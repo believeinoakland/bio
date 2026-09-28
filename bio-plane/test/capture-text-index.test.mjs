@@ -443,12 +443,19 @@ t("B2b: and the one slide unit carries BOTH of that slide's shapes' text, which 
   deckDoc.text_units?.every((u, i) => u.text.includes(SLIDE_TITLES[i]) && u.text.includes(SLIDE_SECOND)),
   true);
 
-t("B3: the WORKBOOK emits NO units at all — a cell is not a passage and `sheet-range` waits on "
-+ "EXTRACTION-BREADTH §3.2. The key is ABSENT rather than an empty array, because an empty list "
-+ "would say this workbook holds nothing to index, which is a different and false claim",
-  [Object.prototype.hasOwnProperty.call(bookDoc, "text_units"),
+/* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, EXTRACTION #2 REPORT J2.2): extraction R16 as amended (N108's second half,
+   D-672 whole) makes a sheet a unit when its reader names its used range, its extent that `sheet-range`
+   (`{kind: "sheet-range", sheet, range}`), `seq` the sheet's position; a sheet with no named range is still no unit,
+   never a guessed rectangle. So the workbook's gap is closed rather than stated: its two sheets are two units at the
+   ranges their cells occupy (Summary A1:B2, Detail A1:B1), and its text is still the extracted text. */
+t("B3: the WORKBOOK emits one `sheet-range` unit per sheet at the used range its reader names — a "
++ "cell is not a passage and a guessed rectangle is not one either (extraction R16 as amended, D-672), "
++ "`seq` the sheet's position, and its text is still the text that was extracted",
+  [(bookDoc.text_units || []).map((u) => [u.extent?.kind, u.extent?.sheet, u.extent?.range, u.seq]),
+   (bookDoc.text_units || []).every((u, i) => typeof u.text === "string" && u.text.length > 0),
    /* and its text WAS extracted, which is the half that makes the gap a gap */
-   bookDoc.reading?.read_from_text], [false, true]);
+   bookDoc.reading?.read_from_text],
+  [[["sheet-range", "Summary", "A1:B2", 0], ["sheet-range", "Detail", "A1:B1", 1]], true, true]);
 
 /* THE EXTENT IS THE CONTENT ADDRESS, AND THIS IS THE ASSERTION §4.5 RESTS ON.
    The unit's extent must canonicalise to the SAME string a member's citation of
@@ -485,9 +492,11 @@ await promote(B_DECK, { document: deckDoc });
 await promote(B_BOOK, { document: bookDoc });
 
 const st1 = await get("stats", "", "adm-rec91");
-t("C1: the units are PERSISTED — one row per paragraph plus one per slide, and the workbook "
-+ "contributes none",
-  st1.textUnits, PARAS.length + SLIDE_TITLES.length);
+t("C1: the units are PERSISTED — one row per paragraph plus one per slide, and one per sheet of the "
++ "workbook",
+  /* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, EXTRACTION #2 REPORT J2.2): plus the workbook's two `sheet-range`
+     units (B3), one per sheet with a named used range. */
+  st1.textUnits, PARAS.length + SLIDE_TITLES.length + SHEET_NAMES.length);
 /* CORRECTED BY THIS ITEM'S OWN `replace` CONTROL ARM, and the first spelling is
    kept here because it is the more useful half of the lesson. It read
    `st1.textIndexed === st1.textUnits` and called that "the trigger discipline
@@ -1062,14 +1071,15 @@ t("W1b: THE OVER-STRICTNESS HALF — a one-glyph paragraph is still a unit, and 
      merging them with slide text, and the only address that reaches a slide is
      `slide-shape`, whose shape-omitted form is now the slide itself. So the most
      candid text in a deck has no indexable unit. Reported as a DESIGN GAP.
-   - A `sheet-range` UNIT, which does not exist (EXTRACTION-BREADTH §3.2).
+   - (STRUCK 2026-09-28, LEGACY-TESTS #4: a `sheet-range` unit now exists — extraction R16 as amended, D-672 — and
+     B3 and C1 see it.)
    - A REAL PDF PRODUCER. The `pdf-page` arm is driven through `op=promote` with
      an authored provenance document, which is the writer's real input; what it
      does NOT exercise is `pdfstructure`'s own `text.pages[]` reaching the wire.
      The DOCX and PPTX arms do exercise that path end to end, so the wire's
      shape-recognition is measured — but on two of its three arms, not three. */
 console.log(`\n  WHAT THIS SUITE CANNOT SEE: the \`passage:\` arm (REC-92), a slide's speaker notes `
-          + `(no extent arm — DESIGN GAP), a \`sheet-range\` unit (EXTRACTION-BREADTH §3.2), and the `
+          + `(no extent arm — DESIGN GAP), and the `
           + `PDF producer's own text reaching the wire (driven through op=promote instead).`);
 
 reachedFoot = true;

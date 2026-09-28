@@ -70,6 +70,7 @@ import { CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES,
             a hand copy agrees with its author for free. */
          RENDER_CAPTURE_CHECKS } from "../checks/bio-checks.mjs";
 import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
+import { CAPTURE_REQUESTS_SCHEMA } from "../src/capture-requests/schema.mjs";
 /* T4 (legacy-tests; capture R20, K60): the co-attestation services every capture now asks, from their one definition. */
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../src/tsa.mjs";
 
@@ -79,7 +80,14 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): `userAgent`, the control plane's agent composer, moved
    out of src/index.mjs into the capture module's src/capture/acquire.mjs; section 9a reads it there. */
 const ACQUIRE_SRC = readFileSync(SRC("capture/acquire.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the table, the door, the attribution
+   composer, the conduct region and the drain left the store with CAPTURE-REQUESTS #1 — the CREATE TABLE literal is
+   `src/capture-requests/schema.mjs`'s (`CAPTURE_REQUESTS_SCHEMA`), and `captureRequest`, `captureRequestAttribution`
+   (a module function now), `#captureRequestConduct` (→ `#conduct`), `captureRequestDrain` (→ `drain`) and
+   `#captureRequestHostHeld` (→ `#hostHeld`) are `src/capture-requests/index.mjs`'s. Every source arm below reads them
+   there, asking the same question. */
+const CR_SRC = readFileSync(SRC("capture-requests/index.mjs"), "utf8");
+const SCHEMA_SRC = readFileSync(SRC("capture-requests/schema.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -182,10 +190,10 @@ const decomment = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
   .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
 function doorBlock() {
-  const at = STORE_SRC.indexOf("captureRequest(a = {}) {");
+  const at = CR_SRC.indexOf("  captureRequest(a = {}, { viewer = null, caller = null } = {}) {");
   if (at < 0) return "";
-  const end = STORE_SRC.indexOf("\n  #captureRequestAttribution(", at);
-  return STORE_SRC.slice(at, end < 0 ? at + 20000 : end);
+  const end = CR_SRC.indexOf("\n  #inquiryInSight(", at);
+  return CR_SRC.slice(at, end < 0 ? at + 20000 : end);
 }
 
 /* ---------------------------------------------------------------- fixture */
@@ -279,12 +287,20 @@ const drive = (r) => { const c = codeOf(r); if (c && c in CAPTURE_REQUEST_CHECKS
 console.log("\n--- 1. the table's shape, its position, and its place in purge (D-113) ---");
 {
   const tbl = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
-  t("the table exists in schema.mjs", tbl > -1, true);
+  t("the table exists in schema.mjs", tbl > -1, true);   /* capture-requests' schema.mjs (see SCHEMA_SRC) */
   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the table left the store's `SCHEMA`
+     for its module's `CAPTURE_REQUESTS_SCHEMA`, migrated by `migrateCaptureRequests`, so it can no longer sit AFTER
+     the governor's block there. The trap is asked of both literals it could now bite: the store's `SCHEMA` holds no
+     capture_requests table (one home), its governor block is still present, and the module's table literal closes
+     on its own `\n);`. */
   const tblBuilt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
   const govBuilt = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
+  const tblMod = CAPTURE_REQUESTS_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
   t("and it is declared BEFORE the host_governor block (CLAUDE.md's trap: hygiene asserts the "
-  + "literal ends on a `);`)", tblBuilt > -1 && govBuilt > -1 && tblBuilt < govBuilt, true);
+  + "literal ends on a `);`)",
+    [tblBuilt, govBuilt > -1, tblMod > -1 && CAPTURE_REQUESTS_SCHEMA.indexOf("\n);", tblMod) > tblMod],
+    [-1, true, true]);
   const body = SCHEMA_SRC.slice(tbl, SCHEMA_SRC.indexOf("\n);", tbl));
   t("it carries BOTH principals as NOT NULL columns — an act that can name one is refused at the "
   + "write rather than half-recorded (DEC-27(b))",
@@ -469,10 +485,18 @@ console.log("\n--- 4. DEC-47's conduct: enforced ONCE, at the drain ---");
      reading, which is the only way that class is ever caught. */
   t("every conduct row's `where` names ONE span — the conduct region the drain calls — and no other",
     [...new Set(conduct.map(([, v]) => v.where))],
-    ["src/store.mjs #captureRequestConduct > is-capture-conduct"]);
+    /* RE-PINNED 2026-09-28 (LEGACY-TESTS #4): the conduct region is capture-requests' `#conduct` now. The rows'
+       `where`s still name the store's function until legacy-checks re-points them (CAPTURE-REQUESTS #1 REPORT J2.1),
+       so this arm is red until then, BY NAME, rather than green over a span that no longer exists. */
+    ["src/capture-requests/index.mjs #conduct > is-capture-conduct"]);
   t("and that span is a REGION inside ONE function, resolvable by name: a marker pair inside an "
   + "unnamed span is a `where` the guard cannot resolve, which means nothing checks the site at all",
-    /#captureRequestConduct\(q, nowMs, hostsThisTick\) \{/.test(STORE_SRC), true);
+    (() => {
+      const at = CR_SRC.indexOf("  #conduct(q, nowMs, hostsThisTick) {");
+      const end = CR_SRC.indexOf("\n  #hostHeld(", at);
+      const span = at < 0 || end < at ? "" : CR_SRC.slice(at, end);
+      return [at > -1, /DEC-49 REGION is-capture-conduct/.test(span), /END DEC-49 REGION is-capture-conduct/.test(span)];
+    })(), [true, true, true]);
   const door = decomment(doorBlock());
   t("and the DOOR enforces none of it: no purpose roster, no agent composer, no governor read. "
   + "One enforcement point, so the rules cannot be half applied by a caller that arrived another way",
@@ -626,7 +650,7 @@ console.log("\n--- 5. attribution states BOTH principals (DEC-27(b), DEC-55.4) -
      instead of pretended at with an unreachable `if`. */
   t("the machine attribution is BY CONSTRUCTION: the actor is the prefix and a literal, with no "
   + "path by which a caller's or a member's name could reach it",
-    /const actor = `\$\{MACHINE_AUTHOR_PREFIX\}daemon`;/.test(STORE_SRC), true);
+    /const actor = `\$\{MACHINE_AUTHOR_PREFIX\}daemon`;/.test(CR_SRC), true);
   t("THE SENTENCE THE RECORD STATES names both, because a structured field a surface may or may not "
   + "open is not a statement",
     [a.statement.includes("the daemon captured this"), a.statement.includes("at the investigative session's request"),
@@ -709,8 +733,10 @@ console.log("\n--- 7. BOB-3: a robots.txt disallow does not bar a public documen
   t("there is no robots rule anywhere in the conduct family",
     Object.keys(CAPTURE_REQUEST_CHECKS).filter((k) => /ROBOT/i.test(k)), []);
   t("nor any robots read in the drain's source",
-    /robots/i.test(STORE_SRC.slice(STORE_SRC.indexOf("async captureRequestDrain"),
-                                   STORE_SRC.indexOf("#captureRequestHostHeld"))), false);
+    (() => {
+      const at = CR_SRC.indexOf("  async drain({"), end = CR_SRC.indexOf("\n  #hostHeld(", at);
+      return [at > -1 && end > at, /robots/i.test(at < 0 || end < at ? "" : CR_SRC.slice(at, end))];
+    })(), [true, false]);
 }
 console.log("\n--- 7a. the door is idempotent on (run, address): asking twice is asking once ---");
 {
@@ -758,7 +784,13 @@ console.log("\n--- 7b. OVER-STRICTNESS: `acquire` is a truthful purpose too ---"
  * no instance has a renderer at all (2.rendered), so the LIVE behaviour of either
  * path is undetermined until DIST deploys one.
  *
- * THE TWO REQUEST IDS BELOW ARE LITERAL, AND THAT IS THE INSTRUMENT. The drain
+ * RE-DERIVED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5), AS THE PARAGRAPH BELOW SAYS MUST BE
+ * DONE: the door now MINTS the id (R7, "never a body's `request`"), so an id can no longer fix the order. The order is
+ * fixed by the other half of the same ORDER BY instead — `requested_at`, which is the instance's clock to the second
+ * (R6): each row that must be reached LATER is requested in a LATER SECOND (`nextSecond()` waits for the wall clock to
+ * turn), so the tick's order is decided by the clock and never by the draw. The ids are read off each answer.
+ *
+ * THE TWO REQUEST IDS BELOW WERE LITERAL, AND THAT WAS THE INSTRUMENT. The drain
  * orders a tick `ORDER BY requested_at, request`, `requested_at` is stamped to the
  * SECOND, and a minted id ends in six random characters — so two requests made in
  * the same second are drained in an order the DRAW decides. The host-slot arm at
@@ -776,7 +808,11 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
      slot back. Left counted, the oldest row would win that slot every tick and
      defer again, starving the plain request until the render row expired. */
   const PLAIN_TWIN = "https://oaklandca.opengov.com/portal/agendas-2026-twin";
-  const ID_RENDER = "CR-D491-1-RENDER", ID_PLAIN = "CR-D491-2-PLAIN";
+  const MINTED = /^CR-\d{14}-[0-9a-f]+$/;
+  /* The instance's clock is the wall clock here (no BIO_NOW_MS binding), stamped to the second. */
+  const nextSecond = async () => { const s0 = Math.floor(Date.now() / 1000);
+    while (Math.floor(Date.now() / 1000) === s0) await new Promise((r) => setTimeout(r, 50)); };
+  let ID_RENDER = null, ID_PLAIN = null;
 
   /* THE DOOR READS THE FLAG STRICTLY. A value that is neither true nor absent is
      refused BY NAME rather than normalised to "no render": normalising it would
@@ -789,9 +825,10 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
   t("and its canned translation is the registry's, read off the wire rather than typed here",
     bad.translation === CAPTURE_REQUEST_CHECKS.CAPTURE_REQUEST_RENDER_MALFORMED.translation, true);
 
-  const rq = await request({ address: RENDERABLE, render: true, request: ID_RENDER });
+  const rq = await request({ address: RENDERABLE, render: true });
+  ID_RENDER = rq.request ?? null;
   t("a request for the page as a visitor saw it is QUEUED, and the answer says what the row asked",
-    [rq.ok, rq.requested, rq.render, rq.request], [true, true, true, ID_RENDER]);
+    [rq.ok, rq.requested, rq.render, MINTED.test(String(rq.request))], [true, true, true, true]);
   {
     const rows = await GET(`op=capturerequests&token=${RUTH}&run=${RUN}`);
     const row = rows.requests.find((r) => r.request === ID_RENDER);
@@ -852,9 +889,11 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
   /* OVER-STRICTNESS. `render: false` and an absent flag are the plain capture,
      answered and not refused — a fence tighter than its rule is an undeclared
      interface change wearing the costume of caution. */
-  const off = await request({ address: PLAIN_TWIN, render: false, request: ID_PLAIN });
+  await nextSecond();   /* reached AFTER the render: a later `requested_at` */
+  const off = await request({ address: PLAIN_TWIN, render: false });
+  ID_PLAIN = off.request ?? null;
   t("`render: false` is a request for the document as the site serves it, not a malformed flag",
-    [off.ok, off.render, off.request], [true, false, ID_PLAIN]);
+    [off.ok, off.render, MINTED.test(String(off.request))], [true, false, true]);
   const d2 = await drain();
   t("and it CAPTURES, exactly as every request before this column did",
     [(d2.captured || []).map((c) => c.address).includes(PLAIN_TWIN),
@@ -877,8 +916,10 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
      one slot for the host by the DRAW of its id — measured: the render row's C-83
      code was overwritten by CAPTURE_CONDUCT_TICK_SPENT on one run and not on
      another. The literal id sorts AFTER ID_RENDER, so the render is always
-     reached first, exactly as this block's header prescribes for the other two. */
-  const plainSame = await request({ address: RENDERABLE, request: "CR-D491-3-PLAIN-SAME" });
+     reached first, exactly as this block's header prescribes for the other two.
+     RE-DERIVED 2026-09-28: requested in a later second than the render, for the same reason. */
+  await nextSecond();
+  const plainSame = await request({ address: RENDERABLE });
   t("a PLAIN request for the address the render named is a SECOND row, not the render's: answering "
   + "it with the standing render would report a capture of the served document that nobody performed",
     [plainSame.ok, plainSame.already === true, plainSame.request === ID_RENDER, plainSame.render],
@@ -936,9 +977,10 @@ console.log("\n--- 7c. a request can ask for the RENDERED page, and a render thi
   /* THE RATE ARM — THE CASE THE FIRST DRAFT MISSED. A plain request and a render on ONE fresh host, the plain
      one ordered first: the tick captures it and the render is held by CONDUCT 3 (C-28), not by C-83. */
   const H2_PLAIN = "https://portal.d523-rate.example.gov/agenda", H2_RENDER = "https://portal.d523-rate.example.gov/agenda-app";
-  const ID_H2_PLAIN = "CR-D523-1-PLAIN", ID_H2_RENDER = "CR-D523-2-RENDER";
-  await request({ address: H2_PLAIN, request: ID_H2_PLAIN });
-  await request({ address: H2_RENDER, render: true, request: ID_H2_RENDER });
+  /* RE-DERIVED 2026-09-28: the plain row is reached first because it is requested a second earlier (7c's header). */
+  const ID_H2_PLAIN = (await request({ address: H2_PLAIN })).request ?? null;
+  await nextSecond();
+  const ID_H2_RENDER = (await request({ address: H2_RENDER, render: true })).request ?? null;
   {
     const d3 = await drain();
     t("the RATE arm is armed: the plain row took the host's slot and the render was held by CONDUCT 3, "
@@ -1126,7 +1168,13 @@ console.log("\n--- 9a. the vocabularies are CLOSED, and the plane reads them rat
     CAPTURE_UA_MODES, ["civicos", "member-browser"]);
   t("the store IMPORTS both rather than re-typing them: a hand-typed vocabulary agrees with its "
   + "author at zero cost",
-    /CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible/.test(STORE_SRC), true);
+    /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): the conduct that reads both left the store; capture-requests' module
+       imports them from the catalogue, by name, in one import. */
+    (() => {
+      const imp = (CR_SRC.match(/import \{([^}]*)\} from "\.\.\/\.\.\/checks\/bio-checks\.mjs";/) || [])[1] || "";
+      return ["CAPTURE_REQUEST_CHECKS", "CAPTURE_PURPOSES", "CAPTURE_UA_MODES", "userAgentIsLegible"]
+        .every((n) => new RegExp(`\\b${n}\\b`).test(imp));
+    })(), true);
   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; capture T4-4): the composer moved with `op=acquire` into
      src/capture/acquire.mjs (`userAgent`), where the same question is asked: it returns the catalog's composer. */
   t("and the control plane composes its agent through the catalog's ONE composer",

@@ -47,6 +47,13 @@ const F = {
      the draining row's own address, purpose, agent and render flag, and from outside `via: "capture-request"` is
      refused C-28.13 whatever the caller. Arms (1) and (10) patch that file. */
   acquire: ROOT + "src/capture/acquire.mjs",
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the door, the conduct region, the
+     attribution composer, the drain (with its expiry sweep and the host-slot rollback), the purge declaration and the
+     held-render read left the store for `src/capture-requests/index.mjs`. Each arm below that armed the store arms the
+     same line there, renamed where the module renamed it (`#captureRequestHostHeld` → `#hostHeld`, the purge row is
+     `declarePurge`'s, the draining read's `render` is the fire's since `captureRequestDraining` was retired, and the
+     expiry sweep now takes every held row, not only renders — D-583). The two queue producers stay the store's. */
+  cr: ROOT + "src/capture-requests/index.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -151,7 +158,7 @@ arm("(2) CONDUCT 1 — THE AGENT'S CONTACT URL (C-28.6), the other rules HELD OP
      the composed CivicOS string, which carries the component by construction, so
      it is unreachable today and is kept as the statement of the rule D-94
      measured rather than as a drivable arm. */
-  [["store", `    if (!CAPTURE_UA_MODES.includes(q.ua_mode))`, `    if (false)`]],
+  [["cr", `    if (!CAPTURE_UA_MODES.includes(q.ua_mode))`, `    if (false)`]],
   ["an agent mode outside the two legible forms is refused at the drain by name",
    "EVERY code in the family was DRIVEN out of the plane"],
   ["a member-browser fetch under a question that records NO member agent is refused",
@@ -162,7 +169,7 @@ arm("(3) CONDUCT 1b — THE MEMBER AGENT MUST BE RECORDED, NEVER INVENTED (C-28.
   + "HELD OPEN. BOB-3 permits DELEGATING an agent a member actually used; composing one would be the "
   + "fabricated-Mozilla case wearing the ruling's clothes. AND THE OVER-STRICTNESS ARM MUST STAY GREEN: "
   + "a recorded member agent is a PERMITTED fetch and a check that refuses it is a defect in the check.",
-  [["store", `      if (!ua)\n        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",`,
+  [["cr", `      if (!ua)\n        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",`,
              `      if (false)\n        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",`]],
   ["a member-browser fetch under a question that records NO member agent is refused",
    "EVERY code in the family was DRIVEN out of the plane"],
@@ -173,7 +180,7 @@ arm("(4) CONDUCT 2 — THE PURPOSE TOKEN (C-28.8), the other rules HELD OPEN. "
   + "DEC-47 requires an investigation fetch to introduce or reuse a purpose token DELIBERATELY. With "
   + "this gone, an arbitrary word rides into the user-agent and the instance tells a source something "
   + "false about why it is asking — and the source can no longer tell a first capture from a re-check.",
-  [["store", `    if (!CAPTURE_PURPOSES.includes(q.purpose))`, `    if (false)`]],
+  [["cr", `    if (!CAPTURE_PURPOSES.includes(q.purpose))`, `    if (false)`]],
   ["and the DRAIN turns it away by name",
    "EVERY code in the family was DRIVEN out of the plane"],
   ["a request to a host in cool-off is HELD by name",
@@ -195,7 +202,7 @@ arm("(5) CONDUCT 3 — RATE (C-28.9), the other rules HELD OPEN. "
      of consuming a drain slot, incrementing `attempts`, and telling the run "the
      fetch did not land", which is our own politeness reported as the source
      failing. That distinction is the whole of D-104. */
-  [["store", `    if (this.#captureRequestHostHeld(q.host, nowMs))`, `    if (false)`]],
+  [["cr", `    if (this.#hostHeld(q.host, nowMs))`, `    if (false)`]],
   ["a request to a host in cool-off is HELD by name",
    "and the run's log says so in the record's own vocabulary",
    "EVERY code in the family was DRIVEN out of the plane"],
@@ -209,7 +216,7 @@ arm("(6) ATTRIBUTION — A RECORD NAMING ONE OF THE TWO PRINCIPALS (C-28.11). "
   + "WHICH LEVEL of the Claude-account cascade paid for the reasoning. With the composer's guard gone "
   + "a capture is MADE for an act the record cannot attribute, and the sentence it states names one "
   + "party where two acted.",
-  [["store", `    if (!row || !plane || !claude)`, `    if (false)`]],
+  [["cr", `  if (!row || !plane || !claude)`, `  if (false)`]],
   ["a request that can name only ONE principal is refused at the drain BY NAME",
    "and NO fetch was made for an act the record could not attribute",
    "the READ answers with the same refusal rather than a half attribution",
@@ -226,7 +233,7 @@ arm("(7a) THE PURGE (D-113), MEASURED AGAINST `hygiene.test.mjs` — THE INSTRUM
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): record-core's purge (R21–R24) clears every DECLARED table; the
      store declares `capture_requests` (keyed by `target`) in its `declarePurge("legacy-store", …)`. Removing the
      declaration removes BOTH deletes, as the two edits did. */
-  [["store", `      { name: "capture_requests", keys: ["target"] },\n`, ``]],
+  [["cr", `[{ name: "capture_requests", keys: ["target"] }]`, `[]`]],
   ["tables covered by purge or a stated exemption"],
   [],
   "hygiene.test.mjs");
@@ -245,8 +252,8 @@ arm("(7b) THE WHOLE-STORE ARM ALONE, against this item's own suite — the half 
   + "standing.",
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the whole-store half alone is the declaration's `whole` clause
      (record-core R22: the whole-store form clears only where it holds); `0` keeps the per-bundle key. */
-  [["store", `      { name: "capture_requests", keys: ["target"] },\n`,
-             `      { name: "capture_requests", keys: ["target"], whole: "0" },\n`]],
+  [["cr", `[{ name: "capture_requests", keys: ["target"] }]`,
+          `[{ name: "capture_requests", keys: ["target"], whole: "0" }]`]],
   [/* "purge deletes capture_requests in BOTH arms" — RETIRED 2026-09-27 (T5-12, legacy-tests): the suite RETIRED
       that source-reading assertion on 2026-09-26 (T3, record-core R21/R22: purge moved to record-core's declarations),
       and section 8 measures both halves; the two below are what fails, by name. */
@@ -298,8 +305,8 @@ arm("(11) THE CARRY, ONE LAYER DOWN — the row holds the flag and the DRAINING 
   + "the address, the purpose and the agent and a lie about the render. Same outcome as (10) and a "
   + "different cause, which is why both are armed: a column that exists and a read that drops it is "
   + "indistinguishable, from the record's side, from no column at all.",
-  [["store", `             render: r.render === 1,\n             run: r.run, target: r.target };`,
-    `             render: false,\n             run: r.run, target: r.target };`]],
+  [["cr", `agent: q.ua_mode === "member-browser" ? verdict.ua : null, render: q.render === 1,`,
+          `agent: q.ua_mode === "member-browser" ? verdict.ua : null, render: false,`]],
   ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
    "and the render request was never captured",
    "the ROW carries the deferral by name"],
@@ -312,7 +319,7 @@ arm("(12) THE DOOR'S STRICTNESS (C-28.16). Neuter the malformed-flag refusal and
   + "and that is declared rather than discovered: the swallowed row is queued at the SAME host as the "
   + "render request, so it also takes that host's one slot for the tick and the deferral arm is "
   + "answered CAPTURE_CONDUCT_TICK_SPENT instead. A dropped flag does not stay in its own lane.",
-  [["store", `    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)`, `    if (false)`]],
+  [["cr", `    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)`, `    if (false)`]],
   ["a render flag that is neither true nor absent is REFUSED BY NAME",
    "EVERY code in the family was DRIVEN out of the plane"],
   ["`render: false` is a request for the document as the site serves it"]);
@@ -321,7 +328,7 @@ arm("(13) THE HOLD. Let a refused render fall through to the ordinary fetch-fail
   + "carries CAPTURE_FETCH_FAILED over a fetch that was never attempted, the run's log says the source "
   + "could not be reached when nothing was sent to it — D-104's split inverted — and the deferral BOB "
   + "#32 item 3 requires the tick to record is nowhere in the record.",
-  [["store", `        } else if (r.renderCode) {`, `        } else if (false) {`]],
+  [["cr", `        } else if (r.renderCode) {`, `        } else if (false) {`]],
   ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
    "the ROW carries the deferral by name",
    "the run's log carries the deferral as a GOVERNED indeterminate",
@@ -334,7 +341,7 @@ arm("(14) OVER-STRICTNESS, AND IT MUST BREAK ONLY CORRECT WORK. Make the door re
   + "this item did not have to anticipate, and a fence that refuses it is an undeclared interface "
   + "change wearing the costume of caution. The deferral arms must stay GREEN: this arm is about the "
   + "fence being too tight, not about the render path being wrong.",
-  [["store", `    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)`,
+  [["cr", `    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)`,
     `    if (renderRaw !== null && renderRaw !== true)`]],
   ["`render: false` is a request for the document as the site serves it"],
   ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
@@ -346,7 +353,7 @@ arm("(15) THE HOST'S SLOT, GIVEN BACK. Remove the rollback and a deferred render
   + "is answered CAPTURE_CONDUCT_TICK_SPENT until the render row expires 24 hours later. Starvation "
   + "caused by a request that never touched the host, and the arm is here because D-491 is what makes "
   + "it reachable: every other hold in this drain SENT something.",
-  [["store", `          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));\n`, ``]],
+  [["cr", `            hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));\n`, ``]],
   ["AND THE DEFERRAL GAVE THE HOST'S SLOT BACK",
    "and it CAPTURES, exactly as every request before this column did"],
   ["THE ACCEPTS-WHEN: the render request SURVIVES the drain as RENDER_DEFERRED",
@@ -358,9 +365,9 @@ arm("(16) THE ROW'S NEGATIVE CONTROL — LET EXPIRY DELETE THE ROW. At `expires`
   + "render instead of recording it: the drain's own answer still names it, but the RECORD then holds "
   + "nothing — no row reading undetermined, no item saying the render never happened. That is the "
   + "measured failure D-523 moves (a hold ending in nothing recorded), reached on purpose.",
-  [["store", "            `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,\n"
-    + "            said.slice(0, 600), at, q.request);",
-    "            `DELETE FROM capture_requests WHERE request=? AND state='requested'`, q.request);"]],
+  [["cr", "        this.#sql.exec(`UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,\n"
+    + "                       said.slice(0, 600), at, q.request);",
+    "        this.#sql.exec(`DELETE FROM capture_requests WHERE request=? AND state='requested'`, q.request);"]],
   ["THE ROW READS UNDETERMINED AFTER EXPIRY",
    "and op=queue does not DROP it"],
   ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
@@ -368,8 +375,8 @@ arm("(16) THE ROW'S NEGATIVE CONTROL — LET EXPIRY DELETE THE ROW. At `expires`
 
 arm("(17) THE HOLD UNBOUNDED — the state before D-523. Neuter the expiry sweep and a render this instance "
   + "cannot do is asked for on every tick past its `expires`, and nothing ever says how it ended.",
-  [["store", "WHERE state='requested' AND render=1 AND expires <= ?\n",
-    "WHERE state='requested' AND render=1 AND 0 AND expires <= ?\n"]],
+  [["cr", "WHERE state='requested' AND expires <= ? ORDER BY expires, request LIMIT ?`",
+    "WHERE state='requested' AND 0 AND expires <= ? ORDER BY expires, request LIMIT ?`"]],
   ["AT EXPIRY THE DRAIN RELEASES IT",
    "THE RATE ARM AT EXPIRY",
    "THE ROW READS UNDETERMINED AFTER EXPIRY"],
@@ -379,8 +386,8 @@ arm("(17) THE HOLD UNBOUNDED — the state before D-523. Neuter the expiry sweep
 arm("(18) THE FIRST DRAFT'S SWEEP — C-83 codes only. A render whose code the RATE rule overwrote on its "
   + "last tick is let through past its expiry and asked AGAIN. Found by driving the sweep, and this arm "
   + "keeps it found: the C-83 release must stay GREEN, only the rate-held render fails.",
-  [["store", "WHERE state='requested' AND render=1 AND expires <= ?\n",
-    "WHERE state='requested' AND render=1 AND expires <= ? AND code LIKE 'RENDER%'\n"]],
+  [["cr", "WHERE state='requested' AND expires <= ? ORDER BY expires, request LIMIT ?`",
+    "WHERE state='requested' AND expires <= ? AND code LIKE 'RENDER%' ORDER BY expires, request LIMIT ?`"]],
   ["THE RATE ARM AT EXPIRY"],
   ["AT EXPIRY THE DRAIN RELEASES IT",
    "THE ROW READS UNDETERMINED AFTER EXPIRY"]);
@@ -397,8 +404,8 @@ arm("(19) THE CONDITION KIND ABSENT — remove the producer from `#queueConditio
 arm("(20) TIGHTER THAN THE RULE — the item shows a held render only under a C-83 code. The render the "
   + "RATE rule paused for one tick then VANISHES from the queue while it still waits; the C-83 hold "
   + "stays shown, so only the rate arm's item assertion may fail.",
-  [["store", "AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))",
-    "AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code LIKE 'RENDER%'))"]],
+  [["cr", "\"(cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))\"",
+    "\"(cr.state = 'expired' OR (cr.state = 'requested' AND cr.code LIKE 'RENDER%'))\""]],
   ["a render the RATE rule paused is still SHOWN waiting"],
   ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
    "and op=queue does not DROP it"]);

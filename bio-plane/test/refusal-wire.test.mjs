@@ -115,7 +115,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -298,7 +298,16 @@ const enclosingObject = (src, at) => {
   return null;
 };
 const STATIC = { carried: 0, bare: 0, bareCodes: new Set(), uncatalogued: 0, unreadable: 0 };
-for (const src of [STORE_BARE, decomment(INDEX_SRC)]) {
+/* WIDENED 2026-09-28 (LEGACY-TESTS #4): the store's refusal sites have been leaving it, module by module, since T3 —
+   T7 alone took run-productions', capture-requests', ai-runs', basis-versions', inquiry's and strength's — so a walk
+   over store.mjs and index.mjs measures a corpus that shrinks by extraction rather than by any change to the class.
+   The walk reads every extracted module's files beside them (`src/<module>/`, the T3 helper's rule), which is the
+   plane's refusal source as it stood before the extractions. The floor below is unchanged. */
+const MODULE_DIRS = readdirSync(join(DIR, "..", "src"), { withFileTypes: true }).filter((e) => e.isDirectory())
+  .map((e) => e.name).sort();
+const MODULE_BARES = MODULE_DIRS.flatMap(moduleFiles)
+  .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")));
+for (const src of [STORE_BARE, decomment(INDEX_SRC), ...MODULE_BARES]) {
   for (const m of src.matchAll(/\b(?:reason|code)\s*:\s*"([A-Z][A-Z0-9_]{2,})"/g)) {
     const body = enclosingObject(src, m.index);
     if (body === null) { STATIC.unreadable++; continue; }
@@ -450,8 +459,16 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
  * THE TWELVE — HARVESTED FROM `store.mjs`, SO A THIRTEENTH CANNOT ARRIVE
  * UNMEASURED. (REC-73's harvest, for REC-73's reason.)
  * ==================================================================== */
-const FENCES = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
-console.log(`    the machine-fence family, harvested from store.mjs: ${FENCES.length} code(s)`);
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): four of the store's fences left it with T7's extractions and are harvested
+   where they went — MACHINE_CANNOT_CONCLUDE and MACHINE_CANNOT_MOVE_VERSION with basis-versions
+   (`src/basis-versions/`), MACHINE_CANNOT_DIVIDE and MACHINE_CANNOT_GROUND with inquiry (`src/inquiry/`). A FIFTH,
+   MACHINE_CANNOT_DECLARE (C-32.9), left the FAMILY and not only the file: strength holds it in its own
+   `STRENGTH_BAR_CHECKS` (`src/strength/checks.mjs`), as its requirements moved it from the machine fences, so it is
+   struck from this harvest with that reason and the floor below moves 14 -> 13 by exactly it. */
+const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry"].flatMap(moduleFiles)
+  .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))];
+const FENCES = [...new Set(FENCE_SOURCES.flatMap((b) => [...b.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1])))].sort();
+console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry}/: ${FENCES.length} code(s)`);
 /* THE FLOOR MOVED 12 -> 14 BY REC-185, 2026-09-24, FROM THIS LINE'S OWN PRINT ON ITS TREE — AND IT
    WAS FOUND BY A CONTROL COMING BACK GREEN, NOT BY READING IT. Arm (f) of this file's driver drops
    one code out of the harvest and is DECLARED RED. On 2026-09-24 it came back **GREEN, 33/0**. The
@@ -470,7 +487,7 @@ console.log(`    the machine-fence family, harvested from store.mjs: ${FENCES.le
 t("the fence harvest found a REAL family and not an empty set — and the floor is a RATCHET rather "
 + "than a reassurance: it is this family's measured size today, so ONE code leaving the harvest "
 + "fails this line and must be struck with its reason",
-  FENCES.length >= 14, true);
+  FENCES.length >= 13, true);
 t("every harvested fence has a catalogue row with a canned translation — REC-64's work, and the "
 + "precondition for asking whether it reaches anybody",
   FENCES.filter((c) => !ROWS.has(c)), []);
@@ -525,7 +542,8 @@ const SITES = new Map();                       /* code -> [{ file, line }] */
    harvested UNDER ITS OWN NAME, so a row whose `where` still names `src/store.mjs` for a fence that moved is
    reported as exactly that (list 2) rather than as minted nowhere. */
 const HARVESTED = [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE],
-  ...["record-core", "membership", "promotion"].flatMap(moduleFiles).map((f) =>
+  /* T7 (LEGACY-TESTS #4, 2026-09-28): basis-versions and inquiry, where three catalogued fences and C-25.24's went. */
+  ...["record-core", "membership", "promotion", "basis-versions", "inquiry"].flatMap(moduleFiles).map((f) =>
     [`src/${f}`, decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"))])];
 for (const [file, bare] of HARVESTED) {
   for (const m of bare.matchAll(FENCE_LITERAL)) {
@@ -547,7 +565,7 @@ const whereFile = (w) => (/(src\/[A-Za-z./-]+\.mjs)/.exec(String(w)) || [])[1] |
 const familyOf = (c) => (ROWS.get(c) || {}).family || null;
 
 console.log(`    MACHINE_FENCE_CHECKS holds ${CAT_CODES.length} row(s); the widened harvest finds `
-          + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs + src/{record-core,membership,promotion}/`);   /* T3 (legacy-tests), 2026-09-26 */
+          + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs + src/{record-core,membership,promotion,basis-versions,inquiry}/`);   /* T3 (legacy-tests), 2026-09-26; T7 2026-09-28 */
 for (const code of [...SITES.keys()].sort()) {
   const at = SITES.get(code).map((s) => `${s.file}:${s.line}`).join(", ");
   console.log(`      ${(familyOf(code) === "MACHINE_FENCE_CHECKS" ? "   " : "  *")} ${code.padEnd(34)} `

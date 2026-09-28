@@ -44,8 +44,15 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the run wake left the store with AI-RUNS #1 (`wake`, `wakeDue`, `wakeWake`,
+   `#aiRunWakeHolds`, `#aiRunWakeRuns` in `src/ai-runs/index.mjs`), and what it reads of the requests is capture-requests'
+   wait source (`waitSource()`'s `holds` and `woken`, and `markWoken`, in `src/capture-requests/index.mjs`, R29,
+   CAPTURE-REQUESTS #1). Each arm makes the same edit at the same condition there; arm (8) still arms the store's
+   `onAlarm`. Arm (9)'s completion states now include `expired` (D-583), so its re-spelling carries three. */
 const F = {
   store: ROOT + "src/store.mjs",
+  airuns: ROOT + "src/ai-runs/index.mjs",
+  cr: ROOT + "src/capture-requests/index.mjs",
   wrangler: ROOT + "wrangler.jsonc",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -55,7 +62,7 @@ const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) =>
    truncated snapshot passes for free — measured twice in this repository, once
    caught only because a digest read `e3b0c442…`, the sha256 of the empty
    string. */
-const FLOOR = { store: 400000, wrangler: 1000 };
+const FLOOR = { store: 400000, airuns: 100000, cr: 40000, wrangler: 1000 };
 for (const [k, v] of Object.entries(ORIGINAL)) {
   console.log(`  pristine ${k}: ${v.length} bytes · ${ORIGINAL_SHA[k].slice(0, 12)}…`);
   if (v.length < FLOOR[k]) throw new Error(`PRISTINE COPY BELOW FLOOR: ${k} read ${v.length} bytes`);
@@ -142,7 +149,7 @@ if (base.fail !== 0 || !base.reachedFoot) {
 arm("(1)", "THE WAKE. Make the wake loop iterate nothing, holds left live. The daemon answers and "
   + "the run is never told: no observation entry, no stamp, no lease renewed for the resumption. This "
   + "is the arm that distinguishes a consumer that is REGISTERED from one that DOES something.",
-  [["store", "    for (const r of this.#aiRunWakeRuns()) {", "    for (const r of []) {"]],
+  [["airuns", "    for (const r of this.#aiRunWakeRuns()) {", "    for (const r of []) {"]],
   ["ONE run was woken, for ONE completion",
    "the run's log carries exactly one wake entry",
    "the completed request is stamped with WHEN the run was told"],
@@ -161,7 +168,7 @@ arm("(2)", "THE HOLD. Make the hold loop iterate nothing, the wake left live. A 
      wake where it claimed to measure the hold. A SECOND RUN that has heard
      nothing back at all was added to the suite so the hold has an arm of its
      own, and that arm is what this control now names. */
-  [["store", "    for (const r of this.#aiRunWakeHolds(iso)) {", "    for (const r of []) {"]],
+  [["airuns", "    for (const r of this.#aiRunWakeHolds(iso)) {", "    for (const r of []) {"]],
   ["and BOTH runs were HELD",
    "the run that has heard NOTHING back is alive too, on the hold alone",
    "past the request's OWN expiry the hold stops"],
@@ -171,8 +178,8 @@ arm("(3)", "THE STAMP. Remove the `run_woken_at` write. Every alarm re-delivers 
   + "for ever: a fresh observation entry each time, a lease renewed on a run nothing is waiting for, "
   + "and a consumer that never self-terminates. Delivered-exactly-once is the whole of the idempotence "
   + "here and nothing else enforces it.",
-  [["store", `          this.sql.exec(\`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?\`, iso, q.request);`,
-    `          void q;`]],
+  [["cr", `      this.#sql.exec(\`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?\`, iso, r.request);`,
+    `      void r;`]],
   ["a second alarm delivers NOTHING new",
    "the completed request is stamped with WHEN the run was told"],
   ["the registry is exactly the ten real consumers, in order"]);
@@ -187,10 +194,8 @@ arm("(4)", "THE BOUND. Remove the request's own expiry from the hold's predicate
      `LIMIT ?` (the derivation-bounds ratchet made it bounded), matched zero
      times, and stopped. An arm that did not arm is a finding, and it is
      recorded here rather than quietly re-anchored. */
-  [["store", `                       WHERE cr.run = r.run AND cr.state IN ('requested','draining') AND cr.expires > ?)
-        ORDER BY r.run LIMIT ?\`, iso, iso, Store.AI_RUN_WAKE_TICK_BATCH);`,
-    `                       WHERE cr.run = r.run AND cr.state IN ('requested','draining') AND ? IS NOT NULL)
-        ORDER BY r.run LIMIT ?\`, iso, iso, Store.AI_RUN_WAKE_TICK_BATCH);`]],
+  [["cr", `            WHERE state IN ('requested','draining') AND expires > ? GROUP BY run ORDER BY run\`, String(iso))) {`,
+    `            WHERE state IN ('requested','draining') AND ? IS NOT NULL GROUP BY run ORDER BY run\`, String(iso))) {`]],
   ["past the request's OWN expiry the hold stops"],
   ["ONE run was woken, for ONE completion"]);
 
@@ -198,7 +203,7 @@ arm("(5)", "SELF-TERMINATION. Make the wake unconditional. An instance with noth
   + "arms an alarm and re-arms it for ever — the property REC-1 prized and the one the sovereign "
   + "instances the installer targets are paid for. It is also the property a consumer is most likely "
   + "to lose by accident, because nothing about a working instance looks different.",
-  [["store", "    if (this.#aiRunWakePending(now) <= 0) return null;\n    return now + this.#aiRunWakeTickMs();",
+  [["airuns", "    if (this.wakeDue(now) <= 0) return null;\n    return now + this.#aiRunWakeTickMs();",
     "    return now + this.#aiRunWakeTickMs();"]],
   ["an instance with nothing suspended arms no alarm at all"],
   ["ONE run was woken, for ONE completion",
@@ -209,8 +214,8 @@ arm("(6)", "THE PLAN ROW'S OWN CONTROL, ARMED: *add the run's own alarm*. Give t
   + "reconciling alarm, and a second one is not a scheduling detail — it is a consumer that can no "
   + "longer be starved OR reconciled, which is how per-consumer sprawl starts. Before FL-4 this suite "
   + "carried the declaration and no assertion that could fail on it.",
-  [["store", "  #aiRunWake(now) {\n    const iso = Store.#aiIso(now);",
-    "  #aiRunWake(now) {\n    this.ctx.storage.setAlarm(now + 1000);\n    const iso = Store.#aiIso(now);"]],
+  [["airuns", "  async wake(now) {\n    const iso = AiRuns.#aiIso(now);",
+    "  async wake(now) {\n    this.ctx.storage.setAlarm(now + 1000);\n    const iso = AiRuns.#aiIso(now);"]],
   ["EVERY setAlarm in the plane is inside #reconcileAlarm"],
   ["the registry is exactly the ten real consumers, in order",
    "and NO cron: wrangler.jsonc declares no triggers block"]);
@@ -239,10 +244,8 @@ arm("(9)", "OVER-STRICTNESS: correct work in a spelling the suite did not antici
   + "same rule differently spelled. The suite MUST STAY GREEN. A suite that pins the SQL rather than "
   + "the behaviour is a fence tighter than its rule, which is an undeclared interface change wearing "
   + "the costume of caution.",
-  [["store", `                       WHERE cr.run = r.run AND cr.state IN ('captured','refused')
-                         AND cr.run_woken_at IS NULL)`,
-    `                       WHERE cr.run = r.run AND (cr.state = 'captured' OR cr.state = 'refused')
-                         AND cr.run_woken_at IS NULL)`]],
+  [["cr", `            WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL ORDER BY run\`)) {`,
+    `            WHERE (state = 'captured' OR state = 'refused' OR state = 'expired') AND run_woken_at IS NULL ORDER BY run\`)) {`]],
   [], [], { mustStayGreen: true });
 
 console.log(`\nFL-4 controls: ${armsRun} arms run, ${armsWrong} NOT as declared.`);

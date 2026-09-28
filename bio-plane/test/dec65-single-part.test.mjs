@@ -72,7 +72,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -82,7 +82,16 @@ import { SUFFICIENCY_UNCLAIMED, isSufficiencyClaimed, isSufficiencyUnclaimed,
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const CHECKS_SRC = readFileSync(join(DIR, "..", "checks", "bio-checks.mjs"), "utf8");
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 REPORT J2.5): the two plane-side sites left
+   `src/store.mjs`. PL-3's endpoint guard is in `suggest` (`src/run-productions/index.mjs`), and the stamp that was
+   `#suggestionPersisted`'s is basis-versions' `versionAsWritten` (`src/basis-versions/grammar.mjs`, K182). The sweep's
+   plane half is therefore the WHOLE plane source rather than one file — a wider reach, so a site moved into a third
+   file is found instead of missed — and the guard's structural pin reads the file the guard now lives in. */
+const PLANE_SRC = (function walk(d) {
+  return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(join(d, e.name))
+    : e.name.endsWith(".mjs") ? [readFileSync(join(d, e.name), "utf8")] : []);
+})(join(DIR, "..", "src")).join("\n");
+const SUGGEST_SRC = readFileSync(SRC("run-productions/index.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -490,7 +499,7 @@ console.log("\n--- 7. the class sweep: every site that judges a sufficiency asse
      premise DEC-65's own entry had to be corrected for. */
   const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const PRED = "(?:isMachineIdentity|isMachineStamp|isSufficiencyClaimed|isSufficiencyUnclaimed|sufficiencyClaimState)";
-  const CORPUS = [["checks/bio-checks.mjs", CHECKS_SRC], ["src/store.mjs", STORE_SRC]];
+  const CORPUS = [["checks/bio-checks.mjs", CHECKS_SRC], ["src/**/*.mjs", PLANE_SRC]];
   const sitesIn = (src) => [...stripComments(src).replace(/\s+/g, " ")
     .matchAll(new RegExp(`[^;{}]*asserted_by[^;{}]*${PRED}\\s*\\([^)]*\\)`
                          + `|[^;{}]*${PRED}\\s*\\([^)]*asserted_by[^)]*\\)`, "g"))].map((m) => m[0].trim());
@@ -538,8 +547,8 @@ console.log("\n--- 7. the class sweep: every site that judges a sufficiency asse
   t("BUT IT CANNOT SEE PL-3's GUARD, WHICH IS STATED RATHER THAN PAPERED OVER: that guard judges the SESSION and the PART COUNT and names no `asserted_by`, so it shares no shape with these sites — it is pinned structurally here and DRIVEN through the op in block 2",
     found[1][1].some((l) => /legsIn|declaredParts/.test(l)), false);
   t("the guard IS there, though, and the sweep says so by a different shape — the part count beside the machine predicate, in the file the matcher above could not speak for",
-    /const singlePart = declaredParts\.length === 1/.test(STORE_SRC)
-      && /isMachineIdentity\(who\) && !singlePart/.test(STORE_SRC), true);
+    /const singlePart = declaredParts\.length === 1/.test(SUGGEST_SRC)
+      && /isMachineIdentity\(who\) && !singlePart/.test(SUGGEST_SRC), true);
 }
 
 /* ================================================================= *

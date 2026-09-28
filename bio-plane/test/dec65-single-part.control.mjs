@@ -126,10 +126,14 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const CHECKS = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
-const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 REPORT J2.5, its map §4): the guard is in
+   `suggest` (`src/run-productions/index.mjs`, where `needsPartition` is spelled `legsIn.length > 0`), and the stamp is
+   basis-versions' `versionAsWritten` (`src/basis-versions/grammar.mjs`). Same edits, same arms. */
+const RP = fileURLToPath(new URL("../src/run-productions/index.mjs", import.meta.url));
+const GRAMMAR = fileURLToPath(new URL("../src/basis-versions/grammar.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./dec65-single-part.test.mjs", import.meta.url));
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const MIN_BYTES = { [CHECKS]: 200_000, [STORE]: 800_000 };
+const MIN_BYTES = { [CHECKS]: 200_000, [RP]: 40_000, [GRAMMAR]: 8_000 };
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
@@ -139,13 +143,13 @@ const ARMS = [
   { id: "0-baseline", what: "nothing patched — the row that tells seven-arms-broken from seven-arms-working",
     patches: [] },
   { id: "1-guard-reverted", what: "PL-3's guard back to refusing on ANY leg — the state of the world FL-3 measured",
-    patches: [[STORE, "(isMachineIdentity(who) && !singlePart)", "(isMachineIdentity(who))"]] },
+    patches: [[RP, "(isMachineIdentity(who) && !singlePart)", "(isMachineIdentity(who))"]] },
   { id: "2-licence-widened", what: "the guard admits ANY number of parts — the widening DEC-65 forbids",
-    patches: [[STORE, "if ((declared.length || needsPartition) && (!who || (isMachineIdentity(who) && !singlePart)))",
-               "if ((declared.length || needsPartition) && (!who))"]] },
+    patches: [[RP, "if ((declared.length || legsIn.length > 0) && (!who || (isMachineIdentity(who) && !singlePart)))",
+               "if ((declared.length || legsIn.length > 0) && (!who))"]] },
   { id: "3-stamp-reverted", what: "a machine's ground row carries the machine's own identity again",
-    patches: [[STORE, "        asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? \"\"),",
-               "        asserted_by: fs(author ?? \"\"),"]] },
+    patches: [[GRAMMAR, "asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? \"\"),",
+               "asserted_by: fs(author ?? \"\"),"]] },
   { id: "4-check-licence-removed", what: "C-25.6 refuses the minted value again — the check half alone",
     patches: [[CHECKS, "    const noClaim = typeof g.asserted_by === 'string' && isSufficiencyUnclaimed(g.asserted_by);",
                "    const noClaim = false;"]] },

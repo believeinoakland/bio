@@ -126,13 +126,16 @@ const arm = ({ n, what, file, from, to, marker, suites, expect }) => {
 
 const named = (r, re) => r.fails.some((f) => re.test(f));
 
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): `aiRunRead` and `#standardForRun` left `src/store.mjs` with AI-RUNS #1
+   (`read` and `#standardForRun` in `src/ai-runs/index.mjs`). Arms 1, 2, 4 and 5 make the same edit there; arm 1's
+   anchor is `read`'s own `standard:` line, told from the spawn payload's by the line after it. */
 const ARMS = [
   /* (1) DROP THE NEW PUBLICATION. The item's own subject, removed. */
   { n: 1, what: "DROP THE PUBLICATION — `op=airun` stops publishing the run's third condition, which "
               + "is exactly what it did before this item",
-    file: "src/store.mjs",
-    from: "      standard: this.#standardForRun(row),\n    } };",
-    to:   "      /* NC-REC74-ARM1 */\n    } };",
+    file: "src/ai-runs/index.mjs",
+    from: "      standard: this.#standardForRun(row),\n      /* B6 (AGENT-WORKER #1 REPORT 3)",
+    to:   "      /* NC-REC74-ARM1 */\n      /* B6 (AGENT-WORKER #1 REPORT 3)",
     marker: "NC-REC74-ARM1",
     suites: ["run-conditions"],
     expect: (r) => r["run-conditions"].fail > 0
@@ -142,7 +145,7 @@ const ARMS = [
   /* (2) THE ARM THIS ITEM EXISTS FOR. */
   { n: 2, what: "PUBLISH THE ABSENT CASE AS AN INDISTINGUISHABLE NULL — the key is present and says "
               + "nothing, which is the shape the item was written to prevent",
-    file: "src/store.mjs",
+    file: "src/ai-runs/index.mjs",
     from: "      pair: basis === \"recorded\" ? { capture, connection } : null,",
     to:   "      pair: basis === \"recorded\" ? { capture, connection } : null,\n"
         + "      basis: basis === \"recorded\" ? basis : null, /* NC-REC74-ARM2 */\n"
@@ -186,7 +189,7 @@ const ARMS = [
      two absences are told apart by the code rather than by the fixture. */
   { n: 4, what: "COLLAPSE THE TWO ABSENCES — a projectless run reports `none-recorded` like any other, "
               + "losing DEC-17's *an inquiry outside any project has no bar*",
-    file: "src/store.mjs",
+    file: "src/ai-runs/index.mjs",
     from: "      : row.context_type === \"project\" ? \"none-recorded\"\n      : \"context-has-no-project\";",
     to:   "      : \"none-recorded\"; /* NC-REC74-ARM4 */",
     marker: "NC-REC74-ARM4",
@@ -197,7 +200,7 @@ const ARMS = [
   /* (5) POLARITY, on the branch that costs nothing to get wrong. */
   { n: 5, what: "ACCEPT A BAR THAT NAMES NEITHER AXIS AS A REAL BAR — PL-4's class: a value that "
               + "survives a falsiness guard while naming nothing reads as PRESENT and travels",
-    file: "src/store.mjs",
+    file: "src/ai-runs/index.mjs",
     from: "      : parsed !== null ? (capture === null && connection === null ? \"names-no-axis\" : \"recorded\")",
     to:   "      : parsed !== null ? \"recorded\" /* NC-REC74-ARM5 */",
     marker: "NC-REC74-ARM5",

@@ -190,13 +190,16 @@ t("the grey image's row: a DERIVED crop of the row's own extent, from the row's 
   [200, true, true, "crop", { kind: "image", page: 0, rect: GREY_RECT }, ids.grey, CAP, CAP]);
 t("D-419 crop dimensions: the cited image's own 2x2 — not the page, not the other image on it",
   [g.width, g.height], [2, 2]);
-const gBytes = octets(g.bytes);
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CONTENT #2 REPORT J2.1; content R32 as folded, K179, N119): the crop's
+   answer carries its bytes as `bytes_base64` (standard base64 of the rendition's file) and no `bytes` key; `octets`
+   decodes it as before. Same assertions over the same bytes. */
+const gBytes = octets(g.bytes_base64);
 t("  the bytes handed back hash to the file_sha256 the answer states", [gBytes.length > 0, sha(gBytes)], [true, g.file_sha256]);
 t("  and the answer says what it is not: a derived rendition, not evidence (§3.4)",
   [/derived rendition/i.test(g.says || ""), /not itself evidence/.test(g.says || "")], [true, true]);
 const [, j] = await crop(`id=${ids.jpeg}`);
 t("the JPEG's row returns the publisher's own bytes, untouched, at its declared 40x30",
-  [j.ok, j.route, j.mediaType, octets(j.bytes).equals(JPG), j.width, j.height],
+  [j.ok, j.route, j.mediaType, octets(j.bytes_base64).equals(JPG), j.width, j.height],
   [true, "passthrough-dct", "image/jpeg", true, 40, 30]);
 
 /* ===================== 2. THE REFUSALS A CALLER REACHES ================== */

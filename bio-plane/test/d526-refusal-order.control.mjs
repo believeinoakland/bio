@@ -43,10 +43,13 @@ const ARMS = {
     mustPass: [...LABELLED_ALL, "MISLABELLED: refused ENVELOPE_TYPE_DISAGREES", "MISLABELLED: refused NOT_CAPABLE",
                "MISLABELLED: refused NAME_TAKEN", "UNLABELLED: refused BIAS_REFUSED"] },
 
-  /* D-85's surfacing gate, in the store. */
+  /* D-85's surfacing gate, in the store.
+     RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, N57 via m025 A4): the gate left the store with AI-RUNS #1 and is ai-runs'
+     promotion step now (`#surfacing`, R25, `src/ai-runs/index.mjs`), which reads the promotion's document type
+     (`c.promotedType`); the arm makes it read the ENVELOPE's type again (the step context's `meta`), the same edit. */
   "surface-envelope": {
-    patches: [[S, 'if (base === null && meta && typeof meta === "object" && promotedType === "inquiry"',
-                  `if (base === null && meta && typeof meta === "object" && ${ENV_S} === "inquiry"`]],
+    patches: [["src/ai-runs/index.mjs", 'return !!c && !c.head && c.promotedType === "inquiry"',
+                  'return !!c && !c.head && normalizeType(c.meta && c.meta.object_type) === "inquiry"']],
     /* UPDATED 2026-09-26 (T3; promotion R39): MISLABELLED meets ENVELOPE_TYPE_DISAGREES first, as in laws-envelope. */
     mustFail: ["UNLABELLED: refused SURFACE_NO_RUN"],
     mustPass: [...LABELLED_ALL, "MISLABELLED: refused ENVELOPE_TYPE_DISAGREES", "MISLABELLED: refused NOT_CAPABLE"] },

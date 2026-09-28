@@ -646,7 +646,9 @@ t("a MEMBER's own basis leg still earns its capture-axis grade from the capture,
   true);
 t("`op=extractproposals` refuses an UNSCOPED listing — an enumeration of every proposal in the "
 + "record would be a scan and a number nobody can act on",
-  (await get("extractproposals", "", RUTH)).reason, "NO_SCOPE");
+  /* RE-PINNED 2026-09-28 (LEGACY-TESTS #4): RUN-PRODUCTIONS #1's R13 (K163, LEGACY-CHECKS #2 REPORT 2) mints
+     this refusal as `EXTRACT_NO_SCOPE`, a C-104 row of its own, in place of the bare `NO_SCOPE`. */
+  (await get("extractproposals", "", RUTH)).reason, "EXTRACT_NO_SCOPE");
 
 /* THE READ'S BOUND, DRIVEN HERE RATHER THAN IN `bounds.test.mjs`, and
    `DRIVEN_ELSEWHERE` there names this op with the reason. Building the corpus

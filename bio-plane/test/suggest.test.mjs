@@ -115,7 +115,7 @@ import "./stdio.mjs";                 /* D-282: a suite's own exit must not disc
 import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -128,7 +128,19 @@ import { SUGGEST_CHECKS, SUGGEST_KINDS, SUGGEST_LEVELS, isBoilerplate,
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 REPORT J2.5): the endpoint left `src/store.mjs` with
+   RUN-PRODUCTIONS #1's extraction — `suggestVersion` is now `suggest` in `src/run-productions/index.mjs`, with its three
+   DEC-49 regions and its `fromRecord` group — and the WRITE it hands over is basis-versions' `appendVersion` (R28,
+   CHANGE B6), which composes the version row and holds the `suggested` literal. Every source arm below reads the file
+   the code now lives in; none of them was loosened to fit. */
+const SUGGEST_SRC = readFileSync(SRC("run-productions/index.mjs"), "utf8");
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
+/* THE WHOLE PLANE'S SOURCE, for the one pin that is about the plane rather than about a file: the version tables'
+   write site must stay ONE wherever the extractions have put it. */
+const PLANE_SRC = (function walk(d) {
+  return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(join(d, e.name))
+    : e.name.endsWith(".mjs") ? [readFileSync(join(d, e.name), "utf8")] : []);
+})(join(DIR, "..", "src")).join("\n");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -171,18 +183,25 @@ const decomment = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
   .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
 function suggestBlock() {
-  const at = STORE_SRC.indexOf("suggestVersion(a = {}) {");
+  const at = SUGGEST_SRC.indexOf("\n  suggest(a = {}) {");
   if (at < 0) return "";
-  const end = STORE_SRC.indexOf("\n  static #suggestionFrontmatter(", at);
-  return STORE_SRC.slice(at, end < 0 ? at + 40000 : end);
+  const end = SUGGEST_SRC.indexOf("\n  extractPropose(", at);
+  return SUGGEST_SRC.slice(at, end < 0 ? at + 40000 : end);
+}
+/* basis-versions' `appendVersion` (R28), the method the write region hands the version to: it composes the rows. */
+function appendVersionBody() {
+  const at = BV_SRC.indexOf("\n  appendVersion({");
+  if (at < 0) return "";
+  const end = BV_SRC.indexOf("\n  /* ====", at + 1);
+  return BV_SRC.slice(at, end < 0 ? at + 8000 : end);
 }
 /* THE SPAN THAT COMPOSES THE VERSION ROW, isolated for §4's fence walk — D-235.
    The fence's rule is about the row this endpoint WRITES, and the write is one
    declared region inside a method that is now several screens longer than it. */
 function suggestWriteRegion() {
-  const from = STORE_SRC.indexOf("DEC-49 REGION is-suggest-write");
-  const to = STORE_SRC.indexOf("END DEC-49 REGION is-suggest-write", from);
-  return from < 0 || to < from ? "" : STORE_SRC.slice(from, to);
+  const from = SUGGEST_SRC.indexOf("DEC-49 REGION is-suggest-write");
+  const to = SUGGEST_SRC.indexOf("END DEC-49 REGION is-suggest-write", from);
+  return from < 0 || to < from ? "" : SUGGEST_SRC.slice(from, to);
 }
 
 try {
@@ -445,17 +464,28 @@ const read = async () => (await GET(`op=basisversions&token=${RUTH}&id=${INQ}&li
    than taken on trust: every `#appendFmRows` call in the method is inside that
    region, so a second row composition outside it cannot slip past the narrowed
    walk. Loosening the span without that pin would have been the weakening it
-   looks like. */
+   looks like.
+   RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 J2.5 and CHANGE B6): the rows are no longer composed in
+   this endpoint. Its write region hands the version to basis-versions' `appendVersion` (R28), which writes the literal
+   `state: "suggested"` itself and never reads a caller's `state`. So the fence is now asserted in the two places it
+   lives: the write region hands over NO `state` at all (so it cannot hand over one other than `suggested`), and
+   every row composition is the ONE `appendVersion` call inside that region, where the literal is written and the
+   caller's `state` key is skipped. Old pins → new: `state: "suggested"` in the region → in `appendVersion`'s body
+   (twice, both of its row shapes); `#appendFmRows(` 3 in the method and 3 in the region → `appendVersion(` 1 and 1,
+   and `appendFmRows(` 3 in `appendVersion` and 0 in this method. */
 t("THE SOLE OUTPUT IS A LITERAL: the endpoint writes `state: \"suggested\"` and the write region "
 + "carries no other state assignment on the version row it composes — §4's fence expressed as the "
 + "absence of a variable rather than as a check on one — AND every row this method composes is inside "
 + "that region, so the narrowed walk cannot be escaped by composing a row somewhere else",
-  [/state: "suggested"/.test(suggestWriteRegion()),
-   (decomment(suggestWriteRegion()).match(/\bstate:(?!\s*"suggested")/g) || []).length,
+  [(decomment(appendVersionBody()).match(/state: "suggested"/g) || []).length,
+   /if \(k === "state" \|\| k === "hidden"/.test(appendVersionBody()),
+   (decomment(suggestWriteRegion()).match(/\bstate:/g) || []).length,
    suggestWriteRegion().length > 1500,
-   (suggestBlock().match(/#appendFmRows\(/g) || []).length,
-   (suggestWriteRegion().match(/#appendFmRows\(/g) || []).length],
-  [true, 0, true, 3, 3]);
+   (decomment(suggestBlock()).match(/\bappendVersion\(/g) || []).length,
+   (decomment(suggestWriteRegion()).match(/\bappendVersion\(/g) || []).length,
+   (decomment(suggestBlock()).match(/appendFmRows\(/g) || []).length,
+   (decomment(appendVersionBody()).match(/\bappendFmRows\(/g) || []).length],
+  [2, true, 0, true, 1, 1, 0, 3]);
 
 /* ====================================================================== 2
  * THE SIX PRE-WRITE CHECKS, EACH DRIVEN, EACH BY ITS OWN C-NUMBER.
@@ -1338,8 +1368,8 @@ console.log("\n--- 7. instrument guards: the source walk is non-trivial and the 
     ["is-suggest-checks", "is-suggest-shape", "is-suggest-write"]);
   t("and every one of the three markers is OPENED and CLOSED in the source",
     ["is-suggest-shape", "is-suggest-checks", "is-suggest-write"].map((r) =>
-      [(STORE_SRC.match(new RegExp(`DEC-49 REGION ${r}\\b`, "g")) || []).length,
-       (STORE_SRC.match(new RegExp(`END DEC-49 REGION ${r}\\b`, "g")) || []).length]),
+      [(SUGGEST_SRC.match(new RegExp(`DEC-49 REGION ${r}\\b`, "g")) || []).length,
+       (SUGGEST_SRC.match(new RegExp(`END DEC-49 REGION ${r}\\b`, "g")) || []).length]),
     [[2, 1], [2, 1], [2, 1]]);
   /* ONE WRITE PATH, PINNED. PL-1 pinned the version tables at one write site
      each inside `promote`; this item must not have added a second. */
@@ -1350,34 +1380,44 @@ console.log("\n--- 7. instrument guards: the source walk is non-trivial and the 
      for the field somebody adds tomorrow, which is the only kind of coverage
      that lasts. Every value the write quotes must come from `persisted` — `pv`,
      or the `g`/`l` bound over its grounds and legs — and `args` must not appear
-     inside the write region at all. */
+     inside the write region at all.
+     RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 J2.5, CHANGE B6): the region no longer quotes —
+     it hands `persisted`'s values to basis-versions' `appendVersion` (R28), which quotes them, so the old reader
+     (`q(<root>.`) matches nothing. The question is unchanged and asked of what the region now does: the ROOT of every
+     member access in it is pinned as a TOTALITY (the normaliser's `persisted`, its `pv` and the `g` bound over its
+     grounds; `this` for the provider, `promoted` for its receipt, `Object` for the leg filter), so `args.` — or any
+     root nobody anticipated — fails; `pv.`/`g.` reads stand in for the old `q(` count, same floor. */
   {
-    const from = STORE_SRC.indexOf("DEC-49 REGION is-suggest-write");
-    const to = STORE_SRC.indexOf("END DEC-49 REGION is-suggest-write", from);
-    const region = decomment(STORE_SRC.slice(from, to));
-    const quoted = [...region.matchAll(/\bq\(([A-Za-z_$][\w$]*)\./g)].map((m) => m[1]);
+    const from = SUGGEST_SRC.indexOf("DEC-49 REGION is-suggest-write");
+    const to = SUGGEST_SRC.indexOf("END DEC-49 REGION is-suggest-write", from);
+    const region = decomment(SUGGEST_SRC.slice(from, to));
+    const rootsIn = (src) => [...new Set([...src.matchAll(/(?<![.\w$])([A-Za-z_$][\w$]*)\.(?=[A-Za-z_$])/g)]
+      .map((m) => m[1]))].sort();
+    const quoted = [...region.matchAll(/(?<![.\w$])(pv|g)\.[A-Za-z_$]/g)].map((m) => m[1]);
+    console.log(`      write-region roots: ${JSON.stringify(rootsIn(region))}`);
     t("REC-75: EVERY VALUE THE WRITE QUOTES COMES FROM THE ONE NORMALISER — `args` does not appear in "
     + "the write region at all, so a field added to this endpoint tomorrow cannot be composed from raw "
     + "args on one side of the duplicate gate and from persisted values on the other, which is exactly "
     + "how D-234 arose. The corpus is PRINTED so a narrowing that read nothing cannot pass",
       [from > 0 && to > from, region.length > 1500, quoted.length >= 15,
-       [...new Set(quoted)].sort(), (region.match(/\bargs\./g) || []).length],
-      [true, true, true, ["g", "l", "pv"], 0]);
+       rootsIn(region), (region.match(/\bargs\./g) || []).length],
+      [true, true, true, ["Object", "g", "persisted", "promoted", "pv", "this"], 0]);
     /* THE GUARD RUNS OVER A SYNTHETIC CORPUS AND NEVER OVER THE LIVE REGION, and
        that is a correction made by RUNNING THE CONTROL rather than by writing
        it. Written first as "the live region plus one planted reference", it went
        RED under `suggest.control.mjs`'s (D-234e) arm — which plants exactly such
        a reference — so the guard was measuring the subject instead of the
        reader. A guard coupled to the thing it guards is not a guard. */
-    const SYNTH = `const vRow = [\`  - name: \${q(pv.name)}\`, \`  - d: \${q(args.description)}\`];`;
+    const SYNTH = `appendVersion({ version: { name: pv.name, description: args.description } });`;
     t("WALK GUARD for that arm: the same reader over a FIXED synthetic span that MUST trip it does trip "
     + "— a walk that took an empty span would report zero offending references and congratulate itself, "
     + "which is the shape three instruments in this repository took in one week",
-      [(SYNTH.match(/\bargs\./g) || []).length,
-       [...new Set([...SYNTH.matchAll(/\bq\(([A-Za-z_$][\w$]*)\./g)].map((m) => m[1]))].sort()],
+      [(SYNTH.match(/\bargs\./g) || []).length, rootsIn(SYNTH)],
       [1, ["args", "pv"]]);
   }
-  const writes = (STORE_SRC.match(/(INSERT|REPLACE|UPDATE)\s+(OR\s+\w+\s+)?(INTO\s+)?inquiry_basis_versions?\b/g) || []).length;
+  /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): the one INSERT left `store.mjs` with basis-versions' extraction
+     (`src/basis-versions/index.mjs`), so the count is over the whole plane's source — still exactly ONE. */
+  const writes = (PLANE_SRC.match(/(INSERT|REPLACE|UPDATE)\s+(OR\s+\w+\s+)?(INTO\s+)?inquiry_basis_versions?\b/g) || []).length;
   t("ONE WRITE SITE STILL: the suggest endpoint appends to `bundle.md` and re-promotes, and holds no "
   + "INSERT into either version table — PL-1's pin, re-asserted from the other side",
     [writes, /INSERT INTO inquiry_basis_versions/.test(suggestBlock())], [1, false]);
@@ -1720,9 +1760,9 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
       .replace(/(^|,)\s*[\w$]+\s*:/gm, "$1")
       .matchAll(/(?:^|[^.\w$])([A-Za-z_$][\w$]*)/g)].map((m) => m[1]))]
       .filter((n) => !["null", "true", "false", "const", "fromRecord"].includes(n)).sort();
-    const at = STORE_SRC.indexOf("const fromRecord = {");
-    const to = STORE_SRC.indexOf("};", at);
-    const group = at < 0 ? "" : decomment(STORE_SRC.slice(at, to));
+    const at = SUGGEST_SRC.indexOf("const fromRecord = {");
+    const to = SUGGEST_SRC.indexOf("};", at);
+    const group = at < 0 ? "" : decomment(SUGGEST_SRC.slice(at, to));
     const roots = rootsOf(group);
     console.log(`      record-group roots: ${JSON.stringify(roots)}`);
     t("D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK AND NOTHING ELSE — pinned over the "
@@ -1731,7 +1771,11 @@ console.log("\n--- 8. D-235: the answer names the source of every field it publi
     + "the roots the group draws on rather than as a list of forbidden names, so a value taken from "
     + "somewhere nobody anticipated fails too",
       [at > 0 && to > at, group.length > 200, roots],
-      [true, true, ["b", "promoted", "rc", "recorded"]]);
+      /* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 J2.5): in `src/run-productions/index.mjs` the
+         group reads `legs`, `count` and `grounds` off `recorded` itself, so the store's `rc` (the read-back's
+         collections) left the set, and `ground_count` guards with `Array.isArray`, a builtin and not a value source.
+         Nothing outside the read-back, the promotion's receipt and the gated row `b` joined it. */
+      [true, true, ["Array", "b", "promoted", "recorded"]]);
     const SYNTH = `const fromRecord = {\n  legs: rc.legs,\n  version: name,\n  grounds: declaredLabels,\n};`;
     t("WALK GUARD for that arm: the same reader over a FIXED synthetic group that MUST trip it does "
     + "trip, AND it trips on the identifier the banned-list spelling of this arm could not see — a walk "

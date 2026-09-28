@@ -80,8 +80,13 @@ const ROOT = join(DIR, "..");
 const INDEX = join(ROOT, "src", "index.mjs");
 const STORE = join(ROOT, "src", "store.mjs");
 const SUITE = join(DIR, "refusal-wire.test.mjs");
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): MACHINE_CANNOT_CONCLUDE left the store with basis-versions (`conclude`,
+   `src/basis-versions/index.mjs`) and MACHINE_CANNOT_GROUND with inquiry (`groundInquiry`, `src/inquiry/index.mjs`);
+   arms (c) and (g) arm the first there and arm (k) the second, making the same edits. */
+const BV = join(ROOT, "src", "basis-versions", "index.mjs");
+const INQ = join(ROOT, "src", "inquiry", "index.mjs");
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const MIN_BYTES = { [INDEX]: 100000, [STORE]: 500000, [SUITE]: 10000 };
+const MIN_BYTES = { [INDEX]: 100000, [STORE]: 500000, [SUITE]: 10000, [BV]: 50000, [INQ]: 50000 };
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const bytes = (p) => readFileSync(p).length;
@@ -90,7 +95,7 @@ const bytes = (p) => readFileSync(p).length;
    compared against it as well, so an arm that restores from a copy taken AFTER
    a previous arm leaked cannot pass unnoticed. */
 const OF_RECORD = {};
-for (const p of [INDEX, STORE, SUITE]) {
+for (const p of [INDEX, STORE, SUITE, BV, INQ]) {
   const dst = `${p}.d262-of-record`;
   copyFileSync(p, dst);
   OF_RECORD[p] = { sha: sha(p), bytes: bytes(p), copy: dst };
@@ -183,7 +188,7 @@ arm("b", "the decoration removed from json() — src/index.mjs (THE SUBJECT)", I
    a presence check, and that the decoration FILLS rather than OVERWRITES. A
    decoration that overwrote would silently correct this into agreement and the
    suite would stay green, which is the arm coming back GREEN. */
-arm("c", "a real site ships a translation the catalogue does not hold — src/store.mjs (THE SUBJECT)", STORE,
+arm("c", "a real site ships a translation the catalogue does not hold — src/basis-versions/index.mjs (THE SUBJECT)", BV,
   (s) => s.replace('return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",\n               detail:',
                    'return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",\n               translation: "Computers are not allowed to do that.",\n               detail:'),
   "RED");
@@ -221,16 +226,16 @@ arm("f", "one fence dropped out of the harvest — test/refusal-wire.test.mjs (T
    unlike anything REC-64 wrote, and an extra key the grader has never seen.
    IT MUST PASS. A grader that reports correct work as bare is worse than no
    grader, because it teaches the next author to route around it. */
-arm("g", "a correct refusal in an UNANTICIPATED spelling — src/store.mjs (OVER-STRICTNESS)", STORE,
+arm("g", "a correct refusal in an UNANTICIPATED spelling — src/basis-versions/index.mjs (OVER-STRICTNESS)", BV,
   (s) => {
     /* The row is IMPORTED rather than hand-copied, so this arm cannot pass by
        agreeing with a stale copy of a sentence — the equality has to cost
        something or it is not evidence. `MACHINE_FENCE_CHECKS` is not among
        store.mjs's imports today, so the arm adds it; both edits are ONE arm
        because they are one change. */
-    const withImport = s.replace('import { ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";',
-      'import { ROUTE_MARK_CHECKS } from "../checks/bio-checks.mjs";\n'
-    + 'import { MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";');
+    const withImport = s.replace('CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS, ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";',
+      'CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS, ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";\n'
+    + 'import { MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";');
     if (withImport === s) throw new Error("ARM g NEVER ARMED — the import anchor matched zero times");
     return withImport.replace('return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",\n               detail:',
                    'return { ok: false, code: "MACHINE_CANNOT_CONCLUDE", check: "C-32.2",\n'
@@ -315,7 +320,7 @@ arm("j", "MACHINE_CANNOT_REVIEW's mint removed from its site — src/store.mjs (
    wherever they stand, so a code that moved into a variable is still named, and
    an instrument that demanded one syntax would be a check the next author
    routes around. */
-arm("k", "MACHINE_CANNOT_GROUND minted through a VARIABLE — src/store.mjs (OVER-STRICTNESS)", STORE,
+arm("k", "MACHINE_CANNOT_GROUND minted through a VARIABLE — src/inquiry/index.mjs (OVER-STRICTNESS)", INQ,
   (s) => {
     const hoisted = s.replace('    /* DEC-49 REGION is-machine-ground \u2014 REC-64/C-32.8. The fence alone. */',
       '    const groundFenceCode = "MACHINE_CANNOT_GROUND";   /* D-494 arm k: the code in a variable */\n'
@@ -370,12 +375,12 @@ for (const r of results) {
   console.log(`  ARM ${r.id}  declared ${r.declared.padEnd(5)}  actual ${r.actual.padEnd(8)}  `
             + `${r.pass} pass / ${r.fail} fail  ${asDeclared ? "as declared" : "*** NOT AS DECLARED ***"}`);
 }
-for (const p of [INDEX, STORE, SUITE]) {
+for (const p of [INDEX, STORE, SUITE, BV, INQ]) {
   const back = sha(p);
   console.log(`  final ${p.replace(ROOT + "/", "").padEnd(28)} ${bytes(p)} bytes · sha ${back.slice(0, 16)}… · `
             + `${back === OF_RECORD[p].sha ? "IDENTICAL to pristine-of-record" : "*** DRIFTED ***"}`);
   execFileSync("cmp", ["-s", p, OF_RECORD[p].copy]);
 }
-for (const p of [INDEX, STORE, SUITE]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
+for (const p of [INDEX, STORE, SUITE, BV, INQ]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
 console.log(`\n${wrong === 0 ? "ALL THIRTEEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
 process.exit(0);
