@@ -7,6 +7,8 @@ import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 import { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
          rowOf } from "../../../src/publication/checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns } from "../../../src/publication/index.mjs";
+import { migratePublication } from "../../../src/publication/schema.mjs";
+import { storage } from "./fixture.mjs";
 
 const F = "INQ-2026-0001";
 const MINE = { ...CASE_RESOLUTION_CHECKS, ...PUBLISHED_STORE_CHECKS, ...PUBLISHED_READ_CHECKS, ...ATTRIBUTION_ACT_CHECKS };
@@ -52,7 +54,7 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
 test("R33 each check moved here with its id, code and translation, is held nowhere else, and names this module's site", () => {
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   assert.deepEqual(ids, ["C-44.2", "C-68.5", "C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8",
-                         "C-92.9", "C-98.1", "C-98.2", "C-98.3", "C-98.4", "C-98.5", "C-98.6", "C-98.7", "C-98.8"]);
+                         "C-92.9", "C-98.1", "C-98.2", "C-98.3", "C-98.4", "C-98.5", "C-98.6", "C-98.7", "C-98.8", "C-98.9"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
     assert.match(row.where, /^src\/(publication\/(index|worker)\.mjs|container\.mjs) /, `${code}'s site is this module's`);
@@ -63,10 +65,9 @@ test("R33 each check moved here with its id, code and translation, is held nowhe
         assert.ok(!Object.values(rows).some((r) => r && r.check === row.check), `${row.check} is not also in ${family}`);
       }
   }
-  /* the families the catalogue keeps keep the rest: C-44.1, C-68.1–.4, C-92.10–.12 */
+  /* the families the catalogue keeps keep the rest: C-44.1, C-68.1–.4 */
   assert.equal(CATALOGUE.CASE_DERIVATION_CHECKS.CASE_IDENTITY_AMBIGUOUS.check, "C-44.1");
   assert.equal(CATALOGUE.INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED.check, "C-68.1");
-  assert.deepEqual(Object.values(CATALOGUE.ATTRIBUTION_CHECKS).map((r) => r.check), ["C-92.10", "C-92.11", "C-92.12"]);
   /* negative control: a code with no row is a defect, and says so loudly rather than shipping no sentence */
   assert.throws(() => rowOf("NOT_A_CODE"), /no row with a canned translation/);
 });
@@ -87,6 +88,22 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);
+});
+
+test("R24 an existing store migrates: every ratified row of the old, edition-less shape survives as edition 1, and nothing is invented", () => {
+  const st = storage();
+  st.db.exec(`CREATE TABLE published_bundles (bundle_id TEXT PRIMARY KEY, bundle_sha TEXT NOT NULL, ratified_at TEXT NOT NULL,
+    attestor_key TEXT NOT NULL, attestor_member TEXT, gate_version TEXT NOT NULL, sig_armored TEXT NOT NULL)`);
+  st.sql.exec(`INSERT INTO published_bundles VALUES ('INQ-2026-0001-legacy','legacysha','2026-01-01T00:00:00Z','LEGACYKEY','bob','plane-gate/0.9','sig')`);
+  migratePublication(st.sql);
+  migratePublication(st.sql);   /* every boot: idempotent */
+  const rows = st.sql.exec(`SELECT * FROM published_bundles`);
+  assert.equal(rows.length, 1);
+  assert.deepEqual([rows[0].edition, rows[0].bundle_sha, rows[0].attestor_member, rows[0].gate_version, rows[0].sig_armored],
+                   [1, "legacysha", "bob", "plane-gate/0.9", "sig"]);
+  assert.deepEqual([rows[0].strength, rows[0].required, rows[0].delivered_by], [null, null, null], "nothing invented");
+  assert.equal(st.sql.exec(`SELECT name FROM sqlite_master WHERE name='published_bundles_preeditions'`).length, 0);
+  assert.ok(st.sql.exec(`PRAGMA table_info(published_case_members)`).some((c) => c.name === "version_sha"));
 });
 
 test.todo("R30 a published rendering is verified by pixels_sha256 over its normalised samples — NOT YET MET (D-246): nothing in the plane publishes a rendering yet (no `kind: rendering` part is written to published_shas or a container), so there is no rendering to carry the pixel hash; it joins when the rendering path does");

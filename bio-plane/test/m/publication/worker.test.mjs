@@ -155,7 +155,8 @@ test("R13 a ratified case document's hash is served from its signed text, re-has
   w.st.sql.exec(`UPDATE case_documents SET text=text || 'x'`);
   const bad = await call(w, env, "publishedbytes", { sha256: doc.doc_sha });
   assert.equal(bad.status, 500);
-  assert.equal((await bad.json()).reason, "CASE_DOCUMENT_UNSERVABLE");
+  const bb = await bad.json();
+  assert.deepEqual([bb.reason, bb.check, bb.translation], ["CASE_DOCUMENT_UNSERVABLE", "C-98.9", rowOf("CASE_DOCUMENT_UNSERVABLE").translation]);
 });
 
 test("R13 publishedcase renders each finding from its published bytes, never the working record, and states a missing body by its code", async () => {

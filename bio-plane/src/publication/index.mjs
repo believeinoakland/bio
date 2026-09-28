@@ -38,8 +38,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { observerRef } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
-import { parseFrontmatter, isMachineIdentity, createSha256, sectionText as caseSectionText,
-         REVIEW_COPY_CHECKS } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, isMachineIdentity, createSha256, sectionText as caseSectionText } from "../../checks/bio-checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf, ATTRIBUTION_ACT_CHECKS, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresV4Disclosures } from "./checks.mjs";
@@ -74,21 +73,17 @@ const fmSafe = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g,
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const shaOf = (text) => createSha256().update(new TextEncoder().encode(String(text))).hex();
 
-/* R23 (K240): the doors a review provider gives, and the answer each gives when no module has registered one: no draft
-   reads, no grant admits, no identity or edition is stated, and the dead answer is C-87.1's bytes (the review copy's
-   one "no such review copy" answer), so a door with no provider answers exactly as a revoked grant does. */
+/* R23 (K240, K244): the doors a review provider gives, and the answer each gives when no module has registered one: no
+   draft reads, no grant admits, no identity or edition is stated, and the dead answer is a bare NO_REVIEW_COPY refusal.
+   It carries no catalogue row: review holds C-87 and is not a use of this module, and this answers only while no
+   module has filled R23. */
 const REVIEW_DOORS = Object.freeze(["draftForMember", "draftIdentity", "caseIdentitySentence", "statedEdition",
                                     "liveGrant", "grantAdmitsCaseEdition", "deadAnswer"]);
 const NO_REVIEW_PROVIDER = Object.freeze({
   registered: false, module: null,
   draftForMember: () => null, draftIdentity: () => null, caseIdentitySentence: () => null, statedEdition: () => null,
   liveGrant: () => null, grantAdmitsCaseEdition: () => false,
-  deadAnswer: () => ({ ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY",
-    check: REVIEW_COPY_CHECKS.NO_REVIEW_COPY.check, translation: REVIEW_COPY_CHECKS.NO_REVIEW_COPY.translation,
-    detail: "no review copy answers to this request. A review copy is read through the grant that "
-          + "was issued for it, or by a member with standing in the project that produced it; a "
-          + "grant that was withdrawn, or whose draft has moved to another edition, answers exactly "
-          + "as one that was never issued." }),
+  deadAnswer: () => ({ ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY" }),
   detail: "no module has registered the review provider, so no grant admits and no draft is read through it",
 });
 
@@ -278,7 +273,7 @@ export class Publication {
   }
 
   /** R23: the registered review provider, or the answer that none is: no draft reads, no grant admits, no identity is
-   *  stated, and the dead answer is C-87.1's. */
+   *  stated, and the dead answer is a bare NO_REVIEW_COPY. */
   reviewProvider() {
     return this.#review ? { registered: true, ...this.#review } : NO_REVIEW_PROVIDER;
   }
