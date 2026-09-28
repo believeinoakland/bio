@@ -26,3 +26,7 @@ Read whole: `roles/JOB.md`; `build/requirements/promotion.md`; the public parts 
 - `node --test bio-plane/test/m/` (every module using promotion's services): tests 2336, pass 2308, fail 2, todo 26; the two failures are the citation and connections tests above, identical on the base.
 - `node --test bio-plane/test/d470-catalog-census.test.mjs`: A3 and A9 red, as they must be until legacy-tests re-pins to 1.39.0 (they were red under 1.38.0 too).
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture`: 16 product files, 55 relative imports; 0 failures. `coverage`: 49 of 49 live requirement ids named by a test; 0 failures. `ownership`: re-run after the N208 commit.
+
+## J1 · REPORT
+
+N240, N254 and N202's share are applied and pushed (8926590d63): CATALOG_VERSION 1.39.0 (count 397, digest e1c688c5…, source 9927c1ad…, from the d470 print), stepDeclared and caseCatalogueFailed declared (C-102.8 carried), listenerRefusal (R49) with my own registrations converged on it. Module tests 67 pass, 0 fail, 1 todo; the four checks pass. N208 is the one entry left: membership has not merged into tranche/T9 and does not yet export noSuchProject, so importing it would break promotion's load. Please send a CHANGE when membership merges; I apply N208 then and post COMPLETE. Also for you: bio-plane/dist/bio-plane.bundled.mjs is stale (my inputs changed); citation's invariants R5 test and connections' factory R24 test are red on tranche/T9 before my change (details in my record).
