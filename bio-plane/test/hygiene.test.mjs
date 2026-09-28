@@ -2741,7 +2741,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 66)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 68)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2775,7 +2775,13 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        (`66 walking file(s)`) against 62, diffed by name: no departure, four arrivals — `airun.test.mjs`,
        `caselifecycle.test.mjs`, `casepin.test.mjs` and `multicase.test.mjs`, each now walking `src/` for code T8 moved
        into its modules (named above). `t8-extracted.mjs` walks nothing (a module map only). */
-    census.length >= 66, true);
+    /* MOVED 66 -> 68 on 2026-09-28 (legacy-tests T9), from the figure this suite PRINTED on `job/T9/legacy-tests`
+       (`68 walking file(s)`) against T8's close (ebdc344d57, 66), diffed by name: no departure, two arrivals — the
+       civicos-ui helper `plane-refusal-wire.mjs` (it now walks `bio-plane/src/` for the `requiredArgument` call sites
+       that left `index.mjs`) and `surface-registry.test.mjs` (ARM V now reads refusal `detail:` strings from all of
+       `src/`). Both are GUARDED, not named: each asks `scripts/provenance.mjs`, reports every file it read, and floors
+       its reach over the commit at HEAD (177 module files and 7 call sites; 178 source files), from its own print. */
+    census.length >= 68, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

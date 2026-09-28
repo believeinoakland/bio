@@ -40,6 +40,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+/* GUARDED 2026-09-28 (legacy-tests T9): the walk of `bio-plane/src/` below (the call sites that left `index.mjs`) asks
+   the estate's one provenance check, as every guarded walk in `hygiene.test.mjs`'s class census does, and floors its
+   reach on the figures counted over the commit at HEAD (D-257), so an empty or narrowed walk THROWS at import. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLANE = path.join(HERE, "..", "..", "bio-plane");
@@ -134,6 +138,36 @@ const MODULE_SRCS = (() => {
   walk(path.join(PLANE, "src"));
   return out;
 })();
+/* GUARDED 2026-09-28 (legacy-tests T9): WHAT THE WALK REACHED, AND HOW MUCH OF IT ANOTHER CHECKOUT REPRODUCES. Every
+   file it read is handed to the one provenance report (a phantom module deposited under `src/` is named there, never
+   counted silently), and the two figures `assertDerived` floors — the module files read and the `requiredArgument("…"`
+   call sites found in them — are counted over the files in the commit at HEAD. When git cannot answer, every file
+   counts and the report says UNVERIFIED (provenance.mjs rule 4), never clean. The floors are the figures this walk
+   PRINTED on `job/T9/legacy-tests` (177 module files, 7 call sites: capture/doorbell.mjs ×2, capture/ops.mjs,
+   extraction/ops.mjs, monitoring/index.mjs, publication/worker.mjs ×2); a legitimate drop is a decision, made here. */
+const MODULE_WALK_FLOOR = { files: 177, sites: 7 };
+const REPO = path.join(PLANE, "..");
+const PROV = readGitProvenance(REPO);
+const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, abs));
+const sitesIn = (src) => (src.match(/requiredArgument\("/g) || []).length;
+const MODULE_REPRO = MODULE_SRCS.filter(([f]) => inCommit(f));
+const MODULE_WALK = {
+  files: MODULE_SRCS.length, filesRepro: MODULE_REPRO.length,
+  sites: MODULE_SRCS.reduce((n, [, src]) => n + sitesIn(src), 0),
+  sitesRepro: MODULE_REPRO.reduce((n, [, src]) => n + sitesIn(src), 0),
+  report: reportProvenance({
+    prov: PROV,
+    items: MODULE_SRCS.map(([f, src]) => ({ path: repoPath(REPO, f), what: path.relative(PLANE, f),
+      counted: `searched for requiredArgument call sites (${sitesIn(src)} found)` })),
+    instrument: "plane-refusal-wire's module walk",
+    corpus: `bio-plane/src/: ${MODULE_SRCS.length} module file(s) walked, ${MODULE_REPRO.length} of them in the commit, `
+      + `${MODULE_REPRO.reduce((n, [, src]) => n + sitesIn(src), 0)} requiredArgument call site(s) in those`
+      + ` · floors ${MODULE_WALK_FLOOR.files} / ${MODULE_WALK_FLOOR.sites}`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "module files walked", contaminated: MODULE_SRCS.length, reproducible: MODULE_REPRO.length, source: "files" },
+    ],
+  }),
+};
 function callTextFor(op){
   const needle = `requiredArgument("${op}"`;
   if(INDEX_SRC.indexOf(needle) >= 0) return callTextIn(INDEX_SRC, needle, op);
@@ -216,6 +250,12 @@ export function assertDerived(){
   if(!REQUIRED_ARGUMENT_CODE) bad.push("REQUIRED_ARGUMENT code not found inside requiredArgument()");
   if(!REQUIRED_ARGUMENT_CANNED || REQUIRED_ARGUMENT_CANNED.translation.length < 40)
     bad.push(`no *_CHECKS family holds a canned translation for ${REQUIRED_ARGUMENT_CODE}`);
+  /* GUARDED 2026-09-28 (legacy-tests T9): the module walk's REACH, over the commit at HEAD (see MODULE_WALK). A walk
+     that read nothing would find no call site and hand a consumer a null envelope for an op whose site moved there. */
+  if(MODULE_WALK.filesRepro < MODULE_WALK_FLOOR.files)
+    bad.push(`the walk of bio-plane/src/ read ${MODULE_WALK.filesRepro} module file(s) in the commit, floor ${MODULE_WALK_FLOOR.files}`);
+  if(MODULE_WALK.sitesRepro < MODULE_WALK_FLOOR.sites)
+    bad.push(`the walk of bio-plane/src/ found ${MODULE_WALK.sitesRepro} requiredArgument call site(s) in committed module files, floor ${MODULE_WALK_FLOOR.sites}`);
   if(bad.length)
     throw new Error("plane-refusal-wire: the plane's refusal wire could not be DERIVED, so no fixture "
       + "built from it would mean anything (DEC-49 / UI-100):\n  - " + bad.join("\n  - "));

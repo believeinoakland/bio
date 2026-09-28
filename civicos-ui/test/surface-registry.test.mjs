@@ -185,6 +185,9 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import fs from "fs";
 import vm from "vm";
 import { ACTS, ACT_IDS, CAPTURE_ACTS } from "../../bio-plane/src/affordances.mjs";
+/* GUARDED 2026-09-28 (legacy-tests T9): ARM V's walk of `bio-plane/src/` asks the estate's one provenance check, as every
+   guarded walk in `hygiene.test.mjs`'s class census does, and its floors are counted over the commit at HEAD (D-257). */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 /* ============================================================
    THE COLLECTOR — UI-49's RIDER, AND IT IS A REAL DEFECT BEING FIXED RATHER
@@ -1379,9 +1382,37 @@ await section("ARM V · refusal text is surfaced, never copied", () => {
   const walkSrc = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap(e =>
     e.isDirectory() ? walkSrc(d + "/" + e.name) : (e.name.endsWith(".mjs") ? [d + "/" + e.name] : []));
   const PLANE_SRC_DIR = new URL("../../bio-plane/src", import.meta.url).pathname;
-  const planeAll = walkSrc(PLANE_SRC_DIR).map(f => fs.readFileSync(f, "utf8")).join("\n");
-  const planeDetails = [...new Set([...planeAll.matchAll(/detail:\s*"([^"]{50,})"/g)].map(m => m[1]))];
-  ok(planeDetails.length >= 20, `ARM V0: ${planeDetails.length} long detail strings read from the plane, floor 20 — an empty corpus would make V1 vacuous`);
+  /* GUARDED 2026-09-28 (legacy-tests T9): every file the walk read is handed to the one provenance report, and the
+     floors are the figures over the files IN THE COMMIT AT HEAD (D-257), so a phantom module deposited under `src/` is
+     named and can raise no floor. V1 still reads the WHOLE working tree: a wider corpus only widens what it forbids
+     app.html to copy (a ceiling at zero, the safe direction). The reach floor is the figure this walk PRINTED on
+     `job/T9/legacy-tests` (178 files: `index.mjs` and every module file); a legitimate drop is a decision, made here.
+     When git cannot answer, every file counts and the report says UNVERIFIED, never clean (provenance.mjs rule 4). */
+  const SRC_REACH_FLOOR = 178;
+  const REPO = new URL("../../", import.meta.url).pathname;
+  const PROV = readGitProvenance(REPO);
+  const inCommit = (f) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, f));
+  const detailsOf = (text) => [...new Set([...text.matchAll(/detail:\s*"([^"]{50,})"/g)].map(m => m[1]))];
+  const srcFiles = walkSrc(PLANE_SRC_DIR).map(f => ({ f, text: fs.readFileSync(f, "utf8") }));
+  const srcRepro = srcFiles.filter(x => inCommit(x.f));
+  const planeAll = srcFiles.map(x => x.text).join("\n");
+  const planeDetails = detailsOf(planeAll);
+  const reproDetails = detailsOf(srcRepro.map(x => x.text).join("\n"));
+  const PROV_REPORT = reportProvenance({
+    prov: PROV,
+    items: srcFiles.map(x => ({ path: repoPath(REPO, x.f), what: repoPath(REPO, x.f),
+      counted: "read for the plane's long `detail:` strings (ARM V)" })),
+    instrument: "ARM V's walk of the plane's source",
+    corpus: `bio-plane/src/: ${srcFiles.length} file(s) walked, ${srcRepro.length} of them in the commit · `
+      + `${planeDetails.length} long detail string(s) over the working tree, ${reproDetails.length} over the commit`
+      + ` · floors ${SRC_REACH_FLOOR} / 20`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "source files walked", contaminated: srcFiles.length, reproducible: srcRepro.length, source: "files" },
+    ],
+  });
+  ok(srcRepro.length >= SRC_REACH_FLOOR && PROV_REPORT.accounted === srcFiles.length,
+     `ARM V0a: the walk READ the plane's source — ${srcRepro.length} of ${srcFiles.length} file(s) in the commit, floor ${SRC_REACH_FLOOR}, every one of them classified against the commit (${PROV_REPORT.accounted} accounted${PROV_REPORT.verified ? "" : ", UNVERIFIED"})`);
+  ok(reproDetails.length >= 20, `ARM V0: ${reproDetails.length} long detail strings read from the plane's committed source (${planeDetails.length} over the working tree), floor 20 — an empty corpus would make V1 vacuous`);
   const copied = planeDetails.filter(d => app.includes(d));
   ok(copied.length === 0,
      `ARM V1: ${copied.length} of the plane's own refusal explanations are COPIED into app.html: ${copied.slice(0,2).join(" | ")}`);
