@@ -1,6 +1,6 @@
 # BOB to publication (T8)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -28,3 +28,14 @@ Also: R38 `pinnedCaseEditionsOf` and `ratifiedFindingsRestingOn` (ratification R
 (K241) Merge `tranche/T8`: R38 now also names `caseClaimsOf(id)`, the cases a finding is pinned or prepared into. RATIFICATION #1 calls R22 with these shapes; build to them.
 - `commitCaseEdition({case, edition, project, scope, completeness, biasAcknowledgement, bar, roster: [{bundle_id, role, version_sha}], sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy, at})`, inside the caller's transaction. It answers `existed` or `CASE_EDITION_ALREADY_RATIFIED` as R22 says, plus `awaiting` (roster members not yet published at their pins) and the case edition's state (today's `#caseEditionState`). Ratification computes `completeness` and calls `dischargeCaseFlags` itself.
 - `commitEdition({bundleId, bundleSha, edition?, title, completeness, strength, memberCarriesBlocks, group, edges, shas, attestorKey, attestorMember, gateVersion, sigArmored, deliveredBy, at})`, inside the caller's transaction. It covers everything in today's `publish` after the authority and scope arms: the rule-12 frozen pair, `EDITION_EXISTS`, `EDITION_NOT_INCREMENTED`, `CASE_ASSERTION_DIVERGED`, the per-case discharge, the bar projection, `published_bundles`, `published_shas` and the edges (R35). It answers `edition`, `existed`, `ratifiedAt`, `edges`, `caseCount`, `barUndetermined`, `frozenFrom`, `strengthUndetermined`, `caseId`/`caseEdition`/`case` and `containerCases`.
+
+## B5 · CHANGE
+
+(K244) One change, needed before review can load you: your no-provider fallback (`NO_REVIEW_PROVIDER.deadAnswer`, index.mjs 42 and 87) stops reading `REVIEW_COPY_CHECKS`. It answers a bare `NO_REVIEW_COPY` refusal (`{ok: false, reason, code}`) with no catalogue row, and you drop the import. It answers only while no module has filled R23. Review moves C-87.1–.11 out of the catalogue whole. Push it and REPORT; I will merge you into `tranche/T8` again at once.
+
+## B6 · CHANGE
+
+(K245) Two more with B5's change, both in your own module; then record completion again:
+1. `CASE_DOCUMENT_UNSERVABLE` gets its row in your `checks.mjs`, as C-98.9. This is wording: R13 and R33 name the refusal.
+2. `test/publish.test.mjs` §9 (an existing store migrates, and every ratified row survives as edition 1) fails with `NOT NULL constraint failed: published_bundles.edition` on `tranche/T8` since your merge. Your migration of an old-shape store must fill `edition`.
+Ratification is now merged into `tranche/T8` too; merge it.
