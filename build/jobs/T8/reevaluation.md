@@ -41,3 +41,7 @@ Size (session_01NGonW6u7AxdGRxu9HsKZwZ): test runs 16, module lines 2736
 5. Stale generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` (not_product), by `src/reevaluation/` and `store.mjs` 726–727.
 6. scheduler (layer 10): R25's services are on the one instance, `reevaluationOf(ctx)`; `noticeSweep(now)` is synchronous and answers `raiseNotices`' answer or `{pending: false}`; `REEVAL_NOTICE_DELAY_MS` is exported.
 7. The store rewire: the check does not count a rewritten comment line as a removal, so I folded the two-line comment at 726–727 into one line (inquiry's note and strength R28's, reevaluation's stale clause dropped) rather than editing its second line; net legacy change 2 added, 3 removed.
+
+## J3 · COMPLETE
+
+N200 (R14), N182 (1)–(4) and N178 (R25, K237) applied; 39/39 tests, 25/25 ids covered; format, architecture, coverage and ownership clean (legacy-store 2 added, 3 removed). Record: build/jobs/T8/reevaluation.md, §Completion; REPORT J3.
