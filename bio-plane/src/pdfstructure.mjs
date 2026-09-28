@@ -2237,9 +2237,10 @@ function anchorOf(placed, source) {
 }
 
 /** Document text (Tier 1). Extends the I2 output; see the module header.
- *  `placedByPage` receives each read page's placed glyphs (R35), kept off the
- *  output. */
-async function extractText(doc, placedByPage = new Map()) {
+ *  `placedByPage` receives the placed glyphs (R35), kept off the output, of
+ *  each read page in `linkPages`: only a page a link sits on is asked, so a
+ *  long document does not hold every glyph's position at once. */
+async function extractText(doc, placedByPage = new Map(), linkPages = new Set()) {
   /* D-251: WHO MADE THIS LAYER. Read ONCE, from the file's own /Info, and
      carried on the text shape rather than on the document — because the claim
      it bounds is a claim about the TEXT, and a consumer holding the text is the
@@ -2277,7 +2278,7 @@ async function extractText(doc, placedByPage = new Map()) {
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
-    if (res.placed) placedByPage.set(idx, res.placed);
+    if (res.placed && linkPages.has(idx)) placedByPage.set(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
@@ -2872,7 +2873,8 @@ export async function extractPdfStructure(bytes) {
   /* R35: each page's placed glyphs, kept off the output, from which every
      link's anchor text is read. */
   const placedByPage = new Map();
-  const text = await extractText(doc, placedByPage);
+  const linkPages = new Set(links.map((l) => l.source && l.source.page));
+  const text = await extractText(doc, placedByPage, linkPages);
   for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
 
   /* CPDF-18: the images each page PAINTS, as IC-1 `image {page, rect}`
