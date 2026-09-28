@@ -48,3 +48,7 @@ Found in other modules by my T9 change (R33–R35, K279), measured against `tran
    - `fleetbundles.test.mjs`: stale bundles, next item.
 2. **Generated artifacts (§14), stale:** `pdf-worker`, `ocr-worker` and `agent-worker` bundles embed pdfstructure. I did not rebuild them. pdf-worker's own `structure.test.mjs` (R7, R10) fails against its committed bundle and passes 46/46 against a fresh local build (restored, not committed).
 3. **extraction**: `image_unread` is in `text.undetermined` and `counts.undetermined` (N253, as you said).
+
+## J3 · COMPLETE
+
+Complete: N100's share (R33 pageBoxes) and N101 (R34 image_unread, R35 link anchors) applied as K279 worded them. Exact shapes for extraction, tests (pdf-reader 58/58; with format-registry 85/85; pdf-worker 46/46 on a fresh local bundle) and all four checks (0 failures) are in my record's Completion section. Other modules' effects: REPORT J2.
