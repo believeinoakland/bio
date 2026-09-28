@@ -1,0 +1,9 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01362JGtE3gn5X3QqZps3xue,job,legacy-checks,10794412,166923,138,35382,,470,12315
+session_01PwqLa1NvQSNYxStbJ9R5ds,job,subresources,7237800,160707,98,25373,,16,1426
+session_01US5MKSyeetAVCERbaBowrE,job,office-readers,5504043,207005,72,20204,,3,3330
+session_01WS5qsgXgxGzNszdSSHz4o2,job,odf-reader,6041098,175161,80,22211,,7,2122
+session_01LKbhRJ9uya72jg3WhQgDJV,job,pdf-reader,12808426,221428,134,45798,,14,2941
+session_01LkjS5fE3osSrYaAkNn6uqe,job,text-chain,7721942,158189,106,25905,,10,1692
+session_01NmWHzjUgZb4RbiiKmG4HyX,job,image-codecs,9492417,182639,118,85192,,22,2981
+session_01XVGk5mMCA4CFxRzihSLoPk,job,pdf-pixels,3155088,154364,52,13186,,6,1074
