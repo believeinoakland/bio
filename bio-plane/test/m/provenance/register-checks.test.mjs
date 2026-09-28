@@ -1,10 +1,12 @@
 /* provenance: the C-18 register arms (R42–R46): each keeps its catalogue id and severity, refuses at the write through
-   the module's registered check, and still runs at the gate (`withRegisterChecks`) and in the audit
-   (`provenanceAudit`). C-18.6 (R45) hashes stored bytes and stays in the catalogue, run by the gate (K72 (4)). */
+   the module's registered check, and still runs at the gate (`withRegisterChecks`) and in the audit (its registered
+   audit check, record-core R59; N92). C-18.6 (R45) hashes stored bytes and stays in the catalogue, run by the gate (K72 (4)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, provDoc, infoMd } from "./fixture.mjs";
-import { registerChecks, withRegisterChecks, provenanceAudit } from "../../../src/provenance/index.mjs";
+import * as provenance from "../../../src/provenance/index.mjs";
+import { registerChecks, withRegisterChecks } from "../../../src/provenance/index.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
 import { checkBundle, parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 const run = (docs, { md = infoMd("INFO-2026-0001-x"), files = {}, reg = null } = {}) => registerChecks({
@@ -51,6 +53,8 @@ test("R42: C-18.1, the register's shape, release authority and the sweep fence, 
   const w = world();
   const r = w.promoteInfo("INFO-2026-0003-z", { captures: [cap], docs: [{ ...good, capture: { ...good.capture, method: "" } }] });
   assert.deepEqual([r.ok, r.reason, r.findings[0].check], [false, "PROVENANCE_REGISTER_REFUSED", "C-18.1"]);
+  assert.deepEqual([r.code, r.check, r.translation], ["PROVENANCE_REGISTER_REFUSED", "C-103.1",
+                   PROVENANCE_ACT_CHECKS.PROVENANCE_REGISTER_REFUSED.translation], "the act's own catalogue row");
   assert.equal(w.head("INFO-2026-0003-z"), null, "nothing written");
 });
 
@@ -145,12 +149,21 @@ test("R42–R46: the arms still run at the gate and in the audit, so moving them
   assert.deepEqual([gated.ok, gated.findings.map((x) => x.check)], [false, ["C-18.9"]]);
   const clean = withRegisterChecks({ ...image, "bundle.md": infoMd("INFO-2026-0001-x") }, { gateVersion: "g", ok: true, findings: [], warnings: 2 });
   assert.deepEqual([clean.ok, clean.warnings], [true, 2]);
-  /* The audit: a bundle held with a C-18 violation (a replay) is counted with errors and tallied under its check. */
+  /* The audit (N92): the arms are provenance's registered audit check (record-core R59), so record-core's own pass
+     over a page counts a bundle held with a C-18 violation (a replay) with errors, once, tallied under its check;
+     no wrapper of this module's stands between the audit and the pass. */
+  assert.equal("provenanceAudit" in provenance, false, "the wrapper is gone");
   const w = world();
   w.promoteInfo("INFO-2026-0001-x", { captures: [cap], state: "verified", pkg: { replay: true } });
-  const pass = await provenanceAudit(w.host, { after: "", limit: 10, visible: () => true });
-  assert.equal(pass.tally["C-18.9"] >= 1, true, JSON.stringify(pass.tally));
-  assert.equal((pass.tallyDetail || {})["C-18.9/chain-absent"] >= 1, true);
-  assert.equal(pass.offenders.some((o) => o.bundleId === "INFO-2026-0001-x"), true);
-  assert.equal(pass.withErrors >= 1, true);
+  w.promoteInfo("INFO-2026-0002-y", { captures: [{ path: "snapshots/y.txt", text: "bytes of y" }] });
+  const pass = await w.record.auditPass({ after: "", limit: 10, visible: () => true });
+  assert.equal(pass.tally["C-18.9"], 1, JSON.stringify(pass.tally));
+  assert.equal(pass.tallyDetail["C-18.9/chain-absent"], 1);
+  assert.deepEqual(Object.keys(pass.tally).filter((k) => k.startsWith("C-18.")), ["C-18.9"],
+                   "the violating bundle's one finding, and nothing from the conformant register");
+  /* The fixture's bundle.md also carries catalogue findings (C-2.2), so both bundles are offenders; the one that also
+     breaks C-18 is still one bundle with errors, never two. */
+  assert.deepEqual([pass.checked, pass.clean, pass.withErrors, pass.offenders.length], [2, 0, 2, 2], "each bundle judged once, whole");
+  /* Registered once: a second registration by this module is refused by record-core. */
+  assert.equal(w.record.registerAuditCheck("provenance", () => []).reason, "AUDIT_CHECK_DECLARED");
 });

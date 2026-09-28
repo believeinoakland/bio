@@ -6,7 +6,8 @@
  * C-18.5 went to monitoring and C-18.7 stays with C-18.8 in promotion (K49).
  *
  * They run in three places, so the move loses none of them: at every promotion, as this module's registered check
- * (`index.mjs`); at the gate, after `runGate` (`withRegisterChecks`); and in the audit (`provenanceAudit`). */
+ * (`index.mjs`); at the gate, after `runGate` (`withRegisterChecks`); and in the audit, as the module's registered
+ * audit check (record-core R59, `provenanceOf`). */
 
 import { isMachineIdentity, ACTOR_CLASSES, BASIS_GRADES, TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
 

@@ -84,6 +84,8 @@ test("R20: the rebuild reports, refuses whole when any document is undetermined,
   const r = (args) => w2.prov.provenanceChainRebuild({ author: V("ruth"), viewer: V("ruth"), ...args }).reason;
   assert.equal(r({ author: "", bundleId: "INFO-2026-0002-y" }), "NO_AUTHOR");
   assert.equal(r({ bundleId: "" }), "NO_BUNDLE");
+  assert.equal(w2.prov.provenanceChainRebuild({ bundleId: "", author: V("r"), viewer: V("r") }).check, "C-103.3",
+               "NO_BUNDLE carries its row here too: its sentence is true at both sites");
   assert.equal(r({ bundleId: "INFO-2026-0404-none" }), "NO_SUCH_BUNDLE");
   assert.equal(r({ bundleId: "INFO-2026-0002-y", viewer: "stranger" }), "NO_SUCH_BUNDLE", "unseen answers as absent");
   const w3 = world();

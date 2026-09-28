@@ -6,6 +6,7 @@ import { generateKeyPairSync, createHash } from "node:crypto";
 import { world, sha, evidence } from "./fixture.mjs";
 import { attest, attestStatus } from "../../../src/provenance/index.mjs";
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE, ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../checks/bio-checks.mjs";
 
 /* A TimeStampResp, granted, whose token carries the digest's raw bytes (what `parseTimestampResponse` binds on). */
 function granted(digestHex) {
@@ -144,9 +145,10 @@ test("R34: the instance signs its own receipt with its own key; a receipt stays 
   /* No key bound: stated, never a silent skip. */
   const w0 = world();
   const none = await w0.prov.signReceipt({ captureSha: s, retrievalLocator: "https://x", retrieved: "t" });
-  assert.equal(none.reason, "RECEIPT_NO_KEY");
+  assert.deepEqual([none.reason, none.check, none.translation], ["RECEIPT_NO_KEY", "C-103.7", PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation]);
   assert.equal(w0.count("signed_receipts"), 0);
-  assert.equal((await w0.prov.signReceipt({ captureSha: "x" })).reason, "RECEIPT_MALFORMED");
+  const bad = await w0.prov.signReceipt({ captureSha: "x" });
+  assert.deepEqual([bad.reason, bad.check, bad.translation], ["RECEIPT_MALFORMED", "C-103.6", PROVENANCE_ACT_CHECKS.RECEIPT_MALFORMED.translation]);
   /* The key is a secret: no answer carries it. */
   assert.equal(JSON.stringify([r1, r2, kept]).includes(k1.slice(0, 40)), false);
 });

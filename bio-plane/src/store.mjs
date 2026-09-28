@@ -221,7 +221,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
-import { provenanceOf, provenanceAudit, routeFinding, testimonyBytes, observerRef, TESTIMONY_PATH, TESTIMONY_MAX_BYTES,
+import { provenanceOf, routeFinding, testimonyBytes, observerRef, TESTIMONY_PATH, TESTIMONY_MAX_BYTES,
          TESTIMONY_FORMAT, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
@@ -13900,7 +13900,7 @@ export class Store extends DurableObject {
     // membership findings the sweep publishes beside the page, stay here.
     const gate = viewerPredicate(viewer);
     const sighted = new Set(this.#rows(`SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})`, ...gate.args).map((r) => r.bundle_id));
-    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await provenanceAudit(this.ctx, {
+    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordAudit(this.ctx, {
       after, limit, visible: (id) => sighted.has(id),
       context: (id) => {
         const targets = this.#rows(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id).map((r) => r.target_id);
