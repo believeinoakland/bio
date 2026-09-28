@@ -12919,6 +12919,88 @@ var te3 = new TextEncoder();
 
 // ../bio-plane/src/promotion/index.mjs
 var INLINE_MAX = 1024 * 1024;
+var MODULE_ORDER = Object.freeze([
+  /* 1 */
+  "legacy-checks",
+  "jurisdictions",
+  "test-support",
+  "bundler",
+  "runtime-limits",
+  "signatures",
+  "id-spaces",
+  "subresources",
+  "ooxml",
+  "office-readers",
+  "odf-reader",
+  "pdf-reader",
+  "format-registry",
+  "text-chain",
+  "docprofile",
+  "image-codecs",
+  "pdf-pixels",
+  "pdf-worker",
+  "ocr-worker",
+  /* 2 */
+  "record-core",
+  "membership",
+  "promotion",
+  /* 3 */
+  "host-governor",
+  "provenance",
+  "capture-sources",
+  "capture",
+  /* 4 */
+  "calibration",
+  "extraction",
+  "content",
+  /* 5 */
+  "entities",
+  "connections",
+  "progressions",
+  "bias",
+  "observation-log",
+  "query-language",
+  "retrieval",
+  /* 6 */
+  "inquiry",
+  "citation",
+  "basis-versions",
+  "strength",
+  "contradiction",
+  "ai-runs",
+  "run-productions",
+  "capture-requests",
+  "skills",
+  "agent-worker",
+  /* 7 */
+  "intent",
+  "reevaluation",
+  /* 8 */
+  "publication",
+  "ratification",
+  "case-authoring",
+  "review",
+  /* 9 */
+  "standards",
+  "conformance",
+  "consequences",
+  "actions",
+  "filings",
+  "escalation",
+  /* 10 */
+  "monitoring",
+  "scheduler",
+  "legacy-store",
+  /* 11 */
+  "affordances",
+  "queue",
+  "instance-setup",
+  "control-plane",
+  "legacy-index",
+  "legacy-ui",
+  "installer",
+  "legacy-tests"
+]);
 
 // ../bio-plane/src/provenance/register-checks.mjs
 var CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
