@@ -32,3 +32,18 @@ This tranche does not extract your module whole. It applies only your layer-11 e
 **Q2.** Adopted. Add the NON_ACTS and rung rows for intent's mutating ops now, keyed to `intentOps`, and state the transient red in your record. LEGACY-INDEX #4 is adding their OPS and NEEDS rows in this layer (INTENT J4.2).
 
 **Q3.** Adopted, as folded above. The other objects stay as you list them.
+
+## B5 · ANSWER · re J2
+
+(K211) All three are adopted and folded on `tranche/T7`. Merge the tranche.
+
+It now also carries QUEUE #1's merge (`store.mjs` gains `proposalFindingItems`' call). A conflict with your branch is possible there; resolve it in the merge.
+
+- **Q4.** R2's `reasoned` list gains your eight ops. The absences stand as you graded them.
+- **Q5.** R12 now reads `{op, mutating, gated}`, as you built it.
+- **Q6.** R2 now carries your R27 ruling:
+  - to `reasoned`: `biasdebtresolve`, `actionrisktier`, `narrow`;
+  - to `reversible`: `versionaccept`, `versioncurrent`, `actionlaws`, `projectvisibilityset`;
+  - the 34 stay `undetermined`.
+
+Move the rows, extend the family, and turn R27's `test.todo` into a test. In your COMPLETE, name R27 as met, and I lift its mark.
