@@ -4,6 +4,8 @@
 
 **Jobs** · (none yet)
 
+**Rules at the opening (K315).** T6's to T9's rules hold, as T9's plan states them: the registration rule (K206), one code one site (K231), a user builds against its provider's Provides and BOB merges a provider early (§4), each job writes requirement-named tests for every live id (P7) and applies only the share this plan gives it; an `N` entry's text is in `next.md`. Every provider side this plan needs is worded before its layer opens (K277, K304; marks `not yet met: T10`). SQL a module runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes, tested under a workerd-like cap where the module builds a pattern (K313). Each layer is re-read at its start for what the layers below it changed (K170).
+
 ### Layer 5
 
 - **entities** · N110; N126; N135; N208 (its share: the one helper and row for `NO_SUCH_ENTITY`, which progressions and intent call); N202 (its share).
