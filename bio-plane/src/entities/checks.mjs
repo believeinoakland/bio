@@ -37,3 +37,17 @@ export function idspaceRefusal(code, fields) {
     throw new Error(`idspaceRefusal: ${code} has no C-91 row with a canned translation (DEC-49)`);
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...fields };
 }
+
+/* R36 (N208, K231, K275): `NO_SUCH_ENTITY` is one condition, no entity with the id asked is registered, so it is minted
+   at one site, `noSuchEntity` (index.mjs), and every module answering that condition calls it: this module's R2, R3,
+   R12 and R17, progressions' R6 and R14, and intent. Its one row is this module's; progressions' C-100.12 and intent's
+   C-111.5 give way to it. It takes the next free number of C-91, the family this module holds (K174; membership's
+   C-70.5 is the precedent). The sentence names no act, so it reads true wherever it is answered. */
+export const ENTITY_CHECKS = Object.freeze({
+  NO_SUCH_ENTITY: Object.freeze({
+    check: 'C-91.4',
+    where: 'src/entities/index.mjs noSuchEntity > is-entity-registered',
+    translation: 'No subject with that id is registered in the record, so nothing can be said about it or attached '
+      + 'to it. Register the subject first, or name one that is registered. Nothing was written.',
+  }),
+});
