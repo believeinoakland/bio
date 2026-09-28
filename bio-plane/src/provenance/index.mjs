@@ -18,6 +18,8 @@
  *                                  unless a test passes its own.
  *   now           the module's clock, an ISO instant (default: the wall clock). R1's `registered`, R13's receipts
  *                 when a caller gives none, R28's `recorded_at` and R29's `at` read it, never a caller's time.
+ *   order         the modules' total order (ids) R47's listeners run in: membership's `MODULE_ORDER`, the one list
+ *                 promotion's steps run in too, unless a test passes its own.
  *   instanceName  the instance's name for a reconstructed hop (R19), default `unnamed`.
  *   signingKey    the instance's receipt-signing key (R34, K59): an Ed25519 private key, PKCS#8, base64; held as a
  *                 secret by the operator and replaceable. Absent, `signReceipt` answers that no key is bound. */
@@ -27,8 +29,8 @@ import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256
          TESTIMONY_GRADE } from "../../checks/bio-checks.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT, ARCHIVE_SAVE_BASE,
          ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
-import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks } from "./register-checks.mjs";
@@ -776,7 +778,7 @@ class Provenance {
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
     this.#instanceName = typeof instanceName === "string" && instanceName ? instanceName : "unnamed";
     this.#signingKey = typeof signingKey === "string" && signingKey.trim() ? signingKey.trim() : null;
-    this.#order = Array.isArray(order) ? order : [];
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -916,8 +918,7 @@ class Provenance {
       }
       const here = this.#record.readFile(r.bundle_id, r.path);
       if (here && here.sha256 === r.capture_sha) { out.live++; continue; }
-      /* History is record-core's table, read on its digest column (reported: record-core's read contract, R37, does not
-         yet state it). */
+      /* History is record-core's table, read on its digest column (record-core's read contract, R37). */
       if (this.#one(`SELECT sha256 FROM history WHERE bundle_id=? AND sha256=? LIMIT 1`, r.bundle_id, r.capture_sha)) {
         out.historical++; continue;
       }
@@ -1172,12 +1173,12 @@ class Provenance {
    * THE ACQUISITION RECEIPTS (R13–R16, R47).
    * ===================================================================== */
 
-  /** R47 — a later module's work on each receipt, registered once at start (K31's pattern, promotion R39). */
+  /** R47 — a later module's work on each receipt, registered once at start (K31's pattern, promotion R39). A malformed
+   *  or repeated registration is refused through membership's `listenerRefusal` (its R81; N202), the one site of
+   *  `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
   onReceipt(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names its module and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
     const i = this.#order.indexOf(module);
     this.#listeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.#listeners.length });
     this.#listeners.sort((a, b) => (a.rank - b.rank) || (a.seq - b.seq));
@@ -1200,10 +1201,17 @@ class Provenance {
    *  modules' order, with the receipt and the observation; one that refuses or throws does not undo the receipt, and
    *  the answer names each one's outcome. `context` is the caller's own, handed to the listeners unread (who asked,
    *  under which authority), so a listener can attribute its row without this module knowing what it writes. */
+  /*  THE INTERVAL IS SPELLED WHOLE-SECOND UTC ON EVERY ROW (R48, N133; record-core R47's "second"), so a later module
+   *  compares and brackets `first_retrieved` and `last_retrieved` as text in its own SQL, and MIN/MAX below widen the
+   *  interval as instants: two spellings of one instant never sort apart. A `retrieved` in any readable ISO spelling
+   *  is re-spelled to its whole second (the fraction dropped); none, or one that names no instant, takes this module's
+   *  clock, the instant of the plane's own write. */
   recordReceipt({ address, addressNorm, captureSha, retrieved, via = "direct", retrievalLocator = null, context = null } = {}) {
     if (!addressNorm || !captureSha) return { recorded: false };
     const v = String(via || "direct");
-    const when = typeof retrieved === "string" && retrieved ? retrieved : this.#now();
+    const asked = typeof retrieved === "string" && retrieved ? Date.parse(retrieved) : NaN;
+    const clock = Date.parse(this.#now());
+    const when = stampInstant("second", Number.isFinite(asked) ? asked : Number.isFinite(clock) ? clock : Date.now());
     return this.#record.transact(() => {
       const seen = this.#one(
         `SELECT COUNT(*) AS n, SUM(CASE WHEN capture_sha = ? THEN 1 ELSE 0 END) AS same
