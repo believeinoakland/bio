@@ -1,6 +1,6 @@
 # promotion (T8)
 
-**Status** · session_01EuPnv3s9AHDC8wfDv5W1A8 · depth 2 · RUNNING until 2026-09-28T13:20:45Z (users' suites on branch and base) · handled B4
+**Status** · session_01EuPnv3s9AHDC8wfDv5W1A8 · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
