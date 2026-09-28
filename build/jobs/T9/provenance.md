@@ -30,3 +30,7 @@
 - `format`: 0 failures. `architecture provenance`: 0 failures. `coverage provenance`: 49 of 49 live ids named; 0 failures. `ownership provenance tranche/T9`: 0 failures (re-run after commit below).
 
 Size (session_017KrztZChBMPxWJ41xnLD4i): test runs 8, module lines 3175
+
+## J1 · REPORT
+
+Found outside my module (details in my record's Completion): (1) provenance.md lines 111-112 state attestationsOf's header twice in two shapes; the first matches R49 and the code, the second should go. (2) A register entry with bytes absent/null fails the promotion as PROMOTE_FAILED (NOT NULL); -1 or 1.5 are stored as stated (R48: 'as the entry states it'); a named refusal would need a legacy-checks row — proposed for a later tranche, not built. (3) membership exports MODULE_ORDER, read by promotion and now provenance (R47's order; production passed none, so listeners ran in registration order — fixed), but membership's Provides does not name it. (4) Stale artifact: agent-worker/dist/agent-worker.bundled.mjs (inputs src/provenance/index.mjs, schema.mjs); not rebuilt. (5) connections' test 'R24, R18, K155' (factory.test.mjs) fails on tranche/T9 with and without my change: captureOf refuses a second env (capture R58).
