@@ -158,7 +158,8 @@ const fmInsert = (md, ...lines) => {
    takes them.
    RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): the C-18 register arms (C-18.1 @2, C-18.3,
    C-18.4, C-18.9, release authority) left the catalogue for provenance's `registerChecks`, which the gate runs over
-   the same image after the catalogue (`withRegisterChecks`) and the audit after the pass (`provenanceAudit`). The
+   the same image after the catalogue (`withRegisterChecks`) and the audit through provenance's registered audit
+   check (`registerAuditCheck("provenance", …)` in `provenanceOf`, record-core R59; N92 retired `provenanceAudit`). The
    findings of a bundle are now all three; the register arms are asked of `registerChecks` over the same files and
    front matter, every finding (a warning included, as C-18.4 is). */
 async function findingsFor(type, files, extra = {}) {

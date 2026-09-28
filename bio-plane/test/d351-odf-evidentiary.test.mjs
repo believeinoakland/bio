@@ -267,7 +267,8 @@ const promote = async (docs, locator, monitored = false, blobs = [], { held = fa
 };
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.3 left the catalogue with the other C-18
    register arms for provenance's `registerChecks`, which the gate runs after the catalogue (`withRegisterChecks`) and
-   the audit after the pass (`provenanceAudit`). A bundle's findings are both, as the gate takes them; without the
+   the audit through provenance's registered audit check (`registerAuditCheck("provenance", …)` in `provenanceOf`,
+   record-core R59; N92 retired `provenanceAudit`). A bundle's findings are both, as the gate takes them; without the
    second half every "does NOT fold" arm below would pass over a catalogue that no longer holds the fold. */
 const checksOf = async (id) => {
   const img = (await G(`op=image&id=${encodeURIComponent(id)}`)).result || {};

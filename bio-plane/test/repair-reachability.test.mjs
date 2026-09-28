@@ -424,7 +424,8 @@ const bundleMd = (id, extra = "") =>
 
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the findings an operator receives for these bundles are
    the catalogue's and provenance's register arms (C-18.1, C-18.9), as the gate (`withRegisterChecks`) and the audit
-   (`provenanceAudit`) run them. */
+   (provenance's registered audit check, `registerAuditCheck("provenance", …)` in `provenanceOf`, record-core R59;
+   N92 retired `provenanceAudit`) run them. */
 const runChecks = async (files) => [...(await checkBundle({
   folderName: "INFO-2026-0099-x", files, sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true,
 })).findings, ...registerChecks({ files, fm: parseFrontmatter(files.get("bundle.md")).data })];

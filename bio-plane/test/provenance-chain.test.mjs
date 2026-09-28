@@ -53,8 +53,9 @@ const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const CHECKS_SRC = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.9 (`checkAuthorityPublishable`) and the
    release-authority arm (`checkReleaseAuthority`) left the catalogue for provenance's register arms, unchanged in what
-   they find; the gate runs them after the catalogue (`withRegisterChecks`) and the audit after the pass
-   (`provenanceAudit`). Every catalogue reading below reads them where they now live. */
+   they find; the gate runs them after the catalogue (`withRegisterChecks`) and the audit as provenance's registered
+   audit check (`registerAuditCheck("provenance", …)` in `provenanceOf`, record-core R59; N92 retired
+   `provenanceAudit`). Every catalogue reading below reads them where they now live. */
 const REGISTER_CHECKS_SRC = fileURLToPath(new URL("../src/provenance/register-checks.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
