@@ -175,3 +175,9 @@ Also: **reevaluation** `src/reevaluation/index.mjs` 909 spells a whole-second st
 - `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T8` → ownership: 120 files changed by legacy-tests between tranche/T8 and HEAD; 0 failures
 
 Size (session_01CbeAzHStemFoTD8gQHPzK6): test runs 2 whole batteries plus about 400 single-suite runs by the four family agents, module lines 4547
+
+## J6 · COMPLETE
+
+Complete again after B3–B4 (K270, K271; tranche/T8 merged @ 8bf782594a, this branch ebdc344d57). J5 stands except:
+
+**The old battery** (369 suites, the whole run on the merged tree): **350 green, 19 red** (87 at the job's start). The promotion step-order four are green (reevaluation 74/0, rec114-leg-earned 36/0, rec118-reeval-earned 29/0, frontier-chunk 16/0) and contradiction-overstrict ran green in the battery. The 19 are J5's owned list less those five: bounds 210/3, d311 20/1, d470 11/2, d543 11/1, derivation-bounds 69/4, hygiene 1346/1, m025-arm-anchor-witness 25/1, machine-fences 91/1, machinefences-dec49 88/1, meaning-bounds 92/4, observation-content 74/1, observation-log 130/1, plane-envelope 60/4, project-sight 248/1, refusal-wire 41/1, run-conditions 56/3, scheduler 47/4 (FL-4), skillsequencing 26/1, strengthpair 90/1; each owned in J5. No test file changed since J5, so the checks stand (ownership against the merged tranche: see the record).
