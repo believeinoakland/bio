@@ -41,3 +41,7 @@ capture-requests' `#fire` passes only `credential` today; `heldSha` and `origin`
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … capture`: 0 failures. `checks/coverage.mjs … capture`: 62 of 62 live ids named, 0 failures. `checks/ownership.mjs … capture tranche/T9`: 0 failures (legacy-index 5 added, 35 removed; legacy-store 0/0).
 
 Size (session_01LMAH1easrQsx33uAH8zDHb): test runs 275, module lines 3013
+
+## J2 · COMPLETE
+
+capture T9 complete on job/T9/capture. Applied N202, N228, N133, N247 (capture's share; legacy-index 5 added, 35 removed), N79 (R28 now holds on live captures: its 'not yet met' can go), N140 as R60-R62 (their 'not yet met' can go). Tests 64/64; format, architecture, coverage (62/62) and ownership all 0 failures. Reports: connections' factory test pins pre-R58 captureOf and fails with or without this job; capture-requests' heldSha/origin passing is T10; monitoring holds plane-envelope's other N247 failures; bio-plane.bundled.mjs is stale. Details in my record's Completion.
