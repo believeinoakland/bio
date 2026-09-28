@@ -26,3 +26,26 @@
 - `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … legacy-checks`: 1 product file, 0 relative imports; 0 failures. `coverage.mjs … legacy-checks`: 0 modules, 0 of 0 live ids; 0 failures. `ownership.mjs … legacy-checks tranche/T11`: 1 file changed; 0 failures.
 
 Size (session_01EwVH7Frcm6uLT9v54Y4Xi3): test runs 4, module lines 12,304
+
+## J2 · COMPLETE · re B2
+
+**CHANGE B2 applied** (K350, replacing K348 for N289), in `bio-plane/checks/bio-checks.mjs`, commit 8f9e24e920 (+31 −6 against the tranche):
+1. **C-22.7 restored.** `AI_RUN_SKILL_VERSION_UNNAMED` is back in `AI_RUN_CHECKS` exactly as it stood before eeaff7823c: code, number `C-22.7`, `where`, translation, and the SK-1 comment that rode it (byte-identical, checked with `git diff eeaff7823c^`). J1's three-line note is replaced by one line: ai-runs takes this row into its own table (ai-runs R35); this copy leaves in T12 (N299).
+2. **C-22 header** reworded only as far as the row is back: the table holds observation-log's eight rows and C-22.7, ai-runs' row, until ai-runs holds it and this copy leaves in T12 (N299); the run's other rows are ai-runs' own.
+3. **N282 and N286** comment changes kept unchanged.
+
+**The window J1 named is closed:** the row is held by the catalogue again, so the plane boots on the tranche branch.
+
+**Deferred:** none.
+
+**Found in other modules, reported (not edited):**
+- **Generated artifact (§14):** `agent-worker/dist/agent-worker.bundled.mjs` is still STALE against `bio-checks.mjs` (source sha256 bca55dbae155…, bundle built from 1ef46752d144…); `fleetbundles.test.mjs` fails 1 arm (agent-worker only). The code matches what the bundle was built from, but the comments differ. Not rebuilt; BOB regenerates at layer close.
+- **legacy-tests / legacy-ui:** the DEC-49 guard `civicos-ui/check-refusal-codes.mjs` is back to its baseline of 61 failures (was 66 after J1).
+- **ai-runs / skills:** J1's report of a 40/6 and a 0/3 no longer holds. Both are green; ai-runs' N289 share (its own row plus `skill-version.mjs`) stands as layer 6 work, and the catalogue's copy leaves in T12.
+
+**Tests and checks run:**
+- Plane-booting suites back to baseline: promotion 67/0, skills 30/0, ai-runs 46/0, observation-log 43/0, provenance 63/0, ratification 65/0 (1 todo).
+- legacy-checks has no `tests` path and no requirements file: coverage 0 of 0.
+- `format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … legacy-checks`: 1 product file, 0 relative imports; 0 failures. `coverage.mjs … legacy-checks`: 0 modules, 0 of 0 live ids; 0 failures. `ownership.mjs … legacy-checks tranche/T11`: 1 file changed; 0 failures.
+
+Size (session_01X21rA21HbLKssMYh2XjGmk): test runs 6, module lines 12,329
