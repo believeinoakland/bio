@@ -32,3 +32,7 @@ Proposed, for your files:
 3. R12, replacing "(a second registration by the same module is refused `LISTENER_DECLARED`)" with: "(a malformed registration, or a second by the same module, is refused through `membership`'s `listenerRefusal`, its R81: `LISTENER_MALFORMED`, `LISTENER_DECLARED`)", and "in the modules' total order" with "in the modules' total order (`membership`'s `MODULE_ORDER`, R83)".
 
 One consequence of R81 governing: a whitespace-only module name ("  ") was refused `LISTENER_MALFORMED` here before and is now accepted, as R81 accepts any non-empty string. I kept R81's definition.
+
+## J2 · COMPLETE
+
+T9 calibration complete at c4fcb3c72d on job/T9/calibration (tranche/T9 merged at K291). N202: onCalibration refuses through membership's listenerRefusal; R12 listeners default to MODULE_ORDER (production passed no order: fixed). Calibration 43/43; extraction 65/65, content 50/50, scheduler 46/0 (6 todo). format, architecture, coverage (17/17), ownership: 0 failures. Nothing deferred. For you (record): calibration.md's not-yet-met marks (R4, R5, R8, R10-R12, R16) are stale, all built and tested; stale artifacts bio-plane and agent-worker bundles (src/calibration/index.mjs), not rebuilt.
