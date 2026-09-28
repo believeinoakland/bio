@@ -56,6 +56,7 @@ import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
+import { publicationOf } from "../publication/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
@@ -241,7 +242,7 @@ export class Review {
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
-  get publication() { return this.#deps.publication; }
+  get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get caseAuthoring() { return this.#deps.caseAuthoring; }
 
   migrate() { migrateReview(this.sql); }
@@ -714,8 +715,8 @@ export class Review {
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host, created on the first call with `deps`. It creates its tables and declares them to
- *  purge (R24). */
+/** K61: the one instance per host, created on the first call with `deps`. It creates its tables, declares them to
+ *  purge (R24), and fills publication's review provider (publication R23), replacing legacy-store's fill (K206). */
 export function reviewOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -727,6 +728,7 @@ export function reviewOf(host, deps) {
     instances.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
+    r.publication.registerReviewProvider("review", r.provider());
   }
   return r;
 }

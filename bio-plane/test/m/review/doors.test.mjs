@@ -150,3 +150,25 @@ test("R19: the list of a project's drafts, fenced exactly as R9, bounded, writin
   assert.equal(w.r.list({ project: Q, viewer: V("quinn") }).total, 1);
   assert.equal(w.r.list({ project: P, viewer: V("adm") }).total, 5);
 });
+
+test("R8, R9, R10: the one place each is judged is the provider this module fills in publication (its R23), once", () => {
+  const w = standard();
+  assert.equal(w.providers.length, 1);
+  const [{ module, provider: p }] = w.providers;
+  assert.equal(module, "review");
+  assert.deepEqual(Object.keys(p).sort(), ["caseIdentitySentence", "deadAnswer", "draftForMember", "draftIdentity",
+    "grantAdmitsCaseEdition", "liveGrant", "statedEdition"]);
+  w.publishedCase("CASE-2026-0001", P, 1);
+  const d = draft(w, { caseId: "CASE-2026-0001" });
+  grant(w, d, 1);
+  const row = w.row(`SELECT * FROM case_drafts WHERE draft_id=?`, d.draftId);
+  assert.deepEqual(p.draftForMember(d.draftId, V("ivy")), w.r.draftForMember(d.draftId, V("ivy")));
+  assert.equal(p.draftForMember(d.draftId, V("out")), null);
+  assert.deepEqual(p.draftIdentity(row), { caseId: "CASE-2026-0001", edition: 2 });
+  assert.deepEqual(p.liveGrant(SECRET(1)), w.r.liveGrant(SECRET(1)));
+  assert.equal(p.grantAdmitsCaseEdition(SECRET(1), "CASE-2026-0001", 2), true);
+  assert.equal(p.grantAdmitsCaseEdition(SECRET(1), "CASE-2026-0001", 1), false);
+  assert.equal(p.statedEdition({ caseId: null, edition: 1 }, false), null);
+  assert.equal(p.caseIdentitySentence("CASE-2026-0001", 2, false), "the next edition (2) of CASE-2026-0001");
+  assert.equal(JSON.stringify(p.deadAnswer()), DEAD);
+});

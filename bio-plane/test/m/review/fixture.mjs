@@ -82,7 +82,9 @@ export function world({ now = NOW } = {}) {
   };
   /* publication's side: the attribution level in force (its R17). */
   const chosen = new Set();          // `${case}|${edition}|${observation}`
+  const providers = [];              // what this module registered with publication (its R23)
   const publication = {
+    registerReviewProvider(module, provider) { providers.push({ module, provider }); return { ok: true, module }; },
     attributionInForce(caseId, edition, observation) {
       calls.attribution.push([caseId, edition, observation]);
       return chosen.has(`${caseId}|${edition}|${observation}`) ? { level: "group", edition } : null;
@@ -103,7 +105,7 @@ export function world({ now = NOW } = {}) {
                              now: () => clock.now });
   let bundles = 0;
   const w = {
-    st, host, record, membership, strength, r, clock, calls, ca, chosen, reach,
+    st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,

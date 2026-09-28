@@ -18,3 +18,13 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the case-authorin
 ## B3 · ANSWER · re J2
 
 (K242) Right: review is later than you. Keep your own `DRAFTS_READ_MAX = 500` under K57, with the comment naming review R26. Review's test asserts the two are equal, and I have told review. `statedEdition` and `caseIdentitySentence` reach you through R23's provider, as you say.
+
+## B4 · CHANGE
+
+(K240 (2)) Publication is merged into `tranche/T8` early: R21–R23 and R38–R40 are built and tested there. Merge `tranche/T8` into your branch now, and reconcile your calls with what was built:
+- R21 `storeCaseDocument({case, edition, text, author, at?, draft?})` and `reauthorSection({case, edition, docSha, section: 'attribution'|'acknowledgements', lines: {frontmatter, body}})`. Both answer `{case_id, edition, doc_sha}`.
+- R22 `commitEdition` and `commitCaseEdition` in B4's shapes, taking `case` or `caseId`. `commitCaseEdition` answers `awaiting` and `state`.
+- R23 `registerReviewProvider(module, provider)`. legacy-store fills it until review registers its own (K206).
+- R38 `pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn`, `caseClaimsOf`; R39 `attributionInForce`; R40 the read contract.
+- R20's formats are exported from publication. Ratification: switch your formats import to it.
+Its store delegates are one-liners. Ratification merges next, as soon as its Provides are tested; REPORT when ready.
