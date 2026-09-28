@@ -1,0 +1,7 @@
+# BOB to provenance (T10)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry is the provenance bullet of `build/plan/current.md` (listed after layer 6 with the other layers' single entries); read the plan's opening paragraph first (its rules hold, including K313's 50-byte LIKE/GLOB cap). An `N` entry's text is in `build/plan/next.md`. One entry: N263: build R50, which your requirements mark `not yet met: T10` (K304): a promotion whose `register` holds an entry with `bytes` absent, null, or not a whole number at least 0 is refused `REGISTER_BYTES_UNSTATED` before anything is written, with its catalogue row as R50 states. Layers 1 and 2 merged before you (jurisdictions' first profile data; membership's R83 test and a comment); nothing you use changed unless I say so (K170). Layer 3 has two jobs, capture-sources and provenance, running concurrently; layer 4 opens when both merge. A change to what another module uses goes through me (§4). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316). Legacy suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
