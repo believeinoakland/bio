@@ -177,18 +177,20 @@ test("R11: registeredFor lists the bundle's register rows in capture_sha order",
 test("R12: capturesOf orders by when the record first held each capture, on this instance's clock alone", () => {
   const w = world();
   const [a, b, c] = ["a", "b", "c"].map((n) => w.cap(n));
-  w.clock.now = "2026-09-27T05:00:00.000Z";
+  w.clock.now = "2026-09-27T05:00:00.500Z";
   w.promoteInfo("INFO-2026-0001-x", { captures: [a, b, c] });
-  /* b was received (a receipt) before it was registered; a's receipt came after its registration. The earlier of
-     the two instants is when the record first held it, compared as instants: `…:00Z` is before `…:00.5Z`. */
+  /* b was received (a receipt) before it was registered; c's receipt came after its registration. a's receipt is
+     spelled whole-second (R48), so it reads `…05:00:00Z` beside a registration at `…05:00:00.500Z`: the earlier of
+     the two instants is when the record first held it, compared as instants and never as strings (as strings
+     `…:00Z` sorts after `…:00.500Z`). */
   w.prov.recordReceipt({ addressNorm: "e.org/b", captureSha: b.sha, retrieved: "2026-09-27T04:00:00Z" });
-  w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: a.sha, retrieved: "2026-09-27T06:00:00Z" });
-  w.prov.recordReceipt({ addressNorm: "e.org/c", captureSha: c.sha, retrieved: "2026-09-27T04:00:00.500Z" });
+  w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: a.sha, retrieved: "2026-09-27T05:00:00.200Z" });
+  w.prov.recordReceipt({ addressNorm: "e.org/c", captureSha: c.sha, retrieved: "2026-09-27T06:00:00Z" });
   const got = w.prov.capturesOf("INFO-2026-0001-x");
   assert.deepEqual(got, [
     { capture_sha: b.sha, held_at: "2026-09-27T04:00:00Z" },
-    { capture_sha: c.sha, held_at: "2026-09-27T04:00:00.500Z" },
-    { capture_sha: a.sha, held_at: "2026-09-27T05:00:00.000Z" },
+    { capture_sha: a.sha, held_at: "2026-09-27T05:00:00Z" },
+    { capture_sha: c.sha, held_at: "2026-09-27T05:00:00.500Z" },
   ]);
   /* A document's own stated date never orders them: the register document's `retrieved` is not read. */
   assert.deepEqual(w.prov.capturesOf("INFO-2026-0404-none"), []);
@@ -257,6 +259,8 @@ test("R41: the module owns its tables, declared to purge once; another declarati
   assert.equal(w.count("captured_locators"), 0);
 });
 
+const WHOLE_SECOND = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+
 test("R48: register and captured_locators keep their read-contract columns, joinable in a later module's SQL", () => {
   const w = world({ now: "2026-09-27T05:06:07.000Z" });
   const a = w.cap("a");
@@ -264,16 +268,120 @@ test("R48: register and captured_locators keep their read-contract columns, join
   w.prov.recordReceipt({ address: "https://e.org/a", addressNorm: "e.org/a", captureSha: a.sha,
                          retrieved: "2026-09-27T00:00:00Z", retrievalLocator: "https://e.org/a?x" });
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((r) => r.name);
-  for (const c of ["capture_sha", "bundle_id", "path", "registered"]) assert.equal(cols("register").includes(c), true, c);
+  for (const c of ["capture_sha", "bundle_id", "path", "registered", "authored", "bytes", "author"])
+    assert.equal(cols("register").includes(c), true, c);
+  for (const c of ["address_norm", "address", "retrieval_locator", "capture_sha", "first_retrieved", "via", "last_retrieved"])
+    assert.equal(cols("captured_locators").includes(c), true, c);
   /* N111: `registered` is this module's clock at the register write (R1), an ISO instant; `address_norm` is the
      receipt's document address as the acquisition normalised it (R13), the key a later module seeks on. */
   assert.equal(w.row(`SELECT registered FROM register WHERE capture_sha = ?`, a.sha).registered, "2026-09-27T05:06:07.000Z");
   assert.equal(Number.isFinite(Date.parse(w.row(`SELECT registered FROM register`).registered)), true);
   assert.deepEqual({ ...w.row(`SELECT address_norm, address FROM captured_locators WHERE address_norm = ?`, "e.org/a") },
                    { address_norm: "e.org/a", address: "https://e.org/a" });
-  for (const c of ["address_norm", "address", "retrieval_locator", "capture_sha"]) assert.equal(cols("captured_locators").includes(c), true, c);
   const joined = w.row(`SELECT r.bundle_id, r.path, cl.address, cl.retrieval_locator FROM captured_locators cl
                           JOIN register r ON r.capture_sha = cl.capture_sha WHERE cl.address_norm = ?`, "e.org/a");
   assert.deepEqual({ ...joined }, { bundle_id: "INFO-2026-0001-a", path: a.path, address: "https://e.org/a",
                                     retrieval_locator: "https://e.org/a?x" });
+});
+
+test("R48: register.authored is 1 exactly for a member's authored observation, and register.author names that member alone", () => {
+  /* N145 (K182): basis-versions R39 joins `authored`; N213: publication reads `author`. */
+  const w = world();
+  const a = w.cap("a");
+  w.promoteInfo("INFO-2026-0001-a", { captures: [a] });
+  const t = w.prov.testify({ words: "The lights were off.", observedAt: "2026-09-20", author: V("ruth") });
+  assert.equal(t.ok, true, JSON.stringify(t));
+  const rows = w.rows(`SELECT capture_sha, authored, author FROM register ORDER BY capture_sha`)
+    .map((r) => ({ ...r }));
+  assert.deepEqual(rows.find((r) => r.capture_sha === t.capture_sha), { capture_sha: t.capture_sha, authored: 1, author: V("ruth") });
+  assert.deepEqual(rows.find((r) => r.capture_sha === a.sha), { capture_sha: a.sha, authored: 0, author: null });
+  /* Every row: authored is 0 or 1, and author is set exactly when authored is 1. */
+  for (const r of rows) {
+    assert.equal(r.authored === 0 || r.authored === 1, true, r.capture_sha);
+    assert.equal(r.author !== null, r.authored === 1, r.capture_sha);
+  }
+  /* A later module's own SQL finds the authored observations by the column. */
+  assert.deepEqual(w.rows(`SELECT r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.authored = 1`)
+                     .map((r) => r.bundle_id), [t.bundle_id]);
+});
+
+test("R48: register.bytes is the registered capture's size as the entry that registers it states it", () => {
+  const w = world();
+  const a = w.cap("a", "twelve bytes"), b = w.cap("b");
+  w.promoteInfo("INFO-2026-0001-a", { captures: [a, b] });
+  assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, 12);
+  assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, b.sha).bytes, Buffer.byteLength(b.text));
+  /* As the entry states it, even where the file the entry names is not those bytes (a capture held in parts). */
+  const p = w.cap("p", "a part");
+  const r = w.promotion.promote({ bundleId: "INFO-2026-0002-p", base: null, snapKey: "p", author: "member:alice", replay: true,
+    files: [{ path: "bundle.md", text: w.record.readFile("INFO-2026-0001-a", "bundle.md").text.replace("INFO-2026-0001-a", "INFO-2026-0002-p") },
+            { path: p.path, text: p.text }], meta: { object_type: "information" },
+    register: [{ sha256: sha("the whole"), path: "snapshots/whole", bytes: 4096 }] });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, sha("the whole")).bytes, 4096);
+  /* A revision re-registering the capture carries the size its entry states. */
+  const head = w.head("INFO-2026-0001-a");
+  const files = w.record.livePaths("INFO-2026-0001-a").map((x) => ({ path: x, text: w.record.readFile("INFO-2026-0001-a", x).text }));
+  const rev = w.promotion.promote({ bundleId: "INFO-2026-0001-a", base: head.bundleSha, snapKey: "rev", author: "member:alice",
+    files, meta: { object_type: "information" }, register: [{ sha256: a.sha, path: a.path, bytes: 13 }] });
+  assert.equal(rev.ok, true, JSON.stringify(rev));
+  assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, 13);
+});
+
+test("R48: captured_locators.via is the receipt's source and part of its key; last_retrieved its latest", () => {
+  /* N227, K276: monitoring R26 reads `via`. */
+  const w = world();
+  const s = sha("v");
+  w.prov.recordReceipt({ addressNorm: "e.org/v", captureSha: s, retrieved: "2026-09-27T02:00:00Z" });
+  w.prov.recordReceipt({ addressNorm: "e.org/v", captureSha: s, retrieved: "2026-09-27T01:00:00Z", via: "archive.org" });
+  w.prov.recordReceipt({ addressNorm: "e.org/v", captureSha: s, retrieved: "2026-09-27T04:00:00Z" });
+  w.prov.recordReceipt({ addressNorm: "e.org/v", captureSha: s, retrieved: "2026-09-27T03:00:00Z" });
+  const rows = w.rows(`SELECT via, first_retrieved, last_retrieved, observations FROM captured_locators
+                        WHERE address_norm = ? AND capture_sha = ? ORDER BY via`, "e.org/v", s).map((r) => ({ ...r }));
+  assert.deepEqual(rows, [
+    { via: "archive.org", first_retrieved: "2026-09-27T01:00:00Z", last_retrieved: "2026-09-27T01:00:00Z", observations: 1 },
+    { via: "direct", first_retrieved: "2026-09-27T02:00:00Z", last_retrieved: "2026-09-27T04:00:00Z", observations: 3 },
+  ]);
+  /* A receipt with no via is `direct`, the column's value on every row. */
+  assert.equal(w.rows(`SELECT via FROM captured_locators`).every((r) => typeof r.via === "string" && r.via), true);
+  /* A second row for the same address, capture and via is refused by the key itself. */
+  assert.throws(() => w.st.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved,
+    last_retrieved) VALUES (?, ?, ?, 'direct', 'x', 'x')`, "e.org/v", "e.org/v", s), /UNIQUE|PRIMARY/);
+});
+
+test("R48: first_retrieved and last_retrieved are spelled whole-second UTC on every row, and compare as text", () => {
+  /* N133: a later module brackets them as text in its own SQL. */
+  const w = world({ now: "2026-09-27T09:08:07.654Z" });
+  const s1 = sha("1"), s2 = sha("2"), s3 = sha("3");
+  w.prov.recordReceipt({ addressNorm: "e.org/t", captureSha: s1, retrieved: "2026-09-27T05:00:00.900Z" });
+  w.prov.recordReceipt({ addressNorm: "e.org/t", captureSha: s1, retrieved: "2026-09-27T05:00:00.100Z" });
+  w.prov.recordReceipt({ addressNorm: "e.org/t", captureSha: s1, retrieved: "2026-09-27T07:30:00+02:00" });
+  w.prov.recordReceipt({ addressNorm: "e.org/t", captureSha: s2 });
+  w.prov.recordReceipt({ addressNorm: "e.org/t", captureSha: s3, retrieved: "not an instant" });
+  const one = w.row(`SELECT first_retrieved, last_retrieved FROM captured_locators WHERE capture_sha = ?`, s1);
+  assert.deepEqual({ ...one }, { first_retrieved: "2026-09-27T05:00:00Z", last_retrieved: "2026-09-27T05:30:00Z" },
+                   "the fraction dropped, an offset read to UTC, and the interval widened as instants");
+  assert.equal(w.row(`SELECT first_retrieved FROM captured_locators WHERE capture_sha = ?`, s2).first_retrieved,
+               "2026-09-27T09:08:07Z", "no retrieved: this module's clock, whole-second");
+  assert.equal(w.row(`SELECT first_retrieved FROM captured_locators WHERE capture_sha = ?`, s3).first_retrieved,
+               "2026-09-27T09:08:07Z", "an unreadable retrieved: this module's clock, never the text as given");
+  for (const r of w.rows(`SELECT first_retrieved, last_retrieved FROM captured_locators`)) {
+    assert.match(r.first_retrieved, WHOLE_SECOND);
+    assert.match(r.last_retrieved, WHOLE_SECOND);
+  }
+  /* A bracket as text in SQL, as a later module writes it. */
+  assert.deepEqual(w.rows(`SELECT capture_sha FROM captured_locators WHERE first_retrieved <= ? AND last_retrieved >= ?`,
+                          "2026-09-27T05:10:00Z", "2026-09-27T05:10:00Z").map((r) => r.capture_sha), [s1]);
+  /* Receipts stored before the spelling was stated are re-spelled at migrate; a value naming no instant is left. */
+  w.st.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved)
+                 VALUES ('e.org/old', 'e.org/old', ?, 'direct', '2026-01-02T03:04:05.678Z', '2026-01-03T00:00:00.001Z')`, s1);
+  w.st.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved)
+                 VALUES ('e.org/bad', 'e.org/bad', ?, 'direct', 'garbage', 'garbage')`, s1);
+  w.prov.migrate();
+  w.prov.migrate();
+  assert.deepEqual({ ...w.row(`SELECT first_retrieved, last_retrieved FROM captured_locators WHERE address_norm = 'e.org/old'`) },
+                   { first_retrieved: "2026-01-02T03:04:05Z", last_retrieved: "2026-01-03T00:00:00Z" });
+  assert.equal(w.row(`SELECT first_retrieved FROM captured_locators WHERE address_norm = 'e.org/bad'`).first_retrieved, "garbage");
+  assert.deepEqual({ ...w.row(`SELECT first_retrieved, last_retrieved FROM captured_locators WHERE capture_sha = ? AND address_norm = 'e.org/t'`, s1) },
+                   { ...one }, "a row already whole-second is untouched");
 });

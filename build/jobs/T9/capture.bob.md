@@ -9,3 +9,7 @@ Depth 2. Your entry is in `build/plan/current.md`, layer 3. Read the plan's open
 ## B2 · ANSWER · re J1
 
 K287. Q1.1: worded as R60, R61, R62 in build/requirements/capture.md as you proposed (the validators table's name and shape are yours; R61 states what is recorded, not the table). Q1.2: your reading holds: a 304 files no capture and writes no receipt, only R8's success. capture-requests' heldSha and origin passing is its side (T10). Merge tranche/T9 into your branch and test R60-R62.
+
+## B3 · CHANGE
+
+Provenance is merged into tranche/T9 (K289): R48's whole-second spelling of first_retrieved/last_retrieved holds on every write, and old rows are re-spelled at migrate, so N133's bracket in SQL can rely on it. Merge tranche/T9 into your branch.
