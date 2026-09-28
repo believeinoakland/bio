@@ -1,7 +1,7 @@
 /* The test profile (R22): the City of Port Ellery and Marlow County, a jurisdiction made up for tests.
  * Every basis is `TEST`. It supplies every section and vocabulary key the first profile supplies, with
  * different values in each, shares no host with it (all hosts are under the reserved `.example`
- * domain), and adds a captured crosswalk, which the first profile has none of. Modules that take local
+ * domain), and adds a captured crosswalk and a holiday calendar, which the first profile has none of. Modules that take local
  * facts are tested against it (`build/layers.md`, "No jurisdiction in the product", rule 3). */
 const R = String.raw;
 
@@ -53,7 +53,8 @@ export default {
 
   systems: [
     { origin: "ellery.minutes", name: "the Port Ellery clerk's minute book",
-      hosts: ["minutes.port-ellery.example"], basis: "TEST" },
+      hosts: ["minutes.port-ellery.example"],
+      links: { item: { re: R`^\/entry\/\d+$` }, file: { re: R`^\/papers\/[a-z0-9-]+\.pdf$`, flags: "i" } }, basis: "TEST" },
     { origin: "ellery.minutes", name: "the Port Ellery clerk's minute book, through the shared records API",
       hosts: ["api.records-host.example"], path: { re: R`^\/ellery\/`, flags: "i" }, basis: "TEST" },
     { origin: "ellery.ledger", name: "the Port Ellery general ledger",
@@ -111,28 +112,32 @@ export default {
   },
 
   practice: { minutes_due_days: { value: 30, basis: "TEST" } },
+  locale: { value: "en-GB", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
     { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. § 1.100", basis: "TEST" },
     { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. § 4", basis: "TEST" },
+    { level: "federal", name: "National Records Access Act (test)", citation: "Test U.S.C. § 552", basis: "TEST" },
   ],
 
   standard_sources: [
     { source: "Port Ellery Bylaws", kind: "ordinance", issuer: "Port Ellery Selectboard",
-      cite: { re: R`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" }, code: "pebl", basis: "TEST" },
-    { source: "Marlow County Budget Commitments", kind: "commitment", issuer: "Marlow County Commission",
+      level: "city", cite: { re: R`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" }, code: "pebl", basis: "TEST" },
+    { source: "Marlow County Budget Commitments", kind: "commitment", issuer: "Marlow County Commission", level: "county",
       cite: { re: R`\bMCBC\s+\d{4}-\d+` }, basis: "TEST" },
   ],
   counterparties: [
     { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false, basis: "TEST" },
     { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
-    { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, basis: "TEST" },
+    { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
+    { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" },
   ],
   action_kinds: [
     { kind: "records_request", label: "request under the records act", tier: 2,
       laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
       venue: { name: "the Town Clerk's office", how: "email", basis: "TEST" },
-      template: "To the Town Clerk: under {{law}}, please provide {{records}}.", basis: "TEST" },
+      template: "To the Town Clerk: under {{law}}, please provide {{records}}.",
+      advisory: "A test advisory: have a solicitor read the request before it is sent.", basis: "TEST" },
     { kind: "bylaw_complaint", label: "complaint under the bylaws", tier: 1, laws: ["Port Ellery Bylaws"],
       venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
       template: "To the Selectboard: {{act}} does not conform to {{bylaw}}.", basis: "TEST" },
@@ -145,5 +150,20 @@ export default {
       citation: "Test Stat. § 1.140", basis: "TEST" },
     { rule: "claim_notice", applies_to: "claim", days: 90, count: "calendar", starts: "known",
       citation: "Test Stat. § 9.20", basis: "TEST" },
+  ],
+  legal_organisations: [
+    { name: "Marlow Commons Legal Society (test)", evaluates: ["commitment_claim"],
+      contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
+      basis: "TEST" },
+  ],
+  holidays: [
+    { year: 2026, days: [
+      { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-03-17", name: "Harbour Day" },
+      { date: "2026-07-03", name: "Founders' Day (observed)" }, { date: "2026-12-25", name: "Christmas Day" }],
+      basis: "TEST" },
+    { year: 2027, days: [
+      { date: "2027-01-01", name: "New Year's Day" }, { date: "2027-03-17", name: "Harbour Day" },
+      { date: "2027-12-24", name: "Christmas Day (observed)" }],
+      basis: "TEST" },
   ],
 };
