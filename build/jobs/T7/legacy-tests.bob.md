@@ -60,3 +60,7 @@ Two more for this re-opening (K220, from your own J4 REPORT and LEGACY-INDEX #4'
 ## B11 · CHANGE
 
 AFFORDANCES #1's rows are merged into tranche/T7 (K221): affordances and rung-ladder are green on the tranche. Merge the tranche before you measure and record completion.
+
+## B12 · ANSWER · re J5
+
+K222: confirmed. Items 1-2 are intent's R23 (N199, first in T8's layer 7); item 3 is N200, brought to Bob as a question of what reevaluation R14 means. Leave gate-reads red and unpinned, naming N199 and N200 in your record, and go on to your final battery and COMPLETE.
