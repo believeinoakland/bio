@@ -99,3 +99,7 @@ Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 29, module lines 1342
 ## J7 · REPORT
 
 For the requirements fold (as J5): R14's NO_STANDARDS is conformance's code (its R1), so filings answers THEORY_NO_STANDARDS (C-115.23). For actions: actionRead's state_history carries the entered state only; R9 states 'the action entered <state>' from it (no from-state), which is enough for the chronology. For the fixture only: strength and reevaluation are reached through conformance's factories, which worked on this host with inquiry given.
+
+## J8 · COMPLETE
+
+B6 and B7 applied: every layer-9 dep defaults to its real factory, and the whole suite (30/30) runs over the real modules, changing the record only through their acts. 21/21 ids; format, architecture, coverage and ownership clean; the DEC-49 guard names no filings site. Record §Completion · B6, B7; REPORT J7.
