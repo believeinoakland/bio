@@ -59,3 +59,55 @@ The op rows are done: every op layers 7–10 route is accounted for, keyed to ea
 **Q4. Uses.** Keying the rows to the op maps and driving the backing means my tests import `standards`, `conformance`, `consequences`, `filings` (their `*Ops` maps) and `escalation`'s and `consequences`' fixtures. The architecture check fails on those five imports (6 failures), because none is in my `uses`. All are layer 9, before 11, and affordances grades their acts, so the uses are real (K212's and K221's precedent). Best reading: add all five to affordances' `uses` in `modules.json` and to its Uses list. The other checks pass: format 0 failures; coverage 27 of 27; ownership 0 legacy lines added or removed.
 
 **Tests** (with index.mjs's `ACQUIRE_GRADE_NOTE` import re-pointed to capture locally, legacy-index's N80 share; not committed): `node --test bio-plane/test/m/affordances/` → 75 tests, 72 pass, 0 fail, 3 todo (R16, R18: N176; R26 live: N231).
+
+## J4 · COMPLETE
+
+**Entries applied** (plan layer 11; B1–B3, K262, K264), on `job/T8/affordances` after merging `tranche/T8` @ B3:
+- **N65 (3) and R26:** the action loop's vocabularies are `actions'`:
+  - `PRODUCT_KINDS` as the module-level `action_kind`, plus `RISK_TIERS`, `LAW_LEVELS` (jurisdictions', which `op=actionlaws` refuses against; not legacy-checks' copy), `ACTION_BASIS_KINDS`, `CORRESPONDENCE_DIRECTIONS`, `CORRESPONDENCE_STAGES`, `CORRESPONDENCE_OUTCOMES` and `RESOLUTIONS`;
+  - `SUBJECT_POSITIONS` is ratification's, `BASIS_ROLES` inquiry's, the version machine basis-versions', and `CONTENT_MINT_STATES` content's;
+  - no action kind is held here, and the only vocabulary still read from legacy-checks is `SUFFICIENCY_CLAIM_STATES`, which has not moved;
+  - `vocabulariesFor(kinds)` (K262 Q1) publishes the instance's kinds as `action_kind` and every other key as the same object.
+  - **R26 is met at this interface.** Its live half in `op=affordances` is a `test.todo` naming N231.
+- **N80:** `acquireGradeNote` and `ACQUIRE_GRADE_NOTE` are dropped (capture's). R5's test checks the fence and that no copy remains.
+- **ACTIONS #1 J2.1:** the plane fixture creates a `records_request`.
+- **K208 (2) rows, as K263 and K264 rule:**
+  - `actionriskpropose` (actions R28) gets a `NON_ACTS` row and a stated absence, `undetermined`, on `actionlawspropose`'s ground.
+  - `monitoring` gets none: it is a read with no `NEEDS` row, `driveshells`' cut.
+  - Layer 9's 22 other rows are held for T9 (N216), exactly as J3 states them:
+    - `NON_ACTS` for each;
+    - `reasoned`: `consequencerevise`, `addressedrecord`, `escalationevaluate`, `escalationadvance`, `escalationdecline`, `escalationsuspend`;
+    - `reversible`: `escalationresume`;
+    - `substrate`: `counselpacketexport`;
+    - `undetermined`: `standarddeclare`, `standardpropose`, `standardadopt`, `determine` (K264: `BAD_REASON` stays out of the family; N233), `comparisonpropose`, `consequencerecord`, `filingprepare`, `filingapprove`, `filingsent`, `counselpacket`, `theorypropose`, `escalationopen`, `escalationattach`, `escalationend`.
+    - Their `is:` sentences and `NON_ACTS` reasons are in `bio-plane/src/affordances.mjs` at commit `92ebb0abeb` on this branch, ready to restore with N216.
+  - The backing the held rungs rest on is tested now, at each module's interface (`backing.test.mjs`): each of the six `reasoned` acts is refused without its reason (`NO_REASON`) and accepted with one; `escalationresume` is taken back by a further suspension.
+  - `catalogue.test.mjs` holds the held ops out of every table.
+
+**Deferred:**
+- N144 (N232, K262 Q2).
+- R16 and R18 (N176, with `affordanceFacts`' extraction, T9).
+- R26's live half (N231).
+Each is a `test.todo` naming its cause, except N144, which R17 does not yet state.
+
+**Other modules** (for BOB, not changed by me):
+1. **legacy-index:**
+   - `index.mjs` 93–94 still imports `ACQUIRE_GRADE_NOTE` from `./affordances.mjs`, so the plane fails to load until its N80 re-point merges (B2: legacy-index merges first).
+   - Until its `OPS`/`NEEDS` row for `actionriskpropose` lands, `unaccounted` answers it as `stale`. Legacy `affordances.test.mjs` "NON_ACTS names only ops in NEEDS" and `rung-ladder` BACKWARD and EXACTLY are red on that one op.
+2. **legacy-tests:** `affordances.test.mjs`
+   - "the published action_kind vocabulary IS the array C-2.10 enforces", "neither enforcement site keeps a literal copy of the four resolutions" and "the catalogue publishes … the eight action kinds" pin legacy-checks' objects, which N65 (3) retired here. Re-anchor them on actions' (R26).
+   - Its fixture's `ACTN-2026-0001-rec19` uses `cpra_request`, which is refused `ACTION_KIND_UNKNOWN` (red since layer 9).
+   - `rung-ladder`'s "ROUTES to the publishing path" and "NO UNBACKED CLAIM" are red identically on `tranche/T8` without my change.
+3. **conformance:** N233 (K264).
+4. **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` embeds `src/affordances.mjs` and is stale; yours to regenerate at the close.
+
+**Tests and checks** (index.mjs' import re-pointed to capture locally for the runs, not committed):
+- Module: `node --test bio-plane/test/m/affordances/` → tests 75, pass 72, fail 0, todo 3.
+- `test/m/` whole: tests 2300, pass 2273, fail 2 (`citation/invariants`, `connections/factory`, red on the base), todo 25.
+- Legacy: `rung-ladder` 45 pass, 4 fail (2 on the base, 2 the transient `actionriskpropose` row); `affordances.test.mjs` as item 2.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio affordances` → architecture: 6 product files, 41 relative imports (0 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio affordances` → coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio affordances tranche/T8` → ownership: 5 files changed by affordances between tranche/T8 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures
+
+Size (session_01GC8QNKei7sU5uBHF2DgCy8): test runs 14, module lines 2416
