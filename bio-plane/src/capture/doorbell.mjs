@@ -2,7 +2,8 @@
  * handler (moved from `legacy-index` in T4, K98) refuses what it will not read before the store is called
  * (R49–R51, in R53's order) and hands the rest to the store side (`Capture#knock`, R31, R32, R54). A knock is not a
  * capture and not a bundle: it lands in the inbox, which only a signed-in member reads. The response envelope,
- * `requiredArgument` and the store-silence refusal are the control plane's, passed in by the caller. */
+ * `requiredArgument`, the store-silence refusal and the Durable Object envelope's reader (`doAnswer`, N247) are the
+ * control plane's, passed in by the caller. */
 import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 
 /* R31, R49, R50. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
@@ -59,9 +60,10 @@ export function knockEmpty() {
   /* END DEC-49 REGION is-knock-empty */
 }
 
-/** op=knock (R30–R32, R47–R54). `store` is the Durable Object stub; `json`, `requiredArgument` and `storeSilent`
- *  are the control plane's. The refusals are tried in R53's order and the first that applies answers. */
-export async function knockOp(req, env, store, { json, requiredArgument, storeSilent }) {
+/** op=knock (R30–R32, R47–R54). `store` is the Durable Object stub; `json`, `requiredArgument`, `storeSilent` and
+ *  `doAnswer` (the one reader of a Durable Object's envelope, N247) are the control plane's. The refusals are tried
+ *  in R53's order and the first that applies answers. */
+export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, doAnswer }) {
   if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
   const raw = await req.arrayBuffer();
   if (raw.byteLength > KNOCK.maxBytes + 4096) return json(knockEnvelopeTooLarge(), 413);
@@ -81,20 +83,17 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
   if (bytes.length > cap) return json(knockPayloadTooLarge(cap, evidence), 413);
   const source = req.headers.get("cf-connecting-ip") || "unknown";
-  let out = null;
-  try {
-    out = await (await store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
-                             content: typeof body.contentB64 === "string" ? null : body.contentText,
-                             note: body.note, contact: body.contact, windowMs: KNOCK.windowMs,
-                             perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
-                             /* D-487: the window's instant is the control plane's, read once, as it always was. */
-                             now: Date.now() }) }))).json();
-  } catch { out = null; }
+  const out = await doAnswer(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source)}`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
+                           content: typeof body.contentB64 === "string" ? null : body.contentText,
+                           note: body.note, contact: body.contact, windowMs: KNOCK.windowMs,
+                           perIpLimit: KNOCK.perIp, globalLimit: KNOCK.global,
+                           /* D-487: the window's instant is the control plane's, read once, as it always was. */
+                           now: Date.now() }) })));
   /* REC-52: a store that did not answer is silence, never a rate refusal: 429 would tell a stranger they knocked
      too often when nobody counted. */
-  if (!out || out.ok !== true) return storeSilent("knock");
+  if (!out.answered) return storeSilent("knock");
   const rec = out.result || {};
   if (!rec.ok) {
     if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")

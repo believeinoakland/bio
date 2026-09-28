@@ -17,7 +17,7 @@ export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
 export { CAPTURE_SCHEMA } from "./schema.mjs";
@@ -174,13 +174,14 @@ export class Capture {
 
   /** A later module registers, once at start, a listener for one of `CAPTURE_EVENTS`. Listeners are called after
    *  this module's own write, in the order they registered (the host registers the modules in their total order),
-   *  and a listener's failure never fails the act; its outcome is named. */
+   *  and a listener's failure never fails the act; its outcome is named. A malformed or second registration is
+   *  refused by membership's `listenerRefusal` (its R81, N202: `LISTENER_MALFORMED` and `LISTENER_DECLARED` are
+   *  minted at that one site), the slot's `event` beside its fields. */
   on(event, module, fn) {
     if (!CAPTURE_EVENTS.includes(event)) return { ok: false, reason: "UNKNOWN_EVENT", event };
-    if (typeof fn !== "function" || typeof module !== "string" || !module)
-      return { ok: false, reason: "BAD_LISTENER", event };
     const list = this.#listeners.get(event) || [];
-    if (list.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED", event, module };
+    const refused = listenerRefusal(list, module, fn, { event });
+    if (refused) return refused;
     list.push({ module, fn });
     this.#listeners.set(event, list);
     return { ok: true, event, module };
@@ -530,7 +531,9 @@ export class Capture {
     const rows = found.slice(0, bound);
     const next = truncated ? cursorOf([rows[rows.length - 1].citation_norm, rows[rows.length - 1].link_ref]) : null;
     if (!rows.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated, next };
-    const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
+    /* N133: the source's retrieval instant, spelled whole-second UTC as the receipts are (provenance R48), so the
+       bracket is decided in SQL by comparing text. */
+    const T = stampSecond(Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
     const verdicts = { contemporaneous: 0, superseded: 0, undetermined: 0 };
@@ -541,24 +544,34 @@ export class Capture {
         out.push({ ...r, resolution: r.partition, verdict: null });
         continue;
       }
-      const caps = this.#rows(
-        `SELECT cl.capture_sha, cl.first_retrieved, cl.last_retrieved, cl.observations FROM captured_locators cl
-          WHERE cl.address_norm = ? AND cl.via = 'direct' AND (${tgt.sql}) ORDER BY cl.first_retrieved`,
-        r.address_norm, ...tgt.args);
-      if (!caps.length) {
+      /* N133: a BOUNDED read per link. The target's direct captures the viewer may see are never read whole: SQL
+         answers their count and the at most four captures the verdict turns on, each one row: the first capture
+         (by first retrieval) seen more than once across T (`bracket`), the last whose last sighting is at or
+         before T (`before`), the first whose first sighting is at or after T (`after`), and the source's own. */
+      const found = this.#rows(
+        `WITH c AS (SELECT cl.capture_sha, cl.first_retrieved, cl.last_retrieved, cl.observations FROM captured_locators cl
+                     WHERE cl.address_norm = ? AND cl.via = 'direct' AND (${tgt.sql}))
+         SELECT 'n' AS k, NULL AS capture_sha, NULL AS first_retrieved, NULL AS last_retrieved, COUNT(*) AS observations FROM c
+         UNION ALL SELECT * FROM (SELECT 'bracket', * FROM c WHERE first_retrieved <= ? AND last_retrieved >= ? AND observations > 1
+                                  ORDER BY first_retrieved, capture_sha LIMIT 1)
+         UNION ALL SELECT * FROM (SELECT 'before', * FROM c WHERE last_retrieved <= ? ORDER BY first_retrieved DESC, capture_sha DESC LIMIT 1)
+         UNION ALL SELECT * FROM (SELECT 'after', * FROM c WHERE first_retrieved >= ? ORDER BY first_retrieved, capture_sha LIMIT 1)
+         UNION ALL SELECT * FROM (SELECT 'self', * FROM c WHERE capture_sha = ? LIMIT 1)`,
+        r.address_norm, ...tgt.args, T, T, T, T, sourceCapture);
+      const pick1 = (k) => { const x = found.find((f) => f.k === k); return x ? { capture_sha: x.capture_sha,
+        first_retrieved: x.first_retrieved, last_retrieved: x.last_retrieved, observations: x.observations } : null; };
+      const count = Number((found.find((f) => f.k === "n") || {}).observations || 0);
+      if (!count) {
         tally.offsite++;
         out.push({ ...r, resolution: "offsite", verdict: null, basis: "the record holds no capture of this address" });
         continue;
       }
       tally.linked++;
-      const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T
-                                       && c.observations > 1) || null;
-      const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
-      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
+      const bracket = pick1("bracket"), before = pick1("before"), after = pick1("after");
       /* D-57: A SELF-REFERENCE, AND ONE CAPTURE ON BOTH SIDES, ARE NOT A CHANGE. A page that links to itself finds
          its OWN capture among the target's, retrieved at exactly T, so it is both the last capture at-or-before T
          and the first at-or-after it; stated for what it is (a fourth basis, never a fourth verdict). */
-      const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
+      const selfCap = pick1("self");
       const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
       let verdict, basis, detail = null, pick = null;
       if (bracket && bracket.capture_sha === sourceCapture) {
@@ -606,7 +619,7 @@ export class Capture {
                  target_bundle: reg ? reg.bundle_id : null,
                  target_retrieved: pick ? pick.first_retrieved : null,
                  target_last_seen: pick ? pick.last_retrieved : null,
-                 target_captures: caps.length });
+                 target_captures: count });
     }
     return { sourceCapture, resolved: out.length, at: rows[0].captured_at, tally, verdicts, links: out,
       limit: cap, truncated, next,

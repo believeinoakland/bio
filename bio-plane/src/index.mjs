@@ -4476,7 +4476,7 @@ export default {
          bio/inbox/<sha256> in the working bucket and nowhere else, the way
          probe is confined to scratch. Nothing is read back out except by a
          signed-in member. */
-      if (op === "knock") return knockOp(req, env, stub, { json, requiredArgument, storeSilent });
+      if (op === "knock") return knockOp(req, env, stub, { json, requiredArgument, storeSilent, doAnswer });
       /* REC-52: the same spread as section 7a's. A store silence used to leave
          a `{ok:true}` carrying the service name, the version and the bootstrap
          flag and NOTHING the store knows — an instance answering "here is what
@@ -5127,7 +5127,7 @@ export default {
     }
 
     if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)),
-      { json, storeSilent, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
+      { json, storeSilent, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
 
     if (op === "capture") return captureObjectOp(req, url, env,
       { json, storageAbsent, requiredArgument, key: (s) => captureKey(storeName, s), storeName, cls });
@@ -5138,42 +5138,13 @@ export default {
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`,
         author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`, storeName });
 
-    /* Acquisition: the fetch layer the intake doctrine calls M2'.
-     *
-     * What it produces is Grade B and says so. The doctrine's Section 3 is
-     * precise: Grade B is "the document bytes as fetched by a capable surface,
-     * hashed at receipt, with locator and instant", and Grade A requires a WACZ
-     * or equivalent chain-of-custody capture of the source as served, which a
-     * Worker cannot produce. Claiming A here would be the one thing the grading
-     * scheme exists to prevent, since "a claim about evidence is only as strong
-     * as its weakest named layer".
-     *
-     * It writes no bundle state. The doctrine: "No intake path writes live
-     * state; the daemon and the member are writers like every writer." So this
-     * returns a provenance document and the caller promotes it.
-     */
-    /* ---- the archive fallback's decision half (D-99 / ARCHIVE-FALLBACK.md) ----
-     *
-     * ARCHIVE.ORG IS A BACKUP SOURCE, NEVER A PRIMARY ONE (RULED). This refuses
-     * unless the source-failure counter says the document has actually been
-     * unreachable: three consecutive failures the SOURCE produced, or a failing
-     * run of fourteen days. D-104's exclusion is what makes that fence mean
-     * something, because our own governor declining to ask never advances it.
-     * Without the fence, sustained politeness would load somebody else's
-     * infrastructure to solve a problem we made.
-     *
-     * It fetches through the same governor as everything else, and its host
-     * appetite is set conservatively from THEIR published figures rather than
-     * discovered by probing for the wall. Bob, 2026-07-31: there is no need to
-     * push traffic to the breaking point; there is plenty of time.
-     */
-    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent });
+    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer });
 
     if (op === "acquire") {
       /* K72 (8), (11): the acquisition is capture's service in the Durable Object; this op forwards to it and then
          runs the reading block below over what it filed, until `extraction` takes the block (K49). */
       const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)),
-        { json, storeSilent, storageAbsent, cls, member: viaSession, sessMember, storeName });
+        { json, storeSilent, storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
       if (acquired.response) return acquired.response;
       const read = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { storeSilent, storeName });
       if (read.response) return read.response;

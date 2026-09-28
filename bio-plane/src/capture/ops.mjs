@@ -1,22 +1,15 @@
 /* capture — the op handlers the control plane routes to (layers.md ruling 2, K3), moved from `legacy-index` in T4.
  * Routing, authentication and the response envelope stay the control plane's: `json`, `storeSilent`,
- * `storageAbsent` and `requiredArgument` are passed in, with the stamps it decided (the caller class, the viewer, the
- * member). `store` is the Durable Object stub the op is scoped to. */
+ * `storageAbsent`, `requiredArgument` and `doAnswer` (the one reader of a Durable Object's envelope, N247: a body
+ * that is not the store's `{ok: true, result}` is not an answer, and a silence is never read as an empty result,
+ * REC-52) are passed in, with the stamps it decided (the caller class, the viewer, the member). `store` is the
+ * Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
-
-/* `{answered, result}` from a Durable Object answer: a body that is not the store's `{ok: true, result}` is not an
-   answer, and a silence is never read as an empty result (REC-52). */
-async function ask(store, path, init) {
-  try {
-    const out = await (await store.fetch(path, init)).json();
-    return out && out.ok === true ? { answered: true, result: out.result } : { answered: false };
-  } catch { return { answered: false }; }
-}
 
 /** R27, R29, D-701: op=links. `address=` what points at an address; `capture=` a document's outbound links with their
  *  verdicts; `host=` how a host's navigation changed between captures (R29's per-host read). Every row passes the
  *  caller's viewer before it is counted. */
-export async function linksOp(url, store, { json, storeSilent, viewer }) {
+export async function linksOp(url, store, { json, storeSilent, doAnswer, viewer }) {
   /* N90: the caller's page, forwarded; the route bounds a read the caller did not. */
   const v = `viewer=${encodeURIComponent(viewer ?? "")}`
     + ["limit", "after"].map((k) => (url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "")).join("");
@@ -24,9 +17,9 @@ export async function linksOp(url, store, { json, storeSilent, viewer }) {
   const capture = url.searchParams.get("capture");
   const host = url.searchParams.get("host");
   let r;
-  if (address) r = await ask(store, `http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`);
-  else if (host) r = await ask(store, `http://x/navchanges?host=${encodeURIComponent(host)}&${v}`);
-  else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await ask(store, `http://x/resolvelinks?capture=${capture}&${v}`);
+  if (address) r = await doAnswer(store.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`));
+  else if (host) r = await doAnswer(store.fetch(`http://x/navchanges?host=${encodeURIComponent(host)}&${v}`));
+  else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await doAnswer(store.fetch(`http://x/resolvelinks?capture=${capture}&${v}`));
   else return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
     detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, "
           + "or host=<host> for how that host's navigation changed between captures" }, 400);
@@ -67,27 +60,56 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
   });
 }
 
+/* ---- the archive fallback's decision half (D-99 / ARCHIVE-FALLBACK.md) ----
+ *
+ * ARCHIVE.ORG IS A BACKUP SOURCE, NEVER A PRIMARY ONE (RULED). This refuses
+ * unless the source-failure counter says the document has actually been
+ * unreachable: three consecutive failures the SOURCE produced, or a failing
+ * run of fourteen days. D-104's exclusion is what makes that fence mean
+ * something, because our own governor declining to ask never advances it.
+ * Without the fence, sustained politeness would load somebody else's
+ * infrastructure to solve a problem we made.
+ *
+ * It fetches through the same governor as everything else, and its host
+ * appetite is set conservatively from THEIR published figures rather than
+ * discovered by probing for the wall. Bob, 2026-07-31: there is no need to
+ * push traffic to the breaking point; there is plenty of time.
+ * (Moved from `legacy-index` beside the op's call, N247.) */
 /** R3: op=archivelookup, forwarded to the service. */
-export async function archiveLookupOp(req, url, store, { json, storeSilent }) {
+export async function archiveLookupOp(req, url, store, { json, storeSilent, doAnswer }) {
   const body = req.method === "POST" ? await req.json().catch(() => null) : null;
   const address = body?.address || url.searchParams.get("address");
-  const r = await ask(store, "http://x/archivelookup", { method: "POST", headers: { "content-type": "application/json" },
-                                                         body: JSON.stringify({ address }) });
+  const r = await doAnswer(store.fetch("http://x/archivelookup", { method: "POST", headers: { "content-type": "application/json" },
+                                                                   body: JSON.stringify({ address }) }));
   if (!r.answered) return storeSilent("archivelookup");
   return json(r.result.body, r.result.status);
 }
 
+/* Acquisition: the fetch layer the intake doctrine calls M2'.
+ *
+ * What it produces is Grade B and says so. The doctrine's Section 3 is
+ * precise: Grade B is "the document bytes as fetched by a capable surface,
+ * hashed at receipt, with locator and instant", and Grade A requires a WACZ
+ * or equivalent chain-of-custody capture of the source as served, which a
+ * Worker cannot produce. Claiming A here would be the one thing the grading
+ * scheme exists to prevent, since "a claim about evidence is only as strong
+ * as its weakest named layer".
+ *
+ * It writes no bundle state. The doctrine: "No intake path writes live
+ * state; the daemon and the member are writers like every writer." So this
+ * returns a provenance document and the caller promotes it.
+ * (Moved from `legacy-index` beside the op's call, N247.) */
 /** R1–R20, K72 (11): op=acquire, forwarded to the service with the control plane's stamps. Answers `{response}`
  *  (a refusal, a silence) or `{answer}`, the filed capture's answer, which `extraction` reads from the stored primary
  *  itself (R42, K49; N103: no second read of the primary here). */
-export async function acquireOp(req, env, store, { json, storeSilent, storageAbsent, cls, member, sessMember, storeName }) {
+export async function acquireOp(req, env, store, { json, storeSilent, storageAbsent, doAnswer, cls, member, sessMember, storeName }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
     return { response: storageAbsent("acquire", "this instance has no evidence storage configured") };
   const body = await req.json().catch(() => null);
   const q = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
-  const r = await ask(store, `http://x/acquire?${q}`, { method: "POST", headers: { "content-type": "application/json" },
-                                                         body: JSON.stringify(body || {}) });
+  const r = await doAnswer(store.fetch(`http://x/acquire?${q}`, { method: "POST", headers: { "content-type": "application/json" },
+                                                                   body: JSON.stringify(body || {}) }));
   if (!r.answered) return { response: storeSilent("acquire") };
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json(answer, status) };

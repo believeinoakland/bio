@@ -11,6 +11,9 @@ const json = (o, status = 200) => new Response(JSON.stringify(o), { status, head
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const storageAbsent = (op, error) => json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503);
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
+/* The control plane's envelope reader (index.mjs `doAnswer`), as it is handed to the ops (N247). */
+const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
+  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
 const stubOf = (c) => ({ async fetch(req, init) {
   const r = typeof req === "string" ? new Request(req, init) : req;
   const url = new URL(r.url);
@@ -58,7 +61,7 @@ test("R27 R29: op=links answers what points at an address, a capture's links, an
   c.recordLinks({ sourceCapture: "a".repeat(64), capturedAt: "2026-01-01T00:00:00Z", links: [{ ref: "u", address: "https://t.example/u", address_norm: "https://t.example/u" }] });
   c.recordLinks({ sourceCapture: "b".repeat(64), capturedAt: "2026-01-01T00:00:00Z", links: [{ ref: "u", address: "https://t.example/u", address_norm: "https://t.example/u" }] });
   const st = stubOf(c);
-  const op = async (qs, viewer) => { const r = await linksOp(new URL(`https://p/?op=links&${qs}`), st, { json, storeSilent, viewer }); return { status: r.status, body: await r.json() }; };
+  const op = async (qs, viewer) => { const r = await linksOp(new URL(`https://p/?op=links&${qs}`), st, { json, storeSilent, doAnswer, viewer }); return { status: r.status, body: await r.json() }; };
   assert.equal((await op("address=HTTPS://T.EXAMPLE/u", "class:admin")).body.count, 2, "the address is normalised");
   assert.equal((await op("address=https://t.example/u", "member:dave")).body.count, 1);
   assert.equal((await op(`capture=${"a".repeat(64)}`, "member:dave")).body.resolved, 0);
@@ -69,7 +72,7 @@ test("R27 R29: op=links answers what points at an address, a capture's links, an
   assert.equal((await op("host=h.example", "member:dave")).body.observations, 1);
   const need = await op("", "member:dave");
   assert.deepEqual([need.status, need.body.reason], [400, "NEED_CAPTURE_OR_ADDRESS"]);
-  const sil = await linksOp(new URL("https://p/?op=links&address=https://t.example/u"), silent, { json, storeSilent, viewer: "class:admin" });
+  const sil = await linksOp(new URL("https://p/?op=links&address=https://t.example/u"), silent, { json, storeSilent, doAnswer, viewer: "class:admin" });
   assert.equal(sil.status, 502);
 });
 
@@ -81,7 +84,7 @@ test("R42 N103: op=acquire forwards to the service with the control plane's stam
   const net = network({ "https://a.example/t.txt": () => new Response("plain text body", { headers: { "content-type": "text/plain" } }),
                         "https://a.example/u.txt": () => new Response("other text body", { headers: { "content-type": "text/plain" } }) });
   try {
-    const h = { json, storeSilent, storageAbsent, cls: "member", member: true, sessMember: "m1", storeName: "bio" };
+    const h = { json, storeSilent, storageAbsent, doAnswer, cls: "member", member: true, sessMember: "m1", storeName: "bio" };
     const get = await acquireOp(new Request("https://p/?op=acquire"), env, st, h);
     assert.equal(get.response.status, 405);
     const none = await acquireOp(new Request("https://p/", { method: "POST", body: "{}" }), {}, st, h);

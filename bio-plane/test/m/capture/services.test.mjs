@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, receipt, register, H } from "./fixture.mjs";
 import { captureOf, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
+import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const A = H("a"), B = H("b"), C = H("c"), D = H("d");
 
@@ -46,13 +47,20 @@ test("R8 R43: each attempt is recorded by kind, governed counted apart, eligibil
   assert.equal(fresh({ env: { FALLBACK_CONSECUTIVE_FAILURES: "1" } }).c.reachabilityThresholds().failures, 3, "a binding is not the setting");
 });
 
-test("R44: listeners for source outcomes and tasks are called after the write, in registration order, and a failing one fails nothing", async () => {
+test("R44 (N202): listeners for source outcomes and tasks are called after the write, in registration order, and a failing one fails nothing; a malformed or repeated registration is membership's refusal", async () => {
   const { c, rows } = fresh();
   const heard = [];
   assert.equal(c.on("source-outcome", "a", (o) => { heard.push(["a", o.outcome, rows(`SELECT count(*) n FROM source_reachability`)[0].n]); }).ok, true);
   assert.equal(c.on("source-outcome", "b", () => { throw new Error("boom"); }).ok, true);
   assert.equal(c.on("source-outcome", "c", (o) => { heard.push(["c", o.outcome]); }).ok, true);
-  assert.equal(c.on("source-outcome", "a", () => {}).reason, "LISTENER_DECLARED");
+  /* N202: the two registration refusals are membership's (R81), minted at its one site, the slot's event beside them. */
+  assert.deepEqual(c.on("source-outcome", "a", () => {}), listenerRefusal([{ module: "a" }], "a", () => {}, { event: "source-outcome" }));
+  assert.deepEqual([c.on("source-outcome", "a", () => {}).code, c.on("source-outcome", "a", () => {}).event], ["LISTENER_DECLARED", "source-outcome"]);
+  for (const [m, fn] of [["", () => {}], [null, () => {}], ["z", "not a function"]]) {
+    const bad = c.on("task", m, fn);
+    assert.deepEqual([bad.ok, bad.reason, bad.code, bad.event], [false, "LISTENER_MALFORMED", "LISTENER_MALFORMED", "task"]);
+    assert.deepEqual(bad, listenerRefusal([], m, fn, { event: "task" }));
+  }
   assert.equal(c.on("nonsense", "a", () => {}).reason, "UNKNOWN_EVENT");
   const out = await c.recordSourceOutcome({ addressNorm: "https://x.example/", outcome: "fetch_failed" });
   assert.equal(out.ok, true);
@@ -241,6 +249,43 @@ test("R27: recordLinks replaces a capture's rows; linksTo answers every source a
   c.recordLinkVerdict({ sourceCapture: A, addressNorm: "https://t.example/x", verdict: "undetermined", basis: "b1", at: "2026-05-11T00:00:00Z" });
   const lv = c.recordLinkVerdict({ sourceCapture: A, addressNorm: "https://t.example/x", verdict: "contemporaneous", basis: "b2", at: "2026-05-12T00:00:00Z" });
   assert.deepEqual([lv.current.verdict, lv.history.length, lv.changed], ["contemporaneous", 2, true]);
+});
+
+test("R27 (N133): resolveLinks decides each verdict over the target's direct captures without reading them whole: the count, the first bracketing capture, the last before and the first after, whatever their number", () => {
+  const { c, s } = fresh();
+  const T = "2026-05-10T00:00:00Z";
+  const day = (d) => new Date(Date.parse("2026-01-01T00:00:00Z") + d * 86400000).toISOString().replace(/\.\d+Z$/, "Z");
+  const hx = (i) => i.toString(16).padStart(64, "0");
+  const link = (a) => ({ ref: a, address: a, address_norm: a, type: "deferred" });
+  /* The source's instant in a millisecond spelling reads as its whole second. */
+  c.recordLinks({ sourceCapture: A, capturedAt: "2026-05-10T00:00:00.700Z", links: [link("https://t.example/many"), link("https://t.example/pre"),
+    link("https://t.example/post"), link("https://t.example/tie")] });
+  /* 400 captures of one target on each side of T, two of them bracketing T seen more than once: the verdict names the
+     one first seen earliest, and the count is every capture. */
+  for (let i = 0; i < 400; i++) receipt(s, { address: "https://t.example/many", capture: hx(i + 1), first: day(i % 250), last: day(i % 250) });
+  receipt(s, { address: "https://t.example/many", capture: hx(9001), first: day(100), last: day(200), observations: 3 });
+  receipt(s, { address: "https://t.example/many", capture: hx(9002), first: day(90), last: day(210), observations: 2 });
+  for (let i = 0; i < 300; i++) receipt(s, { address: "https://t.example/pre", capture: hx(20000 + i), first: day(i % 120), last: day(i % 120) });
+  for (let i = 0; i < 300; i++) receipt(s, { address: "https://t.example/post", capture: hx(30000 + i), first: day(140 + (i % 50)), last: day(140 + (i % 50)) });
+  receipt(s, { address: "https://t.example/tie", capture: hx(40002), first: "2026-05-01T00:00:00Z" });
+  receipt(s, { address: "https://t.example/tie", capture: hx(40001), first: "2026-05-01T00:00:00Z" });
+  receipt(s, { address: "https://t.example/tie", capture: hx(40003), first: "2026-05-20T00:00:00Z" });
+  const r = c.resolveLinks({ sourceCapture: A });
+  const by = Object.fromEntries(r.links.map((l) => [l.link_ref, l]));
+  assert.equal(r.at, "2026-05-10T00:00:00.700Z");
+  assert.deepEqual([by["https://t.example/many"].verdict, by["https://t.example/many"].target_capture, by["https://t.example/many"].target_captures],
+                   ["contemporaneous", hx(9002), 402], "the bracketing capture first seen earliest, among every capture counted");
+  assert.deepEqual([by["https://t.example/pre"].verdict, by["https://t.example/pre"].target_captures], ["undetermined", 300]);
+  assert.equal(by["https://t.example/pre"].target_retrieved, day(119), "the last capture before T");
+  assert.match(by["https://t.example/pre"].basis, /all predate/);
+  assert.deepEqual([by["https://t.example/post"].verdict, by["https://t.example/post"].target_retrieved], ["superseded", day(140)], "the first capture after T");
+  assert.equal(by["https://t.example/tie"].target_capture, hx(40002), "of two captures first seen together, the later digest is the last before T");
+  assert.match(by["https://t.example/tie"].detail, /bracketing captures differ/);
+  /* A target capture the viewer may not see is neither counted nor picked. */
+  s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('dave', 'd', 'member', 'active', '2026-01-01', '2026-01-01')`);
+  register(s, hx(9002), "PROJ-9", { type: "project" });
+  const dv = c.resolveLinks({ sourceCapture: A, viewer: "member:dave" }).links.find((l) => l.link_ref === "https://t.example/many");
+  assert.deepEqual([dv.target_capture, dv.target_captures], [hx(9001), 401]);
 });
 
 test("R27: what a viewer cannot see is never named or counted (D-701): a gated source is absent, a gated target is offsite", () => {

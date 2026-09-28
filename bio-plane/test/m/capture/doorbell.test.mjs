@@ -10,7 +10,10 @@ import { KNOCK_CHECKS } from "../../../checks/bio-checks.mjs";
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const storeSilent = (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502);
-const helpers = { json, requiredArgument, storeSilent };
+/* The control plane's envelope reader (index.mjs `doAnswer`), as it is handed to the ops (N247). */
+const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
+  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
+const helpers = { json, requiredArgument, storeSilent, doAnswer };
 
 /* A Durable Object stub answering as the store's dispatcher does: `{ok: true, result}`. `calls` counts every call. */
 function stubOf(c, env) {
@@ -49,6 +52,21 @@ test("R30 R54: anyone may knock with no account; an accepted knock answers 200 w
   const b64 = await send(knock({ contentB64: Buffer.from([1, 2, 3]).toString("base64") }));
   assert.equal(b64.body.bytes, 3);
   assert.equal(inboxRows(rows), 2);
+});
+
+test("R54 (N247): the store's answer is opened only through the control plane's doAnswer; a store that does not answer is silence, never a rate refusal or an acceptance", async () => {
+  const { st, env, rows } = setup();
+  const opened = [];
+  const spy = async (res) => { const r = await doAnswer(res); opened.push(r); return r; };
+  const ok = await knockOp(knock({ contentText: "through the reader" }), env, st, { ...helpers, doAnswer: spy });
+  assert.equal(ok.status, 200);
+  assert.deepEqual([opened.length, opened[0].answered, opened[0].result.ok], [1, true, true], "the one envelope, opened by the reader handed in");
+  for (const stub of [{ fetch: async () => json({ ok: false }, 500) }, { fetch: async () => new Response("not json") },
+                      { fetch: async () => { throw new Error("down"); } }]) {
+    const r = await knockOp(knock({ contentText: "x" }), env, stub, helpers);
+    assert.deepEqual([r.status, (await r.json()).reason], [502, "STORE_DID_NOT_ANSWER"]);
+  }
+  assert.equal(inboxRows(rows), 1);
 });
 
 test("R53: knock is a POST; the refusals are tried in order and a refused knock writes no row, stores no bytes, counts in no window", async () => {

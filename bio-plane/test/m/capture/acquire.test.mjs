@@ -8,7 +8,6 @@ import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
 import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
 import { SUBRESOURCE_STAGGER_SETTING, REACHABILITY_SETTINGS, acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../../../src/capture/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
-import { driveRow } from "../../../src/capture/acquire.mjs";
 
 const HTML = (body = "<p>hello</p>") => `<!doctype html><html><head><title>t</title></head><body>${body}</body></html>`;
 const page = (body, headers = {}, status = 200) => new Response(body, { status, headers: { "content-type": "text/html; charset=utf-8", ...headers } });
@@ -140,15 +139,17 @@ test("R4: the Drive arm refuses hop facts, folders, undetermined kinds and unkno
   }
   const hop = await run(w, {}, { locator: "https://a.example/x", producer: "me" });
   assert.deepEqual([hop.status, hop.body.reason, hop.body.supplied], [400, "DRIVE_HOP_FACT_SUPPLIED", ["producer"]], "whatever its address");
+  assert.deepEqual([hop.body.check, hop.body.translation], row("DRIVE_HOP_FACT_SUPPLIED"));
   const unreach = await run(w, { [exp]: new Response("no", { status: 403 }) }, { locator: link });
-  assert.deepEqual([unreach.body.reason, unreach.body.check], ["DRIVE_EXPORT_UNREACHABLE", row("DRIVE_EXPORT_UNREACHABLE")[0]]);
+  assert.deepEqual([unreach.status, unreach.body.reason, unreach.body.check, unreach.body.translation], [502, "DRIVE_EXPORT_UNREACHABLE", ...row("DRIVE_EXPORT_UNREACHABLE")]);
   assert.deepEqual(unreach.net.seen.map((x) => x.url), [exp], "the application page is never fetched in its place");
   let bodyRead = false;
   const shellBody = new ReadableStream({ pull(c) { bodyRead = true; c.enqueue(new TextEncoder().encode("<html>")); c.close(); } }, { highWaterMark: 0 });
   const shell = await run(w, { [exp]: () => new Response(shellBody, { headers: { "content-type": "text/html" } }) }, { locator: link });
-  assert.equal(shell.body.reason, "DRIVE_EXPORT_IS_THE_SHELL"); assert.equal(bodyRead, false, "the shell's body is never read");
+  assert.deepEqual([shell.status, shell.body.reason, shell.body.check, shell.body.translation], [502, "DRIVE_EXPORT_IS_THE_SHELL", ...row("DRIVE_EXPORT_IS_THE_SHELL")]);
+  assert.equal(bodyRead, false, "the shell's body is never read");
   const sniffed = await run(w, { [exp]: new Response("<!doctype html><html><body>app</body></html>", { headers: { "content-type": "application/vnd.oasis.opendocument.text" } }) }, { locator: link });
-  assert.equal(sniffed.body.reason, "DRIVE_EXPORT_BYTES_ARE_THE_SHELL");
+  assert.deepEqual([sniffed.status, sniffed.body.reason, sniffed.body.check, sniffed.body.translation], [502, "DRIVE_EXPORT_BYTES_ARE_THE_SHELL", ...row("DRIVE_EXPORT_BYTES_ARE_THE_SHELL")]);
   assert.equal(w.b.calls.filter((c) => c[0] === "put").length, 0, "nothing filed for any of them");
   const odt = new Uint8Array([0x50, 0x4b, 0x03, 0x04, ...new TextEncoder().encode("mimetypeapplication/vnd.oasis.opendocument.text rest")]);
   const ok = await run(w, { [exp]: new Response(odt, { headers: { "content-type": "application/vnd.oasis.opendocument.text" } }) }, { locator: link });
@@ -453,6 +454,38 @@ test("R19 R55: the walk of a single HTML page's supporting files, its bookkeepin
   assert.equal((await run(bk, routes, { locator: "https://s.example/p", subresources: true })).status, 200);
 });
 
+test("R28 (N79): a live capture files each link's containment (subresources R34), and the host's chrome is classified from it: contained AND on two distinct pages is chrome, on one page undetermined, never lost", async () => {
+  const w = world();
+  const pg = (nav, body) => page(HTML(`<header><a href="/home">Home</a></header><nav>${nav}</nav><main>${body}</main>`));
+  const routes = { "https://s.example/p1": () => pg('<a href="/about">About</a>', '<a href="https://t.example/x">x</a>'),
+                   "https://s.example/p2": () => pg('<a href="/about">About</a><a href="/contact">Contact</a>', "<p>two</p>"),
+                   "https://s.example/p3": () => page(HTML('<p>no navigation at all</p><a href="/about">About</a>')) };
+  const r1 = await run(w, routes, { locator: "https://s.example/p1", subresources: true });
+  const sha1 = r1.body.document.capture.sha256;
+  const filed = Object.fromEntries(w.rows(`SELECT address_norm, chrome, chrome_basis FROM links WHERE source_capture = ?`, sha1)
+    .map((l) => [l.address_norm, [l.chrome, l.chrome_basis]]));
+  assert.equal(filed["https://s.example/about"][0], 1, "contained in <nav>");
+  assert.match(filed["https://s.example/about"][1], /nav/);
+  assert.equal(filed["https://s.example/home"][0], 1, "contained in <header>");
+  assert.match(filed["https://s.example/home"][1], /header/);
+  assert.deepEqual(filed["https://t.example/x"], [0, null], "a body link is filed, not contained");
+  let ch = Object.fromEntries(w.c.chromeOf({ host: "s.example" }).links.map((l) => [l.address_norm, l]));
+  assert.equal(ch["https://s.example/about"].state, "undetermined", "one page only: undetermined, never lost");
+  assert.equal(ch["https://t.example/x"], undefined, "a link in no chrome region is never classified");
+  await run(w, routes, { locator: "https://s.example/p2", subresources: true });
+  ch = Object.fromEntries(w.c.chromeOf({ host: "s.example" }).links.map((l) => [l.address_norm, l]));
+  assert.deepEqual([ch["https://s.example/about"].state, ch["https://s.example/about"].pages], ["chrome", 2]);
+  assert.deepEqual([ch["https://s.example/home"].state, ch["https://s.example/home"].pages], ["chrome", 2]);
+  assert.deepEqual([ch["https://s.example/contact"].state, ch["https://s.example/contact"].pages], ["undetermined", 1]);
+  assert.match(ch["https://s.example/about"].basis, /recurred on 2 distinct pages/); assert.ok(ch["https://s.example/about"].at);
+  const before = w.rows(`SELECT count(*) n FROM links`)[0].n;
+  await run(w, routes, { locator: "https://s.example/p3", subresources: true });
+  assert.ok(w.rows(`SELECT count(*) n FROM links`)[0].n > before, "the uncontained page's links are filed");
+  ch = Object.fromEntries(w.c.chromeOf({ host: "s.example" }).links.map((l) => [l.address_norm, l]));
+  assert.deepEqual([ch["https://s.example/about"].state, ch["https://s.example/about"].pages], ["chrome", 2],
+                   "a page carrying the address outside any chrome region neither adds a page nor removes the classification");
+});
+
 test("R11 R22: a continuation resumes the session's outstanding files against the session's own primary and never fetches the primary again", async () => {
   const w = world();
   w.c.recordCaptureLimit({ runtime: "subrequests", observed: 7 });
@@ -527,13 +560,4 @@ test("R37 R38: each refusal carries its catalogue row, and nothing in the answer
     answers.push((await run(w, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, b)).body);
   for (const a of answers.slice(0, 3)) assert.ok(a.check && a.translation, `${a.reason} carries its row`);
   assert.ok(!/oakland|alameda/i.test(JSON.stringify(answers)));
-});
-
-test("R4 R37: driveRow answers every C-48 code's own catalogue row, read from the catalogue, and throws on a code with no sentence", () => {
-  const codes = Object.keys(DRIVE_CAPTURE_CHECKS);
-  assert.ok(codes.includes("DRIVE_TICK_EXPORT_IS_THE_SHELL") && codes.includes("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"));
-  for (const code of codes)
-    assert.deepEqual(driveRow(code), { code, check: DRIVE_CAPTURE_CHECKS[code].check, translation: DRIVE_CAPTURE_CHECKS[code].translation }, code);
-  for (const bad of ["NOT_A_DRIVE_CODE", "RENDER_FAILED", "", undefined])
-    assert.throws(() => driveRow(bad), /has no DRIVE_CAPTURE_CHECKS row/, String(bad));
 });
