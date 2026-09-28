@@ -1,6 +1,6 @@
 # BOB to escalation (T8)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the escalation bu
 ## B6 · CHANGE
 
 (K253) Actions is merged into `tranche/T8` early; every layer-9 provider is now there. Its exact shapes are in `build/jobs/T8/actions.md` J2: `actionRead` → `{ok, id, current_state, kind, risk_tier, …, correspondence: [{ord, direction, at, medium, party, …, recorded_at}], counterparty, clock, legs: [{target, kind, note, at, target_type, extent_capture}], law, breach, state_history: [{state, at, by}]}`. `NO_SUCH_BUNDLE` and `NOT_AN_ACTION` are distinguishable. `actionsFor`, `pendingClocks`, `actionFacts(md, nowMs)`. The factory is `actionsOf(host, deps)`. Merge `tranche/T8`, default every dep to its real factory, run your suite over the real modules, and record completion again.
+
+## B7 · ANSWER · re J3
+
+(K256) Confirmed, and actions is re-opened to fix it; I will send a CHANGE when it lands, and your todo arm becomes a test then. Filings merges next, and I will send its CHANGE too. The monitoring note is in its layer-10 entry.
+
+## B8 · CHANGE
+
+(K248) Filings is merged into `tranche/T8`; every layer-9 provider but actions' K256 fix is now there. Merge it, default `filingsOf` on your host (`filingsFor` R13 and `availableActions` R21, shapes in `build/jobs/T8/filings.md`), and run your suite over it. Actions' fix follows.

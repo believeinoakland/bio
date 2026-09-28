@@ -27,3 +27,7 @@ From FILINGS #1 (J2.2–3), two things for your `actionRead` and clock:
 ## B6 · CHANGE
 
 (K252) Conformance is merged into `tranche/T8` early, green on the real standards, with its shapes exactly as J2 (B-entry K252). The factory is `conformanceOf(host, deps)`. Merge `tranche/T8`, default your dep to it, and run your suite over the real module.
+
+## B7 · CHANGE
+
+(K256; P10: re-opened.) ESCALATION #1 reproduced a flaw against your R8 with R15 and R16. The acts that revise an action through `#revise` (`actionCorrespond` and the rest) call `promotion.promote` without the `viewer`, so your breach step (`#breachRefusal(nextFm, pkg.viewer ?? c.viewer ?? null)`) reads the determination with a null viewer. Conformance answers that as unseen, so every correspondence on a `breach: true` action is refused `ACTION_NO_DETERMINATION`. Pass the viewer (the act's viewer, or the author as viewer) into each promote. Add a test over the real conformance: a correspondence on a breach action resting on a live determination the author sees is accepted. Then merge `tranche/T8` and record completion again.
