@@ -30,3 +30,7 @@ N132 has no requirement id in `build/requirements/host-governor.md` to test agai
 Two readings I took, say if either is wrong: (1) an `env` with no bindings (`{}`) counts as supplied, as capture R58 counts it; (2) `record` is refused whenever it is another object, never adopted, since R24's purge declaration was made through the one held (capture R58 treats `record` the same way).
 
 The header's `(R1–R25)` becomes `(R1–R26)`; nothing another module uses changes shape.
+
+## J2 · COMPLETE
+
+N132 applied as R26 (K287), merged with tranche/T9. host-governor tests 30/30; capture, capture-requests, monitoring, queue tests green; format, architecture, coverage (26/26), ownership 0 failures. Stales bio-plane and agent-worker bundles (not rebuilt). Also found: fleetbundles fails on tranche/T9 before this job (agent-worker recipe drift: membership/checks.mjs). Details in the record's Completion section.
