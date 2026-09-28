@@ -15,6 +15,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
+import { versionsIn } from "../../../src/basis-versions/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -65,8 +66,6 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT
 `;
 
 const q = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim()}"`;
-/** The grammar's one escape (basis-versions' `asWritten`): folds newlines, turns `"` and `\` to `'`, trims. */
-export const asWritten = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 
 /** An inquiry's document with its versions, in the restricted frontmatter grammar. */
 export function inquiryMd(id, versions = []) {
@@ -84,24 +83,8 @@ export function infoMd(id, state = "collected") {
           `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", "criticality: supporting",
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
-/** basis-versions' one composer (its R5), as far as this module's check depends on it: every field that defines a
- *  version, in a fixed order, escaped; the ground rows sorted, carrying `asserted_by` and `at` as fields 2 and 3. */
-export function basisVersionsOf(fm) {
-  const c = (v) => String(v ?? "").replace(/\\/g, "\\\\").replace(/\t/g, "\\t").replace(/\n/g, "\\n");
-  return (fm.basis_versions || []).map((v) => {
-    const legs = (fm.basis_version_legs || []).filter((l) => l.version === v.name);
-    const grounds = (fm.basis_version_grounds || []).filter((g) => g.version === v.name)
-      .sort((a, b) => (a.ground < b.ground ? -1 : a.ground > b.ground ? 1 : 0));
-    const composition = [
-      `name\t${c(v.name)}`, ...(v.kind ? [`kind\t${c(v.kind)}`] : []), `description\t${c(v.description)}`,
-      `claim\t${c(v.claim)}`, `relationship\t${c(v.relationship)}`, `derived_from\t${c(v.derived_from)}`,
-      ...grounds.map((g) => `ground\t${c(g.ground)}\t${c(g.asserted_by)}\t${c(g.at)}\t${c(g.statement)}`),
-      ...legs.map((l, k) => `leg\t${k}\t${c(l.target)}\t${c(l.role)}\t${c(l.grade)}\t${c(l.grade_axis)}\t`
-                          + `${c(l.grade_source)}\t${c(l.note)}\t${c(l.date)}\t${c(l.ground)}`),
-    ].join("\n");
-    return { name: v.name, kind: v.kind ?? null, composition, legs, grounds };
-  });
-}
+/** basis-versions' one composer (its R5), the module's own pure `versionsIn`. */
+export const basisVersionsOf = (fm) => versionsIn(fm);
 
 /** `real`: strength and citation are the extracted modules themselves (reached through their factories, as the
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
@@ -179,7 +162,6 @@ export function world({ strengthPair = null, real = false } = {}) {
 
   const candidateSources = [];
   const basisVersions = {
-    asWritten, basisVersionsOf,
     unsplice: false,
     appended: [],
     onCandidates(module, fn) { candidateSources.push({ module, fn }); return { ok: true }; },
@@ -233,7 +215,8 @@ export function world({ strengthPair = null, real = false } = {}) {
     strengthOf(host, { record, membership, inquiry, producingGroup: () => "g", now: () => clock.now });
     citationOf(host, { record, membership, content });
   }
-  const p = runProductionsOf(host, { record, membership, content, connections, aiRuns, basisVersions,
+  const p = runProductionsOf(host, { record, membership, content, connections, aiRuns,
+                                     basisVersions,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
