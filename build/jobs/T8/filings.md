@@ -1,3 +1,15 @@
 # filings (T8)
 
 **Status** · session_01N4paMRwP5wLaRFraqLcEB1 · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Four of filings' providers (standards, conformance, consequences, actions) are being built beside it in layer 9, so I build against their Provides through injected dependencies (no import of a file that does not exist yet) and test with stand-ins that answer exactly what their Provides state. Where a Provides leaves a field's name open, this is my reading; I carry on with it. Please confirm, or name what the providers' jobs answer instead.
+
+1. **actions.actionRead({id, viewer})** (R29 = R25's block). Beside R25's keys I read: `id`; `current_state` (R1's `ACTION_CLOSED` on `resolved`/`abandoned`); `counterparty` as the document holds it (actions R9: `{state: named, role, body, level?}` or `{state: undetermined, basis}`); `clock` (the document's entries); `legs` (`[{target, kind, ...}]`); `governing_laws` (`governingLawsOf`: `{state: stated, laws: [{level, citation}], by, at}` or `{state: undetermined, ...}`); `law`; `risk_tier` (1, 2, 3 or `undetermined`). Its `NO_SUCH_BUNDLE` and `NOT_AN_ACTION` both answer filings' one `NO_SUCH_ACTION`.
+2. **The action's determination** (R3, R8's `NO_DETERMINATION`, R6's staleness): its `rests_on` legs whose target `conformance.determinationRead` answers (a `CONF-` id, N129) and that is live; with several, the first live one in leg order.
+3. **conformance.determinationRead({id, viewer})** answers `{ok, id, project, act: {id, description, actor: {role, body}, at | period, evidence}, findings: [{id, case, edition, version_sha}], standards: [{id, outcome, in_force}], rows, live, superseded_by, basis_changed: {causes} | null, author, at}`; **determinationsFor({finding, live: true, viewer})** as its R11.
+4. **standards.standardRead({id, viewer})** answers `{ok, id, cite, kind, issuer, text: [content ids], period, superseded_by}`; **standards.inForce(id, date)** answers `{state, why}` (a bare state string also read).
+5. **consequences.consequencesOf({determination, viewer})** answers its R7 `{parts, totals, undetermined, unproven}`; filings includes it whole, states kept apart (R9).
+6. **R15/R21's block.** The profile has no link from a kind to an office, so "the kinds available against its counterparty's offices" is read as: for each office the determination's act names (`act.actor`), every kind of the view's `action_kinds`, each with its tier (or undetermined) and label, the office stated as matched in the view's `counterparties` or not. For Tier 3 kinds the standards the theories rest on are the determination's standards whose per-standard outcome is `noncompliant`. For the published case, the block covers the live determinations resting on any finding of that edition whose project owns the case, read by the plane (a machine viewer), since the package is public and conformance R2 already binds such a determination to that project's published findings.
+7. **Ops.** filings has no `from`, so it writes no legacy file: it exports `filingsOps(f, url, body)` (the reevaluation pattern) for legacy-index to route in layer 11 (map §4's ~25 lines are that job's), and REPORTs it.
