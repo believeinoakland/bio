@@ -75,3 +75,7 @@ B3 (K250) applied: tranche/T8 merged; consequences' shapes confirm J1 item 5, no
 **Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 30, pass 30, fail 0. format: 0 failures. architecture: 10 product files, 32 relative imports; 0 failures. coverage: 21 of 21; 0 failures. ownership: 11 files; 0 failures.
 
 Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 19, module lines 1336
+
+## J5 · REPORT
+
+For BOB to fold into filings' requirements (codes are interface detail, K238's precedent, as standards' J2): R1's and R14's NO_AUTHOR is the catalogue's generic code (minted in store and provenance for other conditions), so the DEC-49 guard's arm G refuses a C-115 row for it; filings mints FILING_NO_PREPARER (C-115.1, R1) and THEORY_NO_PROPOSER (C-115.27, R14). R14's NO_SUCH_STANDARD and R21's NO_SUCH_DETERMINATION are now standards' and conformance's own refusals passed through (naming the id), never re-minted; with the provider absent filings answers THEORY_STANDARD_UNREADABLE and DETERMINATION_UNREADABLE (K248). Also for standards: standardsOf does not migrate its tables at construction (filings' fixture calls migrate itself).
