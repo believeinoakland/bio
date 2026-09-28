@@ -1946,9 +1946,9 @@ export class Store extends DurableObject {
          no other's. Its wake is the earliest lease expiry across live runs, so
          an instance with no run in flight holds no alarm at all. */
       { name: "ai-run-reap",
-        due:  (now) => this.#aiRuns().reapDue(now) > 0 ? now : null,
-        wake: (now) => this.#aiRuns().reapWake(now),
-        tick: (now) => ({ airunreap: this.#aiRuns().reap(now) }) },
+        due:  (now) => aiRunsOf(this.ctx, this.env).reapDue(now) > 0 ? now : null,
+        wake: (now) => aiRunsOf(this.ctx, this.env).reapWake(now),
+        tick: (now) => ({ airunreap: aiRunsOf(this.ctx, this.env).reap(now) }) },
       /* PL-4 / IS-4 / SWEEP 4b.1: THE CAPTURE-REQUEST DRAIN — the NINTH consumer
          on the one alarm, and ONE APPENDED ENTRY exactly as SCHEDULER.md
          instructs: *"append an entry to #schedConsumers… Do NOT add a second
@@ -2049,11 +2049,11 @@ export class Store extends DurableObject {
          instant no run does — an instance with no suspended run holds no alarm
          at all. */
       { name: "ai-run-wake",
-        due:  (now) => this.#aiRuns().wakeDue(now) > 0 ? now : null,
-        wake: (now) => this.#aiRuns().wakeWake(now),
+        due:  (now) => aiRunsOf(this.ctx, this.env).wakeDue(now) > 0 ? now : null,
+        wake: (now) => aiRunsOf(this.ctx, this.env).wakeWake(now),
         /* D-260: ASYNC since the wake gained its caller — the resumption dispatch awaits `agent-worker`. `onAlarm`
            already awaits every tick, so this is the async-consumer shape REC-1 foresaw, not a reshape. */
-        tick: async (now) => ({ airunwake: await this.#aiRuns().wake(now) }) },
+        tick: async (now) => ({ airunwake: await aiRunsOf(this.ctx, this.env).wake(now) }) },
       /* CPDF-13 / D-183 — THE CALIBRATION RE-PROBE, and ONE APPENDED ENTRY
          exactly as SCHEDULER.md instructs: *"append an entry to
          #schedConsumers… Do NOT add a second alarm or a cron; that is the
