@@ -290,7 +290,7 @@ export class Actions {
     const bytes = new TextEncoder().encode(text);
     return this.promotion.promote({
       bundleId: id, base: this.#baseOf(id), snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
-      author: who, ...marks,
+      author: who, viewer: marks.viewer ?? who, ...marks,
       files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() },
               ...this.#carried(id)],
       meta: { object_type: fm.object_type ?? b.object_type, title: fm.title,
@@ -508,7 +508,8 @@ export class Actions {
                   + "account and an author (DEC-13)",
             repairs: ["capture the artifact first (op=capture), then record its sha", "or record a named account instead"] }] });
       }
-      const breach = this.#breachRefusal(nextFm, pkg.viewer ?? c.viewer ?? null);
+      /* R8 (K256): the determination is read as the act's viewer sees it; a write that names none reads as its author. */
+      const breach = this.#breachRefusal(nextFm, pkg.viewer ?? c.viewer ?? (who || null));
       if (breach) return breach;
     }
     /* REC-24 (g) / C-6.1: a responds_to edge's shape from the catalogue, its resolution from the record. */
@@ -784,7 +785,7 @@ export class Actions {
     const bytes = new TextEncoder().encode(text);
     const promoted = this.promotion.promote({
       bundleId: target, base: this.#baseOf(target), snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
-      author: who,
+      author: who, viewer: viewer ?? who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
       meta: { object_type: fm.object_type ?? b.object_type,
@@ -1079,7 +1080,7 @@ export class Actions {
     const bytes = new TextEncoder().encode(text);
     const promoted = this.promotion.promote({
       bundleId: target, base: this.#baseOf(target), snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
-      author: who,
+      author: who, viewer: viewer ?? who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
       meta: { object_type: fm.object_type ?? b.object_type,
@@ -1179,7 +1180,7 @@ export class Actions {
     const bytes = new TextEncoder().encode(text);
     const promoted = this.promotion.promote({
       bundleId: target, base: this.#baseOf(target), snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
-      author: who, [LAWS_ACT]: true,
+      author: who, viewer: viewer ?? who, [LAWS_ACT]: true,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
       meta: { object_type: fm.object_type ?? b.object_type,
@@ -1350,7 +1351,7 @@ export class Actions {
     const bytes = new TextEncoder().encode(text);
     const promoted = this.promotion.promote({
       bundleId: target, base: this.#baseOf(target), snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
-      author: who, [RISK_TIER_ACT]: true,
+      author: who, viewer: viewer ?? who, [RISK_TIER_ACT]: true,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
       meta: { object_type: fm.object_type ?? b.object_type,
@@ -1506,7 +1507,7 @@ export class Actions {
     const bytes = new TextEncoder().encode(text);
     const p = this.promotion.promote({
       bundleId: doc.bundle_id, base: this.#baseOf(doc.bundle_id),
-      snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`, author: who,
+      snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`, author: who, viewer: who,
       files: [{ path: "bundle.md", text, bytes: bytes.length,
                 sha256: createSha256().update(bytes).hex() }, ...carried],
       meta: { object_type: fm.object_type ?? doc.object_type,
