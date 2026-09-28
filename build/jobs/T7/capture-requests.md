@@ -1,6 +1,6 @@
 # capture-requests (T7)
 
-**Status** · session_01NwvumqeZpXpPVxqHF2TYjC · depth 2 · WORKING · handled B1
+**Status** · session_01NwvumqeZpXpPVxqHF2TYjC · depth 2 · WORKING · handled B3
 
 ## J1 · QUESTION
 
