@@ -102598,29 +102598,8 @@ var Store = class _Store extends DurableObject {
   #citesInto(id) {
     return connectionsOf(this.ctx).citesInto(id);
   }
-  /* publication (T8, K3): the case relation, the revision flags, the case documents, the attribution statements, the
-     published reads and their pinning helpers are publication's. The store's callers not yet extracted reach them here. */
-  #caseRelationOf(id) {
-    return publicationOf(this.ctx).caseRelation(id);
-  }
-  #projectCaseExclusions(...a) {
-    return publicationOf(this.ctx).projectCaseExclusions(...a);
-  }
-  #hasCaseStanding(...a) {
-    return publicationOf(this.ctx).hasCaseStanding(...a);
-  }
-  #attributionInForce(...a) {
-    return publicationOf(this.ctx).attributionInForce(...a);
-  }
-  #attributionStatements(...a) {
-    return publicationOf(this.ctx).attributionStatements(...a);
-  }
-  static #attributionFrontmatterLines(rows) {
-    return attributionFrontmatterLines(rows);
-  }
-  static #attributionBodyLines(rows) {
-    return attributionBodyLines(rows);
-  }
+  /* publication (T8, K3): the published registries and the attribution reads are publication's; the store's callers not
+     yet extracted, and the old battery, reach them here. */
   publishedRegistryFor(...a) {
     return publicationOf(this.ctx).publishedRegistryFor(...a);
   }
@@ -102632,10 +102611,6 @@ var Store = class _Store extends DurableObject {
   }
   attributionStatedFor(...a) {
     return publicationOf(this.ctx).attributionStatedFor(...a);
-  }
-  /* R17: the live legs resting on an id: inquiry's. */
-  #restsOnLive(id) {
-    return inquiryOf(this.ctx).restsOnLive(id);
   }
   /* REC-181: RETIREMENT'S ONE CITATION PREDICATE, shared by `retire` and by
    * `promote`'s transition into `retired`. §4.1 of State Rules v1.5 (BOB #30):
@@ -103061,20 +103036,6 @@ Mitigation: ${mit}
   actionQuotes(a) {
     return actionsOf(this.ctx).actionQuotes(a);
   }
-  /* One Session Log appender for THIS item's three writers (actionMove,
-     actionCorrespond and the responds_to producer), so they cannot disagree
-     about where an entry goes. It is written as a helper rather than open-coded
-     a third time; conclude, reopen and cite still carry their own identical
-     copies of this five-line splice, which is a real duplication and is stated
-     rather than quietly inherited — moving them onto this helper is a cleanup
-     with no behaviour in it and is not this item's to make. */
-  static #appendSessionLog(text3, entry) {
-    const at14 = text3.indexOf("## Session Log");
-    if (at14 < 0) return text3 + "\n## Session Log\n\n" + entry;
-    const nxt = text3.indexOf("\n## ", at14 + 1);
-    const cut3 = nxt === -1 ? text3.length : nxt + 1;
-    return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
-  }
   reopen({ target, reason = "", viewer = null, author = null } = {}) {
     return promotionOf(this.ctx).reopen({ target, reason, viewer, author });
   }
@@ -103087,63 +103048,6 @@ Mitigation: ${mit}
   }
   groundInquiry(...a) {
     return inquiryOf(this.ctx).ground(...a);
-  }
-  /* Frontmatter-safe: the restricted grammar has no escapes, and these strings
-     are DERIVED (a strength detail, a bar's explanation) rather than authored,
-     so they are sanitised here rather than refused — an authored field is
-     refused by name above, which is the difference that matters. */
-  static #fmSafe(s) {
-    return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
-  }
-  /* REC-14: replace a heading's SECTION body, or open the section if the
-     document has none. Used for `## What This Excludes`, which C-3.1 requires
-     in the published state — the frontmatter is what the gates read and this is
-     what a person reads, and they are written in the same act so they cannot
-     disagree. */
-  static #setSection(text3, heading, lines) {
-    const at14 = text3.indexOf(`
-${heading}
-`);
-    const body = `${heading}
-
-${lines.join("\n")}
-`;
-    if (at14 === -1) return text3.replace(/\s*$/, "\n") + "\n" + body;
-    const start = at14 + 1;
-    const nxt = text3.indexOf("\n## ", start + 1);
-    const end2 = nxt === -1 ? text3.length : nxt + 1;
-    return text3.slice(0, start) + body + "\n" + text3.slice(end2);
-  }
-  /* A frontmatter BLOCK (a map or an array of objects), written whole. The
-     scalar setters cannot express either, and a block that is edited in place
-     rather than rewritten is a block that can end up half from one edition and
-     half from another — which is exactly what C-21.1 exists to catch and is not
-     a state this act should be able to produce in the first place. */
-  static #removeBlock(text3, key) {
-    const lines = text3.split("\n");
-    if (lines[0] !== "---") return text3;
-    const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return text3;
-    let at14 = -1;
-    for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
-      at14 = i;
-      break;
-    }
-    if (at14 === -1) return text3;
-    let last = at14;
-    for (let i = at14 + 1; i < end2; i++) {
-      if (/^\s/.test(lines[i]) && lines[i].trim() !== "") last = i;
-      else break;
-    }
-    return [...lines.slice(0, at14), ...lines.slice(last + 1)].join("\n");
-  }
-  static #setOrAddBlock(text3, key, block) {
-    const t = _Store.#removeBlock(text3, key);
-    const lines = t.split("\n");
-    if (lines[0] !== "---") return t;
-    const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return t;
-    return [...lines.slice(0, end2), `${key}:`, ...block, ...lines.slice(end2)].join("\n");
   }
   /* REC-86 / IC-123: narrowing is basis-versions' (R24–R27). */
   narrowCandidates(a) {
@@ -103199,117 +103103,6 @@ ${lines.join("\n")}
       }
     }
     return text3;
-  }
-  /* #setScalar for a key that may not be there yet (REC-13). It returns the
-     text UNCHANGED when the key is absent, which is right for the fields every
-     document already carries (current_state, prior_state, last_updated) and
-     wrong for a field a NEW state introduces: an inquiry authored before
-     `concluded` existed carries no `conclusion:` line, and silently not
-     writing one would move the state while leaving its own entry requirement
-     unmet — the bundle the catalog then rejects. Absent, the key is opened
-     immediately before the closing fence, the #spliceReferences convention. */
-  /* CORRECTED 2026-08-04 (REC-14), and the old form was WRONG rather than
-     superseded. It decided "was the key there?" by asking "did the text
-     CHANGE?" — so writing a key its EXISTING VALUE appended a SECOND copy of
-     it, and the document then carried a duplicate top-level key that C-2.1
-     refuses. Nothing caught it because no act had ever written the same value
-     twice: REC-13's conclude() was only ever called once per document until
-     DEC-12 made a case reopen, be concluded AGAIN with the same falsifier, and
-     republish. The gate found it (`duplicate top-level key 'falsifier'`), which
-     is the layering working, but the write should never have produced it.
-     Presence is now decided by LOOKING, which is what the question was. */
-  static #setOrAddScalar(text3, key, value) {
-    const lines = text3.split("\n");
-    if (lines[0] !== "---") return text3;
-    const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return text3;
-    for (let i = 1; i < end2; i++)
-      if (lines[i].startsWith(key + ":")) {
-        lines[i] = `${key}: ${value}`;
-        return lines.join("\n");
-      }
-    return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
-  }
-  /* PL-3 / IS-4 — APPEND WHOLE ROWS TO ONE ARRAY-OF-OBJECTS BLOCK.
-   *
-   * `#setVersionField` moves ONE field on ONE existing row and `#spliceReferences`
-   * appends to the ONE block it is named for. Adding a version needs rows in
-   * THREE sibling blocks, any of which may be absent, inline-empty or populated,
-   * so this is `#setCurrentVersionRow`'s three-shape handling with the block
-   * name as a parameter instead of baked in — one implementation for the three
-   * blocks rather than three that agree today.
-   *
-   * IT REFUSES RATHER THAN GUESSES, returning null when the block is an inline
-   * scalar this restricted grammar cannot extend. That is `#spliceReferences`'
-   * posture and its reason: the grammar has no escapes, so a wrong guess
-   * corrupts a document silently and the store would then promote the corruption. */
-  static #appendFmRows(text3, key, rowLines) {
-    if (!rowLines.length) return text3;
-    const lines = text3.split("\n");
-    if (lines[0] !== "---") return null;
-    const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return null;
-    let at14 = -1;
-    for (let i2 = 1; i2 < end2; i2++) if (new RegExp(`^${key}:`).test(lines[i2])) {
-      at14 = i2;
-      break;
-    }
-    if (at14 === -1)
-      return [...lines.slice(0, end2), `${key}:`, ...rowLines, ...lines.slice(end2)].join("\n");
-    const rest = lines[at14].slice(key.length + 1).trim();
-    if (rest === "[]")
-      return [...lines.slice(0, at14), `${key}:`, ...rowLines, ...lines.slice(at14 + 1)].join("\n");
-    if (rest !== "") return null;
-    let i = at14 + 1;
-    while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
-    return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
-  }
-  /* PL-2's two write sites both append their Session Log entry through REC-24's
-     EXISTING `#appendSessionLog` above (C-13.2 requires the entry whenever
-     `last_updated` moves, and BEAT 4 requires the receipt to land IN THE RECORD
-     rather than only in the HTTP response). A second five-line splice was
-     written here and DELETED: REC-24's own comment says the helper exists so its
-     writers cannot disagree about where an entry goes, and the duplication it
-     already names as real debt is not worth adding a fourth instance to. */
-  /* Splice new entries into the `references` block, touching nothing else.
-   *
-   * Three shapes are reachable in the corpus and all three are handled: an
-   * inline empty `references: []`, a populated block, and a document with no
-   * references key at all. A key whose value is any OTHER inline scalar is
-   * refused by returning null rather than guessed at, because the restricted
-   * grammar cannot express an inline array of objects and a wrong guess would
-   * corrupt the document silently. */
-  static #spliceReferences(text3, additions) {
-    const lines = text3.split("\n");
-    if (lines[0] !== "---") return null;
-    const end2 = lines.indexOf("---", 1);
-    if (end2 === -1) return null;
-    const block = additions.map((a) => `  - rel: ${a.rel}
-    target: ${a.target}
-    status: ${a.status}
-    note: "${a.note ?? ""}"` + (typeof a.extent_capture === "string" ? `
-    extent_capture: ${a.extent_capture}` : ""));
-    let ref = -1;
-    for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
-      ref = i;
-      break;
-    }
-    if (ref === -1)
-      return [...lines.slice(0, end2), "references:", ...block, ...lines.slice(end2)].join("\n");
-    const rest = lines[ref].slice("references:".length).trim();
-    if (rest === "[]")
-      return [...lines.slice(0, ref), "references:", ...block, ...lines.slice(ref + 1)].join("\n");
-    if (rest !== "") return null;
-    let last = ref;
-    for (let i = ref + 1; i < end2; i++) {
-      if (lines[i].trim() === "") continue;
-      if (/^\s/.test(lines[i])) {
-        last = i;
-        continue;
-      }
-      break;
-    }
-    return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
   }
   #rows(q6, ...a) {
     return [...this.sql.exec(q6, ...a)];
@@ -103713,33 +103506,6 @@ ${lines.join("\n")}
   attestationsFor(...a) {
     return contentOf(this.ctx).attestationsFor(...a);
   }
-  /** THE PERSISTED READING for a capture, parsed, or null.
-   *
-   *  CAP-9 FOLDED TWO READS INTO ONE. `contentContextFor` wants two facts off
-   *  this row — the chain and (since D-345) the page count — and asking for the
-   *  row twice would be two answers to one question waiting to disagree, which
-   *  is the drift the comment on `#contentPlanFor` already names. One read,
-   *  parsed once, handed to both readers below.
-   *
-   *  D-440 ADDS THE ROW'S `capture_format` TO THE SAME READ rather than a second
-   *  one, for the same reason: the container's kind and its extent are two facts
-   *  about one row, and `contentContextFor` hands both to the checker together. */
-  #persistedReading(captureSha) {
-    const row2 = this.#one(`SELECT reading, capture_format FROM readings WHERE capture_sha=?`, captureSha);
-    return {
-      reading: row2 ? safeJson17(row2.reading) || null : null,
-      captureFormat: row2 && typeof row2.capture_format === "string" ? row2.capture_format : null,
-      held: !!row2
-    };
-  }
-  /** The transcription chain the record holds for a capture, or null.
-   *  ONE source (`readings.reading.text_source`), the same one `attestText` and
-   *  `attestationsFor` read, so the chain a content row records and the chain a
-   *  ceiling is computed from cannot be two different chains. */
-  #chainOfReading(reading) {
-    const chain2 = reading && typeof reading === "object" ? reading.text_source ?? null : null;
-    return Array.isArray(chain2) ? chain2 : null;
-  }
   /** Everything the extent checker needs about a capture (K73 (1)): content's. */
   contentContextFor(...a) {
     return contentOf(this.ctx).contentContextFor(...a);
@@ -103766,8 +103532,13 @@ ${lines.join("\n")}
   // provenance's TESTIMONY_PATH until `extraction`, `content` and `observation-log` register it as their projections
   // (K31). ONE unit over the whole words, at the `document` extent: the content row is minted at that same extent
   // under that same (null) chain, so a `passage:` hit and a citation address one passage under one id. The index
-  // observation reads PRESENT because it is: the words are the whole document. No READING is written, because no
-  // reader ran over the words. The extraction look is not a formality: without it `op=contentaxis` finds no
+  // observation reads PRESENT because it is: the words are the whole document.
+  // N265: NO READING IS WRITTEN, SO THIS PATH DOES NOT GO THROUGH EXTRACTION'S WRITER (`writeReading`, its R19). No
+  // reader ran over the words, so there is no reading to write, and inventing one would make the record claim acts
+  // nobody performed: the writer's listeners would record a reader run that found no references (observation-log R8)
+  // and tier outcomes judged from a chain that does not exist (its R6). So the path asks extraction's text index
+  // (`indexUnits`, R22's half of the writer) and observation-log's index row (`observeIndexed`, R7) directly, and
+  // nothing else of the writer. The extraction look below is not a formality: without it `op=contentaxis` finds no
   // `extract` row for this capture and calls it NOBODY LOOKED, which is false, since the words ARE the text. It
   // throws to roll the whole promotion back rather than return a half.
   #testimonyWithin(bid, pkg) {
@@ -104164,7 +103935,7 @@ ${lines.join("\n")}
    *  producer: a producer filtering its own homes would be a second
    *  implementation of the homes rule, which is the shape this repository has
    *  already lost a control to. The narrowing is `#refEdgeSevered`, the single
-   *  predicate `#citesInto` and `#restsOnLive` also read, and BOTH edge kinds are
+   *  predicate `#citesInto` and inquiry's `restsOnLive` also read, and BOTH edge kinds are
    *  confirmed — the basis half had the identical blindness and nothing had
    *  named it.
    *
@@ -104291,8 +104062,8 @@ ${lines.join("\n")}
   }
   /** The options a member may act on, DERIVED — never a copy, never invented.
    *
-   *  REC-19 owns "what may be DONE to an object": ACTS + deriveActs over the
-   *  store's own affordanceFacts, which is itself viewer-gated. This method
+   *  REC-19 owns "what may be DONE to an object": ACTS + deriveActs over
+   *  affordances' `affordanceFacts`, which is itself viewer-gated. This method
    *  calls THAT derivation and projects the three fields that survive the DO
    *  boundary; the control plane decorates them with `needs`, `mode` and
    *  `rung` from NEEDS/SESSION_OPS/RUNGS through the SAME function op=affordances
@@ -104387,25 +104158,25 @@ ${lines.join("\n")}
    *  is actually working on; site_assets would answer a narrower question (what
    *  a host SERVED as furniture) and reuse_verdicts a narrower one still.
    *
-   *  GLOB rather than LIKE, and on purpose: `_` is a LIKE wildcard and a legal
-   *  hostname character, so LIKE would silently widen the match, while GLOB's
-   *  metacharacters (`*?[`) cannot appear in a hostname at all. Four patterns
-   *  because normalizeAddress keeps the scheme and keeps a non-default port. */
+   *  AN ADDRESS BELONGS TO THE HOST WHEN IT BEGINS WITH ONE OF FOUR PREFIXES, since normalizeAddress keeps the
+   *  scheme and a non-default port: `https://<host>/`, `http://<host>/`, `https://<host>:`, `http://<host>:`. Each
+   *  prefix is asked as a RANGE over the text, `prefix <= address_norm < upper`, where `upper` is the prefix with
+   *  its last character (`/` or `:`) raised by one: under SQLite's binary collation that is exactly "begins with",
+   *  and it is a seek on the `address_norm` key. No LIKE or GLOB pattern is built (N270): a pattern grows with the
+   *  host, and workerd refuses one over 50 bytes (K313), so a long hostname failed the whole read on the plane. */
   #conditionBundlesForHost(host, viewer) {
     const cap = _Store.QUEUE_CONDITION_SUBJECTS_MAX;
     if (typeof host !== "string" || !host) return { ids: [], bounded: false };
     const seen = this.#bundleGate("r.bundle_id", viewer);
+    const prefixes = [`https://${host}/`, `http://${host}/`, `https://${host}:`, `http://${host}:`];
+    const ranges = prefixes.flatMap((p) => [p, p.slice(0, -1) + String.fromCharCode(p.charCodeAt(p.length - 1) + 1)]);
     const rows = this.#rows(
       `SELECT DISTINCT r.bundle_id FROM captured_locators cl
          JOIN register r ON r.capture_sha = cl.capture_sha
-        WHERE (cl.address_norm GLOB ? OR cl.address_norm GLOB ?
-            OR cl.address_norm GLOB ? OR cl.address_norm GLOB ?)
+        WHERE (${prefixes.map(() => "(cl.address_norm >= ? AND cl.address_norm < ?)").join(" OR ")})
           AND (${seen.sql})
         ORDER BY r.bundle_id LIMIT ?`,
-      `https://${host}/*`,
-      `http://${host}/*`,
-      `https://${host}:*`,
-      `http://${host}:*`,
+      ...ranges,
       ...seen.args,
       cap + 1
     );
@@ -104976,7 +104747,7 @@ ${lines.join("\n")}
    *
    *  THE FIX IS D-464'S AND D-486'S SUBTRACTION, NOT A SECOND SIGHT RULE, and
    *  that is also the answer to the old paragraph's performance objection.
-   *  `#hiddenSets(viewer).hid` is the ONE set of bundles the caller's own
+   *  `#hiddenBundles(viewer)` is the ONE set of bundles the caller's own
    *  `viewerPredicate` does not pass, spelled once and read here as a set —
    *  `NOT IN`, an indexed subtraction SQLite materialises once per statement,
    *  never the per-row correlated gate the old paragraph rightly refused. Who
@@ -105002,7 +104773,7 @@ ${lines.join("\n")}
    *  which case no item is minted. */
   #queueSharedInquiryCandidates(viewer) {
     const cap = _Store.QUEUE_SHARED_INQUIRIES_MAX;
-    const { hid } = this.#hiddenSets(viewer);
+    const hid = this.#hiddenBundles(viewer);
     const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : "";
     const args = hid ? [...hid.args, ...hid.args] : [];
     const rows = this.#rows(
@@ -106705,58 +106476,24 @@ ${lines.join("\n")}
   stats({ capacity = false, viewer } = {}) {
     return this.#counts({ proof: false, capacity: capacity === true, viewer });
   }
-  /** D-486 — THE ONE PREDICATE THAT WITHHOLDS A HIDDEN PROJECT'S RUN ATTRIBUTION, AND THE ONE PLACE
-   *  THE THREE SETS ARE SPELLED. Five readers take it (`#counts`' `aiRunLog` and
-   *  `observationsNonLead`, and the document, content and meaning frontier tallies), because a rule
-   *  with five spellings is the mirror-and-drift class this file refuses for gates.
+  /** D-464 — THE BUNDLES THIS CALLER CANNOT SEE, as a set subtraction: every bundle the caller's own
+   *  `viewerPredicate` does not pass, the complement of the one compiled gate (a use, not a second rule). The
+   *  shared-inquiry candidates and `#counts` subtract it. `null` when there is nothing to subtract: a credential the
+   *  gate does not filter (scope `member`) and a viewer NEVER SENT (`undefined`: a direct internal call, which stays
+   *  WHOLE, purge's proof among them). A viewer sent but unrecognised is DENY, so every bundle is hidden: fails closed.
    *
-   *  **RULED BY BOB #32, 2026-09-24 02:30Z, on the question D-464 routed rather than decided**
-   *  (`BIO_Membership_Architecture_v2.md` §7 item 7.9; `OBSERVATION-LOG-DESIGN.md` §6): *a hidden
-   *  project's run output is the PROJECT'S THINKING until something outside uses it; the bytes stay
-   *  shared, only the run's ATTRIBUTION is withheld.* So nothing here touches the evidence — a
-   *  capture, a content row, a reading a hidden project's run produced stays in every corpus count
-   *  it was ever in. What leaves an outsider's tallies is the LOG ROW that says a run happened, and
-   *  it leaves because that row is §7.9's *"not its existence"* arriving as an aggregate: a member
-   *  diffing `op=stats` or `op=frontier` across a colleague's work learned that a project they were
-   *  never invited to had RUN.
-   *
-   *  THE PREDICATE IS A SET SUBTRACTION AND DELIBERATELY NOT A RESOLVER, which is what makes it
-   *  admissible where REC-110 (D-386) refused gating these tallies. That ruling's premise (2) is
-   *  that `observation_log` has no bundle column, so a bundle gate here would be the SECOND
-   *  implementation of `#observationBundles` REC-92 refused; its premise (3) is that applying that
-   *  resolver per row is `derivation-bounds.test.mjs`'s amplification class. Neither is touched:
-   *  this reads ONE indexed set of run ids (`observation_log_authority` is `(authority_kind,
-   *  authority, seq)`) and subtracts it, with no per-row work and no second resolver. Premise (1) —
-   *  *`op=stats` answers the same question to the same audience through a door of identical width* —
-   *  is KEPT TRUE BY MOVING BOTH DOORS IN ONE LANDING rather than by leaving the tallies whole; that
-   *  is why D-486's row says *all five readers together*, and why gating four of them would have
-   *  been the documented hole the premise warns about. Premise (4) is untouched: the field still
-   *  counts every row at its level rather than this page's states.
-   *
-   *  WHO IS FILTERED IS THE GATE'S WORD (D-464's sentence, inherited rather than restated): a
-   *  credential `viewerPredicate` does not filter — scope `member`, the four token classes and an
-   *  organisation `ai` key — and an enrolled administrator's session get `null` here, i.e. exactly
-   *  the count they always got. A viewer SENT but unrecognised is DENY, so every project is hidden
-   *  and every project-context run's rows drop: FAILS CLOSED.
-   *
-   *  THE NEVER-SENT STAMP IS THE CALLER'S CONVENTION AND NOT THIS METHOD'S, and the two callers
-   *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
-   *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
-   *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
-   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all
-   *  (*a missing stamp is an outage and never a leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
-  #hiddenSets(viewer) {
+   *  D-486's RUN subtraction (BOB #32: a hidden project's run is its thinking; the bytes stay shared, only the run's
+   *  attribution is withheld) is NOT spelled here any more. It is ai-runs' one predicate, `hiddenRuns` (its R42,
+   *  N191), which `#counts` asks through `#hiddenRunTail` below. */
+  #hiddenBundles(viewer) {
     const gate = viewer === void 0 ? null : viewerPredicate(viewer);
-    const hid = gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
-    const hidRuns = hid && {
-      sql: `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid.sql})`,
-      args: hid.args
-    };
-    const runRows = hidRuns && {
-      sql: `NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`,
-      args: hidRuns.args
-    };
-    return { gate, hid, hidRuns, runRows };
+    return gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
+  }
+  /** N191 (K333, K335): ai-runs' R42 tail for the caller's sight — over `observation_log` without `column`, over a
+   *  column naming a run id with one. R42 fails CLOSED on an absent viewer, so it is not asked for a viewer never
+   *  sent: this store's own convention keeps a direct internal call WHOLE (the empty tail), as `#hiddenBundles` does. */
+  #hiddenRunTail(viewer, column = void 0) {
+    return viewer === void 0 ? { sql: "", args: [] } : hiddenRuns(viewer, column);
   }
   /** The one body behind both answers, so the wire's counts and purge's proof cannot drift apart
    *  on any key but the ones the ruling names. `proof` is PRIVATE: only `purge` passes it, because
@@ -106764,18 +106501,13 @@ ${lines.join("\n")}
    *  WHOLE (§5: *the purge proof's own count stays whole*) — `observations` over the whole log,
    *  `leads`, and `dbBytes`, exactly as `op=purge` has always answered. No route reaches it. */
   #counts({ proof, capacity = false, viewer }) {
-    const { hid, hidRuns, runRows } = this.#hiddenSets(viewer);
-    const nx = (t, where, keys = [], runKeys = [], whereArgs = []) => {
-      const conds = where ? [where] : [], args = [...whereArgs];
-      if (hid) {
-        for (const k of keys) {
-          conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`);
-          args.push(...hid.args);
-        }
-        for (const k of runKeys) {
-          conds.push(`COALESCE(${k}, '') NOT IN ${hidRuns.sql}`);
-          args.push(...hidRuns.args);
-        }
+    const hid = this.#hiddenBundles(viewer);
+    const runTail = this.#hiddenRunTail(viewer), boundsTail = this.#hiddenRunTail(viewer, "run");
+    const nx = (t, where, keys = []) => {
+      const conds = where ? [where] : [], args = [];
+      if (hid) for (const k of keys) {
+        conds.push(`COALESCE(${k}, '') NOT IN ${hid.sql}`);
+        args.push(...hid.args);
       }
       return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
     };
@@ -106917,7 +106649,7 @@ ${lines.join("\n")}
          COUNT AND NOTHING ELSE — what a run is looking into is not an operator
          surface, the same line queueState draws one row up. */
       aiRuns: n("ai_runs", "context_id"),
-      aiRunBounds: nx("ai_run_bounds", null, [], ["run"]),
+      aiRunBounds: this.#one(`SELECT count(*) c FROM ai_run_bounds WHERE 1=1${boundsTail.sql}`, ...boundsTail.args).c,
       /* D-85: the links from an assistant's questions to their runs, counted for IS-6's reason one line up — so a
          purge can PROVE it took them (D-113). A COUNT AND NOTHING ELSE: which run opened which question is read
          per question, under that question's gate (`op=projection`'s `surfaced_in`). */
@@ -106935,13 +106667,10 @@ ${lines.join("\n")}
       /* D-486 / BOB #32 (2026-09-24): AND IT IS TAKEN THROUGH THE CALLER'S OWN SIGHT. This key is the
          `authority_kind = 'run'` SLICE of the log, so every row it counts is a run saying it looked —
          which for a project the caller cannot see is that project's THINKING, withheld by the ruling.
-         `runRows` is D-464's `hidRuns` inverted into a row predicate at `#hiddenSets`, one compilation
-         point for this key, `observationsNonLead` below and the three frontier tallies. Unfiltered
-         callers get `null` and the count they always got; purge's `observations` below stays WHOLE. */
-      aiRunLog: this.#one(
-        `SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : ""}`,
-        ...runRows ? runRows.args : []
-      ).c,
+         `runTail` is ai-runs' R42 (`hiddenRuns`, N191), the one predicate this key, `observationsNonLead` below and
+         retrieval's frontier tallies read. Unfiltered callers get the empty tail and the count they always got;
+         purge's `observations` below stays WHOLE. */
+      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runTail.sql}`, ...runTail.args).c,
       /* REC-131 / IC-148 — `leads` IS NOT ON THE WIRE FOR ANY CLASS, AND THE WIRE'S LOG COUNT IS A
          DIFFERENT KEY FROM PURGE'S. BOB #15's CORRECTED ruling (`MEMBER-KNOWLEDGE-DESIGN.md` §5, *A
          COUNT IS A DISCLOSURE OF EXISTENCE*): a counter over rows a caller could not all read goes
@@ -106965,8 +106694,8 @@ ${lines.join("\n")}
            table and are deliberately not folded: `authority_kind <> 'lead'` states the key's NAME (REC-131:
            a key never carries two meanings), while the run subtraction is the CALLER's sight and moves with
            the viewer. A rename would be an IC; this is a subtraction inside the name the key already has. */
-        `SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runRows ? ` AND ${runRows.sql}` : ""}`,
-        ...runRows ? runRows.args : []
+        `SELECT count(*) c FROM observation_log WHERE authority_kind <> 'lead'${runTail.sql}`,
+        ...runTail.args
       ).c },
       /* MK-4 / IC-136: a COUNT of members' leads and nothing else, so a purge can
          PROVE it took them (D-113). What any lead says is not an operator fact —
@@ -107614,20 +107343,11 @@ ${lines.join("\n")}
   registerAudit() {
     return provenanceOf(this.ctx).registerRows();
   }
-  #isProjectOwner(...a) {
-    return membershipOf(this.ctx).isProjectOwner(...a);
-  }
-  #isJoinedParticipant(...a) {
-    return membershipOf(this.ctx).isJoinedParticipant(...a);
-  }
   #projectAuthority(...a) {
     return membershipOf(this.ctx).projectAuthority(...a);
   }
   #caseAuthority(...a) {
     return membershipOf(this.ctx).caseAuthority(...a);
-  }
-  #inSight(...a) {
-    return membershipOf(this.ctx).inSight(...a);
   }
   static SIGHT_NONE = Membership.SIGHT_NONE;
   static SIGHT_EXISTENCE = Membership.SIGHT_EXISTENCE;
@@ -107795,14 +107515,8 @@ ${lines.join("\n")}
   registerHolds(...a) {
     return provenanceOf(this.ctx).registerHolds(...a);
   }
-  #ownsAnyProject(...a) {
-    return membershipOf(this.ctx).ownsAnyProject(...a);
-  }
   #isProjectEditor(...a) {
     return membershipOf(this.ctx).isProjectEditor(...a);
-  }
-  #participation(...a) {
-    return membershipOf(this.ctx).participation(...a);
   }
   #isAdminMember(...a) {
     return membershipOf(this.ctx).isAdministrator(...a);
@@ -107824,9 +107538,6 @@ ${lines.join("\n")}
   }
   projectOwnerAdd(...a) {
     return membershipOf(this.ctx).projectOwnerAdd(...a);
-  }
-  #rescueRefusal(...a) {
-    return membershipOf(this.ctx).rescueRefusal(...a);
   }
   projectOwnerRescue(...a) {
     return membershipOf(this.ctx).projectOwnerRescue(...a);
@@ -107877,12 +107588,8 @@ ${lines.join("\n")}
   }
   static CAPABILITIES = Membership.CAPABILITIES;
   static adminMath = Membership.adminMath;
-  static ownerMath = Membership.ownerMath;
   projectOwnerArithmetic(...a) {
     return membershipOf(this.ctx).projectOwnerArithmetic(...a);
-  }
-  #owners(...a) {
-    return membershipOf(this.ctx).projectOwners(...a).sort();
   }
   adminArithmetic(...a) {
     return membershipOf(this.ctx).adminArithmetic(...a);
@@ -108240,90 +107947,8 @@ ${lines.join("\n")}
   }
   /* REC-93 / IC-92 — THE OBSERVATION LOG: ONE APPEND SITE, ONE TABLE. observation-log's (R2–R4): every look this
    * file records is appended through its `observe`, which judges and writes it; `#observe` delegates. */
-  /** WHOSE LOOK IS THIS? §4.1 rows 1 and 2, decided ONCE rather than at each of
-   *  the drain's three exits.
-   *
-   *  A capture request that carries a run is that RUN's look. A request that
-   *  carries none is the MONITOR'S SWEEP — *"`authority_kind = sweep`,
-   *  `authority` = the named request or ratified sweep"* — and the request id is
-   *  the authority, because it is the thing an operator can actually go and read.
-   *
-   *  **THIS CLOSES A DEFECT THE FOLD MADE VISIBLE RATHER THAN CREATED.** Before
-   *  REC-93 all three drain exits called `#aiRunAppend(q.run, …)` unconditionally,
-   *  so a capture request with no run wrote a log row keyed to `run = NULL` — a
-   *  row about a look that named nothing that made it. Nothing read it and
-   *  nothing could have noticed. C-22.9 refuses that by name now, which is the
-   *  general append site earning its keep on its first day. */
-  #lookAuthority(q6) {
-    return q6 && q6.run ? { authorityKind: "run", authority: String(q6.run), actorClass: "machine" } : {
-      authorityKind: "sweep",
-      authority: q6 && q6.request ? String(q6.request) : null,
-      actorClass: "plane"
-    };
-  }
   #observe(...a) {
     return observationLogOf(this.ctx).observe(...a);
-  }
-  /** REC-94 / REC-92 — WHICH OF SECTION 5.1's CAUSES EXPLAINS A MISSING CONTENT-LEVEL ROW: observation-log's rule
-   *  (its R11, `missingCause`), asked here with the content level's pre-log evidence, the `readings` table. The set-based
-   *  tally (`#contentAxisTally`) gathers the same inputs in one statement and asks the same rule. */
-  static #missingCauseFrom({ hasReading = false, registeredAt = null, firstContentAt = null } = {}) {
-    return missingCause({ hasArtifact: hasReading, registeredAt, firstRowAt: firstContentAt });
-  }
-  /* ==================================================================== *
-   * REC-95 — THE MEANING-LEVEL WRITERS. `OBSERVATION-LOG-DESIGN.md`
-   * section 4.3 and section 8's row 3.
-   * ==================================================================== *
-   *
-   * THREE ACTS, THREE SUBJECTS, ONE APPEND SITE. Every method below turns one
-   * act into entries and hands them to `#observe` — REC-93's single writer for
-   * `observation_log`, which this item neither duplicates nor modifies. The
-   * JUDGEMENT is not made here either: `readerRunObservation`,
-   * `resolutionObservation` and `derivationObservation` in `airun.mjs` are pure
-   * and hold it, so a suite can hold the decision to this store's behaviour
-   * without workerd. Nothing below types a C-number.
-   *
-   * THIS ITEM ADDS NO TABLE, NO COLUMN AND NO REFUSAL. It adds one member to an
-   * existing vocabulary (`OBSERVATION_SUBJECT_KINDS.reference`) and says why at
-   * the site.
-   */
-  /* THE READER RUN, THE RESOLUTION ATTEMPT AND THE CONNECTION DERIVATION (§4.3): observation-log's writers (its R8).
-   * The reader run is its listener on extraction's reading notice; the other two are called where they fire until
-   * entities and connections are extracted and it registers on their notices. */
-  /** REC-107 — **THE TWO FIELDS THAT PUT §5.1's UNDETERMINED SET ON THE ROW**, for
-   *  every level's frontier, through the one function in `airun.mjs` that decides
-   *  it. Shared by the content and meaning arms and written for the internet arm
-   *  that is being built as this lands.
-   *
-   *  WHY IT EXISTS AT ALL, AND IT IS NOT A CONVENIENCE. Both arms published a
-   *  `why` per row that ENUMERATED what could not be ruled out, and both
-   *  enumerations were one member short — `never_looked` is live wherever the
-   *  evidence probe missed, and neither sentence named it. The meaning arm was
-   *  short a second member at a reference and an entity, where a pre-log look that
-   *  found nothing left no artifact; that widening WAS published, but as a
-   *  top-level map the caller had to join to the row themselves. **A caller that
-   *  did not join it read a narrower set than the truth, which is the record
-   *  claiming more coverage than it has.**
-   *
-   *  THE SUBJECT KIND IS PASSED IN AND NEVER GUESSED. The content arm's rows carry
-   *  no `subject_kind` — that level has one act — so it names `capture` at the
-   *  call site rather than having this method default an absent value into a
-   *  meaning it was not given. A default here would be a fact invented to fill a
-   *  column, which is the thing §5.1 exists to refuse one construct up.
-   *
-   *  AND AN UNDECLARED KIND PUBLISHES `evidence_one_sided: true`, WHICH IS THE
-   *  WEAKER STATEMENT. It says *this record cannot claim the evidence could ever
-   *  have narrowed this*, and `causesNotRuledOut` then names all three causes. A
-   *  fourth subject kind added without declaring its sidedness therefore reads
-   *  honestly instead of inheriting the strong answer by omission — the same
-   *  arrangement `#missingMeaningCause` takes for an unrecognised kind, one field
-   *  over. */
-  #missingCauseSet(sidedness, subjectKind, missingCause2) {
-    const oneSided = sidedness && Object.prototype.hasOwnProperty.call(sidedness, subjectKind) ? sidedness[subjectKind] : void 0;
-    return {
-      evidence_one_sided: oneSided !== false,
-      not_ruled_out: causesNotRuledOut(missingCause2, { evidenceOneSided: oneSided })
-    };
   }
   /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
    *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
