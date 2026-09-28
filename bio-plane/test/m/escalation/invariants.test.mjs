@@ -4,7 +4,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { list, get } from "../../../../jurisdictions/index.mjs";
 import { BUNDLE_ID_RE, STATES } from "../../../checks/bio-checks.mjs";
-import { seeded, opened, toStage, V, MACHINE, ms } from "./fixture.mjs";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
+import { escalationOf } from "../../../src/escalation/index.mjs";
+import { seeded, opened, toStage, storage, V, MACHINE, ms } from "./fixture.mjs";
 
 /* Every act, called with `extra` over arguments that would otherwise land (at stage 4, with a response to read). */
 function acts(w) {
@@ -185,6 +189,41 @@ test("R20 every read and act answers an escalation in a project the viewer may n
   answers.forEach((a) => walk(a, ""));
   assert.ok(sentences.length >= 15, String(sentences.length));
   for (const s of sentences) for (const p of places) assert.ok(!s.includes(p), `"${p}" in "${s}"`);
+});
+
+test("R20 the factory migrates its tables at construction (K267): after escalationOf(host) with no explicit migrate(), a whole-store purge and a bundle purge answer ok and clear the declared tables, and constructing again changes nothing", () => {
+  const tables = ["escalations", "escalation_moves", "escalation_evaluations", "escalation_attachments", "escalation_declines"];
+  /* a bare host, as a caller that only constructs the module (monitoring, R35) leaves it: no migrate() of escalation */
+  const st = storage();
+  const host = { storage: st };
+  for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) st.db.exec(t);
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  const promotion = promotionOf(host, { record, membership });
+  const esc = escalationOf(host, { record, membership, promotion });
+  const held = () => st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'escalation%' ORDER BY name`).map((r) => r.name);
+  assert.deepEqual(held(), [...tables].sort());
+  const all = record.purge({});
+  assert.equal(all.ok, true);
+  for (const t of tables) assert.equal(all.removed[t], 0, t);
+  const one = record.purge({ bundleId: "ESC-2026-0001-escalation" });
+  assert.equal(one.ok, true);
+  for (const t of tables) assert.ok(t in one.removed, t);
+  /* the same instance on a second call, and migrate() again is harmless */
+  assert.equal(escalationOf(host), esc);
+  esc.migrate();
+  assert.deepEqual(held(), [...tables].sort());
+  /* with an escalation written: both purges clear its rows (the fixture's world never calls migrate() either) */
+  const w = stage4();
+  const b = w.record.purge({ bundleId: w.E2 });
+  assert.equal(b.ok, true);
+  assert.equal(b.removed.escalations, 1);
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM escalations WHERE escalation_id=?`, w.E2)[0].n, 0);
+  const a = w.record.purge({});
+  assert.equal(a.ok, true);
+  for (const t of tables) assert.equal(w.count(t), 0, t);
 });
 
 test("R21 an escalation is a record object of its own type: an ESC- bundle of type escalation promoted through promotion, its states the catalogue's, with history, audit and export; only a replay promotes it outside the acts, and its tables follow the document", async () => {
