@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R60).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R61).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -363,15 +363,21 @@ export class RecordCore {
                    ...scopes, at, ...scopes);
   }
 
-  /* ---- leases (R10–R12) ---- */
+  /* ---- leases (R10–R12, R61) ---- */
+
+  /** R10, R30, R61: the one refusal of an unnamed actor, for taking a lease and for ending one. */
+  static #anonymousLease(actor) {
+    if (typeof actor === "string" && actor.trim()) return null;
+    return { ok: false, reason: "ANONYMOUS_LEASE",
+             detail: "a lease is taken under a named actor — a member (from a session) or a machine "
+                   + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock." };
+  }
 
   /** D-61: a lease is NEVER anonymous. It is a courtesy lock; promotion's CAS on `base` is the
    *  integrity mechanism, so the lease hands back the bundle's CURRENT digest as the edit base. */
   acquireLease(bundleId, actor, ttlMs) {
-    if (typeof actor !== "string" || !actor.trim())
-      return { ok: false, reason: "ANONYMOUS_LEASE",
-               detail: "a lease is taken under a named actor — a member (from a session) or a machine "
-                     + "identity (token:<class>). An unnamed writer cannot hold the courtesy lock." };
+    const anonymous = RecordCore.#anonymousLease(actor);
+    if (anonymous) return anonymous;
     return this.transact(() => {
       const now = Date.now();
       const cur = this.#one(`SELECT actor, expires FROM leases WHERE bundle_id=?`, bundleId);
@@ -386,6 +392,25 @@ export class RecordCore {
         bundleId, actor, new Date(now).toISOString(), expires, b ? b.bundle_sha : "");
       return { ok: true, actor, expires, base: b ? b.bundle_sha : null };
     });
+  }
+
+  /** R61 (N219): ends `actor`'s own lease on the bundle, live or expired, so no one is refused it (R11) until a
+   *  lease is taken again. A lease another actor holds, or none, is left as it is: releasing is never a way to
+   *  take a lock from its holder. Never throws; a read or write that fails released nothing (its transaction
+   *  rolled back) and says so. */
+  releaseLease(bundleId, actor) {
+    const anonymous = RecordCore.#anonymousLease(actor);
+    if (anonymous) return anonymous;
+    try {
+      return this.transact(() => {
+        const cur = this.#one(`SELECT actor FROM leases WHERE bundle_id=?`, bundleId);
+        if (!cur || cur.actor !== actor) return { ok: true, released: false };
+        this.#sql.exec(`DELETE FROM leases WHERE bundle_id=? AND actor=?`, bundleId, actor);
+        return { ok: true, released: true };
+      });
+    } catch {
+      return { ok: true, released: false };
+    }
   }
 
   /* ---- reads (R13–R17, R34–R36) ---- */
