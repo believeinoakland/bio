@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { governorOf, governedFetch, retryAfterMs, governorOverStub, governorRoutes, appetiteOf, GOVERNOR }
   from "../../../src/host-governor/index.mjs";
+import { recordOf } from "../../../src/record-core/index.mjs";
 
 const T0 = 1_000_000_000;
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
@@ -528,4 +529,77 @@ test("R25: no host is named in the module: every host starts from the same state
   w.g.governorConfig({ host: "web.archive.org", appetite_per_min: 24 });
   assert.equal(w.g.governorAdmit({ host: "web.archive.org" }).appetite_per_min, 24);
   assert.equal(w.g.governorAdmit({ host: "example.org" }).appetite_per_min, 12);
+});
+
+/* A bare storage for R26: the governor's table over its own SQLite, record-core's instance on the same storage. */
+const bareStorage = () => {
+  const x = world();
+  const storage = { sql: x.ctx.storage.sql, transactionSync: x.ctx.storage.transactionSync };
+  return { storage, rc: recordOf({ storage }), row: (h) => x.row(h) };
+};
+
+test("R26: governorOf answers one instance per storage; a defaulted env, now or random is adopted from a later caller and read from then on", () => {
+  // env: the first caller supplied none (as capture's default governor did); R3 reads the plane's binding once supplied
+  const a = bareStorage();
+  const ctx = { storage: a.storage };
+  const g = governorOf(ctx, { now: () => T0 });
+  g.migrate();
+  assert.equal(g.governorAdmit({ host: "e.example" }).appetite_per_min, 12);
+  const env = { GOVERNOR_APPETITE_PER_MIN: "30" };
+  assert.equal(governorOf(ctx, { env }), g);
+  assert.equal(g.governorAdmit({ host: "e.example" }).appetite_per_min, 30);
+  assert.equal(governorOf({ storage: a.storage }, { env: { ...env } }), g);   // the same bindings in another object
+  assert.equal(governorOf(ctx), g);                                           // supplying nothing changes nothing
+  assert.equal(g.governorAdmit({ host: "e.example" }).appetite_per_min, 30);
+  // now and random: taken by default, adopted from the first later caller that supplies them, and used
+  const b = bareStorage();
+  const h = governorOf({ storage: b.storage });
+  h.migrate();
+  const draws = [0, 0.999999];
+  const now = () => T0 + 7, random = () => draws.shift();
+  assert.equal(governorOf({ storage: b.storage }, { now, random }), h);
+  h.governorConfig({ host: "p.example", appetite_per_min: 60 });
+  assert.equal(h.governorAdmit({ host: "p.example" }).wait_ms, 0);
+  assert.equal(b.row("p.example").last_grant_at, T0 + 7);                    // the adopted clock
+  assert.equal(h.governorAdmit({ host: "p.example" }).wait_ms, 1_500);      // the adopted jitter: j = 0.6 + 0.999999 × 0.9
+  assert.equal(governorOf({ storage: b.storage }, { now, random }), h);      // the same ones again are no difference
+});
+
+test("R26: an option differing from one a caller supplied, or another record, is refused by a throw naming it, and changes nothing", () => {
+  const a = bareStorage();
+  const ctx = { storage: a.storage };
+  const now = () => T0, random = () => 0.5;
+  const env = { GOVERNOR_APPETITE_PER_MIN: "30", OTHER: "x" };
+  const g = governorOf(ctx, { env, now, random });
+  g.migrate();
+  const refused = (opts, name) =>
+    assert.throws(() => governorOf(ctx, opts), (e) => e instanceof Error && e.message.includes(`\`${name}\``) && /R26/.test(e.message));
+  refused({ env: { GOVERNOR_APPETITE_PER_MIN: "31", OTHER: "x" } }, "env");       // one binding differs
+  refused({ env: { GOVERNOR_APPETITE_PER_MIN: "30" } }, "env");                   // one binding missing
+  refused({ env: { ...env, MORE: "y" } }, "env");                                 // one binding more
+  refused({ env: {} }, "env");                                                    // no bindings at all
+  refused({ now: () => T0 }, "now");
+  refused({ random: () => 0.5 }, "random");
+  refused({ record: { declarePurge: () => ({ ok: true }) } }, "record");
+  // a refused call changes nothing, even when it carries an option that alone would be adopted or accepted
+  refused({ env: { OTHER: "y" }, record: a.rc }, "env");
+  assert.equal(g.env, env);
+  assert.equal(g.now, now);
+  assert.equal(g.random, random);
+  assert.equal(g.core, a.rc);
+  // the record held is the storage's own record-core, and naming it is no difference
+  assert.equal(governorOf(ctx, { record: a.rc, env: { ...env }, now, random }), g);
+  assert.equal(g.governorAdmit({ host: "r.example" }).appetite_per_min, 30);
+  // a defaulted option adopted once is then held as supplied: a second, different one is refused
+  const b = bareStorage();
+  const h = governorOf({ storage: b.storage });
+  governorOf({ storage: b.storage }, { env: { GOVERNOR_APPETITE_PER_MIN: "6" } });
+  assert.throws(() => governorOf({ storage: b.storage }, { env: { GOVERNOR_APPETITE_PER_MIN: "7" } }), /`env`/);
+  h.migrate();
+  assert.equal(h.governorAdmit({ host: "x.example" }).appetite_per_min, 6);
+  // an env with no bindings counts as supplied: a later env with bindings differs from it
+  const c = bareStorage();
+  const e = governorOf({ storage: c.storage }, { env: {} });
+  assert.throws(() => governorOf({ storage: c.storage }, { env: { GOVERNOR_APPETITE_PER_MIN: "6" } }), /`env`/);
+  assert.equal(governorOf({ storage: c.storage }, { env: {} }), e);
 });
