@@ -38,3 +38,11 @@ If instead you rule the row does move into skills' paths, it needs ai-runs to st
 - `node checks/format.mjs`: 0 failures. `architecture.mjs … skills`: 6 product files, 29 relative imports, 0 failures. `coverage.mjs … skills`: 26 of 26 live requirement ids named by a test, 0 failures. `ownership.mjs … skills tranche/T10`: 5 files changed, legacy-checks 0 added, 0 removed, 0 failures.
 
 Size (session_016cFZMMXBeCHF8P3yJzn3ua): test runs 6, module lines 1496
+
+## J2 · REPORT
+
+Four items outside skills, found while applying N156 (details in my record's Completion section):
+1. legacy-checks: the catalogue row for C-22.7 still has `where` 'src/skillpack.mjs checkSkillVersion, called from store.mjs aiRunOpen'. N156 deleted that site, so the DEC-49 guard now fails once more (79 → 80): "arm C could not find function checkSkillVersion in src/skillpack.mjs". The one mint is `src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open`. It is a one-line re-point, or it goes with N289.
+2. legacy-tests: `skillsequencing.test.mjs` goes from 26/1 to 24/3. ARM C4, F1 and F2 pin the retired copy (`enforced_by` empty, the old residue). These are N156's "pins moving with it".
+3. Generated artifact: `agent-worker/dist/agent-worker.bundled.mjs` is stale (inputs `skillpack.mjs`, `skilldoctrine.mjs`); agent-worker `requirements.test.mjs` R45's two freshness arms are red. R48's behaviour passes.
+4. agent-worker: `test/harness.test.mjs` crashes at line 315 (the plane's `OBSERVATION_LEVELS` block not found in the source it scans), the same before and after this change.
