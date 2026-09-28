@@ -416,9 +416,18 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
-test.todo("R19 R2: inquiryground is graded `reasoned`, but a FIRST grouping of a question with no standing structure "
-  + "is accepted without a reason (inquiry's #ground: 'A FIRST grouping needs no reason'); only a restructure refuses "
-  + "NO_REASON — not yet met: R2 and R19 disagree for this op (QUESTION to BOB)");
+test("R19 R2: inquiryground is `reasoned` where it revises what stands — a FIRST grouping replaces nothing and asks no "
+   + "reason; a restructure without one is refused with a code in JUSTIFICATION_REFUSALS (K212)", async () => {
+  const q = W.INQ2;
+  const first = await POST(`op=inquiryground&token=${W.IRIS}&target=${E(q)}`, { grounds: [{ ground: "g1", legs: [0] }] });
+  assert.equal(codeOf(first), "ok");
+  const again = await POST(`op=inquiryground&token=${W.IRIS}&target=${E(q)}`, { grounds: [{ ground: "g2", legs: [0] }] });
+  assert.ok(JUSTIFICATION_REFUSALS.includes(codeOf(again)), codeOf(again));
+  const withWhy = await POST(`op=inquiryground&token=${W.IRIS}&target=${E(q)}`,
+    { grounds: [{ ground: "g2", legs: [0] }], reason: "the second group says it better" });
+  assert.equal(codeOf(withWhy), "ok");
+  assert.equal(RUNGS.inquiryground, "reasoned");
+});
 
 /* ============================================================ R20: the machine map */
 test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a machine credential with a MACHINE_* "
