@@ -45,7 +45,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R22** A tick is not re-entrant: one called while the same tick runs answers `busy: true` and does nothing.
 - **R23** The ticks call R1–R10 and `capture.acquire` in process and spend no credential. *(not yet met: K102; they reach `op=monitor` and `op=acquire` over the instance's own Worker today)*
 - **R45** Monitoring runs on every instance where a document asks to be monitored, since asking is the group's standing intent: no binding or credential is a condition of it (R23). An administrator may pause the daemon (R30); the pause is stated on every tick's answer and in R32's answer. DEC-43's credential fallback then carries nothing for monitoring. *(not yet met: K102; with R23 and R30)*
-- **R24** While ticks go over the instance's Worker, configured means a self binding and a bound daemon or administrator credential; a fire spends only a credential the gate admits (the daemon's, then the administrator's) and otherwise fails that subject with `MONITOR_NO_LIVE_CREDENTIAL`'s sentence (D-334).
+- **R24** While ticks go over the instance's Worker, configured means a self binding and a bound daemon or administrator credential; a fire spends only a credential the gate admits (the daemon's, then the administrator's) and otherwise fails that subject with `MONITOR_NO_LIVE_CREDENTIAL`'s sentence (D-334). `configured()` answers that test (true or false) to the scheduler, whose R9 arms read it (K260).
 - **R25** Each tick's outcome at an address is recorded with `capture`'s reachability (success; `removed` or another refusal as `source_refused`; a failed fetch as `fetch_failed`; `governed` apart), so a monitored source that stops answering reaches the fallback. *(not yet met: found in this reading; only `acquire` records outcomes)*
 
 **driveShells({viewer, limit, after})** (`op=driveshells`; read)
@@ -86,6 +86,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)). *(not declared)*
 - `intent`, `publication`, `reevaluation` (R33); `actions`: `pendingClocks` (its R31) and the bound of its R33 (R34, R44); `escalation` (R35). `publication` is *(not declared)*.
 - `runtime-limits`: `unattendedCredential(env)` (its R26: `bound` for R24's configured test, `token()` for the credential a fire spends), until R23. *(not declared)*
+- `subresources`: `normalizeAddress` (the look's subject, D-524's baseline match); `jurisdictions`: `combine` over record-core's `jurisdiction_profiles` setting, the view N116 passes to `identify`/`doctypeFor`/`assess` (K259).
 - `extraction`, `content`: nothing here calls them.
 
 ### Invariants

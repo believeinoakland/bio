@@ -29,6 +29,7 @@ import { intentOf } from "../intent/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { monitoringOf } from "../monitoring/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
 export const SCHED_GRACE_MS = 250;
@@ -336,19 +337,16 @@ export class Scheduler {
 
 const instances = new WeakMap();
 
-/** The one scheduler of a Durable Object (K61). `deps.owners` replaces the default owners (a test's); `deps.monitoring`
- *  is a function answering the `monitoring` owner (R19, R20 and `configured()`), injected until `monitoring` is merged
- *  (K259). */
+/** The one scheduler of a Durable Object (K61). `deps.owners` replaces the default owners (a test's). */
 export function schedulerOf(ctx, env = null, deps = {}) {
   let s = instances.get(ctx);
   if (!s) {
     const e = env || {};
     const owners = deps.owners || {
-      retrieval: () => retrievalOf(ctx), connections: () => connectionsOf(ctx), progressions: () => progressionsOf(ctx, { env: e }),
+      retrieval: () => retrievalOf(ctx), monitoring: () => monitoringOf(ctx), connections: () => connectionsOf(ctx), progressions: () => progressionsOf(ctx, { env: e }),
       aiRuns: () => aiRunsOf(ctx, e), captureRequests: () => captureRequestsOf(ctx), calibration: () => calibrationOf(ctx),
       bias: () => biasOf(ctx), intent: () => intentOf(ctx), reevaluation: () => reevaluationOf(ctx),
     };
-    if (!deps.owners && typeof deps.monitoring === "function") owners.monitoring = deps.monitoring;
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
     instances.set(ctx, s);
     if (!deps.owners)
