@@ -29251,18 +29251,18 @@ function joinItemised(items, textOf2, sourceOf) {
   }
   return { text, segments };
 }
-function flattenText(supplied) {
-  if (typeof supplied === "string")
+function flattenText(supplied2) {
+  if (typeof supplied2 === "string")
     return {
-      text: supplied,
+      text: supplied2,
       source: "string",
-      chars: supplied.trim().length,
+      chars: supplied2.trim().length,
       undetermined: 0,
       reasons: [],
       segments: [],
       position_why: "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said"
     };
-  if (!supplied || typeof supplied !== "object")
+  if (!supplied2 || typeof supplied2 !== "object")
     return {
       text: "",
       source: null,
@@ -29273,11 +29273,11 @@ function flattenText(supplied) {
       position_why: "no text was supplied"
     };
   let text = "", source = null, segments = [], position_why = null;
-  if (typeof supplied.document === "string" && supplied.document.length) {
-    text = supplied.document;
+  if (typeof supplied2.document === "string" && supplied2.document.length) {
+    text = supplied2.document;
     source = "document";
-    const pages = Array.isArray(supplied.pages) ? supplied.pages : null;
-    const paras = Array.isArray(supplied.paragraphs) ? supplied.paragraphs : null;
+    const pages = Array.isArray(supplied2.pages) ? supplied2.pages : null;
+    const paras = Array.isArray(supplied2.paragraphs) ? supplied2.paragraphs : null;
     if (pages && pages.length) {
       const j = joinItemised(
         pages,
@@ -29300,18 +29300,18 @@ function flattenText(supplied) {
     } else {
       position_why = "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said";
     }
-  } else if (Array.isArray(supplied.pages) && supplied.pages.length) {
+  } else if (Array.isArray(supplied2.pages) && supplied2.pages.length) {
     const j = joinItemised(
-      supplied.pages,
+      supplied2.pages,
       (p) => p && typeof p.text === "string" ? p.text : "",
       (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
     );
     text = j.text;
     segments = j.segments;
     source = "pages";
-  } else if (Array.isArray(supplied.paragraphs) && supplied.paragraphs.length) {
+  } else if (Array.isArray(supplied2.paragraphs) && supplied2.paragraphs.length) {
     const j = joinItemised(
-      supplied.paragraphs,
+      supplied2.paragraphs,
       (p) => p && typeof p.text === "string" ? p.text : "",
       (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i, p && p.ref)
     );
@@ -29321,8 +29321,8 @@ function flattenText(supplied) {
   }
   if (!segments.length && !position_why && source)
     position_why = `this producer's ${source} carry no part index, so where in the document a reference was read cannot be said`;
-  const c = supplied.counts;
-  const markers = Array.isArray(supplied.undetermined) ? supplied.undetermined : [];
+  const c = supplied2.counts;
+  const markers = Array.isArray(supplied2.undetermined) ? supplied2.undetermined : [];
   const undetermined = c && typeof c.undetermined === "number" ? c.undetermined : markers.reduce((n, m) => n + (m && typeof m.count === "number" ? m.count : 1), 0);
   const reasons = [...new Set(markers.map((m) => m && m.reason).filter(Boolean))];
   return {
@@ -29349,8 +29349,8 @@ function makeLocator(segments) {
     return null;
   };
 }
-function readText(supplied, ctx = {}) {
-  const flat = flattenText(supplied);
+function readText(supplied2, ctx = {}) {
+  const flat = flattenText(supplied2);
   const named = flat.reasons.length ? `: ${flat.reasons.join(", ")}` : "";
   if (!flat.chars) {
     return {
@@ -33252,18 +33252,18 @@ function digestFiles(files) {
   const out = files.map((f5) => {
     const computed = fileDigestOf(f5);
     if (computed === null) return f5;
-    const supplied = f5.sha256;
-    if (supplied === void 0 || supplied === null) return { ...f5, sha256: computed };
-    if (typeof supplied !== "string" || supplied.toLowerCase() !== computed) {
+    const supplied2 = f5.sha256;
+    if (supplied2 === void 0 || supplied2 === null) return { ...f5, sha256: computed };
+    if (typeof supplied2 !== "string" || supplied2.toLowerCase() !== computed) {
       disagree.push({
         path: f5.path ?? null,
         kind: typeof f5.text === "string" ? "inline" : "blob",
-        supplied: typeof supplied === "string" ? supplied : String(supplied),
+        supplied: typeof supplied2 === "string" ? supplied2 : String(supplied2),
         computed
       });
       return f5;
     }
-    return supplied === computed ? f5 : { ...f5, sha256: computed };
+    return supplied2 === computed ? f5 : { ...f5, sha256: computed };
   });
   return { files: out, disagree };
 }
@@ -34984,6 +34984,7 @@ var rowRefusal2 = (family) => (code, detail, extra) => {
   const row = family[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra || {} };
 };
+var actRefusal = rowRefusal2(PROVENANCE_ACT_CHECKS);
 var TESTIMONY_PATH = Symbol("mk1-testimony-path");
 function observedMs(v) {
   const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?Z)?$/.exec(v);
@@ -34995,11 +34996,11 @@ function observedMs(v) {
   return ms;
 }
 var PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, keyOf, parts) {
+async function partsHeld(bucket, keyOf2, parts) {
   const missing = [], disagree = [], unverified = [];
   for (const p of parts) {
     const name = { file: p.file, sha256: p.sha256, bytes: p.bytes };
-    const h = await bucket.head(keyOf(p.sha256));
+    const h = await bucket.head(keyOf2(p.sha256));
     if (!h) {
       missing.push(name);
       continue;
@@ -35010,7 +35011,7 @@ async function partsHeld(bucket, keyOf, parts) {
     }
     let digest = h.checksums?.sha256 ? hexBytes(h.checksums.sha256) : null;
     if (!digest && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(keyOf(p.sha256));
+      const o = await bucket.get(keyOf2(p.sha256));
       if (o) digest = hexBytes(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
     if (!digest) unverified.push({ ...name, why: "no stored checksum, and too large to read here" });
@@ -35232,48 +35233,6 @@ function withRegisterChecks(image, gate) {
     warnings: (gate.warnings || 0) + found.length - errors.length
   };
 }
-async function provenanceAudit(host, opts = {}) {
-  const pass = await recordAudit(host, opts);
-  const record = recordOf(host);
-  const out = { ...pass, tally: { ...pass.tally || {} }, offenders: [...pass.offenders || []] };
-  const tallyDetail = { ...pass.tallyDetail || {} };
-  const sha2562 = async (v) => hexBytes(await crypto.subtle.digest("SHA-256", typeof v === "string" ? te4.encode(v) : v));
-  const sha512 = async (b) => new Uint8Array(await crypto.subtle.digest("SHA-512", b));
-  for (const id of pass.page || []) {
-    const moved = registerChecks(imageForChecks(record.readImage(id) || {})).filter((x) => x.severity === "error");
-    if (!moved.length) continue;
-    const img = record.readImage(id) || {};
-    const files = /* @__PURE__ */ new Map(), elided = /* @__PURE__ */ new Set();
-    for (const [path, v] of Object.entries(img)) typeof v === "string" ? files.set(path, v) : elided.add(path);
-    const { findings } = await checkBundle({
-      folderName: id,
-      files,
-      elidedPaths: elided,
-      sha256: sha2562,
-      sha512,
-      resolveTarget: (t) => !!record.bundleInfo(t),
-      ...typeof opts.context === "function" ? opts.context(id) || {} : {}
-    });
-    const before = [...findings, ...await recordChecks({ folderName: id, files, sha256: sha2562 })].filter((x) => x.severity === "error");
-    if (!before.length) {
-      out.clean--;
-      out.withErrors++;
-    }
-    const at2 = out.offenders.findIndex((o) => o.bundleId === id);
-    for (const e of moved) {
-      out.tally[e.check] = (out.tally[e.check] || 0) + 1;
-      if (e.code) {
-        const k = `${e.check}/${e.code}`;
-        tallyDetail[k] = (tallyDetail[k] || 0) + 1;
-      }
-    }
-    const extra = moved.map((e) => ({ check: e.check, detail: e.message }));
-    if (at2 >= 0) out.offenders[at2] = { bundleId: id, errors: [...out.offenders[at2].errors, ...extra].slice(0, 5) };
-    else if (out.offenders.length < 20) out.offenders.push({ bundleId: id, errors: extra.slice(0, 5) });
-  }
-  if (Object.keys(tallyDetail).length) out.tallyDetail = tallyDetail;
-  return out;
-}
 var Provenance = class _Provenance {
   #storage;
   #sql;
@@ -35355,18 +35314,16 @@ var Provenance = class _Provenance {
     }
     const added = now.filter((x) => !held.has(`${x.check}\0${x.message}`));
     if (!added.length) return null;
-    return {
-      ok: false,
-      reason: "PROVENANCE_REGISTER_REFUSED",
-      bundleId,
-      findings: added.map((x) => ({
+    return actRefusal(
+      "PROVENANCE_REGISTER_REFUSED",
+      `this promotion's data/provenance.json fails ${added.length} of the intake provenance register's rules (C-18) that the version it revises did not fail. Nothing was written.`,
+      { bundleId, findings: added.map((x) => ({
         check: x.check,
         detail: x.message,
         ...x.code ? { code: x.code } : {},
         ...x.repairs ? { repairs: x.repairs } : {}
-      })),
-      detail: `this promotion's data/provenance.json fails ${added.length} of the intake provenance register's rules (C-18) that the version it revises did not fail. Nothing was written.`
-    };
+      })) }
+    );
   }
   /* R1: the register write, after `commit`, in the same transaction. `registered` is this module's clock; the
      authored columns are written from the testimony path's own key and never from the entry a caller sent. */
@@ -35666,6 +35623,81 @@ var Provenance = class _Provenance {
       return { capture_sha: r.capture_sha, held_at: held, t: ms(held) };
     }).sort((x, y) => (Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity) || (x.capture_sha < y.capture_sha ? -1 : x.capture_sha > y.capture_sha ? 1 : 0)).map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
   }
+  /** R49 · K171 (13), K176 — every attestation the record holds for a capture, for `filings`' exhibits (its R9): read
+   *  from the document entries of the capture's home (R4) that name it, in the order recorded, each naming the bundle
+   *  and the file it is recorded in. Two eras of the same facts are read alike: the daemon's `timestamp {authority,
+   *  token_file}` and bare `co_archive` locator (State Rules v1.5 §4.1), and `op=attest`'s answer as the plane records
+   *  it, `attestations: [{kind: "rfc3161", service, file, sha256}]` and `co_archive {service, locator}`. `at` is the
+   *  instant of the entry's matching attempt, when the entry recorded one. It asks no authority and verifies no
+   *  token's signature, and says so. An empty list is the earned "none recorded" only when the home's register was
+   *  read; with no home (a capture registered only by its parts has none under the whole's digest) or an unreadable
+   *  register the answer is `undetermined`, with why (R37). */
+  attestationsOf(captureSha) {
+    const s = bareSha(captureSha);
+    if (!s || !/^[0-9a-f]{64}$/.test(s))
+      return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
+    const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's signature was verified here";
+    const home = this.homeOf(s);
+    const answer = (attestations, why) => ({
+      ok: true,
+      sha256: s,
+      registered: !!home,
+      attestations,
+      ...why ? { undetermined: why } : {},
+      note
+    });
+    if (!home)
+      return answer([], "no register row names this capture under a bundle that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+    const PATH = "data/provenance.json";
+    const f5 = this.#record.readFile(home.bundleId, PATH);
+    if (!f5) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f5.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    const reg = safeJson(f5.text);
+    if (!isObj3(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
+    const str4 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+    const out = [];
+    for (const d of reg.documents) {
+      if (!isObj3(d) || !isObj3(d.capture) || bareSha(d.capture.sha256) !== s) continue;
+      const tries = Array.isArray(d.attestation_attempts) ? d.attestation_attempts.filter(isObj3) : [];
+      const when = (match) => {
+        const a = tries.find(match);
+        return a && str4(a.attempted) ? { at: a.attempted } : {};
+      };
+      const where = { bundle: home.bundleId, path: PATH };
+      if (isObj3(d.timestamp)) {
+        const service = str4(d.timestamp.service) || str4(d.timestamp.authority);
+        out.push({
+          kind: "rfc3161",
+          ...service ? { service } : {},
+          ...str4(d.timestamp.token_file) ? { file: str4(d.timestamp.token_file) } : {},
+          ...service ? when((a) => a.ok === true && a.service === service && a.kind !== "co-archive") : {},
+          ...where
+        });
+      }
+      for (const t of Array.isArray(d.attestations) ? d.attestations : []) {
+        if (!isObj3(t) || t.kind !== "rfc3161") continue;
+        const tokenSha = bareSha(t.sha256);
+        out.push({
+          kind: "rfc3161",
+          ...str4(t.service) ? { service: str4(t.service) } : {},
+          ...str4(t.file) ? { file: str4(t.file) } : {},
+          ...tokenSha ? { token_sha: tokenSha } : {},
+          ...when((a) => a.ok === true && tokenSha && bareSha(a.token_sha256) === tokenSha),
+          ...where
+        });
+      }
+      const co = typeof d.co_archive === "string" ? { locator: str4(d.co_archive) } : isObj3(d.co_archive) ? { service: str4(d.co_archive.service), locator: str4(d.co_archive.locator) } : null;
+      if (co && co.locator)
+        out.push({
+          kind: "co_archive",
+          ...co.service ? { service: co.service } : {},
+          locator: co.locator,
+          ...when((a) => a.ok === true && a.kind === "co-archive" && a.archived_locator === co.locator),
+          ...where
+        });
+    }
+    return answer(out, null);
+  }
   /* ===================================================================== *
    * THE ACQUISITION RECEIPTS (R13–R16, R47).
    * ===================================================================== */
@@ -35817,12 +35849,11 @@ var Provenance = class _Provenance {
   declareOrigin({ bundleId = "", system = "", by = null, viewer = null } = {}) {
     const who2 = String(by ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
-      return {
-        ok: false,
-        reason: "ORIGIN_NOT_A_MEMBER",
-        detail: who2 ? `'${who2.slice(0, 60)}' is a machine credential. Which system a document came from is a named member's attributed statement, never a machine's` : "declaring a document's origin is a named member's act, and this call carries nobody"
-      };
-    if (!bundleId) return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+      return actRefusal(
+        "ORIGIN_NOT_A_MEMBER",
+        who2 ? `'${who2.slice(0, 60)}' is a machine credential. Which system a document came from is a named member's attributed statement, never a machine's` : "declaring a document's origin is a named member's act, and this call carries nobody"
+      );
+    if (!bundleId) return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
     const info = this.#record.bundleInfo(bundleId);
     if (!info || !this.#membership.inSight(bundleId, viewer))
       return {
@@ -35832,19 +35863,14 @@ var Provenance = class _Provenance {
         detail: "no document of that name is in the record, or none this viewer may see; the two answer alike"
       };
     if (String(info.type).toLowerCase() !== "information")
-      return {
-        ok: false,
-        reason: "ORIGIN_NOT_A_DOCUMENT",
-        bundleId,
-        detail: `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system`
-      };
+      return actRefusal(
+        "ORIGIN_NOT_A_DOCUMENT",
+        `this bundle is a ${String(info.type).slice(0, 40)}; only a document came from a system`,
+        { bundleId }
+      );
     const sys = String(system ?? "").replace(/[\p{Cc}]+/gu, " ").replace(/\s+/g, " ").trim();
     if (!sys || sys.length > 200)
-      return {
-        ok: false,
-        reason: "ORIGIN_NO_SYSTEM",
-        detail: "name the system the document came from, in at most 200 characters"
-      };
+      return actRefusal("ORIGIN_NO_SYSTEM", "name the system the document came from, in at most 200 characters");
     const at2 = secondOf(this.#now());
     const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) AS m FROM origin_declarations WHERE bundle_id = ?`, bundleId).m || 0) + 1;
     this.#sql.exec(
@@ -35893,18 +35919,16 @@ sha256: ${captureSha}
   async signReceipt({ captureSha, retrievalLocator, retrieved } = {}) {
     const s = bareSha(captureSha);
     if (!s || !/^[0-9a-f]{64}$/.test(s) || typeof retrievalLocator !== "string" || !retrievalLocator || typeof retrieved !== "string" || !retrieved)
-      return {
-        ok: false,
-        reason: "RECEIPT_MALFORMED",
-        detail: "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched"
-      };
+      return actRefusal(
+        "RECEIPT_MALFORMED",
+        "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched"
+      );
     const key = await this.#key();
     if (!key)
-      return {
-        ok: false,
-        reason: "RECEIPT_NO_KEY",
-        detail: "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds one as a secret; nothing is claimed signed until then"
-      };
+      return actRefusal(
+        "RECEIPT_NO_KEY",
+        "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds one as a secret; nothing is claimed signed until then"
+      );
     const statement = _Provenance.receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
     const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te4.encode(statement)));
     const at2 = this.#now();
@@ -36144,7 +36168,7 @@ sha256: ${captureSha}
         detail: who2 ? `'${who2.slice(0, 60)}' is a machine credential. Reconstructing a provenance chain is a named member's act: the record must show which person decided that the evidence supported this route` : "reconstructing a provenance chain is a named act: the record must show who decided that the evidence supported this route"
       };
     if (!bundleId)
-      return { ok: false, reason: "NO_BUNDLE", detail: "pass bundleId=<id>" };
+      return actRefusal("NO_BUNDLE", "pass bundleId=<id>");
     const head = this.#record.head(bundleId);
     const seen = head && this.#membership.inSight(bundleId, viewer) ? {
       bundle_sha: head.bundleSha,
@@ -36722,11 +36746,7 @@ sha256: ${captureSha}
       const fileText = testimonyBytes({ id: id2, observedAt: obs, words: text });
       const fileBytes2 = new TextEncoder().encode(fileText);
       const sha2 = createSha256().update(fileBytes2).hex();
-      if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha2))
-        return { spent: refusal12(
-          "TESTIMONY_WORDS_REGISTERED",
-          `the canonical bytes of ${id2} (${sha2.slice(0, 16)}\u2026) are already registered in this record`
-        ) };
+      if (this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=?`, sha2)) return { spent: { id: id2, sha: sha2 } };
       const file2 = `snapshots/observation-${sha2.slice(0, 16)}.txt`;
       const locator = "a member's firsthand observation, authored in this record";
       const observer = observerRef(id2);
@@ -36844,7 +36864,11 @@ sha256: ${captureSha}
       if (!promoted2.ok) return promoted2;
       return { ok: true, id: id2, sha: sha2, file: file2, fileBytes: fileBytes2, promoted: promoted2 };
     });
-    if (out.spent) return out.spent;
+    if (out.spent)
+      return refusal12(
+        "TESTIMONY_WORDS_REGISTERED",
+        `the canonical bytes of ${out.spent.id} (${out.spent.sha.slice(0, 16)}\u2026) are already registered in this record`
+      );
     if (!out.ok) return out;
     const { id, sha, file, fileBytes, promoted } = out;
     return {
@@ -36904,6 +36928,7 @@ function provenanceOf(host, deps) {
       { name: "signed_receipts", keys: [] }
     ], { exempt: ["receipt_keys"] });
     p.joinPromotion();
+    record.registerAuditCheck("provenance", ({ raw }) => registerChecks(imageForChecks(raw)));
   }
   return p;
 }
@@ -43887,15 +43912,15 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   }
   let driveCapture = null, driveHopRecorded = null;
   {
-    const supplied = callerSuppliedHopFacts(body);
-    if (supplied.length)
+    const supplied2 = callerSuppliedHopFacts(body);
+    if (supplied2.length)
       return answer(400, {
         ok: false,
         reason: "DRIVE_HOP_FACT_SUPPLIED",
         ...driveRow("DRIVE_HOP_FACT_SUPPLIED"),
         op,
-        supplied,
-        detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
+        supplied: supplied2,
+        detail: `this request carried ${supplied2.map((k) => `\`${k}\``).join(", ")}. The export address, the export format and the producer are DERIVED by this instance from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.`
       });
     const drive = readDriveAddress(body.locator);
     if (drive) {
@@ -44686,51 +44711,6 @@ async function continueCapture(cap, { body, session, cls, storeName, ev }) {
     tokenClass: cls
   } };
 }
-async function readingInputs(env, storeName, answer) {
-  const doc = answer.document;
-  const ids = doc.profile && doc.profile.jurisdiction_view;
-  const combined = Array.isArray(ids) ? combine(ids) : null;
-  const view = combined && combined.ok ? combined.view : void 0;
-  const sha = doc.capture.sha256, total = doc.capture.bytes, ct = doc.capture.content_type || "";
-  const multipart = Array.isArray(doc.parts);
-  const retrieved = doc.retrieved;
-  const headerPairs = (doc.capture.transport || doc.shell && doc.shell.transport || {}).http_headers || [];
-  const profHeaders = {};
-  for (const [hk, hv] of headerPairs) profHeaders[String(hk).toLowerCase()] = hv;
-  const driveHopOf2 = (doc.provenance_chain || []).find((h) => h && h.drive_file_id);
-  const driveCapture = driveHopOf2 ? readDriveAddress(driveHopOf2.document_address) : null;
-  const documentAddress = driveCapture ? driveCapture.address : (doc.provenance_chain || []).find((h) => h && h.via === "archive.org" && h.document_address)?.document_address || doc.locator;
-  let profileText = "", profileBytes = null;
-  if (profilesAsText(ct, total, multipart) && typeof env.CAPTURES?.get === "function") {
-    try {
-      const o = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-      if (o) {
-        profileBytes = new Uint8Array(await o.arrayBuffer());
-        profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes);
-      }
-    } catch {
-    }
-  }
-  const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
-  const stackId = identify(profCtx);
-  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...view ? { view } : {} });
-  return {
-    sha,
-    total,
-    ct,
-    multipart,
-    retrieved,
-    profHeaders,
-    profCtx,
-    profileText,
-    profileBytes,
-    stackId,
-    docType,
-    documentAddress,
-    driveCapture,
-    profile: doc.profile
-  };
-}
 
 // src/capture/schema.mjs
 var CAPTURE_SCHEMA = `
@@ -45168,8 +45148,29 @@ var REACHABILITY_SETTINGS = Object.freeze({
 });
 var SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
 var PROBE_EVERY = 25;
+var READ_LIMIT = Object.freeze({ default: 200, max: 1e3 });
+var limitOf = (asked) => {
+  const n = Math.floor(Number(asked));
+  return asked != null && asked !== "" && Number.isFinite(n) && n > 0 ? Math.min(READ_LIMIT.max, n) : READ_LIMIT.default;
+};
+var cursorOf = (parts) => btoa(String.fromCharCode(...te5.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+var keyOf = (cursor, n) => {
+  try {
+    const bytes2 = Uint8Array.from(atob(String(cursor).replace(/-/g, "+").replace(/_/g, "/")), (ch) => ch.charCodeAt(0));
+    const k = JSON.parse(new TextDecoder().decode(bytes2));
+    return Array.isArray(k) && k.length === n && k.every((x) => typeof x === "string") ? k : null;
+  } catch {
+    return null;
+  }
+};
+var badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is not a cursor this read answered as `next`" });
 var CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
 var instances6 = /* @__PURE__ */ new WeakMap();
+var supplied = /* @__PURE__ */ new WeakMap();
+var sameEnv = (a, b) => {
+  const ka = Object.keys(a || {}), kb = Object.keys(b || {});
+  return ka.length === kb.length && ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && a[k] === b[k]);
+};
 function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances6.get(storage);
@@ -45181,6 +45182,24 @@ function captureOf(ctx, opts = {}) {
       provenance: opts.provenance ?? provenanceOf(ctx)
     });
     instances6.set(storage, c);
+    supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
+    return c;
+  }
+  const given = supplied.get(c);
+  const refuse3 = (name) => {
+    throw new Error(`captureOf: a caller supplied a different \`${name}\` for a storage whose capture already holds another one a caller gave; capture refuses it rather than run against either silently (R58)`);
+  };
+  if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse3("env");
+  if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse3("governor");
+  for (const [name, held] of [["record", c.core], ["provenance", c.provenance]])
+    if (opts[name] != null && opts[name] !== held) refuse3(name);
+  if (opts.env != null && !given.has("env")) {
+    c.env = opts.env;
+    given.add("env");
+  }
+  if (opts.governor != null && !given.has("governor")) {
+    c.governor = opts.governor;
+    given.add("governor");
   }
   return c;
 }
@@ -45446,13 +45465,22 @@ var Capture = class _Capture {
     }
     return answer;
   }
-  /** R32: only a signed-in member reaches these (the op's fence). */
-  inboxList(status) {
-    return { inbox: this.#rows(
-      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
-       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`,
-      ...status ? [status] : []
-    ) };
+  /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, newest first, paged by
+   *  `after`: a doorbell anyone may ring must not answer a member with everything it was ever handed. */
+  inboxList(status, { limit = null, after = null } = {}) {
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 2) : null;
+    if (after && !from) return badCursor();
+    const found = this.#rows(
+      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by FROM inbox
+        WHERE ${status ? "status = ?" : "1=1"} AND ${from ? "(received, knock_id) < (?, ?)" : "1=1"}
+        ORDER BY received DESC, knock_id DESC LIMIT ?`,
+      ...status ? [status] : [],
+      ...from || [],
+      cap + 1
+    );
+    const inbox = found.slice(0, cap), truncated3 = found.length > cap, last = inbox[inbox.length - 1];
+    return { inbox, limit: cap, truncated: truncated3, next: truncated3 ? cursorOf([last.received, last.knock_id]) : null };
   }
   inboxGet(knockId) {
     const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
@@ -45578,25 +45606,34 @@ var Capture = class _Capture {
   /** R27. File the links a captured document made. Replaces this capture's rows rather than appending: a
    *  capture's own links are a property of its bytes. A link carries `chrome: true` with its `chrome_basis` when
    *  it sat in a chrome region (containment, D-340); whether it IS the site's chrome is decided by recurrence
-   *  (R28), re-derived here for this capture in the same write. */
+   *  (R28), re-derived here for this capture in the same write. A row filed again keeps the instant it was FIRST
+   *  filed (R57: `first_seen` is a read contract, and a continuation re-files every link of its page). */
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
     if (!sourceCapture) return { recorded: 0 };
     const now = stampSecond3();
-    this.#sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
+    const kept = /* @__PURE__ */ new Set();
     let n = 0;
     for (const l of links) {
       if (!l || !l.address_norm) continue;
+      n++;
+      const ref = String(l.ref || l.address), citation = l.citation_norm || l.address_norm;
+      const key = JSON.stringify([ref, citation]);
+      if (kept.has(key)) continue;
+      kept.add(key);
       this.#sql.exec(
         `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
            citation_norm, fragment, partition, origin, chrome, chrome_basis, captured_at, first_seen)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
+         ON CONFLICT(source_capture, link_ref, citation_norm) DO UPDATE SET source_bundle = excluded.source_bundle,
+           address = excluded.address, address_norm = excluded.address_norm, fragment = excluded.fragment,
+           partition = excluded.partition, origin = excluded.origin, chrome = excluded.chrome,
+           chrome_basis = excluded.chrome_basis, captured_at = excluded.captured_at`,
         sourceBundle,
         sourceCapture,
-        String(l.ref || l.address),
+        ref,
         l.address || l.address_norm,
         l.address_norm,
-        l.citation_norm || l.address_norm,
+        citation,
         l.fragment || null,
         l.type || "deferred",
         l.origin || null,
@@ -45605,26 +45642,43 @@ var Capture = class _Capture {
         capturedAt || now,
         now
       );
-      n++;
     }
+    this.#sql.exec(
+      `DELETE FROM links WHERE source_capture = ? AND NOT EXISTS (SELECT 1 FROM json_each(?) k
+         WHERE json_extract(k.value, '$[0]') = links.link_ref AND json_extract(k.value, '$[1]') = links.citation_norm)`,
+      sourceCapture,
+      `[${[...kept].join(",")}]`
+    );
     const chrome = this.#chromeDeriveCapture(sourceCapture, now);
     return { recorded: n, source_capture: sourceCapture, site_chrome: chrome };
   }
-  /** R27, D-701. Everything that points AT an address, matched on the RESOURCE key so the citations of its
-   *  sections are found too. Only sources the viewer may see; `count` and `elements` from what passed. */
-  linksTo({ address_norm, viewer = void 0 } = {}) {
+  /** R27, D-701, N90. Everything that points AT an address, matched on the RESOURCE key so the citations of its
+   *  sections are found too. Only sources the viewer may see, at most `limit` in (source, citation) order, paged by
+   *  `after`; `count` and `elements` are of the rows listed. */
+  linksTo({ address_norm, viewer = void 0, limit = null, after = null } = {}) {
     const seen = this.#captureGate("l.source_capture", viewer);
-    const rows = this.#rows(
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 3) : ["", "", ""];
+    if (!from) return badCursor();
+    const found = this.#rows(
       `SELECT l.source_capture, l.source_bundle, l.link_ref, l.partition, l.fragment, l.citation_norm, l.captured_at
-         FROM links l WHERE l.address_norm = ? AND (${seen.sql})`,
+         FROM links l WHERE l.address_norm = ? AND (l.source_capture, l.citation_norm, l.link_ref) > (?, ?, ?) AND (${seen.sql})
+        ORDER BY l.source_capture, l.citation_norm, l.link_ref LIMIT ?`,
       address_norm,
-      ...seen.args
+      ...from,
+      ...seen.args,
+      cap + 1
     );
+    const rows = found.slice(0, cap), last = rows[rows.length - 1];
+    const truncated3 = found.length > cap;
     return {
       address_norm,
       count: rows.length,
       sources: rows,
-      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))]
+      elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))],
+      limit: cap,
+      truncated: truncated3,
+      next: truncated3 ? cursorOf([last.source_capture, last.citation_norm, last.link_ref]) : null
     };
   }
   /** R27. Resolve a capture's links against the record, with a contemporaneity verdict for each that resolves:
@@ -45633,11 +45687,28 @@ var Capture = class _Capture {
    *  unanswerable case into one bucket or the other. The strongest evidence is two captures of the target
    *  BRACKETING the source's retrieval whose bytes hash equal. D-96: the bracket reads DIRECT receipts only.
    *  D-701: a source the viewer may not see answers as a capture the record does not hold, and a target capture
-   *  the viewer may not see is filtered out BEFORE the bracket. */
-  resolveLinks({ sourceCapture, at: at2 = null, viewer = void 0 } = {}) {
+   *  the viewer may not see is filtered out BEFORE the bracket. N90: through the op, at most `limit` links in
+   *  (citation, ref) order, paged by `after`, the tally and verdicts being of the links listed; an in-process caller
+   *  that passes no `limit` (connections' projection, which must see every link) is answered whole, `limit: null`. */
+  resolveLinks({ sourceCapture, at: at2 = null, viewer = void 0, limit = null, after = null } = {}) {
     const src = this.#captureGate("l.source_capture", viewer);
-    const rows = this.#rows(`SELECT l.* FROM links l WHERE l.source_capture = ? AND (${src.sql})`, sourceCapture, ...src.args);
-    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
+    const cap = limit == null ? null : limitOf(limit);
+    const bound = cap ?? Infinity;
+    const window = Number.isFinite(bound) ? bound + 1 : -1;
+    const from = after ? keyOf(after, 2) : ["", ""];
+    if (!from) return badCursor();
+    const found = this.#rows(
+      `SELECT l.* FROM links l WHERE l.source_capture = ? AND (l.citation_norm, l.link_ref) > (?, ?) AND (${src.sql})
+        ORDER BY l.citation_norm, l.link_ref LIMIT ?`,
+      sourceCapture,
+      ...from,
+      ...src.args,
+      window
+    );
+    const truncated3 = found.length > bound;
+    const rows = found.slice(0, bound);
+    const next = truncated3 ? cursorOf([rows[rows.length - 1].citation_norm, rows[rows.length - 1].link_ref]) : null;
+    if (!rows.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated: truncated3, next };
     const T = Date.parse(rows[0].captured_at) || Date.parse(at2 || "") || Date.now();
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
@@ -45663,9 +45734,9 @@ var Capture = class _Capture {
       tally.linked++;
       const bracket = caps.find((c) => Date.parse(c.first_retrieved) <= T && Date.parse(c.last_retrieved) >= T && c.observations > 1) || null;
       const before = [...caps].reverse().find((c) => Date.parse(c.last_retrieved) <= T) || null;
-      const after = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
+      const after2 = caps.find((c) => Date.parse(c.first_retrieved) >= T) || null;
       const selfCap = caps.find((c) => c.capture_sha === sourceCapture) || null;
-      const oneCapture = !!(before && after && before.capture_sha === after.capture_sha);
+      const oneCapture = !!(before && after2 && before.capture_sha === after2.capture_sha);
       let verdict, basis, detail = null, pick = null;
       if (bracket && bracket.capture_sha === sourceCapture) {
         verdict = "contemporaneous";
@@ -45687,14 +45758,14 @@ var Capture = class _Capture {
         pick = before;
         basis = "the record holds one capture of the target made at this document's retrieval instant and observed once; one observation is not a second version, and it does not establish that the target was unchanged on either side";
         detail = `one capture: ${before.capture_sha.slice(0, 12)} retrieved ${before.first_retrieved}`;
-      } else if (before && after) {
+      } else if (before && after2) {
         verdict = "undetermined";
         pick = before;
         basis = "the target changed somewhere between the captures bracketing this document's retrieval, so which version it pointed at is not established";
-        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, ${after.capture_sha.slice(0, 12)} first seen ${after.first_retrieved}`;
-      } else if (!before && after) {
+        detail = `bracketing captures differ: ${before.capture_sha.slice(0, 12)} last seen ${before.last_retrieved}, ${after2.capture_sha.slice(0, 12)} first seen ${after2.first_retrieved}`;
+      } else if (!before && after2) {
         verdict = "superseded";
-        pick = after;
+        pick = after2;
         basis = "every capture of the target postdates this document's retrieval, so the record holds a later version than the one pointed at";
       } else {
         verdict = "undetermined";
@@ -45723,11 +45794,25 @@ var Capture = class _Capture {
       tally,
       verdicts,
       links: out,
+      limit: cap,
+      truncated: truncated3,
+      next,
       note: "undetermined is the resting state and the expected common case, not a failure: it means nothing established which version the source pointed at, which is different from the record holding nothing and different again from holding a later version"
     };
   }
-  /** R27. Append a verdict, never an update: a verdict that changed is a fact about the record. */
-  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at: at2 = null } = {}) {
+  /** R27. Append a verdict, never an update: a verdict that changed is a fact about the record. N90: the history
+   *  answered is the newest `limit` verdicts, oldest first, with the `total` and whether it was cut. */
+  recordLinkVerdict({
+    sourceCapture,
+    addressNorm,
+    verdict,
+    basis,
+    targetBundle = null,
+    targetCapture = null,
+    detail = null,
+    at: at2 = null,
+    limit = null
+  } = {}) {
     const now = at2 || stampSecond3();
     this.#sql.exec(
       `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
@@ -45741,12 +45826,27 @@ var Capture = class _Capture {
       now,
       detail
     );
-    const all = this.#rows(
-      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
+    const cap = limitOf(limit);
+    const total = Number(this.#one(
+      `SELECT COUNT(*) AS n FROM link_verdicts WHERE source_capture = ? AND address_norm = ?`,
       sourceCapture,
       addressNorm
+    ).n);
+    const found = this.#rows(
+      `SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at DESC LIMIT ?`,
+      sourceCapture,
+      addressNorm,
+      cap + 1
     );
-    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
+    const history = found.slice(0, cap).reverse();
+    return {
+      current: history[history.length - 1] || null,
+      history,
+      changed: total > 1,
+      total,
+      limit: cap,
+      truncated: found.length > cap
+    };
   }
   /* ---- R28, R29: the host's chrome, derived per HOST ---- */
   /** The hosts and pages a capture is on record at. DIRECT receipts only: an archive capture's retrieval date is
@@ -45862,10 +45962,17 @@ var Capture = class _Capture {
       );
     }
   }
-  /** R28. The standing classification of a host's contained links, with basis and date. */
-  chromeOf({ host } = {}) {
+  /** R28, N90. The standing classification of a host's contained links, with basis and date: at most `limit` in
+   *  address order, paged by `after`. */
+  chromeOf({ host, limit = null, after = null } = {}) {
     const h = String(host || "").trim().toLowerCase();
-    return { host: h, links: this.#rows(`SELECT address_norm, state, pages, basis, at FROM link_chrome WHERE host = ? ORDER BY address_norm`, h) };
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 1) : [""];
+    if (!from) return badCursor();
+    const found = this.#rows(`SELECT address_norm, state, pages, basis, at FROM link_chrome WHERE host = ? AND address_norm > ?
+                                ORDER BY address_norm LIMIT ?`, h, from[0], cap + 1);
+    const links = found.slice(0, cap), truncated3 = found.length > cap;
+    return { host: h, links, limit: cap, truncated: truncated3, next: truncated3 ? cursorOf([links[links.length - 1].address_norm]) : null };
   }
   /** R29. Regenerate a host's chrome by SCAN, which is what makes it derived: everything recomputed from `links`
    *  and the receipts. Bounded and paged: the first page (no `after`) clears the host's derived rows; each page
@@ -46089,34 +46196,64 @@ var Capture = class _Capture {
   /** R24. Assets this host has served, by normalised address. `documents` counts distinct PAGES, a page being the
    *  primary's DOCUMENT ADDRESS in the receipts (CAP-13): a primary sha is a content hash, so one page whose bytes
    *  changed would otherwise read as two documents. A primary with NO receipt cannot say which page it was: it is
-   *  counted apart as `documents_undetermined`, never guessed into `documents`. */
-  siteAssets({ host, addresses = [] } = {}) {
+   *  counted apart as `documents_undetermined`, never guessed into `documents`. N90: `limit` (the op always passes
+   *  one) answers at most that many in address order, paged by `after`, unless `addresses` names the assets asked;
+   *  the in-process walk (R19) passes none and reads the host whole. */
+  siteAssets({ host, addresses = [], limit = null, after = null } = {}) {
     if (!host) return { host: null, assets: {} };
     const out = {};
-    const want = addresses && addresses.length ? new Set(addresses) : null;
+    const want = addresses && addresses.length ? [...new Set(addresses.map(String))] : null;
+    const cap = limit == null || want ? null : limitOf(limit);
+    const bound = cap ?? Infinity;
+    const window = want ? want.length : Number.isFinite(bound) ? bound + 1 : -1;
+    const from = after && cap !== null ? keyOf(after, 1) : [""];
+    if (!from) return badCursor();
+    let found;
+    if (want) found = this.#rows(`SELECT * FROM site_assets WHERE host = ? AND address_norm IN (SELECT value FROM json_each(?))
+                                  ORDER BY address_norm LIMIT ?`, host, JSON.stringify(want), window);
+    else found = this.#rows(
+      `SELECT * FROM site_assets WHERE host = ? AND address_norm > ? ORDER BY address_norm LIMIT ?`,
+      host,
+      from[0],
+      window
+    );
+    const page = found.slice(0, bound);
     const counts = /* @__PURE__ */ new Map();
-    for (const c of this.#rows(
-      `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`,
-      host
-    )) counts.set(c.address_norm, c);
-    for (const r of this.#rows(`SELECT * FROM site_assets WHERE host = ?`, host)) {
-      if (want && !want.has(r.address_norm)) continue;
+    if (page.length)
+      for (const c of this.#rows(
+        `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
+                COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+           FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+          WHERE r.host = ? AND r.address_norm IN (SELECT value FROM json_each(?)) GROUP BY r.address_norm LIMIT ?`,
+        host,
+        JSON.stringify(page.map((r) => r.address_norm)),
+        page.length
+      )) counts.set(c.address_norm, c);
+    for (const r of page) {
       const c = counts.get(r.address_norm);
       out[r.address_norm] = { ...r, documents: c && c.pages || 0, documents_undetermined: c && c.unlocated || 0 };
     }
-    return { host, assets: out, count: Object.keys(out).length };
+    return {
+      host,
+      assets: out,
+      count: page.length,
+      limit: cap,
+      truncated: found.length > bound,
+      next: found.length > bound ? cursorOf([page[page.length - 1].address_norm]) : null
+    };
   }
   /** R25. File what a capture saw of a host. When an address comes back with different bytes, that is a dated fact
    *  about the site AND it puts every document that REUSED the old bytes into question: the asset moves, the
    *  change is counted, and a dated `posthoc` `changed` verdict is appended for each (CAP-4 item 6a, zero request
    *  cost). A fetched asset's `last_fetched_by` names the capture whose fetch it was; a reuse never moves it
-   *  (CAP-14), and a reused part's source is the reusing capture's own record. */
-  recordSiteAssets({ host, primarySha, observations = [], at: at2 = null } = {}) {
+   *  (CAP-14), and a reused part's source is the reusing capture's own record. N90: every change is counted and
+   *  every posthoc verdict appended, but the answer lists at most `limit` changes, each naming at most `limit`
+   *  reusers, and says when either was cut. */
+  recordSiteAssets({ host, primarySha, observations = [], at: at2 = null, limit = null } = {}) {
     if (!host || !primarySha) return { host: null, recorded: 0 };
     const now = at2 || stampSecond3();
+    const cap = limitOf(limit);
+    let truncated3 = false;
     let added = 0, changedCount = 0;
     const changed = [];
     const fromObs = (o) => typeof o.reused_from === "string" && HEX643.test(o.reused_from) ? o.reused_from : null;
@@ -46143,8 +46280,17 @@ var Capture = class _Capture {
         );
         added++;
       } else if (!o.reused && cur.sha256 !== o.sha256) {
-        const affected = this.#rows(
-          `SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+        this.#sql.exec(
+          `INSERT OR IGNORE INTO reuse_verdicts
+             (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+           SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
+             FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+          host,
+          o.address_norm,
+          cur.sha256,
+          o.sha256,
+          "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
+          now,
           host,
           o.address_norm
         );
@@ -46162,20 +46308,23 @@ var Capture = class _Capture {
           o.address_norm
         );
         changedCount++;
-        changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256, reused_by: affected.map((a) => a.primary_sha) });
-        for (const a of affected)
-          this.#sql.exec(
-            `INSERT OR IGNORE INTO reuse_verdicts
-               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-             VALUES (?, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?)`,
-            a.primary_sha,
+        if (changed.length < cap) {
+          const reusedBy = this.#rows(`SELECT primary_sha FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1
+                                        ORDER BY primary_sha LIMIT ?`, host, o.address_norm, cap + 1);
+          const count = Number(this.#one(
+            `SELECT COUNT(*) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
             host,
-            o.address_norm,
-            cur.sha256,
-            o.sha256,
-            "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
-            now
-          );
+            o.address_norm
+          ).n);
+          if (reusedBy.length > cap) truncated3 = true;
+          changed.push({
+            address_norm: o.address_norm,
+            was: cur.sha256,
+            now: o.sha256,
+            reused_by: reusedBy.slice(0, cap).map((a) => a.primary_sha),
+            reused_by_count: count
+          });
+        } else truncated3 = true;
       } else if (!o.reused) {
         this.#sql.exec(
           `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
@@ -46202,7 +46351,7 @@ var Capture = class _Capture {
         o.reused ? fromObs(o) : null
       );
     }
-    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
+    return { host, recorded: observations.length, added, changed: changedCount, changes: changed, limit: cap, truncated: truncated3 };
   }
   /** CAP-4: the reused subresource PARTS of a bundle, so ratification can re-fetch each. Scoped to THIS bundle by
    *  the register (provenance R48's read contract). `reused_from` is read from the reusing capture's own ref row;
@@ -46263,18 +46412,22 @@ var Capture = class _Capture {
     }
     return { ok: true, bundleId, recorded, at: now, observation_refusals: refusals.filter(Boolean) };
   }
-  /** R26. The reuse verdicts, newest first, by bundle (ratify) or by source capture (which also surfaces the free
-   *  posthoc verdicts). */
-  reuseVerdicts({ bundleId = null, sourceCapture = null } = {}) {
+  /** R26, N90. The reuse verdicts, newest first, by bundle (ratify) or by source capture (which also surfaces the free
+   *  posthoc verdicts), at most `limit`. */
+  reuseVerdicts({ bundleId = null, sourceCapture = null, limit = null } = {}) {
     const cols = "source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at";
-    if (bundleId) return { bundleId, verdicts: this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE bundle_id = ? ORDER BY at DESC, address_norm`, bundleId) };
-    if (sourceCapture) return { sourceCapture, verdicts: this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE source_capture = ? ORDER BY at DESC, address_norm`, sourceCapture) };
-    return { verdicts: [] };
+    const cap = limitOf(limit);
+    const [key, value] = bundleId ? ["bundle_id", bundleId] : ["source_capture", sourceCapture];
+    if (!value) return { verdicts: [] };
+    const found = this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE ${key} = ? ORDER BY at DESC, address_norm LIMIT ?`, value, cap + 1);
+    return { ...bundleId ? { bundleId } : { sourceCapture }, verdicts: found.slice(0, cap), limit: cap, truncated: found.length > cap };
   }
-  /** Asset chrome by RECURRENCE across a host's pages (CAP-13: a page is its document address), a ratio, not a
-   *  boolean: the threshold is the caller's. Primaries with no page on record enter neither side. */
-  siteChrome({ host, threshold = 0.6 } = {}) {
+  /** R24. Asset chrome by RECURRENCE across a host's pages (CAP-13: a page is its document address), a ratio, not a
+   *  boolean: the threshold is the caller's. Primaries with no page on record enter neither side. N90: at most
+   *  `limit` assets, most-recurring first, with the host's `total`; `documents` are the host's, never the page's. */
+  siteChrome({ host, threshold = 0.6, limit = null } = {}) {
     if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
+    const cap = limitOf(limit);
     const d = this.#one(
       `SELECT COUNT(DISTINCT cl.address_norm) AS pages, COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
          FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha WHERE r.host = ?`,
@@ -46282,30 +46435,34 @@ var Capture = class _Capture {
     );
     const documents = d && d.pages || 0;
     const undetermined = d && d.unlocated || 0;
-    const assets = [];
-    for (const r of this.#rows(
+    const total = Number(this.#one(`SELECT COUNT(DISTINCT address_norm) AS n FROM site_asset_refs WHERE host = ?`, host).n);
+    const found = this.#rows(
       `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
               COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
          FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`,
-      host
-    )) {
+        WHERE r.host = ? GROUP BY r.address_norm ORDER BY pages DESC, r.address_norm LIMIT ?`,
+      host,
+      cap + 1
+    );
+    const assets = found.slice(0, cap).map((r) => {
       const share = documents ? r.pages / documents : 0;
-      assets.push({
+      return {
         address_norm: r.address_norm,
         documents: r.pages,
         documents_undetermined: r.unlocated || 0,
         share,
         chrome: documents >= 3 && share >= threshold
-      });
-    }
-    assets.sort((a, b) => b.share - a.share);
+      };
+    });
     return {
       host,
       documents,
       documents_undetermined: undetermined,
       threshold,
       assets,
+      total,
+      limit: cap,
+      truncated: found.length > cap,
       note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet" : "chrome here means the address recurs across at least this share of the host's captured documents") + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, so which document each was is undetermined and none is counted` : "")
     };
   }
@@ -46553,32 +46710,36 @@ function captureOwns(t) {
 function captureOps(c, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => url.searchParams.has("viewer") ? q("viewer") : void 0;
+  const page = { limit: q("limit") || READ_LIMIT.default, after: q("after") || null };
   return {
     capturelimit: () => c.captureLimit(q("runtime") || "subrequests"),
-    siteassets: () => c.siteAssets(body || { host: q("host") }),
+    siteassets: () => {
+      const a = body || { host: q("host") };
+      return c.siteAssets({ after: page.after, ...a, limit: a.limit ?? page.limit });
+    },
     recordsiteassets: () => c.recordSiteAssets(body || {}),
     reusedparts: () => c.reusedParts(q("id")),
     recordreuseverdicts: () => c.recordReuseVerdicts(body || {}),
-    reuseverdicts: () => c.reuseVerdicts({ bundleId: q("bundle"), sourceCapture: q("capture") }),
+    reuseverdicts: () => c.reuseVerdicts({ bundleId: q("bundle"), sourceCapture: q("capture"), limit: page.limit }),
     renderadmit: () => c.renderAdmit(body || {}),
     renderspend: () => c.renderSpend(body || {}),
     recordlinks: () => c.recordLinks(body || {}),
-    resolvelinks: () => c.resolveLinks({ sourceCapture: q("capture"), viewer: viewerOf() }),
-    linksto: () => c.linksTo({ address_norm: q("address"), viewer: viewerOf() }),
+    resolvelinks: () => c.resolveLinks({ sourceCapture: q("capture"), viewer: viewerOf(), ...page }),
+    linksto: () => c.linksTo({ address_norm: q("address"), viewer: viewerOf(), ...page }),
     recordlinkverdict: () => c.recordLinkVerdict(body || {}),
     navchanges: () => c.navChanges({ host: q("host"), limit: q("limit"), viewer: viewerOf() }),
     derivesitechrome: () => c.deriveSiteChrome({ host: q("host"), limit: q("limit"), after: q("after") }),
-    chromeof: () => c.chromeOf({ host: q("host") }),
+    chromeof: () => c.chromeOf({ host: q("host"), ...page }),
     recordsourceoutcome: () => c.recordSourceOutcome(body || {}),
     sourcereach: () => c.sourceReachability({ addressNorm: q("address"), now: q("now") }),
     taskenqueue: () => c.taskEnqueue(body || {}),
     savecapturesession: () => c.saveCaptureSession(body || {}),
     loadcapturesession: () => c.loadCaptureSession({ session: q("session") }),
     dropcapturesession: () => c.dropCaptureSession({ session: q("session") }),
-    sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6 }),
+    sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6, limit: page.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
     knock: () => c.knock({ ...body || {}, sourceAddress: q("source") }),
-    inboxlist: () => c.inboxList(q("status") || null),
+    inboxlist: () => c.inboxList(q("status") || null, page),
     inboxget: () => c.inboxGet(q("id")),
     inboxresolve: () => c.inboxResolve(body || {}),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
@@ -77456,7 +77617,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
   async auditPass({ after = "", limit = 200, viewer = null } = {}) {
     const gate = viewerPredicate(viewer);
     const sighted = new Set(this.#rows(`SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})`, ...gate.args).map((r) => r.bundle_id));
-    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await provenanceAudit(this.ctx, {
+    const { clean, withErrors, tally, tallyDetail = {}, offenders, limit: cap, page: ids } = await recordAudit(this.ctx, {
       after,
       limit,
       visible: (id) => sighted.has(id),
@@ -79001,11 +79162,6 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     return contentOf(this.ctx).contentMint(...a);
   }
   /* MK-1 / D-184 / IC-133 / IC-134: the authored bundle, its bytes and its observer reference: provenance's (R28). */
-  static TESTIMONY_MAX_BYTES = TESTIMONY_MAX_BYTES;
-  static TESTIMONY_FORMAT = TESTIMONY_FORMAT;
-  static testimonyBytes(...a) {
-    return testimonyBytes(...a);
-  }
   static observerRef(...a) {
     return observerRef(...a);
   }
@@ -95591,13 +95747,13 @@ async function ask(store, path, init) {
   }
 }
 async function linksOp(url, store, { json: json2, storeSilent: storeSilent2, viewer }) {
-  const v = `viewer=${encodeURIComponent(viewer ?? "")}`;
+  const v = `viewer=${encodeURIComponent(viewer ?? "")}` + ["limit", "after"].map((k) => url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "").join("");
   const address = url.searchParams.get("address");
   const capture = url.searchParams.get("capture");
   const host = url.searchParams.get("host");
   let r;
   if (address) r = await ask(store, `http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`);
-  else if (host) r = await ask(store, `http://x/navchanges?host=${encodeURIComponent(host)}&limit=${encodeURIComponent(url.searchParams.get("limit") || "")}&${v}`);
+  else if (host) r = await ask(store, `http://x/navchanges?host=${encodeURIComponent(host)}&${v}`);
   else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await ask(store, `http://x/resolvelinks?capture=${capture}&${v}`);
   else return json2({
     ok: false,
@@ -95676,7 +95832,7 @@ async function acquireOp(req, env, store, { json: json2, storeSilent: storeSilen
   if (!r.answered) return { response: storeSilent2("acquire") };
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json2(answer, status) };
-  return { answer, inputs: await readingInputs(env, storeName, answer) };
+  return { answer };
 }
 function withReading(answer, { reading, textUnits, textUnitsOverBound }) {
   const { file, locator, retrieved, profile, ...rest } = answer.document;
