@@ -24,3 +24,7 @@ RECORD-CORE #6 (the first session of this job in T11).
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture record-core`: 4 product files, 6 relative imports; 0 failures. `coverage record-core`: 61 of 61 live requirement ids named by a test; 0 failures. `ownership record-core tranche/T11`: 4 files, legacy-store 0 added, 0 removed; 0 failures.
 
 Size (session_01F4Zw6fHHxLm7fXnQfo4nc5): test runs 6, module lines 1046
+
+## J1 · COMPLETE
+
+Done: N287 (R37's bundles.group_id and prior_state tested at the contract, read through a later module's own SQL and head). Fixed two flaws my tests found, each red first: commit threw on a later group:null (NOT NULL on group_id; now kept, per R37), and seedMintLedger's GLOB '<prefix>-*' broke workerd's 50-byte cap for a long prefix and matched pattern characters (now a literal substr head, K313). Tests moved to a cursor-shaped, pattern-capped fixture (K316). record-core 55/55; users' suites 1728 pass / 40 fail, the identical 40 with and without my change (K348's reds); format, architecture, coverage 61/61, ownership 0 failures. Reported in my record: plane bundle stale (not rebuilt); the requirements' Status line still calls N213/N219 not yet met, which T9 met.
