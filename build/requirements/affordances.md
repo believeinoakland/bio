@@ -59,6 +59,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - `jurisdictions`: `list`, `get`, `combine` (R25's place names, R26's `action_kind`; K212).
 - `inquiry`: `DISPOSITIONS` (R6). `progressions`: `STAGE_REQUIREDNESS`. `entities`: `ENTITY_KINDS`, `RELATION_KINDS`. `actions`: `RISK_TIERS` and its accepted kinds (R26), and its other vocabularies; `content`: its vocabularies. *(none declared)*
 - `intent`: its open proposal, the backing of R19's `triage` (K221).
+- `standards`, `conformance`, `consequences`, `filings`, `escalation`: their op maps, the ops R27 grades, and the backing of each rung (K264).
 - `review`, `legacy-store`: nothing, once the facts above are read from their modules.
 
 ### Invariants
