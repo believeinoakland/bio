@@ -63,3 +63,12 @@ Five points; I carry on meanwhile on the best reading of each. Already doing now
 - The 9 ADDED lines, for BOB's review: the import of `proposalFindingItems` (store.mjs 233), and the call at 12130–12137, which passes the gate SQL (moved, unchanged), `#queueAncestors`, `#queueOptions` and `QUEUE_OPTION_SUBJECTS_MAX`, then `items.push(...proposalItems)`.
 
 Size (session_01XoUuJXLYkVnbwhHrHRxBqE): test runs 60, module lines 459
+
+## J2 · REPORT
+
+1. **legacy-store** (N112, per B3): add `pdfstructure` to `PROJECT_NAMING_READS_NOT` beside `reading` (LEGACY-TESTS #3 REPORT 13). It is an addition, so not mine to make.
+2. **legacy-tests** (`civicos-ui/check-refusal-codes.mjs`, the DEC-49 guard): arm E's `vocabularyTerms` ratchet measures 114 against a floor of 113. The one new term is the catalogued `cardinality_exceeded` (R1, K209). Re-pin the floor to 114 from the guard's print. `vocabularies` stays 22. Measured on the merged tree: base 145 failures, head 146, the difference being only this ratchet.
+3. **observation-log** (comments only, nothing behavioural): `src/observation-log/vocabulary.mjs` lines 8–9 and 1346–1348 say the vocabulary is "written here from `queuestate.mjs`" and that its reasons "stay there". The refusal at 1599 names "(queuestate.mjs)". The vocabulary now lives only in observation-log, and `queuestate.mjs` re-exports it (N114), so these three places should name observation-log.
+4. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale. Its inputs `src/store.mjs` and `src/queuestate.mjs` changed, and it gains `src/queue/proposals.mjs`. The agent-worker bundle does not include `queuestate.mjs` and is unaffected.
+5. **Process tool** (`checks/ownership.mjs`): a legacy line that uses an imported name only through spread (`items.push(...proposalFindingItems(…))`) is not seen as a use. The `usesOwn` pattern excludes a name preceded by `.`, which is meant for property access, so a hunk rewired that way fails. I bound the result to a local instead. The pattern could allow `...` before the name.
+6. **legacy-tests:** `surfacing-run.mjs`'s `projectMd` (the REC-171 fixture project) and `queue.test.mjs`'s `projectMd` need `objective:` (INTENT #1 J4.1). With both added, `queue` passes 36/0 and `d125-findingmute` 42/0, on base and head alike.
