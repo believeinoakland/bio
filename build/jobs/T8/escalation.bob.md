@@ -33,3 +33,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the escalation bu
 ## B8 · CHANGE
 
 (K248) Filings is merged into `tranche/T8`; every layer-9 provider but actions' K256 fix is now there. Merge it, default `filingsOf` on your host (`filingsFor` R13 and `availableActions` R21, shapes in `build/jobs/T8/filings.md`), and run your suite over it. Actions' fix follows.
+
+## B9 · CHANGE
+
+(K256) Actions' fix is merged into `tranche/T8`: each promote carries its viewer, and a correspondence on a breach action resting on a live determination the author sees is accepted. Merge `tranche/T8`, turn your todo arm for stages 2–3 into a test over the real modules, and record completion.

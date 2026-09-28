@@ -192,3 +192,29 @@ test("R33 a machine revision moves only a past pending entry to overdue, by the 
   assert.equal(w.promote(B, w.text(B).replace("status: pending", "status: overdue"), { author: MACHINE, extra: recheck }).reason,
     "CLOCK_STATUS_NOT_MECHANICAL", "a future date is not past");
 });
+
+test("R8 R15 R16 a correspondence on a breach action resting on a live determination the author sees is accepted, over the real conformance (K256)", () => {
+  const w = world();
+  const p = w.promotion.promote({ base: null, snapKey: "p1", author: V("alice"), ownerMemberId: "alice",
+    files: [{ path: "bundle.md", text: ["---", "object_type: project", "schema: project@1", 'title: "Breach"',
+      "current_state: forming", "prior_state: null", 'created: "2026-09-27T00:00:00Z"', 'last_updated: "2026-09-27T00:00:00Z"',
+      "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n") }], meta: { object_type: "project" } });
+  assert.equal(p.ok, true, JSON.stringify(p));
+  /* the determination as conformance's determine act leaves it (its tables and its CONF- document); read back by its
+     own determinationRead, as the author sees it. */
+  const D = "CONF-2026-0001-determination";
+  w.st.sql.exec(`INSERT INTO determinations (determination_id, project_id, act_id, act_minted, act_description, act_role,
+    act_body, act_at, act_evidence, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    D, p.bundleId, "ACT-2026-0001", 1, "the act", "Town Clerk", "Town of Port Ellery", "2026-09-01", "[]", V("alice"), "2026-09-02T00:00:00Z");
+  assert.equal(w.promote(D, ["---", `id: ${D}`, "object_type: determination", `title: ${D}`, "current_state: recorded",
+    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } }).ok, true);
+  assert.equal(w.a.conformance.determinationRead({ id: D, viewer: V("alice") }).live, true, "the real module answers it");
+  w.action(A, ["breach: true", "action_basis:", `  - target: ${D}`, "    kind: rests_on"]);
+  const c = w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-03", account: "we notified the office",
+                                   viewer: V("alice"), author: V("alice") });
+  assert.equal(c.ok, true, JSON.stringify(c));
+  assert.equal(w.a.actionMove({ target: A, to: "active", reason: "notified", viewer: V("alice"), author: V("alice") }).ok, true);
+  /* negative control: an author who cannot see the determination's project is refused by name. */
+  const x = w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-04", account: "again", viewer: V("bob"), author: V("bob") });
+  assert.equal(x.reason, "ACTION_NO_DETERMINATION");
+});

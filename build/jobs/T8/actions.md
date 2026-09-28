@@ -1,6 +1,6 @@
 # actions (T8)
 
-**Status** · session_013nZKkthfi1LNuwSZpeoQRn · depth 2 · COMPLETE · handled B6
+**Status** · session_013nZKkthfi1LNuwSZpeoQRn · depth 2 · COMPLETE · handled B7
 
 
 ## Completion (ACTIONS #1)
@@ -24,7 +24,9 @@ B4 (K248, from FILINGS #1) applied after J3: `actionRead` answers `state_history
 
 B5, B6 (K252) applied: `tranche/T8` merged; the `conformance` dep defaults to `conformanceOf(host)`, created with actions so its step joins before any promotion; R8's reader takes conformance's R9 shape (`live`, `superseded_by`; `NO_SUCH_DETERMINATION` is no determination). The fixture now builds the real chain conformance brings (content, connections, entities, inquiry, reevaluation) as the store's boot does. R8's todo is replaced by its test: the real module refuses a breach action with no determination, and a stand-in in the R9 shape proves the live and superseded arms (a live one needs published findings and standards, which are conformance's to build). `test/m/actions`: tests 29, pass 29, fail 0, todo 0.
 
-Size (session_013nZKkthfi1LNuwSZpeoQRn): test runs 20, module lines 3340
+B7 (K256, re-opened; ESCALATION #1's finding) applied: every promotion an act makes now carries the act's viewer (`actionMove`, `actionCorrespond`, `actionLaws`, `actionRiskTier`; the `responds_to` revision carries its author), and the R8 step reads the determination as that viewer, else as the write's author. Before, the acts promoted with no viewer, so conformance answered every determination unseen and each act on a `breach: true` action was refused `ACTION_NO_DETERMINATION`. New test over the real conformance: a correspondence and a move on a breach action resting on a live determination the author sees are accepted; an author who cannot see its project is refused. `tranche/T8` merged. `test/m/actions`: tests 30, pass 30.
+
+Size (session_013nZKkthfi1LNuwSZpeoQRn): test runs 23, module lines 3345
 
 ## J1 · QUESTION
 
@@ -67,3 +69,7 @@ Complete again after B4 (J4). Everything else as J3.
 ## J6 · COMPLETE
 
 B5 and B6 (K252) applied: tranche/T8 merged; conformance defaults to conformanceOf(host), created with actions so its step joins before any promotion; R8 reads the R9 shape (live, superseded_by; NO_SUCH_DETERMINATION). R8's todo is now a test over the real module (no determination: refused) with a stand-in in R9's shape for the live and superseded arms. test/m/actions: 29 tests, 29 pass, 0 todo; format, architecture, coverage (41/41) and ownership pass. Record's completion section updated.
+
+## J7 · COMPLETE
+
+B7 (K256) applied: each act's promotion carries its viewer (the responds_to revision its author), and R8's step reads the determination as that viewer, else as the author. New test over the real conformance: a correspondence and a move on a breach action resting on a live determination the author sees are accepted; an author who cannot see its project is refused ACTION_NO_DETERMINATION. tranche/T8 merged; test/m/actions 30/30; format, architecture, coverage (41/41), ownership pass. Record updated.
