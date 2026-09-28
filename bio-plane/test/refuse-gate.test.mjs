@@ -504,10 +504,17 @@ const refuseCallers = (src) => {
    three lines the sweep is about, and to have correctly discarded the prose that
    merely mentions them. */
 const seen = codeLines(CORPUS_SRC);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (5)): retrieval R59 (N142, K332) made `answerChanged` a module-level
+   FUNCTION returning a boolean that never throws — the one-line arrow `moved || drift?.digestChanged === true` is now
+   a declaration and two arms. The needle follows the new form and names each part the rule rests on: the
+   declaration, the per-row arm (`moved` true answers true) and the digest arm (a query's constant-count swap), so a
+   stripper that swallowed any of the three lines still fails here. */
 t("the walk sees the gate, the formula and the record statement as CODE",
   ["const stopped = answerChanged(drift, moved)", "const moved = drift.revised.length",
    "const setMovedNote = answerChanged(sel.drift, sel.moved)",
-   "export const answerChanged = (drift, moved) => moved || drift?.digestChanged === true;"]
+   "export function answerChanged(drift, moved) {",
+   "if (moved === true) return true;",
+   "drift.digestChanged === true"]
     .filter((frag) => !seen.some(({ line }) => line.includes(frag))), []);
 t("and discards a comment that merely NAMES `sel.moved` in prose",
   seen.some(({ line }) => /It read `sel\.moved`/.test(line)), false);

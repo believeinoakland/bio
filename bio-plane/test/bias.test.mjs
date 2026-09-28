@@ -299,8 +299,15 @@ t("SEEK GUARD: a known CODE line survives decommenting",
 t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning cannot satisfy an anchor",
   [/The malformedness rule binds the machine exactly as a member/.test(BIAS_SRC),
    /The malformedness rule binds the machine exactly as a member/.test(BIAS)], [true, false]);
+/* RE-PINNED 2026-09-28 (legacy-tests T10, B1 (8); K341): store.mjs's floor moves from 500,000 to the MEASURED print,
+   484,830 characters. What left in T10, by name, measured at each tranche merge from 506,526 at T9's close
+   (-21,696 in all): legacy-store's layer-10 job (deb9367cd3, -20,343: N268's nine dead private delegates and
+   `static ownerMath`, N191's `#hiddenSets` run subtraction replaced by ai-runs' R42, and the dead
+   frontmatter/publication/reading helpers), retrieval (99d8a98fd5, -786: R59, R60), strength (bf8416f54b, -355) and
+   run-productions (cbd0805c1c, -212). A blindness floor, not a ratchet: an unreadable or truncated store fails it,
+   and the next extraction moves it again by name. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length > 500_000, INDEX_SRC.length > 100_000], [true, true]);
+  [STORE_SRC.length >= 484_830, INDEX_SRC.length > 100_000], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
           + `index.mjs ${INDEX_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
 
