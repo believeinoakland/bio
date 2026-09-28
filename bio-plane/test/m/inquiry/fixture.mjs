@@ -1,5 +1,5 @@
 /* inquiry over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   extraction, capture, entities, connections), on a real SQLite database (node:sqlite) standing in for a Durable
+   extraction, entities, connections), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. What later modules register with it (legacy-store's facts `caseMember` and `publishedRegistry`,
    reevaluation's `onRaised`, strength's `onGrounded`) and retrieval's selections are stand-ins the test controls. Every
    test drives `inquiry` at its interface. */
@@ -11,7 +11,6 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
-import { captureOf } from "../../../src/capture/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
@@ -46,7 +45,7 @@ export const NOW = "2026-09-28T01:00:00Z";
 /* The columns this module writes on record-core's `bundles` (R40), which the store's additive list creates today. */
 const BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"];
 
-export function world({ caseMembers = new Set(), published = null } = {}) {
+export function world({ caseMembers = new Set(), published = null, group = "test-group" } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -58,7 +57,8 @@ export function world({ caseMembers = new Set(), published = null } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  const groupRef = { value: group };
+  promotion.registerFact("producingGroup", "legacy-store", () => groupRef.value);
   promotion.registerFact("caseMember", "legacy-store", (id) => caseMembers.has(id));
   promotion.registerFact("publishedRegistry", "legacy-store", () => published);
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
@@ -67,8 +67,7 @@ export function world({ caseMembers = new Set(), published = null } = {}) {
   extraction.migrate();
   const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
   content.migrate();
-  const capture = captureOf(host, { record, governor: {}, provenance: prov });
-  capture.migrate();
+  const capture = {};   /* connections' link projection is not driven here */
   const entities = entitiesOf(host, { record, membership, provenance: prov, now: () => clock.now });
   entities.migrate();
   const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture, entities });
@@ -89,7 +88,7 @@ export function world({ caseMembers = new Set(), published = null } = {}) {
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, entities, connections, k, clock, selections, raisedCalls,
-    caseMembers,
+    caseMembers, groupRef,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,

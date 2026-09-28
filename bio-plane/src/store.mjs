@@ -13395,8 +13395,7 @@ export class Store extends DurableObject {
          envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
          the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
       const isInquiry = promotedType === "inquiry";
-      /* REC-11, REC-18, REC-42: the basis grammar and the subject entity are inquiry's check (its R11), registered with
-         promotion before this step. */
+      /* REC-11, REC-18, REC-42: the basis grammar and the subject entity are inquiry's check (its R11). */
       /* REC-24: THE ACTION ARM, and it is the inquiry basis arm above line for
        * line — the catalog's own functions run at the WRITE, so the store's view
        * and the checker's view are ONE rule and a malformed action neither lands
@@ -13703,8 +13702,7 @@ export class Store extends DurableObject {
          it is idempotent: a revision that changes neither recomputes the same row. */
       this.#reindexProjectSight(bundleId);
 
-      /* REC-11, REC-17, REC-82: the superseded-by index and inquiry_basis with each leg's content row are inquiry's
-         projection (its R12), registered with promotion before this step, so the basis below is already projected. */
+      /* REC-11, REC-17, REC-82: the superseded-by index and inquiry_basis with its content rows are inquiry's (its R12). */
       /* PL-1 / IS-1: THE BASIS VERSIONS, projected WHOLE from basis_versions[],
          basis_version_grounds[] and basis_version_legs[] in this SAME
          transaction as inquiry_basis above and by the same delete-then-insert
