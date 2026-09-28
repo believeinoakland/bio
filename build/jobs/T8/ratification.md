@@ -1,6 +1,6 @@
 # ratification (T8)
 
-**Status** · session_015JFVQbsYTrseJ3goPTfSAj · depth 2 · RUNNING until 2026-09-28T08:40:01Z (legacy battery suites for ratification (11 suites)) · handled B3
+**Status** · session_015JFVQbsYTrseJ3goPTfSAj · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
