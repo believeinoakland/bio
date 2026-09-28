@@ -104,9 +104,6 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             translation for the version chain's three refusals, as ONE row read
             from the catalog rather than restated here. */
          VERSION_CHAIN_CHECKS,
-         /* D-394 / DEC-49: the cross-version notice's three refusals, one row
-            each, read from the catalog rather than restated here. */
-         VERSION_NOTICE_CHECKS,
          /* PL-1 / IS-1: the BASIS-VERSION grammar, imported rather than
             reimplemented, so the version rules run at BOTH gates through ONE
             function — a version that cannot land cannot audit clean either,
@@ -396,6 +393,7 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { progressionsOf, progressionOps, PROGRESSIONS_TABLES } from "./progressions/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES, barAxisWords } from "./strength/index.mjs";
+import { reevaluationOf, reevaluationOps } from "./reevaluation/index.mjs";
 /* SK-1: the doctrine pack's own refusal, imported for the reason every check in
    this file is — the rule has ONE implementation and this file holds no copy of
    it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
@@ -729,7 +727,7 @@ export class Store extends DurableObject {
     promotion.registerFact("publishedRegistry", "legacy-store", (id, targets) => this.publishedRegistryFor(id, targets));
     /* inquiry (K31, K61): its check and projection join every promotion before legacy-store's step (its R11, R12);
        legacy-store answers reevaluation's obligation (R21, R25) and strength's pair (R28) until each is extracted. */
-    inquiryOf(ctx).onRaised("reevaluation", ({ target, viewer }) => this.#reevalRaisedBy(target, viewer));
+    reevaluationOf(ctx);
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
     strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
       legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },
@@ -750,8 +748,6 @@ export class Store extends DurableObject {
       const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
       if (monitored || biasOf(ctx).biasDebtDue(Date.now()) !== null) await this.#armScheduler();
     });
-    /* promotion R46: reevaluation's answer to a reopening (REC-17), registered in its name until reevaluation is extracted. */
-    promotionOf(ctx).onReopened("reevaluation", ({ target, viewer, at }) => ({ source: "reopened", since: at, raised: this.#reevalRaisedBy(target, viewer) }));
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
@@ -2136,19 +2132,6 @@ export class Store extends DurableObject {
 
   /* R20–R22, R39: disposing a selection of inquiries: inquiry's. */
   dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
-  /* The dependents ONE act just put a second look on, named in the actor's own
-     answer — the same reverse lookup op=reevaluations runs, and GATED THE SAME
-     WAY (REC-30): a dependent the actor may not see is WITHHELD, with no count
-     of what was withheld, because that count is the leak. An act's echo is a
-     read like any other and does not get a weaker posture for riding a write.
-     Kept to ids and ords: the echo names no title. */
-  #reevalRaisedBy(targetId, viewer) {
-    const visible = this.#bundleRedactor(viewer);
-    return this.#restsOnLive(targetId).all
-      .filter((l) => visible(l.bundle_id) !== null)
-      .map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role, state: l.state }));
-  }
-
   #refEdgeSevered(...a) { return connectionsOf(this.ctx).edgeSevered(...a); }
 
 
@@ -5315,9 +5298,7 @@ export class Store extends DurableObject {
                         across are the edition a leg already rests on, so nothing moved
                         under anybody. */
                      ...(!already && memberEdition > 1
-                       ? { reevaluation: { source: "edition", since: when,
-                                           edition: memberEdition,
-                                           raised: this.#reevalRaisedBy(target, viewer) } }
+                       ? { reevaluation: reevaluationOf(this.ctx).raise({ target, source: "edition", since: when, edition: memberEdition, viewer }) }
                        : {}) });
     }
 
@@ -13575,372 +13556,6 @@ export class Store extends DurableObject {
   basisFor(...a) { return inquiryOf(this.ctx).basisFor(...a); }
   restingOn(...a) { return inquiryOf(this.ctx).restingOn(...a); }
 
-  /* ================================================================   * REC-17 / P-64: THE RE-EVALUATION OBLIGATION, AS A QUERY AND NOT A FLAG.
-   *
-   * When a case is superseded or republished at a new edition, everything that
-   * cited it needs a second look. `SELECT bundle_id FROM inquiry_basis WHERE
-   * target_id = <moved>` is the WHOLE MECHANISM, over the `inquiry_basis_target`
-   * index REC-11 built, plus `bundles.inquiry_superseded_by` — the reverse of a
-   * `supersedes` edge — so the supersession half is a LOOKUP and not a graph
-   * walk either.
-   *
-   * NOTHING IS STORED, and that is the item's title rather than an
-   * implementation preference. Two reasons, both of them load-bearing:
-   *
-   *   1. A STORED VERDICT GOES STALE. REC-12 already proved this of the
-   *      strength cache — a leg raised beneath an inquiry does not re-promote
-   *      it — and a stored "needs re-evaluation" bit would go stale in BOTH
-   *      directions: still set after the member looked, still clear after the
-   *      thing beneath it moved again.
-   *   2. THE MEMBER DECIDES, NOT THE PLANE. No verdict here is computed from
-   *      STRENGTH, and nothing in this file alters a strength when something
-   *      moves underneath: the case's frozen pair keeps reading exactly what
-   *      the group signed (DEC-12), the derived pair keeps deriving from the
-   *      legs as authored, and what the reader is handed is the FACT that
-   *      something moved. Recomputing a case's strength on its authors' behalf
-   *      because a document beneath it was republished would be the plane
-   *      making a claim nobody authored.
-   *
-   * THE VOCABULARY IS REUSED, NOT MINTED. The answer speaks in
-   * `reeval_flag`/`reeval_since`/`reeval_source` — the three columns already in
-   * the schema, already projected from `reeval_pending`, already indexed and
-   * already normalised at boot (LAYERS.md B7 names them as the one reusable
-   * mechanism in the ground). A dependent's own STORED triple is carried beside
-   * the derived one under `stored`, never merged into it: what a document
-   * ASSERTS about itself and what the record DERIVES about it are two
-   * statements, and collapsing them would let a derived obligation look like an
-   * authored one.
-   *
-   * FIVE SOURCES, and every one of them is a fact about the TARGET's own row
-   * rather than a judgement about the dependent:
-   *   supersession — something supersedes it (REC-16's edges, both directions
-   *                  resolvable, read from the reverse index)
-   *   edition      — it stands at a LATER edition than the leg names (DEC-12:
-   *                  the leg keeps citing the edition it named, and nothing
-   *                  here follows it forward)
-   *   deferred     — the group set the question down (reversible; D-5's
-   *                  obligation arm)
-   *   reopened     — the group picked it back up (reversible; D-5)
-   *   dismissed    — the question was abandoned. Under this item that is
-   *                  REFUSED while a live leg names it, so this source can only
-   *                  arise from a document hand-authored into `dismissed` or
-   *                  from a store written before the refusal existed. It is
-   *                  reported rather than assumed impossible.
-   *
-   * GATED (REC-25/REC-30), in both of that sweep's shapes: a DEPENDENT the
-   * viewer may not see is a row ABOUT that bundle and is WITHHELD with no count
-   * of what was withheld, and a SUPERSEDING id inside a visible row is a
-   * back-reference and is REDACTED while every record fact in the row — the
-   * source, the date, both strengths — stands unchanged. A derivation that got
-   * weaker or stronger with the reader would be the record claiming something
-   * different to different people, which is worse than the leak. */
-  reevaluations({ target = null, viewer = null } = {}) {
-    if (target && !this.#viewerSees(target, viewer))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    /* With no target: every id any leg names. Bounded by the number of DISTINCT
-       basis targets rather than by the corpus — the same index, read the other
-       way — and each one costs one row read before it is dismissed as unmoved. */
-    const targets = target
-      ? [target]
-      : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis ORDER BY target_id`)
-          .map((r) => r.target_id);
-    const visible = this.#bundleRedactor(viewer);
-    const obligations = [];
-    for (const t of targets) {
-      const moved = this.#reevalMoved(t, visible);
-      if (!moved) continue;
-      /* REC-118 / D-410: `target_type` is SELECTED because the cap has a
-         no-referent arm — a capture letter on an INQ- leg ranges over no
-         document and is never bounded. It is read here and never published:
-         the leg shape this op answers with is composed in
-         `#reevalLegsEarned`, which is the one place that shape is decided. */
-      const legs = this.#rows(
-        `SELECT bundle_id, ord, target_id, target_type, role, grade, grade_axis, grade_source, at
-           FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, t);
-      const byBundle = new Map();
-      for (const l of legs) {
-        /* The row IS about this dependent, so an invisible one is withheld
-           whole — op=backlinks' posture — and no count of the withheld is
-           reported, because that count is the leak. */
-        if (visible(l.bundle_id) === null) continue;
-        if (!byBundle.has(l.bundle_id)) byBundle.set(l.bundle_id, []);
-        byBundle.get(l.bundle_id).push(l);
-      }
-      for (const [bundleId, mine] of byBundle) {
-        const dep = this.#one(
-          `SELECT title, object_type, current_state, reeval_flag, reeval_since, reeval_source
-             FROM bundles WHERE bundle_id=?`, bundleId);
-        /* The leg's OWN cited edition comes from the dependent's document, not
-           from a column: `target_edition` is authored on the leg (DEC-12) and
-           inquiry_basis does not project it. The document is the authority for
-           every fact in this file, which is why it is read rather than cached. */
-        const fmBasis = this.#basisFrontmatter(bundleId);
-        /* REC-160 / DEC-70 (§5.4 of the State Rules): SEVERANCE DISCHARGES
-           SUPPORT, NEVER CONNECTION. A withdrawn leg still RECEIVES the
-           obligation — it is NOT filtered here, and filtering it would reverse
-           the ruling — but the read MARKS it and never describes it as resting
-           on its target. `inquiry_basis` drops the status, so it is read off the
-           dependent's own document through the ONE severance predicate
-           (D-267), exactly as `restingOn` publishes it: only a positive
-           recorded `severed` narrows; an unrecorded, unreadable or unrecognised
-           status reads `confirmed`. Asked once per dependent, because every
-           leg in `mine` names the same target and the predicate answers per
-           (citer, target). */
-        const legStatus = this.#refEdgeSevered(bundleId, t) ? "severed" : "confirmed";
-        const causes = [];
-        for (const c of moved.causes) causes.push(c);
-        const citedEditions = [];
-        if (moved.edition) {
-          for (const l of mine) {
-            const cited = fmBasis[l.ord] && fmBasis[l.ord].target_edition != null
-              ? Number(fmBasis[l.ord].target_edition) : null;
-            citedEditions.push(cited);
-            if (cited === null || cited < moved.edition.latest)
-              causes.push({ source: "edition", since: moved.edition.since, ord: l.ord,
-                            cited_edition: cited, latest_edition: moved.edition.latest,
-                            latest_ratified_edition: moved.edition.latest_ratified,
-                            detail: legStatus === "severed"
-                              /* REC-160: a WITHDRAWN leg NAMED an edition; it
-                                 supports nothing, so the sentence says what it
-                                 named and why it is still listed (DEC-70). */
-                              ? (cited === null
-                                ? `this leg was WITHDRAWN (severed) and named no edition of ${t}, which `
-                                  + `now stands at edition ${moved.edition.latest}.`
-                                : `this leg was WITHDRAWN (severed) and named edition ${cited} of ${t}, `
-                                  + `which now stands at edition ${moved.edition.latest}.`)
-                                + ` A withdrawn leg supports nothing here: it adds nothing to strength, `
-                                + `gates nothing and counts toward no bar. It is listed because the `
-                                + `connection still informs a second look (DEC-70).`
-                              : cited === null
-                              ? `this leg names no edition of ${t}, which now stands at edition `
-                                + `${moved.edition.latest}. A leg keeps citing the edition it names `
-                                + `(DEC-12) and this one names none, so which edition it rests on cannot `
-                                + `be read off the record.`
-                              : `this leg rests on edition ${cited} of ${t}, which now stands at edition `
-                                + `${moved.edition.latest}. Edition ${cited} keeps answering with its own `
-                                + `signature and its own frozen strength; nothing here follows the case `
-                                + `forward on your behalf (DEC-12).` });
-          }
-        }
-        if (!causes.length) continue;
-        obligations.push({
-          bundle_id: bundleId, title: dep?.title ?? null,
-          object_type: dep?.object_type ?? null, current_state: dep?.current_state ?? null,
-          target: t, target_state: moved.state,
-          /* REC-118 / D-410: the RAW rows travel here, and the PUBLISHED leg
-             shape is composed once, in `#reevalLegsEarned`, after the whole
-             answer is built — so the registry is asked ONCE for the page
-             rather than once per obligation. Nothing below reads `legs`. */
-          legs: mine.map((l) => ({ ...l,
-                                   target_edition: fmBasis[l.ord]?.target_edition ?? null,
-                                   status: legStatus })),
-          /* THE REUSED TRIPLE. `flag` is true because this answer only ever
-             carries rows that have an obligation; `since` and `source` come
-             from the first cause in the priority the derivation computed. */
-          reeval: { flag: true, since: causes[0].since, source: causes[0].source },
-          causes,
-          /* The dependent's OWN authored triple, beside the derived one and
-             never merged with it. */
-          stored: { flag: dep && dep.reeval_flag != null ? !!dep.reeval_flag : null,
-                    since: dep?.reeval_since ?? null, source: dep?.reeval_source ?? null },
-          /* BOTH strengths, derived on read and UNALTERED by any of this. Named
-             in the answer because the whole question the obligation asks is
-             "does this still read the way you published it?", and a reader
-             cannot weigh that without the pair in front of them. */
-          strength: (() => { const s = this.strengthOf(bundleId);
-                             return { ...Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, s[a]])),
-                                      depth_bound: s.depth_bound }; })(),
-          ...(moved.superseded_by ? { superseded_by: moved.superseded_by } : {}),
-        });
-      }
-    }
-    obligations.sort((a, b) => (a.bundle_id + a.target) < (b.bundle_id + b.target) ? -1 : 1);
-    this.#reevalLegsEarned(obligations);
-    return { ok: true, ...(target ? { target } : {}), obligations, count: obligations.length };
-  }
-
-  /** REC-118 / D-410 — AN OBLIGATION'S LEG LETTERS, RESOLVED AGAINST WHAT THE
-   *  RECORD CAN EARN, SO THE TWO HALVES OF ONE ANSWER STOP DISAGREEING.
-   *
-   *  THE DEFECT THIS CLOSES, AND WHY IT WAS THE SHARPEST OF THE CENSUS'S FIVE.
-   *  `op=reevaluations` published each leg's AUTHORED letter straight off
-   *  `inquiry_basis.grade` in the SAME answer object as a `strength` block
-   *  that has been capped since REC-105. One envelope, two letters for one
-   *  fact, with nothing saying which was which — and the whole question this
-   *  op asks is *does this still read the way you published it?*, which a
-   *  reader cannot weigh while the answer contradicts itself. REC-114 DROVE
-   *  it rather than grepping it: `legs[0].grade = B` beside
-   *  `strength.capture = C`, on a fixture that supersedes a document.
-   *
-   *  THE RULING IS INHERITED, NOT RE-LITIGATED. REC-105 capped the walk;
-   *  REC-114 swept the leg listing and published the AUTHORED letter beside
-   *  the earned one. This is the same rule reaching a third reader: publish
-   *  what the record can SUPPORT, never erase what a member AUTHORED, and say
-   *  why they differ.
-   *
-   *  IT REUSES `Store.#capturedAt` AND THAT IS THE LOAD-BEARING DECISION, for
-   *  REC-114's reason in its own words: the ARITHMETIC lives in `captureBound`,
-   *  the SENTENCE in `earnedBasisRegistry`, the three-case policy in
-   *  `#capturedAt`. A second policy here would open at this surface exactly the
-   *  divergence REC-105 closed at the walk. This method decides NOTHING about
-   *  grades — it collects, calls, and labels.
-   *
-   *  THE THREE CONDITIONS ARE THE WALK'S AND THE LISTING'S, RE-STATED RATHER
-   *  THAN INHERITED — a different loop over the same rule, where a silent
-   *  drift between the three sites is the whole failure mode. That restatement
-   *  is not left to care: `rec118-reeval-earned.test.mjs` block 5 asserts all
-   *  THREE resolvers carry the same three conditions and all three call
-   *  `#capturedAt`, so a future edit to one that does not reach the others
-   *  fails by name. Capture axis only (a connection leg's earned answer is a
-   *  VALUE the write pins, not a ceiling a read applies); a leg actually
-   *  carrying a letter (null stays null — nothing is invented); and a target
-   *  that is NOT an inquiry (the walk's `noReferent` arm).
-   *
-   *  ONE REGISTRY CALL FOR THE WHOLE ANSWER, which is why this runs as a
-   *  post-pass rather than inside the target loop: that loop's cost model is
-   *  one row read per UNMOVED target, and a registry call per moved target
-   *  would have put a probe on a member-facing sweep.
-   *
-   *  BOTH DERIVED FIELDS ARE ALWAYS PRESENT, including on a leg that needed no
-   *  cap. A field that appears only when the record disagreed with its author
-   *  is a one-bit signal of exactly that, and a consumer would have to treat
-   *  absence as a value — the absence-with-two-causes shape `CLAUDE.md` names.
-   *  So an obligation at or under its ceiling is byte-identical but for
-   *  `grade_authored` echoing `grade` and `grade_why: null`.
-   *
-   *  IT MUTATES `obligations` IN PLACE and returns nothing, because the array
-   *  is this method's own local and a copy would say it was shared. */
-  #reevalLegsEarned(obligations) {
-    if (!Array.isArray(obligations) || !obligations.length) return;
-    const bounded = (l) => !!l && l.grade_axis === "capture" && l.grade != null
-      && typeof l.target_id === "string" && !!l.target_id
-      && normalizeType(l.target_type) !== "inquiry";
-    const targets = new Set();
-    for (const o of obligations) for (const l of (o.legs ?? [])) if (bounded(l)) targets.add(l.target_id);
-    const cap = targets.size
-      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
-      : {};
-    for (const o of obligations) {
-      o.legs = (o.legs ?? []).map((l) => {
-        const res = bounded(l) ? Store.#capturedAt(l.grade, cap[l.target_id], l.target_id) : null;
-        return { ord: l.ord, role: l.role || null,
-                 grade: res ? res.grade : (l.grade ?? null),
-                 grade_axis: l.grade_axis ?? null,
-                 grade_source: l.grade_source ?? null,
-                 target_edition: l.target_edition ?? null,
-                 /* REC-160 / DEC-70: `severed` only on a positive recorded
-                    withdrawal; anything else reads `confirmed`. */
-                 status: l.status === "severed" ? "severed" : "confirmed",
-                 grade_authored: l.grade ?? null,
-                 grade_why: res ? res.why : null };
-      });
-    }
-  }
-
-  /* One target's own row, answered as "has anything moved under a leg naming
-     it?". Returns null when nothing has — which is the common case and is what
-     keeps the untargeted sweep cheap. */
-  #reevalMoved(targetId, visible) {
-    const row = this.#one(
-      `SELECT bundle_id, object_type, current_state, prior_state, last_updated, inquiry_superseded_by
-         FROM bundles WHERE bundle_id=?`, targetId);
-    if (!row) return null;
-    const causes = [];
-    /* SUPERSESSION, from the reverse index and not from a walk. The superseding
-       ids are BACK-REFERENCES: an invisible one is redacted to null and the
-       fact that this bundle was superseded still stands, because that fact is
-       the record's and must not change with the reader (REC-30). */
-    const sup = Store.supersededByOf(row);
-    let supersededBy = null;
-    if (sup.length) {
-      supersededBy = sup.map((id) => visible(id));
-      /* D-443: ONE json_each value — a question's successors are bounded by no cap (D-36). */
-      const when = this.#one(
-        `SELECT MAX(last_updated) AS m FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))`,
-        JSON.stringify(sup));
-      causes.push({ source: "supersession", since: (when && when.m) || row.last_updated,
-                    detail: `${targetId} has been superseded. The question it asked is carried forward by `
-                          + `what supersedes it, and a leg naming ${targetId} was not re-pointed by that `
-                          + `act — nothing here re-points it for you.` });
-    }
-    /* THE LIFECYCLE ARMS (D-5). Read off the target's own state pair; the
-       reversible acts are what RAISE rather than refuse. */
-    if (row.current_state === "deferred")
-      causes.push({ source: "deferred", since: row.last_updated,
-                    detail: `${targetId} has been set down. It is reversible and the group may pick it back `
-                          + `up, and until it does, a claim resting on it rests on a question nobody is `
-                          + `working.` });
-    else if (row.current_state === "dismissed")
-      causes.push({ source: "dismissed", since: row.last_updated,
-                    detail: `${targetId} was abandoned. A claim resting on it names a question that will `
-                          + `not be answered.` });
-    /* CASE-4 / DEC-72: `concluded` JOINS THE PRIOR STATES THAT MEAN "REOPENED",
-       and it is not a widening. `REOPENABLE_FROM` used to carry `published`, so
-       reopening a published case left `prior_state: published` and this arm
-       fired. DEC-72 ends that state: a member sits at `concluded`, so the same
-       act now leaves `prior_state: concluded` and this arm would have gone
-       silent on exactly the reopening most worth telling a dependent about. It
-       is EXACT rather than generous: `concluded -> open` is refused by
-       `op=reopen` for every finding that is NOT a case member (REC-31's rule,
-       preserved at that refusal), so a document sitting at `open` with
-       `prior_state: concluded` can only have got there by a case member being
-       picked back up. */
-    else if (row.current_state === "open"
-             && (REOPENABLE_FROM.includes(row.prior_state) || row.prior_state === "concluded"))
-      causes.push({ source: "reopened", since: row.last_updated,
-                    detail: `${targetId} was picked back up from ${row.prior_state}. What it concluded is `
-                          + `being worked again, which is a reason to look at what rests on it.` });
-    /* THE EDITION ARM is per-LEG (it depends on which edition the leg named), so
-       what is computed here is the target's latest edition and the caller pairs
-       it with each leg. LATEST is the greater of what has been RATIFIED and what
-       the working document now says: an authored-but-unratified edition 2 has no
-       signature yet, and a reader whose leg names edition 1 still wants to know
-       the case has moved. Both numbers are reported so neither is implied. */
-    const ratified = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, targetId);
-    const latestRatified = ratified && ratified.m != null ? Number(ratified.m) : 0;
-    /* The document is read ONLY where it could carry an edition at all. The
-       untargeted sweep runs this once per distinct basis target, and a
-       frontmatter parse per document beneath every claim in the store is a real
-       cost for an answer that is `0` for everything nobody ever published. */
-    /* CASE-4 / DEC-72: the second arm was `|| row.current_state === "published"`
-       and it is REMOVED RATHER THAN TRANSLATED, because it could never change
-       this answer — measured rather than assumed. It existed to catch a document
-       carrying an AUTHORED but unratified edition. `edition` below is reported
-       only when `latest > 1`, and an authored edition of 2 or more is only
-       reachable on a finding whose edition 1 ratified, which puts
-       `latestRatified > 0` and satisfies the first arm already. The only shape
-       the second arm added alone is an authored edition 1 with nothing ratified,
-       where `latest` is 1 and the result is null either way. Translating it to
-       the case relation would have cost a frontmatter parse for every
-       never-published basis target in the untargeted sweep — the exact cost the
-       comment above guards — to reach an answer that cannot differ. */
-    const fm = latestRatified > 0 ? this.#frontmatterOf(targetId) : null;
-    const authored = fm && Number.isInteger(fm.edition) ? fm.edition : 0;
-    const latest = Math.max(latestRatified, authored);
-    const edition = latest > 1
-      ? { latest, latest_ratified: latestRatified, since: row.last_updated }
-      : null;
-    if (!causes.length && !edition) return null;
-    return { state: row.current_state, causes, edition,
-             ...(supersededBy ? { superseded_by: supersededBy } : {}) };
-  }
-
-  /* A bundle's frontmatter, parsed from its live bundle.md. Small helper so the
-     two readers below do not each restate the same three lines. */
-  #frontmatterOf(bundleId) {
-    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
-    if (!md || md.content === null) return null;
-    try { return parseFrontmatter(md.content).data || null; } catch { return null; }
-  }
-
-  /* The authored basis legs of a bundle, by ord — for the fields inquiry_basis
-     deliberately does not project (`target_edition`). */
-  #basisFrontmatter(bundleId) {
-    const fm = this.#frontmatterOf(bundleId);
-    const legs = fm && Array.isArray(fm.basis) ? fm.basis : [];
-    return legs.map((l) => (l && typeof l === "object" ? l : {}));
-  }
-
   /* REC-12: the strength pair is `strength`'s (its R1–R5); this delegate serves the callers still here. The axes
      are its `STRENGTH_AXES`, re-exported where this file's callers name them. */
   static STRENGTH_AXES = STRENGTH_AXES;
@@ -17083,247 +16698,6 @@ export class Store extends DurableObject {
   capturedLocators(...a) { return provenanceOf(this.ctx).receipts(...a); }
   versionChain(...a) { return provenanceOf(this.ctx).versionChain(...a); }
 
-  /** D-256 — THE "CHANGED FROM" SENTENCES ALREADY WRITTEN, EACH CHECKED AGAINST
-   *  THE VERSION CHAIN, AND NOT ONE BYTE OF ANY BODY REWRITTEN.
-   *
-   *  D-221 fixed the writer: before 2026-08-08 `addGo` chose the named id by a
-   *  bm25 tiebreak among captures with identical url text, which PL-10 measured
-   *  naming the OLDEST version at the address. The sentences it wrote stay in
-   *  the record, and BOB #31 ruled (2026-09-23 22:22Z) that the bodies stay as
-   *  written and the correction is the READ (DEC-19: correction moves forward;
-   *  D-219: a stored string is a fact about when it was written). This is that
-   *  read. It WRITES NOTHING — `versionchain.test.mjs` asserts every body
-   *  byte-unchanged by digest, and that this method holds no write statement.
-   *
-   *  THE BUNDLE'S OWN VERSION IS FOUND FROM THE RECORD, never from its prose:
-   *  its `register` rows joined to `captured_locators` give the (address,
-   *  capture) pairs the bundle holds; then `versionChain` — the one chain
-   *  reader, consumed and never restated — answers the true predecessor. The
-   *  frontmatter's `content_hash` only breaks a tie when the bundle holds
-   *  versions at more than one address pair.
-   *
-   *  THREE VERDICTS, COUNTED APART, because folding any two is D-256's own
-   *  mistake repeated:
-   *    wrong         the chain names a different predecessor than the sentence
-   *    right         the chain's predecessor IS the bundle the sentence names
-   *                  (`sole_prior` says whether the address held exactly one
-   *                  prior version, where the two routes could not disagree)
-   *    undetermined  the chain cannot check it, with the reason: the bundle
-   *                  holds no version in the chain (`no_version_held`), holds
-   *                  several and none is the frontmatter's (`several_versions_held`),
-   *                  its version is the oldest held (`no_prior_version` —
-   *                  the earlier capture may simply never have been
-   *                  registered; sparse is normal), or the sentence names
-   *                  more than one id (`several_named`) or none this reader
-   *                  can take as one (`no_named_id`).
-   *
-   *  WHAT IT CANNOT SEE, said here rather than implied: it reads the LIVE
-   *  `bundle.md` of every bundle, so a sentence present only in a superseded
-   *  history snapshot is not counted; and it matches the literal the writer
-   *  emitted, so a sentence a member retyped in other words is not counted. */
-  changedFromAudit({ limit = null, offset = 0 } = {}) {
-    const cap = Math.max(1, Math.min(Store.CHANGED_FROM_AUDIT_LIMIT_MAX,
-      Math.floor(Number(limit) || Store.CHANGED_FROM_AUDIT_LIMIT_DEFAULT)));
-    const from = Math.max(0, Math.floor(Number(offset) || 0));
-    const lit = Store.CHANGED_FROM_SENTENCE;
-    const viewer = `${MACHINE_CLASS_PREFIX}admin`;
-    const named = new RegExp(lit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^()\\s]+)\\)", "g");
-    const rows = this.#rows(
-      `SELECT bundle_id, content FROM files WHERE path = 'bundle.md' AND instr(content, ?) > 0
-        ORDER BY bundle_id`, lit);
-    const out = { wrong: 0, right: 0, undetermined: 0 };
-    const all = rows.map((r) => {
-      const ids = [...new Set([...String(r.content).matchAll(named)].map((m) => m[1]))];
-      const base = { bundle_id: r.bundle_id, named: ids.length === 1 ? ids[0] : null };
-      const undetermined = (why, extra = {}) =>
-        ({ ...base, verdict: "undetermined", why, predecessor: null, ...extra });
-      if (ids.length !== 1) return undetermined(ids.length ? "several_named" : "no_named_id", { named_all: ids });
-      const pairs = this.#rows(
-        `SELECT DISTINCT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha
-           FROM register r JOIN captured_locators cl ON cl.capture_sha = r.capture_sha
-          WHERE r.bundle_id = ? ORDER BY cl.address_norm, cl.capture_sha`, r.bundle_id);
-      let pair = pairs.length === 1 ? pairs[0] : null;
-      if (pairs.length > 1) {
-        const h = /^\s*content_hash:\s*"?([0-9a-fA-F]{64})"?\s*$/m.exec(String(r.content));
-        const hits = h ? pairs.filter((p) => p.capture_sha === h[1].toLowerCase()) : [];
-        pair = hits.length === 1 ? hits[0] : null;
-        if (!pair) return undetermined("several_versions_held", { versions_held: pairs.length });
-      }
-      if (!pair) return undetermined("no_version_held");
-      const c = this.versionChain({ addressNorm: pair.address_norm, at: pair.capture_sha, limit: 1, viewer });
-      if (!c.ok) return undetermined("no_version_held");
-      const at = { address_norm: pair.address_norm, capture_sha: pair.capture_sha, at_index: c.at_index };
-      if (!c.predecessor) return undetermined("no_prior_version", at);
-      const predecessor = { bundle_id: c.predecessor.bundle_id, capture_sha: c.predecessor.capture_sha,
-                            first_retrieved: c.predecessor.first_retrieved };
-      return { ...base, verdict: c.predecessor.bundle_id === ids[0] ? "right" : "wrong",
-               ...at, sole_prior: c.at_index === 1, predecessor };
-    });
-    for (const a of all) out[a.verdict]++;
-    const listed = all.slice(from, from + cap);
-    return {
-      ok: true,
-      affected: all.length,
-      wrong: out.wrong, right: out.right, undetermined: out.undetermined,
-      bundles: listed, count: listed.length, total: all.length,
-      limit: cap, offset: from, truncated: from + listed.length < all.length,
-      wrote: false,
-      note: "read-only: every body stays as written (BOB #31, 2026-09-23 22:22Z); this answer is the correction. "
-        + "'undetermined' is the chain unable to check a sentence, never evidence it was right.",
-    };
-  }
-  /* D-256's bound, `op=versionchain`'s 200/1000 pair reused rather than a new
-     spelling invented. Declared BELOW its method, on REC-116's finding: `bounds.test.mjs`'s
-     segmenter splits on method signatures, so a constant above a method is credited to the one before it. It bounds the LISTING only: the three totals are always
-     counted over every affected bundle, because a verdict total cut at N would
-     be the partial count this op exists to replace. */
-  static CHANGED_FROM_AUDIT_LIMIT_DEFAULT = 200;
-  static CHANGED_FROM_AUDIT_LIMIT_MAX = 1000;
-  /* The one literal the pre-2026-08-08 `addGo` wrote (civicos-ui/app.html,
-     the CHANGED_FROM branch), up to the parenthesis that opens the named id. */
-  static CHANGED_FROM_SENTENCE = "The record already holds an earlier capture of this same address (";
-
-  /* ====================================================================== *
-   * D-394 — THE CROSS-VERSION NOTICE (BIO_Content_Framework_v0_10.md §18.1).
-   * ====================================================================== *
-   *
-   * THE GAP THIS CLOSES IS NOT AN OVERCLAIM, WHICH IS WHY NO GATE CAUGHT IT. A
-   * member's citation stays honestly pointed at the capture it was made against,
-   * and a case may rest on a passage the publisher has since revised, with the
-   * record holding BOTH captures and saying nothing. This read is the record
-   * TELLING. It answers three questions about one cited passage, and keeps them
-   * apart because collapsing them is what kept the whole thing unbuilt (§18.1's
-   * decomposition):
-   *
-   *   1. IS THERE A NEWER CAPTURE AT THIS DOCUMENT'S ADDRESS?  Answered WITH
-   *      CERTAINTY, by asking `versionChain` — the one chain lookup, PL-10's, and
-   *      no second copy of it — anchored on the row's own capture. `newer` is
-   *      three-valued: true, false, or NULL when the chain could not be read (no
-   *      address recorded for the capture, or the capture is not a version the
-   *      chain holds). **`false` is said ONLY when every chain was read**: "no
-   *      newer version" answered for a chain nobody read is the lie this read is
-   *      most exposed to, and it reads exactly like the earned silence of §18.1's
-   *      first row.
-   *   2. IS A PASSAGE AT THE SAME EXTENT IN IT?  REC-82's extent test, asked
-   *      against the newer capture as the record holds it. It is admitted as a
-   *      SUFFICIENT signal for a CANDIDATE and never as evidence of identity:
-   *      the candidate is labelled so, and nothing here says "the same passage".
-   *      Where the test cannot hold — the extent is outside the newer capture, or
-   *      the record holds no bound for it to be tested against — the answer is
-   *      UNDETERMINED with its reason, which §18.1 calls the honest and most
-   *      common answer. A bound the record does not hold is NOT a match: the
-   *      checker skips an unheld bound (a fence must not refuse what nobody
-   *      measured), and reading that skip as "it fits" would be the checker's
-   *      permissiveness turned into a claim.
-   *   3. WHAT MAY BE DONE ABOUT IT?  Nothing, by the record. Only a member's act
-   *      moves a citation (§14.4, Bob 2026-09-14), and the answer says so.
-   *
-   * IT WRITES NOTHING, AND THAT IS THE MECHANISM RATHER THAN AN OMISSION.
-   * §18.1: *the strongest guarantee that a proposal is never mistaken for a
-   * re-pointing is to make it impossible to persist one.* So no content row is
-   * minted for the candidate (an existing one is NAMED if somebody already cited
-   * that extent of the newer capture — a find, never a mint), no leg, edge or
-   * row is touched, and the answer is computed at READ against the current state
-   * of both captures, so it cannot go stale. `test/versionnotice.test.mjs`
-   * asserts every table of the store byte-identical across the read.
-   *
-   * GATED TWICE, both times through predicates that already exist: the subject
-   * (the question, or the passage) through `#viewerSees`, and the chain through
-   * `versionChain`'s own `#bundleGate` — so a newer capture filed inside a
-   * project the caller was never invited to is not in the chain this caller
-   * reads, and the answer says the chain is the one VISIBLE TO THE CALLER.
-   * ====================================================================== */
-
-  /** The legs one notice read answers for a question. 200 is the version chain's
-   *  own default, reused rather than a new spelling: a question resting on more
-   *  than two hundred passages is a run's walk, and `truncated` says so. */
-  static VERSION_NOTICE_LEGS_MAX = 200;
-  /** THE ADDRESSES ONE CAPTURE WAS RETRIEVED FROM — one walk of `captured_locators`
-   *  by capture, shared by its two askers: IS-6's origin walk (`#independenceOf`) and
-   *  D-394's notice. `independence.test.mjs` pins exactly ONE such walk in this file,
-   *  and D-394 met that pin: a second spelling of the same question is where two
-   *  answers to "where did these bytes come from" would drift. DISTINCT, because the
-   *  key carries `via` (D-96) and one address seen by two routes is one address;
-   *  ordered, so a bounded answer is a stable one. */
-  #capturedAddresses(captureSha, limit) {
-    return this.#rows(
-      `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
-      captureSha, limit);
-  }
-
-  /** op=versionnotice — D-394. One question (`target=`: every live-basis leg that
-   *  rests on a passage) or one passage (`content=`). A READ that writes nothing.
-   *  `limit` bounds the legs answered for a question; it is CLAMPED to
-   *  [1, VERSION_NOTICE_LEGS_MAX] and the applied figure is what is published
-   *  (REC-57's discipline), with `truncated` saying whether legs were left out. */
-  versionNotice({ target = null, content = null, limit = null, viewer = null } = {}) {
-    const refusal = (code, detail, extra) => {
-      const row = VERSION_NOTICE_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-               detail, ...(extra || {}) };
-    };
-    const tgt = String(target ?? "").trim();
-    const cid = String(content ?? "").trim();
-    const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as`;
-    let legs = [], rows = [], truncated = false, inquiry = null;
-    /* DEC-49 REGION is-version-notice-subject */
-    if ((tgt && cid) || (!tgt && !cid))
-      return refusal("VERSION_NOTICE_NO_SUBJECT",
-        tgt ? "pass target=<INQ-…> OR content=<content id>, not both: a notice is about one subject."
-            : "pass target=<INQ-…> (every passage a question rests on) or content=<content id> (one passage).");
-    if (tgt) {
-      const b = this.#one(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id=?`, tgt);
-      if (!b || normalizeType(b.object_type) !== "inquiry" || !this.#viewerSees(b.bundle_id, viewer))
-        return refusal("VERSION_NOTICE_NO_INQUIRY",
-          `no question by the id '${tgt.slice(0, 60)}' is readable here. A question you may not see `
-          + `answers exactly as one that does not exist.`, { target: tgt });
-      inquiry = b.bundle_id;
-    } else {
-      const passage = contentOf(this.ctx).passageNotice({ contentId: cid, viewer });
-      if (!passage.ok) return passage;
-      const { ok, states, grades, wrote, proposal_only, visible_to, ...notice } = passage;
-      rows = [notice];
-    }
-    /* END DEC-49 REGION is-version-notice-subject */
-    const max = Math.max(1, Math.min(Store.VERSION_NOTICE_LEGS_MAX,
-      Math.floor(Number(limit) || Store.VERSION_NOTICE_LEGS_MAX)));
-    if (inquiry) {
-      const page = this.#rows(
-        `SELECT b.ord AS ord, b.target_id AS target, b.content_id AS content_id
-           FROM inquiry_basis b WHERE b.bundle_id=? ORDER BY b.ord LIMIT ?`, inquiry, max + 1);
-      truncated = page.length > max;
-      legs = page.slice(0, max);
-      const ids = [...new Set(legs.map((l) => l.content_id).filter(Boolean))];
-      /* `LIMIT ?` at the id count: the set is already bounded by the leg cap above, and
-         saying so in the SQL is what lets the derivation-bounds census see it. */
-      rows = ids.length
-        ? this.#rows(`SELECT ${ROW_COLS} FROM content WHERE content_id IN (${ids.map(() => "?").join(",")}) LIMIT ?`,
-            ...ids, ids.length)
-        : [];
-    }
-    const memo = new Map();
-    const byId = new Map(rows.map((r) => [r.content_id, inquiry ? contentOf(this.ctx).noticeForRow(r, viewer, memo) : r]));
-    const notices = inquiry
-      ? legs.map((l) => l.content_id && byId.has(l.content_id)
-          ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) }
-          : { ord: l.ord, target: l.target, content_id: null, state: "not_asked", newer: null,
-              says: null, affects: null,
-              why: "this leg rests on no cited passage (it cites another question, or a document this record "
-                 + "holds no bytes of), so there is no capture whose newer versions could be asked about" })
-      : [...byId.values()];
-    return {
-      ok: true, target: inquiry, content: inquiry ? null : cid,
-      notices, count: notices.length, limit: inquiry ? max : 1, truncated,
-      states: VERSION_NOTICE_STATES, grades: VERSION_NOTICE_GRADES,
-      wrote: false, proposal_only: true,
-      visible_to: "the version chains here are the ones visible to you; a version filed in a project you "
-        + "were not invited to is not in them",
-      says: "a notice, computed now and stored nowhere. A newer version is stated with certainty where the "
-        + "version chain was read; a passage at the same extent in it is a CANDIDATE, never the same passage; "
-        + "nothing was moved, minted or written, and only a member's act can re-point a citation.",
-    };
-  }
-
   static BASIS_VERSIONS_LIMIT_DEFAULT = BASIS_VERSIONS_LIMIT_DEFAULT;
   static BASIS_VERSIONS_LIMIT_MAX = BASIS_VERSIONS_LIMIT_MAX;
   static BASIS_VERSION_LEGS_MAX = BASIS_VERSION_LEGS_MAX;
@@ -18902,15 +18276,12 @@ export class Store extends DurableObject {
         ...progressionOps(progressionsOf(this.ctx), url, body),
         ...basisVersionsOps(basisVersionsOf(this.ctx), url, body),
         ...strengthOps(strengthModule(this.ctx), url, body),
+        ...reevaluationOps(reevaluationOf(this.ctx), url, body),
         promote: () => promotionOf(this.ctx).promote(body),
         allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
         lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 300000),
         /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
         snapkeycensus: () => recordOf(this.ctx).snapKeyCensus({ limit: url.searchParams.get("limit") }),
-        /* D-256: every "changed from" sentence already written, checked against the version chain; read-only
-           (see `changedFromAudit`). */
-        changedfromaudit: () => this.changedFromAudit({
-          limit: url.searchParams.get("limit"), offset: url.searchParams.get("offset") }),
         /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
         homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
         /* D-476: does the register hold these whole-document bytes, read-only and naming no
@@ -18942,12 +18313,6 @@ export class Store extends DurableObject {
            parts so ratification can re-fetch them; `recordreuseverdicts` commits
            the outcomes the control plane produced; `reuseverdicts` reads them
            (also surfacing the free posthoc verdicts by source_capture). */
-        /* REC-17 / P-64: the RE-EVALUATION OBLIGATION, derived on read over the
-           same reverse index. `?target=` asks it of one moved thing; with no
-           target it sweeps every id a leg names. GATED — `viewer` is stamped by
-           the control plane and an absent one fails closed. */
-        reevaluations: () => this.reevaluations({ target: url.searchParams.get("target"),
-                                                  viewer: url.searchParams.get("viewer") }),
         /* CASE-4 / DEC-72: THE REVISION FLAGS. `?case=` asks one case, `?target=`
            asks one member finding, neither sweeps the store. UNGATED and
            unstamped, unlike `reevaluations` above, and the difference is a fact
@@ -19085,14 +18450,6 @@ export class Store extends DurableObject {
            the seam op=links already uses for the same reason. `viewer` is
            stamped by the control plane and an absent one compiles to the deny
            predicate, so this fails closed like every other gated read. */
-        /* D-394: THE CROSS-VERSION NOTICE. A READ: `viewer` is the control
-           plane's stamp, and both subjects are gated through it. */
-        versionnotice: () => this.versionNotice({
-          target: url.searchParams.get("target"),
-          content: url.searchParams.get("content"),
-          limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer"),
-        }),
         versionchain: () => this.versionChain({
           addressNorm: url.searchParams.get("address"),
           at: url.searchParams.get("at"),
