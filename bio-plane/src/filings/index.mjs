@@ -16,8 +16,8 @@
  *   record, publication, provenance, content   `getSetting`, `allocId`, `transact`, `textAtSha`, `declarePurge`;
  *                                   `registerEvidenceBlock`, `publishedEditionsOf`; `attestationsOf`; `contentRow`,
  *                                   `captureFor`.
- *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32).
- *   conformance    `determinationRead` (its R9), `determinationsFor` (R11).
+ *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32), from `actionsOf` (K253).
+ *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`).
@@ -36,6 +36,9 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
+import { conformanceOf } from "../conformance/index.mjs";
+import { consequencesModule } from "../consequences/index.mjs";
+import { actionsOf } from "../actions/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX,
          sha256HexSync } from "../../checks/bio-checks.mjs";
@@ -120,11 +123,7 @@ export class Filings {
                 now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, publication, provenance, content };
-    this.actions = actions;
-    this.conformance = conformance;
-    this.#deps.standards = standards;
-    this.consequences = consequences;
+    this.#deps = { host, publication, provenance, content, actions, conformance, standards, consequences };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
@@ -135,7 +134,12 @@ export class Filings {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
+  /* The layer-9 modules, each its own factory on the same host unless given (K253); with no host, absent, and every
+     service that needs one refuses (K248). */
   get standards() { return this.#deps.standards ||= (this.#deps.host ? standardsOf(this.#deps.host) : null); }
+  get conformance() { return this.#deps.conformance ||= (this.#deps.host ? conformanceOf(this.#deps.host) : null); }
+  get consequences() { return this.#deps.consequences ||= (this.#deps.host ? consequencesModule(this.#deps.host) : null); }
+  get actions() { return this.#deps.actions ||= (this.#deps.host ? actionsOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -627,9 +631,10 @@ export class Filings {
     }
     if (a.state_history === null)
       undated.push({ event: "the action's state history", source: a.id, why: "the action's read does not answer its state history" });
+    /* actions R29 (K253): each move `{state, at, by}`, in order. */
     for (const [i, h] of (a.state_history || []).entries())
-      push(realDate(String(h.at ?? "").slice(0, 10)), { event: `the action moved from ${h.from ?? "undetermined"} to ${h.to ?? "undetermined"}`,
-                                                        source: `${a.id}/state_history[${i}]` });
+      push(realDate(String(h.at ?? "").slice(0, 10)), { event: `the action entered ${h.state ?? h.to ?? "an undetermined state"}`,
+                                                        ...(h.by ? { by: h.by } : {}), source: `${a.id}/state_history[${i}]` });
     for (const [i, e] of a.correspondence.entries()) {
       const ord = Number.isInteger(e.ord) ? e.ord : i;
       push(realDate(String(e.at ?? "").slice(0, 10)), { event: `correspondence ${e.direction ?? "undetermined"}${str(e.party) ? ` (${e.party})` : ""}`,
@@ -879,7 +884,7 @@ export class Filings {
                detail: `state the candidate theory, and any remedy, each in at most ${THEORY_TEXT_MAX} characters` };
     const list = (Array.isArray(standards) ? standards : typeof standards === "string" ? standards.split(",") : [])
       .map((s) => String(s ?? "").trim()).filter(Boolean);
-    if (!list.length) return { ok: false, reason: "NO_STANDARDS", detail: "a candidate theory names the standards it rests on" };
+    if (!list.length) return { ok: false, reason: "THEORY_NO_STANDARDS", detail: "a candidate theory names the standards it rests on" };
     const reads = this.standards && typeof this.standards.standardRead === "function"
       ? list.map((s) => this.#call(() => this.standards.standardRead({ id: s, viewer }))) : null;
     if (!reads || reads.some((r) => !r))

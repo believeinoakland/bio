@@ -3,7 +3,8 @@
  * (K248). A refusal another module answers passes through as it came: `actions.actionCorrespond`'s (R7), standards'
  * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. R1's and R14's
  * `NO_AUTHOR` is the catalogue's generic code, minted elsewhere for other conditions, so each act here has its own
- * (`FILING_NO_PREPARER`, `THEORY_NO_PROPOSER`), as standards did for its R1 (K251). */
+ * (`FILING_NO_PREPARER`, `THEORY_NO_PROPOSER`), as standards did for its R1 (K251); R14's `NO_STANDARDS` is
+ * conformance's, so a theory naming none is `THEORY_NO_STANDARDS`. */
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
@@ -106,7 +107,7 @@ export const FILINGS_CHECKS = Object.freeze({
     check: "C-115.22", where: at("theoryPropose", "is-theory-propose"),
     translation: "State the candidate theory, and any remedy, in words that are not too long.",
   },
-  NO_STANDARDS: {
+  THEORY_NO_STANDARDS: {
     check: "C-115.23", where: at("theoryPropose", "is-theory-propose"),
     translation: "A candidate theory names the standards it rests on.",
   },
