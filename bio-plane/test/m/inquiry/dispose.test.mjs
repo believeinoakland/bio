@@ -3,7 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
-import { DISPOSITIONS } from "../../../src/inquiry/index.mjs";
+import { DISPOSITIONS, PROJECTS_DRAWING_MAX } from "../../../src/inquiry/index.mjs";
+import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const A = "INFO-2026-0001-a";
 const Q1 = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r";
@@ -68,9 +69,14 @@ test("R21 R42 each member gains its history entry, prior and current state, reas
   const w2 = world(); w2.inquiry(Q1); w2.select("h", [Q1]);
   const r2 = go(w2, "h", "deferred");
   assert.equal(r2.reevaluation, undefined); assert.match(r2.reevaluation_absent, /no module/);
-  /* R42: one registration per module set, a malformed one refused */
-  assert.equal(w.k.onRaised("other", () => []).reason, "LISTENER_DECLARED");
-  assert.equal(w2.k.onRaised("", () => []).reason, "LISTENER_MALFORMED");
+  /* R42: one registration in the slot, whoever makes it; a malformed one refused; both through membership R81 */
+  const again = w.k.onRaised("other", () => []);
+  assert.deepEqual([again.ok, again.reason, again.code, again.module], [false, "LISTENER_DECLARED", "LISTENER_DECLARED", "reevaluation"]);
+  assert.deepEqual(w.k.onRaised("reevaluation", () => []), listenerRefusal({ module: "reevaluation" }, "reevaluation", () => []));
+  for (const [m, fn] of [["", () => []], [7, () => []], ["x", null]]) {
+    const bad = w2.k.onRaised(m, fn);
+    assert.deepEqual(bad, listenerRefusal(null, m, fn)); assert.equal(bad.reason, "LISTENER_MALFORMED");
+  }
   /* a dismissal raises none */
   w2.inquiry(Q2); w2.select("d", [Q2]);
   const d = go(w2, "d", "dismissed");
@@ -98,8 +104,9 @@ test("R39 R35 a question more than one project draws on is not moved; the refusa
   const P1 = w.project("Budget", "alice", [Q1, Q2]);
   const P2 = w.project("Audit", "bob", [Q1]);
   w.project("Severed", "bob", [{ target: Q2, status: "severed" }]);
-  assert.deepEqual(w.k.projectsDrawingOn(Q1), [P1, P2].sort());
-  assert.deepEqual(w.k.projectsDrawingOn(Q2), [P1], "a severed citation does not draw");
+  assert.deepEqual([...w.k.projectsDrawingOn(Q1)], [P1, P2].sort());
+  assert.deepEqual([...w.k.projectsDrawingOn(Q2)], [P1], "a severed citation does not draw");
+  assert.equal(w.k.projectsDrawingOn(Q1).truncated, false);
   w.select("h", [Q1, Q2]);
   const r = w.k.dispose({ handle: "h", to: "deferred", reason: "later", viewer: V("alice"), owner: "o", author: V("alice") });
   assert.equal(r.reason, "DRAWN_ON_BY_SEVERAL_PROJECTS"); assert.equal(r.check, "C-106.1"); assert.ok(r.translation);
@@ -120,4 +127,50 @@ test("R21 the history entry records the stamped author as it is", () => {
   const r = w.k.dispose({ handle: "h", to: "deferred", reason: "later", viewer: "admin", owner: "o", author: MACHINE });
   assert.equal(r.ok, true);
   assert.equal(w.fm(Q1).state_history.at(-1).author, MACHINE);
+});
+
+test("R39 the projects drawing on a member are read at most 32, the first by id, with truncated; a severed citer takes no slot and the bound never decides", () => {
+  const w = world(); w.member("alice"); w.member("bob");
+  w.inquiry(Q1); w.inquiry(Q2);
+  assert.equal(PROJECTS_DRAWING_MAX, 32);
+  /* Q2: many severed citers first by id, then exactly two that draw: still "more than one" */
+  for (let i = 0; i < 40; i++) w.project(`Severed ${i}`, "bob", [{ target: Q2, status: "severed" }]);
+  const two = [w.project("One", "alice", [Q2]), w.project("Two", "bob", [Q2])];
+  const d2 = w.k.projectsDrawingOn(Q2);
+  assert.deepEqual([[...d2], d2.truncated], [two.sort(), false]);
+  /* Q1: 34 projects draw on it */
+  const all = [];
+  for (let i = 0; i < 34; i++) all.push(w.project(`P${i}`, i % 2 ? "bob" : "alice", [Q1]));
+  const d1 = w.k.projectsDrawingOn(Q1);
+  assert.deepEqual([[...d1], d1.truncated], [all.sort().slice(0, 32), true]);
+  assert.deepEqual([...w.k.projectsDrawingOn("")], []); assert.equal(w.k.projectsDrawingOn("").truncated, false);
+  w.select("h", [Q1, Q2]);
+  const r = w.k.dispose({ handle: "h", to: "deferred", reason: "later", viewer: V("alice"), owner: "o", author: V("alice") });
+  assert.equal(r.reason, "DRAWN_ON_BY_SEVERAL_PROJECTS");
+  const o1 = r.offenders.find((o) => o.id === Q1), o2 = r.offenders.find((o) => o.id === Q2);
+  assert.deepEqual([o1.truncated, o1.bound, o1.others_out_of_view], [true, 32, true], "a refusal whose list was cut says so");
+  assert.ok(o1.projects.every((p) => w.membership.inSight(p, V("alice"))));
+  assert.deepEqual([o2.truncated, o2.projects.length, o2.others_out_of_view], [undefined, 1, true]);
+  assert.equal(w.fm(Q1).current_state, "open");
+});
+
+test("R42 R21 a listener's own failures are carried as reevaluation.listeners_failed through dispose; a listener that throws is named and undoes nothing", () => {
+  const w = world(); w.inquiry(Q1); w.inquiry(Q2);
+  w.k.onRaised("reevaluation", ({ target }) => target === Q1
+    ? { source: "deferred", raised: [{ bundle_id: "DEP", ord: 0 }], listeners_failed: ["intent"] }
+    : { raised: [], listeners_failed: ["intent", "queue"] });
+  w.select("h", [Q1, Q2]);
+  const r = go(w, "h", "deferred");
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.reevaluation.raised, [{ bundle_id: "DEP", ord: 0, target: Q1 }]);
+  assert.deepEqual(r.reevaluation.listeners_failed, ["intent", "queue"]);
+  const w2 = world(); w2.inquiry(Q1);
+  w2.k.onRaised("reevaluation", () => { throw new Error("boom"); });
+  w2.select("h", [Q1]);
+  const t = go(w2, "h", "deferred");
+  assert.equal(t.ok, true); assert.equal(w2.fm(Q1).current_state, "deferred", "the act stands");
+  assert.deepEqual(t.reevaluation, { source: "deferred", since: t.reevaluation.since, raised: [], listeners_failed: ["reevaluation"] });
+  /* a listener answering only the dependents carries no field */
+  const w3 = world(); w3.inquiry(Q1); w3.listen(); w3.select("h", [Q1]);
+  assert.equal(go(w3, "h", "deferred").reevaluation.listeners_failed, undefined);
 });

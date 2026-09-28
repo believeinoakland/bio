@@ -1,5 +1,5 @@
-/* The reads over the projection: the basis and who rests on a target (R16), the live legs (R17), the exclusions naming
-   a target (R18), an inquiry's state history (R19), each gated as R33 says. */
+/* The reads over the projection: the basis and who rests on a target (R16), the live legs (R17), an inquiry's state
+   history (R19), each gated as R33 says; the recorded subject and member agent (R43, R44). R18 is retired (N183). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
@@ -34,22 +34,6 @@ test("R17 restsOnLive: a divided citer skipped, a severed one severed, a case me
   assert.deepEqual(r.all.map((l) => l.bundle_id), ["INQ-2026-0001-q", "INQ-2026-0003-s"]);
 });
 
-test("R18 R33 exclusionsNaming answers the exclusions a viewer may see, each with its inquiry, edition, description, reason, author and date", () => {
-  const w = world(); w.member("alice"); w.member("bob"); w.doc(A);
-  const excl = ["completeness:", '  statement: "s"', "  author: member:alice", '  at: "2026-09-27T00:00:00Z"',
-                "completeness_excluded:", `  - target: ${A}`, '    description: "the memo"', '    reason: "out of scope"'];
-  w.inquiry("INQ-2026-0001-q", { extra: [...excl, "edition: 2"] });
-  const rows = w.k.exclusionsNaming(A, V("bob"));
-  assert.deepEqual(rows.map((r) => [r.bundle_id, r.edition, r.description, r.reason, r.author, r.at]),
-    [["INQ-2026-0001-q", 2, "the memo", "out of scope", "member:alice", "2026-09-27T00:00:00Z"]]);
-  assert.deepEqual(w.k.exclusionsNaming(A, null), [], "an absent viewer fails closed");
-  /* an inquiry inside a project the viewer is not in is withheld */
-  const P = w.project("Closed", "alice");
-  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id='INQ-2026-0001-q'`, P);
-  w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id='INQ-2026-0001-q'`);
-  assert.deepEqual(w.k.exclusionsNaming(A, V("bob")), [], "what the viewer may not see answers as nothing");
-});
-
 test("R19 stateHistory answers each transition with who took it and when, so a reopened finding can say who reopened it", async () => {
   const w = world(); w.member("alice");
   w.inquiry("INQ-2026-0001-q");
@@ -72,7 +56,7 @@ test("R33 every read naming an inquiry or project the viewer may not see answers
     ? { ok: false, reason: "NO_SUCH_BUNDLE", target: P } : null);
 });
 
-test("R12 subjectEntityOf and memberUserAgent (proposed R43, R44): what the inquiry records, or null, never a default", () => {
+test("R12 R43 R44 subjectEntityOf and memberUserAgent: what the inquiry records, or null, never a default", () => {
   const w = world(); w.entity("ENT-2026-0001");
   w.inquiry("INQ-2026-0001-q", { subject: "ENT-2026-0001", extra: ['member_user_agent: "  Mozilla/5.0 test  "'] });
   w.inquiry("INQ-2026-0002-r");
