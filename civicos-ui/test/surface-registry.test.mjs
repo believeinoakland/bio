@@ -480,9 +480,14 @@ await section("ARM L · the levels are legible", () => {
   /* The vocabulary is pinned to CLAUDE.md's own sentence rather than kept as a
      fourth copy of it. Read textually, and stated as such — the same shape and
      the same caveat as check-semantics.mjs's knownSchemas pin. */
-  const claude = fs.readFileSync(new URL("../../CLAUDE.md", import.meta.url).pathname, "utf8");
-  const m = /search\s+\*\*meaning,\s+content,\s+documents,\s+AND\s+the\s+open\s+internet\*\*/.exec(claude);
-  ok(m, "ARM L0: CLAUDE.md's four-level sentence was found — if this fails the extraction needs updating, not the vocabulary");
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): CLAUDE.md was replaced on 2026-09-25 by the new process's pointer page,
+     and the old one (archived, `docs/archive/CLAUDE-2026-09-26-old-process.md`) only PARAPHRASED the rule. Its canon is
+     the Content Framework, Part II §14.3 — "all four levels — meaning, content, documents, and the open internet —
+     may need to be searched, in any order" — which is where `skills` R21 (T7) re-pointed the same rule. Read from
+     there; the four words and their order are what ARM L1 then pins, unchanged. */
+  const canon = fs.readFileSync(new URL("../../docs/architecture/BIO_Content_Framework_v0_10.md", import.meta.url).pathname, "utf8");
+  const m = /all\s+four\s+levels\s+—\s+meaning,\s+content,\s+documents,\s+and\s+the\s+open\s+internet\s+—/.exec(canon);
+  ok(m, "ARM L0: the Content Framework's four-level sentence (Part II §14.3) was found — if this fails the extraction needs updating, not the vocabulary");
   eq(SURFACE_LEVELS, ["meaning", "content", "documents", "internet"],
      "ARM L1: SURFACE_LEVELS is the four levels CLAUDE.md names, in its order");
 
@@ -1367,7 +1372,15 @@ await section("ARM N · the registry is not member-facing", () => {
    key and are to be surfaced VERBATIM. A COPY of one in this runtime is the
    drift hazard, not the fidelity: the copy is what goes stale. */
 await section("ARM V · refusal text is surfaced, never copied", () => {
-  const planeDetails = [...planeSrc.matchAll(/detail:\s*"([^"]{50,})"/g)].map(m => m[1]);
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): the refusals left `index.mjs` with their ops — the store's and the
+     control plane's extracted modules under `bio-plane/src/` mint them now — so `index.mjs` alone held 5 of them.
+     The corpus is the plane's whole source: `index.mjs` and every module file under `src/`. A wider corpus only
+     widens what V1 forbids app.html to copy. */
+  const walkSrc = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap(e =>
+    e.isDirectory() ? walkSrc(d + "/" + e.name) : (e.name.endsWith(".mjs") ? [d + "/" + e.name] : []));
+  const PLANE_SRC_DIR = new URL("../../bio-plane/src", import.meta.url).pathname;
+  const planeAll = walkSrc(PLANE_SRC_DIR).map(f => fs.readFileSync(f, "utf8")).join("\n");
+  const planeDetails = [...new Set([...planeAll.matchAll(/detail:\s*"([^"]{50,})"/g)].map(m => m[1]))];
   ok(planeDetails.length >= 20, `ARM V0: ${planeDetails.length} long detail strings read from the plane, floor 20 — an empty corpus would make V1 vacuous`);
   const copied = planeDetails.filter(d => app.includes(d));
   ok(copied.length === 0,

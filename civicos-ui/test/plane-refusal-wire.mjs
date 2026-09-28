@@ -117,9 +117,34 @@ export function requiredArgumentDetail(op, argument, shape){
    silently returns the wrong thing on the other; the scanner returns the whole
    call and the caller's shape decides. */
 const CALL_SCAN_LIMIT = 1200;   /* no call site in index.mjs is anywhere near this long */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the call sites left `index.mjs` with their ops. `op=publishedbytes` and
+   `op=publishedcase` are the `publication` module's now (`bio-plane/src/publication/worker.mjs`), which mints the
+   same refusal through the control plane's own helper handed to it (`P.requiredArgument("publishedbytes", …)`), so a
+   read of `index.mjs` alone found no site and handed `publishedcase.test.mjs` a null envelope. The helper, its code
+   and its `detail` template are still `index.mjs`'s and are still read there; only the CALL is looked for in the
+   module sources as well — `index.mjs` first, then every module file under `src/` — and a needle found in more than one file
+   THROWS rather than picking one, because two sites for one op would be two envelopes and a guess is worse than none. */
+const MODULE_SRCS = (() => {
+  const out = [];
+  const walk = (d) => { for(const e of fs.readdirSync(d, { withFileTypes:true })){
+    const f = path.join(d, e.name);
+    if(e.isDirectory()) walk(f);
+    else if(e.name.endsWith(".mjs") && f !== path.join(PLANE, "src", "index.mjs")) out.push([f, fs.readFileSync(f, "utf8")]);
+  } };
+  walk(path.join(PLANE, "src"));
+  return out;
+})();
 function callTextFor(op){
   const needle = `requiredArgument("${op}"`;
-  const at = INDEX_SRC.indexOf(needle);
+  if(INDEX_SRC.indexOf(needle) >= 0) return callTextIn(INDEX_SRC, needle, op);
+  const hits = MODULE_SRCS.filter(([, src]) => src.indexOf(needle) >= 0);
+  if(hits.length > 1)
+    throw new Error(`plane-refusal-wire: requiredArgument("${op}") is called in ${hits.length} module files `
+      + `(${hits.map(([f]) => path.relative(PLANE, f)).join(", ")}); one op has one site.`);
+  return hits.length ? callTextIn(hits[0][1], needle, op) : "";
+}
+function callTextIn(SRC, needle, op){
+  const at = SRC.indexOf(needle);
   if(at < 0) return "";
   /* Balance from the helper's OWN opening paren. Getting this index wrong is not
      a near miss: starting one character late leaves `depth` at 0, the first `)`
@@ -128,13 +153,13 @@ function callTextFor(op){
      `literalsIn` a quote from a comment two refusals away. It is bounded and it
      THROWS rather than returning a shorter answer that would look like a call. */
   const open = at + "requiredArgument".length;
-  if(INDEX_SRC[open] !== "(") return "";
+  if(SRC[open] !== "(") return "";
   let depth = 0;
-  const end = Math.min(INDEX_SRC.length, open + CALL_SCAN_LIMIT);
+  const end = Math.min(SRC.length, open + CALL_SCAN_LIMIT);
   for(let i = open; i < end; i++){
-    const c = INDEX_SRC[i];
+    const c = SRC[i];
     if(c === "(") depth++;
-    else if(c === ")"){ depth--; if(depth === 0) return INDEX_SRC.slice(at, i + 1); }
+    else if(c === ")"){ depth--; if(depth === 0) return SRC.slice(at, i + 1); }
   }
   throw new Error(`plane-refusal-wire: requiredArgument("${op}") in index.mjs does not close within `
     + `${CALL_SCAN_LIMIT} characters. The call shape moved; a fixture built from a guess at where it `
@@ -153,8 +178,11 @@ export function planeRequiredArgumentSite(op){
   let error = lits.slice(3).join("");
   if(!error){
     /* The `error:` key set beside the spread — `op=verify`'s shape. Anchored to
-       the text that FOLLOWS this call, so it cannot pick up another site's. */
-    const after = INDEX_SRC.slice(INDEX_SRC.indexOf(call) + call.length, INDEX_SRC.indexOf(call) + call.length + 400);
+       the text that FOLLOWS this call, so it cannot pick up another site's.
+       RE-ANCHORED 2026-09-28 (legacy-tests T9): read in whichever source holds the call (see `callTextFor`). */
+    const SRC = INDEX_SRC.indexOf(call) >= 0 ? INDEX_SRC
+      : ((MODULE_SRCS.find(([, src]) => src.indexOf(call) >= 0) || [, ""])[1]);
+    const after = SRC.slice(SRC.indexOf(call) + call.length, SRC.indexOf(call) + call.length + 400);
     const m = /^,\s*\n?\s*error: "((?:[^"\\]|\\.)*)"/.exec(after);
     error = m ? unq(m[1]) : "";
   }

@@ -58,7 +58,10 @@ import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
 /* THE TIE: the catalogue's OWN map and canned translations, imported, so what the page must show is the
    single place the plane composes it rather than a second copy that agrees for free. */
-import { RISK_TIERS, RISK_TIER_REVISION_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the actions module (T8) extracted RISK_TIER_REVISION_CHECKS out of
+   the legacy checks into its own `bio-plane/src/actions/checks.mjs`, which re-exports RISK_TIERS beside it — so both
+   are imported from the one place the plane now composes them (the import threw a SyntaxError before any arm ran). */
+import { RISK_TIERS, RISK_TIER_REVISION_CHECKS } from "../../bio-plane/src/actions/checks.mjs";
 
 let pass = 0, fail = 0;
 const ok = (label, cond, detail) => {
@@ -115,7 +118,9 @@ const actionMd = (id, title, tier) => ["---",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "action_kind: other", `risk_tier: ${tier}`,
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): actions R9 (C-101.3) — a named counterparty is an OFFICE, its role
+     and the body it belongs to; the bare `name:` was refused COUNTERPARTY_REFUSED, so neither fixture landed. */
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "",
   "## Session Log", "", `### Session ${NOW} | Formation | nadia`,

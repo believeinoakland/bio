@@ -217,7 +217,8 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import fs from "fs";
 import { inlinedStore } from "../../bio-plane/test/extracted-sources.mjs";   /* T5-12 (legacy-tests): see WALK 1's corpus */
 import { reinlineLayer3 } from "../../bio-plane/test/t4-extracted.mjs";
-import { reinlineLayer5, T5_MODULES } from "../../bio-plane/test/t5-extracted.mjs";
+import { reinlineLayer5, T5_MODULES, T7_MODULES } from "../../bio-plane/test/t5-extracted.mjs";
+import { T8_MODULES } from "../../bio-plane/test/t8-extracted.mjs";   /* T9 (legacy-tests): see WALK 1's corpus */
 import { moduleSources } from "../../bio-plane/test/extracted-sources.mjs";
 import vm from "vm";
 import { webcrypto } from "crypto";
@@ -237,7 +238,14 @@ const SRC = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
    fell from 23 ops at the T5 opening to 9 while every op stayed capped. The corpus is the store's text with the
    extracted modules RE-INLINED where the store delegates to them, exactly as `bio-plane/test/bounds.test.mjs` reads
    it (T3's `inlinedStore`, T4's `reinlineLayer3`, T5's `reinlineLayer5`, each stating its substitutions). */
-const STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text;
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): layers 6-10 (T7, T8) extracted more modules the same way, and
+   `op=exportlog` — one of the five this walk names — left with `publication` (`exportLog`, `const cap =
+   Math.max(1, Math.min(Math.floor(Number(limit) || EXPORT_LOG_LIMIT_DEFAULT), …))`, still capped unconditionally), so the
+   roster lost it while the op stayed capped. The corpus gains the two further passes of the SAME re-inliner that
+   `bio-plane/test/bounds.test.mjs` now reads (`{ modules: T7_MODULES }`, then `{ modules: T8_MODULES }`, each
+   `{ ops: true, privates: true }`), leaving every earlier substitution as it was. */
+const STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
 const QUERY = fs.readFileSync(new URL("../../bio-plane/src/query.mjs", import.meta.url), "utf8");
 
 /* ==========================================================================

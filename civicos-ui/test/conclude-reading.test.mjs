@@ -193,8 +193,10 @@ const infoMd = (id) => ["---",
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); its
    creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
 const projectMd = (id) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Oversight"`,
-  "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the
+     fixture states one — its creation was refused NO_OBJECTIVE before any arm ran. */
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", 'objective: "Trace where the money went."',
+  `title: "Oversight"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references:", `  - target: ${INQ_PROJ}`, "    rel: cites", "    status: confirmed",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");

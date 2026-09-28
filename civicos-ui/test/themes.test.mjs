@@ -74,6 +74,8 @@ import { webcrypto, createHash } from "crypto";
 import { appScript } from "./extract.mjs";
 /* THE TIE (DEC-49): the plane's OWN canned translations, imported — a copy here would agree for free. */
 import { THEME_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the withdraw act's own family, which the theme ops' refusal reads beside it. */
+import { THEME_WITHDRAW_CHECKS } from "../../bio-plane/src/connections/themes.mjs";
 import { registerDoc, registerFile } from "../../bio-plane/test/register-doc.mjs";
 
 let pass = 0, fail = 0;
@@ -418,9 +420,18 @@ ok("...and no place form and no confirm control on the theme's page",
 const machinePlace = await (async () => { U.thmPlaceField("target", DOC_B); U.STATE().busy = false; await U.thmPlace(); return page(); })();
 ok("...and a machine that reached the place act is shown THEME_PLACEMENT_NOT_A_MEMBER's translation, verbatim",
    machinePlace.includes(html(THEME_CHECKS.THEME_PLACEMENT_NOT_A_MEMBER.translation)));
+/* RE-PINNED 2026-09-28 (legacy-tests T9): 10 -> 14, read from the table: connections' R45 withdraw act added four codes
+   (THEME_WITHDRAW_NOT_A_MEMBER, _NO_REASON, _NOTHING_STANDING, _NOT_THE_PLACER) to the catalogue family, and the
+   module's own `THEME_WITHDRAW_CHECKS` (`connections/themes.mjs`, which `#refusal` reads beside it) carries the same
+   four. The property is unchanged — total — and is now asserted over BOTH tables the theme ops mint from, with the
+   module's four required to be the catalogue's own rows word for word. */
 ok("EVERY code the theme ops can return carries a canned translation (the plane's table, total)",
-   Object.values(THEME_CHECKS).length === 10
-   && Object.values(THEME_CHECKS).every((r) => typeof r.translation === "string" && r.translation.length > 40));
+   Object.values(THEME_CHECKS).length === 14
+   && Object.values(THEME_CHECKS).every((r) => typeof r.translation === "string" && r.translation.length > 40)
+   && Object.keys(THEME_WITHDRAW_CHECKS).length === 4
+   && Object.entries(THEME_WITHDRAW_CHECKS).every(([k, r]) => typeof r.translation === "string" && r.translation.length > 40
+        && THEME_CHECKS[k] && THEME_CHECKS[k].translation === r.translation),
+   `THEME_CHECKS ${Object.values(THEME_CHECKS).length} · THEME_WITHDRAW_CHECKS ${Object.keys(THEME_WITHDRAW_CHECKS).length}`);
 
 /* ============================================================ 8. THE SURFACE HOLDS NO SENTENCE OF THE PLANE'S */
 console.log("\n--- 8. where the words come from, and the address ---");

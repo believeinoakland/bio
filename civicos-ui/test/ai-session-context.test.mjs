@@ -196,8 +196,11 @@ const sha = (s) => createHash("sha256").update(s).digest("hex");
    creation naming one (C-59.1) or bytes carrying `id:` (C-59.2). A project is created with neither, and its id is
    read from the answer; the old creation at a chosen id now REFUSED silently here (nothing checked the answer), so
    the project arms below lost their project. Every other type is unchanged. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the project's
+   bytes state one — the creation was refused NO_OBJECTIVE and the suite threw "the project was not minted". */
 const promote = (id, objectType, tok = "mem-ui49") => {
-  const md = objectType === "project" ? `---\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`;
+  const md = objectType === "project" ? `---\nobjective: "Trace where the money went."\n---\n\n## Question\n\nfixture\n`
+    : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`;
   return post("promote", {
     ...(objectType === "project" ? {} : { bundleId: id }), base: null, snapKey: "20260807T090000Z_inbox", author: "ruth",
     meta: { object_type: objectType, 
@@ -216,7 +219,11 @@ const PROJ = (await promote("PROJ-2026-0807-ui49-carols", "project", CAROL))?.bu
 if (typeof PROJ !== "string") throw new Error("fixture: the project was not minted");
 
 const openRun = (run, contextType, contextId, label, bounds, tok = "mem-ui49") => post("airunopen", {
-  run, contextType, contextId, label, mode: `mode-${tag()}`,
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): ai-runs C-109.1 (AI-RUNS #2, N158) refuses a mode that is not deployed,
+     AI_RUN_MODE_NOT_DEPLOYED, and `check` is the one deployed today — so the random `mode-<tag>` this fixture drew opened
+     NO run and every indicator arm read an empty roster. No arm reads the mode back, so the drawn values that matter
+     (label, budgets) are still drawn at runtime. */
+  run, contextType, contextId, label, mode: "check",
   /* CORRECTED 2026-08-08 BY SK-1, NOT EXEMPTED: `skill-<tag>` names a version and
      no PACK, and SK-1's C-22.7 requires the run to say which pack it is a
      version OF — two AI features write this one column. Still drawn at runtime. */

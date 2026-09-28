@@ -398,8 +398,11 @@ ok("it is on the QUESTION arm only — a case's citation edge has no basis leg t
    other direction. The picker is NOT built here — that is a UI item (a page set
    and a page canvas, UI-61's second finding), delegated back — and the two
    assertions below say exactly that, so neither half can drift silently. */
-const store = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
-const citeRouting = /cite: \(\) => this\.cite\(\{[\s\S]*?\n {8}\}\),/.exec(store)?.[0] || "";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): `op=cite`'s routing is the `citation` module's (`citationOps`,
+   `bio-plane/src/citation/index.mjs`) — `cite: () => c.cite({ … })` at four spaces — and no longer the store's
+   `this.cite` at eight; the old matcher found nothing and both arms below read an empty routing. */
+const store = fs.readFileSync(new URL("../../bio-plane/src/citation/index.mjs", import.meta.url), "utf8");
+const citeRouting = /cite: \(\) => c\.cite\(\{[\s\S]*?\n {4}\}\),/.exec(store)?.[0] || "";
 ok("`op=cite` NOW CARRIES the extent — the silent drop UI-61 measured is closed (REC-97)",
   citeRouting.length > 0 && /extent/.test(citeRouting),
   "if this fails, op=cite has stopped carrying an extent and the composer's sentence is false again");

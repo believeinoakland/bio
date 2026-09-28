@@ -181,7 +181,11 @@ const tag = () => letterTag(Math.random);
 const { FETCH_ALLOWED, FETCH_CONSUMED, SUBS_ALLOWED, SUBS_CONSUMED, RUNTIME_ALLOWED,
         OTHER_ALLOWED, OTHER_CONSUMED } = DRAW;
 const LABEL      = `label-${tag()}`;
-const MODE       = `mode-${tag()}`;
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): ai-runs C-109.1 (AI-RUNS #2, N158) refuses a mode that is not deployed,
+   AI_RUN_MODE_NOT_DEPLOYED, and `check` is the one deployed today — a drawn `mode-<tag>` opened NO run. The mode is
+   vocabulary, not instance data (ARM W6 already counts it among what a hand copy gets free); the figures, labels,
+   account reference and skill that ARM W6 names are still drawn at runtime. */
+const MODE       = "check";
 const CLAUDE_LVL = `project`;                      /* §14a's cascade word; the LEVEL is a real vocabulary, so it is not randomised — the REF beside it is */
 const CLAUDE_REF = `acct-${tag()}`;
 /* CORRECTED 2026-08-08 BY SK-1, NOT EXEMPTED, and the reason is worth the line:
@@ -209,6 +213,8 @@ const SHA = "a".repeat(64);
    a machine credential could still open a run over an id the store did not hold. REC-153 (BOB #16) refuses
    that as absent, so the fixture now creates the project with NO id and reads back the one the plane minted,
    and it throws if either creation is refused. What ARM N measures is unchanged. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the project's
+   bytes state one — the creation was refused NO_OBJECTIVE and the suite threw before any arm ran. */
 const promote = async (id, objectType) => {
   const mint = objectType === "project";
   const r = await post("promote", {
@@ -217,7 +223,7 @@ const promote = async (id, objectType) => {
             title: `fixture ${id}`,
             current_state: objectType === "project" ? "forming" : "open",
             created: T0, last_updated: T0 },
-    files: [{ path: "bundle.md", text: mint ? `---\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`,
+    files: [{ path: "bundle.md", text: mint ? `---\nobjective: "Trace where the money went."\n---\n\n## Question\n\nfixture\n` : `---\nid: ${id}\n---\n\n## Question\n\nfixture\n`,
               bytes: 40 /* REC-175 (2026-09-23): CORRECTED, not exempted — this sent sha256: SHA, which is not the SHA-256 of the text above, and the old op=promote stored it as given; promote now refuses that by name (FILE_DIGEST_MISMATCH, C-33.38), so no digest is sent and the plane computes it from the bytes */ }],
     register: [],
   });
@@ -241,7 +247,11 @@ await openRun(RUN_LIVE, "inquiry", INQ, [
   { bound: "subsessions", allowed: SUBS_ALLOWED,  consumed: 0, unit: "sessions" },
 ]);
 await post("airuntick", { run: RUN_LIVE, consume: { fetches: FETCH_CONSUMED, subsessions: SUBS_CONSUMED } });
-await post("airuntick", { run: RUN_LIVE, consume: {} });
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): ai-runs R19/R12 (AGENT-WORKER #1 B6) publish the run's resumable scratch
+   as `session.state`, a nested value that is `{}` until a tick writes one — which ARM W1s rightly refuses as a nesting
+   the walk enters and grades nothing in. So the second tick WRITES the scratch (R12: `state` replaces it when given),
+   drawn at runtime like every other value here, and ARM W1 then requires the panel to carry it. */
+await post("airuntick", { run: RUN_LIVE, consume: {}, state: { next: `step-${tag()}` } });
 
 /* RUN_STOPPED — a run a BOUND stopped, so there is a terminal condition to
    render. `runtime` is used because its condition carries a KIND as well as a

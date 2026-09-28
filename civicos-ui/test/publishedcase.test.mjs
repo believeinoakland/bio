@@ -217,7 +217,10 @@ function ok(msg, cond, detail){
    top-level `detail` that does not exist, so the mock had drifted from the wire
    in both directions at once. A fixture that reads the plane's own bytes cannot
    drift, and if the plane's wording moves this suite moves with it. */
-const PLANE_STORE = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): `publishedCase()` and its success return are the `publication` module's
+   (`bio-plane/src/publication/index.mjs`) since the extraction; `store.mjs` holds neither sentence any more, so the
+   read came back null and every UI-35/UI-40 arm lost its subject. The name `PLANE_STORE` is kept for its readers. */
+const PLANE_STORE = fs.readFileSync(new URL("../../bio-plane/src/publication/index.mjs", import.meta.url), "utf8");
 /* Brace-balanced is the wrong tool here and a naive `[^"]*` is too: these are
    ADJACENT string literals joined by `+` across lines. Take the region from the
    key to the next top-level key and concatenate every double-quoted literal in
@@ -2370,7 +2373,8 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
    routed in this item's report. This block PINS THE SET so that the next one to
    appear fails here instead of being found by a fourth measurement. */
 {
-  const src = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): read from the module that holds `publishedCase()` now (see PLANE_STORE). */
+  const src = PLANE_STORE;
   /* The success return of `publishedCase()`, taken by BRACE BALANCE from the
      `return { ok: true,` that follows the `#caseEditionState` read. */
   /* COMMENTS ARE SKIPPED, and that is not a detail: this file's comments are
@@ -2466,7 +2470,9 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
      read, by `planeSaid`. Asserting this is what keeps the finding above from
      reading as "the plane never says `detail`", which would be false. */
   ok("UI-35: the NOT_PUBLISHED refusal DOES carry a top-level `detail`, and it is a different return",
-     /reason: "NOT_PUBLISHED",\s*\n\s*detail:/.test(src));
+     /* RE-ANCHORED 2026-09-28 (legacy-tests T9): the refusal now spreads its DEC-49 row (D-561, C-98.8) between the
+        code and its `detail`; the `detail` is still its own top-level key on that return, which is what this pins. */
+     /reason: "NOT_PUBLISHED",(?:\s*\.\.\.rowOf\("NOT_PUBLISHED"\),)?\s*\n\s*detail:/.test(src));
 
   /* Now the consumers, anchored on the WIRE NAME at the surface. Comments are
      stripped so a key merely NAMED in prose does not read as a reader. */
@@ -2506,6 +2512,13 @@ const surface = pubBody() + list() + (() => { ctx.__pubVerifyPanel(); return pub
                         + "unconsumed publication — a SURFACE GAP. DEC-34's per-page header shows a "
                         + "`Declared bias` computed from HUNCH legs, which is a DIFFERENT fact, so a "
                         + "reader of the public record never meets the group's own sentence.",
+    /* ADDED 2026-09-28 (legacy-tests T9) — THIS ARM FIRING EXACTLY AS ARM (d) WAS BUILT TO MAKE IT FIRE, answered by
+       naming the key rather than relaxing the arm. `publication` R36 added one top-level key to the success return. */
+    evidence_package: "publication R36's evidence-package block (`#evidencePackage`, computed at the read): a later "
+                    + "module fills it — `filings` R15, the available-actions block, not yet built — and with none "
+                    + "registered the plane says the package carries no such block. A SURFACE GAP with no surface "
+                    + "requirement yet: no requirement asks this page to render it. The day a reader lands, this "
+                    + "entry is DELETED (the set is pinned in both directions).",
     /* `bar` AND `bar_detail` CAME OFF THIS LIST AT CASE-6, 2026-09-10, AND THEY
        ARE THE ITEM. Both were declared here as SURFACE GAPS rather than as
        unconsumed publications — the entries said so, and named CASE-6 as the item
@@ -2816,8 +2829,11 @@ console.log("\n--- UI-40: the consumer walk (IC-22's evidence) ---");
 
   /* `set` is the corpus to walk — a parameter, so the NEUTERING control has
      something to neuter and the reach arm is a DELTA against it. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): a `.key` preceded by a BACKSLASH is an escaped dot inside a regex
+     literal — an instrument NAMING the field (the plane's own `case-opened.test.mjs` pins `x\\.opened` so), never a
+     property read — so `(?<!\\\\)` keeps it out. Every real read is still matched. */
   const readsOf = (key, set = corpus) => {
-    const re = new RegExp(`\\.${key}\\b|\\[\\s*["'\`]${key}["'\`]\\s*\\]`);
+    const re = new RegExp(`(?<!\\\\)\\.${key}\\b|\\[\\s*["'\`]${key}["'\`]\\s*\\]`);
     const hits = [];
     for(const { f, code } of set)
       code.split("\n").forEach((l, n) => { if(re.test(l)) hits.push(`${f}:${n+1}`); });
@@ -2862,13 +2878,30 @@ console.log("\n--- UI-40: the consumer walk (IC-22's evidence) ---");
 
   /* AND THE FINDING IC-22 RESTS ON. */
   const openedReads = readsOf("opened");
-  const outsideProducer = openedReads.filter(h => !h.startsWith("bio-plane/src/store.mjs"));
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9), the plane battery's own correction (`bio-plane/test/case-opened.test.mjs`,
+     T8) carried here rather than re-derived. (1) THE PRODUCER MOVED: `caseEditionState` is the `publication`
+     module's, so the one read of its own SQL row is in `bio-plane/src/publication/index.mjs`, not `store.mjs`.
+     (2) `opened` is ALSO a key of a DETERMINATION QUESTION (`determination_questions.opened`, conformance) — whether a
+     determination opened an inquiry for it — a different fact on a different object that shares the word. Those reads
+     are set aside BY THEIR OWN LINE, each matched against the determination-question shape it must have, never by
+     file: a read of the CASE's field added anywhere in conformance, or on any other line, is still counted. */
+  const PRODUCER_FILE = "bio-plane/src/publication/index.mjs";
+  const RAW_LINE = (h) => { const f = h.slice(0, h.lastIndexOf(":")), k = Number(h.slice(h.lastIndexOf(":") + 1));
+                            return fs.readFileSync(path.join(ROOT, f), "utf8").split("\n")[k - 1] ?? ""; };
+  const DETERMINATION_QUESTION = [
+    ["bio-plane/src/conformance/", /\bopened\.ok\b|\bx\.opened\b|opened: x\.opened === 1/],
+    ["bio-plane/test/m/conformance/", /\bquestions\[\d\]\.opened\b|\bq\.opened\b/],
+  ];
+  const notTheCase = openedReads.filter(h =>
+    DETERMINATION_QUESTION.some(([dir, re]) => h.startsWith(dir) && re.test(RAW_LINE(h))));
+  console.log(`UI-40 SET ASIDE (a determination question's \`opened\`, not the case's): ${notTheCase.join(", ") || "none"}`);
+  const outsideProducer = openedReads.filter(h => !h.startsWith(PRODUCER_FILE) && !notTheCase.includes(h));
   ok("UI-40: `opened` has ZERO consumers anywhere outside the producer — the surface, the installer, the "
      + "fleet, the tools and the battery all read it not once. IC-22's evidence, RE-MEASURED and not inherited",
      outsideProducer.length === 0, outsideProducer.join(", ") || "none");
   ok("UI-40: and the only reads of it that exist are the PRODUCER reading its own SQL row, which is what "
      + "makes it an unconsumed publication rather than a field with one caller",
-     openedReads.length > 0 && openedReads.every(h => h.startsWith("bio-plane/src/store.mjs")),
+     openedReads.length > 0 && openedReads.filter(h => !notTheCase.includes(h)).every(h => h.startsWith(PRODUCER_FILE)),
      openedReads.join(", ") || "NONE AT ALL — the walk found nothing, which is itself suspect");
 }
 

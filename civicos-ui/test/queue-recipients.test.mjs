@@ -106,7 +106,10 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: 
   "visuals: []", "surfaced_by: member", 'disposition_reason: ""', "---", "", "## Question", "", `Did ${id} happen?`, "",
   "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
-const projectMd = () => ["---", "object_type: project", "current_state: forming", `created: "${NOW}"`,
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the project
+   states one — its promote was refused NO_OBJECTIVE, so no project, no join and no project run. */
+const projectMd = () => ["---", "object_type: project", 'objective: "Trace where the money went."',
+  "current_state: forming", `created: "${NOW}"`,
   `last_updated: "${LATER}"`, "references: []", "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 const bundle = (id, type) => {
   const md = type === "project" ? projectMd() : inquiryMd(id);

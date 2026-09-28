@@ -121,7 +121,10 @@ const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema:
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
   "---", "", "## Summary", "", "A captured record.", "", "## Provenance Notes", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
-const projectMd = () => ["---", "object_type: project", `title: "Oversight"`, "current_state: forming",
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the fixture
+   states one — it refused NO_OBJECTIVE before any arm ran. */
+const projectMd = () => ["---", "object_type: project", 'objective: "Trace where the money went."',
+  `title: "Oversight"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references:", ...[AGENT, MEMBER].flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
   "required_strength:", "  capture: B", "  connection: C",

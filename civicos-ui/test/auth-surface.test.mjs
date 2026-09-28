@@ -948,14 +948,18 @@ ok("and the document root says so",
      are stripped first because the plane documents these queries in block
      comments that quote column names IN BACKTICKS — the exact trap arm C's own
      first run fell into and recorded. */
-  const mm = /^ {2}publishedManifest\s*\(\s*\)\s*\{/m.exec(STORE_SRC);
-  ok("store.mjs's publishedManifest() is readable from here — the fixture has a source to be pinned against", !!mm);
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): `publishedManifest()` did NOT stay in `store.mjs` after all — it is the
+     `publication` module's (`bio-plane/src/publication/index.mjs`), with the same `published: this.#rows(` SELECT of
+     the same nine columns. The pin is read from where the method is; everything it asks is unchanged. */
+  const PUB_SRC = fs.readFileSync(new URL("../../bio-plane/src/publication/index.mjs", import.meta.url), "utf8");
+  const mm = /^ {2}publishedManifest\s*\(\s*\)\s*\{/m.exec(PUB_SRC);
+  ok("publication's publishedManifest() is readable from here — the fixture has a source to be pinned against", !!mm);
   let wireCols = [];
   if(mm){
-    let i = STORE_SRC.indexOf("{", mm.index), depth = 0, body = "";
-    for(let j = i; j < STORE_SRC.length; j++){
-      if(STORE_SRC[j] === "{") depth++;
-      else if(STORE_SRC[j] === "}"){ depth--; if(depth === 0){ body = STORE_SRC.slice(i, j + 1); break; } }
+    let i = PUB_SRC.indexOf("{", mm.index), depth = 0, body = "";
+    for(let j = i; j < PUB_SRC.length; j++){
+      if(PUB_SRC[j] === "{") depth++;
+      else if(PUB_SRC[j] === "}"){ depth--; if(depth === 0){ body = PUB_SRC.slice(i, j + 1); break; } }
     }
     const at = body.indexOf("published: this.#rows(");
     const rest = at < 0 ? "" : body.slice(at + "published: this.#rows(".length)

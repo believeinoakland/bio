@@ -214,8 +214,10 @@ const infoMd = (id) => ["---",
    no `id:` line and the promote names no bundleId. It CITES the question, which
    is what puts it in `op=backlinks` and what REC-142 keys the act on. */
 const projectMd = (id) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Oversight"`,
-  "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the
+     fixture states one — its creation was refused NO_OBJECTIVE before any arm ran. */
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", 'objective: "Trace where the money went."',
+  `title: "Oversight"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references:", `  - target: ${INQ}`, "    rel: cites", "    status: confirmed",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
