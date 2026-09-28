@@ -47,3 +47,7 @@ B3–B6 applied: `tranche/T8` merged; escalation defaults `conformanceOf`, `cons
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 30 relative imports; 0 failures. coverage: 21 of 21 live ids; 0 failures. ownership: 11 files changed; 0 failures (no legacy file touched).
 
 Size (session_01SpVCFJ485ktPaATS1SaQpH): test runs 32, module lines 1425
+
+## J4 · COMPLETE
+
+B9 applied; escalation COMPLETE: R1–R21 met over the real conformance, consequences, actions and filings; 27/27 tests, 0 todo; format, architecture, coverage, ownership 0 failures; no legacy file touched. Record § Completion.
