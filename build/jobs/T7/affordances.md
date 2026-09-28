@@ -1,6 +1,6 @@
 # affordances (T7)
 
-**Status** · session_01Uzmu9LYFCjcYb7iowFaKQZ · depth 2 · WAITING ON BOB (J3) · handled B5
+**Status** · session_01Uzmu9LYFCjcYb7iowFaKQZ · depth 2 · WAITING ON BOB (J3) · handled B6
 
 ## J1 · QUESTION
 
