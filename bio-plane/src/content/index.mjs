@@ -58,6 +58,9 @@ export const TEXT_SOURCE_LIMIT_MAX = 5000;
 export const CONTENT_READ_PARAMS = new Set(["id", "viewer", "store"]);
 /** R20: how many content rows one `standings` read resolves. */
 export const CONTENT_EARNED_MAX = 200;
+/** R41 (N117): how many of the rows one re-read stales are read back and graded, in ONE read, inside the writer's
+ *  transaction. The rest are marked by the same one UPDATE, counted by the same read, and told as ungraded. */
+export const STALE_GRADED_MAX = 200;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -773,8 +776,9 @@ export class Content {
    * STALE (R22, R41).
    * ===================================================================== */
 
-  /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each row a replaced
-   *  reading marks stale whose passage the new text affects or cannot be told, `fn` is called with the notice. */
+  /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each re-read that
+   *  stales a row whose passage the new text affects or cannot be told, `fn` is called ONCE with the re-read's notice
+   *  (`markStale`): the graded rows it must tell, and the count of rows past the bound, ungraded and so undetermined. */
   onStale(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED" };
@@ -787,40 +791,57 @@ export class Content {
    *  from the new non-null chain becomes `stale`, one way (un-staling would be the record deciding an old citation is
    *  current again); nothing is deleted or moved; a null chain marks nothing (an unrecorded chain is not one that
    *  moved). A member's TYPING is never staled: its chain is `typed(member)` over the BYTES, which cannot change under
-   *  a row that names them. ONE statement, not a loop (rows per capture are unbounded by design).
-   *  R41: each row marked is graded old text against new — `unitsBefore`, the capture's units as they stood, and
-   *  `unitsAfter`, as the replacing reading wrote them (default: the index as it stands at the call, which is the new
-   *  one only when the call follows the write, as extraction's R24 listener does); without the old units the grade is
-   *  UNDETERMINED and says so — and every registered listener is told of each row whose grade is affected or
-   *  undetermined. Returns the count. */
+   *  a row that names them. Returns the count.
+   *  THE BOUND (N117; the store's REC-66 / D-227 shape): this runs inside the writer's transaction (extraction R24), so
+   *  a re-read costs ONE read and ONE update however many rows it stales. The read returns at most `STALE_GRADED_MAX`
+   *  rows, in content-id order, each carrying the total in the same statement; the UPDATE marks them all.
+   *  R41: with a listener registered, each row read is graded old text against new — `unitsBefore`, the capture's units
+   *  as they stood, and `unitsAfter`, as the replacing reading wrote them (default: the index as it stands at the call,
+   *  which is the new one only when the call follows the write, as extraction's R24 listener does); without the old
+   *  units the grade is UNDETERMINED and says so. Every listener is then called ONCE for the re-read, never per row,
+   *  with the rows whose grade is affected or undetermined, and the rows past the bound counted as ungraded, which is
+   *  undetermined and told as such. */
   markStale(captureSha, chain, { unitsBefore = null, unitsAfter = null } = {}) {
     const live = Array.isArray(chain) ? JSON.stringify(chain) : null;
     if (live == null) return 0;
     const where = `capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0
                    AND content_id NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=?)`;
-    const hit = this.staleListeners.length
-      ? this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content WHERE ${where}`,
-                   captureSha, live, captureSha) : null;
-    const n = hit ? hit.length : this.#one(`SELECT count(*) AS c FROM content WHERE ${where}`, captureSha, live, captureSha).c;
-    if (n) this.sql.exec(`UPDATE content SET stale=1 WHERE ${where}`, captureSha, live, captureSha);
-    if (hit && hit.length) {
-      const before = normUnits(unitsBefore);
-      const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.extraction.unitsOf(captureSha));
-      for (const row of hit) {
-        const extent = safeJson(row.extent) ? { kind: row.extent_kind, ...safeJson(row.extent) } : null;
-        const g = before.units.length ? gradeAcross(row, extent, before, after)
-          : { grade: "UNDETERMINED", affects: "undetermined", reason: "cited_text_not_held",
-              why: "the text this row was cited under is no longer held beside the new reading, so whether the re-read "
-                 + "changed the passage cannot be told" };
-        if (g.affects === "unaffected") continue;
-        const notice = { content_id: row.content_id, bundle_id: row.bundle_id, capture_sha: row.capture_sha,
-                         ref: row.ref, grade: g.grade, affects: g.affects, reason: g.reason, why: g.why,
-                         found_at: g.found_at ?? null, similarity: g.similarity ?? null, stale: true,
-                         says: "the document was re-read and the text under your citation may have changed. Nothing "
-                             + "moved: keep the citation as it stands, or adopt the passage under the new reading" };
-        for (const l of this.staleListeners) l.fn(notice);
-      }
+    const hit = this.#rows(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as, count(*) OVER () AS n
+         FROM content WHERE ${where} ORDER BY content_id LIMIT ?`, captureSha, live, captureSha, STALE_GRADED_MAX);
+    const n = hit.length ? hit[0].n : 0;
+    if (!n) return 0;
+    this.sql.exec(`UPDATE content SET stale=1 WHERE ${where}`, captureSha, live, captureSha);
+    if (!this.staleListeners.length) return n;
+    const before = normUnits(unitsBefore);
+    const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.extraction.unitsOf(captureSha));
+    const rows = [];
+    for (const row of hit) {
+      const extent = safeJson(row.extent) ? { kind: row.extent_kind, ...safeJson(row.extent) } : null;
+      const g = before.units.length ? gradeAcross(row, extent, before, after)
+        : { grade: "UNDETERMINED", affects: "undetermined", reason: "cited_text_not_held",
+            why: "the text this row was cited under is no longer held beside the new reading, so whether the re-read "
+               + "changed the passage cannot be told" };
+      if (g.affects === "unaffected") continue;
+      rows.push({ content_id: row.content_id, bundle_id: row.bundle_id, capture_sha: row.capture_sha, ref: row.ref,
+                  grade: g.grade, affects: g.affects, reason: g.reason, why: g.why,
+                  found_at: g.found_at ?? null, similarity: g.similarity ?? null, stale: true });
     }
+    const ungraded = n - hit.length;
+    if (!rows.length && !ungraded) return n;
+    const notice = {
+      capture_sha: captureSha, chain, staled: n, graded: hit.length, rows, ungraded,
+      ungraded_after: ungraded ? hit[hit.length - 1].content_id : null,
+      ungraded_affects: ungraded ? "undetermined" : null,
+      ungraded_why: ungraded
+        ? `this re-read staled ${n} rows and ${STALE_GRADED_MAX} were graded; the other ${ungraded} (the capture's stale `
+          + `rows whose content_id sorts after ungraded_after) were marked stale and not graded, so whether the re-read `
+          + `changed their passages is UNDETERMINED`
+        : null,
+      says: "the document was re-read and the text under your citation may have changed. Nothing moved: keep the "
+          + "citation as it stands, or adopt the passage under the new reading",
+    };
+    for (const l of this.staleListeners) l.fn(notice);
     return n;
   }
 
@@ -1135,8 +1156,8 @@ export class Content {
    * ===================================================================== */
 
   /** R32: the crop of an image cited by page and rectangle, cut through `pdf-pixels` from the capture's own bytes in
-   *  the evidence store, and served as a DERIVED RENDITION that says so (EXTRACTION-BREADTH §3.4: "the viewer shows the
-   *  crop; the crop is not the evidence"). Writes nothing. A crop from bytes whose digest is not the row's capture is
+   *  the evidence store, its file as `bytes_base64` (N119), and served as a DERIVED RENDITION that says so
+   *  (EXTRACTION-BREADTH §3.4: "the viewer shows the crop; the crop is not the evidence"). Writes nothing. A crop from bytes whose digest is not the row's capture is
    *  refused rather than shown. */
   async cropOf({ contentId = null, viewer = null } = {}) {
     const id = typeof contentId === "string" ? contentId.trim() : "";
@@ -1173,7 +1194,12 @@ export class Content {
       return { ok: false, reason: "CROP_CAPTURE_MISMATCH", content_id: r.content_id, capture_sha: r.capture_sha,
                cropped_from: out.capture_sha256 ?? null,
                detail: "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back" };
-    return { ...out, ok: true, derived: true, content_id: r.content_id, capture_sha: r.capture_sha,
+    /* N119: the wire form is the module's, so every route hands back one encoding: the rendition's file as standard
+       base64 (`bytes_base64`, D-419), whose `file_sha256` the answer states. Raw octets would reach JSON as an object
+       keyed by index. */
+    const { bytes: file, ...rest } = out;
+    return { ...rest, bytes_base64: base64Of(file), ok: true, derived: true, content_id: r.content_id,
+             capture_sha: r.capture_sha,
              says: "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop "
                  + "is not itself evidence" };
   }
@@ -1182,6 +1208,14 @@ export class Content {
 /* ======================================================================= *
  * PURE HELPERS.
  * ======================================================================= */
+
+/** Standard base64 of a byte array, in chunks (a crop can be megabytes; one spread would overflow the call stack). */
+function base64Of(bytes) {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+  let bin = "";
+  for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
 
 function chainOfReading(reading) {
   const chain = reading && typeof reading === "object" ? reading.text_source ?? null : null;

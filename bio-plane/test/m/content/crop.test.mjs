@@ -41,7 +41,14 @@ test("R32: the crop of a cited PDF image by page and rectangle, through pdf-pixe
   assert.deepEqual([r.derived, r.rendition, r.content_id, r.capture_sha, r.capture_sha256], [true, "crop", id, pdfSha, pdfSha]);
   assert.match(r.says, /derived rendition/);
   assert.equal(r.mediaType, "image/png");
-  const px = greySamples(r.bytes);
+  /* N119: the file travels as base64, one wire form for every route, and it is the file whose hash the answer states */
+  assert.equal("bytes" in r, false, "no raw octets");
+  assert.equal(typeof r.bytes_base64, "string");
+  assert.deepEqual(JSON.parse(JSON.stringify(r)).bytes_base64, r.bytes_base64, "it survives the JSON wire as itself");
+  const file = Buffer.from(r.bytes_base64, "base64");
+  assert.equal(file.toString("base64"), r.bytes_base64, "standard base64");
+  assert.equal(sha(file), r.file_sha256);
+  const px = greySamples(file);
   assert.deepEqual([px.w, px.h], [3, 2]);
   assert.deepEqual(px.out, Array.from({ length: 6 }, (_, i) => (i * 37 + 11) & 0xff), "the image's own samples");
 });
