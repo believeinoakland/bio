@@ -12,10 +12,10 @@
  * the whole refusal; a code this module answers from several acts is minted in one private helper of `Progressions`,
  * which each act calls. What left C-100 in T10, its ids retired and never reused: `NO_SUCH_ENTITY` (C-100.12) is
  * entities' one answer (its R36, `noSuchEntity`), `LISTENER_DECLARED` (C-100.23) membership's (its R81,
- * `listenerRefusal`), and `NO_KEY` (C-100.1), which other modules mint for conditions of their own, is answered as the
- * catalogue's generic code under its REC-64 rule (K163's precedent), with no row (`GENERIC_CODES`, `generic`). N118's
- * other five (`NO_LABEL`, `NOT_FOUND`, `NO_ENTITY`, `NO_SHA`, `NOT_A_DISPOSITION`) keep their rows while the member
- * surface receives them, so no member meets one untranslated (PROGRESSIONS #2's J2, for BOB's ruling under K275). */
+ * `listenerRefusal`), and `NO_KEY` (C-100.1), which many modules mint for one condition, is answered as the catalogue's
+ * generic code under its REC-64 rule (R27; K163, K329), with no row (`GENERIC_CODES`, `generic`). N118's other five
+ * (`NO_LABEL`, `NOT_FOUND`, `NO_ENTITY`, `NO_SHA`, `NOT_A_DISPOSITION`) keep their rows while the member surface receives
+ * them, so no member meets one untranslated (K329); whether each is renamed or provided as one helper is N285. */
 
 import { ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";
 
@@ -151,8 +151,7 @@ export const PROGRESSION_CHECKS = Object.freeze({
   },
 });
 
-/** The generic codes this module answers with no row of its own (N118; the catalogue's REC-64 rule, K163): each names
- *  what a request left out, and other modules mint the same word for their own subjects. */
+/** The generic codes this module answers with no row of its own (R27; N118; the catalogue's REC-64 rule, K163, K329). */
 export const GENERIC_CODES = Object.freeze(["NO_KEY"]);
 
 /** A refusal in DEC-49's shape: the code, its row and translation, then the site's own fields and sentence. `NO_BASIS`
