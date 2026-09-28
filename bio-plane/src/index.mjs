@@ -85,13 +85,15 @@ import { driveHop, callerSuppliedHopFacts,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
    SESSION_OPS, the tables that actually gate the call, so the publication and
    the gate cannot drift. */
+/* N177 (T8, affordances R11): the act decoration is affordances' `decorate(act, gate)`; this file supplies the gate
+   from the tables that actually gate the call (`ACT_GATE`, beside `NEEDS`). */
+import { ACTS, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate } from "./affordances.mjs";
 /* REC-48 / DEC-39: op=acquire's `note` is COMPOSED from the enforced capture
    ceiling rather than spelled here. It is not the attest fence and is not
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
-   them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
-import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs,
-         ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
+   them. N80 (T8): the note is capture's (`acquireGradeNote`, capture's Provides), composed where acquire is. */
+import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
 import { RENDER_DEFAULTS, completenessReading, keepRenderBodies, renderAllowanceMs,
@@ -487,6 +489,10 @@ const OPS = {
      its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
      up: a machine is refused at `actionlaws` BY NAME (C-32.18), and this op writes no list at all. */
   actionlawspropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T8 (actions R28, ACTIONS #1 J2.5): a proposed RISK TIER, stored apart and labelled, never touching `risk_tier` —
+     `actionlawspropose`'s class cut and reason: proposing is the machine's half, so the store refuses nobody by class,
+     and the fence is one op up, at `actionrisktier` (C-32.19). */
+  actionriskpropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -1378,6 +1384,10 @@ const OPS = {
      and names the remedy; it never re-acquires. Classes and the D-15 stamp are
      op=index's, because it walks the same working corpus and names bundle ids. */
   driveshells:        { classes: ["admin", "member", "probe"],      mutating: false },
+  /* T8 (monitoring R32, MONITORING #1 J3.6): what the group monitors and how each watch stands, the DO route
+     `monitoring`. A READ on `driveshells`' cut and for its reason — it walks the working corpus and names bundle ids —
+     so the viewer is stamped below and the store answers only what the viewer may see. */
+  monitoring:         { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
      section 4.2, section 6 row 2): *which of the four content-axis states is this
      capture in, and why*. A READ, so `mutating: false`.
@@ -2074,6 +2084,8 @@ const SESSION_OPS = {
                       capture-requests' retry (R42), a member's act on the group's queue; in BOTH sets, because an
                       administrator is a member too. */
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
+                   /* T8 (actions R28): the risk-tier proposal, `actionlawspropose`'s route, in BOTH sets. */
+                   "actionriskpropose",
                    /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
                       and a MEMBER is a signed-in person — not the MEMBER_TOKEN
                       machine credential, which stamps `token:member` and is a
@@ -2126,6 +2138,7 @@ const SESSION_OPS = {
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
+                   "actionriskpropose",
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2375,6 +2388,8 @@ const NEEDS = {
   /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
      it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
   actionlawspropose: "contribute",
+  /* T8 (actions R28): proposing a tier takes `actionlawspropose`'s capability, for its reason. */
+  actionriskpropose: "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -2758,45 +2773,17 @@ const NEEDS = {
   calibrationsignal:  "contribute",
 };
 
-/* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
-   and op=queue share ONE function rather than one function and a copy of it.
-   The store derives WHICH acts exist (deriveActs over its own facts); this adds
-   the metadata that lives only here — the capability NEEDS gates the call with,
-   how the op is reached, and the DECLARED ladder rung. A queue item's options[] and
-   an op=affordances answer for the same subject are therefore identical by
-   construction and not by agreement, which is the property the item's suite
-   asserts byte-for-byte. */
-/* REC-16 / DEC-29(b) adds `prompt`: the wording a surface MUST show when it
-   offers this act, null wherever no ruling attaches one. It is published rather
-   than left to the client for DEC-8's reason — a surface renders what it
-   received — and it is on the act rather than in a separate table so a surface
-   that has the control necessarily has the sentence that must accompany it. */
-/* REC-38: `weight ?? null`, and the null is STATED rather than the key being
-   dropped — this file's own rule for `rung` one line down, applied to the one
-   other declared field. Every entry in ACTS carries a weight, so nothing about
-   the act catalogue changes; CAPTURE_ACTS entries carry none, because a capture
-   act is not selection-backed and there is no set-application weight to report.
-   Omitting the key would let a surface read `undefined` and guess; publishing
-   null says the record has no such number for this act. */
-const decorateAct = (a) => ({
-  id: a.id, label: a.label, weight: a.weight ?? null,
-  needs: NEEDS[a.id] ?? null,
-  mode: SESSION_OPS.member.has(a.id) ? "session"
-      : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
-  rung: RUNGS[a.id] ?? null,
-  /* FW-14. `rung: null` NOW MEANS SOMETHING IT DID NOT MEAN BEFORE, and this key
-     is what makes the difference legible to a surface. Until this item a null
-     rung meant "nobody has classified this"; every mutating op is now either
-     rung-bearing or NAMED IN `RUNG_ABSENT` with the ground on which it has none,
-     asserted total in both directions. So a null rung beside a stated ground is
-     a CLASSIFIED ABSENCE — undetermined stated, which CLAUDE.md makes
-     first-class — and a null rung beside a null ground is the shape that can no
-     longer reach a caller, because the suite refuses to let such an op exist.
-     Published rather than left implicit for DEC-8's reason: a surface must be
-     able to render "this act has no rung, because <ground>" without computing
-     the sentence itself. */
-  rung_absence: RUNG_ABSENT[a.id]?.ground ?? null,
-  prompt: a.prompt ?? null,
+/* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
+   op=affordances answer for the same subject are identical by construction and not by agreement. N177 (T8): the
+   decoration itself is affordances' `decorate(act, gate)` (its R11) — `id`, `label`, `weight`, the DECLARED rung and
+   the ground of a stated absence (FW-14), and DEC-29(b)'s `prompt`, each a stated null where the record holds none.
+   The GATE is the one half that lives only here: the capability `NEEDS` gates the call with, and how the op is
+   reached (`SESSION_OPS`), read from the very tables that gate it, so the publication and the gate cannot drift.
+   `ACT_GATE` is read only when a request is decorated, after both tables exist. */
+const decorateAct = (a) => decorate(a, ACT_GATE);
+const ACT_GATE = Object.freeze({
+  needs: (id) => NEEDS[id] ?? null,
+  mode: (id) => SESSION_OPS.member.has(id) ? "session" : SESSION_OPS.admin.has(id) ? "admin-session" : "machine",
 });
 
 const SCRATCH = "scratch";
@@ -4775,21 +4762,20 @@ export default {
        An `action` bundle returns an empty act list because nothing operates one
        until REC-24, and an empty list is the honest answer. */
     if (op === "affordances") {
-      /* REC-20 hoisted this to module scope (decorateAct) so op=queue's
-         options[] and this answer come from the SAME function. */
-      const decorate = decorateAct;
+      /* REC-20: op=queue's options[] and this answer come from the SAME function (decorateAct, affordances'
+         `decorate` over this file's gate). */
       const target = url.searchParams.get("target");
       if (!target) {
         /* No target: the whole catalogue and the vocabularies, the shape a
            surface loads once — searchfields' precedent exactly. */
         return json({ ok: true, result: {
           target: null,
-          catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
+          catalog: ACTS.map((a) => ({ ...decorateAct(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
-          capture_acts: CAPTURE_ACTS.map(decorate),
+          capture_acts: CAPTURE_ACTS.map(decorateAct),
           /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
              decorated from the same tables as every act, with the bound the store enforces. */
-          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorate(a), set_key: a.set_key, item_keys: a.item_keys,
+          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorateAct(a), set_key: a.set_key, item_keys: a.item_keys,
                                                shared_keys: a.shared_keys, max_items: PER_ITEM_MAX })),
           detail: "pass target=<bundle id> for the acts available on that object right now; "
                 + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
@@ -4845,7 +4831,7 @@ export default {
       return json({ ok: true, result: {
         target: facts.target, object_type: facts.object_type,
         current_state: facts.current_state,
-        acts: deriveActs(facts).map(decorate),
+        acts: deriveActs(facts).map(decorateAct),
         vocabularies: VOCABULARIES,
         /* REC-38. The SAME block the no-target catalogue answers, and it is
            deliberately NOT filtered by this target: a capture act's subject is
@@ -4856,7 +4842,7 @@ export default {
            object; deriving one here would be the publication disagreeing with
            op=attest's own NO_SUCH_CAPTURE. The reasoning is on CAPTURE_ACTS,
            where both consumers of the distinction read it. */
-        capture_acts: CAPTURE_ACTS.map(decorate),
+        capture_acts: CAPTURE_ACTS.map(decorateAct),
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -4867,9 +4853,9 @@ export default {
 
        Composed the way op=affordances is, and for the same reason: the store
        derives the ITEMS and the homes (it holds the edges and the D-15
-       predicate), and the act metadata is added HERE, where NEEDS, SESSION_OPS
-       and RUNGS live — through decorateAct, the SAME function op=affordances
-       uses, so the two answers cannot drift.
+       predicate), and the act metadata is added HERE, where NEEDS and SESSION_OPS
+       live — through decorateAct, the SAME function op=affordances uses (the
+       rungs are affordances'), so the two answers cannot drift.
 
        TWO server-side stamps, both set AFTER nothing of the caller's is read,
        because either one taken from the request would defeat the other:
@@ -5606,6 +5592,11 @@ export default {
            member sees its own unpublished pairing — beside the administer stamp below. Without either the store
            answers the published pairings alone (fails closed). */
         || op === "memberpairings"
+        /* T8 (actions R28): the risk-tier proposal names an action and reads it behind the fail-closed gate before it
+           writes, `actionlawspropose`'s reason. */
+        || op === "actionriskpropose"
+        /* T8 (monitoring R32): the monitored sources name bundles, `driveshells`' reason (REC-25). */
+        || op === "monitoring"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -5855,6 +5846,13 @@ export default {
        here BY DESIGN — D-149 says the machine MAY propose — so a comment claiming otherwise would be the
        instrument reading this site correctly. The fence is one op up, at the act that SETS the list. */
     if (op === "actionlawspropose")
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T8 (actions R28, ACTIONS #1 J2.5): WHO PROPOSED A RISK TIER, by the line above's expression and for its reason —
+       the label is the whole product, and a caller-supplied `proposer` is overwritten. */
+    if (op === "actionriskpropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
