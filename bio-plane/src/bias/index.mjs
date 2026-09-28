@@ -10,6 +10,7 @@
  *                 adopted revision in the promotion's own transaction (R10). The state edge is promotion's (its R15).
  *   the bias debt: work products later modules register (R33), swept against the lens now in force, settled by one
  *                 of three recorded acts (R35, R37, R38), read (R36), and disclosed, never blocking (R28).
+ *   counts, uncleared  what `queue` reads: the rows held (R42) and the open debts with their recipients (R43).
  *
  * REACHED as `biasOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call with `deps`
  * and returned to every later caller. `deps`:
@@ -27,7 +28,7 @@
 import { normalizeType, parseFrontmatter, MACHINE_AUTHOR_PREFIX, isMachineStamp,
          createSha256 } from "../../checks/bio-checks.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING, checkBiasSet,
@@ -36,7 +37,6 @@ import { BIAS_CHECKS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHR
 export { BIAS_CHECKS, BIAS_STATEMENT_KINDS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING,
          checkBiasSet, checkBiasImage, withBiasChecks } from "./checks.mjs";
 export { BIAS_SCHEMA, BIAS_TABLES } from "./schema.mjs";
-export { aiRunWorkProducts } from "./interim.mjs";
 
 /* The manifest's bound (R18). 200 is the common read, "what lens is in force", which a group's whole declared bias
    fits inside many times over; 2,000 is for a regrade, two lenses re-run against each other, where a lens silently
@@ -57,6 +57,9 @@ export const BIAS_DEBT_BATCH = 50;
 export const BIAS_DEBT_OWNERS_MAX = 50;
 export const BIAS_DEBT_REASON_MAX = 4000;
 export const BIAS_DEBT_SETTLEMENTS_MAX = 50;
+/* R43's bound: 200 by default, the queue's page; at most 1,000. */
+export const BIAS_DEBT_UNCLEARED_DEFAULT = 200;
+export const BIAS_DEBT_UNCLEARED_MAX = 1000;
 /* The operator-internal viewer the sweep reads a lens as (R33): the lens in force is a fact about the SCOPE. */
 export const BIAS_DEBT_VIEWER = "admin";
 
@@ -95,6 +98,15 @@ function statementRows(bundleId, fm) {
   return out;
 }
 
+/* R9: each error finding named by its C-26 row (its code and translation), for BIAS_REFUSED's `findings`. */
+const BIAS_ROW_BY_CHECK = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
+function refusalFindings(errs) {
+  return errs.map((x) => {
+    const hit = BIAS_ROW_BY_CHECK.get(x.check);
+    return { check: x.check, detail: x.message, code: hit ? hit.code : null, translation: hit ? hit.row.translation : null };
+  });
+}
+
 /* The bundle.md text of one promotion's files, or null. */
 const bundleMdText = (files) => {
   const md = Array.isArray(files) ? files.find((x) => x && x.path === "bundle.md") : null;
@@ -126,24 +138,16 @@ class Bias {
   /* The viewer gate over a bundle-id column (membership's one sight rule, R43, over record-core's `bundles`): a
      machine credential or the founder's viewer passes everything, an unrecognised viewer nothing, a member what the
      predicate admits. The column must be qualified, or it binds to `bundles` inside the subquery and passes all. */
-  static #gate(col, viewer) {
-    const gate = viewerPredicate(viewer);
+  static #gate(col, viewer) { return Bias.#gateOver(col, viewerPredicate(viewer)); }
+
+  /* The same gate from a predicate already compiled (`viewerPredicate`'s answer, R43's `gate`). A predicate that is
+     not `{sql, args}` admits nothing (fail closed). */
+  static #gateOver(col, gate) {
+    if (!isObj(gate) || typeof gate.sql !== "string" || !Array.isArray(gate.args)) return { sql: `${GATE_MARK} 0=1`, args: [] };
     if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
-    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+    if (gate.scope === "DENY") return { sql: `${GATE_MARK} 0=1`, args: [] };
     return { sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
              args: gate.args };
-  }
-
-  /* One revision's bundle.md, by its digest: the live file when it is that revision, else the snapshot in history
-     that holds it (record-core R13, R15). Null when the record cannot produce it. */
-  #textAtSha(bundleId, sha) {
-    if (!bundleId || !sha) return null;
-    const live = this.#record.readFile(bundleId, "bundle.md");
-    if (live && typeof live.text === "string" && live.sha256 === sha) return live.text;
-    const img = this.#record.readImage(bundleId) || {};
-    for (const [path, v] of Object.entries(img))
-      if (/^_history\/bundle_.*\.md$/.test(path) && typeof v === "string" && sha256Hex(v) === sha) return v;
-    return null;
   }
 
   /* ---------------------------------------------------------------- R8–R10: this module's share of a promotion */
@@ -161,16 +165,9 @@ class Bias {
     /* DEC-49 REGION bias-set-refusal */
     const errs = checkBiasSet(fm, new Map([["bundle.md", text]])).filter((x) => x.severity === "error");
     if (!errs.length) return null;
-    const byNumber = new Map(Object.entries(BIAS_CHECKS).map(([code, row]) => [row.check, { code, row }]));
-    const refusal = this.#refuse("BIAS_REFUSED",
+    return this.#refuse("BIAS_REFUSED",
       "the bias set's statements were judged before anything was written, and at least one is not something the "
-      + "record can honour. Nothing was written.");
-    return { ...refusal,
-             findings: errs.map((x) => {
-               const hit = byNumber.get(x.check);
-               return { check: x.check, detail: x.message, code: hit ? hit.code : null,
-                        translation: hit ? hit.row.translation : null };
-             }) };
+      + "record can honour. Nothing was written.", { findings: refusalFindings(errs) });
     /* END DEC-49 REGION bias-set-refusal */
   }
 
@@ -215,17 +212,20 @@ class Bias {
   /** R23: a later module's notice that a lens may have moved, once per successful adoption and per promotion that
    *  moves a bias set's head, after the write. A second registration by one module is refused. */
   onLensChange(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#lensListeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    /* N202: the refusals are membership's one site (its R81). */
+    const refused = listenerRefusal(this.#lensListeners, module, fn);
+    if (refused) return refused;
     this.#lensListeners.push({ module, fn });
     return { ok: true, module };
   }
 
-  /* Each listener once; one that throws or rejects changes nothing the act wrote and no other listener's notice. */
+  /* Each listener once, in the modules' total order (membership R83; a module not in it after, by name); one that
+     throws or rejects changes nothing the act wrote and no other listener's notice. */
   #notify() {
-    const runs = this.#lensListeners.map((l) => {
+    const at = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? MODULE_ORDER.length : i; };
+    const ordered = [...this.#lensListeners].sort((x, y) => at(x.module) - at(y.module)
+      || (x.module < y.module ? -1 : x.module > y.module ? 1 : 0));
+    const runs = ordered.map((l) => {
       try { return Promise.resolve(l.fn()).catch(() => null); } catch { return null; }
     });
     this.#notices = Promise.all([this.#notices, ...runs]).then(() => undefined);
@@ -349,7 +349,7 @@ class Bias {
           WHERE a.scope_type = ? AND a.scope_id = ? AND b.current_state <> 'retired' AND (${seen.sql})
           ORDER BY a.bundle_id`, type, id, ...seen.args);
       for (const a of rows) {
-        const text = this.#textAtSha(a.bundle_id, a.bundle_sha);
+        const text = this.#record.textAtSha(a.bundle_id, a.bundle_sha);   // record-core R60 (N207)
         if (text === null) { unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type }); continue; }
         const fm = parseFrontmatter(text).data || {};
         if (fm.current_state !== "adopted") {
@@ -696,8 +696,12 @@ class Bias {
    *  work products per tick (50 by default), resuming from a cursor, restarted from the top when the lens moves
    *  again. For each: moved raises a debt or restates a changed one; a debt settled by an authored act over the
    *  same lens delta stays settled (REC-207); not moved settles an open debt as `lens_returned`; undetermined raises
-   *  and clears nothing. Idempotent by the work product's key. Nothing is refused anywhere (R28). */
-  async biasDebtSweep(nowMs) {
+   *  and clears nothing. Idempotent by the work product's key. Nothing is refused anywhere (R28).
+   *  `rank` (N224) is the scheduler's (its R10, `rank(items, now)` answering the items reordered): the batch is read,
+   *  each work product offered as `{kind: "bundle", id: its context id, waitingSince: when it was registered}`, and
+   *  compared in the rank's order. Without it, or when it fails, the order is the cursor's. The cursor, the batch
+   *  size and what each comparison raises or settles do not depend on the order. */
+  async biasDebtSweep(nowMs, rank = null) {
     const at = stampInstant("second", Number(nowMs));
     const cap = this.#batch();
     const fp = this.lensFingerprint();
@@ -707,9 +711,10 @@ class Bias {
     const batch = items.slice(0, cap);
     const out = { read: 0, raised: [], restated: [], cleared: [], held: [], undetermined: [], unchanged: 0,
                   complete: items.length <= cap, batch: cap };
-    for (const { source, key } of batch) {
+    const read = [];
+    for (const item of batch) read.push({ ...item, wp: await item.source.read(item.key) });
+    for (const { source, key, wp } of Bias.#ranked(read, rank, Number(nowMs))) {
       out.read++;
-      const wp = await source.read(key);
       const lens = wp && isObj(wp.lens) ? wp.lens : null;
       const now = wp && lens ? this.#lensNow(wp.context) : { undetermined: true };
       const then = lens && typeof lens.statements_sha === "string" ? lens.statements_sha : null;
@@ -758,6 +763,32 @@ class Bias {
                                     cursor = excluded.cursor, at = excluded.at`,
       out.complete ? fp : (st ? st.fingerprint : null), fp, out.complete ? "" : last, at);
     return out;
+  }
+
+  /* N224: the batch in the rank's order. Each item carries its place under a symbol, which the rank's copies keep
+     (`{...x}`) and its shape does not show; an item the rank drops or cannot place follows in the cursor's order. */
+  static #ranked(read, rank, now) {
+    if (typeof rank !== "function" || read.length < 2) return read;
+    const PLACE = Symbol("place");
+    const items = read.map((r, i) => ({ kind: "bundle", id: r.wp && r.wp.context && r.wp.context.id != null
+      ? String(r.wp.context.id) : null, waitingSince: Bias.#instantMs(r.wp && r.wp.registered), [PLACE]: i }));
+    let answer;
+    try { answer = rank(items, now); } catch { return read; }
+    if (!Array.isArray(answer)) return read;
+    const order = [], taken = new Set();
+    for (const x of answer) {
+      const i = x && typeof x === "object" ? x[PLACE] : undefined;
+      if (Number.isInteger(i) && !taken.has(i)) { taken.add(i); order.push(read[i]); }
+    }
+    for (let i = 0; i < read.length; i++) if (!taken.has(i)) order.push(read[i]);
+    return order;
+  }
+
+  /* An instant as ms since the epoch: a finite number, or a parseable date string; else null. */
+  static #instantMs(v) {
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    if (typeof v === "string" && v.trim()) { const t = Date.parse(v); return Number.isFinite(t) ? t : null; }
+    return null;
   }
 
   /* R37: THE ONE WRITER OF A SETTLEMENT. Every act that settles a debt appends its row here and stamps the debt from
@@ -868,6 +899,51 @@ class Bias {
             + "record here: the lens moving back, a re-run under the lens now in force, and a member's "
             + "resolve with a stated reason (BOB #32, 2026-09-23)",
     };
+  }
+
+  /* ---------------------------------------------------------------- R42, R43: the counts and the open debts (N171) */
+
+  /** R42: the bias statements and the adoptions held. `hid` (`{sql, args}`, the bundles the caller may not see, as
+   *  run-productions' `counts`) leaves out a row naming such a bundle: a statement by its bundle, an adoption by its
+   *  bundle or its project. Synchronous; writes nothing; never throws (a count that cannot be read answers null). */
+  counts(hid = null) {
+    const h = isObj(hid) && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
+    const c = (t, ...keys) => {
+      try {
+        const conds = h ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${h.sql}`) : [];
+        const args = h ? keys.flatMap(() => h.args) : [];
+        return Number(this.#one(`SELECT count(*) AS c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+          ...args).c);
+      } catch { return null; }
+    };
+    return { biasStatements: c("bias_statements", "bundle_id"), biasAdoptions: c("bias_adoptions", "bundle_id", "scope_id") };
+  }
+
+  /** R43: the debts not yet cleared whose context `gate` admits (`gate` membership's predicate, `viewerPredicate`'s
+   *  answer over the alias `b`; a machine or founder scope admits every debt; a malformed gate admits none), newest
+   *  raised first, ties by run, at most `limit` (1–1,000, default 200), `truncated` measured by reading one more.
+   *  Writes nothing; never throws (a read that fails answers none, and says so). */
+  uncleared({ gate = null, limit = null } = {}) {
+    const n = Math.floor(Number(limit));
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(n, BIAS_DEBT_UNCLEARED_MAX) : BIAS_DEBT_UNCLEARED_DEFAULT;
+    try {
+      const seen = Bias.#gateOver("bd.context_id", gate);
+      const rows = this.#rows(
+        `SELECT bd.run, bd.context_type, bd.context_id, bd.moved_basis, bd.lens_then, bd.lens_now, bd.observed,
+                bd.raised, bd.recipients
+           FROM bias_debts bd WHERE bd.cleared_at IS NULL AND (${seen.sql})
+          ORDER BY bd.raised DESC, bd.run LIMIT ?`, ...seen.args, cap + 1);
+      const debts = rows.slice(0, cap).map((r) => {
+        const named = safeJson(r.recipients);
+        return { run: r.run, context_type: r.context_type, context_id: r.context_id, moved_basis: r.moved_basis ?? null,
+                 lens_then: r.lens_then ?? null, lens_now: r.lens_now ?? null, observed: r.observed, raised: r.raised,
+                 recipients: Array.isArray(named) ? named.filter((x) => typeof x === "string") : [] };
+      });
+      return { debts, limit: cap, truncated: rows.length > cap };
+    } catch {
+      return { debts: [], limit: cap, truncated: false, undetermined: true,
+               stated: "the open bias debts could not be read, so none is listed" };
+    }
   }
 
   /** R38 — told of a work product's close. When it re-made another (`rerunOf`), the debt of the one re-made is
