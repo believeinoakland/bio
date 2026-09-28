@@ -5,8 +5,9 @@
  * observation log, which is now this one. PURE: no storage, no clock, no viewer.
  *
  * Two additions: `OBSERVATION_STATE_WORDS` and `LEAD_VOCABULARY` (D-682, R21), and `CONDITION_KINDS`, the condition
- * vocabulary C-22.4 checks against, written here from `queuestate.mjs` (queue, layer 11) because this module is its
- * first consumer (map §5.4, K78 (3)); `queuestate.mjs` re-exports it at queue's extraction. */
+ * vocabulary C-22.4 checks against. This module is its home (map §5.4, K78 (3), N174): it moved here from
+ * `queuestate.mjs` (queue, layer 11) because this module is its first consumer, and queue re-exports it from here as
+ * `QUEUE_CONDITION_KINDS` (N114). */
 
 import { OBSERVATION_CHECKS } from "./checks.mjs";
 
@@ -268,7 +269,7 @@ export const CONTENT_AXIS_STATES = {
   indexed_partial: "part of this capture's text is indexed: it ran over the per-capture bound, or "
                  + "only some of its pages could be read",
   indexed_none:    "none of this capture's text is indexed, and the record says WHY — there was no "
-                 + "text to extract, or this container has no unit arm",
+                 + "text to extract, or this record cannot address a passage of this kind of document",
   not_extracted:   "nobody has tried to extract this capture's text. This is the ABSENCE of an "
                  + "observation and not a finding about the document (D-129's NEVER_LOOKED at the "
                  + "content level)",
@@ -413,12 +414,13 @@ export function contentAxisFor({ observed = null, unitIndex = false,
      observation (`authority_kind = derive`), and two of its four values are not
      points on the full/partial scale at all: the index LOOKED and there was
      nothing to index (no text), or it looked and COULD NOT address a passage of
-     this container (a workbook has no unit arm -- the `sheet-range` EXTENT arm landed with FW-19, and nothing yet writes its units into the index; an
-     HTML page has no `dom` producer). Both are the none-with-a-reason member,
-     and the reason travels with them.
+     this container (an HTML page has no `dom` producer, and a container this
+     record does not name has no arm; a workbook's sheets have been units since
+     extraction writes their `sheet-range` units, N108, N134). Both are the
+     none-with-a-reason member, and the reason travels with them.
      THE DIRECTION IS WHY THIS BRANCH EXISTS. Without it those captures fall
      through to `unitsComplete === false` and answer PARTIAL — telling a member
-     that some of a workbook's passages are searchable when the record cannot
+     that some of a page's passages are searchable when the record cannot
      address a single one of them. That is the record claiming more than it can
      support at exactly the level the four-level search exists to keep honest,
      and it is the same null-read-as-falsy shape as the branch below it. */
@@ -467,17 +469,19 @@ export function contentAxisFor({ observed = null, unitIndex = false,
  *  `NEVER_LOOKED` and `NEVER_LOOKED` is the absence of a row — arriving at the
  *  content level.
  *
- *  THE FOURTH ROW OF §4.2's TABLE HAS NO PRODUCER HERE, AND THAT IS STATED
- *  RATHER THAN APPROXIMATED. *The document has no text (a scan, and tier 3 read
- *  nothing above the floor)* is `LOOKED_ABSENT`, and telling it apart from *text
- *  was produced* needs a CHARACTER COUNT. The persisted reading carries none —
- *  measured on this tree, not assumed: `readings.reading` holds `found`,
- *  `entities`, `basis`, the chain, the tier and the page count, and no count of
- *  the text. `found: false` is NOT that fact and must not be used as it: it
- *  means the reader found no ENTITIES in text it read perfectly well, which is a
+ *  THE FOURTH ROW OF §4.2's TABLE (D-375, N139, R6): *the document has no text
+ *  (a scan, and tier 3 read nothing above the floor)* is `LOOKED_ABSENT`, and
+ *  telling it apart from *text was produced* needs a CHARACTER COUNT, which the
+ *  reading now carries: `text_chars`, the count of exactly the text the reader
+ *  was handed (extraction R60). REC-94 found no such count and said so; this is
+ *  the producer that finding waited on. ONLY AN INTEGER 0 IS "NO TEXT": a count
+ *  that is null or absent (a reading persisted before R60, a text that stated no
+ *  figure) never reads as no text, and is judged by coverage as before.
+ *  `found: false` is NOT that fact and must not be used as it: it means the
+ *  reader found no ENTITIES in text it read perfectly well, which is a
  *  MEANING-level absence (REC-95) and not a content-level one. Emitting
  *  `LOOKED_ABSENT` off `found: false` would file every document that mentions
- *  nobody as a document with no text. Reported as a DESIGN GAP and delegated.
+ *  nobody as a document with no text.
  *
  *  `found: false` THEREFORE PRODUCES `PRESENT` AT THIS LEVEL, and that is the
  *  content axis meaning what it says: text was extracted. What the text SAYS is
@@ -494,10 +498,24 @@ export function contentObservationsFor(reading, captureSha, tiersOf) {
      and it is what turns an otherwise whole-document PRESENT into `partial`. */
   const shortfall = reading.tier3_candidate === true;
 
-  if (reading.read_from_text !== true) {
-    /* §4.2 row 3 — no text possible. The condition is the record's existing
+  /* §4.2 ROW 4 — THE DOCUMENT HAS NO TEXT (R6, N139). It precedes row 3 because the reader DECLINES empty text, so a
+     scan read to nothing arrives `read_from_text: false`, and the count, not that flag, is what says a text was
+     handed over and held nothing. ONE row, on the last tier the chain evidences. PAGES LEFT UNREAD (`tier3_candidate`)
+     are not a page with no text, so a zero count there stays row 3, *no text possible*: the weaker claim. */
+  if (reading.text_chars === 0 && !shortfall) {
+    const last = tiers.length ? tiers[tiers.length - 1] : null;
+    return { rows: [{ tier: last ? last.tier : null, state: "LOOKED_ABSENT", condition: null,
+                      resultKind: null, resultRef: null,
+                      detail: detailFor(last, terminal, reading,
+                                        "no text: the text this document was read to holds no character") }],
+             unclassified, why: null };
+  }
+
+  if (reading.read_from_text !== true || reading.text_chars === 0) {
+    /* §4.2 row 3 — no text possible, and a zero count with pages left unread (above) whatever the flag says. The
+       condition is the record's existing
        word for it and no new vocabulary is coined: `text-undetermined` is
-       `queuestate.mjs`'s *"no text layer, CID fonts, or over the envelope"*,
+       `CONDITION_KINDS`' *"no text layer, CID fonts, or over the envelope"*,
        which is exactly this branch's three causes plus the office bound. */
     return { rows: [{ tier: tiers.length ? tiers[tiers.length - 1].tier : null,
                       state: "LOOKED_INDETERMINATE", condition: "text-undetermined",
@@ -750,6 +768,17 @@ export const CONTENT_EVIDENCE_IS_ONE_SIDED = {
   capture: false,     /* `readings` holds a row whether or not text was produced */
 };
 
+/** N113 (K306, Bob's ruling of 2026-09-28) — THE DOCUMENT LEVEL'S SIDEDNESS, in the same shape as the others, for
+ *  the one subject kind a document-level missing row is read at: an ADDRESS. ONE-SIDED. The level's pre-log evidence
+ *  is `captured_locators` (provenance), and a locator is left only by a fetch that CAPTURED something: an address
+ *  fetched before the log carried the level that answered nothing (a dead link, an empty answer) left no locator. So
+ *  a missing row at an address can never rule out the pre-log look that found nothing, and it names all three causes
+ *  (`causesNotRuledOut`); the address stays on the never-looked worklist. This supersedes the "document · address:
+ *  two-sided" row of OBSERVATION-LOG-DESIGN.md §5.1's table, as K306 records. */
+export const DOCUMENT_EVIDENCE_IS_ONE_SIDED = {
+  address: true,      /* `captured_locators` holds a row only where the fetch CAPTURED something */
+};
+
 /** REC-129 / IC-143 — THE INTERNET LEVEL'S SIDEDNESS, in the same shape as the
  *  two above, for the one subject kind its frontier reads: a member's LEAD
  *  (`description`, §4.5). `false`, and NOT because some table holds a row
@@ -834,15 +863,19 @@ export const INTERNET_FRONTIER_EMPTY_CAUSES = {
 export const ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
 
 export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined } = {}) {
-  /* CAUSE (1) AND CAUSE (3) ARE EACH A SET OF ONE, and for opposite reasons that
-     are worth saying once. `pre_log` was reached because the evidence table HAS a
-     row: an artifact exists, so a look demonstrably happened, and neither a purge
-     nor nobody-looked survives it. `never_looked` was reached by excluding the
-     other two — it is §5.1's one cause that licenses a positive statement, and
-     widening it here would make the frontier refuse to conclude anything, which
-     is its own defect and the direction G2a exists to catch. */
+  /* CAUSE (1) IS ALWAYS A SET OF ONE, AND CAUSE (3) IS ONE ON TWO-SIDED EVIDENCE.
+     `pre_log` was reached because the evidence table HAS a row: an artifact exists,
+     so a look demonstrably happened, and neither a purge nor nobody-looked survives
+     it. `never_looked` was reached by excluding the other two, which only two-sided
+     evidence can do (K331, below). */
   if (missingCause === "pre_log") return ["pre_log"];
-  if (missingCause === "never_looked") return ["never_looked"];
+  /* K331 (R11): `never_looked` IS A SET OF ONE ONLY WHERE THE EVIDENCE IS TWO-SIDED. It was reached because the
+     evidence probe missed and the subject entered after the level's first row; at a one-sided kind (an address, a
+     reference, an entity) a look that found NOTHING left no artifact for the probe to find, so a pre-log look, a purge
+     and nobody looking all stay live. Only an explicit `false` earns the one-member set: an undeclared kind takes the
+     wide one, this function's weakest-claim default. */
+  if (missingCause === "never_looked")
+    return evidenceOneSided === false ? ["never_looked"] : [...ALL_MISSING_ROW_CAUSES];
   /* AN UNRECOGNISED CAUSE WORD TAKES THE WIDEST SET, never the narrowest — the
      same shape as `#missingMeaningCause`'s unrecognised-subject-kind default one
      call up, pointed at the cause vocabulary instead of at the subject one. */
@@ -1343,10 +1376,10 @@ export function derivationStatement(row = null, missingCause = null) {
                + "rule out one made before it carried this level (or cleared by a purge)" };
 }
 
-/* THE CONDITION-KIND VOCABULARY C-22.4 checks against (R2), written here from `queuestate.mjs` (K78 (3)); the reasons
- * are that file's and stay there with the mute that also reads it. Transcribed from NOTIFICATIONS.md's catalogue
- * ("The catalogue", the entries marked [CONDITION]). A condition outside it is refused C-22.4 rather than becoming a
- * silent new vocabulary. */
+/* THE CONDITION-KIND VOCABULARY C-22.4 checks against (R2). THIS MODULE IS ITS HOME (K78 (3), N174): it moved here
+ * from `queuestate.mjs`, and queue re-exports it from here as `QUEUE_CONDITION_KINDS` (N114) for the mute that also
+ * reads it. Transcribed from NOTIFICATIONS.md's catalogue ("The catalogue", the entries marked [CONDITION]). A
+ * condition outside it is refused C-22.4 rather than becoming a silent new vocabulary. */
 export const CONDITION_KINDS = Object.freeze({
   "monitoring-recheck-due":       "a monitoring recheck or deadline sweep has come due (S-7)",
   "archive-fallback-eligible":    "the archive fallback became eligible: three failures or fourteen days (D-104)",
@@ -1439,12 +1472,12 @@ export function observationReferentFault(entry, referent) {
   return null;
 }
 
-/** C-22.1 / C-22.2 / C-22.3 / C-22.6 / C-22.9 / C-22.10 — ONE OBSERVATION.
+/** C-22.1 / C-22.2 / C-22.3 / C-22.6 / C-22.9 / C-22.10 / C-22.17 — ONE OBSERVATION.
  *
  *  `conditionKinds` is passed IN rather than imported here, so the caller
  *  supplies the live vocabulary and this function cannot hold a stale copy of
- *  it. The store passed `queuestate.mjs`'s own object; this module's append passes
- *  `CONDITION_KINDS`, which is also the default.
+ *  it. This module's append passes `CONDITION_KINDS`, this module's own vocabulary
+ *  (N174), which is also the default.
  *
  *  GENERALISED BY REC-93 from "one ai_run_log entry" to "one row of the
  *  observations table", which is the whole of `OBSERVATION-LOG-DESIGN.md`
@@ -1498,15 +1531,18 @@ export function checkObservation(entry, conditionKinds = CONDITION_KINDS, refere
   /* R3 — `NEVER_LOOKED` IS NAMED AND NEVER STORED. It is a key of `OBSERVATION_STATES` because it is the state of a
      subject with NO ROW, and the membership test above therefore admitted it: an append of it wrote a row claiming
      nobody looked, which is a row that is its own contradiction (§3: "NEVER_LOOKED is the absence of a row"). Refused
-     here, under C-22.1's code, since it is not one of the states a look can STORE (`LEAD_LOOK_OUTCOMES`). */
+     here under C-22.17, a code of its own (N118): C-22.1 says a state is not in the vocabulary, and this one is; it is
+     the one state a look cannot STORE (`LEAD_LOOK_OUTCOMES`). One code, one condition (DEC-49). */
   /* ONE EXCEPTION (R3, K148): a run's TERMINAL entry is ai-runs'
      rollup of the run's whole search (ai-runs R14), and a run that looked at nothing rolls up to NEVER_LOOKED — the one
      honest word for it. Refusing that entry refuses the run's only exit, so a run with no observations could never
      close. The exception is exactly that entry (`terminal`, authority `run`); every other NEVER_LOOKED is refused. */
+  /* DEC-49 REGION is-never-looked-stored */
   if (state === "NEVER_LOOKED" && !(e.terminal === true && authorityKind === "run"))
-    return refusal("AI_LOG_STATE_UNKNOWN",
+    return refusal("AI_LOG_NEVER_LOOKED_STORED",
       `NEVER_LOOKED is never stored: it is what the record says of a subject with no row at all `
       + `(OBSERVATION-LOG-DESIGN.md section 3). A look that happened found one of ${LEAD_LOOK_OUTCOMES.join(", ")}`);
+  /* END DEC-49 REGION is-never-looked-stored */
 
   /* C-22.2 — D-104's split. `governed` is the fact that OUR pacing held us. */
   if (e.governed === true && DEFINITIVE_STATES.has(state))
@@ -1596,6 +1632,6 @@ export function checkCondition(condition, conditionKinds = CONDITION_KINDS) {
   if (condition == null || condition === "") return null;   // no condition is a supported state
   if (!Object.prototype.hasOwnProperty.call(conditionKinds || {}, String(condition)))
     return refusal("AI_RUN_CONDITION_UNKNOWN",
-      `'${String(condition)}' is not in the record's condition vocabulary (queuestate.mjs)`);
+      `'${String(condition)}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)`);
   return null;
 }

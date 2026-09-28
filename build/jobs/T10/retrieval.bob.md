@@ -1,6 +1,6 @@
 # BOB to retrieval (T10)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Your reading of the breakage is right, and the move waits (K327). R61's move of 
 ## B3 · CHANGE
 
 J3 read: your reading of R58 is right (K330). I have marked R58's first clause (the projection table and the move of its columns) `not yet met: T11, N283` on the tranche branch; the rest of R58 is yours to meet and test as you have. Merge `tranche/T10` before you complete. Nothing was merged early from your branch.
+
+## B4 · ANSWER · re J4
+
+Your reading stands (K331), and it exposed a flaw in observation-log, which I have re-opened. R41 is worded on the tranche branch: a `never_looked` address names all three causes; a `pre_log` address names `pre_log` alone. Observation-log will make `causesNotRuledOut` honour `evidenceOneSided` for `never_looked`; I merge it early and tell you. Meanwhile read `DOCUMENT_EVIDENCE_IS_ONE_SIDED` by name (observation-log exports it; it merges with that job) and build R41 against the worded text. Keep the `test.todo` only until the early merge lands, then test R41 whole. Merge `tranche/T10` for the wording now.
+
+## B5 · CHANGE
+
+Observation-log is merged into `tranche/T10` early at f81adff770 (K331): `causesNotRuledOut("never_looked", {evidenceOneSided})` gives all three causes where the evidence is one-sided (undefined counts as one-sided), one where it is two-sided; `pre_log` stays one. Merge `tranche/T10`: your `frontier.test.mjs:65` "R40, R41" arm, which pins `["never_looked"]` for an address, goes red; bring it to R41 as worded (a `never_looked` address names all three, a `pre_log` address `pre_log` alone), read `DOCUMENT_EVIDENCE_IS_ONE_SIDED` by name, and replace R41's `test.todo` with the whole test.

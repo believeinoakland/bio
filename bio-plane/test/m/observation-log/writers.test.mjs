@@ -68,9 +68,49 @@ test("R6 the content level: one extract row per tier outcome naming the bundle, 
   assert.deepEqual(w.obs.observeExtraction("B", sha("s3"), reading({ found: false, entities: [] })).states, ["PRESENT"]);
   // no reading at all writes nothing
   assert.deepEqual(w.obs.observeExtraction("B", sha("s4"), null).written, 0);
+  // a count the text states is judged by coverage as before; a null or absent count is never "no text"
+  assert.deepEqual(w.obs.observeExtraction("B", sha("s6"), reading({ text_chars: 42 })).states, ["PRESENT"]);
+  assert.deepEqual(w.obs.observeExtraction("B", sha("s7"), reading({ text_chars: null })).states, ["PRESENT"]);
+  assert.deepEqual(w.obs.observeExtraction("B", sha("s8"), reading({ text_chars: null, read_from_text: false })).states,
+    ["LOOKED_INDETERMINATE"]);
   // a machine author is a machine look
   w.obs.observeExtraction("B", sha("s5"), reading(), { author: "class:ai/tok-1" });
   assert.deepEqual([w.log().at(-1).actor_class, w.log().at(-1).actor], ["machine", "class:ai/tok-1"]);
+});
+
+test("R6 the fourth row: a reading whose text_chars is 0 is the document with no text, one LOOKED_ABSENT row with condition null; a null or absent count, or found: false, never reads as no text", () => {
+  const w = world();
+  const OCR = OCR_PAGES([0, 1, 2]);
+  // the reader declines empty text, so the scan read to nothing arrives read_from_text: false; the count says it
+  for (const [i, r] of [reading({ read_from_text: false, found: false, entities: [], text_chars: 0, text_source: OCR }),
+                        reading({ text_chars: 0, text_source: OCR }),
+                        reading({ read_from_text: false, text_chars: 0, text_source: [LAYER()] }),
+                        reading({ read_from_text: false, text_chars: 0, text_source: null })].entries()) {
+    const c = sha(`empty${i}`);
+    const x = w.obs.observeExtraction("INFO-2026-0001", c, r, { author: "member:alice" });
+    assert.deepEqual([x.written, x.states, x.refused], [1, ["LOOKED_ABSENT"], []], String(i));
+    const row = w.log().at(-1);
+    assert.deepEqual([row.level, row.authority_kind, row.authority, row.subject_kind, row.subject, row.state, row.condition,
+                      row.result_kind, row.result_ref], ["content", "extract", "INFO-2026-0001", "capture", c, "LOOKED_ABSENT",
+                      null, null, null], String(i));
+    assert.match(row.detail, /^first extraction; no text/);
+  }
+  assert.match(w.log()[0].detail, /tier 3/, "on the last tier the chain evidences");
+  // pages left unread are not a page with no text: a zero count there stays no text possible
+  const unread = w.obs.observeExtraction("B", sha("unread"), reading({ read_from_text: false, text_chars: 0, tier3_candidate: true }));
+  assert.deepEqual(unread.states, ["LOOKED_INDETERMINATE"]);
+  assert.equal(w.log().at(-1).condition, "text-undetermined");
+  assert.deepEqual(w.obs.observeExtraction("B", sha("unread2"), reading({ text_chars: 0, tier3_candidate: true })).states,
+    ["LOOKED_INDETERMINATE"]);
+  // only an integer 0 is no text: null, absent, a string "0" and found: false are not
+  for (const [i, over] of [{ text_chars: null }, {}, { text_chars: "0" }, { found: false, entities: [] },
+                           { found: false, entities: [], text_chars: 7 }].entries())
+    assert.deepEqual(w.obs.observeExtraction("B", sha(`text${i}`), reading(over)).states, ["PRESENT"], String(i));
+  // the same through extraction's reading notice
+  const out = notice(w, "INFO-2026-0002", sha("scan"), reading({ read_from_text: false, found: false, entities: [], text_chars: 0, text_source: OCR }));
+  assert.deepEqual(out.find((o) => o.module === OBSERVATION_LOG_MODULE).answer.observed.states, ["LOOKED_ABSENT"]);
+  assert.deepEqual(contentObservationsFor(reading({ text_chars: 0 }), "c", () => ({ tiers: [], unclassified: [] })).rows.map((r) => [r.tier, r.state]),
+    [[null, "LOOKED_ABSENT"]], "a chain evidencing no tier: one row, no tier");
 });
 
 test("R6 a chain step no rule classifies is returned by name, never counted as nothing", () => {
@@ -112,10 +152,17 @@ test("R6 R7 R8 registered on extraction's reading notice: the index row, the con
   assert.deepEqual(mine, { observed: { written: 1, states: ["PRESENT"], reextraction: false, refused: 0, unclassified: [] } });
   assert.deepEqual(w.log().map((r) => [r.level, r.authority_kind, r.state]),
     [["content", "derive", "PRESENT"], ["content", "extract", "PRESENT"], ["meaning", "derive", "PRESENT"]]);
-  assert.deepEqual([...CAPTURE_TEXT_UNIT_CONTAINERS].sort(), ["docx", "odp", "odt", "pdf", "pptx"]);
-  notice(w, "INFO-2026-0002", sha("book"), reading({ text_container: "xlsx" }));
-  const ix = w.log().find((r) => r.subject === sha("book") && r.authority_kind === "derive" && r.level === "content");
-  assert.equal(ix.state, "LOOKED_INDETERMINATE"); assert.match(ix.bound, /a xlsx has no indexing unit arm/);
+  assert.deepEqual([...CAPTURE_TEXT_UNIT_CONTAINERS].sort(), ["csv", "docx", "odp", "ods", "odt", "pdf", "pptx", "xlsx"]);
+  // a workbook's sheets are units (extraction R16, N134): its index row reads indexed
+  for (const book of ["xlsx", "ods", "csv"]) {
+    notice(w, `INFO-2026-${book}`, sha(book), reading({ text_container: book }));
+    const ix = w.log().find((r) => r.subject === sha(book) && r.authority_kind === "derive" && r.level === "content");
+    assert.deepEqual([ix.state, ix.bound, ix.result_kind], ["PRESENT", null, "reading"], book);
+  }
+  notice(w, "INFO-2026-0002", sha("page"), reading({ text_container: "html" }));
+  const ix = w.log().find((r) => r.subject === sha("page") && r.authority_kind === "derive" && r.level === "content");
+  assert.equal(ix.state, "LOOKED_INDETERMINATE"); assert.match(ix.bound, /a html has no indexing unit arm/);
+  assert.doesNotMatch(ix.bound, /workbook|sheet-range units into/, "the reason no longer says a workbook has no unit arm");
   notice(w, "INFO-2026-0003", sha("unknown"), reading({ text_container: null }));
   assert.match(w.log().find((r) => r.subject === sha("unknown") && r.authority_kind === "derive" && r.level === "content").bound,
     /does not hold which container/);

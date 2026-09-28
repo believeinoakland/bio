@@ -62,9 +62,19 @@ test("R11 missingCause: pre_log on the artifact; purged with no row at the level
   assert.equal(ol.missingCause({ registeredAt: "2026-09-27T03:00:14.500Z", firstRowAt: "2026-09-27T03:00:15.000Z" }), "purged");
 });
 
-test("R11 causesNotRuledOut: pre_log and never_looked each a set of one; purged and the band leave two on two-sided evidence and all three on one-sided or undeclared evidence; an unknown cause the widest set", () => {
-  assert.deepEqual(ol.causesNotRuledOut("pre_log"), ["pre_log"]);
-  assert.deepEqual(ol.causesNotRuledOut("never_looked"), ["never_looked"]);
+test("R11 causesNotRuledOut: pre_log a set of one at every sidedness; never_looked a set of one on two-sided evidence and all three on one-sided or undeclared evidence (K331); purged and the band leave two on two-sided evidence and all three otherwise; an unknown cause the widest set; the document level's sidedness stated", () => {
+  for (const sided of [true, false, undefined]) assert.deepEqual(ol.causesNotRuledOut("pre_log", { evidenceOneSided: sided }), ["pre_log"], String(sided));
+  assert.deepEqual(ol.causesNotRuledOut("never_looked", { evidenceOneSided: false }), ["never_looked"]);
+  assert.deepEqual(ol.causesNotRuledOut("never_looked", { evidenceOneSided: true }), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(ol.causesNotRuledOut("never_looked"), ["pre_log", "purged", "never_looked"], "undeclared takes the wide set");
+  // at each level's declared kinds: a one-sided kind's never_looked names all three, a two-sided kind's names itself
+  const at = (m, k) => ol.causesNotRuledOut("never_looked", { evidenceOneSided: m[k] });
+  assert.deepEqual(at(ol.DOCUMENT_EVIDENCE_IS_ONE_SIDED, "address"), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(at(ol.MEANING_EVIDENCE_IS_ONE_SIDED, "reference"), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(at(ol.MEANING_EVIDENCE_IS_ONE_SIDED, "entity"), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(at(ol.MEANING_EVIDENCE_IS_ONE_SIDED, "capture"), ["never_looked"]);
+  assert.deepEqual(at(ol.CONTENT_EVIDENCE_IS_ONE_SIDED, "capture"), ["never_looked"]);
+  assert.deepEqual(at(ol.INTERNET_EVIDENCE_IS_ONE_SIDED, "description"), ["never_looked"]);
   for (const c of ["purged", "watermark_band"]) {
     assert.deepEqual(ol.causesNotRuledOut(c, { evidenceOneSided: false }), ["purged", "never_looked"]);
     assert.deepEqual(ol.causesNotRuledOut(c, { evidenceOneSided: true }), ["pre_log", "purged", "never_looked"]);
@@ -76,6 +86,19 @@ test("R11 causesNotRuledOut: pre_log and never_looked each a set of one; purged 
   assert.equal(ol.MEANING_EVIDENCE_IS_ONE_SIDED.entity, true);
   assert.equal(ol.MEANING_EVIDENCE_IS_ONE_SIDED.capture, false);
   assert.equal(ol.CONTENT_EVIDENCE_IS_ONE_SIDED.capture, false);
+  assert.equal(ol.INTERNET_EVIDENCE_IS_ONE_SIDED.description, false);
+  // the document level (N113, K306): an address is one-sided, so its missing row names all three causes
+  assert.deepEqual(ol.DOCUMENT_EVIDENCE_IS_ONE_SIDED, { address: true });
+  for (const c of ["purged", "watermark_band"])
+    assert.deepEqual(ol.causesNotRuledOut(c, { evidenceOneSided: ol.DOCUMENT_EVIDENCE_IS_ONE_SIDED.address }),
+      ["pre_log", "purged", "never_looked"]);
+  // each sidedness is keyed by a subject kind R1 states with its sentence, beside the reference and entity words
+  for (const m of [ol.DOCUMENT_EVIDENCE_IS_ONE_SIDED, ol.CONTENT_EVIDENCE_IS_ONE_SIDED, ol.MEANING_EVIDENCE_IS_ONE_SIDED,
+                   ol.INTERNET_EVIDENCE_IS_ONE_SIDED])
+    for (const [k, v] of Object.entries(m)) {
+      assert.ok(sentence(ol.OBSERVATION_SUBJECT_KINDS[k]), k);
+      assert.equal(typeof v, "boolean", k);
+    }
 });
 
 test("R12 contentAxisFor: the two axes never merged; no row is not_extracted only under never_looked and undetermined naming the cause otherwise", () => {
@@ -101,10 +124,10 @@ test("R12 contentAxisFor: the two axes never merged; no row is not_extracted onl
   assert.equal(ol.contentAxisFor({ observed: "PRESENT", unitIndex: false }).state, "undetermined");
 });
 
-test("R26 the C-22 refusals are the catalogue's rows by reference, numbers unchanged; C-54.2–C-54.10 are this module's rows and have left the catalogue, C-54.1 staying with the leg grammars", () => {
+test("R26 the C-22 refusals (C-22.17 among them) are the catalogue's rows by reference, numbers unchanged; C-54.2–C-54.10 are this module's rows and have left the catalogue, C-54.1 staying with the leg grammars", () => {
   const want = { AI_LOG_STATE_UNKNOWN: "C-22.1", AI_LOG_GOVERNED_ABSENCE: "C-22.2", AI_LOG_SHELL_PRESENT: "C-22.3",
                  AI_RUN_CONDITION_UNKNOWN: "C-22.4", AI_LOG_NOT_A_BUNDLE: "C-22.6", OBS_AUTHORITY_UNNAMED: "C-22.9",
-                 OBS_PRESENT_NO_REFERENT: "C-22.10" };
+                 OBS_PRESENT_NO_REFERENT: "C-22.10", AI_LOG_NEVER_LOOKED_STORED: "C-22.17" };
   assert.deepEqual(Object.fromEntries(Object.entries(ol.OBSERVATION_CHECKS).map(([k, r]) => [k, r.check])), want);
   for (const k of Object.keys(want)) {
     assert.equal(ol.OBSERVATION_CHECKS[k], AI_RUN_CHECKS[k], `${k} is the catalogue's one row, not a copy`);

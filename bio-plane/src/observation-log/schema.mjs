@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS observation_log (
   subject        TEXT,              -- the normalised address, the capture_sha, the canonical extent, the entity id, or a member words. See the nullability note above
   state          TEXT NOT NULL,     -- LOOKED_ABSENT | LOOKED_INDETERMINATE | partial | PRESENT. NEVER_LOOKED is the ABSENCE of a row
   governed       INTEGER NOT NULL DEFAULT 0,
-  condition      TEXT,              -- queuestate.mjs vocabulary, and no new words
+  condition      TEXT,              -- CONDITION_KINDS (vocabulary.mjs), and no new words
   bound          TEXT,              -- which bound stopped it, if one did
   terminal       INTEGER NOT NULL DEFAULT 0,
   result_kind    TEXT,              -- capture | content | entity | reading | observation (a rollup, REC-100). What the look produced, if anything
