@@ -222,28 +222,44 @@ export function usedSheetRange(name, usedRows, usedCols) {
  * would be the record claiming an extent the author did not name (R22).
  *
  * Judged at the T2 job from the snapshot's D-415 (48245247) and kept as built
- * for `.xlsx`; the `.ods` half is `odf-reader`'s. `rangeUnitFor` is the one
- * place a rectangle becomes a unit, exported so that half can reuse it.
+ * for `.xlsx`; the `.ods` half is `odf-reader`'s. `a1Corner` and
+ * `rangeUnitFor` are PROVIDED (N27): the one reading of an A1 corner and the
+ * one place a rectangle becomes a unit, so that half reuses them rather than
+ * growing a second copy. As provided services they never throw (R21): an
+ * argument they cannot read is a stated reason, like any other.
  */
 
-/** One A1 corner (`$B$14`, `b14`) -> {col,row}, or null. */
+const isCorner = (c) => c != null && Number.isInteger(c.col) && c.col > 0 && Number.isInteger(c.row) && c.row > 0;
+
+/** One A1 corner (`$B$14`, `b14`) -> {col,row}, both 1-based, or null. The
+ *  `$` markers are notation, not address; letters are read without case;
+ *  surrounding whitespace is trimmed. Anything else — not a string, a whole
+ *  row or column, a row of 0 or with a leading zero, more than three letters
+ *  or seven digits — is null, never a guessed corner. */
 export function a1Corner(s) {
-  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(String(s ?? "").trim());
+  if (typeof s !== "string") return null;
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(s.trim());
   if (!m) return null;
   let col = 0;
   for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
   return { col, row: parseInt(m[2], 10) };
 }
 
-/** A rectangle on a named sheet -> {unit} or {why}. `a`/`b` are corners from
- *  `a1Corner`; `sheets` the workbook's sheet names; `grid` the format's bound
- *  or null. A sheet name matches exactly, else case-insensitively when exactly
- *  one sheet answers (the format resolves sheet names without case); the unit
- *  carries the WORKBOOK's spelling. */
-export function rangeUnitFor(sheetName, a, b, sheets, grid) {
-  let sheet = sheets.includes(sheetName) ? sheetName : null;
+/** A rectangle on a named sheet -> {unit} or {why}. `a`/`b` are corners as
+ *  `a1Corner` returns them, in either order; `sheets` the workbook's sheet
+ *  names; `grid` the format's bound `{rows, cols}`, or null when the format
+ *  fixes none (`.ods`, csv). A sheet name matches exactly, else
+ *  case-insensitively when exactly one sheet answers (the format resolves
+ *  sheet names without case); the unit carries the WORKBOOK's spelling. Why
+ *  not: `not_a_range_reference` (a corner is not one), `no_such_sheet`,
+ *  `outside_grid`. */
+export function rangeUnitFor(sheetName, a, b, sheets, grid = null) {
+  if (!isCorner(a) || !isCorner(b)) return { why: "not_a_range_reference" };
+  const names = Array.isArray(sheets) ? sheets.filter((s) => typeof s === "string") : [];
+  if (typeof sheetName !== "string") return { why: "no_such_sheet" };
+  let sheet = names.includes(sheetName) ? sheetName : null;
   if (sheet == null) {
-    const ci = sheets.filter((s) => String(s).toLowerCase() === String(sheetName).toLowerCase());
+    const ci = names.filter((s) => s.toLowerCase() === sheetName.toLowerCase());
     if (ci.length === 1) sheet = ci[0];
   }
   if (sheet == null) return { why: "no_such_sheet" };
@@ -360,19 +376,13 @@ function xlsxRangeUnits(parts) {
 const XLSX_GRID_ROWS = 1048576;
 const XLSX_GRID_COLS = 16384;
 
-/** The 1-based column number of an A1 reference's column letters, or null.
- *  `$B$14` and `B14` both answer 2 — the absolute markers are notation, not
- *  address, exactly as `CONTENT_EXTENT_A1_RE` in the check catalog treats
- *  them. Anything this cannot read is null and is SKIPPED by the caller,
- *  never scored zero: a reference this helper does not understand must not
- *  silently shrink a sheet's measured extent. */
-function a1Col(ref) {
-  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
-  if (!m) return null;
-  let n = 0;
-  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n;
-}
+/** The 1-based column number of an A1 reference, or null — `a1Corner`'s
+ *  reading, the one there is. `$B$14` and `B14` both answer 2 — the absolute
+ *  markers are notation, not address, exactly as `CONTENT_EXTENT_A1_RE` in the
+ *  check catalog treats them. Anything this cannot read is null and is
+ *  SKIPPED by the caller, never scored zero: a reference this helper does not
+ *  understand must not silently shrink a sheet's measured extent. */
+const a1Col = (ref) => a1Corner(ref)?.col ?? null;
 
 /* http/https are addresses the record may hold a capture of elsewhere:
  * deferred. Everything else a hyperlink rel can carry (mailto:, file:, ...)
