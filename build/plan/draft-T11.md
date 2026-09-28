@@ -32,4 +32,5 @@
 - **ai-runs** (layer 6) · N284 (a work product's `registered`); N289 (its share); N293 (a byte ceiling on `state`).
 - **progressions**, **inquiry**, **entities**, **intent**, and the modules minting the shared generic codes · N285 (K275 per code, each keeping its translation).
 - **intent** (layer 7) · N291 (`requestById`); N285 (its `NO_SUCH_ENTITY` site). **reevaluation** (layer 7) · N292 (`listeners_failed`).
+- **capture-requests** (layer 6) · N295 (R14 reads inquiry R44).
 - **extraction**, **observation-log**, **provenance**, **legacy-store** · N294 (the testimony index as a provided service).
