@@ -1,6 +1,6 @@
 # BOB to promotion (T8)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
