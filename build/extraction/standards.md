@@ -1,6 +1,6 @@
 # standards — extraction map
 
-**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `index.mjs` 9,069, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/standards.md` (R1–R15); K4, K23, K31, K61, K88, K102, K108 (5) (N72) apply. The module exports `standardsOf(ctx)` (K61). A new module: `modules.json` gives it no `from`, and none is needed (§1). Its first job writes it from its requirements.
+**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `index.mjs` 9,069, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732): every `store.mjs`, `schema.mjs`, `bio-checks.mjs` and module-file line below is current there, superseding the sentence before; `index.mjs` cites are pending T7's close and marked so. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/standards.md` (R1–R15); K4, K23, K31, K61, K88, K102, K108 (5) (N72) apply. The module exports `standardsOf(ctx)` (K61). A new module: `modules.json` gives it no `from`, and none is needed (§1). Its first job writes it from its requirements.
 
 ## 1. What moves to `standards`
 
@@ -12,11 +12,11 @@ Nothing. Searched `store.mjs`, `index.mjs`, `schema.mjs` and `bio-checks.mjs` fo
 
 | what | where today (T6) | owner | why |
 | --- | --- | --- | --- |
-| D-149's `LAW_LEVELS`, `GOVERNING_LAWS_MAX`, `CITATION_MAX`, `governingLawsOf` | bio-checks 643–694 | `actions` (its map) | the laws the group's own request is made under, not a standard a government act is measured against |
-| `LAW_PROPOSAL_STATES`, `lawProposalState`, `lawProposalLabel`, `LAW_PROPOSAL_WHY_MAX` | bio-checks 743–800 | `legacy-checks` (K92 (2)) | one composer, read by R9 by import; see §5.1 |
-| `isMachineIdentity` (with `isMachineStamp`) | bio-checks 1667–1693 | `legacy-checks` | REC-46's one predicate (R1, R11) |
-| `actionLaws`, `#lawEntries`, `actionLawsPropose`, `#lawProposalsFor` | store 5207–5271, 5291–5324, 5547–5587, 5604–5630 | `actions` | REC-195's member-states, machine-proposes, stored-apart pattern is the model for R9–R10; nothing is shared but `lawProposalLabel` |
-| `action_law_proposals` DDL | schema 1877–1885 | `actions` | the model for `standard_proposals`, not reused |
+| D-149's `LAW_LEVELS`, `GOVERNING_LAWS_MAX`, `CITATION_MAX`, `governingLawsOf` | bio-checks 654–694 | `actions` (its map) | the laws the group's own request is made under, not a standard a government act is measured against |
+| `LAW_PROPOSAL_STATES`, `lawProposalState`, `lawProposalLabel`, `LAW_PROPOSAL_WHY_MAX` | bio-checks 769–800 | `legacy-checks` (K92 (2)) | one composer, read by R9 by import; see §5.1 |
+| `isMachineIdentity` (with `isMachineStamp`) | bio-checks 1631–1642 | `legacy-checks` | REC-46's one predicate (R1, R11) |
+| `actionLaws`, `#lawEntries`, `actionLawsPropose`, `#lawProposalsFor` | store 3556–3620, 3640–3673, 3896–3936, 3953–3979 | `actions` | REC-195's member-states, machine-proposes, stored-apart pattern is the model for R9–R10; nothing is shared but `lawProposalLabel` |
+| `action_law_proposals` DDL | schema 1136 | `actions` | the model for `standard_proposals`, not reused |
 | `code_section` references from a document's text | docprofile `doctypes/regulation.mjs` 258, `staff-report.mjs` 301 | `docprofile` | where a citation is first read; an AI run may seed a proposal from it (Suggestions), not this module |
 | `SOURCE_KINDS` (R1's six kinds), `standard_sources` validation, `combine`'s union of the section | jurisdictions/index.mjs 24, 313–323, 601 | `jurisdictions` | R1 and R3 import them |
 
