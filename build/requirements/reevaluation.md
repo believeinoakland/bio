@@ -67,7 +67,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
 
 ### Invariants
 
-- **R18** The obligation is a query: nothing is stored for it, and no read here writes (P-64). The only rows this module writes are R14's notices and their closures, R16's recorded re-evaluations, and R25's pass position (where the pass stands and when the last complete one began).
+- **R18** The obligation is a query: nothing is stored for it, and no read here writes (P-64). The only rows this module writes are R14's notices and their closures, R16's recorded re-evaluations, and R25's pass position (where the pass stands, when the running and the last complete pass began, and a count of receipts seen, so pending survives an eviction; no receipt content is stored; K237).
 - **R19** Nothing here alters a strength, re-points a reference or moves a leg; only a member's act (R15) moves a reference, and it keeps the old one readable (DEC-12, Framework §14.4, §18.1).
 - **R20** Every viewer is given the same record facts; only ids a viewer may not see are withheld or nulled, and a withholding is never counted (REC-30).
 - **R21** Silence is earned: no answer reads "nothing newer" or "unaffected" unless the record read it; what could not be read is undetermined, by name (§18.1).
