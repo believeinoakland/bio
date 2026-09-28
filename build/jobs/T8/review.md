@@ -1,6 +1,6 @@
 # review (T8)
 
-**Status** · session_01B11NRC4vX3HGNywo9Ky3Cz · depth 2 · WORKING · handled B3
+**Status** · session_01B11NRC4vX3HGNywo9Ky3Cz · depth 2 · RUNNING until 2026-09-28T08:12:57Z (old-battery comparison, base vs branch) · handled B3
 
 ## J1 · QUESTION
 
