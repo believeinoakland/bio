@@ -298,6 +298,11 @@ test("R17: with a target, R13's refusal as given, else the target's type, state,
     }
 });
 
+test.todo("R26: op=affordances publishes as vocabularies.action_kind the kinds this instance's actions accepts at the "
+  + "moment of the call (a profile made active adds its kinds) — not yet met: N231, actions offers no read op answering "
+  + "`kinds()` and the control plane publishes the module-level VOCABULARIES; `vocabulariesFor(kinds)` is met at this "
+  + "module's interface (catalogue.test.mjs)");
+
 test("R21: every label, prompt, ground and vocabulary op=affordances hands a surface is this module's own value", async () => {
   const r = await GET(`op=affordances&token=${W.IRIS}`);
   for (const a of [...r.catalog, ...r.capture_acts, ...r.set_acts]) {
