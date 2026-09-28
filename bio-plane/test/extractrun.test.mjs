@@ -1,4 +1,5 @@
 /* NEGATIVE CONTROL: the SIX arms live in `test/nc-sk8.mjs` and are re-run in one step with `node test/nc-sk8.mjs [arm]` from `bio-plane/`. Each arm EDITS A REAL SOURCE, is armed ALONE with the others held open, and is restored from a UNIQUELY-NAMED per-arm pristine copy verified by sha256 AND by cmp with a byte count printed and a minimum guarded (never `git checkout --`, which restores to HEAD and has twice discarded a session's own uncommitted work in this repository). Declared before arming, every one RUN, results in this file's own RESULTS line and in the item's report. (a) `baseline` — nothing armed; MUST be green, and it is the row that distinguishes all-arms-broken from all-arms-working. (b) `strengthen` — THE ROW'S OWN DECLARED CONTROL, in `src/extractrun.mjs`: `proposalChain` stops routing through `appendStep` and concatenates the step itself (`[...captureChain, step]`), which is exactly how a producer would "simplify" the call. §1's rule-2 arm MUST FAIL — a proposal whose `ai` step claims a cap STRONGER than the capture's chain is no longer refused by TEXT_CHAIN_STRENGTHENS and lands, and the recorded cap silently improves. It is the sharpest arm here because the hazard of this whole capability is output that looks better than its input. (c) `label` — in `src/store.mjs`, delete the `mint:` line from `extractPropose`'s answer, which drops the label from the WRITE while leaving the read's rows labelled. §3's totality arm MUST FAIL NAMING THE SURFACE rather than reporting a count. (d) `bound` — in `src/store.mjs`, `#mintsBound` answers a DEFAULT ALLOWANCE (`{allowed: 1000, consumed: 0}`) instead of null when a run declared none, which is precisely the invented number §7.3 (5) rules out and the shape a builder reaches for to avoid a refusal. §4's unbounded-run arm MUST FAIL: the run with no `mints` bound produces freely, and nothing would ever end it because `finishedBound` fires only on a row with `allowed > 0`. (e) `coverage` — in `src/store.mjs`, make `extractPropose` ALSO write its refs into `reading_refs` (the plausible "why keep two tables" change). §5's arm MUST FAIL: `op=readingref` — the reverse index every earned tier reads — starts answering the machine's proposed reference, which is *counted as extraction coverage*, the one thing §7.3 (6) rules out. (f) `overstrict` — THE OVER-STRICTNESS DIRECTION: `proposedReadingGrade` promotes a NAME-only proposal from C to B, the ordinary way a new grader silently strengthens what the record claims. Three §2 arms MUST FAIL while every MEMBER-side assertion in §5 and §7 STAYS GREEN — the registered reader's reading, its resolution and its earned A are untouched, because this item adds no grade to anything a member wrote. The promotion is chosen at C→B rather than at B→A deliberately: a B→A arm trips `PROPOSAL_ABOVE_CEILING` and refuses the whole batch, which cascades into arms about other properties and stops the failure being attributable. */
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10): ai-runs R40 (C-109.1) opens no extract run while extract is not deployed, so arms (b)–(f) above declared failures on arms this suite has now retired; `nc-sk8.mjs` keeps them, NOT RUN, naming where each property is now driven, and runs `baseline` alone. The figures below are of their day. */
 /* RESULTS, 2026-09-14, SK-8's worker, every arm ALONE with the others held open, every restore verified byte-identically by sha256 AND by content with a byte count printed (`src/store.mjs` 2,037,840 B sha256 3ea0f9838833... - `src/extractrun.mjs` 21,251 B sha256 2bf4d8045793...), never `git checkout --`. **RE-RUN IN FULL ON THE COMMITTED TREE, which is the figure that counts: an earlier pass read 61/0 while this suite still stood at 61 assertions, and a control figure one behind its own subject describes a tree nobody has. baseline 62/0 green - strengthen 60/2 (2/2 declared) - label 60/2 (2/2) - bound 61/1 (1/1) - coverage 61/1 (1/1) - overstrict 59/3 (3/3) - ALL SIX AS DECLARED.** ONE ARM CAME BACK WRONG BEFORE IT CAME BACK RIGHT, and the correction went to the SUBJECT rather than to the assertion, which is the finding worth carrying: `overstrict`'s first cut promoted a name-only proposal from C to B and the sentence assertion STAYED GREEN — because `proposedReadingGrade` wrote each branch's LETTER and its REASON as two independent literals, so the record would have published a B explained by *this proposal names only a NAME* and nothing in this repository could have noticed. A grade and the sentence saying what it rests on are exactly the pair this project must never let drift. The function now decides the letter once and interpolates it INTO its own sentence; the assertion was strengthened to read the letter out of the reason; the arm's anchor follows the corrected shape; and all three declared failures then occurred. The arm also DID NOT ARM once in between (patch matched 0×) — reported by the harness as a finding rather than retried, which is what caught the stale anchor. */
 
 /* SK-8 — AI-PROPOSED READINGS, and the FIRST EMISSION of the `ai(function,
@@ -46,12 +47,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
-import { contentIdFor, isMachineIdentity, CONTENT_MINT_STATES } from "../checks/bio-checks.mjs";
 import { EXTRACT_FUNCTIONS, EXTRACT_RUN_MODE, PROPOSED_READING_CEILING,
          proposedReadingGrade, proposalChain, checkProposedRef,
          mintRatio } from "../src/extractrun.mjs";
 import { RUN_BOUNDS, runStatusFor } from "../src/airun.mjs";
-import { derivationCap, describeChain, STEP_KINDS } from "../src/textchain.mjs";
+/* T7 (legacy-tests; K220): ai-runs R40's open refusal row (C-109.1), read from the module that holds it. */
+import { AI_RUNS_CHECKS } from "../src/ai-runs/index.mjs";
+import { STEP_KINDS } from "../src/textchain.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -231,7 +233,14 @@ const AK = EXTRACTOR.token;
 /* THE RUN, OPENED BY A MEMBER. §7.3 (4): the subject and the objective are the
    member's and a run begins on a member's act. The `mints` bound is declared
    HERE, by the member, which is §7.3 (5) — the budget is part of what the
-   member authorises rather than a number the plane invents. */
+   member authorises rather than a number the plane invents.
+   RE-PINNED 2026-09-28 (T7, legacy-tests; K220, BOB's B10): ai-runs R40 (C-109.1)
+   refuses to OPEN a run in a mode the one deployment order has not deployed, and
+   `extract` is not deployed (`DEPLOYED_MODES` is ["check"] until its verification
+   is recorded) — approved behaviour. So the member's open is now asserted REFUSED,
+   by its code and check, with nothing written; every arm below that needed this run
+   to produce under is RETIRED to run-productions' and extraction's own tests, named
+   at each. The arms that still reach their claim without an extract run are kept. */
 const RUN = "RUN-2026-0914-extract";
 const started = await post("airunopen", {
   run: RUN, contextType: "inquiry", contextId: INQ,
@@ -241,9 +250,16 @@ const started = await post("airunopen", {
   bounds: [{ bound: "mints", allowed: 3, unit: "passages" },
            { bound: "fetches", allowed: 10, unit: "requests" }],
   leaseMs: 600000, at: NOW }, RUTH);
-t("A MEMBER OPENS THE EXTRACT RUN, declaring its mints bound — the run is DEC-62's object and "
-+ "this item added no second one",
-  [started.started, started.status], [true, "running"]);
+const MODE_ROW = AI_RUNS_CHECKS.AI_RUN_MODE_NOT_DEPLOYED;
+t("A MEMBER'S EXTRACT RUN IS REFUSED AT THE OPEN WHILE EXTRACT IS NOT DEPLOYED — ai-runs R40, "
++ "AI_RUN_MODE_NOT_DEPLOYED, C-109.1, with its translation and the deployed modes named",
+  [started.started, started.code, started.check, started.translation, started.mode,
+   (started.deployed || []).includes(EXTRACT_RUN_MODE), (started.deployed || []).includes("check")],
+  [false, "AI_RUN_MODE_NOT_DEPLOYED", "C-109.1", MODE_ROW?.translation, EXTRACT_RUN_MODE, false, true]);
+t("and NOTHING WAS WRITTEN: the refused run is absent from `op=airun` and has no log",
+  [(await get("airun", `run=${RUN}`, RUTH))?.session ?? null,
+   ((await get("airunlog", `run=${RUN}&limit=500`, RUTH))?.entries || []).length],
+  [null, 0]);
 t("`mints` is a bound in the table the run already has, and the plane classifies a run that ends "
 + "on it as STOPPED — no new vocabulary, which was §7.3 (5)'s own test",
   [Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "mints"), runStatusFor("mints")],
@@ -257,87 +273,32 @@ t("the step kind was DESIGNED at CPDF-10 and is a DERIVATION, which is what make
 + "to it at all",
   [STEP_KINDS.ai?.role, Object.keys(EXTRACT_FUNCTIONS)], ["derivation", ["propose-reading"]]);
 
-/* THE REFERENCES THE REGISTERED READER DID NOT FIND. One names an identifier
-   the document itself carries (earns B) and one names only a NAME (earns C);
-   both carry a POSITION, so both mint a passage. */
-const PROPOSALS = [
-  { ref: "contract:C-11940", refKind: "contract", refKey: "C-11940",
-    label: "Agreement with Bayline Utility Services",
-    source: { kind: "pdf-page", page: 1, ref: "page 2, the transfer table" } },
-  { ref: "Harriet Vance", label: "Harriet Vance",
-    source: { kind: "pdf-page", page: 2, ref: "page 3, the signature block" } },
-];
-const proposed = await post("extractpropose",
-  { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0", refs: PROPOSALS }, AK);
-t("THE EXTRACT RUN PROPOSES A READING AND THE ACT LANDS — the first caller SK-7's door has ever "
-+ "had, and the first producer of the `ai` step this record has ever had",
-  [proposed.ok, proposed.proposed.length, proposed.minted], [true, 2, 2]);
-t("the proposal's basis is the capture's own chain with ONE `ai` step appended, naming the "
-+ "function and the version",
-  proposed.chain.map((s) => [s.step, s.engine ?? null, s.version ?? null]),
-  [["pixels", null, null], ["ocr", "tesseract", "5.3.4"], ["ai", "propose-reading", "0.1.0"]]);
-t("and the chain's derivation cap is UNCHANGED at the capture's C: the step claims no fidelity of "
-+ "its own, which is UNDETERMINED and STATED rather than the capture's letter borrowed",
-  [proposed.cap, proposed.chain[2].cap], ["C", null]);
-t("the whole chain says what happened, composed FROM the chain and never written beside it",
-  describeChain(proposed.chain).endsWith("a model rewrote the text (propose-reading 0.1.0)"), true);
-
-/* RULE 2, THROUGH THE OP. This is the row's own declared negative control and
-   it is asserted in the PRODUCT rather than only in the module: a step claiming
-   a cap stronger than the chain it extends is refused by name, and nothing is
-   written. */
-const strengthened = await post("extractpropose",
-  { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0", cap: "A",
-    refs: [{ ref: "ordinance:99999", refKind: "ordinance", refKey: "99999" }] }, AK);
-t("A STEP CLAIMING A CAP STRONGER THAN ITS INPUT IS REFUSED BY NAME — rule 2, enforced by the "
-+ "module that owns rule 2 and returned to the caller verbatim",
-  [strengthened.ok, strengthened.code, strengthened.check],
-  [false, "TEXT_CHAIN_STRENGTHENS", "C-35.6"]);
-t("and the refusal says WHY in the sentence the rule was written with, rather than naming a field",
-  /more READABLE, not more RELIABLE/.test(strengthened.detail || strengthened.translation || ""), true);
-t("a WEAKER cap is accepted — the fence is on the direction and not on the presence of a letter",
-  (await post("extractpropose",
-    { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0", cap: "D",
-      refs: [{ ref: "fund:7710", refKind: "fund", refKey: "7710" }] }, AK)).cap, "D");
-t("a step naming NO function is refused, and a function nothing in this repository emits is "
-+ "refused by a different name — a roster carrying a word no producer writes is how a vocabulary "
-+ "comes to have no producer at all",
-  [(await post("extractpropose", { run: RUN, bundleId: DOC, version: "0.1.0",
-                                   refs: [{ ref: "x:1", refKind: "x", refKey: "1" }] }, AK)).reason,
-   (await post("extractpropose", { run: RUN, bundleId: DOC, fn: "rewrite-the-text", version: "0.1.0",
-                                   refs: [{ ref: "x:1", refKind: "x", refKey: "1" }] }, AK)).reason],
-  ["NO_FUNCTION", "UNKNOWN_FUNCTION"]);
-t("and a function with no VERSION is refused: a proposal nobody can re-run is a proposal nobody "
-+ "can check, and the version is what a later calibration would be OF",
-  (await post("extractpropose", { run: RUN, bundleId: DOC, fn: "propose-reading",
-                                  refs: [{ ref: "x:1", refKind: "x", refKey: "1" }] }, AK)).reason,
-  "NO_FUNCTION_VERSION");
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10) — no extract run opens, so no production lands. Each arm, and
+   the test that covers it:
+   - "THE EXTRACT RUN PROPOSES A READING AND THE ACT LANDS", "the proposal's basis is the capture's own chain with ONE
+     `ai` step appended", "and the chain's derivation cap is UNCHANGED at the capture's C": run-productions
+     `test/m/run-productions/extract.test.mjs` "R11: success writes one proposed reading per reference in one
+     transaction, with the run, the proposer stamp, the chain with ai(fn, version) and its cap, and earned B or C
+     computed", and extraction `test/m/extraction/rules.test.mjs` "R43 R44: proposalChain appends ai(fn, version)
+     through appendStep, refusing no capture chain and a cap that is not a grade, an absent cap undetermined; …".
+   - "the whole chain says what happened" (describeChain's sentence over the op's chain): no op-level cover; the
+     sentence is textchain's and the chain it reads is R43's.
+   - "A STEP CLAIMING A CAP STRONGER THAN ITS INPUT IS REFUSED BY NAME" and "and the refusal says WHY": extract.test.mjs
+     "R10, R13: refusals in order, …" (`cap: "A"` -> TEXT_CHAIN_STRENGTHENS, check C-35.6) and rules.test.mjs "R43 R44: …"
+     (appendStep's refusal returned); the refusal's sentence itself is not asserted there.
+   - "a WEAKER cap is accepted": rules.test.mjs "R43 R44: …" asserts only the absent cap; not covered at the op.
+   - "a step naming NO function … UNKNOWN_FUNCTION", "and a function with no VERSION is refused": rules.test.mjs "R41:
+     the EXTRACT role's vocabulary: its run mode, the functions something emits, and the refusals of an unknown
+     function and a missing version", and extract.test.mjs "R10, R13: …" (`fn: "invent"` -> UNKNOWN_FUNCTION). */
 
 /* ================== 2. GRADED BY WHAT IT NAMES, NEVER A ================= */
 
 console.log("\n=== 2. graded by what it NAMES: an identifier earns B, a name earns C, never A ===");
 
-const byRef = Object.fromEntries(proposed.proposed.map((p) => [p.ref, p]));
-t("the proposal naming an identifier the document itself carries earns B — what a registered "
-+ "reader's reference KEY is worth, one letter below the A a source-assigned reference earns",
-  byRef["contract:C-11940"]?.earned ?? null, "B");
-t("the proposal naming only a NAME earns C — the weakest thing the framework grades",
-  byRef["Harriet Vance"]?.earned ?? null, "C");
-/* AND EACH ROW SAYS WHAT IT EARNED AND WHY, WITH THE LETTER INSIDE THE SENTENCE.
-   The letter is asserted here as part of the reason rather than only beside it,
-   and that is this suite's own control finding: `nc-sk8.mjs`'s `overstrict` arm
-   promoted a name-only proposal from C to B and this assertion STAYED GREEN,
-   because the grade and its sentence were two independent literals. A B
-   explained by a C's reason is the record claiming more than it can support, in
-   the one function whose job is to say what a grade rests on. `proposedReading
-   Grade` now interpolates the letter into the sentence, and the arm fails as
-   declared. */
-t("and each row SAYS what it earned AND the letter it earned, composed from what it names so the "
-+ "two cannot come to disagree",
-  [/^earned B: this proposal names an identifier the document itself carries/
-     .test(byRef["contract:C-11940"]?.earned_because ?? ""),
-   /^earned C: this proposal names only a NAME/.test(byRef["Harriet Vance"]?.earned_because ?? "")],
-  [true, true]);
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220): "the proposal naming an identifier … earns B", "the proposal naming
+   only a NAME earns C" and "and each row SAYS what it earned AND the letter it earned" — extract.test.mjs "R11: …"
+   (earned B for a kind and key, C for a name) and rules.test.mjs "R42 R44: a proposed reading's grade is computed,
+   never taken: kind and key B, a label alone C, nothing null, the sentence from the letter; …". */
 t(`no proposal may reach A — the ceiling is ${PROPOSED_READING_CEILING} and it is a property of the `
 + "grader, not a filter applied afterwards",
   [PROPOSED_READING_CEILING,
@@ -345,185 +306,46 @@ t(`no proposal may reach A — the ceiling is ${PROPOSED_READING_CEILING} and it
    proposedReadingGrade({ label: "a name" }).grade,
    proposedReadingGrade({}).grade],
   ["B", "B", "C", null]);
-t("A CALLER OFFERING ITS OWN GRADE IS REFUSED BY NAME rather than silently ignored: a machine "
-+ "grading its own reading is the one act DEC-24 rule 3 rules out, and a silent drop is how a "
-+ "caller comes to believe it was honoured",
-  (await post("extractpropose",
-    { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-      refs: [{ ref: "z:1", refKind: "z", refKey: "1", grade: "A" }] }, AK)).reason,
-  "GRADE_OFFERED");
-t("a proposal naming NEITHER an identifier nor a name is refused: there is nothing to grade, and "
-+ "a row that cannot be graded cannot become part of a finding",
-  (await post("extractpropose",
-    { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-      refs: [{ ref: "a bare string" }] }, AK)).reason,
-  "PROPOSAL_NAMES_NOTHING");
-t("the refusal names the ORDINAL of the entry it refused, so a caller sending a batch knows which "
-+ "one, and the batch is refused WHOLE",
-  (await post("extractpropose",
-    { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-      refs: [{ ref: "ok:1", refKind: "ok", refKey: "1" }, { ref: "bad" }] }, AK)).at_index,
-  1);
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220): "A CALLER OFFERING ITS OWN GRADE IS REFUSED BY NAME", "a proposal naming
+   NEITHER an identifier nor a name is refused" and "the refusal names the ORDINAL of the entry it refused" —
+   rules.test.mjs "R42 R44: …" (GRADE_OFFERED, PROPOSAL_NAMES_NOTHING) and extract.test.mjs "R10, R13: …" (GRADE_OFFERED
+   at_index 1, the batch refused whole: nothing written on any). */
 
 /* ====================== 3. LABELLED, ON EVERY SURFACE =================== */
 
 console.log("\n=== 3. labelled as machine work on EVERY surface that can emit one ===");
 
-/* A TOTALITY RATHER THAN A LIST OF SPELLINGS. Every op that can answer with a
-   proposed reading is driven, every object carrying a `ref` and an `earned` is
-   harvested RECURSIVELY out of the answer, and each one must carry the plane's
-   own published sentence. A list of two surfaces goes stale the moment a third
-   is written; the walk does not. */
-const harvest = (v, out = []) => {
-  if (Array.isArray(v)) { v.forEach((x) => harvest(x, out)); return out; }
-  if (v && typeof v === "object") {
-    if ("earned" in v && "ref" in v) out.push(v);
-    for (const x of Object.values(v)) harvest(x, out);
-  }
-  return out;
-};
-const SURFACES = {
-  extractpropose: proposed,
-  "extractproposals (by run)": await get("extractproposals", `run=${RUN}`, RUTH),
-  "extractproposals (by document)": await get("extractproposals", `bundle=${DOC}`, RUTH),
-};
-const unlabelled = [];
-let rowsSeen = 0;
-for (const [surface, answer] of Object.entries(SURFACES)) {
-  const rows = harvest(answer);
-  rowsSeen += rows.length;
-  for (const row of rows) {
-    const says = row.mint?.says ?? (answer.mint?.says ?? null);
-    const state = row.mint?.state ?? (answer.mint?.state ?? null);
-    if (state !== "machine_marked" || says !== CONTENT_MINT_STATES.machine_marked)
-      unlabelled.push(`${surface}:${row.ref}`);
-  }
-}
-console.log(`  corpus: ${Object.keys(SURFACES).length} surfaces driven, ${rowsSeen} proposed-reading `
-          + `row(s) harvested recursively out of their answers`);
-console.log(`  what this instrument CANNOT see: a surface nobody added to SURFACES above, and a `
-          + `renderer in civicos-ui — no page renders a proposed reading today and none is asserted.`);
-t("EVERY proposed-reading row on EVERY surface carries the plane's own machine-work label, "
-+ "and the arm NAMES the surface rather than reporting a count",
-  unlabelled, []);
-t("and the corpus is NOT EMPTY, floored — a totality assertion over nothing passes for free and "
-+ "this repository has measured that three times",
-  rowsSeen >= 4, true);
-t("the label is the plane's own PREDICATE and not a literal a surface matches on",
-  [proposed.mint?.machine_work ?? null, isMachineIdentity(proposed.mint?.by)], [true, true]);
-t("and the write's answer says, in the plane's own words, that these are proposals and not "
-+ "coverage",
-  /PROPOSALS/.test(proposed.says) && /none of it counts as extraction coverage/.test(proposed.says),
-  true);
-t("the CONTENT ROW the run minted is labelled by the SAME helper every other content surface uses "
-+ "— SK-7's label, travelling through this item's door unchanged",
-  (await get("content", `id=${byRef["contract:C-11940"]?.content_id ?? null}`, RUTH))?.mint?.state,
-  "machine_marked");
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220): the totality walk "EVERY proposed-reading row on EVERY surface carries
+   the plane's own machine-work label", its floor "and the corpus is NOT EMPTY", "the label is the plane's own
+   PREDICATE", "and the write's answer says … these are proposals and not coverage" and "the CONTENT ROW the run minted
+   is labelled by the SAME helper" — with no production there is no row to label. extract.test.mjs "R11: success
+   writes …" (the answer's `mint.machine_work` and `says`), "R11: a reference with a position is minted as a content
+   row by content, labelled machine work; …" and "R12: neither run nor bundle is EXTRACT_NO_SCOPE; the list is newest
+   first, …, each labelled a machine's proposal" (every listed row's `mint.machine_work` and sentence). */
 
 /* ========================= 4. MINTS ARE A BOUND ========================= */
 
 console.log("\n=== 4. §7.3 (5): mints are a BOUND on the run, in the table the run already has ===");
 
-t("the run's own bounds table carries the consumption, both numbers stored and neither derived",
-  proposed.bound, { bound: "mints", allowed: 3, consumed: 2 });
-t("and `op=airun` publishes it in the run's `budget` beside every other bound, so UI-38's "
-+ "field-name-blind renderer shows it with no edit — which is what §7.3 (5)'s *no schema, no new "
-+ "vocabulary* buys",
-  ((await get("airun", `run=${RUN}`, RUTH)).session?.budget || []).find((b) => b.bound === "mints"),
-  { bound: "mints", allowed: 3, consumed: 2, unit: "passages" });
-t("a proposal with NO position mints nothing and spends nothing — the only extent available would "
-+ "be the whole document, and minting that per reference is the manufacturing the ratio exists "
-+ "to catch",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "place:none", refKind: "place", refKey: "none" }] }, AK);
-    return [r.ok, r.minted, r.proposed[0].content_id, r.bound.consumed];
-  })(),
-  [true, 0, null, 2]);
-t("a batch that would take the run PAST its allowance is refused WHOLE and never truncated: a "
-+ "batch trimmed to fit would drop proposals the caller believes it filed",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "over:1", refKind: "over", refKey: "1",
-                 source: { kind: "pdf-page", page: 0, ref: "page 1, top" } },
-               { ref: "over:2", refKind: "over", refKey: "2",
-                 source: { kind: "pdf-page", page: 0, ref: "page 1, bottom" } }] }, AK);
-    return [r.ok, r.reason, r.would_mint];
-  })(),
-  [false, "MINTS_BOUND_WOULD_EXCEED", 2]);
-t("the last mint inside the allowance LANDS, and the bound is now exhausted",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "last:1", refKind: "last", refKey: "1",
-                 source: { kind: "pdf-page", page: 0, ref: "page 1, the preamble" } }] }, AK);
-    return [r.ok, r.bound];
-  })(),
-  [true, { bound: "mints", allowed: 3, consumed: 3 }]);
-t("AND THE NEXT PRODUCTION IS REFUSED BY THE BOUND, which is the whole of §7.3 (5): a machine that "
-+ "may mint without a bound produces a store of proposals nobody cited",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "past:1", refKind: "past", refKey: "1",
-                 source: { kind: "pdf-page", page: 2, ref: "page 3, the margin" } }] }, AK);
-    return [r.ok, r.reason, r.consumed, r.allowed];
-  })(),
-  [false, "MINTS_BOUND_REACHED", 3, 3]);
-t("AND THE RUN ITSELF ENDS ON IT, naming the bound — a run that ran out of mints ends exactly as "
-+ "one that ran out of fetches, through the machinery that already existed",
-  await (async () => {
-    const tick = await post("airuntick", { run: RUN, at: LATER, leaseMs: 600000 }, RUTH);
-    return [tick.ended?.bound ?? null, tick.status];
-  })(),
-  ["mints", "stopped"]);
-/* AND WHAT THE ENDED RUN PUBLISHES, ASSERTED AS IT IS RATHER THAN AS IT OUGHT
-   TO BE. `op=airun`'s `condition` block names the bound, and its `detail` reads
-   *the run stopped on 'mints'* — the SHORT form, because `#aiRunTerminate`
-   writes no `stopped_condition` for a mints ending (there is no condition kind
-   to write: `runtime-ceiling-reached` is the only one, and it is the platform
-   ceiling's). So the bound's own published sentence — `RUN_BOUNDS.mints` — is
-   NOT in the answer. That is pre-existing behaviour for every bound but
-   `runtime` and is NOT this item's to change: widening `condition.detail` would
-   move a shape `aiRunRead`'s own consumers read. It is asserted true here, and
-   reported as a finding rather than smoothed over by asserting something
-   weaker. */
-t("the ended run NAMES the bound that stopped it, and the bound carries its own published "
-+ "description in the catalogue a surface resolves it against",
-  [(await get("airun", `run=${RUN}`, RUTH)).session?.condition?.bound ?? null,
-   /passages a machine credential marked citable/.test(RUN_BOUNDS.mints)],
-  ["mints", true]);
-
-/* A RUN THAT DECLARED NO BOUND AT ALL is refused, and that refusal is the one
-   the arm `bound` in nc-sk8.mjs removes. An absent bound is not a generous
-   bound — `finishedBound` fires only on `allowed > 0`, so nothing would ever
-   end such a run. */
-const UNBOUNDED = "RUN-2026-0914-unbounded";
-await post("airunopen", {
-  run: UNBOUNDED, contextType: "inquiry", contextId: INQ, mode: EXTRACT_RUN_MODE,
-  principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
-  skillVersion: "investigative-session@1",
-  bounds: [{ bound: "fetches", allowed: 5, unit: "requests" }],
-  leaseMs: 600000, at: NOW }, RUTH);
-t("A RUN THAT DECLARES NO `mints` BOUND MAY NOT PRODUCE — refused by name, rather than defaulted "
-+ "to an allowance chosen in code, which would be a measurement with no measurement behind it",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: UNBOUNDED, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "u:1", refKind: "u", refKey: "1",
-                 source: { kind: "pdf-page", page: 0, ref: "page 1" } }] }, AK);
-    return [r.ok, r.reason];
-  })(),
-  [false, "NO_MINTS_BOUND"]);
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220): every arm here produced under the extract run. "the run's own bounds
+   table carries the consumption" and "a proposal with NO position mints nothing and spends nothing": extract.test.mjs
+   "R11: a reference with a position is minted …; mints is consumed through ai-runs by the rows newly minted and by
+   nothing else; a refused mint is recorded, never dropped, and spends nothing". "a batch that would take the run PAST
+   its allowance is refused WHOLE", "AND THE NEXT PRODUCTION IS REFUSED BY THE BOUND" and "A RUN THAT DECLARES NO
+   `mints` BOUND MAY NOT PRODUCE": extract.test.mjs "R10, R13: …" (MINTS_BOUND_WOULD_EXCEED with allowed/consumed/
+   would_mint, MINTS_BOUND_REACHED, NO_MINTS_BOUND for no bound and for a zero one). "the last mint inside the
+   allowance LANDS", "`op=airun` publishes it in the run's `budget`", "AND THE RUN ITSELF ENDS ON IT" and "the ended run
+   NAMES the bound": not covered by run-productions' tests (the run's budget and ending are ai-runs'); an extract run
+   cannot exist to end on `mints` until extract deploys. */
 
 /* ============ 5. NEVER COVERAGE, AND THE MINTED-TO-CITED RATIO ========== */
 
 console.log("\n=== 5. §7.3 (6): an uncited machine-minted row is a PROPOSAL — never coverage ===");
 
 const READING_AFTER = await get("reading", `sha256=${SHA_DOC}`, RUTH);
-t("THE REGISTERED READER'S READING IS BYTE-FOR-BYTE WHAT IT WAS. Six proposals later, the thing "
+/* RE-PINNED 2026-09-28 (T7, legacy-tests; K220): the label said "Six proposals later"; none can land now (§0), so the
+   member-side arms of §5 hold what they held, over no machine proposal. */
+t("THE REGISTERED READER'S READING IS BYTE-FOR-BYTE WHAT IT WAS after everything above — the thing "
 + "every coverage question reads is unmoved — the separation is STRUCTURAL and not a predicate "
 + "somebody has to remember to apply",
   JSON.stringify(READING_AFTER.reading) === JSON.stringify(READING_BEFORE.reading), true);
@@ -539,47 +361,36 @@ t("the recogniser's own answer for the document is unchanged: one resolution, at
   })(),
   [1, "A"]);
 
-/* THE INSTRUMENT, IN BOTH DIRECTIONS. Nothing cited yet, so the ratio is 0 of
-   N — and the arm that matters is the one after a member cites, where it
-   RISES. A ratio that could only ever read 0 would measure nothing. */
-const before = await get("extractproposals", `bundle=${DOC}`, RUTH);
-t("with nothing cited, the ratio is 0 of the passages the machine marked — and it SAYS that the "
-+ "rest are proposals the record keeps, labels, and counts as no coverage at all",
-  [before.instrument.cited, before.instrument.minted, before.instrument.ratio],
-  [0, 3, 0]);
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220): "with nothing cited, the ratio is 0 of the passages the machine marked"
+   and "A MEMBER CITES ONE OF THE PASSAGES AND THE RATIO RISES" — extract.test.mjs "R12: the minted-to-cited ratio is
+   over the machine-minted content rows of the scope's documents the viewer may see (at most 64), a row cited when a
+   member's leg or version leg names it; …" (0 -> 2 of 3 as legs cite). "and the member's leg landed on the MACHINE's
+   row rather than minting a second one" — no op-level cover (content's id-by-content is content's; R12 inserts the
+   leg's content_id directly). */
 t("zero MINTED is not a ratio of zero and does not read as one: an absence answers null and says "
 + "which case it is, because the healthiest-looking number must not mean two opposite things",
   [mintRatio({ minted: 0, cited: 0 }).ratio, /nothing to measure/.test(mintRatio({}).says)],
   [null, true]);
 
-/* A MEMBER CITES ONE OF THEM. The id is hash(capture, extent, chain), so the
-   member's own leg FINDS the machine's row — which is why the `ai` step is not
-   on that chain, and is the mechanism by which a proposal becomes part of a
-   finding at all. */
+/* A MEMBER CITES THE DOCUMENT, at the page the machine would have proposed — a member's act, kept so §7's member-side
+   arm reads a question that rests on the document. */
 await promote(INQ, inquiryMd(INQ, { subject: ORD, refs: [DOC],
   legs: [{ target: DOC },
          { target: DOC, kind: "pdf-page", page: 1, eref: "page 2, the transfer table" }] }), "inquiry");
-const after = await get("extractproposals", `bundle=${DOC}`, RUTH);
-t("A MEMBER CITES ONE OF THE PASSAGES AND THE RATIO RISES — the instrument moves, which is the "
-+ "only thing that makes *if it never falls, the assistant is manufacturing* a measurement",
-  [after.instrument.cited, after.instrument.minted, after.instrument.uncited],
-  [1, 3, 2]);
-t("and the member's leg landed on the MACHINE's row rather than minting a second one — one "
-+ "address, because there is no allocator",
-  byRef["contract:C-11940"]?.content_id ?? null,
-  contentIdFor(SHA_DOC, { kind: "pdf-page", page: 1, ref: "page 2, the transfer table" }, CHAIN));
 
 /* ================ 6. THE RUN IS THE ONLY PLACE IT RUNS ================= */
 
 console.log("\n=== 6. §7.3 (2) and (4): it runs in the RUN, and the run is a MEMBER's act ===");
 
+/* KEPT: the two refusals that answer BEFORE any run is read still reach their claim with no extract run open. The
+   third row ("inside the run this suite has already ended", RUN_NOT_RUNNING) is RETIRED 2026-09-28 (T7, legacy-tests;
+   K220): the run never opened, so it answers NO_SUCH_RUN — extract.test.mjs "R10, R13: …" (RUN-ENDED ->
+   RUN_NOT_RUNNING). */
 for (const [body, reason, why] of [
   [{ bundleId: DOC, fn: "propose-reading", version: "0.1.0" },
    "NO_RUN", "with no run named at all"],
   [{ run: "RUN-nobody-opened", bundleId: DOC, fn: "propose-reading", version: "0.1.0" },
    "NO_SUCH_RUN", "naming a run nobody opened"],
-  [{ run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0" },
-   "RUN_NOT_RUNNING", "inside the run this suite has already ended"],
 ]) {
   const r = await post("extractpropose",
     { ...body, refs: [{ ref: "n:1", refKind: "n", refKey: "1" }] }, AK);
@@ -595,9 +406,9 @@ t("and the refusal for an absent run SAYS that a run begins on a member's act �
 
 /* A RUN IN ANOTHER MODE. `check` is the deployed investigative mode; its run is
    a perfectly good run and it may not produce readings, because a run's mode is
-   one of the conditions it was formed under. */
+   one of the conditions it was formed under. KEPT: a check run still opens. */
 const CHECKRUN = "RUN-2026-0914-check";
-await post("airunopen", {
+const checkOpened = await post("airunopen", {
   run: CHECKRUN, contextType: "inquiry", contextId: INQ, mode: "check",
   principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
   skillVersion: "investigative-session@1",
@@ -609,29 +420,38 @@ t("A RUN IN ANOTHER MODE MAY NOT PRODUCE A READING even with a mints bound decla
     const r = await post("extractpropose",
       { run: CHECKRUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
         refs: [{ ref: "c:1", refKind: "c", refKey: "1" }] }, AK);
-    return [r.ok, r.reason, r.mode];
+    /* 2026-09-28 (T7, K220): the check run's own open is asserted beside the refusal, so the arm cannot pass over a
+       run that never opened (it would then read NO_SUCH_RUN, not NOT_AN_EXTRACT_RUN — but say it). */
+    return [checkOpened.started, r.ok, r.reason, r.mode];
   })(),
-  [false, "NOT_AN_EXTRACT_RUN", "check"]);
+  [true, false, "NOT_AN_EXTRACT_RUN", "check"]);
 t("THE MACHINE CREDENTIAL CANNOT OPEN A RUN — §7.3 (4) at the door rather than in a sentence: the "
 + "subject and the objective stay the member's",
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests; K220): the machine's open asked for `extract`, which ai-runs R40 now
+     refuses for ANY opener, so the arm would pass on the mode alone. It asks for the DEPLOYED mode, so what refuses it
+     is the credential; and it still asserts no run exists after. */
   await (async () => {
     const r = await post("airunopen",
-      { run: "RUN-machine-opened", contextType: "inquiry", contextId: INQ, mode: EXTRACT_RUN_MODE,
+      { run: "RUN-machine-opened", contextType: "inquiry", contextId: INQ, mode: "check",
         principalClaude: "project", skillVersion: "investigative-session@1",
         bounds: [{ bound: "mints", allowed: 1 }], at: NOW }, AK);
-    return r.ok !== true && r.started !== true;
+    const after = (await get("airun", "run=RUN-machine-opened", RUTH))?.session ?? null;
+    return [r.ok !== true && r.started !== true, r.code === "AI_RUN_MODE_NOT_DEPLOYED", after];
   })(),
-  true);
+  [true, false, null]);
 t("and a credential whose member declared NO writes cannot produce at all — FL-6's cascade doing "
 + "its job at a new verb, driven rather than assumed from the class",
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests; K220): this arm produced under RUN, which no longer opens, so any
+     credential would be refused (NO_SUCH_RUN). It produces under the CHECK run, whose production a credential WITH the
+     write reaches (NOT_AN_EXTRACT_RUN, the arm above), and asserts the no-writes credential never reaches that door. */
   await (async () => {
     const READER = await mintCred([], "reader-only");
     const r = await post("extractpropose",
-      { run: RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
+      { run: CHECKRUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
         refs: [{ ref: "r:1", refKind: "r", refKey: "1" }] }, READER.token);
-    return r.ok !== true;
+    return [r.ok !== true, (r.reason ?? r.code) !== "NOT_AN_EXTRACT_RUN"];
   })(),
-  true);
+  [true, true]);
 
 /* ===================== 7. OVER-STRICTNESS, AND THE HONEST EDGES ========= */
 
@@ -650,98 +470,22 @@ t("`op=extractproposals` refuses an UNSCOPED listing — an enumeration of every
      this refusal as `EXTRACT_NO_SCOPE`, a C-104 row of its own, in place of the bare `NO_SCOPE`. */
   (await get("extractproposals", "", RUTH)).reason, "EXTRACT_NO_SCOPE");
 
-/* THE READ'S BOUND, DRIVEN HERE RATHER THAN IN `bounds.test.mjs`, and
-   `DRIVEN_ELSEWHERE` there names this op with the reason. Building the corpus
-   this needs — a document with a capture and a chain, an `ai` credential, a
-   member-opened EXTRACT run with a `mints` bound, and several proposals — is
-   this suite's entire §0 through §4, and a second copy of it over there would be
-   two fixtures for one fact. The shape is `bounds.test.mjs`'s own loop: a BITE of
-   1 against a corpus of more than one, `limit` read back as the CLAMPED cap,
-   `truncated` TRUE on the bite and FALSE at the default, and an over-ask answered
-   AT THE CEILING rather than silently. */
-t("the read's bound is PUBLISHED and not silent: a bite of 1 says `limit` and says `truncated`, the "
-+ "default bound says neither is cutting anything, and an over-ask is answered at the CEILING "
-+ "rather than at the number the caller asked for",
-  await (async () => {
-    const bite = await get("extractproposals", `bundle=${DOC}&limit=1`, RUTH);
-    const whole = await get("extractproposals", `bundle=${DOC}`, RUTH);
-    const over = await get("extractproposals", `bundle=${DOC}&limit=100000`, RUTH);
-    return [bite.limit, bite.count, bite.truncated,
-            whole.limit, whole.truncated, whole.count > 1,
-            over.limit];
-  })(),
-  [1, 1, true, 100, false, true, 500]);
-t("a proposal whose POSITION cannot be read in IC-1's vocabulary is refused: an address nothing "
-+ "resolves looks like a binding and joins to nothing",
-  await (async () => {
-    const OK2 = "RUN-2026-0914-second";
-    await post("airunopen", { run: OK2, contextType: "inquiry", contextId: INQ,
-      mode: EXTRACT_RUN_MODE, principalClaude: "project",
-      skillVersion: "investigative-session@1",
-      bounds: [{ bound: "mints", allowed: 4, unit: "passages" }], leaseMs: 600000, at: NOW }, RUTH);
-    const r = await post("extractpropose",
-      { run: OK2, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "p:1", refKind: "p", refKey: "1",
-                 source: { kind: "pdf-page", page: "not a page", ref: "nowhere" } }] }, AK);
-    return [r.ok, r.reason];
-  })(),
-  [false, "PROPOSAL_POSITION"]);
-t("A MINT REFUSED BY THE CONTAINER'S OWN EXTENT DOES NOT REFUSE THE PROPOSAL: the reading was "
-+ "still read, and *we could not make this citable* and *this was never proposed* are different "
-+ "facts that must not read alike",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: "RUN-2026-0914-second", bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "far:1", refKind: "far", refKey: "1",
-                 source: { kind: "pdf-page", page: 99, ref: "page 100, which does not exist" } }] }, AK);
-    return [r.ok, r.minted, r.proposed[0].content_id,
-            r.proposed[0].mint_refused?.code ?? null, r.proposed[0].mint_refused?.check ?? null];
-  })(),
-  [true, 0, null, "CONTENT_EXTENT_OUT_OF_RANGE", "C-45.1"]);
-t("a document the record holds no bytes of, and an object that is not a document, are refused as "
-+ "DIFFERENT facts — CLAUDE.md's sparse rule at this door",
-  await (async () => {
-    const a = await post("extractpropose",
-      { run: "RUN-2026-0914-second", bundleId: INQ, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "q:1", refKind: "q", refKey: "1" }] }, AK);
-    const b = await post("extractpropose",
-      { run: "RUN-2026-0914-second", bundleId: "INFO-2026-9999-absent", fn: "propose-reading",
-        version: "0.1.0", refs: [{ ref: "q:1", refKind: "q", refKey: "1" }] }, AK);
-    return [a.reason, b.reason];
-  })(),
-  ["NOT_A_DOCUMENT", "NO_SUCH_BUNDLE"]);
-t("an EMPTY proposal is refused and sent where it belongs: a run that honestly found nothing "
-+ "writes an OBSERVATION, where absence is first-class and says which level",
-  await (async () => {
-    const r = await post("extractpropose",
-      { run: "RUN-2026-0914-second", bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [] }, AK);
-    return [r.reason, /belongs in the run's log/.test(r.detail || "")];
-  })(),
-  ["NO_PROPOSALS", true]);
-t("a member who was never invited may not learn a document exists by proposing a reading of it — "
-+ "D-15 answers an invisible bundle EXACTLY as an absent one",
-  /* CORRECTED 2026-09-22 (REC-165, INVESTIGATIVE-SESSION.md §11 item 5 rule 1, BOB #25): this arm proposed
-     under RUTH's run, which ira does not hold. That was accepted as far as the bundle check only because
-     `extractPropose` never asked whose run it was — the defect REC-165 closes — so the arm was measuring the
-     bundle gate THROUGH a hole. ira now opens HER OWN extract run (her act, her principal) and the arm asks
-     the question it was written to ask; the refusal under ruth's run is asserted beside it, naming no
-     document, so the principal gate cannot become a way to learn one exists either. */
-  await (async () => {
-    const IRA_RUN = "RUN-2026-0914-ira";
-    const opened = await post("airunopen", { run: IRA_RUN, contextType: "inquiry", contextId: INQ,
-      mode: EXTRACT_RUN_MODE, principalClaude: "project", skillVersion: "investigative-session@1",
-      bounds: [{ bound: "mints", allowed: 2, unit: "passages" }], leaseMs: 600000, at: NOW }, IRA);
-    const a = await post("extractpropose",
-      { run: IRA_RUN, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "v:1", refKind: "v", refKey: "1" }] }, IRA);
-    const notHers = await post("extractpropose",
-      { run: "RUN-2026-0914-second", bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-        refs: [{ ref: "v:1", refKind: "v", refKey: "1" }] }, IRA);
-    return [opened.started === true, a.ok === true || a.reason === "NO_SUCH_BUNDLE",
-            notHers.code, JSON.stringify(notHers).includes(DOC)];
-  })(),
-  [true, true, "AI_RUN_NOT_PRINCIPAL", false]);
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220) — each needed an extract run to produce under:
+   - "the read's bound is PUBLISHED and not silent" (a bite of 1 over more than one proposal): extract.test.mjs "R12:
+     neither run nor bundle is EXTRACT_NO_SCOPE; the list is newest first, limit clamped to [1, 500], 100 by default,
+     with truncated, …".
+   - "a proposal whose POSITION cannot be read in IC-1's vocabulary is refused": rules.test.mjs "R42 R44: …"
+     (PROPOSAL_POSITION).
+   - "A MINT REFUSED BY THE CONTAINER'S OWN EXTENT DOES NOT REFUSE THE PROPOSAL": extract.test.mjs "R11: a reference
+     with a position is minted …; a refused mint is recorded, never dropped, and spends nothing"
+     (CONTENT_EXTENT_OUT_OF_RANGE, C-45.1, the proposal kept).
+   - "a document the record holds no bytes of, and an object that is not a document, are refused as DIFFERENT facts":
+     extract.test.mjs "R10, R13: …" (NOT_A_DOCUMENT, NO_SUCH_BUNDLE, NO_BYTES_HELD).
+   - "an EMPTY proposal is refused and sent where it belongs": extract.test.mjs "R10, R13: …" (NO_PROPOSALS); its
+     sentence ("belongs in the run's log") is not asserted there.
+   - "a member who was never invited may not learn a document exists by proposing a reading of it": extract.test.mjs
+     "R10, R13: …" (a bundle the viewer cannot see answers NO_SUCH_BUNDLE exactly as an absent one but for the id; a
+     run another principal holds -> AI_RUN_NOT_PRINCIPAL). */
 
 /* THE MODULE'S OWN PREDICATES, driven directly so a refusal that the op path
    cannot reach is still measured. `PROPOSAL_ABOVE_CEILING` is unreachable from
@@ -755,8 +499,9 @@ t("the ceiling is a REFUSAL and not a comment: it is driven directly, because th
 t("and a capture with NO chain cannot be proposed over: there is nothing for an `ai` step to "
 + "extend, and a derivation of text with no stated provenance rests on nothing",
   proposalChain(null, { fn: "propose-reading", version: "1" }).reason, "NO_CAPTURE_CHAIN");
-t("the module's cap computation agrees with textchain's, asked about the chain this suite built",
-  derivationCap(proposed.chain), "C");
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220): "the module's cap computation agrees with textchain's, asked about the
+   chain this suite built" — the suite builds no chain through the op now; extract.test.mjs "R11: success writes …"
+   (the answer's cap C from the chain) and rules.test.mjs "R43 R44: …". */
 
 } catch (e) {
   console.log(`  FAIL  the suite threw before its foot: ${e && e.stack ? e.stack.slice(0, 900) : e}`);

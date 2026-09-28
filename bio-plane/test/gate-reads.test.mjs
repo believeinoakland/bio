@@ -1284,6 +1284,50 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "tally or the bracket are computed. A hidden source capture answers exactly as one the record does not "
       + "hold; a link whose only capture is hidden is `offsite`, the answer an uncaptured target gets. A capture "
       + "filed in NO bundle names none and stays visible. Fails closed on an absent stamp.",
+    /* CLASSIFIED 2026-09-28 (T7, legacy-tests): five of the nine reads T7's legacy-index routed (legacy-index.md; OPS
+       rows from INTENT #1 J4.2 and REEVALUATION #1 J2.9), each reason read off its code path whole, from
+       `intentOps` / `reevaluationOps` to the reads it makes, and each hidden-project arm DRIVEN once (a scratch
+       probe on this suite's fixture: dave, carol's secret project; not kept, as this suite drives only the ops it
+       names) before being written. The other four are deliberately LEFT UNCLASSIFIED and red, because each reads a hidden project's material without gating it (legacy-tests' T7 record):
+       `intentproposals` (a gap deferred or dismissed without naming its project is served in `set_aside` to every
+       viewer, and its key is `intent::<project id>::…`), `pursuit` and `aspirationcontacts` (a PROJECT-scoped
+       aspiration is asked `inSight` of its OWN id, which viewerPredicate never filters, so an uninvited member reads
+       its owner project's id and statement), and `reevaluationnotices` (the holder is gated and `newer_bundle`
+       redacted, but a notice raised under the machine's sight still hands over the NEWER CAPTURE's sha, grade and
+       effect when that capture is filed in a project the viewer cannot see — the version op=versionnotice and
+       op=versionchain withhold WHOLE). */
+    objectiveprogress: "intent R3–R5, R23: progress on ONE project's objective. GATED on the project first: "
+      + "Intent#project asks membership's `existenceAct` (a discoverable project outside the caller's sight answers "
+      + "C-70.1) and then `inSight` (viewerPredicate), and a project the viewer may not see answers NO_SUCH_PROJECT "
+      + "exactly as one that does not exist (C-110.2), before the condition is read. The instances it measures are "
+      + "read through progressions' `readInstance` under the SAME stamped viewer, so each placed document's bundle id "
+      + "passes progressions' redactor (op=instance's gate) and one the viewer cannot see is null; the derivation is "
+      + "the record's and does not move with the reader. It takes the fail-closed viewer stamp (INTENT_READS) in "
+      + "index.mjs. It writes nothing.",
+    objectivegaps: "intent R6, R23: ONE project's gaps, each an `objective-gap` proposal. It IS op=objectiveprogress "
+      + "(Intent#gaps calls `progress` with the same viewer), so it takes that gate whole: the project through "
+      + "`existenceAct` and `inSight`, hidden answering exactly as absent (NO_SUCH_PROJECT), and every document a gap "
+      + "names through progressions' redactor. Stamped fail-closed with INTENT_READS in index.mjs. It writes nothing.",
+    goal: "intent R8, R23: one GOAL by id — its statement, bounds, aspiration pointer, state and the objectives linked "
+      + "to it. A goal is the group's pursuit, not a project's, so the goal row itself is asked `inSight` of its own id; "
+      + "the PROJECTS it names are the gated material and each linked objective is kept only when the viewer sees its "
+      + "project (`membership.inSight` per row, Intent#goalView), with no count of those dropped. Stamped fail-closed "
+      + "with INTENT_READS in index.mjs. Its `aspiration` pointer is an aspiration id, whose sight is the defect named "
+      + "above against op=pursuit. It writes nothing.",
+    aspirations: "intent R12, R23: the aspirations in force for a project, a member, or the group. GATED where it can "
+      + "name a project: a `project` asked is resolved through Intent#project (`existenceAct`, then `inSight`) and one "
+      + "the viewer may not see answers NO_SUCH_PROJECT exactly as one that does not exist, BEFORE its own aspirations "
+      + "or its departures (`intent_departures`, read only for that project) are read. Without a project it answers the "
+      + "group's and the named member's only, so a PROJECT-scoped aspiration is never listed here but through its own "
+      + "project's gate. Stamped fail-closed with INTENT_READS in index.mjs. It writes nothing.",
+    reevaluationchanges: "reevaluation R9, R20: the pull read — the causes standing on each named FINDING and each named "
+      + "PASSAGE's version notice. GATED on both arms: each finding id is asked `#visible` (viewerPredicate over "
+      + "`bundles`) and one the viewer may not see answers `{id, absent: true}`, exactly as an id the record does not "
+      + "hold, before its row, edition or strength is read; the SUPERSEDING ids inside a visible answer pass the "
+      + "module's `#redactor` (op=reevaluations' posture). Each passage goes through content's `passageNotice`, which "
+      + "asks `sees` of the passage's bundle (VERSION_NOTICE_NO_CONTENT for hidden and absent alike) and reads the "
+      + "version chain under the same viewer, so a newer version filed in a project the caller cannot see is not in it "
+      + "(op=versionnotice's gate). Stamped fail-closed in index.mjs. It writes nothing.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -1404,14 +1448,8 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "registeraudit's fence, and for its reason: it is an audit of the working corpus that lists bundle ids whose "
       + "body carries addGo's changed-from sentence; probe is confined by scopeFor to the scratch namespace, a "
       + "different Durable Object. It writes nothing.",
-    /* PL-4 / IS-4, 2026-08-08. Classified by the item that adds it. */
-    capturerequestdraining: "CLASS-FENCED to admin, probe and daemon (NO MEMBER CLASS), so no member "
-      + "session reaches it, and probe is confined by scopeFor to the scratch namespace. It exists for "
-      + "ONE caller — op=acquire's capture-request arm, asking whether a named request is being drained "
-      + "right now so it can admit the drain and refuse everybody else. It answers about ONE request the "
-      + "caller already names and enumerates nothing, so there is no list whose total could betray a "
-      + "hidden row. Gating it on the request's inquiry would put a member predicate in front of a "
-      + "question only the daemon asks, which protects nothing and would make the fence harder to read.",
+    /* REMOVED 2026-09-28 (T7, legacy-tests): `capturerequestdraining` (PL-4 / IS-4) — the op is retired (K58, K181, K218)
+       and legacy-index removed its OPS row, so there is no read left to classify. */
     /* PL-11 / IS-5 / D-199, 2026-08-08. Classified by the item that adds it. */
     aicredentials: "HOLDS NO CORPUS MATERIAL: the roster of agent credentials this group has minted "
       + "— an identity, a principal, a declared task scope, and who authored it. No bundle id appears "

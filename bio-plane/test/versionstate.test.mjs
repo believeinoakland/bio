@@ -889,7 +889,10 @@ console.log("\n--- 8. the machine published, and the six acts derived over REAL 
   const needsOps = [...INDEX_SRC.matchAll(/^\s{2}(version\w+):\s+"contribute"/gm)].map((m) => m[1]);
   t("TOTALITY: every one of the six is in NEEDS and is an ACT here — none is in NON_ACTS, and none "
   + "ships unpublished and unexplained",
-    [needsOps.sort(), VERBS.map((v) => "version" + v).filter((o) => ACTS.some((a) => a.id === o)).sort(),
+    /* RE-PINNED 2026-09-28 (T7, legacy-tests): NEEDS now also holds reevaluation's REC-202 acts `versionadopt` and
+       `versionkeep` (legacy-index's OPS rows, REEVALUATION #1 J2.9), which are not this item's six; the claim is about
+       the six, so each of the six is asked of NEEDS by name. (Their affordance rows are affordances', K219.) */
+    [VERBS.map((v) => "version" + v).filter((o) => needsOps.includes(o)).sort(), VERBS.map((v) => "version" + v).filter((o) => ACTS.some((a) => a.id === o)).sort(),
      VERBS.map((v) => "version" + v).filter((o) => o in NON_ACTS)],
     [VERBS.map((v) => "version" + v).sort(), VERBS.map((v) => "version" + v).sort(), []]);
 }

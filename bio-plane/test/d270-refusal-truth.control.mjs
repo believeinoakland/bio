@@ -83,9 +83,9 @@ const ARMS = [
     } },
 
   /* WIDENED 2026-09-25 (REC-155): §4.10 recorded `livefire` and `reproject`, so emptying the record must
-     name them too. */
+     name them too. WIDENED 2026-09-28 (T7, K199): `reevaluationraise` is recorded too. */
   { id: "c", file: SRC, expect: "RED", mustName: ["purge", "cpuprobe", "taskdrain", "capturerequestdrain",
-                                                  "livefire", "reproject"],
+                                                  "livefire", "reproject", "reevaluationraise"],
     what: "THE DECLARATION EMPTIED — UNATTENDED_BY_DECISION made empty, so the four ops with a "
         + "recorded decision are told it is an omission. THE ARM FOR BOB'S RULE ITSELF: the plane "
         + "may say 'not for a person' only where a decision is recorded, so emptying the record "

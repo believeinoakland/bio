@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN 2026-09-23 BY `test/d260-resume.control.mjs` (patches COPIES of `bio-plane/src` and `agent-worker/src`, so the battery never discovers it and the real sources are verified untouched by sha256 AND content; re-run from `bio-plane/`: `node test/d260-resume.control.mjs [arm]`). Baseline 22/0. (1) dispatch-every — THE ROW'S CONTROL, the gate hands every woken run over whenever the credential resolves -> MEMBER ARM 1, MEMBER ARM 2, OTHER-KEY ARM, the tick's named reasons, MEMBER ARM 3, the withheld-log arm and COUNT ARM fail BY NAME, 15/7. (2) member-prefix-only — a fence looser than the rule, withholding only member runs -> OTHER-KEY ARM, the named reasons, MEMBER ARM 3 and COUNT ARM, 18/4; its first declaration also named the withheld-log arm and that stayed GREEN, MEASURED: the other key's run was dispatched, agent-worker answered ok, and REC-152 refused every tick, so nothing landed — the liar the row names, visible only at the binding. (3) dispatch-none — the opposite defect -> the four INSTANCE arms, COUNT ARM and both REFUSED-DISPATCH arms, 15/7, every member arm green. (4) equal-by-compare — over-strictness, the same equality spelled differently -> nothing fails, 22/0. Every arm AS DECLARED.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN 2026-09-23 BY `test/d260-resume.control.mjs` (patches COPIES of `bio-plane/src` and `agent-worker/src`, so the battery never discovers it and the real sources are verified untouched by sha256 AND content; re-run from `bio-plane/`: `node test/d260-resume.control.mjs [arm]`). Baseline 22/0. (1) dispatch-every — THE ROW'S CONTROL, the gate hands every woken run over whenever the credential resolves -> MEMBER ARM 1, MEMBER ARM 2, OTHER-KEY ARM, the tick's named reasons, MEMBER ARM 3, the withheld-log arm and COUNT ARM fail BY NAME, 15/7. (2) member-prefix-only — a fence looser than the rule, withholding only member runs -> OTHER-KEY ARM, the named reasons, MEMBER ARM 3 and COUNT ARM, 18/4; its first declaration also named the withheld-log arm and that stayed GREEN, MEASURED: the other key's run was dispatched, agent-worker answered ok, and REC-152 refused every tick, so nothing landed — the liar the row names, visible only at the binding. (3) dispatch-none — the opposite defect -> the four INSTANCE arms, COUNT ARM and both REFUSED-DISPATCH arms, 15/7, every member arm green. (4) equal-by-compare — over-strictness, the same equality spelled differently -> nothing fails, 22/0. Every arm AS DECLARED. [2026-09-28, T7, legacy-tests (K220): the suite now also carries NO-NETWORK ARM and its whole-suite twin (agent-worker's model behind a mock `outboundService`), 25/0; dispatch-none's declaration adds NO-NETWORK ARM; the tallies above are of their day and the control was not re-run.]
  * =========================================================================
  * D-260 — A WOKEN RUN IS RE-ENTERED, AND ONLY UNDER THE CREDENTIAL THAT OPENED IT.
  *
@@ -27,7 +27,10 @@
  * DIST's (`BIO_Distribution_v0_1.md` §6; BUILT by DIST-9, 2026-09-24 — this line said "not built" until then, which was
  * true of its day) and is tested in `newgroup/test/wizard.test.mjs` and `test/deploybindings.test.mjs`, not here; (ii) a live model turn — `agent-worker` still runs none
  * (`turns_run: 0`), so "resumes" here means the plane handed the run over and the member drove the run's table
- * against the record under the run's own credential; (iii) the `scratch` namespace's cross-object credential
+ * against the record under the run's own credential [2026-09-28, T7, legacy-tests (K220, BOB's B10): no longer so —
+ * agent-worker R40 runs model turns, so the resumed segment's judgements are a model's. The model is the SCRIPTED
+ * MOCK behind agent-worker's `outboundService` below (agent-worker/test/requirements.test.mjs's pattern), never the
+ * real API: what this suite still cannot see is a live model's judgement]; (iii) the `scratch` namespace's cross-object credential
  * lookup is exercised only by `#aiRunResumer`'s code path, not by an arm (scratch cannot mint an `ai` credential,
  * C-29.1, so no scratch run can carry an organisation stamp through the ops).
  * ========================================================================= */
@@ -51,6 +54,8 @@ const { instanceAiCredential, INSTANCE_AI_BINDING, INSTANCE_AI_UNSET, INSTANCE_A
    did not record the pack it renders, so the opener records `renderPack(...).version` — rendered, as agent-worker
    renders it, from the plane's own `op=affordances` answer and the check catalogue, both from the (possibly armed) tree. */
 const { renderPack } = await import(join(TREE, "bio-plane", "src", "skillpack.mjs"));
+/* T7 (legacy-tests; K220, BOB's B10): agent-worker's one egress that is not the plane, read from the (possibly armed) tree. */
+const { MODEL_ENDPOINT } = await import(join(TREE, "agent-worker", "src", "model.mjs"));
 const CATALOGUE = await import(join(TREE, "bio-plane", "checks", "bio-checks.mjs"));
 
 let pass = 0, fail = 0;
@@ -68,6 +73,44 @@ const INSTANCE_CLAUDE = "sk-d260-instance-claude-account";
 const ADM = "adm-d260", MEM = "mem-d260";
 
 const CALLS = [];                       /* every request the plane made on AGENT_WORKER, as the binding saw it */
+/* EVERY OUTBOUND REQUEST EITHER WORKER MADE (a global `fetch` that is not a service binding), as its mock saw it
+   (T7, legacy-tests; K220, BOB's B10). agent-worker R40 now takes model turns, and with no outbound service its
+   instance run called the real api.anthropic.com from the suite (401 -> MODEL_REFUSED). Both workers' outbound is
+   now a mock, and NO-NETWORK ARM asserts every request went to one. */
+const OUTBOUND = [];
+/* THE MODEL MOCK, agent-worker/test/requirements.test.mjs's scripted model reduced to its default script: it refuses
+   a request the API would refuse (no first user message, a tool_use left unanswered), answers a sub-session (its
+   tools carry `report`) with a LOOKED_ABSENT report for its level, and answers every judged row by calling that row's
+   `judge_<step>` tool with an empty judgement — so the table, not the mock, decides where the run goes. */
+const modelMock = async (request) => {
+  const raw = request.method === "POST" ? await request.text() : "";
+  OUTBOUND.push({ from: "agent-worker", url: request.url, method: request.method,
+                  keyed: !!request.headers.get("x-api-key"), version: request.headers.get("anthropic-version") });
+  if (request.url !== MODEL_ENDPOINT)
+    return Response.json({ type: "error", error: { type: "not_found_error", message: "the d260 mock serves only the model API" } }, { status: 404 });
+  let body = null; try { body = JSON.parse(raw); } catch { body = null; }
+  if (!body || !Array.isArray(body.messages) || !body.messages.length || body.messages[0].role !== "user")
+    return Response.json({ type: "error", error: { type: "invalid_request_error", message: "messages: at least one user message first" } }, { status: 400 });
+  for (let i = 0; i < body.messages.length - 1; i++) {
+    const uses = (Array.isArray(body.messages[i].content) ? body.messages[i].content : []).filter((b) => b.type === "tool_use");
+    const next = body.messages[i + 1];
+    const answered = new Set((Array.isArray(next.content) ? next.content : []).filter((b) => b.type === "tool_result").map((b) => b.tool_use_id));
+    if (uses.some((u) => !answered.has(u.id)))
+      return Response.json({ type: "error", error: { type: "invalid_request_error", message: "tool_use without tool_result" } }, { status: 400 });
+  }
+  const n = OUTBOUND.length;
+  const reply = (content) => Response.json({ id: "msg_d260_" + n, type: "message", role: "assistant", model: body.model,
+    content, stop_reason: "tool_use", usage: { input_tokens: 1, output_tokens: 1 } });
+  const names = (body.tools || []).map((x) => x.name);
+  if (names.includes("report")) {
+    const contract = JSON.parse(String(body.system).split("YOUR SPAWN CONTRACT:\n")[1] || "{}");
+    return reply([{ type: "tool_use", id: "r" + n, name: "report",
+                    input: { state: "LOOKED_ABSENT", summary: "nothing supportable at " + contract.level } }]);
+  }
+  const prompt = [...body.messages].reverse().find((m) => m.role === "user" && typeof m.content === "string");
+  const step = (/Answer by calling judge_([a-z]+)/.exec(prompt ? prompt.content : "") || [])[1] || "";
+  return reply([{ type: "tool_use", id: "j" + n, name: "judge_" + step, input: {} }]);
+};
 let MF;
 const mf = new Miniflare({
   workers: [
@@ -96,14 +139,16 @@ const mf = new Miniflare({
           return new Response(out, { status: res.status, headers: { "content-type": "application/json" } });
         },
       },
-      outboundService() {
+      outboundService(request) {
+        OUTBOUND.push({ from: "plane", url: request.url, method: request.method });
         return new Response(new Uint8Array(2048).map((_, i) => (i * 17 + 3) % 256),
                             { headers: { "content-type": "application/pdf" } });
       } },
     { name: "agent-worker", modules: true, modulesRoot: "/", scriptPath: AW, script: readFileSync(AW, "utf8"),
       modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
       compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-      bindings: { VERSION: "test" }, serviceBindings: { PLANE: "plane" } },
+      bindings: { VERSION: "test" }, serviceBindings: { PLANE: "plane" },
+      outboundService: modelMock },
   ],
 });
 MF = mf;
@@ -250,6 +295,19 @@ try {
     [true, RUNS.instance.run, "DISPATCH", "DISPATCHED"]);
   t("COUNT ARM: the tick's own answer counts ONE dispatch over four woken runs, and the binding saw one call",
     [a1.airunwake?.dispatched, CALLS.length], [1, 1]);
+  /* T7 (legacy-tests; K220, BOB's B10): THE RESUMED SEGMENT TOOK ITS TURNS FROM THE MOCK, AND NOTHING LEFT THE SUITE.
+     Every outbound request so far — agent-worker's and the plane's — was answered by a mock: agent-worker's all went to
+     the model API's endpoint (the mock refuses any other URL), and the plane's (the capture fetches, their timestamp
+     authorities and archive saves) to the plane's own byte-serving mock. And the instance run's segment did take model
+     turns: its answer counts them, and the mock saw exactly that many. */
+  const modelCalls = OUTBOUND.filter((o) => o.from === "agent-worker");
+  t("NO-NETWORK ARM: the resumed segment's model turns were answered by the suite's model mock, every one keyed and "
+    + "versioned and sent to the model endpoint, and the plane's captures were served by its own mock — nothing reached "
+    + "the network",
+    [modelCalls.length > 0, aw?.turns_run === modelCalls.length, modelCalls.every((o) => o.url === MODEL_ENDPOINT && o.keyed
+       && o.version === "2023-06-01"),
+     OUTBOUND.some((o) => o.from === "plane" && /^https:\/\/www\.d260-host-0\.example\.gov\//.test(o.url))],
+    [true, true, true, true]);
   const ilog = await logOf(RUNS.instance);
   const wIdx = ilog.findIndex((e) => /the daemon answered/.test(String(e.detail || "")));
   t("INSTANCE ARM 4 (RESUMES, IN THE RECORD): after its wake entry the run's own log carries entries its resumed "
@@ -323,6 +381,9 @@ try {
     reads.push(JSON.stringify(await GET(`op=aicredentials&token=${RUTH}`)));
     reads.push(JSON.stringify(a1), JSON.stringify(a2));
     const blob = reads.join("\n");
+    t("NO-NETWORK ARM (WHOLE SUITE): across every alarm, every outbound request of either worker went to a mock",
+      [OUTBOUND.filter((o) => o.from === "agent-worker").every((o) => o.url === MODEL_ENDPOINT),
+       OUTBOUND.every((o) => o.from === "plane" || o.from === "agent-worker")], [true, true]);
     t("NO-TOKEN ARM: neither secret appears in any run log, run read, request list, credential list or alarm answer "
       + "(read over a corpus that is not empty)",
       [blob.length > 2000, blob.includes(INSTANCE_AI), blob.includes(INSTANCE_CLAUDE)], [true, false, false]);

@@ -1,6 +1,6 @@
 # legacy-tests (T7)
 
-**Status** · session_01EbJbvw2MqsPnPv5f2PjGVo · depth 2 · COMPLETE · handled B8
+**Status** · session_01EbJbvw2MqsPnPv5f2PjGVo · depth 2 · COMPLETE · handled B12
 
 **Contract** (legacy module, no requirements file; `build/modules.json`): paths `civicos-ui/check-refusal-codes.mjs`, `civicos-ui/check-semantics.mjs`; tests `bio-plane/test/`, `civicos-ui/test/` (except `bio-plane/test/m/<module>/`, each module's own). Entries: layer 11's legacy-tests line in `build/plan/current.md` and every forwarded item naming legacy-tests (B1).
 
@@ -87,3 +87,43 @@ Everything else found is in my record's Progress notes and comes as REPORTs at C
 - `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T7` → ownership: 174 files changed by legacy-tests between tranche/T7 and HEAD; 0 failures
 
 Size (session_01EbJbvw2MqsPnPv5f2PjGVo): test runs 24, module lines 4515
+
+## Re-opened by B9, B10 (K219, K220)
+
+- Merged tranche/T7 with legacy-index (@ 86e83c240e). Measured: rung-ladder 46/3 (FORWARD: `capturerequestretry`, `reevaluationraise`, `reevaluationrecord`, `versionadopt`, `versionkeep` have no rung and no stated absence; the mutating set 140 against 145; NO UNDER-CLAIM: `triage` below `reasoned`) and affordances 98/1 (`capturerequestretry`, `versionadopt`, `versionkeep`, `reevaluationrecord` neither a published act nor a NON_ACT): all affordances' rows (K219), reported as affordances'. refusal-wire 40/2 → 38/4: the `capturerequestdraining` red cleared (legacy-index removed the row); two new, one cause: intent's `NO_STATEMENT` (C-110.10) collides with the catalogue's C-33.14, now reached on the wire through intent's routed ops, so the C-number and sentence arms find it divergent and the over-strictness arm's `before.divergent` reads 1 (intent's arm G, already reported). D-494's `where`s stay legacy-checks'.
+- K199: daemon-token 54/2 → 56/0 (the daemon roster EXACTLY FOUR with `reevaluationraise`; the sweep excludes it by name); d270-refusal-truth 35/1 → 36/0 (the RECORDED-DECISION literal eight ops, `reevaluationraise` the one arrival; its control's arm (c) names it, not yet run). K220 (3): `d419-content-crop.control.mjs` written (a mkdtemp copy of the sources, anchors once, real sources verified untouched by sha256): 6/6 arms AS DECLARED (baseline 16/0, stamp-dropped 7/9, fail-open 14/2, rect-dropped 9/7, refusal-collapsed 15/1, detail-respelled 16/0); the suite declares it on line 1 and honours `D419_TREE`. owed-controls 47/1 → 48/0; `node scripts/coverage.mjs --strict` exits 0 (369 of 369 suites declare a control; its REGISTER and FLEET floor warnings are legacy-index's and do not gate).
+
+## J5 · REPORT
+
+BEHAVIOUR CHANGES: hidden-project material reaches a non-member (gate-reads, driven on its fixture: dave, not a member; carol's hidden project), left unclassified and red, not re-pinned (commit dcb925b46b):
+1. intent `op=intentproposals` (driven): a gap triaged `defer` with no project is stored with `project_id` NULL, and `proposals()` serves it in `set_aside` to every viewer (filter `!d.project || inSight(...)`); dave received the key `intent::PROJ-…-secret::sweep::ENT-…`. Gate on the project the key names, or require a project for a gap's triage.
+2. intent `op=pursuit`, `op=aspirationcontacts` (driven), and the pointer in `op=goal`: `#pursuit` asks `inSight` of the aspiration's own id, and viewerPredicate filters only project bundles, so the owning project is never asked; dave's `op=pursuit&id=ASP-2026-0001` returned `owner: PROJ-…-secret` and its statement. R23 needs sight of the owning project for `scope: project`. (Side note: aspiration/goal declares on a store with no seeded group are refused GROUP_UNDETERMINED; `#create` sends no `group`.)
+3. reevaluation `op=reevaluationnotices` (read, not driven: no notices in the fixture): notices are raised under MACHINE_ADMIN's chain, so `newer_capture`, `grade`, `affects` of a capture filed in a hidden project reach any viewer who sees the holder; `op=versionnotice` withholds that version. R14's wording ("its newer bundle, if unseen, is null") allows it, so it may want your ruling.
+Final battery and COMPLETE follow.
+
+## J6 · COMPLETE
+
+**Completion again, after B9–B11** (K219, K220, K221; tranche/T7 merged at B11 @ a0213d6b80). J4 stands except as below.
+
+**Applied in this re-opening:**
+- K199: daemon-token 54/2 → 56/0 (the daemon roster EXACTLY FOUR, `reevaluationraise` added); d270-refusal-truth 35/1 → 36/0 (the RECORDED-DECISION literal eight ops; its control's arm (c) names it).
+- K220 (1): rec165-production-principal 28/7 → 33/0 and extractrun 6/2 → 23/0, each re-pinned to ai-runs R40's refusal of an extract run at open (`AI_RUN_MODE_NOT_DEPLOYED`, C-109.1, nothing written); their extractpropose arms retired, each naming the covering test in `test/m/run-productions/extract.test.mjs` or `test/m/extraction/rules.test.mjs` (17/0); arms that would now pass on the mode refusal alone re-pinned to open in `check` so they stay as strong; `nc-sk8`'s five arms moved to a RETIRED map, `rec165…control`'s two extract arms retired.
+- K220 (2): d260-resume 21/2 → 25/0: the model is mocked behind agent-worker's `outboundService` (`requirements.test.mjs`' scripted model), and two NO-NETWORK arms assert every outbound request of either worker reached a mock.
+- K220 (3): `d419-content-crop.control.mjs` written and run in a mkdtemp copy, 6/6 AS DECLARED, real sources untouched; the suite declares it. owed-controls 47/1 → 48/0; `node scripts/coverage.mjs --strict` exits 0 (369 of 369 suites declare a control).
+- After legacy-index's merge: versionstate asks its six verbs of NEEDS by name (reevaluation's `versionadopt`, `versionkeep` arrived) 88/1 → 89/0; capturerequests retires the class-fence arm of the retired draining op (K218); d419's control spells its patches whole (m025 A5); gate-reads classifies five of the nine new reads as GATED, each driven on its hidden project (`objectiveprogress`, `objectivegaps`, `goal`, `aspirations`, `reevaluationchanges`), and drops the retired `capturerequestdraining` entry.
+- K221: affordances 99/0, rung-ladder 49/0 and fleetbundles green on the merged tranche.
+
+**The old battery** (369 suites, after B11's merge): **19 red** (J4's 25, less affordances, rung-ladder, fleetbundles, rec165, extractrun, d260, owed-controls, capturerequests' draining arms; plus gate-reads, and refusal-wire's two). Each is owned in J4 or below. capturerequests reads 134/2 alone; its RATE arm failed once under a four-way parallel run and passed twice alone (load-sensitive timing, nothing it reads changed).
+
+**New REPORTs** (J5, sent 04:43): BEHAVIOUR CHANGES, hidden-project material reaching a non-member, left unclassified in gate-reads (114/1): intent `intentproposals` (a project-less gap triage served in `set_aside` to every viewer, driven); intent `pursuit`, `aspirationcontacts` and `goal`'s pointer (a project-scoped aspiration read without asking its owning project, driven); reevaluation `reevaluationnotices` (a hidden capture's sha, grade and affects under MACHINE_ADMIN's chain; read, not driven; R14's wording may allow it: a ruling). refusal-wire 40/2 → 38/4: intent's `NO_STATEMENT` (C-110.10) collides with the catalogue's C-33.14 on the wire now that intent's ops are routed (intent, arm G). Deferred reads: coverage gaps the retired extract arms leave in run-productions' own tests (the STRENGTHENS and NO_PROPOSALS sentences, a weaker cap at the op, no `reading_refs` write) and content (a member's leg on a machine-minted content row); a run's `mints` budget cannot be tested until extract deploys (ai-runs, run-productions).
+
+**Tests and checks** (on `job/T7/legacy-tests` after B11's merge):
+- Old battery 369 suites: 350 green, 19 red, each owned. `civicos-ui/test/refusal-codes.test.mjs` 158 green; the DEC-49 guard 119 failures, all other modules' (J4).
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio legacy-tests` → architecture: 868 product files, 2242 relative imports (65 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio legacy-tests` → coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T7` → ownership: 15 files changed by legacy-tests between tranche/T7 and HEAD; 0 failures
+
+Size (session_01EbJbvw2MqsPnPv5f2PjGVo): test runs 32, module lines 4515
+
+**After B12 (K222):** gate-reads stays red and unpinned on the four unclassified reads: `intentproposals`, `pursuit`, `aspirationcontacts` are intent's R23, **N199** (first in T8's layer 7); `reevaluationnotices` is **N200**, a question for Bob about what reevaluation R14 means. J6's completion stands.

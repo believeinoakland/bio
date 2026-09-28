@@ -28,6 +28,10 @@
  * RE-ANCHORED 2026-09-27 (T5-12, legacy-tests) AND RE-RUN (worktree bio-ctl1): `label` re-spelled to content's
  * `mintLabel`. baseline 62/0 · strengthen 60/2 · label 60/2 · bound 61/1 · coverage 61/1 · overstrict 59/3 — every arm
  * AS DECLARED, exactly the declared failures, every restore byte-identical.
+ *
+ * 2026-09-28 (T7, legacy-tests; K220, BOB's B10): the five non-baseline arms are RETIRED (see RETIRED below): the
+ * suite's extract arms they declared are retired with ai-runs R40's refusal of an extract run at the open. Only
+ * `baseline` runs; not re-run by this job.
  */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -228,9 +232,31 @@ const ARMS = {
   },
 };
 
+/* RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10). ai-runs R40 (C-109.1) opens no extract run while extract is
+   not deployed, so `test/extractrun.test.mjs` no longer produces a proposal and its op=extractpropose arms are retired
+   to run-productions' and extraction's own tests. Every arm below declared its failures on those retired arms' labels,
+   so none can fail as declared against this suite: each is kept (its patch and anchors unchanged, for the day extract
+   deploys) but NOT RUN, and says where its property is now driven. `baseline` still runs. */
+const RETIRED = {
+  strengthen: "its two declared arms (TEXT_CHAIN_STRENGTHENS and its sentence) are retired; appendStep's refusal is "
+    + "driven by test/m/extraction/rules.test.mjs \"R43 R44: proposalChain appends ai(fn, version) through appendStep, …\"",
+  label: "its two declared arms (the totality walk, the predicate) are retired; the write's and the list's labels are "
+    + "asserted by test/m/run-productions/extract.test.mjs \"R11: success writes …\" and \"R12: neither run nor bundle is "
+    + "EXTRACT_NO_SCOPE; …\"",
+  bound: "its declared arm (NO_MINTS_BOUND) is retired; extract.test.mjs \"R10, R13: refusals in order, …\" drives it",
+  coverage: "its declared arm (`op=readingref` does not answer the machine's reference) is KEPT in the suite but now "
+    + "holds over no machine proposal, so the patch cannot move it; no run-productions test asserts reading_refs stays "
+    + "untouched (reported)",
+  overstrict: "its three declared arms: two retired (earned C, the sentence) to rules.test.mjs \"R42 R44: …\"; the "
+    + "third (no proposal may reach A) is kept, and the patch alone does not fail it",
+};
+for (const k of Object.keys(RETIRED)) delete ARMS[k];
+
 const want = process.argv[2];
+if (want && RETIRED[want]) { console.log(`arm '${want}' is RETIRED (2026-09-28, K220): ${RETIRED[want]}`); process.exit(0); }
 const names = want ? [want] : Object.keys(ARMS);
 if (want && !ARMS[want]) { console.error(`unknown arm '${want}'. arms: ${Object.keys(ARMS).join(", ")}`); process.exit(2); }
+for (const [k, why] of Object.entries(RETIRED)) if (!want) console.log(`\n===== ARM ${k} — RETIRED (2026-09-28, K220): ${why}`);
 
 let finding = 0;
 for (const name of names) {

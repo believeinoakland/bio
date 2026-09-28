@@ -122,11 +122,21 @@ t("the OPS table was actually read (a silent parse failure would make every swee
    new verb's own reach is narrower than its class list — inside op=acquire it
    admits only a request row the drain itself has put in `draining`. The
    deny-side sweeps below therefore still range over both new reads, and this
-   assertion still fails the moment a fourth op admits the class. */
-t("EXACTLY THREE ops admit the daemon class: DEC-37's two verbs, plus the capture-request "
-  + "drain widened BY DECISION (SWEEP §4b item 1, 2026-08-07)",
+   assertion still fails the moment a fourth op admits the class.
+
+   RE-PINNED 2026-09-28 (T7, LEGACY-TESTS #4 under K219/K220), WIDENED BY
+   DECISION AGAIN, NOT BY DRIFT: K199 (BOB #51) ruled reevaluation R14's notices
+   are raised by the bounded sweep `raiseNotices({limit, after})` behind op
+   `reevaluationraise`, "admin and daemon", because `scheduler`/`monitoring`
+   drive it unattended. `reevaluationraise` is that fourth verb (its OPS row in
+   src/index.mjs cites K199, and it is in UNATTENDED_BY_DECISION). Nothing else
+   moved: the assertion is still EXACT and still fails the moment a fifth op
+   admits the class. */
+t("EXACTLY FOUR ops admit the daemon class: DEC-37's two verbs, plus the capture-request "
+  + "drain widened BY DECISION (SWEEP §4b item 1, 2026-08-07), plus reevaluation R14's "
+  + "notice sweep reevaluationraise widened BY DECISION (K199, BOB #51)",
   OP_ROWS.filter((r) => r.classes && r.classes.includes("daemon")).map((r) => r.op).sort(),
-  ["acquire", "capturerequestdrain", "monitor"]);
+  ["acquire", "capturerequestdrain", "monitor", "reevaluationraise"]);
 t("and neither of the two lost a class it already had — this widening takes nothing away",
   OP_ROWS.filter((r) => r.op === "acquire" || r.op === "monitor").map((r) => r.classes),
   [["admin", "member", "probe", "daemon"], ["admin", "member", "probe", "daemon"]]);
@@ -409,16 +419,18 @@ try {
      handful would have proved a handful. */
   /* CORRECTED 2026-08-08 BY PL-4 with the totality above: the exclusion list is
      the class's OWN reach and it is now three, for the recorded decision stated
-     at that assertion. Everything else in the table is still swept. */
+     at that assertion. Everything else in the table is still swept.
+     RE-PINNED 2026-09-28 (T7) with the totality: four, `reevaluationraise`
+     added by K199's decision. Everything else is still swept. */
   const gated = OP_ROWS.filter((r) => r.classes
-    && !["acquire", "monitor", "capturerequestdrain"].includes(r.op));
+    && !["acquire", "monitor", "capturerequestdrain", "reevaluationraise"].includes(r.op));
   const answered = [];
   for (const r of gated) {
     const got = await A.GET(`op=${r.op}&token=${DAEMON}`);
     if (got.status !== 403 || got.body?.error !== "forbidden for token class") answered.push(r.op);
   }
   t("the sweep covered the whole gated surface", gated.length > 60, true);
-  t("and NOT ONE op outside the daemon's three verbs answered it anything but the class refusal",
+  t("and NOT ONE op outside the daemon's four verbs (K199 added reevaluationraise) answered it anything but the class refusal",
     answered, []);
 
   console.log("\n--- THE READ SURFACES, called out of the sweep because the posture is a DECISION ---");

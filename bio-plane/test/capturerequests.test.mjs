@@ -424,11 +424,9 @@ console.log("\n--- 3a. a caller holding a REAL request id cannot make the plane 
      not draining outside a tick; an unknown id not found and not draining). capture-requests' requirements retired
      that op (K58; K181), so the store answers it with no row; R16's refusal, the fact these arms read, is driven by
      capture-requests' own tests (`bio-plane/test/m/capture-requests/`). The class fence below still holds. */
-  t("it is CLASS-FENCED: no member session reaches it, because it exists for op=acquire's arm and "
-  + "not for a person",
-    (await GET(`op=capturerequestdraining&token=mem-pl4&request=${REQ1.request}`))?.error
-      ?? (await mf.dispatchFetch(`http://x/api/?op=capturerequestdraining&token=mem-pl4`)).status,
-    "forbidden for token class");
+  /* RETIRED 2026-09-28 (T7, legacy-tests; K218, after legacy-index's merge): the class-fence arm drove the same retired
+     `op=capturerequestdraining`; legacy-index removed its OPS row (CAPTURE-REQUESTS J2.2b), so the plane answers
+     "unknown op" to every class and there is no fence left to assert. */
   t("the refusal names the shape rather than the class, so it holds for a credential class that "
   + "does not exist yet (PL-11's `token:ai`)",
     /drain/.test(String(asMember.detail)) && /REQUESTS/.test(String(asMember.detail)), true);
