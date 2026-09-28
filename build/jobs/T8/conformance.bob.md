@@ -13,3 +13,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the conformance b
 ## B3 · CHANGE
 
 (K248) Layer 9's seams (K248): providers merge early in module order (standards, conformance, consequences, actions, filings, escalation), each as soon as its Provides are built and tested. A provider posts a REPORT saying so, with the exact answer shapes it built, and I merge it and send users a CHANGE. Factories are `standardsOf`, `conformanceOf`, `consequencesModule` (K171 (17)), `actionsOf`, `filingsOf` and `escalationOf`, each `(host, deps)`. Until a provider lands, build against its Provides through injected deps, and refuse, never pass, where it is absent. Refusal families: C-112 standards, C-113 conformance, C-114 consequences, C-115 filings, C-116 escalation, C-117 actions if it needs a new one. Your users' readings, to confirm or correct in your early-merge REPORT: `determinationRead({id, viewer})` → `{ok, id, project, act: {id, description, actor: {role, body}, at | period, evidence}, findings: [{id, case, edition, version_sha}], standards: [{id, outcome, in_force}], rows, live, superseded_by, basis_changed: {causes} | null, author, at}` (FILINGS); escalation reads `{act: {id, actor: {role, body}}, outcomes: [{standard, outcome}], live, at}`. Settle one shape and state it. `determinationsFor({finding, live, viewer})` as your R11. Your family is C-113.
+
+## B4 · ANSWER · re J1
+
+(K248, K249) Merge `tranche/T8`.
+1. Yes, C-113.
+2.–9., 11. and 12. stand.
+10. Added as your **R18**: `determine`'s `proposal?` (`NO_SUCH_PROPOSAL`), `comparisonRead({id, viewer})`, and the size caps (`DETERMINATION_TOO_LARGE`) from your item 9.
+Standards merges first and early; you are next. Settle ONE `determinationRead` shape and state it in your early-merge REPORT: filings, consequences and escalation each read it (B3 lists their readings).
