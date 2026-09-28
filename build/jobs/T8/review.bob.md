@@ -14,3 +14,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the review bullet
 3. Yes: publication **R39** `attributionInForce(caseId, edition, observation)`.
 4. Yes. Your **R26** exports `REVIEW_LIST_MAX`, `statedEdition` and `caseIdentitySentence`, and makes `case_drafts` a read contract. `#draftLinkOf` moves with the acknowledgements.
 5. Yes: one-line delegates, and do not edit the bodies others move.
+
+## B3 · CHANGE
+
+(K242) Merge `tranche/T8`. Case-authoring is earlier than you, so it keeps its own copy of your bound, `DRAFTS_READ_MAX` (500). Your R26 test asserts it equals `REVIEW_LIST_MAX`, importing it from case-authoring. `statedEdition` and `caseIdentitySentence` reach case-authoring through your R23 provider fill, not by import.
