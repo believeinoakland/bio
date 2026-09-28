@@ -815,7 +815,12 @@ console.log("\n--- B7 · LOG-ALWAYS holds across FL-5's row, and the observation
      FL-3's does, reproducing PL-5's `#aiRunTerminate`. Two different instruments
      answering two different questions, and the arithmetic is stated so the
      difference is a decision rather than a discrepancy. */
-  t("every step still produced a log entry", (out.trace || []).length, st.runlog.length);
+  /* CORRECTED BY R26 (K148), NEVER EXEMPTED. This arm read "every step produced a log entry", and each of those
+     entries said NEVER_LOOKED, which the record refuses from a member (observation-log R3). Log-always now means
+     every step TICKS (its spend and lease), and an entry is sent only by a step whose judgement stated a look —
+     none here, so the run's log holds none, and not one NEVER_LOOKED. */
+  t("every step still ticked", (out.trace || []).length, st.log.filter((l) => l.op === "airuntick").length);
+  t("and no step that looked at nothing sent an entry", st.runlog.length, 0);
   t("and the run actually took some steps", (out.trace || []).length > 5, true);
   const collect = (out.trace || []).find((x) => x.step === "collect");
   t("the collect step's note names both numbers", /3 REPORT\(s\) taken, 1 REFUSED/.test(collect?.note ?? ""), true);

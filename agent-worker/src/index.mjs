@@ -139,7 +139,20 @@ import {
  * plane's own airunopen stamp says so: the plane learns it by being told and
  * refuses a run that cannot say. The material arrives PER CALL beside the `ai`
  * credential and is retained exactly as long: not at all. */
-import { resolveClaudeCascade, CASCADE_NO_ACCOUNT } from "./cascade.mjs";
+import { resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT } from "./cascade.mjs";
+
+/* R40, R41, D-611 — THE MODEL HALF, in its own file. It asks the model for a judgement inside a step and
+ * decides no step; the table above still decides every one. */
+import {
+  DEFAULT_MODEL, DEFAULT_MAX_SEGMENT_BYTES, SEGMENT_BYTES_SOURCE, segmentMeter, converse,
+  judgeTools, LOAD_LAYER, parentSystem, rowPrompt, rowFacts, subsessionSystem, subsessionTools,
+} from "./model.mjs";
+import { LOOKED_STATES } from "./subsession.mjs";
+
+/* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is rendered here, by `skills`' own renderer, from what the plane
+ * publishes (`op=affordances`) and the check catalogue, and its version is held to the one the run recorded. */
+import { renderPack } from "../../bio-plane/src/skillpack.mjs";
+import * as CATALOGUE from "../../bio-plane/checks/bio-checks.mjs";
 
 /* ------------------------------------------------------ THE SEGMENT BOUND
  *
@@ -207,7 +220,9 @@ const NAMESPACES = Object.freeze(["bio", "scratch"]);
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
     status,
-    headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
+    /* R47: no `access-control-allow-origin`. Nothing but the plane's service binding reaches this member, and
+       a header inviting a browser origin was an invitation to a caller it must never have. */
+    headers: { "content-type": "application/json" },
   });
 
 /* Every refusable condition answers through THIS helper, with the code passed as
@@ -291,7 +306,7 @@ const MAX_STEPS = 400;
  *  answers F10's precondition. Every one of those is in `harness.mjs`, is pure,
  *  and is driven directly by the suite as well as through this function — so a
  *  decision made here instead would be a decision nothing exhaustive covers. */
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps, cascade = null }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, cascade = null, model = null }) {
   /* EVERY PLANE CALL IS COUNTED, AND THE COUNT IS WHAT SPENDS `runtime`.
      §14b.6 named `runtime-ceiling-reached` as a word the record had with no
      writer, and IS-9(d) as the item that builds the producer. This counter IS
@@ -354,6 +369,32 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       + "level or this segment was handed the wrong accounts; both are the caller's to fix.",
       409, { run_id: runId, recorded: recordedPayer, resolved: cascade.level, levels: cascade.levels }) };
 
+  /* R48 — THE PACK, RENDERED AND HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run: until
+     then the pack instructs nothing and this changes nothing. */
+  if (model) {
+    const pub = planeAnswer(await call("affordances"), "affordances");
+    if (pub.silent) return { refusal: planeSilent(pub.silent) };
+    if (pub.refused)
+      return { refusal: planeRefused(runId, store, { status: 403, body: pub.refused.plane ?? null }) };
+    let pack;
+    try { pack = renderPack(pub.result, CATALOGUE); }
+    catch (e) {
+      return { refusal: refusal("PACK_UNRENDERABLE",
+        "the skill pack a run's model is instructed by could not be rendered from what the plane published, so no "
+        + "model turn was taken: " + String((e && e.message) || e).slice(0, 300), 502, { run_id: runId }) };
+    }
+    const recordedSkill = session.principal?.skill ?? null;
+    if (recordedSkill !== pack.version)
+      return { refusal: refusal("SKILL_VERSION_MISMATCH",
+        "the run's record says it runs under one skill pack and the pack this member rendered is another, so its "
+        + "model would be instructed by words the record does not name. No turn was taken; the run is resumable "
+        + "once the two agree.", 409, { run_id: runId, recorded: recordedSkill, rendered: pack.version }) };
+    model.pack = pack;
+    model.messages = [];
+    model.system = parentSystem(pack);
+    model.tools = [LOAD_LAYER(Object.keys(pack.disclosed || {})), ...judgeTools(LEVELS)];
+  }
+
   /* §14b.7 — A RESUMED RUN READS ITS OWN LOG AND CONTINUES.
      The count is what the table needs; the entries are what a later reader
      needs. Both come from PL-5's `op=airunlog`, in `seq` order, which is why
@@ -371,6 +412,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       { status: 403, body: logRead.refused.plane ?? null }) };
   const priorLog = logRead.result ?? {};
   const resumedFrom = Array.isArray(priorLog.entries) ? priorLog.entries.length : 0;
+  /* THE ADDRESS OF A LOOK THIS SEGMENT WRITES: `log:<seq>`, the ordinal `op=airunlog` answers (R41's reports
+     cite it as `observed_at`). Knowable only from a whole log: a truncated read leaves it UNDETERMINED. */
+  const logSeq = { next: () => (priorLog.truncated === true ? null : resumedFrom + logged + 1),
+                   landed: () => { logged += 1; },
+                   refused: (named) => { logRefused.push(named); refusals.push(named); } };
 
   const budget = {};
   for (const b of Array.isArray(session.budget) ? session.budget : [])
@@ -402,17 +448,39 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
      simply carries the state forward — an absent judgement is not an error, it
      is a run whose model had nothing to add. */
   let jx = 0;
-  let ended = null, steps = 0;
+  let ended = null, steps = 0, segmentStopped = null;
 
   while (steps < maxSteps) {
     steps += 1;
     const callsAtStepStart = calls;
     const row = CONTROL_FLOW[state.step];
 
-    /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. */
-    if (row && row.judged && jx < judgements.length) {
-      const applied = applyJudgement(state, judgements[jx]);
+    /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. Supplied by the caller in order, or (R40) made by a model
+       turn at every judged row but `collect`, whose judgements are the sub-sessions' REPORTS (R41). */
+    let judgement;
+    if (row && row.judged && model && state.step !== "collect") {
+      model.messages.push({ role: "user", content: rowPrompt(state.step, row, rowFacts(state, LEVELS)) });
+      const got = await converse({
+        token: model.token, model: model.id, meter: model.meter, system: model.system,
+        messages: model.messages, tools: model.tools, finalTool: `judge_${state.step}`,
+        onTool: async (name, input) => {
+          if (name === "load_layer") {
+            const layer = model.pack.disclosed?.[String(input.name)];
+            return layer ? { content: layer } : { content: `no disclosed layer '${String(input.name)}'`, error: true };
+          }
+          return { content: `this step is judged by judge_${state.step}`, error: true };
+        },
+      });
+      if (got.silent) return { refusal: modelSilent(got.silent, runId) };
+      if (got.refused) return { refusal: modelRefused(got.refused, runId) };
+      if (got.stopped) { segmentStopped = got.stopped; break; }
+      if (got.answer) judgement = got.answer;
+    } else if (row && row.judged && !model && jx < judgements.length) {
+      judgement = judgements[jx];
       jx += 1;
+    }
+    if (judgement !== undefined) {
+      const applied = applyJudgement(state, judgement);
       if (!applied.ok)
         return { refusal: refusal("JUDGEMENT_OVERREACH", applied.detail, 400,
           { step: state.step, fields: applied.overreach }) };
@@ -420,8 +488,13 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     }
 
     /* WHAT THE ROW DOES, IN PLANE CALLS. */
-    const work = await performStep(call, state, runId);
+    const work = await performStep(call, state, runId, model, logSeq);
     if (work.silent) return { refusal: planeSilent(work.silent) };
+    if (work.model?.silent) return { refusal: modelSilent(work.model.silent, runId) };
+    if (work.model?.refused) return { refusal: modelRefused(work.model.refused, runId) };
+    /* D-611: the segment's turns or bytes ran out inside the step. The SEGMENT stops; the run does not, and what
+       the step already logged stays logged. */
+    if (work.stopped) { segmentStopped = work.stopped; break; }
     /* THE SPAWN CONTRACT COULD NOT BE COMPOSED, AND THE RUN STOPS RATHER THAN
        FANNING OUT ANYWAY. This is the §14 fence firing: the plane's search-half
        payload arrived carrying the lens, or carrying nothing at all. Continuing
@@ -461,12 +534,20 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        condition. */
     const spentThisStep = calls - callsAtStepStart + 1; /* +1: the tick is a subrequest too */
     const consume = { ...(work.consume || {}), runtime: spentThisStep };
+    /* R26, K148: the entry only when the step's judgement states a look; a step that looked at nothing still
+       ticks, for its spend and its lease, and sends no entry. */
     const entry = stepLog(state, decision);
-    if (state.observed === "PRESENT") presentUnbacked += 1;
+    if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     const tick = await call("airuntick", null,
-      { run: runId, log: [entry], consume });
+      { run: runId, log: entry ? [entry] : [], consume });
     if (!tick.reached) return { refusal: planeSilent(tick) };
-    if (tick.status === 200 && tick.body?.ok === true) {
+    /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
+       an entry that landed. */
+    const tickAnswer = planeAnswer(tick, "airuntick");
+    if (tickAnswer.refused) {
+      refusals.push({ at: "airuntick", code: tickAnswer.refused.code, check: tickAnswer.refused.check,
+                      plane: tickAnswer.refused.plane });
+    } else {
       const t = tick.body.result ?? tick.body;
       /* REC-100 / IC-130 — A TICK THAT ANSWERED ok IS NOT AN ENTRY THAT LANDED.
          `op=airuntick` appends entry by entry and REFUSES per entry, returning
@@ -484,7 +565,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       const refusedEntries = Array.isArray(t?.refused) ? t.refused : [];
       const appendedNow = t?.appended != null && Number.isFinite(Number(t.appended))
         ? Number(t.appended)
-        : (t?.ticked === false ? 0 : Math.max(0, 1 - refusedEntries.length));
+        : (t?.ticked === false ? 0 : Math.max(0, (entry ? 1 : 0) - refusedEntries.length));
       logged += appendedNow;
       for (const r of refusedEntries) {
         const named = { at: "airuntick.log", step: state.step, to: decision.step,
@@ -510,13 +591,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
                   by: "the plane's own exit" };
         break;
       }
-    } else {
-      /* Already ANSWER-checked before D-276; given the same three fields as
-         every other published refusal so a reader is not told the code at four
-         sites and left to find it in the body at the fifth. */
-      refusals.push({ at: "airuntick", code: tick.body?.reason ?? tick.body?.code ?? null,
-                      check: tick.body?.check ?? null, plane: tick.body ?? null });
     }
+    /* A LOOK BELONGS TO THE STEP THAT MADE IT: it is not carried into the next step's entry. */
+    state = { ...state, level: null, observed: null, governed: false, condition: null };
 
     if (decision.step === "close") {
       /* THE ORDINARY EXIT, NAMING THE BOUND (C-22.5). The plane refuses a close
@@ -583,6 +660,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        which is "nothing was counted", not "nothing is held". */
     holdings: state.holdings ?? null,
     budget: BUDGET_BOUNDS.map((b) => ({ bound: b, ...(state.budget[b] || { allowed: 0, consumed: 0 }) })),
+    segmentStopped,
   };
 }
 
@@ -667,7 +745,7 @@ const meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) 
  *  work, and rows that have none say so by falling through — the table already
  *  says what every row is FOR, and duplicating that here would be a second
  *  description to age. */
-async function performStep(call, state, runId) {
+async function performStep(call, state, runId, model = null, logSeq = null) {
   const out = { state, consume: {}, note: null };
 
   switch (state.step) {
@@ -720,6 +798,16 @@ async function performStep(call, state, runId) {
       out.note = `${contracts.length} sub-session contract(s) composed, one per level, each read-only `
                + `(${SUBSESSION_OPS.join(", ")}) and with no field for the lens to arrive in`;
       out.state = { ...state, contracts };
+
+      /* R41 — THE SUB-SESSIONS RUN, when model turns do: one per level, each its own conversation under its own
+         contract, and each hands back a REPORT that `collect` holds to R20. */
+      if (model) {
+        const ran = await runSubsessions(call, out.state, runId, model, logSeq, contracts);
+        if (ran.silent || ran.model || ran.stopped) return ran;
+        out.state = { ...out.state, reports: ran.reports,
+                      reportsRefused: [...(out.state.reportsRefused || []), ...ran.refused] };
+        out.note += `; ${ran.reports.length} sub-session(s) reported, ${ran.refused.length} returned no report`;
+      }
 
       /* THE INTERNET LEVEL REQUESTS ACQUISITION AND DOES NOT PERFORM IT (§4
          group 1, PL-4). One request per internet target the judgement named, and
@@ -950,7 +1038,8 @@ async function performStep(call, state, runId) {
         { ...candidate, target: candidate.target ?? state.target ?? null, run: runId });
       if (!res.reached) return { silent: res };
       const answer = res.body?.result ?? res.body ?? {};
-      if (res.status === 200 && res.body?.ok === true && answer.wrote !== false) {
+      /* R24, R43 — D-276's class: a refusal nested in `result` states `ok: false`, with or without `wrote`. */
+      if (res.status === 200 && res.body?.ok === true && answer.ok !== false && answer.wrote !== false) {
         out.submitted = true;
         out.note = `wrote '${String(candidate.name ?? "")}'`;
         out.state = { ...state, queue, refusal: null, submission: candidate };
@@ -994,6 +1083,77 @@ async function performStep(call, state, runId) {
       return out;
   }
 }
+
+/** R41 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
+ *  frozen contract, the contract's `scope` as its only plane tool, and `report` as its answer. Its look is logged
+ *  at its level, and that entry's address is the report's `observed_at`. A sub-session that returns no report is
+ *  named, never read as an absence. */
+async function runSubsessions(call, state, runId, model, logSeq, contracts) {
+  const reports = [], refused = [];
+  for (const contract of contracts) {
+    const got = await converse({
+      token: model.token, model: model.id, meter: model.meter,
+      system: subsessionSystem(model.pack, contract),
+      messages: [{ role: "user", content: `Search the ${contract.level} level for the run's question, then report.` }],
+      tools: subsessionTools(contract),
+      finalTool: "report",
+      onTool: async (name, input) => {
+        if (!contract.scope.includes(name))
+          return { content: `'${String(name)}' is not in this sub-session's scope (${contract.scope.join(", ")})`, error: true };
+        const lim = Math.min(50, Math.max(1, Math.floor(Number(input.limit)) || 20));
+        const r = await meaningRead(call, { q: String(input.q ?? ""), rows: String(input.rows ?? ""), limit: lim });
+        if (r.silent) return { halt: { planeSilent: r.silent } };
+        if (r.refused) return { content: r.refused.plane ?? { code: r.refused.code }, error: true };
+        return { content: r.result };
+      },
+    });
+    if (got.planeSilent) return { silent: got.planeSilent };
+    if (got.silent || got.refused) return { model: got };
+    if (got.stopped) return { stopped: got.stopped };
+    if (!got.answer) {
+      refused.push({ level: contract.level, code: "SUBSESSION_NO_REPORT",
+                     detail: "the sub-session ended without calling report; its level is UNDETERMINED, not empty" });
+      continue;
+    }
+    const { observed_at: _ignored, ...said } = got.answer;
+    const report = { ...said, level: contract.level };
+    if (LOOKED_STATES.has(String(report.state))) {
+      const seq = logSeq ? logSeq.next() : null;
+      const entry = {
+        level: contract.level, subject: `sub-session ${contract.level} -> report`,
+        state: report.state === "PRESENT" ? "LOOKED_INDETERMINATE" : report.state,
+        governed: report.governed === true, condition: typeof report.condition === "string" ? report.condition : null,
+        terminal: false, bound: null,
+        detail: String(typeof report.summary === "string" ? report.summary : "").slice(0, 500),
+      };
+      const tick = planeAnswer(await call("airuntick", null, { run: runId, log: [entry] }), "airuntick");
+      if (tick.silent) return { silent: tick.silent };
+      const t = tick.result ?? {};
+      const bad = Array.isArray(t.refused) ? t.refused : [];
+      if (tick.refused || bad.length) {
+        for (const r of tick.refused ? [tick.refused] : bad)
+          logSeq?.refused({ at: "airuntick.log", step: "fanout", to: "collect", level: contract.level,
+                            code: r?.code ?? r?.reason ?? null, check: r?.check ?? null, plane: r?.plane ?? r ?? null });
+      } else {
+        logSeq?.landed();
+        if (seq != null) report.observed_at = `log:${seq}`;
+      }
+    }
+    reports.push(report);
+  }
+  return { reports, refused };
+}
+
+const modelSilent = (silent, runId) => refusal("MODEL_SILENT",
+  "the model API could not be reached, so no judgement was made at this step and the segment stopped. The run is "
+  + "resumable; nothing the table did before this step is lost.", 502,
+  { run_id: runId, detail_from_model: silent?.detail ?? null });
+
+const modelRefused = (refused, runId) => refusal("MODEL_REFUSED",
+  "the model API refused the call, or the model declined, so no judgement was made at this step and the segment "
+  + "stopped. The API's own error type and status are beside this, unchanged.", 502,
+  { run_id: runId, model_status: refused?.status ?? null, model_error: refused?.type ?? null,
+    model_message: refused?.message ?? null });
 
 const planeSilent = (asked) => refusal("PLANE_SILENT",
   "the plane could not be reached, so this member knows nothing about the record and says so. A failure "
@@ -1084,7 +1244,8 @@ async function handleRun(req, env) {
     return refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,
       { capability: "unavailable", levels: cascade.levels });
 
-  const bound = Number(env.MAX_TURNS_PER_SEGMENT) || DEFAULT_MAX_TURNS_PER_SEGMENT;
+  /* R7: a positive number, else 120 — `Number(x) || 120` let a negative setting become the bound. */
+  const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
   const requested = body.turns == null ? bound : Number(body.turns);
   if (!Number.isFinite(requested) || requested < 1)
     return refusal("BAD_TURNS", "turns must be a positive number of model turns for this segment.", 400);
@@ -1094,8 +1255,8 @@ async function handleRun(req, env) {
   if (requested > bound)
     return refusal("SEGMENT_OVER_BOUND",
       `a segment is bounded at ${bound} model turns and ${requested} were asked for. The bound is not a `
-      + `policy choice: it is where the isolate's MEMORY ceiling sits, measured, and a longer segment `
-      + `would not fail cleanly. Split the run across segments — resuming is what segments are for.`,
+      + `policy choice: it keeps the segment clear of the isolate's CPU ceiling, measured (M-168), which a `
+      + `longer segment would meet. Split the run across segments — resuming is what segments are for.`,
       400, { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE });
 
   /* THE ROUND TRIP. One op, non-mutating, under the credential we were handed.
@@ -1127,8 +1288,17 @@ async function handleRun(req, env) {
    * walks it with no network at all, and this driver is the part that turns a
    * row into a plane call. A driver that decided anything would be a second
    * control flow nobody could exhaust. */
+  /* R40 — MODEL TURNS RUN when an account resolved and the caller supplied no judgements; `judgements` in the
+     body keeps the supplied mode, in which no turn is taken. The token is read here, for this call only. */
+  const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
+  const meter = segmentMeter({ turnsBound: requested, bytesBound });
+  const modelMode = !!(cascade && cascade.available) && !Array.isArray(body.judgements);
+  const model = modelMode
+    ? { token: (await cascadeToken(body.claude_accounts)).token, id: env.MODEL || DEFAULT_MODEL, meter }
+    : null;
+
   const drive = await driveHarness(env, {
-    runId, store, credential, cascade,
+    runId, store, credential, cascade, model,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS,
   });
@@ -1144,18 +1314,19 @@ async function handleRun(req, env) {
        different claims. `stage: "harness"` says the deterministic table ran;
        `turns_run: 0` and `judgement_source` say the model half did not. */
     stage: "harness",
-    turns_run: 0,
-    judgement_source: "supplied",
+    turns_run: meter.turns,
+    judgement_source: modelMode ? "model" : "supplied",
     /* CORRECTED AT FL-6, never exempted: this note used to say the model
        account "is FL-6's cascade and is not resolved here". The cascade IS
        resolved here now, and the honest remainder is different — the account
        is resolved and NAMED, and what still does not happen is a MODEL TURN,
        whose sizing is D-218's measurement and not this item's. */
-    judgement_note: "the control-flow table is FL-3's and it ran; the Claude account that would pay for "
-                  + "a model turn is resolved by FL-6's cascade and named beside this. What has not "
-                  + "happened is a model turn itself (turns_run: 0) — running one is sized by D-218 and "
-                  + "is not this segment's claim — so judgements arrived from the caller. Stated rather "
-                  + "than presented as a model run.",
+    judgement_note: modelMode
+      ? `the control-flow table ran and the judgements inside its steps were made by model turns (${meter.turns}), `
+        + "under the Claude account the cascade resolved and the skill pack the run names; the sub-sessions ran "
+        + "one per level and returned REPORTS"
+      : "the control-flow table ran and its judgements arrived from the caller, so no model turn was taken "
+        + "(turns_run: 0). Stated rather than presented as a model run.",
     /* FL-6 ON THE WIRE, secret-free by construction. Three shapes, each an
        honest statement of a different fact: material supplied and RESOLVED
        (level + ref + every level's own state); material supplied and NOTHING
@@ -1204,7 +1375,11 @@ async function handleRun(req, env) {
        reader may take as what the run held. */
     holdings: drive.holdings,
     budget: drive.budget,
-    segment: { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE },
+    /* D-611: the segment's two bounds and what it spent against each; `stopped` names the one that ended the
+       SEGMENT (never the run, whose `ended` stays null), or null. */
+    segment: { turns_requested: requested, turns_bound: bound, bound_source: BOUND_SOURCE,
+               turns_run: meter.turns, bytes_sent: meter.bytes, bytes_bound: bytesBound,
+               bytes_source: SEGMENT_BYTES_SOURCE, stopped: drive.segmentStopped ?? null },
 
     /* THE PLANE'S STATEMENT ABOUT THE CREDENTIAL, COPIED AND NOT INTERPRETED.
        What the plane publishes here is the class it resolved the credential to

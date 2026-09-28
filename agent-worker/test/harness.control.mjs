@@ -522,14 +522,16 @@ arm({
      count a model-judged PRESENT it records as indeterminate. The arm's subject
      — skip the terminal step's tick — is unchanged. Found by
      `m025-arm-anchor-witness` A4, which is that instrument doing its job. */
+  /* RE-ANCHORED 2026-09-28 by AGENT-WORKER #1 (T7, R26/K148): the tick now sends an entry only when the step
+     stated a look (`entry ? [entry] : []`), and B1's arm it fails by was renamed with it (every step TICKS). */
   find: `    const tick = await call("airuntick", null,
-      { run: runId, log: [entry], consume });`,
+      { run: runId, log: entry ? [entry] : [], consume });`,
   replace: `    const tick = decision.step === "close"
       ? { reached: true, status: 200, body: { ok: true, result: {} } }
-      : await call("airuntick", null, { run: runId, log: [entry], consume });`,
+      : await call("airuntick", null, { run: runId, log: entry ? [entry] : [], consume });`,
   run: () => {
     const r = runHarness();
-    const logArm = anyFailed(r, /every step the trace names produced a log entry|last entry is terminal|and names the bound/);
+    const logArm = anyFailed(r, /every step the trace names ticked|last entry is terminal|and names the bound/);
     const gateHeld = !anyFailed(r, /investigate-fresh is NOT deployed/);
     return {
       observed: `${r.pass} pass, ${r.fail} FAIL · log-always arms ${logArm ? "FAILED" : "did NOT fail"} · gate ${gateHeld ? "held" : "also failed"}`,

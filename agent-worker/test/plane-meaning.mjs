@@ -13,7 +13,7 @@
  *
  * IT IS DERIVED, NEVER TYPED, AND THAT IS THE WHOLE DESIGN. The arms come from
  * `MEANING` in the plane's own compiler and the refusal wording comes from
- * `MEANING_READ_CHECKS` in the plane's own catalog. A hand copy would agree with
+ * `MEANING_READ_CHECKS` in the plane's own retrieval checks. A hand copy would agree with
  * the member for free — this project has now measured that failure at least six
  * times, most sharply as a complete hand copy of 131 op names that passed —
  * whereas a derivation cannot: rename an arm in `query.mjs` and this fixture
@@ -30,7 +30,7 @@
  * instrument the suites share, not a suite.
  */
 import { MEANING } from "../../bio-plane/src/query.mjs";
-import { MEANING_READ_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+import { MEANING_READ_CHECKS } from "../../bio-plane/src/retrieval/checks.mjs";
 
 /** The arms the plane's compiler actually holds, in its order. */
 export const MEANING_ARMS = Object.keys(MEANING);
