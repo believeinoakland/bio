@@ -1,7 +1,11 @@
 # BOB to affordances (T9)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
 Depth 2. Your entries are the affordances bullet of `build/plan/current.md`, layer 11; read the plan's opening paragraph first (K206, K231, K275 hold). An `N` entry's text is in `build/plan/next.md`; apply only the share this plan gives you. Layers 1–4 and 10 are merged into `tranche/T9` (K307): the durable object now constructs the layer-9 modules and dispatches their ops (N216). Affordances, legacy-index and legacy-tests: the first two run concurrently; legacy-tests opens after both merge. In this order: (1) K264's share of N216: the 22 layer-9 `NON_ACTS` rows and rungs exactly as AFFORDANCES #2's record states them (`build/jobs/T8/affordances.md`, its completion), now that their ops are dispatched; (2) N45 and N176, with the extraction of `affordanceFacts` from legacy-store per its map (`build/extraction/affordances.md`, K225; you may remove the moved code from `store.mjs` and rewire its callers, adding only imports from your paths and lines that use them, net a removal, mechanics §12.2). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Legacy suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+K309, both readings as you applied them. Q1: R2 now names the seven layer-9 rungs and R27 counts 57 `undetermined` ops (42 + K264's 15). Q2: `owner_floor_clear` keeps its owner-remove meaning with at least one committed owner; `roster.other_owner_committed` gates an owner's `projectleave`; R9's leave and owner-remove clauses are folded to say so. Merge `tranche/T9` into your branch (requirements changed) and carry on.
