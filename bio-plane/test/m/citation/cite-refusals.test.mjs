@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, projMd, inqMd, biasMd, NOW } from "./fixture.mjs";
 import { Citation, CITE_CHECKS, CITE_EXTENT_CHECKS, EXTENT_PARAMS } from "../../../src/citation/index.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 
@@ -33,7 +34,7 @@ test("R1: the selection is asked first, at weight report (retrieval R19): an unk
   assert.equal(w.cit.cite({ project: "nope", handle: h, ...ANN }).reason, "NOT_YOURS");
 });
 
-test("R1, R9: an absent citing object and a project the viewer may not see answer the same NO_SUCH_PROJECT; existence-only sight answers membership's C-70.1", async () => {
+test("R1, R9: an absent citing object and a project the viewer may not see answer the same NO_SUCH_PROJECT, membership's own answer (its R78) byte for byte; existence-only sight answers membership's C-70.1", async () => {
   const { w, p } = await setup();
   const hv = await w.select(["INFO-2026-0001"], { viewer: V("vera"), owner: "v" });
   const hidden = w.cit.cite({ project: p, handle: hv, viewer: V("vera"), owner: "v", author: "member:vera", identity: V("vera") });
@@ -41,6 +42,11 @@ test("R1, R9: an absent citing object and a project the viewer may not see answe
   assert.equal(hidden.reason, "NO_SUCH_PROJECT");
   assert.deepEqual({ ...hidden, project: null }, { ...absent, project: null });
   assert.equal(hidden.project, p);
+  /* The answer is membership's one no-such-project answer (R78, N146, N208), with its row's check and translation. */
+  assert.deepEqual(hidden, noSuchProject(p));
+  assert.deepEqual(absent, noSuchProject("PROJ-2026-9999-none"));
+  assert.equal(typeof hidden.check, "string");
+  assert.equal(typeof hidden.translation, "string");
   /* A caller with no viewer sees no project (fail closed). */
   assert.equal(w.cit.cite({ project: p, handle: hv, viewer: null, owner: "v" }).reason, "NO_SUCH_PROJECT");
   const disc = w.project("Open door", "ann", { visibility: "discoverable" });

@@ -32,7 +32,7 @@
 
 import { normalizeType, OBJECT_TYPES, parseFrontmatter, createSha256 } from "../../checks/bio-checks.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf, INLINE_MAX } from "../promotion/index.mjs";
 import { contentOf, citationExtent } from "../content/index.mjs";
 import { retrievalOf, answerChanged } from "../retrieval/index.mjs";
@@ -77,14 +77,6 @@ export const EXTENT_PARAMS = Object.freeze({
   content_id: "text",
 });
 
-/* The one no-such-project answer (Membership Architecture v2 §7.9): a project this viewer cannot see answers exactly
-   as one that does not exist (R9). Byte for byte `membership`'s own, which it does not export (a copy, K57). */
-function noSuchProject(project) {
-  return { ok: false, reason: "NO_SUCH_PROJECT", project: project ?? null,
-           detail: "no project answers to that id here. A project you cannot see is answered exactly as one "
-                 + "that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way." };
-}
-
 /* A refusal with a catalogue row carries the row's check and translation (R1). */
 const rowOf = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
 
@@ -123,22 +115,25 @@ export class Citation {
   /* ---- the citing object, R1 and R4's shared opening ---- */
 
   /* The citing object, answered through sight BEFORE position (REC-138 / D-426, R9): an existence-only sight is
-     `membership`'s C-70.1 (REC-149), and an absent id and one this viewer cannot see give the same answer. */
+     `membership`'s C-70.1 (REC-149), and an absent id and one this viewer cannot see give the same answer, which is
+     `membership.noSuchProject`'s (its R78, N146, N208): the code is minted there, never here. */
   #citingObject(project, viewer) {
     const h = typeof project === "string" && project ? this.record.head(project) : null;
-    if (h) { const existence = this.membership.existenceAct(project, viewer); if (existence) return { refusal: existence }; }
-    if (!h || !this.membership.inSight(project, viewer)) return { refusal: noSuchProject(project) };
-    return { head: h };
+    if (h) { const existence = this.membership.existenceAct(project, viewer); if (existence) return existence; }
+    if (!h || !this.membership.inSight(project, viewer)) return noSuchProject(project);
+    return { ok: true, head: h };
   }
 
-  /* The live `bundle.md`, parsed, or its readability refusal. */
+  /* The live `bundle.md`, parsed (`ok: true`), or its readability refusal, returned as itself so its verdict stands
+     at the top level (N196: a refusal nested one level down reads to the D-240 reader as an answer). It reads one
+     file, bounded by the inline bound (1 MiB, promotion R48), and publishes no collection. */
   #document(project, detail) {
     const f = this.record.readFile(project, "bundle.md");
-    if (!f || typeof f.text !== "string") return { refusal: { ok: false, reason: "NO_BUNDLE_MD", project } };
+    if (!f || typeof f.text !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
     const parsed = parseFrontmatter(f.text);
     if (!parsed.data)
-      return { refusal: { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project, ...(detail ? { detail } : {}) } };
-    return { text: f.text, data: parsed.data };
+      return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project, ...(detail ? { detail } : {}) };
+    return { ok: true, text: f.text, data: parsed.data };
   }
 
   /* Promote the rewritten `bundle.md` over the head, every OTHER live file carried forward untouched: promote writes a
@@ -183,7 +178,7 @@ export class Citation {
     if (!sel.ok) return sel;
 
     const obj = this.#citingObject(project, viewer);
-    if (obj.refusal) return obj.refusal;
+    if (!obj.ok) return obj;
     const p = obj.head;
     if (p.type !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", project, got: p.type,
@@ -245,7 +240,7 @@ export class Citation {
     }
 
     const doc = this.#document(project, null);
-    if (doc.refusal) return doc.refusal;
+    if (!doc.ok) return doc;
 
     const current = new Map();
     for (const r of Array.isArray(doc.data.references) ? doc.data.references : [])
@@ -341,7 +336,7 @@ export class Citation {
     if (!sel.ok) return sel;
 
     const obj = this.#citingObject(project, viewer);
-    if (obj.refusal) return obj.refusal;
+    if (!obj.ok) return obj;
     const p = obj.head;
     /* Through normalizeType, so a legacy focus/problem spelling lands on the inquiry arm — the MAP RULE. */
     const ontoInquiry = normalizeType(p.type) === "inquiry";
@@ -444,7 +439,7 @@ export class Citation {
     /* END DEC-49 REGION is-cite-retired */
 
     const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
-    if (doc.refusal) return doc.refusal;
+    if (!doc.ok) return doc;
 
     /* Partition the selection against what the document already carries. SEVERED IS NOT ABSENT: a severed edge is a
        recorded human judgment, and reinstating one is a state change that cannot ride inside a report-weight act
