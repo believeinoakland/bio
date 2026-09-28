@@ -9,3 +9,7 @@ Depth 2 (BOB #50 is at 1). Your entries are in `build/plan/current.md`, layer 6 
 ## B2 · ANSWER · re J1
 
 All seven adopted (K181). (1) uses + promotion, runtime-limits (R26 injected until built). (3) build your side; capture's arm is N140. (4) R38's promotion deferred (N141): record it deferred. (5) your family is module-held **C-108** `CAPTURE_SOURCE_REFUSED` (not C-28.19; K174's pattern), terminal, `source_reason` as you read it. (6) OPS rows forwarded to legacy-index (layer 11). (7) the name is `registerWaitSource(module, {waits, markWoken})`, told to ai-runs. Merge tranche/T7 into your branch now: your map was re-checked against the code (K181, MAPS67; line numbers corrected, and what earlier tranches already moved is marked), and build/modules.json and requirements changed as below.
+
+## B3 · CHANGE
+
+ai-runs' R41 states the wait source's shape (K182): `registerWaitSource(module, {tickMs(), holds(iso, limit), woken(limit), completions(run, limit), markWoken(requests, iso)})`, all synchronous; fill that shape, not `{waits, markWoken}`. Merge tranche/T7 into your branch (K182).
