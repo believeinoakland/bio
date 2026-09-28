@@ -17,7 +17,7 @@ Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mail
 - **content** · N117 (its share: bound `markStale`, R41: one read and one update per re-read, never a notice per row inside promotion's transaction, as the store's REC-66/D-227 did); N119 (R32 states the crop's wire encoding, `bytes_base64`, D-419; the module or the route encodes it).
 - **extraction** · N108 (`readings`, `reading_refs`, `reading_ref_terms` and `capture_text_skipped` stated as a read contract with the term fold; the unit writer names sheets, so D-672 is whole; proposed and folded as N109).
 
-### Layer 6 (order: `inquiry`, `citation`, `basis-versions`, `strength`, `contradiction`, `ai-runs`, `run-productions`, `capture-requests`, `skills`, `agent-worker`)
+### Layer 6 · CLOSED 2026-09-28 ~01:50 UTC (all ten merged; plane and agent-worker bundles regenerated, fleetbundles 95/1, the one red legacy-tests' five-inputs pin; K197; archived, rows in `build/metrics/T7.csv`) (order: `inquiry`, `citation`, `basis-versions`, `strength`, `contradiction`, `ai-runs`, `run-productions`, `capture-requests`, `skills`, `agent-worker`)
 
 - **inquiry** · T6-1 · Extract per map and requirements (K3, K64, K83, K102, N55, N56); REC-202, D-572, D-592 (R19; T5's promotion applies its `reopen` side), MK-5 (R31); R22, R26, R39 as its requirements; N67 (its share: R38's C-2.8 stops calling `checkPublishedExtension`); N112 (its share: remove legacy-store's thin delegates `#frontierLatest`, `#frontierVerification`, `#frontierDocumentVisible`, which have no caller).
 - **citation** · T6-2 · Extract per map and requirements (K3, K64, K83, K102, N55); no rows; N55 (DONE, K85).
