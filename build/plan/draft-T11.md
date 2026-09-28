@@ -31,6 +31,7 @@
 - **record-core** (layer 1) · N287 (R37 states `group_id`, `prior_state`). **connections** (layer 5) · N288 (`entity_id` read contract).
 - **ai-runs** (layer 6) · N284 (a work product's `registered`); N289 (its share); N293 (a byte ceiling on `state`).
 - **progressions**, **inquiry**, **entities**, **intent**, and the modules minting the shared generic codes · N285 (K275 per code, each keeping its translation).
+- **capture** (layer 3) · N285 (`NOT_FOUND`: R63 `evidenceAbsent`, extraction R31 through it; K343). **calibration** · N223 (its two post-write notices, worded K343).
 - **intent** (layer 7) · N291 (`requestById`); N285 (its `NO_SUCH_ENTITY` site). **reevaluation** (layer 7) · N292 (`listeners_failed`).
 - **capture-requests** (layer 6) · N295 (R14 reads inquiry R44).
 - **extraction**, **observation-log**, **provenance**, **legacy-store** · N294 (the testimony index as a provided service).
