@@ -559,8 +559,11 @@ console.log("\n--- 4. THE FIXTURE'S OWN MARGIN, asserted so it cannot go quiet -
   t("tier 1 ordered three pages", t1.pages.length, 3);
   t("page 0 decoded NOTHING and produced one marker per run",
     [t1.pages[0].text.length, t1.pages[0].undetermined.length], [0, 20]);
-  t("page 1 is named a scan by tier 1 itself — the marker the tier-3 predicate reads",
-    t1.pages[1].undetermined.map((m) => m.reason), ["no_text_layer"]);
+  /* RE-PINNED 2026-09-28 (legacy-tests T9; pdf-reader R34, R14 as amended, N101, K279; PDF-READER #2 J2): the scan
+     page's full-page image now also carries R34's `image_unread` (count 0), after its one `no_text_layer` marker.
+     Stated exactly, from the suite's print. */
+  t("page 1 is named a scan by tier 1 itself — the marker the tier-3 predicate reads — and its image R34's image_unread",
+    t1.pages[1].undetermined.map((m) => m.reason), ["no_text_layer", "image_unread"]);
   t("page 2 decoded its short line byte-for-byte", t1.pages[2].text.includes(GOOD_LINE), true);
   /* CORRECTED AT D-514, 2026-09-24. This read `t1.counts.chars` — the RAW
      character count — and said the predicate clears its margin over 8
@@ -574,9 +577,16 @@ console.log("\n--- 4. THE FIXTURE'S OWN MARGIN, asserted so it cannot go quiet -
   const glyphsOf = (str) => { let n = 0; for (const ch of str) if (!/\s/u.test(ch)) n++; return n; };
   t("the RAW counter is untouched and still reports 8 characters for the good line",
     t1.counts.chars, GOOD_LINE.length);
-  t("and the escalation predicate's own input clears it with margin: 21 markers over 7 GLYPHS",
-    [t1.counts.undetermined, glyphsOf(t1.document), t1.counts.undetermined > glyphsOf(t1.document)],
-    [21, 7, true]);
+  /* RE-PINNED 2026-09-28 (legacy-tests T9; pdf-reader R34, K279; extraction R4, N253): tier 1's own count now holds
+     R34's `image_unread` on page 1, so it reads 22; the escalation predicate does not weigh that marker (an unread
+     image is no undecoded character, R4), and is handed extraction's `decodeView`, which takes it out. Both figures
+     are pinned, from the suite's print, and the margin on the 21 the predicate actually weighs, as D-514 did above. */
+  const { decodeView } = await import("../src/extraction/pipeline.mjs");
+  const weighed = decodeView(t1).counts.undetermined;
+  t("and the escalation predicate's own input clears it with margin: 21 markers over 7 GLYPHS "
+    + "(tier 1's count 22, R34's image_unread not weighed, R4)",
+    [t1.counts.undetermined, weighed, glyphsOf(t1.document), weighed > glyphsOf(t1.document)],
+    [22, 21, 7, true]);
 }
 
 /* ===================================================================== *

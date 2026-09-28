@@ -271,11 +271,31 @@ const PRE_ITEM_DIGEST = {
    text first); the literals above are NOT re-taken. Any other added, moved or changed key still moves the digest,
    so the over-strictness arm (f) still fails here. */
 const R52_KEYS = ["membership", "membershipWhy"];
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; pdf-reader R33, R34, N100, N101, K279; extraction R31, K293): the plain
+   read now also serves pdf-reader's own top-level `pageBoxes` (R33), which R31 is worded (K293) to allow beside
+   R52's two, and tier 1's text over the SCAN carries R34's `image_unread` marker for its full-page image (in the
+   page's and the document's `undetermined`, counted in `counts.undetermined`). Both are removed BY NAME, the count
+   lowered by as many markers, exactly as R52's keys are, and the literals above are still NOT re-taken: the
+   remainder hashes to them. What was removed is asserted, so the removal cannot pass over nothing. (D-374's branch
+   re-took the literals over the whole answer, pre-R52: its layer literal d167a73e… is this tree's layer answer
+   less R52's keys, which is the same fact read the other way.) */
+const R33_KEYS = ["pageBoxes"];
 const withoutR52 = (text) => {
   const o = JSON.parse(text);
   const present = R52_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(o, k));
   for (const k of R52_KEYS) delete o[k];
-  return { text: JSON.stringify(o, null, 1), present,
+  const presentR33 = R33_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(o, k));
+  for (const k of R33_KEYS) delete o[k];
+  const unread = (m) => m && m.reason === "image_unread";
+  const tx = o.text;
+  const removedR34 = tx && Array.isArray(tx.undetermined) ? tx.undetermined.filter(unread) : [];
+  if (removedR34.length) {
+    tx.undetermined = tx.undetermined.filter((m) => !unread(m));
+    if (Array.isArray(tx.pages)) for (const p of tx.pages)
+      if (p && Array.isArray(p.undetermined)) p.undetermined = p.undetermined.filter((m) => !unread(m));
+    if (tx.counts && typeof tx.counts.undetermined === "number") tx.counts.undetermined -= removedR34.length;
+  }
+  return { text: JSON.stringify(o, null, 1), present, presentR33, removedR34: removedR34.map((m) => [m.page, m.rect, m.area_share]),
            faithful: JSON.stringify(JSON.parse(text), null, 1) === text };
 };
 
@@ -312,14 +332,20 @@ console.log("\n--- 1 · WITHOUT THE FLAG: byte-identical to the pre-item read, a
   const callsBefore = CALLS;
   const plainScan = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${S}`);
   const plainLayer = await raw(mf, `op=pdfstructure&token=${RUTH}&sha256=${L}`);
-  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): R52's two additive keys removed by name (above). */
+  /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): R52's two additive keys removed by name (above); RE-ANCHORED 2026-09-28 (T9): and R33's `pageBoxes`, R34's markers. */
   const scanLess = withoutR52(plainScan.text), layerLess = withoutR52(plainLayer.text);
   console.log(`  printout: scan digest ${sha(plainScan.text)} · layer digest ${sha(plainLayer.text)}`
-    + ` · less R52's keys: ${sha(scanLess.text)} · ${sha(layerLess.text)}`);
+    + ` · less R52's keys, R33's key and R34's markers: ${sha(scanLess.text)} · ${sha(layerLess.text)}`);
   t("the plain answers are in the plane's serialised form, so removing two keys by name changes nothing else",
     [scanLess.faithful, layerLess.faithful], [true, true]);
   t("both plain answers carry R52's two keys (extraction R52, K139), and only those are removed",
     [scanLess.present, layerLess.present], [R52_KEYS, R52_KEYS]);
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): R33's key on both, R34's one marker on the scan's full-page image and
+     none on the text layer, stated exactly from the suite's print. */
+  t("both carry pdf-reader R33's `pageBoxes` (extraction R31, K293), and the scan's text R34's one `image_unread` "
+    + "(its full-page image), the text layer's none; exactly these are removed by name",
+    [scanLess.presentR33, layerLess.presentR33, scanLess.removedR34, layerLess.removedR34],
+    [R33_KEYS, R33_KEYS, [[0, [0, 0, 612, 792], 1]], []]);
   t("the plain read of the scan is BYTE-IDENTICAL to the pre-item answer (digest)", sha(scanLess.text), PRE_ITEM_DIGEST.scan);
   t("the plain read of the text-layer document is BYTE-IDENTICAL to the pre-item answer (digest)",
     sha(layerLess.text), PRE_ITEM_DIGEST.layer);
