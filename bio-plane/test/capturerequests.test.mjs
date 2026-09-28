@@ -420,14 +420,10 @@ console.log("\n--- 3a. a caller holding a REAL request id cannot make the plane 
      shipped with a ReferenceError while 1276 assertions passed, so a store-level
      answer is not evidence that a caller can reach the question — and this
      particular question is the one the whole fence turns on. */
-  const seen0 = await GET(`op=capturerequestdraining&token=adm-pl4&request=${REQ1.request}`);
-  t("op=capturerequestdraining answers through the control plane, and OUTSIDE a drain tick it says "
-  + "the row is `requested` and NOT draining — which is the fact the arm above refuses on",
-    [seen0.found, seen0.state, seen0.draining], [true, "requested", false]);
-  const seenNone = await GET(`op=capturerequestdraining&token=adm-pl4&request=CR-no-such-request`);
-  t("and a request that does not exist answers NOT FOUND and NOT DRAINING — an unknown row and a "
-  + "queued one are both refused, so a caller learns nothing by guessing ids",
-    [seenNone.found, seenNone.draining, seenNone.address], [false, false, null]);
+  /* RETIRED 2026-09-28 (T7, legacy-tests; K218): two arms drove `op=capturerequestdraining` (the row `requested` and
+     not draining outside a tick; an unknown id not found and not draining). capture-requests' requirements retired
+     that op (K58; K181), so the store answers it with no row; R16's refusal, the fact these arms read, is driven by
+     capture-requests' own tests (`bio-plane/test/m/capture-requests/`). The class fence below still holds. */
   t("it is CLASS-FENCED: no member session reaches it, because it exists for op=acquire's arm and "
   + "not for a person",
     (await GET(`op=capturerequestdraining&token=mem-pl4&request=${REQ1.request}`))?.error
