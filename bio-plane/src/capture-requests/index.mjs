@@ -27,10 +27,11 @@
  * the same storage, and a test may pass its own. */
 import {
   CAPTURE_REQUEST_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
-  civicosUserAgent, isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, parseFrontmatter,
+  civicosUserAgent, isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, parseFrontmatter, createSha256,
 } from "../../checks/bio-checks.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { viewerPredicate } from "../membership/index.mjs";
+import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { credentialsOf } from "../capture-sources/credentials.mjs";
@@ -57,6 +58,10 @@ export const CAPTURE_REQUEST_READ_LIMIT = 200;
 export const CAPTURE_REQUEST_READ_MAX = 1000;
 /** R29: a run's outstanding requests and its completions, each bounded. */
 export const CAPTURE_REQUEST_WAIT_BATCH = 25;
+/** R12 (N224): with the scheduler's rank, a tick reads this many times its batch of `requested` rows to rank. */
+export const CAPTURE_REQUEST_RANK_READ = 10;
+/** R38 (N141): the slug of the information bundle a requested capture is promoted as (`INFO-<year>-<n>-requested`). */
+export const CAPTURE_REQUEST_BUNDLE_SLUG = "requested";
 /** R5: the request's states; the terminal ones end a request. */
 export const CAPTURE_REQUEST_STATES = Object.freeze(["requested", "draining", "captured", "refused", "expired"]);
 export const CAPTURE_REQUEST_TERMINAL = Object.freeze(["captured", "refused", "expired"]);
@@ -135,16 +140,24 @@ const clamp = (limit, dflt, max) => {
   const n = Math.floor(Number(limit));
   return Math.max(1, Math.min(Number.isFinite(n) && n > 0 ? n : dflt, max));
 };
+/** An instant as milliseconds: a finite number, or a parseable date string; else null. */
+const instantMs = (v) => {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string" && v.trim()) { const t = Date.parse(v); return Number.isFinite(t) ? t : null; }
+  return null;
+};
 const randomHex = (bytes) => [...crypto.getRandomValues(new Uint8Array(bytes))]
   .map((b) => b.toString(16).padStart(2, "0")).join("");
 
 export class CaptureRequests {
   #sql; #deps; #draining = false;
+  #filed = [];     // R44: {module, fn, seq}
 
   /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
    *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
-   *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default). */
+   *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default), `promotion` (R38), `order` (R44: the
+   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own). */
   constructor(storage, deps = {}) {
     this.#sql = storage.sql;
     this.#deps = deps;
@@ -161,6 +174,7 @@ export class CaptureRequests {
     return typeof n === "string" && n ? n : "bio";
   }
   #observe(entry, at) { return this.#deps.observations.observe(entry, at, 0); }
+  #rank(m) { const o = Array.isArray(this.#deps.order) ? this.#deps.order : MODULE_ORDER; const i = o.indexOf(m); return i === -1 ? Infinity : i; }
 
   /* ==================================================================== *
    * R1–R9 — THE DOOR. It writes a row. It fetches NOTHING.
@@ -168,7 +182,7 @@ export class CaptureRequests {
    * Read this function looking for an outbound call and there is none, which is the module's whole claim expressed as
    * an absence: R9's test drives the door with a capture, a governor and credentials that fail the test when touched.
    * ==================================================================== */
-  captureRequest(a = {}, { viewer = null, caller = null } = {}) {
+  captureRequest(a = {}, { viewer = null, caller = null, at = null } = {}) {
     const args = a && typeof a === "object" ? a : {};
     const refusal = (code, detail, extra) => {
       const row = CAPTURE_REQUEST_CHECKS[code];
@@ -297,10 +311,11 @@ export class CaptureRequests {
                state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
-    /* R6, R7: THE TIME IS THIS INSTANCE'S CLOCK, never a body's `at`, and THE ID IS MINTED HERE, never a body's
-       `request`: a caller naming the instant would set its own expiry, and one naming the id could collide with a held
+    /* R6, R7: THE TIME IS THE IN-PROCESS CALLER'S STATED INSTANT (`at`, a test or the scheduler's replay) OR THIS
+       INSTANCE'S CLOCK, never a body's `at` (the op handler passes none), so each request's expiry follows its own
+       instant (N188 (3)). THE ID IS MINTED HERE, never a body's `request`: one naming the id could collide with a held
        one. A drawn id already held is drawn again, so the door never throws on the key. */
-    const nowMs = this.#nowMs();
+    const nowMs = instantMs(at) ?? this.#nowMs();
     const now = stampInstant("second", nowMs);
     const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
     let request = null;
@@ -315,6 +330,14 @@ export class CaptureRequests {
       request, run, target, address, host, purpose, uaMode, callerPlane, String(runRow.principal_claude ?? ""),
       now, now, expires, lead || null, render);
     const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
+    /* R44 (N223): every listener told once, after the write, in the modules' total order; none can change the row or
+       the answer. A rejection is swallowed where it lands. */
+    for (const l of this.#filed) {
+      try {
+        const r = l.fn({ request, run: written.run, expires: written.expires });
+        if (r && typeof r.then === "function") r.then(null, () => {});
+      } catch { /* isolated */ }
+    }
     return { ok: true, request, run: written.run, target: written.target, address: written.address,
              host: written.host, purpose: written.purpose, ua_mode: written.ua_mode,
              lead_inquiry: written.lead_inquiry ?? null, render: written.render === 1,
@@ -337,6 +360,16 @@ export class CaptureRequests {
 
   /** R10's composer, as a method for the reads' callers. */
   attribution(row) { return captureRequestAttribution(row); }
+
+  /** R44 (N223, K259): a later module registers once at start for the notice after each request written (R6). Its
+   *  refusals are membership's `listenerRefusal` (R81); listeners run in the modules' total order (R83). */
+  onRequestFiled(module, fn) {
+    const refused = listenerRefusal(this.#filed, module, fn);
+    if (refused) return refused;
+    this.#filed.push({ module, fn, seq: this.#filed.length });
+    this.#filed.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
 
   /* ==================================================================== *
    * R11–R22, R37–R41 — THE DRAIN: THE ONLY THING IN THIS PLANE THAT TURNS A REQUEST INTO A FETCH.
@@ -370,8 +403,9 @@ export class CaptureRequests {
 
   #remaining() { return Number(this.#one(`SELECT count(*) AS c FROM capture_requests WHERE state='requested'`).c) || 0; }
 
-  /** op=capturerequestdrain, and the scheduler's `capture-request-drain` consumer. */
-  async drain({ limit = null, actor = "consumer", now = null } = {}) {
+  /** op=capturerequestdrain, and the scheduler's `capture-request-drain` consumer, which passes its rank (R12, N224:
+   *  scheduler R10, `rank(items, now)` answering the items reordered). */
+  async drain({ limit = null, actor = "consumer", now = null, rank = null } = {}) {
     const nowMs = Number.isFinite(now) ? now : this.#nowMs();
     const at = stampInstant("second", nowMs);
     if (!this.configured())
@@ -426,10 +460,14 @@ export class CaptureRequests {
                        expires: q.expires, detail: said });
       }
 
-      /* R12: `requested` rows oldest first, none past its `expires`. */
-      const queued = this.#rows(
+      /* R12: `requested` rows oldest first, none past its `expires`. Given the scheduler's rank (N224), the tick reads
+         at most ten times its batch, oldest first, and takes its batch in the rank's order; without one, or when the
+         rank fails, oldest first. */
+      const ranking = typeof rank === "function";
+      const read = this.#rows(
         `SELECT * FROM capture_requests WHERE state='requested' AND expires > ? ORDER BY requested_at, request LIMIT ?`,
-        at, cap);
+        at, ranking ? cap * CAPTURE_REQUEST_RANK_READ : cap);
+      const queued = ranking ? this.#ranked(read, rank, nowMs).slice(0, cap) : read;
       const captured = [], refused = [], held = [];
       const hostsThisTick = new Map();
       /* R13: a refusal or hold writes code, detail (and R40's reason), `attempts + 1` when judged by conduct, and moves
@@ -498,7 +536,8 @@ export class CaptureRequests {
 
         if (r.ok) {
           /* R15, R39: captured, the detail the attribution statement; the digest `capture` filed. A capture whose
-             bytes the record already held (`existed: true`) is recorded as THAT capture, never as a new one. */
+             bytes the record already held (`existed: true`, or the source's `304` on the held capture) is recorded as
+             THAT capture, never as a new one. */
           this.#sql.exec(
             `UPDATE capture_requests SET state='captured', code=NULL, detail=?, source_reason=NULL, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
             verdict.attribution.statement, r.sha || null, at, at, q.request);
@@ -507,8 +546,12 @@ export class CaptureRequests {
             state: "PRESENT", governed: false, resultKind: "capture", resultRef: r.sha || null,
             detail: verdict.attribution.statement,
           }, at);
+          /* R38 (N141): a NEW capture is promoted at `collected` as an information bundle; one already held has its
+             home and makes none (R39). The promotion's refusal changes nothing of the row: the capture is filed. */
+          const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q, r.document, verdict.attribution, at);
           captured.push({ request: q.request, address: q.address, sha: r.sha || null, grade: r.grade ?? null,
-                          attribution: verdict.attribution, already_held: r.existed === true });
+                          attribution: verdict.attribution, already_held: r.existed === true,
+                          ...(promoted ? { promoted } : {}) });
         } else if (r.renderCode) {
           const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
           const why = String(r.detail || r.reason || "").slice(0, 400);
@@ -547,6 +590,28 @@ export class CaptureRequests {
       return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
                captured, refused, held, expired, remaining: this.#remaining() };
     } finally { this.#draining = false; }
+  }
+
+  /** R12 (N224): the rows in the rank's order. Each is offered as `{kind: "request", id, waitingSince, cadenceMs}`
+   *  (`waitingSince` its `requested_at` in milliseconds; `cadenceMs` R37's, by which the rank puts work waiting longer
+   *  than one cadence first) and carries its place under a symbol the rank's copies keep; a row the rank drops or
+   *  cannot place follows in oldest-first order. A rank that throws or answers no list leaves the order as read. */
+  #ranked(read, rank, now) {
+    if (read.length < 2) return read;
+    const PLACE = Symbol("place");
+    const cadenceMs = this.drainIntervalMs();
+    const items = read.map((r, i) => ({ kind: "request", id: r.request, waitingSince: instantMs(r.requested_at),
+                                        cadenceMs, [PLACE]: i }));
+    let answer;
+    try { answer = rank(items, now); } catch { return read; }
+    if (!Array.isArray(answer)) return read;
+    const order = [], taken = new Set();
+    for (const x of answer) {
+      const i = x && typeof x === "object" ? x[PLACE] : undefined;
+      if (Number.isInteger(i) && !taken.has(i)) { taken.add(i); order.push(read[i]); }
+    }
+    for (let i = 0; i < read.length; i++) if (!taken.has(i)) order.push(read[i]);
+    return order;
   }
 
   /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied. */
@@ -655,15 +720,25 @@ export class CaptureRequests {
                                                                      target: q.target });
         credential = c && Array.isArray(c.credentials) && c.credentials.length ? c.credentials[0] : null;
       }
+      /* R39 (N262): the capture this module's own record holds of the same address and render; R38: the sweep origin,
+         the target inquiry the matched scope and the run with both principals the deeming actor (capture R60, R61). */
+      const held = this.#one(
+        `SELECT capture_sha FROM capture_requests WHERE address=? AND render=? AND state='captured' AND capture_sha IS NOT NULL
+          AND request<>? ORDER BY captured_at DESC, request DESC LIMIT 1`, q.address, q.render, q.request);
       const res = await this.#deps.capture.acquire({}, {
         cls: "daemon", member: false, storeName: this.#storeName(),
         captureRequest: { locator: q.address, purpose: q.purpose,
                           agent: q.ua_mode === "member-browser" ? verdict.ua : null, render: q.render === 1,
-                          ...(credential ? { credential } : {}) } });
+                          ...(credential ? { credential } : {}),
+                          ...(held ? { heldSha: held.capture_sha } : {}),
+                          origin: { matched_sweep: q.target, deeming_actor: deemingActor(verdict.attribution) } } });
       const out = res && res.body;
       const doc = out && out.ok && out.document;
       if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256, grade: doc.capture && doc.capture.grade,
-                        existed: out.existed === true };
+                        existed: out.existed === true || out.held === true, document: doc };
+      /* R39, capture R61: the source answered that the held capture is still what it serves; no document, no bytes. */
+      if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
+        return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
       const reason = (out && (out.reason || out.error)) || `http ${res && res.status}`;
       const renderCode = q.render === 1 && typeof reason === "string"
         && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
@@ -674,6 +749,75 @@ export class CaptureRequests {
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
     } catch {
       return { ok: false, reason: "the fetch did not complete and this plane did not record why", status: null };
+    }
+  }
+
+  /** R38 (N141, K102, K181): THE CAPTURE PROMOTED AT `collected`, NEVER HIGHER, as a plane-composed `information`
+   *  bundle through `promotion.promote` under the daemon's machine-shaped actor (R10). DEC-47 makes the inquiry the
+   *  authorisation, so the capture's origin (filed by `capture` from the drain's own values, R15) is `sweep`, the target
+   *  inquiry its matched scope and the run with both principals its deeming actor. The bundle holds the capture's
+   *  register document as `capture` answered it, the primary (and a render's shell, a streamed capture's parts) as
+   *  blobs, and one register row. No `group`: `promote` writes the instance's recorded one or refuses (C-64.1). Answers
+   *  `{ok: true, bundle_id}`, or `{ok: false, reason?, detail}` (the promotion's own refusal relayed); never throws. */
+  #promoteCapture(q, doc, attribution, at) {
+    try {
+      const promotion = this.#deps.promotion;
+      if (!promotion || typeof promotion.promote !== "function")
+        return { ok: false, detail: "no promotion is reachable here, so the capture was filed and not promoted" };
+      const cap = doc.capture || {};
+      if (typeof doc.file !== "string" || !/^[0-9a-f]{64}$/.test(String(cap.sha256 || "")) || !Number.isSafeInteger(cap.bytes))
+        return { ok: false, detail: "capture's answer named no primary file, digest and size to promote" };
+      const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at;
+      const enc = (t) => {
+        const b = new TextEncoder().encode(t);
+        return { text: t, bytes: b.length, sha256: createSha256().update(b).hex() };
+      };
+      return this.#deps.record.transact(() => {
+        const id = `${this.#deps.record.allocId("INFO", at.slice(0, 4)).id}-${CAPTURE_REQUEST_BUNDLE_SLUG}`;
+        const title = `Requested capture of ${q.address}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const md = ["---",
+          `id: ${id}`, "object_type: information", "schema: information@2",
+          `title: ${JSON.stringify(title)}`, "current_state: collected", "prior_state: null",
+          `created: "${at}"`, `last_updated: "${at}"`,
+          "produced_by:", "  mode: agent", "  capability_tier: session",
+          "references: []", "state_history: []", "annotations_open: 0",
+          "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+          "visuals: []", "criticality: supporting", "source_status: unchanged",
+          "source:", `  locator: ${JSON.stringify(q.address)}`, `  retrieved: ${retrieved}`,
+          "monitoring:", "  enabled: false", "  frequency: none",
+          "---", "", "## Summary", "",
+          `The document served at ${q.address}, captured by the daemon at an investigative session's request `
+          + `under ${q.target}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+          "## Provenance Notes", "",
+          `${attribution.statement}. Requested ${q.requested_at} as ${q.request}; collected ${at}. Filed at collected `
+          + `and never higher: releasing it is a named member's decision.`, "",
+          "## Session Log", "",
+          `### Session ${at} | Collected | ${attribution.actor}`,
+          `Trigger: capture request ${q.request} (run ${q.run})`,
+          "Changes: created from the daemon's capture of the requested address.", "",
+          "## Review Notes", ""].join("\n");
+        const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || ""))
+          && Number.isSafeInteger(f.bytes) ? { path: f.file, blobSha: f.sha256, sha256: f.sha256, bytes: f.bytes } : null);
+        const blobs = [blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }), blob(doc.shell),
+                       ...(Array.isArray(doc.parts) ? doc.parts.map(blob) : [])].filter(Boolean);
+        const seen = new Set();
+        const files = [{ path: "bundle.md", ...enc(md) },
+                       { path: "data/provenance.json", ...enc(JSON.stringify({ documents: [doc] }, null, 2)) },
+                       ...blobs.filter((f) => (seen.has(f.path) ? false : seen.add(f.path)))];
+        const p = promotion.promote({
+          bundleId: id, base: null, snapKey: `${at.replace(/[-:]/g, "")}_${randomHex(4)}`, author: attribution.actor,
+          files,
+          meta: { object_type: "information", title, current_state: "collected", prior_state: null,
+                  created: at, last_updated: at, criticality: "supporting" },
+          register: [{ sha256: cap.sha256, path: doc.file, encoding: "binary", bytes: cap.bytes }],
+        });
+        /* The promotion's own refusal, relayed by its code, never minted here. */
+        return p && p.ok ? { ok: true, bundle_id: id }
+                         : { ok: false, reason: (p && (p.reason || p.code)) || null,
+                             detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
+      });
+    } catch {
+      return { ok: false, detail: "the promotion did not complete and this plane did not record why" };
     }
   }
 
@@ -746,6 +890,21 @@ export class CaptureRequests {
                          "cr.updated, cr.request", limit, "cr.target", viewer);
   }
 
+  /** R43 (N169): one request by id, as R24 answers a row (with R25's `render_deferral`), when its target is one the
+   *  viewer can see; null for a blank id, an unknown one or an unseen one alike. One read by key; writes nothing; never
+   *  throws. */
+  requestById(a = {}) {
+    try {
+      const { request = null, viewer = null } = a && typeof a === "object" ? a : {};
+      const id = text(request).trim();
+      if (!id) return null;
+      const seen = CaptureRequests.#gate("cr.target", viewer);
+      const r = this.#one(`SELECT cr.* FROM capture_requests cr WHERE cr.request = ? AND (${seen.sql}) LIMIT 1`,
+                          id, ...seen.args);
+      return r ? CaptureRequests.project(r) : null;
+    } catch { return null; }
+  }
+
   /** R28: a request's target and lead inquiry, either absent when not set, or null for an unknown id
    *  (observation-log's `sweep` authority resolution, R13 of observation-log). */
   bundlesOf(request) {
@@ -790,6 +949,18 @@ export class CaptureRequests {
    *  stamps them. Nothing is held while unattended capture is not configured, because nothing will complete. Whether a
    *  run is running is ai-runs' own answer (`runFor`, read with a machine viewer). */
   waitSource() {
+    /* N188 (1): each walk reads in keyset pages of the answer's bound, and at most `CAPTURE_REQUEST_READ_MAX` rows in
+       all, so a table of finished runs' leftovers never makes one call unbounded. */
+    const walk = (q, args, keyOf, take) => {
+      let after = "", scanned = 0;
+      for (;;) {
+        const page = this.#rows(q, ...args, after, CAPTURE_REQUEST_WAIT_BATCH);
+        for (const r of page) { if (take(r) === false) return; }
+        scanned += page.length;
+        if (page.length < CAPTURE_REQUEST_WAIT_BATCH || scanned >= CAPTURE_REQUEST_READ_MAX) return;
+        after = keyOf(page[page.length - 1]);
+      }
+    };
     const running = (run) => {
       try { const r = this.#deps.runs.runFor(run, "class:daemon"); return !!r && r.status === "running"; }
       catch { return false; }
@@ -799,23 +970,23 @@ export class CaptureRequests {
       tickMs: () => this.drainIntervalMs(),
       holds: (iso, limit) => {
         if (!this.configured()) return [];
-        const out = [];
-        for (const r of this.#rows(
-          `SELECT run, count(*) AS outstanding FROM capture_requests
-            WHERE state IN ('requested','draining') AND expires > ? GROUP BY run ORDER BY run`, String(iso))) {
-          if (out.length >= bound(limit)) break;
-          if (running(r.run)) out.push({ run: r.run, outstanding: Number(r.outstanding) });
-        }
+        const out = [], n = bound(limit);
+        walk(`SELECT run, count(*) AS outstanding FROM capture_requests
+               WHERE state IN ('requested','draining') AND expires > ? AND run > ? GROUP BY run ORDER BY run LIMIT ?`,
+             [String(iso)], (r) => r.run, (r) => {
+               if (running(r.run)) out.push({ run: r.run, outstanding: Number(r.outstanding) });
+               return out.length < n;
+             });
         return out;
       },
       woken: (limit) => {
-        const out = [];
-        for (const r of this.#rows(
-          `SELECT DISTINCT run FROM capture_requests
-            WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL ORDER BY run`)) {
-          if (out.length >= bound(limit)) break;
-          if (running(r.run)) out.push(r.run);
-        }
+        const out = [], n = bound(limit);
+        walk(`SELECT DISTINCT run FROM capture_requests
+               WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL AND run > ? ORDER BY run LIMIT ?`,
+             [], (r) => r.run, (r) => {
+               if (running(r.run)) out.push(r.run);
+               return out.length < n;
+             });
         return out;
       },
       completions: (run, limit) => this.#rows(
@@ -866,6 +1037,12 @@ export class CaptureRequests {
   }
 }
 
+/** R38: the deeming actor of a requested capture's sweep origin: the run and both principals (R10), never a token. */
+function deemingActor(attribution) {
+  const a = attribution && attribution.ok ? attribution : null;
+  return a ? `run ${a.at_the_request_of.run} under ${a.principals.plane}, paid by ${a.principals.claude}` : null;
+}
+
 /** The look's authority for a request: the run that asked (the door requires one, so the `sweep` arm is reached only
  *  by a row that names none). */
 function lookAuthority(q) {
@@ -896,6 +1073,8 @@ export function captureRequestsOf(host, deps = {}) {
       /* CAPTURE-SOURCES #2's note: the key rides the first `credentialsOf` call. */
       credentials: deps.credentials === undefined ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null })
                                                   : deps.credentials,
+      /* R38 (N141): the one promotion on this storage, through which a requested capture enters the record. */
+      promotion: deps.promotion || promotionOf(host, { record }),
     };
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);

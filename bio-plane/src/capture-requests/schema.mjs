@@ -139,6 +139,9 @@ CREATE INDEX IF NOT EXISTS capture_requests_run ON capture_requests(run);
 -- stop at its limit instead of sorting every terminal row the table holds.
 CREATE INDEX IF NOT EXISTS capture_requests_completed ON capture_requests(state, captured_at, request);
 CREATE INDEX IF NOT EXISTS capture_requests_renders ON capture_requests(render, state, updated, request);
+-- R39 (N262): the drain finds the capture this table holds of an address (and
+-- render flag) to fetch conditionally on, by one indexed read per fired row.
+CREATE INDEX IF NOT EXISTS capture_requests_address ON capture_requests(address, render, state, captured_at);
 `;
 
 /** The columns added after the table was first created, each added to a store that predates it. A legacy row's value
