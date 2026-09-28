@@ -166,6 +166,8 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N163 · 2026-09-28 · **publication** (REEVALUATION #1 REPORT J2.3): at its extraction, (a) R14's last clause: a published case's owners are told once per affected or undetermined cited part (reevaluation reads the case's cited parts and owners through publication); (b) `publishCase`'s edition arm calls `reevaluationOf(ctx).raise({target, source: "edition", since, edition, viewer})`, now in the store, and moves with it; (c) publication provides `publishedRegistry` itself (N152's half).
 - N164 · 2026-09-28 · **scheduler**, **monitoring** (REEVALUATION #1 REPORT J2.4): a caller of reevaluation's sweep `raiseNotices({limit, after})` (op `reevaluationraise`), following `cursor` to null after a newer capture is read.
 - N165 · 2026-09-28 · **actions**, **run-productions**, **citation** (REEVALUATION #1 REPORT J2.5; D-579, D-595): a case's `cites`, an action's legs and a run's suggested legs raise reevaluation notices only once each module pins its capture and names a holder; each states it when its job next runs.
+- N166 · 2026-09-28 · **capture**, **monitoring** (the T8 map re-check, K206): capture states `source_reachability` as a read contract in Provides, with its test; monitoring's `#monitorPending` and `#monitorTick` read it by name today.
+- N167 · 2026-09-28 · **scheduler** (the T8 map re-check, K206): intent's `ageSurfaced` (R17) is a consumer with no caller; scheduler's requirements name it, and R10 names the intent service it ranks by.
 
 ## Before layer 9
 
