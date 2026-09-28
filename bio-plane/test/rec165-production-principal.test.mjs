@@ -1,4 +1,4 @@
-/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/rec165-production-principal.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/rec165-production-principal.control.mjs [arm]`. RESULTS, RUN 2026-09-22 by REC-165 (CONDUCT #14's worker, cloud) on de40aa56 + this item (real src/index.mjs 704,656 B sha256 bb0e524ed14c…, src/store.mjs 2,793,636 B 200f653d8541…, src/airun.mjs 138,642 B f47ddd05121a…, checks/bio-checks.mjs 815,295 B a52ce90a1a2b…, untouched: YES), EVERY ARM AS DECLARED — on its first run, and AGAIN after the principal relay was rewritten field by field instead of spread (the DEC-49 guard's inherited-verdict ceiling refused the spread; the two gate arms were re-anchored on the new return and re-armed), same tallies: baseline 35/0 · **drop-gate-suggest — THE ROW'S CONTROL, the principal gate in `suggestVersion` removed -> 26/9: ARM S1 and S2 (THE OTHER PRINCIPAL, session AND credential) by name, with S3 S4 S5 F1 F3 and the two order arms N3 X6** · drop-gate-extract -> 30/5: E1 E2 E3 F2 F3 · **drop-context — BOB #28's CONTROL, the context check removed -> 31/4: X1 X2 X3 X4 by name, the order arms X6/X7 unmoved** · no-sight-suggest -> 33/2: U1 X7 · no-sight-extract -> 34/1: U2 · sent-field (the stamp honours a sent `principal`) -> 32/3: F1 F2 F3 · context-too-tight (a fence tighter than the rule: the run's own id only) -> 34/1: X5 · context-by-projects (over-strictness: the same rule spelled through `#runContextProjects`) -> 35/0. BEFORE THIS ITEM (the suite run against `de40aa56`'s sources): 13 pass, 22 fail — cora and her credential wrote suggestions and proposed readings under alice's runs, pia wrote one under a run over a project she cannot see, and every outside-context suggestion landed.
+/* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/rec165-production-principal.control.mjs` — deliberately NOT a `.test.mjs`, because it patches COPIES of `src/` while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/rec165-production-principal.control.mjs [arm]`. RESULTS, RUN 2026-09-22 by REC-165 (CONDUCT #14's worker, cloud) on de40aa56 + this item (real src/index.mjs 704,656 B sha256 bb0e524ed14c…, src/store.mjs 2,793,636 B 200f653d8541…, src/airun.mjs 138,642 B f47ddd05121a…, checks/bio-checks.mjs 815,295 B a52ce90a1a2b…, untouched: YES), EVERY ARM AS DECLARED — on its first run, and AGAIN after the principal relay was rewritten field by field instead of spread (the DEC-49 guard's inherited-verdict ceiling refused the spread; the two gate arms were re-anchored on the new return and re-armed), same tallies: baseline 35/0 · **drop-gate-suggest — THE ROW'S CONTROL, the principal gate in `suggestVersion` removed -> 26/9: ARM S1 and S2 (THE OTHER PRINCIPAL, session AND credential) by name, with S3 S4 S5 F1 F3 and the two order arms N3 X6** · drop-gate-extract -> 30/5: E1 E2 E3 F2 F3 · **drop-context — BOB #28's CONTROL, the context check removed -> 31/4: X1 X2 X3 X4 by name, the order arms X6/X7 unmoved** · no-sight-suggest -> 33/2: U1 X7 · no-sight-extract -> 34/1: U2 · sent-field (the stamp honours a sent `principal`) -> 32/3: F1 F2 F3 · context-too-tight (a fence tighter than the rule: the run's own id only) -> 34/1: X5 · context-by-projects (over-strictness: the same rule spelled through `#runContextProjects`) -> 35/0. BEFORE THIS ITEM (the suite run against `de40aa56`'s sources): 13 pass, 22 fail — cora and her credential wrote suggestions and proposed readings under alice's runs, pia wrote one under a run over a project she cannot see, and every outside-context suggestion landed. [2026-09-28, T7, legacy-tests (K220): the extract arms E1–E3, L4, L5, U2, F2 and F3's extract half are RETIRED and ARM M (the open's C-109.1 refusal) added, so `drop-gate-extract` and `no-sight-extract` have no arm left to fail and are retired in the driver, and `sent-field` declares F1 and F3 only; the tallies above are of their day and the control was not re-run.]
  * =========================================================================
  * REC-165 — A PRODUCTION NAMES A RUNNING RUN ITS CALLER HOLDS, AND A SUGGESTION LANDS INSIDE THAT RUN'S CONTEXT.
  *
@@ -28,6 +28,13 @@
  * live-cites predicate and its severance reading is `severedhomes.test.mjs`'s; (v) `op=capturerequest`, the same
  * class, is NOT gated by this landing (rule 1 names two ops) and is measured, not asserted, in REC-165's report.
  * [2026-09-23, REC-168: that door is now gated by BOB #28's ruling — `test/rec168-capturerequest-principal.test.mjs`.]
+ *
+ * RE-PINNED 2026-09-28 (T7, legacy-tests; K220, BOB's B10): ai-runs R40 (C-109.1) refuses to OPEN a run in a mode not
+ * deployed, and `extract` is not deployed (`DEPLOYED_MODES` is ["check"] until its verification is recorded), so no
+ * extract run opens and `op=extractpropose` is unreachable on a live plane — approved behaviour. The suite now asserts
+ * that refusal at the open (ARM M: its code, its check, and that nothing was written), and its `op=extractpropose` arms
+ * (E1–E3, L4, L5, U2, F2 and F3's extract half) are RETIRED to run-productions' own tests, named at each. Every
+ * `op=suggest` arm is unchanged.
  * ========================================================================= */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
@@ -213,6 +220,7 @@ const openAs = async (tok, contextId, contextType, extra = {}) => {
 const openExtract = (tok, contextId, contextType) => openAs(tok, contextId, contextType,
   { mode: EXTRACT_RUN_MODE, bounds: [{ bound: "mints", allowed: 20, unit: "passages" }] });
 const readRun = async (run) => parse(await RAW(`op=airun&token=${ADM}&run=${E(run)}`))?.session ?? null;
+const readLog = async (run) => (parse(await RAW(`op=airunlog&token=${ADM}&run=${E(run)}&limit=500`))?.entries ?? []).length;
 
 let nameSeq = 0;
 /* THE ONE SUBMITTER. §9's EMPTY-LEVEL kind, because it rests on no document and so is writable by a member
@@ -222,22 +230,43 @@ const suggest = (tok, run, target, extraQ = "", body = {}) => RAW(`op=suggest&${
   target, run, kind: "level-empty", name: `rec165 reading ${++nameSeq}`,
   description: `Search ${nameSeq}: we searched the meaning layer for a superseding reading and found none.`,
   relationship: "and", level: "meaning", observed_at: `observation:rec165-${nameSeq}`, ...body });
-const propose = (tok, run, extraQ = "", body = {}) => RAW(`op=extractpropose&${tok}${extraQ}`, {
-  run, bundleId: DOC, fn: "propose-reading", version: "0.1.0",
-  refs: [{ ref: `contract:C-${9000 + (++nameSeq)}`, refKind: "contract", refKey: `C-${9000 + nameSeq}` }], ...body });
+/* RE-PINNED 2026-09-28 (T7, legacy-tests; K220): the `op=extractpropose` submitter is retired with the arms that used it —
+   no extract run opens (ARM M), so none of them can reach the production. */
 const versionsOf = async (id) => (parse(await RAW(`op=basisversions&token=${ADM}&id=${E(id)}&limit=1000`))?.versions ?? []).length;
-const proposalsOf = async (run) => parse(await RAW(`op=extractproposals&token=${ADM}&run=${E(run)}`))?.count ?? -1;
 
 const QRUN = await openAs(ALICE, Q, "inquiry");         // alice's run over the loose question
 const PRUN = await openAs(ALICE, P, "project");         // alice's run over the project
-const XRUN = await openExtract(ALICE, Q, "inquiry");    // alice's EXTRACT run over the question
-const PXRUN = await openExtract(ALICE, P, "project");   // alice's EXTRACT run over the project
+const XRUN = await openExtract(ALICE, Q, "inquiry");    // alice's EXTRACT run over the question: REFUSED (ARM M)
+const PXRUN = await openExtract(ALICE, P, "project");   // alice's EXTRACT run over the project: REFUSED (ARM M)
+const KXRUN = await openExtract(AK, Q, "inquiry");      // her CREDENTIAL's extract run: REFUSED (ARM M)
 const KRUN = await openAs(AK, Q, "inquiry");            // a run alice's CREDENTIAL opened
-t("REACH: alice's five runs are really running and the plane STAMPED her (or her credential) as each run's "
+/* RE-PINNED 2026-09-28 (T7, legacy-tests; K220): "five runs" -> three. The two extract runs this arm also required
+   running are now refused at the open (ARM M below); the three check runs every op=suggest arm stands on are held
+   exactly as before. */
+t("REACH: alice's three check runs are really running and the plane STAMPED her (or her credential) as each run's "
   + "principal — every refusal below would pass vacuously over a run that never started",
-  [QRUN.r?.started, PRUN.r?.started, XRUN.r?.started, PXRUN.r?.started, KRUN.r?.started,
+  [QRUN.r?.started, PRUN.r?.started, KRUN.r?.started,
    (await readRun(QRUN.run))?.principal?.plane, (await readRun(KRUN.run))?.principal?.plane],
-  [true, true, true, true, true, "member:alice", "member:alice/alice-agent"]);
+  [true, true, true, "member:alice", "member:alice/alice-agent"]);
+
+console.log("\n--- ARM M · ai-runs R40 (C-109.1): AN EXTRACT RUN IS REFUSED AT THE OPEN WHILE EXTRACT IS NOT DEPLOYED ---");
+{
+  /* ADDED 2026-09-28 (T7, legacy-tests; K220, BOB's B10): the approved behaviour the retired extract arms now meet. */
+  const M = AI_RUN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED;
+  const notDeployed = (o) => [o?.started, o?.code, o?.check, o?.translation, o?.mode];
+  const WANT_M = [false, "AI_RUN_MODE_NOT_DEPLOYED", "C-109.1", M?.translation, EXTRACT_RUN_MODE];
+  t("ARM M0 (THE ROW): the check the open cites is ai-runs' C-109.1, and extract is a mode the one order has not deployed",
+    [M?.check, (XRUN.r?.deployed ?? []).includes(EXTRACT_RUN_MODE), (XRUN.r?.deployed ?? []).includes("check")],
+    ["C-109.1", false, true]);
+  t("ARM M1 (SESSION): alice's extract run over the question is refused at the open — AI_RUN_MODE_NOT_DEPLOYED, C-109.1, "
+    + "with its translation", notDeployed(XRUN.r), WANT_M);
+  t("ARM M2 (PROJECT CONTEXT): and so is her extract run over the project", notDeployed(PXRUN.r), WANT_M);
+  t("ARM M3 (CREDENTIAL): and so is one her minted credential asks for", notDeployed(KXRUN.r), WANT_M);
+  t("ARM M4 (NOTHING WRITTEN): none of the three refused runs exists afterwards — no run read, no log entry",
+    [await readRun(XRUN.run), await readRun(PXRUN.run), await readRun(KXRUN.run),
+     await readLog(XRUN.run), await readLog(PXRUN.run), await readLog(KXRUN.run)],
+    [null, null, null, 0, 0, 0]);
+}
 
 const C = AI_RUN_CHECKS.AI_RUN_NOT_PRINCIPAL;
 const refused = (a) => [a?.ok, a?.code, a?.check, a?.translation];
@@ -259,16 +288,15 @@ console.log("\n--- ARM S · ANOTHER PRINCIPAL'S RUNNING RUN IS REFUSED ON op=sug
     await versionsOf(Q), before);
 }
 
-console.log("\n--- ARM E · ANOTHER PRINCIPAL'S RUNNING RUN IS REFUSED ON op=extractpropose, FROM BOTH CALLER KINDS ---");
-{
-  const e1 = parse(await propose(CORA, XRUN.run));
-  const e2 = parse(await propose(CK, XRUN.run));
-  t("ARM E1 (THE OTHER PRINCIPAL, SESSION): cora cannot propose a reading under alice's extract run — refused "
-    + "positionally, by code, with the reason spelled as the code", [...refused(e1), e1?.reason], [...WANT, "AI_RUN_NOT_PRINCIPAL"]);
-  t("ARM E2 (THE OTHER PRINCIPAL, CREDENTIAL): nor can cora's minted credential", refused(e2), WANT);
-  t("ARM E3 (NOTHING WRITTEN): alice's extract run holds no proposal after the two refusals",
-    await proposalsOf(XRUN.run), 0);
-}
+/* ARM E (E1, E2, E3) — RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10). ANOTHER PRINCIPAL'S RUNNING RUN
+   REFUSED ON op=extractpropose, from both caller kinds, nothing written: no extract run opens (ARM M), so the arm cannot
+   reach the production. COVERED BY run-productions' own tests (`test/m/run-productions/extract.test.mjs`):
+   "R10, R13: refusals in order, nothing written on any, each with its catalogue check and translation but NO_TARGET and
+   NO_SUCH_BUNDLE" (a run another principal holds -> AI_RUN_NOT_PRINCIPAL, code and reason, check C-22.12, and nothing
+   written or spent on any refusal) and "R15, R18: every production names a running run whose principal is the caller;
+   the run is read only through ai-runs.runFor and the bound only through boundOf and consumeBound — this module holds
+   no run or bound table" (a machine caller AND a member caller other than the run's principal each refused
+   AI_RUN_NOT_PRINCIPAL; nothing attributed to anyone but the stamped proposer). */
 
 console.log("\n--- ARM L · THE CALLER'S OWN RUNNING RUN LANDS, FROM A SESSION AND FROM HER MINTED CREDENTIAL ---");
 {
@@ -281,12 +309,12 @@ console.log("\n--- ARM L · THE CALLER'S OWN RUNNING RUN LANDS, FROM A SESSION A
     [l2?.ok, l2?.state, l2?.code ?? null], [true, "suggested", null]);
   t("ARM L3: and her session suggests under the run her CREDENTIAL opened",
     [l3?.ok, l3?.state, l3?.code ?? null], [true, "suggested", null]);
-  const l4 = parse(await propose(ALICE, XRUN.run));
-  const l5 = parse(await propose(AK, XRUN.run));
-  t("ARM L4 (SESSION): alice proposes a reading under her own extract run — it lands",
-    [l4?.ok, l4?.code ?? null, l4?.reason ?? null], [true, null, null]);
-  t("ARM L5 (CREDENTIAL): and so does her minted credential, under the same run",
-    [l5?.ok, l5?.code ?? null, l5?.reason ?? null], [true, null, null]);
+  /* ARM L4, L5 — RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10). The run's own principal proposing under her
+     extract run, from her session and her credential: no extract run opens (ARM M). COVERED BY
+     `test/m/run-productions/extract.test.mjs`: "R11: success writes one proposed reading per reference in one
+     transaction, with the run, the proposer stamp, the chain with ai(fn, version) and its cap, and earned B or C
+     computed" and "R15, R18: every production names a running run whose principal is the caller; …" (the principal's
+     production lands). */
 }
 
 console.log("\n--- ARM N · THE CALLER'S ENDED RUN IS REFUSED ON op=suggest ---");
@@ -316,19 +344,14 @@ console.log("\n--- ARM U · A CALLER WHO CANNOT SEE THE RUN'S CONTEXT IS ANSWERE
   t("ARM U1 (SUGGEST): pia cannot see the project, and her suggestion under alice's run over it is "
     + "BYTE-IDENTICAL to one under a run id nobody minted (the id she sent is the only difference)",
     norm(sU, PRUN.run), norm(sN, NEVER));
-  const eU = await propose(PIA, PXRUN.run, "", { refs: [{ ref: "contract:C-1", refKind: "contract", refKey: "C-1" }] });
-  const eN = await propose(PIA, NEVER, "", { refs: [{ ref: "contract:C-1", refKind: "contract", refKey: "C-1" }] });
-  /* RE-PINNED 2026-09-28 (T7, legacy-tests; LEGACY-CHECKS #2 REPORT 10): the absent-run answer now carries its code,
-     NO_SUCH_RUN (C-104.3), where it carried none — run-productions R13's intended effect, a code a surface can key on.
-     The arm's claim is unchanged: the hidden run's answer is the never-minted run's, byte for byte, and the code it
-     carries is the ABSENT one, never the positional AI_RUN_NOT_PRINCIPAL that would tell pia the run exists. */
-  t("ARM U2 (EXTRACTPROPOSE): and her proposal under alice's extract run over the project is BYTE-IDENTICAL to "
-    + "one under a never-minted run — NO_SUCH_RUN, the absent run's own code",
-    [norm(eU, PXRUN.run), parse(eU)?.reason, parse(eU)?.code ?? null],
-    [norm(eN, NEVER), "NO_SUCH_RUN", "NO_SUCH_RUN"]);
+  /* ARM U2 — RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10). A proposal under a hidden extract run answered
+     byte-for-byte as under a never-minted one: no extract run opens (ARM M), so both runs are simply absent and the arm
+     would compare two absences. COVERED BY `test/m/run-productions/extract.test.mjs`: "R10, R13: refusals in order,
+     nothing written on any, each with its catalogue check and translation but NO_TARGET and NO_SUCH_BUNDLE" (a run over
+     a project the viewer cannot see answers NO_SUCH_RUN, and its answer equals the never-opened run's but for the id). */
 }
 
-console.log("\n--- ARM F · THE FORGED PRINCIPAL: a caller who SENDS alice's id is still refused, on both ops ---");
+console.log("\n--- ARM F · THE FORGED PRINCIPAL: a caller who SENDS alice's id is still refused on op=suggest ---");
 {
   const q = `&principal=${E("member:alice")}&caller=${E("member:alice")}&actor=${E("member:alice")}`
           + `&identity=${E("member:alice")}&viewer=${E("member:alice")}`;
@@ -337,11 +360,14 @@ console.log("\n--- ARM F · THE FORGED PRINCIPAL: a caller who SENDS alice's id 
   t("ARM F1 (THE FORGED PRINCIPAL, SUGGEST): cora sends alice's id in every field of query and body — refused "
     + "positionally, nothing written",
     [refused(parse(await suggest(CORA, QRUN.run, Q, q, b))), await versionsOf(Q)], [WANT, before]);
-  t("ARM F2 (THE FORGED PRINCIPAL, EXTRACTPROPOSE): and her proposal is refused the same way",
-    refused(parse(await propose(CORA, XRUN.run, q, b))), WANT);
-  t("ARM F3 (THE FORGED PRINCIPAL, CREDENTIAL): cora's credential sending the same is refused on both",
-    [refused(parse(await suggest(CK, QRUN.run, Q, q, b))), refused(parse(await propose(CK, XRUN.run, q, b)))],
-    [WANT, WANT]);
+  /* ARM F2, and F3's op=extractpropose half — RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10): the forged
+     principal on op=extractpropose; no extract run opens (ARM M). COVERED BY `test/m/run-productions/extract.test.mjs`:
+     "R12, R8: through the op the scope and limit are the query's and the viewer is the control plane's stamp; the
+     proposer and caller of a production are stamps too" (a query `principal`/`proposedBy`/`viewer` and a body
+     `proposedBy`/`viewer`/`caller` naming another member are ignored: the stamp is written) and "R15, R18: …" (a caller
+     other than the run's principal refused AI_RUN_NOT_PRINCIPAL). F3's op=suggest half is kept, unchanged. */
+  t("ARM F3 (THE FORGED PRINCIPAL, CREDENTIAL): cora's credential sending the same is refused on op=suggest",
+    refused(parse(await suggest(CK, QRUN.run, Q, q, b))), WANT);
 }
 
 console.log("\n--- ARM X · BOB #28: A SUGGESTION LANDS ONLY INSIDE ITS RUN'S CONTEXT ---");

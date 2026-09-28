@@ -27,10 +27,8 @@ const before = REAL.map(digest);
    anchor is the `if` and the first line of its own return — unique to its site by the fields that follow. */
 const SUGGEST_GATE = "    if (notPrincipal)\n      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,\n"
   + "               translation: notPrincipal.translation, detail: notPrincipal.detail, target, run,\n";
-const EXTRACT_GATE = "    if (notPrincipal)\n      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,\n"
-  + "               translation: notPrincipal.translation, detail: notPrincipal.detail, run: runId,\n";
 const SUGGEST_SIGHT = "    const runSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);\n";
-const EXTRACT_SIGHT = "    if (!r || !this.#aiRunInSight(runId, viewer))\n";
+/* EXTRACT_GATE and EXTRACT_SIGHT went with the two retired extract arms (2026-09-28, T7, K220). */
 const CONTEXT = "    const inContext = target === ctxId\n"
   + "      || (String(runRow.context_type) === \"project\" && this.#citesInto(target).confirmed.includes(ctxId));\n";
 const STAMP = "    if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))\n"
@@ -43,17 +41,17 @@ const ARMS = {
      name — from a session AND from a credential (a liar gating one kind would leave half of these green) — and
      the arms that depend on position being asked FIRST move with them: N3 (cora is then told the run's status)
      and X6 (she is then told the context). S5 and F1 fail because the refused acts now WRITE. Nothing on
-     op=extractpropose may move (F3 asserts both ops in one assertion, so it fails on its suggest half). */
+     op=extractpropose may move (F3 asserts both ops in one assertion, so it fails on its suggest half). [2026-09-28,
+     T7, legacy-tests (K220): the op=extractpropose arms are retired and F3 asserts op=suggest alone.] */
   "drop-gate-suggest": {
     patches: [["store.mjs", SUGGEST_GATE, SUGGEST_GATE.replace("if (notPrincipal)", "if (false)")]],
     mustFail: ["ARM S1 ", "ARM S2 ", "ARM S3:", "ARM S4:", "ARM S5 ", "ARM N3 ", "ARM F1 ", "ARM F3 ", "ARM X6 "],
   },
 
-  /* The same gate dropped in `extractpropose`: the E arms and the forged extract arms, and nothing on suggest. */
-  "drop-gate-extract": {
-    patches: [["store.mjs", EXTRACT_GATE, EXTRACT_GATE.replace("if (notPrincipal)", "if (false)")]],
-    mustFail: ["ARM E1 ", "ARM E2 ", "ARM E3 ", "ARM F2 ", "ARM F3 "],
-  },
+  /* `drop-gate-extract` — RETIRED 2026-09-28 (T7, legacy-tests; K220, BOB's B10): it declared ARM E1, E2, E3, F2 and
+     F3's extract half, all retired from the suite (ai-runs R40 opens no extract run, so op=extractpropose is
+     unreachable) to run-productions' own tests, which drive that gate directly. Nothing left in the suite can fail
+     for it. */
 
   /* BOB #28's CONTROL: drop the context check. The outside-target arms must fail by name, and X4 with them (the
      refused suggestions now write); the order arms X6/X7 must NOT move — position and sight answer first. */
@@ -69,11 +67,8 @@ const ARMS = {
     mustFail: ["ARM U1 ", "ARM X7 "],
   },
 
-  /* SIGHT DROPPED on extractpropose: only U2. */
-  "no-sight-extract": {
-    patches: [["store.mjs", EXTRACT_SIGHT, "    if (!r)\n"]],
-    mustFail: ["ARM U2 "],
-  },
+  /* `no-sight-extract` — RETIRED 2026-09-28 (T7, legacy-tests; K220): its one declared arm, U2, is retired from the suite
+     to run-productions' `extract.test.mjs` ("R10, R13: …", the hidden run answered as the never-opened one). */
 
   /* COMPARE WITH A SENT FIELD: the stamp honours a `principal` the caller put in its own query. Every honest
      arm stays green — that is the lie — and only the FORGED arms may fail. */
@@ -81,7 +76,8 @@ const ARMS = {
     patches: [["index.mjs", STAMP,
       STAMP.replace("        viaSession ? sessIdentity\n",
         "        url.searchParams.get(\"principal\") ? url.searchParams.get(\"principal\") : viaSession ? sessIdentity\n")]],
-    mustFail: ["ARM F1 ", "ARM F2 ", "ARM F3 "],
+    /* 2026-09-28 (T7, legacy-tests; K220): F2 retired with the extract arms; F3 now asserts op=suggest alone. */
+    mustFail: ["ARM F1 ", "ARM F3 "],
   },
 
   /* A FENCE TIGHTER THAN BOB #28's RULE: a run's context is its own id ONLY, so a project run may not land on a

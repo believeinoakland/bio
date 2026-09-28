@@ -64,8 +64,10 @@ const ARMS = {
      what shows the member arms are not satisfied merely by an absent caller. */
   "dispatch-none": {
     patches: [["bio-plane/src/store.mjs", GATE, "    if (false && resumer && resumer.ready && principal === resumer.stamp)\n"]],
+    /* 2026-09-28 (T7, legacy-tests; K220): NO-NETWORK ARM added with the suite's model mock — with nothing resumed
+       no model turn is taken, so its "the mock answered the segment's turns" half fails. Not run by this job. */
     mustFail: ["INSTANCE ARM 1", "INSTANCE ARM 2", "INSTANCE ARM 3", "INSTANCE ARM 4", "COUNT ARM",
-               "REFUSED-DISPATCH ARM", "…and the run's own log's LAST entry"],
+               "REFUSED-DISPATCH ARM", "…and the run's own log's LAST entry", "NO-NETWORK ARM:"],
   },
   /* OVER-STRICTNESS: the same equality in a spelling the suite did not anticipate. Nothing may fail. */
   "equal-by-compare": {
