@@ -32,3 +32,10 @@ Also: R38 `pinnedCaseEditionsOf` and `ratifiedFindingsRestingOn` (ratification R
 ## B5 · CHANGE
 
 (K244) One change, needed before review can load you: your no-provider fallback (`NO_REVIEW_PROVIDER.deadAnswer`, index.mjs 42 and 87) stops reading `REVIEW_COPY_CHECKS`. It answers a bare `NO_REVIEW_COPY` refusal (`{ok: false, reason, code}`) with no catalogue row, and you drop the import. It answers only while no module has filled R23. Review moves C-87.1–.11 out of the catalogue whole. Push it and REPORT; I will merge you into `tranche/T8` again at once.
+
+## B6 · CHANGE
+
+(K245) Two more with B5's change, both in your own module; then record completion again:
+1. `CASE_DOCUMENT_UNSERVABLE` gets its row in your `checks.mjs`, as C-98.9. This is wording: R13 and R33 name the refusal.
+2. `test/publish.test.mjs` §9 (an existing store migrates, and every ratified row survives as edition 1) fails with `NOT NULL constraint failed: published_bundles.edition` on `tranche/T8` since your merge. Your migration of an old-shape store must fill `edition`.
+Ratification is now merged into `tranche/T8` too; merge it.
