@@ -37,3 +37,7 @@
 - ownership: 7 files changed by agent-worker between tranche/T10 and HEAD; 0 failures
 
 Size (session_019AMVanykGp758UHakTRzV2): test runs 32, module lines 3253
+
+## J2 · REPORT · re B2
+
+B2 was already applied in J1 (commit d0ba76fb1a), so there is nothing new to push. harness.test's A5 and A8 and fanout.test's D-129 pin now read `OBSERVATION_LEVELS` and `OBSERVATION_STATES` through the plane's export (P7), not by scanning source text. harness: 260 passed, 0 failed; fanout: 185 passed, 0 failed. R45's freshness arms (2) read red until your rebuild at the close; I did not rebuild. My state stays COMPLETE.
