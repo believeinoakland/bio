@@ -28,3 +28,13 @@ Size (session_01F4Zw6fHHxLm7fXnQfo4nc5): test runs 6, module lines 1046
 ## J1 · COMPLETE
 
 Done: N287 (R37's bundles.group_id and prior_state tested at the contract, read through a later module's own SQL and head). Fixed two flaws my tests found, each red first: commit threw on a later group:null (NOT NULL on group_id; now kept, per R37), and seedMintLedger's GLOB '<prefix>-*' broke workerd's 50-byte cap for a long prefix and matched pattern characters (now a literal substr head, K313). Tests moved to a cursor-shaped, pattern-capped fixture (K316). record-core 55/55; users' suites 1728 pass / 40 fail, the identical 40 with and without my change (K348's reds); format, architecture, coverage 61/61, ownership 0 failures. Reported in my record: plane bundle stale (not rebuilt); the requirements' Status line still calls N213/N219 not yet met, which T9 met.
+
+## Completion after B2 (K350)
+
+Merged `tranche/T11` (C-22.7's catalogue row restored, the plane boots again) into `job/T11/record-core` @ 27efdb0077. No change to the module or its tests was needed.
+- `node --test bio-plane/test/m/record-core/`: tests 55, pass 55, fail 0, todo 0.
+- Every module that uses record-core (the same 38 test paths, the plane-booting suites among them): tests 1786, pass 1767, fail 0, todo 19. The 40 J1 failures (K348's) are all gone; none was mine.
+- `format`: 0 failures. `architecture record-core`: 4 product files, 0 failures. `coverage record-core`: 61 of 61, 0 failures. `ownership record-core tranche/T11`: 4 files, legacy-store 0 added, 0 removed; 0 failures.
+- Still reported: the plane bundle is stale from record-core's `index.mjs` (not rebuilt); the requirements' Status line's "not yet met" for N213/N219 is stale.
+
+Size (session_01F4Zw6fHHxLm7fXnQfo4nc5): test runs 2, module lines 1046
