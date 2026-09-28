@@ -5,7 +5,7 @@
   "scripts": {
     "embed": "node scripts/embed-release.mjs",
     "build": "npm run embed && esbuild src/index.mjs --bundle --format=esm --platform=neutral --outfile=dist/newgroup.bundled.mjs",
-    "test": "node test/embed.test.mjs && npm run embed && node test/wizard.test.mjs",
+    "test": "node test/embed.test.mjs && npm run embed && node test/wizard.test.mjs && node --test test/requirements.test.mjs",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"
   },

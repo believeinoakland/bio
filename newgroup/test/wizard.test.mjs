@@ -177,8 +177,14 @@ async function begin(slug, mode = "install", extra = {}) {
   const state = j.ok ? new URL(j.authorize).searchParams.get("state") : null;
   return { r, j, cookie, state };
 }
-const callback = (qs, cookie) =>
-  req("/callback?" + qs, { headers: cookie ? { cookie } : {} });
+/* R19: the streamed page escapes `<`, `>` and `&` inside its scripts (< …), so management-API text cannot close
+   them. The assertions below read the page as its own script sees those strings, so a negative such as "no
+   <b>Updated" still means what it says rather than passing on the escaped bytes. */
+const unescapeScripts = (s) => s.replace(/\\u00(3c|3e|26)/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+const callback = async (qs, cookie) => {
+  const r = await req("/callback?" + qs, { headers: cookie ? { cookie } : {} });
+  return new Response(unescapeScripts(await r.text()), { status: r.status, headers: r.headers });
+};
 
 async function metadataOf(call) {
   const blob = call.init.body.get("metadata");
@@ -1050,9 +1056,12 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
   t("naming what is refused until it is done, and by which code", body.includes("GROUP_UNDETERMINED"), true);
   t("naming the act that settles it — the root of trust's seed, for the record AND for scratch",
     [body.includes("op=instancegroupseed"), body.includes("store=scratch"), body.includes("ADMIN_TOKEN")], [true, true, true]);
-  t("the installed name is offered as a SUGGESTION, with the example of a copy whose group is not its worker name",
-    [body.includes("A suggestion, not a default"), body.includes("cross-town"), body.includes("biosmoke7"), body.includes("believe-in-oakland")],
-    [true, true, true, true]);
+  /* R22 (N5): the example of this project's own copy (biosmoke7, believe-in-oakland) is gone; the notice says the two
+     names may differ without naming any copy but the operator's. */
+  t("the installed name is offered as a SUGGESTION, saying a copy's name and its group's may differ, naming no other copy",
+    [body.includes("A suggestion, not a default"), body.includes("cross-town"), body.includes("group producing its record need not be"),
+     /biosmoke7|believe-in-oakland/.test(body)],
+    [true, true, true, false]);
   t("and it NEVER seeds, nor asks op=instancegroup (it holds no credential that could)", groupCalls(calls), []);
   t("no token in output", body.includes(TOK), false);
   globalThis.fetch = realFetch;

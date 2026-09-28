@@ -23,7 +23,7 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS } from "./ui.mjs";
+import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, publisherFooter } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
@@ -111,9 +111,12 @@ async function selectRelease(emit) {
     emit.ok("rel", "The built-in release (" + RELEASE_VERSION + ") is current.");
     return { version: RELEASE_VERSION, source: RELEASE_SOURCE, from: "built-in", man };
   } catch (e) {
-    man = null;
+    /* R11: a repository that answered, but whose plane failed verification, was REACHABLE: its manifest stays, so the
+       fleet step names the true reason its members are left out (they are signed against a plane this act did not
+       install) rather than "not reachable". Only a repository that did not answer leaves no manifest. */
+    if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
     const fallback = " The installer's own built-in release (" + RELEASE_VERSION
-      + ") installs instead, which is safe. This is worth mentioning to Believe in Oakland.";
+      + ") installs instead, which is safe. This is worth mentioning to the publisher of CivicOS releases.";
     emit.ok("rel",
       e && e.integrity
         ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback
@@ -747,12 +750,13 @@ function progressShell(title, slug) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">Believe in Oakland &middot; installer</p>
+<p class="eyebrow">CivicOS &middot; installer</p>
 <h1>${esc(title)}</h1>
-<p class="small">Reference: <span class="mono">${esc(slug)}</span>. Leave this page open. This usually takes under a minute.</p>
+<p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. Leave this page open. This usually takes under a minute.</p>
 <div id="log" class="log"></div>
 <div id="fail" class="notice" hidden><h2 id="fail-h"></h2><p id="fail-p"></p><p class="small mono" id="fail-d"></p></div>
 <div id="done" hidden></div>
+${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);const rows={};
 function step(id,label){const d=document.createElement("div");d.className="row go";d.id="r-"+id;
@@ -768,7 +772,12 @@ function done(html){$("#done").innerHTML=html;$("#done").hidden=false;
 </script>`;
 }
 
-const jsStr = (s) => JSON.stringify(String(s ?? ""));
+/* R19: every value streamed into a <script> is JSON with `<`, `>`, `&` and the two JavaScript line separators escaped,
+   so text from the management API (an error message, an account's name) can never close the script element it rides
+   in; the page then sets it as text, never as markup. */
+const jsLit = (v) => JSON.stringify(v).replace(/[<>&\u2028\u2029]/g,
+  (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+const jsStr = (s) => jsLit(String(s ?? ""));
 
 function streamPage(headers, shell, run) {
   const { readable, writable } = new TransformStream();
@@ -779,7 +788,7 @@ function streamPage(headers, shell, run) {
     ok:   (id, label) => write(`<script>ok(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`),
     no:   (id, label) => write(`<script>no(${jsStr(id)}${label ? "," + jsStr(label) : ""})</script>\n`),
     fail: (h, p, d)   => write(`<script>no();fail(${jsStr(h)},${jsStr(p)},${jsStr(d)})</script>\n`),
-    done: (inner)     => write(`<script>done(${JSON.stringify(inner)})</script>\n`),
+    done: (inner)     => write(`<script>done(${jsLit(inner)})</script>\n`),
   };
   (async () => {
     await write(shell);
@@ -867,11 +876,10 @@ async function runInstall(emit, code, saved) {
     return emit.fail("The Workers Paid plan is needed first",
       "Your copy runs on Cloudflare Workers, and the work it does — reading captured documents, "
       + "assembling evidence, answering members — needs the processing allowance that comes with "
-      + "Cloudflare's Workers Paid plan ($5/month). Your account already has a payment method for "
-      + "the storage this installer sets up, so this is $5 a month on a card Cloudflare already "
-      + "has, not a new kind of commitment. Installing without it would hand you a copy that looks "
-      + "right and quietly fails under real work, which is worse than this message. "
-      + "Nothing was installed, so there is nothing to clean up.",
+      + "Cloudflare's Workers Paid plan ($5/month), paid with a payment method on the account, which "
+      + "the evidence storage this installer sets up needs as well. Installing without it would hand "
+      + "you a copy that looks right and quietly fails under real work, which is worse than this "
+      + "message. Nothing was installed, so there is nothing to clean up.",
       "To continue: sign in at dash.cloudflare.com with this same account, open Workers & Pages, "
       + "choose Plans, enable Workers Paid, then come back here and run the installer again.");
   }
@@ -993,20 +1001,21 @@ async function runInstall(emit, code, saved) {
   emit.done(successPanel(base, secrets, !!st, verdict));
 }
 
+const NO_KEY = "No one else holds a key to it, the publisher of CivicOS releases included.";
 function successPanel(base, secrets, verified, verdict = null) {
   const lagging = verified && verdict && !verdict.confirmed;
   const head = verified && !lagging
     ? `<b>Your copy is running.</b> It lives in your
-Cloudflare account, under your control. Believe in Oakland holds no key to it.`
+Cloudflare account, under your control. ${NO_KEY}`
       + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "")
     : lagging
     ? `<b>Your copy is installed and answering, but not every part of it is confirmed running this release.</b>
 When it was last asked:${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
-account, under your control. Believe in Oakland holds no key to it.`
+account, under your control. ${NO_KEY}`
     : `<b>Your copy is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
 credentials below now, then open your address. It lives in your Cloudflare account, under
-your control. Believe in Oakland holds no key to it.`;
+your control. ${NO_KEY}`;
   return `<div class="${lagging ? "notice" : "okbox"}"><p style="margin:0">${head}</p></div>
 <div class="card">
  <div class="kv"><span class="k">Your address</span><span class="v" id="out-url">${esc(base)}</span><button class="copy" data-copy="out-url">Copy</button></div>
@@ -1030,8 +1039,7 @@ Cloudflare sign-in is the way back in.</p>
  * with nobody's act), or, for a store that already held a record when the value arrived, by one act of its
  * root of trust, op=instancegroupseed. THIS INSTALLER NEVER PERFORMS THAT ACT (D-436's decision (b); BOB #24
  * confirmed an automatic seed is not ruled in): which group produces a record is a person's to say, and a
- * copy's worker name need not be its group's slug — this project's own copy is the worker `biosmoke7`, and its
- * group is `believe-in-oakland`. So an update TELLS the operator, and never seeds.
+ * copy's worker name need not be its group's slug. So an update TELLS the operator, and never seeds.
  *
  * WHY IT TELLS FROM THE RULE AND NOT FROM A READ (DIST #4, 2026-09-22, refining DIST #3's route of 2026-09-21
  * in CLAIMS.md). That route read op=instancegroup after the update. The op answers the admin, member and probe
@@ -1071,8 +1079,8 @@ claim step over): <span class="mono">POST ${at}/api/?op=instancegroupseed&amp;to
 added, for your scratch record. Each records it once and never again, so check the spelling first;
 <span class="mono">op=instancegroup</span> shows what is recorded.</p>
 <p class="small">A suggestion, not a default: this copy was installed under the name <span class="mono">${esc(slug)}</span>.
-Your group&#39;s slug may differ from it &mdash; this project&#39;s own copy is named biosmoke7, and its group is
-believe-in-oakland. The installer does not record it for you: which group produces your record is yours to say.</p></div>`;
+Your group&#39;s slug may differ from it: a copy&#39;s name and the name of the group producing its record need not be
+the same. The installer does not record it for you: which group produces your record is yours to say.</p></div>`;
 }
 
 async function runUpdate(emit, code, saved) {
@@ -1234,7 +1242,8 @@ export default {
     if (req.method === "POST" && url.pathname === "/begin") {
       const body = await req.json().catch(() => ({}));
       const mode = body.mode === "update" ? "update" : "install";
-      const slug = String(body.slug || "").trim();
+      /* R2: a slug is a string in the grammar; a number or anything else is refused, never coerced into one. */
+      const slug = typeof body.slug === "string" ? body.slug.trim() : "";
       if (!slugOk(slug))
         return json({ ok: false, error: "The name needs 3 to 40 characters: lower-case letters, digits, and hyphens, starting and ending with a letter or digit." }, 400);
       const v = rand(32), s = rand(16);
@@ -1271,7 +1280,7 @@ export default {
       if (err)
         return html(plainPage("Permission was not granted",
           "Cloudflare did not approve the request, so nothing was created.",
-          url.searchParams.get("error_description") || err), 200, clear);
+          url.searchParams.get("error_description") || err, saved?.slug), 200, clear);
 
       if (!code || !saved || saved.s !== state
           || typeof saved.t !== "number" || Date.now() - saved.t > CFG.COOKIE_MAX_AGE_S * 1000)
@@ -1289,13 +1298,19 @@ export default {
   },
 };
 
-function plainPage(head, what, detail) {
+/* R22: a refusal page names CivicOS, and the group by the name it chose when this browser's request carried one;
+   before a group has chosen a name (the 404, an unverifiable return) it speaks to "your group". */
+function plainPage(head, what, detail, slug) {
+  const group = typeof slug === "string" && slugOk(slug)
+    ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : "Setting up your group&#39;s copy of CivicOS.";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(head)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">Believe in Oakland &middot; installer</p>
+<p class="eyebrow">CivicOS &middot; installer</p>
 <h1>${esc(head)}</h1><p>${esc(what)}</p>
 ${detail ? `<p class="small mono">${esc(detail)}</p>` : ""}
+<p class="small">${group}</p>
 <p><a href="/">Back to the start</a></p>
+${publisherFooter()}
 </main></body></html>`;
 }

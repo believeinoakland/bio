@@ -1,6 +1,17 @@
 /* The wizard's front page and the CSS shared with the progress and error
  * pages. One aesthetic across parts 1, 2, and 3: paper, ink, verdigris.
+ *
+ * R22 (N5, K262): every page names the product, CivicOS, and speaks to the group installing it: by the name it chose
+ * once it has chosen one, as "your group" before. Each says the installer is run by the publisher of CivicOS releases
+ * (PUBLISHER, the line every page carries), and names no third party. R23: the install page states the two
+ * prerequisites the install enforces.
  */
+
+export const PRODUCT = "CivicOS";
+export const PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
+/* The example name is not a place (R22): a group names itself for what it does. */
+export const EXAMPLE_SLUG = "clean-water-coalition";
+export const publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
 
 export const PAGE_CSS = `
 :root{
@@ -58,6 +69,7 @@ button.copy:hover{border-color:var(--verdigris)}
 .row.ok span:last-child::before{content:""}
 @keyframes pulse{50%{opacity:.35}}
 .actions{margin-top:8px}
+.publisher{margin-top:34px;border-top:1px solid var(--rule);padding-top:16px}
 `;
 
 function page({ title, description, eyebrow, lede, blocks, slugLabel, slugHint,
@@ -90,6 +102,7 @@ ${extra}
 <p class="small">Pressing the button takes you to dash.cloudflare.com to
 approve the permission, then brings you straight back here.</p>
 ${footer}
+${publisherFooter()}
 </main>
 <script>
 const $=s=>document.querySelector(s);
@@ -117,17 +130,20 @@ $("#go").addEventListener("click",async()=>{
 
 export const WIZARD_HTML = page({
   mode: "install",
-  title: "Set up your group's copy",
-  description: "Install your group's own copy of the Believe in Oakland accountability record, into your own Cloudflare account.",
-  eyebrow: "Believe in Oakland &middot; installer",
-  lede: `In a few minutes your group will have its own copy of the
+  title: "Set up your group's copy of CivicOS",
+  description: "Install your group's own copy of CivicOS, the accountability record, into your own Cloudflare account.",
+  eyebrow: "CivicOS &middot; installer",
+  lede: `In a few minutes your group will have its own copy of CivicOS, the
 accountability record, running in your own Cloudflare account. Not an account
 of ours: yours, under your control, from the first second.`,
   blocks: `<div class="card">
-<p style="margin:0"><b>What you need:</b> a Cloudflare account, which is free
-and takes an email address to create. No card is needed. If your account
-happens to have large-file storage turned on, this copy will use it; if not,
-everything still works and it can be added later.
+<p style="margin:0"><b>What you need:</b> a Cloudflare account with two
+things turned on. First, the <b>Workers Paid plan</b> ($5 a month): your copy
+does real work, reading documents and assembling evidence, and the free plan's
+processing allowance is too small for it. Second, a <b>payment method</b> on
+the account: Cloudflare requires one before it turns on the file storage your
+copy keeps its evidence in. The installer checks both before it creates
+anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
 </div>
@@ -142,13 +158,14 @@ database and nowhere to keep it, and it is never stored.</p>
 <p class="small">Prefer to do everything by hand, with nothing passing
 through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
-that your group can stand up a copy even if Believe in Oakland disappears.</p>
+that your group can stand up a copy even if the publisher of CivicOS releases
+disappears.</p>
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",
   slugHint: `Lower-case letters, digits, and hyphens. It becomes part of your
 web address, so pick something you are happy to say out loud.`,
-  placeholder: "oakland-sewer-watch",
+  placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Already running a copy and looking for the current release? That is
@@ -157,10 +174,10 @@ Already running a copy and looking for the current release? That is
 
 export const UPDATE_HTML = page({
   mode: "update",
-  title: "Update your copy",
-  description: "Bring an existing group copy of the Believe in Oakland record up to the current software release.",
-  eyebrow: "Believe in Oakland &middot; software update",
-  lede: `This brings a copy your group already runs up to the current software
+  title: "Update your copy of CivicOS",
+  description: "Bring your group's existing copy of CivicOS up to the current release.",
+  eyebrow: "CivicOS &middot; software update",
+  lede: `This brings the copy of CivicOS your group already runs up to the current
 release. It changes the software and nothing else: your passwords, your
 credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
@@ -180,7 +197,7 @@ the permission is gone the moment it finishes. Nothing is stored here.</p>
 <p class="hint">Only if a member of your group minted an organisation AI credential on this copy and you want the copy
 to resume paused assistant runs on its own. It is stored in your copy as a secret and never shown. Left empty, the
 update sends none and keeps any your copy already holds. This installer never creates one.</p>`,
-  placeholder: "oakland-sewer-watch",
+  placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Setting up a brand-new copy instead? That is <a href="/">the setup page</a>.</p>`,
