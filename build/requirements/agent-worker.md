@@ -82,15 +82,15 @@ The answer:
 - **R37** It judges no scope: it has no op allow-list, scope or class. `PLANE_OPS` is exactly `whoami`, `airun`, `airunlog`, `airunspawn`, `meaningrows`, `basisversions`, `search`, `versionchain`, `affordances` (reads; `affordances` for R48's published catalogue, K181) and `airuntick`, `suggest`, `capturerequest`, `airunclose` (writes the plane makes); it calls no other op, and none of them returns document bytes.
 - **R38** It never writes `runtime-ceiling-reached` or any ending itself; it spends, and the plane writes the condition at its own exit.
 - **R39** No model judgement sets the mode, the step, the pass count or limit, the budget, a bound, the run, the namespace or the target (R16).
-- **R40** A run's model turns run under the Claude account the cascade resolved and the skill pack the run names, within the segment bound. *(not yet met: `turns_run: 0`, judgements supplied by the caller; D-218, D-611 size the segment in bytes)*
-- **R41** Sub-sessions run, one per level, each under its spawn contract (R17) and returning only reports (R20). *(not yet met: contracts are composed and published; reports are supplied by the caller)*
+- **R40** A run's model turns run under the Claude account the cascade resolved and the skill pack the run names, within the segment bound.
+- **R41** Sub-sessions run, one per level, each under its spawn contract (R17) and returning only reports (R20).
 - **R42** Enabling a mode is an edit to `MODES` under review, never a request parameter.
 - **R43** A refusal reaching the member is never reworded (R8, R9, R11, R17, R23, R24, R26, R27).
 - **R44** Its copies equal their sources, both ways: `LEVELS` is the key order of `OBSERVATION_LEVELS`; `REPORT_STATES`' keys are `OBSERVATION_STATES`'; `REPORTING_LEVEL` is total over `LEVELS` and agrees with `skills.reportsAs`; `NAMESPACES` is the plane's; `MODES`' keys are `skills`' `DEPLOYMENT_SEQUENCE.order` and only its first member is deployed; the `mode-not-deployed` ending is one of the plane's `RUN_ENDINGS`.
 - **R45** The committed bundle is byte-identical to a fresh build of `src/index.mjs`, and its manifest names every input, `bio-plane/src/tokens.mjs` included (the check is `bundler`'s).
 - **R46** No place is named in its behaviour or outward text; its `account_id` is the project's one Cloudflare account.
-- **R47** It is reachable only through the plane's service binding. *(not yet met: unmeasured; `wrangler.jsonc` does not set `workers_dev: false`, and every answer carries `access-control-allow-origin: *`)*
-- **R48** A run's model is instructed by the pack the run names. When model turns run (R40), this member renders the pack (`skills.renderPack`) and refuses a segment whose run's recorded skill version is not the rendered pack's version, before any turn and as it refuses a run whose recorded payer differs (R10): a 409 refusal carrying both versions. Until turns run it changes nothing. *(not yet met: K102)*
+- **R47** It is reachable only through the plane's service binding.
+- **R48** A run's model is instructed by the pack the run names. When model turns run (R40), this member renders the pack (`skills.renderPack`) and refuses a segment whose run's recorded skill version is not the rendered pack's version, before any turn and as it refuses a run whose recorded payer differs (R10): a 409 refusal carrying both versions. Until turns run it changes nothing.
 
 ### Satisfies
 
