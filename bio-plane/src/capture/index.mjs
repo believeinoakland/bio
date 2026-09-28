@@ -13,6 +13,7 @@
 import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { KNOCK } from "./doorbell.mjs";
 import { acquire, archiveLookup } from "./acquire.mjs";
+export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";

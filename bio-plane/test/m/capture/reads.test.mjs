@@ -235,3 +235,44 @@ test("R58 (N122): captureOf answers one instance per storage; an env or governor
   assert.deepEqual([c3.env, c3.governor], [{}, g3], "nothing adopted by a refused call");
   assert.equal(captureOf(ctx3, { env: { INSTANCE_NAME: "i" } }).env.INSTANCE_NAME, "i");
 });
+
+test("R29 (N187): op=navchanges answers at most `limit` observations, the newest, oldest first, with `limit` and `truncated`; 200 when the caller names none or none usable, clamped to 500; op=links forwards the caller's limit", async () => {
+  const { c, s } = fresh();
+  const host = "h.example";
+  const N = 502;
+  /* N direct captures of N distinct pages, each carrying the host's navigation; the navigation changes at every
+     hundredth capture, so a cut sequence still has changes to compare */
+  for (let i = 0; i < N; i++) {
+    const when = new Date(Date.UTC(2026, 0, 1) + i * 60000).toISOString().replace(/\.\d+Z$/, "Z");
+    receipt(s, { address: `https://${host}/p${i}`, capture: hex(1000 + i), first: when });
+    const nav = ["https://h.example/about", `https://h.example/era${Math.floor(i / 100)}`];
+    c.recordLinks({ sourceCapture: hex(1000 + i), capturedAt: when,
+                    links: nav.map((a) => ({ ref: a, address: a, address_norm: a, chrome: true, chrome_basis: "<nav>" })) });
+  }
+  const at = (r) => r.sequence.map((o) => o.first_observed);
+  const newest = (k) => Array.from({ length: k }, (_, j) => new Date(Date.UTC(2026, 0, 1) + (N - k + j) * 60000).toISOString().replace(/\.\d+Z$/, "Z"));
+  for (const [qs, cap] of [["", 200], ["limit=abc", 200], ["limit=0", 200], ["limit=-5", 200], ["limit=37", 37], ["limit=37.9", 37],
+                           ["limit=500", 500], ["limit=501", 500], ["limit=100000", 500]]) {
+    const r = route(c, "navchanges", `host=${host}${qs ? `&${qs}` : ""}`);
+    assert.deepEqual([r.limit, r.observations, r.sequence.length, r.truncated], [cap, cap, cap, true], qs || "(no limit)");
+    assert.deepEqual(at(r), newest(cap), `${qs || "(no limit)"}: the newest ${cap}, oldest first`);
+    assert.ok(r.changes.every((ch) => r.sequence.some((o) => o.source_capture === ch.from.source_capture)), "changes are of the observations listed");
+  }
+  /* under the cap: every observation, not truncated */
+  const small = fresh();
+  for (let i = 0; i < 3; i++) {
+    receipt(small.s, { address: `https://${host}/q${i}`, capture: hex(i), first: `2026-01-0${i + 1}T00:00:00Z` });
+    small.c.recordLinks({ sourceCapture: hex(i), capturedAt: `2026-01-0${i + 1}T00:00:00Z`,
+                          links: [{ ref: "n", address: "https://h.example/n", address_norm: "https://h.example/n", chrome: true, chrome_basis: "<nav>" }] });
+  }
+  const whole = route(small.c, "navchanges", `host=${host}&limit=3`);
+  assert.deepEqual([whole.observations, whole.truncated], [3, false]);
+  /* op=links carries the caller's limit to the route */
+  const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
+  const stub = { async fetch(u) { const url = new URL(u); return json({ ok: true, result: captureOps(c, url, null, c.env)[url.pathname.slice(1)]() }); } };
+  const { linksOp } = await import("../../../src/capture/ops.mjs");
+  const via = await (await linksOp(new URL(`https://p/?op=links&host=${host}&limit=9000`), stub, { json, storeSilent: () => json({}, 502), viewer: "class:admin" })).json();
+  assert.deepEqual([via.limit, via.observations, via.truncated], [500, 500, true]);
+  const dflt = await (await linksOp(new URL(`https://p/?op=links&host=${host}`), stub, { json, storeSilent: () => json({}, 502), viewer: "class:admin" })).json();
+  assert.deepEqual([dflt.limit, dflt.observations], [200, 200]);
+});

@@ -5,8 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, governor, provenance, network, sha, receipt, H } from "./fixture.mjs";
 import { RENDER_DEFAULTS, renderLocaleFor } from "../../../src/render.mjs";
-import { EARNED_CAPTURE_CEILING, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
-import { SUBRESOURCE_STAGGER_SETTING, REACHABILITY_SETTINGS } from "../../../src/capture/index.mjs";
+import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_CHECKS } from "../../../checks/bio-checks.mjs";
+import { SUBRESOURCE_STAGGER_SETTING, REACHABILITY_SETTINGS, acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../../../src/capture/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { driveRow } from "../../../src/capture/acquire.mjs";
 
@@ -380,6 +380,32 @@ test("R18: the grade is the ceiling for a direct fetch and the archive letter fo
                       { via: "archive.org", address: addr }, { cls: "admin" });
   assert.equal(a.body.document.capture.grade, ARCHIVE_CAPTURE_GRADE, "provenance's one definition");
   assert.notEqual(ARCHIVE_CAPTURE_GRADE, EARNED_CAPTURE_CEILING);
+});
+
+test("R18 (N80): every success answer carries the note capture composes from the enforced ceiling and the letter above it; no refusal carries one; the composer refuses a sentence it cannot make true", async () => {
+  const w = world();
+  assert.equal(ACQUIRE_GRADE_NOTE, acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE), "composed from the one definitions");
+  assert.equal(ACQUIRE_GRADE_NOTE, `Grade ${EARNED_CAPTURE_CEILING}: bytes as fetched, hashed at receipt. Grade ${UNREACHABLE_CAPTURE_GRADE} needs a `
+    + `chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${EARNED_CAPTURE_CEILING} toward evidentiary weight.`);
+  assert.match(acquireGradeNote("C", "B"), /^Grade C: .* Grade B needs .* raises C toward/, "the letters are the arguments, never typed");
+  for (const [c, u] of [[null, "A"], ["B", null], [undefined, undefined]]) assert.throws(() => acquireGradeNote(c, u), /cannot be composed truthfully/);
+  const d = await run(w, { "https://a.example/x": page("x", { "content-type": "text/plain" }) }, { locator: "https://a.example/x" });
+  assert.deepEqual([d.status, d.body.note], [200, ACQUIRE_GRADE_NOTE], "a filed capture");
+  assert.equal(d.body.document.capture.grade, EARNED_CAPTURE_CEILING, "beside the grade it states");
+  /* a continuation is a success answer too */
+  w.c.recordCaptureLimit({ runtime: "subrequests", observed: 7 });
+  const many = Array.from({ length: 6 }, (_, i) => `<link rel="stylesheet" href="/c${i}.css">`).join("");
+  const routes = (u) => u === "https://s.example/p" ? page(HTML(many)) : u.endsWith(".css") ? new Response("a{}", { headers: { "content-type": "text/css" } }) : null;
+  const first = await run(w, routes, { locator: "https://s.example/p", subresources: true });
+  assert.equal(first.body.note, ACQUIRE_GRADE_NOTE);
+  const cont = await run(w, routes, { locator: "https://s.example/p", subresources: true, continue: first.body.snapshot.continuation.session });
+  assert.deepEqual([cont.status, cont.body.continued ? "continued" : null, cont.body.note], [200, "continued", ACQUIRE_GRADE_NOTE]);
+  /* refusals carry none */
+  for (const [routesR, body] of [[{}, { locator: "http://a.example/x" }], [{ "https://a.example/r": new Response("no", { status: 410 }) }, { locator: "https://a.example/r" }],
+                                 [{}, { locator: "https://drive.google.com/drive/folders/1AbCdEfGhIjK" }]]) {
+    const r = await run(w, routesR, body);
+    assert.equal(r.body.ok, false); assert.equal("note" in r.body, false, r.body.reason);
+  }
 });
 
 const SITE = (links) => HTML(`<link rel="stylesheet" href="/s.css"><img src="/i.png"><nav><a href="/about">About</a></nav>${links || ""}`);

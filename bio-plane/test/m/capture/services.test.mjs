@@ -325,3 +325,42 @@ test("R40: renderSpend frees the slot, adds the elapsed time ceiled, releases at
   assert.equal(rows(`SELECT count(*) n FROM render_slots`)[0].n, 0, "the slot is freed on every path");
   assert.equal(c.renderSpend({ ms: 0, releaseMs: 99999, at }).reserved_ms, 0, "never below zero");
 });
+
+test("R59 (N166): source_reachability is a read contract: one row per address_norm, consecutive_failures counts the source's failures since its last success and never a governed refusal, first_failure_since is the first failure of the current run; a reader's own SQL finds the failing documents oldest run first", async () => {
+  const { c, rows } = fresh();
+  const cols = rows(`PRAGMA table_info(source_reachability)`).map((r) => r.name);
+  for (const col of ["address_norm", "consecutive_failures", "first_failure_since"]) assert.ok(cols.includes(col), col);
+  const row = (a) => rows(`SELECT address_norm, consecutive_failures, first_failure_since FROM source_reachability WHERE address_norm = ?`, a);
+  const a = "https://a.example/doc", b = "https://b.example/doc", g = "https://g.example/doc";
+  assert.deepEqual(row(a), [], "no row for an address never attempted");
+  await c.recordSourceOutcome({ addressNorm: a, outcome: "success", status: 200, at: "2026-01-01T00:00:00Z" });
+  assert.deepEqual({ ...row(a)[0] }, { address_norm: a, consecutive_failures: 0, first_failure_since: null }, "a success: no run");
+  await c.recordSourceOutcome({ addressNorm: a, outcome: "source_refused", status: 503, at: "2026-01-02T00:00:00Z" });
+  await c.recordSourceOutcome({ addressNorm: a, outcome: "governed", at: "2026-01-03T00:00:00Z" });
+  await c.recordSourceOutcome({ addressNorm: a, outcome: "fetch_failed", at: "2026-01-04T00:00:00Z" });
+  assert.deepEqual({ ...row(a)[0] }, { address_norm: a, consecutive_failures: 2, first_failure_since: "2026-01-02T00:00:00Z" },
+                   "two failures the source produced; the governed refusal moved nothing; the run's first failure kept");
+  assert.equal(rows(`SELECT count(*) n FROM source_reachability WHERE address_norm = ?`, a)[0].n, 1, "one row per address");
+  for (const at of ["2026-01-05T00:00:00Z", "2026-01-06T00:00:00Z"]) await c.recordSourceOutcome({ addressNorm: g, outcome: "governed", at });
+  assert.deepEqual({ ...row(g)[0] }, { address_norm: g, consecutive_failures: 0, first_failure_since: null }, "governed refusals alone are no run");
+  await c.recordSourceOutcome({ addressNorm: b, outcome: "fetch_failed", at: "2025-12-31T00:00:00Z" });
+  await c.recordSourceOutcome({ addressNorm: b, outcome: "source_refused", status: 404, at: "2026-01-07T00:00:00Z" });
+  assert.equal(row(b)[0].first_failure_since, "2025-12-31T00:00:00Z");
+  assert.match(row(b)[0].first_failure_since, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/, "a whole-second UTC instant");
+  /* monitoring's reads, as its own SQL, at the floor R43's figures give */
+  const TH = c.reachabilityThresholds();
+  const floor = Math.max(1, Math.min(TH.failures, TH.minForAge));
+  assert.equal(rows(`SELECT count(*) c FROM source_reachability WHERE consecutive_failures >= ?`, floor)[0].c, 2);
+  assert.deepEqual(rows(`SELECT address_norm FROM source_reachability WHERE consecutive_failures >= ? ORDER BY first_failure_since LIMIT ?`, floor, 50)
+                     .map((r) => r.address_norm), [b, a], "the oldest failing run first");
+  /* a success ends the run */
+  await c.recordSourceOutcome({ addressNorm: a, outcome: "success", status: 200, at: "2026-01-08T00:00:00Z" });
+  assert.deepEqual({ ...row(a)[0] }, { address_norm: a, consecutive_failures: 0, first_failure_since: null });
+  await c.recordSourceOutcome({ addressNorm: a, outcome: "fetch_failed", at: "2026-01-09T00:00:00Z" });
+  assert.deepEqual([row(a)[0].consecutive_failures, row(a)[0].first_failure_since], [1, "2026-01-09T00:00:00Z"], "a new run starts at its own first failure");
+  /* the reading agrees with the module's own answer */
+  for (const x of [a, b, g]) {
+    const r = c.sourceReachability({ addressNorm: x });
+    assert.deepEqual([r.consecutive_failures, r.first_failure_since], [row(x)[0].consecutive_failures, row(x)[0].first_failure_since], x);
+  }
+});

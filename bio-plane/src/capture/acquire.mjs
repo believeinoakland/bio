@@ -8,8 +8,8 @@
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
-import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, civicosUserAgent, CAPTURE_REQUEST_CHECKS,
-         DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS } from "../../checks/bio-checks.mjs";
+import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, civicosUserAgent,
+         CAPTURE_REQUEST_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS } from "../../checks/bio-checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
 import { odfEvidentiaryDigest, ODF_FORMATS } from "../odf.mjs";
@@ -47,6 +47,23 @@ const renderRow = (code) => {
     throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
+
+/* N80 (K225 (4)): the answer's `note`, which this module composes itself (moved from `affordances.mjs`, REC-48 /
+   DEC-39). It is the RECEIPT a caller who has just received bytes reads beside the capture's own `grade`, saying
+   in one line what the capture is worth; it is NOT the attest fence (`ATTEST_FENCE`, read by a member DECIDING
+   whether to co-attest), and neither replaces the other. Both letters are COMPOSED from the enforced ceiling and
+   the letter one rank above it in the same grade array, never typed, so a change of doctrine moves the sentence
+   with it. It REFUSES TO COMPOSE a sentence it cannot make true: with no letter above the ceiling it throws at
+   load, which stops the plane, rather than shipping "Grade null needs a chain-of-custody web archive". */
+export const acquireGradeNote = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("op=acquire's note states what this surface earns AND the grade above it; "
+                  + "with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a `
+       + "chain-of-custody web archive, which this surface cannot produce. Co-attestation raises "
+       + `${ceiling} toward evidentiary weight.`;
+};
+export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
 /** R7. The plane's identity to a source, in one place because it was in three and they had drifted. BIO does not
  *  disguise its requests; a bare token matches no browser and no known-good crawler pattern, and a great many WAF
@@ -758,7 +775,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
-    store: storeName, tokenClass: cls,
+    store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
 }
 
@@ -894,5 +911,5 @@ async function continueCapture(cap, { body, session, cls, storeName, ev }) {
                  note: "a continuation files no new document: the primary was captured by the session's first tick and is never re-fetched" },
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
-    store: storeName, tokenClass: cls } };
+    store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
 }
