@@ -1,0 +1,7 @@
+# BOB to capture-sources (T10)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry is the capture-sources bullet of `build/plan/current.md` (listed after layer 6 with the other layers' single entries); read the plan's opening paragraph first (its rules hold, including K313's 50-byte LIKE/GLOB cap). An `N` entry's text is in `build/plan/next.md`. One entry: N273: C-105.10's conscripted region `is-credential-stored` lies outside `credentialSupply`'s body and C-105.11's is a 3-line span, so neither resolves for the guard; mark regions that resolve, each over its whole refusal, and test that each does. Your requirements carry no `T10` mark: this entry changes no requirement. Layers 1 and 2 merged before you (jurisdictions' first profile data; membership's R83 test and a comment); nothing you use changed unless I say so (K170). Layer 3 has two jobs, capture-sources and provenance, running concurrently; layer 4 opens when both merge. A change to what another module uses goes through me (§4). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316). Legacy suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
