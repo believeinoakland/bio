@@ -52,7 +52,7 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
 - `retrieval`, `connections`, `progressions`, `bias`, `calibration`, `ai-runs`, `capture-requests`, `monitoring`: the due, wake and tick services R5 names, through their factories (K61).
 - `retrieval` (`onSelectionCreated`, R52), `capture` (R44), `entities` (R13), `progressions` (`onThreaded`, R33), `bias` (`onLensChange`, R23), `promotion` (`onCommitted`, R45): the notices R9 registers with.
 - `intent`: the rank (R10), through `gaps` (its R6); `ageSurfaced` (its R17), a consumer (R5; N167).
-- `reevaluation`: `raiseNotices` (its R14, K199 (1)), a consumer (R5; N164). *(not declared)*
+- `reevaluation`: `raiseNotices` (its R14, K199 (1)), a consumer (R5; N164).
 - The Durable Object's alarm (`ctx.storage.setAlarm`, `getAlarm`, `deleteAlarm`).
 
 ### Invariants
