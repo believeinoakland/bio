@@ -2,9 +2,9 @@
 
 **Status** · OPEN · BOB #56 · session_01VU9rtJrxixUgABcg5fucAq · depth 1
 
-**Jobs** · (none yet)
+**Jobs** · legacy-checks: LEGACY-CHECKS #4 session_01362JGtE3gn5X3QqZps3xue; subresources: SUBRESOURCES #2 session_01PwqLa1NvQSNYxStbJ9R5ds; office-readers: OFFICE-READERS #2 session_01US5MKSyeetAVCERbaBowrE; odf-reader: ODF-READER #2 session_01WS5qsgXgxGzNszdSSHz4o2; pdf-reader: PDF-READER #2 session_01LKbhRJ9uya72jg3WhQgDJV; text-chain: TEXT-CHAIN #2 session_01LkjS5fE3osSrYaAkNn6uqe; image-codecs: IMAGE-CODECS #2 session_01NmWHzjUgZb4RbiiKmG4HyX; pdf-pixels: PDF-PIXELS #2 session_01XVGk5mMCA4CFxRzihSLoPk
 
-Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #52, K201) re-read for what T8 changed (K170's rule) and cut by K274. Branch `tranche/T9` starts at `main` @ 7b535cf70c (T8 closed, K272). T9 carries layers 1–4, legacy-store's own job (layer 10) and layer 11's affordances, legacy-index and legacy-tests: the draft's first items (N240, N216 with K263/K264's held routes and rows), the provider-side services later layers read (N202's and N208's helpers, N213's and N219's contracts, N215's `passageText`), and each T8 entry against a module of these layers. Layers 5–6 and the layer 7–11 entries go to `draft-T10.md` (K274). T6's to T8's rules hold, as T8's plan states them: the registration rule (K206), one code one site (K231), a user builds against its provider's Provides and BOB merges a provider early (§4), each job writes requirement-named tests for every live id (P7) and applies only the share this plan gives it; an `N` entry's text is in `next.md`. Each layer is re-read at its start for what the layers below it changed (K170).
+Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #52, K201) re-read for what T8 changed (K170's rule) and cut by K274. Bob's weekly meter at the opening: 75% (T8's opening 58%). Branch `tranche/T9` starts at `main` @ 7b535cf70c (T8 closed, K272). T9 carries layers 1–4, legacy-store's own job (layer 10) and layer 11's affordances, legacy-index and legacy-tests: the draft's first items (N240, N216 with K263/K264's held routes and rows), the provider-side services later layers read (N202's and N208's helpers, N213's and N219's contracts, N215's `passageText`), and each T8 entry against a module of these layers. Layers 5–6 and the layer 7–11 entries go to `draft-T10.md` (K274). T6's to T8's rules hold, as T8's plan states them: the registration rule (K206), one code one site (K231), a user builds against its provider's Provides and BOB merges a provider early (§4), each job writes requirement-named tests for every live id (P7) and applies only the share this plan gives it; an `N` entry's text is in `next.md`. Each layer is re-read at its start for what the layers below it changed (K170).
 
 ### Layer 1 (order: `legacy-checks`, `subresources`, `office-readers`, `odf-reader`, `pdf-reader`, `text-chain`, `image-codecs`)
 
@@ -14,6 +14,7 @@ Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #
 - **odf-reader** · N27 (the `.ods` half of D-415: named ranges and tables as `sheet-range` units; built work in `odf.mjs` on the snapshot).
 - **pdf-reader** · N100 (its share: each page's box, the producer half of D-374, built on `land/worker/D-374`); N101 (`image_unread` per image, D-665's producer half; REC-206's link anchors).
 - **text-chain** · N98 (D-670's space rule for `extentCovers`, `readingPositionInExtent`, `readingSource`'s `space`; built on the D-670 branch); N102 (`mergeTier2Text` carries `image_unread`); N104 (its share: states which step kinds are machine readings).
+- **pdf-pixels** · N255 (K281: re-pin R25's working-set test on image-codecs' N75, started once image-codecs merges early).
 - **image-codecs** · N75 (the low-memory line-based 9/7 wavelet only; its measurement on a deployed plane waits).
 
 ### Layer 2 (order: `record-core`, `membership`, `promotion`)
@@ -43,7 +44,7 @@ Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #
 
 - **affordances** · K264's share of N216: the 22 layer-9 `NON_ACTS` rows and rungs exactly as AFFORDANCES #2's record states them, now the durable object dispatches their ops; N45 and N176 with the extraction of `affordanceFacts` from legacy-store per its map (K225).
 - **legacy-index** · K263's share of N216: the 34 layer-9 routes exactly as LEGACY-INDEX #5's record states them (names, classes, stamps, `NEEDS`).
-- **legacy-tests** · re-anchor or retire what T9's layers break; N240's and promotion's re-opening's census re-pins (d470, A5's literal, pinned `gateVersion`s) from the suite's print; N248 (the seven dead anchors, N57's remainder, refusal-wire 41/1 after N212); the reds T9's earlier layers own, re-measured after their fixes.
+- **legacy-tests** · re-anchor or retire what T9's layers break; N240's and promotion's re-opening's census re-pins (d470, A5's literal, pinned `gateVersion`s) from the suite's print; N248 (the seven dead anchors, N57's remainder, refusal-wire 41/1 after N212); the reds T9's earlier layers own, re-measured after their fixes; `check-semantics`, bias-vocabulary and add-surface's new-type arms recorded as waiting on the UI's replacement (N241, K283).
 
 **Size.** 22 jobs: layer 1 7, layer 2 3, layer 3 4, layer 4 3, layer 10 1, layer 11 3 (K274). T8 had 23.
 
@@ -53,4 +54,4 @@ Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #
 - **Still waiting**, as T8's plan says: N22, N26, N30, N31 (N14: `tools/` has not retired), N34's remainder, N75's deployed measurement, DIST-14, N137, N136.
 - **N211, N221, N249's catalogue share:** the copies of `checkCaseDocument` and `checkPublishedExtension` retire only once promotion, affordances and ai-runs stop importing them; promotion cannot import ratification (it is earlier), so this needs its design first (T10).
 - **N217:** ruled (K275); its sites are in layers 7–9 (T10).
-- **N241:** Bob's (legacy-ui and the six new types).
+- **N241:** waits on the UI's replacement (Bob, K283); legacy-tests records its arms as waiting on it.

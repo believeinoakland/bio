@@ -121,8 +121,9 @@ test("R26: overlapping images count once; a no_text_layer page carries neither R
     { content: "q 600 0 0 800 0 0 cm /I Do Q", resources: "/XObject << /I 20 0 R >>" },
     { content: "BT /F1 10 Tf (7) Tj ET" },
   ], { objs: { 20: img() } }));
-  assert.deepEqual(r.text.pages[0].undetermined.map((x) => [x.reason, x.image_share]), [["image_content_unread", 0.5]]);
-  assert.deepEqual(r.text.pages[1].undetermined.map((x) => x.reason), ["no_text_layer"]);
+  const r26 = (i) => r.text.pages[i].undetermined.filter((x) => x.reason !== "image_unread");
+  assert.deepEqual(r26(0).map((x) => [x.reason, x.image_share]), [["image_content_unread", 0.5]]);
+  assert.deepEqual(r26(1).map((x) => x.reason), ["no_text_layer"]);
   assert.deepEqual(r.text.pages[2].undetermined, []);
   // images null (a page could not be walked): no share can be measured and nothing is said
   const n = await extractPdfStructure(doc([

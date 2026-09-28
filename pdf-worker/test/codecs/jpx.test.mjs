@@ -1,5 +1,6 @@
 /* image-codecs R4, R6: `decodeJpx`, `JPX_REFUSES` and `JpxRefusal` at their
- * interface (build/requirements/image-codecs.md), with N34's memory refusal.
+ * interface (build/requirements/image-codecs.md), with N34's memory refusal and
+ * N75's line-based decode.
  *
  * INDEPENDENT EXPECTATIONS (R6). Every expected picture is opj_decompress's
  * (OpenJPEG 2.5.0) decode of the same bytes, interleaved samples, written by
@@ -7,11 +8,17 @@
  * confirmed by PyMuPDF before it was kept. OpenJPEG shares no line with
  * `jpxdecode.mjs`.
  *
- * THE MEMORY BOUND (N34). A decode's working set is fixed by its SIZ marker:
- * 4 bytes a sample for every component of the largest tile, and a tiled image's
- * 8-bit output beside them. The tests below re-declare a fixture's image and tile
- * sizes in its SIZ and check the refusal is made from the header, before any
- * plane: a refused declaration takes no time and no memory. */
+ * PAGES (N75). `./fixtures/jpx-pages.json` (from `./fixtures/make-jpx-pages.py`,
+ * the same OpenJPEG and PyMuPDF check) holds single-tile pages whose whole
+ * planes, 4 bytes a sample per component, pass the bound: the decode refused
+ * them before it was made line-based, and now reads them.
+ *
+ * THE MEMORY BOUND (N34, N75). A decode's working set is fixed by its headers:
+ * the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of
+ * every band and a few rows of every level of the largest tile. The tests below
+ * re-declare a fixture's image and tile sizes in its SIZ, or its code-block size
+ * in its COD, and check the refusal is made from the header, before any sample:
+ * a refused declaration takes no time and no memory. */
 import "../../../bio-plane/test/sandbox.mjs";
 
 import { test } from "node:test";
@@ -44,6 +51,15 @@ function withSiz(v, { X, Y, XT = X, YT = Y }) {
   return d;
 }
 const bare = (comps) => V.find((v) => v.expect === "ok" && v.container === "j2k" && v.comps === comps);
+const named = (name) => V.find((v) => v.name === name);
+/** A bare codestream with its COD's code-block size re-declared (exponents). */
+function withBlocks(d, xcb, ycb) {
+  let p = 2;
+  while (!(d[p] === 0xff && d[p + 1] === 0x52)) p++;
+  d[p + 10] = xcb - 2; d[p + 11] = ycb - 2;
+  return d;
+}
+const PAGES = JSON.parse(readFileSync(new URL("./fixtures/jpx-pages.json", import.meta.url), "utf8"));
 
 test("R4 R6 the fixtures: OpenJPEG's decode of 114 images and 13 refusals", () => {
   assert.match(FIX.provenance, /OpenJPEG 2\.5\.0/);
@@ -89,39 +105,63 @@ test("R4 what it cannot decode is a JpxRefusal; an UNSUPPORTED one names its fea
       driven.add(e.detail.feature);
     }
   }
-  driven.add(refusal(() => decodeJpx(withSiz(bare(3), { X: 2550, Y: 3300 }))).detail.feature);
+  driven.add(refusal(() => decodeJpx(withSiz(bare(3), { X: 5000, Y: 5000 }))).detail.feature);
   assert.deepEqual([...driven].sort(), Object.keys(JPX_REFUSES).sort(), "every declared refusal is driven");
 });
 
-test("R4 N34 a decode past the memory bound is refused by name, from the header, before any plane", () => {
-  const e = refusal(() => decodeJpx(withSiz(bare(3), { X: 2550, Y: 3300 })));
+test("R4 R6 N75 pages past the whole-plane working set decode, to OpenJPEG's bit", () => {
+  assert.match(PAGES.provenance, /OpenJPEG 2\.5\.0/);
+  assert.equal(PAGES.pages.length, 4);
+  for (const pg of PAGES.pages) {
+    assert.ok(pg.comps * pg.width * pg.height * 4 > 61_300_000, `${pg.name}: its whole planes pass the bound`);
+    const out = decodeJpx(new Uint8Array(Buffer.from(pg.data_b64, "base64")));
+    assert.deepEqual([out.width, out.height, out.comps, out.detail.tiles], [pg.width, pg.height, pg.comps, 1], pg.name);
+    assert.equal(sha(out.samples), pg.opj_sha256, `${pg.name}: OpenJPEG's samples`);
+  }
+  assert.deepEqual([...new Set(PAGES.pages.map((pg) => `${pg.comps}:${pg.args.includes("-I") ? "9/7" : "5/3"}`))].sort(), ["1:9/7", "3:5/3", "3:9/7"]);
+});
+
+test("R4 N34 a decode past the memory bound is refused by name, from the header, before any sample", () => {
+  const e = refusal(() => decodeJpx(withSiz(bare(3), { X: 5000, Y: 5000 })));
   assert.equal(e.code, "UNSUPPORTED");
   assert.equal(e.detail.feature, MEMORY);
-  assert.deepEqual([e.detail.width, e.detail.height, e.detail.components], [2550, 3300, 3]);
-  assert.equal(e.detail.working_set_bytes, 2550 * 3300 * 3 * 4, "three 4-byte planes of the one tile");
+  assert.deepEqual([e.detail.width, e.detail.height, e.detail.components], [5000, 5000, 3]);
+  assert.ok(e.detail.working_set_bytes > 5000 * 5000 * 3, "the output, and the decode's buffers beside it");
   assert.equal(e.detail.bound_bytes, 61_300_000);
   assert.ok(e.message.includes(MEMORY));
   /* A declaration far past any memory is refused just as fast: nothing is allocated. */
   const t0 = performance.now();
   const huge = refusal(() => decodeJpx(withSiz(bare(1), { X: 60000, Y: 60000 })));
   assert.equal(huge.detail.feature, MEMORY);
+  assert.ok(huge.detail.working_set_bytes > 60000 * 60000);
   assert.ok(performance.now() - t0 < 200);
 });
 
-test("N34 the working set is what the bound counts: planes of the largest tile, and a tiled image's output", () => {
+test("N34 N75 the working set is what the bound counts: the output, and one code-block row of every band beside it", () => {
   const bound = 61_300_000;
-  const memoryRefused = (d) => { const e = refusal(() => decodeJpx(d)); return !!e && e.detail.feature === MEMORY; };
-  /* Grey, one tile: 4 bytes a sample. 3910x3910 is 61,152,400 bytes; 3920x3910 is 61,308,800. */
-  assert.ok(3910 * 3910 * 4 <= bound && 3920 * 3910 * 4 > bound);
-  assert.equal(memoryRefused(withSiz(bare(1), { X: 3910, Y: 3910 })), false, "just inside: not refused for memory");
-  assert.equal(memoryRefused(withSiz(bare(1), { X: 3920, Y: 3910 })), true, "just past: refused");
-  /* The same colour page in 1024x1024 tiles: three tile planes (12.6 MB) and the output (25.2 MB). */
-  assert.equal(memoryRefused(withSiz(bare(3), { X: 2550, Y: 3300 })), true, "one tile: 101 MB");
-  assert.equal(memoryRefused(withSiz(bare(3), { X: 2550, Y: 3300, XT: 1024, YT: 1024 })), false, "tiled: 37.8 MB");
+  const memory = (d) => { const e = refusal(() => decodeJpx(d)); return e && e.detail.feature === MEMORY ? e.detail.working_set_bytes : 0; };
+  const grey = () => withSiz(named("9-7-levels-5-grey"), { X: 7800, Y: 7850 });
+  /* Grey, one tile, 64x64 code-blocks. The output alone decides the far side. */
+  assert.ok(memory(withSiz(named("9-7-levels-5-grey"), { X: 7900, Y: 7800 })) > 7900 * 7800, "61.6 MB of output: refused");
+  /* 61.2 MB of output, inside the bound; the buffers beside it take it past. */
+  assert.ok(7800 * 7850 < bound);
+  const ws = memory(grey());
+  assert.ok(ws > bound, "the output and the buffers: refused");
+  /* The buffers are a strip of rows per band, not a plane: a page's are a few MB. */
+  assert.ok(ws - 7800 * 7850 < 7800 * 7850 / 8, `buffers of ${ws - 7800 * 7850} bytes`);
+  assert.equal(memory(withSiz(named("9-7-levels-5-grey"), { X: 7000, Y: 7000 })), 0, "49 MB of output and its buffers: not refused for memory");
+  /* The strip is the code-block's height: 16x256 blocks hold four times the rows of 64x64 ones. */
+  const tall = memory(withBlocks(withSiz(named("9-7-levels-5-grey"), { X: 7800, Y: 7850 }), 4, 8));
+  assert.ok(tall > ws, "taller code-blocks, larger strips");
+  assert.equal(memory(withBlocks(withSiz(named("9-7-levels-5-grey"), { X: 5000, Y: 5000 }), 2, 10)) > 0, true,
+    "4x1024 code-blocks: 25 MB of output, and 1024-row strips of every band, refused");
+  assert.equal(memory(withSiz(named("9-7-levels-5-grey"), { X: 5000, Y: 5000 })), 0, "the same page in 64x64 code-blocks is not");
+  /* A single-tile colour page the whole-plane decode refused (101 MB of planes) is no longer refused. */
+  assert.equal(memory(withSiz(bare(3), { X: 2550, Y: 3300 })), 0, "one tile, 25.2 MB of output");
   /* Tiles do not escape the bound: the output alone can pass it. */
-  assert.equal(memoryRefused(withSiz(bare(3), { X: 4600, Y: 4600, XT: 256, YT: 256 })), true, "tiled, 63.5 MB of output");
+  assert.ok(memory(withSiz(bare(3), { X: 4600, Y: 4600, XT: 256, YT: 256 })) > 4600 * 4600 * 3, "tiled, 63.5 MB of output");
   /* The largest tile is the one counted, wherever the tile grid's edges fall. */
-  assert.equal(memoryRefused(withSiz(bare(1), { X: 3910, Y: 3910, XT: 5000, YT: 5000 })), false, "a tile larger than the image is clipped to it");
+  assert.equal(memory(withSiz(bare(1), { X: 7000, Y: 7000, XT: 9000, YT: 9000 })), 0, "a tile larger than the image is clipped to it");
 });
 
 test("R4 the page sizes the bound admits still decode: the corpus is untouched by it", () => {

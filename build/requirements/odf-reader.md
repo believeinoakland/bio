@@ -214,6 +214,8 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   failure — `detect`, `parts`, `structure`, `text`, `odfEvidentiaryDigest` alike — is a stated
   result naming why, never an exception the caller must catch.
 
+- **R44** (N27, D-415; K278) `odsEntry.text()` also carries `rangeUnits: [{source: "named-range" | "database-range", name, scope, hidden: false, unit}]`, one per `<table:named-range>` (document-scoped, `scope: null`; or inside a `<table:table>`, `scope` that sheet's name) and `<table:database-range>` (`scope` its sheet) whose address names one rectangle on one sheet of this document, `unit` its `sheet-range` reference from `office-readers`' `rangeUnitFor` (grid `null`, R42); and `rangeUnitsSkipped: [{source, name, ref, why}]` for every other, and for every `<table:named-expression>` (`source: "named-expression"`, `why: "not_a_range_reference"`). `why` is one of `multi_area`, `broken_reference`, `not_a_range_reference`, `whole_row_or_column`, `external_workbook`, `multi_sheet_reference`, `no_such_sheet`, `empty_reference` (`office-readers` R9's vocabulary). `hidden` is `false`: ODF has no hidden flag on a name. Over the guard, or with no readable `<office:spreadsheet>` body, both are `null`, never `[]`: an `.ods` declares its names only in `content.xml`, which was not read (R41). *(not yet met: T9, N27)*
+
 ## Private
 
 ### Uses
@@ -225,7 +227,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   `IMAGE_MIME_BY_EXT`.
 - `subresources`: `linkWrapper`, for the `anchor`/`deferred`/`refused` link partition.
 - `office-readers`: `docParaRef`, `docTableRef` (`docx.mjs`); `sheetCellRef`, `usedSheetRange`
-  (`formats-xlsx.mjs`); `slideShapeRef` (`pptx.mjs`) — the one reference builder per IC-1 arm,
+  (`formats-xlsx.mjs`); `a1Corner`, `rangeUnitFor` (`formats-xlsx.mjs`, R44; N27); `slideShapeRef` (`pptx.mjs`) — the one reference builder per IC-1 arm,
   never re-derived here.
 
 ### Invariants

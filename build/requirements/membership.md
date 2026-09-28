@@ -1,6 +1,6 @@
 # membership — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (a product module, P17), with his two rulings as R62 (organisation-wide AI keys: administrators only) and R63 (an owner's removal reason is kept). Reviewed for BOB #40. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs` (and the sight predicate in `query.mjs`); the module is extracted from them by its first job. Not yet met: REC-224, REC-226, seven rules found unbuilt in this review (marked "new"), and R62–R63. N64 folded by a drafting worker for BOB #43, 2026-09-26: R75–R76, met (both are exported and used today).
+**Status** · APPROVED by Bob 2026-09-26 (a product module, P17), with his two rulings as R62 (organisation-wide AI keys: administrators only) and R63 (an owner's removal reason is kept). Reviewed for BOB #40. Layer 2. Code today: inside the legacy modules `bio-plane/src/store.mjs` and `schema.mjs` (and the sight predicate in `query.mjs`); the module is extracted from them by its first job. Not yet met: REC-224, REC-226, seven rules found unbuilt in this review (marked "new"), and R62–R63. N64 folded by a drafting worker for BOB #43, 2026-09-26: R75–R76, met (both are exported and used today). N208 and N146 folded by a drafting worker for BOB, 2026-09-28: R78, not yet met.
 
 ## Public
 
@@ -113,6 +113,9 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 
 **existenceAct(projectId, viewer) → refusal or null** (N76)
 - **R77** Answers `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1: the project's id and name only, with its check id and translation) when `viewer`'s sight of `projectId` is existence only (R43), else `null`; `null` when no `viewer` is given. Every act of this module and of `promotion` that names a project asks it before its own no-such-project answer, so C-70.1 is minted only here. Never throws.
+
+**noSuchProject(projectId, extra?) → refusal** (N208, N146, K238, K275; a module-level function)
+- **R78** The one answer to one condition: no project answers to `projectId`, or the caller's sight of it is not `FULL` (after R77's existence answer), answered as absent (R61). It answers `{ok: false, reason: "NO_SUCH_PROJECT", code: "NO_SUCH_PROJECT", check, translation, project, detail}`: `project` the id as asked (null when none), `detail` one fixed sentence, the same for every caller (today's `#noSuchProject` sentence), and `check` and `translation` its catalogue row's. `extra` adds a caller's own fields (such as `finding`) and never replaces these. Every act of any module that answers this condition answers through it, so the code is minted at one site; its one catalogue row is this module's, its `where` naming this function, and intent's C-111.2 and conformance's C-113.2 give way to it. It writes nothing and never throws. *(not yet met: T9, N208, N146)*
 
 ## Private
 

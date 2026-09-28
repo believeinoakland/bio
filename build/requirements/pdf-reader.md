@@ -127,7 +127,7 @@ markers, `{page, reason, font, codes, count}` — `codes` a hex dump of the unre
   the reading degrades to no break, never an invented one.
 - **R14** A page with no `/Resources /Font` entry, or one whose fonts are never used by a
   text-showing operator anywhere it paints (its own streams and every form, per `pageShowsText`, R15),
-  AND that declares an image XObject in its resources, carries exactly one `undetermined` marker
+  AND that declares an image XObject in its resources, carries exactly one `no_text_layer` marker (beside any R34 `image_unread` markers)
   `{page, reason:"no_text_layer", font:null, codes:"", count:0}` when it otherwise decoded to zero
   characters and zero other markers. A page that shows text, or declares no image, or whose
   text-showing status could not be determined (`pageShowsText` → `null`), never gets this marker on
@@ -215,6 +215,10 @@ interface is the members below and nothing else; every other field is private.
   unencrypted); cached after the first call.
 - Errors: no `PdfDoc` method throws on malformed input; a read that cannot resolve returns `null`,
   `false`, or an empty result, per the method's own rule above.
+
+- **R33** (D-374, N100; K279) R2's answer carries a top-level `pageBoxes` (beside `images`, so tier 2's replacement of `text` keeps it): `{boxes: [{media_box: [x0, y0, x1, y1], w, h, rotate}], of_page: [index | null]}`, `of_page[i]` indexing page i's distinct box in `boxes` (each distinct box stored once), or `null` where that page's box cannot be read. The box is the page's /MediaBox, inherited up the page tree, corners normalised, origin kept (never re-based to 0,0), never a default; four finite numbers with positive area, else `null`. `rotate` is the inherited /Rotate normalised to 0/90/180/270, 0 when absent, `null` when not a multiple of 90; it does not move the box. `pageBoxes` is `null` only when the document has no pages. Boxes are read for an encrypted document too. *(not yet met: T9, N100)*
+- **R34** (D-665, N101; K279) With `images` a list, every placement whose rect covers at least 0.001 of its page's visible box (R26's box), or whose page box cannot be read, adds to its page's `undetermined`, in painting order and after any R26 marker, `{page, reason: "image_unread", font: null, codes: "", count: 0, rect, area_share}`: `rect` exactly the placement's, `area_share` the rect clipped to the box over the box's area, to 4 places, `null` without a box. It routes nothing, and is carried on a `no_text_layer` page too (R14). *(not yet met: T9, N101)*
+- **R35** (REC-206, N101; K279) Every `links[]` record carries `anchor: {text, why, tier: 1}`: the text tier 1 shows whose glyph ink point (mid-advance, 0.35 em above the baseline, default user space) lies in the link's `source.rect`, in showing order, runs joined by one space, whitespace collapsed, trimmed. `why` is `null` only for a complete reading, else one of `no_rect`, `text_not_read`, `no_text_in_rect`, `positions_unknown`, `partly_unplaced`, `undecodable`, `partly_undecodable` (REC-206's meanings). R3–R6's exact records gain the `anchor` key. *(not yet met: T9, N101)*
 
 ## Private
 

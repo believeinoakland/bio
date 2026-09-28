@@ -6,8 +6,8 @@ import { extractPdfStructure, pageShowsText, openPdf } from "../../../src/pdfstr
 import { build, doc, flate, hex } from "./pdf.mjs";
 
 const text = async (bytes) => (await extractPdfStructure(bytes)).text;
-/** R14 speaks of no_text_layer alone; an image page that shows text may also carry R26's marker. */
-const r14 = (p) => p.undetermined.filter((m) => !m.reason.startsWith("image_content"));
+/** R14 speaks of no_text_layer alone; an image page may also carry R26's and R34's markers. */
+const r14 = (p) => p.undetermined.filter((m) => !m.reason.startsWith("image_content") && m.reason !== "image_unread");
 const page1 = async (content, o = {}) => (await text(doc([{ content, ...o }], o))).pages[0];
 const ENC = "<< /Filter /Standard /V 1 /R 2 /O (owner) /U (user) /P -4 >>";
 const IMG = { dict: "/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8", data: "\x80" };
