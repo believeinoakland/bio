@@ -216,3 +216,27 @@ test("R52: an agenda item's membership in a file is derived from containment und
   assert.equal(r.body.membership, null);
   assert.equal(r.body.membershipWhy, "no_active_profile_states_item_and_file_link_shapes");
 });
+
+test("R34 R60 (N100, N139): a re-read carries the structure's page boxes, else the stored reading's, else none; and its own text counts by the acquire path's rule", async () => {
+  const pb = { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0, 0] };
+  const t = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }]);
+  const withBoxes = (boxes) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(t), pages: 2, notes: [],
+                                                                            ...(boxes !== undefined ? { pageBoxes: boxes } : {}) }) });
+  const reread = async (storedExtra, boxes) => {
+    const { w, d } = await held(t);
+    if (storedExtra) {
+      const r = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
+      w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { ...r, ...storedExtra } });
+    }
+    await withEntry(withBoxes(boxes), () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
+    return JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
+  };
+  const stored = { boxes: [{ media_box: [0, 0, 100, 100], w: 100, h: 100, rotate: 0 }], of_page: [0, 0] };
+  assert.deepEqual((await reread({ page_boxes: stored }, pb)).page_boxes, pb, "the structure's own");
+  assert.deepEqual((await reread({ page_boxes: stored }, undefined)).page_boxes, stored, "else the stored reading's");
+  assert.equal((await reread({ page_boxes: null }, undefined)).page_boxes, null);
+  const none = await reread(null, undefined);
+  assert.equal("page_boxes" in none, false, "else absent");
+  const merged = "Text\nocr text of page 1";
+  assert.deepEqual([none.text_chars, none.text_glyphs, none.text_undetermined], [merged.length, merged.replace(/\s/g, "").length, 0]);
+});

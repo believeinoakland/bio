@@ -40,7 +40,8 @@ export const MULTIPART_READ_MAX = 20 * 1024 * 1024;
 /* D-665 (BOB #35, 2026-09-25 06:25Z): `image_unread` says an image is painted and its content unread; it is not an
    undecoded character and counts 0. Two readers judge the DECODE by the marker count (`needsTier2` and docprofile's
    `readText`), so both are handed the text with those markers taken out and the count lowered by as many. The
-   markers stay on the text itself. */
+   markers stay on the text itself. N253 (R4, R12): pdf-reader emits one per painted image (its R34), so without this
+   a photo page would escalate to tier 2, which reads no image. */
 export function decodeView(text) {
   const marks = text && Array.isArray(text.undetermined) ? text.undetermined : null;
   if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text;
@@ -69,34 +70,8 @@ export function needsTier2(text0) {
   return true;
 }
 
-/* D-697 (R9): a page tier 2 wins keeps a still-true `image_unread`. `mergeTier2Text` (text-chain) carries tier 1's
-   `image_content_*` markers onto a page tier 2 won and not `image_unread`, which is as true after tier 2 as before
-   (tier 2 reads no image). So each such marker tier 1 stated for a replaced page is carried after tier 2's own,
-   unless tier 2 already states it, and the document's marker list and count are recomputed from the pages. */
-export function carryImageUnread(tier1, merged) {
-  if (!merged || !merged.ok || !Array.isArray(merged.replaced) || !merged.replaced.length) return merged;
-  const t1 = new Map((tier1 && Array.isArray(tier1.pages) ? tier1.pages : [])
-    .filter((p) => p && Number.isInteger(p.page)).map((p) => [p.page, p]));
-  const text = merged.text;
-  if (!text || !Array.isArray(text.pages)) return merged;
-  let added = 0;
-  const same = (a, b) => a && b && a.reason === b.reason && JSON.stringify(a.rect ?? null) === JSON.stringify(b.rect ?? null);
-  const pages = text.pages.map((p) => {
-    if (!p || !merged.replaced.includes(p.page)) return p;
-    const own = Array.isArray(p.undetermined) ? p.undetermined : [];
-    const had = t1.get(p.page);
-    const carry = (had && Array.isArray(had.undetermined) ? had.undetermined : [])
-      .filter((u) => u && u.reason === "image_unread" && !own.some((o) => same(o, u)));
-    if (!carry.length) return p;
-    added += carry.length;
-    return { ...p, undetermined: [...own, ...carry] };
-  });
-  if (!added) return merged;
-  const pageless = (Array.isArray(text.undetermined) ? text.undetermined : []).filter((m) => m && !Number.isInteger(m.page));
-  const undetermined = [...pages.flatMap((p) => (p && Array.isArray(p.undetermined) ? p.undetermined : [])), ...pageless];
-  return { ...merged, text: { ...text, pages, undetermined,
-    counts: { ...(text.counts || {}), undetermined: undetermined.length } } };
-}
+/* D-697 (R9, N253): a page tier 2 wins keeps a still-true `image_unread`. That is text-chain's `mergeTier2Text` (its
+   R90), which carries each such marker after tier 2's own; this module no longer re-carries them. */
 
 /* One tier-2 escalation, as both paths run it (R4). `text` is tier 1's I2 text. Answers `{outcome, text, replaced,
    kept, perPage, note, memberNotes}`. `outcome`: "not_needed" (tier 1 did not get essentially nothing), "unbound"
@@ -115,7 +90,7 @@ export async function tier2Escalate(env, { sha, storeName, text }) {
     const t2 = await r.json();
     if (!(r.ok && t2 && t2.ok && t2.text)) { out.outcome = "no_improvement"; return out; }
     out.memberNotes = (Array.isArray(t2.notes) ? t2.notes : []).filter((n) => typeof n === "string");
-    const m = carryImageUnread(text, mergeTier2Text(text, t2.text));
+    const m = mergeTier2Text(text, t2.text);
     if (m.ok) {
       /* D-251: who made the layer is a fact about the FILE; the member returns no `producer`, so tier 1's is
          carried when the member supplied none. */
@@ -695,6 +670,45 @@ export const readEntities = (list) => (Array.isArray(list) ? list : []).map((e) 
   ...(Array.isArray(e && e.occurrences) ? { occurrences: e.occurrences } : {}),
 })).filter((e) => e.key != null || e.kind != null);
 
+/* D-375 / N139 (R60): how much text the reader was handed, as three facts. `text_chars` is I2's `counts.chars`, the
+   producer's claim; `text_glyphs` the glyphs of the text in hand (D-514: what "holds text" means here); and
+   `text_undetermined` I2's `counts.undetermined`, the residue a producing tier marked unread, over the decode view
+   (R4: an `image_unread` marker is no undecoded character). OBSERVATION-LOG-DESIGN §4.2's fourth outcome, a scan read
+   to nothing, is told from a document read whole by these. Null where the text states no such figure; no text, no
+   keys (null answered here); never a zero nothing counted. */
+export function textCountsOf(text) {
+  if (text == null) return null;
+  if (typeof text === "string")
+    return { text_chars: text.length, text_glyphs: glyphCount(text), text_undetermined: null };
+  if (typeof text !== "object") return null;
+  const c = decodeView(text).counts;
+  const n = (v) => (Number.isInteger(v) && v >= 0 ? v : null);
+  return { text_chars: n(c && c.chars),
+           text_glyphs: typeof text.document === "string" ? glyphCount(text.document) : null,
+           text_undetermined: n(c && c.undetermined) };
+}
+
+/* D-374 / N100 (R13): each page's box as pdf-reader answered it (its R33, `pageBoxes`), read whole or not at all: one
+   box this wire cannot read makes the answer null, because a partial list would bound the pages it kept and silently
+   not the rest. A page whose box the reader could not read is null in `of_page`, as it said. */
+export function pageBoxesFrom(v) {
+  if (!v || typeof v !== "object" || !Array.isArray(v.boxes) || !Array.isArray(v.of_page)) return null;
+  const fin = (x) => typeof x === "number" && Number.isFinite(x);
+  const boxes = [];
+  for (const b of v.boxes) {
+    const m = b && Array.isArray(b.media_box) && b.media_box.length === 4 && b.media_box.every(fin) ? b.media_box : null;
+    if (!m || !(m[2] > m[0] && m[3] > m[1])) return null;
+    boxes.push({ media_box: m.slice(), w: m[2] - m[0], h: m[3] - m[1],
+                 rotate: [0, 90, 180, 270].includes(b.rotate) ? b.rotate : null });
+  }
+  const of_page = [];
+  for (const i of v.of_page) {
+    if (i !== null && !(Number.isInteger(i) && i >= 0 && i < boxes.length)) return null;
+    of_page.push(i);
+  }
+  return { boxes, of_page };
+}
+
 /* R12: the reading a wired text produces. A determined reading carries `text_source` (the chain), `text_tier`,
    `text_container`, and a basis naming the reader, the chain, the tier, the tier-2 and tier-3 notes and where
    references were read; an undetermined one is a failed reading whose basis gives the tier notes and the entry's
@@ -956,7 +970,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   } else if (wireable) {
     /* R3 (D-593, D-684): through the entry over the stored bytes, tier 1, including delimited text read as text at
        intake and a multi-part capture within the bound: a CSV's text is the entry's own decode. */
-    let i2text = null, wiredTier = null, pageCount = null, pdfPaints = null, wired = null;
+    let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false;
     try {
       if (typeof entry.text === "function") {
@@ -968,6 +982,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         if (st && st.ok) {
           i2text = st.text || null; wiredTier = 1;
           if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+          /* N100 (R13): each page's box, off the structure object (tier 2 and 3 replace `text`, not it). */
+          pageBoxes = pageBoxesFrom(st.pageBoxes);
           pdfPaints = { images: Array.isArray(st.images) ? st.images : null,
                         why: typeof st.imagesWhy === "string" ? st.imagesWhy : null };
           /* R4: tier 2, merged page by page; two page-scoped parts when both tiers hold pages. */
@@ -1023,15 +1039,17 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
               .filter(Boolean).join(" — ")) };
       /* R13: never zero. */
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
+      /* N100 (R13): the boxes under the count's rule: present where it is, null where no box was read. */
+      reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
       reading = failed(doc, docType, `the ${fmt} entry could not read these bytes (${String(e && e.message || e).slice(0, 200)}), `
-        + `so nothing is claimed about its text`, { page_count: null, container_extent: null });
+        + `so nothing is claimed about its text`, { page_count: null, page_boxes: null, container_extent: null });
       textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null;
     }
   } else {
     reading = failed(doc, docType, `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
-                     { page_count: null, container_extent: null });
+                     { page_count: null, page_boxes: null, container_extent: null });
   }
 
   /* R15: the reading's provenance, at one site for every branch, over exactly the text the reader was handed; text
@@ -1041,6 +1059,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
     container: typeof reading.text_container === "string" ? reading.text_container : null,
     planeVersion, member });
+  /* N139 (R60): the counts of exactly the text the reader was handed; none when no text was. */
+  { const n = textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
   /* R14: absent when no entry answered a decoding choice. */
   if (readDialect !== undefined) reading.dialect = readDialect;
   return { reading,

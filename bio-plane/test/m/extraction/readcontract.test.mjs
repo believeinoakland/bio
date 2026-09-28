@@ -119,3 +119,23 @@ test("R59: normAlias trims, collapses whitespace, lower-cases and cuts to 200 ch
   const long = Array.from({ length: 30 }, (_, i) => `w${i}`).join(" ");
   assert.deepEqual(labelTerms(long), Array.from({ length: 24 }, (_, i) => `w${i}`));
 });
+
+test("R58 R19 (N151): reading_text_source: one row per capture whose reading carries a well-formed chain, its chain column exactly the reading's text_source; no row for an absent or malformed chain", () => {
+  const w = fresh();
+  bundle(w.s, "B-1");
+  const have = w.rows(`PRAGMA table_info(reading_text_source)`).map((c) => c.name);
+  for (const c of ["capture_sha", "chain"]) assert.ok(have.includes(c), c);
+  const ocr = [{ step: "pixels", cap: "C", measured_by: "M", calibration: null },
+               { step: "ocr", engine: "tess", version: "5", cap: "C", measured_by: "M", calibration: null }];
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([], { text_source: ocr }) });
+  w.x.writeReading({ bundleId: "B-1", captureSha: S2, reading: reading([], { text_source: [{ step: "nonsense" }] }) });
+  const rows = w.rows(`SELECT capture_sha, chain FROM reading_text_source ORDER BY capture_sha`);
+  assert.deepEqual(rows.map((r) => r.capture_sha), [S1]);
+  assert.deepEqual(JSON.parse(rows[0].chain), ocr);
+  assert.deepEqual(JSON.parse(rows[0].chain), JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, S1).reading).text_source);
+  /* a replacement replaces the row; a reading with no chain leaves none */
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([], { text_source: layer }) });
+  assert.deepEqual(JSON.parse(w.one(`SELECT chain FROM reading_text_source WHERE capture_sha=?`, S1).chain), layer);
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([], { text_source: undefined }) });
+  assert.equal(w.one(`SELECT chain FROM reading_text_source WHERE capture_sha=?`, S1), null);
+});

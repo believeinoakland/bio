@@ -5,7 +5,7 @@
    `index.mjs` (`op=pdfstructure`, the acquire wire's reading block), with the rows this job applied named at their
    sites. The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { getFormat } from "../formats.mjs";
@@ -20,7 +20,7 @@ import { REEXTRACT_CHECKS, reextractRow } from "./checks.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
-         readingFromWire, decodeView, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
+         readingFromWire, decodeView, textCountsOf, pageBoxesFrom, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, CAPTURE_TEXT_UNIT_CAP };
 
@@ -36,8 +36,6 @@ export const TEXT_SOURCE_LIMIT_MAX = 5000;
 export const READING_HISTORY_SHOWN = 16;
 /* D-454 (R19): past this many occurrences of one reference the rest are the one unplaced occurrence. */
 export const OCCURRENCES_PER_REF = 256;
-/* R24: a later module's listener, called with every write. */
-const LISTENER_DECLARED = "LISTENER_DECLARED";
 
 /* R49: the reading tables, keyed to their bundle by `bundle_id`; `capture_text_fts` (external content over
    `capture_text`, kept by triggers) and `composed_readings` (no bundle) whole-store only. `capture_text` is
@@ -254,15 +252,17 @@ export class Extraction {
     return this.#calListening;
   }
 
-  /** R24: a later module registers once; its function runs after each write, in the same transaction, in the
-   *  modules' total order (the host registers them in that order), with `unitsBefore` (the capture's indexed units
-   *  before the write, null when never indexed), and a throw fails the whole write. */
+  /** R24: a later module registers once, a malformed or repeated registration refused by membership's
+   *  `listenerRefusal` (its R81, N202: the one site of LISTENER_MALFORMED and LISTENER_DECLARED); its function runs
+   *  after each write, in the same transaction, in `MODULE_ORDER` (membership R83) whatever order they registered
+   *  in, with `unitsBefore` (the capture's indexed units before the write, null when never indexed), and a throw
+   *  fails the whole write. */
   onReading(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: LISTENER_DECLARED, module, detail: `${module} has already registered its listener` };
-    this.#listeners.push({ module, fn });
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
+    const i = MODULE_ORDER.indexOf(module);
+    this.#listeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.#listeners.length });
+    this.#listeners.sort((a, b) => (a.rank - b.rank) || (a.seq - b.seq));
     return { ok: true, module };
   }
 
@@ -670,6 +670,9 @@ export class Extraction {
              pageCount: Number.isInteger(pc) && pc > 0 ? pc : null,
              ...(reading && Object.prototype.hasOwnProperty.call(reading, "container_extent")
                ? { containerExtent: reading.container_extent } : {}),
+             /* N100: the boxes as R13 stored them: absent never stored, null stored null. */
+             ...(reading && Object.prototype.hasOwnProperty.call(reading, "page_boxes")
+               ? { pageBoxes: reading.page_boxes } : {}),
              textContainer: reading && typeof reading.text_container === "string" ? reading.text_container : null,
              captureFormat: typeof row.capture_format === "string" ? row.capture_format : null };
   }
@@ -884,9 +887,15 @@ export class Extraction {
           tier2note: readT2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
         reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
           ? structure.pages : (Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : null);
+        /* N100 (R34): the structure's boxes, else the stored reading's when it held the key, else absent. */
+        { const pb = pageBoxesFrom(structure.pageBoxes);
+          if (pb) reading.page_boxes = pb;
+          else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes; }
         if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
         reading.provenance = await readingProvenance({ text: t3.i2text, chain, tier: t3.wiredTier,
                                                        container: "pdf", planeVersion: e.VERSION || null });
+        /* N139 (R60): the re-read's own counts, by the acquire path's rule. */
+        { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
         structureChain = chain;
         reading.reextracted = {
           at: stampInstant("second"), by: author,
