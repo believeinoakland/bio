@@ -88,3 +88,16 @@ B5 and B6 applied; J4's record stands, with these changes.
 - Old battery, serial, `tranche/T7` @ 3bfd3f9f2f against this branch, the 31 suites that drive versions, conclusions, narrowing, CURRENT, strength, suggest, publish and the fences: 25 identical; 6 differ, each only in arms that read source text (J4.1): `versions` (write-site and table census of `store.mjs`/`schema.mjs`), `suggest` (write-site census), `casepin` (`VERSION_ACT_TO` and two refusal words read from store source), `current` (ARM 4 reads the writer), `projection-noproject` (reader call sites in store source), `rec119-version-legs-earned` (the resolver in store source). An earlier serial pass over 83 suites (@ a21d88b177) differed in 4 of these only. None fails on behaviour.
 
 Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 40, module lines 2003
+
+## J6 · COMPLETE
+
+B7 applied. `tranche/T7` @ 727c18a7fb merged (K192); run-productions' removals kept.
+
+- `store.mjs` re-derived from the tranche with this job's removals; the narrowing region (which run-productions had rewired to `runProductionsOf(ctx).candidates`) moves whole to basis-versions and leaves the one delegate. run-productions' interim bridge names no method this job removed (`Store.basisVersionsOf`, `basisVersions` are delegates here), so it is unchanged.
+- R40's registration: until run-productions leaves its interim and registers itself, legacy-store registers `basisVersionsOf(ctx).onCandidates("legacy-store", (a) => runProductionsOf(ctx).candidates(a))`. **run-productions' CHANGE should delete that one store line** when it registers (a second registration is `LISTENER_DECLARED`, which its factory would receive, not throw).
+- The extract arm reads a source row's `position` when the source parses it (run-productions' `candidates` does), else its `pos_kind`/`pos`/`pos_ref` columns; R40's test covers both.
+- Strength's wiring is as J5 (`inquiryOf(ctx)` with `basisFor(id, o)`, `versions: basisVersionsOf(ctx)`).
+
+**Tests and checks (@ this commit).** Module tests with run-productions', strength's and inquiry's: `node --test bio-plane/test/m/{basis-versions,run-productions,strength,inquiry}/` 165 pass, 0 fail. Old `narrow` suite (boots the plane, drives both arms): 52 pass, 0 fail. format 69 modules, 0 failures; architecture 11 product files, 39 relative imports, 0 failures; coverage 40 of 40, 0 failures; ownership 14 files, legacy-store 38 added / 3,254 removed, legacy-checks 0/0, 0 failures.
+
+Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 42, module lines 2004
