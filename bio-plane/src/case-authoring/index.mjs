@@ -126,7 +126,9 @@ export class CaseAuthoring {
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
-  #when(precision) { const w = this.now(precision); return typeof w === "string" && w ? w : stampInstant(precision); }
+  /* The act's instant, from the clock it was given. A clock that answers no instant is carried as it answers, so the
+     searched section refuses it by name (R11) rather than stamping one the clock did not give. */
+  #when(precision) { const w = this.now(precision); return typeof w === "string" ? w : stampInstant(precision); }
 
   /* The review provider publication holds (its R23): with none registered, every door refuses and `deadAnswer()` is
      still C-87.1's answer, so R19's dead answer is one answer either way. */

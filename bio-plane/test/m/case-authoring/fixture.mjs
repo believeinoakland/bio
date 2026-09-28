@@ -107,7 +107,7 @@ function reviewProvider(w) {
   };
 }
 
-export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null } = {}) {
+export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, deps = {} } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -181,7 +181,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   if (provider) publication.registerReviewProvider("review", reviewProvider(w));
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification,
-    now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)) });
+    now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
