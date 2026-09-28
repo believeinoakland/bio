@@ -1,6 +1,6 @@
 # escalation (T8)
 
-**Status** · session_01Dj21W7K2W3BqsaQUEQKpDo · depth 2 · WORKING · handled B10
+**Status** · session_01Dj21W7K2W3BqsaQUEQKpDo · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
