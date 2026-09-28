@@ -16,6 +16,8 @@ import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS, MEMBER_I
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
+import { MEMBERSHIP_CHECKS } from "./checks.mjs";
+export { MEMBERSHIP_CHECKS } from "./checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 
 /* The marker every generated statement carries (moved from query.mjs with `viewerPredicate`, K57). It is a SQL
@@ -46,6 +48,29 @@ export function viewerPredicate(viewer) {
     args: [memberId, memberId],
     viewer: v, scope: "participant",
   };
+}
+
+/* R78 (N208, N146, K238, K275). THE ONE ANSWER TO ONE CONDITION: no project answers to `projectId`, or the caller's
+   sight of it is not FULL (after R77's existence answer), answered as absent (R61, Membership Architecture v2 §7.9).
+   Every act of any module answering that condition answers through here, so `NO_SUCH_PROJECT` is minted at one site
+   and its one row is this module's (C-70.5). The detail is one fixed sentence, the same for every caller, so an absent
+   id and a hidden one can never be told apart by it. `extra` adds a caller's own fields (such as `finding`) beside
+   these and never replaces one of them. Writes nothing and never throws. */
+const NO_SUCH_PROJECT_DETAIL = "no project answers to that id here. A project you cannot see is answered exactly as one "
+  + "that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way.";
+const NO_SUCH_PROJECT_FIXED = new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
+export function noSuchProject(projectId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_PROJECT_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-project-seen */
+  const row = MEMBERSHIP_CHECKS.NO_SUCH_PROJECT;
+  return { ok: false, reason: "NO_SUCH_PROJECT", code: "NO_SUCH_PROJECT", check: row.check,
+           translation: row.translation, project: projectId ?? null, ...Object.fromEntries(own),
+           detail: NO_SUCH_PROJECT_DETAIL };
+  /* END DEC-49 REGION is-project-seen */
 }
 
 /* A whole-second instant, the record's `…:00Z` spelling (the legacy store's the whole-second spelling). */
@@ -785,8 +810,8 @@ export class Membership {
    *   see this bundle. Only PROJECT rows are ever filtered, so for anything else it answers true to
    *   every recognised viewer; an absent or unrecognised viewer sees NOTHING (fail closed, the gate's
    *   own posture), which is why every act that calls it has its viewer stamped by the control plane.
-   *   `Membership.#noSuchProject(project)` is THE answer a project-targeted act gives when there is no
-   *   project it may name — returned by the absent branch and the hidden branch alike, and in every
+   *   `noSuchProject(project)` (R78, a module-level function, every module's) is THE answer a project-targeted
+   *   act gives when there is no project it may name — returned by the absent branch and the hidden branch alike, and in every
    *   caller by ONE condition (`!p || !this.inSight(...)`), so the two cannot drift: there is no
    *   second string to keep in step. IC-141's `#noCaseDocument` is the precedent, one object over.
    *
@@ -942,7 +967,7 @@ export class Membership {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     const existence = b ? this.existenceAct(projectId, viewer) : null;
     if (existence) return existence;
-    if (!b || !this.rosterInSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
     const want = String(setting ?? "");
     const refusal = (code, detail) => {
@@ -1004,7 +1029,7 @@ export class Membership {
    *  widen: a caller without full sight is answered as for a project that does not exist. */
   projectVisibility({ projectId, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b || !this.inSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.inSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
     const history = this.#rows(
       `SELECT setting, set_by, reason, at FROM project_visibility WHERE project_id=? ORDER BY seq`, projectId);
@@ -1116,7 +1141,7 @@ export class Membership {
    * each clause of the design lands:
    *   ASK       `projectRequest` — a member SESSION at EXISTENCE sight (uninvited, active, not a participant), at
    *             most ONE OPEN request per member per project, an optional short comment (§7.6's precedent). A
-   *             hidden project, or one the caller cannot see, is answered `#noSuchProject` byte for byte.
+   *             hidden project, or one the caller cannot see, is answered `noSuchProject` (R78) byte for byte.
    *   WITHDRAW  `projectRequestWithdraw` — the requester's own open request. After it they may ask again.
    *   ANSWER    `projectRequestAnswer` — an OWNER's (§7.2: only owners invite). GRANT IS AN INVITATION: it writes
    *             the participation `invited` with `invited_by` = the granting owner, exactly the row `projectInvite`
@@ -1212,7 +1237,7 @@ export class Membership {
 
   /** REC-150 — ASK TO JOIN (§7.14 "Who may ask"). The one act a member at EXISTENCE may take. Sight decides
    *  first and says nothing a caller did not already know: NONE (absent, hidden, or not a project the caller can
-   *  see) is `#noSuchProject` byte for byte; FULL (a participant, an administrator, the founder) is refused
+   *  see) is `noSuchProject` (R78) byte for byte; FULL (a participant, an administrator, the founder) is refused
    *  positionally, since that caller can already see the project. Only at EXISTENCE is a request written. */
   projectRequest({ projectId, comment = null, by, viewer = null } = {}) {
     const refusal = (code, detail, extra = {}) => {
@@ -1234,7 +1259,7 @@ export class Membership {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     const shown = b ? this.#titleOf(projectId) : null;
     const sight = b && b.object_type === "project" ? this.sight(projectId, viewer) : Membership.SIGHT_NONE;
-    if (sight === Membership.SIGHT_NONE) return Membership.#noSuchProject(projectId);
+    if (sight === Membership.SIGHT_NONE) return noSuchProject(projectId);
     if (sight === Membership.SIGHT_FULL)
       return refusal("PROJECT_REQUEST_NOT_OUTSIDE",
         "you can already see this project, so there is nothing to ask: a participant is already in it (an "
@@ -1281,7 +1306,7 @@ export class Membership {
   projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }
-    if (!b || !this.rosterInSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
     const want = String(answer ?? "");
     const refusal = (code, detail, extra = {}) => {
@@ -1370,7 +1395,7 @@ export class Membership {
     }
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }
-    if (!b || !this.inSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.inSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT", project: projectId };
     /* DEC-49 REGION is-join-requests-project */
     if (!this.isProjectOwner(projectId, by) && !this.isAdministrator(by))
@@ -1406,12 +1431,6 @@ export class Membership {
      that a measurement: without the stamp these acts fall back to disclosing, and its arms go red. */
   rosterInSight(projectId, viewer) {
     return viewer === null || viewer === undefined || this.inSight(projectId, viewer);
-  }
-
-  static #noSuchProject(project) {
-    return { ok: false, reason: "NO_SUCH_PROJECT", project: project ?? null,
-             detail: "no project answers to that id here. A project you cannot see is answered exactly as one "
-                   + "that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way." };
   }
 
   /** D-310: DOES THIS MEMBER HOLD THE OWNER POSITION ANYWHERE — the question
@@ -1471,7 +1490,7 @@ export class Membership {
    *  owner row, which is honest rather than inventing one. */
   projectClaimOwner({ projectId, memberId } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    if (!b) return { ok: false, reason: "NO_SUCH_PROJECT" };
+    if (!b) return noSuchProject(projectId);   /* R78 */
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (this.#one(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1`, projectId))
       return { ok: false, reason: "OWNED" };
@@ -1490,7 +1509,7 @@ export class Membership {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -1602,7 +1621,7 @@ export class Membership {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -1702,7 +1721,7 @@ export class Membership {
     /* REC-138 / D-426: sight BEFORE position — so ADMIN_ONLY is said only to a member who can
        already see the project (an invited one); an administrator sees every project (§7.3). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const blocked = this.rescueRefusal(projectId, by);
     if (blocked) return blocked;
@@ -1739,7 +1758,7 @@ export class Membership {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
     /* REC-138 / D-426: sight BEFORE position (see `#inSight`). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
-    if (!b || !this.rosterInSight(projectId, viewer)) return Membership.#noSuchProject(projectId);
+    if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
     if (b.object_type !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     if (!this.isProjectOwner(projectId, by))
       return { ok: false, reason: "NOT_THE_OWNER",
@@ -1904,10 +1923,7 @@ export class Membership {
    *  uninvited member cannot see that a project EXISTS. */
   projectParticipants({ projectId, by } = {}) {
     const mine = this.participation(projectId, by);
-    if (!mine && !this.isAdministrator(by))
-      return { ok: false, reason: "NO_SUCH_PROJECT",
-               detail: "no project by that identifier is visible to you. An uninvited member cannot see "
-                     + "that a project exists, so this is the same answer as for one that does not." };
+    if (!mine && !this.isAdministrator(by)) return noSuchProject(projectId);   /* R78 */
     const handleOf = (id) => this.#one(`SELECT handle FROM members WHERE member_id=?`, id)?.handle ?? id;
     return { ok: true, projectId, participants: this.#rows(
       `SELECT m.handle, p.state, p.owner, p.comment, p.created
