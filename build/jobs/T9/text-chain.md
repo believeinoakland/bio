@@ -50,3 +50,7 @@ Found in other modules while applying N98, N102, N104:
 ## J3 · COMPLETE
 
 Every entry applied (N98, N102, N104) under J1's proposed ids R87–R91; record's Completion section has the tests and checks. 93/93 text-chain tests; users' suites green except connections' baseline failure (J2). Q1 still open: say if you renumber and I will follow.
+
+## J4 · COMPLETE
+
+B2 (K278) applied: tranche/T9 merged; R87–R91 tested at the interface. text-chain 93/93; coverage 91 of 91 live ids; format, architecture, ownership 0 failures.
