@@ -863,15 +863,19 @@ export const INTERNET_FRONTIER_EMPTY_CAUSES = {
 export const ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
 
 export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined } = {}) {
-  /* CAUSE (1) AND CAUSE (3) ARE EACH A SET OF ONE, and for opposite reasons that
-     are worth saying once. `pre_log` was reached because the evidence table HAS a
-     row: an artifact exists, so a look demonstrably happened, and neither a purge
-     nor nobody-looked survives it. `never_looked` was reached by excluding the
-     other two — it is §5.1's one cause that licenses a positive statement, and
-     widening it here would make the frontier refuse to conclude anything, which
-     is its own defect and the direction G2a exists to catch. */
+  /* CAUSE (1) IS ALWAYS A SET OF ONE, AND CAUSE (3) IS ONE ON TWO-SIDED EVIDENCE.
+     `pre_log` was reached because the evidence table HAS a row: an artifact exists,
+     so a look demonstrably happened, and neither a purge nor nobody-looked survives
+     it. `never_looked` was reached by excluding the other two, which only two-sided
+     evidence can do (K331, below). */
   if (missingCause === "pre_log") return ["pre_log"];
-  if (missingCause === "never_looked") return ["never_looked"];
+  /* K331 (R11): `never_looked` IS A SET OF ONE ONLY WHERE THE EVIDENCE IS TWO-SIDED. It was reached because the
+     evidence probe missed and the subject entered after the level's first row; at a one-sided kind (an address, a
+     reference, an entity) a look that found NOTHING left no artifact for the probe to find, so a pre-log look, a purge
+     and nobody looking all stay live. Only an explicit `false` earns the one-member set: an undeclared kind takes the
+     wide one, this function's weakest-claim default. */
+  if (missingCause === "never_looked")
+    return evidenceOneSided === false ? ["never_looked"] : [...ALL_MISSING_ROW_CAUSES];
   /* AN UNRECOGNISED CAUSE WORD TAKES THE WIDEST SET, never the narrowest — the
      same shape as `#missingMeaningCause`'s unrecognised-subject-kind default one
      call up, pointed at the cause vocabulary instead of at the subject one. */

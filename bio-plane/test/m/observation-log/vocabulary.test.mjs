@@ -62,9 +62,19 @@ test("R11 missingCause: pre_log on the artifact; purged with no row at the level
   assert.equal(ol.missingCause({ registeredAt: "2026-09-27T03:00:14.500Z", firstRowAt: "2026-09-27T03:00:15.000Z" }), "purged");
 });
 
-test("R11 causesNotRuledOut: pre_log and never_looked each a set of one; purged and the band leave two on two-sided evidence and all three on one-sided or undeclared evidence; an unknown cause the widest set; the document level's sidedness stated", () => {
-  assert.deepEqual(ol.causesNotRuledOut("pre_log"), ["pre_log"]);
-  assert.deepEqual(ol.causesNotRuledOut("never_looked"), ["never_looked"]);
+test("R11 causesNotRuledOut: pre_log a set of one at every sidedness; never_looked a set of one on two-sided evidence and all three on one-sided or undeclared evidence (K331); purged and the band leave two on two-sided evidence and all three otherwise; an unknown cause the widest set; the document level's sidedness stated", () => {
+  for (const sided of [true, false, undefined]) assert.deepEqual(ol.causesNotRuledOut("pre_log", { evidenceOneSided: sided }), ["pre_log"], String(sided));
+  assert.deepEqual(ol.causesNotRuledOut("never_looked", { evidenceOneSided: false }), ["never_looked"]);
+  assert.deepEqual(ol.causesNotRuledOut("never_looked", { evidenceOneSided: true }), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(ol.causesNotRuledOut("never_looked"), ["pre_log", "purged", "never_looked"], "undeclared takes the wide set");
+  // at each level's declared kinds: a one-sided kind's never_looked names all three, a two-sided kind's names itself
+  const at = (m, k) => ol.causesNotRuledOut("never_looked", { evidenceOneSided: m[k] });
+  assert.deepEqual(at(ol.DOCUMENT_EVIDENCE_IS_ONE_SIDED, "address"), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(at(ol.MEANING_EVIDENCE_IS_ONE_SIDED, "reference"), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(at(ol.MEANING_EVIDENCE_IS_ONE_SIDED, "entity"), ["pre_log", "purged", "never_looked"]);
+  assert.deepEqual(at(ol.MEANING_EVIDENCE_IS_ONE_SIDED, "capture"), ["never_looked"]);
+  assert.deepEqual(at(ol.CONTENT_EVIDENCE_IS_ONE_SIDED, "capture"), ["never_looked"]);
+  assert.deepEqual(at(ol.INTERNET_EVIDENCE_IS_ONE_SIDED, "description"), ["never_looked"]);
   for (const c of ["purged", "watermark_band"]) {
     assert.deepEqual(ol.causesNotRuledOut(c, { evidenceOneSided: false }), ["purged", "never_looked"]);
     assert.deepEqual(ol.causesNotRuledOut(c, { evidenceOneSided: true }), ["pre_log", "purged", "never_looked"]);
