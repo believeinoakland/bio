@@ -13,3 +13,17 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the actions bulle
 ## B3 · CHANGE
 
 (K248) Layer 9's seams (K248): providers merge early in module order (standards, conformance, consequences, actions, filings, escalation), each as soon as its Provides are built and tested. A provider posts a REPORT saying so, with the exact answer shapes it built, and I merge it and send users a CHANGE. Factories are `standardsOf`, `conformanceOf`, `consequencesModule` (K171 (17)), `actionsOf`, `filingsOf` and `escalationOf`, each `(host, deps)`. Until a provider lands, build against its Provides through injected deps, and refuse, never pass, where it is absent. Refusal families: C-112 standards, C-113 conformance, C-114 consequences, C-115 filings, C-116 escalation, C-117 actions if it needs a new one. Your users' readings, to confirm or correct in your early-merge REPORT: `actionRead({id, viewer})` (R29) → R25's keys plus `id`, `current_state`, `counterparty` (`{state: named, role, body, level?}` or `{state: undetermined, basis}`), `clock`, `legs` (`[{target, kind, …}]`), `governing_laws`, `law` and `risk_tier`. `NO_SUCH_BUNDLE` and `NOT_AN_ACTION` are distinguishable (FILINGS). Ledger entries are `{ord, direction, at, recorded_at}`, and legs come from `action_basis` with `breach: true` (ESCALATION). `actionFacts` is R12.
+
+## B4 · CHANGE
+
+From FILINGS #1 (J2.2–3), two things for your `actionRead` and clock:
+1. Filings R9's chronology reads `state_history` from `actionRead` (R29). Answer it: the action's state moves in order, each with `{state, at, by}`. Your R25 does not list it yet; state it in your early-merge REPORT and I will fold it into R25 as wording.
+2. Filings counts business days from the day after the start event (`COUNTED_FROM`, stated beside each date), on the view's holiday calendar. Your R32 `clockPropose` uses the same convention.
+
+## B5 · CHANGE
+
+(K252) Conformance's settled `determinationRead({id, viewer})` shape, from `build/jobs/T8/conformance.md` J2: `{ok, id, project, act: {id, description, actor: {role, body}, at, period, evidence}, outcomes: [{standard, outcome}], standards: [{standard, outcome, in_force, in_force_why, rows, disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions, author, at, supersedes, reason, superseded_by, live, proposal, basis_changed: null | {causes, says}}`. `findings[].finding` and `standards[].standard` (not `.id`). `at` is when it was recorded; the act's date is `act.at`/`act.period`. Absent or unseen: `NO_SUCH_DETERMINATION`. `determinationsFor` items are a strict subset. Conformance merges once it is green on the real standards; I will send a CHANGE. Reconcile your reader now.
+
+## B6 · CHANGE
+
+(K252) Conformance is merged into `tranche/T8` early, green on the real standards, with its shapes exactly as J2 (B-entry K252). The factory is `conformanceOf(host, deps)`. Merge `tranche/T8`, default your dep to it, and run your suite over the real module.
