@@ -123,6 +123,7 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 import { ratifyCase } from "./caseceremony.mjs";
 import { docDate } from "./docdates.mjs";   /* promotion R12: the envelope carries the document's own dates */
 import { moduleFiles } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's extracted modules */
+import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (strength R5, K187) */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -157,8 +158,15 @@ const STORE_BARE = decomment(STORE_SRC);
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, host-governor, capture): NO_AUTHOR's own site,
    `provenanceChainRebuild`, moved into `src/provenance/` with layer 3 (the walk had fallen back to another method's
    NO_AUTHOR), so the corpus widens to the three layer-3 modules the same way, each file walked on its own. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; layers 8-10): the store lost more than half its text to the T8 modules —
+   LEASE_HELD left with `actionCorrespond` for `src/actions/`, EDITION_NOT_INCREMENTED with the committer's `publish`
+   for `src/publication/` — and the walk fell to 297 sites across 567 methods, under its blindness floor. The corpus
+   widens to the T8 modules extracted from the store in the same way, each file walked on its own. */
+const T8_EXTRACTED = ["actions", "case-authoring", "review", "publication", "ratification", "monitoring", "scheduler",
+                      "standards", "conformance", "consequences", "filings", "escalation"];
 const WALKED_BARE = [STORE_BARE, ...[...moduleFiles("membership"), ...moduleFiles("promotion"),
-                                    ...moduleFiles("provenance"), ...moduleFiles("capture"), ...moduleFiles("host-governor")]
+                                    ...moduleFiles("provenance"), ...moduleFiles("capture"), ...moduleFiles("host-governor"),
+                                    ...T8_EXTRACTED.flatMap(moduleFiles)]
   .map((f) => decomment(readFileSync(SRC(f), "utf8")))];
 const INDEX_BARE = decomment(INDEX_SRC);
 
@@ -249,8 +257,10 @@ const actionMd = (id) => ["---",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   `group: ${GROUP}`, "references: []", "state_history: []",
-  "action_kind: cpra_request", "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-READ 2026-09-28 (T8, legacy-tests): `cpra_request` is no kind this instance offers (ACTIONS C-101.1) and a NEW
+     named counterparty is an office, its role and its body (R9, C-101.3). Fixture, not subject. */
+  "action_kind: records_request", "risk_tier: 1",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
@@ -338,14 +348,16 @@ console.log("\n--- 1. the eight are confirmed against the plane, and each still 
     return heads.map((h, i) => ({
       name: h[1], body: BARE.slice(h.index, i + 1 < heads.length ? heads[i + 1].index : BARE.length) }));
   });
-  const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})")/g;
+  /* RE-ANCHORED 2026-09-28 (T8): the modules mint through `refusal(<TABLE>, "CODE", …)`, the row's table first; that
+     spelling is the fourth. */
+  const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefusal\s*\(\s*[A-Z][A-Z0-9_]*\s*,\s*"([A-Z][A-Z0-9_]{2,})")/g;
 
   /* Every refusal site in the file, with what sits BEHIND it in its own method. */
   const sites = [];
   for (const m of methods) {
     const seq = [];
     for (const h of m.body.matchAll(CODE)) {
-      const c = h[1] || h[2] || h[3];
+      const c = h[1] || h[2] || h[3] || h[4];
       if (!seq.some((s) => s.code === c)) seq.push({ code: c, at: h.index });
     }
     seq.forEach((s, i) => sites.push({ method: m.name, code: s.code, shadows: seq.length - 1 - i,
@@ -650,13 +662,25 @@ console.log("\n--- 2. each refusal: driven by name, then the same act driven to 
 
   const CAP = "INFO-2026-7800-cap", CONN = "INFO-2026-7800-conn", LEFT = "INFO-2026-7800-left";
   const INQ = "INQ-2026-7800-edition";
-  for (const d of [CAP, CONN, LEFT])
+  for (const d of [CAP, LEFT])
     await mustPromote(d, infoMd(d), "information", RUTH, {}, [],
       [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${d}`), encoding: "binary", bytes: 10 }]);
-  const legs = ["basis:",
+  /* RE-READ 2026-09-28 (T8, legacy-tests; strength R5, K187), never exempted: the connection leg was a `hunch`, and
+     op=publish now refuses a case resting on one (UNCLEARED_HUNCH), so the fixture's case never published and the
+     refusal this block pins was never reached. Fixture, not subject: CONN carries a READING naming the inquiry's
+     subject entity, resolved, so the connection C is EARNED (`earned-connection.mjs`). */
+  const EARN = await connectionAtC(async (b) => POST(`op=entitycreate&token=${RUTH}`, b));
+  {
+    const cap = sha(`capture-of-${CONN}`);
+    await mustPromote(CONN, infoMd(CONN), "information", RUTH, {}, EARN.files(cap, "snapshots/doc.bin"),
+      [{ path: "snapshots/doc.bin", sha256: cap, encoding: "binary", bytes: 10 }]);
+    const res = await POST(`op=resolve&token=${RUTH}`, { captureSha: cap });
+    if (res?.ok === false) throw new Error(`resolve ${CONN}: ${JSON.stringify(res).slice(0, 400)}`);
+  }
+  const legs = [`subject_entity: ${EARN.entityId}`, "basis:",
     `  - target: ${CAP}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
     `  - target: ${CONN}`, "    role: supports", "    grade: C", "    grade_axis: connection",
-    "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
+    "    grade_source: resolution"].join("\n");
   const md = inquiryMd(INQ, { question: "Was the sewer transfer authorised?", refs: [CAP, CONN] })
     .replace("---\n\n## Question", `${legs}\n---\n\n## Question`);
   /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a

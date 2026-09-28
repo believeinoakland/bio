@@ -1974,6 +1974,94 @@ withTree(nestedTree({ rows: REGION_ROWS(FN_WHERE), floor: undefined }), tree => 
      /NO row's `where` claims: src[\\/]fixture\.mjs::fixture-nested/.test(r.out)], [true, true]);
 });
 
+/* ============================================================
+   ARM 16 — T8 (legacy-tests #5): THE HELPER WALK READS A FUNCTION-LOCAL ALIAS AND A CONDITIONAL CODE.
+
+   T8's extractions spelled two refusals the helper walk could not see, so each region around them judged
+   NOTHING and failed as a drifted marker: case-authoring's `acknowledgeStatement` refuses through
+   `const ack = (code, detail, extra) => refusal(STATEMENT_ACK_CHECKS, code, …)`, and escalation's
+   `#edgeArgs` through `refusal(kind === "advance" ? "MACHINE_CANNOT_ADVANCE" : "MACHINE_CANNOT_DECLINE", …)`.
+   THE FIXTURE: one region refusing through a local alias, one through a conditional code, each its own rows.
+   ============================================================ */
+const HELPER_SRC = (alias = "const bad = (code, detail) => refusal(code, detail);", aliasCode = "FIXTURE_NO_ADDRESS",
+                    ternaryCode = "FIXTURE_ANCHOR_UNREAD") => `
+function refusal(code, detail) { return { ok: false, code, detail }; }
+export function checkFixture(input = {}) {
+  ${alias}
+  /* DEC-49 REGION fixture-alias
+     refused through the function's own alias of the helper. */
+  if (!input.address) {
+    const why = "no address was named, so nothing was looked up and nothing was guessed at";
+    return bad("${aliasCode}", why);
+  }
+  /* END DEC-49 REGION fixture-alias */
+  /* DEC-49 REGION fixture-ternary
+     refused with a code chosen between two literals. */
+  if (!/^[0-9a-f]{64}$/.test(String(input.at || "")))
+    return refusal(input.at === undefined ? "${ternaryCode}" : "FIXTURE_BAD_ANCHOR", String(input.at));
+  /* END DEC-49 REGION fixture-ternary */
+  return null;
+}
+export function checkSecond(rows = {}) {
+  if (!rows.arm) return { ok: false, code: "FIXTURE_TWO_NO_ARM", detail: "no arm" };
+  return null;
+}
+`;
+const HELPER_ROWS = {
+  FIXTURE_NO_ADDRESS: { check: "C-90.1", where: "src/fixture.mjs checkFixture > fixture-alias", translation: DEFAULT_TRANSLATION },
+  FIXTURE_BAD_ANCHOR: { check: "C-90.2", where: "src/fixture.mjs checkFixture > fixture-ternary",
+    translation: "That is not the shape a capture identity has, so nothing was looked up at all and the "
+      + "request is reported as malformed rather than as a document the record does not hold." },
+  FIXTURE_ANCHOR_UNREAD: { check: "C-90.3", where: "src/fixture.mjs checkFixture > fixture-ternary",
+    translation: "No capture identity was given at all, so there was nothing to check the shape of and "
+      + "nothing was looked up in its place." },
+  FIXTURE_TWO_NO_ARM: { check: "C-91.1", where: "src/fixture.mjs checkSecond",
+    translation: "That request did not say which kind of meaning to read, and the record holds two "
+      + "kinds that answer different questions, so it asks rather than choosing one for you." },
+};
+/* The floors are the figures the guard PRINTED over this tree (its `ratchet:` lines), never derived here. */
+const helperTree = (over = {}) => Object.assign({
+  fixtureSrc: HELPER_SRC(), rows: HELPER_ROWS,
+  floor: { families: 1, rows: 4, census: 8, reach: 8, governedSites: 3, surfaceTables: 1, bodyLines: 6,
+           vocabularies: 2, vocabularyTerms: 4, regions: 2, regionLines: 10, codesChecked: 4,
+           outcomeReturns: 1, refusalsJudged: 3, untranslated: 0 },
+}, over);
+
+console.log("\n--- ARM 16 · a refusal through a FUNCTION-LOCAL ALIAS and one with a CONDITIONAL CODE are judged — GREEN ---");
+withTree(helperTree(), tree => {
+  const r = runGuard(tree);
+  if (r.exit !== 0) console.log(r.out.split("\n").filter(l => /FAIL|ratchet:/.test(l)).join("\n"));
+  t("ARM 16: exits 0", r.exit, 0);
+  t("ARM 16: the alias region judged its ONE call and compared its code",
+    /checkFixture > fixture-alias \d+L \(1 judged, 1 code\(s\) checked\)/.test(r.out), true);
+  t("ARM 16: the conditional region judged ONE refusal and compared BOTH codes",
+    /checkFixture > fixture-ternary \d+L \(1 judged, 2 code\(s\) checked\)/.test(r.out), true);
+});
+
+console.log("\n--- ARM 16b · OVER-REACH REFUSED: a local arrow that does NOT pass its code on is not the helper — RED ---");
+withTree(helperTree({ fixtureSrc: HELPER_SRC("const bad = (code, detail) => refusal(\"FIXTURE_BAD_ANCHOR\", detail);") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 16b: exits 1", r.exit, 1);
+  t("ARM 16b: the alias region judged NOTHING, because `bad` does not hand its first parameter to the helper",
+    /judged NO refusal inside the region `fixture-alias`/.test(r.out), true);
+});
+
+console.log("\n--- ARM 16c · THE TEETH THROUGH THE ALIAS: a code that is not this region's row FAILS by name ---");
+withTree(helperTree({ fixtureSrc: HELPER_SRC(undefined, "FIXTURE_ANCHOR_ELSEWHERE") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 16c: exits 1", r.exit, 1);
+  t("ARM 16c: naming the code the alias sent",
+    /\(in checkFixture > fixture-alias\) calls refusal\("FIXTURE_ANCHOR_ELSEWHERE"\), which is NOT a row/.test(r.out), true);
+});
+
+console.log("\n--- ARM 16d · THE TEETH THROUGH THE CONDITIONAL: EITHER branch's code that is not a row FAILS by name ---");
+withTree(helperTree({ fixtureSrc: HELPER_SRC(undefined, undefined, "FIXTURE_UNROWED_BRANCH") }), tree => {
+  const r = runGuard(tree);
+  t("ARM 16d: exits 1", r.exit, 1);
+  t("ARM 16d: naming the branch's code",
+    /\(in checkFixture > fixture-ternary\) calls refusal\(… \? … "FIXTURE_UNROWED_BRANCH" …\), which is NOT a row/.test(r.out), true);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -2025,5 +2113,8 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `an expectation is observed and not fed (13f), and a helper that throws is named rather than scored zero (13g). AND SINCE D-589 `
   + `a claimed region nested in a whole-function site is judged ONCE, by its own rows (15), the same tree fails by name `
   + `with the exclusion removed (15b), a codeless refusal inside it fails once, at the region (15c), JSDoc-spelled `
-  + `markers are excluded all the same (15d), and an UNCLAIMED marker is not excluded (15e)`);
+  + `markers are excluded all the same (15d), and an UNCLAIMED marker is not excluded (15e). AND SINCE T8 (legacy-tests #5) `
+  + `the helper walk reads a refusal through a FUNCTION-LOCAL ALIAS and one whose code is a CONDITIONAL between two `
+  + `literals (16), refuses an arrow that does not pass its code on (16b), and fails by name a code either sends that `
+  + `is not the region's row (16c, 16d)`);
 if (bad) process.exit(1);

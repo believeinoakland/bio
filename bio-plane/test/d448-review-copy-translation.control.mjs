@@ -72,8 +72,17 @@ const ROOT = join(DIR, "..");
 const REPO = join(ROOT, "..");
 /* NEVER inside the repository — see the header. */
 const PEN = process.env.NC_PEN ? process.env.NC_PEN : mkdtempSync(join(tmpdir(), "nc-d448-"));
-const STORE = join(ROOT, "src", "store.mjs");
-const CATALOG = join(ROOT, "checks", "bio-checks.mjs");
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; REVIEW #1 J4): the review copy's acts moved to `src/review/index.mjs` and
+   C-87.1–.11 to `src/review/checks.mjs`. `STORE` and `CATALOG` keep their names (the arms read them) and name those
+   files; every needle below is re-quoted from them, arms (a)–(d) unchanged.
+   ARM (e) HAS NO SUBJECT ON THIS TREE, and that is reported rather than re-aimed: its subject was `#noReviewCopy`, a
+   STATIC method the guard could resolve only through `functionBody`'s `(?:static\s+)?`. T8 review made it a
+   module-level function (`noReviewCopy`, C-87.1's `where`), and no row's `where` names a static method any more
+   (measured over every governed site on job/T8/legacy-tests), so reverting the widening changes no resolution and
+   the arm cannot come back as declared. It is left as written, so its NOT AS DECLARED is visible, until a governed
+   static site exists to aim it at. */
+const STORE = join(ROOT, "src", "review", "index.mjs");
+const CATALOG = join(ROOT, "src", "review", "checks.mjs");
 const GUARD = join(REPO, "civicos-ui", "check-refusal-codes.mjs");
 const SUITE = join(DIR, "d448-review-copy-translation.test.mjs");
 const LOG = join(PEN, "suite.out");
@@ -100,14 +109,14 @@ const RECIP_END = `      /* END DEC-49 REGION is-review-recipient */\n`;
 
 const COMMENT_BLOCK = `      /* DEC-49 REGION is-review-comment-text */
       return refusal("REVIEW_NO_COMMENT_TEXT",
-               \`a comment says something: at least one character and at most \${Store.REVIEW_TEXT_MAX}.\`);
+               \`a comment says something: at least one character and at most \${REVIEW_TEXT_MAX}.\`);
       /* END DEC-49 REGION is-review-comment-text */`;
 /* The SAME refusal, built the way it was built before D-448 — a bare object literal, ABOVE the region,
    so the helper is not called and the marker pair stands over a span that refuses nothing. The span is
    left comfortably above the guard's non-trivial-span floor on purpose: an arm that tripped THAT floor
    would prove only that markers can collapse, not that a refusal left its region. */
 const COMMENT_ARMED = `      return { ok: false, reason: "REVIEW_NO_COMMENT_TEXT",
-               detail: \`a comment says something: at least one character and at most \${Store.REVIEW_TEXT_MAX}.\` };
+               detail: \`a comment says something: at least one character and at most \${REVIEW_TEXT_MAX}.\` };
       /* DEC-49 REGION is-review-comment-text */
       /* nc-d448 arm (c): this span is what C-87.11's \`where\` still claims, and the refusal that used to
          stand in it has been moved out, above the opening marker. Nothing here refuses anything. */
@@ -128,8 +137,8 @@ const PLAIN_RE = `(?:^|\\\\n)\\\\s*(?:export\\\\s+)?(?:async\\\\s+)?(?:function\
    label after its template interpolations), `src` is a fragment of the suite's SOURCE. A declaration
    checked only against the printed output cannot notice that it names an assertion nobody wrote; one
    checked only against the source cannot match an interpolated label at all. */
-const REGION_EXISTS = { out: "REVIEW_NO_RECIPIENT's region `is-review-recipient` exists in store.mjs",
-                        src: "exists in store.mjs, opened and closed" };
+const REGION_EXISTS = { out: "REVIEW_NO_RECIPIENT's region `is-review-recipient` exists in src/review/index.mjs",
+                        src: "exists in src/review/index.mjs, opened and closed" };
 const CAT_8710 = { out: "REVIEW_NO_GRANT carries a canned sentence that is prose",
                    src: "carries a canned sentence that is prose, not the code re-spelled" };
 const WIRE_8710 = { out: "a withdrawal naming no grant — `translation` is the catalogue's own sentence",
@@ -141,7 +150,7 @@ const WIRE_8710 = { out: "a withdrawal naming no grant — `translation` is the 
 const NO_SENTENCE_SHARE = { out: "no two of the eleven share a translation",
                             src: "no two of the eleven share a translation" };
 const PIN_HELPER_ONCE = { out: "REVIEW_NO_COMMENT_TEXT is minted through the `refusal` helper EXACTLY ONCE",
-                          src: "helper EXACTLY ONCE in store.mjs" };
+                          src: "helper EXACTLY ONCE in src/review/index.mjs" };
 const PIN_IN_REGION = { out: "REVIEW_NO_COMMENT_TEXT's one mint is INSIDE its own region",
                         src: "'s one mint is INSIDE its own region" };
 const PIN_NO_LITERAL = { out: "REVIEW_NO_COMMENT_TEXT is no longer returned as a bare `reason:` object literal",

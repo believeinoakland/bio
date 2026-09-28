@@ -61,9 +61,11 @@
  * ========================================================================== */
 
 import "./stdio.mjs";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs";
+/* C-44.1's row left the catalogue with case-authoring (CASE-AUTHORING #1 J5, T8 layer 8). */
+import { CASE_DERIVATION_CHECKS } from "../src/case-authoring/checks.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -72,8 +74,16 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 
-const SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
-const store = readFileSync(SRC, "utf8");
+/* RE-ANCHORED (legacy-tests T8, PUBLICATION #1 J4.6 and CASE-AUTHORING #1 J5): the class CASE-6 counted in
+   `store.mjs` alone now lives where layer 8 moved it — the case relation, the case reads and the revision flag in
+   `src/publication/index.mjs`, `publishCase`'s derivation in `src/case-authoring/index.mjs`, the ratify path in
+   `src/ratification/`. The census walks EACH of these files (the store's remainder included) as CASE-6 walked the
+   one, and section 4 asserts that no OTHER file under `src/` builds a query in the class, so the premise that makes
+   the count comparable is re-measured over the whole tree rather than over a hand list. */
+const CORPUS_FILES = ["store.mjs", "publication/index.mjs", "case-authoring/index.mjs",
+                      "ratification/index.mjs", "ratification/ops.mjs"];
+const texts = CORPUS_FILES.map((f) => ({ f, text: readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8") }));
+const store = texts.map((x) => x.text).join("\n");
 
 /* ===================================================================== 1
  * THE CENSUS — THE CLASS, CLASSIFIED, AND ITS CORPUS PRINTED.
@@ -90,14 +100,15 @@ console.log("\n--- 1. the class CASE-6 counted, recounted: 'a SELECT over publis
    name on different lines and cannot tell which query either belongs to — which
    is how a census silently drops the multi-line members of its own class. */
 const literals = [];
-for (let i = 0; i < store.length; i++) {
-  if (store[i] !== "`") continue;
-  if (i > 0 && store[i - 1] === "\\") continue;
-  let j = i + 1;
-  while (j < store.length && !(store[j] === "`" && store[j - 1] !== "\\")) j++;
-  literals.push({ start: i, end: j, text: store.slice(i + 1, j) });
-  i = j;
-}
+for (const { f, text: src } of texts)
+  for (let i = 0; i < src.length; i++) {
+    if (src[i] !== "`") continue;
+    if (i > 0 && src[i - 1] === "\\") continue;
+    let j = i + 1;
+    while (j < src.length && !(src[j] === "`" && src[j - 1] !== "\\")) j++;
+    literals.push({ f, src, start: i, end: j, text: src.slice(i + 1, j) });
+    i = j;
+  }
 
 const TABLE = "published_case_members";
 /* `bundle_id=?` with any whitespace, and `m.bundle_id=?` for the aliased join —
@@ -116,9 +127,9 @@ for (const lit of literals) {
      statement's call. Anything not matched is UNCLASSIFIED and is NAMED — never
      scored zero, because a thing the matcher does not understand is the one thing
      a census must not swallow. */
-  const back = store.slice(Math.max(0, lit.start - 220), lit.start);
+  const back = lit.src.slice(Math.max(0, lit.start - 220), lit.start);
   const one = /this\.#one\(\s*$/.test(back), rows = /this\.#rows\(\s*$/.test(back);
-  const line = store.slice(0, lit.start).split("\n").length;
+  const line = `${lit.f}:${lit.src.slice(0, lit.start).split("\n").length}`;
   sites.push({ line, kind: one ? "SCALAR" : rows ? "PLURAL" : "UNCLASSIFIED",
                sql: lit.text.replace(/\s+/g, " ").trim().slice(0, 70) });
 }
@@ -127,9 +138,9 @@ const scalar = sites.filter((s) => s.kind === "SCALAR");
 const plural = sites.filter((s) => s.kind === "PLURAL");
 const unclassified = sites.filter((s) => s.kind === "UNCLASSIFIED");
 
-console.log(`  CORPUS: ${literals.length} template literals in src/store.mjs (${store.length} bytes), `
+console.log(`  CORPUS: ${literals.length} template literals in ${CORPUS_FILES.map((f) => `src/${f}`).join(", ")} (${store.length} bytes), `
   + `${sites.length} in the class`);
-for (const s of sites) console.log(`    ${String(s.line).padStart(6)}  ${s.kind.padEnd(12)} ${s.sql}`);
+for (const s of sites) console.log(`    ${String(s.line).padStart(32)}  ${s.kind.padEnd(12)} ${s.sql}`);
 console.log(`  CENSUS: ${sites.length} sites · ${scalar.length} SCALAR · ${plural.length} PLURAL · `
   + `${unclassified.length} unclassified   (CASE-6, 2026-09-10: 11 · 9 · 2 · 0)`);
 
@@ -178,8 +189,9 @@ const NINE = [
   { n: 4, site: "publishedCase() by finding id, LATEST", decision: "REFUSES, naming them",
     present: /WHERE bundle_id=\? ORDER BY case_id, edition`, id\)/,
     absent: /this\.#one\(`SELECT case_id FROM published_case_members WHERE bundle_id=\? ORDER BY edition DESC LIMIT 1`, id\)/ },
+  /* T8: publication exports the helper as a service (`caseClaimsOf`, no longer private), so the `#` is optional. */
   { n: 5, site: "#caseClaimsOf (was #caseClaimOf)", decision: "ALL; the caller already wanted an array",
-    present: /#caseClaimsOf\(bundleId\) \{/, absent: /#caseClaimOf\(bundleId\) \{/ },
+    present: /(?:#|\b)caseClaimsOf\(bundleId\) \{/, absent: /(?:#|\b)caseClaimOf\(bundleId\) \{/ },
   { n: 6, site: "#casesOf AT AN EDITION", decision: "ALL, DISTINCT by case",
     present: /SELECT DISTINCT case_id FROM published_case_members WHERE bundle_id=\? AND edition=\?/,
     absent: /#caseOf\(bundleId, edition = null\) \{/ },
@@ -202,8 +214,10 @@ for (const s of NINE)
 t("and the TWO PLURAL sites CASE-6 measured as already correct for any n are STILL plural and were "
   + "not touched — #caseRelationOf and #flagCasesOnRevision, a deliberate closure named rather than "
   + "an omission",
-  [/#caseRelationOf\(bundleId\) \{[\s\S]{0,400}?this\.#rows\(/.test(store),
-   /#flagCasesOnRevision\(bundleId, replacedSha, when\) \{[\s\S]{0,400}?this\.#rows\(/.test(store)],
+  /* T8: both are publication's services now, `caseRelation(bundleId)` (was `#caseRelationOf`) and
+     `flagCasesOnRevision` (no longer private); the store keeps a one-line delegate to the first. */
+  [/(?:#caseRelationOf|\bcaseRelation)\(bundleId\) \{[\s\S]{0,400}?this\.#rows\(/.test(store),
+   /(?:#|\b)flagCasesOnRevision\(bundleId, replacedSha, when\) \{[\s\S]{0,400}?this\.#rows\(/.test(store)],
   [true, true]);
 
 /* ===================================================================== 3
@@ -230,7 +244,7 @@ t("the new refusal is a DEC-49 ROW carrying its C-number and a canned translatio
   + "copy agrees at zero cost and that has been measured five times",
   [row.check, typeof row.translation === "string" && row.translation.length > 120,
    row.where, store.includes(row.translation)],
-  ["C-44.1", true, "src/store.mjs publishCase > case-identity-derivation", false]);
+  ["C-44.1", true, "src/case-authoring/index.mjs publishCase > case-identity-derivation", false]);
 
 /* THE REGION MARKERS. The guard FAILS if a `where`'s markers are missing,
    unclosed, duplicated, outside the named function or trivially short — a `where`
@@ -246,8 +260,10 @@ t("the new refusal is a DEC-49 ROW carrying its C-number and a canned translatio
    written as a decorated banner (`/* ===== DEC-49 REGION …`). An assertion that
    agrees with a guard only by being weaker than it is not a second check, it is
    a first check that lies. */
-const opens = [...store.matchAll(/\/\*[\s*]*DEC-49 REGION\s+case-identity-derivation\b/g)];
-const closes = [...store.matchAll(/\/\*[\s*]*END DEC-49 REGION\s+case-identity-derivation\b/g)];
+/* The markers are counted in the file the `where` names (case-authoring's, since T8). */
+const whereText = texts.find((x) => x.f === "case-authoring/index.mjs").text;
+const opens = [...whereText.matchAll(/\/\*[\s*]*DEC-49 REGION\s+case-identity-derivation\b/g)];
+const closes = [...whereText.matchAll(/\/\*[\s*]*END DEC-49 REGION\s+case-identity-derivation\b/g)];
 t("and its `where` names a REGION rather than the FUNCTION, with exactly one opening marker and one "
   + "closing one, MATCHED THE WAY THE UI GUARD MATCHES THEM — naming `publishCase` would conscript "
   + "every unrelated refusal in it, which is how PL-1's two rows put 32 refusals in scope and turned "
@@ -262,7 +278,9 @@ t("and its `where` names a REGION rather than the FUNCTION, with exactly one ope
 t("and the code reaches the wire as a STRING LITERAL through a helper named `refusal` — a code held "
   + "in a variable is invisible to the DEC-49 guard, and one shipped `translation: undefined` to a "
   + "member exactly that way",
-  [/refusal\("CASE_IDENTITY_AMBIGUOUS"/.test(store), /function refusal\(key, extra = \{\}\)/.test(store)],
+  /* case-authoring's helper takes the family first: `refusal(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS", …)`. */
+  [/refusal\(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS"/.test(whereText),
+   /function refusal\(family, key, extra = \{\}\)/.test(whereText)],
   [true, true]);
 
 /* ===================================================================== 4
@@ -273,11 +291,18 @@ console.log("\n--- 4. the census's own stated limit, asserted so it cannot go st
 /* CASE-6's count was over `store.mjs` ALONE and said so, resting on the fact that
    no other `src/` file builds such a query. That fact is what makes both counts
    comparable, so it is re-measured rather than inherited. */
-const SRC_DIR = new URL("../src/", import.meta.url);
-const others = ["index.mjs", "schema.mjs", "cdx.mjs", "subresources.mjs", "affordances.mjs", "airun.mjs"];
+const SRC_DIR = fileURLToPath(new URL("../src/", import.meta.url));
+/* Every `.mjs` under `src/` outside the corpus (T8: the tree, not a hand list, since the class is now spread over
+   modules), with the six files the pre-T8 list named floored as reached. */
+const walkSrc = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+  e.isDirectory() ? walkSrc(join(d, e.name)) : e.name.endsWith(".mjs") ? [join(d, e.name)] : []);
+const others = walkSrc(SRC_DIR).map((p) => relative(SRC_DIR, p)).filter((f) => !CORPUS_FILES.includes(f));
+t("(corpus of section 4) the walk reaches the six files the census once listed by hand, and many more",
+  [["index.mjs", "schema.mjs", "cdx.mjs", "subresources.mjs", "affordances.mjs", "airun.mjs"].every((f) => others.includes(f)),
+   others.length > 50], [true, true]);
 const builders = [];
 for (const f of others) {
-  let text; try { text = readFileSync(fileURLToPath(new URL(f, SRC_DIR)), "utf8"); } catch { continue; }
+  const text = readFileSync(join(SRC_DIR, f), "utf8");
   for (const lit of text.split("`")) if (lit.includes(TABLE) && KEYED.test(lit)) builders.push(f);
 }
 t("NO OTHER `src/` FILE BUILDS A QUERY IN THIS CLASS — the premise that makes a count over store.mjs "

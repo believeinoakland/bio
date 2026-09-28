@@ -45,8 +45,15 @@ import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
-import { TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6, RATIFICATION #2 J6): C-92 left the catalogue — the
+   act's rows (C-92.1–.9) are publication's `ATTRIBUTION_ACT_CHECKS`, the ceremony's (C-92.10–.12) ratification's
+   `RATIFY_ATTRIBUTION_CHECKS` — and so did C-53.10–.12 (`RATIFY_TESTIMONY_CHECKS`). The names below are the unions
+   the catalogue's families were. */
+import { ATTRIBUTION_ACT_CHECKS } from "../src/publication/checks.mjs";
+import { RATIFY_ATTRIBUTION_CHECKS, RATIFY_TESTIMONY_CHECKS } from "../src/ratification/checks.mjs";
+const ATTRIBUTION_CHECKS = { ...ATTRIBUTION_ACT_CHECKS, ...RATIFY_ATTRIBUTION_CHECKS };
+import { TESTIMONY_CHECKS as CATALOGUE_TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, checkBundle, BUNDLE_ID_RE, parseFrontmatter } from "../checks/bio-checks.mjs";
+const TESTIMONY_CHECKS = { ...CATALOGUE_TESTIMONY_CHECKS, ...RATIFY_TESTIMONY_CHECKS };
 import { registerChecks } from "../src/provenance/index.mjs";
 import { registerFile } from "./register-doc.mjs";
 

@@ -65,7 +65,6 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const INDEX_SRC = readFileSync(IDX, "utf8");
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 const QUERY_SRC = readFileSync(fileURLToPath(new URL("../src/query.mjs", import.meta.url)), "utf8");
 /* REC-46: the compiler itself, so the class-recognition assertion below can ask
    the FUNCTION what it answers instead of asking its source what it says. */
@@ -194,13 +193,16 @@ t("viewerPredicate recognises class:daemon (without it the class authenticates a
 t("#monitorToken reads DAEMON_TOKEN FIRST with the ADMIN_TOKEN fallback RETAINED "
   + "(D-334: both are now asked liveToken before either is spent)",
   (() => {
-    const m = /async #monitorToken\(\) \{([\s\S]*?)\n  \}/.exec(STORE_SRC);
-    if (!m) return "no async #monitorToken() found in store.mjs";
+    /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3 item 1, N63): the store's `#monitorToken()` left
+       with the monitor, which spends `runtime-limits.unattendedCredential(env).token()` (`src/tokens.mjs`, R26): ONE
+       loop over the two binding names in order, each asked `liveToken` before it is returned. Same five claims. */
+    const m = /\n    async token\(\) \{([\s\S]*?)\n    \},/.exec(TOKENS_SRC);
+    if (!m) return "no async token() found in tokens.mjs' unattendedCredential";
     const body = m[1];
     const d = body.indexOf("DAEMON_TOKEN"), a = body.indexOf("ADMIN_TOKEN");
     return [d !== -1, a !== -1, d >= 0 && a >= 0 && d < a,
-            /await liveToken\(env\.DAEMON_TOKEN\)/.test(body),
-            /await liveToken\(env\.ADMIN_TOKEN\)/.test(body)];
+            /for \(const k of \["DAEMON_TOKEN", "ADMIN_TOKEN"\]\)/.test(body),
+            /if \(await liveToken\(v\)\) return v;/.test(body)];
   })(),
   [true, true, true, true, true]);
 t("livefire's token-hygiene sweep knows the new binding's name",
@@ -215,8 +217,17 @@ t("and liveToken takes a VALUE, so a DAEMON_TOKEN whose value was ever published
   + "already refused by the function that was there before this class existed",
   /export async function liveToken\(v\)/.test(TOKENS_SRC)
   && /PUBLISHED_TOKEN_HASHES\.has\(await sha256hex\(v\)\)/.test(TOKENS_SRC), true);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; N63, K90 (2)): `src/tokens.mjs` now also holds the unattended credential
+   selection (runtime-limits R26, `unattendedCredential`), which names the two bindings it chooses between — by design,
+   and after the denylist rather than inside it. The claim is about the DENYLIST: its set and the one predicate that
+   reads it (`liveToken`) name no binding, so the denylist is keyed by value alone. That surface is what is read. */
+const DENYLIST_SURFACE = [
+  (/export const PUBLISHED_TOKEN_HASHES = new Set\(\[[\s\S]*?\]\);/.exec(TOKENS_SRC) || [""])[0],
+  (/export async function liveToken\(v\) \{[\s\S]*?\n\}/.exec(TOKENS_SRC) || [""])[0],
+].map((x) => x.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ""));
 t("no binding NAME appears in the denylist module's executable surface",
-  /DAEMON_TOKEN|MONITOR_TOKEN/.test(TOKENS_SRC.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")), false);
+  [DENYLIST_SURFACE.every((x) => x.length > 60),
+   DENYLIST_SURFACE.some((x) => /DAEMON_TOKEN|MONITOR_TOKEN|ADMIN_TOKEN|MEMBER_TOKEN|PROBE_TOKEN/.test(x))], [true, false]);
 
 /* ------------------------------------------------------------------ *
  * The shared fixture: a monitored Information bundle whose source moves,

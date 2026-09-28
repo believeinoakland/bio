@@ -44,7 +44,13 @@
 import { withReplayProof } from "./replay-proof.mjs";    /* D-512: a replay is honoured only over provenance the plane verifies */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
-import { ATTRIBUTION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6, RATIFICATION #2 J6): C-92 left the catalogue — the
+   act's rows (C-92.1–.9) are publication's `ATTRIBUTION_ACT_CHECKS`, the ceremony's (C-92.10–.12) ratification's
+   `RATIFY_ATTRIBUTION_CHECKS` — and so did C-53.10–.12 (`RATIFY_TESTIMONY_CHECKS`). The names below are the unions
+   the catalogue's families were. */
+import { ATTRIBUTION_ACT_CHECKS } from "../src/publication/checks.mjs";
+import { RATIFY_ATTRIBUTION_CHECKS, RATIFY_TESTIMONY_CHECKS } from "../src/ratification/checks.mjs";
+const ATTRIBUTION_CHECKS = { ...ATTRIBUTION_ACT_CHECKS, ...RATIFY_ATTRIBUTION_CHECKS };
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -55,10 +61,11 @@ import { registerFile } from "./register-doc.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { GRADE_AXES, TESTIMONY_GRADE, TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
+import { GRADE_AXES, TESTIMONY_GRADE, TESTIMONY_CHECKS as CATALOGUE_TESTIMONY_CHECKS, EARNED_CAPTURE_CEILING, BASIS_GRADES,
          checkInquiryBasis, checkBundle, parseFrontmatter,
          /* D-442: the frozen rows moved into the case document; its gate is what judges them now. */
          checkCaseDocument, caseDocumentStatesMemberBlocks } from "../checks/bio-checks.mjs";
+const TESTIMONY_CHECKS = { ...CATALOGUE_TESTIMONY_CHECKS, ...RATIFY_TESTIMONY_CHECKS };
 
 const SRC_DIR = fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");

@@ -92,7 +92,10 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; membership R70, K57): the signer roster and the predicate moved to
    `src/membership/`, so §5's structural pin reads `store.mjs` AND the module extracted from it. */
-const STORE_SRC = storeCorpus(["membership"]);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6, PUBLICATION #1 J4.6): `gateFacts` left the store for
+   ratification and `caseDocumentFacts` for publication, each still calling membership's `attestingKeys()`; the corpus
+   is the store as it stood before those extractions — store.mjs, membership, ratification and publication. */
+const STORE_SRC = storeCorpus(["membership", "ratification", "publication"]);
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

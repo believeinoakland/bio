@@ -69,7 +69,10 @@ const edit = (file, needle, replacement) => {
                                      src.subarray(first + nb.length)]));
 };
 
-const FAMILY_HEAD = "export const GOVERNING_LAW_CHECKS = {\n";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8): GOVERNING_LAW_CHECKS left the catalogue with the action layer (actions,
+   `src/actions/checks.mjs`, 1.38.0), so arm (b)'s new row joins ACT_SHAPE_CHECKS, a family the file still declares;
+   the arm is the same: one row added, the version unmoved. */
+const FAMILY_HEAD = "export const ACT_SHAPE_CHECKS = {\n";
 const EMIT_C151 = "    findings.push(f('C-15.1', 'error', 'every Problem, in every disposition including dismissed, carries at least one recheck trigger', ['author a trigger, dual-audience shape, dated when time-bound']));";
 /* M0-192: THE NEEDLE IS READ FROM gate.mjs AT RUN TIME, NEVER QUOTED. The quoted literal this replaces was wrong
    by construction, not by neglect: it pinned the value of a constant whose whole job is to MOVE on every catalogue
@@ -145,9 +148,9 @@ const except = (...xs) => ALL.filter((x) => !xs.includes(x));
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes four-arms-working from four-arms-broken",
               apply: () => {}, mustFail: [], mustNotFail: ALL, expectGreen: true },
-  b: { files: [CATALOG], label: "(B) ADD A CHECK WITHOUT MOVING THE VERSION — the row's own control: C-73.99 joins GOVERNING_LAW_CHECKS",
+  b: { files: [CATALOG], label: "(B) ADD A CHECK WITHOUT MOVING THE VERSION — the row's own control: C-33.99 joins ACT_SHAPE_CHECKS",
        apply: () => edit(CATALOG, FAMILY_HEAD,
-         FAMILY_HEAD + "  ARM_D470_ADDED: { check: 'C-73.99', where: 'nowhere — a control arm', translation: 'x' },\n"),
+         FAMILY_HEAD + "  ARM_D470_ADDED: { check: 'C-33.99', where: 'nowhere — a control arm', translation: 'x' },\n"),
        mustFail: [A3, A9], mustNotFail: except(A3, A9) },
   c: { files: [CATALOG], label: "(C) ADD A CHECK AT AN UNRESOLVABLE EMISSION SITE — f(NEW_FAMILY.THING, …)",
        apply: () => edit(CATALOG, EMIT_C151,

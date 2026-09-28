@@ -32,7 +32,11 @@ const ROOT = join(DIR, "..");
 const PEN = mkdtempSync(join(tmpdir(), "nc-reviewcopy-inband-"));   /* OUTSIDE the worktree — see the header */
 const INDEX = join(ROOT, "src", "index.mjs");
 const INBAND = join(ROOT, "src", "inband.mjs");
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8, REVIEW #1 J4.1): the copy's last-change reducer left `store.mjs` for
+   review's module function in `src/review/index.mjs` (two-space indentation, and it orders instants with
+   `instantOrder` since D-543, so arm (e)'s correct alternative spelling sorts with the same comparator). The name
+   STORE is kept for arms (e) and (f); each needle matches once. */
+const STORE = join(ROOT, "src", "review", "index.mjs");
 const SUITE = join(DIR, "reviewcopy-inband.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -95,18 +99,18 @@ const ARMS = {
        label: "(e) OVER-STRICTNESS: the newest act picked by SORTING the candidates rather than by the "
             + "reducer loop — a correct spelling the suite did not anticipate; it must PASS",
        apply: () => edit(STORE,
-         "    let last = null;\n"
-         + "    for (const c of cand) if (!last || Date.parse(c.at) > Date.parse(last.at)) last = c;\n",
-         "    const ranked = cand.map((c, i) => [c, i])\n"
-         + "      .sort((x, y) => (Date.parse(y[0].at) - Date.parse(x[0].at)) || (x[1] - y[1]));\n"
-         + "    const last = ranked.length ? ranked[0][0] : null;\n") },
+         "  let last = null;\n"
+         + "  for (const c of cand) if (!last || instantOrder(c.at, last.at) > 0) last = c;\n",
+         "  const ranked = cand.map((c, i) => [c, i])\n"
+         + "    .sort((x, y) => instantOrder(y[0].at, x[0].at) || (x[1] - y[1]));\n"
+         + "  const last = ranked.length ? ranked[0][0] : null;\n") },
 
   f: { files: [STORE],
        label: "(f) THE LIAR: the date is the MOMENT OF THE READ — which moves on every comment and would "
             + "satisfy every 'the date moved' arm while meaning nothing",
        apply: () => edit(STORE,
-         "      at: last ? last.at : null, by: last ? last.by : null,\n",
-         "      at: new Date().toISOString(), by: last ? last.by : null,\n") },
+         "    at: last ? last.at : null, by: last ? last.by : null,\n",
+         "    at: new Date().toISOString(), by: last ? last.by : null,\n") },
 };
 
 const want = process.argv[2];

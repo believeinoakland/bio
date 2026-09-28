@@ -535,7 +535,11 @@ console.log("\n--- site 6: do/recordcasemanifest (the one site whose branch need
      complete at its own ratification under rule 12), so the silence branch is now that function's RETURN and its `op`
      names the calling act (`ratify/recordcasemanifest` or `caseratify/recordcasemanifest`). The ORDER is unchanged
      and is what is still asserted. */
-  const container = /return !recOut\.answered\s*\n\s*\? \{ ok: false, reason: STORE_SILENT_REASON, op: `\$\{via\}\/recordcasemanifest`/.test(SRC);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): `assembleCaseContainer` left `index.mjs` for
+     `src/publication/worker.mjs`, VERBATIM but for the control plane's shared constants, which it reaches through its
+     bound plane (`plane().STORE_SILENT_REASON`). The three pins read it there; the ORDER is what is asserted. */
+  const SRC = readFileSync(fileURLToPath(new URL("../src/publication/worker.mjs", import.meta.url)), "utf8");
+  const container = /return !recOut\.answered\s*\n\s*\? \{ ok: false, reason: (?:plane\(\)\.)?STORE_SILENT_REASON, op: `\$\{via\}\/recordcasemanifest`/.test(SRC);
   ok("the container's SILENCE branch is evaluated before anything else, so a store that never "
      + "answered cannot reach the `MANIFEST_NOT_RECORDED` fallback", container);
   const iSilent = SRC.indexOf("op: `${via}/recordcasemanifest`");

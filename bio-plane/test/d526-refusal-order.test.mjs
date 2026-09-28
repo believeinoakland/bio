@@ -80,9 +80,12 @@ const HEAD = (id, type, schema, title, state) => [
    list the caller filled in itself — which only `op=actionlaws` may set (D-149, C-73.1). */
 const actionMd = (id, { laws = false } = {}) => [
   ...HEAD(id, "action", "action@1", "Records request", "planned"),
-  "action_kind: cpra_request", "risk_tier: undetermined",
+  /* RE-READ 2026-09-28 (T8, legacy-tests): `cpra_request` is no kind this instance offers (ACTIONS R10, C-101.1) and a
+     NEW named counterparty is an office, its role and its body (R9, C-101.3) — both refused at the write now, which is
+     what the over-strictness arms met. Fixture, not subject: the records request is `records_request`. */
+  "action_kind: records_request", "risk_tier: undetermined",
   ...(laws ? ["governing_laws:", '  - citation: "Cal. Gov. Code 7920.000"', "    level: state"] : []),
-  "counterparty:", "  state: named", "  name: City Clerk",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join(NL);
 

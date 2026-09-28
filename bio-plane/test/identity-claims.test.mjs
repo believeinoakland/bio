@@ -69,6 +69,7 @@ import { dirname, join } from "node:path";
 import { sweep, wideClaims, methodBodies } from "../scripts/identity-claims.mjs";
 import { moduleSources } from "./extracted-sources.mjs";
 import { reinlineLayer5 } from "./t5-extracted.mjs";
+import { T8_MODULES } from "./t8-extracted.mjs";   /* T8 (legacy-tests): layers 8-10's module map, for the same re-inliner */
 /* M0-18 — ONE mechanism, imported. The reason this suite needed it is at the
    wide-ledger walk in block 3. */
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
@@ -114,6 +115,14 @@ console.log(`  T4: ${REINLINED.length} provenance delegations re-inlined for the
 const T5_INLINE = reinlineLayer5(STORE_SRC, { ops: true });
 STORE_SRC = T5_INLINE.text;
 console.log(`  T5: ${T5_INLINE.reinlined.length} substitutions for the sweep: ${T5_INLINE.reinlined.join(", ")}`);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; layers 8-10 of T8): seven more modules (case-authoring, ratification,
+   publication, review, actions, monitoring, scheduler) left the store behind delegations and spreads of their routes, and
+   the dispatch table this sweep reads fell 157 -> 122 ops (op=publish, op=caseratify, the actions and review acts …, each
+   an entry of a module's routes now). The same re-inliner is passed T8's module map (`t8-extracted.mjs`), the substitution
+   above for the modules T8 moved: each op reads the method its fence now lives in; nothing else changes. */
+const T8_INLINE = reinlineLayer5(STORE_SRC, { ops: true, modules: T8_MODULES });
+STORE_SRC = T8_INLINE.text;
+console.log(`  T8: ${T8_INLINE.reinlined.length} substitutions for the sweep: ${T8_INLINE.reinlined.join(", ")}`);
 
 let MF;
 const mf = new Miniflare({

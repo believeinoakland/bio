@@ -34,15 +34,18 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
-const TARGET = join(PLANE, "src", "index.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, RATIFICATION #2 J6): both fences left `index.mjs` with the two handlers
+   for `src/ratification/ops.mjs`, where each guard is indented four spaces and its refusal six; every needle matches
+   once there. */
+const TARGET = join(PLANE, "src", "ratification", "ops.mjs");
 const SUITE = join(HERE, "operator-attest.test.mjs");
-const MIN_BYTES = 500_000;          /* index.mjs is far larger; a restore below this is not a restore */
+const MIN_BYTES = 50_000;           /* ops.mjs is ~70 KB; a restore below this is not a restore */
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* The guard exactly as it stands in the source, at each of the two regions. */
 const GUARD = "if (!viaSession)";
-const RATIFY_FENCE = `      ${GUARD}\n        return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",`;
-const CASE_FENCE = `      ${GUARD}\n        return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",`;
+const RATIFY_FENCE = `    ${GUARD}\n      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",`;
+const CASE_FENCE = `    ${GUARD}\n      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",`;
 const both = (to) => [[RATIFY_FENCE, RATIFY_FENCE.replace(GUARD, to)], [CASE_FENCE, CASE_FENCE.replace(GUARD, to)]];
 
 const L = {
@@ -78,7 +81,8 @@ const ARMS = {
   /* THE LIAR: refuse by token STRING, naming two bindings. The probe class walks
      straight through at both acts, and the structural pin sees the binding. */
   tokenstring: {
-    edits: both(`if ([env.ADMIN_TOKEN, env.MEMBER_TOKEN].includes(url.searchParams.get("token")) /* ARMED */)`),
+    /* T8: the handler receives `req`, not a parsed `url`, so the token is read off `req.url`. */
+    edits: both(`if ([env.ADMIN_TOKEN, env.MEMBER_TOKEN].includes(new URL(req.url).searchParams.get("token")) /* ARMED */)`),
     mustFail: [L.fence("caseratify", "probe"), L.fence("ratify", "probe"), L.caseNot, L.ratNot, L.table,
                `${L.structure}caseratify`, `${L.structure}ratify`],
   },

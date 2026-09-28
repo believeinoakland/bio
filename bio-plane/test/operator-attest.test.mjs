@@ -48,7 +48,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { projectFixtureMd, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
+import { MACHINE_FENCE_CHECKS as CATALOGUE_MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): C-32.14 and C-32.15 left the catalogue for
+   ratification's `RATIFY_MACHINE_FENCE_CHECKS`; the family this suite reads is the union. */
+import { RATIFY_MACHINE_FENCE_CHECKS } from "../src/ratification/checks.mjs";
+const MACHINE_FENCE_CHECKS = { ...CATALOGUE_MACHINE_FENCE_CHECKS, ...RATIFY_MACHINE_FENCE_CHECKS };
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- operator-attest ---");
@@ -93,9 +97,12 @@ t("each act's OPS row parsed, and at least one bearer class reaches each handler
 /* THE STRUCTURAL HALF — the liar the row names. Comments are stripped so the
    reasoning written in the region (which names ADMIN, MEMBER and PROBE on
    purpose) is not mistaken for the guard. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): both acts' handlers, and their regions, left
+   `index.mjs` for `src/ratification/ops.mjs`; the region is read there. */
+const OPS_SRC = readFileSync(fileURLToPath(new URL("../src/ratification/ops.mjs", import.meta.url)), "utf8");
 const region = (name) => {
-  const a = IDX_SRC.indexOf(`/* DEC-49 REGION ${name}`), b = IDX_SRC.indexOf(`/* END DEC-49 REGION ${name} */`);
-  return a < 0 || b < a ? null : IDX_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");
+  const a = OPS_SRC.indexOf(`/* DEC-49 REGION ${name}`), b = OPS_SRC.indexOf(`/* END DEC-49 REGION ${name} */`);
+  return a < 0 || b < a ? null : OPS_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");
 };
 const REGIONS = { ratify: "is-operator-ratify-bundle", caseratify: "is-operator-ratify-case" };
 for (const op of ACTS) {

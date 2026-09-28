@@ -102,20 +102,26 @@ const post = async (op, body, tok = "mem-d484") => rP(await (await mf.dispatchFe
    and this project has measured a headline totality assertion doing exactly that three times. */
 const store = readFileSync(SRC, "utf8");
 console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").length} lines`);
+/* RE-PINNED 2026-09-28 (T8, legacy-tests) from this suite's own CORPUS print: src/store.mjs is 533,793 bytes after the
+   T8 extractions (was over 1,000,000 at T7). A blindness floor, not a ratchet: an unreadable or truncated file fails it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length > 1_000_000 && /class Store\b/.test(store), true);
+  store.length > 500_000 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;
 
 console.log("\n--- the catalogue holds a row for each, with a real sentence ---");
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the catalogue re-aimed C-33.40's `where` at inquiry's copy of the helper
+   (`src/inquiry/index.mjs actNoBasis > is-act-no-basis`) when store.mjs's last NO_BASIS sites left (T7); C-33.41's still
+   names the store's `actNoCitation`. Each `where` is pinned to the file that holds its region. */
+const WHERE_FILE = { NO_BASIS: "src\\/inquiry\\/index\\.mjs", NO_CITATION: "src\\/store\\.mjs" };
 for (const [code, row, check] of [["NO_BASIS", ROW_BASIS, "C-33.40"], ["NO_CITATION", ROW_CITE, "C-33.41"]]) {
   t(`${code} has an ACT_SHAPE_CHECKS row at ${check}`, row && row.check, check);
   t(`${code}'s translation is prose a member reads, not a restatement of the machine word`,
     !!row && typeof row.translation === "string" && row.translation.length > 120
       && !row.translation.includes(code), true);
   t(`${code}'s \`where\` names the ONE governed region, not a whole function`,
-    !!row && /^src\/store\.mjs act[A-Za-z]+ > is-act-[\w-]+$/.test(row.where), true);
+    !!row && new RegExp(`^${WHERE_FILE[code]} act[A-Za-z]+ > is-act-[\\w-]+$`).test(row.where), true);
 }
 t("the two translations are not each other (one sentence serving two codes is DEC-49's drift)",
   ROW_BASIS.translation === ROW_CITE.translation, false);

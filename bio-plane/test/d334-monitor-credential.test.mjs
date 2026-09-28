@@ -439,18 +439,37 @@ console.log("\n--- arm E (the class sweep): no presence-only credential selectio
      scannedLines > 30000, readSites >= 10], [true, true, true]);
   t("NO executable line in the plane selects a credential VALUE by presence with `||`",
     offenders, []);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3 item 1, N63): the arming predicate is no longer a
+     `DAEMON_TOKEN || ADMIN_TOKEN` over the bindings. The choice lives once in `runtime-limits.unattendedCredential(env)`
+     (served by `src/tokens.mjs` until R26 is built), whose `bound` is composed of `presentIn`, a `!!`-coerced reader,
+     over the binding NAMES as strings — so the `||` that remains is between two booleans and this sweep's binding
+     pattern no longer meets it. The claim is the same: exactly ONE presence-`||` over the credential bindings remains
+     in the plane, and it is boolean. */
+  const PRESENCE_BOUND = /presentIn\(env, "DAEMON_TOKEN"\) \|\| presentIn\(env, "ADMIN_TOKEN"\)/;
+  const boundSites = files.flatMap(([name, path]) => stripComments(readFileSync(path, "utf8"))
+    .map((line, i) => (PRESENCE_BOUND.test(line) ? `${name}:${i + 1}` : null)).filter(Boolean));
+  console.log(`        runtime-limits' presence composition: ${boundSites.join(", ") || "none"}`);
   t("the one presence-`||` that remains is the boolean arming predicate, and there is exactly one",
-    arming.length, 1);
+    [arming.length, boundSites.length, boundSites.every((x) => x.startsWith("src/tokens.mjs:"))], [0, 1, true]);
 }
 
 console.log("\n--- arm E (cont.): the arming predicate cannot leak a credential to a caller ---");
 {
-  const STORE_SRC = readFileSync(STORE_SRC_PATH, "utf8");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3 item 1, N63): the store's `#monitorTokenBound()`,
+     `#monitorConfigured()` and `#monitorToken()` left with the monitor (`src/monitoring/index.mjs`), which asks
+     `runtime-limits.unattendedCredential(env)` (`src/tokens.mjs`, R26): `bound` for "is monitoring WIRED", `token()`
+     for the LIVE credential to spend. Each pin below reads the same property where it now lives. */
+  const TOKENS_SRC = readFileSync(TOKENS_SRC_PATH, "utf8");
+  const MON_SRC = readFileSync(fileURLToPath(new URL("../src/monitoring/index.mjs", import.meta.url)), "utf8");
+  const uc = (() => { const i = TOKENS_SRC.indexOf("export function unattendedCredential(env) {");
+                      return i < 0 ? "" : TOKENS_SRC.slice(i, TOKENS_SRC.indexOf("\n}\n", i)); })();
   /* The closure above is only safe while it stays boolean and stays unspent, so
      both properties are pinned instead of trusted. */
-  t("#monitorTokenBound() returns a `!!`-coerced boolean, so it can never BE a token",
-    /#monitorTokenBound\(\) \{\s*return !!\(this\.env && \(this\.env\.DAEMON_TOKEN \|\| this\.env\.ADMIN_TOKEN\)\);/
-      .test(STORE_SRC), true);
+  t("the arming predicate (`unattendedCredential(env).bound`) is built of `!!`-coerced reads, so it can never BE a token",
+    [uc.length > 200,
+     /const presentIn = \(env, k\) => \{ try \{ return !!\(env && env\[k\]\); \} catch \{ return false; \} \};/.test(TOKENS_SRC),
+     /const bound = presentIn\(env, "DAEMON_TOKEN"\) \|\| presentIn\(env, "ADMIN_TOKEN"\);/.test(uc)],
+    [true, true, true]);
   /* Its callers: the two "is this consumer wired" predicates and nothing else.
      A third caller would be a new place where presence stands in for liveness. */
   /* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the second sync predicate,
@@ -459,10 +478,11 @@ console.log("\n--- arm E (cont.): the arming predicate cannot leak a credential 
      which is `!!`-coerced the same way. So the two predicates are still the only consumers of a presence test and
      each is still boolean: the store's `#monitorConfigured()` of `#monitorTokenBound()` (1 caller now, was 2), and
      capture-requests' `configured()` of `unattendedBound` (1 call, boolean by construction). */
-  const callers = (STORE_SRC.match(/this\.#monitorTokenBound\(\)/g) || []).length;
+  /* RE-ANCHORED 2026-09-28 (T8): the monitor's side is monitoring's `configured()` (R24), the ONE reader of `.bound`. */
+  const callers = (MON_SRC.match(/unattendedCredential\(this\.env\)\.bound/g) || []).length;
   const CR_SRC = readFileSync(fileURLToPath(new URL("../src/capture-requests/index.mjs", import.meta.url)), "utf8");
   t("and it is consulted by exactly the two sync `*Configured()` predicates",
-    [callers, /#monitorConfigured\(\) \{[\s\S]{0,200}?this\.#monitorTokenBound\(\)/.test(STORE_SRC),
+    [callers, /\n  configured\(\) \{[\s\S]{0,200}?unattendedCredential\(this\.env\)\.bound/.test(MON_SRC),
      (CR_SRC.match(/\bunattendedBound\(this\.#env\(\)\)/g) || []).length,
      /configured\(\) \{\s*\n\s*try \{ return this\.#deps\.configured \? !!this\.#deps\.configured\(\) : unattendedBound\(this\.#env\(\)\); \}/.test(CR_SRC),
      /export function unattendedBound\(env\) \{\s*\n\s*return !!\(/.test(CR_SRC)],
@@ -471,7 +491,13 @@ console.log("\n--- arm E (cont.): the arming predicate cannot leak a credential 
 
 console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structurally ---");
 {
-  const STORE_SRC = readFileSync(STORE_SRC_PATH, "utf8");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3 item 1, N63): the selection is
+     `unattendedCredential(env).token()` (`src/tokens.mjs`, runtime-limits R26), and the two fires that spend it are
+     monitoring's `#fireMonitorTick` and `#fireArchiveFallback` (`src/monitoring/index.mjs`). */
+  const TOKENS_SRC = readFileSync(TOKENS_SRC_PATH, "utf8");
+  const MON_SRC = readFileSync(fileURLToPath(new URL("../src/monitoring/index.mjs", import.meta.url)), "utf8");
+  const uc = (() => { const i = TOKENS_SRC.indexOf("export function unattendedCredential(env) {");
+                      return i < 0 ? "" : TOKENS_SRC.slice(i, TOKENS_SRC.indexOf("\n}\n", i)); })();
   /* A structural pin beside the behavioural arms, for the reason WORKER.md
      gives: a revert that happened to be behaviourally invisible in some future
      shape would still be caught here. */
@@ -480,14 +506,16 @@ console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structur
      instanceClaudeToken }` — the gate's own predicate is still imported from tokens.mjs, so the old spelling was
      pinning the SHAPE of the line rather than the property. It now asks that `liveToken` is a named import of
      `./tokens.mjs`, and still fails on a store that re-derives it or imports it from anywhere else. */
-  t("store.mjs imports the GATE'S OWN predicate rather than re-deriving one",
-    /import \{[^}]*\bliveToken\b[^}]*\} from "\.\/tokens\.mjs";/.test(STORE_SRC), true);
-  t("#monitorToken() is ASYNC and asks liveToken before selecting the daemon credential",
-    /async #monitorToken\(\)[\s\S]{0,400}?await liveToken\(env\.DAEMON_TOKEN\)/.test(STORE_SRC), true);
+  t("the monitor takes its credential from the GATE'S OWN module rather than re-deriving one",
+    [/import \{[^}]*\bunattendedCredential\b[^}]*\} from "\.\.\/tokens\.mjs";/.test(MON_SRC),
+     /\bliveToken\b/.test(MON_SRC.replace(/\/\*[\s\S]*?\*\//g, ""))], [true, false]);
+  t("the selection is ASYNC and asks liveToken before selecting the daemon credential",
+    /async token\(\) \{\s*\n\s*for \(const k of \["DAEMON_TOKEN", "ADMIN_TOKEN"\]\) \{[\s\S]{0,120}?if \(await liveToken\(v\)\) return v;/.test(uc), true);
   t("and asks it of ADMIN_TOKEN too — the class, not the reported half",
-    /async #monitorToken\(\)[\s\S]{0,700}?await liveToken\(env\.ADMIN_TOKEN\)/.test(STORE_SRC), true);
+    /\["DAEMON_TOKEN", "ADMIN_TOKEN"\]/.test(uc) && /return null;/.test(uc), true);
   t("the SYNC arming predicate stays presence-only, so REC-1's scheduler seam is unchanged",
-    /#monitorConfigured\(\) \{[\s\S]{0,200}?this\.#monitorTokenBound\(\)/.test(STORE_SRC), true);
+    /\n  configured\(\) \{[\s\S]{0,200}?unattendedCredential\(this\.env\)\.bound/.test(MON_SRC)
+      && !/\n  configured\(\) \{[^}]*await/.test(MON_SRC), true);
   /* MOVED 3 -> 2, 2026-09-27 (T4, legacy-tests; capture T4-4, K58), to the figure this tree prints, and the site that
      DEPARTED is named: `#fireCaptureRequest`, the capture-request drain's fire. It no longer spends a credential at
      all: it no longer loops back through `SELF` to `op=acquire` under a selected token, it calls capture's trusted
@@ -495,9 +523,10 @@ console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structur
      there is no token to select and none to refuse. The two sites that remain (the archive fallback and the
      monitor's re-check) still await the selection and still state the refusal; the departure is pinned below. */
   t("and every fire site AWAITS the selection — an un-awaited Promise is a truthy token",
-    (STORE_SRC.match(/const token = await this\.#monitorToken\(\);/g) || []).length, 2);
+    (MON_SRC.match(/const token = await unattendedCredential\(this\.env\)\.token\(\);/g) || []).length, 2);
   t("with the no-live-credential refusal stated once and reused, never spelled three ways",
-    (STORE_SRC.match(/Store\.MONITOR_NO_LIVE_CREDENTIAL/g) || []).length, 2);
+    [(MON_SRC.match(/export const MONITOR_NO_LIVE_CREDENTIAL =/g) || []).length,
+     (MON_SRC.match(/reason: MONITOR_NO_LIVE_CREDENTIAL \}/g) || []).length], [1, 2]);
   {
     /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): `#fireCaptureRequest` is capture-
        requests' `#fire(q, verdict)` now, and capture's in-process arm is its injected `capture` (the store hands it

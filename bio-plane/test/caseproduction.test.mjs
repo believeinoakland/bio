@@ -106,7 +106,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CASE_MEMBER_ROLES, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
-import { SCHEMA } from "../src/schema.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): `published_case_members` (and its `role` comment,
+   block 9's authority) moved out of `schema.mjs`'s SCHEMA into publication's own schema literal. */
+import { PUBLICATION_SCHEMA as SCHEMA } from "../src/publication/schema.mjs";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -119,6 +121,12 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6, PUBLICATION #1 J4.6, CASE-AUTHORING #1 J5): block 8's
+   committer (`ratifyCaseDocument`, which reads the case document's frontmatter) is ratification's, and its commit and
+   the divergence prose are publication's; `publishCase` and `MEMBER_ROLES` are case-authoring's. */
+const RATIFICATION_SRC = readFileSync(fileURLToPath(new URL("../src/ratification/index.mjs", import.meta.url)), "utf8");
+const PUBLICATION_SRC = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
+const AUTHORING_SRC = readFileSync(fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url)), "utf8");
 /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5): `#projectBar` is strength's `projectBar`. */
 const STRENGTH_SRC = readFileSync(fileURLToPath(new URL("../src/strength/index.mjs", import.meta.url)), "utf8");
 const mf = new Miniflare({
@@ -1094,15 +1102,15 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
   + "`case_project` and `case_roles` off the frontmatter of the document a member signed, exactly as "
   + "it parses the roster beside them — a project id taken off a request would be an attribution we "
   + "made on the group's behalf, and a reader cannot tell the two apart",
-    [/const fm = parseFrontmatter\(doc\.text\)\.data \|\| \{\};[\s\S]{0,900}?fm\.case_project/.test(STORE_SRC),
-     /const fm = parseFrontmatter\(doc\.text\)\.data \|\| \{\};[\s\S]{0,900}?fm\.case_roles/.test(STORE_SRC)],
+    [/const fm = parseFrontmatter\(doc\.text\)\.data \|\| \{\};[\s\S]{0,900}?fm\.case_project/.test(RATIFICATION_SRC),
+     /const fm = parseFrontmatter\(doc\.text\)\.data \|\| \{\};[\s\S]{0,900}?fm\.case_roles/.test(RATIFICATION_SRC)],
     [true, true]);
   t("and the ratify committer refuses a member whose bytes name a DIFFERENT producing project, "
   + "rather than reconciling them — a case does not change hands between members",
-    /CASE_PRODUCTION_DIVERGED/.test(STORE_SRC), true);
+    /CASE_PRODUCTION_DIVERGED/.test(RATIFICATION_SRC + PUBLICATION_SRC), true);
   t("and one whose partition disagrees with the members already ratified, for the same reason: which "
   + "findings a case RESTS ON is part of what every member signed",
-    /CASE_ROLES_DIVERGED/.test(STORE_SRC), true);
+    /CASE_ROLES_DIVERGED/.test(RATIFICATION_SRC + PUBLICATION_SRC), true);
   /* CASE-1'S PURGE EXEMPTION IS NOT DISTURBED, and the reason is asserted rather
      than asserted-about: `cases` is written at RATIFY and never at publish, so
      this item creates no draft state and the condition CASE-1 named for
@@ -1120,9 +1128,9 @@ console.log("\n--- 8. the record commits what was SIGNED: `cases` and the member
      draft in `cases` and the exemption stands. */
   t("`op=publish` WRITES NO `cases` ROW — the row is the ratify committer's, which is why CASE-1's "
   + "stated purge exemption is undisturbed and `purge` is untouched by this item",
-    /\n {2}publishCase\(\{ target = null[\s\S]{0,40000}?INSERT INTO cases/.test(STORE_SRC), false);
+    /\n {2}#publishCase\(\{ target = null[\s\S]{0,40000}?INSERT INTO cases/.test(AUTHORING_SRC), false);
   t("and the corrected anchor still FINDS the definition — an anchor that matched nothing would pass the arm above "
-  + "for free", /\n {2}publishCase\(\{ target = null/.test(STORE_SRC), true);
+  + "for free", /\n {2}#publishCase\(\{ target = null/.test(AUTHORING_SRC), true);
 }
 
 /* ========= 9. the design doc is the expectation, PARSED rather than restated */
@@ -1170,7 +1178,8 @@ console.log("\n--- 9. the expectations come from documents this item did not wri
     CASE_MEMBER_ROLES, declared);
   t("and the store's is too — three sites, one spelling, checked against the SCHEMA and never "
   + "against each other",
-    (/static MEMBER_ROLES = \[([^\]]*)\]/.exec(STORE_SRC)?.[1] ?? "")
+    /* T8: the store's `static MEMBER_ROLES` is case-authoring's `export const MEMBER_ROLES = Object.freeze([...])`. */
+    (/(?:static|export const) MEMBER_ROLES = (?:Object\.freeze\()?\[([^\]]*)\]/.exec(AUTHORING_SRC)?.[1] ?? "")
       .split(",").map((s) => s.trim().replace(/^"|"$/g, "")).filter(Boolean),
     declared);
 }

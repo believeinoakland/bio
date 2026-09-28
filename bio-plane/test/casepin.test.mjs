@@ -73,7 +73,7 @@ import { ADOPTED_READING, ADOPTED_CLAIM, adoptedVersionParam } from "./adoptable
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -120,6 +120,18 @@ const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.
    and `#ground` (PUBLISHED_CANNOT_RESTRUCTURE) to src/inquiry/index.mjs (INQUIRY #1 J2.2). */
 const BV_SRC = readFileSync(fileURLToPath(new URL("../src/basis-versions/index.mjs", import.meta.url)), "utf8");
 const INQ_SRC = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (T8 layer 8, legacy-tests): the case document's roster (the pins, authored in one statement)
+   left `store.mjs` for case-authoring's document author (`src/case-authoring/document.mjs`, CASE-AUTHORING #1 J5);
+   its write-once store and the roster INSERT at ratification for publication (`src/publication/index.mjs`,
+   PUBLICATION #1 J4.6). "No second version table" is asked of every plane source file, since the tables are now
+   declared per module. */
+const DOC_SRC = readFileSync(fileURLToPath(new URL("../src/case-authoring/document.mjs", import.meta.url)), "utf8");
+const PUB_SRC = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
+const PLANE_SRC = (() => { const out = [];
+  (function walk(d) { for (const e of readdirSync(d, { withFileTypes: true })) {
+    const p = join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name.endsWith(".mjs")) out.push(readFileSync(p, "utf8")); } })(
+    fileURLToPath(new URL("../src/", import.meta.url)));
+  return out.join("\n"); })();
 
 /* ---- keys and roster ---- */
 const dir = mkdtempSync(join(tmpdir(), "casepin-"));
@@ -468,9 +480,9 @@ console.log("\n--- 1. the case FREEZES its member at the hash the member signed 
    the pin is in the signed document, and the signed document is immutable. */
 {
   t("the pins are AUTHORED IN THE CASE DOCUMENT, all of them, in one statement — so the pin is inside the bytes a member signed rather than assembled over N ratifications",
-    /version_sha: \$\{pins\.get\(m\) \?\? "null"\}/.test(STORE_SRC), true);
+    /version_sha: \$\{pins\.get\(m\) \?\? "null"\}/.test(DOC_SRC), true);
   t("and the case document is WRITE-ONCE ONCE SIGNED — the re-author carries `sig_armored IS NULL`, so no statement in this file can move a pin a signature already covers (NOT driven: there is no caller route to it)",
-    /ON CONFLICT\(case_id,edition\) DO UPDATE[\s\S]{0,400}?WHERE case_documents\.sig_armored IS NULL/.test(STORE_SRC),
+    /ON CONFLICT\(case_id,edition\) DO UPDATE[\s\S]{0,400}?WHERE case_documents\.sig_armored IS NULL/.test(PUB_SRC),
     true);
 }
 
@@ -701,9 +713,8 @@ console.log("\n--- 6. the expectation is parsed from CASE-AS-PRODUCTION.md, not 
      unchanged, which is what this arm is actually about. */
   t("and the chain the pin names is the EXISTING one — no second version table was built, which is "
   + "D-21's rule and the reason the pin is a bundle_sha rather than an id of its own",
-    [/CREATE TABLE IF NOT EXISTS case_versions/.test(
-       readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8")),
-     /INSERT INTO published_case_members \(case_id,edition,ord,bundle_id,version_sha,role\)/.test(STORE_SRC)],
+    [/CREATE TABLE IF NOT EXISTS case_versions/.test(PLANE_SRC),
+     /INSERT INTO published_case_members \(case_id,edition,ord,bundle_id,version_sha,role\)/.test(PUB_SRC)],
     [false, true]);
 }
 

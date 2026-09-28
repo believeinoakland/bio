@@ -277,7 +277,11 @@ const witness = async () => {
     for (const { name } of db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all()) {
       let h;
       try {
-        const rows = db.prepare(`SELECT * FROM "${name.replace(/"/g, '""')}"`).all()
+        /* T8 (legacy-tests): read integers as BigInt, which the replacer below already renders as strings — the
+           scheduler's alarm row (`_cf_ALARM`) holds a value past 2^53 and was otherwise reported UNREADABLE. */
+        const stmt = db.prepare(`SELECT * FROM "${name.replace(/"/g, '""')}"`);
+        stmt.setReadBigInts(true);
+        const rows = stmt.all()
           .map((r) => JSON.stringify(r, (k, v) => (v instanceof Uint8Array ? Buffer.from(v).toString("hex")
                                                    : typeof v === "bigint" ? String(v) : v))).sort();
         h = `${rows.length}:${sha(rows.join("\n"))}`;
@@ -290,6 +294,40 @@ const witness = async () => {
   await get("stats");                        /* boot the instance so the next request is not the first */
   return out;
 };
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8, REEVALUATION R14/R25): the plane now raises reevaluation NOTICES in a
+   background SWEEP, armed on the scheduler's alarm REEVAL_NOTICE_DELAY_MS (1 s) after it becomes pending — and it is
+   pending as soon as any basis leg rests on a passage, which this fixture's question does. Left running, the sweep
+   writes `reevaluation_notices` and `reevaluation_sweep` INSIDE the witness window and re-arms the alarm at every
+   restart, which is the plane's own background work and not a write by the read under test. So the window opens only
+   once the sweep has SETTLED: its pass complete, no receipt counted since, nothing pending (read off the store's own
+   `reevaluation_sweep` row, with the instance disposed as the witness does). After that nothing is pending, the sweep
+   arms nothing, and every hash the window compares is the read's alone. */
+const sweepRow = async () => {
+  await mf.dispose();
+  let row = null;
+  const dbs = [];
+  const walk = (d) => { for (const n of readdirSync(d)) { const p = join(d, n);
+    statSync(p).isDirectory() ? walk(p) : /\.sqlite$/.test(n) && dbs.push(p); } };
+  walk(PERSIST);
+  for (const p of dbs) {
+    const db = new DatabaseSync(p);
+    try { row = db.prepare("SELECT pass_began, complete_began, complete_seq, receipt_seq FROM reevaluation_sweep WHERE id = 1").get() ?? row; }
+    catch { /* not the store's file */ }
+    db.close();
+  }
+  mf = mk();
+  await get("stats");
+  return row;
+};
+let settled = null;
+for (let i = 0; i < 40 && !settled; i++) {
+  await new Promise((r) => setTimeout(r, 500));
+  const row = await sweepRow();
+  if (row && row.pass_began === null && row.complete_began !== null
+      && Number(row.receipt_seq) <= Number(row.complete_seq ?? 0)) settled = row;
+}
+t("(fixture) the reevaluation notice sweep has SETTLED before the witness window opens (pass complete, nothing pending)",
+  settled !== null, true);
 const statsA = await get("stats");
 const W0 = await witness();
 const W1 = await witness();

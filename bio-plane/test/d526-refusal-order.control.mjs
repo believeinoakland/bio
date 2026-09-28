@@ -20,7 +20,8 @@ import { tmpdir } from "node:os";
 const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = dirname(PLANE.replace(/\/$/, ""));
 const SUITE = join(PLANE, "test", "d526-refusal-order.test.mjs");
-const REAL = ["src/store.mjs", "src/index.mjs", "checks/bio-checks.mjs"].map((p) => join(PLANE, p));
+const REAL = ["src/store.mjs", "src/index.mjs", "checks/bio-checks.mjs", "src/actions/index.mjs", "src/bias/index.mjs"]
+  .map((p) => join(PLANE, p));
 const digest = () => REAL.map((p) => { const b = readFileSync(p); return `${p.slice(PLANE.length)} ${b.length} B ${createHash("sha256").update(b).digest("hex")}`; });
 
 const S = "src/store.mjs", I = "src/index.mjs";
@@ -36,7 +37,11 @@ const ARMS = {
 
   /* THE ROW'S OWN CONTROL: D-149's carry-forward reads the envelope's type again. */
   "laws-envelope": {
-    patches: [[S, '|| (!cur && promotedType === "action"))) {', `|| (!cur && ${ENV_S} === "action"))) {`]],
+    /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the carry-forward left the store with the action layer and is actions'
+       promotion step now (`#lawsFence`, ACTIONS R2), which asks the promotion's type through `isAction` (the envelope's
+       OR the document's, D-505); the arm makes the creation half read the ENVELOPE's type alone again, the same edit. */
+    patches: [["src/actions/index.mjs", 'if (pkg[LAWS_ACT] || !(heldAction || (!head && isAction))) return null;',
+                  'if (pkg[LAWS_ACT] || !(heldAction || (!head && normalizeType(c.meta && c.meta.object_type) === "action"))) return null;']],
     /* UPDATED 2026-09-26 (T3, legacy-tests; promotion R39, K62): MISLABELLED now meets promotion's own
        ENVELOPE_TYPE_DISAGREES before this (registered) fence runs, so it no longer fails here and must stay green. */
     mustFail: ["UNLABELLED: refused GOVERNING_LAWS_REWRITTEN", "UNLABELLED: …and nothing landed"],
@@ -83,8 +88,10 @@ const ARMS = {
 
   /* C-26's bias gate, in the store: the envelope ALONE, as before this item. */
   "bias-envelope": {
-    patches: [[S, 'if ((promotedType === "bias" || normalizeType(meta.object_type) === "bias") && !pkg.replay) {',
-                  'if (normalizeType(meta.object_type) === "bias" && !pkg.replay) {']],
+    /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the gate left the store for bias's promotion check (`promotionCheck`,
+       BIAS R9), which asks the document's type and the envelope's; the arm makes it ask the envelope alone again. */
+    patches: [["src/bias/index.mjs", 'if (c.promotedType !== "bias" && envelopeType !== "bias") return null;',
+                  'if (envelopeType !== "bias") return null;']],
     mustFail: ["UNLABELLED: refused BIAS_REFUSED"],
     mustPass: [...LABELLED_ALL, "MISLABELLED: refused ENVELOPE_TYPE_DISAGREES"] },
 

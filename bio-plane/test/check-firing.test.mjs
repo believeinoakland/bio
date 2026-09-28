@@ -83,6 +83,10 @@ import { registerChecks } from "../src/provenance/index.mjs";
    `checkReevalPending`, which the gate runs as a promotion step (its errors refuse) and the audit as a registered audit
    check over the same front matter. */
 import { checkReevalPending } from "../src/reevaluation/checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; ACTIONS R37): C-2.10's action arms (risk_tier among them) and C-11.1 left
+   the catalogue's `checkBundle` for actions' `checkActionExtension`, which actions registers with record-core's audit
+   and with promotion; `legacy-checks` no longer runs the action arm. */
+import { checkActionExtension } from "../src/actions/checks.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -176,7 +180,14 @@ async function findingsFor(type, files, extra = {}) {
   return [...findings, ...await recordChecks({ folderName: idFor(type), files, sha256: shaHex, ...extra }),
           ...registerChecks({ files, fm }),
           /* T7: and reevaluation's C-10.1, over the same front matter at the suite's clock (see the import above). */
-          ...(fm ? checkReevalPending(fm, { nowMs: extra.nowMs ?? NOWMS }) : [])];
+          ...(fm ? checkReevalPending(fm, { nowMs: extra.nowMs ?? NOWMS }) : []),
+          /* T8: and actions' C-2.10 action arms and C-11.1, over the same front matter at the suite's clock. */
+          ...actionFindings(fm, extra.nowMs ?? NOWMS)];
+}
+function actionFindings(fm, nowMs) {
+  const out = [];
+  if (fm) checkActionExtension({ fm, nowMs }, out);
+  return out;
 }
 const has = (fs, id) => fs.some((f) => f.check === id);
 

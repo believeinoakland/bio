@@ -66,8 +66,11 @@ const HEAD = (id, type, schema) => [
 /* A conformant action with no projection blocks, so nothing but this item's fence has anything to refuse. */
 const actionMd = (id, plan = "Ask for the transfer ledger.") => [
   ...HEAD(id, "action", "action@1"),
-  "action_kind: cpra_request", "risk_tier: undetermined",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-READ 2026-09-28 (T8, legacy-tests): `cpra_request` is no kind this instance offers (ACTIONS R10, C-101.1) and a
+     NEW named counterparty is an office, its role and its body (R9, C-101.3) — both refused at the write now, so the
+     fixture never landed. Fixture, not subject: the records request is `records_request`, addressed to an office. */
+  "action_kind: records_request", "risk_tier: undetermined",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "",
   "## Plan", "", plan, "",
   "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", "",

@@ -9,7 +9,7 @@
    (g) OVER-STRICTNESS, and it is the arm this file exists to survive: a REAL site is rewritten to carry its row itself, in a SHAPE THIS SUITE WAS NOT WRITTEN AROUND — the code spelled in `code` with NO `reason` at all, the row IMPORTED rather than hand-copied (an equality that costs nothing is not evidence), an extra key the grader has never seen. It MUST PASS. A grader that reports correct work as bare is worse than no grader, because it teaches the next author to route around it.
    (h) REC-185 — `op=purge`'s CODED REFUSAL REVERTED TO ITS BARE SENTENCE at its site in `src/index.mjs`, the whole refusal restored to the pre-REC-185 answer rather than one key deleted, so the arm is the defect and not a caricature of it. Section 6b MUST FAIL BY NAME on four of its six lines (and, FROM D-495, section 6c's residue pin fails beside them, for five failures in total rather than REC-185's four — see the D-495 run line below) — no code, no C-number and no canned translation, no argument/shape, and no "Nothing was changed." on the one op that destroys a record. MUST NOT FAIL: 6b's `error` line, because the sentence is byte-identical either way and that is precisely what makes this an arm about the CODE and not about the wording; nor anything in section 2c, whose two walks do not read this site (it carries no spread, and it never left by a raw `new Response`) — an arm that took those down with it would be moving a second variable.
    (i) REC-185's OVER-STRICTNESS ARM, on the REAL site: `op=purge`'s refusal rebuilt AT ITS SITE in a spelling 6b was not written around — the code in `code` with NO `reason`, the row IMPORTED from `REQUIRED_ARGUMENT_CHECKS` rather than hand-copied, the `detail` worded unlike anything the helper writes, an extra key the grader has never seen. It MUST PASS: 6b grades whether a caller is told the FACT, never whether the helper was the author.
-   (j) D-494 — A FENCE'S MINT DROPPED AT ITS SITE IN `src/store.mjs`: `MACHINE_CANNOT_REVIEW`'s literal replaced with a code the harvest does not match, so the catalogue row survives a fence that no longer exists. Section 3b MUST FAIL naming `MACHINE_CANNOT_REVIEW` under `cataloguedMintedNowhere` — BY NAME, never on a count. MUST NOT FAIL: 3b's template census, and nothing in 2c or 6b. Section 3's older `store.mjs`-only floor MAY also fail on the same loss; that is the two instruments agreeing over one variable, not a second variable.
+   (j) D-494 — A FENCE'S MINT DROPPED AT ITS SITE IN `src/store.mjs`: `MACHINE_CANNOT_REVIEW`'s literal replaced with a code the harvest does not match, so the catalogue row survives a fence that no longer exists. Section 3b MUST FAIL naming `MACHINE_CANNOT_REVIEW` under `cataloguedMintedNowhere` — BY NAME, never on a count. MUST NOT FAIL: 3b's template census, and nothing in 2c or 6b. Section 3's older `store.mjs`-only floor MAY also fail on the same loss; that is the two instruments agreeing over one variable, not a second variable. RE-AIMED 2026-09-28 (T8, legacy-tests): review took MACHINE_CANNOT_REVIEW's fence and its row out of MACHINE_FENCE_CHECKS, so the arm now drops MACHINE_CANNOT_RELEASE's mint (C-32.1, still this family's, still store.mjs's) and 3b MUST name THAT code; the declaration is otherwise unchanged.
    (k) D-494's OVER-STRICTNESS ARM: `MACHINE_CANNOT_GROUND` hoisted into a `const` above its DEC-49 region and minted THROUGH THE VARIABLE — the shape a `machineFenceRow` refactor produces and the one section 3b was not written around. It MUST PASS: the widened harvest walks literals wherever they stand. A RED here would be an instrument demanding one syntax, which is how a check comes to be routed around.
    RUN 2026-09-24 BY THE D-494 WORKER on branch `land/worker/D-494`, TWICE — once over origin/main 0fdef669 and again after rebasing onto origin/main d536f834 (which moved `src/store.mjs`, so the figures were RE-MEASURED rather than carried across the rebase; they agree), and the figures are the ones the driver PRINTED: **a GREEN 35/0 · b RED 31/4 · c RED 32/3 · d RED 1/2 · e RED 29/6 · f RED 34/1 · g GREEN 35/0 · h RED 31/4 · i GREEN 35/0 · j RED 33/2 · k GREEN 35/0 — ALL ELEVEN AS DECLARED**, all three files byte-identical to their pristine-of-record by sha256 AND by `cmp` (on d536f834: `src/store.mjs` 3164607 bytes sha `213ad1fa0b4dd608…`, `src/index.mjs` 779787 bytes sha `ee3c550c242f7895…`, `test/refusal-wire.test.mjs` 66452 bytes sha `32e24d56b970eda4…`). Arm (j)'s two failures are the declared one plus section 3's older `store.mjs`-only floor, which reads the same loss — the two instruments agreeing over one variable. **AND THE DRIVER ITSELF WAS CORRECTED BY THIS ARM RATHER THAN THE ARM BY THE DRIVER:** the first run printed arm (j) RED on a label TRUNCATED AT 200 CHARACTERS, so the driver's own output said a line had failed and NOT which fence it failed over — the count-not-names reading this item exists to refuse, in the instrument that grades the item. The driver now prints each FAIL's `want`/`got` continuation and was RE-RUN rather than adjusted on paper; the figures above are the second run's, and arm (j)'s `got` reads `cataloguedMintedNowhere: ["MACHINE_CANNOT_REVIEW"]`.
    (l) D-495 (was j on its branch) — AN ADMIN-ONLY REFUSAL STRIPPED OF ITS CODE: `GROUP_SLUG_MALFORMED` at its site in `src/store.mjs`, reverted to a bare `error` sentence — the whole refusal and not one key deleted, so the arm is the defect and not a caricature of it. `op=instancegroupseed` is `["admin"]` ALONE, so it is invisible to the member drive, to section 9's pin and to 6b's hand-driven purge: ONLY the class drive can see it, which is what makes this the arm for D-495 rather than a second copy of (h). MUST FAIL on section 6c's residue pin, NAMING `instancegroupseed (admin)`. MUST NOT FAIL: 6c's admin and probe REACH counts, because the op body is still reached and that is what separates a refusal finding from a gate finding; 6c's grade, because a refusal carrying NO code is not a bare TRANSLATION and scoring it as one would be the instrument confusing its own two questions; section 9's member+`ai` pin, which cannot see this op at all; and 6b, whose site is untouched.
@@ -206,6 +206,25 @@ t("the catalogue walk found real translated rows — the floor is asserted BEFOR
    property one level over, on the CODE, and it is what the decoration rests on. */
 t("no code is minted in two families — the property the one-place decoration rests on", DUPLICATED, []);
 
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): THE FENCES' FAMILIES ARE NOT ALL IN THE CATALOGUE ANY MORE. `ROWS` stays
+   the catalogue — it is exactly the set `index.mjs`'s `dec49Attach` resolves against, which is what sections 4 and 6c
+   grade — but T8's modules took fence rows with them (actions' ACTION_FENCE_CHECKS and RECORDS_LAW_FENCE_CHECKS,
+   review's C-32.16 in REVIEW_COPY_CHECKS, ratification's RATIFY_MACHINE_FENCE_CHECKS; the layer-9 families), each
+   refusal carrying its row from its own site. So the fence sections (3, 3b, 5) ask a fence's row of EVERY family: the
+   catalogue's first, then each module's `checks.mjs`, harvested by the same `_CHECKS` suffix and never listed. */
+const ALL_ROWS = new Map([...ROWS]);
+for (const d of readdirSync(join(DIR, "..", "src"), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort()) {
+  let mod = null;
+  try { mod = await import(`../src/${d}/checks.mjs`); } catch (e) { if (e.code !== "ERR_MODULE_NOT_FOUND") throw e; }
+  for (const [family, rows] of Object.entries(mod || {})) {
+    if (!/_CHECKS$/.test(family) || !rows || typeof rows !== "object") continue;
+    for (const [code, row] of Object.entries(rows))
+      if (row && typeof row === "object" && typeof row.translation === "string" && row.translation && !ALL_ROWS.has(code))
+        ALL_ROWS.set(code, { check: row.check ?? null, translation: row.translation, family, where: row.where ?? null });
+  }
+}
+console.log(`    and ${ALL_ROWS.size - ROWS.size} further translated row(s) in the modules' own families (the fence sections read them)`);
+
 /* HALT ON A BLIND CORPUS, AND THIS LINE WAS EARNED BY THE CONTROL RATHER THAN
    FORESEEN. ARM d (the catalogue harvest made to match nothing) was DECLARED to
    come back RED and came back **NO TALLY**: every later block reads
@@ -365,7 +384,17 @@ const lineOf = (src, at) => src.slice(0, at).split("\n").length;
    over the service in src/capture/acquire.mjs) into the capture module. They answer through the control plane's own
    `json()`, handed to them by index.mjs, so both walks below read the capture module's files beside index.mjs, each
    under its own name (a site outside index.mjs is printed `Lcapture/<file>:<n>`). */
+/* WIDENED 2026-09-28 (T8, legacy-tests): every module whose Worker half `index.mjs` now imports and hands its own
+   `json()` — publication's published reads (`src/publication/worker.mjs`, PUBLICATION #1 J4.6), ratification's two
+   ceremonies (`src/ratification/ops.mjs`, RATIFICATION #2 J6), op=monitor (`monitorOp`, MONITORING #1 J3.1),
+   extraction's reads (`src/extraction/ops.mjs`) and the governor's op (`src/host-governor/index.mjs`) — is read beside
+   capture's for the same reason: the handler left index.mjs, its answers did not leave the control plane. */
 const CONTROL_PLANE = [["", INDEX_SRC, INDEX_BARE],
+  ...["publication/worker.mjs", "ratification/ops.mjs", "extraction/ops.mjs", "monitoring/index.mjs",
+      "host-governor/index.mjs"].map((f) => {
+    const src = readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
+    return [`${f}:`, src, decomment(src)];
+  }),
   ...moduleFiles("capture").map((f) => {
     const src = readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
     return [`${f}:`, src, decomment(src)];
@@ -384,7 +413,7 @@ for (const m of BARE.matchAll(/new Response\(/g)) {
               head: SRC_TEXT.split("\n")[lineOf(BARE, m.index) - 1].trim().slice(0, 96) });
 }
 const RESP_OUT = RESP.filter((r) => !r.isJsonItself);
-console.log(`    (B) ${RESP.length} \`new Response(\` construction(s) in index.mjs and src/capture/ — ${RESP.length - RESP_OUT.length} `
+console.log(`    (B) ${RESP.length} \`new Response(\` construction(s) in the control plane (index.mjs and its modules' Worker halves) — ${RESP.length - RESP_OUT.length} `
           + `is json()'s own, ${RESP_OUT.length} leave by another door:`);
 for (const r of RESP_OUT) console.log(`        L${r.line}  ${r.carriesRefusal ? "REFUSAL CARRIER" : "not a refusal"}  ${r.head}`);
 t("the `new Response` walk found a real corpus and did not go blind — floored BEFORE the emptiness "
@@ -452,7 +481,13 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
      code, check and translation inside the service's DEC-49 region is-capture-request-arm
      (src/capture/acquire.mjs), answered through acquireOp's `json()` — visible to the static walks, no longer a
      forward. */
-  ["built", "c", "confinement.error", "declared.error", "facts", "r", "rec",
+  /* CORRECTED 2026-09-28 (T8, legacy-tests), LOOKED AT as this assertion asks, by name: `built`, `c`, `storeAbsent`
+     and `zip` are op=publishedbytes' and op=publishedcase's forwards, unchanged, read where they moved
+     (`src/publication/worker.mjs`). `gate` ARRIVED: op=caseratify (`caseRatifyOp`, `src/ratification/ops.mjs`) now asks
+     ratification's store half for the case gate (`casegate`, R2) and forwards its refusal — `CASE_RATIFY_STALE`, which
+     at T7 was minted as a literal in index.mjs, and publication's `caseDocumentFacts` answer (`NO_CASE_DOCUMENT`)
+     — neither of which holds a row in any family: the census's, named in the T8 legacy-tests record for ratification. */
+  ["built", "c", "confinement.error", "declared.error", "facts", "gate", "r", "rec",
    "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3
@@ -465,10 +500,14 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
    MACHINE_CANNOT_DECLARE (C-32.9), left the FAMILY and not only the file: strength holds it in its own
    `STRENGTH_BAR_CHECKS` (`src/strength/checks.mjs`), as its requirements moved it from the machine fences, so it is
    struck from this harvest with that reason and the floor below moves 14 -> 13 by exactly it. */
-const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry"].flatMap(moduleFiles)
+/* RE-POINTED 2026-09-28 (T8, legacy-tests): T8 took six more of the store's fences where their acts went —
+   MACHINE_CANNOT_CORRESPOND, _MOVE_ACTION, _SET_LAWS and _SET_RISK_TIER with actions (`src/actions/`, which also mints
+   T8's MACHINE_CANNOT_STATE_RECORDS_LAW), MACHINE_CANNOT_PUBLISH with case-authoring and MACHINE_CANNOT_REVIEW with
+   review — each harvested where it went, its row asked of every family (`ALL_ROWS`). */
+const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry", "case-authoring", "actions", "review"].flatMap(moduleFiles)
   .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))];
 const FENCES = [...new Set(FENCE_SOURCES.flatMap((b) => [...b.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1])))].sort();
-console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry}/: ${FENCES.length} code(s)`);
+console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review}/: ${FENCES.length} code(s)`);
 /* THE FLOOR MOVED 12 -> 14 BY REC-185, 2026-09-24, FROM THIS LINE'S OWN PRINT ON ITS TREE — AND IT
    WAS FOUND BY A CONTROL COMING BACK GREEN, NOT BY READING IT. Arm (f) of this file's driver drops
    one code out of the harvest and is DECLARED RED. On 2026-09-24 it came back **GREEN, 33/0**. The
@@ -487,10 +526,12 @@ console.log(`    the machine-fence family, harvested from store.mjs + src/{basis
 t("the fence harvest found a REAL family and not an empty set — and the floor is a RATCHET rather "
 + "than a reassurance: it is this family's measured size today, so ONE code leaving the harvest "
 + "fails this line and must be struck with its reason",
-  FENCES.length >= 13, true);
-t("every harvested fence has a catalogue row with a canned translation — REC-64's work, and the "
-+ "precondition for asking whether it reaches anybody",
-  FENCES.filter((c) => !ROWS.has(c)), []);
+  /* MOVED 13 -> 14 on 2026-09-28 by T8 legacy-tests, FROM THIS LINE'S OWN PRINT: the thirteen, re-harvested where T8
+     moved them, and MACHINE_CANNOT_STATE_RECORDS_LAW, actions' T8 fence (RECORDS_LAW_FENCE_CHECKS). */
+  FENCES.length >= 14, true);
+t("every harvested fence has a row with a canned translation — the catalogue's or, since T8, its module's own "
++ "family (REC-64's work, and the precondition for asking whether it reaches anybody)",
+  FENCES.filter((c) => !ALL_ROWS.has(c)), []);
 
 /* ====================================================================== 3b
  * D-494 · THE HARVEST WIDENED TO BOTH SOURCES, AND THE CATALOGUE GRADED
@@ -543,7 +584,10 @@ const SITES = new Map();                       /* code -> [{ file, line }] */
    reported as exactly that (list 2) rather than as minted nowhere. */
 const HARVESTED = [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE],
   /* T7 (LEGACY-TESTS #4, 2026-09-28): basis-versions and inquiry, where three catalogued fences and C-25.24's went. */
-  ...["record-core", "membership", "promotion", "basis-versions", "inquiry"].flatMap(moduleFiles).map((f) =>
+  /* T8 (legacy-tests, 2026-09-28): case-authoring, actions and review, where six of the store's fences went, and
+     ratification, where index.mjs's four ratify fences went (`src/ratification/ops.mjs`). */
+  ...["record-core", "membership", "promotion", "basis-versions", "inquiry", "case-authoring", "actions", "review",
+      "ratification"].flatMap(moduleFiles).map((f) =>
     [`src/${f}`, decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"))])];
 for (const [file, bare] of HARVESTED) {
   for (const m of bare.matchAll(FENCE_LITERAL)) {
@@ -562,7 +606,7 @@ for (const [file, bare] of HARVESTED)   /* T3 (legacy-tests), 2026-09-26: the wi
 const CAT = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS;
 const CAT_CODES = Object.keys(CAT).sort();
 const whereFile = (w) => (/(src\/[A-Za-z./-]+\.mjs)/.exec(String(w)) || [])[1] || null;   /* T3 (legacy-tests), 2026-09-26: a `where` may name src/<module>/x.mjs */
-const familyOf = (c) => (ROWS.get(c) || {}).family || null;
+const familyOf = (c) => (ALL_ROWS.get(c) || {}).family || null;   /* T8: every family, not the catalogue alone */
 
 console.log(`    MACHINE_FENCE_CHECKS holds ${CAT_CODES.length} row(s); the widened harvest finds `
           + `${SITES.size} code(s) minted across src/store.mjs + src/index.mjs + src/{record-core,membership,promotion,basis-versions,inquiry}/`);   /* T3 (legacy-tests), 2026-09-26; T7 2026-09-28 */
@@ -596,14 +640,27 @@ const whereNamesTheWrongSource = CAT_CODES.filter((c) => SITES.has(c))
 const mintedOutsideTheFenceFamily = [...SITES.keys()].filter((c) => !CAT_CODES.includes(c)).sort()
   .map((c) => `${c} -> ${familyOf(c) || "NO ROW IN ANY _CHECKS FAMILY"}`);
 
+/* CORRECTED 2026-09-28 (T8, legacy-tests), LOOKED AT as the set asks, by name: ten fences are minted outside
+   MACHINE_FENCE_CHECKS because T8 moved their ROWS with their acts — actions' four (ACTION_FENCE_CHECKS) and its new
+   records-law fence (RECORDS_LAW_FENCE_CHECKS), review's C-32.16 (REVIEW_COPY_CHECKS, split from this family by number)
+   and ratification's four (RATIFY_MACHINE_FENCE_CHECKS: the two MACHINE_CANNOT_RATIFY* of REC-123 and the two
+   OPERATOR_TOKEN_CANNOT_RATIFY* of REC-125). Each is held by the family that DOES hold it — the shape this set pins. */
 t("D-494 · the CATALOGUE and the WIDENED HARVEST agree, BY NAME and not by count: every one of "
-+ "MACHINE_FENCE_CHECKS' rows is minted in the source its `where` names, and the only fence-shaped "
-+ "code minted outside that family is MACHINE_CANNOT_MOVE_VERSION, which VERSION_ACT_CHECKS holds "
-+ "on purpose (C-25.24, REC-46's one predicate at the six version acts' one transition). A row "
++ "MACHINE_FENCE_CHECKS' rows is minted in the source its `where` names, and every fence-shaped "
++ "code minted outside that family is held by the family named beside it — MACHINE_CANNOT_MOVE_VERSION by "
++ "VERSION_ACT_CHECKS on purpose (C-25.24, REC-46's one predicate at the six version acts' one transition), "
++ "and since T8 the fences whose rows moved with their modules. A row "
 + "minted nowhere is a DEFECT — delete the row or build the fence; it is never allow-listed here",
   { cataloguedMintedNowhere, whereNamesTheWrongSource, mintedOutsideTheFenceFamily },
   { cataloguedMintedNowhere: [], whereNamesTheWrongSource: [],
-    mintedOutsideTheFenceFamily: ["MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS"] });
+    mintedOutsideTheFenceFamily: [
+      "MACHINE_CANNOT_CORRESPOND -> ACTION_FENCE_CHECKS", "MACHINE_CANNOT_MOVE_ACTION -> ACTION_FENCE_CHECKS",
+      "MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS", "MACHINE_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
+      "MACHINE_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS", "MACHINE_CANNOT_REVIEW -> REVIEW_COPY_CHECKS",
+      "MACHINE_CANNOT_SET_LAWS -> ACTION_FENCE_CHECKS", "MACHINE_CANNOT_SET_RISK_TIER -> ACTION_FENCE_CHECKS",
+      "MACHINE_CANNOT_STATE_RECORDS_LAW -> RECORDS_LAW_FENCE_CHECKS",
+      "OPERATOR_TOKEN_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
+      "OPERATOR_TOKEN_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS"] });
 
 t("D-494 · no fence code is ASSEMBLED from a template — the one spelling no static harvest can "
 + "name, gated at empty rather than described, because a hole stated in prose is a hole nobody "
@@ -777,7 +834,8 @@ t("something was actually graded — an empty graded set would satisfy all three
 console.log("\n--- 5. the twelve machine fences, each pinned on the WIRE ---");
 const fenceWire = FENCES.map((c) => {
   const got = OBSERVED.get(c);
-  return { code: c, reached: !!got, translated: !!got && got.translation === (ROWS.get(c)?.translation ?? null) };
+  /* T8 (legacy-tests): the fence's row from EVERY family (`ALL_ROWS`), since six of these carry a module's row. */
+  return { code: c, reached: !!got, translated: !!got && got.translation === (ALL_ROWS.get(c)?.translation ?? null) };
 });
 const unreached = fenceWire.filter((f) => !f.reached).map((f) => f.code);
 const untranslated = fenceWire.filter((f) => f.reached && !f.translated).map((f) => f.code);
@@ -811,7 +869,12 @@ t("the fences this empty-payload sweep does not reach are NAMED rather than coun
      member's revision act, above every payload complaint (through the one helper `promote` asks too) — so this
      sweep's empty call reaches it through that op, with its translation, and it leaves the unreached set. The
      REC-189 note above was true of `promote`, and still is. */
-  unreached, ["MACHINE_CANNOT_MOVE_VERSION"]);
+  /* MOVED 2026-09-28 by T8 legacy-tests, never exempted: MACHINE_CANNOT_STATE_RECORDS_LAW (C-32.20, actions R5, T8's
+     fence, harvested since the fences were re-pointed to actions) stands inside the action write's own arm and refuses
+     a machine STATING a records law, so an empty call — no action, no law — is refused by the payload complaints long
+     before it. Reachability is its interface test's: `test/m/actions/write.test.mjs`, "R5 a machine may not state,
+     change or remove a records law; one stated before reads MACHINE-STATED (C-32.20)". */
+  unreached, ["MACHINE_CANNOT_MOVE_VERSION", "MACHINE_CANNOT_STATE_RECORDS_LAW"]);
 
 /* ====================================================================== 7
  * TWO PRODUCERS, ONE CODE — AND THE `detail` IS WHAT TELLS THEM APART.

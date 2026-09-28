@@ -28,7 +28,7 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "opaque-ids.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "test/opaque-ids.test.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/store.mjs", "src/case-authoring/index.mjs", "test/opaque-ids.test.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const ARMS = {
@@ -40,8 +40,11 @@ const ARMS = {
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests): the CASE mint's call site stayed in src/store.mjs and now reaches the one
      minter through record-core's interface (`recordOf(this.ctx).mintOpaqueId`); the same mutation, on that spelling. */
   "counter-restored-case": {
-    patches: [["store.mjs", "      theCase = recordOf(this.ctx).mintOpaqueId(\"CASE\", new Date().toISOString().slice(0, 4), \"\", (id) =>",
-               "      theCase = ((y, _t, _f) => recordOf(this.ctx).allocId(\"CASE\", y).id)(new Date().toISOString().slice(0, 4), \"\", (id) =>"]],
+    /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): the CASE mint moved with `publishCase` into
+       `src/case-authoring/index.mjs`, where it reaches the minter as `this.record.mintOpaqueId` and takes its year from
+       the module's clock (`this.#when("second")`); the same mutation, on that spelling. */
+    patches: [["case-authoring/index.mjs", "      theCase = this.record.mintOpaqueId(\"CASE\", this.#when(\"second\").slice(0, 4), \"\", (id) =>",
+               "      theCase = ((y, _t, _f) => this.record.allocId(\"CASE\", y).id)(this.#when(\"second\").slice(0, 4), \"\", (id) =>"]],
     mustFail: ["CASE NO COUNT: the three ids are NOT the counter's answer", "CASE NO COUNT: two mints in a row",
                "NO gated prefix is minted from the counter anywhere", "the CASE mint calls the one minter"],
   },
@@ -150,3 +153,6 @@ const untouched = before.every((d, i) => d === after[i]);
 console.log(`\nreal sources: ${REAL.map((p, i) => `${p.split("/").slice(-1)[0]} ${after[i]}`).join(" · ")} — untouched: ${untouched ? "YES" : "NO"}`);
 if (!untouched) bad++;
 process.exit(bad ? 1 : 0);
+/* RE-MEASURED 2026-09-28 by legacy-tests (T8), after re-anchoring `counter-restored-case` on case-authoring (the driver
+   copies the tree; untouched: YES): baseline 35/0 · counter-restored-case 31/4 · clock-pinned 35/0 ·
+   clock-read-restored 31/4 · clock-read-restored-no-pin 35/0 — every arm AS DECLARED. */

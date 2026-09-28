@@ -225,6 +225,13 @@ const block = async (name, fn) => {
    so the hazard is larger here than there, and ARM S0 guards the guard. */
 const decomment = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 const STORE = decomment(STORE_SRC);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): the case preparation — the authored
+   acknowledgement, the computed manifest stamp, C-21.1's carried-forward refusal and the sentence that says nothing
+   reads WHICH bias is named — left `store.mjs` with `publishCase` for `src/case-authoring/` (its index and the
+   document author). Block 15 reads those files, decommented as the store is. */
+const AUTHORING_SRC = readdirSync(SRC("case-authoring")).filter((f) => f.endsWith(".mjs")).sort()
+  .map((f) => readFileSync(join(SRC("case-authoring"), f), "utf8")).join("\n");
+const AUTHORING = decomment(AUTHORING_SRC);
 const INDEX = decomment(INDEX_SRC);
 const BIAS = decomment(BIAS_SRC);
 /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the store's `aiRunSpawnPayload` moved into ai-runs as
@@ -1202,15 +1209,15 @@ console.log("\n--- 15. ARM D1 / DEC-46: the acknowledgement stays authored at ex
 await block("15", async () => {
   t("the acknowledgement and the manifest are two fields and two mechanisms — the manifest is COMPUTED and "
   + "stamped by the plane, the acknowledgement is AUTHORED by the member in the ceremony",
-    [/bias_acknowledgement/.test(STORE), /statements_sha/.test(STORE)], [true, true]);
+    [/bias_acknowledgement/.test(AUTHORING), /statements_sha/.test(AUTHORING)], [true, true]);
   t("ARM D1: C-21.1's byte-check on a carried-forward acknowledgement is UNTOUCHED by this item — the "
   + "refusal exists by name and the reason beside it still discriminates it from the scope statement",
-    [/BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD/.test(STORE),
+    [/BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD/.test(AUTHORING),
      /checkCompletenessFreshness/.test(readFileSync(join(ROOT, "checks", "bio-checks.mjs"), "utf8"))],
     [true, true]);
   t("and NOTHING in this item reads WHICH bias is named at publication, which is DEC-20's disclosure rule: "
   + "declaring a bias never blocks a case",
-    /reads WHICH bias/.test(STORE_SRC), true);
+    /reads WHICH bias/.test(AUTHORING_SRC), true);
 });
 
 /* ====================================================================== 15b

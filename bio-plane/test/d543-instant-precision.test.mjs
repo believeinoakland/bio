@@ -234,7 +234,14 @@ console.log("\n--- 4. no hand-spelled whole-second stamp is left in store.mjs or
      files — the store as it stood before the extraction (`storeCorpus`) — and its floor, the store's own size, is
      asked of that whole; the sweep and the call count read it too. */
   const T5_MODULES = ["record-core", "calibration", "extraction", "content", "entities", "connections",
-    "progressions", "bias", "observation-log", "retrieval"];
+    "progressions", "bias", "observation-log", "retrieval",
+    /* RE-ANCHORED 2026-09-28 by legacy-tests (T8; REVIEW #1 J4.1 named `src/review/`): T6–T8 moved more of the
+       store's named calls out with the code that makes them. The corpus widens to every module EXTRACTED FROM the
+       store since T5 (the store as it stood before the extraction), and to no module built as new code in T8
+       (standards, conformance, consequences, filings, escalation), whose stamps were never the store's. */
+    "ai-runs", "run-productions", "citation", "inquiry", "basis-versions", "strength", "reevaluation", "intent",
+    "review", "publication", "ratification", "case-authoring", "actions", "capture-requests", "monitoring",
+    "scheduler"];
   const store = codeOf(storeCorpus(T5_MODULES, "latin1"));
   const index = codeOf(readFileSync(SRC("index.mjs"), "utf8"));
   const HAND = /toISOString\(\)\s*\.\s*(?:replace\(\/\\\.\\d\+Z\$\/|split\(\s*["']\.["']\s*\)\s*\[\s*0\s*\]\s*\+\s*["']Z["'])/g;

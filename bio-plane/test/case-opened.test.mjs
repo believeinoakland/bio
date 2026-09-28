@@ -252,10 +252,43 @@ function objectKeys(text) {
 }
 const has = (text, key) => objectKeys(text).includes(key);
 
-const STORE_SRC = read(join(REPO, "bio-plane/src/store.mjs"));
-const INDEX_SRC = read(join(REPO, "bio-plane/src/index.mjs"));
-const STORE = skeleton(STORE_SRC);
-const INDEX = skeleton(INDEX_SRC);
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8, PUBLICATION #1 J4.6, RATIFICATION #2 J6, CASE-AUTHORING #1 J5),
+   never exempted: every method REC-58 measured left `store.mjs` and `index.mjs` in layer 8, with its body. Each
+   region is now looked for in the module that holds it, and every question below is asked unchanged:
+     - `publishCase` (the authoring act)             -> `src/case-authoring/index.mjs` (`publishCase(args = {})`);
+     - `publishedCase`, the producer (now the service
+       `caseEditionState`, no longer private), and the
+       RATIFICATION committer's case half (`Store.publish()`'s
+       `case: caseState` is `commitEdition`, which
+       ratification's `publish` returns)              -> `src/publication/index.mjs`;
+     - op=ratify's and op=caseratify's handlers        -> `src/ratification/ops.mjs`;
+     - the container manifest (`assembleCaseContainer`) -> `src/publication/worker.mjs`;
+     - `DO_PATH` stays in `src/index.mjs`.
+   The region helpers carry their file, so two regions in DIFFERENT files are disjoint by construction and the
+   disjointness arms say so rather than comparing line numbers across files. */
+const FILES = {
+  store: "bio-plane/src/store.mjs", index: "bio-plane/src/index.mjs",
+  authoring: "bio-plane/src/case-authoring/index.mjs", publication: "bio-plane/src/publication/index.mjs",
+  ops: "bio-plane/src/ratification/ops.mjs", worker: "bio-plane/src/publication/worker.mjs",
+};
+const RAW = Object.fromEntries(Object.entries(FILES).map(([k, f]) => [k, read(join(REPO, f))]));
+const SKEL = Object.fromEntries(Object.entries(RAW).map(([k, v]) => [k, skeleton(v)]));
+const regionIn = (file, re) => ({ ...regionAt(SKEL[file], re), file });
+const disjoint = (a, b) => a.file !== b.file || a.to < b.from || b.to < a.from;
+const INDEX_SRC = RAW.index;
+const INDEX = SKEL.index;
+/* The whole plane source, skeletoned, for the counts that must hold ANYWHERE under `src/` (a caller or a fetch that
+   moved to a sixth module is still a way out). */
+const PLANE = (() => {
+  const out = [];
+  (function walk(d) {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const p = join(d, e.name);
+      if (e.isDirectory()) walk(p); else if (e.name.endsWith(".mjs")) out.push({ f: relative(REPO, p), raw: read(p) });
+    }
+  })(join(REPO, "bio-plane/src"));
+  return out.map((x) => ({ ...x, code: skeleton(x.raw) }));
+})();
 
 console.log("\n--- REC-58 · 1. THE ANCHORS, CHECKED AGAINST THE METHODS THEY CLAIM ---");
 /* UI-35's anchor matched `publishCase()` when it wanted `publishedCase()` — two
@@ -263,10 +296,11 @@ console.log("\n--- REC-58 · 1. THE ANCHORS, CHECKED AGAINST THE METHODS THEY CL
    below is therefore PROVED to be the method it is named after, by a landmark
    only that method carries, BEFORE anything is measured inside it. A region that
    silently matched its sibling would answer this whole item backwards. */
-const publishCase   = regionAt(STORE, /^  publishCase\(\{/);
-const publishedCase = regionAt(STORE, /^  publishedCase\(\{/);
-const caseEdState   = regionAt(STORE, /^  #caseEditionState\(/);
-const storePublish  = regionAt(STORE, /^  publish\(\{ bundleId/);
+/* `publishCase(args)` is a one-line transaction around the body, `#publishCase({ … })`, which is the act measured. */
+const publishCase   = regionIn("authoring", /^  #publishCase\(\{/);
+const publishedCase = regionIn("publication", /^  publishedCase\(\{/);
+const caseEdState   = regionIn("publication", /^  caseEditionState\(/);
+const storePublish  = regionIn("publication", /^  commitEdition\(\{ bundleId/);
 
 t("REC-58 ANCHOR: all four regions are FOUND and BRACE-BALANCED (each closed, none ran to end of file)",
   [publishCase.found, publishedCase.found, caseEdState.found, storePublish.found],
@@ -275,7 +309,7 @@ t("REC-58 ANCHOR: all four regions are FOUND and BRACE-BALANCED (each closed, no
 /* The landmarks. Each is a refusal reason or a SQL fragment unique to its
    method, read off the SKELETON's string DELIMITERS being intact — so what is
    matched is the code shape, and the sibling cannot satisfy it. */
-const rawRegion = (r) => STORE_SRC.split("\n").slice(r.from - 1, r.to).join("\n");
+const rawRegion = (r) => RAW[r.file].split("\n").slice(r.from - 1, r.to).join("\n");
 t("REC-58 ANCHOR: `publishCase` is the CASE-AUTHORING act and not its one-letter sibling — it carries "
 + "MACHINE_CANNOT_PUBLISH and NO_SUBJECT_POSITION, and carries NOT_PUBLISHED nowhere",
   [rawRegion(publishCase).includes("MACHINE_CANNOT_PUBLISH"),
@@ -290,17 +324,17 @@ t("REC-58 ANCHOR: `publishedCase` is the PUBLIC READ and not its one-letter sibl
   [true, true, false]);
 t("REC-58 ANCHOR: the two are DISJOINT regions — the trap is that they overlap or that one contains "
 + "the other, and a containment would make every measurement below meaningless",
-  publishCase.to < publishedCase.from || publishedCase.to < publishCase.from, true);
+  disjoint(publishCase, publishedCase), true);
 t("REC-58 ANCHOR: `#caseEditionState` is the producer — it SELECTs off published_cases and is the "
 + "method the other two call, and it is disjoint from publishCase",
   [rawRegion(caseEdState).includes("FROM published_cases"),
-   caseEdState.from > publishCase.to],
+   disjoint(caseEdState, publishCase)],
   [true, true]);
 
 /* THE FOUR OBJECT LITERALS THIS ITEM IS ABOUT, each anchored on its own first
    line so `objectKeys` reads the object and not the method around it. */
-const producerReturn = regionAt(STORE, /^    return \{ caseId, edition: ed, group:/);
-const publicReturn   = regionAt(STORE, /^    return \{ ok: true, caseId: theCase, edition: ed, scope:/);
+const producerReturn = regionIn("publication", /^    return \{ caseId, edition: ed, group:/);
+const publicReturn   = regionIn("publication", /^    return \{ ok: true, caseId: theCase, edition: ed, scope:/);
 t("REC-58 ANCHOR: the producer's RETURN OBJECT and the public read's RETURN OBJECT are found and "
 + "brace-balanced, and each sits inside the method it belongs to",
   [producerReturn.found, publicReturn.found,
@@ -363,20 +397,22 @@ t("REC-58: `Store.publishedCase()` calls the producer and PICKS ITS FIELDS — i
    is asserted, rather than the count simply being raised. */
 t("REC-58: and those are the ONLY callers in the whole store — the two REC-58 measured plus D-442's two "
 + "internal hops; a fifth call site would be a new way out and is asserted absent rather than assumed",
-  (STORE.match(/#caseEditionState\(/g) || []).length, 5);   /* 1 definition + 4 call sites */
+  /* T8: counted over EVERY plane source file (the producer is publication's service now, so `#` is gone). */
+  PLANE.reduce((n, x) => n + (x.code.match(/\bcaseEditionState\(/g) || []).length, 0), 5);   /* 1 definition + 4 call sites */
 t("D-442: op=caseratify DESTRUCTURES the store's `completedCase` off its answer before spreading it, so "
 + "the internal state never reaches the wire",
-  /const \{ completedCase, \.\.\.r \} = answered \|\| \{\}/.test(INDEX_SRC), true);
+  /const \{ completedCase, \.\.\.r \} = answered \|\| \{\}/.test(RAW.ops), true);
 t("D-442: op=ratify hands `containerCases` to the container assembler and never spreads it",
-  [/for \(const cs of pub\.containerCases\)/.test(INDEX_SRC), /\.\.\.\s*pub\.containerCases/.test(INDEX_SRC)],
+  [/for \(const cs of pub\.containerCases\)/.test(RAW.ops),
+   PLANE.some((x) => /\.\.\.\s*pub\.containerCases/.test(x.raw))],
   [true, false]);
 
 console.log("\n--- REC-58 · 4. THE FENCE AT THE CONTROL PLANE ---");
 /* This is where the ruling actually rests. `Store.publish()` hands `opened` to
    the control plane over an internal hop; the control plane names the fields it
    forwards, twice, and `opened` is in neither list. */
-const ratifyCase = regionAt(INDEX, /case:\s*\{ edition: pub\.case\?\.edition/);
-const manifest   = regionAt(INDEX, /const manifest = \{/);
+const ratifyCase = regionIn("ops", /case:\s*\{ edition: pub\.case\?\.edition/);
+const manifest   = regionIn("worker", /const manifest = \{/);
 t("REC-58 FENCE: both control-plane picks are FOUND and brace-balanced",
   [ratifyCase.found, manifest.found], [true, true]);
 /* ASSERTED AS THE WHOLE KEY SET, not as a membership test: an EXACT set is what
@@ -410,7 +446,9 @@ t("REC-58 ROUTING: `op=publish` is an ALIAS for `publishcase` in DO_PATH — so 
   [doPath.found, /publish:\s*"publishcase"/.test(rawIndexRegion(doPath))], [true, true]);
 t("REC-58 ROUTING: `http://do/publish` is fetched EXACTLY ONCE in the whole control plane, and it is "
 + "inside the ratify handler — the state-carrying answer never had a second way out",
-  (INDEX_SRC.match(/http:\/\/do\/publish"/g) || []).length, 1);
+  /* T8: counted over every plane source file; the one fetch is in `src/ratification/ops.mjs`'s ratify handler. */
+  [PLANE.reduce((n, x) => n + (x.raw.match(/http:\/\/do\/publish"/g) || []).length, 0),
+   /http:\/\/do\/publish"/.test(RAW.ops)], [1, true]);
 
 console.log("\n--- REC-58 · 6. THE CONSUMER WALK, RE-MEASURED OVER THE WHOLE REPOSITORY ---");
 /* THE EXCLUSION RULE, STATED IN THE INSTRUMENT RATHER THAN IN A REPORT.
@@ -577,13 +615,28 @@ t("REC-58 CONTROL (the failure mode NAMED): over that same empty corpus a `zero 
   readsOf("opened", []).length === 0, true);
 
 const openedReads = readsOf("opened");
-const outsideProducer = openedReads.filter((h) => !h.startsWith("bio-plane/src/store.mjs"));
+const PRODUCER_FILE = FILES.publication;   /* T8: the producer is publication's `caseEditionState` */
+/* T8 (layer 9, conformance): `opened` is ALSO a key of a DETERMINATION QUESTION — whether the determination opened
+   an inquiry for it (`determination_questions.opened`, conformance R-series) — a different fact on a different
+   object that happens to share the word. Those reads are set aside BY THEIR OWN LINE, each matched against the
+   determination-question shape it must have, never by file: a read of the CASE's field added anywhere in
+   conformance, or on any other line, is still counted. */
+const RAW_LINE = (h) => { const [f, n] = [h.slice(0, h.lastIndexOf(":")), Number(h.slice(h.lastIndexOf(":") + 1))];
+                          return read(join(REPO, f)).split("\n")[n - 1] ?? ""; };
+const DETERMINATION_QUESTION = [
+  ["bio-plane/src/conformance/", /\bopened\.ok\b|\bx\.opened\b|opened: x\.opened === 1/],
+  ["bio-plane/test/m/conformance/", /\bquestions\[\d\]\.opened\b|\bq\.opened\b/],
+];
+const notTheCase = openedReads.filter((h) =>
+  DETERMINATION_QUESTION.some(([dir, re]) => h.startsWith(dir) && re.test(RAW_LINE(h))));
+console.log(`  REC-58 SET ASIDE (a determination question's \`opened\`, not the case's): ${notTheCase.join(", ") || "none"}`);
+const outsideProducer = openedReads.filter((h) => !h.startsWith(PRODUCER_FILE) && !notTheCase.includes(h));
 t("REC-58 RE-MEASURED: `opened` has ZERO consumers anywhere outside the producer — surface, installer, "
 + "fleet, tools and this whole battery read it not once. NOT inherited from UI-40's table",
   outsideProducer.length === 0, true);
 t("REC-58 RE-MEASURED: and the only reads that exist are the PRODUCER reading its own SQL row, which is "
 + "what makes this an unconsumed COMPUTATION rather than a field with one caller",
-  openedReads.length > 0 && openedReads.every((h) => h.startsWith("bio-plane/src/store.mjs")), true);
+  openedReads.length > 0 && openedReads.filter((h) => !notTheCase.includes(h)).every((h) => h.startsWith(PRODUCER_FILE)), true);
 
 console.log("\n--- REC-58 · 7. THE RELATION, HELD OPEN RATHER THAN COLLAPSED ---");
 /* The genuinely open question is not "is it published" (it is not) but "should a

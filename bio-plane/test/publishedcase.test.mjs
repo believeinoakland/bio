@@ -73,7 +73,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readContainer, readPart } from "../src/ooxml.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
-import { INSTALLATION_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";   /* D-549: C-68.5; D-561: C-98 — read from the rows, never a hand copy */
+/* D-549: C-68.5; D-561: C-98 — read from the rows, never a hand copy.
+   RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): both families left the catalogue with the published
+   reads — C-98 as publication's `PUBLISHED_READ_CHECKS`, and C-68.5 (`NO_PUBLISHED_STORE`, once the catalogue's
+   `INSTALLATION_CHECKS`) as its `PUBLISHED_STORE_CHECKS`. The binding keeps its old name so every arm below reads as
+   written. */
+import { PUBLISHED_READ_CHECKS, PUBLISHED_STORE_CHECKS as INSTALLATION_CHECKS } from "../src/publication/checks.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
@@ -643,7 +648,13 @@ console.log("\n--- 4. DEC-34: the container is a zip, served by the MANIFEST's h
      following it: the day one does, it fails here and somebody has to decide
      where the control lives. */
   const srcDir = fileURLToPath(new URL("../src/", import.meta.url));
-  const emitted = readdirSync(srcDir).filter((f) => f.endsWith(".mjs")).filter((f) => {
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the plane's code is no longer one flat directory — T3–T8 moved it into
+     `src/<module>/` — so the walk reads every `.mjs` below `src/` (not `test/` or `dist/`), each named by its path
+     under `src/`. A module that began emitting pages would otherwise be invisible to this arm. */
+  const walk = (d, rel = "") => readdirSync(join(d, rel), { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? (["test", "dist"].includes(e.name) ? [] : walk(d, rel ? `${rel}/${e.name}` : e.name))
+      : e.name.endsWith(".mjs") ? [rel ? `${rel}/${e.name}` : e.name] : []);
+  const emitted = walk(srcDir).filter((f) => {
     const s = readFileSync(join(srcDir, f), "utf8");
     return /%PDF-|application\/pdf["'`]\s*[,}]|renderPage|drawPage/.test(s)
         && !/pdfstructure|docx|pptx|formats/.test(f);
@@ -794,8 +805,12 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
 console.log("\n--- 7. structural: credential-free BY DESIGN, and reading the published projection ONLY ---");
 {
   const idx = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
-  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-  const schema = readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): the store's publication half — `publishedCase`,
+     and the write-time restriction, `#publishEdges` in store.mjs and `publishEdges` here — moved to
+     `src/publication/index.mjs`, and its tables to `src/publication/schema.mjs`'s PUBLICATION_SCHEMA, which that
+     module's own migration runs. `store` names that module's source so every arm below reads as written. */
+  const store = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
+  const { PUBLICATION_SCHEMA } = await import("../src/publication/schema.mjs");
   const opSpec = (op) => (new RegExp(`^\\s{2}${op}:\\s*\\{([^}]*)\\}`, "m").exec(idx) || [])[1] || "";
   t("both ops are declared `classes: null` and non-mutating in the OPS table itself",
     ["publishedcase", "publishedbytes"].map((o) => [/classes: null/.test(opSpec(o)), /mutating: false/.test(opSpec(o))]),
@@ -819,16 +834,21 @@ console.log("\n--- 7. structural: credential-free BY DESIGN, and reading the pub
      /\bFROM bundles\b/.test(fn), /current_state/.test(fn)], [true, true, false, false]);
   t("and it takes no viewer, because there is no working material for a predicate to filter",
     /viewerPredicate/.test(fn), false);
-  const edges = methodSrc("#publishEdges");
+  const edges = methodSrc("publishEdges");
   t("the SERVE restriction is enforced in the store against published_bundles, not asserted by the caller",
     [/nameOnly && !this\.#one\(/.test(edges), /FROM published_bundles WHERE bundle_id=\?/.test(edges)],
     [true, true]);
 
   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; host-governor, K72 (3)): the `host_governor` DDL moved to `src/host-governor/schema.mjs`, which schema.mjs interpolates last (`${HOST_GOVERNOR_SCHEMA}`), so its CREATE is no longer in schema.mjs's text. The rule is asked of the schema the store runs, schema.mjs's exported `SCHEMA`, where the governor's block is still the last. */
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): `published_edges` left the store's SCHEMA for
+     publication's own, which its migration runs statement by statement — so the trap (a table declared AFTER the
+     host_governor block that closes SCHEMA) cannot hold it. Asked as two facts: the table is declared in the schema
+     that creates it, and it is nowhere in SCHEMA, where the governor's block still stands last. */
   t("published_edges is declared BEFORE the host_governor block (the standing trap)",
-    BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_edges") > -1
-      && BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_edges") < BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor"),
-    true);
+    [PUBLICATION_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_edges") > -1,
+     BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_edges"),
+     BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor") > -1],
+    [true, -1, true]);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): "and it is cleared in BOTH arms of op=purge ..."
      counted `DELETE FROM published_edges` lines in store.mjs's purge; purge moved to record-core, where each module
      declares its tables and the columns keying them to a bundle. The claim is MEASURED at the end of this suite (so
@@ -1071,8 +1091,14 @@ console.log("\n--- REC-117 / BOB 2026-09-17: a finding concluded with NO falsifi
        above D. A grade with no account of where it came from is an invented one
        and C-2.8 refuses the promote — measured, not guessed: the first version
        of this fixture came back BASIS_REFUSED for exactly that. */
+    /* RE-GRADED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5, R12 / DEC-20), never exempted: a HUNCH leg is
+       debt op=publish now refuses (UNCLEARED_HUNCH) until it is cleared, and this block's subject is the falsifier
+       override, not the hunch. So the connection C is EARNED as the case at the top of this suite earns it — a
+       `resolution` of INFO_CONN's resolved reading against this question's subject entity (`earned-connection.mjs`,
+       strength R5, K187) — rather than authored. */
     refs: [INFO_CONN], legs: [{ target: INFO_CONN, role: "supports", grade: "C", axis: "connection",
-                                source: "hunch", author: "vera", date: "2026-08-04" }],
+                                source: "resolution" }],
+    extra: [`subject_entity: ${CONN.entityId}`],
   })), "inquiry", "open");
 
   const cc = await conclude(VERA, { target: NOFALS,
@@ -1147,15 +1173,23 @@ console.log("\n--- D-561: C-98, the public door's refusals, each translated, as 
        typeof ans.body.translation === "string" && ans.body.translation.length > 60],
       [status, code, code, row.check, row.translation, true]);
   };
-  /* THE FIXTURE FLOOR: every C-98 row exists with a non-empty translation, so no arm below can pass on an empty row. */
+  /* THE FIXTURE FLOOR: every C-98 row exists with a non-empty translation, so no arm below can pass on an empty row.
+     RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1, K245): the family now holds a NINTH row, C-98.9
+     CASE_DOCUMENT_UNSERVABLE, minted by publication in T8 and driven at its interface
+     (`test/m/publication/worker.test.mjs`). D-561's subject stays the eight it enumerated; the ninth is PINNED by name
+     and number here, so a tenth — or the ninth renumbered — still fails this block rather than being filtered away. */
+  const D561_ROWS = Object.fromEntries(Object.entries(PUBLISHED_READ_CHECKS).filter(([, r]) => r.check !== "C-98.9"));
+  t("D-561 fixture: C-98's only row beyond D-561's eight is publication's C-98.9 CASE_DOCUMENT_UNSERVABLE",
+    Object.entries(PUBLISHED_READ_CHECKS).filter(([k]) => !(k in D561_ROWS)).map(([k, r]) => [k, r.check]),
+    [["CASE_DOCUMENT_UNSERVABLE", "C-98.9"]]);
   t("D-561 fixture: C-98 holds eight rows, each with a check and a translation",
-    Object.entries(PUBLISHED_READ_CHECKS).map(([k, r]) => [k, /^C-98\.\d$/.test(r.check), (r.translation || "").length > 60]),
+    Object.entries(D561_ROWS).map(([k, r]) => [k, /^C-98\.\d$/.test(r.check), (r.translation || "").length > 60]),
     ["NO_PUBLISHED_PART", "OBJECT_MISSING", "NOT_A_CONTAINER", "MANIFEST_UNREADABLE", "PART_MISSING",
      "DUPLICATE_PATH", "CONTAINER_TOO_LARGE", "NOT_PUBLISHED"].map((k) => [k, true, true]));
 
   /* Each row's check id PINNED as a literal, so the coverage register sees every C-98 check named by an assertion. */
   t("D-561: each public-door code holds its own check id — C-98.1 to C-98.8",
-    Object.fromEntries(Object.entries(PUBLISHED_READ_CHECKS).map(([k, r]) => [k, r.check])),
+    Object.fromEntries(Object.entries(D561_ROWS).map(([k, r]) => [k, r.check])),
     { NO_PUBLISHED_PART: "C-98.1", OBJECT_MISSING: "C-98.2", NOT_A_CONTAINER: "C-98.3", MANIFEST_UNREADABLE: "C-98.4",
       PART_MISSING: "C-98.5", DUPLICATE_PATH: "C-98.6", CONTAINER_TOO_LARGE: "C-98.7", NOT_PUBLISHED: "C-98.8" });
   graded("a hash nothing published answers to", await got(await anonBytes(`sha256=${sha("D-561 never published")}`)),
@@ -1181,8 +1215,11 @@ console.log("\n--- D-561: C-98, the public door's refusals, each translated, as 
   graded("the manifest names two parts at one path",
     await zipWith(asJson({ ...manifest, parts: [...manifest.parts, { ...manifest.parts[0] }] })),
     /* 413, MEASURED: the control plane answers EVERY serialiser refusal at 413 (`if (!zip.ok)`), this one included.
-       The status predates D-561 and is not this item's; the code and its sentence are. */
-    413, "DUPLICATE_PATH");
+       The status predates D-561 and is not this item's; the code and its sentence are.
+       RE-ANCHORED 2026-09-28 (T8, legacy-tests): 413 -> 409, the RULING's figure, not a measurement moved — D-613 put
+       DUPLICATE_PATH (and PART_MISSING) at 409 and kept 413 for CONTAINER_TOO_LARGE alone; publication applied it in
+       T8 (its record's snapshot rows; `test/m/publication/worker.test.mjs`, "R13 the container form … at 409 (D-613)"). */
+    409, "DUPLICATE_PATH");
   /* Over the 64 MiB bound with 33 MiB stored: one object, named twice at two paths. */
   const bigSha = sha("D-561 one large part");
   await bucket.put(`bio/published/${bigSha}`, new Uint8Array(33 * 1024 * 1024));
@@ -1246,7 +1283,9 @@ console.log("\n--- D-549: C-68.5, the published store absent, at both public ops
      costs is the row's single `where`; this pin is what goes red. Every double-quoted occurrence of the code in
      index.mjs must lie between its region's markers (a comment naming it unquoted is not counted; one QUOTING it
      would be, and would fail loudly rather than hide anything). */
-  const SRC_TEXT = readFileSync(IDX, "utf8");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): the helper and its region moved with the published
+     reads to `src/publication/worker.mjs` (`publishedStoreAbsent`, C-68.5's `where`); the pin reads that file. */
+  const SRC_TEXT = readFileSync(fileURLToPath(new URL("../src/publication/worker.mjs", import.meta.url)), "utf8");
   const open = SRC_TEXT.indexOf("DEC-49 REGION is-published-store-absent");
   const close = SRC_TEXT.indexOf("END DEC-49 REGION is-published-store-absent");
   const at = [...SRC_TEXT.matchAll(/"NO_PUBLISHED_STORE"/g)].map((m) => m.index);

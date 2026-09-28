@@ -277,8 +277,13 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 }
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 by legacy-tests (T8, REVIEW #1 J4.1): the review copy left the store. `review_grants` is
+   declared in `src/review/schema.mjs`; the draft reads and their one fence are review's services in
+   `src/review/index.mjs` (`seesProjectDrafts`, called by `draftForMember` and `list`, no longer private). "The
+   store is never handed the value" is asked of the store AND of the module that now holds the grants. */
+const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/review/schema.mjs", import.meta.url)), "utf8");
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+const REVIEW_SRC = readFileSync(fileURLToPath(new URL("../src/review/index.mjs", import.meta.url)), "utf8");
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -654,7 +659,7 @@ t("STRUCTURALLY: the grant table carries `secret_sha` and has no column that cou
            return [!!m, /\bsecret_sha\b/.test(body), /^\s*secret\s/m.test(body)]; })(),
   [true, true, false]);
 t("and the store is never handed the value: the secret is generated at the edge, as `aicredentialmint`'s is",
-  /rv1_/.test(STORE_SRC), false);
+  /rv1_/.test(STORE_SRC) || /rv1_/.test(REVIEW_SRC), false);
 t("THE RECIPIENT NEVER BECOMES A MEMBER — issuing two grants added nobody to the roster",
   (rP(await GET("op=memberlist&token=adm-r126"))?.members || []).length, membersBefore);
 
@@ -930,20 +935,24 @@ t("REC-198: A JOINED PARTICIPANT WHO IS NOT THE OWNER LISTS THE SAME SEVEN — t
 {
   /* STRUCTURALLY: ONE FENCE, CALLED BY BOTH READS. A behavioural arm cannot see a faithful copy of a rule. */
   const body = (name) => {
-    const at = STORE_SRC.search(new RegExp(`\\n  ${name.replace(/[#$]/g, (c) => "\\" + c)}\\(`));
+    const at = REVIEW_SRC.search(new RegExp(`\\n  ${name.replace(/[#$]/g, (c) => "\\" + c)}\\(`));
     if (at < 0) return "";
-    const next = STORE_SRC.slice(at + 1).search(/\n  (?:static |async )?[#A-Za-z_$][\w$]*\([^)]*\)\s*\{/);
-    return next < 0 ? "" : STORE_SRC.slice(at, at + 1 + next);
+    const next = REVIEW_SRC.slice(at + 1).search(/\n  (?:static |async )?[#A-Za-z_$][\w$]*\([^)]*\)\s*\{/);
+    /* T8: `list` is the last method whose signature this matcher recognises in review's file, so a body with no
+       next method runs to the end of the file rather than reading as absent. */
+    return next < 0 ? REVIEW_SRC.slice(at) : REVIEW_SRC.slice(at, at + 1 + next);
   };
-  const single = body("#draftForMember"), list = body("caseDraftList");
+  /* T8: `#draftForMember` is review's `draftForMember`; `caseDraftList` is review's `list`; the fence is `seesProjectDrafts`. */
+  const single = body("draftForMember"), list = body("list");
   t("REC-198: THE LIST AND THE SINGLE READ CALL THE SAME FENCE — `#seesProjectDrafts` is called from both, and "
   + "neither compiles a viewer predicate of its own",
-    [single.length > 0, list.length > 0, /this\.#seesProjectDrafts\(/.test(single),
-     /this\.#seesProjectDrafts\(/.test(list),
+    [single.length > 0, list.length > 0, /this\.#?seesProjectDrafts\(/.test(single),
+     /this\.#?seesProjectDrafts\(/.test(list),
      /viewerPredicate\(/.test(single), /viewerPredicate\(/.test(list)],
     [true, true, true, true, false, false]);
   t("and the fence has exactly those two callers in the store",
-    (STORE_SRC.match(/this\.#seesProjectDrafts\(/g) || []).length, 2);
+    (REVIEW_SRC.match(/this\.#?seesProjectDrafts\(/g) || []).length
+      + (STORE_SRC.match(/this\.#?seesProjectDrafts\(/g) || []).length, 2);
 }
 
 /* =========================================================================== 10

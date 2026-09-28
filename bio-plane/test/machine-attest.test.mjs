@@ -59,7 +59,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { MACHINE_FENCE_CHECKS, AI_CREDENTIAL_CHECKS } from "../checks/bio-checks.mjs";
+import { MACHINE_FENCE_CHECKS as CATALOGUE_MACHINE_FENCE_CHECKS, AI_CREDENTIAL_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): C-32.12–.15, the ratify fences, left the catalogue's
+   MACHINE_FENCE_CHECKS for ratification's own `RATIFY_MACHINE_FENCE_CHECKS`. The machine fences this suite names are
+   the union of the two families, read as one. */
+import { RATIFY_MACHINE_FENCE_CHECKS } from "../src/ratification/checks.mjs";
+const MACHINE_FENCE_CHECKS = { ...CATALOGUE_MACHINE_FENCE_CHECKS, ...RATIFY_MACHINE_FENCE_CHECKS };
 import { RUNGS } from "../src/affordances.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {

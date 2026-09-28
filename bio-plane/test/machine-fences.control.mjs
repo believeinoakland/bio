@@ -37,6 +37,10 @@ const F = {
      in this map by sha256 AND by content, so adding the file here is what puts the
      new arms under the same restore guarantee as the old ones. */
   index: ROOT + "src/index.mjs",
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): op=ratify and op=caseratify left src/index.mjs for the ratification
+     module (`ratifyOp`, `caseRatifyOp`), taking the four ratify fences with them; arms (6), (7) and (9) edit them
+     there, under the same restore guarantee. The governance fence (arm 8) and arm (10)'s plant stay in index.mjs. */
+  ratify: ROOT + "src/ratification/ops.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -214,6 +218,9 @@ console.log("\n=== (5) OVER-STRICTNESS, AND IT IS BUILT INTO EVERY PIN. Each of 
     "and the SAME payload accepts the reading for a signed-in member",
     "and the SAME payload forwards it for the signed-in assignee",
     "and the SAME payload resolves it for the signed-in assignee",
+    /* ADDED 2026-09-28 (T8): block (xvi)'s member twin and its liar's arm (C-32.20). */
+    "and the SAME payload creates the action for a signed-in member",
+    "a machine credential's creation of a records_request stating NO law lands",
     /* ADDED 2026-09-24 by D-503: block 3b's three member twins, which are that block's
        over-strictness arms for the same reason — a payload is shown COMPLETE only by a
        human's own signed-in session succeeding with it. */
@@ -258,8 +265,8 @@ console.log("\n=== (5) OVER-STRICTNESS, AND IT IS BUILT INTO EVERY PIN. Each of 
  * ========================================================================= */
 
 const MACHINE_CASE_FENCE =
-  '      if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))\n'
-+ '        return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE",';
+  '    if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))\n'
++ '      return json({ ok: false, reason: "MACHINE_CANNOT_RATIFY_CASE",';
 
 arm("(6) **D-503 · DROP THE MACHINE FENCE AT `op=caseratify`.** The `ai` credential carries ruth's "
   + "REAL signature over a real case document at edition 1 — the payload a member commits with on the "
@@ -267,7 +274,7 @@ arm("(6) **D-503 · DROP THE MACHINE FENCE AT `op=caseratify`.** The `ai` creden
   + "3b's MACHINE_CANNOT_RATIFY_CASE pin MUST fail by name. DECLARED AND NOT OBVIOUS: the case still is "
   + "NOT committed, because the session fence in the region below catches the same caller — so that "
   + "read-back MUST STAY GREEN and the pin's `got` should read OPERATOR_TOKEN_CANNOT_RATIFY_CASE.",
-  [["index", MACHINE_CASE_FENCE, MACHINE_CASE_FENCE.replace("if (aiCred &&", "if (false && aiCred &&")]],
+  [["ratify", MACHINE_CASE_FENCE, MACHINE_CASE_FENCE.replace("if (aiCred &&", "if (false && aiCred &&")]],
   ["MACHINE_CANNOT_RATIFY_CASE — refused BY NAME through the op",
    "every one of them answered with its OWN name, stated once as a set"],
   ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
@@ -276,8 +283,8 @@ arm("(6) **D-503 · DROP THE MACHINE FENCE AT `op=caseratify`.** The `ai` creden
    "OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth committing THE SAME signed"]);
 
 const OPERATOR_RATIFY_FENCE =
-  '      if (!viaSession)\n'
-+ '        return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",';
+  '    if (!viaSession)\n'
++ '      return json({ ok: false, reason: "OPERATOR_TOKEN_CANNOT_RATIFY",';
 
 /* THE TITLE BELOW DELIBERATELY DOES NOT QUOTE THE REFUSAL'S OWN SENTENCE, and it was CORRECTED to
    stop doing so: its first spelling read "the operator's `admin`-class bearer token", which is
@@ -293,7 +300,7 @@ arm("(7) **D-503 · DROP THE SESSION FENCE AT `op=ratify`.** The operator's bear
   + "The `ai` fence above it is untouched, so MACHINE_CANNOT_RATIFY MUST STAY GREEN, as must every "
   + "caseratify arm. What ruth's own call then answers is RECORDED rather than declared: the act she "
   + "was going to perform has already been performed by a credential that is not her.",
-  [["index", OPERATOR_RATIFY_FENCE, OPERATOR_RATIFY_FENCE.replace("if (!viaSession)", "if (false && !viaSession)")]],
+  [["ratify", OPERATOR_RATIFY_FENCE, OPERATOR_RATIFY_FENCE.replace("if (!viaSession)", "if (false && !viaSession)")]],
   ["OPERATOR_TOKEN_CANNOT_RATIFY — refused BY NAME through the op",
    "and the finding is STILL not published"],
   ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
@@ -325,7 +332,7 @@ arm("(9) **D-503 · OVER-STRICTNESS, AND IT IS THE ARM THAT TELLS A FENCE FROM A
   + "too — the bearer now answers MACHINE_CANNOT_RATIFY_CASE instead of its own code, which is a fence "
   + "lying about which caller it refused. DECLARED TO STAY GREEN: the MACHINE pin itself, because a "
   + "fence that refuses everyone still refuses the machine.",
-  [["index", MACHINE_CASE_FENCE, MACHINE_CASE_FENCE.replace(
+  [["ratify", MACHINE_CASE_FENCE, MACHINE_CASE_FENCE.replace(
       "if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))",
       "if (true)")]],
   ["OVER-STRICTNESS, and the evidence the payload was COMPLETE: ruth committing THE SAME signed",

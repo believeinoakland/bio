@@ -139,9 +139,17 @@ import { ACTS, ACT_IDS, NON_ACTS, RUNGS, VOCABULARIES, DISPOSITIONS, DIVIDE_PROM
          ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, CAPTURE_ACTS,
          ATTEST_FENCE, attestFence }
   from "../src/affordances.mjs";
-import { ACTION_KINDS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
-         RESOLUTIONS, BASIS_GRADES, MACHINE_CLASS_PREFIX,
+import { BASIS_GRADES, MACHINE_CLASS_PREFIX,
          EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; AFFORDANCES #2 J4.2, R26; ACTIONS #1 J2 item 4): the action loop's
+   vocabularies are `actions'` (its R40), which `op=affordances` publishes (N65 (3)) and whose acts and C-2.10 arms
+   refuse against them: `PRODUCT_KINDS` / `actionKinds(view)` (R10), the leg kinds, the directions and the four
+   resolutions. The action's store code is `src/actions/index.mjs` and its catalogue arms `src/actions/checks.mjs`. */
+import { PRODUCT_KINDS, actionKinds, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
+         RESOLUTIONS, checkActionExtension } from "../src/actions/index.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+const ACTIONS_SRC = readFileSync(new URL("../src/actions/index.mjs", import.meta.url), "utf8");
+const ACTIONS_CHECKS_SRC = readFileSync(new URL("../src/actions/checks.mjs", import.meta.url), "utf8");
 /* D-310: the ONE viewer parser, imported so this suite asks the real function
    what a viewer resolves to rather than restating its spellings. */
 import { viewerPredicate } from "../src/query.mjs";
@@ -228,16 +236,23 @@ console.log("\n--- structural: vocabularies and rungs are the enforcing tables, 
 t("dispose() enforces the PUBLISHED set: store.mjs imports DISPOSITIONS from affordances.mjs and keeps no literal copy",
   /import \{[^}]*\bDISPOSITIONS\b[^}]*\} from "\.\/affordances\.mjs"/.test(storeSrc)
     && !/const DISPOSITIONS = \[/.test(storeSrc), true);
+/* RE-ANCHORED 2026-09-28 (T8; affordances R26, actions R10, R40): the array a creation is judged against is actions'
+   `actionKinds(view)`, whose answer with no profile active is `PRODUCT_KINDS` — and the module-level publication IS
+   that array (identity, the REC-35 pin), not a copy. */
 t("the published action_kind vocabulary IS the array C-2.10 enforces (one import, no copy)",
-  VOCABULARIES.action_kind, ACTION_KINDS);
+  [VOCABULARIES.action_kind === PRODUCT_KINDS, VOCABULARIES.action_kind, actionKinds(null)],
+  [true, actionKinds(null), actionKinds(null)]);
 /* CORRECTED 2026-08-05 (REC-24), never exempted. The old assertion pinned SEVEN
    values and was right until DEC-13 ruled that a case put to its subject for
    comment is a KIND of action rather than a note on one — so the suite gains
    `request_for_comment` and this assertion states eight. The pin itself is the
    point and is unchanged: the published vocabulary is the array C-2.10
    enforces, so a kind added in one place cannot go unpublished in the other. */
-t("action_kind is the eight-value suite (DEC-13 adds request_for_comment)",
-  ACTION_KINDS, ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"]);
+/* RE-ANCHORED 2026-09-28 (T8; actions R10, K102 "No jurisdiction in the product"): the product's own kinds are three —
+   `records_request`, `request_for_comment` (DEC-13, still here) and `other`; every other kind comes from the active
+   profiles' view, and a kind written before reads as written (R4). */
+t("action_kind is the product's three-value suite (DEC-13's request_for_comment among them)",
+  PRODUCT_KINDS, ["records_request", "request_for_comment", "other"]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES, and this pair of assertions is
    the drift guard itself rather than a description of it.
@@ -317,14 +332,20 @@ t("the two action-loop vocabularies published by op=affordances ARE the catalog'
    exactly what is published) is asserted further down where a plane is live. */
 t("the four RESOLUTIONS published by op=affordances ARE the catalog's own array, not a copy",
   VOCABULARIES.resolutions === RESOLUTIONS, true);
+/* RE-ANCHORED 2026-09-28 (T8; ACTIONS #1 J2 item 4, affordances R26): both enforcement sites moved to `actions` —
+   `actionMove`'s refusal to `src/actions/index.mjs`, C-2.10's arm to `src/actions/checks.mjs` — and the array's one
+   definition stays `legacy-checks`' `export const RESOLUTIONS`, which actions imports and re-exports (its R40). The
+   same three clauses, where the code now lives, plus the stores' own: none keeps a literal copy. */
+const FOUR_LITERAL = /\[\s*["']complied["']\s*,\s*["']denied["']\s*,\s*["']escalated["']\s*,\s*["']withdrawn["']\s*\]/;
 t("neither enforcement site keeps a literal copy of the four resolutions any more",
-  [/import \{[^}]*\bRESOLUTIONS\b[^}]*\} from "\.\.\/checks\/bio-checks\.mjs"/s.test(storeSrc),
-   /\[\s*["']complied["']\s*,\s*["']denied["']\s*,\s*["']escalated["']\s*,\s*["']withdrawn["']\s*\]/
-     .test(storeSrc.replace(/\/\*[\s\S]*?\*\//g, "")),
-   /\[\s*["']complied["']\s*,\s*["']denied["']\s*,\s*["']escalated["']\s*,\s*["']withdrawn["']\s*\]/g
-     .exec(readFileSync(new URL("../checks/bio-checks.mjs", import.meta.url), "utf8")
+  [/import \{[^}]*\bRESOLUTIONS\b[^}]*\} from "\.\/checks\.mjs"/s.test(ACTIONS_SRC),
+   /import \{[^}]*\bRESOLUTIONS\b[^}]*\} from "\.\.\/\.\.\/checks\/bio-checks\.mjs"/s.test(ACTIONS_CHECKS_SRC),
+   FOUR_LITERAL.test(stripComments(ACTIONS_SRC)),
+   FOUR_LITERAL.test(stripComments(ACTIONS_CHECKS_SRC)),
+   FOUR_LITERAL.test(stripComments(storeSrc)),
+   FOUR_LITERAL.exec(readFileSync(new URL("../checks/bio-checks.mjs", import.meta.url), "utf8")
        .replace(/\/\*[\s\S]*?\*\//g, "").replace(/export const RESOLUTIONS[^;]+;/, "")) !== null],
-  [true, false, false]);
+  [true, true, false, false, false, false]);
 
 /* REC-38 — THE CAPTURE-DIRECTED ACTS' METADATA (UI-22's delegation), and these
    four assertions are the shape decision made structural.
@@ -361,11 +382,17 @@ t("the capture acts stay NON_ACTS: publishing metadata for one does not make it 
    `needs`, `mode`, `rung` or any fourth invented key still fails here by name. */
 t("CAPTURE_ACTS declares ONLY id, label and prompt — needs/mode/rung have homes and are never copied here",
   [...new Set(CAPTURE_ACTS.flatMap((a) => Object.keys(a)))].sort(), ["id", "label", "prompt"]);
-t("index.mjs composes the block through the SAME decorateAct and keeps no literal label of its own",
-  [/capture_acts: CAPTURE_ACTS\.map\(decorate\)/.test(indexSrc),
-   /import \{[^}]*\bCAPTURE_ACTS\b[^}]*\} from "\.\/affordances\.mjs"/.test(indexSrc),
+/* RETIRED 2026-09-28 (T8, legacy-tests; N177, legacy-index's share landed: `decorateAct` is affordances'
+   `decorate(act, gate)`, R11), the first clause — the source scan for `capture_acts: CAPTURE_ACTS.map(decorate)`. That
+   the capture block is composed through the ONE decoration and reaches a caller carrying the module's own labels and
+   prompts is proven by `test/m/affordances/plane.test.mjs`, test "R21: every label, prompt, ground and vocabulary
+   op=affordances hands a surface is this module's own value", with `test/m/affordances/services.test.mjs`, test "R11:
+   one shape from one function — the same act decorated twice through the same gate is the same object …". The two
+   clauses that still read this file's own source (the import, and no literal label) are kept. */
+t("index.mjs imports the block from affordances.mjs and keeps no literal label of its own",
+  [/import \{[^}]*\bCAPTURE_ACTS\b[^}]*\} from "\.\/affordances\.mjs"/.test(indexSrc),
    CAPTURE_ACTS.some((a) => stripComments(indexSrc).includes(a.label))],
-  [true, true, false]);
+  [true, false]);
 
 /* ------------------------------------------------------------- fixtures */
 const NOW = "2026-07-01T00:00:00Z";
@@ -415,12 +442,15 @@ const actnMd = (id) => [
      legal flat string until C-2.10 made the field three-valued. The FACT this
      fixture asserts is unchanged — this action is addressed to the City Clerk —
      so it is corrected into the block that states it, not exempted. */
-  "action_kind: cpra_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
+  /* RE-GRADED 2026-09-28 (T8, AFFORDANCES #2 J4.2; ACTIONS #1 J2.1): a kind actions offers, `records_request` —
+     `cpra_request` is refused ACTION_KIND_UNKNOWN on a creation (actions R10). */
+  "action_kind: records_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
      fixture states through a DEPLOY token — a machine identity — and C-32.19 now refuses a machine
      setting 1, 2 or 3 (D-182: only a member's authored act does). The tier is not this suite's subject,
      so the fixture states what an unassessed action honestly is. */
   "risk_tier: undetermined",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-GRADED 2026-09-28 (T8): the office, `{role, body}` (actions R9); `{state: named, name}` is refused on a creation. */
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "P.", "", "## Status", "", "## Correspondence", "",
   "## Session Log", "", "## Review Notes", "",
 ].join("\n");
@@ -665,10 +695,11 @@ t("and each is the constant from the module that owns it, never a copy",
    cat.result.catalog.find((a) => a.id === "inquiryground").prompt === GROUND_PROMPT],
   [true, true]);
 /* CORRECTED 2026-08-05 (REC-24): eight kinds, for the reason stated at the
-   ACTION_KINDS pin above. */
-t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the eight action kinds",
-  [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind.length],
-  [["deferred", "dismissed"], 8]);
+   ACTION_KINDS pin above. RE-ANCHORED 2026-09-28 (T8; affordances R26, actions R10): the instance's kinds, which with
+   no profile active are the product's three — and what reaches the caller is exactly actions' answer. */
+t("the catalogue publishes the object vocabularies (searchfields' pattern): dispositions and the product's three action kinds",
+  [cat.result.vocabularies.dispositions, cat.result.vocabularies.action_kind],
+  [["deferred", "dismissed"], actionKinds(null)]);
 
 /* REC-35 — THE INTENT LAYER'S THREE VOCABULARIES OVER THE WIRE, and then held
    against WHAT THE STORE ACTUALLY REFUSES.
@@ -1259,8 +1290,8 @@ const oneOfColon = (s) => {
   return m ? m[1].trim().split(/\s*,\s*/) : null;
 };
 const BADACT = "ACTN-2026-0002-rec19";
-const badBasisMd = actnMd(BADACT).replace("  name: City Clerk\n---",
-  `  name: City Clerk\naction_basis:\n  - target: ${A}\n    kind: __not_a_basis_kind__\n---`);
+const badBasisMd = actnMd(BADACT).replace("  body: City of Oakland\n---",
+  `  body: City of Oakland\naction_basis:\n  - target: ${A}\n    kind: __not_a_basis_kind__\n---`);
 const badBasis = rP(await POST(`op=promote&token=mem-rec19`, {
   bundleId: BADACT, base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
   meta: { object_type: "action", group: "believe-in-oakland",
@@ -1325,22 +1356,25 @@ t("every published resolution is one op=actionmove ACCEPTS (the publication is n
 const BADRES = "ACTN-2026-0005-rec39";
 const badResMd = actnMd(BADRES)
   .replace("current_state: planned", "current_state: resolved")
-  .replace("action_kind: cpra_request", "action_kind: cpra_request\nresolution: __not_a_resolution__");
-await promote(BADRES, badResMd, "action", "resolved");
-/* Read through op=audit, which is the sweep that runs the catalogue over what
-   LANDED — the "audit clean before you call anything done" gate — rather than by
-   calling checkBundle in this process, for the reason stated above the
-   correspondence assertion: a function this harness imports proves nothing about
-   what a caller meets. `after` is set one character short of this bundle's id so
-   the single-row page is this document and no other. */
-const badResAudit = rP(await GET(
-  `op=audit&token=mem-rec19&after=${encodeURIComponent("ACTN-2026-0005-rec3")}&limit=1`));
-const resFinding = (badResAudit.offenders?.[0]?.errors || [])
-  .find((e) => /requires resolution in/.test(e.detail || ""));
+  .replace("action_kind: records_request", "action_kind: records_request\nresolution: __not_a_resolution__");
+/* RE-ANCHORED 2026-09-28 (T8; actions R7, D-717 / C-101.4): such a document no longer LANDS — the write refuses it,
+   ACTION_RESOLUTION_REFUSED, before anything is written — so op=audit has nothing to sweep. The instrument is kept
+   where each site now answers: the WRITE's refusal, read over the wire with its own `legal` list and sentence, and
+   C-2.10's own sentence from the audit arm actions registers with record-core (`checkActionExtension`, R37) over the
+   same bytes. Both must list exactly what is published. */
+const badResW = rP(await POST(`op=promote&token=mem-rec19`, {
+  bundleId: BADRES, base: null, snapKey: "20260701T000000Z_aaaa1111", author: "seed",
+  meta: { object_type: "action", group: "believe-in-oakland", current_state: "resolved", created: NOW, last_updated: NOW },
+  files: [{ path: "bundle.md", text: badResMd, bytes: badResMd.length, sha256: sha(badResMd) }], register: [] }));
+t("the WRITE refuses a resolved action with an unknown resolution against exactly the published resolutions (C-101.4)",
+  [badResW.ok, badResW.reason, badResW.check, badResW.legal, oneOfColon(badResW.detail)],
+  [false, "ACTION_RESOLUTION_REFUSED", "C-101.4", cat.result.vocabularies.resolutions, cat.result.vocabularies.resolutions]);
+const resFindings = [];
+checkActionExtension({ fm: parseFrontmatter(badResMd).data }, resFindings);
+const resFinding = resFindings.find((e) => /requires resolution in/.test(e.message || ""));
 t("C-2.10 REFUSES against exactly the published resolutions, in the catalogue's own sentence",
-  [badResAudit.offenders?.[0]?.bundleId, resFinding?.check,
-   (/\bin:\s*([^.(]+)/.exec(resFinding?.detail || "")?.[1] || "").trim().split(/\s*,\s*/)],
-  [BADRES, "C-2.10", cat.result.vocabularies.resolutions]);
+  [resFinding?.check, (/\bin:\s*([^.(]+)/.exec(resFinding?.message || "")?.[1] || "").trim().split(/\s*,\s*/)],
+  ["C-2.10", cat.result.vocabularies.resolutions]);
 
 /* ----------------------------------------- rung honesty across everything */
 /* CORRECTED BY FW-14. The heading read "rung honesty: null wherever no document

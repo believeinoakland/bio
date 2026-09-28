@@ -68,7 +68,13 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-case-project-conclusion");   /* inside this worktree */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8; RATIFICATION #2 J6, CASE-AUTHORING #1 J5): the reader
+   (`caseConclusionFor`, its state floor, its no-project arm, and the two basis-versions reads it asks) left
+   `store.mjs` for `src/ratification/index.mjs` (the name STORE is kept for arms (B)–(E), which now reach
+   basis-versions as `this.basisVersions.*`); `publishCase`'s gate is case-authoring's (`src/case-authoring/index.mjs`,
+   arm (A), which reaches the reader as `this.ratification.caseConclusionFor`). Each needle matches exactly once. */
+const STORE = join(ROOT, "src", "ratification", "index.mjs");
+const AUTHORING = join(ROOT, "src", "case-authoring", "index.mjs");
 const AFF = join(ROOT, "src", "affordances.mjs");
 const SUITE = join(DIR, "case-project-conclusion.test.mjs");
 const LOG = join(PEN, "run.out");
@@ -92,20 +98,20 @@ const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes six-arms-working from six-arms-broken",
               apply: () => {} },
 
-  a: { files: [STORE],
+  a: { files: [AUTHORING],
        label: "(A) THE GATE POINTED BACK AT THE INQUIRY'S SHARED STATE: publishCase asks "
             + "b.current_state again, the single stance §7 forbids and the row's own named control",
-       apply: () => edit(STORE,
-         "      const conc = this.#caseConclusionFor(proj, id, viewer, b.current_state);\n"
+       apply: () => edit(AUTHORING,
+         "      const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);\n"
        + "      if (conc.state !== \"concluded\")",
-         "      const conc = this.#caseConclusionFor(proj, id, viewer, b.current_state);\n"
+         "      const conc = this.ratification.caseConclusionFor(proj, id, viewer, b.current_state);\n"
        + "      if (b.current_state !== \"concluded\")") },
 
   b: { files: [STORE],
        label: "(B) THE STATE FLOOR DROPPED: every state is case-bearing, so a conclusion written while "
             + "the question was open outlives the group setting it down or dividing it",
        apply: () => edit(STORE,
-         "    const bearing = Store.CASE_BEARING_STATES.includes(currentState);",
+         "    const bearing = Ratification.CASE_BEARING_STATES.includes(currentState);",
          "    const bearing = true;") },
 
   c: { files: [STORE],
@@ -119,14 +125,14 @@ const ARMS = {
        label: "(D) THE WITHDRAWAL MADE INVISIBLE: the gate reads the raw stance instead of "
             + "#conclusionOf, so a conclusion a project WITHDREW still admits a case",
        apply: () => edit(STORE,
-         "    const own = pid && bearing ? this.#conclusionOf(pid, inq, viewer) : null;",
-         "    const own = pid && bearing ? (this.#conclusionRecordOf(pid, inq, viewer).stance || null) : null;") },
+         "    const own = pid && bearing ? this.basisVersions.conclusionOf(pid, inq, viewer) : null;",
+         "    const own = pid && bearing ? (this.basisVersions.conclusionRecordOf(pid, inq, viewer).stance || null) : null;") },
 
   e: { files: [STORE],
        label: "(E) THE STRICT READING OF §7.1 ITEM 8: the no-project disjunct removed, so ONLY a "
             + "project's own conclusion admits a case — the tightening the report puts to BOB, measured",
        apply: () => edit(STORE,
-         "    const np = bearing ? this.#noProjectConclusionOf(inq) : null;",
+         "    const np = bearing ? this.basisVersions.noProjectConclusionOf(inq) : null;",
          "    const np = null;") },
 
   f: { files: [AFF],

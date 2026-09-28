@@ -111,6 +111,21 @@ import { RUN_PRODUCTIONS_TABLES, runProductionsOwns } from "../src/run-productio
 import { BASIS_VERSIONS_TABLES } from "../src/basis-versions/schema.mjs";
 import { INTENT_TABLES } from "../src/intent/schema.mjs";
 import { REEVALUATION_TABLES } from "../src/reevaluation/schema.mjs";
+/* T8 (legacy-tests): layers 8-10's owners' purge declarations (the census below) — each passes its exported list to
+   `declarePurge` — and the three claims the store's run-time filter added (`monitoringOwns`, `caseAuthoringOwns`,
+   `publicationOwns`), imported from where the store imports them. */
+import { ACTIONS_TABLES } from "../src/actions/schema.mjs";
+import { CASE_AUTHORING_TABLES } from "../src/case-authoring/schema.mjs";
+import { caseAuthoringOwns } from "../src/case-authoring/index.mjs";
+import { CONFORMANCE_TABLES } from "../src/conformance/schema.mjs";
+import { CONSEQUENCES_TABLES } from "../src/consequences/schema.mjs";
+import { ESCALATION_TABLES } from "../src/escalation/schema.mjs";
+import { FILINGS_TABLES } from "../src/filings/schema.mjs";
+import { MONITORING_TABLES, monitoringOwns } from "../src/monitoring/schema.mjs";
+import { PUBLICATION_TABLES, PUBLICATION_EXEMPT } from "../src/publication/schema.mjs";
+import { publicationOwns } from "../src/publication/index.mjs";
+import { REVIEW_TABLES } from "../src/review/schema.mjs";
+import { STANDARDS_TABLES } from "../src/standards/schema.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -882,10 +897,17 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     Object.values(inlineT7).every((l) => l.length >= 1), true);
   const fromT7 = [...INQUIRY_TABLES, ...RUN_PRODUCTIONS_TABLES, ...BASIS_VERSIONS_TABLES, ...INTENT_TABLES,
                   ...REEVALUATION_TABLES, ...Object.values(inlineT7).flat()].map(named);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): layers 8-10 moved or built ten more owners (actions, case-authoring,
+     conformance, consequences, escalation, filings, monitoring, publication, review, standards), each declaring its own
+     tables to record-core with an exported list (`record.declarePurge("<module>", <MODULE>_TABLES)`; publication with
+     `{ exempt: PUBLICATION_EXEMPT }`), read here as imported. Ratification declares no table. */
+  const fromT8 = [...ACTIONS_TABLES, ...CASE_AUTHORING_TABLES, ...CONFORMANCE_TABLES, ...CONSEQUENCES_TABLES,
+                  ...ESCALATION_TABLES, ...FILINGS_TABLES, ...MONITORING_TABLES, ...PUBLICATION_TABLES, ...REVIEW_TABLES,
+                  ...STANDARDS_TABLES].map(named);
   const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables,
-                       ...fromT5, ...fromT7];
+                       ...fromT5, ...fromT7, ...fromT8];
   const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES, ...CAPTURE_EXEMPT_TABLES,
-                        ...provDecl.exempt, ...exemptT5];
+                        ...provDecl.exempt, ...exemptT5, ...PUBLICATION_EXEMPT.map(named)];
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): legacy-store's list is read as TEXT, and since T5 the store filters
      it at run time by every extracted owner's list (`.filter((t) => !BIAS_TABLES.includes(…))`, `!extractionOwns(t)`,
@@ -903,7 +925,9 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     || ENTITIES_TABLES.includes(n) || RETRIEVAL_TABLES.includes(n) || observationLogOwns(n) || connectionsOwns(n)
     /* T7: the store's filter now also drops run-productions' and inquiry's claims (store.mjs, `.filter(…)` after
        `declarePurge("legacy-store", …)`), so they are subtracted here as the store subtracts them. */
-    || runProductionsOwns(n) || inquiryOwns(n);
+    || runProductionsOwns(n) || inquiryOwns(n)
+    /* T8: and monitoring's, case-authoring's and publication's claims (the same filter, three more `.filter(…)`s). */
+    || monitoringOwns(n) || caseAuthoringOwns(n) || publicationOwns(n);
   const legacyOwn = fromLegacy.filter((n) => !storeDrops(n) && !fromModules.includes(n) && !moduleExempt.includes(n));
   const purged = new Set([...legacyOwn, ...fromModules, ...fromDeletes]);
   t("purge clears a non-trivial set of tables", purged.size >= 10, true);
@@ -1272,8 +1296,11 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
   /* REACH 4: the strip leaves the EMITTED doctrine sentences standing. These are
      the exact two strings a spelled letter would appear in, so if the stripper
      had swallowed them the sweep would be silent for the worst possible reason. */
-  t("the strip leaves op=acquire's note in affordances.mjs standing",
-    uncomment(raw.get("affordances.mjs")).includes("bytes as fetched, hashed at receipt"), true);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CAPTURE T8 N80, AFFORDANCES #2): op=acquire's grade note is composed by
+     capture now (`src/capture/acquire.mjs`, `acquireGradeNote`) and affordances dropped its copy; the arm asks the strip
+     where the sentence now is. */
+  t("the strip leaves op=acquire's note in capture/acquire.mjs standing",
+    uncomment(raw.get("capture/acquire.mjs") ?? "").includes("bytes as fetched, hashed at receipt"), true);
   /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; inquiry #1 J3): op=earnedbasis moved with the earned registry into
      `src/inquiry/index.mjs`, and its ceiling sentence with it; the arm asks the strip where the sentence now is. */
   t("the strip leaves op=earnedbasis's ceiling sentence in inquiry/index.mjs standing",
@@ -2633,6 +2660,18 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "bio-plane/test/scheduler.test.mjs",          // src/, setAlarm/deleteAlarm sites asserted by name
     "bio-plane/test/suggest.test.mjs",            // src/, ONE version write site asserted exact
     "bio-plane/test/versions.test.mjs",           // src/ and module schemas, one write site and no second table
+    /* ADDED 2026-09-28 (T8, legacy-tests), FOUR AT ONCE, T7's reason: T8's extractions moved code these suites read into
+       `src/<module>/`, so each now walks `src/` to find it where it lives (each re-anchor is its own family's in this job).
+       Three assert a ceiling or a position over the plane's own source — airun's ARM S4 (every `storage.setAlarm(` lies
+       inside the scheduler's one `#reconcile`, placed by file and offset), caselifecycle's "nothing in the plane deletes
+       a flag" and casepin's "no second version table" (each a ceiling at zero) — so a phantom file can only turn them
+       red. multicase's section 4 asserts NO other `src/` file builds a query in its class (a ceiling at zero) and the
+       six files the old hand list named by NAME; its one count, `> 50` files, is a reach guard fixed well below the
+       tree and never moved to a print, so an arrival cannot raise what it is compared against. */
+    "bio-plane/test/airun.test.mjs",              // src/ and module files, every arming site placed inside the one reconcile
+    "bio-plane/test/caselifecycle.test.mjs",      // src/, "nothing deletes a flag" (a ceiling at zero)
+    "bio-plane/test/casepin.test.mjs",            // src/, "no second version table" (a ceiling at zero)
+    "bio-plane/test/multicase.test.mjs",          // src/, no other builder of its query class (a ceiling at zero)
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
@@ -2702,7 +2741,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 62)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 66)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2732,7 +2771,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        (`52 walking file(s)`) against the T5 opening's 47 (64386f16eb), diffed by name: no departure, five arrivals,
        `t5-extracted.mjs`, `bias.test.mjs`, `d280-strengthbar.test.mjs`, `severedhomes.test.mjs` and
        `group-identity.test.mjs`, each now listing `src/<module>/` for code T5 moved there (named above). */
-    census.length >= 62, true);
+    /* MOVED 62 -> 66 on 2026-09-28 (T8, legacy-tests), from the figure this suite PRINTED on `job/T8/legacy-tests`
+       (`66 walking file(s)`) against 62, diffed by name: no departure, four arrivals — `airun.test.mjs`,
+       `caselifecycle.test.mjs`, `casepin.test.mjs` and `multicase.test.mjs`, each now walking `src/` for code T8 moved
+       into its modules (named above). `t8-extracted.mjs` walks nothing (a module map only). */
+    census.length >= 66, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

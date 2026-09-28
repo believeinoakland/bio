@@ -92,7 +92,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): C-82.2–.7 moved with `acknowledgeStatement` into
+   case-authoring's own family, and the op's code into `src/case-authoring/index.mjs` — the source the structural half
+   below reads now. The claims are unchanged: one site per code, inside its row's region, built through the op's own
+   row helper declared above the first refusal. The helper is `ack` there (`refusal(STATEMENT_ACK_CHECKS, code, …)`),
+   where store.mjs had spelled it `refusal`. */
+import { STATEMENT_ACK_CHECKS } from "../src/case-authoring/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- d507-statement-ack-translation ---");
@@ -103,7 +108,7 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 }
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -157,7 +162,7 @@ for (const [code, check, region] of SIX) {
     !!row && typeof row.translation === "string" && row.translation.length > 100
       && !row.translation.includes(code) && !row.translation.includes("_"), true);
   t(`${code}'s \`where\` names the ONE governed REGION, not a whole function`,
-    !!row && row.where, `src/store.mjs acknowledgeStatement > ${region}`);
+    !!row && row.where, `src/case-authoring/index.mjs acknowledgeStatement > ${region}`);
 }
 t("the six sentences are six DIFFERENT sentences — one sentence serving two codes is DEC-49's drift",
   new Set(SIX.map(([c]) => STATEMENT_ACK_CHECKS[c].translation)).size, 6);
@@ -176,9 +181,9 @@ t("and C-82.1, retired by D-521 as unreachable, is GONE: the family is exactly t
    ============================================================================ */
 console.log("\n--- 2. ONE site per code, inside its region, and the helper stands ABOVE them all ---");
 const store = readFileSync(SRC, "utf8");
-console.log(`  CORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").length} lines`);
-t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length > 1_000_000 && /class Store\b/.test(store) && /acknowledgeStatement\(\{/.test(store), true);
+console.log(`  CORPUS: src/case-authoring/index.mjs ${store.length} bytes, ${store.split("\n").length} lines`);
+t("the corpus is non-empty and is case-authoring's module (floored, so an unreadable file cannot pass)",
+  store.length > 50_000 && /class CaseAuthoring\b/.test(store) && /acknowledgeStatement\(\{/.test(store), true);
 
 const regionOf = (name) => {
   const a = store.indexOf(`DEC-49 REGION ${name}`);
@@ -187,11 +192,11 @@ const regionOf = (name) => {
 };
 for (const [code, , region] of SIX) {
   const hits = [...store.matchAll(new RegExp(`"${code}"`, "g"))];
-  t(`"${code}" is minted at EXACTLY ONE site in src/store.mjs`, hits.length, 1);
+  t(`"${code}" is minted at EXACTLY ONE site in src/case-authoring/index.mjs`, hits.length, 1);
   const span = regionOf(region);
   t(`the DEC-49 region ${region} exists and is a marker PAIR`, !!span, true);
   t(`that one site is INSIDE ${region} — the span the row's \`where\` claims, and it goes through the helper`,
-    !!span && span.includes(`refusal("${code}"`), true);
+    !!span && span.includes(`ack("${code}"`), true);
 }
 {
   /* THE DEFECT ITSELF, pinned by POSITION: the helper is declared before the first refusal that uses
@@ -219,9 +224,10 @@ for (const [code, , region] of SIX) {
   t("acknowledgeStatement's body was found, reaches its LAST governed region, and is long enough to hold "
   + "all six refusals",
     body.length > 6000 && SIX.every(([c]) => body.includes(`"${c}"`)), true);
-  const helperAt = body.indexOf("const refusal = (code, detail, extra)");
-  t("the `refusal` helper is declared EXACTLY ONCE in that body", body.split("const refusal = (code, detail, extra)").length - 1, 1);
-  const firstUse = Math.min(...SIX.map(([c]) => { const i = body.indexOf(`refusal("${c}"`); return i < 0 ? Infinity : i; }));
+  const helperAt = body.indexOf("const ack = (code, detail, extra) => refusal(STATEMENT_ACK_CHECKS, code,");
+  t("the `ack` helper (the family's row helper) is declared EXACTLY ONCE in that body",
+    body.split("const ack = (code, detail, extra) => refusal(STATEMENT_ACK_CHECKS, code,").length - 1, 1);
+  const firstUse = Math.min(...SIX.map(([c]) => { const i = body.indexOf(`ack("${c}"`); return i < 0 ? Infinity : i; }));
   t("AND IT STANDS ABOVE THE FIRST OF THE SIX — the whole of the defect, which was a helper declared "
   + "below the returns that needed it", helperAt >= 0 && firstUse < Infinity && helperAt < firstUse, true);
   t("no `reason: \"STATEMENT_ACK_` object literal is left in the file: every one goes through the helper",

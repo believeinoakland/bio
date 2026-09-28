@@ -185,7 +185,9 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 }
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, RATIFICATION #2 J6): the committer (`ratifyCaseDocument`) and its
+   CASE_UNSIGNED fence left `store.mjs` for `src/ratification/index.mjs`. The name is kept for the one arm that reads it. */
+const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/ratification/index.mjs", import.meta.url)), "utf8");
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],

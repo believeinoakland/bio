@@ -461,10 +461,16 @@ t("FLOORS AGREE: the draft's floors (the project's bar read now) and the contain
 console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review copy ---");
 {
   const idx = codeOf(SRC("index.mjs"));
-  const calls = (idx.match(/\binbandQuartet\(/g) || []).length;
+  /* RE-ANCHORED 2026-09-28 by legacy-tests (T8, PUBLICATION #1 J4.6): the container assembly
+     (`assembleCaseContainer`) left `index.mjs` for `src/publication/worker.mjs`, where it calls the quartet; the
+     review copy's call stays in `index.mjs`. The TWO sites are counted over both files, and the assembly is sliced
+     from its own file, up to the next exported function (`publishedRoutes`). */
+  const pubWorker = codeOf(SRC("publication/worker.mjs"));
+  const calls = (idx.match(/\binbandQuartet\(/g) || []).length + (pubWorker.match(/\binbandQuartet\(/g) || []).length;
   t("index.mjs calls `inbandQuartet` at exactly the TWO sites — the container assembly and the review copy",
     calls, 2);
-  const asm = idx.slice(idx.indexOf("async function assembleCaseContainer"), idx.indexOf("export default {"));
+  const asm = pubWorker.slice(pubWorker.indexOf("async function assembleCaseContainer"),
+                              pubWorker.indexOf("export async function publishedRoutes"));
   t("the container assembly holds no SHA-256 of its own and no serialisation of the manifest of its own",
     [asm.length > 1000, /crypto\.subtle\.digest|sha256Hex\(|JSON\.stringify\(manifest/.test(asm)], [true, false]);
   /* CONDUCT #18 at c17-batch7 (2026-09-23): the anchor was the whole condition `(op === "reviewcopy" || op ===

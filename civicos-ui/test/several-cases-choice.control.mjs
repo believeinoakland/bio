@@ -46,18 +46,27 @@ import { fileURLToPath } from "url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.join(HERE, "..", "..");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6): C-44.2's row left the catalogue for publication's
+   `CASE_RESOLUTION_CHECKS` (`bio-plane/src/publication/checks.mjs`, key `checks`), and `#resolveOneCase`'s refusal
+   left `store.mjs` for `bio-plane/src/publication/index.mjs` (key `store`), where it is built from its row by `rowOf`
+   rather than by the store's `refusal` helper; arm (F) removes that spread. The (BEFORE) arm restores whole files
+   from 4355bfda, a tree before the modules existed, so it keeps its own keys for the paths those files had
+   (`catalogue`, `legacystore`). Each file is floored at its own size. */
 const FILES = {
   app: path.join(REPO, "civicos-ui", "app.html"),
-  checks: path.join(REPO, "bio-plane", "checks", "bio-checks.mjs"),
-  store: path.join(REPO, "bio-plane", "src", "store.mjs"),
+  checks: path.join(REPO, "bio-plane", "src", "publication", "checks.mjs"),
+  store: path.join(REPO, "bio-plane", "src", "publication", "index.mjs"),
+  catalogue: path.join(REPO, "bio-plane", "checks", "bio-checks.mjs"),
+  legacystore: path.join(REPO, "bio-plane", "src", "store.mjs"),
 };
+const FLOOR = { app: 100000, checks: 10000, store: 100000, catalogue: 100000, legacystore: 100000 };
 const SUITE = path.join(HERE, "several-cases-choice.test.mjs");
 const SCRATCH = path.join(REPO, ".ui81-harness", "control");
 const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 
 const ROW = `  FINDING_IN_SEVERAL_CASES: {
     check: 'C-44.2',
-    where: 'src/store.mjs #resolveOneCase > is-finding-in-several-cases',
+    where: 'src/publication/index.mjs #resolveOneCase > is-finding-in-several-cases',
     translation: 'This finding is part of more than one published case file. Each case file is its own '
       + 'publication, with its own scope and its own statement of what it covers, so the record will not '
       + 'pick one of them for you. Nothing is wrong with the finding. Choose the case file you mean, and '
@@ -106,10 +115,9 @@ const ARMS = [
      translation on the wire, and the store's `refusal` helper is the literal the guard's REGION reads.
      Re-declared GREEN, and (F2) is the arm that breaks the thing the wire actually carries. */
   { name: "(F) the store's helper removed, the row kept", run: "suite", declared: "GREEN",
-    edits: [["store", `    return refusal("FINDING_IN_SEVERAL_CASES", { target: bundleId, cases,`,
-                      `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: bundleId, cases,`],
-            ["store", "you. Ask again naming the case you mean.` });\n    /* END DEC-49 REGION is-finding-in-several-cases */",
-                      "you. Ask again naming the case you mean.` };\n    /* END DEC-49 REGION is-finding-in-several-cases */"]] },
+    /* T8: publication builds the refusal from its row with a spread (`...rowOf(...)`); the arm removes the spread. */
+    edits: [["store", `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", ...rowOf("FINDING_IN_SEVERAL_CASES"), target: bundleId, cases,`,
+                      `    return { ok: false, reason: "FINDING_IN_SEVERAL_CASES", target: bundleId, cases,`]] },
   { name: "(F2) the row's translation dropped, run through the suite", run: "suite", declared: "RED",
     names: ["DEC-49: the refusal carries", "THE PLANE'S WORDS"], mustNotFail: ["CHOICES", "NEVER PICKS", "OPENS: the choice for case"],
     edits: [["checks", TRANSLATION, ""]] },
@@ -120,8 +128,8 @@ const ARMS = [
   /* THE BEFORE-STATE: the three subject files exactly as origin/main @ 4355bfda carried them. */
   { name: "(BEFORE) origin/main 4355bfda's app.html, bio-checks.mjs and store.mjs", run: "suite", declared: "RED",
     names: ["DEC-49: the refusal carries", "CHOICES", "THE PLANE'S WORDS"], mustNotFail: ["SUBSTRATE"],
-    edits: [["app", null, "civicos-ui/app.html"], ["checks", null, "bio-plane/checks/bio-checks.mjs"],
-            ["store", null, "bio-plane/src/store.mjs"]] },
+    edits: [["app", null, "civicos-ui/app.html"], ["catalogue", null, "bio-plane/checks/bio-checks.mjs"],
+            ["legacystore", null, "bio-plane/src/store.mjs"]] },
   { name: "(G) over-strictness: the page's own words re-worded", run: "suite", declared: "GREEN",
     edits: [["app", `<h1>In \${esc(String(cases.length))} case files</h1>`, `<h1>Choose a case file</h1>`],
             ["app", `They are listed by their names, not ranked, and this page does not choose between them.`,
@@ -132,7 +140,7 @@ fs.mkdirSync(SCRATCH, { recursive: true });
 const orig = {};
 for (const [k, p] of Object.entries(FILES)) {
   orig[k] = { sha: sha(p), bytes: fs.statSync(p).size };
-  if (orig[k].bytes < 100000) throw new Error(`${k} is ${orig[k].bytes} bytes — too small to be the subject`);
+  if (orig[k].bytes < FLOOR[k]) throw new Error(`${k} is ${orig[k].bytes} bytes — too small to be the subject`);
   console.log(`${k} pristine sha256 ${orig[k].sha} (${orig[k].bytes} bytes)`);
 }
 const runOne = (which) => which === "suite"

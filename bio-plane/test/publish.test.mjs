@@ -80,7 +80,6 @@ import { checkBundle, STATES, SUBJECT_POSITIONS, checkCaseDocument,
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
-import { SCHEMA } from "../src/schema.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- publish ---");
@@ -1198,14 +1197,25 @@ console.log("\n--- 8. C-9: an exclusion names a document OR says it in prose, an
   const hits = await excludedBy(INFO_LEFTOUT);
   t("'which cases excluded this document' is answered from the indexed projection",
     hits.cases.map((c) => [c.bundle_id, c.target_id ?? null]).length >= 0, true);
-  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-  /* Sliced to the method's OWN body -- from its signature to the next method --
-     rather than to a landmark elsewhere in the file, which is the instrument
-     defect basis.test.mjs had corrected out of it. */
-  const from = store.indexOf("excludedBy(targetId");
-  const method = store.slice(from, store.indexOf("\n  /* REC-14: the published projection", from));
+  /* RE-ANCHORED 2026-09-28 by legacy-tests (T8, PUBLICATION #1 J4.6): `excludedBy` is publication's, and its read of
+     the live exclusions is inquiry's service `exclusionsNaming` (inquiry R18), which publication calls. The question
+     is asked of the pair: publication's method reaches the exclusions ONLY through that service (it names the table
+     nowhere itself), and the service is ONE indexed lookup on target_id. Each body is sliced from its signature to the
+     next method of its class, which is the instrument rule basis.test.mjs corrected. */
+  const bodyOf = (text, sig) => {
+    const at = text.indexOf(`\n  ${sig}`);
+    if (at < 0) return "";
+    const next = text.slice(at + 1).search(/\n  (?:\/\*\*|\/\*|[#A-Za-z_$][\w$]*\()/);
+    return next < 0 ? text.slice(at) : text.slice(at, at + 1 + next);
+  };
+  const pubSrc = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
+  const inqSrc = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
+  const method = bodyOf(pubSrc, "excludedBy(targetId");
+  const service = bodyOf(inqSrc, "exclusionsNaming(targetId");
   t("and it is ONE indexed lookup on target_id, never a scan of every completeness block",
-    [/WHERE x\.target_id=\?/.test(method), (method.match(/FROM inquiry_exclusions/g) || []).length], [true, 1]);
+    [/WHERE x\.target_id=\?/.test(service), (service.match(/FROM inquiry_exclusions/g) || []).length,
+     /this\.inquiry\.exclusionsNaming\(targetId, viewer\)/.test(method), /FROM inquiry_exclusions/.test(method)],
+    [true, 1, true, false]);
   const rows = (await excludedBy(INFO_LEFTOUT)).cases;
   /* CORRECTED 2026-09-23 (D-442, BIO_Publication_v0_1.md §3 rule 12), never exempted. The rows came from the
      MEMBER's live bytes, re-projected at every promotion, so only the LATEST edition's exclusion was ever
@@ -1260,8 +1270,14 @@ console.log("\n--- 9. an EXISTING store migrates: every ratified row survives as
   gate_version    TEXT NOT NULL,
   sig_armored     TEXT NOT NULL
 )`;
-  const from = SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS published_bundles");
-  const OLD_SCHEMA = SCHEMA.slice(0, from) + OLD_PB + SCHEMA.slice(SCHEMA.indexOf(");", from) + 1);
+  /* RE-ANCHORED 2026-09-28 by legacy-tests (T8, PUBLICATION #1 J6 / B6.2): this block built its old store by SPLICING
+     the old CREATE TABLE into `schema.mjs`'s SCHEMA (bound as env SCHEMA), but `published_bundles` left that text for
+     publication's own schema, whose migration (`migratePublication`) runs PUBLICATION_SCHEMA at every boot whatever
+     env SCHEMA says — so the splice cut the schema wrongly and the new shape was created before the row went in. The
+     old store is now made the way an old store exists: the FIRST boot runs a bare Durable Object of the same class
+     name and storage that holds nothing but the OLD-shape table (created directly, below) and the legacy row; the
+     plane then boots on that storage and its OWN migration re-keys it. That migration is the one under test. */
+  const OLD_SCHEMA = OLD_PB;
   /* CORRECTED 2026-08-04, REC-44: read the STATEMENT rather than a window of
      characters after the name. The old proximity regex was a proxy that stopped
      being one when REC-44 added a published_cases comment further down the file
@@ -1275,6 +1291,25 @@ console.log("\n--- 9. an EXISTING store migrates: every ratified row survives as
   /* A subclass with ONE raw route, the strength-cycle-probe precedent: the row
      has to be written in the old column set, which the current committer
      cannot produce. */
+  /* The first boot: no plane at all, only the old shape and one ratified row in it. */
+  const OLD_BOOT = `
+export class ProbeStore {
+  constructor(state) { this.sql = state.storage.sql; }
+  async fetch(req) {
+    const url = new URL(req.url);
+    if (url.pathname === "/rawpublished") {
+      this.sql.exec(${JSON.stringify(OLD_PB)});
+      this.sql.exec("INSERT INTO published_bundles (bundle_id,bundle_sha,ratified_at,attestor_key,attestor_member,gate_version,sig_armored) VALUES (?,?,?,?,?,?,?)",
+        url.searchParams.get("id"), "legacysha", "2026-01-01T00:00:00Z", "LEGACYKEY", "bob",
+        "plane-gate/0.9", "-----BEGIN SSH SIGNATURE-----legacy");
+      const cols = [...this.sql.exec("PRAGMA table_info(published_bundles)")].map((r) => r.name);
+      return Response.json({ result: { ok: true, cols } });
+    }
+    return Response.json({ result: { ok: false } });
+  }
+}
+export default { fetch(req, env) { return env.STORE.get(env.STORE.idFromName("bio")).fetch(req); } };
+`;
   const PROBE = `
 import { Store } from "./store.mjs";
 export class ProbeStore extends Store {
@@ -1291,18 +1326,20 @@ export class ProbeStore extends Store {
 }
 export default { fetch(req, env) { return env.STORE.get(env.STORE.idFromName("bio")).fetch(req); } };
 `;
-  const opts = (schema) => ({
-    modules: true, script: PROBE, modulesRoot: "/",
+  const opts = (script) => ({
+    modules: true, script, modulesRoot: "/",
     scriptPath: fileURLToPath(new URL("../src/publish-migration-probe.mjs", import.meta.url)),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "ProbeStore", useSQLite: true } },
-    bindings: schema ? { SCHEMA: schema } : {},
+    bindings: {},
   });
-  const mfm = new Miniflare(opts(OLD_SCHEMA));
+  const mfm = new Miniflare(opts(OLD_BOOT));
   const dial = async (path) => (await (await mfm.dispatchFetch("http://x" + path)).json()).result;
   const LEGACY = "INQ-2026-0001-legacy";
-  await dial(`/rawpublished?id=${LEGACY}`);
-  await mfm.setOptions(opts(null));            // same storage, the CURRENT schema
+  const raw = await dial(`/rawpublished?id=${LEGACY}`);
+  t("(fixture) the first boot holds the OLD shape and the legacy row went into it",
+    [raw?.ok, (raw?.cols || []).includes("edition"), (raw?.cols || []).includes("bundle_sha")], [true, false, true]);
+  await mfm.setOptions(opts(PROBE));           // same storage, the CURRENT plane and its own migrations
   const eds = await dial(`/publishededitions?id=${LEGACY}`);
   t("the legacy row SURVIVES the re-key, as edition 1, with its signature, attestor, time and gate version",
     [eds.editions.length, eds.editions[0]?.edition, eds.editions[0]?.bundle_sha,

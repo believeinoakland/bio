@@ -56,6 +56,9 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 const SRC_DIR = process.env.RATIFY_AUTHORITY_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 const CHECKS = await import(pathToFileURL(join(SRC_DIR, "..", "checks", "bio-checks.mjs")).href);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, RATIFICATION #2 J6): C-58's rows (`RATIFY_SCOPE_CHECKS`) left the catalogue
+   for ratification's own family, read from the same (possibly armed) source tree. */
+const RAT_CHECKS = await import(pathToFileURL(join(SRC_DIR, "ratification", "checks.mjs")).href);
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -297,7 +300,7 @@ console.log("\n--- 1. op=ratify REFUSES a project bundle, whoever signs and whoe
   const r = await ratify(IRIS, "iris", HIDDEN);
   t("PROJECT BUNDLE: iris, the project's OWNER, signs and delivers her own project's document — refused RATIFY_PROJECT_BUNDLE (a project publishes through its cases)",
     [r && r.ok, codeOf(r), typeof (r && r.check), r && r.bundleId], [false, PROJECT_BUNDLE, "string", HIDDEN]);
-  const row = CHECKS.RATIFY_SCOPE_CHECKS && CHECKS.RATIFY_SCOPE_CHECKS[PROJECT_BUNDLE];
+  const row = RAT_CHECKS.RATIFY_SCOPE_CHECKS && RAT_CHECKS.RATIFY_SCOPE_CHECKS[PROJECT_BUNDLE];
   t("PROJECT BUNDLE: the refusal carries its catalogued C-number and canned translation (DEC-49)",
     [!!row, r && r.check, r && r.translation], [true, row && row.check, row && row.translation]);
   const f = await ratify(FOUNDER, "iris", HIDDEN);
@@ -378,9 +381,10 @@ console.log("\n--- 5. the idempotent retry does not answer an outside administra
 /* ============================ 6. THE CATALOGUE ROWS */
 console.log("\n--- 6. the catalogue rows ---");
 {
-  const row = CHECKS.RATIFY_SCOPE_CHECKS && CHECKS.RATIFY_SCOPE_CHECKS[PROJECT_BUNDLE];
+  const row = RAT_CHECKS.RATIFY_SCOPE_CHECKS && RAT_CHECKS.RATIFY_SCOPE_CHECKS[PROJECT_BUNDLE];
   t("RATIFY_PROJECT_BUNDLE is catalogued with a C-number and a region in op=ratify",
-    [!!row, row && /^C-\d+\.1$/.test(row.check), row && row.where], [true, true, "src/index.mjs fetch > is-ratify-project-bundle"]);
+    /* T8: op=ratify's handler is `ratifyOp` in `src/ratification/ops.mjs`, and the region moved with it. */
+    [!!row, row && /^C-\d+\.1$/.test(row.check), row && row.where], [true, true, "src/ratification/ops.mjs ratifyOp > is-ratify-project-bundle"]);
   /* RE-PINNED 2026-09-27 (T4, legacy-tests; LEGACY-CHECKS #1): the helper moved with membership (T3), and the row's
      `where` now names the file it lives in, `src/membership/index.mjs caseAuthority`. */
   t("C-57.1's region moved into the ONE helper both ratify paths call",
@@ -409,7 +413,7 @@ console.log("\n--- 7. op=ratify publishes NOTHING outside a ratified case: (a) a
   t("OUTSIDE A CASE (a): a concluded INQUIRY in no case and no project, signed and delivered by vic — refused RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE (C-58.2), its detail naming op=caseratify as the act to take first",
     [l && l.ok, codeOf(l), l && l.check, /op=caseratify/.test(l && l.detail || ""), await editionsOf(lead)],
     [false, UNPINNED, "C-58.2", true, 0]);
-  const row = CHECKS.RATIFY_SCOPE_CHECKS[UNPINNED];
+  const row = RAT_CHECKS.RATIFY_SCOPE_CHECKS[UNPINNED];
   t("OUTSIDE A CASE (a): the refusal carries C-58.2's canned translation (DEC-49)", l && l.translation, row && row.translation);
   /* A FINDING PREPARED INTO A CASE WHOSE DOCUMENT IS NOT YET RATIFIED: refused whoever signs — the
      project's OWNER included, so this is the ceremony's ORDER being enforced and not an authority answer
@@ -482,10 +486,15 @@ console.log("\n--- 8. (b) evidence a ratified case's finding RESTS ON crosses, s
   t("EVIDENCE ALLOWED: the FOUNDER delivers iris's signature over G's own basis information, AFTER the finding — PUBLISHED",
     [after && after.ok, after && after.attestor, await editionsOf(G.info)], [true, "iris", 1]);
 
-  const src = readFileSync(join(SRC_DIR, "store.mjs"), "utf8"), idx = readFileSync(IDX, "utf8");
-  const calls = (s) => (s.match(/Store\.publishedGraphEdges\(/g) || []).length;
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T8, PUBLICATION #1 J4.6): `static publishedGraphEdges` is now the module
+     function `publishedGraphEdges` exported by `src/publication/index.mjs`, where the refusal's rests-on
+     (`ratifiedFindingsRestingOn`) reads it; op=ratify's handler (`src/ratification/ops.mjs`) imports it. Same
+     question: one definition, one read by each, and no edge class spelled by op=ratify. */
+  const src = readFileSync(join(SRC_DIR, "publication", "index.mjs"), "utf8"),
+        idx = readFileSync(join(SRC_DIR, "ratification", "ops.mjs"), "utf8");
+  const calls = (s) => (s.match(/(?<!function )\bpublishedGraphEdges\(/g) || []).length;
   t("IDENTITY (structural): ONE definition of the published graph's edge set (`static publishedGraphEdges`), read once by op=ratify to build the graph and once by the refusal's rests-on — and op=ratify spells no edge class of its own",
-    [(src.match(/static publishedGraphEdges\(/g) || []).length, calls(idx), calls(src), /disclosure: "serve"/.test(idx)],
+    [(src.match(/export function publishedGraphEdges\(/g) || []).length, calls(idx), calls(src), /disclosure: "serve"/.test(idx)],
     [1, 1, 1, false]);
 }
 

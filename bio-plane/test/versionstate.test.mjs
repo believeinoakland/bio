@@ -1264,7 +1264,11 @@ console.log("\n--- 11. DEC-49: driven codes EQUAL the registry, floor and ceilin
   t("every row carries a C-number, a `where` naming a real function, and a canned translation that is a "
   + "SENTENCE rather than a restatement of the machine code",
     [registry.every((k) => /^C-25\.\d+$/.test(VERSION_ACT_CHECKS[k].check)),
-     registry.every((k) => VERSION_ACT_CHECKS[k].where.startsWith("src/store.mjs #moveVersionState")),
+     /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the catalogue re-aimed every VERSION_ACT row's `where` at the file
+        that holds the transition since T7 (`src/basis-versions/index.mjs #moveVersionState`, BASIS-VERSIONS #1 J4.1),
+        the body `machineBlock()` reads; the function it names is asked to exist there. */
+     registry.every((k) => VERSION_ACT_CHECKS[k].where.startsWith("src/basis-versions/index.mjs #moveVersionState"))
+       && machineBlock().length > 0,
      registry.every((k) => VERSION_ACT_CHECKS[k].translation.split(/\s+/).length >= 12),
      new Set(registry.map((k) => VERSION_ACT_CHECKS[k].check)).size],
     [true, true, true, registry.length]);

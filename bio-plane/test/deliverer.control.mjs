@@ -31,17 +31,22 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
-const FILES = { index: join(PLANE, "src", "index.mjs"), store: join(PLANE, "src", "store.mjs") };
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8): the two acts' deliverer lines left `index.mjs` for ratification's handlers
+   (`src/ratification/ops.mjs`, key `ops`), and the read chokepoint `#deliveredBy` left `store.mjs` for publication's
+   reads (`src/publication/index.mjs`, key `store` kept). The founder's resolution stays in `index.mjs`. Each anchor
+   matches exactly once in the file its key names. */
+const FILES = { index: join(PLANE, "src", "index.mjs"), store: join(PLANE, "src", "publication", "index.mjs"),
+                ops: join(PLANE, "src", "ratification", "ops.mjs") };
 const SUITE = join(HERE, "deliverer.test.mjs");
-const MIN_BYTES = 500_000;          /* both sources are far larger; a restore below this is not a restore */
+const MIN_BYTES = 50_000;           /* every source is larger (ops.mjs is the smallest, ~70 KB); a restore below this is not a restore */
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* The two lines where each act takes its deliverer, exactly as they stand. */
 const AT_CASE = "const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */";
 const AT_RATIFY = "const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=ratify */";
 const bothActs = (expr) => [
-  ["index", AT_CASE, AT_CASE.replace("deliveringPrincipal(sessRights)", `${expr} /* ARMED */`)],
-  ["index", AT_RATIFY, AT_RATIFY.replace("deliveringPrincipal(sessRights)", `${expr} /* ARMED */`)],
+  ["ops", AT_CASE, AT_CASE.replace("deliveringPrincipal(sessRights)", `${expr} /* ARMED */`)],
+  ["ops", AT_RATIFY, AT_RATIFY.replace("deliveringPrincipal(sessRights)", `${expr} /* ARMED */`)],
 ];
 /* The store's one read chokepoint, exactly as it stands. */
 const READ = "  #deliveredBy(row) { return delivererOf(row ? row.delivered_by : null); }";
@@ -107,7 +112,9 @@ const ARMS = {
      list, editions) used to PUBLISH LOOSE — the finding in no ratified case — and is now refused C-58.2. That
      "green" was D-431's third measured publication outside a case; the arm now reads it as the failure it is. */
   "session-member": {
-    edits: bothActs("`member:${sessMember}`"),
+    /* T8: ratification's handlers receive the session as `sessViewer`/`sessRights` (no `sessMember` in scope); the
+       same fold — the founder's `admin` read as a bare member name — is spelled off `sessViewer`. */
+    edits: bothActs("`member:${String(sessViewer ?? \"\").replace(/^member:/, \"\")}`"),
     mustFail: [L.structActs, L.caseAnswer, L.caseDoc, L.ratAnswer, L.list, L.editions, L.pubcase, L.container,
                L.containerDone, L.containerWords, L.looseAnswer, L.looseReads],
   },

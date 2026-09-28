@@ -39,7 +39,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle, RISK_TIERS, riskTierState, SURFACE_CHECKS as CHECK_CATALOGUE_SURFACE } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the tier vocabulary is read from `actions`, which
+   re-exports it as the SAME object (R40); `checkBundle` no longer runs the action arm, which actions registers with
+   record-core's audit (R37) and `c210` runs beside it. */
+import { checkBundle, parseFrontmatter, SURFACE_CHECKS as CHECK_CATALOGUE_SURFACE } from "../checks/bio-checks.mjs";
+import { RISK_TIERS, riskTierState, checkActionExtension } from "../src/actions/checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for (viii)'s one-writer census. */
 import { moduleFiles } from "./extracted-sources.mjs";
@@ -72,8 +76,10 @@ const actionMd = (id, tierLines) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []",
-  "action_kind: cpra_request", ...tierLines,
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-GRADED 2026-09-28 (T8): a kind actions offers (R10) and a named counterparty as an office (R9); `cpra_request`
+     and `{state: named, name}` are refused on a creation. */
+  "action_kind: records_request", ...tierLines,
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "",
   "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", "",
@@ -95,6 +101,7 @@ const c210 = async (tierLines, id = "ACTN-2026-0001-records-request") => {
     folderName: id, files: new Map([["bundle.md", actionMd(id, tierLines)]]),
     sha256: shaHex, sha512: sha512Hex, resolveTarget: (x) => x === id,
   });
+  checkActionExtension({ fm: parseFrontmatter(actionMd(id, tierLines)).data }, findings);   /* actions R37 */
   return findings.filter((f) => f.severity === "error" && f.check === "C-2.10").map((f) => f.message);
 };
 
@@ -379,7 +386,12 @@ console.log("\n--- 6. D-483: the tier chooser, unset by default, over the publis
   const bytesFor = (checked, id) => {
     const { ui } = drive(checked);
     return ui.mdFor(id, "action", ui.FIRST_STATE.action, "Intake check", "What the member wrote.", NOW,
-      false, null, { counterparty: { state: "named", name: "City Clerk" }, risk_tier: ui.chosenRiskTier() });
+      /* RE-GRADED 2026-09-28 (T8), the counterparty only — this section's subject is the tier: the page's writer
+         serialises a named counterparty as `{state: named, name}`, which actions R9 now refuses on a creation
+         (COUNTERPARTY_REFUSED, C-101.3); that is instance-setup's writer to bring to R9's office shape, reported. The
+         honest undetermined with a basis is the shape the page writes that R9 accepts. */
+      false, null, { counterparty: { state: "undetermined", basis: "The clerk's index will say which office holds it." },
+                     risk_tier: ui.chosenRiskTier() });
   };
 
   const SRC = join(SRC_DIR, "index.mjs");

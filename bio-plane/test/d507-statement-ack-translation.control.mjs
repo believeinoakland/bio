@@ -55,8 +55,12 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const REPO = join(ROOT, "..");
 const PEN = join(ROOT, ".nc-d507");
-const STORE = join(ROOT, "src", "store.mjs");
-const CATALOG = join(ROOT, "checks", "bio-checks.mjs");
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): `acknowledgeStatement` and its six rows moved into
+   case-authoring — the op to `src/case-authoring/index.mjs`, where its row helper is `ack`, and C-82.2–.7 to
+   `src/case-authoring/checks.mjs`. `STORE` and `CATALOG` keep their names (the arms below read them) and name the
+   files that now hold the code and the rows; every needle is re-quoted from them, each arm unchanged. */
+const STORE = join(ROOT, "src", "case-authoring", "index.mjs");
+const CATALOG = join(ROOT, "src", "case-authoring", "checks.mjs");
 const SUITE = join(DIR, "d507-statement-ack-translation.test.mjs");
 const GUARD = join(REPO, "civicos-ui", "check-refusal-codes.mjs");
 const LOG = join(PEN, "suite.out");
@@ -83,19 +87,18 @@ const edit = (file, needle, replacement) => {
 const AUTHOR_BLOCK = `    /* DEC-49 REGION is-statement-ack-by-its-author */
     if (kind === "participant" && ((statementAuthor && by === statementAuthor)
                                    || (blockAuthor && by === blockAuthor)))
-      return refusal("STATEMENT_ACK_BY_ITS_AUTHOR",
-               (statementAuthor && by === statementAuthor
-                 ? \`you wrote this statement, and its acknowledgement is a SECOND person's reading of what \`
-                 + \`the case leaves out (BIO_Publication §3 rule 11). \`
-                 /* REC-212: the other name, and a different sentence because it is a different act. */
-                 : \`you prepared and published this case and authored its completeness block at that act, so \`
-                 + \`you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the \`
-                 + \`case leaves out (BIO_Publication §3 rule 11). Who WROTE the statement is a separate \`
-                 + \`fact, stated separately in these bytes (§3 rule 13). \`)
-                     + \`Ask a participant of this project, or \`
-                     + \`hand the draft to a reader through a review grant. The case publishes without one and \`
-                     + \`says so.\`,
-               { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
+      return ack("STATEMENT_ACK_BY_ITS_AUTHOR",
+                 (statementAuthor && by === statementAuthor
+                   ? \`you wrote this statement, and its acknowledgement is a SECOND person's reading of what \`
+                   + \`the case leaves out (BIO_Publication §3 rule 11). \`
+                   : \`you prepared and published this case and authored its completeness block at that act, so \`
+                   + \`you are its FIRST reader; an acknowledgement is a SECOND person's reading of what the \`
+                   + \`case leaves out (BIO_Publication §3 rule 11). Who WROTE the statement is a separate \`
+                   + \`fact, stated separately in these bytes (§3 rule 13). \`)
+                   + \`Ask a participant of this project, or \`
+                   + \`hand the draft to a reader through a review grant. The case publishes without one and \`
+                   + \`says so.\`,
+                 { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
     /* END DEC-49 REGION is-statement-ack-by-its-author */`;
 /* The SAME refusal, built the way it was built before D-507 — a bare object literal, ABOVE the region,
    so the helper is not called and the marker pair stands over a span that refuses nothing. The region is

@@ -48,7 +48,16 @@ import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 /* D-450 (2026-09-25): `checks` joins the restored set — arm (J) arms C-41.12 in the catalogue. */
-const F = { store: ROOT + "src/store.mjs", index: ROOT + "src/index.mjs", checks: ROOT + "checks/bio-checks.mjs" };
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8): the act this control arms left `store.mjs`. `publishCase`'s fences, roles
+   and bar gate are case-authoring's (`src/case-authoring/index.mjs`, arms A–F; the owner fence asks
+   `this.membership.isProjectOwner`); the project bar and its words are strength's (`src/strength/index.mjs`, arms G and
+   K, the latter already moved in T7); the committer that reads `case_project` off the signed document is
+   ratification's (`src/ratification/index.mjs`, arm H). C-41.12 is LIVE IN TWO COPIES — the catalogue's
+   (`src/gate.mjs`) and ratification's own `checkCaseDocument` (`ratifyCaseDocument`) — so arm J arms both. Each file
+   is snapshotted and restored with the rest; every needle matches exactly once in the file it names. */
+const F = { store: ROOT + "src/store.mjs", index: ROOT + "src/index.mjs", checks: ROOT + "checks/bio-checks.mjs",
+            authoring: ROOT + "src/case-authoring/index.mjs", strength: ROOT + "src/strength/index.mjs",
+            ratification: ROOT + "src/ratification/index.mjs", ratchecks: ROOT + "src/ratification/checks.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -179,7 +188,7 @@ arm("A", "THE PROJECT-LESS PUBLICATION PATH, PUT BACK — CASE-1's handed-over a
   + "makes `cases.project_id NOT NULL` real through an OP rather than only in the schema. "
   + "DECLARED: §2's refusal arm MUST fail. §3's owner arms MUST stay green — armed apart on purpose, "
   + "because one fence covering for another is how a half-fix reads as a whole one.",
-  [["store", `    if (!proj)\n      return { ok: false, reason: "NO_PUBLISHING_PROJECT",`,
+  [["authoring", `    if (!proj)\n      return { ok: false, reason: "NO_PUBLISHING_PROJECT",`,
              `    if (false)\n      return { ok: false, reason: "NO_PUBLISHING_PROJECT",`]],
   [{ name: OWN,
      mustFail: ["A PUBLICATION NAMING NO PROJECT IS REFUSED BY NAME"],
@@ -209,7 +218,7 @@ arm("B", "THE OWNER FENCE NEUTERED — any member holding `publish` publishes an
   + "green, because it runs BEFORE the record moves. **§5 IS NOT DECLARED EITHER WAY** and the "
   + "reason is above: this arm changes the state of the record, so everything downstream of §3 is "
   + "measuring a different fixture and a promise about it would be a promise about a cascade.",
-  [["store", `    if (!this.#isProjectOwner(proj, who))`, `    if (false)`]],
+  [["authoring", `    if (!this.membership.isProjectOwner(proj, who))`, `    if (false)`]],
   [{ name: OWN,
      mustFail: ["A JOINED PARTICIPANT WHO IS NOT AN OWNER IS REFUSED",
                 "AND OWNERSHIP IS OF A PROJECT, NOT A STANDING"],
@@ -242,7 +251,7 @@ arm("C", "DEC-72's SECOND RULED DEFAULT REMOVED — an all-supporting case publi
   /* THE ANCHOR CARRIES ITS REFUSAL NAME, because `if (!loadBearing.length)`
      ALONE OCCURS TWICE in store.mjs and the blind-arming guard refused the arm
      on its first run — which is that guard working, and is why it exists. */
-  [["store", `    if (!loadBearing.length)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`,
+  [["authoring", `    if (!loadBearing.length)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`,
              `    if (false)\n      return { ok: false, reason: "NO_LOAD_BEARING_MEMBER",`]],
   /* M0-78, 2026-09-19 — RE-MEASURED AFTER THIS ARM WAS MADE TO ARM AT ALL, AND THE THIRD FAILURE
      IS DECLARED BECAUSE IT HAPPENS, not because it was predicted. Until today this arm ended in an
@@ -271,7 +280,7 @@ arm("D", "THE BAR STOPS BEING ASKED AT ALL — a load-bearing member below the p
   + "MUST-STAY-GREEN clauses are only meaningful because §5's refusal act runs on its OWN members — "
   + "see (C)'s note; before that split this arm published the acceptance act's members out from "
   + "under it and destroyed its own most important measurement.",
-  [["store", `    if (bar.declared) {\n      const rank = (g) => BASIS_GRADES.indexOf(g);`,
+  [["authoring", `    if (bar.declared) {\n      const rank = (g) => BASIS_GRADES.indexOf(g);`,
              `    if (false) {\n      const rank = (g) => BASIS_GRADES.indexOf(g);`]],
   [{ name: OWN,
      mustFail: ["A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED",
@@ -285,7 +294,7 @@ arm("E", "THE SUPPORTING EXEMPTION REMOVED — the bar is asked of EVERY member,
   + "publish. DECLARED: §5's SUPPORTING arm and everything downstream of it MUST fail. **§5's "
   + "REFUSAL arm MUST stay GREEN** — an over-strictness arm cannot be read off the headline, which "
   + "is the lesson D-280 paid for and this arm is where this item pays it.",
-  [["store", `      for (const m of loadBearing) {`, `      for (const m of memberRoles) {`]],
+  [["authoring", `      for (const m of loadBearing) {`, `      for (const m of memberRoles) {`]],
   [{ name: OWN,
      mustFail: ["THE SAME FINDING, THE SAME GRADES, THE SAME BAR"],
      mustNotFail: ["A LOAD-BEARING MEMBER BELOW THE PROJECT'S STANDARD IS REFUSED",
@@ -296,7 +305,7 @@ arm("E", "THE SUPPORTING EXEMPTION REMOVED — the bar is asked of EVERY member,
 arm("F", "THE ROLE MADE OPTIONAL — an undesignated member falls through, which is a designation by "
   + "OMISSION and exactly what CASE-1 left the column DEFAULT-less to prevent. DECLARED: §4's "
   + "NO_MEMBER_ROLE arm MUST fail. §6's lowered-bar arm MUST stay green.",
-  [["store", `      if (!r)\n        return { ok: false, reason: "NO_MEMBER_ROLE",`,
+  [["authoring", `      if (!r)\n        return { ok: false, reason: "NO_MEMBER_ROLE",`,
              `      if (false)\n        return { ok: false, reason: "NO_MEMBER_ROLE",`]],
   [{ name: OWN,
      mustFail: ["A MEMBER WITH NO AUTHORED DESIGNATION IS REFUSED"],
@@ -310,7 +319,7 @@ arm("G", "THE GROUP DEFAULT RESTORED AS A FALLBACK PUBLICATION BAR — the exact
   + "project acquires a bar it never declared. §2 and §3 MUST stay green — a fence is not what this "
   + "arm touches. **A BEHAVIOURAL ARM ALONE CANNOT SEE THIS**: every project that declares its own "
   + "bar goes on answering correctly, which is why the removal is asserted as ABSENCE off the source.",
-  [["store", `    return { declared: false, source: "none", project: projectId, capture: null, connection: null,`,
+  [["strength", `    return { declared: false, source: "none", project: projectId, capture: null, connection: null,`,
              `    {\n      const g = this.#one(\`SELECT capture, connection FROM group_strength_bar WHERE group_id=?\`,\n`
            + `        "believe-in-oakland");\n`
            + `      if (g && (g.capture || g.connection))\n`
@@ -380,7 +389,7 @@ arm("H", "THE `cases` ROW COMMITTED FROM A REQUEST RATHER THAN FROM THE SIGNED D
      The arm is unchanged in meaning — the attribution is taken from something other
      than the signed bytes, so the record commits a project no signature covers —
      and it now names `store` because that is where the read lives. */
-  [["store", `      const project = typeof fm.case_project === "string" && fm.case_project !== "null"\n`
+  [["ratification", `      const project = typeof fm.case_project === "string" && fm.case_project !== "null"\n`
            + `        ? fm.case_project.trim() : null;`,
              `      const project = "PROJ-ARMED-CASE2-CONTROL-H";`]],
   [{ name: OWN,
@@ -396,6 +405,8 @@ arm("J", "C-41.12 DEMANDS A GRADE ON BOTH AXES OF A DECLARED BAR AGAIN — the r
   + "catalogue then refuses. §10's publish arm and the fixture guards MUST stay green (the act admits a "
   + "one-axis bar; only the check moved), and so must §5/§8's two-axis case.",
   [["checks", "} else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {",
+              "} else if (!BASIS_GRADES.includes(rq[axis])) {"],
+   ["ratchecks", "} else if (rq[axis] !== null && !BASIS_GRADES.includes(rq[axis])) {",
               "} else if (!BASIS_GRADES.includes(rq[axis])) {"]],
   [{ name: OWN,
      mustFail: ["AND THE CASE CEREMONY COMPLETES", "AND op=ratify PUBLISHES ITS MEMBER",
@@ -409,7 +420,7 @@ arm("J", "C-41.12 DEMANDS A GRADE ON BOTH AXES OF A DECLARED BAR AGAIN — the r
 /* ===================== (K) D-450 · THE UNSET AXIS STATED AS A BLANK, NOT IN WORDS */
 arm("K", "THE UNSET AXIS WRITTEN 'not set' INSTEAD OF §3 rule 14's words. DECLARED: §10's words arm MUST "
   + "fail, and nothing else — the pair in the frontmatter, the ceremony and ratify are untouched.",
-  [["store", "bar[axis] == null ? `no bar set on the ${axis} axis`", "bar[axis] == null ? `${axis} not set`"]],
+  [["strength", "bar[axis] == null ? `no bar set on the ${axis} axis`", "bar[axis] == null ? `${axis} not set`"]],
   [{ name: OWN,
      mustFail: ["and the document SAYS it in words"],
      mustNotFail: ["THE PAIR STAYS A PAIR IN THE SIGNED BYTES", "AND THE CASE CEREMONY COMPLETES",

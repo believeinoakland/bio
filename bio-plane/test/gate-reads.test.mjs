@@ -650,25 +650,35 @@ console.log("\n--- REC-14's reads, swept at the merge (2026-08-04) ---");
      would be an outcome that costs nothing to produce. What IS checkable is that
      the read carries the predicate from the one compilation point and binds the
      alias the predicate is written over. */
-  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): op=excludedby and op=publishededitions moved out
+     of store.mjs whole into src/publication/index.mjs (`excludedBy`, `publishedEditions`), and excludedBy's first half
+     — the live `inquiry_exclusions` rows — is now inquiry's `exclusionsNaming` (src/inquiry/index.mjs, inquiry R18),
+     which excludedBy calls with the same viewer. Each half is located and held to the same three properties in the
+     module that now holds it; the second half (`case_exclusions`, D-442) is asserted beside the first. */
+  const publicationSrc = readFileSync(fileURLToPath(new URL("../src/publication/index.mjs", import.meta.url)), "utf8");
+  const inquirySrc = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
   /* One method's BODY, bounded by class-member indentation. Not `indexOf(name)`:
      a method is CALLED long before it is declared, so slicing between two first
      mentions ran backwards and silently produced an empty string — an assertion
      that passes on nothing is the failure this whole suite is about. */
-  const methodSrc = (name) => {
-    const lines = store.split("\n");
+  const methodSrc = (name, src = publicationSrc) => {
+    const lines = src.split("\n");
     const at = lines.findIndex((l) => new RegExp(`^ {2}(async )?${name}\\(`).test(l));
     if (at < 0) return "";
     const end = lines.findIndex((l, i) => i > at && /^ {2}[A-Za-z#*]/.test(l));
     return lines.slice(at, end < 0 ? lines.length : end).join("\n");
   };
   const fn = methodSrc("excludedBy");
+  const fnInq = methodSrc("exclusionsNaming", inquirySrc);
   t("the excludedBy body was actually located (an empty slice would pass on nothing)",
-    fn.includes("inquiry_exclusions"), true);
+    [fn.includes("case_exclusions"), fnInq.includes("inquiry_exclusions")], [true, true]);
+  t("and excludedBy hands the live exclusions' half the SAME viewer it was stamped with",
+    /this\.inquiry\.exclusionsNaming\(targetId, viewer\)/.test(fn), true);
   t("op=excludedby compiles its gate at the ONE compilation point",
-    /viewerPredicate\(viewer\)/.test(fn), true);
+    [/viewerPredicate\(viewer\)/.test(fn), /viewerPredicate\(viewer\)/.test(fnInq)], [true, true]);
   t("and binds the alias that predicate is written over (REC-25's landed lesson)",
-    /JOIN bundles b\b/.test(fn) && /\$\{gate\.sql\}/.test(fn), true);
+    [/JOIN bundles b\b/.test(fn) && /\$\{gate\.sql\}/.test(fn), /JOIN bundles b\b/.test(fnInq) && /\$\{gate\.sql\}/.test(fnInq)],
+    [true, true]);
   const [xHid, xAbs] = [await GET(`op=excludedby&token=${dave}&id=${PROJ}`),
                         await GET(`op=excludedby&token=${dave}&id=${MISSING}`)];
   t("and a hidden id answers exactly as an absent one, targetId aside",
@@ -734,6 +744,148 @@ console.log("\n--- the DO envelope's `ms` is gone at the SOURCE, not stripped at
                    `op=projection&token=${dave}&id=${INFO}`, `op=stats&token=mem-rec25`])
     t(`no control-plane response carries ms: ${q.split("&")[0]}`,
       "ms" in (await GET(q)).body, false);
+}
+
+/* ------------------------------------------------------------------------- *
+ *  T8's READS, DRIVEN ON THE HIDDEN PROJECT (2026-09-28, legacy-tests; INTENT #2 J2, REEVALUATION #2 J2.3,
+ *  MONITORING #1 J3.6). Five reads arrived unclassified. Each is asked here by dave, who was never invited to
+ *  carol's projects, and by carol, who owns them, so the classification below is written from what the plane
+ *  ANSWERED rather than from what its code says it does:
+ *    - intent's `aspirationcontacts`, `pursuit`, `intentproposals` (N199 gates them: a PROJECT's aspiration is
+ *      seen only by a viewer who sees its project, and a triage act on a gap is that gap's project's material);
+ *    - reevaluation's `reevaluationnotices` (N200, K224: a notice whose NEWER capture is filed in a project the
+ *      viewer cannot see is answered without that capture, as op=versionnotice withholds the version);
+ *    - monitoring's `monitoring` (R32: every monitored address the viewer may see, with its row).
+ *  Built AFTER every count above was asserted (a new bundle here would move op=audit's and op=searchindexcheck's
+ *  totals), and citing nothing the sections above count (INFO's backlinks stay [PROJ] for the last section).
+ * ------------------------------------------------------------------------- */
+console.log("\n--- T8's reads (intent, reevaluation, monitoring), driven on the hidden project ---");
+{
+  const { normalizeAddress } = await import("../src/subresources.mjs");
+  const flatten = (r, ...ids) => JSON.parse(ids.reduce((s, id) => s.split(id).join("<ASKED>"), JSON.stringify(r)));
+  const names = (r, ...ids) => ids.filter((id) => JSON.stringify(r).includes(id));
+  /* intent writes its documents through promotion and names no group of its own (C-64.1), so the copy records the
+     group every fixture document above already names, once, by the administrator token's act. */
+  const seeded = await POST("op=instancegroupseed&token=t-admin-rec25", { slug: "believe-in-oakland" });
+  if (seeded.result?.ok === false) throw new Error(`instancegroupseed: ${JSON.stringify(seeded)}`);
+
+  /* --- intent: a PROJECT aspiration on carol's hidden project, and dave's own aspiration naming the same entity,
+         so op=aspirationcontacts has a real pair to report to a viewer who sees both ends. */
+  const pAsp = await POST(`op=aspirationdeclare&token=${carol}`,
+    { scope: "project", owner: PROJ, statement: "Name every hauling signatory in the secret file", entities: [ENT] });
+  if (pAsp.result?.ok !== true) throw new Error(`aspirationdeclare (project): ${JSON.stringify(pAsp)}`);
+  const PASP = pAsp.result.aspiration;
+  const dAsp = await POST(`op=aspirationdeclare&token=${dave}`,
+    { scope: "member", owner: "dave", statement: "Follow the hauling contract", entities: [ENT] });
+  if (dAsp.result?.ok !== true) throw new Error(`aspirationdeclare (member): ${JSON.stringify(dAsp)}`);
+  const DASP = dAsp.result.aspiration;
+
+  const cD = await GET(`op=aspirationcontacts&token=${dave}`);
+  const cC = await GET(`op=aspirationcontacts&token=${carol}`);
+  t("op=aspirationcontacts: the OWNER is told the pair her project's aspiration makes with dave's (the arm is live)",
+    (cC.body.result.contacts || []).map((p) => [p.a, p.b].sort()), [[PASP, DASP].sort()]);
+  t("op=aspirationcontacts: the uninvited member is told NO pair — a project's aspiration is that project's material",
+    cD.body.result.contacts, []);
+  t("op=aspirationcontacts: and nothing in his answer names the project, its aspiration or its statement",
+    names(cD.body, PROJ, PASP, "secret file"), []);
+
+  const ABSENT_ASP = "ASP-2026-9999-none";
+  const [puH, puA] = [await GET(`op=pursuit&token=${dave}&id=${PASP}`), await GET(`op=pursuit&token=${dave}&id=${ABSENT_ASP}`)];
+  t("op=pursuit: a hidden project's aspiration answers dave byte-identically to one that does not exist, the asked id aside",
+    flatten(puH, PASP), flatten(puA, ABSENT_ASP));
+  t("op=pursuit: that answer is a refusal, and names neither the project nor the statement",
+    [puH.body.result?.ok, names(puH.body, PROJ, "secret file")], [false, []]);
+  t("op=pursuit: the OWNER reads the pursuit record of her project's aspiration",
+    [(await GET(`op=pursuit&token=${carol}&id=${PASP}`)).body.result?.aspiration?.id], [PASP]);
+
+  /* intentproposals: carol states the objective's condition, so the thread's missing `closeout` stage is a GAP of her
+     project (`intent::<PROJ>::sweep::<ENT>`), then DEFERS it WITHOUT naming the project — N199's case: the set-aside
+     act concerns the project its key names. */
+  const cond = await POST(`op=objectivecondition&token=${carol}`, { project: PROJ,
+    condition: { progression: "sweep", entity: ENT, required: { stages: ["closeout"] }, satisfied: { share: 100 } } });
+  if (cond.result?.ok !== true) throw new Error(`objectivecondition: ${JSON.stringify(cond)}`);
+  const GAP = `intent::${PROJ}::sweep::${ENT}`;
+  const open = await GET(`op=intentproposals&token=${carol}&project=${PROJ}`);
+  t("op=intentproposals: the OWNER is proposed her project's gap (the arm is live)",
+    (open.body.result.proposals || []).some((p) => p.key === GAP), true);
+  const tri = await POST(`op=triage&token=${carol}`, { proposal: GAP, act: "defer", reason: "after the closeout audit" });
+  if (tri.result?.ok !== true) throw new Error(`triage: ${JSON.stringify(tri)}`);
+  const ipD = await GET(`op=intentproposals&token=${dave}`);
+  const ipC = await GET(`op=intentproposals&token=${carol}`);
+  t("op=intentproposals: the OWNER's set-aside list carries the deferred gap, with its project",
+    (ipC.body.result.set_aside || []).filter((d) => d.key === GAP).map((d) => [d.act, d.project]), [["defer", PROJ]]);
+  t("op=intentproposals: the uninvited member's does not — open or set aside",
+    [(ipD.body.result.proposals || []).some((p) => p.key === GAP), (ipD.body.result.set_aside || []).some((d) => d.key === GAP)],
+    [false, false]);
+  t("op=intentproposals: and nothing in his answer names the project", names(ipD.body, PROJ), []);
+  const [ipH, ipA] = [await GET(`op=intentproposals&token=${dave}&project=${PROJ}`),
+                      await GET(`op=intentproposals&token=${dave}&project=${MISSING}`)];
+  t("op=intentproposals: asked BY the hidden project, dave is answered byte-identically to an absent one, the id aside",
+    flatten(ipH, PROJ), flatten(ipA, MISSING));
+
+  /* --- reevaluation and monitoring: a SHARED, MONITORED document (INFO2) at an address, and a NEWER capture of the
+         same address filed inside a SECOND project of carol's (PROJN), hidden from dave. A question rests on INFO2, so
+         the notice sweep raises a notice whose newer capture is the hidden one. */
+  const RAW = "https://example.gov/t8/hauling-contract.pdf";
+  const NORM = normalizeAddress(RAW);
+  const OSHA = sha("t8-older-capture"), NSHA = sha("t8-newer-capture-in-hidden-project");
+  const INFO2 = "INFO-2026-0002-watched";
+  await mk(INFO2, "information", "mem-rec25",
+    `source:\n  locator: ${RAW}\n  authority: City Clerk\nmonitoring:\n  enabled: true\n  frequency: weekly\n`,
+    { sha: OSHA, entities: [] });
+  const PROJN = (await mk(null, "project", carol, "", { sha: NSHA, entities: [] }, "the newer contract, held in private")).bundleId;
+  for (const [s, at] of [[OSHA, "2026-07-01T00:00:00Z"], [NSHA, "2026-07-05T00:00:00Z"]]) {
+    const r = await (await doStub.fetch("http://x/recordcapturedlocator", { method: "POST",
+      body: JSON.stringify({ address: RAW, addressNorm: NORM, captureSha: s, retrieved: at }) })).json();
+    if (r?.ok === false || r?.result?.ok === false) throw new Error(`recordcapturedlocator: ${JSON.stringify(r)}`);
+  }
+  const INQN = "INQ-2026-0001-watched";
+  const inqText = ["---", `id: ${INQN}`, "object_type: inquiry", "schema: inquiry@1",
+    `title: "What does the hauling contract say?"`, "current_state: open", "prior_state: null",
+    'created: "2026-07-06T00:00:00Z"', 'last_updated: "2026-07-06T00:00:00Z"',
+    "produced_by:", "  mode: agent", "  capability_tier: high", "group: believe-in-oakland",
+    "references:", `  - target: ${INFO2}`, "    rel: cites", "    status: confirmed",
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+    "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
+    "recheck_triggers:", "  - text: Revisit when the contract is re-issued",
+    "    description: A re-issued contract may restate the parties.",
+    "basis:", `  - target: ${INFO2}`, "    role: supports",
+    "---", "", "## Question", "", "What does the hauling contract say?", "",
+    "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
+    "## Session Log", "", "### Session 2026-07-06T00:00:00Z | Formation | agent",
+    "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
+  const inq = await POST(`op=promote&token=${ruth}`, { bundleId: INQN, base: null, snapKey: `${INQN}-new`, author: "suite",
+    files: [{ path: "bundle.md", text: inqText, bytes: inqText.length, sha256: sha(inqText) }], register: [],
+    meta: { object_type: "inquiry", group: "believe-in-oakland", title: "What does the hauling contract say?",
+            current_state: "open", created: "2026-07-06T00:00:00Z", last_updated: "2026-07-06T00:00:00Z" } });
+  if (!inq.result?.ok) throw new Error(`promote ${INQN}: ${JSON.stringify(inq).slice(0, 900)}`);
+  const raised = await POST("op=reevaluationraise&token=t-admin-rec25", {});
+  const mine = (raised.result?.raised || []).filter((n) => n.holder === INQN);
+  if (!mine.length || mine[0].newer_capture !== NSHA) throw new Error(`reevaluationraise: ${JSON.stringify(raised).slice(0, 900)}`);
+  const NOTE = mine[0].notice;
+
+  const nD = await GET(`op=reevaluationnotices&token=${dave}&holder=${INQN}`);
+  const nC = await GET(`op=reevaluationnotices&token=${carol}&holder=${INQN}`);
+  const nOf = (r) => (r.body.result?.notices || []).find((n) => n.notice === NOTE) || null;
+  t("op=reevaluationnotices: the OWNER of the project holding the newer capture is told it, its bundle and its grade",
+    [nOf(nC)?.newer_capture, nOf(nC)?.newer_bundle, nOf(nC)?.affects != null], [NSHA, PROJN, true]);
+  t("op=reevaluationnotices: the uninvited member still sees the notice on a question he may see (the holder is shared)",
+    [nOf(nD)?.holder, nOf(nD)?.capture_sha], [INQN, OSHA]);
+  t("op=reevaluationnotices: but its newer version is withheld WHOLE — capture, bundle, grade and effect (N200, K224)",
+    [nOf(nD)?.newer_capture, nOf(nD)?.newer_bundle, nOf(nD)?.grade, nOf(nD)?.affects], [null, null, null, null]);
+  t("op=reevaluationnotices: and nothing in his answer names the hidden project or its capture", names(nD.body, PROJN, NSHA), []);
+  t("op=reevaluationnotices: a machine credential is not filtered (D-15's carve-out)",
+    nOf(await GET(`op=reevaluationnotices&token=mem-rec25&holder=${INQN}`))?.newer_capture, NSHA);
+
+  const mD = await GET(`op=monitoring&token=${dave}`);
+  const mC = await GET(`op=monitoring&token=${carol}`);
+  const rowOf = (r) => (r.body.result?.items || []).find((i) => i.bundle === INFO2) || null;
+  t("op=monitoring: the watched document is listed to both — it is shared evidence (the arm is live)",
+    [!!rowOf(mD), !!rowOf(mC)], [true, true]);
+  t("op=monitoring: the OWNER's row names the newer version at the address, filed in her project",
+    JSON.stringify(rowOf(mC)).includes(PROJN), true);
+  t("op=monitoring: and nothing in the uninvited member's answer names the hidden project that holds a version there",
+    names(mD.body, PROJN), []);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -1288,7 +1440,9 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        rows from INTENT #1 J4.2 and REEVALUATION #1 J2.9), each reason read off its code path whole, from
        `intentOps` / `reevaluationOps` to the reads it makes, and each hidden-project arm DRIVEN once (a scratch
        probe on this suite's fixture: dave, carol's secret project; not kept, as this suite drives only the ops it
-       names) before being written. The other four are deliberately LEFT UNCLASSIFIED and red, because each reads a hidden project's material without gating it (legacy-tests' T7 record):
+       names) before being written. The other four were deliberately LEFT UNCLASSIFIED and red in T7, because each read a
+       hidden project's material without gating it (legacy-tests' T7 record; CLASSIFIED in T8, below, once N199 and N200
+       closed each, and each DRIVEN in this suite's T8 section above):
        `intentproposals` (a gap deferred or dismissed without naming its project is served in `set_aside` to every
        viewer, and its key is `intent::<project id>::…`), `pursuit` and `aspirationcontacts` (a PROJECT-scoped
        aspiration is asked `inSight` of its OWN id, which viewerPredicate never filters, so an uninvited member reads
@@ -1328,6 +1482,48 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "asks `sees` of the passage's bundle (VERSION_NOTICE_NO_CONTENT for hidden and absent alike) and reads the "
       + "version chain under the same viewer, so a newer version filed in a project the caller cannot see is not in it "
       + "(op=versionnotice's gate). Stamped fail-closed in index.mjs. It writes nothing.",
+    /* CLASSIFIED 2026-09-28 (T8, legacy-tests; INTENT #2 J2, REEVALUATION #2 J2.3): the four T7 left red, each reason
+       read off its code path whole (src/intent/index.mjs `contacts`, `pursuitOf`, `proposals` with `#pursuit`,
+       `#project`, `#setAside`, `#allProposals`, `#conditioned`; src/reevaluation/index.mjs `notices` with `#redactor`
+       and `#captureSeer`) and each hidden-project arm DRIVEN in this suite's T8 section above.
+       `monitoring` (monitoring R32) was left unclassified and red at first: it handed the uninvited member the id of a
+       hidden project holding a version at a monitored address (the row's `versions` and `newer_unmonitored`). CLASSIFIED
+       2026-09-28 once tranche/T8's sight fix (K267–K269) reached this branch: every bundle a row names now passes
+       `inSight`, read off src/monitoring/index.mjs `monitoring` and `#withheld` whole, and the three op=monitoring arms
+       in the T8 section above drive it on the hidden project. */
+    aspirationcontacts: "intent R13, R23 (N199): each pair of held aspirations naming a common entity or progression. "
+      + "GATED per aspiration: the pairs are drawn only from the aspirations the viewer may see (Intent#pursuit), and "
+      + "a PROJECT's aspiration is seen only by a viewer who sees its owning project (Intent#project: `existenceAct`, "
+      + "then `inSight`), whatever its own bundle answers — so an aspiration of a project the caller was never invited "
+      + "to is in no pair, and no count of the withheld is given. Stamped fail-closed with INTENT_READS in index.mjs. "
+      + "It writes nothing.",
+    pursuit: "intent R14, R23 (N199): one aspiration's pursuit record. GATED on the aspiration first, by the same "
+      + "Intent#pursuit (a project's aspiration through its project's sight), and one the viewer may not see answers "
+      + "NO_SUCH_ASPIRATION exactly as an id that does not exist, before any goal is read; each goal is asked "
+      + "Intent#pursuit again and each goal's objectives are kept only where the viewer sees their project "
+      + "(Intent#goalView); the triage acts are read only for those projects, and the capture requests they name through "
+      + "capture-requests' own read under the same viewer. Stamped fail-closed with INTENT_READS. It writes nothing.",
+    intentproposals: "intent R15, R16, R23 (N199): every open proposal and every proposal set aside. GATED: a `project` "
+      + "asked goes through Intent#project (hidden answers NO_SUCH_PROJECT exactly as absent) before anything is read; "
+      + "without one, the gaps are drawn only from the projects the viewer sees (Intent#conditioned asks `inSight`), and "
+      + "a set-aside act is listed only when the viewer sees the project it concerns — the project named with it, else "
+      + "the one its gap key names (`intent::<project>::…`, Intent#projectOfAct) — with no count of the withheld. "
+      + "Stamped fail-closed with INTENT_READS. It writes nothing.",
+    monitoring: "monitoring R32 (K267–K269): every monitored address the viewer may see, with its plan row. GATED "
+      + "per bundle: a row is listed only when the viewer sees the version it checks (`membership.inSight` over the row's "
+      + "`bundle`), and every other bundle the row names passes the same `inSight` (Monitoring#withheld): `versions` "
+      + "keeps the seen ones, `newer_unmonitored` keeps the seen ones or is dropped, and a disagreement is restated over "
+      + "the seen versions' authored words or dropped — so a version filed in a project the caller was never invited to "
+      + "is ABSENT, never a placeholder, with no count of the withheld (`counts` and `truncated` are taken over the rows "
+      + "the viewer sees). The viewer is stamped fail-closed in index.mjs (`driveshells`' reason, REC-25). It writes "
+      + "nothing.",
+    reevaluationnotices: "reevaluation R14, R20 (N200, K224): the pushed notices, for the queue that renders them. "
+      + "GATED twice: a notice whose HOLDER the viewer may not see is withheld whole in SQL (viewerPredicate over "
+      + "`bundles`, JOINed on the holder) and not counted; in a visible notice the NEWER version is withheld whole when "
+      + "the viewer sees no bundle registering the newer capture (`#captureSeer`, the gate op=versionchain reads it "
+      + "through): capture, grade and effect answer null, and the newer bundle passes the module's `#redactor`. So a "
+      + "newer version filed in a project the caller was never invited to is absent from the notice, as op=versionnotice "
+      + "withholds it. Stamped fail-closed in index.mjs. It writes nothing.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */

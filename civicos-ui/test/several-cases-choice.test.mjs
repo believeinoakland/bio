@@ -245,8 +245,10 @@ ok("SUBSTRATE: op=publishedcase by the finding's id refuses naming BOTH cases, a
    several?.ok === false && CASE_X !== CASE_Y && JSON.stringify([...(several.cases || [])].sort()) === JSON.stringify(BOTH),
    JSON.stringify(several).slice(0, 300));
 /* The row is read from the catalogue, never typed here: a hand copy agrees at zero cost. */
-const { CASE_DERIVATION_CHECKS } = await import(pathToFileURL(new URL("../../bio-plane/checks/bio-checks.mjs", import.meta.url).pathname).href);
-const ROW = Object.values(CASE_DERIVATION_CHECKS || {}).find((r) => r && r.check === "C-44.2") || null;
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): C-44.2 left the catalogue's CASE_DERIVATION_CHECKS for
+   publication's `CASE_RESOLUTION_CHECKS` (the refusal is the published read's), read from the plane's module. */
+const { CASE_RESOLUTION_CHECKS } = await import(pathToFileURL(new URL("../../bio-plane/src/publication/checks.mjs", import.meta.url).pathname).href);
+const ROW = Object.values(CASE_RESOLUTION_CHECKS || {}).find((r) => r && r.check === "C-44.2") || null;
 ok("DEC-49: the refusal carries its CODE, its C-number (C-44.2) and the catalogue row's canned translation — "
  + "the code the reason carries, the translation a sentence and not the code",
    !!ROW && several?.code === several?.reason && several?.check === "C-44.2"

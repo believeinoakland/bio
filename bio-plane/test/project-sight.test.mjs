@@ -1035,6 +1035,28 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
     t(`11g000 (T7): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
       routes[witness] !== undefined, true);
   }
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; layers 8-10 of T8): the store's map now also spreads the routes of
+     case-authoring, ratification, publication, review, actions and monitoring, each declared in its module's index.mjs
+     exactly as T7's are (`return {`, entries one indent in, a local `q("<name>")`). 11g++ named nine classified reads
+     whose routes had left the store's own map for these (`excludedby`, `casedrafts`, `gatefacts`, `reviewcopy`,
+     `casedocument`, `verify`, `publishedcase`, `publishededitions`, `caseflags`); they are read into the same table,
+     the same way, each map floored by one route it must carry. */
+  for (const [mod, fn, witness] of [
+    ["case-authoring", "caseAuthoringOps", "publishcase"], ["ratification", "ratificationOps", "gatefacts"],
+    ["publication", "publicationOps", "publishedcase"], ["review", "reviewOps", "reviewcopy"],
+    ["actions", "actionsOps", "actionquotes"], ["monitoring", "monitoringOps", "driveshells"]]) {
+    const xlines = src(`${mod}/index.mjs`).split("\n");
+    const xfn = xlines.findIndex((l) => new RegExp(`^export function ${fn}\\(`).test(l));
+    const xat = xfn < 0 ? -1 : xlines.findIndex((l, i) => i > xfn && /^  return \{/.test(l));
+    let xcur = null;
+    for (let i = xat + 1; xat >= 0 && i < xlines.length && !/^  \};/.test(xlines[i]); i++) {
+      const m = xlines[i].match(/^    ([a-z0-9]+): /);
+      if (m) { xcur = m[1] in routes ? null : m[1]; if (xcur) routes[xcur] = ""; }
+      if (xcur) routes[xcur] += xlines[i].replace(/\bq\("/g, 'searchParams.get("');
+    }
+    t(`11g000 (T8): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
+      routes[witness] !== undefined, true);
+  }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
     return m ? Function(`return (${m[1]});`)() : null; };
   const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");

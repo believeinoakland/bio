@@ -28,7 +28,13 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "ratify-authority.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
+/* RE-ANCHORED 2026-09-28 (legacy-tests T8, RATIFICATION #2 J6, PUBLICATION #1 J4.6): op=ratify's handler is
+   `ratifyOp` in `src/ratification/ops.mjs` (the arms that patched `index.mjs`), the committer is ratification's
+   `publish` in `src/ratification/index.mjs` (the arms that patched `store.mjs`), and the rests-on read over the
+   published graph is publication's `ratifiedFindingsRestingOn` in `src/publication/index.mjs`. Every patch now names
+   its file relative to `src/` and matches exactly once there; the real files the arms mirror are digested too. */
+const REAL = ["src/index.mjs", "src/store.mjs", "src/ratification/ops.mjs", "src/ratification/index.mjs",
+              "src/publication/index.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 /* The helper's delivery question and owner question (`Store#caseAuthority`). */
@@ -41,15 +47,15 @@ const OWNER = "    if (!project || !this.#isProjectOwner(project, signer))";
    now; the arm still patches the PINNED branch only (the evidence branch ends in its own marked line). */
 const FINDING_CALL = "        if (refused) return refused;\n      }\n      /* ===== D-431";
 /* D-431: the outside-a-case block's opening (`Store#publish`). */
-const RESTING = "        const resting = this.#ratifiedFindingsRestingOn(bundleId);\n";
+const RESTING = "        const resting = this.publication.ratifiedFindingsRestingOn(bundleId);\n";
 
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
 
   /* THE BRIEF'S CONTROL 1: project bundles re-admitted. Every project-bundle arm publishes. */
   "readmit-project-bundles": {
-    patches: [["index.mjs", "      if (normalizeType(facts.row.object_type) === \"project\")\n",
-               "      if (false)\n"]],
+    patches: [["ratification/ops.mjs", "    if (normalizeType(facts.row.object_type) === \"project\")\n",
+               "    if (false)\n"]],
     mustFail: ["PROJECT BUNDLE"],
   },
 
@@ -67,7 +73,7 @@ const ARMS = {
      reach RATIFY_STALE, naming its real sha). Only the two sight arms that compare the answer
      may go red. */
   "type-before-sight": {
-    patches: [["index.mjs", "gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`",
+    patches: [["ratification/ops.mjs", "gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`",
                "gatefacts?id=${encodeURIComponent(body.bundleId)}`"]],
     mustFail: ["SIGHT: vic", "SIGHT: and carrying"],
   },
@@ -76,7 +82,7 @@ const ARMS = {
      the lie); the three ALLOWED arms, their publication checks, and the joined member's retry
      MUST go red. */
   "refuse-every-finding": {
-    patches: [["store.mjs", FINDING_CALL,
+    patches: [["ratification/index.mjs", FINDING_CALL,
                "        refused = refused || { ok: false, reason: \"PROJECT_ACT_NOT_A_PARTICIPANT\" };\n" + FINDING_CALL]],
     mustFail: ["ALLOWED", "RETRY: the same act by a joined member"],
   },
@@ -84,8 +90,8 @@ const ARMS = {
   /* THE ASKED-AFTER-THE-RETRY ARM: the finding's questions moved below the idempotent retry
      (asked only for new bytes). Only ruth's retry may go red. */
   "authority-after-retry": {
-    patches: [["store.mjs", "      const pinnedBy = this.#pinnedCaseEditionsOf(bundleId, bundleSha);\n      if (pinnedBy.length) {",
-               "      const pinnedBy = this.#pinnedCaseEditionsOf(bundleId, bundleSha);\n"
+    patches: [["ratification/index.mjs", "      const pinnedBy = this.publication.pinnedCaseEditionsOf(bundleId, bundleSha);\n      if (pinnedBy.length) {",
+               "      const pinnedBy = this.publication.pinnedCaseEditionsOf(bundleId, bundleSha);\n"
                + "      if (pinnedBy.length && !this.#one(`SELECT 1 AS x FROM published_bundles WHERE bundle_id=? AND bundle_sha=?`, bundleId, bundleSha)) {"]],
     mustFail: ["RETRY: ruth re-sends"],
   },
@@ -94,8 +100,8 @@ const ARMS = {
      inquiry no ratified case rests on, so it falls through to the commit. Only the (a) arms may go red
      (the loose inquiry and P's prepared finding publish; iris's second attempt at P is then a retry). */
   "readmit-unpinned-finding": {
-    patches: [["store.mjs", RESTING + "        if (!resting.length) {\n",
-               RESTING + "        if (!resting.length && normalizeType((this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId) || {}).object_type) !== \"inquiry\") {\n"]],
+    patches: [["ratification/index.mjs", RESTING + "        if (!resting.length) {\n",
+               RESTING + "        if (!resting.length && normalizeType((this.record.head(bundleId) || {}).type) !== \"inquiry\") {\n"]],
     mustFail: ["OUTSIDE A CASE (a)"],
   },
 
@@ -104,7 +110,7 @@ const ARMS = {
      refused C-58.3: the identity arms (behavioural and structural) MUST go red, with the evidence arms over
      those bundles and 8b's two (both referenced only). */
   "rests-on-reads-basis": {
-    patches: [["store.mjs", "if (Store.publishedGraphEdges(fm).some((e) => e.disclosure === \"serve\" && e.to === bundleId))",
+    patches: [["publication/index.mjs", "if (publishedGraphEdges(fm).some((e) => e.disclosure === \"serve\" && e.to === bundleId))",
                "if ((Array.isArray(fm.basis) ? fm.basis : []).some((l) => l && l.target === bundleId))"]],
     mustFail: ["IDENTITY", "EVIDENCE ALLOWED: gus", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED", "ANY OWNER"],
   },
@@ -114,7 +120,7 @@ const ARMS = {
      the authority arms over evidence (now answered C-58.3 instead of by the case's authority) and the
      graph identity. */
   "refuse-every-evidence": {
-    patches: [["store.mjs", RESTING + "        if (!resting.length) {\n", RESTING + "        if (true) {\n"]],
+    patches: [["ratification/index.mjs", RESTING + "        if (!resting.length) {\n", RESTING + "        if (true) {\n"]],
     mustFail: ["EVIDENCE ALLOWED", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED",
                "IDENTITY (ALLOWED", "ANY OWNER"],
   },
@@ -167,3 +173,7 @@ const untouched = before.every((d, i) => d === after[i]);
 console.log(`\nreal sources: ${REAL.map((p, i) => `${p.split("/").slice(-1)[0]} ${after[i]}`).join(" · ")} — untouched: ${untouched ? "YES" : "NO"}`);
 if (!untouched) bad++;
 process.exit(bad ? 1 : 0);
+/* RE-MEASURED 2026-09-28 by legacy-tests (T8), after the re-anchoring above (the driver copies the tree, so the real
+   sources were never edited; untouched: YES): baseline 52/0 · readmit-project-bundles 48/4 · type-before-sight 50/2 ·
+   refuse-every-finding 42/10 · authority-after-retry 51/1 · readmit-unpinned-finding 48/4 · rests-on-reads-basis 43/9 ·
+   refuse-every-evidence 43/9 — every arm AS DECLARED. */

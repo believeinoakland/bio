@@ -504,8 +504,16 @@ console.log("\n--- the batch write path refuses a document that would reach veri
   /* The structural fact that makes this necessary, pinned so it cannot drift
      silently: if runGate ever gains a second call site, this pin changes and
      somebody re-reads the reasoning above. */
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): op=ratify's handler left `index.mjs` for
+     `src/ratification/ops.mjs`, so the control plane is no longer one file. The call sites are counted over the
+     control plane's NAMED files — `index.mjs` and the two module files that now hold its publish/ratify handlers
+     (ratification's `ops.mjs`, publication's `worker.mjs`) — named rather than walked, as before; the one there is is
+     op=ratify's. */
+  const planeFiles = ["index.mjs", "ratification/ops.mjs", "publication/worker.mjs"];
+  const callSites = planeFiles.flatMap((f) => [...readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8")
+    .matchAll(/await runGate\(/g)].map(() => f));
   t("runGate still has exactly one call site in the control plane",
-    [...idxSrc.matchAll(/await runGate\(/g)].length, 1);
+    [callSites.length, callSites[0] ?? null, idxSrc.length > 100_000], [1, "ratification/ops.mjs", true]);
   t("and release() now carries the chain among its entry requirements",
     /a provenance_chain for documents\[/.test(src), true);
 }

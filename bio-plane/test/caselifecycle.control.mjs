@@ -66,7 +66,13 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-caselifecycle");        /* inside this worktree, rule 1 */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED (legacy-tests T8): the revision flag (raise, read, discharge) and the case relation left `store.mjs`
+   for `src/publication/index.mjs` (the name STORE is kept for those arms); the NOT_CONCLUDED refusal for
+   `src/case-authoring/index.mjs` (arm c); and op=inquiryground's guard, already moved by T7, is in
+   `src/inquiry/index.mjs` as `this.#caseMember(target)` (arm d2). Each needle matches exactly once. */
+const STORE = join(ROOT, "src", "publication", "index.mjs");
+const AUTHORING = join(ROOT, "src", "case-authoring", "index.mjs");
+const INQUIRY = join(ROOT, "src", "inquiry", "index.mjs");
 const SUITE = join(DIR, "caselifecycle.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -125,7 +131,7 @@ const ARMS = {
           "        WHERE case_id=? AND acted_at IS NULL`, when, by ?? null, edition ?? null, caseId);",
           "        WHERE acted_at IS NULL`, when, by ?? null, edition ?? null);") },
 
-  c: { files: [STORE],
+  c: { files: [AUTHORING],
        label: "(c) THE PRECONDITION DOES NOT SURVIVE THE STATE'S REMOVAL — delete the NOT_CONCLUDED "
             + "refusal from publishCase(). This is the exact shape of the damage the item was warned "
             + "about: the old guard `legalFrom.includes(\"published\")` is false from every state once the "
@@ -142,7 +148,7 @@ const ARMS = {
           CHANGED IN PLACE under a quote that was not moved with it, the D-276
           class) rather than by anybody remembering to look, which is the instrument
           doing exactly what it exists for. */
-       apply: () => edit(STORE,
+       apply: () => edit(AUTHORING,
          '      if (conc.state !== "concluded")',
          '      if (false && conc.state !== "concluded")') },
 
@@ -173,14 +179,14 @@ const ARMS = {
      is what a published member now says, and fences every concluded finding in
      the corpus with it. The fixture builds, every refusal in block 4 still
      fires, and ONLY the over-strictness arm bites. */
-  d2: { files: [STORE],
+  d2: { files: [INQUIRY],
         label: "(d2) OVER-STRICTNESS, THE REALISTIC SHAPE — ONE guard is translated from the state word to "
              + "`concluded` instead of to the case relation, so op=inquiryground refuses every concluded "
              + "finding whether or not any case ever froze it. The fixture still builds and every refusal "
              + "in block 4 still fires, so a suite asserting only that the guards bite would read this as "
              + "a stronger plane rather than as a fence around the whole corpus",
-        apply: () => edit(STORE,
-          "    if (this.#caseRelationOf(target).member)\n"
+        apply: () => edit(INQUIRY,
+          "    if (this.#caseMember(target))\n"
         + '      return { ok: false, reason: "PUBLISHED_CANNOT_RESTRUCTURE", target, from: b.current_state,',
           '    if (b.current_state === "concluded")\n'
         + '      return { ok: false, reason: "PUBLISHED_CANNOT_RESTRUCTURE", target, from: b.current_state,') },

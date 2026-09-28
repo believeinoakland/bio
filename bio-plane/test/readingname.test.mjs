@@ -888,7 +888,12 @@ t("a WHOLE correspondence still outranks every partial and is never gated on rea
  * SURFACE applies after the plane answers, and any ordering in another module.
  * It is a shape detector over one file, not a census of every order in BIO. */
 console.log("\n=== REC-77 · THE SWEEP: orderings fixed in advance, over bio-plane/src/store.mjs ===");
-const RANKED = [...STORE_TEXT.matchAll(/(?:^|[^\w.])((?:Store\.)?#?[A-Z][A-Z_]{2,})\.indexOf\(/gm)]
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): the BASIS_GRADES ordering (publishCase's bar gate,
+   `rank = (g) => BASIS_GRADES.indexOf(g)`) left store.mjs with `publishCase` for `src/case-authoring/index.mjs`. The
+   sweep reads the store as it stood before that extraction: store.mjs, entities' file and case-authoring's. */
+const SWEEP_TEXT = STORE_TEXT + "\n"
+  + readFileSync(fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url)), "utf8");
+const RANKED = [...SWEEP_TEXT.matchAll(/(?:^|[^\w.])((?:Store\.)?#?[A-Z][A-Z_]{2,})\.indexOf\(/gm)]
   .map((m) => m[1]);
 const ORDER_BY = (STORE_TEXT.match(/ORDER BY/g) || []).length;
 const SORTS = (STORE_TEXT.match(/\.sort\(/g) || []).length;
