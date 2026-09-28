@@ -24,4 +24,4 @@
 - 47 legacy suites naming strength's ops or constants, before (worktree at 292459ff6d) and after: same pass/fail lines; six red on the baseline too (bounds, hygiene, machine-fences, machinefences-dec49, meaning-bounds, strengthpair), content differences as above.
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture strength`: 9 product files, 34 relative imports; 0 failures. `coverage strength`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership strength tranche/T10`: 7 files; legacy-store 1 added, 4 removed; legacy-checks 0/0; 0 failures.
 
-Size (session_01TQhFSmtZmNQAvKiWVVjB19): test runs 12, module lines 1045
+Size (session_01TQhFSmtZmNQAvKiWVVjB19): test runs 12, module lines 1418
