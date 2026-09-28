@@ -1,6 +1,24 @@
 # host-governor (T9)
 
-**Status** · session_01YFNNHMErCvvjFpwV1NB6Kt · depth 2 · WORKING · handled B0
+**Status** · session_01YFNNHMErCvvjFpwV1NB6Kt · depth 2 · WORKING · handled B2
+
+## Completion (HOST-GOVERNOR #2)
+
+**Applied.** N132 (K287, R26): `governorOf(ctx, opts)` records which of `env`, `now`, `random` a caller supplied; a defaulted one is adopted from the first later caller that supplies it (R3 reads the adopted `env` from the next admission), one differing from a supplied one (an `env` by its bindings, `{}` counting as supplied; `now`/`random` by identity), or any `record` other than the one held, is refused by a throw naming the option, judged before anything is adopted so a refused call changes nothing. Capture R58's pattern. Header now `(R1–R26)`.
+
+**Deferred.** Nothing.
+
+**Found in other modules / generated artifacts.**
+- My change stales two generated artifacts, not rebuilt (§14): `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`) and `agent-worker/dist/agent-worker.bundled.mjs` (owner `agent-worker`); both take `bio-plane/src/host-governor/index.mjs` as an input. Regenerate at layer close.
+- `fleetbundles.test.mjs` already fails on `tranche/T9` without my change: agent-worker's recorded inputs lack `bio-plane/src/membership/checks.mjs`, which a fresh build pulls in (layer 2's membership change; recipe drift in agent-worker's manifest).
+- Legacy battery files naming the governor (113 files) run with and without my change: the same 16 files fail both ways (bounds, cpdf18-pdf-images, d543-instant-precision, derivation-bounds, fleetbundles, hygiene, machine-fences, meaning-bounds, observation-log, plane-envelope, project-sight, reextract, scheduler, textshown, tier3-layer-parts; capturerequests failed on the baseline run only, passing with mine). None is caused by this job; not investigated further (legacy-tests' own).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/host-governor/`: tests 30, pass 30, fail 0, todo 0.
+- Users of this module: `m/capture` 59 pass 0 fail; `m/capture-requests` 53 pass 0 fail; `m/monitoring` 43 pass 0 fail 10 todo (its own); `m/queue` 10 pass 0 fail; instance-setup has no test directory.
+- `format`: 0 failures · `architecture`: 0 failures · `coverage`: 26 of 26 live ids named by a test, 0 failures · `ownership` against `tranche/T9`: 0 failures, legacy-store/legacy-index 0 lines.
+
+Size (session_01YFNNHMErCvvjFpwV1NB6Kt): test runs 12, module lines 367
 
 ## J1 · QUESTION
 
