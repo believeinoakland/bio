@@ -1388,7 +1388,9 @@ await section("ARM V · refusal text is surfaced, never copied", () => {
      app.html to copy (a ceiling at zero, the safe direction). The reach floor is the figure this walk PRINTED on
      `job/T9/legacy-tests` (178 files: `index.mjs` and every module file); a legitimate drop is a decision, made here.
      When git cannot answer, every file counts and the report says UNVERIFIED, never clean (provenance.mjs rule 4). */
-  const SRC_REACH_FLOOR = 178;
+  /* RE-PINNED 2026-09-28 (legacy-tests T10, B1): 178 -> 177, by name against the T10 opening tree (ac699662aa):
+     `bias/interim.mjs` (N143) and `run-productions/interim.mjs` (N194) deleted, `provenance/checks.mjs` arrived. */
+  const SRC_REACH_FLOOR = 177;
   const REPO = new URL("../../", import.meta.url).pathname;
   const PROV = readGitProvenance(REPO);
   const inCommit = (f) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, f));

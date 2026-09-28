@@ -233,8 +233,11 @@ arm("g", "a correct refusal in an UNANTICIPATED spelling — src/basis-versions/
        something or it is not evidence. `MACHINE_FENCE_CHECKS` is not among
        store.mjs's imports today, so the arm adds it; both edits are ONE arm
        because they are one change. */
-    const withImport = s.replace('CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS, ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";',
-      'CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS, ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";\n'
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T10; m025 A4): basis-versions no longer imports `ACT_SHAPE_CHECKS` (its act
+       shape refusal is entities' `actShapeRefusal` now), so the import line the arm extends reads
+       `CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS } from …`. Same edit, same site, same declaration. */
+    const withImport = s.replace('createSha256, CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS } from "../../checks/bio-checks.mjs";',
+      'createSha256, CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS } from "../../checks/bio-checks.mjs";\n'
     + 'import { MACHINE_FENCE_CHECKS } from "../../checks/bio-checks.mjs";');
     if (withImport === s) throw new Error("ARM g NEVER ARMED — the import anchor matched zero times");
     return withImport.replace('return { ok: false, reason: "MACHINE_CANNOT_CONCLUDE",\n               detail:',

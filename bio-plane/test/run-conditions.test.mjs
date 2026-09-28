@@ -77,7 +77,8 @@
 
    WHAT THIS MATCHER CAN AND CANNOT SEE — stated here rather than discovered:
      - IT SEES: methods of `Store` declared at two-space indent whose body
-       contains `FROM ai_runs` after comments are stripped. It reads the column
+       contains `FROM ai_runs` after comments are stripped (and, since 2026-09-28, a column-0 `function`
+       declaration, with keyword lines skipped as signatures: see `runReaders`). It reads the column
        list out of the ONE `CREATE TABLE IF NOT EXISTS ai_runs (...)` literal.
      - IT CANNOT SEE: a read of `ai_runs` built by string concatenation, a read
        inside a nested function expression assigned elsewhere, a reader outside
@@ -170,11 +171,24 @@ const runColumns = (schemaSrc) => {
 /* THE READER CORPUS. Method signatures at two-space indent, brace-free
    segmentation by NEXT signature — the same shape `airun.test.mjs`'s consumer
    walk uses, and it is the walk arm (3) of the negative control neuters. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7)): ai-runs R42 (N191, N276) made the hidden-run tail a MODULE-LEVEL
+   function, `export function hiddenRuns(…)` at column 0, whose own statement reads `ai_runs`. The walk saw only
+   two-space-indent signatures, so it took the function's two-space `if (` line for a method and named a reader `if`
+   (W3). The walk now also marks a column-0 `function` declaration (exported or not), and a two-space mark whose name
+   is a JavaScript keyword (`if`, `for`, `while`, `switch`, `catch`, `return`, …) is not a signature and is skipped, so
+   such a line stays inside the body it belongs to. Measured on this tree: the same 351 marks and the same readers as
+   before but for `if` → `hiddenRuns`; W5's seek guard still reads both files empty with the reads removed. */
+const NOT_A_SIGNATURE = new Set(["if", "for", "while", "switch", "catch", "return", "function", "await", "typeof",
+                                 "new", "do", "else", "try", "with"]);
 const runReaders = (storeDecommented) => {
-  const re = /^  (?:async\s+)?(#?[A-Za-z][A-Za-z0-9_]*)\s*\(/gm;
+  const re = /^(?:  (?:async\s+)?(#?[A-Za-z][A-Za-z0-9_]*)|(?:export\s+)?(?:async\s+)?function\s+([A-Za-z][A-Za-z0-9_]*))\s*\(/gm;
   const marks = [];
   let m;
-  while ((m = re.exec(storeDecommented))) marks.push({ name: m[1], at: m.index });
+  while ((m = re.exec(storeDecommented))) {
+    const name = m[1] ?? m[2];
+    if (m[1] !== undefined && NOT_A_SIGNATURE.has(name)) continue;
+    marks.push({ name, at: m.index });
+  }
   const hits = [];
   const bodies = new Map();
   for (let i = 0; i < marks.length; i++) {
@@ -377,7 +391,10 @@ const ROLE = {
      NUMBER. Not SELECTS: it delegates to no PUBLISHES reader, because it publishes no run. `#counts` is still
      purge's proof and still counts `ai_runs` by table name; that is `n("ai_runs", "context_id")`, which this walk
      has never counted as a read of the row. ARM W4's three publishers are untouched — asserted one arm down. */
-  "#hiddenSets":       "HOUSEKEEPS",
+  /* RETIRED 2026-09-28 (legacy-tests T10, B1 (7)), and ARM W3b named it: N191 deleted `#hiddenSets` (K341). The run
+     half of D-486's subtraction is ai-runs' R42 `hiddenRuns` alone (its cell below), which legacy-store's
+     `#hiddenRunTail` now CALLS for `op=stats`' run counters; what the store kept is D-464's bundle set,
+     `#hiddenBundles`, which reads no row of `ai_runs`. A caller, not a reader. */
   /* REC-207's, 2026-09-24, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on this
      item's first full battery, which is the sixth time this ratchet has caught a new reader rather than
      absorbing one in silence. `#biasDebtDischargeByRerun` reads `ai_runs` (`SELECT *`, for `rerun_of` and
@@ -439,7 +456,13 @@ const ROLE = {
   /* ADDED 2026-09-28 (LEGACY-TESTS #4): D-486's run half moved with the run object — `hiddenRunTail` (ai-runs R36)
      is the WHERE tail over `observation_log` that subtracts the runs over projects the viewer cannot see. It projects
      the key only inside a subquery and publishes no fact of any run: `#hiddenSets`' HOUSEKEEPS, word for word. */
-  hiddenRunTail:       "HOUSEKEEPS",
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7)): N191/N276 removed the instance method `hiddenRunTail` (W3b
+     named it) for ai-runs R42's module-level `hiddenRuns(viewer, column)` (W3 named it once the walk could see a
+     column-0 function), the ONE place the subtraction is written. Its only statement over `ai_runs` is the subquery
+     `SELECT r.run FROM ai_runs r WHERE <R19's sight>`: the key alone, consumed as a set to keep or drop log rows and
+     `ai_run_bounds` rows, and no fact of any run reaches a caller through it. HOUSEKEEPS, the cell's role carried to
+     the new name. */
+  hiddenRuns:          "HOUSEKEEPS",
   /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R21, R22): `purge`'s cell is REMOVED, and ARM W3b named it,
      on `#counts`' precedent above. Purge moved to `record-core`, which deletes from every DECLARED table with one
      generic statement; the store now DECLARES `ai_runs` to it (`{ name: "ai_runs", keys: [] }`, whole-store only)
@@ -1108,6 +1131,11 @@ const MATRIX = {
          lens block beside the manifest the run was handed. `at` because it always resolves: the matrix run opens
          with no lens in force, so its `statements_sha` is honestly null. */
       lens_at_open: "bias.at_open.at",
+      /* ADDED 2026-09-28 (legacy-tests T10, B1 (7)): N190 gave `ai_runs.rerun_of` its disposition — PUBLISHED by R19's
+         read as `session.rerun_of`, the earlier run's id only when the viewer can see that run (else null, as for a
+         run that re-runs nothing). The matrix run now re-runs `R.bar` (same project, visible), so the path resolves
+         (P2) with a value rather than an honest null. */
+      rerun_of: "rerun_of",
     },
   },
   spawnPayload: {
@@ -1138,6 +1166,10 @@ const MATRIX = {
       lens_at_open: W("as bias_manifest (D-85): the lens in force at the open is part of the LENS block, and the "
                     + "search half never receives the lens. The composing half's envelope carries it with the rest "
                     + "of that block"),
+      /* ADDED 2026-09-28 (legacy-tests T10, B1 (7)), N190: ai-runs R19 publishes `rerun_of` in the read alone. */
+      rerun_of: W("which earlier run this one re-runs is the run's HISTORY, published once by op=airun under R19's "
+                + "sight (N190); a sub-session is given the work it is launched into, and the parent's lineage is "
+                + "not part of it"),
     },
   },
   log: {
@@ -1160,6 +1192,9 @@ const MATRIX = {
       state: W("the work list; the LOG is the account of where the search went and is a different "
              + "object. §14b.7 resumes from THIS, which is why the log is bounded and ordered"),
       lens_at_open: W("as bias_manifest (D-85): the lens is published ONCE, by op=airun"),
+      /* ADDED 2026-09-28 (legacy-tests T10, B1 (7)), N190. */
+      rerun_of: W("as label — the lineage is op=airun's answer (R19, N190), published once under the sight of the "
+                + "earlier run"),
     },
   },
 };
@@ -1180,6 +1215,9 @@ await block("P", async () => {
     principalClaudeRef: SENTINEL.claudeRef, skillVersion: SENTINEL.skill,
     biasManifest: SENTINEL.bias, standardPair: SENTINEL.standard,
     state: JSON.parse(SENTINEL.state), bounds: [{ bound: "fetches", allowed: 9, unit: "requests" }],
+    /* ADDED 2026-09-28 (legacy-tests T10, B1 (7)), N190: a stored `rerun_of` the read may publish — `R.bar` is over
+       the same project (R9 refuses another context) and the member token sees it. */
+    rerunOf: R.bar,
     /* DISTINCT INSTANTS, and the reason was measured: opening and closing at the
        same timestamp made `created`, `updated` and `stopped_at` one value, and
        the value scan below then reported a leak that was the FIXTURE's making

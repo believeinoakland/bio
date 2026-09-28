@@ -104,8 +104,14 @@ const store = readFileSync(SRC, "utf8");
 console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").length} lines`);
 /* RE-PINNED 2026-09-28 (T8, legacy-tests) from this suite's own CORPUS print: src/store.mjs is 533,793 bytes after the
    T8 extractions (was over 1,000,000 at T7). A blindness floor, not a ratchet: an unreadable or truncated file fails it. */
+/* RE-PINNED 2026-09-28 (legacy-tests T10, B1 (8); K341) from this suite's own CORPUS print: src/store.mjs is 484,830
+   characters (the print says "bytes"; it is `.length`), under the old 500,000 floor. What left in T10, by name, from
+   506,526 at T9's close, measured at each tranche merge: legacy-store's layer-10 job (deb9367cd3, -20,343: N268's dead
+   private delegates and `static ownerMath`, N191's `#hiddenSets` run subtraction, the dead helpers), retrieval
+   (99d8a98fd5, -786), strength (bf8416f54b, -355) and run-productions (cbd0805c1c, -212). Still a blindness floor at the
+   measured figure, never below it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length > 500_000 && /class Store\b/.test(store), true);
+  store.length >= 484_830 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;
@@ -178,20 +184,38 @@ const cnt = (s, re) => (s.match(re) || []).length;
    none (its helper stays, uncalled — reported to legacy-store and legacy-checks, whose C-33.40 `where` names it). */
 const INQ = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
 const BV = readFileSync(fileURLToPath(new URL("../src/basis-versions/index.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (d484)): two helpers changed their spelling in T10 and neither changed
+   what it routes. Entities' helper is `actShapeRefusal` (fede1c49c0, entities T10, so the DEC-49 guard can read
+   NO_ALIAS's refusal) — the same one function over ACT_SHAPE_CHECKS[code], still called once per code. Progressions'
+   exception document (op=discharge, e49c27e26a, progressions T10, N208/N202) now answers its NO_CITATION inside the
+   one refusal chain `const refused = ... || (!cite ? refusal("NO_CITATION", ...) : null) || ...; if (refused) return
+   refused;` rather than on a `return` line of its own; it is counted in that form, with the chain's return asserted
+   beside it, so an exception site that stopped returning the chain still fails here. Still 4 + 3, per file. */
 t("every former site now returns through a helper: 4 NO_BASIS + 3 NO_CITATION call sites, per file",
   { store: [cnt(store, /return actNoBasis\(/g), cnt(store, /return actNoCitation\(/g)],
     inquiry: [cnt(INQ, /return actNoBasis\(/g), cnt(INQ, /return actNoCitation\(/g)],
     basis_versions: [cnt(BV, /return actNoBasis\(/g), cnt(BV, /return actNoCitation\(/g)],
-    entities: [cnt(ENT, /return actShape\("NO_BASIS"/g), cnt(ENT, /return actShape\("NO_CITATION"/g)],
-    progressions: [cnt(PRG, /return refusal\("NO_BASIS"/g), cnt(PRG, /return refusal\("NO_CITATION"/g)] },
+    entities: [cnt(ENT, /return actShapeRefusal\("NO_BASIS"/g), cnt(ENT, /return actShapeRefusal\("NO_CITATION"/g)],
+    progressions: [cnt(PRG, /return refusal\("NO_BASIS"/g),
+                   cnt(PRG, /return refusal\("NO_CITATION"/g) + cnt(PRG, /\|\| \(!cite \? refusal\("NO_CITATION"/g)] },
   { store: [0, 0], inquiry: [1, 0], basis_versions: [1, 0], entities: [1, 1], progressions: [1, 2] });
-t("and the two moved copies mint NO_BASIS once each, inside their own is-act-no-basis region, from the catalogue row",
+t("and progressions' chained exception site RETURNS its chain — the helper's answer is what the op answers",
+  /\|\| \(!cite \? refusal\("NO_CITATION"[\s\S]{0,1200}?\n\s*if \(refused\) return refused;/.test(PRG), true);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (d484)): N186 (basis-versions T10, layer 6) deleted basis-versions'
+   copy of `actNoBasis` and its orphan `is-act-no-basis` marker (N204): it IMPORTS inquiry's helper, so the "two moved
+   copies" are ONE, and C-33.40's single `where` (inquiry's) is now the whole truth. The arm follows: inquiry mints
+   NO_BASIS once, inside its region, from the catalogue row; basis-versions mints it nowhere, holds no region and no
+   copy, and its one call site is inquiry's function by import. */
+t("and the one remaining copy (inquiry's) mints NO_BASIS once, inside its is-act-no-basis region, from the catalogue "
++ "row; basis-versions holds no copy and no region and calls inquiry's by import (N186)",
   [INQ, BV].map((src) => {
     const a = src.indexOf("DEC-49 REGION is-act-no-basis"), b = src.indexOf("END DEC-49 REGION is-act-no-basis");
     const span = a >= 0 && b > a ? src.slice(a, b) : "";
     return [cnt(src, /reason: "NO_BASIS"/g), span.includes('reason: "NO_BASIS"'),
             span.includes("ACT_SHAPE_CHECKS.NO_BASIS")];
-  }), [[1, true, true], [1, true, true]]);
+  }).concat([[/\nfunction actNoBasis\(/.test(BV),
+              /import \{[^}]*\bactNoBasis\b[^}]*\} from "\.\.\/inquiry\/index\.mjs"/.test(BV)]]),
+  [[1, true, true], [0, false, false], [false, true]]);
 t("and neither module mints either code as a bare literal outside its helper (the helpers read the catalogue row)",
   [cnt(ENT, /reason: "NO_(BASIS|CITATION)"/g), cnt(PRG, /reason: "NO_(BASIS|CITATION)"/g),
    /ACT_SHAPE_CHECKS\[code\]/.test(ENT), /ACT_SHAPE_CHECKS\[code\]/.test(PRGC)], [0, 0, true, true]);

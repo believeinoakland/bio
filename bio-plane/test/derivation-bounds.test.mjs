@@ -1216,6 +1216,10 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
    - STILL NOT TAKEN INTO THIS FIGURE (2), unchanged since T8 and REPORTED to their owners: actions/index:pendingClocks and
      publication/index:#promoteNamedEdges, so the CEILING, the by-name roster and the identity arm below stay red naming
      them. No arrival. */
+/* legacy-tests T10, 2026-09-28: RE-MEASURED, NOT MOVED. The merged T10 tree prints `29 in the class (19 by the walk + 10
+   admitted by name)`, the class roster byte-identical by name to the T9 close's (ac699662aa), CLASS OPS unchanged. Still
+   red for the same two, both REPORTED since T8 and untouched by T10: actions/index:pendingClocks (actions R31) and
+   publication/index:#promoteNamedEdges (publication R35). */
 const CLASS_MEASURED_2026_08_08 = 27;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
           + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES), moved to 33 on 2026-09-27 by legacy-tests T5-12 (the walk reads the extracted modules: 9 moved members renamed, 2 admitted in T5_STAYS; arrivals content/index:markStale (R41) and six of T3's and T4's modules' methods, named above the figure), moved to 28 on 2026-09-28 by legacy-tests T7 (five left by fixes — record-core auditPass, capture recordSiteAssets, content markStale, and the admitted #conditionsCaptureRequested and #findingsOutOfInquiryLead; changedFromAudit, reevaluations and #restsOnLive moved; the arrival intent/index:#measure is REPORTED, not taken), held at 28 on 2026-09-28 by legacy-tests T8 (intent/index:#measure left by a fix; five publication members moved; the arrivals actions/index:pendingClocks and publication/index:#promoteNamedEdges are REPORTED, not taken)`);
@@ -1974,12 +1978,48 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    until each is bounded or admitted: inquiry/index:{projectsDrawingOn, staled, exclusionsNaming} (N183),
    capture-requests/index:waitSource (N188 (1)), actions/index:{pendingClocks, project} and
    publication/index:#promoteNamedEdges. 198 + 7 = the 205 printed. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6)): HELD AT 198, AND THE MEMBERSHIP MOVED. READ FROM THE CENSUS ROSTER
+   THIS RUN PRINTED on the merged T10 tree (201) and DIFFED BY NAME against the same census run on the T9 close ac699662aa
+   (205), never 198 - 1 + 1. FOUR DEPARTURES, NO ARRIVAL:
+     - DEPARTED BY A FIX, IN THIS FIGURE (1): progressions/index:threadInstance (PROGRESSIONS T10, N242, K329): its stage
+       check read every stage of the progression (`SELECT stage_key FROM progression_stages WHERE progression_key=?`) and
+       now asks `#stageOf`, one `#one` per placement, so the method holds no unbounded scan.
+     - DEPARTED BY A FIX, AMONG THE SEVEN REPORTED ARRIVALS, so never in this figure (3): inquiry/index:{projectsDrawingOn,
+       staled, exclusionsNaming} (INQUIRY T10, N183 (2), K335): each reads in pages under a bound (`PROJECTS_DRAWING_MAX`,
+       `STALE_PAGE`, 500 rows per statement).
+   TAKEN INTO THIS FIGURE AS A READER MISREAD, NAMED (1): capture-requests/index:waitSource. N188 (1) is met (CAPTURE-
+   REQUESTS T10): both walks read keyset pages of `CAPTURE_REQUEST_WAIT_BATCH` rows, `LIMIT ?`, at most
+   `CAPTURE_REQUEST_READ_MAX` per call. The census still counts it because the page statement reaches `#rows` through
+   the local `walk(q, ...)` closure as a parameter (`this.#rows(q, ...args, after, CAPTURE_REQUEST_WAIT_BATCH)`), and
+   `scans()` reads a `LIMIT` only inside the call's own text. So its unbounded reading is this reader's, not the plane's:
+   it is counted here (the safe direction, the ceiling's) and the arm below pins the bound it cannot see, by name, so a
+   `LIMIT` dropped from either walk still fails. 197 + waitSource = 198.
+   STILL NOT TAKEN INTO THIS FIGURE, unchanged since T8 and REPORTED: actions/index:{pendingClocks (actions R31), project}
+   and publication/index:#promoteNamedEdges (publication R35). 198 + 3 = the 201 printed; the CEILING stays red naming
+   exactly those three, and no T10 layer touched actions or publication. */
 const SCANNING_MEASURED_2026_09_15 = 198;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
 + "cared. The roster is printed above, so the failing run names the arrival",
   SCANNING <= SCANNING_MEASURED_2026_09_15, true);
+/* legacy-tests T10, 2026-09-28: THE MISREAD TAKEN INTO THE FIGURE ABOVE, PINNED BY WHAT IT HOLDS. `waitSource`'s two walks
+   pass their page statement to `#rows` through the closure's `q`, which `scans()` cannot read; the bound is asserted here
+   instead, off the comment-stripped segment: every statement the method writes is `LIMIT ?`, the page read is passed the
+   batch, the walk stops at the per-call ceiling, and the census still counts the method (so this arm reds, and the figure
+   must be moved by name, the day the reader learns to follow the closure). */
+{
+  const WS = ALL_SEGMENTS.get("capture-requests/index:waitSource") || "";
+  const sql = [...WS.matchAll(/`(\s*SELECT[^`]*)`/g)].map((m) => m[1].replace(/\s+/g, " ").trim());
+  t("CENSUS (N188 (1)): capture-requests' `waitSource` is on the census by the reader's limit, not the plane's: every "
+  + "statement its walks and its completions read is `LIMIT ?`, the page is read `CAPTURE_REQUEST_WAIT_BATCH` rows at a "
+  + "time, and a call stops at `CAPTURE_REQUEST_READ_MAX` rows",
+    [SCANNING_NAMES.includes("capture-requests/index:waitSource"), sql.length,
+     sql.filter((q) => !/ LIMIT \?$/.test(q)),
+     /this\.#rows\(q, \.\.\.args, after, CAPTURE_REQUEST_WAIT_BATCH\)/.test(WS),
+     /scanned >= CAPTURE_REQUEST_READ_MAX\) return;/.test(WS)],
+    [true, 3, [], true, true]);
+}
 t("CENSUS IS A FLOOR: the figure falling without somebody moving it means the READER stopped "
 + "seeing row sources, not that the plane got better — the same direction REC-60's shrunken 27 "
 + "fell in, unnoticed for two days",

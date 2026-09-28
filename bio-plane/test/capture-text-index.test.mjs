@@ -404,7 +404,9 @@ const bookDoc = (await acquire("/budget.xlsx")).document;
    an empty fixture has passed three times in this repository. */
 console.log(`  corpus: 3 containers acquired through op=acquire — a document of ${PARAS.length} `
           + `paragraphs, a deck of ${SLIDE_TITLES.length} slides with 2 shapes each, and a workbook `
-          + `of ${SHEET_NAMES.length} sheets (${SHEET_NAMES.join(", ")}), which has no unit arm at all`);
+          + `of ${SHEET_NAMES.length} sheets (${SHEET_NAMES.join(", ")}), one \`sheet-range\` unit each`);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (4)): the printed corpus said the workbook "has no unit arm at all",
+   false since extraction R16's `sheet-range` unit and N134's arm; it now says what B3 and C3 assert. */
 t("B0: the fixture is non-empty and all three were recognised by the FORMAT axis",
   [docDoc?.profile?.format?.format, deckDoc?.profile?.format?.format,
    bookDoc?.profile?.format?.format], ["docx", "pptx", "xlsx"]);
@@ -523,13 +525,38 @@ t("C2b: and the EXTRACTION axis beside it is still extraction's own row, not the
 /* THE OVER-STRICTNESS DIRECTION IN THE PRODUCT, not in a control arm: a
    container this record cannot address a passage of must say so, and must NOT
    read as a document with no text. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (4)): N134 (observation-log, K332) gave the workbook a unit arm —
+   `CAPTURE_TEXT_UNIT_CONTAINERS` now holds `xlsx`, `ods` and `csv`, because extraction writes a sheet's `sheet-range`
+   unit (its R16, B3 above) — so "a workbook says NONE with a reason" is RETIRED with the answer it pinned. The
+   property follows to where the record now holds each half. C3: the workbook reads FULL over exactly its two sheet
+   units (B3, C1), and its extraction row is still extraction's own. C3b: the none-with-a-reason answer still exists
+   for a container with no arm, and HTML is the one observation-log keeps (no `dom` producer); driven below through
+   op=promote, it must still say NONE, not read as an absence of text, and name the container. */
 const axBook = await axisOf(bookDoc.capture.sha256);
-t("C3: the WORKBOOK says NONE with a REASON — its text WAS extracted and this record cannot address "
-+ "a passage of it. That is not an absence of text and the answer must not let it read as one",
-  [axBook.indexed, axBook.determined, axBook.extraction?.state], [NONE, true, "PRESENT"]);
-t("C3b: and the reason NAMES the container rather than the category, so a member is told which "
-+ "absence is true (CLAUDE.md's sparse rule, made mechanical where absence is read)",
-  typeof axBook.why === "string" && axBook.why.includes("xlsx"), true);
+t("C3: the WORKBOOK's text is now FULLY indexed over its sheet units (N134) — determined, the index row naming "
++ "exactly its two `sheet-range` units, and the extraction row beside it still extraction's own",
+  [axBook.indexed, axBook.determined, axBook.extraction?.state,
+   new RegExp(`^${SHEET_NAMES.length} unit\\(s\\) indexed,`).test(String(axBook.index?.detail))],
+  [FULL, true, "PRESENT", true]);
+{
+  const shHtml = sha("a captured HTML page whose text was extracted and which has no unit arm");
+  /* AUTHORED, as section D's PDF is: the writer's real input is the provenance document a caller composes. */
+  await promote("INFO-2026-9310-htmlpage", { document: {
+    file: "snapshots/page.html", locator: "https://www.oaklandca.gov/page.html", retrieved: NOW,
+    capture: { sha256: shHtml, encoding: "binary", bytes: 4096 },
+    reading: { content_type: "meeting_packet", reader_version: 1, read_from_text: true,
+               found: false, entities: [], facts: {}, at: NOW,
+               text_source: [{ step: "layer", tier: 1, container: "html" }],
+               text_tier: 1, text_container: "html", page_count: 1, container_extent: null,
+               basis: "a synthetic reading of a page with no unit arm" } } });
+  const axHtml = await axisOf(shHtml);
+  t("C3b: a container with NO unit arm (HTML) still says NONE with a REASON that NAMES the container rather "
+  + "than the category — its text WAS extracted, and that is not an absence of text (CLAUDE.md's sparse rule, "
+  + "made mechanical where absence is read)",
+    [axHtml.indexed, axHtml.determined, axHtml.extraction?.state,
+     typeof axHtml.why === "string" && axHtml.why.includes("a html has no indexing unit arm")],
+    [NONE, true, "PRESENT", true]);
+}
 
 /* THE PRE-ITEM CORPUS, WHICH IS EVERY CAPTURE ON EVERY LIVE INSTANCE. A capture
    whose text was extracted before this writer existed has no index observation,

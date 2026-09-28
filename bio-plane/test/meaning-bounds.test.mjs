@@ -906,6 +906,9 @@ t("RETURN-DELEGATE: `op=caseratify` likewise, reached through `#caseEditionState
      this rule follows a held module service, so the op reads UNJUDGED; the collections it publishes are unchanged. An
      instrument blind spot (REPORTED), the same limit T7 recorded for `versionstrength`: following consulted services
      is a reader redesign, not a re-anchor. */
+  /* legacy-tests T10, 2026-09-28: RE-MEASURED, UNCHANGED — still [false, false] on the merged T10 tree, as on the T9 close;
+     no T10 layer touched ratification or publication. Left red, owned as T8 recorded (ratification's held
+     `this.publication` service, which neither the re-inliner nor this rule follows). */
   [BARE_OPS.includes("caseratify"), (DELEGATED.get("ratifyCaseDocument") || []).includes("#caseEditionState")],
   [true, true]);
 
@@ -1031,6 +1034,15 @@ t("D-240 (b) THE WIDENING SEES MORE, AND LOSES NOTHING — the declared-refusal 
   /* T8 (legacy-tests), 2026-09-28 — still red, ONE DEPARTURE: `adoptVersion[silent]` left the list (REEVALUATION #2,
      N182 (4): the failed write's return now carries `ok: false` itself, `{ ...w, ok: false, notice }`). What remains is `pdfStructure[silent]` x7 and
      `#document$citationOf[silent]` x2, each a refusal whose verdict sits below the top level — N70's, left for it. */
+  /* CORRECTED 2026-09-28 (legacy-tests T10, B1 (7)): the T8 note above is STALE in its last sentence, and it is corrected
+     here rather than rewritten. `#document$citationOf[silent]` x2 LEFT the list in T10 (CITATION T10, N196): citation's
+     `#document` (and `#citingObject`) now return a refusal as itself, `ok: false` at the top level, where it was nested as
+     `{ refusal: { ok: false, … } }`, so the reader sees the verdict and the widening loses nothing there. Measured on this
+     tree: the list is extraction's `pdfStructure[silent]` x7 and nothing else, T5's seven, each a refusal written in the
+     route's `{ status: 4xx, body: { ok: false, … } }` envelope (op=pdfstructure's refusals, extraction R31). None
+     carries a collection, so no roster moves on them. Still red, and not re-pinned: the arm's own property (nothing the
+     old literal excluded is now graded) does not hold over those seven, and reading a route envelope's `body` is a change
+     to D-240's shared reader, which this job does not make. Owner: extraction (the envelope) with the D-240 reader. */
   [EX.newlyDeclared > 0, EX.spellings.size > 1, EX.lostByWidening],
   [true, true, []]);
 /* (c) OVER-STRICTNESS — THE ARM THAT REFUSED THIS EDIT'S FIRST DRAFT, and it is
@@ -1451,6 +1463,8 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      the one reason T8 recorded: the walk prints 37 because it has lost `op=caseratify` (publication's held service, the
      reader's blind spot), which this floor refuses to let pass as progress. Membership's four and T8's `pursuit` are
      fixes and are out of the figure; caseratify is not a fix and is in it. */
+  /* legacy-tests T10, 2026-09-28: RE-MEASURED, NOT MOVED — the walk prints 37 on the merged T10 tree, and the BARE roster
+     is byte-identical by name to the T9 close's (ac699662aa): no arrival, no departure. Still red for caseratify alone. */
   BARE_OPS.length >= 38, true);
 
 /* ==========================================================================
@@ -1569,7 +1583,14 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               read is bounded and paged now (`limit` 200, clamped 1…1000, `truncated`, `next`), so it is no longer a
               scan this walk cannot judge. */
            "taskdrain->taskDrain",
-           /* ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write
+           /* REMOVED 2026-09-28 (legacy-tests T10, B1 (6)): `thread->threadInstance` LEFT, diffed by name against this
+              suite's print on the T9 close (ac699662aa): 9 OPAQUE there, 8 here, no arrival. A change in the plane, not
+              the reader: the one row scan in `threadInstance`'s own segment was the unbounded `SELECT stage_key FROM
+              progression_stages WHERE progression_key=?`, and PROGRESSIONS T10 (N242, K329) replaced it with
+              `#stageOf`, a one-row `#one` per placement that mints `BAD_STAGE` in one place. The method scans no rows of
+              its own now, so the op reads NO_COLLECTION (a write path answering a status, as REC-67's note that follows says), not a
+              blind spot. The ceiling above holds at 8 of 10. The REC-67 note is kept as the record of why it was here.
+              ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write
               path, and it arrives the same way PL-15's did: it was on the BARE
               roster on the strength of a `String(threadedBy).slice(0, 200)` the
               collection detector read as an array. `threadInstance` writes
@@ -1577,7 +1598,6 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               collection this reader can find, and saying THAT is honest where
               calling it bare was not. Named rather than absorbed, because "10"
               satisfied by a different ten is what this arm exists to refuse. */
-           "thread->threadInstance",
            /* ADDED 2026-08-08 (PL-15) — and it is the ONE member of this list
               that is NOT a write path scanning rows for its own logic. It is a
               READ, and it is here because the reader could not classify what it
@@ -1598,7 +1618,10 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               scan and no verdict) and `projectfork->forkProject` / `projectowneradd->projectOwnerAdd` LEAVE (their reads
               are record-core's and membership's services now). Red identically on `tranche/T6` and the T7 opening; left
               red for its owners, as this job was told. T8 (legacy-tests), 2026-09-28: UNCHANGED, the identical nine
-              printed on the T7 close (84d078c16a) and on this tree; still left red for its owners. */
+              printed on the T7 close (84d078c16a) and on this tree; still left red for its owners.
+              legacy-tests T10, 2026-09-28: UNCHANGED BUT FOR `thread` (above): `audit->auditPass` still arrives and
+              `projectfork->forkProject` still leaves, identically on the T9 close and on the merged T10 tree. Left red for
+              record-core (its REPORT R3; the audit pass and the fork read are record-core's services). */
           ]);
 t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape shrinks the "
 + "DENOMINATOR too — otherwise the reach fractions above are computed against a constant and "

@@ -114,8 +114,12 @@ import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { parseFrontmatter, SEARCHED_SUBJECT_SOURCES,
          checkCaseDocument, CASE_DOCUMENT_FAMILY } from "../checks/bio-checks.mjs";
-import { searchedSection, SEARCHED_LEVEL_OUTCOMES,
-         MEANING_EVIDENCE_IS_ONE_SIDED } from "../src/airun.mjs";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N138; K181 (5), K336; case-authoring R17): `searchedSection` and
+   `SEARCHED_LEVEL_OUTCOMES` left `airun.mjs` (ai-runs' copy is gone) for case-authoring's `searched.mjs`, reached
+   through case-authoring's index; every arm below reads the same functions from their one owner, unchanged.
+   `MEANING_EVIDENCE_IS_ONE_SIDED` is observation-log's vocabulary, still re-exported by `airun.mjs`. */
+import { searchedSection, SEARCHED_LEVEL_OUTCOMES } from "../src/case-authoring/index.mjs";
+import { MEANING_EVIDENCE_IS_ONE_SIDED } from "../src/airun.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- casesearched ---");

@@ -650,10 +650,15 @@ console.log("\n--- 7. DEC-40: the answer states which readings it counted, on it
   t("the machine-readable set travels beside the sentence, so no consumer parses prose",
     [Array.isArray(dflt.state_set), Array.isArray(whatIf.state_set)], [true, true]);
   /* THE GUARD, not merely the convention: an answer with no line is REFUSED. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N184 (3)): the `where` named `#refusePairComposed`, a private
+     method's spelling; the guard is the MODULE function `refusePairComposed` (strength/index.mjs), and N184 (3)
+     corrected C-30.7/C-30.8's `where` to that name. The pin follows it, and additionally holds that the named
+     function is really declared as a module function in the source it names (no `#`). */
   t("and a missing line is a REFUSAL with a canned translation, not a formatting lapse",
     [chk("VERSION_STRENGTH_UNFILTERED").check,
-     /src\/strength\/index\.mjs #refusePairComposed/.test(chk("VERSION_STRENGTH_UNFILTERED").where ?? "")],
-    ["C-30.8", true]);
+     /^src\/strength\/index\.mjs refusePairComposed > is-pair-composed$/.test(chk("VERSION_STRENGTH_UNFILTERED").where ?? ""),
+     count(strip(STRENGTH_SRC), "function refusePairComposed("), count(strip(STRENGTH_SRC), "#refusePairComposed")],
+    ["C-30.8", true, 1, 0]);
 }
 
 /* ====== 8. M9'S SENTENCE — BOTH STATES, EACH OVER THE FACTS THAT MAKE IT = */
@@ -805,10 +810,12 @@ console.log("\n--- 9. the op through the control plane: refusals, the gate, and 
       return row && /^C-30\.\d+$/.test(row.check) && row.translation.length > 40
              && / > is-version-strength$/.test(row.where);
     }), true);
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), N184 (3)): `#refusePairComposed` -> `refusePairComposed`, the
+     module function's own name, as N184 (3) corrected both rows' `where`. */
   t("the two self-guards carry their OWN `where`, so neither site conscripts the other's refusals",
     selfGuards.map((k) => chk(k).where ?? null),
-    ["src/strength/index.mjs #refusePairComposed > is-pair-composed",
-     "src/strength/index.mjs #refusePairComposed > is-pair-composed"]);
+    ["src/strength/index.mjs refusePairComposed > is-pair-composed",
+     "src/strength/index.mjs refusePairComposed > is-pair-composed"]);
   t("NO canned translation uses the analyst's vocabulary on a member's screen (DEC-32 cl. 1, D-226)",
     Object.entries(VERSION_STRENGTH_CHECKS)
       .filter(([, r]) => /\bground\b|\bpartition\b|\bAND\b|\bOR\b|disjunct/.test(r.translation))

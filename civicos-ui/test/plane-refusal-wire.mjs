@@ -145,7 +145,10 @@ const MODULE_SRCS = (() => {
    counts and the report says UNVERIFIED (provenance.mjs rule 4), never clean. The floors are the figures this walk
    PRINTED on `job/T9/legacy-tests` (177 module files, 7 call sites: capture/doorbell.mjs ×2, capture/ops.mjs,
    extraction/ops.mjs, monitoring/index.mjs, publication/worker.mjs ×2); a legitimate drop is a decision, made here. */
-const MODULE_WALK_FLOOR = { files: 177, sites: 7 };
+/* RE-PINNED 2026-09-28 (legacy-tests T10, B1; the guard family's finding): 177 -> 176 module files, by name against the
+   T10 opening tree (ac699662aa): `bias/interim.mjs` (N143) and `run-productions/interim.mjs` (N194) were deleted and
+   `provenance/checks.mjs` (provenance R50) arrived. The 7 call sites are the same seven in the same files. */
+const MODULE_WALK_FLOOR = { files: 176, sites: 7 };
 const REPO = path.join(PLANE, "..");
 const PROV = readGitProvenance(REPO);
 const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, abs));

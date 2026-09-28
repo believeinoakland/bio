@@ -2546,6 +2546,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        with itself across the reads, so a phantom file adds tables to BOTH sides of the comparison and cannot make the
        nothing-written arm pass; it can only fail the quiet arm, by name. */
     "bio-plane/test/versionnotice.test.mjs",      // its own mkdtemp persist root, hashed as the nothing-written witness
+    /* ADDED 2026-09-28 (legacy-tests T10, B2/K342), on REC-176's and D-394's reasoning: N290's suite. NAMED AND NOT
+       GUARDED: its one walk is of ITS OWN `mkdtemp` persist root (`n290-*`, inside the sandbox `sandbox.mjs` owns), after
+       `mf.dispose()`, to find the Durable Object's SQLite and read `inquiry_member_agents`. It asserts EXACTLY one store
+       file holds that table, so a phantom file can only turn it red, never quietly green. */
+    "bio-plane/test/n290-member-agent.test.mjs",  // its own mkdtemp persist root, one store file asserted exactly
     /* ADDED 2026-09-22 by CONDUCT #12 at M0-81's integration, AND THE RATCHET CAUGHT IT ON THE FIRST BATTERY THE ITEM
        MET: the integration gate of batch 2 (tree cd85c88a, commit b2797101), because M0-81 was folded into the batch with
        its own FULL gate unrun. NAMED AND NOT GUARDED: the driver's one discovery primitive in code is
@@ -2741,7 +2746,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 68)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 69)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2781,7 +2786,10 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        that left `index.mjs`) and `surface-registry.test.mjs` (ARM V now reads refusal `detail:` strings from all of
        `src/`). Both are GUARDED, not named: each asks `scripts/provenance.mjs`, reports every file it read, and floors
        its reach over the commit at HEAD (177 module files and 7 call sites; 178 source files), from its own print. */
-    census.length >= 68, true);
+    /* MOVED 68 -> 69 on 2026-09-28 (legacy-tests T10), from the figure this suite PRINTED (`69 walking file(s)`) against
+       this job's baseline print of 68 (5e8d1fd055), diffed by name: one arrival, `n290-member-agent.test.mjs` (named
+       above), no departure. */
+    census.length >= 69, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,

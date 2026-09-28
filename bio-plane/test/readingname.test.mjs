@@ -919,8 +919,14 @@ t("SWEEP GUARD: the detector found something, so a clean verdict below is a read
                            measurement inside the partial band. */
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the walk reads store.mjs and src/entities/index.mjs; the third
    ordering is the same constant, now entities' module-level `CORRESPONDENCE_RANK` (was `Store.#CORRESPONDENCE_RANK`). */
-t("the fixed-position orderings in store.mjs are exactly the three that can each answer for themselves",
-  [...new Set(RANKED)].sort(), ["BASIS_GRADES", "CORRESPONDENCE_RANK", "Store.QUEUE_CLASSES"]);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (3)): a FOURTH fixed-position ordering arrived in the walked text, and
+   it is argued here rather than added: entities' `#listen` (R13, N202) ranks its `onResolved`/`onResolveAttempt`
+   listeners by `MODULE_ORDER.indexOf(m)`, membership's R83 (K289) — `build/modules.json`'s module ids in their total
+   (layer) order, the one list every module orders its LISTENERS by (membership R79, R81). Like Store.QUEUE_CLASSES it
+   is a RULING and orders WORK, not evidence: it decides which module's listener runs first inside one transaction and
+   claims nothing about how well anything corresponds to anything. Pinned by name, so a FIFTH still fails here. */
+t("the fixed-position orderings in store.mjs are exactly the four that can each answer for themselves",
+  [...new Set(RANKED)].sort(), ["BASIS_GRADES", "CORRESPONDENCE_RANK", "MODULE_ORDER", "Store.QUEUE_CLASSES"]);
 /* AND THE SWEEP MUST NOT PASS BY CITING ITSELF. The arm above would go on
    passing if this item were reverted, because the constant would still be there
    with the same name. What makes it a finding is that the ONE ordering of
