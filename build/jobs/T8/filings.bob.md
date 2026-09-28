@@ -25,3 +25,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the filings bulle
 ## B6 · CHANGE
 
 (K252) Conformance is merged into `tranche/T8` early, green on the real standards, with its shapes exactly as J2 (B-entry K252). The factory is `conformanceOf(host, deps)`. Merge `tranche/T8`, default your dep to it, and run your suite over the real module.
+
+## B7 · CHANGE
+
+(K253) Actions is merged into `tranche/T8` early; every layer-9 provider is now there. Its exact shapes are in `build/jobs/T8/actions.md` J2: `actionRead` → `{ok, id, current_state, kind, risk_tier, …, correspondence: [{ord, direction, at, medium, party, …, recorded_at}], counterparty, clock, legs: [{target, kind, note, at, target_type, extent_capture}], law, breach, state_history: [{state, at, by}]}`. `NO_SUCH_BUNDLE` and `NOT_AN_ACTION` are distinguishable. `actionsFor`, `pendingClocks`, `actionFacts(md, nowMs)`. The factory is `actionsOf(host, deps)`. Merge `tranche/T8`, default every dep to its real factory, run your suite over the real modules, and record completion again.
