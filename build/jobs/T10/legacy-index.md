@@ -40,3 +40,7 @@ Nothing.
 2. **Generated artifact.** `bio-plane/dist/bio-plane.bundled.mjs` is stale from `index.mjs` (both edits). Not rebuilt (§14); BOB regenerates at the layer close.
 
 Size (session_013Fr8m2QkVBUm76bvxapWas): test runs 11, module lines 7,041
+
+## J1 · COMPLETE
+
+LEGACY-INDEX #7 complete at 836f85e9b2 (record's Completion). N290: op=promote deletes memberUserAgent for every caller and stamps it only on a creation through a member's session, from that request's User-Agent, trimmed, at most 512 (cut, not dropped); tested at the op in a scratch suite, 6/0, control 4 arms red (no tests path, none committed; offered to legacy-tests). N265: the acquire op already hands the read to extraction (acquireReadingOp); the stale K49 comment corrected, no code change. Checks: format, architecture, coverage, ownership 0 failures. Found: (1) capture-requests R14's #memberAgent reads only the document's member_user_agent, so inquiry R44's recorded stamp never reaches the member-browser form (a requirements change for BOB); (2) bio-plane bundle stale from index.mjs, for the layer close.
