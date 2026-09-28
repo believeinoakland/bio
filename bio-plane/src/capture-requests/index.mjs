@@ -63,6 +63,9 @@ export const CAPTURE_REQUEST_TERMINAL = Object.freeze(["captured", "refused", "e
 /** R40: why a source turned a request away. */
 export const SOURCE_REASONS = Object.freeze(["login", "paywall", "user-agent", "other"]);
 /** R4: the fields that would make a request a capture. */
+/** R18: the two render results `capture` decides after the page was fetched, by their C-83 check (C-83.6, C-83.7). */
+const RENDER_NOT_A_PAGE_CHECK = "C-83.6";
+const RENDER_FAILED_CHECK = "C-83.7";
 export const CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
 
 /** R40: the source's HTTP answer as its reason, and whether it ends the request. A login is asked by 401 (and a proxy's
@@ -450,6 +453,32 @@ export class CaptureRequests {
           ...(render ? { render } : {}) });
       };
 
+      /* R40, K103 (3): THE SOURCE TURNED THE REQUEST AWAY, and it says why: a login, a payment, an agent it will not
+         admit, or another reason it gave. Terminal, so a member can supply what it asked for and retry (R41, R42); the
+         source's own answer is the detail. */
+      const sourceRefused = (q, r) => {
+        /* DEC-49 REGION is-capture-source-refused */
+        const why = sourceReasonOf(r.status);
+        const row = CAPTURE_SOURCE_CHECKS.CAPTURE_SOURCE_REFUSED;
+        return { ok: false, terminal: true, code: "CAPTURE_SOURCE_REFUSED", check: row.check, translation: row.translation,
+                 sourceReason: why.reason,
+                 detail: `the source answered HTTP ${r.status} for ${q.address} (${why.reason}); nothing was captured` };
+        /* END DEC-49 REGION is-capture-source-refused */
+      };
+      /* R19, D-584: ANY OTHER FAILURE HOLDS THE ROW under C-28.17. When the source answered (a status), its reason is
+         `other` (R40) and its answer is the detail; a fetch that never got an answer states no source reason, because
+         nothing the source said decided it. */
+      const fetchFailed = (q, r) => {
+        /* DEC-49 REGION is-capture-fetch-failed */
+        const row = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED;
+        const fromSource = r.reason === "SOURCE_REFUSED";
+        return { ok: false, terminal: false, code: "CAPTURE_FETCH_FAILED", check: row.check, translation: row.translation,
+                 sourceReason: fromSource ? "other" : null,
+                 detail: fromSource ? `the source answered HTTP ${r.status} for ${q.address}; nothing was captured`
+                                    : `the fetch did not land: ${String(r.reason || "").slice(0, 200)}` };
+        /* END DEC-49 REGION is-capture-fetch-failed */
+      };
+
       for (const q of queued) {
         const verdict = this.#conduct(q, nowMs, hostsThisTick);
         if (!verdict.ok) {
@@ -483,14 +512,14 @@ export class CaptureRequests {
         } else if (r.renderCode) {
           const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
           const why = String(r.detail || r.reason || "").slice(0, 400);
-          if (r.renderCode === "RENDER_NOT_A_PAGE") {
+          if (renderRow.check === RENDER_NOT_A_PAGE_CHECK) {
             /* R18, D-582: decided AFTER the page was fetched, so the host's slot stays spent; the address serves no
                page to render, which will not change on the next tick, so the row is refused. The source served what
                it served: not governed. */
             settle(q, { terminal: true, code: r.renderCode, check: renderRow.check, translation: renderRow.translation,
                         detail: why || "the address served something that is not a single HTML page",
                         governed: false, condition: null, countAttempt: false });
-          } else if (r.renderCode === "RENDER_FAILED") {
+          } else if (renderRow.check === RENDER_FAILED_CHECK) {
             /* R18, D-582: the page WAS fetched and our renderer failed on it: the slot stays spent (nothing is given
                back that was used), the row is held, and the look is ours (governed, `render-deferred`). */
             settle(q, { terminal: false, code: r.renderCode, check: renderRow.check, translation: renderRow.translation,
@@ -507,36 +536,12 @@ export class CaptureRequests {
                         render: { state: r.renderState || "deferred", content: "undetermined" } });
           }
         } else if (r.reason === "SOURCE_REFUSED" && sourceReasonOf(r.status).terminal) {
-          /* DEC-49 REGION is-capture-source-refused */
-          /* R40, K103 (3): THE SOURCE TURNED THE REQUEST AWAY, and it says why: a login, a payment, an agent it will
-             not admit, or another reason it gave. Terminal, so a member can supply what it asked for and retry
-             (R41, R42); the source's own answer is the detail. */
-          const why = sourceReasonOf(r.status);
-          const row = CAPTURE_SOURCE_CHECKS.CAPTURE_SOURCE_REFUSED;
-          settle(q, { terminal: true, code: "CAPTURE_SOURCE_REFUSED", check: row.check,
-                      translation: row.translation, sourceReason: why.reason, governed: false, condition: null,
-                      countAttempt: false,
-                      detail: `the source answered HTTP ${r.status} for ${q.address} (${why.reason}); nothing was captured` });
-          /* END DEC-49 REGION is-capture-source-refused */
-        } else if (r.reason === "HOST_COOLING_OFF") {
-          /* The governor held the host between conduct and the fire: our pacing, so C-28.9's hold, governed. */
-          const row = CAPTURE_REQUEST_CHECKS.CAPTURE_CONDUCT_HOST_HELD;
-          settle(q, { terminal: false, code: "CAPTURE_CONDUCT_HOST_HELD", check: row.check, translation: row.translation,
-                      detail: `${q.host} went into cool-off before the fetch was sent, so nothing was sent; the request `
-                            + "waits for the interval the host named",
-                      governed: true, condition: "governor-holding-host", countAttempt: false });
+          settle(q, { ...sourceRefused(q, r), governed: false, condition: null, countAttempt: false });
         } else {
-          /* DEC-49 REGION is-capture-fetch-failed */
-          /* R19, D-584: ANY OTHER FAILURE HOLDS THE ROW under C-28.17, not governed. When the source answered (a
-             status), its reason is `other` (R40) and its answer is the detail; a fetch that never got an answer
-             states no source reason, because nothing the source said decided it. */
-          const row = CAPTURE_REQUEST_CHECKS.CAPTURE_FETCH_FAILED;
-          const fromSource = r.reason === "SOURCE_REFUSED";
-          settle(q, { terminal: false, code: "CAPTURE_FETCH_FAILED", check: row.check, translation: row.translation,
-                      sourceReason: fromSource ? "other" : null, governed: false, condition: null, countAttempt: false,
-                      detail: fromSource ? `the source answered HTTP ${r.status} for ${q.address}; nothing was captured`
-                                         : `the fetch did not land: ${String(r.reason || "").slice(0, 200)}` });
-          /* END DEC-49 REGION is-capture-fetch-failed */
+          /* Our own governor holding the host between conduct and the fire is our pacing: governed. */
+          const ours = r.reason === "HOST_COOLING_OFF";
+          settle(q, { ...fetchFailed(q, r), governed: ours, condition: ours ? "governor-holding-host" : null,
+                      countAttempt: false });
         }
       }
       return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
