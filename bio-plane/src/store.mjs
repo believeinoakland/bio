@@ -1026,7 +1026,7 @@ export class Store extends DurableObject {
     governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
     extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
-    observationLogOf(this.ctx).migrate();   /* observation-log's tables (R22, R23), before ai-runs folds the pre-fold run log into them */
+    observationLogOf(this.ctx).migrate();   /* observation-log's tables (R22, R23), before the run log folds into them below */
     captureRequestsOf(this.ctx).migrate();   /* capture-requests' table, its additive columns and indexes (R35) */
     aiRunsOf(this.ctx, this.env).migrate();   /* ai-runs' two late columns and the ai_run_log fold (its R38) */
     entitiesOf(this.ctx).migrate();     /* entities' tables, R8's withdrawal columns and their purge declaration (R30) */
