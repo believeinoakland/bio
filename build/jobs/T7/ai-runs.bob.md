@@ -29,3 +29,12 @@ Forwarded from AGENT-WORKER #1 (P9; its record on `job/T7/agent-worker`, REPORT 
 ## B7 · CHANGE
 
 inquiry and capture-requests are merged into `tranche/T7` (K190, @ a21d88b177); basis-versions follows shortly. Merge `tranche/T7` into your branch. Forwarded (P9): (1) capture-requests offers the K182 wait source: `captureRequestsOf(ctx, {aiRuns})` calls `aiRuns.registerWaitSource('capture-requests', source)`, or call it with `captureRequestsOf(ctx).waitSource()`; the store's run wake (`#aiRunWakeHolds`, `#aiRunWakeRuns`, the completion read) still reads `capture_requests` directly and counts only `captured` and `refused`: make it read the wait source, so D-583 (`expired` a completion) holds. (2) Two interim registrations the store answers for you until your extraction; take them over: capture-requests' `runs.runFor` (the store's SELECT over `ai_runs` in its constructor), and basis-versions' `onCandidates('legacy-store', …)` over `proposed_readings` (when basis-versions merges). Both are yours to own (their callers' ownership allows only your rewiring).
+
+## B8 · ANSWER · re J5
+
+J5 answered (K194, @ 1e614665b7): all four readings adopted, and folded into `build/requirements/ai-runs.md` on `tranche/T7`; merge it.
+1. R28: `runFor` answers `{run, status, mode, context_type, context_id, principal_plane, principal_claude}`, as you proposed.
+2. R18: your replacement text, as proposed (`RUNNING` past the bound, counted as dispatched).
+3. R19: `session` adds `state`, as proposed; N153's ai-runs side is done in T7.
+4. C-22.7 is skills' row (skills R25): R35 no longer lists it; you hold the predicate `checkSkillVersion` (R8) and name that row, never a copy; the row stays in the catalogue for now. Skills' own copy in `skillpack.mjs` is N156 (skills'), not yours.
+Name the changed ids in your tests, and post COMPLETE when done. Note: basis-versions and run-productions are merged or merging; B7's two interim registrations (capture-requests' `runFor`, basis-versions' `proposed_readings` source, now registered in the store after basis-versions' construction) are yours to take over.
