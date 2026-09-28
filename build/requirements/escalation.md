@@ -51,7 +51,7 @@ Terms. The **stages**, in order: `1 documentation` (discovery and documentation)
 - `jurisdictions`: `combine`'s view, `counterparties` with `elected` and `oversight` (R12; `oversight` is R24's, not yet met there, built by the `jurisdictions` job before layer 9, K171).
 - `conformance`: `determinationRead`, `determinationsFor` (R1, R4, R14).
 - `consequences`: `addressed` (R3, R14).
-- `actions`: `actionRead`, `actionsFor`, `actionFacts`'s clock rule (R5–R12).
+- `actions`: `actionRead`, `actionsFor`, `actionFacts`'s clock rule (R5–R12); `noSuchAction` (its R43), through which R9's `NO_SUCH_ACTION` is answered, in place of C-116.11 (N217, K275). *(not yet met: N217)*
 - `filings`: `filingsFor`, `availableActions` (its R21; R8).
 
 ### Invariants

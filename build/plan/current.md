@@ -4,7 +4,7 @@
 
 Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB #57, K305; arising entries BOB #58 and #59) at once after T10 closed (K346; K340: no pacing). Branch `tranche/T11` starts at `main` @ 8cf1ffb937. Cut to 28 jobs (K347): the N285 shared-code cluster and the queue, instance-setup and control-plane extractions go to `draft-T12.md`. Every provider side this plan needs was worded on T10's tranche before it closed (K338, K343, K344) and re-read against T10's close (K170): layers 1–6 and 10–11 of T10 changed nothing they word. Bob's weekly meter at the opening: asked.
 
-**Jobs** · legacy-checks: LEGACY-CHECKS #5 session_01EwVH7Frcm6uLT9v54Y4Xi3
+**Jobs** · record-core: RECORD-CORE #6 session_01F4Zw6fHHxLm7fXnQfo4nc5; promotion: PROMOTION #11 session_01ASTMYa8KNLdKEKcGwkyoBG; legacy-checks: LEGACY-CHECKS #6 session_01X21rA21HbLKssMYh2XjGmk
 
 **Rules at the opening.** T6's to T10's rules hold: the registration rule (K206), one code one site (K231, K275), a user builds against its provider's Provides and BOB merges a provider early (§4), each job writes requirement-named tests for every live id (P7) and applies only the share this plan gives it; an `N` entry's text is in `next.md`. SQL a module runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes, tested under a workerd-like cap (K313), over a cursor-returning fixture (K316). A job strikes each `not yet met` mark its work meets. Each layer is re-read at its start for what the layers below it changed (K170).
 
@@ -33,6 +33,7 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 - **ai-runs** · N284 (R30 `registered`); N289 (R35 holds C-22.7); N293 (R45, the `state` ceiling, C-22.18).
 - **capture-requests** · N295 (R14 reads inquiry R44).
 - **agent-worker** · N293 (its share: R49, its published state stays under ai-runs R45).
+- **skills** · N289 (its share, K349: R25's test reads C-22.7's row through ai-runs, never the catalogue; P10's provided-service exception).
 
 ### Layer 7
 
@@ -41,7 +42,7 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 
 ### Layer 8
 
-- **publication** · N210 (R41 `caseCitedParts`, registered with reevaluation R26); N230 (R42); N256; N260; N277, N237, N238 (their shares); N297 (its share).
+- **publication** · N210 (R41 `caseCitedParts`, registered with reevaluation R26); N230 (R42); N256; N260; N277, N237 (their shares; N238 has no share here, K351); N297 (its share).
 - **ratification** · N256 (its share).
 - **case-authoring** · N259; N275 (its share); N297 (its share).
 - **review** · N297 (its share).
@@ -52,13 +53,13 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 - **conformance** · N233; N274; N296; N297 (its share).
 - **consequences** · N257; N296; N297 (its share).
 - **actions** · N283 (its read); N231 (R42 `kinds()`); N237 (R31's bound and cursor); N246; N261; N271; N277 (its share); N217's layer-9 sites (K275); N297 (its share).
-- **filings** · N296.
-- **escalation** · N296; N297 (its share).
+- **filings** · N296; N217 (its sites call actions R43 `noSuchAction`, keeping `#noAction`'s second sentence through `extra`, K351).
+- **escalation** · N296; N297 (its share); N217 (R9 calls actions R43 `noSuchAction`, K351).
 
 ### Layer 10
 
 - **monitoring** · N283 (its reads); N222; N278; N266 (R46 `counts()`); N224 (R19, R20); N230 (its share); N247 (its share); N297 (its share).
-- **scheduler** · N223's and N224's consumers (calibration R18–R19; monitoring's rank).
+- **scheduler** · N223's and N224's consumers (calibration R18–R19, ai-runs R43, capture-requests R44; monitoring's rank; K351).
 - **legacy-store** · N266 and N267 (their shares); N294 (its share: `#testimonyWithin` calls extraction's `indexTestimony`).
 
 ### Layer 11
