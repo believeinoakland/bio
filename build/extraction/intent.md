@@ -1,12 +1,12 @@
 # intent — extraction map
 
-**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b0f` (`store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682, `index.mjs` 13,438) by a drafting worker for BOB #43 (P18). The contract is `build/requirements/intent.md` (R1–R25); K6, K23, K31, K61 apply. The module exports `intentOf(ctx)` (K61). Intent is a new module: almost nothing exists to extract, and its first job writes it from its requirements. `from` should read `legacy-checks`, not `legacy-store` (§3).
+**Status** · Checked against `tranche/T7` @ `e15806be` by a worker for BOB #50 (P18) (`checks/bio-checks.mjs` 14,629 lines, `store.mjs` 33,756, `schema.mjs` 1,948, `index.mjs` 9,069); every line number below is re-measured there (the measured sizes are left as first measured). Corrections: lines re-measured; `progressions` is extracted, so `proposalsFeed`, `disposeProposal` and `proposal_dispositions` are at progressions/index.mjs 785, 903 and progressions/schema.mjs 245 (store 16761 delegates; the store's `proposeDispose`, 20088–20298, is the progression arm's per-item wrapper still in `legacy-store`); `observation-log` is extracted, so the `objective` authority kind is in observation-log/schema.mjs 63 and its unresolved arm at observation-log/index.mjs 556 (no longer in `schema.mjs` or the store). §3.1 and §3.2 are applied (`modules.json`: `from` is `legacy-checks`; uses add `promotion` and `entities`, drop `content`). No provider-service gap: every service intent's requirement names from an earlier module exists in that module's Provides and code (`membership`, `promotion`, `entities`, `progressions`). Measured 2026-09-26 on `tranche/T3` @ `f324df9b0f` (`store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682, `index.mjs` 13,438) by a drafting worker for BOB #43 (P18). The contract is `build/requirements/intent.md` (R1–R25); K6, K23, K31, K61 apply. The module exports `intentOf(ctx)` (K61). Intent is a new module: almost nothing exists to extract, and its first job writes it from its requirements. `from` should read `legacy-checks`, not `legacy-store` (§3).
 
 ## 1. What moves to `intent`
 
 | what | where today | lines | notes |
 | --- | --- | --- | --- |
-| C-2.9's objective arm: `if (typeof fm.objective !== 'string' \|\| fm.objective.trim() === '') findings.push(f('C-2.9', …'objective is missing or empty'))` | bio-checks, inside `checkProjectExtension` (4178–4216) | 4181–4183 | R1, R22; registered with `promotion` as a check on a project promotion |
+| C-2.9's objective arm: `if (typeof fm.objective !== 'string' \|\| fm.objective.trim() === '') findings.push(f('C-2.9', …'objective is missing or empty'))` | bio-checks, inside `checkProjectExtension` (3914–3956) | 3917–3919 | R1, R22; registered with `promotion` as a check on a project promotion |
 
 Nothing in `store.mjs`, `schema.mjs` or `index.mjs` implements an aspiration, a goal, a satisfaction condition, progress, gaps, triage or ageing (searched for `objective`, `aspiration`, `goal`, `satisfaction`, `surfaced_by` ageing, `objective-gap`). **Schema (K4):** none moves; the module's own tables (or document types, Open for Bob 1) are new.
 
@@ -16,13 +16,13 @@ Nothing in `store.mjs`, `schema.mjs` or `index.mjs` implements an aspiration, a 
 
 | what | where today | owner | why |
 | --- | --- | --- | --- |
-| the rest of `checkProjectExtension`: C-2.9's `workproduct_state`, `evaluations` and `closed_reason` arms, C-9.1 | bio-checks 4184–4216 | `legacy-checks` until BOB assigns it (the readiness ladder reads as `publication`'s; the project lifecycle as `promotion`'s) | not about intent |
+| the rest of `checkProjectExtension`: C-2.9's `workproduct_state`, `evaluations` and `closed_reason` arms, C-9.1 | bio-checks 3920–3956 | `legacy-checks` until BOB assigns it (the readiness ladder reads as `publication`'s; the project lifecycle as `promotion`'s) | not about intent |
 | a project's `objective` written at setup | `bio-plane/src/setup.mjs` 894 | `instance-setup` | it writes the project document; R1 checks it |
 | the queue kind `objective-gap` (D-76) | `queuestate.mjs` 145 | `queue` | the kind is queue's vocabulary; `intent` R6 is its producer |
-| the authority kind `objective` and its unresolved arm | `schema.mjs` 3237, store.mjs 42143–42151, `airun.mjs` 255 | `observation-log` | its vocabulary (its R1); `intent` R18's run writes looks under it, and observation-log's resolver gains an arm that resolves the project then |
-| `proposalsFeed`, `proposeDispose` (the progression arm), `proposal_dispositions` | store 27290ff., 30415ff. | `progressions` | the one proposal source built; `intent` reads and calls them (R15, R16) |
-| the machine-surfacing step (`surfaced_by: agent`, C-66) | store 17442ff. | `ai-runs` (its R25–R27) | `intent` R17 ages what it surfaced |
-| the inquiry's dispose act and create-at-`surfaced` | store 4575ff. | `inquiry` | R16, R17 call them |
+| the authority kind `objective` and its unresolved arm | observation-log/schema.mjs 63, observation-log/index.mjs 556 (extracted), `airun.mjs` 255 | `observation-log` | its vocabulary (its R1); `intent` R18's run writes looks under it, and observation-log's resolver gains an arm that resolves the project then |
+| `proposalsFeed`, `proposeDispose` (the progression arm), `proposal_dispositions` | progressions/index.mjs 785, 903, progressions/schema.mjs 245 (extracted); store 16761, 20088ff. | `progressions` | the one proposal source built; `intent` reads and calls them (R15, R16) |
+| the machine-surfacing step (`surfaced_by: agent`, C-66) | store 14576ff. | `ai-runs` (its R25–R27) | `intent` R17 ages what it surfaced |
+| the inquiry's dispose act and create-at-`surfaced` | store 2637ff. | `inquiry` | R16, R17 call them |
 
 ## 3. Undetermined, conflicts, and code others could claim
 
