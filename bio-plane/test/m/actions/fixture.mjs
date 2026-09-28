@@ -1,7 +1,8 @@
 /* actions over the modules it uses, each the real one where it writes or reads the record (record-core, membership,
    promotion, provenance), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. What
    actions registers with retrieval, the capture content presents for a document (R11), connections' `refs` projection
-   (R25's `responses`) and conformance's determinations (R8) are stand-ins the test controls. Every test drives
+   (R25's `responses`) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
+   inquiry, whose columns on `bundles` are added here), or a stand-in in its R9 shape where a test passes one (R8). Every test drives
    `actions` at its interface. */
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -9,6 +10,9 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
+import { inquiryOf } from "../../../src/inquiry/index.mjs";
+import { contentOf } from "../../../src/content/index.mjs";
+import { connectionsOf } from "../../../src/connections/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 import { DatabaseSync } from "node:sqlite";
 
@@ -54,9 +58,10 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
   /* retrieval's projection columns this module reads for R31 (retrieval writes them from R12's facts). */
-  for (const c of ["action_clock_next TEXT", "fm_json TEXT"]) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
+  for (const c of ["action_clock_next TEXT", "fm_json TEXT", "inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT",
+                   "inquiry_superseded_by TEXT"]) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   /* connections' `refs` projection, as far as R25 joins it. */
-  st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
+  if (conformance) st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
   const clock = { ms: NOW_MS };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   record.migrate();
@@ -82,6 +87,28 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   } });
   const a = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
                               content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms });
+  /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
+     store's boot migrates them. */
+  if (!conformance) {
+    /* extraction's tables as far as content, entities and connections join them; what a reading holds is empty. */
+    for (const q of [
+      `CREATE TABLE readings (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, content_type TEXT, reading TEXT, at TEXT, capture_format TEXT)`,
+      `CREATE TABLE reading_refs (capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL, ref TEXT NOT NULL, ref_kind TEXT, ref_key TEXT,
+         label TEXT, pos_kind TEXT, pos TEXT, pos_ref TEXT, occurrence TEXT NOT NULL DEFAULT '', seq INTEGER NOT NULL DEFAULT 0,
+         PRIMARY KEY (capture_sha, ref, occurrence))`,
+      `CREATE TABLE reading_ref_terms (capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL, ref TEXT NOT NULL, src TEXT NOT NULL,
+         term TEXT NOT NULL, PRIMARY KEY (capture_sha, ref, src, term))`,
+      `CREATE TABLE reading_text_source (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, transcribed INTEGER NOT NULL DEFAULT 0,
+         terminal_step TEXT, engines TEXT, derivation_cap TEXT, steps INTEGER NOT NULL DEFAULT 0, chain TEXT, calibrations TEXT)`]) st.db.exec(q);
+    const extraction = { readingOf: () => null, unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [],
+                         onReading: () => ({ ok: true }) };
+    const content = contentOf(host, { record, membership, provenance: prov, extraction });
+    content.migrate();
+    const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture: {} });
+    connections.entities.migrate();
+    connections.migrate();
+    inquiryOf(host, { record, membership, promotion, content, connections, entities: connections.entities, provenance: prov }).migrate();
+  }
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, a, clock, reg, captures,
