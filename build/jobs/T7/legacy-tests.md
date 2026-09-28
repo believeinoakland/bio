@@ -87,3 +87,7 @@ Everything else found is in my record's Progress notes and comes as REPORTs at C
 - `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T7` → ownership: 174 files changed by legacy-tests between tranche/T7 and HEAD; 0 failures
 
 Size (session_01EbJbvw2MqsPnPv5f2PjGVo): test runs 24, module lines 4515
+
+## Re-opened by B9, B10 (K219, K220)
+
+- Merged tranche/T7 with legacy-index (@ 86e83c240e). Measured: rung-ladder 46/3 (FORWARD: `capturerequestretry`, `reevaluationraise`, `reevaluationrecord`, `versionadopt`, `versionkeep` have no rung and no stated absence; the mutating set 140 against 145; NO UNDER-CLAIM: `triage` below `reasoned`) and affordances 98/1 (`capturerequestretry`, `versionadopt`, `versionkeep`, `reevaluationrecord` neither a published act nor a NON_ACT): all affordances' rows (K219), reported as affordances'. refusal-wire 40/2 → 38/4: the `capturerequestdraining` red cleared (legacy-index removed the row); two new, one cause: intent's `NO_STATEMENT` (C-110.10) collides with the catalogue's C-33.14, now reached on the wire through intent's routed ops, so the C-number and sentence arms find it divergent and the over-strictness arm's `before.divergent` reads 1 (intent's arm G, already reported). D-494's `where`s stay legacy-checks'.
