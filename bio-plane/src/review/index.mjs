@@ -253,13 +253,18 @@ export class Review {
   #when() { const w = this.now(); return typeof w === "string" && w ? w : stampInstant("millisecond"); }
   #draftRow(id) { return this.#one(`SELECT * FROM case_drafts WHERE draft_id=?`, String(id ?? "").trim()); }
 
-  /* D-432 (record-core R40): before this module's first mint, the opaque minter's ledger learns every draft and grant
-     id standing in a live row, so a store written before the ledger existed never has an id drawn twice. */
-  #seedLedger() {
+  /** D-432 (record-core R40): the opaque minter's ledger learns every draft and grant id standing in a live row, at
+   *  start and again before this module's first mint, so an id a store minted before the ledger existed is never drawn
+   *  twice, even after a purge deletes the row it stood in. At start, on a store whose ledger table is not yet created
+   *  (its first boot, when no row can stand), it learns nothing and never throws: a throw at construction would take
+   *  the instance down. */
+  seedLedger() {
     if (this.#seeded) return;
-    this.record.seedMintLedger([["DRAFT", "case_drafts", "draft_id"], ["DRAFT", "review_grants", "draft_id"],
-                                ["RVG", "review_grants", "grant_id"]]);
-    this.#seeded = true;
+    try {
+      this.record.seedMintLedger([["DRAFT", "case_drafts", "draft_id"], ["DRAFT", "review_grants", "draft_id"],
+                                  ["RVG", "review_grants", "grant_id"]]);
+      this.#seeded = true;
+    } catch { /* not yet: the ledger's table is created by record-core's migration, and the next call learns */ }
   }
 
   /* publication's `cases` and `published_cases` (R3, R5): a case's owning project, and its highest published edition. */
@@ -414,7 +419,7 @@ export class Review {
                      WHERE draft_id=?`, named, json, who, when, statementBy, id);
     } else {
       /* REC-151: OPAQUE, never the DRAFT counter (Membership v2 §7): a draft is its project's editors' alone. */
-      this.#seedLedger();
+      this.seedLedger();
       id = this.record.mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
         !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d)
           || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
@@ -451,7 +456,7 @@ export class Review {
     const when = this.#when();
     const ident = this.draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7): a grant is its project owner's alone. */
-    this.#seedLedger();
+    this.seedLedger();
     const id = this.record.mintOpaqueId("RVG", when.slice(0, 4), "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g));
     if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
@@ -729,6 +734,7 @@ export function reviewOf(host, deps) {
     instances.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
+    r.seedLedger();
     r.publication.registerReviewProvider("review", r.provider());
   }
   return r;

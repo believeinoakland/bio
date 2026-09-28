@@ -248,3 +248,34 @@ test("R22: every authorship field is the control plane's stamp, never a body's",
   assert.equal(ops({ project: P, viewer: V("out") }, { viewer: V("ann") }).casedrafts().code, "NO_REVIEW_COPY");
   assert.equal(ops({ project: P, viewer: V("ivy") }, {}).casedrafts().ok, true);
 });
+
+test("R4, R6: an opaque id standing in a live row when the module starts is never drawn again, even after a purge deletes the row", async () => {
+  const { storage } = await import("./fixture.mjs");
+  const { recordOf, RECORD_SCHEMA } = await import("../../../src/record-core/index.mjs");
+  const { membershipOf } = await import("../../../src/membership/index.mjs");
+  const { reviewOf, REVIEW_SCHEMA } = await import("../../../src/review/index.mjs");
+  const st = storage();
+  const host = { storage: st };
+  const ddl = (t) => t.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";").map((x) => x.trim()).filter(Boolean);
+  for (const t of [...ddl(RECORD_SCHEMA), ...ddl(REVIEW_SCHEMA)]) st.db.exec(t);
+  /* rows an earlier build wrote, before the ledger knew them */
+  st.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,updated_by,updated_at)
+               VALUES ('DRAFT-2026-7316','P',NULL,'{}','a','t','a','t')`);
+  st.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
+               VALUES ('RVG-2026-7316','DRAFT-2026-0417',NULL,1,'r','${SECRET(1)}','a','t')`);
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  reviewOf(host, { record, membership, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} });
+  const minted = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).map((r) => r.id);
+  for (const id of ["DRAFT-2026-0417", "DRAFT-2026-7316", "RVG-2026-7316"]) assert.ok(minted.includes(id), id);
+  record.purge({});
+  assert.equal(st.sql.exec(`SELECT COUNT(*) AS n FROM case_drafts`)[0].n, 0);
+  const again = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).map((r) => r.id);
+  assert.deepEqual(again, minted, "the ledger outlives the purge, so none of them can be drawn again");
+  /* a store whose ledger table does not exist yet: the module still starts */
+  const bare = storage();
+  assert.doesNotThrow(() => reviewOf({ storage: bare }, { record: { declarePurge() {}, seedMintLedger() { throw new Error("no table"); } },
+    membership: {}, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} }));
+});
