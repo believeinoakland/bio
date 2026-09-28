@@ -49,3 +49,45 @@ No generated artifact is stale: nothing bundled imports conformance yet.
 - **Reader brought in line:** `inForce(id, date)` is read as `{ok, id, date, state, why}`. A refusal or unreadable answer counts as `undetermined`, never in force.
 - **Checks:** format 0 failures; architecture 0 failures (0 imports unjudged); coverage 18 of 18 ids named; ownership 0 failures (8 files, all mine).
 - **Answer shapes:** exactly as in J2.
+
+## Completion
+
+**Entries applied.**
+- **Built per requirements.** The map says nothing moves (K171 (4)–(7), (10), (11); K248, K249, K251, K252). No legacy module was touched.
+  - `bio-plane/src/conformance/index.mjs`: `conformanceOf(host, deps)`, `Conformance`, `conformanceOps`, `determinationDoc`.
+  - `checks.mjs`: family C-113.1–21.
+  - `schema.mjs`: nine append-only tables, declared to purge.
+- **R1–R8:** `determine`.
+- **R9–R11:** `determinationRead` and `determinationsFor`, in the one shape settled in J2 (K252).
+- **R12, R18:**
+  - `comparisonPropose` and `comparisonRead`.
+  - `determine`'s `proposal?`.
+  - The size caps (`DETERMINATION_TOO_LARGE`).
+- **R13, R17:** a determination is a `CONF-<year>-NNNN-determination` bundle promoted through promotion. A registered step refuses any other write of one (C-113.21).
+- **R10:** reevaluation's `onBasisChanged` is recorded, and the record's own causes are derived at the read.
+- **Reads:**
+  - publication R37 (`publishedEditionsOf`);
+  - inquiry `supersededBy` and `stateHistory`;
+  - strength `inquiryStrength`;
+  - standards `standardRead` and `inForce`;
+  - content `contentRow` and `passageNotice`;
+  - the `CONF-` type and `proposalLabel` (N129).
+- **J1's readings:** all stand (K249).
+
+**Deferred.** Nothing of this module's.
+
+**Found in other modules** (REPORT J2):
+- strength's factory builds an instance without inquiry, so `inquiryStrength` throws (N218).
+- legacy-index and legacy-store must route the five ops and reach `conformanceOf(host)` at the plane's start.
+- affordances publishes the five ops.
+- legacy-tests' refusal guard sees the new family C-113.
+- No generated artifact is stale.
+
+**Tests and checks** (on `tranche/T8` merged, standards real):
+- `node --test bio-plane/test/m/conformance/`: tests 29, pass 29, fail 0. Every id R1–R18 is named.
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
+- `node checks/architecture.mjs … conformance`: 7 product files, 32 relative imports (0 not judged); 0 failures.
+- `node checks/coverage.mjs … conformance`: 18 of 18 live ids named; 0 failures.
+- `node checks/ownership.mjs … conformance tranche/T8`: 8 files; 0 failures.
+
+Size (session_01F4NHaY2fe7KVfrhugvz5hD): test runs 12, module lines 1213
