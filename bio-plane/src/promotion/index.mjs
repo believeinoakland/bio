@@ -21,7 +21,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
@@ -892,10 +892,8 @@ class Promotion {
     const sight = head && viewer !== null && viewer !== undefined ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
     const seen = head && sight === "EXISTENCE" ? membership.existenceAct(projectId, viewer) : null;
     if (seen) return seen;
-    if (!head || sight !== "FULL")
-      return { ok: false, reason: "NO_SUCH_PROJECT", project: projectId ?? null,
-               detail: "no project answers to that id here. A project you cannot see is answered exactly as one that "
-                     + "does not exist, so this is not a hint either way." };
+    /* R42 (N208): an unseen project and an absent id get membership's one answer (its R78, C-70.5). */
+    if (!head || sight !== "FULL") return noSuchProject(projectId);
     if (normalizeType(head.type) !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = membership.participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
