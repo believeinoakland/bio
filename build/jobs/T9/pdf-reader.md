@@ -37,3 +37,14 @@ My share (N100, N101) adds three outputs my requirements do not yet state, so it
 4. REC-206's `text.pages[].lines`/`linesWhy` are NOT in my share, so I do not carry them (the anchor needs only glyph positions, kept off the output). Say if extraction wants them.
 
 For the consumers (not mine, reported): `image_unread` enters `text.undetermined` and `counts.undetermined`, so any reader judging a decode by `counts.undetermined` (needsTier2/readText; D-665's built work added `decodeView` in index.mjs for this) must exclude it, or a photo page escalates to tier 2. And whole-output pins of `op=pdfstructure`/tier 1 in other modules' tests (reextract, formats, cpdf18, capture-container-extent on the snapshot) move by exactly `pageBoxes`, `links[].anchor` and the `image_unread` markers. pdf-worker's bundle goes stale (§14).
+
+## J2 · REPORT
+
+Found in other modules by my T9 change (R33–R35, K279), measured against `tranche/T9` before and after:
+1. **legacy-tests** (bio-plane/test, layer 11): four suites go red, all by the approved shapes, none by a regression:
+   - `textshown.test.mjs`: pins a page's reasons as exactly `["no_text_layer"]` (4 asserts); an image-only page now also carries R34's `image_unread` (R14 as amended).
+   - `tier3-layer-parts.test.mjs`: pins page 1's markers and "21 markers over 7 glyphs"; R34 adds the scan page's `image_unread` (count 0).
+   - `cpdf18-pdf-images.test.mjs`: tier 1's text digest over the image fixture; the pinned object now carries `image_unread` markers (REC-206's snapshot stripped its additions by name before the digest; the same would do here, plus `image_unread`, `pageBoxes`, `links[].anchor`).
+   - `fleetbundles.test.mjs`: stale bundles, next item.
+2. **Generated artifacts (§14), stale:** `pdf-worker`, `ocr-worker` and `agent-worker` bundles embed pdfstructure. I did not rebuild them. pdf-worker's own `structure.test.mjs` (R7, R10) fails against its committed bundle and passes 46/46 against a fresh local build (restored, not committed).
+3. **extraction**: `image_unread` is in `text.undetermined` and `counts.undetermined` (N253, as you said).
