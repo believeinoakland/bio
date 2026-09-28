@@ -361,7 +361,8 @@ export class CaseAuthoring {
          decided on (`conc`, never re-read). The refusal itself is asked below, once the case is known (D-442). */
       const rel = this.publication.caseRelation(id);
       const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
-      prepared.push({ id, b, fm, bundleSha: head ? head.bundleSha : null, conclusion: conc, warrant: recorded });
+      prepared.push({ id, b, fm, bundleSha: head ? head.bundleSha : null, conclusion: conc, warrant: recorded,
+                      preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null });
     }
 
     /* R5 — CASE-2 / DEC-72 clause 4: THE AUTHORED LOAD-BEARING PARTITION. Both halves are authored and neither is a
@@ -458,11 +459,11 @@ export class CaseAuthoring {
       if (rs.length) belongs.set(id, rs.map((r) => r.case_id));
     }
     const distinct = [...new Set([...belongs.values()].flat())];
-    /* The WORKING document's own claim, consulted after the published record and only so a member refused at the gate
-       who publishes again lands on the same case rather than a second minted id. */
-    const claimedInBytes = [...new Set(prepared
-      .map((p) => (typeof p.fm.case_id === "string" && p.fm.case_id !== "null" ? p.fm.case_id : null))
-      .filter(Boolean))];
+    /* THE CASE THIS ACT'S OWN UNSIGNED PREPARATION NAMES (R7's third route), consulted after the published record and
+       only so a publisher who prepares again lands on the same case rather than on a second minted id. Since D-442 a
+       member's bytes name no case, so the preparation is read where it lives: the unsigned case document pinning the
+       member at its current bytes (publication R4's `prepared`). */
+    const preparedCases = [...new Set(prepared.map((p) => p.preparedIn).filter(Boolean))];
     /* DEC-49 REGION case-identity-derivation — C-44.1. The line is drawn at MORE THAN ONE CANDIDATE: with none the act
        mints, with one the derivation reads a fact, `caseId` answers the question one way and `newCase` the other.
        With two there is no default that is anybody's meaning, and that is what this refuses. */
@@ -486,7 +487,7 @@ export class CaseAuthoring {
     /* `newCase` short-circuits both derivation routes, the prepared-bytes claim included, and mints. */
     let theCase = newCase ? null
                 : str(caseId) || distinct[0]
-                || (claimedInBytes.length === 1 ? claimedInBytes[0] : null) || null;
+                || (preparedCases.length === 1 ? preparedCases[0] : null) || null;
     if (caseId && !this.#one(`SELECT case_id FROM published_cases WHERE case_id=? LIMIT 1`, theCase))
       return { ok: false, reason: "NO_SUCH_CASE", caseId: theCase,
                detail: `no published case answers to ${theCase}. A case identity is minted by this act and `
@@ -573,11 +574,10 @@ export class CaseAuthoring {
 
     /* R7 — CASE-2 / DEC-72: A CASE NEVER CHANGES PROJECT. The bar is read from the publishing project at act time, so a
        case that could change hands is a case whose standard of evidence changes with nobody authoring the change. The
-       ratified row is asked first (publication R40: `cases`), the working bytes second. */
+       ratified row is asked first (publication R40: `cases`), then the case's own unsigned preparation, whose
+       `case_project` is the project that prepared it. */
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
-    const claimedProject = ownedBy ? ownedBy.project_id
-      : [...new Set(prepared.map((p) => (typeof p.fm.case_project === "string"
-          && p.fm.case_project !== "null" ? p.fm.case_project : null)).filter(Boolean))][0] || null;
+    const claimedProject = ownedBy ? ownedBy.project_id : this.#preparedProject(theCase);
     if (claimedProject && claimedProject !== proj)
       return { ok: false, reason: "CASE_BELONGS_TO_ANOTHER_PROJECT", caseId: theCase,
                project: proj, owner: claimedProject, ratified: !!ownedBy,
@@ -788,6 +788,14 @@ export class CaseAuthoring {
                  : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
                  + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
                  + `servable as a container when the last of them lands.`) };
+  }
+
+  /* The project an unsigned preparation of a case names, or null (publication R40: `case_documents`). */
+  #preparedProject(caseId) {
+    const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND sig_armored IS NULL
+                         ORDER BY edition DESC LIMIT 1`, caseId);
+    const named = d ? str((parseFrontmatter(d.text).data || {}).case_project) : "";
+    return named || null;
   }
 
   /* A case's highest published edition, 0 when it has none (publication R40: `published_cases`). */
