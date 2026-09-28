@@ -5,16 +5,16 @@
    dispatch), `bio-checks.mjs` (C-91, now `checks.mjs`) and `schema.mjs` (the four tables, now `schema.mjs` here),
    with the rows this job applied named at their sites. It derives no connection: that is `connections`'. */
 import { recordOf, perItem } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { normAlias, labelTerms } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { ACT_SHAPE_CHECKS, BASIS_GRADES } from "../../checks/bio-checks.mjs";
 import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS } from "./schema.mjs";
-import { IDSPACE_CHECKS, idspaceRefusal } from "./checks.mjs";
+import { IDSPACE_CHECKS, ENTITY_CHECKS, idspaceRefusal } from "./checks.mjs";
 
-export { IDSPACE_CHECKS, ENTITIES_SCHEMA };
+export { IDSPACE_CHECKS, ENTITY_CHECKS, ENTITIES_SCHEMA };
 
 /* R7 (REC-35, N13): the closed kind vocabulary, the UNION of safeguard 4's four SUBJECT kinds and the framework's
    entity kinds (D-83 reconciles the two doctrines this one axis serves). Introducing a kind is a doctrine change,
@@ -52,7 +52,28 @@ export const ENTITIES_TABLES = Object.freeze(["resolutions", "entity_relations",
 const RESOLVE_ITEM_KEYS = [["captureSha"], ["captureSha", "ref"]];
 const RESOLVE_SHARED_KEYS = ["ref"];
 
-const LISTENER_DECLARED = "LISTENER_DECLARED";
+/* R36 (N208, K231, K275): THE ONE ANSWER TO ONE CONDITION, no entity with the id `entityId` is registered (R7's `has`
+   is false). Every act of any module that answers that condition answers through here (this module's R2, R3, R12 and
+   R17, progressions' R6 and R14, intent), so `NO_SUCH_ENTITY` is minted at one site and its one row is this module's
+   (C-91.4). The detail is one fixed sentence, the same for every caller. `extra` adds a caller's own fields (such as
+   `end` for R3) beside these and never replaces one of them. Writes nothing and never throws. */
+const NO_SUCH_ENTITY_DETAIL = "no entity with that id is registered in the subject registry; an entity is registered "
+  + "with op=entitycreate before anything can name it";
+const NO_SUCH_ENTITY_FIXED = new Set(["ok", "reason", "code", "check", "translation", "entity_id", "detail"]);
+
+export function noSuchEntity(entityId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_ENTITY_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-entity-registered */
+  const row = ENTITY_CHECKS.NO_SUCH_ENTITY;
+  return { ok: false, reason: "NO_SUCH_ENTITY", code: "NO_SUCH_ENTITY", check: row.check,
+           translation: row.translation, entity_id: entityId ?? null, ...Object.fromEntries(own),
+           detail: NO_SUCH_ENTITY_DETAIL };
+  /* END DEC-49 REGION is-entity-registered */
+}
 
 /* The label as kept (R1): trimmed, whitespace collapsed, at most 200 characters. */
 const cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
@@ -240,11 +261,13 @@ export class Entities {
   addAlias({ entityId, alias, declaredBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
-    /* DEC-49 REGION is-alias-named — REC-64/C-33.25. */
+    /* DEC-49 REGION is-alias-named — REC-64/C-33.25; N126: the whole refusal, the alias's fold with it. */
     const norm = normAlias(alias);
-    if (!norm) return actShape("NO_ALIAS", "an alias needs a name");
+    if (!norm)
+      return actShape("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or only "
+                    + "whitespace), so there is nothing a document could be matched by. Nothing was written.");
     /* END DEC-49 REGION is-alias-named */
-    if (!this.has(entityId)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
     if (dup) return { ok: false, reason: "ALREADY_ALIASED", entity_id: entityId, alias: dup.alias,
                       ...(dup.withdrawn_at ? { withdrawn: true,
@@ -272,8 +295,8 @@ export class Entities {
     if (!just) return { ok: false, reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)" };
     if (!cite) return actShape("NO_CITATION", "a declared relation carries a citation, like a pattern statement (safeguard 4)");
-    if (!this.has(fromEntity)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: fromEntity, end: "from" };
-    if (!this.has(toEntity)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: toEntity, end: "to" };
+    if (!this.has(fromEntity)) return noSuchEntity(fromEntity, { end: "from" });
+    if (!this.has(toEntity)) return noSuchEntity(toEntity, { end: "to" });
     const at = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
     return this.#record.transact(() => {
@@ -515,7 +538,7 @@ export class Entities {
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
     if (!rr) return { ok: false, reason: "NO_SUCH_REFERENCE", capture_sha: captureSha, ref,
       detail: "this captured document's reading carries no such reference to testify about" };
-    if (!this.has(entityId)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    if (!this.has(entityId)) return noSuchEntity(entityId);
     /* D-219: what grade D lacks is a captured DOCUMENT, not a basis. */
     const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
     const m = this.#record.transact(() => this.#upsert({
@@ -527,12 +550,15 @@ export class Entities {
   onResolved(module, fn) { return this.#listen(this.#onResolved, module, fn); }
   /** R13: a later module's work on each reference tried, matched or not, inside the transaction. */
   onResolveAttempt(module, fn) { return this.#listen(this.#onAttempt, module, fn); }
+  /* N202: a malformed or repeated registration is refused by membership's `listenerRefusal` (its R81), the one site
+     of LISTENER_MALFORMED and LISTENER_DECLARED; the listeners run in the modules' total order (`MODULE_ORDER`, its
+     R83; a module not in it last, in the order it registered), whatever order they registered in. */
   #listen(list, module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener is a module name and a function" };
-    if (list.some((l) => l.module === module))
-      return { ok: false, reason: LISTENER_DECLARED, module, detail: "a module registers once" };
-    list.push({ module, fn });
+    const refused = listenerRefusal(list, module, fn);
+    if (refused) return refused;
+    list.push({ module, fn, seq: list.length });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    list.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
     return { ok: true };
   }
 
@@ -645,8 +671,7 @@ export class Entities {
         detail: "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). "
               + "It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates." };
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
-    if (!ent) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId,
-      detail: "no such entity is registered, so it has no names to look documents up by" };
+    if (!ent) return noSuchEntity(entityId);
     const aliases = this.#rows(`SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? AND withdrawn_at IS NULL
                                  ORDER BY canonical DESC, alias_norm`, entityId);
     const cap = Math.max(1, Math.min(Number(limit) || NAMING_LIMIT_DEFAULT, NAMING_LIMIT_MAX));
