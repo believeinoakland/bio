@@ -48,7 +48,7 @@ test("R20 refusals in order, each moving nothing and naming every offender", () 
   assert.equal(w.record.head(Q2).bundleSha, before[1], "no refusal moved anything");
 });
 
-test("R21 each member gains its history entry, prior and current state, reason and Session Log; a deferral answers the re-evaluation it raised", () => {
+test("R21 R42 each member gains its history entry, prior and current state, reason and Session Log; a deferral answers the re-evaluation it raised", () => {
   const w = world(); w.inquiry(Q1); w.inquiry(Q2); w.listen();
   w.select("h", [Q1, Q2]);
   const r = go(w, "h", "deferred", "waiting on the budget");
@@ -68,6 +68,9 @@ test("R21 each member gains its history entry, prior and current state, reason a
   const w2 = world(); w2.inquiry(Q1); w2.select("h", [Q1]);
   const r2 = go(w2, "h", "deferred");
   assert.equal(r2.reevaluation, undefined); assert.match(r2.reevaluation_absent, /no module/);
+  /* R42: one registration per module set, a malformed one refused */
+  assert.equal(w.k.onRaised("other", () => []).reason, "LISTENER_DECLARED");
+  assert.equal(w2.k.onRaised("", () => []).reason, "LISTENER_MALFORMED");
   /* a dismissal raises none */
   w2.inquiry(Q2); w2.select("d", [Q2]);
   const d = go(w2, "d", "dismissed");

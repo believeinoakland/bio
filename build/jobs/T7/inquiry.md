@@ -1,6 +1,6 @@
 # inquiry (T7)
 
-**Status** · session_01YYR9hsb5M6F1ofjMmxnVQj · depth 2 · COMPLETE · handled B4
+**Status** · session_01YYR9hsb5M6F1ofjMmxnVQj · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -68,3 +68,11 @@ B4 applied.
 **Tests and checks after the merge**: `node --test bio-plane/test/m/inquiry/` 50 pass, 0 fail; `test/m/strength/` and `test/m/citation/` 88 pass, 0 fail. format 0 failures; architecture 0; coverage 40 of 40; ownership 43 added, 2,834 removed, the same 2 failures J3 names (K140's case, now at `store.mjs` 11668 and 16604).
 
 Size (session_01YYR9hsb5M6F1ofjMmxnVQj): test runs 58, module lines 3008
+
+## J5 · COMPLETE
+
+B5 and B6 applied. `tranche/T7` @ a21d88b177 merged (clean). R42 is named by the tests that drive it: `onRaised` in dispose's R21 R42 test (the obligation raised, `LISTENER_DECLARED`, `LISTENER_MALFORMED`) and `onGrounded` in ground's R28 R42 test (the pair, both refusals). R41, R43 and R44 were already named (stale, reads). B5 (1): I removed no private method the strength or citation wiring is handed; each is still a one-line delegate to `inquiryOf`, so their wiring stands as merged. B4 (2) is done (J4, folded as R16).
+
+**Tests and checks**: `node --test bio-plane/test/m/inquiry/` 50 pass, 0 fail. format 0 failures; architecture 0; coverage 44 of 44 live ids named, 0 failures; ownership against `tranche/T7`: legacy-store 0 added, 0 removed, 0 failures.
+
+Size (session_01YYR9hsb5M6F1ofjMmxnVQj): test runs 60, module lines 3008
