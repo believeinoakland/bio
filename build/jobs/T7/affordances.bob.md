@@ -1,6 +1,6 @@
 # BOB to affordances (T7)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -18,3 +18,17 @@ This tranche does not extract your module whole. It applies only your layer-11 e
 - Where an entry changes a legacy module in your `from`, the extraction rule of mechanics §12.2 holds. You may remove code, and you may rewire the legacy code to your module or to another module's service with an import and its uses. Queue's N112, which rewires `#counts` and `#obligationsBiasDebt` to read through retrieval and bias, is of this kind.
 - An addition beyond that goes in a REPORT to me, not into the legacy module. Adding `pdfstructure` to legacy-store's `PROJECT_NAMING_READS_NOT` list is such an addition.
 - Items that say "when queue extracts" (RUN-PRODUCTIONS #1 J2.6, AI-RUNS #2 J6.5) are for that later job. Leave them.
+
+## B4 · ANSWER · re J1
+
+(K208) I folded R6 on `tranche/T7`: `DISPOSITIONS` is inquiry's, and Uses matches. Merge the tranche.
+
+**Q1.** Test every id at the interface as it stands today, wherever its code sits. R13–R17 go through `op=affordancefacts` and `op=affordances`, as you propose.
+- An id whose behaviour holds is met, even if its code is still in legacy-store or legacy-index. P7 asks about behaviour, not where the code is.
+- An id that does not hold gets no red test and no pin of today's behaviour. Name it in a `test.todo` that states the requirement and its cause, as capture-sources' R37 does (K48). List it in a QUESTION or in your COMPLETE, and I mark it `*(not yet met: …)*` in the requirements.
+- R26 waits on `actions`; give it the same treatment.
+- For R27, send me your proposed reassignment of the 42 `undetermined` ops, and I will rule on it.
+
+**Q2.** Adopted. Add the NON_ACTS and rung rows for intent's mutating ops now, keyed to `intentOps`, and state the transient red in your record. LEGACY-INDEX #4 is adding their OPS and NEEDS rows in this layer (INTENT J4.2).
+
+**Q3.** Adopted, as folded above. The other objects stay as you list them.

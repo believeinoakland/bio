@@ -171,6 +171,9 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N168 · 2026-09-28 · **legacy-ui** (INTENT #1 REPORT J4.1): `civicos-ui/test/` fixtures that promote a project with no `objective` (`project-workspace`, `published-index-pair`, `several-cases-choice`, `conclude-reading`, `statement-ack`, `review-copy`) are refused `NO_OBJECTIVE` since intent R1; each states one.
 - N169 · 2026-09-28 · **capture-requests** (INTENT #1 REPORT J4.7): a read of one request by id in Provides, so intent's `pursuitOf` (R14) reads outcomes exactly rather than through a bounded list.
 - N170 · 2026-09-28 · **monitoring** (INTENT #1 REPORT J4.6): monitoring watches `intentOf(ctx).watchSet({project})` (intent R7), and its findings join intent's proposals through `registerSource` (R15), as scheduler's do (N167).
+- N171 · 2026-09-28 · **retrieval**, **bias**, **queue** (QUEUE #1 Q3, K209): retrieval `counts(hid)` → `{indexed, selections, selectionItems}` and bias `counts(hid)` → `{biasStatements, biasAdoptions}` and `uncleared({gate, limit})` (the uncleared debts with their recipients, newest first), as run-productions' `counts(hid)`; queue's `#counts` and `#obligationsBiasDebt` then read them (N112's remainder).
+- N172 · 2026-09-28 · **queue** (QUEUE #1 Q4, Q5, K209; REEVALUATION #1 J2.2, INTENT #1 J4.6): at queue's extraction, reevaluation's notices as a FINDING kind with its producer and its ADOPT/KEEP door (`versionadopt`, `versionkeep`), and `objective-gap`'s producer over intent's `gaps` (bounded projects); `reevaluation` and `intent` join queue's uses; BOB folds R1, R9, R12 first from QUEUE #1's J1 proposals.
+- N173 · 2026-09-28 · **queue** (QUEUE #1 Q1, K209): at queue's extraction, requirement-named tests at the interface for R6–R40 (the feed in legacy-store until then).
 
 ## Before layer 9
 
