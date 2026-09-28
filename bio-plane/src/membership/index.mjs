@@ -1,6 +1,6 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R78; T9's N123 revocation notice `onRevoked`, N142's `inSight` and
+ * Requirements: build/requirements/membership.md (R1–R83; T9's N123 revocation notice `onRevoked`, N142's `inSight` and
  * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
@@ -74,9 +74,10 @@ export function noSuchProject(projectId, extra = null) {
   /* END DEC-49 REGION is-project-seen */
 }
 
-/* R79's "the modules' total order": the layer order of `build/modules.json`, its ids by layer and then by their place in
-   the file (K270). Product code cannot read `build/` at run time, so it is held here, as promotion holds its copy for
-   R39; this module's R79 test holds it equal to the file, so a change there fails the suite until the list follows. */
+/* R83 (K289): the modules' total order, `build/modules.json`'s ids in the file's order (which is its layer order, K270).
+   Product code cannot read `build/` at run time, so it is held here, the one list every module orders its listeners by
+   (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
+   the file, so a change there fails the suite until the list follows. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
           "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
