@@ -12,8 +12,8 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import {
-  credentialsOf, CAPTURE_CREDENTIAL_CHECKS, CREDENTIAL_KINDS, CREDENTIAL_SCOPES, REVOCATION, CREDENTIALS_TABLE,
-  hostNameOf, principalMember,
+  credentialsOf, CaptureCredentials, CAPTURE_CREDENTIAL_CHECKS, CREDENTIAL_KINDS, CREDENTIAL_SCOPES, REVOCATION,
+  CREDENTIALS_TABLE, CREDENTIAL_LIST_LIMIT, hostNameOf, principalMember,
 } from "../../../src/capture-sources/credentials.mjs";
 
 const KEY = "test-instance-secret-not-a-real-one";
@@ -125,10 +125,33 @@ test("R55: each refusal, in order, writes nothing and carries its check and tran
   assert.equal(codeOf(await k.supply({})), "CAPTURE_CREDENTIAL_NO_KEY");
   assert.equal(codeOf(await (await world({ key: "" })).supply({})), "CAPTURE_CREDENTIAL_NO_KEY");
   assert.equal(k.raw().length, 0);
-  /* The catalogue rows: nine, one family, each with a translation. */
-  assert.deepEqual(CODES.map((c) => CAPTURE_CREDENTIAL_CHECKS[c].check), Array.from({ length: 9 }, (_, i) => `C-105.${i + 1}`));
+  /* The catalogue rows: eleven, one family, each with its `where` in this module and a translation of a whole
+     sentence or more (N189: one condition per code, K275). */
+  assert.deepEqual(CODES.map((c) => CAPTURE_CREDENTIAL_CHECKS[c].check), Array.from({ length: 11 }, (_, i) => `C-105.${i + 1}`));
+  for (const c of CODES) {
+    const row = CAPTURE_CREDENTIAL_CHECKS[c];
+    assert.match(row.where, /^src\/capture-sources\/credentials\.mjs [#\w]+ > is-[a-z-]+$/, c);
+    assert.ok(typeof row.translation === "string" && row.translation.length > 40, c);
+  }
+  assert.equal(new Set(CODES.map((c) => CAPTURE_CREDENTIAL_CHECKS[c].where)).size, CODES.length);   /* one site each */
   assert.deepEqual([...CREDENTIAL_KINDS], ["login", "user-agent", "other"]);
   assert.deepEqual([...CREDENTIAL_SCOPES], ["member", "project", "group"]);
+});
+
+test("R55: a failure to encrypt or store, after every check passed, is SUPPLY_FAILED, never NO_KEY, and writes nothing", async () => {
+  const w = await world();
+  /* A store whose write fails: every check passes, the insert throws. */
+  const failing = { exec(q, ...a) { if (/^\s*INSERT/.test(q)) throw new Error(`disk full: ${a.join(",")}`); return w.storage.sql.exec(q, ...a); } };
+  const c = new CaptureCredentials({ sql: failing, core: w.rc, members: w.m, key: KEY });
+  const a = await c.credentialSupply({ kind: "login", host: HOST, secret: SECRET, scope: "member", by: "ann" });
+  assert.deepEqual([a.ok, a.code, a.reason, a.check, a.translation],
+    [false, "CAPTURE_CREDENTIAL_SUPPLY_FAILED", "CAPTURE_CREDENTIAL_SUPPLY_FAILED", "C-105.10",
+     CAPTURE_CREDENTIAL_CHECKS.CAPTURE_CREDENTIAL_SUPPLY_FAILED.translation]);
+  noLeak(a, SECRET, "the failure");
+  assert.ok(!a.detail.includes("disk full"));
+  assert.equal(w.raw().length, 0);
+  /* The key's absence stays its own condition. */
+  assert.equal(codeOf(await (await world({ key: null })).supply({})), "CAPTURE_CREDENTIAL_NO_KEY");
 });
 
 test("R56: one admitted credential per fetch: member for its supplier's requests, project for its project's, group for any; exact host", async () => {
@@ -205,7 +228,7 @@ test("R57: withdrawal ends a credential for fetches, destroys its ciphertext, ke
   const row = w.raw().find((x) => x.credential_id === a.credential);
   assert.deepEqual([row.ciphertext, row.iv], [null, null]);
   assert.deepEqual((await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" })).credentials, []);
-  const listed = w.c.credentialList({ viewer: "member:dee" }).find((e) => e.credential === a.credential);
+  const listed = w.c.credentialList({ viewer: "member:dee" }).entries.find((e) => e.credential === a.credential);
   assert.deepEqual([listed.withdrawn_by, listed.withdrawn_at], ["dee", r.withdrawn.withdrawn_at]);
   const before = JSON.stringify(w.raw());
   const again = await w.c.credentialWithdraw({ credential: a.credential, by: "dee" });
@@ -218,6 +241,14 @@ test("R57: withdrawal ends a credential for fetches, destroys its ciphertext, ke
   assert.equal(unknown.code, "CAPTURE_CREDENTIAL_NO_SUCH");
   assert.deepEqual(unseen, unknown);
   for (const v of [undefined, null, {}, { credential: 5, by: "ann" }]) assert.equal((await w.c.credentialWithdraw(v)).code, "CAPTURE_CREDENTIAL_NO_SUCH");
+  /* A failure to read or write the withdrawal is its own condition, and changes nothing. */
+  const stuck = { exec(q, ...a) { if (/^\s*(SELECT|UPDATE)/.test(q)) throw new Error("storage unavailable"); return w.storage.sql.exec(q, ...a); } };
+  const broken = new CaptureCredentials({ sql: stuck, core: w.rc, members: w.m, key: KEY });
+  const g0 = (await w.supply({ scope: "group", by: "dee" })).credential;
+  const beforeFail = JSON.stringify(w.raw());
+  const f = await broken.credentialWithdraw({ credential: g0.credential, by: "dee" });
+  assert.deepEqual([f.ok, f.code, f.check], [false, "CAPTURE_CREDENTIAL_WITHDRAW_FAILED", "C-105.11"]);
+  assert.equal(JSON.stringify(w.raw()), beforeFail);
   /* Seen but not permitted. */
   const g = (await w.supply({ scope: "group", by: "ann" })).credential;
   assert.equal((await w.c.credentialWithdraw({ credential: g.credential, by: "bob" })).code, "CAPTURE_CREDENTIAL_NOT_PERMITTED");
@@ -234,7 +265,7 @@ test("R58: the listing shows each viewer what they may see, filtered, and never 
   const p1 = (await w.supply({ scope: "project", project: "P1", by: "bob", secret: "p1-secret" })).credential;
   const p2 = (await w.supply({ scope: "project", project: "P2", by: "dee", secret: "p2-secret" })).credential;
   const grp = (await w.supply({ scope: "group", by: "bob", secret: "grp-secret" })).credential;
-  const ids = (viewer, o = {}) => w.c.credentialList({ viewer, ...o }).map((e) => e.credential).sort();
+  const ids = (viewer, o = {}) => w.c.credentialList({ viewer, ...o }).entries.map((e) => e.credential).sort();
   const s = (...xs) => xs.map((x) => x.credential).sort();
   assert.deepEqual(ids("member:ann"), s(annOwn, p1, grp));
   assert.deepEqual(ids("member:bob"), s(p1, grp));
@@ -247,13 +278,45 @@ test("R58: the listing shows each viewer what they may see, filtered, and never 
   assert.deepEqual(ids("admin", { project: "P2" }), s(p2));
   assert.deepEqual(ids("admin", { scope: "group", project: "P2" }), []);
   assert.deepEqual(ids("admin", { scope: "nonsense" }), []);
-  const all = w.c.credentialList({ viewer: "admin" });
+  const listing = w.c.credentialList({ viewer: "admin" });
+  assert.deepEqual([listing.limit, listing.truncated], [CREDENTIAL_LIST_LIMIT, false]);
+  const all = listing.entries;
   for (const e of all) assert.deepEqual(Object.keys(e).sort(), ENTRY_KEYS);
   for (const secret of ["ann-secret", "dee-secret", "p1-secret", "p2-secret", "grp-secret"]) noLeak(all, secret, "the listing");
   /* No length of the secret, in any field. */
   assert.ok(all.every((e) => Object.values(e).every((v) => typeof v !== "number")));
-  assert.deepEqual(w.c.credentialList(), []);
-  assert.deepEqual(w.c.credentialList(null), []);
+  for (const v of [undefined, null]) assert.deepEqual(w.c.credentialList(v), { entries: [], limit: CREDENTIAL_LIST_LIMIT, truncated: false });
+  /* A revoked member sees nothing, even what they supplied. */
+  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
+  assert.deepEqual(ids("member:dee"), []);
+});
+
+test("R58: bounded: the first `limit` entries the viewer sees, in supply order, `truncated` measured; the cap is lowered, never raised", async () => {
+  const w = await world();
+  /* Rows dee cannot see come first, so a cut taken before visibility would starve dee's page. */
+  for (let i = 0; i < 5; i++) await w.supply({ scope: "project", project: "P1", by: "ann", secret: `p1-${i}` });
+  for (let i = 0; i < 4; i++) await w.supply({ scope: "member", by: "ann", secret: `ann-${i}` });
+  const mine = [];
+  for (let i = 0; i < 3; i++) mine.push((await w.supply({ scope: "member", by: "dee", secret: `dee-${i}` })).credential.credential);
+  const grp = (await w.supply({ scope: "group", by: "ann", secret: "g" })).credential.credential;
+  const L = (o) => w.c.credentialList({ viewer: "member:dee", ...o });
+  assert.deepEqual([L({}).limit, L({}).truncated], [CREDENTIAL_LIST_LIMIT, false]);
+  assert.deepEqual(L({}).entries.map((e) => e.credential), [...mine, grp]);
+  assert.deepEqual([L({ limit: 2 }).entries.map((e) => e.credential), L({ limit: 2 }).limit, L({ limit: 2 }).truncated], [mine.slice(0, 2), 2, true]);
+  assert.deepEqual([L({ limit: 4 }).entries.length, L({ limit: 4 }).truncated], [4, false]);
+  assert.deepEqual([L({ limit: 3 }).entries.length, L({ limit: 3 }).truncated], [3, true]);
+  for (const limit of [CREDENTIAL_LIST_LIMIT + 1, 1e9, Infinity]) assert.equal(L({ limit }).limit, CREDENTIAL_LIST_LIMIT);
+  for (const limit of [0, null, "x", undefined]) assert.equal(L({ limit }).limit, CREDENTIAL_LIST_LIMIT);
+  assert.equal(L({ limit: -3 }).limit, 1);
+  /* The administrator's page is cut the same way, over every row. */
+  const a = w.c.credentialList({ viewer: "admin", limit: 12 });
+  assert.deepEqual([a.entries.length, a.truncated], [12, true]);
+  assert.equal(w.c.credentialList({ viewer: "admin", limit: 13 }).truncated, false);
+  /* Past the ceiling: one more row than it, cut at it and said so. */
+  const big = await world();
+  for (let i = 0; i < CREDENTIAL_LIST_LIMIT + 1; i++) await big.supply({ scope: "group", by: "ann", secret: `s${i}` });
+  const cut = big.c.credentialList({ viewer: "member:bob", limit: 1e6 });
+  assert.deepEqual([cut.entries.length, cut.limit, cut.truncated], [CREDENTIAL_LIST_LIMIT, CREDENTIAL_LIST_LIMIT, true]);
 });
 
 test("R59: a known secret is never found in the tables read raw", async () => {
@@ -281,6 +344,9 @@ test("R60: no answer of the module shows a secret back, save R56's, even a secre
     answers.push(await w.supply(over));
   answers.push(await (await world({ key: null })).supply({}));
   answers.push(w.c.credentialList({ viewer: "admin" }), w.c.credentialList({ viewer: "member:ann" }));
+  const failing = { exec(q, ...a) { if (/^\s*INSERT/.test(q)) throw new Error(`insert ${a.join(",")}`); return w.storage.sql.exec(q, ...a); } };
+  answers.push(await new CaptureCredentials({ sql: failing, core: w.rc, members: w.m, key: KEY })
+    .credentialSupply({ kind: "login", host: HOST, secret: SECRET, scope: "group", by: "ann" }));
   answers.push(await w.c.credentialWithdraw({ credential: SECRET, by: "ann" }));
   answers.push(await w.c.credentialWithdraw({ credential: answers[0].credential.credential, by: "bob" }));
   answers.push(await w.c.credentialWithdraw({ credential: answers[2].credential.credential, by: "bob" }));
@@ -327,7 +393,7 @@ test("R62: host, scope and project are fixed at supply; the ciphertext is bound 
   assert.deepEqual(moved.credentials, []);
   assert.ok(moved.reason.includes(p.credential));
   /* R56 is the only read that answers one for use, and only within its scope: the listing and withdrawal never do. */
-  assert.ok(!("secret" in w.c.credentialList({ viewer: "admin" })[0]));
+  assert.ok(!("secret" in w.c.credentialList({ viewer: "admin" }).entries[0]));
   const m = await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:bob", target: "Q0" });
   assert.equal(m.credentials[0].secret, "bob-own");
   assert.deepEqual((await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:ann", target: "Q1" })).credentials, []);
@@ -363,13 +429,39 @@ test("R63: who may supply and withdraw at each scope", async () => {
   assert.equal(await W(await fresh({ scope: "group", by: "bob" }), "dee"), "CAPTURE_CREDENTIAL_NOT_PERMITTED");
 });
 
-test("R63: a revocation withdraws the member's own credentials at the first read that meets them, and keeps project and group ones", async () => {
+test("R63: a revocation withdraws the member's own credentials at once, through membership's notice, and keeps project and group ones", async () => {
+  const w = await world();
+  const own = (await w.supply({ scope: "member", by: "bob", secret: "bob-own" })).credential;
+  const own2 = (await w.supply({ scope: "member", by: "bob", secret: "bob-own-2", host: "other.example" })).credential;
+  const annOwn = (await w.supply({ scope: "member", by: "ann", secret: "ann-own" })).credential;
+  const prj = (await w.supply({ scope: "project", project: "P1", by: "bob", secret: "bob-for-p1" })).credential;
+  const grp = (await w.supply({ scope: "group", by: "bob", secret: "bob-for-group" })).credential;
+  const byId = () => Object.fromEntries(w.raw().map((r) => [r.credential_id, r]));
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  /* No read of this module has happened: the notice did it, inside the revoking act. */
+  const rows = byId();
+  for (const id of [own.credential, own2.credential])
+    assert.deepEqual([rows[id].ciphertext, rows[id].iv, rows[id].withdrawn_by, typeof rows[id].withdrawn_at], [null, null, REVOCATION, "string"]);
+  for (const id of [annOwn.credential, prj.credential, grp.credential])
+    assert.deepEqual([rows[id].withdrawn_at, typeof rows[id].ciphertext], [null, "string"]);
+  assert.equal((await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:bob", target: "Q1" })).credentials[0].credential, prj.credential);
+  /* A write that leaves the status revoked notifies nobody and changes nothing here. */
+  const before = JSON.stringify(w.raw());
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  assert.equal(JSON.stringify(w.raw()), before);
+  /* The registration is made once per store, at its creation. */
+  assert.equal(w.m.onRevoked("capture-sources", () => {}).code, "LISTENER_DECLARED");
+});
+
+test("R63: a supplier revoked before the notice was registered is withdrawn at the first read that meets them, and project and group ones kept", async () => {
   for (const firstRead of ["fetch", "list", "withdraw"]) {
     const w = await world();
     const own = (await w.supply({ scope: "member", by: "bob", secret: "bob-own" })).credential;
     const prj = (await w.supply({ scope: "project", project: "P1", by: "bob", secret: "bob-for-p1" })).credential;
     const grp = (await w.supply({ scope: "group", by: "bob", secret: "bob-for-group" })).credential;
-    w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+    /* The revocation as it stood before the registration existed: the status written, no notice. */
+    w.db.prepare(`UPDATE members SET status='revoked' WHERE member_id='bob'`).run();
+    assert.equal(w.raw().find((r) => r.credential_id === own.credential).withdrawn_at, null);
     if (firstRead === "fetch") {
       const a = await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:bob", target: "Q1" });
       assert.equal(a.credentials[0].credential, prj.credential, firstRead);   /* never the member's own */
