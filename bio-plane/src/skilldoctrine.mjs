@@ -94,14 +94,12 @@ import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE,
          SEQUENCING_ALSO_NAMED_IN } from "./ai-runs/deployment.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
-/* C-22.7 IS THIS MODULE'S ROW (R25, K81, K194), named here by key and selected
-   from `ai-runs`' `AI_RUN_CHECKS`, never copied, exactly as `observation-log`
-   names its seven C-22 rows. `ai-runs`, earlier in the order, holds the one
-   predicate that mints it (`checkSkillVersion`, its R8) and must read the row,
-   so the row's text is held where that predicate can reach it. Held in this
-   file rather than beside the re-export of `checkSkillVersion` because
-   `skillpack.mjs` imports this one, and the clauses below cite the row at load;
-   `skillpack.mjs` re-exports it. */
+/* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `ai-runs`'
+   `AI_RUN_CHECKS` and never copied. `ai-runs`, earlier in the order, holds the
+   one predicate that mints it (`checkSkillVersion`, its R8) and so holds the
+   row with it (N289). Named in this file rather than beside the re-export of
+   `checkSkillVersion` because `skillpack.mjs` imports this one, and the clauses
+   below cite the row at load; `skillpack.mjs` re-exports it. */
 export const SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
 export const SKILL_CHECKS = Object.freeze(Object.fromEntries(
   SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));

@@ -63,7 +63,7 @@ test("R13 parseSkillVersion returns {pack, edition, digest} for an accepted valu
   for (const v of ACCEPTED) assert.notEqual(parseSkillVersion(v), null, v);
 });
 
-test("R25 C-22.7 is this module's row, named by key: its code, number and translation unchanged, the row ai-runs' predicate mints, and the one code it refuses under", () => {
+test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, number and translation unchanged, and SKILL_CHECKS' row is the one checkSkillVersion mints", () => {
   assert.deepEqual(SKILL_CHECK_KEYS, ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   assert.deepEqual(Object.keys(SKILL_CHECKS), ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, airun.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED,
@@ -77,6 +77,3 @@ test("R25 C-22.7 is this module's row, named by key: its code, number and transl
   assert.deepEqual([r.code, r.check, r.translation], ["AI_RUN_SKILL_VERSION_UNNAMED", ROW.check, ROW.translation]);
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
-
-test.todo("R25 the C-22.7 row is held in this module's paths: not met, SKILLS #2 QUESTION J1 (the row's one minting site, "
-  + "checkSkillVersion, is ai-runs', earlier in the order, and cannot read a row held here)");
