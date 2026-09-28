@@ -597,4 +597,9 @@ test("R26: an option differing from one a caller supplied, or another record, is
   assert.throws(() => governorOf({ storage: b.storage }, { env: { GOVERNOR_APPETITE_PER_MIN: "7" } }), /`env`/);
   h.migrate();
   assert.equal(h.governorAdmit({ host: "x.example" }).appetite_per_min, 6);
+  // an env with no bindings counts as supplied: a later env with bindings differs from it
+  const c = bareStorage();
+  const e = governorOf({ storage: c.storage }, { env: {} });
+  assert.throws(() => governorOf({ storage: c.storage }, { env: { GOVERNOR_APPETITE_PER_MIN: "6" } }), /`env`/);
+  assert.equal(governorOf({ storage: c.storage }, { env: {} }), e);
 });
