@@ -60,3 +60,7 @@ filings built per requirements (R1–R21): 30/30 tests, 21/21 ids covered; forma
 **Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 30, pass 30, fail 0. format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 30 relative imports; 0 failures. coverage: 21 of 21 live requirement ids named by a test; 0 failures. ownership: see below.
 
 Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 14, module lines 1303
+
+## J4 · COMPLETE
+
+B3 (K250) applied: tranche/T8 merged; consequences' shapes confirm J1 item 5, no source change beyond naming consequencesModule; the fixture uses the real consequencesModule. 30/30 tests, 21/21 ids; format, architecture, coverage, ownership clean. Record §Completion · B3.
