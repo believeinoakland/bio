@@ -9,6 +9,7 @@
  * ai-runs' open rows) are relayed with their own rows and are not restated here. */
 
 const at = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
+/* A code several acts answer is minted once, in `mint` (DEC-49's one code, one site); its row names that site. */
 
 export const INTENT_CHECKS = Object.freeze({
   NO_OBJECTIVE: {
@@ -22,7 +23,7 @@ export const INTENT_CHECKS = Object.freeze({
       + 'set or change the measure. Sign in as a member. Nothing was written.',
   },
   NO_SUCH_PROJECT: {
-    check: 'C-110.2', where: at("setCondition|progress|gaps|departFrom|linkObjective|aspirationsFor|triage|workObjective", "is-project-seen"),
+    check: 'C-110.2', where: at("mint.NO_SUCH_PROJECT", "is-project-seen"),
     translation: 'No project answers to that id here. A project you cannot see is answered exactly as one that does '
       + 'not exist, so this is not a hint either way.',
   },
@@ -32,12 +33,12 @@ export const INTENT_CHECKS = Object.freeze({
       + 'what each matching instance must reach, and the share of them that must reach it. Nothing was written.',
   },
   NO_SUCH_PROGRESSION: {
-    check: 'C-110.4', where: at("setCondition|check", "is-condition-progression"),
+    check: 'C-110.4', where: at("mint.NO_SUCH_PROGRESSION", "is-named-progression"),
     translation: 'The measure names a declared flow the record does not hold. Declare the flow first, or name one '
       + 'that exists. Nothing was written.',
   },
   NO_SUCH_ENTITY: {
-    check: 'C-110.5', where: at("setCondition|check", "is-condition-entity"),
+    check: 'C-110.5', where: at("mint.NO_SUCH_ENTITY", "is-named-entity"),
     translation: 'The measure names an entity the record does not hold. Register it first, or name one that exists. '
       + 'Nothing was written.',
   },
@@ -57,30 +58,30 @@ export const INTENT_CHECKS = Object.freeze({
       + 'written.',
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
-    check: 'C-110.9', where: at("declareGoal|linkObjective|closeGoal|check", "is-goal-member"),
+    check: 'C-110.9', where: at("mint.MACHINE_CANNOT_DECLARE_GOAL", "is-goal-member"),
     translation: 'Declaring a goal, tying a project to it and closing it are members\' decisions. An assistant may '
       + 'propose; it may not decide what the group pursues. Sign in as a member. Nothing was written.',
   },
   NO_STATEMENT: {
-    check: 'C-110.10', where: at("declareGoal|declareAspiration|check", "is-pursuit-stated"),
+    check: 'C-110.10', where: at("mint.NO_STATEMENT", "is-pursuit-stated"),
     translation: 'A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something '
       + 'here is empty. Write it and send it again. Nothing was written.',
   },
   NO_SUCH_GOAL: {
-    check: 'C-110.11', where: at("linkObjective|closeGoal", "is-goal-held"),
+    check: 'C-110.11', where: at("mint.NO_SUCH_GOAL", "is-goal-held"),
     translation: 'No goal answers to that id here. Nothing was written.',
   },
   NO_SUCH_ASPIRATION: {
-    check: 'C-110.12', where: at("declareGoal|departFrom|recordDeadEnd|retireAspiration|pursuitOf", "is-aspiration-held"),
+    check: 'C-110.12', where: at("mint.NO_SUCH_ASPIRATION", "is-aspiration-held"),
     translation: 'No aspiration answers to that id here. Nothing was written.',
   },
   NO_REASON: {
-    check: 'C-110.13', where: at("closeGoal|departFrom|triage", "is-reason-stated"),
+    check: 'C-110.13', where: at("mint.NO_REASON", "is-reason-stated"),
     translation: 'This act is recorded with a reason in your own words, and none was given. The record keeps why, '
       + 'so the next reader is not left guessing. Nothing was written.',
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
-    check: 'C-110.14', where: at("declareAspiration|departFrom|recordDeadEnd|retireAspiration|check", "is-aspiration-member"),
+    check: 'C-110.14', where: at("mint.MACHINE_CANNOT_DECLARE_ASPIRATION", "is-aspiration-member"),
     translation: 'What the group holds to is its members\' decision, and so is setting one aside. An assistant may '
       + 'propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written.',
   },
@@ -95,7 +96,7 @@ export const INTENT_CHECKS = Object.freeze({
       + 'act carries their name and date. Ask an administrator. Nothing was written.',
   },
   NO_LESSON: {
-    check: 'C-110.17', where: at("retireAspiration|check", "is-retirement-taught"),
+    check: 'C-110.17', where: at("mint.NO_LESSON", "is-retirement-taught"),
     translation: 'Retiring an aspiration records what pursuing it taught the group, and nothing was written there. '
       + 'Say what was learned. Nothing was retired.',
   },
@@ -115,7 +116,7 @@ export const INTENT_CHECKS = Object.freeze({
       + 'accepted, and neither comes back. Nothing was written.',
   },
   BAD_SCOPE: {
-    check: 'C-110.21', where: at("declareAspiration|check", "is-aspiration-scoped"),
+    check: 'C-110.21', where: at("mint.BAD_SCOPE", "is-aspiration-scoped"),
     translation: 'An aspiration belongs to the group, to one project, or to one member, and a project\'s or a '
       + 'member\'s names which one. This one does not. Nothing was written.',
   },
@@ -138,9 +139,14 @@ export const INTENT_CHECKS = Object.freeze({
     translation: 'A source of proposals names its kind and gives a reader. This registration does not.',
   },
   PURSUIT_ENDED: {
-    check: 'C-110.26', where: at("linkObjective|closeGoal|retireAspiration|declareGoal", "is-pursuit-live"),
+    check: 'C-110.26', where: at("mint.PURSUIT_ENDED", "is-pursuit-live"),
     translation: 'This goal is closed, or this aspiration is retired. It stays readable with everything recorded '
       + 'under it, and it does not reopen. Nothing was written.',
+  },
+  ADOPTIONS_UNSPLICEABLE: {
+    check: 'C-110.28', where: at("triage", "is-adoptions-spliceable"),
+    translation: 'The project\'s record of adopted proposals is not in a shape the record can add to, so this '
+      + 'adoption could not be written into it. Nothing was written.',
   },
   NO_NOTE: {
     check: 'C-110.27', where: at("recordDeadEnd", "is-dead-end-noted"),

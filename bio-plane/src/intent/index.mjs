@@ -112,10 +112,8 @@ export class Intent {
       if (seen) return { refused: seen };
     }
     if (!d || d.type !== "project" || (viewer !== null && viewer !== undefined && !this.membership.inSight(projectId, viewer)))
-      /* DEC-49 REGION is-project-seen */
-      return { refused: refusal("NO_SUCH_PROJECT", "no project answers to that id here; one you cannot see is answered "
+      return { refused: mint.NO_SUCH_PROJECT("no project answers to that id here; one you cannot see is answered "
                                 + "exactly as one that does not exist.", { project: typeof projectId === "string" ? projectId : null }) };
-      /* END DEC-49 REGION is-project-seen */
     return { doc: d };
   }
 
@@ -196,13 +194,7 @@ export class Intent {
     const who = this.#memberOf(author);
     /* R20: an assistant proposes at any point and declares, revises, closes or retires at none. */
     if (machine(author) || !who)
-      return type === GOAL
-        ? /* DEC-49 REGION is-goal-member */
-          refusal("MACHINE_CANNOT_DECLARE_GOAL", "a goal is written by a named member. Nothing was written.")
-          /* END DEC-49 REGION is-goal-member */
-        : /* DEC-49 REGION is-aspiration-member */
-          refusal("MACHINE_CANNOT_DECLARE_ASPIRATION", "an aspiration is written by a named member. Nothing was written.");
-          /* END DEC-49 REGION is-aspiration-member */
+      return type === GOAL ? this.#goalMachine() : this.#aspirationMachine();
     /* R26: the state machine. A creation starts at the first state; a revision moves only forward, once. */
     const [first, last] = type === GOAL ? ["open", "closed"] : ["held", "retired"];
     const from = c.head ? c.head.currentState : null, to = c.promotedState;
@@ -216,23 +208,19 @@ export class Intent {
     /* END DEC-49 REGION is-pursuit-state-move */
     const text = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
     if (!readSection(text, "Statement") || (type === GOAL && !readSection(text, "Bounds")))
-      /* DEC-49 REGION is-pursuit-stated */
-      return refusal("NO_STATEMENT", `a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, `
+      return mint.NO_STATEMENT(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, `
                      + "in its Statement section. Nothing was written.");
-      /* END DEC-49 REGION is-pursuit-stated */
     if (type === GOAL) {
       if (to === "closed" && from !== "closed" && !readSection(text, "Why It Closed"))
-        return refusal("NO_REASON", "a goal is closed with the reason it closed. Nothing was written.");
+        return mint.NO_REASON("a goal is closed with the reason it closed. Nothing was written.");
       return null;
     }
     if (to === "retired" && from !== "retired" && !readSection(text, "Taught"))
-      /* DEC-49 REGION is-retirement-taught */
-      return refusal("NO_LESSON", "retiring an aspiration records what pursuing it taught. Nothing was written.");
-      /* END DEC-49 REGION is-retirement-taught */
+      return mint.NO_LESSON("retiring an aspiration records what pursuing it taught. Nothing was written.");
     /* R9: who may write it, by its scope (its creation's, which a revision keeps). */
     const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
     if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
-      return refusal("BAD_SCOPE", "an aspiration keeps the scope and owner it was declared with. Nothing was written.");
+      return mint.BAD_SCOPE("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
     return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
   }
 
@@ -240,10 +228,8 @@ export class Intent {
   #aspirationAuthority(scope, owner, author, viewer) {
     const who = this.#memberOf(author);
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !str(owner)) || (scope === "group" && owner != null))
-      /* DEC-49 REGION is-aspiration-scoped */
-      return refusal("BAD_SCOPE", "an aspiration is the group's (naming no owner), a project's or a member's (naming "
+      return mint.BAD_SCOPE("an aspiration is the group's (naming no owner), a project's or a member's (naming "
                      + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-      /* END DEC-49 REGION is-aspiration-scoped */
     if (scope === "member" && str(owner) !== who)
       /* DEC-49 REGION is-aspiration-yours */
       return refusal("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. "
@@ -278,16 +264,12 @@ export class Intent {
                      + "stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
     /* END DEC-49 REGION is-condition-shaped */
     const def = this.progressions.readProgression({ progressionKey: str(c.progression) });
-    /* DEC-49 REGION is-condition-progression */
     if (!def || def.ok === false || !def.found)
-      return refusal("NO_SUCH_PROGRESSION", "the condition names a flow the record has not declared. Nothing was written.",
+      return mint.NO_SUCH_PROGRESSION("the condition names a flow the record has not declared. Nothing was written.",
                      { progression: str(c.progression) });
-    /* END DEC-49 REGION is-condition-progression */
-    /* DEC-49 REGION is-condition-entity */
     if (!this.entities.has(str(c.entity)))
-      return refusal("NO_SUCH_ENTITY", "the condition names an entity the record does not hold. Nothing was written.",
+      return mint.NO_SUCH_ENTITY("the condition names an entity the record does not hold. Nothing was written.",
                      { entity: str(c.entity) });
-    /* END DEC-49 REGION is-condition-entity */
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     /* DEC-49 REGION is-condition-stage */
@@ -482,13 +464,13 @@ export class Intent {
   declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
     if (machine(author)) return this.#goalMachine();
     if (!str(statement) || !str(bounds))
-      return refusal("NO_STATEMENT", "a goal states what it pursues and what bounds it. Nothing was written.");
+      return mint.NO_STATEMENT("a goal states what it pursues and what bounds it. Nothing was written.");
     if (aspiration != null && aspiration !== "") {
       const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-      if (!a) return refusal("NO_SUCH_ASPIRATION", "no aspiration answers to that id here. Nothing was written.",
+      if (!a) return mint.NO_SUCH_ASPIRATION("no aspiration answers to that id here. Nothing was written.",
                              { aspiration });
       if (a.head.currentState === "retired")
-        return refusal("PURSUIT_ENDED", "a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
+        return mint.PURSUIT_ENDED("a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
     }
     const at = this.#when();
     const id = this.record.allocId("GOAL", at.slice(0, 4)).id;
@@ -499,19 +481,17 @@ export class Intent {
   }
 
   #goalMachine() {
-    /* DEC-49 REGION is-goal-member */
-    return refusal("MACHINE_CANNOT_DECLARE_GOAL", "declaring, linking and closing a goal are a named member's acts. "
+    return mint.MACHINE_CANNOT_DECLARE_GOAL("declaring, linking and closing a goal are a named member's acts. "
                    + "Nothing was written.");
-    /* END DEC-49 REGION is-goal-member */
   }
 
   /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
   linkObjective({ goal, project, author, viewer = null } = {}) {
     if (machine(author)) return this.#goalMachine();
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
-    if (!g) return refusal("NO_SUCH_GOAL", "no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
+    if (!g) return mint.NO_SUCH_GOAL("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
     if (g.head.currentState === "closed")
-      return refusal("PURSUIT_ENDED", "a closed goal takes no new objective. Nothing was written.", { goal });
+      return mint.PURSUIT_ENDED("a closed goal takes no new objective. Nothing was written.", { goal });
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
@@ -531,10 +511,10 @@ export class Intent {
   closeGoal({ goal, reason, author, viewer = null } = {}) {
     if (machine(author)) return this.#goalMachine();
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
-    if (!g) return refusal("NO_SUCH_GOAL", "no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
-    if (!str(reason)) return refusal("NO_REASON", "a goal is closed with the reason it closed. Nothing was written.");
+    if (!g) return mint.NO_SUCH_GOAL("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
+    if (!str(reason)) return mint.NO_REASON("a goal is closed with the reason it closed. Nothing was written.");
     if (g.head.currentState === "closed")
-      return refusal("PURSUIT_ENDED", "this goal is already closed. Nothing was written.", { goal });
+      return mint.PURSUIT_ENDED("this goal is already closed. Nothing was written.", { goal });
     const at = this.#when();
     let text = appendHistory(g.text, { at, from: "open", to: "closed", blurb: "closed; the reason is in its document",
                                        author: str(author) });
@@ -550,7 +530,7 @@ export class Intent {
    *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
   readGoal({ goal, viewer = null } = {}) {
     const g = this.#pursuit(goal, GOAL, viewer);
-    if (!g) return refusal("NO_SUCH_GOAL", "no goal answers to that id here.", { goal: goal ?? null });
+    if (!g) return mint.NO_SUCH_GOAL("no goal answers to that id here.", { goal: goal ?? null });
     return { ok: true, goal: this.#goalView(g, viewer) };
   }
 
@@ -569,10 +549,8 @@ export class Intent {
    * ===================================================================== */
 
   #aspirationMachine() {
-    /* DEC-49 REGION is-aspiration-member */
-    return refusal("MACHINE_CANNOT_DECLARE_ASPIRATION", "declaring, departing from, revising and retiring an aspiration "
+    return mint.MACHINE_CANNOT_DECLARE_ASPIRATION("declaring, departing from, revising and retiring an aspiration "
                    + "are a named member's acts. Nothing was written.");
-    /* END DEC-49 REGION is-aspiration-member */
   }
 
   /** R9: declare an aspiration of the group, a project or a member. */
@@ -580,19 +558,19 @@ export class Intent {
     if (machine(author)) return this.#aspirationMachine();
     const own = scope === "group" ? null : str(owner) || null;
     if (!ASPIRATION_SCOPES.includes(scope) || (scope !== "group" && !own) || (scope === "group" && str(owner)))
-      return refusal("BAD_SCOPE", "an aspiration is the group's (naming no owner), a project's or a member's (naming "
+      return mint.BAD_SCOPE("an aspiration is the group's (naming no owner), a project's or a member's (naming "
                      + "which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (!str(statement)) return refusal("NO_STATEMENT", "an aspiration states what it holds to. Nothing was written.");
+    if (!str(statement)) return mint.NO_STATEMENT("an aspiration states what it holds to. Nothing was written.");
     const denied = this.#aspirationAuthority(scope, own, author, viewer ?? author);
     if (denied) return denied;
     const ents = (Array.isArray(entities) ? entities : []).map(str).filter(Boolean);
     const progs = (Array.isArray(progressions) ? progressions : []).map(str).filter(Boolean);
     const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
-    if (badEnt) return refusal("NO_SUCH_ENTITY", "the aspiration names an entity the record does not hold. Nothing was written.",
+    if (badEnt) return mint.NO_SUCH_ENTITY("the aspiration names an entity the record does not hold. Nothing was written.",
                                { entity: badEnt });
     const badProg = progs.find((k) => { const d = TOKEN.test(k) && this.progressions.readProgression({ progressionKey: k });
                                         return !d || d.ok === false || !d.found; });
-    if (badProg) return refusal("NO_SUCH_PROGRESSION", "the aspiration names a flow the record has not declared. Nothing "
+    if (badProg) return mint.NO_SUCH_PROGRESSION("the aspiration names a flow the record has not declared. Nothing "
                                 + "was written.", { progression: badProg });
     const at = this.#when();
     const id = this.record.allocId("ASP", at.slice(0, 4)).id;
@@ -609,15 +587,15 @@ export class Intent {
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return refusal("NO_SUCH_ASPIRATION", "no aspiration answers to that id here. Nothing was written.",
+    if (!a) return mint.NO_SUCH_ASPIRATION("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
     if (a.fm.scope !== "group")
-      return refusal("BAD_SCOPE", "a project departs only from an aspiration the whole group holds; a project's or a "
+      return mint.BAD_SCOPE("a project departs only from an aspiration the whole group holds; a project's or a "
                      + "member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
-      return refusal("PURSUIT_ENDED", "a retired aspiration is held by no project, so there is nothing to depart from. "
+      return mint.PURSUIT_ENDED("a retired aspiration is held by no project, so there is nothing to depart from. "
                      + "Nothing was written.", { aspiration });
-    if (!str(reason)) return refusal("NO_REASON", "a departure from the group's aspiration records why. Nothing was written.");
+    if (!str(reason)) return mint.NO_REASON("a departure from the group's aspiration records why. Nothing was written.");
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
     const at = this.#when();
@@ -631,7 +609,7 @@ export class Intent {
   recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
     if (machine(author)) return this.#aspirationMachine();
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return refusal("NO_SUCH_ASPIRATION", "no aspiration answers to that id here. Nothing was written.",
+    if (!a) return mint.NO_SUCH_ASPIRATION("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
     /* DEC-49 REGION is-dead-end-noted */
     if (!str(note)) return refusal("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
@@ -652,12 +630,12 @@ export class Intent {
   retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
     if (machine(author)) return this.#aspirationMachine();
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return refusal("NO_SUCH_ASPIRATION", "no aspiration answers to that id here. Nothing was written.",
+    if (!a) return mint.NO_SUCH_ASPIRATION("no aspiration answers to that id here. Nothing was written.",
                            { aspiration: aspiration ?? null });
     if (a.head.currentState === "retired")
-      return refusal("PURSUIT_ENDED", "this aspiration is already retired. Nothing was written.", { aspiration });
+      return mint.PURSUIT_ENDED("this aspiration is already retired. Nothing was written.", { aspiration });
     if (!str(taught))
-      return refusal("NO_LESSON", "retiring an aspiration records what pursuing it taught. Nothing was written.");
+      return mint.NO_LESSON("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at = this.#when();
@@ -740,7 +718,7 @@ export class Intent {
    *  them with each act and reason, the capture requests named in them with their outcome, and the dead ends. */
   pursuitOf({ aspiration, viewer = null } = {}) {
     const a = this.#pursuit(aspiration, ASPIRATION, viewer);
-    if (!a) return refusal("NO_SUCH_ASPIRATION", "no aspiration answers to that id here.", { aspiration: aspiration ?? null });
+    if (!a) return mint.NO_SUCH_ASPIRATION("no aspiration answers to that id here.", { aspiration: aspiration ?? null });
     const goals = [];
     let after = "";
     for (;;) {
@@ -899,9 +877,9 @@ export class Intent {
     /* END DEC-49 REGION is-proposal-open */
     const why = str(reason);
     if ((act === "defer" || act === "dismiss") && !why)
-      return refusal("NO_REASON", "a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
+      return mint.NO_REASON("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act === "adopt" && !proj)
-      return refusal("NO_SUCH_PROJECT", "a proposal is adopted into a named project's objective; name the project. "
+      return mint.NO_SUCH_PROJECT("a proposal is adopted into a named project's objective; name the project. "
                      + "Nothing was written.", { project: null });
     if (proj && !isMachine) {
       const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
@@ -913,8 +891,10 @@ export class Intent {
       let text = appendItem(proj.text, "objective_adoptions",
                             { proposal: q(found.key), source: found.source, by: TOKEN.test(str(author)) ? str(author) : q(author),
                               at: q(at) });
-      if (text === null) return refusal("CONDITION_UNREADABLE", "the project's objective_adoptions block is not in a shape "
-                                         + "this grammar can extend. Nothing was written.");
+      /* DEC-49 REGION is-adoptions-spliceable */
+      if (text === null) return refusal("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a "
+                                         + "shape this grammar can extend. Nothing was written.");
+      /* END DEC-49 REGION is-adoptions-spliceable */
       text = setField(text, "last_updated", q(at));
       text = logEntry(text, at, "Proposal adopted", str(author), `the proposal ${found.key} is adopted into the objective.`);
       const r = this.#revise(proj, text, str(author), viewer);
@@ -1026,6 +1006,70 @@ export class Intent {
     return { ...(isObj(opened) ? opened : {}), project, instructions };
   }
 }
+
+/* DEC-49: a code several acts answer is minted at one site, here; each act relays it with its own detail. */
+const mint = {
+  NO_SUCH_PROJECT: (detail, extra) => {
+    /* DEC-49 REGION is-project-seen */
+    return refusal("NO_SUCH_PROJECT", detail, extra);
+    /* END DEC-49 REGION is-project-seen */
+  },
+  NO_SUCH_GOAL: (detail, extra) => {
+    /* DEC-49 REGION is-goal-held */
+    return refusal("NO_SUCH_GOAL", detail, extra);
+    /* END DEC-49 REGION is-goal-held */
+  },
+  NO_SUCH_ASPIRATION: (detail, extra) => {
+    /* DEC-49 REGION is-aspiration-held */
+    return refusal("NO_SUCH_ASPIRATION", detail, extra);
+    /* END DEC-49 REGION is-aspiration-held */
+  },
+  NO_SUCH_PROGRESSION: (detail, extra) => {
+    /* DEC-49 REGION is-named-progression */
+    return refusal("NO_SUCH_PROGRESSION", detail, extra);
+    /* END DEC-49 REGION is-named-progression */
+  },
+  NO_SUCH_ENTITY: (detail, extra) => {
+    /* DEC-49 REGION is-named-entity */
+    return refusal("NO_SUCH_ENTITY", detail, extra);
+    /* END DEC-49 REGION is-named-entity */
+  },
+  NO_REASON: (detail, extra) => {
+    /* DEC-49 REGION is-reason-stated */
+    return refusal("NO_REASON", detail, extra);
+    /* END DEC-49 REGION is-reason-stated */
+  },
+  NO_STATEMENT: (detail, extra) => {
+    /* DEC-49 REGION is-pursuit-stated */
+    return refusal("NO_STATEMENT", detail, extra);
+    /* END DEC-49 REGION is-pursuit-stated */
+  },
+  NO_LESSON: (detail, extra) => {
+    /* DEC-49 REGION is-retirement-taught */
+    return refusal("NO_LESSON", detail, extra);
+    /* END DEC-49 REGION is-retirement-taught */
+  },
+  BAD_SCOPE: (detail, extra) => {
+    /* DEC-49 REGION is-aspiration-scoped */
+    return refusal("BAD_SCOPE", detail, extra);
+    /* END DEC-49 REGION is-aspiration-scoped */
+  },
+  PURSUIT_ENDED: (detail, extra) => {
+    /* DEC-49 REGION is-pursuit-live */
+    return refusal("PURSUIT_ENDED", detail, extra);
+    /* END DEC-49 REGION is-pursuit-live */
+  },
+  MACHINE_CANNOT_DECLARE_GOAL: (detail, extra) => {
+    /* DEC-49 REGION is-goal-member */
+    return refusal("MACHINE_CANNOT_DECLARE_GOAL", detail, extra);
+    /* END DEC-49 REGION is-goal-member */
+  },
+  MACHINE_CANNOT_DECLARE_ASPIRATION: (detail, extra) => {
+    /* DEC-49 REGION is-aspiration-member */
+    return refusal("MACHINE_CANNOT_DECLARE_ASPIRATION", detail, extra);
+    /* END DEC-49 REGION is-aspiration-member */
+  },
+};
 
 /* The capture request ids a proposal's basis names (`capture_request`, `capture_requests`, `requests`). */
 function captureRequestsNamed(basis) {
