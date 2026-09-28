@@ -61,3 +61,4 @@
 
 - **legacy-tests** · re-anchor or retire what T9's layers break.
 - legacy-store: drop the stale comments at the bias construction and above `captureOf` about arming the scheduler (SCHEDULER #1 J2.6, K260).
+- legacy-store: `op=stats` counts monitoring's tables (`monitor_fired`, `monitor_tick_epoch`, `monitor_address_type`) by name; it reads them through monitoring (MONITORING #1 J3.9, K261).

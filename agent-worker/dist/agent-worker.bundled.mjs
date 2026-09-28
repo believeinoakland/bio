@@ -1111,7 +1111,6 @@ __export(bio_checks_exports, {
   checkBundle: () => checkBundle,
   checkCaseDocument: () => checkCaseDocument,
   checkContentExtent: () => checkContentExtent,
-  checkGatheringGrammar: () => checkGatheringGrammar,
   checkInboxGrammar: () => checkInboxGrammar,
   checkInquiryBasis: () => checkInquiryBasis,
   checkLegExtentGrammar: () => checkLegExtentGrammar,
@@ -3724,10 +3723,6 @@ function isPublicHttpsLocator(url) {
   if (host.indexOf(".") === -1) return false;
   return true;
 }
-var GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-var CRITICALITY_ENUM = ["crucial", "supporting"];
-var CADENCE_ENUM = ["hourly", "daily", "weekly", "monthly", "none"];
-var GATH_STATUS_ENUM = ["open", "captured", "retired"];
 var CAPTURE_ENCODINGS = ["utf8", "base64", "binary"];
 var RAW_SHA_RE = /^[0-9a-f]{64}$/;
 function b64ToBytes(s) {
@@ -3983,76 +3978,6 @@ async function checkInfo2Contract(ctx, findings) {
         `provenance documents[${i}]: stored bytes hash ${actual.slice(0, 12)}\u2026 but the register records ${String(cap.sha256).slice(0, 12)}\u2026; silent content mutation fails the gate (@2)`,
         ["restore the capture from history", "correct the register only if the recorded hash was wrong at intake, with a Session Log entry"]
       ));
-    }
-  }
-}
-function checkGatheringGrammar(ctx, findings) {
-  const raw = ctx.files.get("data/gathering.json");
-  if (!raw) return;
-  let g;
-  try {
-    g = JSON.parse(asText(raw));
-  } catch {
-    return;
-  }
-  if (typeof g !== "object" || g === null || Array.isArray(g)) {
-    findings.push(f("C-18.5", "error", "data/gathering.json must be a JSON object"));
-    return;
-  }
-  if (g.daemon !== void 0) {
-    const dmn = g.daemon;
-    if (typeof dmn !== "object" || dmn === null || Array.isArray(dmn)) {
-      findings.push(f("C-18.5", "error", "gathering.json daemon block must be an object"));
-    } else {
-      if (typeof dmn.enabled !== "boolean") findings.push(f("C-18.5", "error", "gathering.json daemon.enabled must be boolean"));
-      for (const bk of ["tick_budget", "sweep_budget"]) {
-        if (dmn[bk] !== void 0 && !(Number.isInteger(dmn[bk]) && dmn[bk] >= 0)) {
-          findings.push(f("C-18.5", "error", `gathering.json daemon.${bk} must be a non-negative integer`));
-        }
-      }
-    }
-  }
-  const reqs = Array.isArray(g.requests) ? g.requests : [];
-  for (let i = 0; i < reqs.length; i++) {
-    const r = reqs[i];
-    if (typeof r !== "object" || r === null) {
-      findings.push(f("C-18.5", "error", `gathering.json requests[${i}] is not an object`));
-      continue;
-    }
-    if (!GATH_ID_RE.test(r.id || "")) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].id '${r.id}' does not match the GATH grammar`));
-    const tgt = r.target;
-    if (!tgt || typeof tgt !== "object") findings.push(f("C-18.5", "error", `gathering.json requests[${i}] missing target block`));
-    else {
-      if (typeof tgt.text !== "string" || tgt.text.length === 0 || tgt.text.length > 200 || /[\r\n]/.test(tgt.text)) {
-        findings.push(f("C-18.5", "error", `gathering.json requests[${i}].target.text must be a nonempty single-line string under 200 chars`));
-      }
-      if (tgt.description !== void 0 && (typeof tgt.description !== "string" || tgt.description.length > 2e3)) {
-        findings.push(f("C-18.5", "error", `gathering.json requests[${i}].target.description must be a string under 2000 chars`));
-      }
-    }
-    const locs = Array.isArray(r.locators) ? r.locators : null;
-    if (!locs || locs.length === 0) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].locators must be a nonempty array`));
-    else for (let L2 = 0; L2 < locs.length; L2++) {
-      if (!isPublicHttpsLocator(locs[L2])) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].locators[${L2}] '${String(locs[L2]).slice(0, 40)}' is not an https public-host locator`));
-    }
-    if (typeof r.authority !== "string" || r.authority.trim() === "") findings.push(f("C-18.5", "error", `gathering.json requests[${i}].authority must be a nonempty string`));
-    if (!CRITICALITY_ENUM.includes(r.criticality)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].criticality must be one of: ${CRITICALITY_ENUM.join(", ")}`));
-    if (r.cadence !== void 0 && !CADENCE_ENUM.includes(r.cadence)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].cadence must be one of: ${CADENCE_ENUM.join(", ")}`));
-    if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(", ")}`));
-    if (r.planted !== void 0 && !ISO_TS_RE.test(r.planted)) findings.push(f("C-18.5", "error", `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
-  }
-  const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
-  for (let i = 0; i < sweeps.length; i++) {
-    const s = sweeps[i];
-    if (typeof s !== "object" || s === null) {
-      findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}] is not an object`));
-      continue;
-    }
-    if (typeof s.id !== "string" || s.id.trim() === "") findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].id must be a nonempty string`));
-    if (s.ratified !== void 0 && typeof s.ratified !== "boolean") findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].ratified must be boolean`));
-    if (s.sources !== void 0) {
-      if (!Array.isArray(s.sources)) findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].sources must be an array`));
-      else for (let L2 = 0; L2 < s.sources.length; L2++) if (!isPublicHttpsLocator(s.sources[L2])) findings.push(f("C-18.5", "error", `gathering.json sweeps[${i}].sources[${L2}] is not an https public-host locator`));
     }
   }
 }
@@ -4315,7 +4240,6 @@ async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     await checkInfo2Contract(ctx, findings);
-    checkGatheringGrammar(ctx, findings);
     checkInboxGrammar(ctx, findings);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
