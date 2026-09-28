@@ -647,7 +647,7 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
   for (const m of ["allocId", "allocIdOp", "mintOpaqueId", "acquireLease", "readFile", "readImage", "auditPass", "declarePurge",
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
-                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha"])
+                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -1141,4 +1141,130 @@ test("R60: textAtSha answers the bundle.md text whose SHA-256 is sha, live or hi
   assert.equal(recordOf({ storage: storage({ schema: false }) }).textAtSha(id, sha("v1")), null, "never throws: no tables");
   assert.equal(recordOf({ storage: { sql: { exec() { throw new Error("no"); } }, transactionSync: (f) => f() } }).textAtSha(id, sha("v1")), null,
                "never throws: a failing read");
+});
+
+/* ---- T9: R37's widened contract (N213), R61 (N219) ---- */
+
+test("R37: files.bytes and blob_sha, bundles.bundle_sha and row_version, history.created and the manifest table hold their stated names, types and meaning (N213)", () => {
+  const { s, rc } = fresh();
+  const cols = (t) => Object.fromEntries(rows(s, `PRAGMA table_info(${t})`).map((r) => [r.name, r]));
+  const f = cols("files"), b = cols("bundles"), h = cols("history"), m = cols("manifest");
+  assert.deepEqual([f.bytes.type, f.bytes.notnull], ["INTEGER", 1]); assert.deepEqual([f.blob_sha.type, f.blob_sha.notnull], ["TEXT", 0]);
+  assert.deepEqual([b.bundle_sha.type, b.bundle_sha.notnull], ["TEXT", 1]); assert.deepEqual([b.row_version.type, b.row_version.notnull], ["INTEGER", 1]);
+  for (const c of ["created", "last_updated"]) assert.deepEqual([b[c].type, b[c].notnull], ["TEXT", 1], `bundles.${c}`);
+  assert.deepEqual([h.created.type, h.created.notnull], ["TEXT", 1]);
+  for (const [c, notnull] of [["bundle_id", 1], ["snap_key", 1], ["kind", 1], ["base", 0], ["author", 0], ["created", 1], ["writer", 0], ["operation", 0]])
+    assert.deepEqual([m[c].type, m[c].notnull], ["TEXT", notnull], `manifest.${c}`);
+  assert.deepEqual([m.bundle_id.pk, m.snap_key.pk], [1, 2]);
+  assert.ok(rows(s, `SELECT rowid FROM manifest LIMIT 0`), "manifest keeps its rowid");
+
+  // meaning: what commit was given and what it answered, read back in a later module's own SQL
+  const id = "INFO-2026-0001-a", text = "é one\r\n", blob = "C".repeat(64);
+  const r1 = rc.commit({ bundleId: id, type: "information", snapKey: "Z1", kind: "promotion", base: EMPTY_STRING_SHA, author: "alice",
+                         files: [file("bundle.md", text), { path: "c.pdf", blobSha: blob, bytes: 2048, sha256: blob.toLowerCase() }],
+                         state: "collected", created: "2026-01-01T00:00:00Z", lastUpdated: "2026-01-01T00:00:00Z", at: "2026-01-01T00:00:00Z" });
+  const r2 = rc.commit({ bundleId: id, type: "information", snapKey: "A2", kind: "promotion-replay", base: sha(text), author: "token:x",
+                         writer: "monitor", operation: "recheck", files: [file("bundle.md", "two")],
+                         state: "verified", lastUpdated: "2026-01-02T00:00:00Z", at: "2026-01-02T00:00:00Z" });
+  const r3 = rc.commit({ bundleId: id, type: "information", snapKey: "M3", base: sha("two"), author: "bob",
+                         files: [file("bundle.md", "three")], lastUpdated: "2026-01-02T00:00:00Z", at: "2026-01-02T00:00:00Z" });
+  assert.deepEqual({ ...rows(s, `SELECT bundle_sha, row_version, created, last_updated FROM bundles WHERE bundle_id=?`, id)[0] },
+                   { bundle_sha: r3.bundleSha, row_version: r3.rowVersion, created: "2026-01-01T00:00:00Z", last_updated: "2026-01-02T00:00:00Z" },
+                   "bundle_sha and row_version are R41's bundleSha and rowVersion");
+  assert.deepEqual([r1.rowVersion, r2.rowVersion, r3.rowVersion], [1, 2, 3], "row_version counts the commits");
+  assert.equal(r3.bundleSha, sha("three"));
+  const hd = rc.head(id);
+  assert.deepEqual([hd.bundleSha, hd.rowVersion], [r3.bundleSha, r3.rowVersion]);
+
+  // files.bytes and blob_sha: the live file's size as commit recorded it, and the blob address, NULL for an inline file
+  const second = "INFO-2026-0002-b";
+  rc.commit({ bundleId: second, type: "information", snapKey: "K1",
+              files: [file("bundle.md", text), { path: "c.pdf", blobSha: blob, bytes: 2048, sha256: blob.toLowerCase() }] });
+  assert.deepEqual(rows(s, `SELECT path, content, blob_sha, bytes FROM files WHERE bundle_id=? ORDER BY path`, second).map((r) => ({ ...r })),
+                   [{ path: "bundle.md", content: text, blob_sha: null, bytes: Buffer.byteLength(text) },
+                    { path: "c.pdf", content: null, blob_sha: blob, bytes: 2048 }]);
+  assert.deepEqual(rc.readFile(second, "c.pdf"), { blobSha: blob, bytes: 2048, sha256: blob.toLowerCase() }, "the same figures R13 answers");
+
+  // history.created: the time of the commit that archived the snapshot
+  assert.deepEqual(rows(s, `SELECT snap_key, path, created FROM history WHERE bundle_id=? ORDER BY created, snap_key, path`, id).map((r) => ({ ...r })),
+                   [{ snap_key: "A2", path: "bundle.md", created: "2026-01-02T00:00:00Z" },
+                    { snap_key: "A2", path: "c.pdf", created: "2026-01-02T00:00:00Z" },
+                    { snap_key: "M3", path: "bundle.md", created: "2026-01-02T00:00:00Z" }]);
+
+  // manifest: R42's entry, and rowid ranks a bundle's entries in the order they were recorded (R16), whatever the keys or times
+  const man = rows(s, `SELECT rowid AS r, bundle_id, snap_key, kind, base, author, created, writer, operation FROM manifest
+                        WHERE bundle_id=? ORDER BY created, rowid`, id).map(({ r, ...x }) => ({ ...x }));
+  assert.deepEqual(man, [
+    { bundle_id: id, snap_key: "Z1", kind: "promotion", base: EMPTY_STRING_SHA, author: "alice", created: "2026-01-01T00:00:00Z", writer: null, operation: null },
+    { bundle_id: id, snap_key: "A2", kind: "promotion-replay", base: sha(text), author: "token:x", created: "2026-01-02T00:00:00Z", writer: "monitor", operation: "recheck" },
+    { bundle_id: id, snap_key: "M3", kind: "promotion", base: sha("two"), author: "bob", created: "2026-01-02T00:00:00Z", writer: null, operation: null },
+  ], "the tie under created is broken by rowid, in write order, never by the snap key");
+  for (const e of man) {
+    const got = rc.manifestEntry(id, e.snap_key);
+    assert.deepEqual([got.kind, got.base, got.author, got.created, got.writer, got.operation],
+                     [e.kind, e.base, e.author, e.created, e.writer, e.operation], `manifest row ${e.snap_key} is R42's entry`);
+  }
+  const ranked = rows(s, `SELECT snap_key FROM manifest WHERE bundle_id=? ORDER BY rowid`, id).map((r) => r.snap_key);
+  assert.deepEqual(ranked, ["Z1", "A2", "M3"]);
+  assert.deepEqual(ranked.map((k) => rc.manifestEntry(id, k).seq), [1, 2, 3], "rowid order is R16's seq");
+  // a purge of one bundle and a later commit keep the ranking in recording order
+  rc.purge({ bundleId: second });
+  rc.commit({ bundleId: id, type: "information", snapKey: "B4", base: sha("three"), author: "c", files: [file("bundle.md", "four")] });
+  assert.deepEqual(rows(s, `SELECT snap_key FROM manifest WHERE bundle_id=? ORDER BY rowid`, id).map((r) => r.snap_key), ["Z1", "A2", "M3", "B4"]);
+});
+
+test("R61 R30: releaseLease refuses an empty or non-string actor with ANONYMOUS_LEASE, as R10, and changes nothing", () => {
+  const { s, rc } = fresh();
+  const id = "INFO-2026-0001-a";
+  put(rc, id, "K1");
+  rc.acquireLease(id, "alice", 60000);
+  const before = dump(s);
+  for (const who of ["", "   ", null, undefined, 7, {}, ["alice"]]) {
+    const r = rc.releaseLease(id, who);
+    assert.deepEqual([r.ok, r.reason], [false, "ANONYMOUS_LEASE"]);
+    assert.deepEqual(r, rc.acquireLease(id, who, 1000), "the same refusal R10 gives");
+  }
+  assert.deepEqual(dump(s), before);
+});
+
+test("R61 R11: releaseLease ends the actor's own lease, live or expired, so no one is refused until a lease is taken again", () => {
+  const { s, rc } = fresh();
+  const id = "INFO-2026-0001-a", other = "INFO-2026-0002-b";
+  put(rc, id, "K1");
+  rc.acquireLease(id, "alice", 60000);
+  rc.acquireLease(other, "alice", 60000);
+  assert.equal(rc.acquireLease(id, "bob", 60000).heldBy, "alice");
+  assert.deepEqual(rc.releaseLease(id, "alice"), { ok: true, released: true });
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM leases WHERE bundle_id=?`, id)[0].n, 0);
+  assert.equal(rc.acquireLease(id, "bob", 60000).ok, true, "R11 refuses no one once it is released");
+  assert.equal(rc.acquireLease(other, "bob", 60000).heldBy, "alice", "a lease on another bundle is untouched");
+  // an expired lease of its own is ended too
+  rc.acquireLease(other, "alice", -1);
+  assert.deepEqual(rc.releaseLease(other, "alice"), { ok: true, released: true });
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM leases WHERE bundle_id=?`, other)[0].n, 0);
+  // released again, or on a bundle never leased: nothing to end
+  assert.deepEqual(rc.releaseLease(other, "alice"), { ok: true, released: false });
+  assert.deepEqual(rc.releaseLease("INFO-2099-0000-z", "alice"), { ok: true, released: false });
+});
+
+test("R61: releaseLease leaves a lease held by another actor as it is, live or expired, and never throws", () => {
+  const { s, rc } = fresh();
+  const id = "INFO-2026-0001-a";
+  put(rc, id, "K1");
+  const held = rc.acquireLease(id, "alice", 60000);
+  const before = dump(s);
+  assert.deepEqual(rc.releaseLease(id, "bob"), { ok: true, released: false });
+  assert.deepEqual(rc.releaseLease(id, "Alice"), { ok: true, released: false }, "the actor is matched exactly");
+  assert.deepEqual(dump(s), before, "the holder's lease is as it was");
+  assert.deepEqual(rc.acquireLease(id, "bob", 60000), { ok: false, heldBy: "alice", until: held.expires });
+  rc.acquireLease(id, "alice", -1);
+  const expired = dump(s);
+  assert.deepEqual(rc.releaseLease(id, "bob"), { ok: true, released: false });
+  assert.deepEqual(dump(s), expired, "an expired lease of another actor is left too");
+  // never throws: no tables, a failing store, a bundle id SQL cannot bind
+  assert.deepEqual(recordOf({ storage: storage({ schema: false }) }).releaseLease(id, "alice"), { ok: true, released: false });
+  const broken = { sql: { exec() { throw new Error("no"); } }, transactionSync: (fn) => fn() };
+  assert.deepEqual(recordOf({ storage: broken }).releaseLease(id, "alice"), { ok: true, released: false });
+  assert.deepEqual(rc.releaseLease({ not: "an id" }, "alice"), { ok: true, released: false });
+  assert.equal(typeof rc.releaseLease, "function");
 });
