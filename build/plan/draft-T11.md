@@ -6,7 +6,7 @@
 
 ### Layers 7–10
 
-- **intent** · N209 (BOB words R12–R13's bound first); N236; N208 (its site); N277 (its share).
+- **intent** · N209 (R12–R13's bound worded, K338); N236; N208 (its site); N277 (its share).
 - **reevaluation** · N239.
 - **publication** · N210; N277 (its share); N237 (its share); N238 (its share); N230 (its share).
 - **publication**, **ratification** · N256. **case-authoring** · N259; N275 (its share). **publication** · N260. **consequences** · N257.

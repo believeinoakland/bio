@@ -44,8 +44,8 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R11** `retireAspiration` requires a non-empty `taught` (`NO_LESSON`); a retired aspiration and its pursuit record stay readable. `recordDeadEnd` appends a dated, authored entry that is never removed.
 
 **aspirationsFor({project?, member?, viewer}), contacts({viewer}), pursuitOf({aspiration, viewer})**
-- **R12** `aspirationsFor` answers those in force: the group's less any departure (each departure listed with its reason), the project's, and the member's, each with its scope. No precedence is stated or implied, and nothing is resolved between them.
-- **R13** `contacts` lists each pair of held aspirations that name a common entity or progression, with what they share. It never says two aspirations contradict.
+- **R12** `aspirationsFor` answers those in force: the group's less any departure (each departure listed with its reason), the project's, and the member's, each with its scope. No precedence is stated or implied, and nothing is resolved between them. It reads at most 1,000 aspirations, in id order, and answers `limit` (1,000) and `truncated: true` when more exist.
+- **R13** `contacts` lists each pair of held aspirations that name a common entity or progression, with what they share. It never says two aspirations contradict. It pairs at most the first 1,000 held aspirations in id order and lists at most 1,000 pairs, in the order of their first and then second aspiration's id, answering `limit` (1,000) and `truncated: true` when either is cut.
 - **R14** `pursuitOf` answers the goals and objectives opened under the aspiration, the proposals triaged under them with each act and reason, the capture requests named in them with their outcome, and the dead ends. It carries no completion figure.
 
 **The discovery loop: registerSource(kind, reader), proposals({project?, viewer}), triage({proposal, act, project?, reason?, author, viewer})**
