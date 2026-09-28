@@ -42,3 +42,32 @@ My best reading, on which I am building now:
 - So R41 holds only when observation-log's `causesNotRuledOut` honours one-sided evidence for `never_looked`. That is observation-log's code, R11, in this layer (N113). I pass `evidenceOneSided: true` for an address today (an undeclared kind reads as one-sided, the weaker statement), and I read `DOCUMENT_EVIDENCE_IS_ONE_SIDED` by name once observation-log exports it. Until the provider changes, that part of R41 is a `test.todo` naming this, and the rest of R41 is tested.
 
 If you read "all three" as applying to `pre_log` too, or read `never_looked` as licensing the positive statement even at a one-sided level (in which case R41's sentence needs changing), say which and I will follow it.
+
+## J5 · COMPLETE
+
+Retrieval T10 is complete on `job/T10/retrieval`, with `tranche/T10` merged in (observation-log's early merge included).
+
+**Entries applied**
+- **N171 (R60):** `counts(hid)` answers `{indexed, selections, selectionItems}`. It is synchronous, writes nothing and never throws; a figure it cannot read is null, not zero. With `hid`, it leaves out the index rows a hidden bundle claims (the same rule as R17), the items naming a hidden bundle, and any selection holding one. That last exclusion is legacy-store's existing rule, under R29. R60 does not say it: if you want the selections count whole, say so.
+  - legacy-store's `#counts` now calls it for `indexed`, `selections` and `selectionItems`. Ownership lists 3 lines added and 13 removed in `store.mjs`; the counts are unchanged and legacy `selection.test.mjs` and `gate-reads.test.mjs` pass.
+  - R17's `indexed` and R21's bytes share one hidden-set helper with it.
+- **N142 (R59):** `answerChanged` now returns a boolean, true exactly for `moved === true` or `drift.digestChanged === true`. It is pure and never throws, even on a hostile getter. Citation's import is unchanged.
+- **N202 (R52):** `onSelectionCreated` refuses through membership's `listenerRefusal`. Listeners, and R56's decorations, now run in `MODULE_ORDER` by default (before this, the default was registration order).
+- **N106:** withdrawn per B2 and K327. R61 is a `test.todo` citing N283, and R58's first clause is T11's per K330.
+- **N113's reader side (R41):** `DOCUMENT_EVIDENCE_IS_ONE_SIDED` is read by name, and the published sidedness and the sidedness the causes are read under are now one value. R41 is tested whole per B4, B5 and K331: a never-looked address names all three causes, a pre_log address pre_log alone.
+- **Tests (K313, K316):** the retrieval fixture now answers as workerd does, a cursor with the 50-byte pattern cap. Every existing test passed on it unchanged.
+
+**Deferred:** R61 (N283, T11).
+
+**Found in other modules**
+- **legacy-tests:** `test/refuse-gate.test.mjs` pins the old source text `export const answerChanged = (drift, moved) => moved || drift?.digestChanged === true;` (its needle list, near line 510). It goes red on my branch (1 fail) and passes on the tranche. R59 needs the new form, so the needle wants re-anchoring to the new function.
+- **legacy-tests:** these suites are red on the tranche with the same failure sets on my branch: observation-log, observation-content, observation-meaning, run-conditions, derivation-bounds, readingname, hygiene, nc-rec107.
+- **record-core R37:** retrieval's `projection()` reads `bundles.group_id` and `bundles.prior_state`, and `selectionResolve` reads `bundles.bundle_sha`. `bundle_sha` is in the contract; `group_id` and `prior_state` are not. That is a contract gap: those two columns need adding to R37, or my read changing.
+- **connections:** `observationOf`'s missing-row probe for an entity reads `connections.entity_id`, which connections states no read contract for (as my Uses already notes).
+- **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale from my source changes; not rebuilt.
+
+**Tests and checks**
+- Retrieval: 61 pass, 0 fail, 1 todo (R61).
+- format: 0 failures. architecture: 0 failures. coverage: 61 of 61 live ids named. ownership: 0 failures (legacy-store 3 added, 13 removed).
+
+Size (session_01CbPDfJwtC7DfaJUPFLHp6F): test runs 34, module lines 2152
