@@ -20,7 +20,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { deflateSync } from "node:zlib";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { JPX_REFUSES } from "../src/jpxdecode.mjs";
+import { JPX_REFUSES, JpxRefusal, decodeJpx } from "../src/jpxdecode.mjs";
 import { cropImage } from "../src/imagecrop.mjs";
 import { onePage, readPng, turn, hex, runner } from "./make-pdf.mjs";
 
@@ -159,21 +159,40 @@ console.log("\n--- R25, R39: what the decoder refuses, by name, and what is cut 
     }
   }
   /* The memory bound (N34, K116): a bare codestream whose SIZ declares one tile of
-     5000x5000, patched into a small fixture. The codec refuses it from the SIZ
-     alone, before any allocation; its working set is 4 bytes a sample per component. */
-  for (const [comps, label] of [[1, "grey"], [3, "colour"]]) {
+     the given size, patched into a small fixture. What the working set counts is
+     image-codecs' to state (its R4, N75), so the figures expected are the codec's
+     own refusal of the same bytes, never a formula restated here. The sizes are
+     those the codec refuses and admits (IMAGE-CODECS #2, J1): 5000x5000 colour
+     and 8000x8000 grey past the bound, 5000x5000 grey within it. */
+  const patched = (comps, size) => {
     const base = V.find((v) => v.expect === "ok" && v.container === "j2k" && v.name.endsWith(comps === 1 ? "-grey" : "-rgb"));
     const d = Uint8Array.from(bytesOf(base));
     const siz = d.findIndex((b, i) => b === 0xff && d[i + 1] === 0x51);
     const dv = new DataView(d.buffer);
-    t(`R25 (a ${label} codestream with ${comps} components to patch)`, [siz > 0, dv.getUint16(siz + 38)], [true, comps]);
-    for (const off of [6, 10, 22, 26]) dv.setUint32(siz + off, 5000);   // Xsiz, Ysiz, XTsiz, YTsiz
-    for (const off of [14, 18, 30, 34]) dv.setUint32(siz + off, 0);      // the offsets
-    const r = await render(jpxPage(d, 5000, 5000), 0);
+    const found = [siz > 0, dv.getUint16(siz + 38)];
+    for (const off of [6, 10, 22, 26]) dv.setUint32(siz + off, size);   // Xsiz, Ysiz, XTsiz, YTsiz
+    for (const off of [14, 18, 30, 34]) dv.setUint32(siz + off, 0);     // the offsets
+    return { d, found };
+  };
+  const codecRefusal = (d) => { try { decodeJpx(d); return null; } catch (e) { return e instanceof JpxRefusal ? e : null; } };
+  for (const [comps, size, label] of [[3, 5000, "colour"], [1, 8000, "grey"]]) {
+    const { d, found } = patched(comps, size);
+    t(`R25 (a ${label} codestream with ${comps} component${comps > 1 ? "s" : ""} to patch)`, found, [true, comps]);
+    const e = codecRefusal(d);
+    t(`R25 (the codec refuses the ${size}x${size} ${label} image for memory, its working set past its bound)`,
+      [e?.code, e?.detail.feature, e?.detail.working_set_bytes > e?.detail.bound_bytes], ["UNSUPPORTED", "an image past the memory bound", true]);
+    const r = await render(jpxPage(d, size, size), 0);
     if (r.feature) named.add(r.feature);
-    t(`R25 a ${label} image past the memory bound: IMAGE_TOO_LARGE with the codec's figures, no bytes`,
+    t(`R25 a ${size}x${size} ${label} image past the memory bound: IMAGE_TOO_LARGE with the codec's figures, no bytes`,
       fields(r, "ok", "reason", "filter", "feature", "working_set_bytes", "bound_bytes", "width", "height", "components", "bytes"),
-      [false, "IMAGE_TOO_LARGE", "JPXDecode", "an image past the memory bound", 5000 * 5000 * 4 * comps, 61_300_000, 5000, 5000, comps, undefined]);
+      [false, "IMAGE_TOO_LARGE", "JPXDecode", "an image past the memory bound", e?.detail.working_set_bytes, e?.detail.bound_bytes, size, size, comps, undefined]);
+  }
+  {
+    const { d, found } = patched(1, 5000);
+    t("R25 (a grey codestream with 1 component to patch, 5000x5000)", found, [true, 1]);
+    const r = await render(jpxPage(d, 5000, 5000), 0);
+    t("R25 a 5000x5000 grey image within the memory bound is not refused for memory",
+      [r.reason === "IMAGE_TOO_LARGE", "working_set_bytes" in r], [false, false]);
   }
   t("R25 every refusal JPX_REFUSES declares was driven", [...named].sort(), Object.keys(JPX_REFUSES).sort());
 }
