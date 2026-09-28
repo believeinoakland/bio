@@ -1494,8 +1494,12 @@ console.log("\n--- L · REC-100: the three live `run` PRESENT writers (D-366) --
     + "two all-false lists cannot pass it (an equality that costs nothing is not evidence)",
       [refusesUnderSweep.filter(Boolean).length, refusesUnderSweep.filter((x) => !x).length,
        /* RE-PINNED 2026-09-27 (T5-12): R3's refusal of the NEVER_LOOKED row, by its own check. */
-       neverLookedRefusal?.code, neverLookedRefusal?.check],
-      [1, 4, "AI_LOG_STATE_UNKNOWN", "C-22.1"]);
+       /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6)): observation-log R3 (N118, K332) gave that refusal a code of
+          its own, `AI_LOG_NEVER_LOOKED_STORED` (C-22.17), never C-22.1's "a state not in R1", which NEVER_LOOKED is
+          not. The pin follows it to its own row, read from the catalogue by key, and still asserts it is NOT C-22.10. */
+       neverLookedRefusal?.code, neverLookedRefusal?.check,
+       neverLookedRefusal?.check === AI_RUN_CHECKS.AI_LOG_NEVER_LOOKED_STORED?.check],
+      [1, 4, "AI_LOG_NEVER_LOOKED_STORED", "C-22.17", true]);
   }
 
   /* L3 — THE ROLLUP, AND IT IS THE FINDING THAT UNSEATS D-366's REMEDY.
@@ -1576,6 +1580,21 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
   const machine  = await DO("frontier", `level=document&limit=500&viewer=class:member`);
   const uninvited = await DO("frontier", `level=document&limit=500&viewer=member:not-invited`);
   const nobody   = await DO("frontier", `level=document&limit=500`);
+  /* ADDED 2026-09-28 (legacy-tests T10, B1 (6), (7)), for J1's DENY half under ai-runs R42: the run rows at this level,
+     per state, read from `op=airunlog` of the run section L left (H purged every earlier one), and the store's own
+     whole count of run rows (op=stats with no viewer is an internal call and stays whole) to prove that run's log is
+     every run row there is. (The store holds a second run, the surfacing run `withSurfacingRun` opens, with no log
+     row: `aiRuns` reads 2, measured, so the arm counts ROWS, not runs.) */
+  const stWhole = await DO("stats");
+  const runLogAll = (await GET(`op=airunlog&token=${ADM}&run=RUN-2026-0916-rec100&limit=5000`)).entries || [];
+  const runDoc = runLogAll.filter((e) => e.level === "document")
+    .reduce((acc, e) => ({ ...acc, [e.state]: (acc[e.state] || 0) + 1 }), {});
+  const runDocRows = Object.values(runDoc).reduce((a, b) => a + b, 0);
+  const runLess = (f) => {
+    const out = {};
+    for (const [k, v] of Object.entries(f.tally || {})) { const left = v - (runDoc[k] || 0); if (left > 0) out[k] = left; }
+    return { tally: out };
+  };
 
   /* THE DATA ARM FIRST, because a pin armed against a FLAG is REC-94's leak all
      over again: unless this viewer is REALLY being withheld from, J1 is an
@@ -1590,13 +1609,29 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
     [0, 0, true, true]);
 
   t("J1: THE RULING, DRIVEN THROUGH THE OP — the `tally` is BYTE-IDENTICAL for a viewer who may "
-  + "see every row, a member who may see some, and a DENY caller who may see NONE. It counts "
+  + "see every row and a member who may see some, and a DENY caller who may see NONE gets that same "
+  + "tally less exactly D-486's run rows (ai-runs R42 fails closed) and nothing else. It counts "
   + "every row at this level and does not follow the reader. **THE TALLIES ARE IN THE TUPLE ON "
   + "PURPOSE: if a later session gates this, the failure prints the withheld tally AND the full "
   + "one together**, because a failure naming one is a failure a reader cannot act on (REC-109's "
   + "rule, inherited). D-386 is RULED (a) and the reasoning is in `store.mjs`, not here",
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6), (7)): ai-runs R42 (N191, N276) is D-486's one predicate, and
+       it fails CLOSED — an absent or unrecognised viewer keeps NO run's rows, where the old tail dropped only a hidden
+       project's. So the DENY caller's tally is no longer the whole log's: it is the whole log less EVERY run row at
+       this level, which is D-486's subtraction (J5) and nothing else. The ruling J1 pins — the tally is not gated by
+       the reader's sight of the rows — is asked exactly: the uninvited member (who sees every run here) still gets
+       the byte-identical tally, and the DENY caller (who sees NO row, J0) gets the whole log minus the run rows,
+       counted independently of the frontier from `op=airunlog` of section L's run (H purged the earlier ones, and
+       op=stats' internal `aiRunLog` proves its log is every run row). Both tallies stay in the tuple. */
     [J(nobody), J(uninvited)],
-    [J(machine), J(machine)]);
+    [J(runLess(machine)), J(machine)]);
+  t("J1b: …AND J1's DENY HALF IS ARMED — the subtraction it allows for is real at this fixture (the one run's "
+  + "document-level rows are non-empty), it is the whole of the run rows (op=stats' internal `aiRunLog` counts every "
+  + "run row in the store, and it equals that run's log), and the DENY tally still counts rows that caller cannot "
+  + "see, so J1 is not an equality between two emptied tallies",
+    [runDocRows > 0, stWhole.aiRunLog, runLogAll.length, T(nobody) > 0,
+     T(nobody) === T(machine) - runDocRows],
+    [true, runLogAll.length, stWhole.aiRunLog, true, true]);
 
   /* J2 — THE OTHER REFUSED ROUTE, AND THE ARM J1 CANNOT REPLACE. D-386's option
      (b) had two spellings and the second was *change what the field counts to
@@ -1666,6 +1701,9 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
      project wants the surprise to come from. It now measures the thing that actually matters — whether the
      subtraction moves anything here — rather than a proxy for it. (The duplicated section letter is reported as a
      finding by D-486; it is cosmetic and is not fixed here.) */
+  /* NOTE 2026-09-28 (legacy-tests T10, B1 (6)): J5 is unchanged and still holds for the MEMBER viewer it measures. Under
+     ai-runs R42 (N191, fail closed) its closing clause no longer covers the DENY caller, who loses every run row; J1
+     now asks that caller's tally for exactly that subtraction and J1b arms it. */
   const st = await DO("stats"), sFiltered = await DO("stats", "viewer=member:not-invited");
   t("J5: J1's EQUALITY IS ARMED AND ITS PRECONDITION IS NOW STATED AND MEASURED — this fixture DOES hold runs "
   + "(so the arm is not vacuous about runs existing) and a filtered viewer DOES lose bundles here (so the gate "
@@ -1675,9 +1713,18 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
     [st.aiRuns > 0, st.bundles > sFiltered.bundles,
      sFiltered.aiRunLog === st.aiRunLog, sFiltered.observationsNonLead === st.observationsNonLead],
     [true, true, true, true]);
-  t("J5b: AND THE NARROWING IS AT ALL THREE TALLY SITES AND IS ONE PREDICATE — each site reaches it through the "
-  + "shared `#hiddenRunTail`, the subtraction itself is written in exactly ONE place (`#hiddenSets`), and the "
-  + "ruling that licensed it is named at that place. Five readers, one rule: three spellings is the drift class "
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), (8)): N191 and N276 made ai-runs' R42 `hiddenRuns` THE one
+     predicate (K335, K341): ai-runs registers it with retrieval itself, and legacy-store's `#hiddenRunTail` now calls
+     it for `op=stats`' `aiRunLog`, `observationsNonLead` and `aiRunBounds` (the column form, K333). The store's
+     `#hiddenSets` is deleted (N191), so the census no longer finds its subtraction beside ai-runs'; the "exactly ONE
+     place" is now asserted over every text a reader of the log lives in (store, ai-runs, retrieval, observation-log),
+     and that one place is `hiddenRuns`' own body. The ruling's name moved with it: BOB #32's 02:30Z ruling was cited at
+     `#hiddenSets`, and `hiddenRuns` names its row, D-486, beside R42 and N191. The label says `hiddenRuns` for
+     `#hiddenSets`; every element is at least as strict as before, and the store-reads-R42 element is new. */
+  t("J5b: AND THE NARROWING IS AT ALL THREE TALLY SITES AND IS ONE PREDICATE — each site reaches it through "
+  + "retrieval's one `hiddenRunTail`, which ai-runs fills with R42's `hiddenRuns`; the subtraction itself is written "
+  + "in exactly ONE place (`hiddenRuns`), the store's `op=stats` readers call that same function, and the ruling that "
+  + "licensed it (D-486) is named at that place. Five readers, one rule: three spellings is the drift class "
   + "REC-110's own J3 was written against, and five would be worse",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39, R57): the tally sites are retrieval's one
        `#tally`, which reaches the narrowing through `retrieval.hiddenRunTail(viewer)` (once); the store registers
@@ -1691,10 +1738,16 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
         `#hiddenSets`: it spells the subtraction itself. So the "written in exactly ONE place" census follows the
         tail into ai-runs' text beside the store's — and reads 2 (store `#hiddenSets` for `op=stats`' two readers,
         ai-runs `hiddenRunTail` for the three tallies). Not re-pinned: REPORTED to ai-runs and legacy-store. */
-     (SRC_RUNS.match(/retrieval\.registerHiddenRunTail\("ai-runs", \(viewer\) => this\.hiddenRunTail\(viewer\)\)/g) || []).length,
-     ((SRC + "\n" + SRC_RUNS).match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
-     /BOB #32, 2026-09-24 02:30Z/.test(SRC)],
-    [1, 3, 1, 1, true]);
+     (SRC_RUNS.match(/retrieval\.registerHiddenRunTail\("ai-runs", hiddenRuns\)/g) || []).length,
+     ((SRC + "\n" + SRC_RUNS + "\n" + SRC_FRONTIER + "\n" + SRC_RETRIEVAL + "\n" + SRC_OBS)
+       .match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) NOT IN /g) || []).length,
+     (() => { const at = SRC_RUNS.indexOf("\nexport function hiddenRuns(viewer, column = undefined) {");
+              const body = at < 0 ? "" : SRC_RUNS.slice(at, SRC_RUNS.indexOf("\n}\n", at));
+              return /NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) NOT IN /.test(body); })(),
+     /R42 \(N191, N276, D-486\)[\s\S]{0,1500}?\nexport function hiddenRuns\(/.test(SRC_RUNS),
+     /#hiddenRunTail\(viewer, column = undefined\) \{\s*return viewer === undefined \? \{ sql: "", args: \[\] \} : hiddenRuns\(viewer, column\);/
+       .test(SRC)],
+    [1, 3, 1, 1, true, true, true]);
 }
 
 /* ------------------------------------------------------------------------- *

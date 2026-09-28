@@ -916,9 +916,18 @@ t("H4: THE OVER-STRICTNESS ARM, and it points the other way — a resolved cause
 + "`pre_log` was reached because the evidence table HAS a row, so a look demonstrably happened and "
 + "neither a purge nor a never-look survives it; `never_looked` is §5.1's one positive statement. "
 + "Widening either would make the frontier refuse to conclude anything, which is its own defect",
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6); K331, observation-log R11): K331 re-opened `never_looked` at
+     ONE-SIDED evidence — where a pre-log look that found nothing left no artifact, a missing row leaves all three
+     causes open, so `never_looked` names all three there and is the one-member positive statement only where the
+     evidence is TWO-SIDED. `pre_log` stays a set of one at every sidedness (its artifact shows a look happened). The
+     over-strictness this arm guards is unchanged and now asked where it still holds: `pre_log` at both sidednesses,
+     `never_looked` at two-sided evidence; and K331's one-sided answer is pinned beside it as the ruled set, so the arm
+     still goes red if either is widened or narrowed. */
   [causesNotRuledOut("pre_log", { evidenceOneSided: true }),
+   causesNotRuledOut("pre_log", { evidenceOneSided: false }),
+   causesNotRuledOut("never_looked", { evidenceOneSided: false }),
    causesNotRuledOut("never_looked", { evidenceOneSided: true })],
-  [["pre_log"], ["never_looked"]]);
+  [["pre_log"], ["pre_log"], ["never_looked"], ["pre_log", "purged", "never_looked"]]);
 
 t("H5: an UNRECOGNISED CAUSE WORD takes the widest set, never the narrowest — G5's rule one field "
 + "over, pointed at the cause vocabulary instead of at the subject vocabulary. A later reader "
@@ -987,15 +996,23 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
   t("H9: `not_ruled_out` IS TOTAL ACROSS BOTH LISTS — every row of `never_looked` and of "
   + "`missing_unexplained` carries it and carries `evidence_one_sided`. A field present only on "
   + "the rows a reader already distrusts is one they learn to look for only when they are already "
-  + "suspicious; on a `never_looked` row it is the one-member set that says THIS row is the "
-  + "positive statement",
+  + "suspicious; on a `never_looked` row at a two-sided kind it is the one-member set that says THIS row is the "
+  + "positive statement, and at a one-sided kind it names all three (K331)",
     await (async () => { const all = rowsOf(m);
       return [all.length > 0,
               all.every((r) => Array.isArray(r.not_ruled_out) && r.not_ruled_out.length > 0),
               all.every((r) => typeof r.evidence_one_sided === "boolean"),
+              /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (6); K331, observation-log R11): a `never_looked` row
+                 carries the one-member set where its kind's evidence is TWO-SIDED, and all three causes where it is
+                 ONE-SIDED (a reference, an entity: K331). Asked per row against the row's own published sidedness,
+                 with both kinds of row required to be present, so the arm is not measured over one branch. */
               (m.never_looked || []).every((r) => Array.isArray(r.not_ruled_out)
-                && r.not_ruled_out.length === 1 && r.not_ruled_out[0] === "never_looked")]; })(),
-    [true, true, true, true]);
+                && JSON.stringify(r.not_ruled_out) === JSON.stringify(r.evidence_one_sided === false
+                  ? ["never_looked"] : ["pre_log", "purged", "never_looked"])
+                && r.evidence_one_sided === MEANING_EVIDENCE_IS_ONE_SIDED[r.subject_kind]),
+              (m.never_looked || []).some((r) => r.evidence_one_sided === false),
+              (m.never_looked || []).some((r) => r.evidence_one_sided === true)]; })(),
+    [true, true, true, true, true, true]);
 
   t("H10: AND THE PROSE STOPPED ASSERTING A SET IT CANNOT ASSERT. No `why` on any published row "
   + "still claims that exactly two causes could not be ruled out — the sentence now describes the "
@@ -1126,8 +1143,14 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
         `aiRunLog` asked), and `hiddenRunTail` as retrieval's tail. The store registers neither now. */
      /observationLogOf\(ctx\)\.registerAuthority\("run", \(run, viewer\) => !!this\.runFor\(run, viewer\)\)/.test(SRC.runs)
        && !/registerAuthority\("run"/.test(SRC.store),
-     (SRC.runs.match(/retrieval\.registerHiddenRunTail\("ai-runs", \(viewer\) => this\.hiddenRunTail\(viewer\)\)/g) || []).length],
-    [true, true, true, 1]);
+     /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), (8); K341): N191/N276 removed the instance method
+        `hiddenRunTail` and the store's `#hiddenSets`; ai-runs registers R42's module-level `hiddenRuns` itself — the
+        one predicate, whose body is the only place the subtraction is written (the content suite's J5 counts that
+        census). The `#hiddenSets` reading of this comment's first re-anchor no longer exists and is retired; the
+        registration is asserted by the function's own name, and that the name is R42's exported function. */
+     (SRC.runs.match(/retrieval\.registerHiddenRunTail\("ai-runs", hiddenRuns\)/g) || []).length,
+     /\nexport function hiddenRuns\(viewer, column = undefined\) \{/.test(SRC.runs)],
+    [true, true, true, 1, true]);
 
   /* J4 — THE OVER-STRICTNESS ARM, AND IT IS THE ONE THAT MATTERS MOST HERE.
      The ruling is about `tally` and about NOTHING ELSE. `by_subject_kind` is a

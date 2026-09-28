@@ -171,6 +171,10 @@ const SRC = {
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R35–R44): the content frontier is retrieval's `#content`
      in `src/retrieval/frontier.mjs`; G5, G5b, J3 and J5 read it there. */
   frontier: readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8"),
+  /* ADDED 2026-09-28 (legacy-tests T10, B1 (8)): J5's one-place census also reads retrieval's index and observation-log's
+     (no content-axis member is spelled in either: A2 walks them too). */
+  retrieval: readFileSync(new URL("../src/retrieval/index.mjs", import.meta.url), "utf8"),
+  obs:      readFileSync(new URL("../src/observation-log/index.mjs", import.meta.url), "utf8"),
 };
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): retrieval's content arm, from its head to the meaning arm's. */
 const CONTENT_ARM = SRC.frontier.slice(SRC.frontier.indexOf("  #content(cap, viewer) {"),
@@ -1075,22 +1079,37 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
      is the mirror-and-drift class, and it is the failure mode REC-110's own J3 was written against.
      The LIVE arm is `project-sight.test.mjs` §9, which drives a real run over a real hidden project through
      the op; this is the SITE arm, J3's job for the new rule. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T10, B1 (7), (8); K341): N191 deleted the store's `#hiddenSets` and N276
+     made ai-runs' R42 `hiddenRuns` the one predicate, registered with retrieval by ai-runs itself and called by
+     legacy-store's `#hiddenRunTail` for `op=stats`. The two `#hiddenSets` arms are RETIRED as spellings and their
+     property is RE-ANCHORED onto R42, where it still holds: (2) "the helper names BOB #32's ruling" named the text of
+     `#hiddenSets`, which no longer exists; the ruling's row, D-486, is named at `hiddenRuns` beside R42 and N191; (3)
+     "written in exactly ONE place" is counted over every text a reader of the log lives in, and that place is
+     `hiddenRuns`' body; (4) the registration is R42's function by name; (5, new) the store's `op=stats` readers call
+     that same function rather than a copy. */
   t("J5: D-486's narrowing is at this site and is the SHARED predicate, not a second spelling — this tally "
-  + "calls `#hiddenRunTail`, the helper names BOB #32's ruling, and the subtraction itself is written in "
-  + "exactly ONE place in the file (`#hiddenSets`), which is what keeps the five readers one rule",
+  + "reaches retrieval's one `hiddenRunTail`, which ai-runs fills with R42's `hiddenRuns`; that function names D-486, "
+  + "the subtraction itself is written in exactly ONE place (`hiddenRuns`), and the store's `op=stats` readers call "
+  + "it too, which is what keeps the five readers one rule",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval R39, R57): this arm calls the one `#tally`, which
        reaches the narrowing once through `retrieval.hiddenRunTail(viewer)`; the store registers its `#hiddenRunTail`
        as that tail, and the subtraction with its ruling stays written once, in the store's `#hiddenSets`. */
     [/const tally = this\.#tally\("content", viewer\);/.test(CONTENT_ARM)
        && (SRC.frontier.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length === 1,
-     /BOB #32, 2026-09-24 02:30Z/.test(SRC.store),
+     /R42 \(N191, N276, D-486\)[\s\S]{0,1500}?\nexport function hiddenRuns\(/.test(SRC.runs),
      /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): the tail is ai-runs'
         `hiddenRunTail`, registered from its constructor; the store's `#hiddenRunTail` and registration are gone. The
         tail does NOT reach `#hiddenSets` — it spells the subtraction itself — so the ONE-place census follows it into
         ai-runs' text beside the store's and reads 2. Not re-pinned: REPORTED to ai-runs and legacy-store. */
-     ((SRC.store + "\n" + SRC.runs).match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
-     (SRC.runs.match(/retrieval\.registerHiddenRunTail\("ai-runs", \(viewer\) => this\.hiddenRunTail\(viewer\)\)/g) || []).length],
-    [true, true, 1, 1]);
+     ((SRC.store + "\n" + SRC.runs + "\n" + SRC.frontier + "\n" + SRC.retrieval + "\n" + SRC.obs)
+       .match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) NOT IN /g) || []).length,
+     (() => { const at = SRC.runs.indexOf("\nexport function hiddenRuns(viewer, column = undefined) {");
+              const body = at < 0 ? "" : SRC.runs.slice(at, SRC.runs.indexOf("\n}\n", at));
+              return /NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) NOT IN /.test(body); })(),
+     (SRC.runs.match(/retrieval\.registerHiddenRunTail\("ai-runs", hiddenRuns\)/g) || []).length,
+     /#hiddenRunTail\(viewer, column = undefined\) \{\s*return viewer === undefined \? \{ sql: "", args: \[\] \} : hiddenRuns\(viewer, column\);/
+       .test(SRC.store)],
+    [true, true, 1, true, 1, true]);
 }
 
 /* ===================================================================== *
