@@ -46,3 +46,60 @@ Three product reds in layer 9, found by gate-reads driving legacy-index's 14 new
 Also (not pinned): **actions R8** via `op=promote`: `#breachRefusal` reads the viewer as `pkg.viewer ?? c.viewer ?? who`, and `who` is the bare member id, which `viewerPredicate` denies, so a member session cannot record a `breach: true` action (answered `ACTION_NO_DETERMINATION`).
 
 Progress: every family done; final battery 15 red → after the gate-reads/hygiene fix 14, each owned; COMPLETE follows once I have written it up.
+
+## J3 · COMPLETE
+
+**Entries applied** (layer 11's legacy-tests bullet; B1–B4; every suite's figures and edits are in the Progress notes above):
+1. **Census** (N240, K288, K300): d470 11/2 → 13/0, rows 1.39.0 (397, e1c688c5…, source 9927c1ad…, `changed: []`) and 1.40.0 (same census and source, `changed: ["C-105.8", "C-105.9"]`), A5 1.40.0. No other suite pins a `bio-checks 1.3x` literal.
+2. **Pins T9 moved:** fleetbundles 95/1 → 96/0 (132 → 133, `membership/checks.mjs`, K286); bounds 208/5 → 220/3 (roster 69 → 71, both caps driven, R82); derivation-bounds 64/9 → 69/4 (census and class by name: capture N133, membership R82, capture-sources K288); meaning-bounds re-pinned by name (92/4).
+3. **Re-anchors:** project-sight 248/1 → 253/0 (layer 9's four op maps); d484 27/3 → 31/0 (inquiry's `actNoBasis`); refusal-wire 42/0, now grading 17 more fences; affordances 95/5 → 100/0, reopen 59/1 → 60/0, reevaluation 73/1 → 74/0 (`affordances/facts.mjs`); rung-ladder 44/4 → 50/0 (layer 9's reason refusals and escalation's way back found in the modules themselves: no REPORT needed); gate-reads classifies 10 of layer 9's 14 routed reads, each driven on a hidden project; readings (textshown 34/0, tier3-layer-parts 49/0, cpdf18-pdf-images 30/0, reextract 66/0: pdf-reader R33/R34, extraction N253; old digests hold with the new keys removed by name); observation-content unchanged (it reads no R60); `nc-d375` and observation-content's D-375 arms are not in this tree (only on `land/worker/D-375`, with N139's producer, T10), so nothing was imported.
+4. **Earlier layers' reds re-measured:** EXTRACTION #3's eleven: bounds, derivation-bounds, hygiene, observation-content, strengthpair at their owned figures below; cpdf18, fleetbundles, reextract, textshown, tier3, versionnotice green. N248: m025 25/1 → 26/0 (casesearched, conclude-project re-derived onto basis-versions); refusal-wire 42/0 after N212; N57's named remainder run AS DECLARED in an isolated worktree (operator-attest 6/6, caseobject c–e, several-cases-choice 13/13, conclude-project 8/8, casesearched 5/5, and the anchors family's d311, conclude-project-arm, d444 arms), except the deferrals below.
+5. **Intermittents** (five runs each on the tranche, then root-caused): `acquire` was K313 (the Store restarted under load, then its migration threw provenance's over-cap GLOB): 97/0 ×4 in parallel after K314. `capturerequests` was the suite's own unsilenced task-drain alarm (a real drain, as scheduler R1/R5 and capture-requests R37 specify, between the suite's hand-driven drains): `TASK_DRAIN_DELAY_MS` silenced, 140/0 on twelve runs, five under load.
+6. **N241/K283:** recorded waiting on the UI's replacement: check-semantics (60 of 61 FAIL lines; the 61st N68), bias-vocabulary 75/6 (R2's six new types), add-surface (stops at "first state for standard"), and semantics-harvest 13/3 (F0, F1, F3 need check-semantics green).
+Also, beyond the bullet: 20 civicos-ui suites found red on the T9 opening tree (T8 never ran them) re-anchored: civicos-ui 87 of 90 green, the three N241's. Residue from the baseline: capture-container-extent, contradiction-overstrict (a fixture lease already past, reaped at random: T8's "timing"), machine-attest (`filingapprove` classified an authored act, not an attestation: BOB may rule), projects (R78's echo) green; d557, ocr-member-e2e, rendered-capture were K313 and are green after K314. The guard 124 → 113, eleven ratchets re-pinned by name, every remaining failure another module's.
+
+**The old battery** (369 suites, this branch @ 17a3409968 plus the gate-reads/hygiene commit d0550a14aa): **28 red at the start, 15 red now**, each owned:
+- bounds 220/3: strength's own `VERSION_LEGS_MAX` ×2 (N184 (2)); intent's `MEASURE_MAX`, `DEPARTURES_MAX`, `SET_ASIDE_MAX` driven by no test (intent).
+- derivation-bounds 69/4: actions `pendingClocks`, `project`; publication `#promoteNamedEdges`; inquiry (N183); capture-requests `waitSource` (N188 (1)).
+- meaning-bounds 92/4: publication's held `commitCaseEdition` hides `caseratify` ×2; D-240 (b) (N70); record-core R3's unseen-reads pair.
+- gate-reads 160/5: filings `counselpacketread` and `filingsfor` LEAK hidden-project material to a non-member; escalation's `#one` reads a workerd cursor as an array, so `escalation`/`escalationsdue` answer nobody (REPORT J2).
+- plane-envelope 62/2: monitoring's `monitorOp` spreads the DO's answer unclassified (D-240 (e)) and opens its envelope outside `doAnswer` (DETECTOR C): N247's monitoring share.
+- hygiene 1346/1: basis-versions `schema.mjs` 52 `grade_axis` comment (N185).
+- strengthpair 90/1: strength `#walk` (N184 (1)).
+- observation-content 74/1, observation-log 130/1: ai-runs' `hiddenRunTail` counts the D-486 subtraction twice.
+- run-conditions 56/3: run-productions `interim.mjs` W6; ai-runs `rerun_of` P1/P6.
+- scheduler 47/4: FL-4, capture-requests' clock (N188).
+- d543-instant-precision 11/1: reevaluation's hand stamp (N239).
+- machine-fences 91/1: actions' `NO_RULE` (`clockPropose`) shadows, pinned by no suite.
+- machinefences-dec49 88/1: the doctrine pack renders `machineFences(CATALOGUE)` only (skills/agent-worker).
+- skillsequencing 26/1: skills' `DEPLOYMENT_SEQUENCE` copy.
+civicos-ui: 87 of 90 green (N241's three); the guard 113 failures, all other modules' (progressions 34, consequences 11, connections/legacy-checks 8, escalation 5, case-authoring 5, conformance 4, review 3, capture-sources 2, and arm G's 27 multi-site codes by owner in the Progress notes).
+
+**Deferred, and why:**
+- `civicos-ui/test/refusal-codes.control.mjs` and `verdict-excluder.control.mjs` (arms 4, 4b retired): both assume green instruments (the guard, meaning-bounds, plane-envelope) that are red with other modules' failures; re-declaring every arm against a red baseline changes how each is judged. Wanted: those reds paid, or Bob's ruling on judging against a red baseline. Dated reasons and each dead anchor's new home are in the drivers.
+- d444's `citecopy`/`suggestcopy`/`typed` store arms (text left store.mjs for citation and run-productions at T7); caseobject control arms (a), (b) bite but the suite, with no `catch`, dies in block 2 with no tally.
+- N57's sweep of every other control: not run (each patches the tree for minutes to hours).
+- The `op=affordancefacts` dispatch has left meaning-bounds' walk (the shared re-inliner would need affordances; it was unjudged, so no arm moves).
+
+**Judgements BOB may reverse:** plane-envelope D-240 (b), (c) measured over a planted copy of op=monitor's removed verdict site (the file's own precedent); gate-reads plants the three publication rows a ratified edition leaves (a determination needs one; the ceremony is not in the fixture); caseobject control (d) re-declared GREEN (NO_MEMBER_ROLE makes the default unreachable: retire?); operator-attest's `L.caseNot` moved out of four arms' declarations (REC-130's gate stops the case first); machine-attest's `filingapprove` classification; publishedcase registers `evidence_package` as unread; contradiction-overstrict's run now opens on the wall clock; hygiene and the two civicos-ui walk floors pinned at exact figures.
+
+**REPORT: found in other modules** (beyond J1, J2):
+- **legacy-index / legacy-checks:** `dec49Row` (`src/index.mjs` 3611) builds its map from the catalogue's families only, so a refusal whose row moved to a module's `checks.mjs` and forgets its `...rowOf` spread reaches the wire with no code or translation (several-cases-choice F, F2).
+- **publication:** `rowOf` throws on a row with no translation, failing a read whole rather than refusing (recorded; fail-closed by design).
+- **legacy-store:** nine private delegates with no caller left after affordances' extraction, and the stale header comment at `store.mjs` 178 (AFFORDANCES #3 J2 reported it; unchanged).
+- **promotion / legacy-checks:** C-102.9's `where` names `caseCatalogueFailed`, whose gate finding carries no boolean verdict, so the guard's arm C cannot judge it (unclassified 7 → 8).
+- **capture-sources:** the regions for C-105.10 (`is-credential-stored`, outside `credentialSupply`'s body) and C-105.11 (a 3-line span) do not resolve.
+- **membership / conformance:** C-70.5's translation is word for word conformance's `NO_SUCH_PROJECT`; conformance should call `noSuchProject` (R78).
+- **case-authoring:** `is-machine-publish` judges no refusal (a spread; inherited verdicts 7 → 8).
+- **actions R8:** `#breachRefusal` reads the viewer as the bare member id, so a member session cannot record a `breach: true` action (J2).
+- **Generated artifacts:** none made stale (tests only). fleetbundles is green on the committed bundles.
+
+**Tests and checks** (this branch, tranche/T9 merged @ f3928f12d5):
+- Old battery, 369 suites: 354 green, 15 red, each owned above. civicos-ui: 87 of 90 green. The guard: 113 failures, all other modules'.
+- Layer tests: none named in `build/manifest.md`.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio legacy-tests` → architecture: 869 product files, 2304 relative imports (67 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio legacy-tests` → coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T9` → ownership: 61 files changed by legacy-tests between tranche/T9 and HEAD; 0 failures
+
+Size (session_01NtbuUmjDKeKm6364QwnWp2): test runs 2 whole batteries plus about 450 single-suite and control runs by the job and its nine family agents, module lines 1953 (1625 added, 328 removed)
