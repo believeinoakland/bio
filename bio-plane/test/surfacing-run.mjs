@@ -60,7 +60,7 @@ const refusalName = (answer) => {
   return "";
 };
 
-const projectMd = (now) => ["---", "object_type: project", "current_state: forming", `created: "${now}"`,
+const projectMd = (now) => ["---", "object_type: project", "objective: \"Fixture objective.\"", "current_state: forming", `created: "${now}"`,
   `last_updated: "${now}"`, "references: []", "---", "", "## Summary", "",
   "The fixture project a deploy token's surfacing run is opened over (REC-171).", "", "## Session Log", ""].join("\n");
 

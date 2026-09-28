@@ -49,7 +49,7 @@ const call = async (p, b) => (await (await mf.dispatchFetch("http://x" + p,
    naming one is refused PROJECT_ID_SUPPLIED (C-59.1) and creation bytes carrying `id:` are refused
    PROJECT_ID_IN_BYTES (C-59.2), so `mk` creates a project with NO bundleId and no id line (its label is kept as
    the title) and the suite reads the id from the answer. Information and problems still choose their ids. */
-const md = (id, type) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
+const md = (id, type) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}current_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
 const mk = (id, type) => { const docId = type === "project" ? null : id; return call("/promote", {
   ...(docId === null ? {} : { bundleId: id }), base: null, snapKey: `${id}-new`, author: "suite",
   files: [{ path: "bundle.md", text: md(docId, type), bytes: md(docId, type).length, sha256: sha(md(docId, type)) }],
@@ -246,7 +246,7 @@ console.log("\n--- 7.11: only an OWNER deactivates or reactivates, and the rule 
   const state = async (id) => (await projRows()).find((r) => r.bundle_id === id)?.current_state;
   const cur = async (id) => (await projRows()).find((r) => r.bundle_id === id)?.bundle_sha;
   const move = (id, to, reason, actor) => {
-    const body = `---\nid: ${id}\nobject_type: project\ncurrent_state: ${to}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-02T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
+    const body = `---\nid: ${id}\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: ${to}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-02T00:00:00Z"\n---\n\n## Summary\n\nSecret plan.\n`;
     return { text: body, to, reason, actor };
   };
   let MOVE_SEQ = 0;
@@ -387,7 +387,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
   /* CORRECTED 2026-09-18 (REC-141, IC-158): a creation sends NO bundleId and no `id:` line (the plane mints the
      id, Membership v2 §7); `label` only keys the snapshot, and a created project's id is read from the answer. */
   const mkNamed = (label, title) => {
-    const doc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+    const doc = `---\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
     return call("/promote", { base: null, snapKey: `${label}-new`, author: "suite",
       files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
       meta: { object_type: "project", group: "believe-in-oakland", title,
@@ -414,7 +414,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
      anywhere: it is still cited, and its name must still resolve to what was
      cited, or a later project silently inherits an earlier one's references. */
   const cur = async (id) => ((await call(`/projection?viewer=class:member`)).bundles || []).find((r) => r.bundle_id === id)?.bundle_sha;
-  const doc2 = `---\nid: ${F.bundleId}\nobject_type: project\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  const doc2 = `---\nid: ${F.bundleId}\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: closed\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-03T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
   await call("/promote", { bundleId: F.bundleId, base: await cur(F.bundleId),
     snapKey: "f-closed", author: "suite",
     files: [{ path: "bundle.md", text: doc2, bytes: doc2.length, sha256: sha(doc2) }],
@@ -426,7 +426,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
 
   /* A project may still be revised without tripping over ITSELF, which is the
      obvious way to get this wrong. */
-  const doc3 = `---\nid: ${A.bundleId}\nobject_type: project\ncurrent_state: investigating\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-04T00:00:00Z"\n---\n\n## Summary\n\nY.\n`;
+  const doc3 = `---\nid: ${A.bundleId}\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: investigating\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-04T00:00:00Z"\n---\n\n## Summary\n\nY.\n`;
   t("and a project keeps its own name across a revision",
     (await call("/promote", { bundleId: A.bundleId, base: await cur(A.bundleId),
       snapKey: "a-rev", author: "suite",
@@ -455,7 +455,7 @@ console.log("\n--- 7.1: project names are unique across the instance, at the WRI
      remove it. */
   /* CORRECTED 2026-09-18 (REC-141, IC-158): created with no bundleId and no id line (the plane mints H); the
      revision's bytes carry the minted id, as this document's two promotions both carried its id before. */
-  const untitledOf = (id) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  const untitledOf = (id) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: project\nobjective: "Fixture objective."\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
   const untitled0 = untitledOf(null);
   const H = (await call("/promote", { base: null, snapKey: "h-new", author: "suite",
     files: [{ path: "bundle.md", text: untitled0, bytes: untitled0.length, sha256: sha(untitled0) }],
@@ -481,7 +481,7 @@ console.log("\n--- 7.13: the ONE participation power an administrator has, and i
      then be unable to touch the project, which accepts no new participants,
      cannot be reactivated, and cannot change hands. */
   /* CORRECTED 2026-09-18 (REC-141, IC-158): created with no bundleId and no id line; P is the minted id. */
-  const doc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
+  const doc = `---\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nX.\n`;
   const P = STRANDED = (await call("/promote", { base: null, snapKey: "PROJ-2026-0200-stranded-new", author: "suite",
     files: [{ path: "bundle.md", text: doc, bytes: doc.length, sha256: sha(doc) }],
     meta: { object_type: "project", group: "believe-in-oakland", title: "Stranded Project",

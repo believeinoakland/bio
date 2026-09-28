@@ -96,7 +96,7 @@ const VERA = await enrol("vera", CAPS);   /* NEVER invited to it: the caller who
 /* A project document WITHOUT an `id:` line — the shape a creation now sends. `extra` lands in the
    frontmatter, `body` below the fence. */
 const projectMd = (title, { id = null, extra = [], body = "A project." } = {}) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "${title}"`, "current_state: forming",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []", ...extra,
   "---", "", "## Summary", "", body, "", "## Session Log", ""].join("\n");
 let seq = 0;
@@ -180,7 +180,7 @@ t("bytes carrying a never-minted id are REFUSED PROJECT_ID_IN_BYTES", codeOf(par
 t("BYTE-IDENTICAL: the two", rawOf(bH), rawOf(bN));
 t("its check is C-59.2", parse(bH)?.check, "C-59.2");
 const over = parse(await create(VERA, "Over Strict",
-  { md: projectMd("Over Strict", { extra: ["objective:", "  id: not-a-top-level-key"], body: "id: a line of prose, not frontmatter" }) }));
+  { md: projectMd("Over Strict", { extra: ["background:", "  id: not-a-top-level-key"], body: "id: a line of prose, not frontmatter" }) }));
 t("OVER-STRICTNESS: a nested `id:` and a body line reading `id:` are NOT an id — the creation commits", over?.ok, true);
 const overText = over?.bundleId ? await fileOf(ADM, over.bundleId) : null;
 t("and the minted id is written beside them, the body untouched",

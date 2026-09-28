@@ -138,7 +138,7 @@ const inquiryMd = (id, basis) => ["---",
    creation whose bytes carry an `id:` line is refused PROJECT_ID_IN_BYTES (C-59.2). A CREATION passes
    `id` null (no id line; `name` labels the title); a REVISION passes the minted id and carries it. */
 const projectMd = (id, { cites = [], summary = "A project.", name = id } = {}) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Project ${name}"`,
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", `title: "Project ${name}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites",
                                                               "    status: confirmed"])]

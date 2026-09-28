@@ -417,7 +417,7 @@ console.log("\n--- S-11 step 4: bulk RETIREMENT of Information, and why it is he
      (Membership v2 §7) and a creation naming one is refused PROJECT_ID_SUPPLIED;
      the bytes carry no `id:` line, no bundleId is sent, and the id is read from
      the answer. */
-  const pdoc = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\nreferences:\n  - rel: cites\n    target: ${infoIds[0]}\n    status: confirmed\n    note: ""\n---\n\n## Summary\n\nX.\n`;
+  const pdoc = `---\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\nreferences:\n  - rel: cites\n    target: ${infoIds[0]}\n    status: confirmed\n    note: ""\n---\n\n## Summary\n\nX.\n`;
   const created = await call("/promote", { base: null, snapKey: "PROJ-cites-new", author: "suite",
     files: [{ path: "bundle.md", text: pdoc, bytes: pdoc.length, sha256: sha(pdoc) }],
     /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */

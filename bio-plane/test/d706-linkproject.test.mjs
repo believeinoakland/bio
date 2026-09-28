@@ -155,7 +155,7 @@ const SO = await acquire("/open.html");
 const SL = await acquire("/loose.html");
 const M2 = await acquire("/mixed.html");
 
-const md = (id, type) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nD-706 fixture.\n`;
+const md = (id, type) => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}current_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nD-706 fixture.\n`;
 const file = async (id, type, tok, shas, label) => {
   const text = md(id, type);
   const r = await api(`op=promote&token=${tok}`, {

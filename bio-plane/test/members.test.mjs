@@ -226,7 +226,7 @@ console.log("\n--- a session cites, and the record says who did it ---");
   /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
      creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1), or PROJECT_ID_IN_BYTES (C-59.2) for an
      `id:` line; the creation names neither and `pid` is read from the answer. */
-  const pmd = `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-24T00:00:00Z"\nlast_updated: "2026-07-24T00:00:00Z"\n---\n\n## Session Log\n\n### Session 2026-07-24T00:00:00Z | Formation | interactive_agentic\nTrigger: elevation\nChanges: created.\n`;
+  const pmd = `---\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: forming\ncreated: "2026-07-24T00:00:00Z"\nlast_updated: "2026-07-24T00:00:00Z"\n---\n\n## Session Log\n\n### Session 2026-07-24T00:00:00Z | Formation | interactive_agentic\nTrigger: elevation\nChanges: created.\n`;
   const cr = await POST(`op=promote&${S}`, {
     base: null, snapKey: "20260724T130000Z_bbbb2222", author: "ruth",
     meta: { object_type: "project", group: "believe-in-oakland", title: "session project",

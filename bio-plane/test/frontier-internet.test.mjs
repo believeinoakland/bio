@@ -121,7 +121,7 @@ const infoMd = (id) => ["---",
    (Membership v2 §7): creation bytes carry no `id:` line (PROJECT_ID_IN_BYTES) and a
    PROJECT creation sends no bundleId (PROJECT_ID_SUPPLIED); P1 and P3 below are the
    ids read from the answers, the old strings surviving only as title labels. */
-const projMd = () => ["---", "object_type: project", "current_state: forming",
+const projMd = () => ["---", "object_type: project", "objective: \"Fixture objective.\"", "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 const readingOf = (captureSha) => ({

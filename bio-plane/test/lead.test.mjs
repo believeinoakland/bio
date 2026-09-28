@@ -350,7 +350,7 @@ const VERA = await enrol("vera", "member"), OTTO = await enrol("otto", "member")
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7) and a
    creation naming one is refused PROJECT_ID_SUPPLIED; the creation carries no id (in the body or the bytes)
    and the id is read from the answer. `label` keeps each title distinct, as the chosen id did. */
-const projMd = () => ["---", "object_type: project", "current_state: forming",
+const projMd = () => ["---", "object_type: project", "objective: \"Fixture objective.\"", "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 const mkProject = async (label, tok) => {

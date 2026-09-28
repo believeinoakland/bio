@@ -53,7 +53,7 @@ import { combine } from "../../jurisdictions/index.mjs";
 const SRC_DIR = process.env.REC203_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): N6 (entities R20, K143) took op=idmatch off id-spaces' legacy
-   adapter (`CMS_FLOOR`, `apnStanding`, `systemOfAddresses`, the old space names `cms`/`apn`) onto the view-first
+   adapter, since retired (N105, K143) (`CMS_FLOOR`, `apnStanding`, `systemOfAddresses`, the old space names `cms`/`apn`) onto the view-first
    services, over the view `jurisdictions.combine` makes of the instance's active profiles. The module arms ask the
    same services over the same view the plane is given below: Oakland's profile, the one M-119, M-132 and M-157
    measured. The spaces are now named `enactment` (was `cms`) and `parcel` (was `apn`). */

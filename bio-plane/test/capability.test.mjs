@@ -83,7 +83,7 @@ let seq = 0;
    extend, so 7.12's fork arm below is still refused UNSPLICEABLE_REFERENCES as it was when the fixture had
    no front matter at all (#spliceReferences opens a missing key, so an absent block no longer refuses). */
 const bundle = (id, type = "information") => {
-  const md = type === "project" ? `---\nobject_type: project\nreferences: none\n---\n# ${id}\n` : `# ${id}\n`;
+  const md = type === "project" ? `---\nobject_type: project\nobjective: "Fixture objective."\nreferences: none\n---\n# ${id}\n` : `# ${id}\n`;
   return {
     ...(type === "project" ? {} : { bundleId: id }), base: null, snapKey: `20260726T1200${String(++seq).padStart(2, "0")}Z_aaaa1111`,
     meta: { object_type: type, group: "believe-in-oakland", title: `title for ${id}`,

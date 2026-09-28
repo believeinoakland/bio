@@ -176,7 +176,7 @@ const infoMd = (id) => ["---",
 /* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
    (PROJECT_ID_IN_BYTES), so `id` null writes none; the plane mints the id and writes it. */
 const projectMd = (id, { title, cites = [] } = {}) => ["---",
-  ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`,
+  ...(id ? [`id: ${id}`] : []), "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length
     ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]

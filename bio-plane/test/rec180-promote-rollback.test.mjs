@@ -99,7 +99,7 @@ const IRIS = await enrol("iris", CAPS);
 const VERA = await enrol("vera", CAPS);
 
 /* A project document with no `id:` line — the shape a creation sends since REC-141. */
-const projectMd = (title) => ["---", "object_type: project", `title: "${title}"`, "current_state: forming",
+const projectMd = (title) => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 let n = 0;

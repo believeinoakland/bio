@@ -68,7 +68,7 @@ const reasonOf = (r) => r?.ok === true ? "LANDED" : (r?.reason ?? JSON.stringify
 /* A project document; `extra` lines go into the front matter (a closed_reason, say). No id line on a creation: the
    plane mints it (REC-141). */
 const projectMd = (title, { id = null, state = "forming", extra = [] } = {}) => ["---",
-  ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`, `current_state: ${state}`,
+  ...(id ? [`id: ${id}`] : []), "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`, `current_state: ${state}`,
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []", ...extra, "---", "",
   "## Thesis Summary", "", "A project.", "", "## Open Questions", "", "## Ruled Out", "",
   "## Session Log", "", "## Review Notes", ""].join(NL);

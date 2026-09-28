@@ -161,7 +161,7 @@ for (const [who, tok] of Object.entries({ "the member TOKEN (unfiltered, nobody 
 }
 /* THE SHARE: one lead, to one project sam has joined and vera was only invited to. */
 let snapSeq = 0;
-const projMd = () => ["---", "object_type: project", "current_state: forming",
+const projMd = () => ["---", "object_type: project", "objective: \"Fixture objective.\"", "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 const mkProject = async (label, tok) => {

@@ -166,7 +166,7 @@ const MEMBER = await (async () => {
    document that STATES a type; so the project's bytes now state none (its envelope still says `project`), and it
    is an ordinary creation that no arm of this suite's control can refuse. */
 const ADMIN_RUN = await (async () => {
-  const pmd = ["---", "current_state: forming", `created: "${NOW}"`, `last_updated: "${NOW}"`,
+  const pmd = ["---", 'objective: "Fixture objective."', "current_state: forming", `created: "${NOW}"`, `last_updated: "${NOW}"`,
                "references: []", "---", "", "## Summary", "", "The D-510 suite's surfacing-run project.", "", "## Session Log", ""].join(NL);
   const pr = await post("promote", { base: null, snapKey: "20260724T025900Z_d510run",
     /* D-563: kept — this project's document states no title, so the label is its name (C-86.3 refuses only a contradiction). */

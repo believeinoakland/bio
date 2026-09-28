@@ -143,7 +143,7 @@ const inquiryMd = (id, question, info, groupLine) => ["---",
   "## What Would Falsify This", "", "## Session Log", "",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
-const projectMd = (title, groupLine) => ["---", "object_type: project", "schema: project@1",
+const projectMd = (title, groupLine) => ["---", "object_type: project", "objective: \"Fixture objective.\"", "schema: project@1",
   `title: "${title}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",

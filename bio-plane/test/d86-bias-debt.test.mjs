@@ -105,7 +105,7 @@ const inquiryMd = (id) => ["---",
   "---", "", "## Question", "", `Did ${id} happen?`, "", "## What It Rests On", "",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
-const projectMd = () => ["---", "object_type: project",
+const projectMd = () => ["---", "object_type: project", "objective: \"Fixture objective.\"",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");

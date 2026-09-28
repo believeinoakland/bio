@@ -14,8 +14,8 @@ const SUITE = fileURLToPath(new URL("./rec203-idspaces.test.mjs", import.meta.ur
 const ID = join(SRC, "idspaces.mjs");
 const ARMS = {
   baseline: [],
-  /* Re-anchored (T3, N23) on the rewritten `judgePair` (id-spaces N2), which the old interface's adapter calls: the
-     same four mutations, on the new code's names (`sa`/`sb` are the ends' systems, `ra`/`rb` their recognised values). */
+  /* Re-anchored (T3, N23) on the rewritten `judgePair` (id-spaces N2), which op=idmatch asks through the view-first
+     services (the legacy adapter is retired: N105, K143): the same four mutations, on the new code's names (`sa`/`sb` are the ends' systems, `ra`/`rb` their recognised values). */
   independence: [[ID, "if (sa.origin === sb.origin)", "if (HOST(sa) === HOST(sb))"],
     /* the host each end was retrieved from (its origin where the end carries no address, as the module-level arms'
        ends do), defined beside the function so the arm is one expression */
