@@ -39,7 +39,7 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 - **R20** `memberSet({memberId, status, by})`: `NOT_AN_ADMIN` as R12; `BAD_STATUS` unless `active` or `revoked`; `NO_SUCH_MEMBER`; `ADMIN_REQUIRES_VOTE` for revoking an administrator. Revocation ends the member's sessions and revokes their keys in the same act. Reactivating a revoked administrator restores an ordinary member (`demoted: true`). `status_by` = `by`.
 
 **Declared and confirmed expertise**
-- **R21** `expertiseDeclare({memberId, label})` is the member's own act: `NO_SUCH_MEMBER`, `NOT_ACTIVE`, `NO_LABEL`, `ALREADY_DECLARED` when the label is currently declared or confirmed. Labels are trimmed, whitespace-collapsed, at most 120 characters.
+- **R21** `expertiseDeclare({memberId, label})` is the member's own act: `NO_SUCH_MEMBER`, `NOT_ACTIVE`, `EXPERTISE_NO_LABEL` (N285; its own row: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. Nothing was written."), `ALREADY_DECLARED` when the label is currently declared or confirmed. Labels are trimmed, whitespace-collapsed, at most 120 characters. *(not yet met: N285; minted as `NO_LABEL`)*
 - **R22** `expertiseConfirm({memberId, label, by, withdraw})`: `ADMIN_ONLY`; `NO_SUCH_MEMBER`; `NOT_DECLARED` for a label never declared; `ALREADY_CONFIRMED`; `NOT_CONFIRMED` for withdrawing what is not confirmed. An administrator may confirm for another administrator.
 - **R23** Every declaration, confirmation and withdrawal is a new entry; none is overwritten.
 - **R24** `expertiseList({memberId})` gives, per label, its current state, who set it and when, and its full history, and states that expertise gates nothing. No capability, sight or act depends on expertise.
