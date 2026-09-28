@@ -28,7 +28,7 @@
 
 - **jurisdictions** (layer 1) · N258 (K303).
 - **provenance** (layer 3) · N263. **content** (layer 4) · N264; N201 (its share: a member's leg on a machine-minted content row).
-- **legacy-store** (layer 10) · N265 (its share); N268; N191 (reads ai-runs' predicate, R42).
+- **legacy-store** (layer 10) · N265 (its share); N268; N270; N191 (reads ai-runs' predicate, R42).
 - **legacy-index** (layer 11) · N265 (its share).
 - **legacy-tests** (layer 11) · re-anchor or retire what T10's layers break; the reds T9 leaves, re-measured.
 
