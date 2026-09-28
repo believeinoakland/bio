@@ -31,6 +31,12 @@
  * reaching a branch the product's own route cannot is a finding about the ROUTE,
  * and it is reported as a DESIGN GAP rather than hidden inside a green arm.
  */
+/* DEAD SINCE T5, FOUND 2026-09-28 (legacy-tests T10): run in a scratch worktree @ 777083f36d, the baseline is AS
+   DECLARED (green) and EVERY one of the seven arms DID NOT ARM (each patch matched 0×). The text index's writer, its
+   bound, its unit-arm set (`CAPTURE_TEXT_UNIT_CONTAINERS`, now `observation-log/index.mjs`, xlsx/ods/csv armed by N134)
+   and the wire's `textUnits` left `store.mjs`/`index.mjs` with EXTRACTION #1 (5637083691, T5-2). Re-deriving each arm
+   onto its new home (and `armsopen`'s declaration onto C3b's HTML container, K332) is N57's sweep of the controls,
+   deferred as at T9; until then this harness reports seven findings and proves nothing. */
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
