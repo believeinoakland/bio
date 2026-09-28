@@ -1,6 +1,6 @@
 # consequences (T8)
 
-**Status** · session_011yhNE6j88pmjeN8wq7pUjm · depth 2 · WORKING · handled B3
+**Status** · session_011yhNE6j88pmjeN8wq7pUjm · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
