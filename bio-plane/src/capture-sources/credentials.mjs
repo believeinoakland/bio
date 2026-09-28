@@ -299,19 +299,17 @@ export class CaptureCredentials {
       /* END DEC-49 REGION is-credential-key-bound */
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
-      return CaptureCredentials.#supplyFailed();
+      /* DEC-49 REGION is-credential-stored */
+      /* Every check passed and the encryption or the write failed (`#store`): the transaction left nothing written.
+         Never the error's own words, which could carry what was passed. */
+      return refusal("CAPTURE_CREDENTIAL_SUPPLY_FAILED",
+        "the credential could not be encrypted and stored, so nothing was written");
+      /* END DEC-49 REGION is-credential-stored */
     }
   }
 
   /* R55: the encryption and the write, once every check has passed. Any failure here is `SUPPLY_FAILED`'s one
-     condition, and the transaction leaves nothing written. */
-  static #supplyFailed() {
-    /* DEC-49 REGION is-credential-stored */
-    /* Never the error's own words, which could carry what was passed. */
-    return refusal("CAPTURE_CREDENTIAL_SUPPLY_FAILED", "the credential could not be encrypted and stored, so nothing was written");
-    /* END DEC-49 REGION is-credential-stored */
-  }
-
+     condition, minted in `credentialSupply`'s catch, and the transaction leaves nothing written. */
   async #store({ kind, h, secret, scope, project, by, key }) {
     const id = `CRED-${b64(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, "").slice(0, 16)}`;
     const proj = scope === "project" ? project : null;
@@ -394,7 +392,9 @@ export class CaptureCredentials {
       return { ok: true, already: false, withdrawn: CaptureCredentials.#entry({ ...row, withdrawn_at: at, withdrawn_by: by }) };
     } catch {
       /* DEC-49 REGION is-credential-withdrawn */
-      return refusal("CAPTURE_CREDENTIAL_WITHDRAW_FAILED", "the credential could not be read or withdrawn, so nothing was changed");
+      /* The read or the withdrawal's write failed: the transaction changed nothing. Never the error's own words. */
+      return refusal("CAPTURE_CREDENTIAL_WITHDRAW_FAILED",
+        "the credential could not be read or withdrawn, so nothing was changed");
       /* END DEC-49 REGION is-credential-withdrawn */
     }
   }

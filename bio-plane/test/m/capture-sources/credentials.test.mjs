@@ -9,6 +9,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import {
@@ -507,4 +510,53 @@ test("R55, R56: the host and principal readers", () => {
   for (const h of ["", "a b", "x:1", "x/y", "u@x", "-x.example", "x..y", ".x", "x.", null, 5, "a".repeat(64) + ".example"]) assert.equal(hostNameOf(h), null, String(h));
   assert.deepEqual(["member:ann", "ann", "member:ann/tok", "class:daemon", "organisation/tok", "", null, "member:", "Member:ann"].map(principalMember),
     ["ann", "ann", "ann", null, null, null, null, null, null]);
+});
+
+/* N273: each C-105 row's `where` names a DEC-49 region that the guard (`civicos-ui/check-refusal-codes.mjs` arm C)
+   resolves: one marker pair, inside the function the row names, over the whole refusal (at least the guard's 4 lines
+   and 120 characters, from the opening marker's comment close to the END marker), minting the row's code. Read
+   twice: once here, independently of the guard's parser, and once by the guard itself. */
+const PLANE = fileURLToPath(new URL("../../../", import.meta.url));
+const REPO = fileURLToPath(new URL("../../../../", import.meta.url));
+
+test("R55, R57, R63: every C-105 row's `where` names a region inside its function, over its whole refusal, that mints its code", () => {
+  const src = readFileSync(`${PLANE}src/capture-sources/credentials.mjs`, "utf8");
+  const count = (s, sub) => s.split(sub).length - 1;
+  for (const code of CODES) {
+    const row = CAPTURE_CREDENTIAL_CHECKS[code];
+    const [, file, fn, region] = /^(\S+) ([#\w$]+) > ([\w-]+)$/.exec(row.where);
+    assert.equal(file, "src/capture-sources/credentials.mjs", code);
+    /* The function: its declaration at the class's method indent to its closing brace at the same indent. */
+    const decl = new RegExp(`\\n  (?:static\\s+)?(?:async\\s+)?${fn.replace(/[#$]/g, "\\$&")}\\s*\\(`).exec(src);
+    assert.ok(decl, `${code}: ${fn} is declared`);
+    const fnStart = decl.index;
+    const fnEnd = src.indexOf("\n  }\n", fnStart);
+    assert.ok(fnEnd > fnStart, `${code}: ${fn} closes`);
+    /* One marker pair. */
+    const open = `DEC-49 REGION ${region} `, close = `END DEC-49 REGION ${region} `;
+    assert.equal(count(src, close), 1, `${code}: one END marker for ${region}`);
+    assert.equal(count(src, open), 2, `${code}: one opening marker for ${region}`);   /* the END marker contains it once */
+    const openAt = src.indexOf(`/* ${open}`);
+    const closeAt = src.indexOf(`/* ${close}`);
+    const start = src.indexOf("*/", openAt) + 2;
+    assert.ok(openAt > fnStart && closeAt < fnEnd && closeAt > start, `${code}: ${region} lies inside ${fn}'s body`);
+    const span = src.slice(start, closeAt);
+    assert.ok(span.split("\n").length >= 4 && span.length >= 120,
+      `${code}: ${region} is ${span.split("\n").length} lines / ${span.length} characters, under the guard's 4 / 120`);
+    /* The whole refusal: its code minted there, and every refusal minted there is this row's. */
+    const minted = [...span.matchAll(/refusal\("([A-Z_]+)"/g)].map((m) => m[1]);
+    assert.ok(minted.length > 0 && minted.every((c) => c === code), `${code}: ${region} mints ${minted.join(", ") || "nothing"}`);
+  }
+});
+
+test("R55, R57, R63: the DEC-49 guard resolves every C-105 region and names none of this module's rows as a failure", () => {
+  /* The guard prints its failures on stderr and exits non-zero on other modules'; both streams are read. */
+  const run = spawnSync(process.execPath, [`${REPO}civicos-ui/check-refusal-codes.mjs`], { cwd: REPO, encoding: "utf8", maxBuffer: 64 << 20 });
+  const out = `${run.stdout}\n${run.stderr}`;
+  /* The guard ran to arm C and reads this family where it lives. */
+  assert.match(out, /arm A: HOMES — .*CAPTURE_CREDENTIAL_CHECKS src\/capture-sources\/credentials\.mjs/);
+  assert.match(out, /arm C: \d+ governed sites/);
+  const mine = out.split("\n").filter((l) => /^FAIL/.test(l)
+    && (l.includes("capture-sources/credentials.mjs") || CODES.some((c) => l.includes(c)) || /C-105\./.test(l)));
+  assert.deepEqual(mine, []);
 });
