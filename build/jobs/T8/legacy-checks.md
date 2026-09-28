@@ -1,6 +1,6 @@
 # legacy-checks (T8)
 
-**Status** · session_013E7FEb6pLnkTkmnNFrnupE · depth 2 · WORKING · handled B0
+**Status** · session_013E7FEb6pLnkTkmnNFrnupE · depth 2 · RUNNING until 2026-09-28T06:11:55Z (old-battery suites, this branch and base) · handled B0
 
 ## J1 · QUESTION
 
