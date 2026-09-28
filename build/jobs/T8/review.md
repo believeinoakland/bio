@@ -97,3 +97,19 @@ Until this is decided my branch's tests cannot load publication, so I am blocked
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 8 product files, 30 relative imports; 0 failures. coverage: 26 of 26 live requirement ids named by a test; 0 failures. ownership: 12 files changed; legacy-store 3 added, 920 removed; legacy-checks 0 added, 132 removed; 0 failures.
 
 Size (session_01B11NRC4vX3HGNywo9Ky3Cz): test runs 24, module lines 1003
+
+## J4 · REPORT
+
+1. **legacy-tests: source anchors this extraction moved** (each identical to base in behaviour):
+   - `reviewcopy.test.mjs` 98/0 → 95/3: the `review_grants` DDL read out of `schema.mjs`, and `#seesProjectDrafts`' two callers counted in `store.mjs`. Both now live in `src/review/schema.mjs` and `src/review/index.mjs` (`seesProjectDrafts`, called by `draftForMember` and `list`).
+   - `d543-instant-precision` 12/0 → 11/1: its named-helper count over the store corpus should include `src/review/`.
+   - `fence-e2e` 53/2 → 50/5: C-32.16's harvest over the store and the listed modules should include `src/review/`, whose family is `REVIEW_COPY_CHECKS`.
+   - `opaque-ids` 34/1 → 32/3: the DRAFT and RVG mint sites are in `src/review/index.mjs`.
+   - `mint-ledger` S7's printed counter set changed; DRAFT and RVG are seeded by the module (`reviewOf` → `record.seedMintLedger`). U4 and U5 pass.
+   - `d448-review-copy-translation` imports `REVIEW_COPY_CHECKS` from `bio-checks.mjs` and no longer loads; the family is `src/review/checks.mjs` now.
+   - `machine-fences` (the C-32.16 region) is unchanged at 80/8; its region is `src/review/index.mjs act > is-machine-review`.
+   - `civicos-ui/check-refusal-codes.mjs`: C-32.16 and C-87.1–.11 now come from a module family (the reevaluation and strength precedent). Re-pin from its print.
+2. **promotion / legacy-tests, the catalogue census:** 12 checks left `bio-checks.mjs` (C-87.1–.11, C-32.16). Promotion's next `CATALOG_VERSION` step and d470's re-pin include them, with layer 9's moves (K233).
+3. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` (not_product) is stale by `src/review/` and `store.mjs`; BOB regenerates at the close.
+4. **legacy-checks (catalogue decision):** `MINT_EXHAUSTED`, answered by the draft and grant mints when 64 draws collide, has no catalogue row. The refusal was pre-existing and is unreachable in practice. It is left as it was; a row would be a new check.
+5. **affordances / queue (layer 11):** they declare a use of `review`. Its instance is `reviewOf(ctx)`, and its ops are `casedraft`, `reviewgrant`, `reviewrevoke`, `reviewcopy`, `reviewcomment`, `casedrafts`.
