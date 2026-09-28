@@ -6420,23 +6420,12 @@ export class Store extends DurableObject {
     };
   }
 
-  /* D-442: the pinned bytes of one member, from the live row or its history — the lookup
-     `#ratifiedFindingsRestingOn` already makes, named once here for the case-document readers. */
-  #memberTextAtSha(bundleId, sha) {
-    if (!bundleId || !sha) return null;
-    const at = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
-                         bundleId, sha)
-            || this.#one(`SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
-                         bundleId, sha);
-    return at && typeof at.content === "string" ? at.content : null;
-  }
-
   #pinnedMemberBasis(docText) {
     const dfm = parseFrontmatter(String(docText || "")).data || {};
     const out = {};
     for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
       if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
-      const text = this.#memberTextAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      const text = recordOf(this.ctx).textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
       if (text === null) continue;
       const mfm = parseFrontmatter(text).data || {};
       out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
@@ -8464,7 +8453,7 @@ export class Store extends DurableObject {
       });
       const completedCase = roster.length && !stillAwaiting.length ? (() => {
         const first = rows.find((x) => x.target === roster[0]) || {};
-        const mt = this.#memberTextAtSha(roster[0], first.version_sha ?? null);
+        const mt = recordOf(this.ctx).textAtSha(roster[0], first.version_sha ?? null);
         const grp = mt ? ((parseFrontmatter(mt).data || {}).group ?? null) : null;
         return this.#caseEditionState(id, ed, grp);
       })() : null;

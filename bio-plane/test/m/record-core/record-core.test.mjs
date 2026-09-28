@@ -647,7 +647,7 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
   for (const m of ["allocId", "allocIdOp", "mintOpaqueId", "acquireLease", "readFile", "readImage", "auditPass", "declarePurge",
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
-                   "digestCensus", "snapKeyCensus", "registerAuditCheck"])
+                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -1072,4 +1072,73 @@ test("R59 R18: a registered audit check runs over every page bundle beside the c
   await rc.auditPass({ visible: (id) => id === ids[3] });
   assert.deepEqual(got.map((x) => x.bundleId), [ids[3]]);
   assert.deepEqual(got[0].ctx, {}, "no context given: an empty one");
+});
+
+/* ---- T8: R37's `files.content` (N162), R60 ---- */
+
+test("R37: files.content is in the read contract: the live file's inline text exactly as committed, NULL when blob-backed (N162)", () => {
+  const { s, rc } = fresh();
+  const f = Object.fromEntries(rows(s, `PRAGMA table_info(files)`).map((r) => [r.name, r]));
+  assert.equal(f.content.type, "TEXT"); assert.equal(f.content.notnull, 0);
+  const id = "INFO-2026-0001-a", text = "---\nid: x\n---\n\n  é 中文 \r\nend\n";
+  rc.commit({ bundleId: id, type: "information", snapKey: "K1",
+              files: [file("bundle.md", text), { path: "c.pdf", blobSha: "c".repeat(64), bytes: 5, sha256: "c".repeat(64) }] });
+  // meaning, read by a later module's own SQL: a scan of the live texts, joined to the bundles contract
+  s.db.exec(`CREATE TABLE scan_hits (bundle_id TEXT)`);
+  s.sql.exec(`INSERT INTO scan_hits VALUES (?)`, id);
+  const got = rows(s, `SELECT f.path, f.content, f.blob_sha, b.object_type FROM scan_hits h JOIN files f ON f.bundle_id = h.bundle_id
+                         JOIN bundles b ON b.bundle_id = f.bundle_id ORDER BY f.path`).map((r) => ({ ...r }));
+  assert.deepEqual(got, [{ path: "bundle.md", content: text, blob_sha: null, object_type: "information" },
+                         { path: "c.pdf", content: null, blob_sha: "c".repeat(64), object_type: "information" }]);
+  assert.equal(fileDigestOf({ text: got[0].content }), sha(text), "no trimming or line-ending change: content hashes to the stored digest");
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM files WHERE content LIKE ?`, "%中文%")[0].n, 1, "a scan in SQL finds the text");
+  rc.commit({ bundleId: id, type: "information", snapKey: "K2", files: [file("bundle.md", "later")] });
+  assert.deepEqual(rows(s, `SELECT content FROM files WHERE bundle_id=?`, id).map((r) => r.content), ["later"], "content is the LIVE file's text");
+});
+
+test("R60: textAtSha answers the bundle.md text whose SHA-256 is sha, live or historical, from this module's tables alone; null otherwise, never throwing", () => {
+  const { s, rc } = fresh();
+  const id = "INFO-2026-0001-a", other = "INFO-2026-0002-b";
+  rc.commit({ bundleId: id, type: "information", snapKey: "K1", files: [file("bundle.md", "v1"), file("n.md", "notes")] });
+  rc.commit({ bundleId: id, type: "information", snapKey: "K2", files: [file("bundle.md", "v2 é")] });
+  rc.commit({ bundleId: id, type: "information", snapKey: "K3", files: [file("bundle.md", "v3")] });
+  rc.commit({ bundleId: other, type: "information", snapKey: "K1", files: [file("bundle.md", "b1")] });
+  // live, and every historical snapshot
+  assert.equal(rc.textAtSha(id, sha("v3")), "v3", "the live file");
+  assert.equal(rc.textAtSha(id, sha("v1")), "v1", "a snapshot, once the live file has moved on");
+  assert.equal(rc.textAtSha(id, sha("v2 é")), "v2 é");
+  assert.equal(rc.textAtSha(id, sha("v1").toUpperCase()), "v1", "a digest is compared as hex, whatever its case");
+  // only bundle.md, only this bundle
+  assert.equal(rc.textAtSha(id, sha("notes")), null, "another path's text is not bundle.md");
+  assert.equal(rc.textAtSha(id, sha("b1")), null, "another bundle's text is not this bundle's");
+  assert.equal(rc.textAtSha(other, sha("b1")), "b1");
+  assert.equal(rc.textAtSha(id, sha("never held")), null);
+  assert.equal(rc.textAtSha("INFO-2099-0000-z", sha("v1")), null, "a bundle not held");
+  // an absent argument
+  for (const [b, d] of [[null, sha("v1")], ["", sha("v1")], [undefined, sha("v1")], [id, null], [id, ""], [id, undefined], [7, sha("v1")], [id, 7], [{}, []]])
+    assert.equal(rc.textAtSha(b, d), null, `${String(b)} / ${String(d)}`);
+  // held only as a blob: null; a blob row never hides an inline one with the same digest
+  const blobId = "INFO-2026-0003-c", d = "d".repeat(64);
+  rc.commit({ bundleId: blobId, type: "information", snapKey: "K1", files: [{ path: "bundle.md", blobSha: d, bytes: 9, sha256: d }] });
+  assert.equal(rc.textAtSha(blobId, d), null, "held only as a blob");
+  const mixed = "INFO-2026-0004-d";
+  rc.commit({ bundleId: mixed, type: "information", snapKey: "K1", files: [file("bundle.md", "inline")] });
+  rc.commit({ bundleId: mixed, type: "information", snapKey: "K2", files: [{ path: "bundle.md", blobSha: sha("inline"), bytes: 6, sha256: sha("inline") }] });
+  assert.equal(rc.textAtSha(mixed, sha("inline")), "inline", "the live blob row is passed over for the snapshot that holds the text");
+  // a row whose stored digest disagrees with its content is never answered as the pinned bytes
+  s.sql.exec(`UPDATE history SET sha256=? WHERE bundle_id=? AND snap_key='K2'`, sha("forged"), id);
+  assert.equal(rc.textAtSha(id, sha("forged")), null, "its text does not hash to sha");
+  assert.equal(rc.textAtSha(id, sha("v1")), null, "and its own bytes are not found by a digest it does not store");
+  s.sql.exec(`INSERT INTO history (bundle_id,snap_key,path,content,blob_sha,sha256,created) VALUES (?,?,?,?,?,?,?)`, id, "K9", "bundle.md", "v1", null, sha("v1"), "t");
+  assert.equal(rc.textAtSha(id, sha("v1")), "v1", "any snapshot that holds the text answers");
+  // it reads only this module's tables and writes nothing
+  s.db.exec(`CREATE TABLE decoy (bundle_id TEXT, path TEXT, content TEXT, sha256 TEXT)`);
+  s.sql.exec(`INSERT INTO decoy VALUES (?, 'bundle.md', 'decoy', ?)`, id, sha("decoy"));
+  assert.equal(rc.textAtSha(id, sha("decoy")), null, "another module's table is never read");
+  const before = dump(s);
+  for (const x of ["v1", "v3", "b1", "none"]) rc.textAtSha(id, sha(x));
+  assert.deepEqual(dump(s), before, "it writes nothing");
+  assert.equal(recordOf({ storage: storage({ schema: false }) }).textAtSha(id, sha("v1")), null, "never throws: no tables");
+  assert.equal(recordOf({ storage: { sql: { exec() { throw new Error("no"); } }, transactionSync: (f) => f() } }).textAtSha(id, sha("v1")), null,
+               "never throws: a failing read");
 });
