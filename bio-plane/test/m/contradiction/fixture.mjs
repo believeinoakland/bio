@@ -77,13 +77,14 @@ export function world({ gate = true, now = null } = {}) {
   /* The runs the stand-in gate answers for: {status, principal, hidden}. */
   const runs = new Map();
   const gateCalls = [];
-  if (gate) c.registerRunGate("test", ({ run: id, viewer, caller, act }) => {
-    gateCalls.push({ run: id, viewer, caller, act });
+  if (gate) c.registerRunGate("test", (id, viewer, caller) => {
+    gateCalls.push({ run: id, viewer, caller });
     const r = runs.get(id);
-    if (!r || r.hidden) return null;
-    return { status: r.status,
-             notPrincipal: caller === r.principal ? null
-               : { code: "AI_RUN_NOT_PRINCIPAL", check: "C-22.12", translation: "not the run's principal", detail: act } };
+    if (!r || r.hidden) return { found: false, running: false, refusal: null };
+    return { found: true, running: r.status === "running",
+             refusal: caller === r.principal ? null
+               : { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL", check: "C-22.12",
+                   translation: "not the run's principal", detail: "proposing is the principal's act" } };
   });
   const w = {
     st, host, record, membership, x, c, runs, gateCalls,

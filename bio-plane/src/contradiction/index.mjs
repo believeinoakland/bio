@@ -177,10 +177,10 @@ export class Contradiction {
 
   /* ---- the run gate (R21, K31) ---- */
 
-  /** R21: the slot `ai-runs` fills (its R37), `legacy-store` until then. `gate({run, viewer, caller, act})` answers
-   *  `null` for a run that is absent or that the viewer may not see (the same answer, §7.9), else `{status,
-   *  notPrincipal}`: the run's status, and the refusal a caller who is not the run's principal is relayed
-   *  (`AI_RUN_NOT_PRINCIPAL`, C-22.12), or null. One gate: a second registration is refused. */
+  /** R21 (K182): the slot `ai-runs` fills (its R37), `legacy-store` until then. `gate(run, viewer, caller)` answers
+   *  `{found, running, refusal}`: `found` false for a blank, absent or invisible run alike (§7.9); `running` whether
+   *  it is still running; `refusal` null, or ai-runs R5's `AI_RUN_NOT_PRINCIPAL` (C-22.12) for a caller who is not
+   *  the run's principal, which R13 relays. One gate: a second registration is refused. */
   registerRunGate(module, gate) {
     if (typeof module !== "string" || !module.trim() || typeof gate !== "function")
       return { ok: false, reason: RUN_GATE_MALFORMED, detail: "a run gate is registered by a module name and a function" };
@@ -705,22 +705,21 @@ export class Contradiction {
     /* R21: SIGHT, THEN POSITION, THEN STATUS — the tick's order (REC-152, REC-165), asked of the registered run gate.
        A run the viewer cannot see answers exactly as one never minted (§7.9), and with no gate registered nothing
        can say a run is open, so the answer is the same. */
-    const r = runId && this.#runGate ? this.#runGate.gate({ run: runId, viewer, caller,
-                                                             act: "proposing contradictions under a run" }) : null;
+    const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
     /* DEC-49 REGION is-candidate-no-run */
-    if (!r)
+    if (!r || r.found !== true)
       return refusal("CANDIDATE_NO_RUN",
         runId ? `no run named '${runId.slice(0, 60)}' is open in this store`
               : "pass run=<the run whose judgement this is>: a candidate is machine work and names the run it came from",
         { run: runId || null });
     /* END DEC-49 REGION is-candidate-no-run */
-    const np = r.notPrincipal;
+    const np = r.refusal;
     if (np)
       return { ok: false, reason: np.code, code: np.code, check: np.check, translation: np.translation,
                detail: np.detail, run: runId,
                note: "a proposed contradiction names a run its caller holds. Nothing was written" };
     /* DEC-49 REGION is-candidate-run-not-running */
-    if (r.status !== "running")
+    if (r.running !== true)
       return refusal("CANDIDATE_RUN_NOT_RUNNING",
         `the run '${runId.slice(0, 60)}' has ended; its work is read against the conditions it was formed under`,
         { run: runId });

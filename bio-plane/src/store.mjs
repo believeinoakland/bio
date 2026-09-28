@@ -503,7 +503,7 @@ import { PER_ITEM_CHECKS, TASK_ACTOR_CHECKS } from "../checks/bio-checks.mjs";
 /* REC-87 / IC-128: TRANSCRIBE's refusals, and the digest the `typed` step
    carries — the catalogue's own sync sha256, so the text digest and the content
    address are computed by one implementation. */
-import { TRANSCRIBE_CHECKS, LEAD_CHECKS, sha256HexSync } from "../checks/bio-checks.mjs";
+import { TRANSCRIBE_CHECKS, LEAD_CHECKS } from "../checks/bio-checks.mjs";
 /* D-536: a re-read of a capture is COMPARED with the reading before it, and the difference ATTRIBUTED
    to a tier and a member (`readingprov.mjs`, Part II §16 "Reading provenance"). */
 import { compareProvenance, PROVENANCE_SCHEME } from "./readingprov.mjs";
@@ -793,10 +793,11 @@ export class Store extends DurableObject {
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     capture.on("compute", "legacy-store", (m) => this.recordRuntimeObservation({ metric: m.metric, ms: m.value, detail: m.detail }));
     progressionsOf(ctx, { env }).onThreaded("legacy-store", () => this.#armScheduler());   /* R33: arms the overdue scan until scheduler is extracted */
-    contradictionOf(ctx).registerRunGate("legacy-store", ({ run, viewer, caller, act }) => {
-      const r = this.#one(`SELECT status, principal_plane FROM ai_runs WHERE run=?`, run);
-      return r && this.#aiRunInSight(run, viewer)
-        ? { status: r.status, notPrincipal: runPrincipalGate({ caller, principal: r.principal_plane, act }) } : null;
+    contradictionOf(ctx).registerRunGate("legacy-store", (run, viewer, caller) => {
+      const r = run ? this.#one(`SELECT status, principal_plane FROM ai_runs WHERE run=?`, run) : null;
+      return !r || !this.#aiRunInSight(run, viewer) ? { found: false, running: false, refusal: null }
+        : { found: true, running: r.status === "running",
+            refusal: runPrincipalGate({ caller, principal: r.principal_plane, act: "proposing contradictions under a run" }) };
     });
     ctx.blockConcurrencyWhile(async () => this.#migrate());
   }
