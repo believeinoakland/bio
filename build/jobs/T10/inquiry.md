@@ -30,3 +30,10 @@ My reading, built and pushed (f9c71352c7): R18 is live again, and N183 (2)'s bou
 Proposed R18 text (un-retiring it): "**R18** `exclusionsNaming(targetId, viewer)` answers every exclusion (`inquiry_exclusions`) naming the target that the viewer may see, each with its inquiry, edition, description, reason, author and date, in (inquiry, ord) order, read at most 500 rows per statement; an empty id answers an empty list and an absent viewer fails closed (R33). For `publication` (its R12)."
 
 If you rule instead that it goes, publication's `excludedBy` needs its own read of `inquiry_exclusions` (R40 would have to name that table in the read contract) before I delete it.
+
+## J4 · REPORT
+
+Found while applying N160; neither is mine to change.
+
+1. **reevaluation** (its R8, against inquiry R42): its registration `inquiry.onRaised("reevaluation", … => r.raise({…}).raised)` (`src/reevaluation/index.mjs` 1167–1168) answers only the dependents, so its own `listeners_failed` never reaches a deferral's, a division's or a re-read's reply. Inquiry now carries a listener's answer `{raised, listeners_failed}` unchanged as `reevaluation.listeners_failed` (a bare array still reads as the dependents). The fix is one line there: answer `r.raise({…})` whole instead of `.raised`. Until then R8's "the act's reply names it under `reevaluation.listeners_failed`" holds for reopen but not for dispose, divide or a re-read. reevaluation's module tests pass either way (39/39).
+2. **citation** (for its job, if not already known): on `tranche/T10` before my changes, `test/m/citation/` is 47/2 red (R5 "true exactly when the current state is retired…" and R6 "a citation exists only in the citing document's bytes…"). Unchanged by this job.
