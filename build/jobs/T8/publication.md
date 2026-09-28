@@ -149,3 +149,16 @@ Size (session_019xHaikQ3bX9KRMWSzbkdBb): test runs 24, module lines 5145
 - The R33 test drops its C-92.10–.12 arm, since ratification took those rows out of the catalogue.
 
 Size (session_019xHaikQ3bX9KRMWSzbkdBb): test runs 29, module lines 5165
+
+## J7 · COMPLETE
+
+**B7 applied.** Merged `tranche/T8`, which has case-authoring and review. The R33 test no longer reads `CASE_DERIVATION_CHECKS.CASE_IDENTITY_AMBIGUOUS`, since case-authoring holds C-44.1 now (K243). Its C-68.1 arm stays. Pushed on `job/T8/publication`.
+
+**Tests and checks on the merged tree:**
+- `node --test bio-plane/test/m/publication/`: 55 tests, 53 pass, 0 fail, 2 todo (R30, R32).
+- `format`: 0 failures.
+- `architecture publication`: 0 failures.
+- `coverage publication`: 40 of 40.
+- `ownership publication tranche/T8`: 0 failures.
+
+Size (session_019xHaikQ3bX9KRMWSzbkdBb): test runs 30, module lines 5153
