@@ -4,7 +4,7 @@
 
 **Size (K201).** T8 carries layers 8–10 and only the lower-layer entries they depend on (capture's N166 added by K206): legacy-checks (N129's record types, and its other entries, since its job runs anyway), jurisdictions (N130, which actions, filings and escalation read), runtime-limits (R26, which monitoring R23 reads), record-core (`textAtSha`, which publication and ratification read) and promotion (the case-document registration ratification fills). The other lower-layer entries (24 modules, small entries) are in `build/plan/draft-T9.md`. 21 jobs.
 
-**Jobs** · legacy-checks: LEGACY-CHECKS #3 session_013E7FEb6pLnkTkmnNFrnupE; jurisdictions: JURISDICTIONS #2 session_01UJt3cBwB4ov538dcch58B8; runtime-limits: RUNTIME-LIMITS #2 session_01A5CFL3k1MxyKAgWRcRPdu6
+**Jobs** · legacy-checks: LEGACY-CHECKS #3 session_013E7FEb6pLnkTkmnNFrnupE; jurisdictions: JURISDICTIONS #2 session_01UJt3cBwB4ov538dcch58B8; runtime-limits: RUNTIME-LIMITS #2 session_01A5CFL3k1MxyKAgWRcRPdu6; record-core: RECORD-CORE #4 session_01JFJXvFWShRsJWYA1ovQNJo
 
 Opened by BOB #54, 2026-09-28 ~05:30 UTC (PROCESS-MECHANICS §5), from `draft-T8.md` (drafted by BOB #51, cut by BOB #52, K201) with K223's changes; Bob's weekly meter at the opening: 58%. Branch `tranche/T8` starts at the commit that opened this plan (`main` @ 708cda1b02, T7 closed). Layers 1–3 were re-read for what T7's layer 11 changed (K219–K222): only N187 (capture) and N192 (legacy-checks) reach them, both folded below. The `index.mjs` re-cites in the layer 8–10 maps and the re-read of layers 7–11 are done during layers 1–3 (K223), before those layers open.
 
