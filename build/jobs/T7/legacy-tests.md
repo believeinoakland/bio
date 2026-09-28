@@ -33,3 +33,57 @@ BEHAVIOUR CHANGE (not re-pinned), capture-requests: `configured()` is now `unatt
 1. BEHAVIOUR CHANGE introduced in T7 (green on T6), owners intent and legacy-store: `overdue-successor` PART 2 fails because progressions never reads `env.BIO_NOW_MS`. `intentOf(ctx)` at `store.mjs:743` builds `progressionsOf(host, {record})` with no `env` (`intent/index.mjs:1146`), before legacy-store's `progressionsOf(ctx, {env})` at 761; the per-host memo keeps the first instance, so every progressions clock on the plane falls back to the wall clock. Fix is intent passing `env` (or legacy-store constructing progressions first). Not re-pinned.
 2. DECISION for you: `capturerequests` 3a (2 arms) drive `op=capturerequestdraining`, which capture-requests retired (K181). Retire the two arms, or keep them red? My reading: retire them (their op is gone by ruling). I carry on meanwhile.
 Everything else found is in my record's Progress notes and comes as REPORTs at COMPLETE.
+
+## J4 · COMPLETE
+
+**Entries applied** (layer 11's legacy-tests line, B1–B8; the Progress notes above give each family's figures and edits):
+- T6-14, layers 6–7 re-anchored or retired, suite by suite, per every forwarded record: CAPTURE #3 J2.2–3, PROVENANCE #2 J3, CONTENT #2 J2, EXTRACTION #2 J2.2, CONTRADICTION #1 J2, CITATION #1 J1.1–7, STRENGTH #1 J5, SKILLS #1 J4 (the two suites deleted by BOB on Bob's approval, K215), INQUIRY #1 J2.2, AGENT-WORKER #1 R1/R4, BASIS-VERSIONS #1 J4.1, CAPTURE-REQUESTS #1 J2.5, RUN-PRODUCTIONS #1 J2.5, AI-RUNS #2 J6.1, N158, REEVALUATION #1 J2.10, INTENT #1 J4.1 (every listed suite's fixture states an `objective`), QUEUE #1 J2.2/J2.6, AFFORDANCES #1 J4.4 (as far as the tree allows before legacy-index), LEGACY-CHECKS #2 R10 (the guard, arm G, the old-battery re-pins), PROMOTION #5 R3 (d470's 1.36.0), record-core R3 (listed, owned elsewhere).
+- `fleetbundles`: agent-worker's inputs pinned to the manifest's 132 (B1).
+- K187's hunch fixtures, the four it names and nine more found red on the same cause (multifinding, audit-inheritance, grounds, inquiryground, earnedbasis, reevaluation, publish, publishedcase, caseflip, reviewcopy-inband): each earns its grade by a resolution, testimony or bare legs; no assertion weakened.
+- K216 (bounds' unconfigured drain on a plane with neither token), K218 (overdue-successor left red as N179; the two `capturerequestdraining` arms retired).
+- N124 prose; N46 (already membership's since T5-12, confirmed); N53's share (the skills suites released, K215).
+- The DEC-49 guard 145 → 119, every remaining failure another module's; `verdict-reader.mjs` reads route answers (T4/T5's deferral with N87).
+- Controls re-anchored where their suites moved (about 45 drivers; anchors checked to match once; run whole only where they work in a temp tree: project-sight, d526, nc-d178, nc-rec114 arm e — each AS DECLARED); m025's dead anchors 11 → 2.
+
+**The old battery** (every `bio-plane/test/*.test.mjs`, 369 suites, on this branch after merging tranche/T7 @ B6): **187 red at the job's start (98 in the checkout once the objective fixtures landed), 25 red now**, each owned below. Every red is measured on the merged tranche.
+
+**Deferred, and why:**
+- N31 arm (j): `tools/` has not retired (N14), so `fleet-bundle.mjs`'s remedy text stands and the arm with it.
+- N57's remainder and the four T5 control arms: about 230 controls not anchored on code T7 moved were not run (each patches the shared checkout and runs its suites several times; days of CPU). Named still-stale drivers: strengthpair, dec65-strength-reach, caseproduction, d280-strengthbar, independence, rung-ladder controls; nc-rec161, nc-rec192, nc-rec105; the ai-runs family's drivers (airun-principal, airun-contextkind, airuns, d85, rec165, rec168, rec169, rec171, rec172, rec177, rec207, d260, analystvocab, aicredential); `conclude-project.control.mjs` arms a–f (wants re-deriving on basis-versions: m025 A4); `current.control` arm 7's fragment; basis-versions' map §4 controls outside its family.
+- N70's `owed-controls` share: nothing in the suite is mine; A13b is legacy-index's (K153/N88).
+- Measuring rung-ladder's three and affordances' one intent-ops arms waits for legacy-index's merge (B4/B5).
+- One process departure: a worker read the longest suites of the basis-versions family around every edit and source read rather than every line.
+
+**REPORT: found in other modules** (reds left, each red on the merged tranche; none re-pinned):
+- **BEHAVIOUR CHANGES:** (a) ai-runs R40/C-109.1: no extract run opens while `verification_recorded` is null, so `op=extractpropose` is unreachable on a live plane (rec165-production-principal 28/7, extractrun 6/2). (b) agent-worker R40/D-611: d260-resume's dispatched instance run makes a real model call to `api.anthropic.com` from the suite (401 → `MODEL_REFUSED`); the worker has no outbound stub or endpoint setting (21/2). (c) strength: `#walk` names an inert version leg with the record's `why` (`leg.why ||`), not the arithmetic's reason (strengthpair 90/1). (d) intent (N179, K218): progressions never reads `BIO_NOW_MS` (overdue-successor 21/1). (e) capture-requests R6: its instance-only clock ignores a request's `at`, so scheduler FL-4's two requests cannot expire apart; a test clock seam is wanted (scheduler 47/4).
+- **legacy-checks:** catalogue `where`s still naming `src/store.mjs` for code T7 moved (to basis-versions, inquiry, capture-requests, run-productions: the guard's 26 lines and its orphan markers; VERSION_ACT_CHECKS, BASIS_VERSION_CHECKS, C-32.2/7/8, C-33.1/2/13/22/23/33–37, C-33.40 naming the dead `actNoBasis`; capturerequests' conduct `where`; refusal-wire's D-494 `where`s). Knock-on guard floors (regionLines, codesChecked, outcomeReturns, inheritedVerdicts) move with them.
+- **progressions:** 42 guard lines (C-100 regions undeclared, the `fn1|fn2` grammar, rows for other modules' codes).
+- **capture-sources:** CAPTURE_CREDENTIAL_CHECKS rows have no `where`; `NO_SUCH`'s translation is 19 characters; `NO_KEY`, `NO_SUCH` are two conditions each; new unbounded reads `credentialList`, `credentialsForFetch`.
+- **intent and reevaluation:** C-110.1–.9 claimed by both INTENT_CHECKS and REEVALUATION_ACT_CHECKS: one renumbers.
+- **intent:** `where` grammar (`mint.X`, `setCondition|check`, `check >` for `#checkProject`/`#checkPursuit`); `is-dead-end-noted` under the region floor; arm G `BAD_GRADE`, `NO_STATEMENT`, `NO_SUCH_PROJECT`; `#measure` joins the amplification class and five unbounded reads (`#departures`, `#measure`, `#triaged`, `pursuitOf`, `watchSet`: derivation-bounds 69/4); `op=pursuit` publishes collections off unbounded reads; `doc.mjs` restates `GRADES` (hygiene C); `intent_triage_key` index unused (airuns 53/1).
+- **reevaluation:** `adoptVersion`/`keepVersion > is-version-choice` names the wrong function; `#records`, `raiseNotices` unbounded; `op=reevaluationnotices` capped but undriven (bounds).
+- **inquiry:** `dispose > is-dispose-shared` names `dispose` for `#dispose`; `projectsDrawingOn`, `staled`, `exclusionsNaming` (unused; duplicates legacy-store's `excludedBy`) unbounded.
+- **basis-versions:** `schema.mjs:52` dropped D-423's comment on `grade_axis` (hygiene 1333/2).
+- **strength:** its own `VERSION_LEGS_MAX` beside basis-versions' `BASIS_VERSION_LEGS_MAX` (bounds 203/3, two); `where` names `#refusePairComposed` for `refusePairComposed`.
+- **capture-requests:** `waitSource` unbounded; CAPTURE_FETCH_FAILED and CAPTURE_REQUEST_NOT_RETRYABLE never driven (capturerequests 135/2 with the conduct `where`).
+- **capture:** `op=navchanges` capped but undriven (bounds).
+- **ai-runs:** `rerun_of` neither published nor declared withheld (run-conditions P1/P6); the D-486 subtraction written twice with legacy-store's `#hiddenSets` (observation-log 130/1, observation-content 74/1).
+- **run-productions:** `interim.mjs` still reads `ai_runs` in a dead arm (run-conditions W6).
+- **skills:** `skilldoctrine.mjs`'s copy of `DEPLOYMENT_SEQUENCE` says `mode` is unchecked; re-export from `ai-runs/deployment.mjs` (skillsequencing 26/1).
+- **promotion:** CATALOG_VERSION unmoved after T7 took 61 rows from the catalogue (d470 A3/A9; now count 489, digest 5e14e469…9246c4).
+- **legacy-store:** `actNoBasis` dead, D-484's one site now two copies (inquiry, basis-versions); five read routes unclassified in `PROJECT_NAMING_READS(_NOT)` (project-sight 242/1; red on T6).
+- **legacy-index:** A13b (owed-controls 47/1); the codeless `capturerequestdraining` OPS row for admin and probe (refusal-wire 40/2); intent's OPS/NEEDS rows (rung-ladder 46/3, affordances 98/1).
+- **affordances (N45):** `projectleave` offered to pam@PC, refused LAST_COMMITTED_OWNER (d311-roster-affordances 20/1).
+- **connections:** THEME_WITHDRAW_CHECKS duplicates C-81.11–.14 (N125). **bias**, **observation-log**, **entities**, **membership**: one guard line each (a `where` naming `#promotionCheck`; `is-never-looked-stored` unmarked; `is-alias-named` 99 characters, N126; `is-hosting-access-holders` 3 lines); observation-log arm G `AI_LOG_STATE_UNKNOWN`.
+- Long-standing, unchanged owners (N70/T5): meaning-bounds 94/2 (the unjudged list; D-240(b), now also reevaluation's `adoptVersion` default and citation's `#document` ×2); civicos-ui `check-semantics.mjs` docprofile drift (legacy-ui, N68).
+- **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale (fleetbundles 92/4): BOB's at the layer close.
+
+**Tests and checks** (on `job/T7/legacy-tests` after merging tranche/T7 @ B6):
+- The old battery, every `bio-plane/test/*.test.mjs`, 369 suites: 344 green, 25 red, each above. `civicos-ui/test/refusal-codes.test.mjs`: 158 assertions, all green. `node civicos-ui/check-refusal-codes.mjs`: 119 failures, all other modules'. `node civicos-ui/check-semantics.mjs`: the one N68 red. `civicos-ui/test/` fixtures are legacy-ui's (N168), not run as a battery.
+- Layer tests: none named in `build/manifest.md`.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio legacy-tests` → architecture: 867 product files, 2242 relative imports (65 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio legacy-tests` → coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T7` → ownership: 174 files changed by legacy-tests between tranche/T7 and HEAD; 0 failures
+
+Size (session_01EbJbvw2MqsPnPv5f2PjGVo): test runs 24, module lines 4515
