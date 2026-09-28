@@ -12,7 +12,9 @@
  * REACHED as `calibrationOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call
  * with `deps` and returned to every later caller. `deps`:
  *   record  record-core, `recordOf(ctx)` unless a test passes its own; its `transact` and `declarePurge` are used.
- *   order   the modules' total order (ids), which `onCalibration` listeners run in; unknown modules run last.
+ *   order   the modules' total order (ids), which `onCalibration` listeners run in: membership's `MODULE_ORDER` (its
+ *           R83), the one list every module orders its listeners by, unless a test passes its own. Unknown modules
+ *           run last, in the order they registered.
  *   now     the module's clock, milliseconds since the epoch (default: the wall clock). A caller's body never sets it.
  * The ops (`calibrations`, `calibrate`, `calibrationsubject`, `calibrationsignal`) are `calibrationOps`' entries,
  * which the legacy store's dispatcher spreads in.
@@ -21,6 +23,7 @@
 import { checkCalibration, checkSignal, compare, drifted, nextProbeDue, cadenceSentence,
          CALIBRATION_CADENCE_MS } from "../calibration.mjs";
 import { recordOf } from "../record-core/index.mjs";
+import { listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { CALIBRATION_CHECKS } from "./checks.mjs";
 import { CALIBRATION_TABLES } from "./schema.mjs";
 
@@ -44,7 +47,7 @@ class Calibration {
   constructor({ sql, record, order, now } = {}) {
     this.#sql = sql;
     this.#record = record;
-    this.#order = Array.isArray(order) ? order : [];
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
     this.#now = typeof now === "function" ? now : () => Date.now();
   }
 
@@ -121,14 +124,12 @@ class Calibration {
   /* ---------------------------------------------------------------- R12: the listeners */
 
   /** R12: a later module registers once; after each calibration `calibrationRecord` records, every listener runs in
-   *  the same transaction, in the modules' order, and returns a list of obligations, or `{obligations, truncated}`. */
+   *  the same transaction, in the modules' order, and returns a list of obligations, or `{obligations, truncated}`.
+   *  A malformed or repeated registration is refused through membership's `listenerRefusal` (its R81; N202), the one
+   *  site of `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
   onCalibration(module, fn) {
-    if (!nonEmpty(module) || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED",
-               detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module,
-               detail: `${module} has already registered its calibration listener` };
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
     this.#listeners.push({ module, fn, seq: this.#listeners.length });
     this.#listeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };

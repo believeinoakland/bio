@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { recordOf } from "../../../src/record-core/index.mjs";
+import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { calibrationOf, calibrationOps, checkCalibration, CALIBRATION_CHECKS, CALIBRATION_CADENCE_MS,
          CALIBRATION_LIMIT_DEFAULT, CALIBRATION_LIMIT_MAX, DRIFT } from "../../../src/calibration/index.mjs";
 import { storage, dump } from "./storage.mjs";
@@ -415,14 +416,28 @@ test("R12: a listener that cut its list short answers {obligations, truncated}, 
   assert.equal(r.obligations_raised, 1);
 });
 
-test("R12: a module registers once (LISTENER_DECLARED); a malformed registration is refused", () => {
+test("R12: a module registers once (LISTENER_DECLARED); a malformed registration is refused, both through membership's listenerRefusal", () => {
   const { c } = fresh();
   assert.equal(c.onCalibration("extraction", () => []).ok, true);
   const again = c.onCalibration("extraction", () => []);
-  assert.equal(again.ok, false); assert.equal(again.reason, "LISTENER_DECLARED");
-  for (const [m, f] of [["", () => []], [null, () => []], ["x", null], ["x", "fn"]])
-    assert.equal(c.onCalibration(m, f).reason, "LISTENER_MALFORMED");
+  assert.equal(again.ok, false); assert.equal(again.reason, "LISTENER_DECLARED"); assert.equal(again.module, "extraction");
+  assert.deepEqual(again, listenerRefusal([{ module: "extraction" }], "extraction", () => []),
+                   "the refusal is membership R81's own, minted at its one site");
+  for (const [m, f] of [["", () => []], [null, () => []], [7, () => []], ["x", null], ["x", "fn"], [undefined, undefined]]) {
+    const r = c.onCalibration(m, f);
+    assert.equal(r.ok, false); assert.equal(r.reason, "LISTENER_MALFORMED");
+    assert.deepEqual(r, listenerRefusal([], m, f));
+  }
   assert.equal(rec(c).obligations_raised, 0, "the refused registrations run nothing");
+});
+
+test("R12: with no order given, listeners run in membership's MODULE_ORDER, unknown modules last in registration order", () => {
+  const { c } = fresh();
+  const seen = [];
+  const late = MODULE_ORDER.filter((m) => MODULE_ORDER.indexOf(m) > MODULE_ORDER.indexOf("calibration")).reverse();
+  for (const m of ["unlisted-b", ...late, "unlisted-a"]) c.onCalibration(m, () => { seen.push(m); return []; });
+  rec(c);
+  assert.deepEqual(seen, [...late.slice().reverse(), "unlisted-b", "unlisted-a"]);
 });
 
 test("R12 R4: a listener that throws, or answers anything but a list, fails the whole record", () => {
