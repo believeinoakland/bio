@@ -131,3 +131,7 @@ Found in other modules. The full text is in my record's "Found in other modules"
 6. **queue** (N112): `#counts` now reads `runProductionsOf(ctx).counts(hid)`.
 7. **connections**: `m/connections/factory.test.mjs` R24/K155 is red on the base too (capture R58's refusal of a second `env`).
 8. **Generated artifact**: `bio-plane/dist/bio-plane.bundled.mjs` is stale.
+
+## J3 · COMPLETE
+
+Complete; handled through B4. Extracted to bio-plane/src/run-productions/ (legacy-store −1,615/+24). Every entry is applied: D-595 (R9), R13, R14, strength R26–R27 through strengthOf, and citation R5 through citationOf. Module tests: 33 pass, 0 fail. format, architecture, coverage and ownership all report 0 failures. Deferred: the rows stay in the catalogue until skills re-points, and the ai-runs and basis-versions interim stays until their CHANGEs. REPORT J2 has the rest. The record is on job/T7/run-productions @ HEAD.
