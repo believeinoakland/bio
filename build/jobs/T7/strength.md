@@ -30,3 +30,55 @@ R5 has one reading I should confirm. The case is a hunch leg whose target is ano
 Both readings make the live pair and the pair over a version agree, and switching between them is a one-line change. Unless you answer otherwise, I complete on my reading.
 
 For your layer close: in the old battery, the fixtures that author connection grades as hunches now read differently by R5 (K102). These are `strength`, `inquirystrength`, `dec65-strength-reach` and `caseproduction`. The rest of the red there is source-text pins on the moved code (`strengthpair`, `independence`, `partitionindependence`, `d280-strengthbar`, `machinefences-dec49`'s row census). I will list them in my record for legacy-tests.
+
+## J5 · COMPLETE
+
+**Completion.** `strength` is extracted per its map and requirements, on `job/T7/strength`. The module is `bio-plane/src/strength/`: `index.mjs` (the services, the ops and the factory `strengthOf(host, deps)`, K61), `arithmetic.mjs` (R1–R4, pure), `checks.mjs` and `schema.mjs`. legacy-store delegates to it.
+
+**Entries applied (layer 6, T6-4):**
+- **Extraction (K3, K86, K102).** Moved out of `store.mjs`:
+  - the bar (`#barAxisWords`, `#projectBar`, `strengthBarSet`, `strengthBarOf`);
+  - the axes and the arithmetic;
+  - the walk, `strengthOf`, `inquiryStrength` and the redaction;
+  - `#independenceOf`;
+  - `versionStrength`, `partitionIndependence`, `#versionLegsAsMembers` and `#refusePairComposed`;
+  - the six ops: `strength`, `inquirystrength`, `versionstrength`, `partitionindependence`, `strengthbar` and `strengthbarof` (now `strengthOps`).
+
+  Also moved: C-30, C-71 and C-32.9 out of `bio-checks.mjs` (R24), and `group_strength_bar` out of `schema.mjs`, now declared to purge as exempt (R23).
+
+  legacy-store keeps the following, with `strengthModule(this.ctx)` doing the strength work:
+  - a `strengthOf` delegate and `static STRENGTH_AXES`;
+  - the wiring of the inquiry and basis-versions deps;
+  - `op=suggest`'s calls, now to `candidatePair` and `candidateIndependence`;
+  - `publishCase` and `reviewCopy`'s calls to `projectBar`.
+- **R5 (K102).** A hunch is inert in every pair and named as a hunch. It inherits nothing, on my reading in J4.
+- **R15 (K102).** Only an active administrator may set the group's default bar. Anyone else is refused `STRENGTH_BAR_NOT_ADMIN`, row C-107.1 (K181).
+- **N60 (R26–R27).** `candidatePair` and `candidateIndependence` are built as their Provides say (J1).
+- **N82.** No share for strength; it belongs to inquiry (J3).
+- **No carried rows** (D-660 and D-736 were dropped).
+
+**Behaviour to know:** every path now bounds a capture grade by what the record earns, at every depth (R1, R2, R19). That covers the pair over a version, whose sub-inquiries were uncapped before, and a candidate's legs. Improved in this job: an inherited grade's `through` now names the actual leg however deep; before, it named the intermediate inquiry.
+
+**Deferred:**
+- R23's cache table, and R13's registration with promotion: N137 (K181). legacy-store's `#writeStrengthProjection` still writes the `bundles` columns, taking the pair from `strength`.
+- `STRENGTH_STATES` stays in the catalogue, because the C-2.8 published-strength arms there read it (P17, decided).
+
+**Found in other modules:**
+- `skills`: `skilldoctrine.mjs` must import `VERSION_STRENGTH_CHECKS` and `VERSION_STRENGTH_INERT_SOURCES` from `../strength/index.mjs`. The plane does not boot until then. Both merge at the layer close (K181).
+- `legacy-tests`, from runs with that import re-pointed locally:
+  - These fixtures author connection grades as hunches, and now read differently by R5: `strength` (it throws on a null weakest), `inquirystrength` (14 fail), `dec65-strength-reach` (8), `caseproduction` (18).
+  - These pin the moved source text or the row census: `strengthpair` (it imports C-30 from the catalogue), `independence` (1), `partitionindependence` (1), `d280-strengthbar` (1), `machinefences-dec49` (2).
+  - `versiongrade` (28/0), `dec65-single-part` (37/0) and `suggest` (101/0) pass.
+- The plane bundle (`bio-plane/dist`) is stale from this job's source changes, for regeneration at the layer close (§14).
+- `inquiry` R16's `basisFor` has no bound. `partitionIndependence` reads it whole and then slices it at 501 legs. The SQL read it replaced had `LIMIT`.
+- Whoever merges second of inquiry and basis-versions must re-point legacy-store's one strength wiring statement (`store.mjs`, the constructor) to `inquiryOf` and `basisVersionsOf`. My module also imports `VERSION_MACHINE` from the catalogue; if basis-versions moves it, re-point that import too.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/strength/`: tests 40, pass 40, fail 0. Negative controls were run: with the hunch rule removed, 2 tests fail; with the capture bound removed, 4 fail.
+- The manifest names no layer tests.
+- `format`: 69 modules, 64 requirements files; 0 failures.
+- `architecture`: 8 product files, 22 relative imports; 0 failures.
+- `coverage`: 27 of 27 live requirement ids named by a test; 0 failures.
+- `ownership`: 12 files; legacy-store 15 lines added, 1,890 removed; legacy-checks 0 added, 229 removed; 0 failures. The 15 added lines are the import, the wiring, the delegates and the calls listed above.
+
+Size (session_01HtJxXzMSHvzQXnWcPtibm8): test runs 10 (module) and 22 (old-battery suites), module lines 1,369
