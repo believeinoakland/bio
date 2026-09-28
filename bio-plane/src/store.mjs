@@ -705,6 +705,7 @@ export class Store extends DurableObject {
        the single-bundle projection's decorations (actions, inquiry, ai-runs), the frontier's hidden-run tail (ai-runs,
        D-486) and the selection sweep's arming (scheduler). */
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
+    aiRunsOf(ctx, env);   /* ai-runs (K61) registers with retrieval before legacy-store does, in the modules' order */
     retrieval.registerActionFacts("legacy-store", (md, nowMs) => {
       let fm = null;
       try { fm = parseFrontmatter(md).data; } catch { return null; }
