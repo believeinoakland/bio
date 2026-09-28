@@ -28,3 +28,24 @@ Every other C-100 code stays, each `where` naming one function and one marked re
 2. **intent** (N208's share): with C-100.12 gone, arm G now reports `INTENT_CHECKS.NO_SUCH_ENTITY` as minted at two sites (entities' R36 and `src/intent/index.mjs`): intent's site should call entities' `noSuchEntity` and its row give way (entities R36 already says so).
 3. **progressions' own requirements, stale marks** (yours to strike; each built and tested at the interface, coverage 34/34): R8 and R14 `not yet met: K102` (versions of threads and exceptions: tests "R8", "R14 R26"); R19 `not yet met: no row …` (built: `open_finding_count` published per instance, test "R19"); R27 `not yet met: no row …` (met as reworded, test "R27 R28"); R31 `not yet met: no row; K102` (test "R31"); R33 `not yet met: N63; threadInstance arms the store's scheduler itself` (it does not: nothing in `store.mjs` registers or arms on a thread, so N63's mark no longer holds and there was nothing to build; R33's notice is built and tested; the scheduler's registration is layer 10's). The T10 marks on R6, R14, R33 are met by this job.
 4. **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` (the plane's, `not_product`) bundles `src/progressions/`; no worker bundle reads it. For your regeneration at the layer's close.
+
+## J4 · COMPLETE
+
+**Completion (step 7).** Branch `job/T10/progressions`, merged with `tranche/T10` after B2/B4 (entities R36, R27's wording).
+
+**Entries applied.**
+- **N208:** R6 and R14 answer an unregistered entity through entities' `noSuchEntity` (R36), byte for byte; C-100.12 and its region deleted.
+- **N202:** R33's `onThreaded` registers through membership's `listenerRefusal` (R81; a malformed or second registration answered, never thrown) and keeps listeners in `MODULE_ORDER` (R83), a module outside it last in registration order; C-100.23 deleted.
+- **N242 / N118's share (K329):** every C-100 `where` names one function and one marked region wrapping the whole refusal; `NO_SUCH_PROGRESSION`, `NO_STAGE`, `BAD_STAGE`, `NO_CAPTURE`, `NOT_CONCERNED`, `NO_REASON` and `NO_ENTITY` are each minted in one private helper (`#declared`, `#stageNamed`, `#stageOf`, `#documentNamed`, `#concerned`, `#reasonStated`, `#entityNamed`) that every act calls; `NO_KEY` is row-less (`GENERIC_CODES`, `generic`), C-100.1 retired; the other five keep their rows (N285).
+- **N63:** its mark no longer holds (J3 item 3): nothing to build.
+- Also: the test fixture answers at workerd's shape (cursor, 50-byte LIKE/GLOB cap, K316); the module's SQL indexes no cursor and uses no pattern.
+
+**Deferred:** none of this job's. R32 stays `test.todo` (deferred by K102). **Other modules:** J3 (legacy-tests' guard instruments, intent's `NO_SUCH_ENTITY` site, the stale marks, the plane bundle).
+
+**Tests and checks run.**
+- `node --test bio-plane/test/m/progressions/`: tests 41, pass 40, fail 0, todo 1 (R32).
+- Users of progressions and the provider: intent 35/0, scheduler 46/0, affordances 73/0, queue 10/0, monitoring 43/0, entities 38/0 (pass/fail). No layer tests (manifest).
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture … progressions`: 10 product files, 31 relative imports; 0 failures. `coverage … progressions`: 34 of 34 live requirement ids named by a test; 0 failures. `ownership … progressions tranche/T10`: 8 files changed; legacy-store 0/0, legacy-checks 0/0; 0 failures.
+- DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`, legacy-tests'): 121 → 89 failures, progressions' 43 → 5 (J3).
+
+Size (session_01AUvfDhJvdEvaWM3SYVnhr6): test runs 7, module lines 1605
