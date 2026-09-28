@@ -145,7 +145,10 @@ export function cdxQuery(address, { limit = 40 } = {}) {
   const u = new URL("https://web.archive.org/cdx/search/cdx");
   u.searchParams.set("url", String(address).replace(/^https?:\/\//, ""));
   u.searchParams.set("output", "json");
-  u.searchParams.set("limit", String(-Math.abs(limit)));
+  /* A limit that is not a whole non-zero number (absent, NaN, a word, 0) asks the default 40, never `limit=NaN`
+     or `limit=0`, which the archive would read as something nobody asked. */
+  const n = Math.abs(Math.trunc(Number(limit)));
+  u.searchParams.set("limit", String(-(Number.isFinite(n) && n > 0 ? n : 40)));
   u.searchParams.set("fl", "urlkey,timestamp,original,mimetype,statuscode,digest,length");
   return u.toString();
 }

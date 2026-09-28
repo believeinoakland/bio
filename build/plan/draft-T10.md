@@ -22,9 +22,11 @@
 - **strength** · N152 (its share); N184; N218; N208 (its site calls membership's helper; `BAD_GRADE` its own row).
 - **ai-runs** · N138 (its share: delete `airun.mjs`' copy, case-authoring now holding it); N190; N191 (keeps the one D-486 predicate and exports it; legacy-store reads it); N223 (its share).
 - **run-productions** · N165 (its share); N194; N201.
-- **capture-requests** · N169; N141; N188; N223 (its share); N224 (its share).
+- **capture-requests** · N169; N141; N188; N262; N223 (its share); N224 (its share).
 - **skills** · N156; N157 (its share); N245 (its share).
 - **agent-worker** · N153 (its share); N157 (its share).
+
+- **provenance** (layer 3) · N263.
 
 ### Layers 7–10
 

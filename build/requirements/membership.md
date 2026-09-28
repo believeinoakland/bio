@@ -124,6 +124,8 @@ Terms. *Administrators* are the founder (the root of trust's session, id `admin`
 **`INLINE_MAX`** (a constant)
 - **R82** (N70, K285) `hostingAccess({limit})` (R11) and `memberPairings({viewer, administer, limit})` (R19) each take a `limit` the caller may lower and never raise (200, as R48), read one row past it, and publish `limit` and a measured `truncated` (R48's shape): the history the first `limit` records in the order recorded, the pairings the first `limit` by handle. `projectOwnerAdd`'s and `projectOwnerRemove`'s deciders (R39, R40) read the counted votes joined to the current owners, bounded by the owner count, which cannot cut a counted vote; nothing is published as a bound.
 
+- **R83** (K289) `MODULE_ORDER`: the frozen list of `build/modules.json`'s module ids in its total order, the one list every later module orders its listeners by (promotion R39, R45–R47; provenance R47; this module's R79); a test holds it equal to the file.
+
 ## Private
 
 ### Uses
