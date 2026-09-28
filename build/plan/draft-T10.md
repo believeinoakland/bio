@@ -10,7 +10,7 @@
 - **connections** · N125; N131; N213 (its share: a read contract on `refs` `target_id`, `kind`); N202 (its share).
 - **progressions** · N118 (its share); N63 (its share, if its mark still holds); N208 (calls entities' helper); N242 (C-100's regions marked, conscripted calls); N202 (its share).
 - **bias** · N171 (its share); N143; N118 (its share); N63 (its share, if its mark holds); N207 (`record-core.textAtSha`); N224 (its share: R33's tick takes the scheduler's rank); N242 (`#promotionCheck`); N202 (its share).
-- **observation-log** · N174; N113 (if Bob has ruled); N118 (its share); N134; N139 (its share); N202 (its share).
+- **observation-log** · N174; N113 (K306); N118 (its share); N134; N139 (its share); N202 (its share).
 - **query-language** · N104 (its share); N106 (its share, with retrieval).
 - **retrieval** · N171 (its share); N106 (its share); N142 (its share: `answerChanged`); N202 (its share).
 
