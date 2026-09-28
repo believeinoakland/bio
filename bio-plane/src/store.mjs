@@ -142,7 +142,8 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             against `schema.mjs`. A format string written in two files is a
             format string that drifts, and the gate refuses on the catalog's
             copy while this file writes its own. */
-         CASE_DOCUMENT_FORMAT } from "../checks/bio-checks.mjs";
+         CASE_DOCUMENT_FORMAT,
+         lawProposalLabel } from "../checks/bio-checks.mjs";
 import { actionsOf, actionsOps } from "./actions/index.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
@@ -617,7 +618,8 @@ export class Store extends DurableObject {
          inquiry's no-project conclusion by the one reader op=basisversions uses; D-85: the run it was opened inside
          (a promise: the lens is hashed). Null on every other type. */
       const type = normalizeType(row.object_type);
-      const one = { no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null };
+      const one = {
+                    no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOf(row.bundle_id) : null };
       const migrated = type === "inquiry" ? this.#surfacedIn(row.bundle_id) : null;
       return migrated ? { ...one, surfaced_in: migrated } : one;
     });

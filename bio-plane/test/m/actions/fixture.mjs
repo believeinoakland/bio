@@ -10,7 +10,29 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
-import { storage } from "../reevaluation/fixture.mjs";
+import { DatabaseSync } from "node:sqlite";
+
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+/** A Durable Object's storage over an in-memory SQLite database. */
+export function storage() {
+  const db = new DatabaseSync(":memory:");
+  let n = 0;
+  const sql = {
+    exec(q, ...args) {
+      const st = db.prepare(q);
+      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+    },
+  };
+  return {
+    db, sql,
+    transactionSync(fn) {
+      const sp = `sp${n++}`;
+      db.exec(`SAVEPOINT ${sp}`);
+      try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+      catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+    },
+  };
+}
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 export const V = (id) => `member:${id}`;
