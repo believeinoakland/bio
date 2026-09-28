@@ -2,15 +2,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, md, T0, infoMd } from "./fixture.mjs";
-import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, RETRIEVAL_TABLES, retrievalRoutes }
+import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX, PROJECTION_RELATION, RETRIEVAL_TABLES,
+         retrievalRoutes }
   from "../../../src/retrieval/index.mjs";
 import { textOf, FTS_COLUMNS } from "../../../src/query.mjs";
 
 const ftsRow = (w, id) => {
-  const b = w.row(`SELECT fts_id FROM bundles WHERE bundle_id=?`, id);
+  const b = w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id=?`, id);
   return b && b.fts_id != null ? w.row(`SELECT rowid, ${FTS_COLUMNS.join(", ")}, bundle_id FROM bundles_fts WHERE rowid=?`, b.fts_id) : null;
 };
-const projRow = (w, id) => w.row(`SELECT ${PROJECTION_COLS.join(", ")} FROM bundles WHERE bundle_id=?`, id);
+const projRow = (w, id) => w.row(`SELECT ${PROJECTION_COLS.join(", ")} FROM bundle_projection WHERE bundle_id=?`, id);
 
 test("R1: after a promotion the projection equals projectionOf(bundle.md) and the index row equals textOf(files), in the same transaction; a revision replaces the bundle's own row under the key allocated once", () => {
   const w = world();
@@ -104,7 +105,7 @@ test("R3: reproject re-derives rows lacking a projection or an index, at most `l
   const w = world();
   for (let i = 1; i <= 5; i++) w.doc(`INFO-${i}`, {}, { files: [{ path: "n.md", text: `word${i}` }] });
   w.retrieval.projectionClear({});
-  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles WHERE fm_json IS NULL AND fts_id IS NULL`).n, 5);
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundle_projection WHERE fm_json IS NULL AND fts_id IS NULL`).n, 5);
   assert.deepEqual(w.retrieval.reproject({ limit: 2 }), { reprojected: 2, reindexed: 2, limit: 2, remaining: 3 });
   assert.equal(w.retrieval.reproject({ limit: 0 }).limit, 500);
   assert.equal(w.retrieval.reproject({ limit: 99999 }).limit, 5000);
@@ -126,7 +127,7 @@ test("R4: projectionPlan shows the filtered columns' indexes are used; projectio
   w.doc("INFO-1"); w.doc("INFO-2");
   const plan = w.retrieval.projectionPlan();
   assert.deepEqual(Object.keys(plan), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
-  for (const [c, rows] of Object.entries(plan)) assert.ok(rows.some((d) => d.includes(`bundles_${c}`)), `${c}: ${rows}`);
+  for (const [c, rows] of Object.entries(plan)) assert.ok(rows.some((d) => d.includes(`bundle_projection_${c}`)), `${c}: ${rows}`);
   assert.deepEqual(w.retrieval.projectionClear({ bundleId: "INFO-1", text: false }), { ok: true, scope: "INFO-1", text: false });
   assert.equal(projRow(w, "INFO-1").fm_json, null);
   assert.ok(ftsRow(w, "INFO-1"), "text: false keeps the index row");
@@ -135,7 +136,7 @@ test("R4: projectionPlan shows the filtered columns' indexes are used; projectio
   assert.notEqual(projRow(w, "INFO-2").fm_json, null);
   assert.deepEqual(w.retrieval.projectionClear({}), { ok: true, scope: "ALL", text: true });
   assert.equal(w.count("bundles_fts"), 0);
-  assert.equal(w.row(`SELECT COUNT(*) n FROM bundles WHERE fm_json IS NOT NULL OR fts_id IS NOT NULL`).n, 0);
+  assert.equal(w.row(`SELECT COUNT(*) n FROM bundle_projection WHERE fm_json IS NOT NULL OR fts_id IS NOT NULL`).n, 0);
 });
 
 test("R5: projection with an id answers the row or null (absent or hidden alike); without, {bundles, limit, cursor, total} in id order, limit clamped (200, at most 5,000), total counted through the gate, jsonPath/jsonEquals filtering", () => {
@@ -191,7 +192,7 @@ test("R30: the projection and the index are derived: both are rebuilt from the s
 
 test("R33: selections, selection_items and bundles_fts are declared to record-core's purge; a bundle's purge removes its index row, and the whole-store purge clears all three", () => {
   const w = world();
-  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundles_fts", "selection_items", "selections"]);
+  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundle_projection", "bundles_fts", "selection_items", "selections"]);
   /* Declared: a second declaration of any of them is refused as another module's. */
   for (const t of RETRIEVAL_TABLES) {
     const r = w.record.declarePurge("someone-else", [t]);
@@ -210,7 +211,7 @@ test("R33: selections, selection_items and bundles_fts are declared to record-co
     assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).orphans.length, 0, "no orphan left behind");
     const all = w.record.purge({});
     assert.deepEqual([all.removed.selections, all.removed.selection_items, all.removed.bundles_fts], [1, 2, 1]);
-    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), [0, 0, 0]);
+    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), RETRIEVAL_TABLES.map(() => 0));
   });
 });
 
@@ -277,3 +278,48 @@ test("R58: migrate() creates the projection columns, their indexes, the keyed te
   assert.equal(routes(url("reproject"), { limit: 3 }).reproject().reprojected, 1);
   assert.deepEqual(Object.keys(routes(url("projectionplan")).projectionplan()), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
 });
+
+test("R61: the projection columns of R2 and the text-index key fts_id are held in bundle_projection, keyed by bundle_id, written by this module's promotion step and backfill, declared to record-core's purge by that key; the relation is named to query-language as {table, key}", () => {
+  const w = world();
+  assert.deepEqual({ ...PROJECTION_RELATION }, { table: "bundle_projection", key: "bundle_id" });
+  assert.equal(Object.isFrozen(PROJECTION_RELATION), true);
+  const cols = w.rows(`PRAGMA table_info(bundle_projection)`);
+  assert.deepEqual(cols.filter((c) => c.pk).map((c) => c.name), ["bundle_id"]);
+  assert.deepEqual(cols.map((c) => c.name).sort(), ["bundle_id", "fts_id", ...PROJECTION_COLS].sort());
+  /* fts_id is unique: one key per bundle. */
+  assert.ok(w.rows(`PRAGMA index_list(bundle_projection)`).some((i) => i.unique
+    && w.rows(`PRAGMA index_info(${i.name})`).map((c) => c.name).join() === "fts_id"));
+  w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "one" }] });
+  w.doc("INFO-2", {}, { files: [{ path: "n.md", text: "two" }] });
+  const md1 = w.row(`SELECT content FROM files WHERE bundle_id='INFO-1' AND path='bundle.md'`).content;
+  assert.deepEqual(projRow(w, "INFO-1"), projectionOf(md1, w.clock.now));
+  const keys = w.rows(`SELECT bundle_id, fts_id FROM bundle_projection ORDER BY bundle_id`);
+  assert.deepEqual(keys.map((k) => k.bundle_id), ["INFO-1", "INFO-2"]);
+  assert.equal(new Set(keys.map((k) => k.fts_id)).size, 2);
+  for (const k of keys) assert.equal(w.row(`SELECT bundle_id FROM bundles_fts WHERE rowid=?`, k.fts_id).bundle_id, k.bundle_id);
+  /* Declared to purge by bundle_id: a second declaration is another module's, and a bundle's purge takes its row. */
+  assert.deepEqual([w.record.declarePurge("someone-else", ["bundle_projection"]).declaredBy], ["retrieval"]);
+  const one = w.record.purge({ bundleId: "INFO-1" });
+  assert.equal(one.removed.bundle_projection, 1);
+  assert.deepEqual(w.rows(`SELECT bundle_id FROM bundle_projection`).map((r) => r.bundle_id), ["INFO-2"]);
+  assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).ok, true);
+  assert.equal(w.record.purge({}).removed.bundle_projection, 1);
+  assert.equal(w.count("bundle_projection"), 0);
+});
+
+test("R58, R61: migrate() moves a projection an older store holds on bundles into bundle_projection once, copied as it stood, and is idempotent", () => {
+  const w = world();
+  w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "kept words" }] });
+  const before = { ...w.row(`SELECT * FROM bundle_projection WHERE bundle_id='INFO-1'`) };
+  /* The older store: the projection only on bundles (as the columns there hold it), no table of its own. */
+  const onBundles = w.row(`SELECT ${[...PROJECTION_COLS, "fts_id"].join(", ")} FROM bundles WHERE bundle_id='INFO-1'`);
+  assert.deepEqual({ ...onBundles }, (({ bundle_id, ...rest }) => rest)(before), "the older store's columns carry the projection");
+  w.st.db.exec(`DROP TABLE bundle_projection`);
+  assert.deepEqual(w.retrieval.migrate(), { reprojected: 0, reindexed: 0, limit: 500, remaining: 0 }, "moved, not re-derived");
+  assert.deepEqual({ ...w.row(`SELECT * FROM bundle_projection WHERE bundle_id='INFO-1'`) }, before);
+  w.retrieval.migrate();
+  assert.equal(w.count("bundle_projection"), 1, "once");
+  assert.equal(w.retrieval.search({ q: "kept", viewer: V("ann") }).total, 1);
+});
+
+test.todo("R61: the projection columns and fts_id are not held on record-core's bundles — N106's second half waits on query-language R25 (its compiled statements read b.<column> of bundles until it merges) and on BOB's answer to J1 (monitoring, actions and legacy-store read the columns on bundles)");

@@ -24,13 +24,37 @@ const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:member";
 
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` or `.length` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does, so code that indexes
+   a cursor or writes a long pattern fails here as it would in the Durable Object (K316). */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -151,9 +175,9 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
   let k = 0;
   const snap = () => `k${++k}`;
   Object.assign(w, {
-    row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
+    rows: (q, ...a) => [...st.sql.exec(q, ...a)],
+    count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
     cap: (name, text = `bytes of ${name}`) => ({ path: `snapshots/${name}.txt`, text, sha: sha(text) }),
     /** Promotes a document (information unless `fields.object_type` says otherwise) with its extra `files` and the
      *  captures it registers. */
@@ -163,7 +187,7 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
       for (const c of captures) all.push({ path: c.path, text: c.text });
       if (captures.length)
         all.push({ path: "data/provenance.json", text: JSON.stringify({ documents: captures.map(provDoc) }, null, 2) });
-      const head = st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, id)[0];
+      const head = [...st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, id)][0];
       const r = promotion.promote({ bundleId: id, base: head ? head.bundle_sha : null, snapKey: snap(), author, files: all,
         meta: { object_type: fields.object_type || "information" },
         register: captures.map((c) => ({ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })) });
@@ -189,7 +213,7 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
         o.at || T0, o.actor_class || "plane", o.actor ?? null, o.authority_kind, o.authority ?? null, o.level,
         o.subject_kind, o.subject ?? null, o.state, o.governed ? 1 : 0, o.condition ?? null, o.bound ?? null,
         o.result_kind ?? null, o.result_ref ?? null, o.detail ?? null);
-      return st.sql.exec(`SELECT MAX(seq) AS s FROM observation_log`)[0].s;
+      return [...st.sql.exec(`SELECT MAX(seq) AS s FROM observation_log`)][0].s;
     },
     /** A reading row for a capture (its existence is the content level's pre-log evidence). */
     reading(capSha, bundleId) {
