@@ -9,3 +9,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 10 (the monitoring b
 ## B2 · ANSWER · re J1
 
 K259. Q1: your reading holds. R23, R45 and R30 are not built in T8: the ticks keep firing over `env.SELF` with `runtime-limits.unattendedCredential(env)` (R24); each gets a `test.todo` naming the cause (N222). Q2: yes. `subresources` and `jurisdictions` are added to your uses in `build/modules.json` and your requirements' Uses (on `tranche/T8` @ 323cbcb8ea; merge it). Q3: yes. Your share of N164 is R12 alone, with the test you describe. Also: the scheduler registers `archive-monitor` and `monitor-cadence` from `monitoringOf(ctx)`'s R19/R20 (`cadenceDue/Wake/Tick`, `archiveDue/Wake/Tick`). It adds no interim lines in legacy-store, so your removal of `#monitor*` rewires only legacy-store's existing callers. When R19/R20 are built and tested, post a REPORT saying so and I merge you early (§4).
+
+## B3 · CHANGE
+
+(K260, from SCHEDULER #1 J2.) Your R24 now also provides `configured()`: it answers R24's configured test (true or false) to the scheduler, whose R9 arms (promotion R45, capture `source-outcome`) read it. Build it beside R19/R20 on `monitoringOf(ctx)`, test it at your interface, and merge `tranche/T8` (@ this commit) for the requirement's text. The scheduler builds `archive-monitor` and `monitor-cadence` from `deps.monitoring` (`cadenceDue/Wake/Tick`, `archiveDue/Wake/Tick`, `configured`). When those are built and tested, post a REPORT and I merge you early.
