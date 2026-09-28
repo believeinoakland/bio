@@ -53,19 +53,19 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
   ]);
 });
 
-/* R2 as folded for T7's new ops (N115, INTENT #1 J4.3): the reasoned list gains the eight ops graded on R27's rule. */
+/* R2 as folded (K211): the eight ops graded for T7's entries, and R27's reassignment. */
 test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   const want = {
     irreversible: ["publish"],
     attested: ["attest", "caseratify", "ratify"],
     terminal: ["retire"],
-    reversible: ["cite", "versionhide", "versionrevert"],
-    reasoned: ["actionmove", "adminremove", "conclude", "discharge", "dispose", "inquirydivide", "inquiryground",
-      "projectownerremove", "projectownerrescue", "proposedispose", "reinstate", "relationdeclare", "release", "reopen",
-      "sever", "versionconsider", "versionreject", "withdrawconclusion",
-      "aliaswithdraw", "aspirationdepart", "aspirationretire", "connectionassert", "filemembershipjudge", "goalclose",
-      "relationwithdraw", "themewithdraw"].sort(),
+    reversible: ["actionlaws", "cite", "projectvisibilityset", "versionaccept", "versioncurrent", "versionhide", "versionrevert"],
+    reasoned: ["actionmove", "actionrisktier", "adminremove", "aliaswithdraw", "aspirationdepart", "aspirationretire",
+      "biasdebtresolve", "conclude", "connectionassert", "discharge", "dispose", "filemembershipjudge", "goalclose",
+      "inquirydivide", "inquiryground", "narrow", "projectownerremove", "projectownerrescue", "proposedispose",
+      "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever", "themewithdraw",
+      "versionconsider", "versionreject", "withdrawconclusion"],
   };
   const got = {};
   for (const [op, r] of Object.entries(RUNGS)) (got[r] ??= []).push(op);
@@ -209,7 +209,7 @@ test("R19: the justification family names only codes that ask the member for an 
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
   for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
-    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "NO_LABEL", "NO_CITATION", "NO_BODY", "NO_TITLE"])
     assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
@@ -264,6 +264,24 @@ test("R25: no place any jurisdiction profile names appears in this module's outw
   assert.ok(typeof NON_ACTS.idmatch === "string" && NON_ACTS.idmatch.length > 40);
 });
 
-test.todo("R27: no op is graded `undetermined` that requires an authored reason (it is `reasoned`) or that a published act "
-  + "takes back (it is `reversible`) — not yet met: the 42 ops graded `undetermined` before T7 await BOB's reassignment "
-  + "on this rule (K102); the proposal is in AFFORDANCES #1's record");
+/* R27 as ruled (K211): of the 42 ops graded `undetermined` before T7, three moved to `reasoned` and four to
+   `reversible`; the other 34 stay, with intent's seven graded on the same rule (K211 Q4). Whether each `reasoned`
+   op really refuses without an account is R19's drive (plane.test.mjs, backing.test.mjs). */
+test("R27: no op is graded `undetermined` that the ruling moved, and exactly the ruled ops remain `undetermined`", () => {
+  const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
+    versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
+  for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
+  const undetermined = Object.keys(RUNG_ABSENT).filter((op) => RUNG_ABSENT[op].ground === "undetermined").sort();
+  assert.deepEqual(undetermined, ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
+    "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",
+    "airunopen", "airunclose", "suggest", "contentmint", "extractpropose", "connectionchoose", "transcribe",
+    "transcriptionattest", "testify", "lead", "leadshare", "attribute", "casedraft", "reviewcomment", "statementack",
+    "leadlook", "themedeclare", "themeplace", "themepropose", "progressiondefine", "resolvetestify",
+    "contradictionpropose", "objectivecondition", "goaldeclare", "goallink", "aspirationdeclare", "aspirationdeadend",
+    "triage", "workobjective"].sort());
+});
+
+test("R27: no new rung is added — the ladder keeps its five", () => {
+  assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
+  assert.ok(Object.values(RUNGS).every((r) => RUNG_LADDER.includes(r)));
+});

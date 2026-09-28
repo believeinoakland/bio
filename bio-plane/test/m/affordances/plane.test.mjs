@@ -399,6 +399,8 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
     goalclose: () => DO(`goalclose?viewer=${E(iris)}`, { goal: goalId, author: iris }),
     aspirationdepart: () => DO(`aspirationdepart?viewer=${E(iris)}`, { project: W.PA, aspiration: aspId, author: iris }),
     aspirationretire: () => DO(`aspirationretire?viewer=admin`, { aspiration: aspId, author: "member:ruth" }),
+    biasdebtresolve: () => POST(`op=biasdebtresolve&token=${W.IRIS}`, { run: "RUN-aff-1" }),
+    actionrisktier: () => POST(`op=actionrisktier&token=${W.IRIS}&target=${E(W.ACTN)}`, { tier: 2 }),
   };
   const got = {};
   for (const [op, f] of Object.entries(DRIVE)) got[op] = codeOf(await f());
@@ -409,7 +411,8 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
   const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
-    "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire"];
+    "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
+    "biasdebtresolve", "actionrisktier", "narrow" /* narrow: backing.test.mjs */];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

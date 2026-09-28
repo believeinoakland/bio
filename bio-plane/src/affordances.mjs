@@ -491,6 +491,9 @@ export const JUSTIFICATION_REFUSALS = [
   /* INTENT #1 J4.3 (T7): retiring an aspiration records what pursuing it taught (C-110.17) — the member's account
      of why it ends, which is this family's requirement in intent's word for it. */
   "NO_LESSON",
+  /* R27 as ruled by BOB (K211): the three acts it moved to `reasoned`, each refusing without the member's account —
+     a bias-debt settlement's reason, a risk-tier revision's reason, and a narrowed reading's account of what changed. */
+  "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -737,6 +740,10 @@ export const RUNGS = {
   goalclose:          "reasoned",   // NO_REASON (C-110.13: a goal is closed with the reason it closed)
   aspirationdepart:   "reasoned",   // NO_REASON (a departure from the group's aspiration records why)
   aspirationretire:   "reasoned",   // NO_LESSON (C-110.17: what pursuing it taught)
+  /* R27, ruled by BOB (K211): acts corrected forward that refuse without the member's account. */
+  biasdebtresolve:    "reasoned",   // BIAS_DEBT_NO_REASON (REC-207: an authored settlement, append-only)
+  actionrisktier:     "reasoned",   // RISK_TIER_REASON_REFUSED (REC-214: a revision carries its reason)
+  narrow:             "reasoned",   // NARROW_NO_DESCRIPTION (C-50.11: what changed and why)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -767,6 +774,14 @@ export const RUNGS = {
   cite:               "reversible",  // sever accepts the status cite writes
   versionrevert:      "reversible",  // VERSION_MACHINE.edges.suggested reaches every state revert runs from
   versionhide:        "reversible",  // its own inverse: `hidden=false` un-hides (D-214: prune HIDES, never deletes)
+  /* R27, ruled by BOB (K211): each is corrected forward, and a PUBLISHED act takes its result back. The rows above
+     that graded them `undetermined` said "no way back exists"; the ruling reads a published act that moves the
+     result on (reconsidering or turning down an accepted reading; standing on another reading; restating the laws;
+     setting the visibility again) as that way back. */
+  versionaccept:        "reversible",  // versionconsider and versionreject move an accepted reading away
+  versioncurrent:       "reversible",  // a further versioncurrent stands the project on another reading
+  actionlaws:           "reversible",  // a further actionlaws restates the list
+  projectvisibilityset: "reversible",  // the owner sets it again
 };
 
 
@@ -878,25 +893,12 @@ export const RUNG_ABSENT = {
      assigning them `reversible` would promise a way back that does not exist;
      so they are stated undetermined and the ladder's gap is named rather than
      papered over. Raised as a provisional at the close of this item. */
-  versionaccept:        { ground: "undetermined", is: "adopts a reading of the evidence; the store's own words are that acceptance is a historical fact, corrected by turning it down or reconsidering, never by returning it to something nobody acted on" },
-  versioncurrent:       { ground: "undetermined", is: "what THIS PROJECT stands on — the project's own dated declaration (§7); it can be declared again, and each declaration stands" },
   inboxresolve:         { ground: "undetermined", is: "a disposition of a knock, keyed by knock id" },
   taskforward:          { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
   taskresolve:          { ground: "undetermined", is: "records how a task ended" },
-  /* REC-207 (BOB #32, 2026-09-23 23:42Z). BESIDE `taskresolve` AND FOR ITS REASON, which is this block's
-     shape word for word: a member performs it ONCE, the record keeps it attributed and dated, and it is
-     APPEND-ONLY by construction — `bias_debt_settlements` is never updated and never deleted, so there is
-     no way back and nothing to move forward either. `reversible` would promise a way back that does not
-     exist; `attested` would claim a signature that does not exist. Undetermined, STATED, and the ladder's
-     gap is named rather than papered over. If the lens moves ONWARDS the obligation is raised again as
-     NEW debt — which is a new fact about the lens and not this act being undone. */
-  biasdebtresolve:      { ground: "undetermined", is: "a member's authored settlement of the bias debt a lens change left on a run, with a REQUIRED stated reason; append-only, never cleared (BOB #32, 2026-09-23)" },
   actioncorrespond:     { ground: "undetermined", is: "records what came back from outside the system — REC-23's counterparty, named or honestly undetermined" },
-  actionlaws:           { ground: "undetermined", is: "a member's attributed statement of the laws governing an action's request (D-149); restated by a further act, never cleared, and the Session Log keeps what each statement replaced" },
-  actionrisktier:       { ground: "undetermined", is: "a member's authored revision of an action's risk tier with a REQUIRED reason (REC-214, BOB #33); APPEND-ONLY — every earlier tier, its author and its reason stay readable in risk_tier_history, and nothing clears it" },
   actionlawspropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
   projectfork:          { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
-  projectvisibilityset: { ground: "undetermined", is: "an owner's recorded, append-only choice of whether a project is DISCOVERABLE or HIDDEN (Membership v2 §7.14, REC-149); it sets no state on the project's document" },
   biasadopt:            { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
   strengthbar:          { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
   entitycreate:         { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
@@ -959,24 +961,13 @@ export const RUNG_ABSENT = {
      things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
      corrected forward (a candidate is never updated), labelled machine work and never signed. */
   contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate — one of §5's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md §8)" },
-  /* REC-86 / IC-123 — NARROW, and the ground is the ladder's own gap rather than
-     `reasoned`, on MEASUREMENT: the act refuses a new reading with no account of
-     what changed (C-50.11, `NARROW_NO_DESCRIPTION`), but that code is not in
-     `JUSTIFICATION_REFUSALS` and `rung-ladder.test.mjs` grades `reasoned` by that
-     class ONLY — widening the class to admit it would be this item re-grading the
-     ladder to suit itself. NOT `reversible`: nothing TAKES the reading back; it is
-     hidden or rejected by the existing version acts, which records a second act
-     rather than undoing the first. The act writes a NEW reading, born `suggested`,
-     and moves nothing existing — so it is corrected forward and never signed. */
-  narrow:               { ground: "undetermined", is: "a member writes a NEW reading of a question's evidence with one citation pointing at LESS of its document; the old reading and its citation are untouched, and the new one is born suggested (Bob's 5.3)" },
-  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined` on
-     `narrow`'s measurement one row up: none of its refusals (C-74) is in
+  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined`: none of its refusals (C-74) is in
      `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
      to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
      the old row is retained, which is corrected forward. Never signed, and never the machine's. */
   connectionchoose:     { ground: "undetermined", is: "a member records WHICH mention of a subject, on one end of one connection, is the one on point; the machine's strongest-graded pair is kept beside it, and a re-choice supersedes and retains the old (Bob's 5.4 second pass)" },
   /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
-     `undetermined` on `attesttext`'s and `narrow`'s measurement: neither act's
+     `undetermined` on `attesttext`'s measurement: neither act's
      refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
      missing justification), and widening that class to admit them would be this
      item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
@@ -1609,7 +1600,7 @@ export const ACTS = [
     applies: (f, ty) => ty === "action" },
   /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
      guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
-     as much as a planned one. Weight `single`: one revision, one act, appended. NO RUNG, for actionmove's reason. */
+     as much as a planned one. Weight `single`: one revision, one act, appended. RUNG `reasoned` (R27, K211). */
   { id: "actionrisktier", label: "Revise risk tier", weight: "single", types: ["action"],
     applies: (f, ty) => ty === "action" },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
@@ -1653,10 +1644,9 @@ export const ACTS = [
    * predicate and `Store.VERSION_ACT_TO`, never the helper's text.
    * `versionrevert` and `versionhide` are `reversible` (revert's target state
    * reaches every state it runs from; hide is its own inverse — `hidden=false`).
-   * `versionaccept` and `versioncurrent` carry a STATED ABSENCE, ground
-   * `undetermined`: acceptance is a historical fact corrected FORWARD and it is
-   * not signed, so neither `reversible` nor `attested` describes it, and the
-   * ladder has no rung that does. Named rather than guessed.
+   * `versionaccept` and `versioncurrent` are `reversible` since R27's ruling
+   * (K211): acceptance is corrected FORWARD, and a published act (reconsider,
+   * turn down, stand on another reading) takes its result back.
    *
    * THE ENTRY REQUIREMENTS ARE ACT-TIME REFUSALS the store words itself: which
    * version, the authored reason, the legal edge, the transitive cycle at accept,
