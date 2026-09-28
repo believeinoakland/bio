@@ -93274,7 +93274,7 @@ var Escalation = class {
     if (!v) throw new ProviderAbsent(name);
     return v;
   }
-  /** The module's tables (R20). */
+  /** The module's tables (R20); run at creation, and safe to run again (each `CREATE ... IF NOT EXISTS`). */
   migrate() {
     migrateEscalation(this.sql);
   }
@@ -94146,6 +94146,7 @@ function escalationOf(host, deps) {
     const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
     instances28.set(host, i);
+    i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
   }
