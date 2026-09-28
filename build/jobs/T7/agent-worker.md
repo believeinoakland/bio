@@ -2,6 +2,40 @@
 
 **Status** · session_01MQd6LoFbeLZ3gwnxAGgWZw · depth 2 · WORKING · handled B2
 
+## Completion
+
+**Entries applied** (plan T6-10; BOB's answer B2, K181):
+- `test/plane-meaning.mjs` imports `MEANING_READ_CHECKS` from `bio-plane/src/retrieval/checks.mjs` (RETRIEVAL #1 REPORT 2); `retrieval` in uses (K181).
+- R26 as folded (K148, K181): `stepLog` returns no entry for a step whose judgement stated no look; every step still ticks for its spend and lease; a look belongs to its step and is cleared after its tick.
+- R40 and D-611: the model mode (`src/model.mjs`) — when accounts resolve and no `judgements` are supplied, each judged row but `collect` is judged by a model turn through the Messages API under the resolved token, answering through a per-row `judge_<row>` tool (R16 still polices it), with `load_layer` for the pack's disclosed layers. The segment is bounded by the turns asked (R7) and by bytes sent (`MAX_SEGMENT_BYTES`, default 1,000,000,000); reaching either stops the segment (`segment.stopped`), never the run. `MODEL_SILENT` / `MODEL_REFUSED` (502) when the API does not answer or refuses. Default model `claude-opus-5` (`env.MODEL` overrides): J1 proposed `claude-opus-5-5`; corrected, since the API guidance makes `claude-opus-5` the default and `-5-5` launch-only.
+- R41: one sub-session per level, each a fresh conversation briefed with its frozen contract, tools = its `scope` (`meaningrows`, through the parent's one reader) + `report`; its look is logged at its level and the entry's `log:<seq>` is the report's `observed_at`; a sub-session that ends without a report is named `SUBSESSION_NO_REPORT` (UNDETERMINED, never an absence).
+- R48: in the model mode, `op=affordances` (added to `PLANE_OPS`, R37 as folded) and legacy-checks' catalogue render the pack with `skills.renderPack`; a run whose recorded skill version differs is refused 409 `SKILL_VERSION_MISMATCH` (recorded, rendered) before any turn; an unrenderable pack 502 `PACK_UNRENDERABLE`.
+- R47: `workers_dev: false`, `preview_urls: false`; no answer carries `access-control-allow-origin`.
+- N53 (my share): the skills doctrine's pins on this member (GATE_ADDRESS dereferences, the gate first and before any bound, MODES = DEPLOYMENT_SEQUENCE.order) are in `test/requirements.test.mjs`; the skills job removes its copies.
+- Build per requirements (K102): `test/requirements.test.mjs` names and checks every live id R1–R48 at the interface (workerd, a reconfigurable plane mock, a scripted model mock behind `outboundService`, the real plane for `op=affordances` and the namespaces).
+
+**Flaws found and fixed in this module:** R7's env bound accepted a negative (`Number(x) || 120`); a sub-session opened with an empty transcript; a suggestion refused inside `result` without `wrote:false` was counted as written, and a tick refused inside `result` as landed (D-276's class; both now through `planeAnswer`); SEGMENT_OVER_BOUND named a memory ceiling (now CPU, the Suggestion); H6's control anchor re-anchored on the new tick line (run alone: AS DECLARED).
+
+**Deferred, with why:**
+- Resumption restarts the table: a resumed segment reads its log's length (R11) but re-walks from `gate-mode` with the pass counter at 0, so a model segment stopped on its turn or byte bound starts its next segment at pass 1. Persisting the table's state needs `op=airun` to publish the run's `state` (ai-runs R12 stores it; its read does not publish it) — a provider change, reported below.
+- R15's Suggestion (the plane publishes no `max_passes`, so the limit is always 3) is BOB's and unchanged.
+
+**Found in other modules (REPORT):**
+1. ai-runs (and whoever opens runs): R48 refuses every model segment whose run did not record the rendered pack's version. `checkSkillVersion` accepts any well-formed value and the fixtures record `investigative-session@1` (no digest), so no such run can take a turn. The opener should record `renderPack(...).version`. `bio-plane/test/d260-resume.test.mjs` INSTANCE ARM 3 and COUNT ARM are red for exactly this (the wake dispatch hands the instance account, so the member now enters the model mode and refuses 409); green on `tranche/T7` without this job.
+2. ai-runs: the wake dispatch (`#aiRunDispatch`) waits `AI_RUN_DISPATCH_WAIT_MS` (30 s) and reads a longer answer as SILENT; a model segment can run longer. It now spends real model turns under the instance account on every wake.
+3. ai-runs: `op=airun` does not publish the run's `state`, so a segment cannot resume the table where the last one stopped (deferred item above).
+4. legacy-tests: `fleetbundles.test.mjs` "agent-worker's five inputs" pins five inputs; the bundle now has ten (`src/model.mjs`, and `skillpack.mjs`, `skilldoctrine.mjs`, `airun.mjs`, `bio-checks.mjs` for R48). Re-pin.
+5. BOB (build/manifest.md, generated artifacts): agent-worker's bundle inputs now include skills, ai-runs and legacy-checks files, so a change to any of them stales `agent-worker/dist/` (this job regenerated it after merging `tranche/T7`).
+6. Pre-existing on `tranche/T7`, not this job's: `airun.test` 2 fail, `owed-controls` 1 fail, `m025-arm-anchor-witness` A4 (contradiction's two anchors), `fleetbundles` bio-plane's 4.
+7. BOB: requirements text still marks R40, R41, R47, R48 *not yet met*; they are met.
+
+**Tests and checks run** (on `job/T7/agent-worker` after merging `tranche/T7`):
+- `requirements: 232 passed, 0 failed` · `agent-worker: 139 passed, 0 failed` · `harness: 259 passed, 0 failed` · `fanout: 185 passed, 0 failed` · `cascade: 29 pass, 0 fail` · `versions: 22 pass, 0 fail` · `wire-vocabulary: 83 passed, 0 failed`
+- plane suites that read or drive this member: `fence-e2e 55/0`, `skillsequencing 27/0`, `refusal-wire 42/0`, `memoryshare 21/0`, `resolveversion 11/0`, `d116-serving-builds 16/0`; `fleetbundles 91/5` (1 mine to re-pin, item 4; 4 pre-existing), `d260-resume 20/2` (item 1)
+- `format: 69 modules, 64 requirements files; 0 failures` · `architecture: 29 product files, 68 relative imports; 0 failures` · `coverage: 48 of 48 live requirement ids named by a test; 0 failures` · `ownership: 14 files changed by agent-worker between tranche/T7 and HEAD; 0 failures`
+
+Size (session_01MQd6LoFbeLZ3gwnxAGgWZw): test runs 58, module lines 3169
+
 ## J1 · QUESTION
 
 Seven points; I am building on these readings now and will bring the work in line with your answers.
