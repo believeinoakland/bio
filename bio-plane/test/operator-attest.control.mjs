@@ -65,9 +65,20 @@ const L = {
    time, so the arm puts no class LITERAL into the region and the structural pin
    is NOT perturbed — what fails is the DRIVE, which is the variable under test. */
 const spelled = (cls) => `[${[...cls].map((c) => JSON.stringify(c)).join(", ")}].join("")`;
+/* RE-DECLARED 2026-09-28 (legacy-tests T9, N248 with N57): T8 ran admin, member, probe and tokenstring NOT AS
+   DECLARED, each missing one declared failure — `L.caseNot`, the case read-back. A LATER GUARD now stops the case, and
+   it is not this fence: REC-130's standing gate (`caseDocumentFacts` in `src/publication/index.mjs`, IC-141). An
+   UNSIGNED case document answers only to standing in its owning project, and `caseRatifyOp` reads it at
+   `viewer=sessViewer`, which a bearer never has (null), so an unfenced bearer reaches the facts read and is answered
+   NO_CASE_DOCUMENT, exactly as for a case that does not exist. The case therefore stays unratified with the fence
+   removed, and no edit to THIS fence can move it without breaking a second rule, which an arm must not do.
+   So each arm still bites what its label names — the class's refusal is gone at BOTH acts (both fence assertions fail
+   by name: caseratify now answers NO_CASE_DOCUMENT, not the fence's code; ratify ACCEPTS), the finding lands (the
+   ratify read-back and the table fail) — and `L.caseNot` moves out of the declaration because the arm cannot show
+   it: the case half of the "nothing landed" pair is now held by two guards, and this control can only remove one. */
 const classArm = (cls) => ({
   edits: both(`if (!viaSession && cls !== ${spelled(cls)} /* ARMED */)`),
-  mustFail: [L.fence("caseratify", cls), L.fence("ratify", cls), L.caseNot, L.ratNot, L.table],
+  mustFail: [L.fence("caseratify", cls), L.fence("ratify", cls), L.ratNot, L.table],
 });
 
 const ARMS = {
@@ -83,7 +94,8 @@ const ARMS = {
   tokenstring: {
     /* T8: the handler receives `req`, not a parsed `url`, so the token is read off `req.url`. */
     edits: both(`if ([env.ADMIN_TOKEN, env.MEMBER_TOKEN].includes(new URL(req.url).searchParams.get("token")) /* ARMED */)`),
-    mustFail: [L.fence("caseratify", "probe"), L.fence("ratify", "probe"), L.caseNot, L.ratNot, L.table,
+    /* T9 (N248): `L.caseNot` re-declared out, for the reason at `classArm` above. */
+    mustFail: [L.fence("caseratify", "probe"), L.fence("ratify", "probe"), L.ratNot, L.table,
                `${L.structure}caseratify`, `${L.structure}ratify`],
   },
 };

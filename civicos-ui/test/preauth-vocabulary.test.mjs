@@ -686,6 +686,13 @@ const STORE_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "s
    reads (NOT_PUBLISHED, the review copy's three, `case_detail`/`graph_detail`) stayed in `store.mjs` and is still
    read there. */
 const LOGIN_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "membership", "index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the other plane sentences did NOT stay in `store.mjs` after all. T8 extracted
+   `publishedCase()` (its NOT_PUBLISHED refusal and its `case_detail`/`graph_detail` accounts) into the `publication`
+   module and the review copy (its marking, its signature line and the gates' `evaluated`) into the `review` module, so
+   every read below that found nothing in `store.mjs` is made in the module that holds the sentence now. The textual
+   read, its guard and what is asked of each sentence are unchanged. */
+const PUB_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "publication", "index.mjs"), "utf8");
+const REVIEW_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "review", "index.mjs"), "utf8");
 function planeLoginRefusal(){
   const block = /static LOGIN_REFUSAL_DETAIL = \{\n([\s\S]*?)\n {2}\};/.exec(LOGIN_SRC);
   if(!block) return null;
@@ -929,15 +936,25 @@ ok("MEASURED IN THE PLANE'S SOURCE: op=verify now OPENS the Durable Object envel
    sentence the plane actually sends, which is the whole reason the arm exists —
    the two directions of this collapse are told apart by `reason`, and a
    hand-typed `reason` would agree with its source at zero cost. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9), AND THE FIXTURE WIDENS TO THE WIRE — UI-84's rule, a mock never narrower
+   than what the plane sends. The refusal is `publication`'s now and D-561 (C-98.8) decorates it at its site:
+   `{ ok: false, reason: "NOT_PUBLISHED", ...rowOf("NOT_PUBLISHED"), detail: … }`, so the wire carries the code, the
+   check and DEC-49's CANNED TRANSLATION beside the store's own `detail`. The regex REQUIRES that spread (a plane that
+   stopped decorating fails the read below rather than leaving this fixture wider than the wire), and the decoration is
+   the plane's own `rowOf` — imported, never typed — so the fixture is narrow in neither direction. */
+const { rowOf: publicationRowOf } = await import("../../bio-plane/src/publication/checks.mjs");
 function planeCaseNotPublished(){
-  const m = /return \{ ok: false, reason: "(NOT_PUBLISHED)",\s*\n\s*detail: "((?:[^"\\]|\\.)*)"\s*\n?\s*\+ "((?:[^"\\]|\\.)*)"\s*\n?\s*\+ "((?:[^"\\]|\\.)*)" \};/.exec(STORE_SRC);
-  return m ? { ok:false, reason:m[1], detail: JSON.parse('"' + m[2] + m[3] + m[4] + '"') } : null;
+  const m = /return \{ ok: false, reason: "(NOT_PUBLISHED)", \.\.\.rowOf\("NOT_PUBLISHED"\),\s*\n\s*detail: "((?:[^"\\]|\\.)*)"\s*\n?\s*\+ "((?:[^"\\]|\\.)*)"\s*\n?\s*\+ "((?:[^"\\]|\\.)*)" \};/.exec(PUB_SRC);
+  return m ? { ok:false, reason:m[1], ...publicationRowOf(m[1]), detail: JSON.parse('"' + m[2] + m[3] + m[4] + '"') } : null;
 }
 const CASE_NOT_PUBLISHED = planeCaseNotPublished();
 ok("the store's own NOT_PUBLISHED answer for op=publishedcase is readable from here, whole — "
-   + JSON.stringify(CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.detail),
+   + JSON.stringify(CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.detail)
+   + " — and, since D-561, decorated at its site with DEC-49's canned sentence (" + JSON.stringify(CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.check) + ")",
    !!CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.reason === "NOT_PUBLISHED"
-   && CASE_NOT_PUBLISHED.detail.length > 100 && /published projection/.test(CASE_NOT_PUBLISHED.detail));
+   && CASE_NOT_PUBLISHED.detail.length > 100 && /published projection/.test(CASE_NOT_PUBLISHED.detail)
+   && CASE_NOT_PUBLISHED.code === "NOT_PUBLISHED" && typeof CASE_NOT_PUBLISHED.translation === "string"
+   && CASE_NOT_PUBLISHED.translation.length > 40);
 
 /* The two public ops. Wire-shaped: `op=publishedmanifest` is WRAPPED (index.mjs
    re-wraps it explicitly), `op=publishedcase` is FLAT (its own handler), which
@@ -950,8 +967,10 @@ const CASE_ID = "CASE-2026-0001", FIND_ID = "FIND-2026-0001";
    in the source and is evaluated as one. The draft's authored words, ids and the one missing item are this
    fixture's own and are labelled as such: the plane-sourced column is a LOWER BOUND for this surface, as for
    the published ones. */
-const planeSentence = (re) => { const m = re.exec(STORE_SRC); try{ return m ? Function("return " + m[1])() : ""; }catch(_){ return ""; } };
-const REVIEW_MARKING = planeSentence(/static REVIEW_MARKING = ("[\s\S]*?");\n/);
+const planeSentence = (re) => { const m = re.exec(REVIEW_SRC); try{ return m ? Function("return " + m[1])() : ""; }catch(_){ return ""; } };
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the marking is the `review` module's exported constant now (it was the
+   store's static), read from REVIEW_SRC like the two sentences beside it. */
+const REVIEW_MARKING = planeSentence(/(?:static|export const) REVIEW_MARKING = ("[\s\S]*?");\n/);
 const REVIEW_SIGNATURE = planeSentence(/signature: \{ signed: false, detail: ("[\s\S]*?") \},/);
 const REVIEW_EVALUATED = planeSentence(/return \{ gates: "refused", missing: \[refused\],\s*evaluated: ("[\s\S]*?") \};/);
 const REVIEW_SECRET = "rv1_" + "Q".repeat(43);
@@ -1071,10 +1090,11 @@ const MANIFEST_ANSWER = {
    NAMED BY UI-35'S CONSUMER TABLE and was found by UI-40's own re-measurement,
    which is the argument for re-measuring rather than inheriting a table. */
 function planeAccount(key, until){
-  const i = STORE_SRC.indexOf(key + ": \"");
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): read from `publication`, which holds `publishedCase()`'s return now. */
+  const i = PUB_SRC.indexOf(key + ": \"");
   if(i < 0) return null;
-  const j = STORE_SRC.indexOf(until, i);
-  const region = STORE_SRC.slice(i + key.length + 1, j < 0 ? STORE_SRC.length : j);
+  const j = PUB_SRC.indexOf(until, i);
+  const region = PUB_SRC.slice(i + key.length + 1, j < 0 ? PUB_SRC.length : j);
   const parts = region.match(/"(?:[^"\\]|\\.)*"/g) || [];
   return parts.map(s => JSON.parse(s)).join("");
 }
@@ -2184,12 +2204,21 @@ if(S("case-address-refused")){
 }
 if(S("case-address-not-published")){
   const pane = textOf("case-address-not-published", "#pub-body");
-  ok("REACH: and the STORE's own NOT_PUBLISHED still reads as \"Not published\", with the store's own "
-     + "sentence rendered WHOLE and its bare reason code kept off a stranger's screen because the plane "
-     + "sent prose beside it (UI-30's rule: the sentence when there is one, the bare reason when there "
-     + "is not, never a blank and never a translation)",
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9), for UI-84's reason after D-278, and never exempted. D-561 (C-98.8) gave
+     NOT_PUBLISHED DEC-49's canned translation at its site, the fixture now carries it as the wire does (see
+     `planeCaseNotPublished`), and `planeSaid` renders it through `refusalWords`, which prefers a translation — so what a
+     stranger reads here is the sentence written FOR A READER, and the store's `detail` (addressed to a caller of the op)
+     is no longer on the page. The pin MOVES to the sentence actually read and is TWO-SIDED, canned present and the
+     caller's absent; the arm's subject — the true negative still reads as "Not published", never as a question not
+     answered, and the bare code stays off a stranger's screen — is unchanged. */
+  ok("REACH (RE-ANCHORED 2026-09-28, after D-561): and the STORE's own NOT_PUBLISHED still reads as \"Not published\", "
+     + "carrying DEC-49's CANNED sentence WHOLE (" + JSON.stringify(String(CASE_NOT_PUBLISHED && CASE_NOT_PUBLISHED.translation).slice(0, 60) + "…")
+     + ") and no longer the store's caller-facing `detail`, with its bare reason code kept off a stranger's screen "
+     + "because the plane sent prose beside it (UI-30's rule: the sentence when there is one, the bare reason when "
+     + "there is not, never a blank)",
      /<h1>Not published<\/h1>/.test(pane)
-     && pane.includes(esc(CASE_NOT_PUBLISHED.detail))
+     && pane.includes(esc(CASE_NOT_PUBLISHED.translation))
+     && !pane.includes(esc(CASE_NOT_PUBLISHED.detail))
      && !/Not answered/.test(pane)
      && !/NOT_PUBLISHED/.test(pane));
 }

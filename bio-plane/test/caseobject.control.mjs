@@ -39,6 +39,9 @@ const PEN = join(ROOT, ".nc-caseobject");          /* inside this worktree, rule
 /* RE-ANCHORED (legacy-tests T8, PUBLICATION #1 J4.6): the case tables and their ADD COLUMN ladder moved to
    publication's schema (the ladder is a top-level list there, indented two spaces), and the case index's join to
    `src/publication/index.mjs`. The names SCHEMA and STORE are kept for the arms; every needle matches once. */
+/* RE-DERIVED 2026-09-28 (legacy-tests T9, N248 with N57): T8 measured arms (c), (d) and (e) NOT BITING (each came back
+   green). Each is re-derived at its arm, below: (c) was right and the SUITE's structural pin was blind to it; (e)
+   neutered one home of two; (d)'s default is now unreachable by any act, and is re-declared rather than re-armed. */
 const SCHEMA = join(ROOT, "src", "publication", "schema.mjs");
 const STORE = join(ROOT, "src", "publication", "index.mjs");
 const SUITE = join(DIR, "caseobject.test.mjs");
@@ -89,6 +92,14 @@ const ARMS = {
             + "GREEN AND BLOCK 2 GOES RED, and that asymmetry is the arm's whole value — over an empty store "
             + "an inner join answers [] exactly as a left join does, so only a REAL published case can see "
             + "published material being deleted from the public record",
+       /* T9 (N248): this arm still breaks the rule it names, in the function it names (publishedManifest's case
+          index), and it came back green because the suite could not see it. Since CASE-2 every case an act can write
+          has its `cases` row, so the inner join drops nothing the suite can make (the suite says so at its block 2),
+          and the LEFT-ness is pinned STRUCTURALLY — by `/LEFT JOIN cases/i`, which T8's move made ambiguous:
+          `src/publication/index.mjs` now carries THREE such joins (`publishedEditionsOf` and
+          `ratifiedFindingsRestingOn` came with the module), so the pin stayed green over this arm. The suite's pin
+          is tightened to the case index's own join (the needle below), and the arm is unchanged. DECLARED (T9):
+          ONE failure, the structural LEFT-join pin; block 1 and block 2's behavioural arms green. */
        apply: () => edit(STORE,
          "FROM published_cases c LEFT JOIN cases k ON k.case_id = c.case_id",
          "FROM published_cases c JOIN cases k ON k.case_id = c.case_id") },
@@ -99,7 +110,15 @@ const ARMS = {
             + "BY A MIGRATION: the shipped ratify path still succeeds and the member comes back designated "
             + "by nobody. A fence tighter than its rule is an undeclared interface change wearing the "
             + "costume of caution",
-       /* THE COMMENT IS KEPT VERBATIM AND ONLY THE CONSTRAINT MOVES. The first
+       /* T9 (N248): RE-DECLARED GREEN, not re-armed. The default can no longer manufacture a designation on any act:
+          case-authoring R5 refuses a member with no authored role (NO_MEMBER_ROLE, "There is no default") before
+          anything is written, and publication's ratification writes each member's authored role explicitly
+          (`m.role ?? null`), so a DEFAULT never fires and no row the suite can make is designated by nobody. The rule
+          this arm names is now held at R5 (armed by `caseproduction.control.mjs`'s NO_MEMBER_ROLE arm); what this arm
+          still measures is its over-strictness half — the shipped publish-and-ratify path is UNAFFECTED by a column
+          tighter than its rule. DECLARED (T9): 0 failures. Moving the arm to R5 would not help: this suite always
+          authors the role, so a default there is invisible to it too.
+          THE COMMENT IS KEPT VERBATIM AND ONLY THE CONSTRAINT MOVES. The first
           version of this arm deleted the line whole, which also took the
           vocabulary comment the block-3 spelling arm greps — so it measured
           15/2 and one of the two failures was collateral. An over-strictness arm
@@ -113,9 +132,15 @@ const ARMS = {
        label: "(e) REACH — neuter block 3's expectation by pointing the design-document lookup at paths that "
             + "do not exist. The FOUND arm fails while blocks 1 and 2 stay green, which is why that arm is "
             + "separate: a detector that finds nothing passes everything",
+       /* T9 (N248): the lookup has TWO homes (docs/development/ and docs/archive/, where CASE-6 archived the design),
+          and the arm pointed only the first away — which no longer exists — so the archive copy was found and the arm
+          measured nothing. Both homes are pointed away now. DECLARED (unchanged): block 3's six document-driven arms
+          FAIL, blocks 1 and 2 and block 3's wire and structural arms stay green. */
        apply: () => edit(SUITE,
-         'const homes = [join(DIR, "..", "..", "docs", "development", "CASE-AS-PRODUCTION.md"),',
-         'const homes = [join(DIR, "..", "..", "docs", "development", "NO-SUCH-DESIGN.md"),') },
+         'const homes = [join(DIR, "..", "..", "docs", "development", "CASE-AS-PRODUCTION.md"),\n'
+       + '                 join(DIR, "..", "..", "docs", "archive", "CASE-AS-PRODUCTION.md")];',
+         'const homes = [join(DIR, "..", "..", "docs", "development", "NO-SUCH-DESIGN.md"),\n'
+       + '                 join(DIR, "..", "..", "docs", "archive", "NO-SUCH-DESIGN.md")];') },
 };
 
 const want = process.argv[2];

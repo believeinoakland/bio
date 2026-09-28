@@ -138,7 +138,9 @@ const actionMd = (id, title) => ["---",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "action_kind: other", "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): actions R9 (C-101.3) — a named counterparty is an OFFICE, its role
+     and the body it belongs to; the bare `name:` was refused COUNTERPARTY_REFUSED, so no fixture landed. */
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "",
   "## Session Log", "", `### Session ${NOW} | Formation | nadia`,
@@ -161,7 +163,9 @@ const UNDET = "ACTN-2026-1104-proposed-not-stated";  /* a proposal standing, the
 /* THE CITATIONS ARE DELIBERATELY DISJOINT ACROSS THE THREE SETS, so a page that composed the two keys
    — or that let a proposal stand in for the list — cannot read as correct by coincidence. */
 const STATED   = [{ level: "state", citation: "Cal. Gov. Code § 7920.000 et seq. (California Public Records Act)" }];
-const MACHINES = [{ level: "local", citation: "Oakland Municipal Code ch. 2.20 (Sunshine Ordinance)" }];
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): `local` is no level (jurisdictions R24: federal, state, county, city);
+   the Oakland ordinance is `city`, so the proposal is refused on its level no longer. */
+const MACHINES = [{ level: "city", citation: "Oakland Municipal Code ch. 2.20 (Sunshine Ordinance)" }];
 const MEMBERS  = [{ level: "federal", citation: "5 U.S.C. § 552 (FOIA)" }];
 
 ok("the fixtures land through op=promote (the corpus is non-empty before anything is asked of it)",

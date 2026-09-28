@@ -1057,6 +1057,29 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
     t(`11g000 (T8): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
       routes[witness] !== undefined, true);
   }
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9; LEGACY-STORE #1 J2, N216): the store's map now also spreads layer 9's
+     `standardsOps`, `conformanceOps`, `consequencesOps` and `filingsOps` (escalation's ten ops are named in the store's
+     own map, so they are read above). Each is declared in its module's index.mjs exactly as T8's are (`return {`,
+     entries one indent in); standards', conformance's and consequences' read parameters through a local `qp("<name>")`,
+     filings' through `q("<name>")`, both the `searchParams.get("…")` they are. 11g++ named seven classified reads whose
+     routes live in these maps (`standard`, `standardinforce`, `determination`, `determinations`, `consequence`,
+     `comparison`, `counselpacketread`); they are read into the same table, the same way, each map floored by one
+     route it must carry. */
+  for (const [mod, fn, witness] of [
+    ["standards", "standardsOps", "standardinforce"], ["conformance", "conformanceOps", "determinations"],
+    ["consequences", "consequencesOps", "consequence"], ["filings", "filingsOps", "counselpacketread"]]) {
+    const xlines = src(`${mod}/index.mjs`).split("\n");
+    const xfn = xlines.findIndex((l) => new RegExp(`^export function ${fn}\\(`).test(l));
+    const xat = xfn < 0 ? -1 : xlines.findIndex((l, i) => i > xfn && /^  return \{/.test(l));
+    let xcur = null;
+    for (let i = xat + 1; xat >= 0 && i < xlines.length && !/^  \};/.test(xlines[i]); i++) {
+      const m = xlines[i].match(/^    ([a-z0-9]+): /);
+      if (m) { xcur = m[1] in routes ? null : m[1]; if (xcur) routes[xcur] = ""; }
+      if (xcur) routes[xcur] += xlines[i].replace(/\bqp?\("/g, 'searchParams.get("');
+    }
+    t(`11g000 (T9): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
+      routes[witness] !== undefined, true);
+  }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
     return m ? Function(`return (${m[1]});`)() : null; };
   const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");

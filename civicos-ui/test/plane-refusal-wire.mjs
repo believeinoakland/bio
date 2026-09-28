@@ -40,6 +40,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+/* GUARDED 2026-09-28 (legacy-tests T9): the walk of `bio-plane/src/` below (the call sites that left `index.mjs`) asks
+   the estate's one provenance check, as every guarded walk in `hygiene.test.mjs`'s class census does, and floors its
+   reach on the figures counted over the commit at HEAD (D-257), so an empty or narrowed walk THROWS at import. */
+import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/scripts/provenance.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLANE = path.join(HERE, "..", "..", "bio-plane");
@@ -117,9 +121,64 @@ export function requiredArgumentDetail(op, argument, shape){
    silently returns the wrong thing on the other; the scanner returns the whole
    call and the caller's shape decides. */
 const CALL_SCAN_LIMIT = 1200;   /* no call site in index.mjs is anywhere near this long */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the call sites left `index.mjs` with their ops. `op=publishedbytes` and
+   `op=publishedcase` are the `publication` module's now (`bio-plane/src/publication/worker.mjs`), which mints the
+   same refusal through the control plane's own helper handed to it (`P.requiredArgument("publishedbytes", …)`), so a
+   read of `index.mjs` alone found no site and handed `publishedcase.test.mjs` a null envelope. The helper, its code
+   and its `detail` template are still `index.mjs`'s and are still read there; only the CALL is looked for in the
+   module sources as well — `index.mjs` first, then every module file under `src/` — and a needle found in more than one file
+   THROWS rather than picking one, because two sites for one op would be two envelopes and a guess is worse than none. */
+const MODULE_SRCS = (() => {
+  const out = [];
+  const walk = (d) => { for(const e of fs.readdirSync(d, { withFileTypes:true })){
+    const f = path.join(d, e.name);
+    if(e.isDirectory()) walk(f);
+    else if(e.name.endsWith(".mjs") && f !== path.join(PLANE, "src", "index.mjs")) out.push([f, fs.readFileSync(f, "utf8")]);
+  } };
+  walk(path.join(PLANE, "src"));
+  return out;
+})();
+/* GUARDED 2026-09-28 (legacy-tests T9): WHAT THE WALK REACHED, AND HOW MUCH OF IT ANOTHER CHECKOUT REPRODUCES. Every
+   file it read is handed to the one provenance report (a phantom module deposited under `src/` is named there, never
+   counted silently), and the two figures `assertDerived` floors — the module files read and the `requiredArgument("…"`
+   call sites found in them — are counted over the files in the commit at HEAD. When git cannot answer, every file
+   counts and the report says UNVERIFIED (provenance.mjs rule 4), never clean. The floors are the figures this walk
+   PRINTED on `job/T9/legacy-tests` (177 module files, 7 call sites: capture/doorbell.mjs ×2, capture/ops.mjs,
+   extraction/ops.mjs, monitoring/index.mjs, publication/worker.mjs ×2); a legitimate drop is a decision, made here. */
+const MODULE_WALK_FLOOR = { files: 177, sites: 7 };
+const REPO = path.join(PLANE, "..");
+const PROV = readGitProvenance(REPO);
+const inCommit = (abs) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, abs));
+const sitesIn = (src) => (src.match(/requiredArgument\("/g) || []).length;
+const MODULE_REPRO = MODULE_SRCS.filter(([f]) => inCommit(f));
+const MODULE_WALK = {
+  files: MODULE_SRCS.length, filesRepro: MODULE_REPRO.length,
+  sites: MODULE_SRCS.reduce((n, [, src]) => n + sitesIn(src), 0),
+  sitesRepro: MODULE_REPRO.reduce((n, [, src]) => n + sitesIn(src), 0),
+  report: reportProvenance({
+    prov: PROV,
+    items: MODULE_SRCS.map(([f, src]) => ({ path: repoPath(REPO, f), what: path.relative(PLANE, f),
+      counted: `searched for requiredArgument call sites (${sitesIn(src)} found)` })),
+    instrument: "plane-refusal-wire's module walk",
+    corpus: `bio-plane/src/: ${MODULE_SRCS.length} module file(s) walked, ${MODULE_REPRO.length} of them in the commit, `
+      + `${MODULE_REPRO.reduce((n, [, src]) => n + sitesIn(src), 0)} requiredArgument call site(s) in those`
+      + ` · floors ${MODULE_WALK_FLOOR.files} / ${MODULE_WALK_FLOOR.sites}`,
+    totals: PROV.inHead === null ? [] : [
+      { label: "module files walked", contaminated: MODULE_SRCS.length, reproducible: MODULE_REPRO.length, source: "files" },
+    ],
+  }),
+};
 function callTextFor(op){
   const needle = `requiredArgument("${op}"`;
-  const at = INDEX_SRC.indexOf(needle);
+  if(INDEX_SRC.indexOf(needle) >= 0) return callTextIn(INDEX_SRC, needle, op);
+  const hits = MODULE_SRCS.filter(([, src]) => src.indexOf(needle) >= 0);
+  if(hits.length > 1)
+    throw new Error(`plane-refusal-wire: requiredArgument("${op}") is called in ${hits.length} module files `
+      + `(${hits.map(([f]) => path.relative(PLANE, f)).join(", ")}); one op has one site.`);
+  return hits.length ? callTextIn(hits[0][1], needle, op) : "";
+}
+function callTextIn(SRC, needle, op){
+  const at = SRC.indexOf(needle);
   if(at < 0) return "";
   /* Balance from the helper's OWN opening paren. Getting this index wrong is not
      a near miss: starting one character late leaves `depth` at 0, the first `)`
@@ -128,13 +187,13 @@ function callTextFor(op){
      `literalsIn` a quote from a comment two refusals away. It is bounded and it
      THROWS rather than returning a shorter answer that would look like a call. */
   const open = at + "requiredArgument".length;
-  if(INDEX_SRC[open] !== "(") return "";
+  if(SRC[open] !== "(") return "";
   let depth = 0;
-  const end = Math.min(INDEX_SRC.length, open + CALL_SCAN_LIMIT);
+  const end = Math.min(SRC.length, open + CALL_SCAN_LIMIT);
   for(let i = open; i < end; i++){
-    const c = INDEX_SRC[i];
+    const c = SRC[i];
     if(c === "(") depth++;
-    else if(c === ")"){ depth--; if(depth === 0) return INDEX_SRC.slice(at, i + 1); }
+    else if(c === ")"){ depth--; if(depth === 0) return SRC.slice(at, i + 1); }
   }
   throw new Error(`plane-refusal-wire: requiredArgument("${op}") in index.mjs does not close within `
     + `${CALL_SCAN_LIMIT} characters. The call shape moved; a fixture built from a guess at where it `
@@ -153,8 +212,11 @@ export function planeRequiredArgumentSite(op){
   let error = lits.slice(3).join("");
   if(!error){
     /* The `error:` key set beside the spread — `op=verify`'s shape. Anchored to
-       the text that FOLLOWS this call, so it cannot pick up another site's. */
-    const after = INDEX_SRC.slice(INDEX_SRC.indexOf(call) + call.length, INDEX_SRC.indexOf(call) + call.length + 400);
+       the text that FOLLOWS this call, so it cannot pick up another site's.
+       RE-ANCHORED 2026-09-28 (legacy-tests T9): read in whichever source holds the call (see `callTextFor`). */
+    const SRC = INDEX_SRC.indexOf(call) >= 0 ? INDEX_SRC
+      : ((MODULE_SRCS.find(([, src]) => src.indexOf(call) >= 0) || [, ""])[1]);
+    const after = SRC.slice(SRC.indexOf(call) + call.length, SRC.indexOf(call) + call.length + 400);
     const m = /^,\s*\n?\s*error: "((?:[^"\\]|\\.)*)"/.exec(after);
     error = m ? unq(m[1]) : "";
   }
@@ -188,6 +250,12 @@ export function assertDerived(){
   if(!REQUIRED_ARGUMENT_CODE) bad.push("REQUIRED_ARGUMENT code not found inside requiredArgument()");
   if(!REQUIRED_ARGUMENT_CANNED || REQUIRED_ARGUMENT_CANNED.translation.length < 40)
     bad.push(`no *_CHECKS family holds a canned translation for ${REQUIRED_ARGUMENT_CODE}`);
+  /* GUARDED 2026-09-28 (legacy-tests T9): the module walk's REACH, over the commit at HEAD (see MODULE_WALK). A walk
+     that read nothing would find no call site and hand a consumer a null envelope for an op whose site moved there. */
+  if(MODULE_WALK.filesRepro < MODULE_WALK_FLOOR.files)
+    bad.push(`the walk of bio-plane/src/ read ${MODULE_WALK.filesRepro} module file(s) in the commit, floor ${MODULE_WALK_FLOOR.files}`);
+  if(MODULE_WALK.sitesRepro < MODULE_WALK_FLOOR.sites)
+    bad.push(`the walk of bio-plane/src/ found ${MODULE_WALK.sitesRepro} requiredArgument call site(s) in committed module files, floor ${MODULE_WALK_FLOOR.sites}`);
   if(bad.length)
     throw new Error("plane-refusal-wire: the plane's refusal wire could not be DERIVED, so no fixture "
       + "built from it would mean anything (DEC-49 / UI-100):\n  - " + bad.join("\n  - "));

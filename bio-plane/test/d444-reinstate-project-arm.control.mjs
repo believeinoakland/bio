@@ -57,21 +57,29 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const STORE = join(PLANE, "src/store.mjs");
 const AFF = join(PLANE, "src/affordances.mjs");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+   K225), so arms `copy` and `blind` — the fact's own site — edit that file. There the fact asks
+   `citation.retiredNotCitable(r.target)` through the facts' citation accessor, on one line; `copy` puts its own read of
+   the head in its place (the helper's spelling, over the facts' `this.sql`), `blind` stops the count. The other store
+   arms (citecopy, suggestcopy, typed) anchor on text that left store.mjs at T7 (citation, run-productions) and are
+   not re-anchored here. */
+const FACTS = join(PLANE, "src/affordances/facts.mjs");
+const nameOf = (f) => f === STORE ? "src/store.mjs" : f === FACTS ? "src/affordances/facts.mjs" : "src/affordances.mjs";
 const SUITE = join(HERE, "affordances.test.mjs");
 /* M0-182's one spelling (moved at c20-batch27 by CONDUCT #20): both old branches were already outside the
    worktree, but the env-var-first expression is one the pen sweep cannot resolve (UNCLASSIFIED). */
 const SNAP = controlPen("d444");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
-const PROJ_ARM = `|| (ty === "project" && (f.cites_out.severed_reinstatable ?? 0) > 0\n`
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9, N248, run in an isolated worktree): the project arm reads its count through
+   `countOf(f.cites_out?.…)` since T7 (affordances K211), so `revert` and `drop` matched nothing; the arm is quoted as it
+   stands and `revert` puts the bare `severed` count back in the same spelling. */
+const PROJ_ARM = `|| (ty === "project" && countOf(f.cites_out?.severed_reinstatable) > 0\n`
                + `                         && f.project_participant !== false) },`;
-const FACT = `          if (typeof r.target === "string" && !this.#retiredNotCitable(r.target))\n`
-           + `            citesOut.severed_reinstatable++;`;
+const FACT = `          if (typeof r.target === "string" && !citation.retiredNotCitable(r.target)) citesOut.severed_reinstatable++;`;
 const COPY = `          if (typeof r.target === "string") {\n`
-           + `            const tb = this.#one(\`SELECT object_type, current_state FROM bundles WHERE bundle_id=?\`, r.target);\n`
-           + `            if (!(tb && normalizeType(tb.object_type) === "information"\n`
-           + `                  && String(tb.current_state ?? "").trim() === "retired"))\n`
-           + `              citesOut.severed_reinstatable++;\n`
+           + `            const tb = [...this.sql.exec(\`SELECT current_state FROM bundles WHERE bundle_id=?\`, r.target)][0];\n`
+           + `            if (!(tb && String(tb.current_state ?? "").trim() === "retired")) citesOut.severed_reinstatable++;\n`
            + `          }`;
 
 const CITE_ONE = `    const retiredMembers = sel.members.filter((id) => this.#retiredNotCitable(id));\n`;
@@ -99,22 +107,28 @@ const S4 = "§4 after the live edge is reinstated";
 
 const ARMS = {
   revert: { file: AFF, floor: 100_000, from: PROJ_ARM,
-    to: `|| (ty === "project" && f.cites_out.severed > 0\n                         && f.project_participant !== false) },`,
+    to: `|| (ty === "project" && countOf(f.cites_out?.severed) > 0\n                         && f.project_participant !== false) },`,
     mustFail: [S0, S1, S4], mustHold: [OFFER, ACCEPT, S3] },
   drop: { file: AFF, floor: 100_000, from: PROJ_ARM, to: `},`,
     mustFail: [S0, OFFER], mustHold: [S1, ACCEPT, S3, S4] },
-  copy: { file: STORE, floor: 1_000_000, from: FACT, to: COPY,
+  copy: { file: FACTS, floor: 10_000, from: FACT, to: COPY,
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
-  blind: { file: STORE, floor: 1_000_000, from: FACT,
-    to: `          if (false && typeof r.target === "string" && !this.#retiredNotCitable(r.target))\n`
-      + `            citesOut.severed_reinstatable++;`,
+  /* RE-DERIVED 2026-09-28 (legacy-tests T9, N248): measured NOT AS DECLARED on its first run — `if (false && …` on the
+     fact's own line also broke §0, whose last element now pins that line's exact text (the fact's door, once). The
+     count is stopped where the fact is PUBLISHED instead: the line that asks the predicate is untouched and the
+     `cites_out` the facts hand out carries `severed_reinstatable: 0` — stated, never counted, as the arm says. */
+  blind: { file: FACTS, floor: 10_000, from: `             cites_out: citesOut, cited_by_case: citedByCase };`,
+    to: `             cites_out: { ...citesOut, severed_reinstatable: 0 }, cited_by_case: citedByCase };`,
     mustFail: [OFFER], mustHold: [S0, S1, ACCEPT, S3, S4] },
-  citecopy: { file: STORE, floor: 1_000_000, from: CITE_ONE, to: CITE_COPY,
+  /* T9 (N248): the three store arms' floors were 1_000_000 B and store.mjs is ~508 KB since the T3–T8 moves, so the
+     driver ABORTED here (exit 2) before reporting them; floored at 400_000 so each reports itself. Their anchors are
+     still dead (citation, run-productions; see the note at FACTS), so each reads DID NOT ARM — a finding, not a pass. */
+  citecopy: { file: STORE, floor: 400_000, from: CITE_ONE, to: CITE_COPY,
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
-  suggestcopy: { file: STORE, floor: 1_000_000, from: SUG_ONE, to: SUG_COPY,
+  suggestcopy: { file: STORE, floor: 400_000, from: SUG_ONE, to: SUG_COPY,
     also: [SUG_USE, `      if (String(row.current_state ?? "").trim() === "retired") unreachable.push(`],
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
-  typed: { file: STORE, floor: 1_000_000, from: HELPER, to: HELPER_TYPED,
+  typed: { file: STORE, floor: 400_000, from: HELPER, to: HELPER_TYPED,
     mustFail: [S0], mustHold: [S1, OFFER, ACCEPT, S3, S4] },
 };
 
@@ -138,9 +152,9 @@ if (base.code !== 0 || !base.foot || base.foot.fail || base.foot.pass < 99) {
 
 for (const [arm, a] of Object.entries(ARMS)) {
   const bytes = readFileSync(a.file);
-  const what = a.file === STORE ? "src/store.mjs" : "src/affordances.mjs";
+  const what = nameOf(a.file);
   if (bytes.length < a.floor) { console.log(`REFUSING: ${what} is ${bytes.length} bytes`); process.exit(2); }
-  const dest = join(SNAP, `${arm}--${a.file === STORE ? "src_store" : "src_affordances"}.mjs.pristine`);
+  const dest = join(SNAP, `${arm}--${what.replace(/[/.]/g, "_")}.pristine`);
   writeFileSync(dest, bytes);
   console.log(`\narm ${arm}: pristine ${what} ${bytes.length} bytes, sha256 ${sha(bytes).slice(0, 12)}…`);
   const text = bytes.toString("latin1");

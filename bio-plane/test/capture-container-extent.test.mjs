@@ -1092,6 +1092,23 @@ t("D-536: both readings carry their provenance", [!!html.reading.provenance, !!p
 const htmlReadingSansD536 = { ...html.reading };
 delete htmlReadingSansD536.provenance;
 delete pdfReadingSansNew.provenance;
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; extraction R60 and R13, N139 and N100, K293), never re-pinned: T9 added
+   FOUR keys to a reading, by the same rule as D-536's above — `text_chars`, `text_glyphs` and `text_undetermined`
+   (R60: the counts of the text the reader was handed; the HTML page's text is a bare string, so its undetermined
+   figure is null) on both readings, and `page_boxes` (R13: present exactly where `page_count` is, pdf-reader's R33
+   boxes) on the PDF's. MEASURED against T8's close (origin/main 7b535cf70c) by a scratch probe over these two
+   captures: those four keys are the WHOLE difference in either reading. So each is removed BY NAME before the
+   digest and the two PRISTINE digests hold at their old literals; what was removed is pinned exactly, from this
+   suite's own print, so removing the keys cannot hide their absence or a change in their values. */
+const T9_KEYS = ["text_chars", "text_glyphs", "text_undetermined", "page_boxes"];
+const takeT9 = (o) => Object.fromEntries(T9_KEYS.filter((k) => k in o).map((k) => { const v = o[k]; delete o[k]; return [k, v]; }));
+const htmlT9 = takeT9(htmlReadingSansD536), pdfT9 = takeT9(pdfReadingSansNew);
+t("T9 (extraction R60, R13): the four keys T9 added are exactly these, with these values — the HTML page's counts "
+  + "of its text, the text-free PDF's zero counts and its one measured page box",
+  [htmlT9, pdfT9],
+  [{ text_chars: 168, text_glyphs: 155, text_undetermined: null },
+   { text_chars: 0, text_glyphs: 0, text_undetermined: 0,
+     page_boxes: { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0] } }]);
 t("an HTML capture's whole reading is BYTE-IDENTICAL to CAP-9's landing (pristine digest pin)",
   normDigest(htmlReadingSansD536), PRISTINE.html);
 t("and a PDF capture's is too, once the ONE key this item adds is removed — nothing else "

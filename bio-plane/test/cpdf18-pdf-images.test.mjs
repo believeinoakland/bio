@@ -343,9 +343,32 @@ console.log("\n--- 4. a page with no images yields no rows and says so ---");
 const cropEmpty = await cropImage(IMAGES_PDF, { kind: "image", page: 1, rect: [50, 600, 250, 700] });
 t("a crop asked of a page that paints nothing is refused NO_IMAGE_AT_RECT with an EMPTY painted list — "
   + "the page was walked and holds none", [cropEmpty.reason, cropEmpty.painted], ["NO_IMAGE_AT_RECT", []]);
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9; pdf-reader R34, N101, K279; PDF-READER #2 J2): tier 1's `text` now
+   carries one `image_unread` marker per painted placement covering at least 0.001 of its page's visible box (R34),
+   in each page's `undetermined`, the document's `undetermined` and `counts.undetermined`. That is an ADDITION BY
+   NAME, not a change to the text walk this pin watches, so the markers are removed BY NAME (and the count lowered by
+   as many) before the digest, as REC-206's snapshot did, and the two literals above are NOT re-taken: the stripped
+   texts hash to exactly them. pdf-reader's other T9 additions, the top-level `pageBoxes` (R33) and
+   `links[].anchor` (R35), sit outside `text` and never reach this digest. The removed markers are pinned exactly,
+   from the suite's print: the synthetic page 0's three placements (the inline image, 200 pt² of a 484,704 pt² page,
+   is under the 0.001 share and gets none) and the agenda's masthead. */
+const R34_UNREAD = (text) => (text?.undetermined || []).filter((m) => m && m.reason === "image_unread");
+const withoutR34 = (text) => {
+  const keep = (a) => (Array.isArray(a) ? a.filter((m) => !(m && m.reason === "image_unread")) : a);
+  const und = keep(text.undetermined);
+  return { ...text, pages: text.pages.map((p) => ({ ...p, undetermined: keep(p.undetermined) })), undetermined: und,
+           counts: { ...text.counts, undetermined: text.counts.undetermined - (text.undetermined.length - und.length) } };
+};
+const unreadAt = (page, rect, area_share) => ({ page, reason: "image_unread", font: null, codes: "", count: 0, rect, area_share });
+t("R34 (K279): tier 1 marks each painted image it cannot read `image_unread`, exactly these, over the image fixture "
+  + "and the agenda's masthead",
+  [R34_UNREAD(st.text), R34_UNREAD(agenda.text)],
+  [[unreadAt(0, [50, 600, 250, 700], 0.0413), unreadAt(0, [310, 110, 370, 190], 0.0099),
+    unreadAt(0, [320, 300, 400, 350], 0.0083)],
+   [unreadAt(0, AGENDA_RECT, 0.0288)]]);
 t("TIER 1's TEXT over the image fixture and over a real agenda is unchanged by the image walk "
-  + "(the tokenizer's inline-image option is off for text) — pinned by digest",
-  [sha(JSON.stringify(st.text)), sha(JSON.stringify(agenda.text))], [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
+  + "(the tokenizer's inline-image option is off for text) — pinned by digest, R34's markers removed by name",
+  [sha(JSON.stringify(withoutR34(st.text))), sha(JSON.stringify(withoutR34(agenda.text)))], [TEXT_PIN_SYNTH, TEXT_PIN_AGENDA]);
 
 await mf.dispose();
 console.log(`\n${pass} pass, ${fail} fail`);

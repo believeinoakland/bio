@@ -356,22 +356,31 @@ ok("NO MACHINE VOCABULARY, RECIPIENT DOOR: no SHOUTY_CODE reaches the page a rec
    requirement. Every `STATEMENT_ACK_*` code `store.mjs` can return is listed; the two this suite
    drives live are named from the plane's own answers above, and the rest are reported. A code this
    walk cannot see would be a code no sentence is owed for, so the corpus is PRINTED. */
-const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): `op=statementack` and its refusals are the `case-authoring` module's
+   (`bio-plane/src/case-authoring/index.mjs`, minted through its `ack(code, detail)` helper over `refusal(...)`), and
+   the catalogue family moved with them (`case-authoring/checks.mjs`, `Object.freeze({ … })`). `store.mjs` holds no
+   STATEMENT_ACK_* code any more, so the walk read an empty corpus. It reads the module that mints them; the name
+   `STORE_SRC` is kept for its readers. */
+const STORE_SRC = fs.readFileSync(new URL("../../bio-plane/src/case-authoring/index.mjs", import.meta.url), "utf8");
 const ACK_CODES = [...new Set([...STORE_SRC.matchAll(/["']?(STATEMENT_ACK_[A-Z_]+)["']?\s*[,:}]/g)].map((m) => m[1]))]
   .filter((c) => !/_MAX$|_CHECKS$/.test(c)).sort();
-console.log(`  ACK CODE CORPUS (derived from bio-plane/src/store.mjs, never typed here): ${ACK_CODES.length} — ${ACK_CODES.join(", ")}`);
-ok("THE CORPUS IS NOT EMPTY, and it is the plane's own: every STATEMENT_ACK_* refusal `store.mjs` can return",
+console.log(`  ACK CODE CORPUS (derived from bio-plane/src/case-authoring/index.mjs, never typed here): ${ACK_CODES.length} — ${ACK_CODES.join(", ")}`);
+ok("THE CORPUS IS NOT EMPTY, and it is the plane's own: every STATEMENT_ACK_* refusal `case-authoring` can return",
    ACK_CODES.length >= 5, JSON.stringify(ACK_CODES));
-const CATALOGUE = fs.readFileSync(new URL("../../bio-plane/checks/bio-checks.mjs", import.meta.url), "utf8");
+const CATALOGUE = fs.readFileSync(new URL("../../bio-plane/src/case-authoring/checks.mjs", import.meta.url), "utf8");
 const CAT_BLOCK = CATALOGUE.slice(CATALOGUE.indexOf("export const STATEMENT_ACK_CHECKS"));
-const CAT_CODES = [...new Set([...CAT_BLOCK.slice(0, CAT_BLOCK.indexOf("\n};")).matchAll(/(STATEMENT_ACK_[A-Z_]+):/g)].map((m) => m[1]))];
+/* The family closes `});` now (frozen) where it closed `};`; the block ends at whichever comes first. */
+const CAT_END = CAT_BLOCK.search(/\n\}\)?;/);
+const CAT_CODES = [...new Set([...CAT_BLOCK.slice(0, CAT_END).matchAll(/(STATEMENT_ACK_[A-Z_]+):/g)].map((m) => m[1]))];
 const NO_ROW = ACK_CODES.filter((c) => !CAT_CODES.includes(c));
 console.log(`  DEC-49 ROWS: ${CAT_CODES.length} of ${ACK_CODES.length} STATEMENT_ACK_* codes have a \`*_CHECKS\` row `
   + `(${CAT_CODES.join(", ") || "none"}); ${NO_ROW.length} carry the plane's authored \`detail\` and no \`translation\`: ${NO_ROW.join(", ") || "none"}.`);
 ok("EVERY REFUSAL THIS SURFACE CAN MEET CARRIES AN AUTHORED SENTENCE — from a catalogue row's `translation` where "
    + "one exists, else the plane's own `detail` at its site; `refusalWords` prefers the row, and the two arms above "
    + "prove the rendered sentence IS the plane's",
-   NO_ROW.every((c) => new RegExp(`reason: "${c}"[\\s\\S]{0,600}?detail:`).test(STORE_SRC)),
+   /* RE-ANCHORED 2026-09-28 (legacy-tests T9): a site is `ack("CODE", <detail>, …)` now — its second argument IS the
+      `detail` — as well as the old `reason: "CODE", … detail:` shape. */
+   NO_ROW.every((c) => new RegExp(`reason: "${c}"[\\s\\S]{0,600}?detail:|\\back\\("${c}",\\s*\\S`).test(STORE_SRC)),
    JSON.stringify(NO_ROW));
 
 /* ============================================================

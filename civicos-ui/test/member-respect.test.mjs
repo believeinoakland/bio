@@ -94,8 +94,12 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282: a suite's own exit must not
                                               lives in the plane's test estate and this is the UI's; the
                                               side effect is what is wanted and it is idempotent. */
 import fs from "fs";
-import { RUNGS, RUNG_ABSENT, RUNG_LADDER, ATTEST_FENCE, ACQUIRE_GRADE_NOTE }
+import { RUNGS, RUNG_ABSENT, RUNG_LADDER, ATTEST_FENCE }
   from "../../bio-plane/src/affordances.mjs";
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): N80 (T8) — op=acquire's `note` is `capture`'s, and the copy that stood
+   in `affordances.mjs` left with it; the import threw a SyntaxError before any arm ran. ARM P1 reads the note from
+   the one module that composes it now (`add-surface.test.mjs` imports it from the same place). */
+import { ACQUIRE_GRADE_NOTE } from "../../bio-plane/src/capture/index.mjs";
 /* UI-53's STANDING RULE, AND THIS FILE IS A CONSUMER OF IT RATHER THAN A FIFTH
    LIST. There is ONE definition of DEC-32 clause 1's ban in this directory. This
    sweep reads the whole member-facing prose corpus, so it is a ban site whether it
@@ -850,9 +854,14 @@ for(const [host, s] of Object.entries(SETS)){
      as the method's first statement — so an entry claiming it is still single-key described the defect D-126 fixed,
      and survived only because its signature regex still matches the method's opening `{ progressionKey`. What
      remains is UI-68's `reviewrevoke`, which withdraws ONE grant, named by id, and is genuinely single-key. */
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): `op=reviewrevoke` is the `review` module's act now — the dispatch
+     sends `r.act({ act: "revoke", grant, … })` and `bio-plane/src/review/index.mjs` runs `#revoke(who, { grant = null }
+     = {})`, still ONE grant named by id. The store's `#reviewRevoke` left with the extraction, so the claim is
+     measured against the module that holds the act; each carry names the source it is read from. */
+  const reviewSrc = fs.readFileSync(new URL("../../bio-plane/src/review/index.mjs", import.meta.url).pathname, "utf8");
   const stillScalar = [
     /* UI-68: `op=reviewrevoke` withdraws ONE grant, named by id. */
-    { op: "reviewrevoke",   sig: /#reviewRevoke\(who, \{\s*grant = null\s*\}/ },
+    { op: "reviewrevoke",   src: reviewSrc, sig: /\n  #revoke\(who, \{\s*grant = null\s*\} = \{\}\)/ },
   ];
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; entities R11, C-75): `op=resolve` is entities' service now. The store's
      `resolveReferences(body)` hands the WHOLE body to `entitiesOf(this.ctx).resolve(body)` (and only arms the derive
@@ -868,7 +877,7 @@ for(const [host, s] of Object.entries(SETS)){
     ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(store),
        `ARM 4d: \`op=${op}\` (\`${method}\`) no longer opens with the set branch into the per-item weight (\`#perItem\`) — the bulk path in \`queueSelBarHtml\` would be sending a selection the plane cannot take. Re-measure the act.`);
   for(const c of stillScalar)
-    ok(c.sig.test(store),
+    ok(c.sig.test(c.src || store),
        `ARM 4d: the carried row for '${c.op}' claims the plane takes ONE key, and the plane's own signature no longer matches that claim. Re-measure it: if the op now accepts a set, the bulk path is buildable here and the carry must be STRUCK in the same commit that builds it.`);
   /* And the correction's own claim, measured the same way and in the other
      direction: `op=queuemute` DOES take a set, which is why UI-55 could fix it here. */

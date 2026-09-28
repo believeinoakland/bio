@@ -157,7 +157,10 @@ const NELL = await member("nell", ["contribute", "create_projects"]);
 const NOW = "2026-09-19T09:00:00Z";
 const sha = async (t) => Array.from(new Uint8Array(await webcrypto.subtle.digest("SHA-256",
   new TextEncoder().encode(t)))).map(b => b.toString(16).padStart(2, "0")).join("");
-const BODY = [ "---", "type: project", "title: The ferry contract", "current_state: forming", "---", "",
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the
+   fixture states one — the promote was refused NO_OBJECTIVE before any arm ran. */
+const BODY = [ "---", "type: project", 'objective: "Trace where the money went."', "title: The ferry contract",
+               "current_state: forming", "---", "",
                "## Plan", "", "Who signed the ferry contract, and against which appraisal.", "",
                "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", "" ].join("\n");
 const made = await post("promote", {

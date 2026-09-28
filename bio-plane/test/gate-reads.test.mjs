@@ -65,11 +65,43 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 
-const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+/* EXTENDED 2026-09-28 (legacy-tests T9): THE REAL WORKER AND THE REAL STORE, WITH ONE PLANTING DOOR, on
+   d573-lastchange-tie.test.mjs's precedent. Layer 9's reads (the T9 section below) are driven on carol's hidden project,
+   and a determination rests on findings a RATIFIED CASE EDITION of that project published (conformance R2, through
+   publication's `publishedEditionsOf`). The ceremony that writes those rows (a case signed, ratified and published) is
+   not in this fixture, so `/t9plant` writes exactly the three publication rows it would leave — the case's identity
+   (`cases`), its ratified edition (`published_cases`) and the finding's membership (`published_case_members`) — and
+   nothing else: every layer-9 object after it (the standard, the determination, the comparison, the consequence part,
+   the escalation, the action and its counsel packet) is written by its module's own act through the control plane,
+   and every read is the plane's. The door takes only those three tables, and is reached only through the Durable
+   Object (`doStub`, as `taskenqueue` and `recordcapturedlocator` are below); the control plane has no route to it. */
+const PROBE_SRC = `
+import worker from "./index.mjs";
+import { Store } from "./store.mjs";
+const PLANTABLE = { cases: ["case_id", "project_id", "opened"],
+                    published_cases: ["case_id", "edition", "opened", "ratified_at"],
+                    published_case_members: ["case_id", "edition", "ord", "bundle_id", "version_sha", "role"] };
+export class GateReadsStore extends Store {
+  async fetch(req) {
+    const url = new URL(req.url);
+    if (url.pathname === "/t9plant") {
+      const b = await req.json();
+      const cols = PLANTABLE[b.table];
+      if (!cols) return Response.json({ result: { ok: false, reason: "NOT_PLANTABLE", table: b.table ?? null } });
+      this.sql.exec("INSERT INTO " + b.table + " (" + cols.join(",") + ") VALUES (" + cols.map(() => "?").join(",") + ")",
+                    ...cols.map((c) => b.row[c] ?? null));
+      return Response.json({ result: { ok: true, table: b.table } });
+    }
+    return super.fetch(req);
+  }
+}
+export default worker;
+`;
 const mf = withSurfacingRun(new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: fileURLToPath(new URL("../src/gate-reads-probe.mjs", import.meta.url)),
+  script: PROBE_SRC,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-  durableObjects: { STORE: { className: "Store", useSQLite: true } },
+  durableObjects: { STORE: { className: "GateReadsStore", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "t-admin-rec25", MEMBER_TOKEN: "mem-rec25", PROBE_TOKEN: "prb-rec25", VERSION: "test" },
 }));
@@ -889,6 +921,203 @@ console.log("\n--- T8's reads (intent, reevaluation, monitoring), driven on the 
 }
 
 /* ------------------------------------------------------------------------- *
+ *  T9's READS, DRIVEN ON THE HIDDEN PROJECT (2026-09-28, legacy-tests T9; LEGACY-INDEX #6 routed them, K312;
+ *  LEGACY-STORE's T9 record built them into the durable object, N216). Fourteen reads of layer 9 arrived unclassified.
+ *  As T8's section above, each is asked by dave, who was never invited to carol's projects, and by carol, who owns them,
+ *  so the classification below is written from what the plane ANSWERED:
+ *    - standards' `standard`, `standards`, `standardinforce` (a standard is a bundle OUTSIDE every project, standards
+ *      R15; its text is passages of DOCUMENTS, which are shared corpus), asked while the hidden project's determination
+ *      measures an act against it, so what a reader of the standard could learn of that project is on the record;
+ *    - conformance's `determination`, `determinations`, `comparison` (R15: every read answers a determination in a
+ *      project the viewer may not see as an absent one);
+ *    - consequences' `consequence`, `consequencesof`, `addressed` (R13: every read answers a part in a project the
+ *      viewer may not see as absent);
+ *    - filings' `availableactions` (R21), `counselpacketread` (R11) and `filingsfor` (R13);
+ *    - escalation's `escalation` (R2, R20) and `escalationsdue` (R16, R20).
+ *  EVERY layer-9 object here is written by its module's own act through the control plane, by carol: the standard
+ *  (over a passage carol marks citable in the shared evidence), the determination, the comparison, the consequence
+ *  part, the escalation, an action resting on the determination (tier 3) and its counsel packet. The one thing planted
+ *  is the ratified case edition of carol's project that publishes the finding the determination rests on (the three
+ *  publication rows `/t9plant` writes; the probe door's header says why). The finding is T8's shared question INQN.
+ *  Built AFTER every count above was asserted, and citing nothing the sections above count.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- T9's reads (standards, conformance, consequences, filings, escalation), driven on the hidden project ---");
+{
+  const R = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+  const flatten = (r, ...ids) => JSON.parse(ids.reduce((s, id) => s.split(id).join("<ASKED>"), JSON.stringify(r)));
+  const names = (r, ...ids) => ids.filter((id) => JSON.stringify(r).includes(id));
+  const must = (what, r, ok) => { if (!ok) throw new Error(`${what}: ${JSON.stringify(r).slice(0, 900)}`); return r; };
+  const INQN = "INQ-2026-0001-watched";
+  const SECRET_ACT = "without the council's closed review";      // the act's words, which only the project may read
+  const SECRET_HARM = "the hauling reserve fund";                  // the consequence part's affected, likewise
+
+  /* --- the standard: a passage of the SHARED evidence marked citable, then a standard carol records over it. */
+  const mint = R(await POST(`op=contentmint&token=${carol}`, { bundleId: INFO, extent: { kind: "document" } }));
+  must("contentmint", mint, mint?.ok === true && typeof mint.content_id === "string");
+  const CID = mint.content_id;
+  const std = R(await POST(`op=standarddeclare&token=${carol}`, { cite: "Hauling Code 5.2", kind: "ordinance",
+    issuer: "City Council", text: [CID], period: { from: "2020-01-01", to: null } }));
+  must("standarddeclare", std, std?.ok === true);
+  const STD = std.id;
+
+  /* --- the ratified case edition of carol's HIDDEN project that publishes INQN (planted: see the probe door). */
+  const plant = async (table, row) => R(await (await doStub.fetch("http://x/t9plant",
+    { method: "POST", body: JSON.stringify({ table, row }) })).json());
+  const CASE = "CASE-2026-0901";
+  for (const [table, row] of [["cases", { case_id: CASE, project_id: PROJ, opened: "2026-07-07T00:00:00Z" }],
+                              ["published_cases", { case_id: CASE, edition: 1, opened: "2026-07-07T00:00:00Z",
+                                                    ratified_at: "2026-07-08T00:00:00Z" }],
+                              ["published_case_members", { case_id: CASE, edition: 1, ord: 0, bundle_id: INQN,
+                                                           version_sha: null, role: "load_bearing" }]]) {
+    const r = await plant(table, row);
+    must(`t9plant ${table}`, r, r?.ok === true);
+  }
+
+  /* --- the determination, the comparison, the consequence part and the escalation, all in carol's hidden project. */
+  const act = { description: `Awarded the hauling contract ${SECRET_ACT}`, actor: { role: "City Administrator", body: "City of Oakland" },
+                at: "2026-06-01", evidence: [CID] };
+  const rows = [{ standard: STD, requires: "a council review before award", did: "awarded without one", reading: "diverges" }];
+  const det = R(await POST(`op=determine&token=${carol}`, { project: PROJ, act, findings: [INQN],
+    standards: [{ standard: STD, outcome: "noncompliant" }], rows }));
+  must("determine", det, det?.ok === true && det.project === PROJ);
+  const DET = det.id;
+  const cmp = R(await POST(`op=comparisonpropose&token=${carol}`, { project: PROJ, act, standards: [STD], rows }));
+  must("comparisonpropose", cmp, cmp?.ok === true);
+  const CMP = cmp.proposal.id;
+  const cons = R(await POST(`op=consequencerecord&token=${carol}`, { determination: DET, standard: STD,
+    affected: { kind: "fund", description: SECRET_HARM }, measure: { unit: "money", currency: "USD" },
+    period: { from: "2026-06-01", to: "2026-07-01" }, basis: { why: "not_assessed" } }));
+  must("consequencerecord", cons, cons?.ok === true && cons.part?.project === PROJ);
+  const CONS = cons.id;
+  const esc = R(await POST(`op=escalationopen&token=${carol}`, { determination: DET }));
+  must("escalationopen", esc, esc?.ok === true && esc.project === PROJ);
+  const ESC = esc.id;
+
+  /* --- an action resting on that determination, and the counsel packet carol assembles for it (tier 3). The action
+         is not `breach: true`: filings reads a `rests_on` leg whatever the flag, and actions' breach check reads the
+         promoting session's viewer as its bare member id (ACTION_NO_DETERMINATION for a member; reported, not
+         pinned). An action is not a project's bundle, so every member may see it (viewerPredicate). */
+  const ACTN = "ACTN-2026-0901-hauling-claim";
+  const actionText = ["---", `id: ${ACTN}`, "object_type: action", "schema: action@1", 'title: "Hauling claim"',
+    "current_state: planned", "prior_state: null", 'created: "2026-07-09T00:00:00Z"', 'last_updated: "2026-07-09T00:00:00Z"',
+    "produced_by:", "  mode: human", "  capability_tier: session", "group: believe-in-oakland", "references: []",
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+    "visuals: []", "action_kind: other", "risk_tier: 3",
+    "counterparty:", "  state: named", "  role: City Administrator", "  body: City of Oakland",
+    "action_basis:", `  - target: ${DET}`, "    kind: rests_on",
+    "---", "", "## Plan", "", "Refer the award to counsel.", "", "## Status", "", "## Correspondence", "",
+    "## Session Log", "", "## Review Notes", ""].join("\n");
+  const actp = R(await POST(`op=promote&token=${carol}`, { bundleId: ACTN, base: null, snapKey: `${ACTN}-new`,
+    author: "suite", files: [{ path: "bundle.md", text: actionText, bytes: actionText.length, sha256: sha(actionText) }],
+    register: [], meta: { object_type: "action", group: "believe-in-oakland", title: "Hauling claim", current_state: "planned",
+                          created: "2026-07-09T00:00:00Z", last_updated: "2026-07-09T00:00:00Z" } }));
+  must("promote the action", actp, actp?.ok === true);
+  const pk = R(await POST(`op=counselpacket&token=${carol}`, { action: ACTN, counsel: { name: "Ada Counsel", organisation: "Bay Legal Aid" } }));
+  must("counselpacket", pk, pk?.ok === true);
+  const CPK = pk.id;
+
+  /* --- standards: nothing of the hidden project is reachable through a standard, and the answer is the record's. */
+  const sD = await GET(`op=standard&token=${dave}&id=${STD}`), sC = await GET(`op=standard&token=${carol}&id=${STD}`);
+  t("op=standard: the declarer reads her standard, its text passage with its standing (the arm is live)",
+    [sC.body.result?.id, (sC.body.result?.texts || []).map((x) => x.content_id)], [STD, [CID]]);
+  t("op=standard: the uninvited member is answered the same standard, byte for byte — it is outside every project",
+    sD, sC);
+  t("op=standard: and nothing in it names the hidden project, the determination measured against it, or the act",
+    names(sD.body, PROJ, DET, SECRET_ACT), []);
+  const lD = await GET(`op=standards&token=${dave}`), lC = await GET(`op=standards&token=${carol}`);
+  t("op=standards: both are listed the standard, identically", [(lD.body.result?.items || []).map((x) => x.id), lD], [[STD], lC]);
+  t("op=standards: and nothing in the list names the hidden project or its determination", names(lD.body, PROJ, DET), []);
+  const fD = await GET(`op=standardinforce&token=${dave}&id=${STD}&date=2026-06-01`);
+  t("op=standardinforce: the period against a date, answered the same to both, naming nothing of the project",
+    [fD, names(fD.body, PROJ, DET)], [await GET(`op=standardinforce&token=${carol}&id=${STD}&date=2026-06-01`), []]);
+
+  /* --- conformance. */
+  const ABSENT_DET = "CONF-2026-9999-determination";
+  t("op=determination: the OWNER reads her project's determination (the arm is live)",
+    [(await GET(`op=determination&token=${carol}&id=${DET}`)).body.result?.id], [DET]);
+  const [dH, dA] = [await GET(`op=determination&token=${dave}&id=${DET}`), await GET(`op=determination&token=${dave}&id=${ABSENT_DET}`)];
+  t("op=determination: a hidden project's determination answers dave byte-identically to one that does not exist, the id aside",
+    flatten(dH, DET), flatten(dA, ABSENT_DET));
+  t("op=determination: and that answer names neither the project nor the act", names(dH.body, PROJ, SECRET_ACT), []);
+  t("op=determinations: the OWNER's list carries it (the arm is live)",
+    (((await GET(`op=determinations&token=${carol}`)).body.result || {}).items || []).map((x) => x.id), [DET]);
+  const dlD = await GET(`op=determinations&token=${dave}`);
+  t("op=determinations: the uninvited member's list does not, and names nothing of the project",
+    [(dlD.body.result?.items || []).map((x) => x.id), names(dlD.body, PROJ, DET, SECRET_ACT)], [[], []]);
+  const [plH, plA] = [await GET(`op=determinations&token=${dave}&project=${PROJ}`), await GET(`op=determinations&token=${dave}&project=${MISSING}`)];
+  t("op=determinations: asked BY the hidden project, dave is answered byte-identically to an absent one, the id aside",
+    flatten(plH, PROJ), flatten(plA, MISSING));
+  t("op=comparison: the OWNER reads the comparison proposed in her project (the arm is live)",
+    [(await GET(`op=comparison&token=${carol}&id=${CMP}`)).body.result?.proposal?.id], [CMP]);
+  const [cH, cA] = [await GET(`op=comparison&token=${dave}&id=${CMP}`), await GET(`op=comparison&token=${dave}&id=CMP-2026-9999`)];
+  t("op=comparison: a hidden project's comparison answers dave byte-identically to one that does not exist, the id aside",
+    flatten(cH, CMP), flatten(cA, "CMP-2026-9999"));
+
+  /* --- consequences. */
+  t("op=consequence: the OWNER reads the part recorded in her project (the arm is live)",
+    [(await GET(`op=consequence&token=${carol}&id=${CONS}`)).body.result?.part?.id], [CONS]);
+  const [kH, kA] = [await GET(`op=consequence&token=${dave}&id=${CONS}`), await GET(`op=consequence&token=${dave}&id=CONS-2026-9999-fund`)];
+  t("op=consequence: a hidden project's part answers dave byte-identically to one that does not exist, the id aside",
+    flatten(kH, CONS), flatten(kA, "CONS-2026-9999-fund"));
+  t("op=consequencesof: the OWNER is listed the determination's live part (the arm is live)",
+    ((await GET(`op=consequencesof&token=${carol}&determination=${DET}`)).body.result?.parts || []).map((x) => x.id), [CONS]);
+  const [qH, qA] = [await GET(`op=consequencesof&token=${dave}&determination=${DET}`),
+                    await GET(`op=consequencesof&token=${dave}&determination=${ABSENT_DET}`)];
+  t("op=consequencesof: asked of the hidden project's determination, dave is answered as for an absent one, the id aside",
+    flatten(qH, DET), flatten(qA, ABSENT_DET));
+  t("op=addressed: the OWNER is told the part's addressed state (the arm is live)",
+    ((await GET(`op=addressed&token=${carol}&determination=${DET}`)).body.result?.parts || []).map((x) => [x.id, x.addressed]),
+    [[CONS, "never_assessed"]]);
+  const [aH, aA] = [await GET(`op=addressed&token=${dave}&determination=${DET}`),
+                    await GET(`op=addressed&token=${dave}&determination=${ABSENT_DET}`)];
+  t("op=addressed: asked of the hidden project's determination, dave is answered as for an absent one, the id aside",
+    flatten(aH, DET), flatten(aA, ABSENT_DET));
+
+  /* --- filings. */
+  t("op=availableactions: the OWNER is answered the block for her project's determination (the arm is live)",
+    [(await GET(`op=availableactions&token=${carol}&determination=${DET}`)).body.result?.determination], [DET]);
+  const [vH, vA] = [await GET(`op=availableactions&token=${dave}&determination=${DET}`),
+                    await GET(`op=availableactions&token=${dave}&determination=${ABSENT_DET}`)];
+  t("op=availableactions: asked of the hidden project's determination, dave is answered as for an absent one, the id aside",
+    flatten(vH, DET), flatten(vA, ABSENT_DET));
+  t("op=counselpacketread: the OWNER reads the packet assembled from her project's determination (the arm is live)",
+    names((await GET(`op=counselpacketread&token=${carol}&id=${CPK}`)).body, CPK, DET, SECRET_ACT), [CPK, DET, SECRET_ACT]);
+  /* FILINGS R11/R19 KEY A PACKET'S SIGHT ON ITS ACTION, and an action is not a project's bundle, so viewerPredicate
+     never hides it: the packet, whose every section carol assembled from a determination of her HIDDEN project, is
+     answered to any member. Left red (product, not re-pinned): the classification below does not name it. */
+  t("op=counselpacketread: nothing in the uninvited member's answer names the hidden project, its determination, the "
+  + "act, or its consequence part and what it affected (conformance R15, consequences R13)",
+    names((await GET(`op=counselpacketread&token=${dave}&id=${CPK}`)).body, PROJ, DET, SECRET_ACT, CONS, SECRET_HARM), []);
+
+  /* --- escalation (asked BEFORE the supersession below, while the determination is live). */
+  t("op=escalation: the OWNER reads the escalation of her project's determination (the arm is live)",
+    [(await GET(`op=escalation&token=${carol}&id=${ESC}`)).body.result?.id], [ESC]);
+  const [eH, eA] = [await GET(`op=escalation&token=${dave}&id=${ESC}`), await GET(`op=escalation&token=${dave}&id=ESC-2026-9999-escalation`)];
+  t("op=escalation: a hidden project's escalation answers dave byte-identically to one that does not exist, the id aside",
+    flatten(eH, ESC), flatten(eA, "ESC-2026-9999-escalation"));
+  t("op=escalationsdue: the OWNER is told her escalation's proposed edge — stage 1's trigger is a live determination "
+  + "whose act names an office (R4), met here (the arm is live)",
+    ((await GET(`op=escalationsdue&token=${carol}`)).body.result?.items || []).filter((i) => i.id === ESC).map((i) => [i.from, i.to]),
+    [[1, 2]]);
+  t("op=escalationsdue: and nothing in the uninvited member's answer names the escalation or its project",
+    names((await GET(`op=escalationsdue&token=${dave}`)).body, ESC, PROJ, DET), []);
+
+  /* --- filingsfor, after carol supersedes the determination: filings R12 flags the packet `basis_changed`. */
+  const det2 = R(await POST(`op=determine&token=${carol}`, { project: PROJ, act: { id: det.act.id }, supersedes: DET,
+    reason: "restated after the council minutes", findings: [INQN], standards: [{ standard: STD, outcome: "noncompliant" }], rows }));
+  must("determine (superseding)", det2, det2?.ok === true);
+  t("op=filingsfor: the OWNER's list carries the packet, flagged because the determination it drew on was superseded "
+  + "(filings R12; the arm is live)",
+    ((await GET(`op=filingsfor&token=${carol}&action=${ACTN}`)).body.result?.packets || [])
+      .map((x) => [x.packet, (x.basis_changed?.causes || []).map((c) => [c.cause, c.determination, c.by])]),
+    [[CPK, [["determination_superseded", DET, det2.id]]]]);
+  /* The same R11/R19 key, and the flag is read by a MACHINE reader (`#basisChanged`), so the causes name the hidden
+     project's determinations to whoever may see the action. Left red (product, not re-pinned). */
+  t("op=filingsfor: and nothing in the uninvited member's answer names the hidden project's determinations",
+    names((await GET(`op=filingsfor&token=${dave}&action=${ACTN}`)).body, PROJ, DET, det2.id), []);
+}
+
+/* ------------------------------------------------------------------------- *
  *  THE DELIBERATELY UNGATED READS, AND WHY — recorded here rather than in a
  *  document, because a rule that is not in the loop the reader runs is not a
  *  rule. The assertion below is STRUCTURAL: it parses index.mjs's OPS table and
@@ -1524,6 +1753,78 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "through): capture, grade and effect answer null, and the newer bundle passes the module's `#redactor`. So a "
       + "newer version filed in a project the caller was never invited to is absent from the notice, as op=versionnotice "
       + "withholds it. Stamped fail-closed in index.mjs. It writes nothing.",
+    /* CLASSIFIED 2026-09-28 (legacy-tests T9): layer 9's reads, routed by LEGACY-INDEX #6 (K312) and built into the
+       durable object by LEGACY-STORE (N216). Each reason is read off its code path whole (src/standards/index.mjs
+       `standardRead`, `#readable`, `standardsIn`; src/conformance/index.mjs `determinationRead`, `#seen`,
+       `determinationsFor`, `#projectRefusal`, `comparisonRead`; src/consequences/index.mjs `consequenceRead`, `#part`,
+       `#seesProject`, `#determination`, `consequencesOf`, `addressed`; src/filings/index.mjs `availableActions`) and each
+       hidden-project arm DRIVEN in this suite's T9 section above, with its owner arm live. FOUR ARE LEFT UNCLASSIFIED,
+       and red, deliberately:
+       `counselpacketread` and `filingsfor` LEAK (filings R11, R13, R19 key sight on the ACTION, which is not a project's
+       bundle, so every member sees it): driven, dave received the hidden project's id, its determination's id, the act's
+       words, the consequence part's id and what it affected from the packet, and both determinations' ids from the
+       list's `basis_changed` (read by a machine reader) once carol superseded the first.
+       `escalation` and `escalationsdue` withhold from dave, and from the OWNER too: `#row` asks `inSight` of the
+       escalation's project, but escalation's `#one` indexes the workerd cursor its `#rows` returns unspread, so it is
+       always null in the plane and neither read answers anybody (the two owner arms above are red). A gate that is never
+       reached is not driven; each is classified once those arms are green. */
+    standard: "standards R5, R15: one standard by id — its citation, kind, issuer, period, source, declarer and each text "
+      + "passage with its standing and newer-version notice. A standard is a record object OUTSIDE every project (R15), "
+      + "and its text is passages of DOCUMENTS, so viewerPredicate — which filters PROJECT bundles and nothing else — "
+      + "admits it to every recognised viewer: `#readable` asks membership `inSight` of the standard under the stamped "
+      + "viewer, and an absent or unrecognised one is answered NO_SUCH_STANDARD, exactly as an id that does not exist "
+      + "(R5). WHAT THE GATE BUYS IS THE FAIL-CLOSED ARM, stated as op=basisversions states it: the participation arm "
+      + "cannot bite on a standard. A passage's standing is content's `standings` of a document's row, and its notice is "
+      + "content's `passageNotice` under the same viewer (`sees`, and only the version chains that viewer sees). DRIVEN "
+      + "in the T9 section above while carol's hidden project holds a determination measured against it: dave is "
+      + "answered the standard byte for byte as carol is, naming nothing of the project, the determination or the act. "
+      + "Stamped fail-closed with STANDARDS_READS in index.mjs. It writes nothing.",
+    standards: "standards R8: the standards the filters admit, in id order, at most 200 a page. The page JOINs `bundles` "
+      + "on each standard's id under viewerPredicate in SQL, so `count`, `truncated` and the cursor are taken over the "
+      + "rows this viewer may read; as op=standard, what the gate buys is the fail-closed arm (a standard is never a "
+      + "project's bundle), and no row names a determination or a project. DRIVEN in the T9 section above: dave and "
+      + "carol are listed the same page, naming nothing of the hidden project. Stamped fail-closed with STANDARDS_READS. "
+      + "It writes nothing.",
+    determination: "conformance R9, R15: one determination — the act, each standard's outcome and rows, the pinned "
+      + "findings, the questions, the supersession links and R10's flag. GATED on its PROJECT: `#seen` answers the row "
+      + "only when membership's `sight` of `project_id` is FULL, and anything else answers NO_SUCH_DETERMINATION, one "
+      + "answer for absent and unseen; inside a visible answer a standard, finding or opened inquiry the viewer may not "
+      + "see is null beside \"an object you may not see\" (`inSight` per item). DRIVEN in the T9 section above: dave is "
+      + "answered carol's hidden project's determination byte-identically to one that does not exist, the id aside. "
+      + "Stamped fail-closed with CONFORMANCE_READS. It writes nothing.",
+    determinations: "conformance R11, R15: the determinations the filters admit, at most 200 a page. A `project` asked "
+      + "goes through `#projectRefusal` first (membership's `existenceAct`, then FULL `sight`; hidden answers "
+      + "NO_SUCH_PROJECT exactly as absent); the page JOINs `bundles` on each determination's `project_id` under "
+      + "viewerPredicate in SQL, so a determination of a project the viewer may not see is absent and `truncated` is "
+      + "taken over the rows it may; each standard and finding named passes `inSight`. DRIVEN in the T9 section above: "
+      + "dave's list omits the hidden project's determination and names nothing of it, and asked by the hidden project "
+      + "he is answered as for an absent one. Stamped fail-closed with CONFORMANCE_READS. It writes nothing.",
+    comparison: "conformance R12, R15: one comparison proposal. GATED on its PROJECT: the row is answered only when "
+      + "membership's `sight` of its `project_id` is FULL, else NO_SUCH_PROPOSAL, one answer for absent, unseen and "
+      + "another project's; each standard it names passes `inSight`. DRIVEN in the T9 section above: dave is answered "
+      + "carol's hidden project's comparison byte-identically to one that does not exist, the id aside. Stamped "
+      + "fail-closed with CONFORMANCE_READS. It writes nothing.",
+    consequence: "consequences R6, R13: one part, superseded or not. GATED on its PROJECT: `#part` answers the row only "
+      + "when `#seesProject` finds membership's `sight` of the part's `project` FULL, else NO_SUCH_PART, one answer for "
+      + "absent and unseen; inside a visible part an operand whose content the viewer may not see, and a causation "
+      + "inquiry it may not see, are withheld. DRIVEN in the T9 section above: dave is answered carol's hidden project's "
+      + "part byte-identically to one that does not exist, the id aside. Stamped fail-closed with CONSEQUENCES_READS. "
+      + "It writes nothing.",
+    consequencesof: "consequences R7, R13: every live part of one determination, with totals within one state, unit "
+      + "and currency. GATED on the DETERMINATION's project: the determination is read through conformance's "
+      + "`determinationRead` under the stamped viewer (its R15) and then `#seesProject`, and a hidden one answers "
+      + "NO_SUCH_DETERMINATION exactly as an absent one, before any part is read; each part passes `#seesProject` too. "
+      + "DRIVEN in the T9 section above. Stamped fail-closed with CONSEQUENCES_READS. It writes nothing.",
+    addressed: "consequences R9, R13: whether one determination's live parts are addressed, per part and overall — the "
+      + "check escalation reads. GATED exactly as op=consequencesof: the determination through conformance's read and "
+      + "`#seesProject`, hidden answering NO_SUCH_DETERMINATION as absent, before any part; each part passes "
+      + "`#seesProject`. DRIVEN in the T9 section above. Stamped fail-closed with CONSEQUENCES_READS. It writes nothing.",
+    availableactions: "filings R21: R15's available-actions block for one determination's offices. GATED on the "
+      + "DETERMINATION: it is read first through conformance's `determinationRead` under the stamped viewer, and that "
+      + "module's own NO_SUCH_DETERMINATION passes through as it came, one answer for absent and unseen, before the "
+      + "block is composed; the block names the profile's kinds and the determination's own office, standards and "
+      + "findings, read under the same viewer. DRIVEN in the T9 section above: dave is answered carol's hidden project's "
+      + "determination exactly as an absent one, the id aside. Stamped fail-closed with FILINGS_READS. It writes nothing.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
@@ -1665,6 +1966,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
     /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): T5-11 (legacy-index) stamps op=memberpairings' viewer and
        administer (membership R19, MEMBERSHIP #2's REPORT), so the caller's OWN unpublished pairing and, for an
        administrator, every pairing are now in the answer; the old sentence said neither. Still no bundle. */
+    /* CLASSIFIED 2026-09-28 (legacy-tests T9): standards' third read, routed by LEGACY-INDEX #6 (K312); its reason read
+       off src/standards/index.mjs `inForce` whole, and DRIVEN in this suite's T9 section. */
+    standardinforce: "NAMES NO PROJECT'S MATERIAL: standards R7, whether ONE standard was in force on a date, with why — "
+      + "the standard's id, the date asked and a state read off the period the `standards` row states, nothing else. A "
+      + "standard is a record object outside every project (R15) that op=standard answers every recognised viewer, and "
+      + "`inForce` joins nothing and takes no viewer, so there is no project row here for a viewer predicate to filter. "
+      + "DRIVEN in the T9 section above while carol's hidden project holds a determination measured against it: dave "
+      + "and carol are answered identically, naming nothing of the project. It writes nothing.",
     memberpairings: "HOLDS NO CORPUS MATERIAL: membership R19's cover-and-handle pairings a member (or an "
       + "administrator) chose to publish (`pairing_published=1`), plus the caller's OWN pairing, and every pairing "
       + "for an administrator, by the server-stamped viewer and administer. It reads the `members` table alone: no "

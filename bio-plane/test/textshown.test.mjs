@@ -150,11 +150,18 @@ t("every answer is the one declared", SHOWN, WANT);
 console.log("\n--- 2. TIER 1: the CAFR-shape page is UNREAD, not read-and-empty ---");
 const T1 = {};
 for (const [k, bytes] of Object.entries(F)) T1[k] = await tier1(bytes);
-t("tier 1 MARKS the CAFR-shape page no_text_layer (it read zero characters and says it could not read it)",
-  T1.cafr, { chars: 0, reasons: ["no_text_layer"] });
-t("the no-font page is marked, as it was before this item", T1.noFont.reasons, ["no_text_layer"]);
-t("a drawn form that shows nothing: marked", T1.formEmpty.reasons, ["no_text_layer"]);
-t("a string holding the letters Tj: marked", T1.stringTj.reasons, ["no_text_layer"]);
+/* RE-PINNED 2026-09-28 (legacy-tests T9; pdf-reader R34, R14 as amended, N101, K279; PDF-READER #2 J2): each of
+   these four pages paints the 64x64 image over its 64x64 box (share 1), so beside its ONE `no_text_layer` marker it
+   now carries R34's `image_unread` for that placement, after it: R14 says exactly one `no_text_layer` marker "beside
+   any R34 `image_unread` markers". The lists are stated exactly, from the suite's print; the blank page below paints
+   no image and still carries none. */
+const SCAN_REASONS = ["no_text_layer", "image_unread"];
+t("tier 1 MARKS the CAFR-shape page no_text_layer (it read zero characters and says it could not read it), "
+  + "and its painted image image_unread (R34)",
+  T1.cafr, { chars: 0, reasons: SCAN_REASONS });
+t("the no-font page is marked, as it was before this item (and its image R34's image_unread)", T1.noFont.reasons, SCAN_REASONS);
+t("a drawn form that shows nothing: marked (and its image R34's image_unread)", T1.formEmpty.reasons, SCAN_REASONS);
+t("a string holding the letters Tj: marked (and its image R34's image_unread)", T1.stringTj.reasons, SCAN_REASONS);
 t("OVER-STRICTNESS: a page that shows text is NOT marked, whatever tier 1 could decode of it",
   ["tj", "tjTight", "tjArray", "quote", "dquote", "formText"].filter((k) => T1[k].reasons.includes("no_text_layer")), []);
 t("UNDETERMINED is not NO: a page whose stream could not be read is NOT marked", T1.unreadable.reasons.includes("no_text_layer"), false);

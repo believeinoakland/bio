@@ -18,6 +18,15 @@
  * THE DECLARATIONS ARE IN THE SUITE'S OWN `NEGATIVE CONTROL:` HEADER, made before
  * arming. The MEASURED figures are recorded at the foot of this file.
  */
+/* RE-DERIVED 2026-09-28 (legacy-tests T9, N248): the conclusion's reader and writer left store.mjs for basis-versions
+ * (`src/basis-versions/index.mjs`: `conclusionRecordOf`, `noProjectConclusionOf` with `BasisVersions.undeterminedClaim()`,
+ * `conclude` and `#setProjectConclusion`; its append-only row writer `appendConclusionEntry` is in
+ * `src/basis-versions/text.mjs`). `store.mjs` now only delegates (`conclude(a)`, `#conclusionRecordOf`, `#conclusionOf`,
+ * `#noProjectConclusionOf` call basis-versions), so every arm that edited STORE had nothing left to break there: arm (c)'s
+ * and arm (f)'s anchors were dead (m025 A4) and arms (a), (b), (d), (e) and f's other anchors quoted text store.mjs no
+ * longer carries. Each arm is re-pointed at the code that now carries its rule and breaks THE SAME rule its label names,
+ * spelled as the moved code spells it (`this.#doc(pid)`, `setOrAddScalar`, `quoted`, `BasisVersions.`, a `const
+ * adopted`); every needle occurs exactly once in its file. Arm (g) is unchanged (C-5.1 is still `checks/bio-checks.mjs`'). */
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -29,7 +38,8 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-conclude-project");          /* inside this worktree */
-const STORE = join(ROOT, "src", "store.mjs");
+const BV = join(ROOT, "src", "basis-versions", "index.mjs");      /* the conclusion's reader and writer (R16–R23) */
+const BVTEXT = join(ROOT, "src", "basis-versions", "text.mjs");  /* its append-only row writer */
 const CHECKS = join(ROOT, "checks", "bio-checks.mjs");
 const SUITE = join(DIR, "conclude-project.test.mjs");
 const LOG = join(PEN, "run.out");
@@ -53,82 +63,92 @@ const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes four-arms-working from four-arms-broken",
               apply: () => {} },
 
-  a: { files: [STORE],
+  a: { files: [BV],
        label: "(A) THE PER-PROJECT RECORD COLLAPSED TO ONE SHARED STATE: #conclusionOf answers from the "
             + "first project that concluded the inquiry, whichever project was asked — one conclusion, echoed",
        /* REC-136: the ONE reader is now #conclusionRecordOf (the history and the
-          stance); the liar is the same — the anchor moved with the reader. */
-       apply: () => edit(STORE,
-         "    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, pid);\n"
-       + "    if (!md || md.content === null) return none;\n"
-       + "    const fm = parseFrontmatter(md.content).data || {};\n"
+          stance); the liar is the same — the anchor moved with the reader.
+          T9 (N248): the reader is basis-versions' `conclusionRecordOf`, which reads the asked project's document
+          through `this.#doc(pid)`; the liar reads the first project document naming the inquiry under
+          `conclusions:` instead, the same query REC-124's arm used. */
+       apply: () => edit(BV,
+         "    const text = this.#doc(pid);\n"
+       + "    if (text === null) return none;\n"
+       + "    const fm = parseFrontmatter(text).data || {};\n"
        + "    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];",
-         "    const md = this.#one(`SELECT content FROM files WHERE path='bundle.md' AND content LIKE ? "
+         "    const shared = this.#one(`SELECT content FROM files WHERE path='bundle.md' AND content LIKE ? "
        + "ORDER BY bundle_id LIMIT 1`, `%conclusions:%${inquiryId}%`);\n"
-       + "    if (!md || md.content === null) return none;\n"
-       + "    const fm = parseFrontmatter(md.content).data || {};\n"
+       + "    const text = shared && typeof shared.content === \"string\" ? shared.content : null;\n"
+       + "    if (text === null) return none;\n"
+       + "    const fm = parseFrontmatter(text).data || {};\n"
        + "    const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];") },
 
-  b: { files: [STORE],
+  b: { files: [BV],
        label: "(B) THE NO_CLAIM REFUSAL REMOVED for a reading that states no claim: it is adopted with an "
             + "empty claim",
-       apply: () => edit(STORE,
+       apply: () => edit(BV,
          "if (!v || v.state !== \"accepted\" || !claimText)",
          "if (!v || v.state !== \"accepted\")") },
 
-  c: { files: [STORE],
+  c: { files: [BV],
        label: "(C) THE LEGACY CLAIM BACK-FILLED from the conclusion text — claim := conclusion on read",
        /* REC-136: the legacy read now starts from an undetermined claim and
-          upgrades only a verified adoption; the back-fill arms the starting value. */
-       apply: () => edit(STORE,
-         "    let claim = Store.#undeterminedClaim();",
+          upgrades only a verified adoption; the back-fill arms the starting value.
+          T9 (N248): that read is basis-versions' `noProjectConclusionOf`, which starts from
+          `BasisVersions.undeterminedClaim()` (was `Store.#undeterminedClaim()`). */
+       apply: () => edit(BV,
+         "    let claim = BasisVersions.undeterminedClaim();",
          "    let claim = { state: \"adopted\", text: s(fm.conclusion), version: null };") },
 
-  d: { files: [STORE],
+  d: { files: [BV],
        label: "(D) OVER-STRICTNESS: a project may NOT conclude a question whose own state is already "
             + "`concluded` — one relationship's conclusion barring another's",
-       apply: () => edit(STORE,
+       apply: () => edit(BV,
          "if (!legalFrom.includes(\"concluded\") && !(pid && b.current_state === \"concluded\"))",
          "if (!legalFrom.includes(\"concluded\"))") },
 
   /* ---- REC-136 (INVESTIGATIVE-SESSION.md §7.1 items 6-7) ---- */
-  e: { files: [STORE],
+  e: { files: [BVTEXT],
        label: "(E) REPLACE-THE-ROW RESTORED: a project's new conclusion or withdrawal REPLACES its earlier "
             + "entry for the question instead of appending — REC-124's writer, the defect item 7 names",
-       apply: () => edit(STORE,
-         "    let i = at + 1;\n"
-       + "    while (i < end && /^\\s{2,}(- )?\\S/.test(lines[i])) i++;\n"
-       + "    return [...lines.slice(0, i), ...block, ...lines.slice(i)].join(\"\\n\");",
-         "    const unquote = (s) => String(s).trim().replace(/^\"(.*)\"$/, \"$1\").trim();\n"
-       + "    let i = at + 1, rowStart = -1, rowEnd = -1;\n"
-       + "    while (i < end && /^\\s{2,}(- )?\\S/.test(lines[i])) {\n"
-       + "      if (/^\\s{2}- /.test(lines[i])) {\n"
-       + "        if (rowStart !== -1 && rowEnd === -1) rowEnd = i;\n"
-       + "        const m = /^\\s{2}- inquiry:\\s*(.+)$/.exec(lines[i]);\n"
-       + "        if (m && unquote(m[1]) === inquiryId) rowStart = i;\n"
-       + "      }\n"
-       + "      i++;\n"
+       /* T9 (N248): the append is `appendConclusionEntry` in basis-versions' `text.mjs` (the helper
+          `#setProjectConclusion` calls), at two-space indent; `appendFmRows` beside it appends `rowLines`, not
+          `block`, and `setCurrentVersionRow`'s replace-in-place is a different rule (one CURRENT per inquiry). */
+       apply: () => edit(BVTEXT,
+         "  let i = at + 1;\n"
+       + "  while (i < end && /^\\s{2,}(- )?\\S/.test(lines[i])) i++;\n"
+       + "  return [...lines.slice(0, i), ...block, ...lines.slice(i)].join(\"\\n\");",
+         "  const unquote = (s) => String(s).trim().replace(/^\"(.*)\"$/, \"$1\").trim();\n"
+       + "  let i = at + 1, rowStart = -1, rowEnd = -1;\n"
+       + "  while (i < end && /^\\s{2,}(- )?\\S/.test(lines[i])) {\n"
+       + "    if (/^\\s{2}- /.test(lines[i])) {\n"
+       + "      if (rowStart !== -1 && rowEnd === -1) rowEnd = i;\n"
+       + "      const m = /^\\s{2}- inquiry:\\s*(.+)$/.exec(lines[i]);\n"
+       + "      if (m && unquote(m[1]) === inquiryId) rowStart = i;\n"
        + "    }\n"
-       + "    if (rowStart === -1) return [...lines.slice(0, i), ...block, ...lines.slice(i)].join(\"\\n\");\n"
-       + "    if (rowEnd === -1) rowEnd = i;\n"
-       + "    return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join(\"\\n\");") },
+       + "    i++;\n"
+       + "  }\n"
+       + "  if (rowStart === -1) return [...lines.slice(0, i), ...block, ...lines.slice(i)].join(\"\\n\");\n"
+       + "  if (rowEnd === -1) rowEnd = i;\n"
+       + "  return [...lines.slice(0, rowStart), ...block, ...lines.slice(rowEnd)].join(\"\\n\");") },
 
-  f: { files: [STORE],
+  f: { files: [BV],
        label: "(F) THE VERSION REQUIREMENT DROPPED: a no-project conclude naming no reading is accepted, as "
             + "REC-124 built it, adopting nothing (an empty reading recorded, read undetermined)",
        apply: () => {
-         edit(STORE, "    if (!pid && !vname)\n      return { ok: false, reason: \"NO_CLAIM\", target,",
-                     "    if (false)\n      return { ok: false, reason: \"NO_CLAIM\", target,");
-         edit(STORE, "    if (!v || v.state !== \"accepted\" || !claimText)",
-                     "    if (want && (!v || v.state !== \"accepted\" || !claimText))");
-         edit(STORE, "    adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };",
-                     "    adopted = v ? { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 }\n"
-                   + "                : { version: \"\", claim: \"\", leg_count: (Array.isArray(fm.basis) ? fm.basis.length : 0) };");
+         edit(BV, "    if (!pid && !vname)\n      return { ok: false, reason: \"NO_CLAIM\", target,",
+                  "    if (false)\n      return { ok: false, reason: \"NO_CLAIM\", target,");
+         edit(BV, "    if (!v || v.state !== \"accepted\" || !claimText)",
+                  "    if (want && (!v || v.state !== \"accepted\" || !claimText))");
+         /* T9 (N248): basis-versions declares the adoption `const adopted = …` (the store's was an assignment). */
+         edit(BV, "    const adopted = { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 };",
+                  "    const adopted = v ? { version: v.name, claim: claimText, leg_count: Number(v.leg_count) || 0 }\n"
+                + "                      : { version: \"\", claim: \"\", leg_count: (Array.isArray(fm.basis) ? fm.basis.length : 0) };");
          /* and no adoption is written when none was named — REC-124's bytes. */
-         edit(STORE, "    text = Store.#setOrAddScalar(text, \"conclusion_version\", `\"${Store.#fmSafe(adopted.version)}\"`);",
-                     "    if (adopted.version) text = Store.#setOrAddScalar(text, \"conclusion_version\", `\"${Store.#fmSafe(adopted.version)}\"`);");
-         edit(STORE, "    text = Store.#setOrAddScalar(text, \"conclusion_claim\", `\"${Store.#fmSafe(adopted.claim)}\"`);",
-                     "    if (adopted.version) text = Store.#setOrAddScalar(text, \"conclusion_claim\", `\"${Store.#fmSafe(adopted.claim)}\"`);");
+         edit(BV, "    text = setOrAddScalar(text, \"conclusion_version\", quoted(adopted.version));",
+                  "    if (adopted.version) text = setOrAddScalar(text, \"conclusion_version\", quoted(adopted.version));");
+         edit(BV, "    text = setOrAddScalar(text, \"conclusion_claim\", quoted(adopted.claim));",
+                  "    if (adopted.version) text = setOrAddScalar(text, \"conclusion_claim\", quoted(adopted.claim));");
          /* RECORDED 2026-09-18: this arm's FIRST draft used `legs.length` here,
             which is declared later in conclude() — so the armed call threw a
             ReferenceError, the suite read `[false, null, false]` for the one

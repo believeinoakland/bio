@@ -340,10 +340,19 @@ for (const r of RUNS) {
    old one stays; and the door refuses by name what is not a proposal over a formed pair. */
 console.log("\n--- 6. REC-147: candidates through op=contradictionpropose (§8) ---");
 const RUN147 = "RUN-2026-0925-contradiction";
+/* CORRECTED 2026-09-28 (legacy-tests T9), a FIXTURE race, never a weakened arm: the run was opened `at: LATER`
+   (2026-09-23T01:00Z) with a ten-minute lease, so its `expires` lay days in the WALL CLOCK's past, and ai-runs'
+   reaper (R15, the scheduler's `ai-run-reap`) reads the wall clock: the first scheduler alarm to fire after the open
+   ended the run as `stopped`, bound `lease`, at whatever instant the alarm fired.
+   Alone the suite usually outran it (51/0); under load it did not (T8: 50/1 four-way; T9 base: 49/2, the
+   AI_RUN_NOT_PRINCIPAL arm's re-propose and "the run ends"). MEASURED: a 3 s pause before REC-152's arm reproduces
+   the 49/2 exactly, op=airunclose answering `status: stopped, bound: lease`; opened on the wall clock the same
+   paused run reads 51/0 and ends by its own close (`completed`). So the run is opened NOW, as a real run is; every
+   `at` below is unchanged, and the ended-run arm is still reached through the suite's own close. */
 const opened = await post("airunopen", {
   run: RUN147, contextType: "inquiry", contextId: `INQ-2026-0071-${K1[0].id}`, label: "contradiction judgement",
   mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
-  skillVersion: "investigative-session@1", biasManifest: null, leaseMs: 600000, at: LATER });
+  skillVersion: "investigative-session@1", biasManifest: null, leaseMs: 600000 });
 t("GROUND: the judgement's run opens (DEC-62's object; this item adds no second one)",
   [opened.started ?? null, opened.status ?? null], [true, "running"]);
 const judgeR1 = recordedJudge("R1");

@@ -1396,7 +1396,21 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
        `publishcase -> publishCase` LEFT AND CAME BACK: CASE-AUTHORING #1 wrapped the act in `record.transact`, and the
        RETURN-DELEGATE rule was widened to that one wrapper (see PRIVATE_CALL); it is bare as before, the same keys.
        `gatefacts -> gateFacts` is the same op (RATIFICATION #2), its keys read off the moved body. */
-  BARE_OPS.length <= 43, true);
+  /* RE-PINNED 2026-09-28 (legacy-tests T9): 43 -> 38, CEILING AND FLOOR IN ONE EDIT. The walk PRINTS 37, DIFFED BY NAME
+     against the same walk on the T8 close 7b535cf70c (41), never 41 - 4:
+       FOUR DEPARTURES BY A FIX, all membership's (MEMBERSHIP #3 J4, R82, N70): `hostingaccess -> hostingAccess` and
+       `memberpairings -> memberPairings` are on the BOUNDED roster now (`LIMIT ?` at the published cap + 1, `limit` beside
+       `truncated`); `projectowneradd -> projectOwnerAdd` and `projectownerremove -> projectOwnerRemove` are UNJUDGED —
+       the unbounded votes read that put them here is membership's `#ownerVotes` now, joined to the current owners with
+       `LIMIT` = the owner count, a bounded read in a private helper they consult (this walk's stated limit). These are
+       T3's REPORT 3 members named in the notes above, and they leave by the fix that REPORT asked for.
+       NO ARRIVAL.
+     THE FIGURE IS THE PRINTED ROSTER PLUS THE ONE MEMBER THE READER LOST, NAMED: `caseratify -> ratifyCaseDocument`
+     (T8's note: publication's held service, which neither the re-inliner nor the RETURN-DELEGATE rule follows; its
+     arm above stays red). So 37 printed + caseratify = 38, and the FLOOR below stays red naming exactly that loss
+     until the reader sees it again. T8's own fix, `pursuit` (INTENT #2, N181), was left inside T8's 43 while the floor
+     waited for caseratify; it is taken out here with membership's four, because a ceiling may not carry slack. */
+  BARE_OPS.length <= 38, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1433,7 +1447,11 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
   /* T8 (legacy-tests), 2026-09-28 — NOT MOVED, AND RED: the walk prints 41, and ONE of its two departures is the reader
      losing `op=caseratify` (see the ceiling's T8 note), which is exactly what this floor refuses to let pass as progress.
      The other, `pursuit`, is a fix; the floor moves when the reader sees caseratify again, not before. */
-  BARE_OPS.length >= 43, true);
+  /* RE-PINNED 2026-09-28 (legacy-tests T9): 43 -> 38 with the ceiling (its note gives every name). STILL RED, and for
+     the one reason T8 recorded: the walk prints 37 because it has lost `op=caseratify` (publication's held service, the
+     reader's blind spot), which this floor refuses to let pass as progress. Membership's four and T8's `pursuit` are
+     fixes and are out of the figure; caseratify is not a fix and is in it. */
+  BARE_OPS.length >= 38, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
@@ -1524,7 +1542,12 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               the same act, reached through `connectionsOps`' entry. */
            "connectionchoose->choose",
            "projectfork->forkProject", "projectionplan->projectionPlan",
-           "projectowneradd->projectOwnerAdd",
+           /* REMOVED 2026-09-28 (legacy-tests T9): `projectowneradd->projectOwnerAdd` — its departure (T6, the note at the
+              end of this list) was N70's, and MEMBERSHIP #3 (J4, R82) closed that share: the votes read is membership's
+              bounded `#ownerVotes`, and the op prints in UNJUDGED on this tree (the method holds no row scan of its own),
+              so it cannot return to this residual. Checked by name in this run's print. What keeps this arm red is the
+              rest of the note below, record-core's REPORT R3: `audit->auditPass` arriving and `projectfork->forkProject`
+              leaving. */
            "registeraudit->registerAudit",
            /* ADDED 2026-09-27 by legacy-tests (T5-12) — AN ARRIVAL, NAMED, of moved code: op=reproject's scan (`LIMIT ?`
               at a clamp of 500/5000, answering counts and `remaining`) sat in the store's private `#backfillProjection`,

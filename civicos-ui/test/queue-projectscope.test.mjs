@@ -167,7 +167,9 @@ const infoMd = (id) => ["---",
 /* CORRECTED 2026-09-18 (REC-141, IC-158): creation bytes of a project carry no `id:` line
    (PROJECT_ID_IN_BYTES), so `id` null writes none; the plane mints the id and writes it. */
 const projectMd = (id, { title, cites = [] } = {}) => ["---",
-  ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`,
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so the
+     fixture states one — both creations were refused NO_OBJECTIVE before any arm ran. */
+  ...(id ? [`id: ${id}`] : []), "object_type: project", 'objective: "Trace where the money went."', `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length
     ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]

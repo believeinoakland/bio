@@ -614,6 +614,22 @@ const CATALOG_CENSUS = {
   "1.38.0": { count: 395, digest: "c22e257463a71e5ef07465bd8960687b586dd556c964b1b437451325da8b4db2",
               changed: ["C-2.8", "C-2.10", "C-6.1"],
               source: "4108bfa49f11a4de75a5902772fdde1d34c366eea6695a24e4796eafe5004f58" },
+  /* 1.39.0 (PROMOTION #9, T9 layer 2, 8926590d63; N240), RECORDED 2026-09-28 by legacy-tests T9 from THIS SUITE'S OWN
+     PRINT (PROMOTION #9's record; `bio-checks.mjs` is byte-identical from 8926590d63 to the T9 HEAD this was measured on):
+     395 -> 397, three arrivals (C-102.8 STEP_DECLARED, C-102.9 CASE_CATALOGUE_FAILED, C-102.10 CASE_MEMBER_REFUSED), one
+     departure (C-18.5, monitoring's T8 extraction, which 1.38.0's note names), none changed; the `where` moves of C-32.6,
+     C-33.14 (N212), C-48.8 and C-48.9 (N226) change no condition, code or translation. */
+  "1.39.0": { count: 397, digest: "e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007",
+              changed: [],
+              source: "9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e" },
+  /* 1.40.0 (PROMOTION #10, T9 re-opened after layer 4, 97cb7a30d2; K288, K300), RECORDED 2026-09-28 by legacy-tests T9
+     from THIS SUITE'S OWN PRINT on the T9 tree: the catalogue FILE did not move, so the census and source equal 1.39.0's;
+     capture-sources' own row table did (rows are counted wherever they live, R34, R47): C-105.10 and C-105.11 arrived
+     outside this file, and C-105.8 NO_KEY and C-105.9 NO_SUCH now each refuse one condition, so they are `changed`,
+     which is also what keeps this row from colliding with 1.39.0's under A4. */
+  "1.40.0": { count: 397, digest: "e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007",
+              changed: ["C-105.8", "C-105.9"],
+              source: "9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -820,9 +836,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    UPDATED 2026-09-27 (T5-12, legacy-tests): 1.33.0 -> 1.35.0, promotion's N86 (1.34.0) and K150 (1.35.0).
    UPDATED 2026-09-28 (LEGACY-TESTS #4, T7): 1.35.0 -> 1.36.0, PROMOTION #5's T6 move (LEGACY-CHECKS #2 REPORT 7).
    UPDATED 2026-09-28 (legacy-tests T8): 1.36.0 -> 1.38.0, PROMOTION #6's 1.37.0 (T8 layer 2) and #7's 1.38.0 (after
-   layer 9), N147. */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.38.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.38.0)", "1.38.0"]);
+   layer 9), N147.
+   UPDATED 2026-09-28 (legacy-tests T9): 1.38.0 -> 1.40.0, PROMOTION #9's 1.39.0 (N240) and #10's 1.40.0 (K288). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.40.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.40.0)", "1.40.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

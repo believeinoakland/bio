@@ -173,7 +173,12 @@ vm.runInContext(appScript() + ";globalThis.__U = {" + [
 const U = ctx.__U;
 
 const APP = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
-const STORE = fs.readFileSync(new URL("../../bio-plane/src/store.mjs", import.meta.url), "utf8");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): `op=airun` is the `ai-runs` module's (`airun: () => runs.read({ run,
+   viewer })`), so the run reader SECTION 0 measures is `read({ run, viewer = null } = {})` in
+   `bio-plane/src/ai-runs/index.mjs`; the store's `aiRunRead` left with the extraction and ARM P0 found nothing. The
+   name `STORE` is kept for its readers; the measurement, its REACH floor and its RED-when-a-producer-lands are unchanged. */
+const STORE = fs.readFileSync(new URL("../../bio-plane/src/ai-runs/index.mjs", import.meta.url), "utf8");
+const RUN_READER = "async read({ run, viewer = null } = {})";
 /* M0-26, 2026-09-14: the plan closed at 43/43 and moved to `docs/archive/`. The pin
    follows the file — the verdict this arm reads is the plan's own and is exactly as
    binding in the archive, where nothing is edited in place. */
@@ -233,9 +238,10 @@ section("SECTION 0 · the producer does not exist, measured", () => {
   /* `aiRunRead` is the ONE op this surface's session object comes from. Its span
      is taken by brace-matching from its own signature, and the span's reach is
      asserted before anything is concluded from it. */
-  const at = STORE.indexOf("async aiRunRead(");
-  ok("ARM P0 (REACH): `aiRunRead` was located in bio-plane/src/store.mjs — an arm that cannot find its subject "
-     + "must not report a clean answer about it", at >= 0);
+  const at = STORE.indexOf(RUN_READER);
+  ok("ARM P0 (REACH): the run reader `op=airun` answers through (ai-runs' `read`, the store's `aiRunRead` before the "
+     + "extraction) was located, EXACTLY ONCE, in bio-plane/src/ai-runs/index.mjs — an arm that cannot find its subject "
+     + "must not report a clean answer about it", at >= 0 && STORE.split(RUN_READER).length === 2);
   let span = "";
   if(at >= 0){
     /* PAST THE PARAMETER LIST FIRST. The signature destructures — `async

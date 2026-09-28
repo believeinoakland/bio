@@ -309,8 +309,12 @@ let bseq = 0;
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a PROJECT's id is MINTED by the plane (Membership v2 §7), which refuses
    a creation naming one (C-59.1) or bytes already carrying `id:` (C-59.2). So a project's bytes carry no id line
    (`label` keeps the title it had) and its id is read from the promote answer; every other type is unchanged. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): intent R1 enforces C-2.9's objective at the write (K207), so a
+   PROJECT's bytes state one — CAROL's project promote was refused NO_OBJECTIVE before any arm ran. Every
+   other type is unchanged, byte for byte. */
 const bundleMd = (id, type = "information", label = id) => [
-  "---", ...(type === "project" ? [] : [`id: ${id}`]), `object_type: ${type}`, `schema: ${type}@1`,
+  "---", ...(type === "project" ? [] : [`id: ${id}`]), `object_type: ${type}`,
+  ...(type === "project" ? ['objective: "Trace where the money went."'] : []), `schema: ${type}@1`,
   `title: "Doc ${label}"`, `current_state: ${type === "project" ? "forming" : "collected"}`, "prior_state: null",
   `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",

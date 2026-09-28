@@ -260,9 +260,15 @@ const PUBLISHED = {
    literal published FOUR of the plane's EIGHT and nothing could have said so.
    ============================================================ */
 import { VOCABULARIES } from "../../bio-plane/src/affordances.mjs";
-import { STATES, RESOLUTIONS as PLANE_RESOLUTIONS,
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): the actions module (T8) extracted the Action object out of the legacy
+   checks. `GOVERNING_LAWS_MAX` and `governingLawsOf` now live ONLY in `bio-plane/src/actions/checks.mjs` (the import
+   threw a SyntaxError before any arm ran), and the RESOLUTIONS and LAW_LEVELS that `op=affordances` publishes and
+   `op=actionlaws` refuses against are the ones that module exports (LAW_LEVELS is `jurisdictions'`, re-exported).
+   The state machine is still the catalogue's, where it stayed. */
+import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
+import { RESOLUTIONS as PLANE_RESOLUTIONS,
          LAW_LEVELS as PLANE_LAW_LEVELS, GOVERNING_LAWS_MAX,
-         governingLawsOf } from "../../bio-plane/checks/bio-checks.mjs";
+         governingLawsOf } from "../../bio-plane/src/actions/checks.mjs";
 
 /* The plane's published vocabularies, as `op=affordances` answers them.
    `action_basis_kinds` is WITHHELD to begin with — not because the plane no
@@ -325,8 +331,12 @@ const DIRECTIONS = VOCABULARIES.correspondence_directions;
    the plane's own arrays could reach it. */
 {
   const named = {
+    /* RE-PINNED 2026-09-28 (legacy-tests T9): actions R10 — the product's kinds are `records_request`,
+       `request_for_comment` and `other` (PRODUCT_KINDS); `cpra_request` is a kind an action was WRITTEN with
+       before R10 and reads as written (R4, R41), never offered on a creation. The intake is driven with
+       `records_request`; the ACT fixture keeps `cpra_request` because section 8's rider is R41's arm. */
     "the two action kinds this harness authors and asserts on":
-      ["cpra_request","request_for_comment"].every(k=>VOCABULARIES.action_kind.includes(k)),
+      ["records_request","request_for_comment"].every(k=>VOCABULARIES.action_kind.includes(k)),
     "the two basis roles the picker is asserted to offer":
       ["rests_on","advances"].every(k=>VOCABULARIES.action_basis_kinds.includes(k)),
     /* UI-90's rider, pinned by NAME for the tie's own reason: importing the plane's array
@@ -334,9 +344,12 @@ const DIRECTIONS = VOCABULARIES.correspondence_directions;
        INVISIBLE because the mock and the assertions would move together. Section 8 names
        all three of these words in its assertions, so a rename in `bio-checks.mjs` fails
        HERE saying which level moved. */
-    "the three levels D-149 states a governing law at, which section 8 names one by one":
-      ["federal","state","local"].every(l=>PLANE_LAW_LEVELS.includes(l))
-      && PLANE_LAW_LEVELS.length === 3
+    /* RE-PINNED 2026-09-28 (legacy-tests T9): the levels are `jurisdictions'` (R24), re-exported by actions —
+       federal, state, county, city — where the catalogue had three ending in `local`. Section 8 names `city`
+       where it named `local`. */
+    "the four levels a governing law is stated at (jurisdictions R24), which section 8 names one by one":
+      ["federal","state","county","city"].every(l=>PLANE_LAW_LEVELS.includes(l))
+      && PLANE_LAW_LEVELS.length === 4
       && VOCABULARIES.law_levels === PLANE_LAW_LEVELS,
     "the three correspondence directions, including the non-response DEC-13 records as a fact":
       ["sent","received","no_response"].every(k=>DIRECTIONS.includes(k)),
@@ -354,7 +367,9 @@ const DIRECTIONS = VOCABULARIES.correspondence_directions;
   for(const [what, held] of Object.entries(named))
     ok("THE TIE: the plane still publishes " + what, held);
   ok("THE TIE: this harness drives the plane's WHOLE action-kind set, not a subset of it",
-     VOCAB.action_kind === VOCABULARIES.action_kind && VOCABULARIES.action_kind.length >= 8);
+     /* RE-PINNED 2026-09-28 (legacy-tests T9): >= 8 -> >= 3, actions R10's PRODUCT_KINDS (the profiles add their
+        own kinds to an instance's view; the module's publication holds the product's three). */
+     VOCAB.action_kind === VOCABULARIES.action_kind && VOCABULARIES.action_kind.length >= 3);
   /* UI-25: and the WHOLE resolution set, on the ACTION_KINDS precedent — a
      literal agreeing on a SUBSET is the failure REC-38 measured in this file. */
   ok("THE TIE: this harness drives the plane's WHOLE resolution set, not a subset of it",
@@ -924,7 +939,8 @@ ok("the counterparty basis is EMPTY: no value between the tags",
 ok("the counterparty basis offers no placeholder, no template and no suggested wording",
    !/id="ac-basis"[^>]*placeholder/.test(form));
 ok("the standing rule is on the intake too", /will not be sent while this is undetermined/.test(form));
-ok("the kinds offered are the PLANE's published set", /value="cpra_request"/.test(form));
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): actions R10 — `records_request` is the published kind (see THE TIE). */
+ok("the kinds offered are the PLANE's published set", /value="records_request"/.test(form));
 ok("and `request_for_comment` is ABSENT while the surface cannot author the legs DEC-13 requires",
    !/value="request_for_comment"/.test(form));
 ok("...which is stated rather than silent", /offers none rather than inventing/.test(form));
@@ -948,7 +964,7 @@ els.get("#a-type").value = "action";
 els.get("#a-title").value = "Records request";
 els.get("#a-body").value = "Ask for the transfer ledger.";
 G.__addActPick("undetermined");
-els.get("#ac-kind").value = "cpra_request";
+els.get("#ac-kind").value = "records_request";   /* RE-ANCHORED 2026-09-28 (legacy-tests T9): R10 */
 els.get("#ac-basis").value = "";
 G.__addActSync();
 await G.__addGo();
@@ -972,7 +988,7 @@ ok("...carrying the member's own words and no invented name",
    /which office answers has not been established/.test(wrote.text)
    && !/name:/.test(wrote.text.split("counterparty:")[1].split("---")[0]));
 ok("...and the kind the member chose, from the plane's published set",
-   /action_kind: cpra_request/.test(wrote.text));
+   /action_kind: records_request/.test(wrote.text));
 
 /* =====================================================================
    8. D-149 / UI-90 — WHICH LAWS THIS ASK IS MADE UNDER.
@@ -1009,7 +1025,9 @@ ok("an action nobody has stated laws for reads the PLANE'S undetermined sentence
 ok("...including the clause that the record assumes NO level applies — the sentence a surface inventing one would never write",
    /The record assumes none/i.test(lawsEmpty));
 ok("...and the `cpra_request` rider, which is the kind read as its member's statement and nothing more",
-   /California Public Records Act governs it/.test(lawsEmpty)
+   /* RE-ANCHORED 2026-09-28 (legacy-tests T9): actions R41 reworded the rider so that no outward text of the
+      module names a law — the kind "named the records law it was made under" and the record names none from it. */
+   /named the records law it was made under/.test(lawsEmpty) && /the record names no law from it/.test(lawsEmpty)
    && /nothing else is inferred from the/.test(lawsEmpty));
 ok("the empty list is NOT rendered as 'none apply', 'no laws' or an empty block",
    !/no laws apply/i.test(lawsEmpty) && !/none apply/i.test(lawsEmpty)
@@ -1083,7 +1101,8 @@ ok("a citation with no level would ask this surface to pick one: the control sta
 /* ---- THE ROUND TRIP, WITH THE LEVELS THE MEMBER CHOSE ---- */
 G.__lawsSet(0, "level", "state");
 G.__lawsAdd();
-G.__lawsSet(1, "level", "local");
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): `local` is no level (jurisdictions R24); an ordinance of the city is `city`. */
+G.__lawsSet(1, "level", "city");
 G.__lawsSet(1, "citation", "Oakland Sunshine Ordinance, O.M.C. 2.20");
 ok("with both halves of both rows written, the commit control appears", /doActionLaws\(\)/.test(dialog()));
 await G.__doLaws();
@@ -1093,14 +1112,14 @@ ok("the act was accepted and the plane wrote the list",
 ok("...carrying BOTH levels exactly as the member chose them, and no level the surface added",
    (() => { const sent = CALLS.filter(c=>c.op==="actionlaws" && c.body && c.body.laws).pop();
             return !!sent && sent.body.laws.length === 2
-                   && sent.body.laws[0].level === "state" && sent.body.laws[1].level === "local"; })());
+                   && sent.body.laws[0].level === "state" && sent.body.laws[1].level === "city"; })());
 ok("the receipt names who stated them and when, from the plane's answer", /m_nadia/.test(lawDone));
 
 await fresh(ACT);
 const lawsSet = content();
 ok("the page now LISTS the member's laws, each at its level",
    /Cal\. Gov\. Code § 7920\.000/.test(lawsSet) && /Oakland Sunshine Ordinance/.test(lawsSet)
-   && />state</.test(lawsSet) && />local</.test(lawsSet));
+   && />state</.test(lawsSet) && />city</.test(lawsSet));
 ok("...and the undetermined sentence is GONE, because the list is no longer undetermined",
    !lawsSet.includes(G.__esc(UNDET)));
 ok("...attributed to the member who stated them, in the plane's own derived block",

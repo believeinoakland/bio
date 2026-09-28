@@ -766,7 +766,14 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
          op=inboxlist (CAPTURE, N90: `const cap = limitOf(limit)` beside `LIMIT ?`, `limit` and `truncated`
          published) — capped since T4 and INVISIBLE to this walk until the same widening read the function spelling; the
          blind spot is closed rather than the arrivals being new. */
-  OPS.size, 69);
+  /* RE-PINNED 2026-09-28 (legacy-tests T9): 69 -> 71 from this suite's print on `job/T9/legacy-tests` (the corpus line
+     read `90 carrying a cap, reaching 71 ops`), never by adding; the roster DIFFED BY NAME against T8's 69. NO
+     DEPARTURE. TWO ARRIVALS, both membership's (MEMBERSHIP #3 J4, R82, N70): op=hostingaccess (`hostingAccess`) and
+     op=memberpairings (`memberPairings`) arrived capped at HOSTING_ACCESS_LIMIT and MEMBER_PAIRINGS_LIMIT (200 each,
+     `LIMIT ?` at cap + 1, `limit` and a measured `truncated` published) — the intended arrival, both DRIVEN below with
+     a real bite. `projectOwnerAdd`/`projectOwnerRemove`'s vote read (`#ownerVotes`, LIMIT = the owner count) is no
+     op's segment and joins nothing. */
+  OPS.size, 71);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1724,7 +1731,13 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                   "navchanges", "reevaluationnotices",
                                   "linksto", "recordlinkverdict", "chromeof", "sitechrome", "recordsiteassets",
                                   "reuseverdicts", "inboxlist",
-                                  "pursuit"]);
+                                  "pursuit",
+                                  /* ADDED 2026-09-28 by legacy-tests (T9): membership's two capped reads (R82, N70; the
+                                     roster pin names why they arrived), driven in THIS file with a real bite below the
+                                     intent arms, not in the loop: op=hostingaccess needs records only an enrolled
+                                     ADMINISTRATOR's session writes (R11), and op=memberpairings needs enrolled members
+                                     with handles (R19) — both exist only after IC-246's and D-479's enrolments. */
+                                  "hostingaccess", "memberpairings"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -2181,6 +2194,59 @@ t("op=intentproposals: publishes the bound on the proposals set aside (SET_ASIDE
   [PROPOSALS_WHOLE?.ok, PROPOSALS_WHOLE?.set_aside_limit, PROPOSALS_WHOLE?.set_aside_truncated],
   [true, SET_ASIDE_MAX, false]);
 
+/* ------------------------------------------------------ MEMBERSHIP's TWO CAPS (T9, legacy-tests; MEMBERSHIP #3 J4, R82, N70).
+   op=hostingaccess (R11: the record of who holds access to the hosting account, append-only, growing with every answer
+   the group records) and op=memberpairings (R19: the cover-and-handle pairings a caller may see, growing with the roster)
+   joined this roster when membership bounded them: HOSTING_ACCESS_LIMIT and MEMBER_PAIRINGS_LIMIT, 200 each, the
+   caller's to LOWER and never to raise, one row read past the cap, `limit` and `truncated` published.
+   THE BITE IS TAKEN AT THE CALLER'S OWN `limit`, D-479's reasoning above: the ceiling is measured by an over-ask
+   answered AT it, since a bite at 200 would need 201 records or 201 enrolled members. The fixture is REAL: two hosting
+   answers recorded by an enrolled administrator's session (R11 refuses a bearer, whose `by` names nobody on the roster),
+   and the pairings of the four members IC-246's and D-479's arms enrolled above, read by the ADMIN_TOKEN bearer, whom
+   the control plane stamps `administer` (N85), so every pairing — published or not — is in the answer. WHAT A SILENT CUT
+   WOULD LOSE: the later hosting answers read as the whole history, and a member past the cut read as unpaired. */
+const MEMBERSHIP_SRC = readFileSync(new URL("../src/membership/index.mjs", import.meta.url), "utf8");
+const HA_MAX = Number((/static HOSTING_ACCESS_LIMIT = (\d+);/.exec(MEMBERSHIP_SRC) || [])[1]);
+const MP_MAX = Number((/static MEMBER_PAIRINGS_LIMIT = (\d+);/.exec(MEMBERSHIP_SRC) || [])[1]);
+const haSet = [];
+for (const holders of ["gia and d479adm, bounds fixture", "gia alone, bounds fixture (the later answer)"])
+  haSet.push(await POST(`op=hostingaccessset&token=${giTok}`, { holders }));
+const HA_BITE = await GET("op=hostingaccess&token=adm-r57&limit=1");
+const HA_WHOLE = await GET(`op=hostingaccess&token=adm-r57&limit=${HA_MAX}`);
+const HA_OVER = await GET(`op=hostingaccess&token=adm-r57&limit=${HA_MAX + 5000}`);
+t("FIXTURE ARMS THE TRAP (membership R82): HOSTING_ACCESS_LIMIT is a number read off the module, and an administrator's "
++ "session recorded TWO hosting answers, so a page of one has something to cut",
+  [Number.isInteger(HA_MAX) && HA_MAX > 0, haSet.map((r) => r?.ok), HA_WHOLE?.history?.length], [true, [true, true], 2]);
+t("op=hostingaccess: THE BITE — the first of two records, the bound APPLIED published and the cut SAID, while `current` is "
++ "still the LATEST answer, so a cut history never changes what the answer is",
+  [HA_BITE?.ok, HA_BITE?.history?.length, HA_BITE?.history?.[0]?.holders, HA_BITE?.limit, HA_BITE?.truncated,
+   HA_BITE?.current?.holders],
+  [true, 1, "gia and d479adm, bounds fixture", 1, true, "gia alone, bounds fixture (the later answer)"]);
+t("op=hostingaccess: WHOLE — at the ceiling both records are listed and the answer says it is complete",
+  [HA_WHOLE?.limit, HA_WHOLE?.truncated], [HA_MAX, false]);
+t("op=hostingaccess: DELTA — 'the whole history' and 'the first N records' do NOT read alike",
+  HA_BITE?.truncated !== HA_WHOLE?.truncated, true);
+t("op=hostingaccess: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING is what is published",
+  [HA_OVER?.limit, HA_OVER?.truncated, HA_OVER?.history?.length], [HA_MAX, false, 2]);
+const MP_BITE = await GET("op=memberpairings&token=adm-r57&limit=1");
+const MP_WHOLE = await GET(`op=memberpairings&token=adm-r57&limit=${MP_MAX}`);
+const MP_OVER = await GET(`op=memberpairings&token=adm-r57&limit=${MP_MAX + 5000}`);
+t("FIXTURE ARMS THE TRAP (membership R82): MEMBER_PAIRINGS_LIMIT is a number read off the module, and the four members "
++ "enrolled above each carry a handle, so a page of one has something to cut",
+  [Number.isInteger(MP_MAX) && MP_MAX > 0, MP_WHOLE?.ok,
+   ["d479adm", "d479out", "d479own", "gia"].every((h) => MP_WHOLE?.pairings?.some((p) => p.handle === h))],
+  [true, true, true]);
+t("op=memberpairings: THE BITE — the first pairing by handle, the bound APPLIED published and the cut SAID",
+  [MP_BITE?.ok, MP_BITE?.pairings?.length, MP_BITE?.limit, MP_BITE?.truncated,
+   MP_BITE?.pairings?.[0]?.handle === MP_WHOLE?.pairings?.[0]?.handle],
+  [true, 1, 1, true, true]);
+t("op=memberpairings: WHOLE — at the ceiling every pairing is listed and the answer says it is complete",
+  [MP_WHOLE?.limit, MP_WHOLE?.truncated, MP_WHOLE?.pairings?.length >= 4], [MP_MAX, false, true]);
+t("op=memberpairings: DELTA — 'every pairing you may see' and 'the first N by handle' do NOT read alike",
+  MP_BITE?.truncated !== MP_WHOLE?.truncated, true);
+t("op=memberpairings: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING is what is published",
+  [MP_OVER?.limit, MP_OVER?.truncated, MP_OVER?.pairings?.length], [MP_MAX, false, MP_WHOLE?.pairings?.length]);
+
 /* =================================================================== * THE BARE-ARRAY PIN, INVERTED AND NOW MEASURED — REC-59 / IC-24, 2026-08-07.
  *
  * IT USED TO READ: `const ARRAY_SHAPED = new Set(["projection"])`, with the
@@ -2317,6 +2383,8 @@ const answersByOp = new Map([
      first saw in T8, asked at the Durable Object (none has a control-plane row), for CPDF-10's reason: the envelope. */
   ["pursuit", PURSUIT_BITE], ["objectiveprogress", PROGRESS_WHOLE], ["aspirations", ASPIRATIONS_WHOLE],
   ["intentproposals", PROPOSALS_WHOLE],
+  /* ADDED 2026-09-28 by legacy-tests (T9): membership's two (R82), driven above with a real bite and REUSED here. */
+  ["hostingaccess", HA_WHOLE], ["memberpairings", MP_WHOLE],
   ["linksto", await DO(`linksto?address=${encodeURIComponent(VC_ADDR)}&limit=1`)],
   ["chromeof", await DO("chromeof?host=example.gov&limit=1")],
   ["sitechrome", await DO("sitechrome?host=example.gov&limit=1")],

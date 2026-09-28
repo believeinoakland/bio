@@ -1,4 +1,7 @@
 /* NEGATIVE CONTROL: (run 2026-08-04, each broken ALONE and restored; 57 pass when whole) (a) THE ITEM'S OWN — remove the REASON requirement and the group's disposition is overturned with nothing accounting for it: in src/store.mjs reopen() change `if (!why)` to `if (false)` (NOTE the file's FIRST `if (!why)` is dispose's — reopen's is the one directly under `const why = String(reason ?? "").trim();` inside reopen()) -> 53 pass, 4 FAIL. Headline: "a reopen with no reason is refused before anything moves" got [true,"open"] where [false,"deferred"] was wanted — op=reopen ACCEPTED reason="" and the deferred inquiry is now open. The other three are the cascade (the NO_REASON name gone; the machine-refusal assertion reading the already-reopened state; the inquiry no longer publishing reopen because it is no longer deferred). ONE gate only, unlike conclude's two-sided control, and that is itself the finding: the catalog has no `open`-state entry requirement to break, so nothing downstream would ever notice — this refusal is the only thing between the record and an unaccounted state change. (b) CHORE (2) — put the MAP RULE residual back: in src/store.mjs affordanceFacts, `normalizeType(b.object_type) === "project"` -> `b.object_type === "project"` -> 54 pass, 3 FAIL: the fourth-name rehearsal's legacy-spelled project publishes ["cite"] instead of ["cite","sever"] (its own confirmed edge counted zero) and answers differently from the canonical spelling. (c) CHORE (3) — remove the write-time refusal: in checks/bio-checks.mjs checkInquiryBasis, `if (leg.grade_axis === 'capture' && targetType === 'inquiry') {` -> `if (false) {` -> 53 pass, 4 FAIL at BOTH gates: op=promote ACCEPTS the leg (got [true,null], and the bundle is now open in the store) and the checker finds nothing wrong with the same bytes (got []). Restored after each. */
+/* RE-ANCHORED 2026-09-28 (legacy-tests T9): control (b)'s site moved with affordanceFacts to
+   src/affordances/facts.mjs (AFFORDANCES #3 J2, K225): arm it there as `const type = normalizeType(b.object_type);`
+   -> `const type = b.object_type;` (the project arm then reads the raw spelling). */
 /* REC-31 chore (1): the REOPEN act, and chores (2) and (3) with it.
  *
  * THE HOLE. `deferred -> open` and `dismissed -> open` have been legal edges in
@@ -502,11 +505,28 @@ console.log("\n--- 5. op=affordances publishes reopen from the ONE edge table �
 /* ------------------------------- 6. chore (2): the MAP RULE residual */
 console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the map (the fourth-name rehearsal) ---");
 {
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9): affordanceFacts moved to src/affordances/facts.mjs (AFFORDANCES #3 J2,
+     K225). The type is normalised ONCE at the top of the method (`const type = normalizeType(b.object_type);`) and
+     the project arm reads `if (type === "project") {`; the citers' own membership question is `#isProject`, which
+     reads `normalizeType(b.object_type) === "project"`. Each is pinned in the moved method (or helper) itself, and the
+     raw spelling must appear nowhere in that file; the store's old arm stays pinned absent as before. */
   const storeSrc = readFileSync(STORE_SRC_PATH, "utf8");
+  const factsSrc = readFileSync(fileURLToPath(new URL("../src/affordances/facts.mjs", import.meta.url)), "utf8");
+  const factsBody = (() => {
+    const s = factsSrc.indexOf("  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {");
+    return s === -1 ? "" : factsSrc.slice(s, factsSrc.indexOf("\n  }\n", s));
+  })();
+  const isProjectBody = (() => {
+    const s = factsSrc.indexOf("  #isProject(id) {");
+    return s === -1 ? "" : factsSrc.slice(s, factsSrc.indexOf("\n  }\n", s));
+  })();
   t("the raw consultation is GONE from affordanceFacts: the membership question goes through normalizeType",
-    [/normalizeType\(b\.object_type\) === "project"/.test(storeSrc),
+    [/\n    const type = normalizeType\(b\.object_type\);\n/.test(factsBody),
+     /\n    if \(type === "project"\) \{\n/.test(factsBody),
+     /return !!b && normalizeType\(b\.object_type\) === "project";/.test(isProjectBody),
+     /\bb\.object_type === "project"/.test(factsSrc),
      /\n    if \(b\.object_type === "project"\) \{/.test(storeSrc)],
-    [true, false]);
+    [true, true, true, false, false]);
 
   /* THE REHEARSAL. There is no project alias TODAY, so the raw comparison was
      wrong only in principle — and a rule that cannot be exercised is a rule
