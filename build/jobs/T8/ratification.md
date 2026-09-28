@@ -64,3 +64,40 @@ Replaces J1. Items 2–4 are J1's, unchanged. Item 1 now names exactly what I ne
    - I REPORT the three removals owed.
 3. As J1 item 3: `caseConclusionRowLines` moves here with R1, and `#caseDocumentText` imports it. Please tell CASE-AUTHORING.
 4. As J1 item 4: the store-half op `casegate` runs `promotionOf(host).runCaseGate` (K233) over the document at the signed `doc_sha`.
+
+## J3 · BLOCKED
+
+Cause: **context**. This session has passed half its window. The work is pushed on `job/T8/ratification`, and B2/B3 (K240, K241) are applied as far as they go before publication lands.
+
+**Done (steps 1–4 in part):**
+- `bio-plane/src/ratification/checks.mjs`: R8, R9, R14.
+  - Moved: C-41, `checkCaseDocument`, `checkPublishedExtension` (exported), the vocabularies, and the rows as `RATIFY_MACHINE_FENCE_CHECKS`, `RATIFY_TESTIMONY_CHECKS`, `RATIFY_ATTRIBUTION_CHECKS`, `CASE_CONCLUSION_CHECKS` and `RATIFY_SCOPE_CHECKS`, with `where` re-pointed and `rowOf(code)`.
+  - New: `caseMemberFindings`, `caseMemberImageFindings`, `withCaseMemberChecks` (the C-2.8 case-member arm at promotion, audit and the ratify gate).
+  - The formats are still imported from `bio-checks.mjs`; switch them to publication R20 when it lands.
+- `bio-plane/src/ratification/index.mjs`: the store half. R1 (`caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines`, `fmSafe`), R7 `gateFacts`, the `casegate` gate (K233), R3 `ratifyCaseDocument` (commits through `publication.commitCaseEdition`, then `dischargeCaseFlags`), R5 `publish` (authority and scope, then `publication.commitEdition`), `check`/`audit` (R9), `ratificationOf` (registers the catalogue, the step and the audit check) and `ratificationOps` (`gatefacts`, `casegate`, `caseratify`, `publish`).
+  - It reads `case_documents` and `cases` through R40.
+  - It calls publication's R38 (`pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn`, `caseClaimsOf`), R2, R7, R17 and R22 by the J2 shapes.
+- `bio-plane/src/ratification/ops.mjs`: the Worker half. `caseRatifyOp` and `ratifyOp`, with the stamps and helpers passed in, the gate through `do/casegate`, and `withCaseMemberChecks` after the catalogue.
+  - It imports `publishedGraphEdges` from `../publication/index.mjs` and `deliveringPrincipal`/`delivererOf` from `../deliverer.mjs`.
+- Legacy, removals and rewiring only:
+  - legacy-store: R1 block, `#caseConclusionRowLines`, `ratifyCaseDocument`, `gateFacts`/`publish` and three dispatch entries removed. Added: one import, one `ratificationOf(ctx)` at construction, the ops spread, and four call sites rewired.
+  - legacy-index: two handlers and three row helpers removed, two call lines and one import added, and the unused import names dropped.
+  - legacy-checks: the rows, the call at 2535 with its comment, `biasAcknowledgementOf` and `completenessFields` removed. `checkCaseDocument`, `SUBJECT_POSITIONS`, `SEARCHED_SUBJECT_SOURCES`, `CASE_MEMBER_ROLES`, `isCaseMemberBytes` and `caseEditionClaimed` are kept (N211, Decided 6).
+- `bio-plane/test/m/ratification/checks.test.mjs`: 14 pass, 0 fail (R8, R9, R14, R15).
+
+**The plane does not load yet.** `ratification/index.mjs` and `ops.mjs` import `../publication/index.mjs`, which lands with publication's early merge (K240 (2)).
+
+**Next, for the restarted job:**
+1. On BOB's CHANGE (publication merged), merge `tranche/T8`.
+   - Reconcile the call names and shapes with publication's built R2, R7, R17, R20, R22, R35, R38 and `publishedGraphEdges`.
+   - Switch the formats import to publication.
+   - Confirm the store and Worker load, and that `assembleCaseContainer` is still passed in from legacy-index.
+2. Write the store-half and ceremony tests in `test/m/ratification/`: R1 (one arm per `why`), R2 (order of refusals), R3 and R5 (the retry arms), R4, R6, R7 (identical bytes for hidden and absent), R10–R13, R16. Also the registration arms of R8 and R9 (`promotionOf(host).runCaseGate` runs this catalogue; a promotion of malformed case-member bytes is refused; the audit counts it).
+   - Use a world fixture like reevaluation's. An id that does not hold gets a `test.todo` naming its cause.
+3. Polish comments naming `#caseRelationOf` and `#publishEdges` in `index.mjs`.
+4. Run the four checks and the old battery's affected suites, then REPORT:
+   - legacy-tests re-anchors: `casesign`, `caseratify-conclusion`, `ratify-authority`, `publish`, `case-project-conclusion.control`, `check-refusal-codes`'s families, the d470 census for 1.38.0;
+   - the stale bundles (plane, agent-worker, newgroup `release.mjs`);
+   - a catalogue row for `CASE_MEMBER_REFUSED` (legacy-checks, next plan);
+   - `gateFacts`' `dangling` read of connections' `refs`, which has no contract.
+5. Record completion (step 7).
