@@ -28,3 +28,17 @@ Five points where review's Uses name services its providers (publication, case-a
    - `#draftLinkOf` (reading `case_documents.draft_id`, publication's table) stays with the acknowledgements, which move to case-authoring. No review code calls it, although my map §1 lists it here.
 
 5. **Interim wiring in store.** The store's remaining callers are `publishCase`'s draft binding, `caseDocumentFacts`' grant door and `acknowledgeStatement`. I keep the private names they call (`#draftForMember`, `#draftIdentity`, `#liveReviewGrant`, `#grantAdmitsCaseEdition`, `#noReviewCopy`, `#caseIdentitySentence`, `#statedEdition`, `REVIEW_LIST_MAX`) as one-line delegates to `reviewOf(ctx)` (§12.2). That way I never edit the bodies publication and case-authoring are moving, and the merges do not conflict. If publication's job makes legacy-store fill its R23 provider from those names, the fill keeps working; once publication merges, I remove it and register my own (K206).
+
+## J2 · REPORT
+
+Progress, and what I am waiting on (no question).
+
+- **Done on `job/T8/review` (pushed).**
+  - `src/review/` (`index.mjs`, `checks.mjs`, `schema.mjs`).
+  - store rewired: one-line delegates, the six ops through `reviewOps`, `reviewOf(ctx)` at construction.
+  - C-87.1–.11 and C-32.16 moved out of the catalogue; the three tables moved out of `schema.mjs`.
+  - Ownership: legacy-store 12 lines added, 912 removed; legacy-checks 0 added, 133 removed.
+  - Module tests 26 pass, 0 fail, 1 todo (R26's `DRAFTS_READ_MAX` equality). Three negative controls fail as they should.
+  - format, architecture and coverage are clean (25/25 at the time; R26 now covered).
+- **B2 and B3 applied.** R15 reads case-authoring's `withheld_stated` from the list. R26 is tested.
+- **Waiting on:** your CHANGE merging publication (`publicationOf`, `registerReviewProvider`, R39 `attributionInForce`) and case-authoring (`caseAuthoringOf`, `publishCase`, the list). Until then the plane's `op=reviewcopy` has no case-authoring to run its dry run against, so the old battery's review suites are red on this branch. Compared with base `tranche/T8`: reviewcopy 98/0 → 55/43, rec213 20/0 → 6/14, d573 12/0 → 4/8, d150 64/0 → 53/11, and others. I will re-measure and REPORT per suite once the providers are merged; I will not rewire interim adapters into the store.
