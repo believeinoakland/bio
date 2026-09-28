@@ -1,0 +1,92 @@
+# promotion (T8)
+
+**Status** · session_01YD4sPbdrGsgL4xn1Cbrnsp · depth 2 · COMPLETE · handled B2
+
+## J1 · QUESTION
+
+Two readings. I am carrying on with both as stated; neither blocks the rest of the job.
+
+1. **R47/R33: where the registration lives.** `runCaseGate` is a module-level function today (`gate.mjs`, re-exported). legacy-index's `op=caseratify` (index.mjs 6738) calls it without a host. A registration made "once at start" by ratification is per host, since ratification is built per host and a second host's registration must not be refused `STEP_DECLARED`.
+   **Best reading, applied:** `registerCaseCatalogue(module, fn)` and `runCaseGate(args)` are methods on the promotion instance (`promotionOf(host)`). The instance runs the registered catalogue, or `checkCaseDocument` until one is registered. The exported free `runCaseGate` keeps running `checkCaseDocument`, so today's caller is unchanged. When ratification takes `op=caseratify` (layer 8), its handler calls the instance's `runCaseGate`. I will REPORT this for ratification's entry.
+   Two further points:
+   - A registered catalogue that throws, or that answers something other than an array, gives an error finding `CASE_CATALOGUE_FAILED` (`ok: false`), so R33's "never throws" holds and the gate fails closed.
+   - `LISTENER_MALFORMED` (a `fn` that is not a function, or no module named) is minted by one helper, which `#listen` and `registerCaseCatalogue` both call (K231's one site within promotion).
+2. **N147's timing, against R34.** The catalogue running today is not the one 1.36.0 names. Layer 6's and 7's departures have happened, and in T8 layer 1 added C-102.6 and C-102.7 and changed the admitted types. So R34 fails now, and my rule is to leave the module meeting its requirements.
+   **Best reading, applied:** I stamp 1.37.0 now (MINOR), from the d470 census suite's own print on this tree, and record the arrivals, departures and changes in the constant's note.
+   "Contradictory" 1's single post-layer-9 stamp then becomes a second stamp, 1.38.0, for actions' and ratification's moves. Promotion is re-opened for it, as K150 did. If you would rather hold R34 red until layer 9, say so, and I will revert the stamp before COMPLETE.
+
+## J2 · REPORT
+
+Found in other modules or artifacts by this job. None of them is changed here.
+
+1. **legacy-checks (next plan, K233 (1)):** `CASE_CATALOGUE_FAILED` needs a catalogue row. The case gate mints it when a registered case-document catalogue throws, or answers something other than a list of finding objects; the gate then fails closed (R33).
+   Its site is `src/gate.mjs runCaseGate`, a whole-function `where`: the function mints only that code.
+   Suggested translation: "The checks a case document must pass could not be run over this one, so it was not passed. The fault is in the checks, not the document, and nothing was signed."
+2. **legacy-checks, next plan (K231's three deferred rows):** `STEP_DECLARED` is now minted at one site, the helper `stepDeclared` in `src/promotion/index.mjs`, which `registerStep`, `registerFact` and `registerCaseCatalogue` all call. Its row's `where` can now name that helper.
+   `LISTENER_MALFORMED` is minted at one site within promotion (the helper `listenerMalformed`, called by `#listen` and `registerCaseCatalogue`); the other modules' sites wait on N202.
+3. **legacy-tests (layer 11, N147's share and J3.6's re-pins):** after this job, `civicos-ui/check-refusal-codes.mjs` goes from 102 to 100 failures.
+   - Cleared: the two region failures, `is-fact-named` and `is-step-named`.
+   - Cleared: arm C's collapsed corpus. outcomeReturns now reads 206 against its floor of 205.
+   - Every other failure it reports is a ratchet to re-pin from its print: codesChecked 676, refusalsJudged 668, regions 283, outcomeReturns 206. regionLines is 4357, against a floor of 4705.
+   - `d470-catalog-census.test.mjs` A3 and A9 need the 1.37.0 row. Record it from the suite's own print: count 491, digest `42a9d0a3f36d1af8d714458aa8af2916b5b07034c6fd28427aeb8e5c746014f0`, source `17c6fd162802b67d0bfacfbd930611cb14b7b11004cb519e111180aa97dd86a4`, with the changed checks the constant's note names. The suite's (A5) literal, and any `gateVersion` literal pinned in the old battery (`ratify.test.mjs`), move with it.
+4. **Generated artifacts (§14):** this job changes `bio-plane/src/gate.mjs` and `src/promotion/index.mjs`, so `agent-worker/dist/agent-worker.bundled.mjs` is stale. `fleetbundles` fails the agent-worker rows. `bio-plane/dist/bio-plane.bundled.mjs` embeds the same sources, so it is stale too. Regenerate both at the layer close.
+5. **N70 (meaning-bounds), for the record:** promotion's `#fact` now returns its `FACT_UNAVAILABLE` refusal flat (`{ok:false, …}`) or `{ok:true, value}`; it no longer nests the refusal. The D-240 (b) arm's list on this tree names no promotion function: `pdfStructure`, reevaluation's `adoptVersion` (N182 (4)) and citation's `#document` (N196). The arm is still red on those.
+6. **Reds seen in users' suites, the same on the tranche base as here:**
+   - citation R5 (the retiring types; LEGACY-CHECKS #3 J3 item 3).
+   - intent R26 (`STATE_MOVE_UNDECLARED`; in intent's layer-7 entry).
+   - connections "R24, R18, K155" (the capture and extraction creates carrying the env). This one has no entry I can find: connections has no T8 job.
+
+## J3 · COMPLETE
+
+**Every entry is applied.** Code is at commit a99312070e (merged with `tranche/T8` at da7be427ca, taking K233).
+
+## Entries applied
+
+- **N67 and N69, promotion's share (R47, R33; K202, K233):**
+  - `registerCaseCatalogue(module, fn)` and `runCaseGate(args)` are methods on the promotion instance. The instance runs the registered catalogue, or `checkCaseDocument` until one registers, with the same answer shape and `GATE_VERSION`.
+  - A second registration, by any module, is `STEP_DECLARED`. A missing module or function is `LISTENER_MALFORMED`.
+  - A registered catalogue that throws, or does not answer a list of findings, gives `CASE_CATALOGUE_FAILED` (`ok: false`), so the gate never throws and never passes a document it did not judge.
+  - The exported free `runCaseGate` in `gate.mjs` takes the catalogue as an optional second argument, defaulting to `checkCaseDocument`. Today's caller, `op=caseratify`, is unchanged. Ratification's handler moves to the instance gate, as its entry now says.
+- **N142, promotion's share (R48, K230):** `INLINE_MAX` was already built. It is now documented as R48, and a test pins the value 1,048,576 and checks the byte-exact edge (UTF-8 bytes, not characters) for `bundle.md` and other files, at creation and revision.
+- **N70, promotion's share:** `#fact` answers `{ok: true, value}`, or the flat `FACT_UNAVAILABLE` refusal, never nested. Its three callers return that refusal directly.
+- **N147, promotion's share (K233):** `CATALOG_VERSION` moves 1.36.0 → 1.37.0, MINOR. The constant's note records the census the d470 suite prints on this tree: 550 → 491 checks, sha256 42a9d0a3…, source 17c6fd16…. It also names the departures (T7's layers 6–7) and the arrivals and changes (T8's layer 1).
+- **N202, promotion's share (K231):**
+  - `STEP_DECLARED` is minted at one site, the helper `stepDeclared`, which `registerStep`, `registerFact` and `registerCaseCatalogue` all call.
+  - `LISTENER_MALFORMED` is minted at one site within promotion, the helper `listenerMalformed`.
+  - The regions `is-fact-named` (in `registerFact`) and `is-step-named` (in `registerStep`) are marked. Their refusals now carry C-102.6 and C-102.7's check and translation, and `FACT_UNAVAILABLE` and `FACT_FAILED` carry C-102.4 and C-102.5's.
+- **R15's test (LEGACY-CHECKS #3 J3.1):** the prefix map now comes from the catalogue's `OBJECT_TYPES`, so every admitted type is driven, the six new ones included. It passes.
+
+## Deferred
+
+None.
+
+## Found in other modules
+
+See J2: `CASE_CATALOGUE_FAILED`'s row and `STEP_DECLARED`'s now-single site (legacy-checks, next plan); the guard's and the d470 census' re-pins (legacy-tests); the stale agent-worker and bio-plane bundles; three reds in users' suites that are the same on the base.
+
+## Tests and checks
+
+- **This module:** `node --test bio-plane/test/m/promotion/`: tests 64, pass 64, fail 0. New or extended tests:
+  - R47 (registration, refusals, per-host, facts passed through);
+  - R33 (fails closed on a broken catalogue);
+  - R39/R40/R47 (`STEP_DECLARED` at every registration; C-102.6 and C-102.7 carried);
+  - R48;
+  - R34 (the instance gate's version);
+  - R15 (over every admitted type).
+- R34's other half, one version per catalogue, is held by legacy-tests' d470 census. The census is red until its 1.37.0 row is recorded (J2 item 3).
+- **Users' suites** (every module importing promotion), each on this branch and on the base:
+  - affordances 65/0, ai-runs 41/0, basis-versions 42/0, bias 45/0, content 50/0, inquiry 50/0, provenance 55/0, reevaluation 30/0, retrieval 58/0, strength 40/0.
+  - citation 48/1, connections 59/1 and intent 29/1 fail on the same test on the base as here.
+- **No layer tests** (manifest).
+- **Old battery:**
+  - `check-refusal-codes` 102 → 100 failures.
+  - `meaning-bounds` 94/2, unchanged; no promotion function is named.
+  - `d470` 11/2 (A3, A9: the re-pin).
+  - `fleetbundles`: the agent-worker rows are stale.
+- **Checks:**
+  - format: 69 modules, 64 requirements files; 0 failures.
+  - architecture: 16 product files, 53 relative imports; 0 failures.
+  - coverage: 48 of 48 live requirement ids named by a test; 0 failures.
+  - ownership: 6 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
+
+Size (session_01YD4sPbdrGsgL4xn1Cbrnsp): test runs 45, module lines 2233
