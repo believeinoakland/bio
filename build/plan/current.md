@@ -30,7 +30,7 @@ Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mail
 - **skills** · T6-9 · Extract per map and requirements (K102); no rows; R10, R21 as its requirements; N53 (its share: its tests that read `agent-worker` and `index.mjs` move); N70 (its share: the doctrine's source, skilldoctrine and skillpack reds).
 - **agent-worker** · T6-10 · `agent-worker/test/plane-meaning.mjs` imports `MEANING_READ_CHECKS` from `bio-plane/src/retrieval/checks.mjs`, no longer the catalogue (RETRIEVAL #1 REPORT 2); its `stepLog` control-flow entries sent via `op=airuntick` carry a state that is a look, or none, never `NEVER_LOOKED` (observation-log R3, K148); Build per requirements (K102; no map, it sits at its paths); D-611 (R40); R41, R47, R48 as its requirements; N53 (its share).
 
-### Layer 7 (order: `intent`, `reevaluation`)
+### Layer 7 · RUNNING since 2026-09-28 ~01:46 UTC (INTENT #1, REEVALUATION #1; K197) (order: `intent`, `reevaluation`)
 
 - **intent** · T6-11 · Extract per map and requirements (K102); no rows, no next.md entries; R2–R18, R26 new (R19–R25 bind the new code; R22 met when C-2.9's check moves).
 - **reevaluation** · T6-12 · Extract per map and requirements (K102); REC-222 (R14; REC-209 superseded), REC-223 (R15); R8, R9, R16, R17 as its requirements; its `raise` from `reopen` reads promotion's `onReopened` (N62, T6's layer 2).
