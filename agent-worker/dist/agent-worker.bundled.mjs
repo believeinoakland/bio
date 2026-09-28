@@ -9951,6 +9951,24 @@ var RecordCore = class _RecordCore {
     if (!r) return null;
     return r.content !== null ? { text: r.content, sha256: r.sha256 } : { blobSha: r.blob_sha, bytes: r.bytes, sha256: r.sha256 };
   }
+  /** R60, D-442: THE PINNED BYTES OF A BUNDLE'S `bundle.md` — the text whose SHA-256 is `sha`, from the live file or
+   *  any historical snapshot of it, read from this module's own tables alone. A row is a candidate by its stored
+   *  digest (compared lower-cased) and is answered only when its text hashes to `sha` by R58's one digest, so a row
+   *  whose stored digest disagrees with its content (R56) never passes its text off as the pinned bytes. A blob-backed
+   *  row holds no text and is passed over, never ending the search. Null when either argument is absent, nothing
+   *  matches, or the read fails; never throws. `publication` R2 and `ratification` R3 read it. */
+  textAtSha(bundleId, sha) {
+    if (typeof bundleId !== "string" || !bundleId || typeof sha !== "string" || !sha) return null;
+    const want = sha.toLowerCase();
+    try {
+      for (const table of ["files", "history"])
+        for (const r of this.#sql.exec(`SELECT content FROM ${table} WHERE bundle_id=? AND path='bundle.md'
+                                          AND content IS NOT NULL AND lower(sha256)=?`, bundleId, want))
+          if (typeof r.content === "string" && fileDigestOf({ text: r.content }) === want) return r.content;
+    } catch {
+    }
+    return null;
+  }
   /** R15's fixed derivation: the key goes in the FILENAME, not a directory — `bundle.md` archived under
    *  K is `_history/bundle_K.md`, `data/changes.json` is `_history/data/changes_K.json` — because the
    *  check catalogue parses exactly this shape (C-12.2). */
@@ -14021,7 +14039,7 @@ var TSA_ENDPOINTS = Object.freeze([
 var te2 = new TextEncoder();
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.36.0";
+var CATALOG_VERSION = "1.37.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var te3 = new TextEncoder();
 

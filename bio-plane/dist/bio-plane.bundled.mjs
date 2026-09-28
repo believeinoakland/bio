@@ -9209,6 +9209,24 @@ var RecordCore = class _RecordCore {
     if (!r) return null;
     return r.content !== null ? { text: r.content, sha256: r.sha256 } : { blobSha: r.blob_sha, bytes: r.bytes, sha256: r.sha256 };
   }
+  /** R60, D-442: THE PINNED BYTES OF A BUNDLE'S `bundle.md` — the text whose SHA-256 is `sha`, from the live file or
+   *  any historical snapshot of it, read from this module's own tables alone. A row is a candidate by its stored
+   *  digest (compared lower-cased) and is answered only when its text hashes to `sha` by R58's one digest, so a row
+   *  whose stored digest disagrees with its content (R56) never passes its text off as the pinned bytes. A blob-backed
+   *  row holds no text and is passed over, never ending the search. Null when either argument is absent, nothing
+   *  matches, or the read fails; never throws. `publication` R2 and `ratification` R3 read it. */
+  textAtSha(bundleId, sha) {
+    if (typeof bundleId !== "string" || !bundleId || typeof sha !== "string" || !sha) return null;
+    const want = sha.toLowerCase();
+    try {
+      for (const table2 of ["files", "history"])
+        for (const r of this.#sql.exec(`SELECT content FROM ${table2} WHERE bundle_id=? AND path='bundle.md'
+                                          AND content IS NOT NULL AND lower(sha256)=?`, bundleId, want))
+          if (typeof r.content === "string" && fileDigestOf({ text: r.content }) === want) return r.content;
+    } catch {
+    }
+    return null;
+  }
   /** R15's fixed derivation: the key goes in the FILENAME, not a directory — `bundle.md` archived under
    *  K is `_history/bundle_K.md`, `data/changes.json` is `_history/data/changes_K.json` — because the
    *  check catalogue parses exactly this shape (C-12.2). */
@@ -13881,18 +13899,23 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.36.0";
+var CATALOG_VERSION = "1.37.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
-function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null }) {
-  const findings = checkCaseDocument(fm, {
-    caseId,
-    edition,
-    priorCase: priorCase || null,
-    body,
-    memberBasis
-  });
+function runCaseGate({ caseId, edition, fm, priorCase, body = null, memberBasis = null } = {}, catalogue = checkCaseDocument) {
+  let findings;
+  try {
+    findings = catalogue(fm, { caseId, edition, priorCase: priorCase || null, body, memberBasis });
+    if (!Array.isArray(findings) || !findings.every((x) => x && typeof x === "object"))
+      throw new Error("the catalogue answered no list of findings");
+  } catch (e) {
+    findings = [{
+      check: "CASE_CATALOGUE_FAILED",
+      severity: "error",
+      message: `the case-document catalogue could not judge this document, so it is not passed: ` + String(e && e.message ? e.message : e).slice(0, 200)
+    }];
+  }
   const errors = findings.filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
   return {
     gateVersion: GATE_VERSION,
@@ -23900,7 +23923,17 @@ function stampGroup(files, slug) {
     return { ...f5, text: text2, bytes: inlineBytesOf({ text: text2 }), sha256: fileDigestOf({ text: text2 }) };
   });
 }
-var factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", fact, detail });
+var factUnavailable = (fact, detail) => ({
+  ok: false,
+  reason: "FACT_UNAVAILABLE",
+  code: "FACT_UNAVAILABLE",
+  check: REGISTRATION_CHECKS.FACT_UNAVAILABLE.check,
+  translation: REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation,
+  fact,
+  detail
+});
+var stepDeclared = (held, detail) => ({ ok: false, reason: "STEP_DECLARED", ...held, detail });
+var listenerMalformed = (detail) => ({ ok: false, reason: "LISTENER_MALFORMED", detail });
 var NAME_TAKEN = () => ({
   ok: false,
   reason: "NAME_TAKEN",
@@ -23921,6 +23954,8 @@ var Promotion = class {
   // {module, fn, seq}: R46's notice of an accepted reopening
   #notices = /* @__PURE__ */ new Map();
   // accepted promotions awaiting their notice, by bundle and snap key
+  #caseCatalogue = null;
+  // {module, fn}: R47's registered case-document catalogue, which R33 runs
   #delivering = false;
   constructor({ record, membership, now, order } = {}) {
     this.#record = record;
@@ -23931,9 +23966,16 @@ var Promotion = class {
   /* ---------------------------------------------------------------- R39, R40: the registry */
   registerStep(module, { check = null, project = null } = {}) {
     if (typeof module !== "string" || !module)
-      return { ok: false, reason: "STEP_MODULE_UNNAMED", detail: "a step names the module that registers it" };
+      return {
+        ok: false,
+        reason: "STEP_MODULE_UNNAMED",
+        code: "STEP_MODULE_UNNAMED",
+        check: REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.check,
+        translation: REGISTRATION_CHECKS.STEP_MODULE_UNNAMED.translation,
+        detail: "a step names the module that registers it"
+      };
     if (this.#steps.some((s) => s.module === module))
-      return { ok: false, reason: "STEP_DECLARED", module, detail: `${module} has already registered its step` };
+      return stepDeclared({ module }, `${module} has already registered its step`);
     this.#steps.push({
       module,
       check: typeof check === "function" ? check : null,
@@ -23951,7 +23993,7 @@ var Promotion = class {
   /* R45, R46: a later module's listener joins `list` once, kept in the modules' total order. */
   #listen(list2, module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
+      return listenerMalformed("a listener names the module that registers it and its function");
     if (list2.some((l) => l.module === module))
       return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
     list2.push({ module, fn, seq: list2.length });
@@ -24016,6 +24058,9 @@ var Promotion = class {
       return {
         ok: false,
         reason: "FACT_FAILED",
+        code: "FACT_FAILED",
+        check: REGISTRATION_CHECKS.FACT_FAILED.check,
+        translation: REGISTRATION_CHECKS.FACT_FAILED.translation,
         fact: name,
         detail: `the module that provides the fact '${name}' could not answer: ${cut(e && e.message ? e.message : e, 200)}`
       };
@@ -24023,23 +24068,43 @@ var Promotion = class {
   }
   registerFact(name, module, fn) {
     if (typeof name !== "string" || !name || typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "FACT_MALFORMED", detail: "a fact names itself, its module and its function" };
+      return {
+        ok: false,
+        reason: "FACT_MALFORMED",
+        code: "FACT_MALFORMED",
+        check: REGISTRATION_CHECKS.FACT_MALFORMED.check,
+        translation: REGISTRATION_CHECKS.FACT_MALFORMED.translation,
+        detail: "a fact names itself, its module and its function"
+      };
     const held = this.#facts.get(name);
-    if (held) return {
-      ok: false,
-      reason: "STEP_DECLARED",
-      fact: name,
-      module: held.module,
-      detail: `the fact '${name}' is already provided by ${held.module}`
-    };
+    if (held) return stepDeclared({ fact: name, module: held.module }, `the fact '${name}' is already provided by ${held.module}`);
     this.#facts.set(name, { module, fn });
     return { ok: true, fact: name, module };
   }
-  /* A fact's value, or FACT_UNAVAILABLE naming it: never read as false (R40). */
+  /* A fact's value `{ok: true, value}`, or the act's refusal FACT_UNAVAILABLE naming it: never read as false (R40).
+     The refusal is the answer itself, never nested inside one (N70: the D-240 reader grades a return by its verdict). */
   #fact(name, ...args) {
     const held = this.#facts.get(name);
-    if (!held) return { unavailable: factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act is refused rather than answered as if it were false. Nothing was written.`) };
-    return { value: held.fn(...args) };
+    if (!held) return factUnavailable(name, `no module provides the fact '${name}' this act needs, so the act is refused rather than answered as if it were false. Nothing was written.`);
+    return { ok: true, value: held.fn(...args) };
+  }
+  /* ---------------------------------------------------------------- R47, R33: the case-document catalogue */
+  /* R47: a later module (ratification) registers, once, the case-document catalogue `fn(fm, ctx) → findings` that R33
+     runs in place of the catalogue's `checkCaseDocument`. Any second registration is refused, whoever makes it. */
+  registerCaseCatalogue(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return listenerMalformed("a case-document catalogue names the module that registers it and its function");
+    if (this.#caseCatalogue)
+      return stepDeclared(
+        { module: this.#caseCatalogue.module },
+        `the case-document catalogue is already registered by ${this.#caseCatalogue.module}`
+      );
+    this.#caseCatalogue = { module, fn };
+    return { ok: true, module };
+  }
+  /* R33: the case gate over the registered catalogue, else the catalogue's own. Same shape and GATE_VERSION (R34). */
+  runCaseGate(args = {}) {
+    return runCaseGate(args || {}, this.#caseCatalogue ? this.#caseCatalogue.fn : checkCaseDocument);
   }
   /* ---------------------------------------------------------------- promote */
   promote(pkg) {
@@ -24195,7 +24260,7 @@ var Promotion = class {
     let groupStamp = null, createdGroup = null;
     if (base === null) {
       const g = this.#fact("producingGroup");
-      if (g.unavailable) return g.unavailable;
+      if (!g.ok) return g;
       const recorded = typeof g.value === "string" && g.value ? g.value : null;
       if (recorded && !replay) {
         groupStamp = recorded;
@@ -24369,7 +24434,7 @@ var Promotion = class {
         );
       if (promotedState === "retired" && (!head || head.currentState !== "retired") && (head ? normalizeType(head.type) : promotedType) === "information") {
         const c = this.#fact("citedBy", bundleId);
-        if (c.unavailable) return c.unavailable;
+        if (!c.ok) return c;
         const citedBy = Array.isArray(c.value) ? c.value : [];
         if (citedBy.length)
           return {
@@ -24792,7 +24857,7 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const fm = parseFrontmatter(text2).data || {};
     if (!REOPENABLE_FROM.includes(head.currentState)) {
       const m = this.#fact("caseMember", target);
-      if (m.unavailable) return { ...m.unavailable, target };
+      if (!m.ok) return { ...m, target };
       if (!m.value)
         return {
           ok: false,
@@ -86085,27 +86150,12 @@ Changes: responds_to edge added to ${actionId}.
       memberBasis: this.#pinnedMemberBasis(doc.text)
     };
   }
-  /* D-442: the pinned bytes of one member, from the live row or its history — the lookup
-     `#ratifiedFindingsRestingOn` already makes, named once here for the case-document readers. */
-  #memberTextAtSha(bundleId, sha) {
-    if (!bundleId || !sha) return null;
-    const at5 = this.#one(
-      `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
-      bundleId,
-      sha
-    ) || this.#one(
-      `SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
-      bundleId,
-      sha
-    );
-    return at5 && typeof at5.content === "string" ? at5.content : null;
-  }
   #pinnedMemberBasis(docText) {
     const dfm = parseFrontmatter(String(docText || "")).data || {};
     const out = {};
     for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
       if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
-      const text2 = this.#memberTextAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
+      const text2 = recordOf(this.ctx).textAtSha(r.target, typeof r.version_sha === "string" ? r.version_sha : null);
       if (text2 === null) continue;
       const mfm = parseFrontmatter(text2).data || {};
       out[r.target] = Array.isArray(mfm.basis) ? mfm.basis : [];
@@ -87979,7 +88029,7 @@ case_project: ${project}
       });
       const completedCase = roster.length && !stillAwaiting.length ? (() => {
         const first = rows.find((x) => x.target === roster[0]) || {};
-        const mt = this.#memberTextAtSha(roster[0], first.version_sha ?? null);
+        const mt = recordOf(this.ctx).textAtSha(roster[0], first.version_sha ?? null);
         const grp = mt ? (parseFrontmatter(mt).data || {}).group ?? null : null;
         return this.#caseEditionState(id, ed, grp);
       })() : null;
@@ -95183,15 +95233,7 @@ ${lines.join("\n")}
     );
     const out = [];
     for (const p of pins) {
-      const at5 = this.#one(
-        `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
-        p.bundle_id,
-        p.version_sha
-      ) || this.#one(
-        `SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
-        p.bundle_id,
-        p.version_sha
-      );
+      const at5 = { content: recordOf(this.ctx).textAtSha(p.bundle_id, p.version_sha) };
       if (!at5 || typeof at5.content !== "string") continue;
       const fm = parseFrontmatter(at5.content).data || {};
       if (_Store.publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === bundleId))
