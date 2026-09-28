@@ -35,3 +35,58 @@ Found in other modules or artifacts by this job. None of them is changed here.
    - citation R5 (the retiring types; LEGACY-CHECKS #3 J3 item 3).
    - intent R26 (`STATE_MOVE_UNDECLARED`; in intent's layer-7 entry).
    - connections "R24, R18, K155" (the capture and extraction creates carrying the env). This one has no entry I can find: connections has no T8 job.
+
+## J3 · COMPLETE
+
+**Every entry is applied.** Code is at commit a99312070e (merged with `tranche/T8` at da7be427ca, taking K233).
+
+## Entries applied
+
+- **N67 and N69, promotion's share (R47, R33; K202, K233):**
+  - `registerCaseCatalogue(module, fn)` and `runCaseGate(args)` are methods on the promotion instance. The instance runs the registered catalogue, or `checkCaseDocument` until one registers, with the same answer shape and `GATE_VERSION`.
+  - A second registration, by any module, is `STEP_DECLARED`. A missing module or function is `LISTENER_MALFORMED`.
+  - A registered catalogue that throws, or does not answer a list of findings, gives `CASE_CATALOGUE_FAILED` (`ok: false`), so the gate never throws and never passes a document it did not judge.
+  - The exported free `runCaseGate` in `gate.mjs` takes the catalogue as an optional second argument, defaulting to `checkCaseDocument`. Today's caller, `op=caseratify`, is unchanged. Ratification's handler moves to the instance gate, as its entry now says.
+- **N142, promotion's share (R48, K230):** `INLINE_MAX` was already built. It is now documented as R48, and a test pins the value 1,048,576 and checks the byte-exact edge (UTF-8 bytes, not characters) for `bundle.md` and other files, at creation and revision.
+- **N70, promotion's share:** `#fact` answers `{ok: true, value}`, or the flat `FACT_UNAVAILABLE` refusal, never nested. Its three callers return that refusal directly.
+- **N147, promotion's share (K233):** `CATALOG_VERSION` moves 1.36.0 → 1.37.0, MINOR. The constant's note records the census the d470 suite prints on this tree: 550 → 491 checks, sha256 42a9d0a3…, source 17c6fd16…. It also names the departures (T7's layers 6–7) and the arrivals and changes (T8's layer 1).
+- **N202, promotion's share (K231):**
+  - `STEP_DECLARED` is minted at one site, the helper `stepDeclared`, which `registerStep`, `registerFact` and `registerCaseCatalogue` all call.
+  - `LISTENER_MALFORMED` is minted at one site within promotion, the helper `listenerMalformed`.
+  - The regions `is-fact-named` (in `registerFact`) and `is-step-named` (in `registerStep`) are marked. Their refusals now carry C-102.6 and C-102.7's check and translation, and `FACT_UNAVAILABLE` and `FACT_FAILED` carry C-102.4 and C-102.5's.
+- **R15's test (LEGACY-CHECKS #3 J3.1):** the prefix map now comes from the catalogue's `OBJECT_TYPES`, so every admitted type is driven, the six new ones included. It passes.
+
+## Deferred
+
+None.
+
+## Found in other modules
+
+See J2: `CASE_CATALOGUE_FAILED`'s row and `STEP_DECLARED`'s now-single site (legacy-checks, next plan); the guard's and the d470 census' re-pins (legacy-tests); the stale agent-worker and bio-plane bundles; three reds in users' suites that are the same on the base.
+
+## Tests and checks
+
+- **This module:** `node --test bio-plane/test/m/promotion/`: tests 64, pass 64, fail 0. New or extended tests:
+  - R47 (registration, refusals, per-host, facts passed through);
+  - R33 (fails closed on a broken catalogue);
+  - R39/R40/R47 (`STEP_DECLARED` at every registration; C-102.6 and C-102.7 carried);
+  - R48;
+  - R34 (the instance gate's version);
+  - R15 (over every admitted type).
+- R34's other half, one version per catalogue, is held by legacy-tests' d470 census. The census is red until its 1.37.0 row is recorded (J2 item 3).
+- **Users' suites** (every module importing promotion), each on this branch and on the base:
+  - affordances 65/0, ai-runs 41/0, basis-versions 42/0, bias 45/0, content 50/0, inquiry 50/0, provenance 55/0, reevaluation 30/0, retrieval 58/0, strength 40/0.
+  - citation 48/1, connections 59/1 and intent 29/1 fail on the same test on the base as here.
+- **No layer tests** (manifest).
+- **Old battery:**
+  - `check-refusal-codes` 102 → 100 failures.
+  - `meaning-bounds` 94/2, unchanged; no promotion function is named.
+  - `d470` 11/2 (A3, A9: the re-pin).
+  - `fleetbundles`: the agent-worker rows are stale.
+- **Checks:**
+  - format: 69 modules, 64 requirements files; 0 failures.
+  - architecture: 16 product files, 53 relative imports; 0 failures.
+  - coverage: 48 of 48 live requirement ids named by a test; 0 failures.
+  - ownership: 6 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
+
+Size (session_01YD4sPbdrGsgL4xn1Cbrnsp): test runs 45, module lines 2233
