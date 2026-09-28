@@ -115,31 +115,31 @@ export const VERSION_NOTICE_SUBJECT_CHECKS = Object.freeze({
 export const REEVALUATION_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_ADOPT_VERSION: {
     check: "C-110.1",
-    where: at("adoptVersion", "is-version-choice"),
+    where: at("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can move a reference to a newer version of a document. The assistant and "
       + "the plane's own credentials may say a newer version exists; they never choose which one a finding rests on.",
   },
   MACHINE_CANNOT_KEEP_VERSION: {
     check: "C-110.2",
-    where: at("keepVersion", "is-version-choice"),
+    where: at("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can record that a reference stays on the earlier version. That is a "
       + "judgement about the evidence, and a machine credential holds no judgement the record would stand behind.",
   },
   VERSION_NOTICE_NOT_FOUND: {
     check: "C-110.3",
-    where: at("adoptVersion", "is-version-choice"),
+    where: at("#choiceSubject", "is-version-choice"),
     translation: "There is no notice by that id that you can read here. A notice about a question you may not see "
       + "answers exactly as one that does not exist.",
   },
   VERSION_NOTICE_CLOSED: {
     check: "C-110.4",
-    where: at("adoptVersion", "is-version-choice"),
+    where: at("#choiceSubject", "is-version-choice"),
     translation: "That notice has already been answered: the reference was either moved to the newer version or "
       + "kept on the earlier one, and the answer stands as recorded. A yet newer version raises a notice of its own.",
   },
   VERSION_CHOICE_WHY_MALFORMED: {
     check: "C-110.5",
-    where: at("keepVersion", "is-version-choice"),
+    where: at("#choiceSubject", "is-version-choice"),
     translation: "The reason is too long, or holds a quotation mark, a backslash or a line break, which the record "
       + "cannot store. Shorten it or leave those characters out.",
   },
@@ -164,7 +164,7 @@ export const REEVALUATION_ACT_CHECKS = Object.freeze({
   },
   VERSION_ADOPT_UNWRITABLE: {
     check: "C-110.9",
-    where: at("adoptVersion", "is-version-choice"),
+    where: at("adoptVersion", "is-version-adoptable"),
     translation: "The reference could not be moved: the question's document no longer holds the leg this notice was "
       + "about, or the newer version could not be written into it. Nothing was written, and the notice stays open.",
   },

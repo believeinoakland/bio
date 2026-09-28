@@ -723,9 +723,8 @@ export class Store extends DurableObject {
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerFact("publishedRegistry", "legacy-store", (id, targets) => this.publishedRegistryFor(id, targets));
-    /* inquiry (K31, K61): its check and projection join every promotion before legacy-store's step (its R11, R12);
-       legacy-store answers reevaluation's obligation (R21, R25) and strength's pair (R28) until each is extracted. */
-    reevaluationOf(ctx);
+    /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
+    reevaluationOf(ctx, { env });
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
     strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
       legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },

@@ -1,6 +1,7 @@
-/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18). The obligation itself is a
+/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25). The obligation itself is a
  * query and has no table (R18, P-64); these hold only what a member's act or the pushed notice writes. Each is keyed by
- * the bundle it is about and declared to record-core's purge (K23), so a purge of that bundle clears its rows. */
+ * the bundle it is about and declared to record-core's purge (K23), so a purge of that bundle clears its rows; the sweep's
+ * position (R25) is about no bundle and is cleared by a whole-store purge only. */
 
 export const REEVALUATION_SCHEMA = `
 -- R14 (REC-222): ONE NOTICE PER (holder, reference, newer capture). The holder
@@ -51,12 +52,31 @@ CREATE TABLE IF NOT EXISTS reevaluation_records (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_records_dependent ON reevaluation_records (dependent, target, source);
+-- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
+-- of the pass part-way (after the last leg a batch read), when that pass began
+-- and when the last complete one began, and the receipt mark: receipt_seq is
+-- counted up by each receipt (provenance's onReceipt), and each pass keeps the
+-- count it began at, so "a receipt since the last complete pass began" is one
+-- comparison of two integers, never two instants in the same second. No
+-- receipt's content is stored. Absent (never written, or purged whole) reads as
+-- no pass yet complete and no receipt counted.
+CREATE TABLE IF NOT EXISTS reevaluation_sweep (
+  id               INTEGER PRIMARY KEY CHECK (id = 1),
+  cursor           TEXT,
+  pass_began       TEXT,
+  pass_seq         INTEGER,
+  complete_began   TEXT,
+  complete_seq     INTEGER,
+  receipt_seq      INTEGER NOT NULL DEFAULT 0
+);
 `;
 
 /** K23: each table keyed to the bundle it is about, so a single-bundle purge clears its rows. */
 export const REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_notices", keys: ["holder"] },
   { name: "reevaluation_records", keys: ["dependent"] },
+  /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
+  { name: "reevaluation_sweep", keys: [] },
 ]);
 
 /** Creates the tables; idempotent. */
