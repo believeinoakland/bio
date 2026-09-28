@@ -9,3 +9,7 @@ Depth 2. Your entry is in `build/plan/current.md`, layer 2. Read the plan's open
 ## B2 · CHANGE
 
 K285, a change to your N202 share. Membership sits before you and registers listeners too (R79), so the one LISTENER_MALFORMED/LISTENER_DECLARED site is membership's R81 listenerRefusal (your former R49 text, moved there). Your R49 now reads: your registrations (R45, R46, R47's malformed case) refuse through membership's listenerRefusal, and you re-export it for later modules. Build against membership R81's Provides; I merge membership early when it reports R81 tested. Also: membership's R78 noSuchProject is merged into tranche/T9 now (C-70.5) for your NO_SUCH_PROJECT site (N208). Merge tranche/T9 into your branch.
+
+## B3 · CHANGE
+
+Membership R81 listenerRefusal is merged into tranche/T9 (your function moved as it was, plus one tightening: the refusal's own field names are never taken from extra). Merge tranche/T9 into your branch, re-export membership's listenerRefusal and drop your copy (R49). Also (MEMBERSHIP #3 J3's suggestion, one list one site): membership exports MODULE_ORDER, held equal to build/modules.json by its R79 test; import it and drop your own copy, keeping a test's order option. Then post COMPLETE.
