@@ -1,18 +1,17 @@
 /* run-productions over the modules it uses, each the real one where it is extracted (record-core, membership,
-   promotion, provenance, content), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage.
+   content), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage.
    The providers not yet extracted are stand-ins the test controls, each written to its requirements' Provides, as
    `runProductionsOf`'s deps take them (K61, K120): ai-runs (R28 `runFor`, R29 `boundOf`/`consumeBound`), strength
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
-   and extraction's readings (content's). Every stand-in records the calls made to it. The tables later modules own
-   and this module reads under their read contracts (inquiry R40, basis-versions R38) are created here in their stated
-   columns. Every test drives `run-productions` at its interface. */
+   and content's own two providers (extraction's readings, provenance's `capturesOf`). Every stand-in records the calls
+   made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
+   later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
+   here in their stated columns. Every test drives `run-productions` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { promotionOf } from "../../../src/promotion/index.mjs";
-import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 
@@ -109,12 +108,9 @@ export function world({ strengthPair = null } = {}) {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
-  const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
-  prov.migrate();
+  /* provenance's `capturesOf` (its R48), as content reads it: the captures registered to a bundle, first-held first. */
+  const registered = {};
+  const prov = { capturesOf: (b) => (registered[b] || []).map((capture_sha) => ({ capture_sha })) };
   const ex = { readings: {}, readFor: {} };
   const extraction = {
     readingOf: (s) => (ex.readings[s] ? { reading: { page_boxes: null }, chain: null, pageCount: null,
@@ -195,13 +191,9 @@ export function world({ strengthPair = null } = {}) {
       basisVersions.appended.push(a);
       if (basisVersions.unsplice) return { ok: false, reason: "UNSPLICEABLE_BASIS" };
       if (basisVersions.refuse) return basisVersions.refuse;
-      const cur = st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, a.target)[0];
       const held = w.versions[a.target] || (w.versions[a.target] = []);
       held.push({ name: a.version.name });
-      const r = promotion.promote({ bundleId: a.target, base: cur.bundle_sha, snapKey: `k${Math.random().toString(16).slice(2)}`,
-        author: a.author || a.version.run, files: [{ path: "bundle.md", text: inquiryMd(a.target, held) + (a.log || "") }],
-        meta: { object_type: "inquiry" } });
-      if (!r.ok) return r;
+      const r = put(a.target, "inquiry", inquiryMd(a.target, held) + (a.log || ""));
       const fm = { basis_versions: [{ ...a.version, state: "suggested", hidden: false }],
                    basis_version_grounds: a.grounds.map((g) => ({ version: a.version.name, ...g })),
                    basis_version_legs: a.legs.map((l) => ({ version: a.version.name, ...l })) };
@@ -223,16 +215,25 @@ export function world({ strengthPair = null } = {}) {
                                      basisVersions, now: () => Date.parse(clock.now) });
   p.migrate();
 
-  const promote = (id, text, type, files = [], register = []) => {
-    const cur = st.sql.exec(`SELECT bundle_sha FROM bundles WHERE bundle_id=?`, id)[0];
-    const r = promotion.promote({ bundleId: id, base: cur ? cur.bundle_sha : null, snapKey: `k${Math.random().toString(16).slice(2)}`,
-      author: ALICE, files: [{ path: "bundle.md", text }, ...files], meta: { object_type: type }, register });
-    if (!r.ok) throw new Error(`fixture promote refused: ${JSON.stringify(r).slice(0, 400)}`);
-    return r;
+  /** A bundle and its files as record-core holds them (its R37 read contract): a new `bundle_sha` on every write. */
+  let rev = 0;
+  const put = (id, type, text, { state = null, files = [] } = {}) => {
+    const cur = st.sql.exec(`SELECT row_version FROM bundles WHERE bundle_id=?`, id)[0];
+    const bsha = sha(`${id}#${++rev}#${text}`);
+    const fm = { inquiry: "open", information: "collected" };
+    if (cur) st.sql.exec(`UPDATE bundles SET bundle_sha=?, row_version=row_version+1 WHERE bundle_id=?`, bsha, id);
+    else st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+                      VALUES (?, ?, 'g', ?, ?, 't', 't', ?)`, id, type, id, state || fm[type] || "forming", bsha);
+    for (const f of [{ path: "bundle.md", text }, ...files])
+      st.sql.exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(bundle_id, path) DO UPDATE SET content=excluded.content, bytes=excluded.bytes, sha256=excluded.sha256`,
+                  id, f.path, f.text, Buffer.byteLength(f.text), sha(f.text));
+    membership.reindexProjectSight(id);
+    return { ok: true, bundleSha: bsha, rowVersion: (cur ? cur.row_version : 0) + 1 };
   };
 
   const w = {
-    st, host, record, membership, promotion, prov, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
+    st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
     citation, retired, connections, cites, basisVersions, candidateSources,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => st.sql.exec(qq, ...a)[0] ?? null,
@@ -247,7 +248,7 @@ export function world({ strengthPair = null } = {}) {
         out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
       return out;
     },
-    inquiry(id, versions = []) { w.versions[id] = versions.slice(); return promote(id, inquiryMd(id, versions), "inquiry"); },
+    inquiry(id, versions = []) { w.versions[id] = versions.slice(); return put(id, "inquiry", inquiryMd(id, versions)); },
     /** A project, written as record-core's `bundles` read contract holds it (a project's id is the plane's to mint). */
     project(id, participants = []) {
       st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
@@ -258,19 +259,11 @@ export function world({ strengthPair = null } = {}) {
       membership.reindexProjectSight(id);
       return id;
     },
-    /** An information bundle holding one capture of `text` (provenance's register, first-held order). */
+    /** An information bundle holding one capture of `text`, registered to it (provenance's first-held order). */
     doc(id, text = `bytes of ${id}`, { state = "collected", read = true, pageCount = 3 } = {}) {
       const s = sha(text);
-      const path = `snapshots/${id}.txt`;
-      promote(id, infoMd(id, state), "information", [
-        { path, text },
-        { path: "data/provenance.json", text: JSON.stringify({ documents: [{
-          file: path, locator: `https://example.org/${id}`, retrieved: "2026-09-27T00:00:00Z",
-          authority: "the publisher", authority_state: "determined", authority_basis: "named on the document",
-          capture: { method: "acquire", grade: "B", actor_class: "session", sha256: s, encoding: "utf8",
-                     bytes: Buffer.byteLength(text) },
-          origin: { kind: "named_request" } }] }, null, 2) }],
-        [{ sha256: s, path, encoding: "utf8", bytes: Buffer.byteLength(text) }]);
+      put(id, "information", infoMd(id, state), { state, files: [{ path: `snapshots/${id}.txt`, text }] });
+      (registered[id] || (registered[id] = [])).push(s);
       if (read) ex.readings[s] = { chain: LAYER, pageCount };
       return s;
     },

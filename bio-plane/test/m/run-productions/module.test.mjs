@@ -82,7 +82,7 @@ test("R16: every C-27 row but C-27.15 and every C-104 row is this module's, read
                                             refs: [{ ref: "k:1", refKind: "k", refKey: "1" }], proposedBy: AK, viewer: ALICE, caller: AK, ...o }));
   P({ proposedBy: "" }); P({ run: "" }); P({ run: "none" }); P({ run: "RUN-EE" }); P({ run: "RUN-C" }); P({ run: "RUN-NB" });
   P({ run: "RUN-F" }); P({ refs: [] }); P({ bundleId: Q }); w.doc(DOC2, "unread", { read: false });
-  w.st.sql.exec(`DELETE FROM register WHERE bundle_id=?`, DOC2); P({ bundleId: DOC2 });
+  w.registered[DOC2] = []; P({ bundleId: DOC2 });
   P({ run: "RUN-1M", refs: [{ ref: "k:1", refKind: "k", refKey: "1", source: { kind: "pdf-page", page: 0, ref: "p1" } },
                             { ref: "k:2", refKind: "k", refKey: "2", source: { kind: "pdf-page", page: 1, ref: "p2" } }] });
   see(w.p.extractProposals({ viewer: ALICE }));

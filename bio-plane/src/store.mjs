@@ -774,8 +774,23 @@ export class Store extends DurableObject {
       list: (after, limit) => this.#rows(`SELECT run FROM ai_runs WHERE run > ? ORDER BY run LIMIT ?`, after, limit).map((r) => r.run),
       read: (run, viewer) => this.aiRunRead({ run, viewer }) }));
     bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
-    /* run-productions (K61, K120): created here, after content and connections, so it declares its tables to purge (R17). */
-    this.#runProductions();
+    /* run-productions (K61, K120): created here, after content and connections, so it declares its tables to purge (R17).
+       The providers it reads that are not yet extracted (ai-runs, strength, citation, basis-versions) are built from
+       what this store hands over, until each merges (`run-productions/interim.mjs`). */
+    runProductionsOf(ctx, { interim: runProductionsInterim({
+      aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
+      strengthWalk: (inquiry, legs) => this.#strengthWalk(inquiry, 0, Store.QUEUE_ANCESTOR_DEPTH, legs),
+      strengthAxes: Store.STRENGTH_AXES,
+      independenceOf: (legs, parts) => this.#independenceOf(legs, parts),
+      retiredNotCitable: (id) => this.#retiredNotCitable(id),
+      basisVersionsOf: (fm) => Store.basisVersionsOf(fm),
+      basisVersions: (a) => this.basisVersions(a),
+      promote: (pkg) => this.promote(pkg),
+      fmSafe: (x) => Store.#fmSafe(x),
+      appendFmRows: (text, key, rows) => Store.#appendFmRows(text, key, rows),
+      setScalar: (text, key, value) => Store.#setScalar(text, key, value),
+      appendSessionLog: (text, entry) => Store.#appendSessionLog(text, entry),
+    }) });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
     promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
@@ -12438,7 +12453,7 @@ export class Store extends DurableObject {
                  + `to judge.` });
     }
     /* (2) WHAT AN EXTRACT RUN PROPOSED (SK-8), with the row it minted if any. */
-    const ext = this.#runProductions().candidates({ captureSha: cap, max });
+    const ext = runProductionsOf(this.ctx).candidates({ captureSha: cap, max });
     if (ext.truncated) truncated = true;
     for (const r of ext.rows) {
       const pos = r.position;
@@ -12446,7 +12461,7 @@ export class Store extends DurableObject {
       push({ source: "extract", ref: pos.ref, extent: { kind: pos.kind, ...posFields(pos) },
              reference: r.ref, label: r.label, run: r.run,
              mentions_subject: null, content_id: r.content_id,
-             mint: r.mint, machine_work: true,
+             mint: mintLabel(r.proposed_by), machine_work: true,
              says: `a machine proposed this passage in run ${r.run}. It is a PROPOSAL: not part of any `
                  + `citation, and not coverage, until a member chooses it.` });
     }
@@ -16152,26 +16167,6 @@ export class Store extends DurableObject {
   /* REC-195: the most PROPOSALS one action's read returns (each at most GOVERNING_LAWS_MAX citations). A cut,
      published beside the answer — never a claim that no more exist. */
   static LAW_PROPOSALS_READ_MAX = 12;
-
-  /* run-productions (K61, K120): op=suggest and the extract productions. The providers it reads that are not yet
-     extracted (ai-runs, strength, citation, basis-versions) are built from what this store hands over, until each
-     merges (`run-productions/interim.mjs`). */
-  #runProductions() {
-    return runProductionsOf(this.ctx, { interim: runProductionsInterim({
-      aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
-      strengthWalk: (inquiry, legs) => this.#strengthWalk(inquiry, 0, Store.QUEUE_ANCESTOR_DEPTH, legs),
-      strengthAxes: Store.STRENGTH_AXES,
-      independenceOf: (legs, parts) => this.#independenceOf(legs, parts),
-      retiredNotCitable: (id) => this.#retiredNotCitable(id),
-      basisVersionsOf: (fm) => Store.basisVersionsOf(fm),
-      basisVersions: (a) => this.basisVersions(a),
-      promote: (pkg) => this.promote(pkg),
-      fmSafe: (x) => Store.#fmSafe(x),
-      appendFmRows: (text, key, rows) => Store.#appendFmRows(text, key, rows),
-      setScalar: (text, key, value) => Store.#setScalar(text, key, value),
-      appendSessionLog: (text, entry) => Store.#appendSessionLog(text, entry),
-    }) });
-  }
 
   /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
    *  the first time.
@@ -20210,7 +20205,7 @@ export class Store extends DurableObject {
          here and is deliberately not: it is scoped to a run or a document
          (`op=extractproposals`), and an instance-wide fraction would average
          across projects that have nothing to do with each other. */
-      proposedReadings: this.#runProductions().counts(hid).proposedReadings,
+      proposedReadings: runProductionsOf(this.ctx).counts(hid).proposedReadings,
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
@@ -20287,7 +20282,7 @@ export class Store extends DurableObject {
          took them (D-113) and so an operator can see that a run is looping
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
-      suggestRefusals: this.#runProductions().counts(hid).suggestRefusals,
+      suggestRefusals: runProductionsOf(this.ctx).counts(hid).suggestRefusals,
       /* PL-4 / IS-4: the outbound work list, reported for the same reason and
          with one more of its own — this is the only counter in the store that
          says how much traffic this instance is about to send to somebody else's
@@ -31445,7 +31440,7 @@ export class Store extends DurableObject {
         /* MK-4 / D-681: the lead's ops, observation-log's (K3); the stamps are the control plane's, read from the query. */
         ...observationLogOps(observationLogOf(this.ctx), url, body),
         /* run-productions' ops (K3): op=suggest and the extract productions; the stamps are the control plane's. */
-        ...runProductionsOps(this.#runProductions(), url, body),
+        ...runProductionsOps(runProductionsOf(this.ctx), url, body),
         ...entitiesOps(entitiesOf(this.ctx), url, body),
         ...progressionOps(progressionsOf(this.ctx), url, body),
         promote: () => promotionOf(this.ctx).promote(body),

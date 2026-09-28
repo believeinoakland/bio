@@ -45,7 +45,7 @@ test("R10, R13: refusals in order, nothing written on any, each with its catalog
   w.run("RUN-OTHER", { mode: "extract", principal_plane: ALICE_TOKEN, mints: 5 });
   w.run("RUN-ONE", { mode: "extract", principal_plane: AK, mints: 1 });
   const nobytes = w.doc(DOC2, "unheld", { read: false });
-  w.st.sql.exec(`DELETE FROM register WHERE capture_sha=?`, nobytes);
+  w.registered[DOC2] = [];
   const before = w.snapshot();
   const steps = [
     [{ proposedBy: "" }, "NO_PROPOSER"],
