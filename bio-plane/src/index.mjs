@@ -1330,51 +1330,6 @@ const OPS = {
   intentproposals:     { classes: ["admin", "member", "probe"],      mutating: false },
   triage:              { classes: ["admin", "member", "probe"],      mutating: true  },
   workobjective:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  /* T8 (layer 9, K248, K250): THE ACTION LAYER'S OPS — standards (R1–R10), conformance (R1–R12), consequences (R1–R9),
-     filings (R1–R11) and escalation (R1–R16). THE ACTS take `conclude`'s cut for `conclude`'s reason: a machine REACHES
-     each and the module refuses it BY NAME on the author stamped below (MACHINE_CANNOT_DECLARE_STANDARD,
-     MACHINE_CANNOT_DETERMINE, MACHINE_CANNOT_APPROVE, MACHINE_CANNOT_OPEN, …) — except the PROPOSALS (`standardpropose`,
-     `comparisonpropose`, `filingprepare`, `theorypropose`), which any credential may make, each labelled with who made
-     it and whether it is machine work; the cut must admit a machine for those. Each act rides `contribute` and is a
-     session op in both sets. THE READS are open to every class that reads the record, and what a caller may see is the
-     module's, on the viewer stamped below. The durable object dispatches these once legacy-store constructs the
-     modules (N216, T9); until then the store answers `unknown op`. */
-  standarddeclare:     { classes: ["admin", "member", "probe"],      mutating: true  },
-  standardpropose:     { classes: ["admin", "member", "probe"],      mutating: true  },
-  standardadopt:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  standard:            { classes: ["admin", "member", "probe"],      mutating: false },
-  standards:           { classes: ["admin", "member", "probe"],      mutating: false },
-  standardinforce:     { classes: ["admin", "member", "probe"],      mutating: false },
-  determine:           { classes: ["admin", "member", "probe"],      mutating: true  },
-  comparisonpropose:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  determination:       { classes: ["admin", "member", "probe"],      mutating: false },
-  determinations:      { classes: ["admin", "member", "probe"],      mutating: false },
-  comparison:          { classes: ["admin", "member", "probe"],      mutating: false },
-  consequencerecord:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  consequencerevise:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  addressedrecord:     { classes: ["admin", "member", "probe"],      mutating: true  },
-  consequence:         { classes: ["admin", "member", "probe"],      mutating: false },
-  consequencesof:      { classes: ["admin", "member", "probe"],      mutating: false },
-  addressed:           { classes: ["admin", "member", "probe"],      mutating: false },
-  filingprepare:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  filingapprove:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  filingsent:          { classes: ["admin", "member", "probe"],      mutating: true  },
-  counselpacket:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  counselpacketexport: { classes: ["admin", "member", "probe"],      mutating: true  },
-  theorypropose:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  counselpacketread:   { classes: ["admin", "member", "probe"],      mutating: false },
-  filingsfor:          { classes: ["admin", "member", "probe"],      mutating: false },
-  availableactions:    { classes: ["admin", "member", "probe"],      mutating: false },
-  escalationopen:      { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationattach:    { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationevaluate:  { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationadvance:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationdecline:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationend:       { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationsuspend:   { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalationresume:    { classes: ["admin", "member", "probe"],      mutating: true  },
-  escalation:          { classes: ["admin", "member", "probe"],      mutating: false },
-  escalationsdue:      { classes: ["admin", "member", "probe"],      mutating: false },
   /* IS-6 / INVESTIGATIVE-SESSION.md §11: THE INVESTIGATIVE RUN. Three writes
      and two reads, and the class lists say two things worth stating.
 
@@ -1950,27 +1905,6 @@ const INTENT_READS = ["objectiveprogress", "objectivegaps", "goal", "aspirations
 /* T6-13 (reevaluation R15, R16): a member's three acts on a reference they hold, stamped `author` in the query, where
    reevaluation reads it after the body. */
 const REEVALUATION_ACTIONS = ["versionadopt", "versionkeep", "reevaluationrecord"];
-/* T8 (layer 9, K248, K250): the action layer's acts and reads, one array each per module, for the reason every array
-   here is one — they share a stamp, a capability and both session sets. `STANDARDS_ACTIONS` take their stamp in the BODY
-   (`author`, or `proposer` for the proposal), where standards reads it; the others read `author` from the QUERY, after
-   the body. Every read is stamped with the viewer. */
-const STANDARDS_ACTIONS = ["standarddeclare", "standardpropose", "standardadopt"];
-const STANDARDS_READS = ["standard", "standards", "standardinforce"];
-const CONFORMANCE_ACTIONS = ["determine", "comparisonpropose"];
-const CONFORMANCE_READS = ["determination", "determinations", "comparison"];
-const CONSEQUENCES_ACTIONS = ["consequencerecord", "consequencerevise", "addressedrecord"];
-const CONSEQUENCES_READS = ["consequence", "consequencesof", "addressed"];
-const FILINGS_ACTIONS = ["filingprepare", "filingapprove", "filingsent", "counselpacket", "counselpacketexport",
-                         "theorypropose"];
-const FILINGS_READS = ["counselpacketread", "filingsfor", "availableactions"];
-const ESCALATION_ACTIONS = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
-                            "escalationdecline", "escalationend", "escalationsuspend", "escalationresume"];
-const ESCALATION_READS = ["escalation", "escalationsdue"];
-/* The four whose modules read `author` from the query. */
-const QUERY_AUTHOR_ACTIONS = [...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS];
-const ACTION_LAYER_ACTIONS = [...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS];
-const ACTION_LAYER_READS = [...STANDARDS_READS, ...CONFORMANCE_READS, ...CONSEQUENCES_READS, ...FILINGS_READS,
-                            ...ESCALATION_READS];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -2150,10 +2084,8 @@ const SESSION_OPS = {
                       capture-requests' retry (R42), a member's act on the group's queue; in BOTH sets, because an
                       administrator is a member too. */
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
-                   /* T8: the action layer's acts and actions' risk-tier proposal (R28), a member's own acts in their
-                      own name (the proposal `actionlawspropose`'s route), in BOTH sets. */
-                   ...STANDARDS_ACTIONS, ...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS,
-                   ...ESCALATION_ACTIONS, "actionriskpropose",
+                   /* T8 (actions R28): the risk-tier proposal, `actionlawspropose`'s route, in BOTH sets. */
+                   "actionriskpropose",
                    /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
                       and a MEMBER is a signed-in person — not the MEMBER_TOKEN
                       machine credential, which stamps `token:member` and is a
@@ -2206,8 +2138,7 @@ const SESSION_OPS = {
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
-                   ...STANDARDS_ACTIONS, ...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS,
-                   ...ESCALATION_ACTIONS, "actionriskpropose",
+                   "actionriskpropose",
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2459,33 +2390,6 @@ const NEEDS = {
   actionlawspropose: "contribute",
   /* T8 (actions R28): proposing a tier takes `actionlawspropose`'s capability, for its reason. */
   actionriskpropose: "contribute",
-  /* T8 (layer 9): each of the action layer's acts writes the working record — a standard or a proposal, a
-     determination or a comparison, a consequence or its addressing, a filing draft, approval or sending, a counsel
-     packet or its export, an escalation's stage — so each rides `contribute`, `actioncorrespond`'s capability and the
-     version acts' reason, and NO fifth capability token is minted (CAPABILITIES.md §4). Who may act — a named member,
-     joined to the project — is the module's, asked of the stamped author: who a session IS, not a capability. */
-  standarddeclare:     "contribute",
-  standardpropose:     "contribute",
-  standardadopt:       "contribute",
-  determine:           "contribute",
-  comparisonpropose:   "contribute",
-  consequencerecord:   "contribute",
-  consequencerevise:   "contribute",
-  addressedrecord:     "contribute",
-  filingprepare:       "contribute",
-  filingapprove:       "contribute",
-  filingsent:          "contribute",
-  counselpacket:       "contribute",
-  counselpacketexport: "contribute",
-  theorypropose:       "contribute",
-  escalationopen:      "contribute",
-  escalationattach:    "contribute",
-  escalationevaluate:  "contribute",
-  escalationadvance:   "contribute",
-  escalationdecline:   "contribute",
-  escalationend:       "contribute",
-  escalationsuspend:   "contribute",
-  escalationresume:    "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -5688,10 +5592,6 @@ export default {
            member sees its own unpublished pairing — beside the administer stamp below. Without either the store
            answers the published pairings alone (fails closed). */
         || op === "memberpairings"
-        /* T8 (layer 9): every act and read of the action layer names a determination, a standard, an act, an
-           action, a filing, a packet or an escalation, each seen through the project it belongs to, so each module
-           answers one the viewer may not see exactly as an absent one. Fails closed on an absent stamp. */
-        || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op)
         /* T8 (actions R28): the risk-tier proposal names an action and reads it behind the fail-closed gate before it
            writes, `actionlawspropose`'s reason. */
         || op === "actionriskpropose"
@@ -5955,19 +5855,6 @@ export default {
     if (op === "actionriskpropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
-        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
-        : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* T8 (layer 9): WHO DETERMINED, COMPARED, RECORDED A CONSEQUENCE OR ITS ADDRESSING, PREPARED, APPROVED OR SENT A
-       FILING, NAMED COUNSEL, EXPORTED A PACKET, PROPOSED A THEORY, OR MOVED AN ESCALATION — conformance, consequences,
-       filings and escalation read `author` from the QUERY after the body, so it is set here, after the caller's
-       parameters were copied, and a caller's is overwritten. It is the POSITIONAL identity (`member:<id>`, the
-       founder's `member:admin`), intent's expression, because each module asks membership's `projectAuthority` of it and
-       a bare id would read as nobody there; a machine credential stamps `class:<cls>` and an `ai` credential
-       `class:ai/<tokenId>`, each a machine identity every act refuses BY NAME and every proposal labels as machine work —
-       NEVER a key's principal, which would put an assistant's act under a person's name. */
-    if (QUERY_AUTHOR_ACTIONS.includes(op))
-      inner.searchParams.set("author",
-        viaSession ? sessIdentity
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
@@ -6886,26 +6773,6 @@ export default {
             if (!viaSession)
               b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
           }
-          passBody = JSON.stringify(b);
-        }
-      } catch { /* the DO will refuse the malformed body with its own words */ }
-    }
-    /* T8 (standards R1, R9, R10): WHO RECORDED OR ADOPTED A STANDARD, AND WHO PROPOSED ONE — standards reads `author` and
-       `proposer` from the BODY (its `viewer` from the query, after the body), so each is stamped into the body here and a
-       caller's is overwritten; the proposal takes `proposer` and the other two `author`, the one key each accepts. The
-       layer's expression (`QUERY_AUTHOR_ACTIONS` above): the positional identity for a session, `class:<cls>` or
-       `class:ai/<tokenId>` for a machine, which standards refuses BY NAME at a declaration or an adoption
-       (MACHINE_CANNOT_DECLARE_STANDARD) and labels as machine work on a proposal. An empty POST body is stamped too. */
-    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
-      try {
-        const b = passBody ? JSON.parse(passBody) : {};
-        if (b && typeof b === "object" && !Array.isArray(b)) {
-          const who = viaSession ? sessIdentity
-            : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
-            : `${MACHINE_CLASS_PREFIX}${cls}`;
-          delete b.author;
-          delete b.proposer;
-          if (op === "standardpropose") b.proposer = who; else b.author = who;
           passBody = JSON.stringify(b);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
