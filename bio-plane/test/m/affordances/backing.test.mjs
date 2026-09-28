@@ -41,10 +41,9 @@ test("R19: triage, graded `reasoned` (K219), is refused without a reason where i
   assert.equal(w.i.triage({ proposal: "monitoring::c-2", act: "defer", reason: "not now", author: IV("bob"), viewer: IV("bob") }).ok, true);
 });
 
-/* T8 layer 11: layer 9's six acts graded `reasoned` for T9 (their rows are held until the durable object dispatches them,
-   N216; K263, K264), driven at their own modules' interfaces over their fixtures. Each is called well-formed but without
-   its reason, then with one; escalationresume, graded `reversible`, is taken back by a further suspension. The backing
-   is what the held rows will rest on. */
+/* Layer 9's six acts graded `reasoned` (K264; their rows restored in T9 with N216), driven at their own modules'
+   interfaces over their fixtures. Each is called well-formed but without its reason, then with one; escalationresume,
+   graded `reversible`, is taken back by a further suspension. */
 import { world as cWorld, V as CV } from "../consequences/fixture.mjs";
 import { seeded as escSeeded, opened, toStage, V as EV } from "../escalation/fixture.mjs";
 
@@ -64,7 +63,7 @@ const cScene = () => {
 };
 const NO_WHY = [undefined, "", "   "];
 
-test("R19: consequencerevise and addressedrecord, graded `reasoned` for T9 (K264), are refused without their reason with a code in "
+test("R19: consequencerevise and addressedrecord, graded `reasoned` (K264), are refused without their reason with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with one", () => {
   for (const reason of NO_WHY) {
     const w = cScene();
@@ -101,7 +100,7 @@ test("R19: escalationevaluate, escalationadvance, escalationdecline and escalati
   assert.equal(ev.ok, true, JSON.stringify(ev).slice(0, 300));
 });
 
-test("R2: escalationresume, graded `reversible` for T9 (K264), is taken back by a published act — a further suspension — and "
+test("R2: escalationresume, graded `reversible` (K264), is taken back by a published act — a further suspension — and "
    + "escalationsuspend, which it takes back, is stated at its higher rung `reasoned`", () => {
   const who = { author: EV("bob"), viewer: EV("bob") };
   const w = escSeeded(); opened(w);
