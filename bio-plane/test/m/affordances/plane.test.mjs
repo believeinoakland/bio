@@ -1,6 +1,7 @@
 /* affordances in the running plane (Miniflare, the Durable Object the product runs in). `affordanceFacts` (R13–R16,
-   R23) is still answered by the store (`op=affordancefacts`, in-process) and the `op=affordances` composition (R17) by
-   the control plane; both are measured here at those interfaces, as they stand (K208 Q1). What the acting modules
+   R23) is this module's (`affordancesOf(ctx)`, T9), reached in-process through the durable object's
+   `op=affordancefacts` route, and the `op=affordances` composition (R17) is still the control plane's; both are
+   measured here at those interfaces (K208 Q1). What the acting modules
    answer when an act is performed is driven here too: the rung backing (R19), the machine map (R20), the agreement
    between an offer and its act (R18's roster half), and that asking writes nothing (R22). */
 import { test, after, before } from "node:test";
@@ -77,8 +78,10 @@ before(async () => {
     "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "",
     "## Session Log", ""].join("\n");
   for (const p of ["PA", "PB", "PC", "PR"]) W[p] = (await promote(null, projectMd(`Affordances project ${p}`), "project", "forming")).bundleId;
+  W.project = async (name) => (await promote(null, projectMd(name), "project", "forming")).bundleId;
   const own = (p, m) => DO("projectclaimowner", { projectId: W[p], memberId: m });
   const invite = (p, h, by) => DO(`projectinvite?projectId=${W[p]}&handle=${h}&by=${by}&viewer=admin`, {});
+  W.own = own; W.invite = invite;
   must("iris owns PA", await own("PA", "iris")); must("pam owns PB", await own("PB", "pam"));
   must("iris owns PC", await own("PC", "iris")); must("vera owns PR", await own("PR", "vera"));
   for (const h of ["pam", "olga", "zed"]) must(`invite ${h}`, await invite("PA", h, "iris"));
@@ -226,14 +229,17 @@ test("R15: each positional fact is null on a target of the wrong type", async ()
   }
 });
 
-test.todo("R16 R14: facts are counts, never ids — not yet met: `cites_in.confirmed` and `cites_in.severed` carry the ids "
-  + "of the bundles citing the target (legacy-store's affordanceFacts passes `#citesInto`'s answer through); "
-  + "`deriveActs` already reads a count (REPORT to BOB)");
-
-test("R16: apart from cites_in, no fact names a bundle other than the target", async () => {
+test("R16 R14: facts are counts, never ids — cites_in, cited_by_case, cites_out and rested_on are numbers, and no "
+   + "fact names a bundle other than the target", async () => {
+  const counts = (o) => Object.values(o).every((v) => Number.isInteger(v) && v >= 0);
+  const i1 = await facts(W.INFO), i2 = await facts(W.INFO2);
+  /* INFO is cited by PA and by INQ's basis leg (a question writes `rel: cites` too); INFO2's one citation was severed */
+  assert.deepEqual([i1.cites_in, i2.cites_in], [{ confirmed: 2, severed: 0 }, { confirmed: 0, severed: 1 }]);
   for (const id of [W.INFO, W.INFO2, W.INQ, W.INQ2, W.ACTN, W.PA]) {
-    const { cites_in: _, ...rest } = await facts(id, { identity: "member:iris", by: "iris", author: "member:iris" });
-    const text = JSON.stringify({ ...rest, target: null });
+    const f = await facts(id, { identity: "member:iris", by: "iris", author: "member:iris" });
+    for (const k of ["cites_in", "cited_by_case", "cites_out", "rested_on"]) assert.ok(counts(f[k]), `${id}.${k}: ${JSON.stringify(f[k])}`);
+    for (const k of ["basis_legs", "basis_versions"]) assert.ok(Number.isInteger(f[k]), `${id}.${k}`);
+    const text = JSON.stringify({ ...f, target: null });
     for (const other of [W.INFO, W.INFO2, W.INQ, W.INQ2, W.ACTN, W.PA, W.PB, W.PC, W.PR]) assert.ok(!text.includes(other), `${id}: ${other}`);
   }
 });
@@ -316,7 +322,7 @@ test("R21: every label, prompt, ground and vocabulary op=affordances hands a sur
 
 /* ============================================================ R18: the roster agreement */
 test("R18: each roster act is offered exactly where its act accepts the caller (the release precedent: refused only "
-   + "by a parameter), for every caller and project in the fixture — projectleave apart, which the todo below names", async () => {
+   + "by a parameter), for every caller and project in the fixture — projectleave is driven by the test below", async () => {
   const CALLERS = [["iris", W.IRIS], ["pam", W.PAM], ["olga", W.OLGA], ["zed", W.ZED], ["ruth", W.RUTH],
     ["founder", W.FOUNDER], ["MEM", MEM], ["ADM", ADM]];
   const PROJECTS = ["PA", "PB", "PC", "PR"];
@@ -344,9 +350,34 @@ test("R18: each roster act is offered exactly where its act accepts the caller (
   assert.deepEqual(Object.keys(seen).filter((a) => seen[a].size !== 2), [], "each act offered somewhere and withheld somewhere");
 });
 
-test.todo("R18: projectleave is offered to an owner only while another owner is committed (not leaving), when membership "
-  + "R35 accepts it — not yet met (N45): the offer reads `roster.owner_floor_clear`, which legacy-store's affordanceFacts "
-  + "computes from every owner, leaving ones included (REPORT to BOB)");
+test("R18: projectleave is offered to an owner only while another owner is committed (not leaving), which is when "
+   + "membership R35 accepts it, and owner-remove stays offered where R40 accepts it (N45)", async () => {
+  W.PD = await W.project("Affordances project PD");
+  must("iris owns PD", await W.own("PD", "iris"));
+  for (const [h, tok] of [["pam", W.PAM], ["zed", W.ZED]]) {
+    must(`invite ${h} to PD`, await W.invite("PD", h, "iris"));
+    must(`${h} joins PD`, await POST(`op=projectjoin&token=${tok}&projectId=${W.PD}`));
+  }
+  must("pam second owner of PD", await POST(`op=projectowneradd&token=${W.IRIS}&projectId=${W.PD}&handle=pam`));
+  const leaveOffered = async (tok) => (await offered(tok, W.PD)).includes("projectleave");
+  const leave = async (tok) => codeOf(await POST(`op=projectleave&token=${tok}&projectId=${W.PD}`));
+  /* two committed owners and a joined participant: each is offered leave */
+  assert.deepEqual([await leaveOffered(W.IRIS), await leaveOffered(W.PAM), await leaveOffered(W.ZED)], [true, true, true]);
+  assert.equal(await leave(W.IRIS), "ok");
+  /* iris is leaving, so pam is the last committed owner: neither offered nor accepted */
+  assert.equal(await leaveOffered(W.PAM), false);
+  assert.equal(await leave(W.PAM), "LAST_COMMITTED_OWNER");
+  /* iris, leaving, is not joined: neither offered nor accepted; zed, no owner, still is */
+  assert.equal(await leaveOffered(W.IRIS), false);
+  assert.equal(await leave(W.IRIS), "NOT_JOINED");
+  assert.equal(await leaveOffered(W.ZED), true);
+  /* owner-remove stays offered to pam, and removing the leaving owner is accepted (at two owners a vote short, a
+     parameter's answer), never LAST_OWNER or LAST_COMMITTED_OWNER */
+  assert.ok((await offered(W.PAM, W.PD)).includes("projectownerremove"));
+  const rm = codeOf(await POST(`op=projectownerremove&token=${W.PAM}&projectId=${W.PD}&handle=iris&reason=${E("asked to leave")}`));
+  assert.ok(["ok", "VOTES_SHORT"].includes(rm), rm);
+  assert.equal(await leave(W.ZED), "ok");
+});
 
 /* ============================================================ R19: the rung backing */
 test("R19: every `reasoned` op this fixture can reach, called well-formed but without its authored reason, is refused "
@@ -418,7 +449,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
     "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
-    "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */];
+    "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */,
+    /* layer 9's six (K264), at their own modules' interfaces: backing.test.mjs */
+    "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline", "escalationsuspend"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

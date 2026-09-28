@@ -52,8 +52,9 @@ const R9 = {
   projectremove: (f, t) => t === "project" && f.roster?.owner === true,
   projectowneradd: (f, t) => t === "project" && f.roster?.owner === true,
   projectjoin: (f, t) => t === "project" && typeof f.roster?.state === "string" && f.roster.state !== "joined",
+  /* R9 as R18 states it (N45; J1 Q2): an owner leaves only while another owner is committed. */
   projectleave: (f, t) => t === "project" && f.roster?.state === "joined"
-    && (f.roster?.owner !== true || f.roster?.owner_floor_clear === true),
+    && (f.roster?.owner !== true || f.roster?.other_owner_committed === true),
   projectownerremove: (f, t) => t === "project" && f.roster?.owner === true && f.roster?.owner_floor_clear === true,
   projectownerrescue: (f, t) => t === "project" && f.roster?.rescue_open === true,
   projectvisibilityset: (f, t) => t === "project" && f.project_target_owner === true,
@@ -71,13 +72,16 @@ const typestates = TYPES.flatMap(([object_type, declared_type]) =>
     .map((current_state) => ({ object_type, declared_type, current_state })));
 const B = [true, false, null];
 const COUNT = [0, 1, null];
-const ROSTERS = [null, { owner: true, state: "joined", owner_floor_clear: true, rescue_open: false },
-  { owner: true, state: "joined", owner_floor_clear: false, rescue_open: false },
-  { owner: false, state: "joined", owner_floor_clear: false, rescue_open: false },
-  { owner: false, state: "invited", owner_floor_clear: true, rescue_open: false },
-  { owner: false, state: "leaving", owner_floor_clear: true, rescue_open: false },
-  { owner: false, state: null, owner_floor_clear: false, rescue_open: true },
-  { owner: null, state: null, owner_floor_clear: null, rescue_open: null }];
+const ROSTERS = [null,
+  { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: true, rescue_open: false },
+  /* two owners, the other asked to leave: the floor is clear for owner-remove, and leave is not offered (N45) */
+  { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: false, rescue_open: false },
+  { owner: true, state: "joined", owner_floor_clear: false, other_owner_committed: false, rescue_open: false },
+  { owner: false, state: "joined", owner_floor_clear: false, other_owner_committed: true, rescue_open: false },
+  { owner: false, state: "invited", owner_floor_clear: true, other_owner_committed: true, rescue_open: false },
+  { owner: false, state: "leaving", owner_floor_clear: true, other_owner_committed: true, rescue_open: false },
+  { owner: false, state: null, owner_floor_clear: false, other_owner_committed: false, rescue_open: true },
+  { owner: null, state: null, owner_floor_clear: null, other_owner_committed: null, rescue_open: null }];
 const READINGS = [null, [], ["suggested"], ["considering"], ["accepted"], ["rejected"], ["accepted", "rejected"]];
 /* Each dimension sets one or more keys of the facts object; `undefined` removes a key. */
 const DIMS = {
@@ -122,14 +126,14 @@ const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_
   rested_on: { working: 0, frozen: 0, severed: 0 }, cites_in: { confirmed: 0, severed: 0 },
   cited_by_case: { confirmed: 1, severed: 1 }, cites_out: { confirmed: 1, severed: 1, severed_reinstatable: 1 },
   project_participant: true, project_target_owner: true,
-  roster: { owner: true, state: "joined", owner_floor_clear: true, rescue_open: true },
+  roster: { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: true, rescue_open: true },
   basis_version_states: ["suggested", "considering", "accepted", "rejected"], basis_versions: 4, actor_is_machine: false };
 const RESTRICTIVE = { case_member: true, concludes_for_project: false, concluded_for_project: false,
   edition_warranted_for_project: false, project_owner: false, basis_legs: 0,
   rested_on: { working: 3, frozen: 1, severed: 0 }, cites_in: { confirmed: 2, severed: 0 },
   cited_by_case: { confirmed: 0, severed: 0 }, cites_out: { confirmed: 0, severed: 0, severed_reinstatable: 0 },
   project_participant: false, project_target_owner: false,
-  roster: { owner: false, state: null, owner_floor_clear: false, rescue_open: false },
+  roster: { owner: false, state: null, owner_floor_clear: false, other_owner_committed: false, rescue_open: false },
   basis_version_states: [], basis_versions: 0, actor_is_machine: true };
 const ABSENT = {};
 const BACKGROUNDS = [["permissive", PERMISSIVE], ["restrictive", RESTRICTIVE], ["absent", ABSENT]];
@@ -227,7 +231,8 @@ test("R10: a null fact never offers a roster act — with no stated roster or ta
     "projectownerremove", "projectownerrescue", "projectvisibilityset"];
   const wrong = [];
   for (const ts of typestates) for (const [, bg] of BACKGROUNDS)
-    for (const roster of [null, undefined, { owner: null, state: null, owner_floor_clear: null, rescue_open: null }])
+    for (const roster of [null, undefined,
+      { owner: null, state: null, owner_floor_clear: null, other_owner_committed: null, rescue_open: null }])
       for (const pto of [null, undefined]) {
         const f = make(ts, bg, { roster, project_target_owner: pto });
         const got = deriveActs(f).map((a) => a.id).filter((id) => ROSTER_ACTS.includes(id));
