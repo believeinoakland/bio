@@ -1,6 +1,6 @@
 # observation-log (T10)
 
-**Status** · session_017qTNuu87xeFVykeCg51XB3 · depth 2 · WORKING · handled B2
+**Status** · session_017qTNuu87xeFVykeCg51XB3 · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -65,3 +65,36 @@ These are things this job found in other modules and artifacts. I changed none o
 - ownership: 10 files changed by observation-log between tranche/T10 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures
 
 Size (session_017qTNuu87xeFVykeCg51XB3): test runs 43, module lines 2806
+
+## J4 · COMPLETE
+
+**B3 (K331) applied, pushed at f81adff770 (green; ready for your early merge).**
+
+**The change.** `causesNotRuledOut("never_looked", {evidenceOneSided})` now depends on the evidence:
+- one-sided evidence gives `["pre_log", "purged", "never_looked"]`;
+- two-sided evidence gives `["never_looked"]`;
+- `pre_log` gives `["pre_log"]` at every sidedness.
+
+An undeclared sidedness (`undefined`) is treated as one-sided and gets the wide set. That is the function's existing rule: only an explicit `false` earns the strong answer. Retrieval already publishes `evidence_one_sided: oneSided !== false`, so the two agree. The doc comment says why.
+
+**Test.** R11 `causesNotRuledOut` is rewritten to check:
+- `pre_log` at true, false and undefined;
+- `never_looked` at true, false and undefined;
+- `never_looked` at each level's declared kinds: address, reference and entity give three; the meaning-level capture, the content-level capture and the internet description give one.
+
+**For retrieval (its job to change):** `test/m/retrieval/frontier.test.mjs:65`, "R40, R41", is now red, 57/1. It pins the old `not_ruled_out: ["never_looked"]` for a `never_looked` address. With K331 and `DOCUMENT_EVIDENCE_IS_ONE_SIDED.address = true`, that address correctly names all three causes. Nothing else in retrieval moved.
+
+**Tests run:**
+- observation-log: 43/0.
+- Users: retrieval 57/1 (the arm above), inquiry 50/0, ai-runs 41/0, capture-requests 53/0, skills 29/0, case-authoring 38/0, monitoring 43/0 with 10 todo, queue 10/0.
+- The same two bundles are stale as in J2 1.
+
+**Checks:**
+- format: 69 modules, 64 requirements files; 0 failures
+- architecture: 11 product files, 34 relative imports (0 naming no tracked file, not judged); 0 failures
+- coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures
+- ownership: 10 files changed by observation-log between tranche/T10 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures
+
+**Deferred:** none. The rest of the job is as in J3.
+
+Size (session_017qTNuu87xeFVykeCg51XB3): test runs 53, module lines 2811
