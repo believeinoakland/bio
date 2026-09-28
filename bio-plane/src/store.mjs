@@ -763,7 +763,7 @@ export class Store extends DurableObject {
                                 WHERE capture_sha=? AND pos_kind IS NOT NULL ORDER BY at DESC, ref LIMIT ?`, captureSha, max + 1);
       return { rows, truncated: rows.length > max };
     });
-    strengthModule(ctx, { inquiry: { basisFor: (id) => inquiryOf(ctx).basisFor(id), earned: (e, t) => inquiryOf(ctx).earned(e, t),
+    strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
       legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },
       versions: basisVersionsOf(ctx) });   /* strength (K61), over inquiry's and basis-versions' own services */
     /* bias (K61): joins every promotion before legacy-store (R8–R10); the store registers the AI runs as the bias debt's
