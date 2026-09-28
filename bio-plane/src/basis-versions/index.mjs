@@ -18,19 +18,21 @@
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own.
  *   inquiry      `{earned(subject, targetIds), legCapped(stated, earned, targetId), cyclePath(id, targetIds)}`, inquiry's
- *                R13, R14 and cycle read, through `inquiryOf(host)` unless a test passes its own.
+ *                R13, R14 and cycle read, each through `inquiryOf(host)` unless a test passes its own.
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, OBJECT_TYPES, STATES, vocabFor, isBoilerplate,
-         checkLegExtentGrammar, legExtent, canonicalExtent, describeExtent, extentRelation, createSha256,
-         CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS, ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";
+         checkLegExtentGrammar, createSha256, CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS } from "../../checks/bio-checks.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
-import { inquiryOf, legCapped } from "../inquiry/index.mjs";
-import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId } from "../content/index.mjs";
+import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
+/* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
+   which the catalogue's copy does not. */
+import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
+         describeExtent, extentRelation } from "../content/index.mjs";
 import { basisVersionFindings, BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_MACHINE, versionNeedsReason,
          VERSION_NAME_RE, NARROW_CHECKS, versionsIn, compositionDiff, sameComposition } from "./grammar.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
@@ -59,14 +61,6 @@ export const VERSION_REASON_MAX = 500;
 export const VERSION_ACT_TO = Object.freeze({
   accept: "accepted", reject: "rejected", consider: "considering", revert: "suggested", current: null, hide: null,
 });
-
-/* R16's shared C-33.40 site (a conclusion with nothing to rest on), `store.mjs`'s `actNoBasis` copied. */
-function actNoBasis(detail, extra = {}) {
-  /* DEC-49 REGION is-act-no-basis — D-484 / C-33.40. */
-  const row = ACT_SHAPE_CHECKS.NO_BASIS;
-  return { ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail, ...extra };
-  /* END DEC-49 REGION is-act-no-basis */
-}
 
 /* The per-arm fields of a reading position, without kind and ref: exactly the shape a content extent takes. */
 function posFields(pos) {
@@ -662,10 +656,7 @@ export class BasisVersions {
                     && typeof l.target === "string" && isInquiryId(l.target))
         .map((l) => l.target))];
       if (inqTargets.length) {
-        if (!this.inquiry || typeof this.inquiry.cyclePath !== "function")
-          return { ok: false, reason: "FACT_UNAVAILABLE", fact: "cyclePath", act, target, version: vname,
-                   detail: "whether accepting this reading closes a basis cycle cannot be asked here, so it is not "
-                         + "accepted rather than accepted unchecked. Nothing was written." };
+        /* the factory always wires inquiry's walk (N204: this module mints no FACT_UNAVAILABLE of its own) */
         const cycle = this.inquiry.cyclePath(target, inqTargets);
         if (cycle)
           return refuse("VERSION_BASIS_CYCLE",
@@ -964,7 +955,8 @@ export class BasisVersions {
     /* END DEC-49 REGION is-conclude-claim */
 
     const legs = Array.isArray(fm.basis) ? fm.basis : [];
-    /* a conclusion rests on the adopted reading's legs, and without a project also on the live basis C-2.8 requires */
+    /* a conclusion rests on the adopted reading's legs, and without a project also on the live basis C-2.8 requires;
+       NO_BASIS is minted at inquiry's one site (its R45, D-484, N186) */
     if (adopted.leg_count < 1 || (!pid && legs.length < 1))
       return actNoBasis("a conclusion rests on something. An open inquiry may hold a claim with no legs at "
                       + "all — a standing objective the group means to pursue — but concluding one that "
@@ -1186,13 +1178,11 @@ export class BasisVersions {
 
   /* ================================================================ narrowing (R24–R27; REC-86) */
 
-  /** R25's extract arm (proposed R40): one module registers the source of passages an extract run proposed. */
+  /** R40: one module registers the source of passages an extract run proposed (R25's extract arm). The slot takes one
+   *  registration whoever makes it; a malformed or second registration is refused by membership's one site (its R81). */
   onCandidates(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a candidate source names its module and its function" };
-    if (this.#candidateSource)
-      return { ok: false, reason: "LISTENER_DECLARED", module: this.#candidateSource.module,
-               detail: `${this.#candidateSource.module} already provides the extract candidates` };
+    const refused = listenerRefusal(this.#candidateSource, module, fn);
+    if (refused) return refused;
     this.#candidateSource = { module, fn };
     return { ok: true, module };
   }
@@ -1548,10 +1538,15 @@ export function basisVersionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
-    const inquiry = d.inquiry || (() => {
-      const i = inquiryOf(host, { record, membership, promotion, content });
-      return { earned: (s, t) => i.earned(s, t), legCapped, cyclePath: (id, t) => i.cyclePath(id, t) };
-    })();
+    /* inquiry's three services, each the one a test passes or else inquiry's own: the acts ask `cyclePath` unguarded */
+    const given = d.inquiry || {};
+    const own = ["earned", "legCapped", "cyclePath"].every((k) => typeof given[k] === "function") ? null
+      : inquiryOf(host, { record, membership, promotion, content });
+    const inquiry = {
+      earned: typeof given.earned === "function" ? given.earned : (s, t) => own.earned(s, t),
+      legCapped: typeof given.legCapped === "function" ? given.legCapped : legCapped,
+      cyclePath: typeof given.cyclePath === "function" ? given.cyclePath : (id, t) => own.cyclePath(id, t),
+    };
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);

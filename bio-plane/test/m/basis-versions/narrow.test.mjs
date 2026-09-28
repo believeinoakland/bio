@@ -3,6 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, V, MACHINE } from "./fixture.mjs";
 import { NARROW_CANDIDATES_MAX } from "../../../src/basis-versions/index.mjs";
+import { canonicalExtent } from "../../../src/content/index.mjs";
+import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-r";
 const T = "2026-09-27T00:00:00Z", ALICE = "member:alice";
@@ -83,6 +85,30 @@ test("R26: narrow refuses a machine, a bad extent, no extent, another capture, t
   void cap;
 });
 
+/* A content row as content's writer holds it, for an extent its mint would take from a document of another format. */
+function heldRow(w, cap, extent, n) {
+  const id = String(n).repeat(64).slice(0, 64);
+  w.st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, cited_as)
+                 VALUES (?, ?, ?, ?, ?, ?, 'member:alice', ?, ?)`, id, cap, DOC, extent.kind, canonicalExtent(extent),
+                `a part ${n}`, T, extent.kind === "envelope" ? "envelope" : "text");
+  return id;
+}
+
+test("R25, R26 (N99): narrower is content's extentRelation — an envelope item lies inside the whole document the leg cites, so narrowing to it lands and a machine's mark on it is a candidate", () => {
+  const { w, cap } = setup();
+  const env = heldRow(w, cap, { kind: "envelope", item: "core-property", part: "docProps/core.xml", name: "creator" }, 1);
+  const r = w.bv.narrow(narrowArgs({ name: "creator", description: "points at who the file says made it",
+                                     extent: { content_id: env } }));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(r.narrowed.to.content_id, env);
+  const back = w.bv.narrow(narrowArgs({ version: "creator", name: "creator again", extent: { content_id: env } }));
+  assert.deepEqual([back.reason, back.relation], ["NARROW_NOT_NARROWER", "same"], "the item itself is not narrower than itself");
+  /* the machine's marks go through the same relation */
+  w.st.sql.exec(`UPDATE content SET minted_by='class:ai' WHERE content_id=?`, env);
+  const c = w.bv.narrowCandidates(narrowArgs());
+  assert.deepEqual(c.candidates.filter((x) => x.source === "marked").map((x) => x.content_id), [env]);
+});
+
 test("R27: narrow writes a new version, suggested, derived_from the old, identical but for the one leg, which names the part pinned to the old capture and carries no grade; the old version is untouched; the answer says whether it was a machine proposal", () => {
   const { w, cap, cid } = setup();
   const oldComp = w.row(`SELECT composition FROM inquiry_basis_versions WHERE name='first'`).composition;
@@ -132,14 +158,24 @@ test("R28: appendVersion appends one version, its grounds and legs, in suggested
                     w.bv.appendVersion({ target: DOC, version: {} }).reason], ["NO_SUCH_BUNDLE", "NOT_AN_INQUIRY"]);
 });
 
-test("R40: onCandidates registers one extract source, a second is LISTENER_DECLARED; with none the extract arm lists nothing", () => {
+test("R40: onCandidates registers one extract source; a malformed or second registration is refused through membership's listenerRefusal (LISTENER_MALFORMED; LISTENER_DECLARED naming the holder); with none the extract arm lists nothing", () => {
   const { w, cap } = setup();
   assert.equal(w.bv.narrowCandidates(narrowArgs()).counts.extract, 0);
+  const noop = () => ({ rows: [], truncated: false });
+  for (const [m, f] of [["", noop], [null, noop], ["run-productions", "not a function"]]) {
+    const bad = w.bv.onCandidates(m, f);
+    assert.deepEqual(bad, listenerRefusal(null, m, f), "membership's one refusal, unchanged");
+    assert.equal(bad.reason, "LISTENER_MALFORMED");
+  }
+  assert.equal(w.bv.narrowCandidates(narrowArgs()).counts.extract, 0, "a refused registration holds no slot");
   const calls = [];
   const src = (a) => { calls.push(a); return { rows: [{ run: "RUN-9", ref: "entity:x", label: "x", pos_kind: "pdf-page",
     pos: JSON.stringify({ kind: "pdf-page", page: 3, ref: "page 4" }), pos_ref: "page 4", content_id: null, proposed_by: "class:ai" }], truncated: false }; };
   assert.deepEqual(w.bv.onCandidates("run-productions", src), { ok: true, module: "run-productions" });
-  assert.equal(w.bv.onCandidates("other", src).reason, "LISTENER_DECLARED");
+  const second = w.bv.onCandidates("other", src);
+  assert.deepEqual(second, listenerRefusal({ module: "run-productions" }, "other", src));
+  assert.deepEqual([second.reason, second.module], ["LISTENER_DECLARED", "run-productions"], "by any module, naming the holder");
+  assert.equal(w.bv.onCandidates("run-productions", src).reason, "LISTENER_DECLARED", "the holder too");
   const r = w.bv.narrowCandidates(narrowArgs());
   assert.deepEqual(calls, [{ captureSha: cap, max: 50 }]);
   assert.deepEqual(r.candidates.map((c) => [c.source, c.run, c.extent.page]), [["extract", "RUN-9", 3]]);
