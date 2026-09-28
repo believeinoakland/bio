@@ -1,0 +1,7 @@
+# BOB to promotion (T11)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries are the promotion bullet of `build/plan/current.md` (layer 2); read the plan's opening paragraph first (its rules hold). An `N` entry's text is in `build/plan/next.md`. Below you, layer 1 (legacy-checks) changed only catalogue comments and moved C-22.7's row out for ai-runs to hold in layer 6: until then the ai-runs and skills tests and the agent-worker bundle's boot are red on the tranche, and none is yours (K348). Your entries: N281: stamp the catalogue version for C-53.14 (R34's mark, K343); N275 (your share): C-102.9's `where` names a region holding the refusal's verdict. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316) and keep each LIKE/GLOB pattern within 50 bytes (K313). Strike each `not yet met` mark your work meets. Suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
