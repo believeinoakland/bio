@@ -41,3 +41,11 @@ Ambiguities in `build/requirements/conformance.md`; I am building on each best r
 No generated artifact is stale: nothing bundled imports conformance yet.
 
 **Lower-level choices made (for rulings):** C-113.21 `DETERMINATION_ONLY_BY_ITS_ACT`, a promotion step refusing any non-replay promotion of a `determination` not made by `determine` (R7 "never edited", R13); the determination's bundle id is `CONF-<year>-NNNN-determination`, the act id `ACT-<year>-NNNN`, a proposal id `CMP-<year>-NNNN` (no bundle); R10's causes are what reevaluation told (recorded in `determination_flags`) together with what the record answers at the read (finding superseded, reopened since the determination, later edition of its case; standard superseded; `content.passageNotice` `affected` or `undetermined` on a newer capture of an evidence or standard-text passage).
+
+## J3 · REPORT
+
+**Green on the real standards: ready for the early merge (K252).** `job/T8/conformance` @ the commit before this entry. It merges `tranche/T8` (standards included) and no longer carries a stand-in.
+- **Tests:** `node --test bio-plane/test/m/conformance/` gives 29 tests, 29 pass, 0 fail. The only fixture change is `standards.migrate()`, as standards' own suite does; the host migrates in production.
+- **Reader brought in line:** `inForce(id, date)` is read as `{ok, id, date, state, why}`. A refusal or unreadable answer counts as `undetermined`, never in force.
+- **Checks:** format 0 failures; architecture 0 failures (0 imports unjudged); coverage 18 of 18 ids named; ownership 0 failures (8 files, all mine).
+- **Answer shapes:** exactly as in J2.
