@@ -36,3 +36,4 @@
 - **standards**, **conformance**, **consequences**, **filings**, **escalation** (layer 9) · N296 (strike the stale marks that hold).
 - **capture-requests** (layer 6) · N295 (R14 reads inquiry R44).
 - **extraction**, **observation-log**, **provenance**, **legacy-store** · N294 (the testimony index as a provided service).
+- **actions**, **publication**, **monitoring**, **consequences**, **conformance**, **case-authoring**, **escalation**, **review** · N297 (the guard's findings, each its share). **legacy-tests** · N298.
