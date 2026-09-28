@@ -16,6 +16,7 @@ import { connectionsOf } from "../connections/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
 import { CONDITION_KINDS } from "../observation-log/vocabulary.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { normalizeType, OBJECT_TYPES } from "../../checks/bio-checks.mjs";
@@ -57,6 +58,11 @@ export class AiRuns {
         ? this.surfacedIn(row.bundle_id, viewer).then((s) => ({ surfaced_in: s }))
         : { surfaced_in: null }));
     biasOf(ctx, { env: this.env }).registerWorkProducts("ai-run", this.workProducts());
+    /* R37: the run gate contradiction offers (its R21, K182), filled from R28 and R5. */
+    contradictionOf(ctx).registerRunGate("ai-runs", (run, viewer, caller) => {
+      const g = this.runGate(run, viewer, caller, "proposing contradictions under a run");
+      return { found: g.found, running: g.running, refusal: g.refusal };
+    });
     /* R25–R26: the surfacing step, joining every promotion (promotion R39, K31). */
     promotionOf(ctx).registerStep("ai-runs", { check: (c) => this.#surfacingCheck(c), project: (c) => this.#surfacingProject(c) });
   }
