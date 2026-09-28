@@ -1,9 +1,10 @@
-/* retrieval: selections (R18–R22, R51, R52, R31's C-33.20 and C-33.32, R32), at the module's interface. */
+/* retrieval: selections (R18–R22, R51, R52, R59, R31's C-33.20 and C-33.32, R32) and the queue's counts (R60), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, infoMd } from "./fixture.mjs";
-import { SELECTION_CHECKS, SELECTION_TTL_MS, SELECTION_MAX_ITEMS, SELECTION_MAX_PER_OWNER, SELECTION_ID_CHUNK }
+import { SELECTION_CHECKS, SELECTION_TTL_MS, SELECTION_MAX_ITEMS, SELECTION_MAX_PER_OWNER, SELECTION_ID_CHUNK, answerChanged }
   from "../../../src/retrieval/index.mjs";
+import { listenerRefusal, MODULE_ORDER, viewerPredicate } from "../../../src/membership/index.mjs";
 
 function many(n, w = world()) {
   for (let i = 1; i <= n; i++) w.doc(`INFO-${String(i).padStart(3, "0")}`, { source_status: i % 2 ? "live" : "gone" });
@@ -194,11 +195,16 @@ test("R51: sweepWake is null with no selection held, else now + the lifetime + 3
   assert.equal(w.retrieval.sweepWake(1000), null, "never throws");
 });
 
-test("R52: onSelectionCreated — one registration per module (LISTENER_DECLARED), each listener called once after every successful create with {handle, expires}, and one that throws or rejects changes nothing", async () => {
+test("R52: onSelectionCreated — a malformed registration and a second by one module are refused through membership's listenerRefusal (LISTENER_MALFORMED, LISTENER_DECLARED); each listener is called once after every successful create with {handle, expires}, in the modules' total order; one that throws or rejects changes nothing", async () => {
   const w = many(1);
   const heard = [];
   assert.equal(w.retrieval.onSelectionCreated("scheduler", (e) => { heard.push(["scheduler", e]); }).ok, true);
-  assert.equal(w.retrieval.onSelectionCreated("scheduler", () => {}).reason, "LISTENER_DECLARED");
+  const again = () => {};
+  assert.deepEqual(w.retrieval.onSelectionCreated("scheduler", again), listenerRefusal([{ module: "scheduler" }], "scheduler", again));
+  assert.equal(w.retrieval.onSelectionCreated("scheduler", again).reason, "LISTENER_DECLARED");
+  for (const [m, f] of [["", () => {}], [null, () => {}], ["x", null], ["x", "fn"]])
+    assert.deepEqual(w.retrieval.onSelectionCreated(m, f), listenerRefusal([], m, f), `${m} ${typeof f}`);
+  assert.equal(w.retrieval.onSelectionCreated("x", 5).reason, "LISTENER_MALFORMED");
   w.retrieval.onSelectionCreated("thrower", () => { throw new Error("x"); });
   w.retrieval.onSelectionCreated("rejecter", async () => { heard.push(["rejecter"]); throw new Error("y"); });
   const s = await w.retrieval.selectionCreate({ owner: "o", viewer: V("vera"), q: "" });
@@ -219,4 +225,78 @@ test("R32: a selection act writes only the selections", async () => {
   w.retrieval.selectionList({ owner: "o", viewer: V("vera") });
   w.retrieval.selectionRelease({ owner: "o" });
   assert.equal(others(), before);
+});
+
+test("R52: the listeners run in membership's MODULE_ORDER whatever order they registered in", async () => {
+  const w = many(1);
+  const heard = [];
+  /* Registered latest-module first: queue (layer 11), scheduler (layer 10), citation (layer 6). */
+  for (const m of ["queue", "scheduler", "citation"]) w.retrieval.onSelectionCreated(m, () => { heard.push(m); });
+  await w.retrieval.selectionCreate({ owner: "o", viewer: V("vera"), q: "" });
+  assert.ok(MODULE_ORDER.indexOf("citation") < MODULE_ORDER.indexOf("scheduler")
+    && MODULE_ORDER.indexOf("scheduler") < MODULE_ORDER.indexOf("queue"));
+  assert.deepEqual(heard, ["citation", "scheduler", "queue"]);
+});
+
+test("R59: answerChanged(drift, moved) is true exactly when moved is true or drift.digestChanged is true; a boolean, pure, never throws; it is the rule R20's SET_MOVED reads", async () => {
+  const cases = [
+    [[{}, false], false], [[{}, true], true], [[{ digestChanged: true }, false], true], [[{ digestChanged: false }, false], false],
+    [[{ digestChanged: "yes" }, false], false], [[{ digestChanged: 1 }, false], false], [[null, false], false],
+    [[undefined, undefined], false], [[{}, 1], false], [[{}, "true"], false], [[{ digestChanged: true }, true], true],
+    [["drift", false], false], [[42, true], true],
+  ];
+  for (const [[d, m], want] of cases) {
+    assert.equal(answerChanged(d, m), want, JSON.stringify([d, m]));
+    assert.equal(answerChanged(d, m), want, "pure: the same inputs, the same answer");
+  }
+  const hostile = { get digestChanged() { throw new Error("no"); } };
+  assert.equal(answerChanged(hostile, false), false, "never throws");
+  assert.equal(answerChanged(hostile, true), true);
+  /* The rule SET_MOVED reads: a query selection swapped at a constant count (moved false, digest changed) refuses. */
+  const w = many(4);
+  const q = await w.retrieval.selectionCreate({ owner: "o", viewer: V("vera"), q: "status:live" });
+  revise(w, "INFO-001", { source_status: "gone" });
+  revise(w, "INFO-002", { source_status: "live" });
+  const r = w.retrieval.selectionResolve({ handle: q.handle, owner: "o", viewer: V("vera"), weight: "refuse" });
+  assert.deepEqual([r.moved, r.drift.digestChanged, answerChanged(r.drift, r.moved), r.reason], [false, true, true, "SET_MOVED"]);
+  const calm = await w.retrieval.selectionCreate({ owner: "o", viewer: V("vera"), q: "status:live" });
+  const c = w.retrieval.selectionResolve({ handle: calm.handle, owner: "o", viewer: V("vera"), weight: "refuse" });
+  assert.deepEqual([answerChanged(c.drift, c.moved), c.ok], [false, true]);
+});
+
+/* The hidden set as a caller (legacy-store's #counts, queue) composes it: the bundles the viewer's gate does not admit. */
+const hidFor = (viewer) => {
+  const g = viewerPredicate(viewer);
+  return { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))`, args: g.args };
+};
+
+test("R60: counts(hid) answers {indexed, selections, selectionItems}; hid leaves out the index rows a hidden bundle claims (an orphan stays), the items naming a hidden bundle and a selection holding one; synchronous, writes nothing, never throws", async () => {
+  const w = many(3);
+  const proj = w.project("Hidden", "ann");
+  await w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), ids: ["INFO-001", "INFO-002"] });
+  await w.retrieval.selectionCreate({ owner: "ann", viewer: V("ann"), ids: ["INFO-003", proj] });
+  await w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), q: "" });
+  w.st.sql.exec(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (999, 't', 'b', 'm', 'l', 'a')`);
+  const whole = w.retrieval.counts();
+  assert.equal(typeof whole.then, "undefined", "synchronous");
+  assert.deepEqual(whole, { indexed: 5, selections: 3, selectionItems: 4 }, "4 bundles indexed plus the orphan");
+  assert.deepEqual(w.retrieval.counts(null), whole);
+  /* vera may not see the project: its index row, its item, and the selection holding it leave; the orphan stays. */
+  assert.deepEqual(w.retrieval.counts(hidFor(V("vera"))), { indexed: 4, selections: 2, selectionItems: 3 });
+  /* A hid naming nothing hidden changes nothing (ann sees the project). */
+  assert.deepEqual(w.retrieval.counts(hidFor(V("ann"))), whole);
+  /* It agrees with R17's indexed figure for the same viewer. */
+  assert.equal(w.retrieval.counts(hidFor(V("vera"))).indexed, w.retrieval.searchIndexCheck({ viewer: V("vera") }).counts.indexed);
+  /* Writes nothing. */
+  const snap = () => JSON.stringify(["bundles_fts", "selections", "selection_items"].map((t) => w.rows(`SELECT * FROM ${t}`)));
+  const before = snap();
+  w.retrieval.counts(hidFor(V("vera")));
+  assert.equal(snap(), before);
+  /* Never throws: a malformed hid reads as none; a figure that cannot be read is null, never a zero. */
+  assert.deepEqual(w.retrieval.counts({ args: [] }), whole);
+  assert.deepEqual(w.retrieval.counts("hid"), whole);
+  const broken = w.retrieval.counts({ sql: "(SELECT nope FROM nowhere)", args: [] });
+  assert.deepEqual(broken, { indexed: null, selections: null, selectionItems: null });
+  w.st.db.exec(`ALTER TABLE selections RENAME TO selections_gone`);
+  assert.deepEqual(w.retrieval.counts(), { indexed: 5, selections: null, selectionItems: 4 });
 });

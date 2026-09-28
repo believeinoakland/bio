@@ -5458,15 +5458,9 @@ export class Store extends DurableObject {
       return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
     };
     const n = (t, ...keys) => nx(t, null, keys);
-    /* The text index's rows are keyed by `bundles.fts_id`, not by a bundle id: the rows a hidden bundle claims go.
-       An ORPHAN (a row no bundle claims) names nothing and stays, so a reader's parity still sees one. */
-    const indexed = hid
-      ? this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
-                     (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c
-      : n("bundles_fts");
     return {
       bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
-      refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed,
+      refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed: retrievalOf(this.ctx).counts(hid).indexed,
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
          reason every other row on this list is -- so a purge can PROVE it took
          the rows rather than assert it.
@@ -5496,12 +5490,8 @@ export class Store extends DurableObject {
         try { this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`); return true; }
         catch { return false; }
       })(),
-      /* A selection holding a bundle the caller cannot see is a count over a row they cannot read (BOB #15), so the
-         whole handle leaves `selections`; `selectionItems` drops only the hidden rows, which name the bundle. */
-      selections: hid ? nx("selections", `handle NOT IN (SELECT handle FROM selection_items WHERE bundle_id IN ${hid.sql})`,
-                           [], [], hid.args)
-                      : n("selections"),
-      selectionItems: n("selection_items", "bundle_id"),
+      selections: retrievalOf(this.ctx).counts(hid).selections,
+      selectionItems: retrievalOf(this.ctx).counts(hid).selectionItems,
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
       tasks: n("tasks", "refers_to"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),

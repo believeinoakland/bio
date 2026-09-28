@@ -10,13 +10,16 @@
  * promotion, extraction and observation-log through their factories on the same `ctx`; observation-log's services and
  * vocabulary (its R1, R9–R13, R18–R21) are read through `observationOf` below, which a test may replace. */
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf, stepContext } from "../promotion/index.mjs";
 import { extractionOf, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../extraction/index.mjs";
 import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
          MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
          INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
          contentAxisFor, observationCoverage, causesNotRuledOut, missingCause } from "../observation-log/index.mjs";
+/* N113 (observation-log's, this layer): the document level's evidence sidedness, read by name when that module states
+   it; until then the frontier reads the level as one-sided, the weaker statement (R41). */
+import * as observationLog from "../observation-log/index.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
 import { normalizeType } from "../../checks/bio-checks.mjs";
@@ -89,8 +92,13 @@ const rand = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))]
 /* HAS THIS ANSWER CHANGED AT ALL — the ONE place the plane asks that, and it is deliberately NOT `moved` (REC-55).
    `moved` means PER-ROW movement. A QUERY selection stores no rows, so a query whose membership SWAPS AT A CONSTANT
    COUNT has `moved` false over a set that is not the set the operator saw; its whole account of movement is the digest.
-   On an ENUMERATED selection `digestChanged` is never set, so this is exactly `moved` there. */
-export const answerChanged = (drift, moved) => moved || drift?.digestChanged === true;
+   On an ENUMERATED selection `digestChanged` is never set, so this is exactly `moved` there. R59 (N142): the one rule
+   R20's SET_MOVED and `citation`'s set-moved note read; a boolean, pure, never throws (a drift it cannot read is no
+   digest change). */
+export function answerChanged(drift, moved) {
+  if (moved === true) return true;
+  try { return !!drift && typeof drift === "object" && drift.digestChanged === true; } catch { return false; }
+}
 
 export class Retrieval {
   #storage; #sql; #now; #selectionNow; #order;
@@ -112,7 +120,9 @@ export class Retrieval {
     this.observation = observation;
     this.#now = typeof now === "function" ? now : () => Date.now();
     this.#selectionNow = typeof selectionNow === "function" ? selectionNow : () => Date.now();
-    this.#order = Array.isArray(order) ? order : [];
+    /* The modules' total order listeners and decorations run in: membership's `MODULE_ORDER` (its R83), unless a test
+       hands its own. */
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
     this.frontierReader = new Frontier(this);
   }
 
@@ -235,12 +245,12 @@ export class Retrieval {
     return { sql: ` AND authority_kind <> 'run'`, args: [] };
   }
 
-  /** R52: a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`. */
+  /** R52 (N202): a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`, in
+   *  the modules' total order. A malformed registration, or a second by the same module, is refused by membership's
+   *  `listenerRefusal` (its R81), the one site of LISTENER_MALFORMED and LISTENER_DECLARED. */
   onSelectionCreated(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#selectionListeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(this.#selectionListeners, module, fn);
+    if (refused) return refused;
     this.#selectionListeners.push({ module, fn, seq: this.#selectionListeners.length });
     this.#selectionListeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
@@ -1057,7 +1067,8 @@ export function observationOf(o, sql) {
   return {
     vocabulary: { OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED, MISSING_ROW_CAUSES,
                   MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
-                  INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY },
+                  INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
+                  DOCUMENT_EVIDENCE_IS_ONE_SIDED: observationLog.DOCUMENT_EVIDENCE_IS_ONE_SIDED ?? null },
     contentAxisFor, observationCoverage, causesNotRuledOut, missingCause,
     /* §5.1 at the meaning level (K80): an unrecognised subject kind takes the weakest cause, never the strongest. */
     missingMeaningCause(kind, subject, entered) {
