@@ -37,3 +37,25 @@ Found while applying N160; neither is mine to change.
 
 1. **reevaluation** (its R8, against inquiry R42): its registration `inquiry.onRaised("reevaluation", … => r.raise({…}).raised)` (`src/reevaluation/index.mjs` 1167–1168) answers only the dependents, so its own `listeners_failed` never reaches a deferral's, a division's or a re-read's reply. Inquiry now carries a listener's answer `{raised, listeners_failed}` unchanged as `reevaluation.listeners_failed` (a bare array still reads as the dependents). The fix is one line there: answer `r.raise({…})` whole instead of `.raised`. Until then R8's "the act's reply names it under `reevaluation.listeners_failed`" holds for reopen but not for dispose, divide or a re-read. reevaluation's module tests pass either way (39/39).
 2. **citation** (for its job, if not already known): on `tranche/T10` before my changes, `test/m/citation/` is 47/2 red (R5 "true exactly when the current state is retired…" and R6 "a citation exists only in the citing document's bytes…"). Unchanged by this job.
+
+## J5 · COMPLETE
+
+**Applied** (T10, layer 6; `tranche/T10` merged through B3):
+- **N186 / R45**: `actNoBasis(detail, extra?)` exported (J1, pushed early); `extra` now joins first, so it never replaces the refusal's own fields.
+- **N183**: (1) C-106.1's `where` names `#dispose > is-dispose-shared`. (2) `projectsDrawingOn` reads candidates a page at a time, at most 32 drawing on a member (`PROJECTS_DRAWING_MAX`), the first by id, with `truncated`; a severed citer takes no slot, so the bound never decides "more than one"; the R39 refusal says `truncated` and `bound` when its list was cut. `staled` reads the stale rows past the bound and the legs a page at a time, at most 500 per statement (`STALE_PAGE`), in (bundle, ord) order. (3) `exclusionsNaming` is kept (J3, K335: publication calls it) and paged the same way (R18 live again).
+- **N160 / R42**: an `onRaised` listener's answer `{raised, listeners_failed}` is carried as `reevaluation.listeners_failed` through dispose, divide and a re-read; a throwing listener is named there and undoes nothing.
+- **N202 / R42**: `onRaised` and `onGrounded` refuse through membership's `listenerRefusal` (R81), each a one-registration slot; `MODULE_ORDER` does not apply to a slot that takes one registration.
+- **N149 / R44, R36** (J2, K334): the control plane's `memberUserAgent` stamp is recorded at an inquiry's creation in `inquiry_member_agents` (purge-declared; trimmed, at most 512 characters, no control characters; never overwritten; carried to a division's children); `memberUserAgent` answers it, else the document's `member_user_agent`, else null.
+- **N142, N99, N151**: nothing left in inquiry. N142's inquiry share (`subjectEntityOf`, `onRaised`, `memberUserAgent`) was built in T7 (R42–R44). N99's narrow act is basis-versions'; inquiry reads no `extentRelation`. N151: extraction R58 now names `reading_text_source.chain`, which the earned registry reads as that contract states.
+- **Own-module improvement**: inquiry imported retrieval's `SELECTION_ID_CHUNK`, which retrieval does not provide; it now holds its own `ID_CHUNK` (64, K57).
+
+**Deferred**, with why: R31 (MK-5, K181: no opinion element exists yet). R36's move of the three `bundles` columns (N136, not in this plan).
+
+**Found in other modules**: J4 (REPORT): reevaluation's registration drops its own `listeners_failed` (a one-line fix on its side); citation's two reds on `tranche/T10` before this job. No generated artifact is made stale (inquiry is in no member bundle).
+
+**Tests and checks** (after merging `tranche/T10` through B3):
+- `node --test bio-plane/test/m/inquiry/`: 59 tests, 59 pass, 0 fail. No layer tests are named in the manifest.
+- The modules that use inquiry: `test/m/publication/` 53 pass, `reevaluation/` 39, `affordances/` 73, `case-authoring/` 38, `actions/` 30, `conformance/` 29, `consequences/` 22, all 0 fail; `citation/` 47/2, red on the base too (J4).
+- `format`: 0 failures. `architecture … inquiry`: 0 failures. `coverage … inquiry`: 45 of 45 live ids named, 0 failures. `ownership … inquiry tranche/T10`: 8 files, legacy-store and legacy-checks 0 lines added or removed, 0 failures.
+
+Size (session_01HRS6LAssjHFRPkTUcmR4Aq): test runs 16, module lines 3090
