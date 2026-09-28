@@ -37,3 +37,7 @@ Size (session_01US5MKSyeetAVCERbaBowrE): test runs 3, module lines 3330
 - **R27** `rangeUnitFor(sheetName, a, b, sheets, grid = null) -> {unit} | {why}`. `a`, `b`: corners as R26 returns them, in any order; `sheets`: the workbook's sheet names; `grid`: the format's bound `{rows, cols}`, or `null` when the format fixes none. `unit` is the `sheet-range` reference (R18's shape and builder) of the rectangle, top-left corner first. The sheet matches exactly, else without case when exactly one sheet answers; the unit carries the workbook's spelling. `why`: `not_a_range_reference` (a corner is not `{col, row}` of positive integers), `no_such_sheet` (no sheet answers, two answer without case, or `sheetName`/`sheets` is not a string/array), `outside_grid` (either corner past `grid` on either axis). Never throws. R9's units are built through it.
 
 Record: flaws fixed in both (they could throw, or read a non-string as a corner or a sheet name `"null"`), and `a1Col` now reads through `a1Corner`. One generated artifact stale: `bio-plane/dist/bio-plane.bundled.mjs`.
+
+## J2 · COMPLETE
+
+Job complete on job/T9/office-readers: N27's share applied (a1Corner and rangeUnitFor fit to provide and tested; proposed Provides R26, R27 in J1), a1Col folded into a1Corner, 25 of 25 live ids named, module tests 66 of 66 pass, odf-reader's and format-registry's tests pass, the four checks pass. Nothing deferred. The completion section of the record lists the rest.
