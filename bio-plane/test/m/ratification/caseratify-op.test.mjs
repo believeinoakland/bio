@@ -129,10 +129,12 @@ test("R2: the store half's refusal is relayed; a store that does not answer refu
 
 test("R6: a case complete at its document's ratification has its container assembled once, by the one assembly", async () => {
   const { w, run } = await setup();
-  w.pub.caseState = { complete: true, manifest_sha: null, edition: 1, findings: [] };
+  const state = { complete: true, manifest_sha: null, edition: 1, findings: [] };
+  const real = w.publication.commitCaseEdition;
+  w.publication.commitCaseEdition = (a) => ({ ...real(a), state });
   const r = await run();
   assert.equal(r.p.assembled.length, 1);
-  assert.deepEqual([r.p.assembled[0].via, r.p.assembled[0].cs], ["caseratify", w.pub.caseState]);
+  assert.deepEqual([r.p.assembled[0].via, r.p.assembled[0].cs], ["caseratify", state]);
   assert.deepEqual(r.body.container, { manifest_sha: "m".repeat(64), zip: "z" });
   assert.equal("completedCase" in r.body, false, "the store's internal state is not spread into the answer");
 });

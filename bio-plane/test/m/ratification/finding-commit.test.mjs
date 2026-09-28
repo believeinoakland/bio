@@ -17,14 +17,14 @@ function setup() {
   const P2 = w.project("Other", "carol");
   w.inquiry(Q); w.info(DOC);
   const args = (id, o = {}) => ({ bundleId: id, bundleSha: w.sha(id), attestorKey: "KEY", attestorMember: "alice",
-                                  gateVersion: "plane-gate/1.0", sigArmored: SIG, shas: [{ sha256: w.sha(id), path: "bundle.md" }],
+                                  gateVersion: "plane-gate/1.0", sigArmored: SIG, shas: [{ sha256: w.sha(id), path: "bundle.md", kind: "bundle", bytes: 10 }],
                                   title: "t", completeness: null, strength: null, edges: [], group: "test-group",
                                   deliveredBy: V("alice"), ...o });
   const caseOf = (caseId, project) =>
     w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, caseId, project, NOW);
   return { w, P, P2, args, caseOf, publish: (id, o) => w.r.publish(args(id, o)) };
 }
-const edits = (w) => w.calls.filter((c) => c[0] === "commitEdition").length;
+const edits = (w) => w.count("published_bundles");
 
 test("R5: MALFORMED without the bundle, its sha, the key, the gate version, the signature or the hash list", () => {
   const { w, publish } = setup();
@@ -88,17 +88,22 @@ test("R5, R12: the commit hands publication the signed edition, the pins, the si
   w.pub.pins.set(`${Q}@${w.sha(Q)}`, pins);
   const edges = [{ to: DOC, kind: "reference", disclosure: "serve" }];
   const r = publish(Q, { edition: 2, edges, memberCarriesBlocks: true, strength: [{ axis: "capture" }], deliveredBy: V("bo") });
-  assert.deepEqual([r.ok, r.existed, r.edition], [true, false, 1]);
+  assert.deepEqual([r.ok, r.existed, r.edition], [true, false, 2]);
   const [, a] = w.calls.find((c) => c[0] === "commitEdition");
-  assert.deepEqual([a.bundleId, a.bundleSha, a.edition, a.pinnedBy, a.edges, a.memberCarriesBlocks, a.group],
-    [Q, w.sha(Q), 2, pins, edges, true, "test-group"]);
+  assert.deepEqual([a.bundleId, a.bundleSha, a.edition, a.edges, a.memberCarriesBlocks, a.group, a.strength],
+    [Q, w.sha(Q), 2, edges, true, "test-group", [{ axis: "capture" }]]);
+  assert.deepEqual(w.row(`SELECT edition, bundle_sha, attestor_member, delivered_by, gate_version FROM published_bundles WHERE bundle_id=?`, Q),
+    { edition: 2, bundle_sha: w.sha(Q), attestor_member: "alice", delivered_by: V("bo"), gate_version: "plane-gate/1.0" });
   assert.deepEqual([a.attestorKey, a.attestorMember, a.deliveredBy, a.gateVersion, a.sigArmored],
     ["KEY", "alice", V("bo"), "plane-gate/1.0", SIG]);
   assert.match(a.at, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/);
-  assert.equal(publish(Q, { deliveredBy: null }).existed, true);
+  const again = publish(Q, { deliveredBy: null });
+  assert.deepEqual([again.existed, again.edition], [true, 2], "a retry of the same bytes answers the edition they carry");
   const [, b] = w.calls.filter((c) => c[0] === "commitEdition")[1];
   assert.equal(b.deliveredBy, null, "never defaulted to the signer");
   assert.equal("edition" in b, false, "an edition the bytes did not name is left to publication");
+  assert.equal(w.count("published_bundles"), 1, "nothing new was written");
+  assert.equal(w.row(`SELECT delivered_by FROM published_bundles WHERE bundle_id=?`, Q).delivered_by, V("bo"), "the first delivery stands");
 });
 
 /* ---- R7 ---- */

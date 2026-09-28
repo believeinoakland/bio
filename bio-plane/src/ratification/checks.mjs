@@ -10,10 +10,10 @@
  * C-92.10–C-92.12. A row's `where` names the region in this module that mints it. The case-document formats and their
  * three predicates are `publication`'s (its R20). The legacy code's comments moved with it. */
 
-import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES, STRENGTH_STATES,
-         CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
+import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES, STRENGTH_STATES } from "../../checks/bio-checks.mjs";
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
-         caseDocumentRequiresV4Disclosures } from "../../checks/bio-checks.mjs";
+         caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from `legacy-checks`. */

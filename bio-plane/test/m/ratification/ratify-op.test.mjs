@@ -1,6 +1,7 @@
 /* ratification R4: `op=ratify` at the control plane (`ratifyOp`, the Worker half), in its order of refusals; R5's
    refusals relayed; R6: after the commit every part is copied to the published store by hash, the case container is
-   assembled when the last member lands, and the reuse report is carried. R16 waits on publication R35. */
+   assembled when the last member lands, and the reuse report is carried; R16: a `name` edge turns `serve` when its
+   target is published (publication R35). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signBundle, cleanInfoMd, V, SILENT } from "./fixture.mjs";
@@ -82,7 +83,7 @@ test("R4: in order — C-58.1, C-53.10, C-53.11, C-92.12, RATIFY_STALE, NO_SIGNE
   const gate = await run({ ...body, sig });
   assert.deepEqual([gate.status, gate.body.reason], [409, "GATE_REFUSED"]);
   assert.ok(gate.body.findings.length > 0);
-  assert.deepEqual(w.pub.editions, [], "nothing crossed");
+  assert.equal(w.count("published_bundles"), 0, "nothing crossed");
 });
 
 test("R4, R9: the gate joins C-2.8's case-member arm over the same image", async () => {
@@ -125,7 +126,7 @@ test("R4, R6: an owner's signature crosses; every part is copied to the publishe
   const retry = await ratifyOp(p.request({ bundleId: DOC, expectedSha: sha, sig: SIGNED.get(w) }), p.stub, p.ctx);
   assert.deepEqual(retry.body.published, { shas: 1, copied: 0, alreadyPresent: 1, r2: "ok" }, "an existing key is immutable and skipped");
   assert.deepEqual([retry.status, retry.body.existed], [200, true]);
-  assert.equal(w.pub.editions.length, 1);
+  assert.equal(w.count("published_bundles"), 1);
 });
 
 test("R6: when the last member of a case edition lands its container is assembled once; an assembled one is named, not rebuilt", async () => {
@@ -161,7 +162,28 @@ test("R6: every reused part carries an outcome in the answer and in the record; 
   assert.deepEqual([s.status, s.body.ok, s.body.reuse.reason, s.body.reuse.op], [200, true, "STORE_SILENT", "ratify/reusedparts"]);
 });
 
-test.todo("R16: a `name` edge to a target published later becomes `serve` — publication R35 is not yet met (K102); this module passes the edges to commitEdition and R35 turns them");
+test("R16: publishing a target turns a `name` edge to it from a published finding into `serve`, through publication R35 in the same commit", () => {
+  const w = world();
+  for (const m of ["alice"]) w.member(m);
+  const P = w.project("Team", "alice");
+  w.inquiry(Q); w.info(DOC);
+  w.pub.pins.set(`${Q}@${w.sha(Q)}`, [{ case_id: "CASE-2026-0001", edition: 1 }]);
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0001', ?, 't')`, P);
+  w.pub.resting.set(DOC, [{ case_id: "CASE-2026-0001", finding: Q, project: P }]);
+  const args = (id, edges) => ({ bundleId: id, bundleSha: w.sha(id), attestorKey: "K", attestorMember: "alice", gateVersion: "g",
+    sigArmored: "s", shas: [{ sha256: w.sha(id), path: "bundle.md", kind: "bundle", bytes: 1 }], edges, deliveredBy: V("alice") });
+  const edges = [{ to: DOC, kind: "cites", disclosure: "name" }, { to: DOC, kind: "division_parent", disclosure: "name" }];
+  assert.equal(w.r.publish(args(Q, edges)).ok, true);
+  const before = w.st.sql.exec(`SELECT kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind`, Q);
+  assert.deepEqual(before, [{ kind: "cites", disclosure: "name" }, { kind: "division_parent", disclosure: "name" }]);
+  const r = w.r.publish(args(DOC, []));
+  assert.deepEqual([r.ok, r.namesServed], [true, 1]);
+  assert.deepEqual(w.st.sql.exec(`SELECT kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind`, Q),
+    [{ kind: "cites", disclosure: "serve" }, { kind: "division_parent", disclosure: "name" }],
+    "a division's disclosure is name-only by kind and never turns; nothing else in either edition changed");
+});
+
+test.todo("R16, R5: a finding's reference to evidence not yet published is recorded as a `name` edge (so R16 can turn it) — publication's `publishEdges` drops it instead (reported to BOB, J5)");
 
 test("R15: no place is named in either ceremony's answers", async () => {
   const { w, P, run, sig } = await setup();

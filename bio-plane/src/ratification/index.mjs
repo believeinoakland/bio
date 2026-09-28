@@ -17,7 +17,7 @@
  * first call. At creation it registers the case-document catalogue with `promotion` (its R47; R8 here), and the
  * case-member arm of C-2.8 as a promotion check and a record-core audit check (R9).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership, promotion   layer 2: `head`, `textAtSha`, `transact`, `registerAuditCheck`; `caseAuthority`,
+ *   record, membership, promotion   layer 2: `head`, `transact`, `registerAuditCheck`; `caseAuthority`,
  *                                   `inSight`, `existenceAct`, `attestingKeys`; `runCaseGate`, `registerCaseCatalogue`,
  *                                   `registerStep`.
  *   provenance     `registeredFor` (the gate's register rows).
@@ -27,9 +27,10 @@
  *   publication    the case documents, the case relation and pins, the registries, the attribution facts, and the two
  *                  commits (its R2, R4, R7, R17, R22).
  *
- * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest` and `history` (`gateFacts`' manifest and history
- * lists, as they were), inquiry's `inquiry_basis` (`bundle_id`, `target_id`, its R40), and connections' `refs`
- * (`gateFacts`' `dangling` list, kept as it was; reported, since connections states no read contract yet). */
+ * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
+ * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
+ * `target_id`, its R40), and connections' `refs` (`gateFacts`' `dangling` list, kept as it was; reported, since
+ * connections states no read contract yet). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
@@ -627,7 +628,7 @@ export class Ratification {
          `deliveredBy` is the control plane's reading of the SESSION and is written as handed — never defaulted to
          `attestorMember` (REC-128, R12). */
       const completeness =
-        fm.completeness ? JSON.stringify({
+        fm.completeness ? {
           ...completenessFields(fm),
           subject_position: fm.completeness.subject_position ?? null,
           author: fm.completeness.author ?? null,
@@ -660,20 +661,17 @@ export class Ratification {
                          named_at: fm.completeness.draft_named_at ?? null } } : {}),
           acknowledgements_truncated: Array.isArray(fm.completeness_acknowledgements)
             ? fm.completeness.acknowledgements_truncated === true : null,
-        }) : null;
+        } : null;
       /* D-442 / BIO_Publication_v0_1.md §3 rule 12: A CASE CAN BE COMPLETE THE MOMENT ITS DOCUMENT IS RATIFIED —
          every member pinned at bytes another case already carried across — and then no op=ratify will ever complete
-         it. The group is read off a member's pinned bytes, the same field op=ratify passes, so the commit can hand
-         the control plane the edition's state for the container (`assembleCaseContainer`). */
-      const firstRow = rows.find((x) => x.target === roster[0]) || {};
-      const firstText = roster.length ? this.record.textAtSha(roster[0], firstRow.version_sha ?? null) : null;
-      const group = firstText ? ((parseFrontmatter(firstText).data || {}).group ?? null) : null;
+         it. The commit answers the edition's state (`state`, read with the group off a member's pinned bytes), so
+         the control plane can assemble the container (`assembleCaseContainer`). */
       const committed = this.publication.commitCaseEdition({
-        case: id, edition: ed, project, at: now, group,
+        case: id, edition: ed, project, at: now,
         scope: typeof fm.case_scope === "string" ? fm.case_scope : null,
         completeness,
         biasAcknowledgement: typeof fm.bias_acknowledgement === "string" ? fm.bias_acknowledgement : null,
-        bar: fm.required_strength && typeof fm.required_strength === "object" ? JSON.stringify(fm.required_strength) : null,
+        bar: fm.required_strength && typeof fm.required_strength === "object" ? fm.required_strength : null,
         roster: roster.map((m) => {
           const r = rows.find((x) => x.target === m) || {};
           return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
@@ -684,8 +682,8 @@ export class Ratification {
       /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
          who ratified it and when; never deleted (set-but-never-clear). */
       this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
-      const completedCase = committed.caseState && committed.caseState.complete && !committed.caseState.manifest_sha
-        ? committed.caseState : null;
+      const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
+        ? committed.state : null;
       return { ok: true, caseId: id, edition: ed, project, roster,
                /* REC-212 / §3 rule 13: BOTH NAMES IN THIS ACT'S ANSWER — who wrote the statement and who prepared and
                   published the case — from the one read above, so the answer and the committed row are one fact. */
@@ -826,7 +824,7 @@ export class Ratification {
          edge from a published finding to this target becomes `serve`, R16). The signer is the verified signature's
          and the deliverer the control plane's stamp, each from its one source (R12). */
       return this.publication.commitEdition({
-        bundleId, bundleSha, pinnedBy, ...(Number.isInteger(edition) ? { edition } : {}), title, completeness,
+        bundleId, bundleSha, ...(Number.isInteger(edition) ? { edition } : {}), title, completeness,
         strength, memberCarriesBlocks, group, edges, shas, attestorKey, attestorMember: attestorMember ?? null,
         gateVersion, sigArmored, deliveredBy: deliveredBy ?? null, at: stampInstant("millisecond") });
     });

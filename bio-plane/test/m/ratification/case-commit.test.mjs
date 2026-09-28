@@ -127,7 +127,7 @@ test("R3: CASE_PRODUCTION_DIVERGED when the case is another project's production
 });
 
 test("R3, R11, R12, R13: the commit hands publication the case from the signed bytes — owner, scope, completeness, bar, roster with roles and pins — signer and deliverer apart, and no case-level strength", () => {
-  const { w, P, commit } = setup({ extra: [
+  const { w, P, commit, docSha } = setup({ extra: [
     "required_strength:", "  declared: true", "  capture: B", "  connection: null",
     "completeness:", `  statement: "the 2019 permits are not covered"`, "  author: alice", `  at: "2026-09-27T00:00:00Z"`,
     "  subject_position: not_sought", `  subject_justification: "closed until October"`, "  statement_by: bo",
@@ -135,47 +135,59 @@ test("R3, R11, R12, R13: the commit hands publication the case from the signed b
   const r = commit({ deliveredBy: V("bo") });
   assert.equal(r.ok, true);
   const [a] = w.pub.committed;
-  assert.deepEqual([a.case, a.edition, a.project, a.scope, a.biasAcknowledgement, a.group],
-    [CASE, 1, P, "whether the permits were issued as the minutes say", "we expected the permits were late", "test-group"]);
+  assert.deepEqual([a.case, a.edition, a.project, a.scope, a.biasAcknowledgement],
+    [CASE, 1, P, "whether the permits were issued as the minutes say", "we expected the permits were late"]);
   assert.deepEqual(a.roster, [{ bundle_id: Q1, role: "load_bearing", version_sha: w.sha(Q1) },
                               { bundle_id: Q2, role: "supporting", version_sha: w.sha(Q2) }]);
-  assert.deepEqual(JSON.parse(a.bar), { declared: true, capture: "B", connection: null });
-  const c = JSON.parse(a.completeness);
+  assert.deepEqual(a.bar, { declared: true, capture: "B", connection: null });
+  const c = a.completeness;
   assert.deepEqual([c.statement, c.author, c.statement_by, c.subject_position, c.acknowledgements, c.acknowledgements_truncated],
     ["the 2019 permits are not covered", "alice", "bo", "not_sought", null, null], "a list the bytes are silent about is null");
   assert.match(c.statement_by_stated, /bo wrote this case's exclusion statement; alice prepared and published/);
   assert.deepEqual([a.sigArmored, a.attestorKey, a.attestorMember, a.gateVersion, a.deliveredBy],
     [SIG, "KEY", "alice", "plane-gate/1.0", V("bo")], "the signer is the signature's and the deliverer the stamp's");
   assert.equal(Object.keys(a).some((k) => /strength/i.test(k)), false, "no case-level strength is composed");
+  /* what publication committed from those arguments */
+  assert.deepEqual(w.row(`SELECT project_id FROM cases WHERE case_id=?`, CASE), { project_id: P });
+  const pc = w.row(`SELECT scope, completeness, bar FROM published_cases WHERE case_id=? AND edition=1`, CASE);
+  assert.deepEqual([pc.scope, JSON.parse(pc.completeness).statement_by, JSON.parse(pc.bar).capture],
+    ["whether the permits were issued as the minutes say", "bo", "B"]);
+  assert.deepEqual(w.st.sql.exec(`SELECT bundle_id, role, version_sha FROM published_case_members WHERE case_id=? ORDER BY ord`, CASE),
+    [{ bundle_id: Q1, role: "load_bearing", version_sha: w.sha(Q1) }, { bundle_id: Q2, role: "supporting", version_sha: w.sha(Q2) }]);
+  assert.deepEqual(w.row(`SELECT doc_sha, sig_armored, attestor_member, delivered_by FROM case_documents WHERE case_id=?`, CASE),
+    { doc_sha: docSha, sig_armored: SIG, attestor_member: "alice", delivered_by: V("bo") });
   assert.deepEqual(w.calls.filter((x) => x[0] === "dischargeCaseFlags").map((x) => x.slice(1, 4)), [[CASE, 1, "alice"]]);
   assert.deepEqual([r.caseId, r.edition, r.project, r.roster, r.awaiting], [CASE, 1, P, [Q1, Q2], [Q1, Q2]]);
   assert.deepEqual(r.statement, { author: "alice", by: "bo", stated: c.statement_by_stated });
-  assert.equal(r.completedCase, undefined);
+  assert.equal(r.completedCase, undefined, "no member is published at its pin yet");
 });
 
 test("R12, R13: a deliverer not stamped is committed null, never the signer; a document silent about completeness commits null; one silent about its writer says so", () => {
   const { w, commit } = setup();
   assert.equal(commit({ deliveredBy: null }).ok, true);
   assert.deepEqual([w.pub.committed[0].deliveredBy, w.pub.committed[0].completeness, w.pub.committed[0].bar], [null, null, null]);
+  assert.deepEqual(w.row(`SELECT completeness, bar FROM published_cases WHERE case_id=?`, CASE), { completeness: null, bar: null });
+  assert.equal(w.row(`SELECT delivered_by FROM case_documents WHERE case_id=?`, CASE).delivered_by, null);
   const { w: w2, commit: c2 } = setup({ extra: ["completeness:", `  statement: "s"`, "  author: alice",
     "completeness_acknowledgements:", "  - kind: participant", "    by: carol", `    at: "2026-09-27T00:00:00Z"`] });
   assert.equal(c2().ok, true);
-  const c = JSON.parse(w2.pub.committed[0].completeness);
+  const c = w2.pub.committed[0].completeness;
   assert.equal(c.statement_by, null);
   assert.match(c.statement_by_stated, /says nothing about who wrote its exclusion statement/);
   assert.deepEqual(c.acknowledgements, [{ kind: "participant", by: "carol", recipient: null, at: "2026-09-27T00:00:00Z" }]);
   assert.equal(c.acknowledgements_truncated, false);
   const { w: w3, commit: c3 } = setup({ extra: ["completeness:", `  statement: "s"`, "  author: alice", "  statement_by: null"] });
   assert.equal(c3().ok, true);
-  assert.match(JSON.parse(w3.pub.committed[0].completeness).statement_by_stated, /^UNDETERMINED/);
+  assert.match(w3.pub.committed[0].completeness.statement_by_stated, /^UNDETERMINED/);
 });
 
 test("R3: a case complete at its document's ratification hands the control plane its state for the container", () => {
   const { w, commit } = setup();
-  w.pub.caseState = { complete: true, manifest_sha: null, edition: 1, findings: [] };
-  assert.deepEqual(commit().completedCase, w.pub.caseState);
+  const state = { complete: true, manifest_sha: null, edition: 1, findings: [] };
+  w.publication.commitCaseEdition = () => ({ ok: true, existed: false, awaiting: [], state });
+  assert.deepEqual(commit().completedCase, state);
   const { w: w2, commit: c2 } = setup();
-  w2.pub.caseState = { complete: true, manifest_sha: "m".repeat(64) };
+  w2.publication.commitCaseEdition = () => ({ ok: true, existed: false, awaiting: [], state: { ...state, manifest_sha: "m".repeat(64) } });
   assert.equal(c2().completedCase, undefined, "an assembled container is not assembled again");
 });
 

@@ -1,18 +1,18 @@
-/* ratification over the modules it uses. record-core, membership and promotion are the real ones, on a real SQLite
-   database (node:sqlite) standing in for a Durable Object's storage: the head, the transaction, the authority and sight
-   questions, and the registrations (R8, R9) are theirs. What basis-versions, provenance, inquiry and publication
-   provide is a provider the test controls, as `ratificationOf`'s deps take them: the conclusion reads (R1), the gate
-   facts (R7), and publication's reads and its two commits (R22), which record every call so a test can say what this
-   module handed them. Publication's `case_documents` and `cases` (its R40 read contract, read here in this module's own
-   SQL) are created from publication's schema and filled as publication's writers would. Every test drives
-   `ratification` at its interface: the store half (`ratificationOf`, `ratificationOps`) and the Worker half
-   (`caseRatifyOp`, `ratifyOp`) with a Durable Object stub that routes to the store half. */
+/* ratification over the modules it uses. record-core, membership, promotion and publication are the real ones, on a
+   real SQLite database (node:sqlite) standing in for a Durable Object's storage: the head, the transaction, the
+   authority and sight questions, the registrations (R8, R9), publication's tables and its two commits (R22, with R35)
+   are theirs. What basis-versions, provenance and inquiry provide is a provider the test controls, as
+   `ratificationOf`'s deps take them (the conclusion reads of R1, the gate facts of R7); so are the publication reads a
+   test steers (the case document facts, the pins, what rests on a bundle). Every call to publication is recorded, so a
+   test can say what this module handed it. Every test drives `ratification` at its interface: the store half
+   (`ratificationOf`, `ratificationOps`) and the Worker half (`caseRatifyOp`, `ratifyOp`) with a Durable Object stub
+   that routes to the store half. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash, webcrypto } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
-import { PUBLICATION_SCHEMA } from "../../../src/publication/index.mjs";
+import { publicationOf } from "../../../src/publication/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
 
@@ -87,8 +87,6 @@ export function world() {
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => NOW });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  /* publication's tables, as far as this module reads them (its R40) */
-  for (const t of bare(PUBLICATION_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
   /* the columns of inquiry's `inquiry_basis` and connections' `refs` that R7's facts join, as their writers fill them */
   st.db.exec(`CREATE TABLE inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL)`);
   st.db.exec(`CREATE TABLE refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
@@ -110,45 +108,31 @@ export function world() {
   const inquiry = { subjectEntityOf: (id) => `ENT-of-${id}`,
                     earned: (subject, targets) => ({ subject, earned: { capture: Object.fromEntries(targets.map((t) => [t, null])) } }) };
 
-  /* publication's services, each recording its calls; a test replaces any of them */
+  /* publication: the real module (its tables, R22's two commits and the discharge, R35), with the reads a test steers
+     — the case document facts, the pins, what rests on a bundle, the claims, the registries and the attribution
+     facts — answered from the maps below. Every call is recorded; a test replaces any method by assigning it. */
+  const realPub = publicationOf(host, { storage: st, record, membership, promotion, now: () => NOW,
+    inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => bv.reach } });
   const calls = [];
-  const note = (name, fn) => (...a) => { calls.push([name, ...a]); return fn(...a); };
-  const pub = {
-    facts: new Map(), pins: new Map(), resting: new Map(), claims: new Map(),
-    committed: [], editions: [],
+  const pub = { facts: new Map(), pins: new Map(), resting: new Map(), claims: new Map(), committed: [] };
+  const steered = {
+    caseDocumentFacts: (c, e) => pub.facts.get(`${c}#${Number(e)}`) ?? { ok: false, reason: "NO_CASE_DOCUMENT" },
+    pinnedCaseEditionsOf: (id, s) => pub.pins.get(`${id}@${s}`) ?? realPub.pinnedCaseEditionsOf(id, s),
+    ratifiedFindingsRestingOn: (id) => pub.resting.get(id) ?? realPub.ratifiedFindingsRestingOn(id),
+    caseClaimsOf: (id) => pub.claims.get(id) ?? [],
+    publishedRegistryFor: (id, targets) => ({ asked: [id, ...targets] }),
+    publishedCaseRegistryFor: (ids) => ({ cases: ids }),
+    attributionStatedFor: () => false,
+    observationsNamingAuthor: () => [],
+    commitCaseEdition: (a) => { pub.committed.push(a); return realPub.commitCaseEdition(a); },
   };
-  const publication = {
-    caseDocumentFacts: note("caseDocumentFacts", (c, e) => pub.facts.get(`${c}#${Number(e)}`) ?? { ok: false, reason: "NO_CASE_DOCUMENT" }),
-    pinnedCaseEditionsOf: note("pinnedCaseEditionsOf", (id, s) => pub.pins.get(`${id}@${s}`) ?? []),
-    ratifiedFindingsRestingOn: note("ratifiedFindingsRestingOn", (id) => pub.resting.get(id) ?? []),
-    caseClaimsOf: note("caseClaimsOf", (id) => pub.claims.get(id) ?? []),
-    publishedRegistryFor: note("publishedRegistryFor", (id, targets) => ({ asked: [id, ...targets] })),
-    publishedCaseRegistryFor: note("publishedCaseRegistryFor", (ids) => ({ cases: ids })),
-    attributionStatedFor: note("attributionStatedFor", () => false),
-    observationsNamingAuthor: note("observationsNamingAuthor", () => []),
-    dischargeCaseFlags: note("dischargeCaseFlags", () => ({ ok: true })),
-    /* R22 as publication states it: inside the caller's transaction, `existed` for the same signature. */
-    commitCaseEdition: note("commitCaseEdition", (a) => {
-      const row = st.sql.exec(`SELECT sig_armored, ratified_at FROM case_documents WHERE case_id=? AND edition=?`,
-                              a.case, a.edition)[0];
-      if (row && row.ratified_at)
-        return row.sig_armored === a.sigArmored ? { ok: true, existed: true }
-          : { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED" };
-      st.sql.exec(`UPDATE case_documents SET sig_armored=?, ratified_at=? WHERE case_id=? AND edition=?`,
-                  a.sigArmored, a.at, a.case, a.edition);
-      if (!st.sql.exec(`SELECT 1 AS x FROM cases WHERE case_id=?`, a.case).length)
-        st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, a.case, a.project, a.at);
-      pub.committed.push(a);
-      return { ok: true, awaiting: a.roster.map((m) => m.bundle_id), caseState: pub.caseState ?? null };
-    }),
-    commitEdition: note("commitEdition", (a) => {
-      const prior = pub.editions.find((e) => e.bundleId === a.bundleId && e.bundleSha === a.bundleSha);
-      if (prior) return { ok: true, existed: true, edition: prior.edition, ratifiedAt: prior.at };
-      const edition = pub.editions.filter((e) => e.bundleId === a.bundleId).length + 1;
-      pub.editions.push({ ...a, edition });
-      return { ok: true, existed: false, edition, ratifiedAt: a.at, edges: { serve: 0, name: 0 } };
-    }),
-  };
+  const publication = new Proxy(steered, {
+    get(t, k) {
+      const fn = Object.prototype.hasOwnProperty.call(t, k) ? t[k]
+        : typeof realPub[k] === "function" ? realPub[k].bind(realPub) : realPub[k];
+      return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
+    },
+  });
   const r = ratificationOf(host, { storage: st, record, membership, promotion, provenance, inquiry, basisVersions,
                                    publication });
   let n = 0;
@@ -185,13 +169,13 @@ export function world() {
     },
     inquiry(id, opts = {}) { return w.promote(id, inqMd(id, opts)); },
     info(id) { return w.promote(id, infoMd(id), "information"); },
-    /** A case document stored unsigned, as publication's R21 stores it; its sha. `owner` also records the case. */
+    /** A case document stored unsigned through publication's R21; its sha. `owner` also records the case as that
+     *  project's production, as an earlier edition's commit would have. */
     caseDoc(caseId, edition, text, { owner = null } = {}) {
-      const docSha = sha(text);
-      st.sql.exec(`INSERT INTO case_documents (case_id, edition, doc_sha, text, authored_by, authored_at)
-                   VALUES (?, ?, ?, ?, 'member:alice', ?)`, caseId, edition, docSha, text, NOW);
+      const res = realPub.storeCaseDocument({ case: caseId, edition, text, author: "member:alice", at: NOW });
+      if (!res.ok) throw new Error(`fixture case document refused: ${JSON.stringify(res)}`);
       if (owner) st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, caseId, owner, NOW);
-      return docSha;
+      return res.doc_sha;
     },
     /** The store half's ops, as the legacy store's dispatch reaches them. */
     op(name, query = {}, body = null) {
