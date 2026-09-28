@@ -113644,6 +113644,11 @@ var index_default = {
         if (proven) b.replay = true;
         const replayed = creatingInquiry ? proven : null;
         if (replayed) b.migrationReplay = replayed;
+        delete b.memberUserAgent;
+        if (viaSession && b.base === null) {
+          const agent = (req.headers.get("User-Agent") || "").trim().slice(0, 512).trimEnd();
+          if (agent) b.memberUserAgent = agent;
+        }
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
