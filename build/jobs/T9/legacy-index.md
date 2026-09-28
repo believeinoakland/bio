@@ -1,6 +1,6 @@
 # legacy-index (T9)
 
-**Status** · session_015C5rwaRYuaTLYD3SanCUps · depth 2 · RUNNING until 2026-09-28T18:44:25Z (old battery, 369 suites, both trees) · handled B2
+**Status** · session_015C5rwaRYuaTLYD3SanCUps · depth 2 · COMPLETE · handled B2
 
 **Job** · LEGACY-INDEX #6, session `session_015C5rwaRYuaTLYD3SanCUps`, branch `job/T9/legacy-index`, the legacy-index bullet of layer 11 (`build/plan/current.md`). This is a legacy module: no requirements file and no `tests` path. Its contract is the bullet, BOB's START (B1) and CHANGE (B2), and the op maps of the modules it routes. B1 and B2 are applied.
 
