@@ -22,7 +22,7 @@
 
 Nothing in my module.
 
-## Found in other modules (REPORT J2)
+## Found in other modules (REPORT J1)
 
 1. **standards:** `op=standard` with no `id` answers `{ok:false, reason:"NO_ID", detail}` with no `code`, `check` or `translation`. This is a codeless refusal (D-495's class). It is the only one among the 36 ops, and it is the module's own answer (`standardRead`), not the route's.
 2. **affordances / legacy-tests:** `rung-ladder` has two reds that name layer-9 acts. They are byte-identical on the tranche tip, so they are not caused by the routes.
