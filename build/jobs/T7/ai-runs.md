@@ -46,3 +46,12 @@ Cause: **context**. Past half my window (≈450k of 1M); per JOB.md I stop at a 
 5. The ops (K3): an `aiRunsOps` table for `airunspawn`, `airunopen`, `airuntick`, `airunclose`, `airun`, `airunlog`, `airuns`, the store's dispatch entries then calling it.
 6. Tests under `test/m/ai-runs/` naming every live id R1–R40 (world.mjs is there); run the module's tests, then the four checks (coverage not yet run).
 7. Record: legacy-tests reds known so far — `airun.test.mjs` 131/3 (2 red on the base; ARM R4c reads `checkCondition`'s source in `airun.mjs`, now observation-log's). Size line.
+
+## J5 · QUESTION
+
+Four points from B6 and B7 where a Provides line or a row's owner changes. I have built each on the reading below (branch `job/T7/ai-runs` @ 9cbe2e5350); say if you read any other way.
+
+1. **R28 (B7, capture-requests' use).** capture-requests reads `principal_claude` from `runFor` (it records the paying level on the request). Proposed R28 text: "`runFor` answers `{run, status, mode, context_type, context_id, principal_plane, principal_claude}` for a held run the viewer can see, and null for a blank id, an absent run or an invisible one alike; it never throws and writes nothing. Whether the caller holds the run is R5 over `principal_plane`."
+2. **R18 (B6 (2)).** Proposed replacement of its last two sentences: "A dispatch waits at most 30 s (configurable) for the answer. One refused, or one whose call did not complete, appends a log entry saying the run is still resumable; one with no answer by the bound is `RUNNING` (the segment answers when it ends), appends nothing and counts as dispatched. The credential's value never enters the record."
+3. **R19 (B6 (3)).** Proposed addition to `session`: "`state`, the run's resumable scratch as its last tick wrote it (R12), or null when it cannot be read back; never a transcript (DEC-61)." This lets N153 close.
+4. **C-22.7: two requirements claim the row.** My R35 lists C-22.7 "with `checkSkillVersion`, K82 (4)"; skills' R25 says the row moves to skills, and merged skills (`skilldoctrine.mjs` 86–99) reads it from the catalogue's `AI_RUN_CHECKS` at load, so removing it there stops the plane loading (measured: capture-requests' plane suite, the whole plane). Reading: the row stays in the catalogue for now; ai-runs holds the predicate (R8) and names the row there (never a copy); R35 drops C-22.7 and skills' R25 keeps it. Also: `skillpack.mjs` 546 still holds its own `checkSkillVersion` rather than re-exporting ai-runs' (R8: "re-exported by `skills`"); that is skills' to change.
