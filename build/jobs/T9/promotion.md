@@ -35,6 +35,30 @@ Read whole: `roles/JOB.md`; `build/requirements/promotion.md`; the public parts 
 
 Size (session_01HaHQYhYSuHMBfLjsfYrKCD): test runs 7, module lines 2265
 
+## Work (PROMOTION #10, re-opened by B4)
+
+Read whole: `roles/JOB.md`; `build/requirements/promotion.md`; `bio-plane/test/d470-catalog-census.test.mjs`; the version notes of `src/gate.mjs`; K288; every row-table and refusal change in `git diff 85493f73b5 HEAD -- bio-plane/src bio-plane/checks` (17 files; `bio-checks.mjs` unchanged).
+
+**Census since 1.39.0 (85493f73b5).** The d470 census, of the catalogue file only, did not move: count 397, digest e1c688c5…, source 9927c1ad…. A module's own row table did (R34, R47: rows are counted wherever they live): capture-sources' `CAPTURE_CREDENTIAL_CHECKS` (K288) gained **C-105.10** `CAPTURE_CREDENTIAL_SUPPLY_FAILED` and **C-105.11** `CAPTURE_CREDENTIAL_WITHDRAW_FAILED`, taken from **C-105.8** `NO_KEY` (the failed encryption or store) and **C-105.9** `NO_SUCH` (the failed read or withdrawal), which now refuse one condition each: changed. Wording only: `where`s on C-105.1–C-105.11, C-105.6's and C-105.9's translations lengthened, C-105.7 minted at one helper. Nothing else moved a row: capture's, content's, extraction's, calibration's and provenance's listener registrations now refuse through membership's `listenerRefusal` (LISTENER_* and capture's former `BAD_LISTENER` carry no row yet, N202); capture's `FETCH_FAILED` (no row) hides its detail when a credential rode the fetch; content's C-45.13 reads a rect's space through text-chain's `rectSpace` and refuses the same spaces.
+
+**Applied** (97cb7a30d2): `CATALOG_VERSION` 1.39.0 → **1.40.0**, MINOR (two arrivals, two changed, no departures), its note in `src/gate.mjs`. For legacy-tests, from the d470 suite's own print on this tree: **version 1.40.0, count 397, digest e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007, source 9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e**. Because that census equals 1.39.0's, 1.40.0's row must carry `changed: ["C-105.8", "C-105.9"]` (and its `source`) or A4 names a collision; 1.39.0's own row (397, e1c688c5…, 9927c1ad…, no `changed`) is still unpinned too. A3 and A5 are red until that re-pin.
+
+**Floors re-taken:** R18's write-path floor measures 36 (pinned ≥ 36); R20's own rows 12 (pinned 12). My tests pin no version literal (R34's test reads `CATALOG_VERSION`). Unchanged.
+
+**Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` (and `.bundle.json`) still carries 1.39.0. Not rebuilt.
+
+**Found in other modules:** unchanged from #9: citation's invariants R5 and connections' factory R24 tests are red on `tranche/T9` without this change (re-run with it stashed: 8 pass, 2 fail).
+
+**Tests and checks run** (on 97cb7a30d2):
+- `node --test bio-plane/test/m/promotion/`: tests 67, pass 67, fail 0.
+- `node --test bio-plane/test/m/`: tests 2385, pass 2357, fail 2, todo 26; the two are citation's and connections' above.
+- `node bio-plane/test/d470-catalog-census.test.mjs`: 11 pass, 2 fail (A3, A5: legacy-tests' re-pin).
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture`: 16 product files, 57 relative imports; 0 failures. `coverage`: 49 of 49 live requirement ids named by a test; 0 failures. `ownership`: 1 file changed by promotion between tranche/T9 and HEAD; legacy-checks and legacy-store 0 lines; 0 failures.
+
+**Deferred:** nothing.
+
+Size (session_01VnBTy9DbLtKgqbQDGVxFwp): test runs 5, module lines 2278
+
 ## J1 · REPORT
 
 N240, N254 and N202's share are applied and pushed (8926590d63): CATALOG_VERSION 1.39.0 (count 397, digest e1c688c5…, source 9927c1ad…, from the d470 print), stepDeclared and caseCatalogueFailed declared (C-102.8 carried), listenerRefusal (R49) with my own registrations converged on it. Module tests 67 pass, 0 fail, 1 todo; the four checks pass. N208 is the one entry left: membership has not merged into tranche/T9 and does not yet export noSuchProject, so importing it would break promotion's load. Please send a CHANGE when membership merges; I apply N208 then and post COMPLETE. Also for you: bio-plane/dist/bio-plane.bundled.mjs is stale (my inputs changed); citation's invariants R5 test and connections' factory R24 test are red on tranche/T9 before my change (details in my record).
