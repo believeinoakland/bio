@@ -171,19 +171,29 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   /* RE-PINNED 2026-09-28 (legacy-tests T9; K286): 132 -> 133 inputs, from the committed manifest this suite reads (its
      staleness arm green): the one arrival is `bio-plane/src/membership/checks.mjs`, membership's own row family (C-70.5,
      R78), which `membership/index.mjs` now imports and so every member reaching membership builds in. None left. */
-  t("agent-worker's 133 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
+  /* RE-PINNED 2026-09-28 (legacy-tests T10, B1 (1)): 133 -> 143 inputs, from the committed manifest this suite reads (its
+     staleness arm green on the merged tree). Eleven arrive and one leaves, each by name: `airun.mjs` now imports ai-runs'
+     own module (`ai-runs/index.mjs`, `schema.mjs`, `deployment.mjs`), which reads bias (`bias/index.mjs`, `checks.mjs`,
+     `schema.mjs`) and contradiction (`contradiction.mjs`, `contradiction/index.mjs`, `checks.mjs`, `schema.mjs`);
+     provenance's `index.mjs` imports its own `provenance/checks.mjs`; and `run-productions/interim.mjs` is no longer
+     reached from the member's build. */
+  t("agent-worker's 143 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
-     "../bio-plane/checks/bio-checks.mjs", "../bio-plane/src/ai-runs/checks.mjs", "../bio-plane/src/ai-runs/skill-version.mjs",
+     "../bio-plane/checks/bio-checks.mjs", "../bio-plane/src/ai-runs/checks.mjs", "../bio-plane/src/ai-runs/deployment.mjs",
+     "../bio-plane/src/ai-runs/index.mjs", "../bio-plane/src/ai-runs/schema.mjs", "../bio-plane/src/ai-runs/skill-version.mjs",
      "../bio-plane/src/airun.mjs", "../bio-plane/src/basis-versions/grammar.mjs", "../bio-plane/src/basis-versions/index.mjs",
-     "../bio-plane/src/basis-versions/schema.mjs", "../bio-plane/src/basis-versions/text.mjs", "../bio-plane/src/browserrender.mjs",
+     "../bio-plane/src/basis-versions/schema.mjs", "../bio-plane/src/basis-versions/text.mjs", "../bio-plane/src/bias/checks.mjs",
+     "../bio-plane/src/bias/index.mjs", "../bio-plane/src/bias/schema.mjs", "../bio-plane/src/browserrender.mjs",
      "../bio-plane/src/calibration.mjs", "../bio-plane/src/calibration/checks.mjs", "../bio-plane/src/calibration/index.mjs",
      "../bio-plane/src/calibration/schema.mjs", "../bio-plane/src/capture/acquire.mjs", "../bio-plane/src/capture/doorbell.mjs",
      "../bio-plane/src/capture/index.mjs", "../bio-plane/src/capture/schema.mjs", "../bio-plane/src/cdx.mjs",
      "../bio-plane/src/citation/checks.mjs", "../bio-plane/src/citation/index.mjs", "../bio-plane/src/citation/splice.mjs",
      "../bio-plane/src/connections/index.mjs", "../bio-plane/src/connections/pair.mjs", "../bio-plane/src/connections/schema.mjs",
      "../bio-plane/src/connections/themes.mjs", "../bio-plane/src/content/extent.mjs", "../bio-plane/src/content/index.mjs",
-     "../bio-plane/src/content/notice.mjs", "../bio-plane/src/content/schema.mjs", "../bio-plane/src/cpu.mjs",
+     "../bio-plane/src/content/notice.mjs", "../bio-plane/src/content/schema.mjs", "../bio-plane/src/contradiction.mjs",
+     "../bio-plane/src/contradiction/checks.mjs", "../bio-plane/src/contradiction/index.mjs", "../bio-plane/src/contradiction/schema.mjs",
+     "../bio-plane/src/cpu.mjs",
      "../bio-plane/src/csv.mjs", "../bio-plane/src/docx.mjs", "../bio-plane/src/drive.mjs",
      "../bio-plane/src/entities/checks.mjs", "../bio-plane/src/entities/index.mjs", "../bio-plane/src/entities/schema.mjs",
      "../bio-plane/src/extraction/checks.mjs", "../bio-plane/src/extraction/drift.mjs", "../bio-plane/src/extraction/filemembership.mjs",
@@ -197,12 +207,12 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/ooxml.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/pptx.mjs",
      "../bio-plane/src/promotion/checks.mjs", "../bio-plane/src/promotion/history.mjs", "../bio-plane/src/promotion/index.mjs",
      "../bio-plane/src/promotion/record-checks.mjs", "../bio-plane/src/promotion/release.mjs", "../bio-plane/src/promotion/text.mjs",
-     "../bio-plane/src/provenance/index.mjs", "../bio-plane/src/provenance/register-checks.mjs", "../bio-plane/src/provenance/schema.mjs",
+     "../bio-plane/src/provenance/checks.mjs", "../bio-plane/src/provenance/index.mjs", "../bio-plane/src/provenance/register-checks.mjs", "../bio-plane/src/provenance/schema.mjs",
      "../bio-plane/src/query.mjs", "../bio-plane/src/readingprov.mjs", "../bio-plane/src/record-core/index.mjs",
      "../bio-plane/src/record-core/schema.mjs", "../bio-plane/src/render.mjs", "../bio-plane/src/retrieval/checks.mjs",
      "../bio-plane/src/retrieval/frontier.mjs", "../bio-plane/src/retrieval/index.mjs", "../bio-plane/src/retrieval/levels.mjs",
      "../bio-plane/src/retrieval/projection.mjs", "../bio-plane/src/retrieval/schema.mjs", "../bio-plane/src/run-productions/checks.mjs",
-     "../bio-plane/src/run-productions/index.mjs", "../bio-plane/src/run-productions/interim.mjs", "../bio-plane/src/run-productions/schema.mjs",
+     "../bio-plane/src/run-productions/index.mjs", "../bio-plane/src/run-productions/schema.mjs",
      "../bio-plane/src/skilldoctrine.mjs", "../bio-plane/src/skillpack.mjs", "../bio-plane/src/sshsig.mjs",
      "../bio-plane/src/strength/arithmetic.mjs", "../bio-plane/src/strength/checks.mjs", "../bio-plane/src/strength/index.mjs",
      "../bio-plane/src/strength/schema.mjs", "../bio-plane/src/subresources.mjs", "../bio-plane/src/textchain.mjs",
