@@ -58,6 +58,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 
 **projectsDrawingOn(inquiryId, viewer) → projects** (N64, K91 (4); read by `queue` and `publication`)
 - **R37** Answers, in id order, each project the viewer may see that draws on the inquiry, by R13's own test for `VERSION_CURRENT_UNRELATED`: the project's document holds a `cites` reference to the inquiry not marked `severed`. Each is `{id, title, current}`, `current` as `currentOf` answers it. At most 32, the list carrying `bound` (32) and `truncated`, measured by reading one past the bound. An empty inquiry id answers an empty list with `truncated: false`. It writes nothing and never throws. *(not yet met: N64; `#projectsDrawingOn` is `legacy-store`'s)*
+- **R38** The tables `inquiry_basis_versions` (`bundle_id`, `name`, `state`, `hidden`, `claim`) and `inquiry_basis_version_legs` (`bundle_id`, `name`, `ord`, `target_id`, `target_type`, `content_id`) are a stated read contract: a later module may join them in its own SQL (`contradiction`'s pairing and its ladder; `strength`'s version reads), and this module changes none of their names, types or meanings without a change to this requirement. Every write to them stays this module's. *(K181)*
 
 ## Private
 
