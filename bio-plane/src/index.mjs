@@ -85,13 +85,15 @@ import { driveHop, callerSuppliedHopFacts,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
    SESSION_OPS, the tables that actually gate the call, so the publication and
    the gate cannot drift. */
+/* N177 (T8, affordances R11): the act decoration is affordances' `decorate(act, gate)`; this file supplies the gate
+   from the tables that actually gate the call (`ACT_GATE`, beside `NEEDS`). */
+import { ACTS, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate } from "./affordances.mjs";
 /* REC-48 / DEC-39: op=acquire's `note` is COMPOSED from the enforced capture
    ceiling rather than spelled here. It is not the attest fence and is not
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
    doctrine, so its two grade letters come from the same place the refusal reads
-   them. The reasoning is on `acquireGradeNote` itself, beside the fence. */
-import { ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs,
-         ACQUIRE_GRADE_NOTE } from "./affordances.mjs";
+   them. N80 (T8): the note is capture's (`acquireGradeNote`, capture's Provides), composed where acquire is. */
+import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
 import { RENDER_DEFAULTS, completenessReading, keepRenderBodies, renderAllowanceMs,
@@ -487,6 +489,10 @@ const OPS = {
      its minted `writes` name it, and the store refuses NOBODY by class here. The fence that matters is one op
      up: a machine is refused at `actionlaws` BY NAME (C-32.18), and this op writes no list at all. */
   actionlawspropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T8 (actions R28, ACTIONS #1 J2.5): a proposed RISK TIER, stored apart and labelled, never touching `risk_tier` —
+     `actionlawspropose`'s class cut and reason: proposing is the machine's half, so the store refuses nobody by class,
+     and the fence is one op up, at `actionrisktier` (C-32.19). */
+  actionriskpropose:{ classes: ["admin", "member", "probe"],      mutating: true  },
   /* S-11 step 2: the first STATE-CHANGING actions to refer to a selection, and
      therefore the first callers of selectionResolve's REFUSING arm. Severing
      withdraws a citation without deleting it and reinstating restores one; both
@@ -1324,6 +1330,51 @@ const OPS = {
   intentproposals:     { classes: ["admin", "member", "probe"],      mutating: false },
   triage:              { classes: ["admin", "member", "probe"],      mutating: true  },
   workobjective:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  /* T8 (layer 9, K248, K250): THE ACTION LAYER'S OPS — standards (R1–R10), conformance (R1–R12), consequences (R1–R9),
+     filings (R1–R11) and escalation (R1–R16). THE ACTS take `conclude`'s cut for `conclude`'s reason: a machine REACHES
+     each and the module refuses it BY NAME on the author stamped below (MACHINE_CANNOT_DECLARE_STANDARD,
+     MACHINE_CANNOT_DETERMINE, MACHINE_CANNOT_APPROVE, MACHINE_CANNOT_OPEN, …) — except the PROPOSALS (`standardpropose`,
+     `comparisonpropose`, `filingprepare`, `theorypropose`), which any credential may make, each labelled with who made
+     it and whether it is machine work; the cut must admit a machine for those. Each act rides `contribute` and is a
+     session op in both sets. THE READS are open to every class that reads the record, and what a caller may see is the
+     module's, on the viewer stamped below. The durable object dispatches these once legacy-store constructs the
+     modules (N216, T9); until then the store answers `unknown op`. */
+  standarddeclare:     { classes: ["admin", "member", "probe"],      mutating: true  },
+  standardpropose:     { classes: ["admin", "member", "probe"],      mutating: true  },
+  standardadopt:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  standard:            { classes: ["admin", "member", "probe"],      mutating: false },
+  standards:           { classes: ["admin", "member", "probe"],      mutating: false },
+  standardinforce:     { classes: ["admin", "member", "probe"],      mutating: false },
+  determine:           { classes: ["admin", "member", "probe"],      mutating: true  },
+  comparisonpropose:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  determination:       { classes: ["admin", "member", "probe"],      mutating: false },
+  determinations:      { classes: ["admin", "member", "probe"],      mutating: false },
+  comparison:          { classes: ["admin", "member", "probe"],      mutating: false },
+  consequencerecord:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  consequencerevise:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  addressedrecord:     { classes: ["admin", "member", "probe"],      mutating: true  },
+  consequence:         { classes: ["admin", "member", "probe"],      mutating: false },
+  consequencesof:      { classes: ["admin", "member", "probe"],      mutating: false },
+  addressed:           { classes: ["admin", "member", "probe"],      mutating: false },
+  filingprepare:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  filingapprove:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  filingsent:          { classes: ["admin", "member", "probe"],      mutating: true  },
+  counselpacket:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  counselpacketexport: { classes: ["admin", "member", "probe"],      mutating: true  },
+  theorypropose:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  counselpacketread:   { classes: ["admin", "member", "probe"],      mutating: false },
+  filingsfor:          { classes: ["admin", "member", "probe"],      mutating: false },
+  availableactions:    { classes: ["admin", "member", "probe"],      mutating: false },
+  escalationopen:      { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationattach:    { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationevaluate:  { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationadvance:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationdecline:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationend:       { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationsuspend:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationresume:    { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalation:          { classes: ["admin", "member", "probe"],      mutating: false },
+  escalationsdue:      { classes: ["admin", "member", "probe"],      mutating: false },
   /* IS-6 / INVESTIGATIVE-SESSION.md §11: THE INVESTIGATIVE RUN. Three writes
      and two reads, and the class lists say two things worth stating.
 
@@ -1378,6 +1429,10 @@ const OPS = {
      and names the remedy; it never re-acquires. Classes and the D-15 stamp are
      op=index's, because it walks the same working corpus and names bundle ids. */
   driveshells:        { classes: ["admin", "member", "probe"],      mutating: false },
+  /* T8 (monitoring R32, MONITORING #1 J3.6): what the group monitors and how each watch stands, the DO route
+     `monitoring`. A READ on `driveshells`' cut and for its reason — it walks the working corpus and names bundle ids —
+     so the viewer is stamped below and the store answers only what the viewer may see. */
+  monitoring:         { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
      section 4.2, section 6 row 2): *which of the four content-axis states is this
      capture in, and why*. A READ, so `mutating: false`.
@@ -1895,6 +1950,27 @@ const INTENT_READS = ["objectiveprogress", "objectivegaps", "goal", "aspirations
 /* T6-13 (reevaluation R15, R16): a member's three acts on a reference they hold, stamped `author` in the query, where
    reevaluation reads it after the body. */
 const REEVALUATION_ACTIONS = ["versionadopt", "versionkeep", "reevaluationrecord"];
+/* T8 (layer 9, K248, K250): the action layer's acts and reads, one array each per module, for the reason every array
+   here is one — they share a stamp, a capability and both session sets. `STANDARDS_ACTIONS` take their stamp in the BODY
+   (`author`, or `proposer` for the proposal), where standards reads it; the others read `author` from the QUERY, after
+   the body. Every read is stamped with the viewer. */
+const STANDARDS_ACTIONS = ["standarddeclare", "standardpropose", "standardadopt"];
+const STANDARDS_READS = ["standard", "standards", "standardinforce"];
+const CONFORMANCE_ACTIONS = ["determine", "comparisonpropose"];
+const CONFORMANCE_READS = ["determination", "determinations", "comparison"];
+const CONSEQUENCES_ACTIONS = ["consequencerecord", "consequencerevise", "addressedrecord"];
+const CONSEQUENCES_READS = ["consequence", "consequencesof", "addressed"];
+const FILINGS_ACTIONS = ["filingprepare", "filingapprove", "filingsent", "counselpacket", "counselpacketexport",
+                         "theorypropose"];
+const FILINGS_READS = ["counselpacketread", "filingsfor", "availableactions"];
+const ESCALATION_ACTIONS = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
+                            "escalationdecline", "escalationend", "escalationsuspend", "escalationresume"];
+const ESCALATION_READS = ["escalation", "escalationsdue"];
+/* The four whose modules read `author` from the query. */
+const QUERY_AUTHOR_ACTIONS = [...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS];
+const ACTION_LAYER_ACTIONS = [...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS];
+const ACTION_LAYER_READS = [...STANDARDS_READS, ...CONFORMANCE_READS, ...CONSEQUENCES_READS, ...FILINGS_READS,
+                            ...ESCALATION_READS];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -2074,6 +2150,10 @@ const SESSION_OPS = {
                       capture-requests' retry (R42), a member's act on the group's queue; in BOTH sets, because an
                       administrator is a member too. */
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
+                   /* T8: the action layer's acts and actions' risk-tier proposal (R28), a member's own acts in their
+                      own name (the proposal `actionlawspropose`'s route), in BOTH sets. */
+                   ...STANDARDS_ACTIONS, ...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS,
+                   ...ESCALATION_ACTIONS, "actionriskpropose",
                    /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
                       and a MEMBER is a signed-in person — not the MEMBER_TOKEN
                       machine credential, which stamps `token:member` and is a
@@ -2126,6 +2206,8 @@ const SESSION_OPS = {
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
                    ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
+                   ...STANDARDS_ACTIONS, ...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS,
+                   ...ESCALATION_ACTIONS, "actionriskpropose",
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2375,6 +2457,35 @@ const NEEDS = {
   /* REC-195: proposing takes `contribute` beside the act it proposes to, and the capability is the only gate
      it has — who proposed is RECORDED and labelled rather than fenced (D-149: the machine may propose). */
   actionlawspropose: "contribute",
+  /* T8 (actions R28): proposing a tier takes `actionlawspropose`'s capability, for its reason. */
+  actionriskpropose: "contribute",
+  /* T8 (layer 9): each of the action layer's acts writes the working record — a standard or a proposal, a
+     determination or a comparison, a consequence or its addressing, a filing draft, approval or sending, a counsel
+     packet or its export, an escalation's stage — so each rides `contribute`, `actioncorrespond`'s capability and the
+     version acts' reason, and NO fifth capability token is minted (CAPABILITIES.md §4). Who may act — a named member,
+     joined to the project — is the module's, asked of the stamped author: who a session IS, not a capability. */
+  standarddeclare:     "contribute",
+  standardpropose:     "contribute",
+  standardadopt:       "contribute",
+  determine:           "contribute",
+  comparisonpropose:   "contribute",
+  consequencerecord:   "contribute",
+  consequencerevise:   "contribute",
+  addressedrecord:     "contribute",
+  filingprepare:       "contribute",
+  filingapprove:       "contribute",
+  filingsent:          "contribute",
+  counselpacket:       "contribute",
+  counselpacketexport: "contribute",
+  theorypropose:       "contribute",
+  escalationopen:      "contribute",
+  escalationattach:    "contribute",
+  escalationevaluate:  "contribute",
+  escalationadvance:   "contribute",
+  escalationdecline:   "contribute",
+  escalationend:       "contribute",
+  escalationsuspend:   "contribute",
+  escalationresume:    "contribute",
   /* FW-6 / D-83: building the SUBJECT REGISTRY reshapes what the working corpus's
      statements MEAN — registering a subject, aliasing it, and declaring a
      constitutive relation between subjects (mechanical bias-statement equivalence
@@ -2758,45 +2869,17 @@ const NEEDS = {
   calibrationsignal:  "contribute",
 };
 
-/* REC-19's act decoration, hoisted to module scope by REC-20 so op=affordances
-   and op=queue share ONE function rather than one function and a copy of it.
-   The store derives WHICH acts exist (deriveActs over its own facts); this adds
-   the metadata that lives only here — the capability NEEDS gates the call with,
-   how the op is reached, and the DECLARED ladder rung. A queue item's options[] and
-   an op=affordances answer for the same subject are therefore identical by
-   construction and not by agreement, which is the property the item's suite
-   asserts byte-for-byte. */
-/* REC-16 / DEC-29(b) adds `prompt`: the wording a surface MUST show when it
-   offers this act, null wherever no ruling attaches one. It is published rather
-   than left to the client for DEC-8's reason — a surface renders what it
-   received — and it is on the act rather than in a separate table so a surface
-   that has the control necessarily has the sentence that must accompany it. */
-/* REC-38: `weight ?? null`, and the null is STATED rather than the key being
-   dropped — this file's own rule for `rung` one line down, applied to the one
-   other declared field. Every entry in ACTS carries a weight, so nothing about
-   the act catalogue changes; CAPTURE_ACTS entries carry none, because a capture
-   act is not selection-backed and there is no set-application weight to report.
-   Omitting the key would let a surface read `undefined` and guess; publishing
-   null says the record has no such number for this act. */
-const decorateAct = (a) => ({
-  id: a.id, label: a.label, weight: a.weight ?? null,
-  needs: NEEDS[a.id] ?? null,
-  mode: SESSION_OPS.member.has(a.id) ? "session"
-      : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",
-  rung: RUNGS[a.id] ?? null,
-  /* FW-14. `rung: null` NOW MEANS SOMETHING IT DID NOT MEAN BEFORE, and this key
-     is what makes the difference legible to a surface. Until this item a null
-     rung meant "nobody has classified this"; every mutating op is now either
-     rung-bearing or NAMED IN `RUNG_ABSENT` with the ground on which it has none,
-     asserted total in both directions. So a null rung beside a stated ground is
-     a CLASSIFIED ABSENCE — undetermined stated, which CLAUDE.md makes
-     first-class — and a null rung beside a null ground is the shape that can no
-     longer reach a caller, because the suite refuses to let such an op exist.
-     Published rather than left implicit for DEC-8's reason: a surface must be
-     able to render "this act has no rung, because <ground>" without computing
-     the sentence itself. */
-  rung_absence: RUNG_ABSENT[a.id]?.ground ?? null,
-  prompt: a.prompt ?? null,
+/* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
+   op=affordances answer for the same subject are identical by construction and not by agreement. N177 (T8): the
+   decoration itself is affordances' `decorate(act, gate)` (its R11) — `id`, `label`, `weight`, the DECLARED rung and
+   the ground of a stated absence (FW-14), and DEC-29(b)'s `prompt`, each a stated null where the record holds none.
+   The GATE is the one half that lives only here: the capability `NEEDS` gates the call with, and how the op is
+   reached (`SESSION_OPS`), read from the very tables that gate it, so the publication and the gate cannot drift.
+   `ACT_GATE` is read only when a request is decorated, after both tables exist. */
+const decorateAct = (a) => decorate(a, ACT_GATE);
+const ACT_GATE = Object.freeze({
+  needs: (id) => NEEDS[id] ?? null,
+  mode: (id) => SESSION_OPS.member.has(id) ? "session" : SESSION_OPS.admin.has(id) ? "admin-session" : "machine",
 });
 
 const SCRATCH = "scratch";
@@ -4775,21 +4858,20 @@ export default {
        An `action` bundle returns an empty act list because nothing operates one
        until REC-24, and an empty list is the honest answer. */
     if (op === "affordances") {
-      /* REC-20 hoisted this to module scope (decorateAct) so op=queue's
-         options[] and this answer come from the SAME function. */
-      const decorate = decorateAct;
+      /* REC-20: op=queue's options[] and this answer come from the SAME function (decorateAct, affordances'
+         `decorate` over this file's gate). */
       const target = url.searchParams.get("target");
       if (!target) {
         /* No target: the whole catalogue and the vocabularies, the shape a
            surface loads once — searchfields' precedent exactly. */
         return json({ ok: true, result: {
           target: null,
-          catalog: ACTS.map((a) => ({ ...decorate(a), appliesTo: a.types })),
+          catalog: ACTS.map((a) => ({ ...decorateAct(a), appliesTo: a.types })),
           vocabularies: VOCABULARIES,
-          capture_acts: CAPTURE_ACTS.map(decorate),
+          capture_acts: CAPTURE_ACTS.map(decorateAct),
           /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
              decorated from the same tables as every act, with the bound the store enforces. */
-          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorate(a), set_key: a.set_key, item_keys: a.item_keys,
+          set_acts: PER_ITEM_ACTS.map((a) => ({ ...decorateAct(a), set_key: a.set_key, item_keys: a.item_keys,
                                                shared_keys: a.shared_keys, max_items: PER_ITEM_MAX })),
           detail: "pass target=<bundle id> for the acts available on that object right now; "
                 + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
@@ -4845,7 +4927,7 @@ export default {
       return json({ ok: true, result: {
         target: facts.target, object_type: facts.object_type,
         current_state: facts.current_state,
-        acts: deriveActs(facts).map(decorate),
+        acts: deriveActs(facts).map(decorateAct),
         vocabularies: VOCABULARIES,
         /* REC-38. The SAME block the no-target catalogue answers, and it is
            deliberately NOT filtered by this target: a capture act's subject is
@@ -4856,7 +4938,7 @@ export default {
            object; deriving one here would be the publication disagreeing with
            op=attest's own NO_SUCH_CAPTURE. The reasoning is on CAPTURE_ACTS,
            where both consumers of the distinction read it. */
-        capture_acts: CAPTURE_ACTS.map(decorate),
+        capture_acts: CAPTURE_ACTS.map(decorateAct),
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -4867,9 +4949,9 @@ export default {
 
        Composed the way op=affordances is, and for the same reason: the store
        derives the ITEMS and the homes (it holds the edges and the D-15
-       predicate), and the act metadata is added HERE, where NEEDS, SESSION_OPS
-       and RUNGS live — through decorateAct, the SAME function op=affordances
-       uses, so the two answers cannot drift.
+       predicate), and the act metadata is added HERE, where NEEDS and SESSION_OPS
+       live — through decorateAct, the SAME function op=affordances uses (the
+       rungs are affordances'), so the two answers cannot drift.
 
        TWO server-side stamps, both set AFTER nothing of the caller's is read,
        because either one taken from the request would defeat the other:
@@ -5606,6 +5688,15 @@ export default {
            member sees its own unpublished pairing — beside the administer stamp below. Without either the store
            answers the published pairings alone (fails closed). */
         || op === "memberpairings"
+        /* T8 (layer 9): every act and read of the action layer names a determination, a standard, an act, an
+           action, a filing, a packet or an escalation, each seen through the project it belongs to, so each module
+           answers one the viewer may not see exactly as an absent one. Fails closed on an absent stamp. */
+        || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op)
+        /* T8 (actions R28): the risk-tier proposal names an action and reads it behind the fail-closed gate before it
+           writes, `actionlawspropose`'s reason. */
+        || op === "actionriskpropose"
+        /* T8 (monitoring R32): the monitored sources name bundles, `driveshells`' reason (REC-25). */
+        || op === "monitoring"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -5857,6 +5948,26 @@ export default {
     if (op === "actionlawspropose")
       inner.searchParams.set("proposer",
         viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T8 (actions R28, ACTIONS #1 J2.5): WHO PROPOSED A RISK TIER, by the line above's expression and for its reason —
+       the label is the whole product, and a caller-supplied `proposer` is overwritten. */
+    if (op === "actionriskpropose")
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T8 (layer 9): WHO DETERMINED, COMPARED, RECORDED A CONSEQUENCE OR ITS ADDRESSING, PREPARED, APPROVED OR SENT A
+       FILING, NAMED COUNSEL, EXPORTED A PACKET, PROPOSED A THEORY, OR MOVED AN ESCALATION — conformance, consequences,
+       filings and escalation read `author` from the QUERY after the body, so it is set here, after the caller's
+       parameters were copied, and a caller's is overwritten. It is the POSITIONAL identity (`member:<id>`, the
+       founder's `member:admin`), intent's expression, because each module asks membership's `projectAuthority` of it and
+       a bare id would read as nobody there; a machine credential stamps `class:<cls>` and an `ai` credential
+       `class:ai/<tokenId>`, each a machine identity every act refuses BY NAME and every proposal labels as machine work —
+       NEVER a key's principal, which would put an assistant's act under a person's name. */
+    if (QUERY_AUTHOR_ACTIONS.includes(op))
+      inner.searchParams.set("author",
+        viaSession ? sessIdentity
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* SK-7 / framework Part II §14.4 (Bob's 5.7) — WHO MARKED THIS PASSAGE AS
@@ -6775,6 +6886,26 @@ export default {
             if (!viaSession)
               b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
           }
+          passBody = JSON.stringify(b);
+        }
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* T8 (standards R1, R9, R10): WHO RECORDED OR ADOPTED A STANDARD, AND WHO PROPOSED ONE — standards reads `author` and
+       `proposer` from the BODY (its `viewer` from the query, after the body), so each is stamped into the body here and a
+       caller's is overwritten; the proposal takes `proposer` and the other two `author`, the one key each accepts. The
+       layer's expression (`QUERY_AUTHOR_ACTIONS` above): the positional identity for a session, `class:<cls>` or
+       `class:ai/<tokenId>` for a machine, which standards refuses BY NAME at a declaration or an adoption
+       (MACHINE_CANNOT_DECLARE_STANDARD) and labels as machine work on a proposal. An empty POST body is stamped too. */
+    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          const who = viaSession ? sessIdentity
+            : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+            : `${MACHINE_CLASS_PREFIX}${cls}`;
+          delete b.author;
+          delete b.proposer;
+          if (op === "standardpropose") b.proposer = who; else b.author = who;
           passBody = JSON.stringify(b);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
