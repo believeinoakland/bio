@@ -1,6 +1,6 @@
 # basis-versions (T10)
 
-**Status** · session_016q7pJH6bnNGAnXFMFWBYoL · depth 2 · COMPLETE · handled B1
+**Status** · session_016q7pJH6bnNGAnXFMFWBYoL · depth 2 · COMPLETE · handled B2
 
 BASIS-VERSIONS #2 (the first session of this job; #1 left no record on this branch).
 
