@@ -141,8 +141,8 @@ export class Strength {
     return new Map(Object.entries((reg && reg.earned && reg.earned.capture) || {}));
   }
 
-  #legsOf(id) {
-    const b = this.inquiry.basisFor(id);
+  #legsOf(id, opts = undefined) {
+    const b = this.inquiry.basisFor(id, opts);
     return (b && Array.isArray(b.legs)) ? b.legs : [];
   }
 
@@ -606,7 +606,7 @@ export class Strength {
         parts.push({ label, ords: [...ords] });
       }
       /* The question's own reasons, read one past the bound so a basis larger than a reading may hold is observed. */
-      const legRows = this.#legsOf(inq).slice(0, VERSION_LEGS_MAX + 1)
+      const legRows = this.#legsOf(inq, { limit: VERSION_LEGS_MAX + 1 })
         .map((l) => ({ ord: l.ord, target_id: l.target_id, target_type: l.target_type, role: l.role }));
       if (legRows.length > VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
