@@ -27,7 +27,7 @@
 
 **Deferred.** `op=stats` (N266, K302). The `standardsOf(ctx).migrate()` call goes once standards migrates at construction (N267).
 
-**Found in other modules (REPORT J3).**
+**Found in other modules (REPORT J2).**
 - **standards:** its factory declares its tables to purge but never creates them (K267's defect). This is N267, and the control below measured it.
 - **legacy-tests:** three suites need re-anchoring:
   - `project-sight` 11g++ needs the sweep to read `standardsOps`, `conformanceOps`, `consequencesOps` and `filingsOps` (T8's loop; standards' and conformance's maps read parameters through `qp("…")`, not `q("…")`).
