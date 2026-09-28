@@ -19,3 +19,27 @@ My readings where the plan, map and requirements leave something open. I am buil
 
 1. **R21/R22, revised.** The ratification and case-authoring maps already say it: `ratifyCaseDocument`'s and `publish`'s inserts "become calls to `publication.commitCaseEdition` / `commitEdition`" and `publishCase`'s insert "becomes `publication.storeCaseDocument`", when those jobs move the functions (their maps §1 and §6). So I build R21 and R22 in `publication`, with tests, and I **do not** carve the SQL out of `publishCase`, `#reauthorAcknowledgements`, `ratifyCaseDocument` or `publish` in the store. Those functions leave with their own jobs, and each job rewires its own writes to R21/R22. In the store I rewire only the calls those functions make to private methods that move to me (`#publishEdges`, `#dischargeCaseFlags`, `#caseEditionState`, `#caseDocMemberFrozen`, `#pinnedCaseEditionsOf`, `#soleCase`, `#ratifiedFindingsRestingOn`, `#frozenFromPinningDocuments`, `#casesOfSha`, `#projectCaseExclusions`, `#attributionStatements`, `#hasCaseStanding` …). Each becomes a one-line `publicationOf(this.ctx).<name>(…)`. That keeps the merge conflicts with RATIFICATION #1 and CASE-AUTHORING #1 to those call lines. `#reauthorAttributions` is mine, and it moves and calls `reauthorSection` itself.
 2. **R20, the formats.** `checkCaseDocument` (C-41) in `bio-checks.mjs` still reads `CASE_DOCUMENT_FORMAT*` and the three predicates, and legacy-checks is first in the order, so it cannot import them from me. My reading: `publication` exports R20 (re-exported from `bio-checks.mjs` for now), and every caller outside the catalogue imports it from `publication`. The definition moves physically into `publication` once C-41 leaves the catalogue (with ratification). A second copy would break R20's "one reading". The map's §5 "re-exports in legacy-checks" is impossible for the same reason (the catalogue cannot import a later module).
+
+## J3 · REPORT
+
+**Provides ready for the early merge (B2 item 1).** R21, R22, R23 and R38–R40 are built and tested on `job/T8/publication`, which is pushed, so you can merge it into `tranche/T8`.
+
+- **R21:** `storeCaseDocument({case, edition, text, author, at?, draft?})` and `reauthorSection({case, edition, docSha, section, lines: {frontmatter, body}})`. The sections are `attribution` and `acknowledgements`. Both answer `{case_id, edition, doc_sha}` read back.
+- **R22:** `commitEdition` and `commitCaseEdition` in B4's shapes (`case` or `caseId`). `commitCaseEdition` answers `awaiting` and `state`. `commitEdition` carries all of `publish`'s commit half, plus R35 (`namesServed` when a name edge turned into a serve edge).
+- **R23:** `registerReviewProvider(provider)` or `registerReviewProvider(module, provider)`, with the doors `{draftForMember, draftIdentity, caseIdentitySentence, statedEdition, liveGrant, grantAdmitsCaseEdition, deadAnswer}`. `legacy-store` registers them in its constructor. With none registered, every door refuses and `deadAnswer()` gives C-87.1's bytes.
+- **R38:** `pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn` and `caseClaimsOf`.
+- **R39:** `attributionInForce`.
+- **R40:** read contract, tested by the columns.
+
+**Also on the branch:**
+- The store reaches everything that moved through one-line private delegates (B3). The movers' bodies are untouched.
+- The facts `caseMember`, `publishedRegistry` and `publishedCaseRegistry`, and the revision-flag projection, are registered by `publication`. legacy-store's two registrations are removed (K206, N152).
+- `index.mjs` binds its helpers to `publication/worker.mjs` and delegates `op=publishedcase` and `op=publishedbytes`.
+- For callers outside the catalogue, R20 is exported from `publication` (re-exported from `bio-checks.mjs`).
+
+**Tests:**
+- `test/m/publication/`: 41 pass, 0 fail.
+- Old battery: casesign, casepin, rec170-manifest-pair and exportnotice pass under miniflare.
+- Checks: format 0 failures; architecture 0 failures; ownership 1 failure, the N127 lines (store 8106–8108) you said you would read at the close.
+
+I am still working: R13, R15, R16, R18, R19, R31, R33, R34 tests, R30 and R32 as `test.todo`, and the full REPORT on other modules. COMPLETE follows.
