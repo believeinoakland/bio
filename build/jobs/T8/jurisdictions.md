@@ -22,3 +22,32 @@ Generated artifacts this job made stale (mechanics §14). I have written none of
 2. **`bio-plane/dist/bio-plane.bundled.mjs`** (owner: `not_product`). It also inlines `../jurisdictions/index.mjs`, including the removed `RECORDS_LAW_LEVELS`. The staleness check does not flag it, but it is out of date the same way. `bio-plane/`: `npm run build`.
 
 On the service I provide: `standard_sources` entries now require a `level` (R23, `LEVEL_UNKNOWN` without one), and `RECORDS_LAW_LEVELS` is replaced by `LAW_LEVELS` (R31). Nothing outside this module imported the old export. I ran the tests of every module that uses jurisdictions, and all are green: id-spaces 26/26, docprofile 35/35, capture 56/56, extraction 65/65, entities 34/34.
+
+## J3 · COMPLETE
+
+**Entries applied** (plan layer 1, the jurisdictions bullet):
+- **N130 / N61 / N65 (4) (K102, K108).**
+  - R31: `LAW_LEVELS` = `federal`, `state`, `county`, `city` is exported, frozen, and is the vocabulary of `records_laws` and `standard_sources`. An office keeps its own levels.
+  - R23: every standard source has a `level`.
+  - R24: optional `oversight`. The first profile gives it to the Civil Grand Jury and to a new City Auditor counterparty, both `UNMEASURED`.
+  - R25: `advisory`, on Tier 2 only.
+  - R32: `legal_organisations`. The test profile has them; the first profile leaves them absent, per K227 (Bob's to decide).
+  - R33: `holidays`. The test profile has them; the first profile leaves them absent.
+  - R34: organisations are unioned; a year's days are one value, and their order is no disagreement.
+  - R29: `advisory`, and `oversight` per role + body, are one value.
+  - R35: the new codes are `ADVISORY_NOT_TIER2`, `ORG_KIND_UNKNOWN`, `CONTACT_INVALID` and `HOLIDAY_INVALID`.
+  - R36: the first profile gains the Tier 2 and Tier 3 kinds of DR8 and Roadmap §8 (basis D-182): `records_petition` (Tier 2, venue Alameda County Superior Court, advisory), then `assessment_challenge`, `taxpayer_action`, `consent_decree_motion` and `constitutional_claim` (Tier 3). R30's eight kinds stay first and in order.
+- **N77 → R37 `locale`.** `{value, basis}`, one well-formed BCP 47 tag, combined as one value. The first profile is `en-US` `UNMEASURED`; the test profile is `en-GB`.
+- **N96 → R38 `systems[].links`.** `{item, file}` patterns that take the entry's basis. The first profile's own-host Legistar entry carries REC-206's gateway shapes, basis `M-119 LEG, M-120`. The test checks them against REC-206's `MEMBERSHIP_SHAPES` (copied as the oracle) on a sample set. The shapes also apply on the alias host `oakland.legistar1.com`, which is the same system (M-119 LEG), though REC-206 measured only `*.legistar.com`.
+
+**Deferred:** none. **Other modules:** J2 (two stale bundles).
+
+**Tests:** `node --test jurisdictions/test/` gives tests 44, pass 44, fail 0. Every live id R1–R38 is named: R17–R22 and R30 as before; R29, R31–R38 new or extended. The users' suites are listed in J2.
+
+**Checks:**
+- format: 69 modules, 64 requirements files; 0 failures
+- architecture: 5 product files, 4 relative imports; 0 failures
+- coverage: 38 of 38 live requirement ids named by a test; 0 failures
+- ownership: 6 files changed by jurisdictions between tranche/T8 and HEAD; 0 failures
+
+Size (session_01UJt3cBwB4ov538dcch58B8): test runs 15, module lines 1206
