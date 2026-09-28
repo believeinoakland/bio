@@ -43,11 +43,11 @@ Five points; I carry on meanwhile on the best reading of each. Already doing now
 **Improvement made in moving.** A stage declared without a label was worded `'null'` in the item's summary and detail. It is now named by its key.
 
 **Deferred**, per B4:
-- Coverage for R6–R8, R10, R11, R13–R15, R17–R31 (bar R26's classing), R34–R40: that feed is still in legacy-store and is owed by queue's extraction job (N173). The ids named here are R1–R5, and N107's share of R9, R12, R16, R32 and R33. R32 and R33 are checked only for this producer's items.
+- Coverage for R6–R8, R10, R11, R13–R15, R17–R31, R34–R40: that feed is still in legacy-store and is owed by queue's extraction job (N173). The ids named here are R1–R5, and N107's share of R9, R12, R16, R32 and R33. R32 and R33 are checked only for this producer's items.
 - N112's two reads: N171.
 - Q4 and Q5: N172.
 
-**Found in other modules:** REPORT J3.
+**Found in other modules:** REPORT J2.
 
 **Tests and checks** (on `job/T7/queue`, the tranche merged at `1c78e949e6`):
 - `node --test bio-plane/test/m/queue/`: tests 10, pass 10, fail 0.
@@ -55,7 +55,7 @@ Five points; I carry on meanwhile on the best reading of each. Already doing now
 - Legacy suites, base (`tranche/T7`) against head:
   - The same 15 suites (`queue`, `proposedispose`, `d552-instance-disposition`, `queue-state`, `queue-conditions`, `current`, `d125-findingmute`, `d266scope`, `exportnotice`, `leadslug`, `d86-bias-debt`, `severedhomes`, `observation-log`, `observation-content`, `airun`) give identical PASS/FAIL counts on both. Most queue suites die on intent's `NO_OBJECTIVE` (K207; legacy-tests').
   - With that fixture given an objective in scratch copies only (`surfacing-run.mjs`, `queue.test.mjs`): `queue` 36/0 and `d125-findingmute` 42/0 on both base and head.
-- `civicos-ui/check-refusal-codes.mjs`: base 145 failures, head 146. The one new failure is arm E's `vocabularyTerms` ratchet at 113 → 114, the catalogued `cardinality_exceeded` term (REPORT J3.2).
+- `civicos-ui/check-refusal-codes.mjs`: base 145 failures, head 146. The one new failure is arm E's `vocabularyTerms` ratchet at 113 → 114, the catalogued `cardinality_exceeded` term (REPORT J2.2).
 - `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
 - `node checks/architecture.mjs … queue`: 4 product files, 9 relative imports; 0 failures.
 - `node checks/coverage.mjs … queue`: 10 of 40 live ids named; 1 failure, the deferred ids above (B4).
