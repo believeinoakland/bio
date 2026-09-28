@@ -1,6 +1,6 @@
 # legacy-tests (T8)
 
-**Status** · session_01CbeAzHStemFoTD8gQHPzK6 · depth 2 · RUNNING until 2026-09-28T14:09:47Z (final old battery, 369 suites) · handled B2
+**Status** · session_01CbeAzHStemFoTD8gQHPzK6 · depth 2 · RUNNING until 2026-09-28T14:09:47Z (final old battery, 369 suites) · handled B3
 
 ## J1 · REPORT
 
