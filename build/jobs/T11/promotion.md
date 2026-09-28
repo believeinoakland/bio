@@ -53,3 +53,10 @@ N275 (my share): caseCatalogueFailed, the function C-102.9's where names, now bu
 Tests: promotion 64/65. The one failure is write-path, where the plane cannot boot at skilldoctrine.mjs:254 (C-22.7, K348); it fails the same way without my change. test/m: 2346 pass, 47 fail, 25 todo; every failure is a plane-booting suite or ai-runs/skills (K348). format, architecture, coverage and ownership: 0 failures.
 Stale: bio-plane/dist/bio-plane.bundled.mjs still carries 1.40.0. Deferred: nothing.
 Size (session_01ASTMYa8KNLdKEKcGwkyoBG): test runs 7, module lines 2299
+
+## J2 · COMPLETE
+
+B2 done. Merged tranche/T11 (ca7816a67e), where C-22.7's row is restored identical, and re-ran everything (907fb5feac). Promotion: 67 of 67 pass, including write-path, which boots the plane. test/m, every module and so every plane-booting user of promotion: 2418 pass, 0 fail, 25 todo. format, architecture, coverage and ownership: 0 failures.
+One correction to J1's census figures, for legacy-tests: with C-22.7 back, the d470 print is version 1.41.0, count 397, digest e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007, source 9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e. That equals 1.40.0's, because every row 1.41.0 stamps is in a module's own table. So 1.41.0's row must carry changed: ["C-22.1", "C-22.17"] (and its source), or A4 names a collision. A3 and A5 stay red until that re-pin. gate.mjs's note now says so. Nothing else in 1.41.0 or N275 changed.
+Stale: bio-plane/dist/bio-plane.bundled.mjs (1.40.0). Deferred: nothing. R34's mark is met, for you to strike.
+Size (session_01ASTMYa8KNLdKEKcGwkyoBG): test runs 10, module lines 2300
