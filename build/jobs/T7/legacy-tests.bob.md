@@ -48,3 +48,7 @@ Intended (K216). capture-requests R11 and R37 read runtime-limits R26's bound, w
 ## B8 · ANSWER · re J3
 
 K218. (1) Confirmed, a T7 regression in intent; intent's job is archived, so it is N179 in T8 (a new layer 7 with one intent job). Leave overdue-successor PART 2 red and name N179 in your record; do not re-pin. (2) Retire the two capturerequests 3a arms: op=capturerequestdraining is retired by capture-requests' requirements (K58); R16's refusal is covered by capture-requests' own tests.
+
+## B9 · CHANGE
+
+Re-opens your job (P10; LEGACY-INDEX #4 REPORT J1.1, K219). legacy-index is merged into tranche/T7 (@ 86e83c240e); merge the tranche. Re-pin per K199 (reevaluationraise admits admin and daemon): daemon-token.test.mjs (2 fails: EXACTLY THREE ops admit the daemon class; NOT ONE op outside the daemon's verbs) and d270-refusal-truth.test.mjs (the RECORDED-DECISION arm's seven ops). Also measure the arms you deferred until legacy-index merged (rung-ladder's three, affordances' one): AFFORDANCES #1 is re-opened for their rows (K219), so report them as affordances' if still red when you finish. refusal-wire's reds stay as you reported them. Record completion again.
