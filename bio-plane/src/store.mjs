@@ -140,11 +140,17 @@ import { parseFrontmatter, checkInboxGrammar, MECHANICAL_FIELD_SETS,
          CASE_DOCUMENT_FORMAT,
          lawProposalLabel } from "../checks/bio-checks.mjs";
 import { actionsOf, actionsOps } from "./actions/index.mjs";
+/* N216 (K250): the layer-9 modules built with no `from`, constructed on this object's host and their ops dispatched here. */
+import { standardsOf, standardsOps } from "./standards/index.mjs";
+import { conformanceOf, conformanceOps } from "./conformance/index.mjs";
+import { consequencesModule, consequencesOps } from "./consequences/index.mjs";
+import { filingsOf, filingsOps } from "./filings/index.mjs";
+import { escalationOf } from "./escalation/index.mjs";
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, routeFinding, observerRef, TESTIMONY_PATH, PROVENANCE_TABLES } from "./provenance/index.mjs";
-import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
+import { Membership, membershipOf, membershipOps, noSuchProject } from "./membership/index.mjs";
 import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { runProductionsOf, runProductionsOps, runProductionsOwns, runProductionsInterim, posFields } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps, renderHoldReason } from "./capture-requests/index.mjs";
@@ -306,7 +312,6 @@ import { checkConsume } from "./airun.mjs";
    may attest — the eleven-copies-of-one-predicate failure REC-46 measured is
    the reason nothing below re-derives any of it. */
 import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribed,
-         terminalStep, gradeCeiling, STEP_KINDS,
          calibrationsOf,
          /* REC-94: WHICH TIERS A CHAIN EVIDENCES, read off the step kinds' own
             declared tier. It lives in `textchain.mjs` because it is a question
@@ -439,7 +444,7 @@ import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";
  * all, and that header named the honest fix as *"the refusals consolidated
  * behind one helper so there IS one site"* and routed it rather than attempting
  * it. This is that fix for the two codes D-484 names: `NO_BASIS` was minted at
- * four sites and `NO_CITATION` at three, and each now has exactly one.
+ * four sites and `NO_CITATION` at three, and each now has exactly one. `NO_BASIS`'s is inquiry's `actNoBasis` (N186).
  *
  * THE CODE IS A STRING LITERAL HERE, which is DEC-49's rule and the reason the
  * consolidation works at all: the guard's arm C COMPARES a literal and reads
@@ -454,21 +459,6 @@ import { TESTIMONY_GRADE } from "../checks/bio-checks.mjs";
  * translation is the MEMBER's answer and the detail is the caller's. What is new
  * is `code`, `check` and `translation` beside them. No existing reader loses a
  * key it read. */
-
-function actNoBasis(detail, extra = {}) {
-  /* DEC-49 REGION is-act-no-basis — D-484 / C-33.40. The ONE site at which the
-     plane says a thing the record would have to stand behind rests on nothing:
-     a conclusion with no legs, a grouping of a question that rests on nothing, a
-     grade-D testimony with no stated basis, a revision of a declared flow that
-     does not say why it changes. */
-  const row = ACT_SHAPE_CHECKS.NO_BASIS;
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error("actNoBasis: NO_BASIS has no ACT_SHAPE_CHECKS row with a canned translation "
-                  + "(DEC-49). A code with no sentence behind it must not reach a member.");
-  return { ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check,
-           translation: row.translation, detail, ...extra };
-  /* END DEC-49 REGION is-act-no-basis */
-}
 
 function actNoCitation(detail, extra = {}) {
   /* DEC-49 REGION is-act-no-citation — D-484 / C-33.41. The ONE site at which the
@@ -597,6 +587,9 @@ export class Store extends DurableObject {
        D-486) and the selection sweep's arming (scheduler). */
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
     aiRunsOf(ctx, env);   /* ai-runs (K61) registers with retrieval before legacy-store does, in the modules' order */
+    /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
+       `deps` on the first call only, so created there it would never see `env` (its R25). */
+    reevaluationOf(ctx, { env });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("legacy-store", (legs) => {
       const cap = this.earnedBasisRegistry(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
@@ -619,15 +612,13 @@ export class Store extends DurableObject {
     connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
-    reevaluationOf(ctx, { env });
     ratificationOf(ctx);   /* ratification (K61): its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
     strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
       legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },
       versions: basisVersionsOf(ctx) });   /* strength (K61), over inquiry's and basis-versions' own services */
-    /* bias (K61): joins every promotion before legacy-store (R8–R10); the store registers the AI runs as the bias debt's
-       work products (R33) and arms the scheduler on a lens change (R23) until ai-runs and scheduler are extracted. */
-    const bias = biasOf(ctx, { env });
+    /* bias (K61): joins every promotion before legacy-store (R8–R10). */
+    biasOf(ctx, { env });
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its
        tables to purge (R17) and registers its candidates with basis-versions (R14). ai-runs is handed over
        as its own module (its R28–R29). */
@@ -637,10 +628,19 @@ export class Store extends DurableObject {
     reviewOf(ctx);
     intentOf(ctx);   /* intent (K61, K198): its check (R1, R2, R26) joins every promotion before legacy-store's; its audit check keeps C-2.9 (R22) */
     caseAuthoringOf(ctx);
+    /* N216 (K250): layer 9, in the modules' order, each registering at start what its factory registers (checks,
+       projections, purge, filings' evidence block). standards' factory creates no tables, so they are created here. */
+    standardsOf(ctx).migrate();
+    const conformance = conformanceOf(ctx);
+    const consequences = consequencesModule(ctx, { conformance });
+    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences,
+                     producingGroup: () => this.#producingGroup() });
+    escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
-    /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
-       runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
+    /* capture R44, R55 (K72 (9), K99): legacy-store registers with capture the arming of its own task drain (a scheduler
+       consumer, below), and the observation log's rows and the runtime measurement until observation-log and
+       instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
     /* capture-requests (K58, K61): its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs'
        (its R28), and it registers its wait source with ai-runs (ai-runs R41). */
@@ -5598,12 +5598,9 @@ export class Store extends DurableObject {
         proj, ...gate.args);
       /* REC-149: at EXISTENCE the positional C-70.1; NONE falls to the unchanged answer below. */
       if (!row) { const existence = this.#existenceAct(proj, viewer); if (existence) return existence; }
-      if (!row || normalizeType(row.object_type) !== "project")
-        return { ok: false, reason: "NO_SUCH_PROJECT", project: proj, finding: find,
-                 detail: "the project a judgment-layer disposition is scoped to must be a PROJECT "
-                       + "bundle this viewer can see. Absent and invisible answer identically here "
-                       + "and that is deliberate (REC-25): a refusal that told them apart would "
-                       + "disclose the existence of a project the caller was not invited to." };
+      /* The scope must be a PROJECT this viewer can see; absent and invisible answer identically (REC-25), through
+         membership's one answer (R78, N208). */
+      if (!row || normalizeType(row.object_type) !== "project") return noSuchProject(proj, { finding: find });
       /* REC-134: the gate above is SIGHT, and every administrator sees every project. The
          judgment it records is that TEAM's (D-266: *"a stance is expressly one project's own
          property"*), so the decider must have JOINED the project it acts for (Membership v2
@@ -5700,9 +5697,8 @@ export class Store extends DurableObject {
    *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
    *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
    *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
-   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all —
-   *  `#frontierDocumentVisible`'s posture one method away (*a missing stamp is an outage and never a
-   *  leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
+   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all
+   *  (*a missing stamp is an outage and never a leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
   #hiddenSets(viewer) {
     const gate = viewer === undefined ? null : viewerPredicate(viewer);
     const hid = gate && gate.scope !== "member"
@@ -6295,15 +6291,6 @@ export class Store extends DurableObject {
                  + "NOT rewritten: whatever group their bytes name is what they were signed under." };
   }
 
-  /* DECISION (c)'s refusal, ONE site however many acts need it, so its DEC-49 row can name one smallest span. */
-  #groupUndetermined(act, detail) {
-    /* DEC-49 REGION is-group-undetermined */
-    const row = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
-    return { ok: false, reason: "GROUP_UNDETERMINED", code: "GROUP_UNDETERMINED", check: row.check,
-             translation: row.translation, act, detail };
-    /* END DEC-49 REGION is-group-undetermined */
-  }
-
   /* =====================================================================
    * REC-164 — THE PUBLISHING GROUP'S DISPLAY NAME AND ITS VERIFIED DOMAIN. `BIO_Publication_v0_1.md` §7 points 2
    * and 3 (BOB #24, 2026-09-21), resting on point 1's public slug (REC-163).
@@ -6695,6 +6682,10 @@ export class Store extends DurableObject {
     /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
        C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
     projectrequests: ["projectId"],
+    /* N193: a document's bundle id. N216's layer-9 reads naming a record object's bundle, or (`determinations`) a project. */
+    connectionsasserted: ["bundle"],
+    standard: ["id"], standardinforce: ["id"], determination: ["id"], determinations: ["project"], consequence: ["id"],
+    escalation: ["id"],
   });
   static PROJECT_NAMING_READS_NOT = Object.freeze({
     content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
@@ -6717,6 +6708,13 @@ export class Store extends DurableObject {
     publishedcase: "`id` is a PUBLISHED case — the published record, served to anybody",
     publishededitions: "`id` is a PUBLISHED case — the published record, served to anybody",
     caseflags: "`case` and `target` name a case and its member finding, every field already published",
+    /* N89, N193 (N112, K210): `pdfstructure` beside `reading`. */
+    archivelookup: "`address` is a source address", pdfstructure: "`sha256` is a CAPTURE's digest",
+    contentcrop: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
+    filemembership: "`sha256` is a CAPTURE's digest",
+    /* N216's layer-9 reads whose id names a row inside a project, never a bundle. */
+    comparison: "`id` is a comparison PROPOSAL id — a thing inside a project, whose existence is contents",
+    counselpacketread: "`id` is a COUNSEL PACKET id — a thing inside a project, whose existence is contents",
   });
   #existenceRead(op, url, body) {
     const params = Object.prototype.hasOwnProperty.call(Store.PROJECT_NAMING_READS, op)
@@ -6756,17 +6754,12 @@ export class Store extends DurableObject {
   static PROJECT_REQUESTS_LIMIT = Membership.PROJECT_REQUESTS_LIMIT;
   #rosterInSight(...a) { return membershipOf(this.ctx).rosterInSight(...a); }
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
-     hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
+     hidden project's revision answers with it rather than with membership's `noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
   /* REC-190, D-476, D-530, D-556: the census of displaced homes and whether the register holds a capture:
      provenance's (R5, R10). */
   homeCensus(...a) { return provenanceOf(this.ctx).homeCensus(...a); }
   registerHolds(...a) { return provenanceOf(this.ctx).registerHolds(...a); }
-  static #noSuchProject(project) {
-    return { ok: false, reason: "NO_SUCH_PROJECT", project: project ?? null,
-             detail: "no project answers to that id here. A project you cannot see is answered exactly as one "
-                   + "that does not exist (Membership Architecture v2 §7.9), so this is not a hint either way." };
-  }
   #ownsAnyProject(...a) { return membershipOf(this.ctx).ownsAnyProject(...a); }
 
   #isProjectEditor(...a) { return membershipOf(this.ctx).isProjectEditor(...a); }
@@ -7670,6 +7663,8 @@ export class Store extends DurableObject {
   biasDebtResolve(a) { return biasOf(this.ctx).biasDebtResolve(a); }
   biasDebtRead(a) { return biasOf(this.ctx).biasDebt(a); }
 
+  static #numberParam(url, k) { const v = url.searchParams.get(k); return v === null || v === "" ? undefined : Number(v); }
+
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -7941,6 +7936,36 @@ export class Store extends DurableObject {
            selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
         ...retrievalRoutes(retrievalOf(this.ctx), url, body),
         ...actionsOps(actionsOf(this.ctx), url, body),
+        /* N216 (K250, K263): layer 9's ops. escalation publishes no op map, so its ten are named here (LEGACY-INDEX #5's
+           table, K262); `author` and `viewer` are the control plane's stamps, read from the query after the body, and
+           `now` and `limit` are numbers or absent. */
+        ...standardsOps(standardsOf(this.ctx), url, body),
+        ...conformanceOps(conformanceOf(this.ctx), url, body),
+        ...consequencesOps(consequencesModule(this.ctx), url, body),
+        ...filingsOps(filingsOf(this.ctx), url, body),
+        escalationopen: () => escalationOf(this.ctx).escalationOpen({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                       viewer: url.searchParams.get("viewer") }),
+        escalation: () => escalationOf(this.ctx).escalationRead({ id: url.searchParams.get("id"),
+                                                                  nowMs: Store.#numberParam(url, "now"),
+                                                                  viewer: url.searchParams.get("viewer") }),
+        escalationattach: () => escalationOf(this.ctx).escalationAttach({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                           viewer: url.searchParams.get("viewer") }),
+        escalationevaluate: () => escalationOf(this.ctx).escalationEvaluate({ ...(body || {}),
+                                                                               author: url.searchParams.get("author"),
+                                                                               viewer: url.searchParams.get("viewer") }),
+        escalationadvance: () => escalationOf(this.ctx).escalationAdvance({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                             viewer: url.searchParams.get("viewer") }),
+        escalationdecline: () => escalationOf(this.ctx).escalationDecline({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                             viewer: url.searchParams.get("viewer") }),
+        escalationend: () => escalationOf(this.ctx).escalationEnd({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                     viewer: url.searchParams.get("viewer") }),
+        escalationsuspend: () => escalationOf(this.ctx).escalationSuspend({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                             viewer: url.searchParams.get("viewer") }),
+        escalationresume: () => escalationOf(this.ctx).escalationResume({ ...(body || {}), author: url.searchParams.get("author"),
+                                                                           viewer: url.searchParams.get("viewer") }),
+        escalationsdue: () => escalationOf(this.ctx).escalationsDue({ nowMs: Store.#numberParam(url, "now"),
+                                                                      limit: Store.#numberParam(url, "limit"),
+                                                                      viewer: url.searchParams.get("viewer") }),
         ...monitoringOps(monitoringOf(this.ctx), url, body),
         /* REC-19: the facts behind op=affordances. The control plane derives
            the act list from these; this endpoint only reports what the store
