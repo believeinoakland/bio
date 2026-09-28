@@ -138,9 +138,9 @@ test("R8: checkSkillVersion — blank or not <pack>@<edition> is AI_RUN_SKILL_VE
   assert.equal(translationOf("NOT_A_CODE"), null);
 });
 
-test("R35: every check the module owns is one row here, with its C-number, translation and a site in this module, and not a second copy in the catalogue", () => {
+test("R35: every check the module owns is one row here (C-22.7 named from the catalogue, where skills claims it), with its C-number, translation and a site in this module, and not a second copy in the catalogue", () => {
   const ids = Object.values(AI_RUNS_CHECKS).map((r) => r.check).sort();
-  const want = ["C-22.5", "C-22.7", "C-22.8", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16",
+  const want = ["C-22.5", "C-22.8", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16",
                 "C-33.29", "C-33.30", "C-33.31", "C-33.45", "C-33.46", "C-33.47", "C-36.1", "C-36.2", "C-36.3",
                 "C-66.1", "C-66.2", "C-66.3", "C-66.4", "C-109.1"].sort();
   assert.deepEqual(ids, want);
@@ -160,6 +160,10 @@ test("R35: every check the module owns is one row here, with its C-number, trans
   const catalogue = Object.entries(CATALOGUE).filter(([k, v]) => /_CHECKS$/.test(k) && v && typeof v === "object")
     .flatMap(([, fam]) => Object.values(fam)).filter((r) => r && typeof r.check === "string").map((r) => r.check);
   for (const id of want) assert.equal(catalogue.includes(id), false, `${id} is still in the catalogue`);
+  /* C-22.7: named, not held — the catalogue keeps the row skills claims (its R25), and checkSkillVersion builds from it */
+  assert.equal(catalogue.filter((c) => c === "C-22.7").length, 1);
+  assert.equal(checkSkillVersion("3").translation, CATALOGUE.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.translation);
+  assert.equal(AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, CATALOGUE.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED);
 });
 
 test("R39: no place is named in the module's outward text — its rows' translations, its vocabularies' sentences, its refusals' details, the deployment order's text", () => {

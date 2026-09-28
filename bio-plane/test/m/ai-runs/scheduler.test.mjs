@@ -79,7 +79,8 @@ test("R16: through the wait source — an outstanding request extends the lease;
   const w = await schedWorld();
   const reqs = {
     R1: [{ request: "q1", state: "pending", expires: "2026-07-01T05:00:00Z" }],
-    R2: [{ request: "q2", state: "captured" }, { request: "q3", state: "refused" }, { request: "q4", state: "pending", expires: "2026-07-01T00:00:01Z" }],
+    R2: [{ request: "q2", state: "captured" }, { request: "q3", state: "refused" }, { request: "q5", state: "expired" },
+         { request: "q4", state: "pending", expires: "2026-07-01T00:00:01Z" }],
     GONE: [{ request: "q9", state: "captured" }],
   };
   const { src, calls } = waitSource(reqs);
@@ -89,16 +90,16 @@ test("R16: through the wait source — an outstanding request extends the lease;
   const r = await w.runs.wake(at("00:00:10"));
   assert.deepEqual([r.held, r.woken, r.dispatched], [1, 1, 0]);
   assert.deepEqual(r.holds, [{ run: "R1", outstanding: 1, expires: "2026-07-01T01:00:10Z" }]);
-  assert.deepEqual([r.wakes[0].run, r.wakes[0].completions, r.wakes[0].captured, r.wakes[0].refused, r.wakes[0].woken, r.wakes[0].resume],
-                   ["R2", 2, 1, 1, true, "AGENT_WORKER_UNBOUND"]);
+  assert.deepEqual([r.wakes[0].run, r.wakes[0].completions, r.wakes[0].captured, r.wakes[0].refused, r.wakes[0].expired, r.wakes[0].woken, r.wakes[0].resume],
+                   ["R2", 3, 1, 1, 1, true, "AGENT_WORKER_UNBOUND"]);
   assert.equal(w.row(`SELECT expires FROM ai_runs WHERE run='R1'`).expires, "2026-07-01T01:00:10Z");
   assert.equal(w.row(`SELECT updated FROM ai_runs WHERE run='R1'`).updated, "2026-07-01T00:00:00Z", "a hold is not the run acting");
   const e = logOf(w, "R2");
   assert.equal(e.length, 1);
   assert.deepEqual([e[0].level, e[0].terminal, e[0].actor, e[0].subject], ["internet", 0, null, INQ]);
   assert.equal(e[0].state, "LOOKED_INDETERMINATE", "a run with no look yet restates no NEVER_LOOKED (observation-log R3)");
-  assert.match(e[0].detail, /2 capture request\(s\).*1 captured, 1 refused.*Resumption: NOT dispatched/);
-  assert.deepEqual(reqs.R2.map((q) => !!q.woken), [true, true, false]);
+  assert.match(e[0].detail, /3 capture request\(s\).*1 captured, 1 refused, 1 expired.*Resumption: NOT dispatched/);
+  assert.deepEqual(reqs.R2.map((q) => !!q.woken), [true, true, true, false]);
   assert.ok(calls.some(([f, , l]) => f === "holds" && l === 25));
   assert.ok(calls.some(([f, l]) => f === "woken" && l === 25));
   /* woken once: a second tick holds R1 again and wakes nothing */
@@ -169,13 +170,19 @@ test("R18: a woken run is dispatched only when its principal is the instance's o
   const silent = { get: () => ({ fetch: async () => new Response("{}", { status: 500 }) }), idFromName: (n) => `id:${n}` };
   assert.equal((await decision(await setup(env(aw, { STORE: silent }), { principal: stamp, store: "scratch" }))).resume, "CREDENTIAL_RECORD_SILENT");
   assert.equal(aw.calls.length, calls, "no withheld run reached the binding");
-  /* a refused or silent dispatch appends one entry saying the run is still resumable; the wait is bounded */
-  for (const answer of [{ status: 403, body: { ok: false, reason: "NO" } }, "hang", "throw"]) {
+  /* a refused or silent dispatch appends one entry saying the run is still resumable; the wait is bounded, and a
+     segment still running at the bound is RUNNING, not silent, and appends nothing */
+  for (const answer of [{ status: 403, body: { ok: false, reason: "NO" } }, "throw"]) {
     const x = await setup(env(agentWorker(answer)), { principal: stamp });
     const o = await decision(x);
-    assert.equal(o.dispatch.state, answer === "hang" || answer === "throw" ? "SILENT" : "REFUSED");
+    assert.equal(o.dispatch.state, answer === "throw" ? "SILENT" : "REFUSED");
     const rows = logOf(x);
     assert.equal(rows.length, 2);
     assert.match(rows[1].detail, /did not complete .*still resumable/);
   }
+  const slow = await setup(env(agentWorker("hang")), { principal: stamp });
+  const started = Date.now();
+  const running = await slow.runs.wake(at("00:00:10"));
+  assert.ok(Date.now() - started < 5000, "the wait is bounded");
+  assert.deepEqual([running.wakes[0].dispatch.state, running.dispatched, logOf(slow).length], ["RUNNING", 1, 1]);
 });

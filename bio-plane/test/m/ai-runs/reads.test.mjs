@@ -23,20 +23,25 @@ async function readWorld() {
   return w;
 }
 
-test("R19: absent or invisible {found: false, session: null}; otherwise the session with its context (a project's visible confirmed-cited questions), principals, budget, condition, bias and standard", async () => {
+test("R19: absent or invisible {found: false, session: null}; otherwise the session with its context (a project's visible confirmed-cited questions), principals, budget, condition, bias, standard and state", async () => {
   const w = await readWorld();
   assert.deepEqual(await w.runs.read({ run: "R404", viewer: "admin" }), { run: "R404", found: false, session: null });
   assert.deepEqual(await w.runs.read({ run: "RH", viewer: "member:dan" }), { run: "RH", found: false, session: null });
   assert.deepEqual(await w.runs.read({ run: "R1", viewer: "nobody-we-know" }), { run: "R1", found: false, session: null });
   const s = (await w.runs.read({ run: "R1", viewer: "member:dan" })).session;
   assert.deepEqual(Object.keys(s), ["id", "label", "mode", "status", "ticks", "created", "updated", "expires", "context",
-    "principal", "budget", "condition", "bias", "standard"]);
+    "principal", "budget", "condition", "bias", "standard", "state"]);
+  assert.deepEqual(s.state, {}, "the run's scratch as the open wrote it");
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],
                    ["R1", "L", "check", "running", 1, T0, T0, "2026-07-01T01:00:00Z"]);
   assert.deepEqual(s.context, { type: "inquiry", id: INQ });
   assert.deepEqual(s.principal, { plane: ORG, claude: "instance", ref: "acct-1", skill: "bio@1" });
   assert.deepEqual(s.budget, [{ bound: "fetches", allowed: 4, consumed: 0, unit: null }]);
   assert.equal(s.condition, null);
+  await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, state: { todo: ["a", "b"], page: 3 } });
+  assert.deepEqual((await w.runs.read({ run: "R1", viewer: "admin" })).session.state, { todo: ["a", "b"], page: 3 }, "as the last tick wrote it");
+  w.sql.exec(`UPDATE ai_runs SET state = '{broken' WHERE run = 'RP'`);
+  assert.equal((await w.runs.read({ run: "RP", viewer: "member:bob" })).session.state, null, "unreadable scratch is null");
   const p = (await w.runs.read({ run: "RP", viewer: "member:bob" })).session;
   assert.deepEqual(p.context, { type: "project", id: PROJ, questions: [INQ, INQ2] }, "only inquiries, sorted");
   await w.runs.close({ run: "R1", bound: "cancelled", viewer: "admin", caller: ORG, at: "2026-07-01T00:05:00Z" });

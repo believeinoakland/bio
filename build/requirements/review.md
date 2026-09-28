@@ -57,7 +57,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 - `record-core`: `recordOf(ctx)`, `transact`, `mintOpaqueId`, `declarePurge`; `bundles` and `files` for findings (R12).
 - `membership`: `isProjectEditor`, `isProjectOwner`, `projectOwners`, `existenceAct`, `viewerPredicate`.
 - `strength`: the project's bar (`#projectBar`, R11).
-- `provenance`: `testimonyReach` (R16). *(not declared)*
+- `basis-versions`: `testimonyReach` (its R39; N67, K182 (1); R16). *(not declared)*
 - `publication`: the published edition and a case's owner (R3, R5; `publishedEditions`), the attribution in force (R16; `attributionStatedFor`); and the one review provider (its R23), which this module fills once at start with R8–R10's draft door, grant door, live grant and dead answer, because `publication` and `case-authoring` come earlier and call them. *(not declared)*
 - `case-authoring`: `publishCase` run inside a transaction always rolled back (R13; its R18), and `statementAcknowledgements`, the one acknowledgement list (R15; its R20). *(not declared)*
 - **Direct use, no longer registration (K102).** In layer 6 this module could not call layer 8, so `publication` would have had to register four things here: the publish act run dry, the published edition, the acknowledgement list and the attribution in force. In layer 8 after `case-authoring` all four are direct calls into `publication` and `case-authoring` (the act and the list are `case-authoring`'s since K97). The one registration left is the review provider this module fills in `publication`.

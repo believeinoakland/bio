@@ -33,7 +33,8 @@
  *   run that forgets it produces an answer nobody can trust:
  *     1. THE OBJECTIVE (§2). Positive and therefore testable.
  *     2. THE MACHINE / MEMBER BOUNDARY (§4). What the run may never do.
- *     3. THE FOUR-LEVEL RULE (CLAUDE.md). What an absence may never be read as.
+ *     3. THE FOUR-LEVEL RULE (Content Framework Part II §14.3). What an absence
+ *        may never be read as.
  *     4. THE ABSENCE VOCABULARY (D-129). The words the third rule is stated in.
  *
  *   PROGRESSIVELY DISCLOSED — the vocabularies and recipes of §14b.1, each with
@@ -59,15 +60,16 @@
  *   `authored` — doctrine. Four sentences, and every one of them is checked
  *                against the design document it is quoted from, so the slowest-
  *                drifting layer still cannot drift SILENTLY.
- *   `imported` — read from the module that ENFORCES the words (`airun.mjs`,
- *                `checks/bio-checks.mjs`). No copy exists here to go stale.
+ *   `imported` — read from the module that ENFORCES the words (`observation-log`,
+ *                `airun.mjs`, the check catalogue). No copy exists here to go
+ *                stale.
  *   `driven`   — read from what the plane PUBLISHES on the wire
  *                (`op=affordances`), passed in by the caller as the plane's own
  *                answer and never reshaped.
  *
- * `test/skillpack.test.mjs` reads this file's own source and FAILS if any member
- * of a driven or imported vocabulary appears in it as a string literal. That is
- * the arm that makes the sentence above a fact rather than an intention.
+ * `test/m/skills/` reads this file's own source and FAILS if any member of a
+ * driven or imported vocabulary appears in it as a string literal (R23). That
+ * is the arm that makes the sentence above a fact rather than an intention.
  *
  * ---------------------------------------------------------------------------
  * THE VERSION IS DERIVED FROM WHAT WAS RENDERED, NOT BUMPED BY HAND
@@ -101,8 +103,10 @@
  *   - **RECIPES ARE NAMED AND EMPTY.** `ASSISTANT-PILOT.md` §1 requires a recipe
  *     to be DATA whose every step names a surface id and an act/op, mechanically
  *     validated so a recipe naming a surface that does not exist FAILS THE
- *     BUILD. The surface registry is `civicos-ui`'s and no plane op publishes
- *     it, so a recipe authored HERE could not be validated here. The layer is
+ *     BUILD. The surface registry now exists, in `civicos-ui` (`ASSISTANT-
+ *     PILOT.md` Status), but no plane op publishes it, so a recipe authored
+ *     HERE could still not be validated here (R9, R10: SK-5 waits on the plane
+ *     publishing that registry). The layer is
  *     therefore declared, empty, and its emptiness is PUBLISHED in the pack —
  *     an honest absence, never a silent omission.
  *     **STILL EMPTY AFTER SK-2, AND THE REASON IS UNCHANGED RATHER THAN
@@ -112,8 +116,9 @@
  *     only if a step naming a surface that does not exist FAILS THE BUILD, the
  *     surface registry is `civicos-ui`'s, and no plane op publishes it. Writing
  *     unvalidated recipes here would buy the appearance of a layer and none of
- *     the property that makes one worth carrying. It waits on a published
- *     surface registry, and that is an interface item, not a skill one.
+ *     the property that makes one worth carrying. It waits on a surface
+ *     registry the PLANE publishes, and that is an interface item, not a skill
+ *     one.
  *   - **THE MACHINE FENCE IS WIDER THAN ITS CANNED WORDS.** The boundary layer
  *     renders the fences that carry a DEC-49 canned translation. The plane can
  *     mint machine refusals that carry none; this pack names none of them and
@@ -121,7 +126,7 @@
  *     SUBSET. The suite measures the size of that subset against the plane's own
  *     source and prints it every run, so the gap is visible rather than implied.
  *   - **NO OP PUBLISHES THIS PACK, DELIBERATELY.** The pack is rendered by
- *     whatever RUNS under it — FL-3's harness, and `test/skillpack.test.mjs`
+ *     whatever RUNS under it — FL-3's harness, and this module's tests
  *     today — from the plane's existing published answer. An op returning the
  *     pack would be a second, plane-side copy of a thing whose entire point is
  *     that it is rendered from the first, and it would buy a coverage row for a
@@ -129,8 +134,10 @@
  *     which version it ran under, which is the checkable fact SK-1 is judged on.
  * ========================================================================= */
 
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
-         AI_RUN_CHECKS } from "./airun.mjs";
+/* The levels and states are observation-log's (K78 (3), K81), read from its
+   public entry; the bounds, endings and run refusals are ai-runs'. */
+import { OBSERVATION_LEVELS, OBSERVATION_STATES } from "./observation-log/index.mjs";
+import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./airun.mjs";
 /* SK-2, LANDED 2026-08-10. The investigative skill's JUDGEMENT layers, authored
    in their own module and merged into the disclosed half below. They are a
    sibling rather than a section of this file for one reason worth stating: this
@@ -139,7 +146,8 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS,
    defence (each sentence pinned to the document it is quoted from, and a
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
-import { judgementLayers } from "./skilldoctrine.mjs";
+import { judgementLayers, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 
 /* WHAT THE PACK IS AND WHICH EDITION OF ITS DOCTRINE THIS IS.
    The edition is the AUTHORED half of the version and moves with a release; the
@@ -149,9 +157,10 @@ export const DOCTRINE_EDITION = "1";
 
 /* ------------------------------------------------------- the authored layer
 
-   FOUR SENTENCES, and every one is quoted from a document in this repository so
-   that the slowest-drifting layer cannot drift silently. `test/skillpack.test.mjs`
-   opens the named document and fails if the sentence is not in it — which is the
+   FOUR SENTENCES, and every one is quoted from a canon document
+   (`requirements/README.md`) so that the slowest-drifting layer cannot drift
+   silently. `test/m/skills/` opens the named document and fails if the
+   sentence is not in it (R21) — which is the
    drift defence `ASSISTANT-PILOT.md` §1 assigns to this layer ("reviewed like
    doctrine") made mechanical for the part a machine can check. */
 
@@ -165,24 +174,31 @@ export const OBJECTIVE =
 export const BOUNDARY =
   "The AI holds no op that ACCEPTS anything. Nothing it can call concludes, accepts, publishes, or makes a version current.";
 
-/** CLAUDE.md's standing section, and it binds this pack hardest of anything:
- *  the assistant is the component most likely to say "there is nothing". */
+/** The Content Framework's own statement of Bob's correction of 2026-08-04
+ *  (Part II §14.3), quoted, and it binds this pack hardest of anything: the
+ *  assistant is the component most likely to say "there is nothing". The rule
+ *  is the one the project has always held; only its citation moved, from the
+ *  session instructions to the canon (K102). */
 export const FOUR_LEVEL_RULE =
-  "Absence at one level is not evidence of absence at the next";
+  "absence at one level is not evidence of absence at the next";
 
-/** CLAUDE.md again, one line up, and it is the reason the four levels are a
+/** §14.3 again, the same sentence, and it is the reason the four levels are a
  *  vocabulary rather than a list: the search may need all four, in any order. */
 export const SEARCH_COMPLETENESS =
-  "NEVER ASSUME THE LOWER LEVELS ARE COMPLETE.";
+  "all four levels — meaning, content, documents, and the open internet — may need to be "
+  + "searched, in any order";
 
 /* Where each authored sentence is quoted FROM, so the arm that checks it has an
-   address rather than a search. Paths are repo-relative. */
+   address rather than a search. Paths are repo-relative; every one is canon. */
+export const CONTENT_FRAMEWORK = "docs/architecture/BIO_Content_Framework_v0_10.md";
 export const AUTHORED_SOURCES = {
   OBJECTIVE:           "docs/development/INVESTIGATIVE-SESSION.md",
   BOUNDARY:            "docs/development/INVESTIGATIVE-SESSION.md",
-  FOUR_LEVEL_RULE:     "CLAUDE.md",
-  SEARCH_COMPLETENESS: "CLAUDE.md",
+  FOUR_LEVEL_RULE:     CONTENT_FRAMEWORK,
+  SEARCH_COMPLETENESS: CONTENT_FRAMEWORK,
 };
+/** The section of the Content Framework the four-level sentences cite. */
+export const FOUR_LEVEL_SECTION = "Part II §14.3";
 
 /* WHAT AN ANSWER REPORTING ABSENCE OWES, and it is the rule rather than the
    words: the words are `OBSERVATION_LEVELS` and `OBSERVATION_STATES`, imported.
@@ -202,15 +218,16 @@ export const SOURCING = {
   objective:      "authored",
   boundary_rule:  "authored",
   four_level:     "authored",
-  levels:         "imported",   /* airun.mjs OBSERVATION_LEVELS */
-  absence:        "imported",   /* airun.mjs OBSERVATION_STATES */
+  levels:         "imported",   /* observation-log OBSERVATION_LEVELS */
+  absence:        "imported",   /* observation-log OBSERVATION_STATES */
   fences:         "imported",   /* checks/bio-checks.mjs, the MACHINE_CANNOT_ rows */
   bounds:         "imported",   /* airun.mjs RUN_BOUNDS + RUN_ENDINGS */
   refusals:       "imported",   /* checks/bio-checks.mjs AI_RUN_CHECKS */
   vocabularies:   "driven",     /* op=affordances .vocabularies */
   acts:           "driven",     /* op=affordances .catalog */
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
-  recipes:        "absent",     /* STILL absent, and the reason is unchanged — see the header */
+  recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
+  recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
      they are doctrine somebody wrote. Their vocabularies are imported and their
      quoted sentences are pinned to the documents they come from, which is the
@@ -274,15 +291,12 @@ export function memberOnlyActs(catalog) {
              .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
-/* THE ONE PUBLISHED TOKEN THIS FILE NAMES, AND IT IS PINNED RATHER THAN TRUSTED.
-   `mode` discriminates a field; it is not a vocabulary the pack renders to
-   anyone, so it is not in the sourcing arm's corpus. It is held instead by TWO
-   assertions in `test/skillpack.test.mjs`, both against the plane and neither
-   against this line: the published catalogue must actually carry acts at this
-   mode, and `index.mjs`'s `decorateAct` — the one place the value is computed —
-   must still spell it this way. Rename it there and the suite fails naming the
-   site, which is the treatment UI-49 gave the run-status word for the same
-   reason: a word a surface must know is pinned to where the plane mints it. */
+/* THE ONE PUBLISHED TOKEN THIS FILE NAMES (R23). `mode` discriminates a field;
+   it is not a vocabulary the pack renders to anyone, so it is not in the
+   sourcing arm's corpus. That the plane still computes `machine` with this
+   spelling (`decorateAct`) is pinned by the op table's owner, later in the order
+   (N53), which reads this module; this module's own tests drive the function
+   over a catalogue carrying the mode. */
 const MACHINE_MODE = "machine";
 
 /* ------------------------------------------------------------- the render */
@@ -324,7 +338,7 @@ export function renderPack(published, catalogue) {
   const levels = Object.keys(OBSERVATION_LEVELS);
   const states = Object.keys(OBSERVATION_STATES);
   if (levels.length === 0 || states.length === 0)
-    throw new Error("the four-level rule and the absence vocabulary are imported from airun.mjs and "
+    throw new Error("the four-level rule and the absence vocabulary are imported from observation-log and "
       + "one of them is empty; a rule stated in words nobody holds is not a rule");
 
   /* THE RESIDENT LAYER. Everything a run must hold from its first token, and
@@ -345,7 +359,8 @@ export function renderPack(published, catalogue) {
     },
     four_level: {
       rule: FOUR_LEVEL_RULE, completeness: SEARCH_COMPLETENESS,
-      source: AUTHORED_SOURCES.FOUR_LEVEL_RULE, sourcing: SOURCING.four_level,
+      source: AUTHORED_SOURCES.FOUR_LEVEL_RULE, section: FOUR_LEVEL_SECTION,
+      sourcing: SOURCING.four_level,
       levels: OBSERVATION_LEVELS, levels_sourcing: SOURCING.levels,
       answer_shape: ABSENCE_ANSWER_SHAPE,
     },
@@ -357,7 +372,13 @@ export function renderPack(published, catalogue) {
     disclosable: null,   /* filled below, from the disclosed layer's own keys */
   };
 
-  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts },
+  /* R10: recipes the plane publishes are validated here, and a step naming a
+     surface or an act the plane does not publish throws, so a pack rendered at
+     build fails the build. Absent, the layer states its absence (R9). */
+  const recipes = Array.isArray(p.recipes) ? p.recipes : null;
+  if (recipes) validateRecipes(recipes, p.surfaces, catalog);
+
+  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, recipes },
                                     catalogue);
   resident.disclosable = Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when }));
 
@@ -369,7 +390,7 @@ export function renderPack(published, catalogue) {
 /** THE PROGRESSIVELY-DISCLOSED LAYERS (§14b.1). Each names the work that loads
  *  it, so "loads when the run reaches work that needs them" is a field a
  *  scheduler can read rather than a sentence a model must interpret. */
-export function disclosedLayers({ vocabularies, catalog, captureActs } = {}, catalogue) {
+export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } = {}, catalogue) {
   return {
     /* SK-2's judgement layers first, so `disclosable` lists what the run is
        INSTRUCTED BY before what it is given to work with. Spread from one
@@ -399,7 +420,11 @@ export function disclosedLayers({ vocabularies, catalog, captureActs } = {}, cat
       body: Object.fromEntries(Object.entries(AI_RUN_CHECKS)
         .map(([code, row]) => [code, { check: row.check, says: row.translation }])),
     },
-    recipes: {
+    recipes: Array.isArray(recipes) ? {
+      load_when: "the run guides a member through a path to a result, or must say which steps reach it",
+      sourcing: SOURCING.recipes_published,
+      body: recipes,
+    } : {
       load_when: "never, in this edition",
       sourcing: SOURCING.recipes,
       body: [],
@@ -410,10 +435,36 @@ export function disclosedLayers({ vocabularies, catalog, captureActs } = {}, cat
         + "worth having only if a step naming a surface that does not exist FAILS THE BUILD. The "
         + "surface registry is the interface's and no plane op publishes it, so a recipe authored "
         + "here could not be validated here. SK-2 landed the judgement layers and left this one "
-        + "empty for that reason rather than for want of an author: it waits on a published "
-        + "surface registry.",
+        + "empty for that reason rather than for want of an author: it waits on the plane "
+        + "publishing the surface registry and its recipes.",
     },
   };
+}
+
+/** R10. Every recipe is a list of steps, each naming a surface id the plane
+ *  published and an act id its catalogue publishes; anything else throws,
+ *  naming the recipe, the step and the unknown name, and nothing renders. The
+ *  names are read from what was published, so this file holds none of them. */
+function validateRecipes(recipes, surfaces, catalog) {
+  const surfaceIds = new Set((Array.isArray(surfaces) ? surfaces : [])
+    .map((x) => (x && typeof x === "object" ? x.id : x)).filter((x) => typeof x === "string"));
+  const actIds = new Set(catalog.map((a) => a && a.id).filter((x) => typeof x === "string"));
+  recipes.forEach((r, i) => {
+    const name = r && typeof r.id === "string" ? r.id : `#${i}`;
+    const steps = r && Array.isArray(r.steps) ? r.steps : [];
+    if (steps.length === 0)
+      throw new Error(`recipe ${name} has no steps: a recipe is a path of steps, each naming a `
+        + "surface and an act the plane publishes");
+    steps.forEach((st, j) => {
+      const surface = st && st.surface, act = st && st.act;
+      if (!surfaceIds.has(surface))
+        throw new Error(`recipe ${name} step ${j + 1} names the surface ${JSON.stringify(surface)}, `
+          + "which the plane does not publish");
+      if (!actIds.has(act))
+        throw new Error(`recipe ${name} step ${j + 1} names the act ${JSON.stringify(act)}, `
+          + "which the plane's catalogue does not publish");
+    });
+  });
 }
 
 /* --------------------------------------------------------------- the version */
@@ -449,14 +500,16 @@ export function packVersion(pack) {
 
 /* ------------------------------------------------------------------ refusal
 
-   ONE code, built from `AI_RUN_CHECKS` — the same one place `airun.mjs` reads,
-   so the C-number, the wire code and the canned translation stay one row
-   (DEC-49). The helper is named `refusal` and the code is a STRING LITERAL at
-   its site: a code in a variable is invisible to the DEC-49 guard, and one
-   shipped `translation: undefined` to a member exactly that way. */
+   ONE code, C-22.7, and it is THIS MODULE'S row (R25, K81): `SKILL_CHECKS`,
+   named by key in `skilldoctrine.mjs` and selected from the catalogue, never
+   copied (see there); the C-number, the wire code
+   and the canned translation stay one row (DEC-49). The helper is named
+   `refusal` and the code is a STRING LITERAL at its site: a code in a variable
+   is invisible to the DEC-49 guard, and one shipped `translation: undefined` to
+   a member exactly that way. */
 
 function refusal(key, detail) {
-  const row = AI_RUN_CHECKS[key];
+  const row = SKILL_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 

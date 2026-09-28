@@ -6,8 +6,10 @@
  * `inquiry`'s, C-66.6 `control-plane`'s). Each row here is an invariant of this module with its test
  * (`test/m/ai-runs/`). */
 
-/* C-22's run rows: C-22.5, .7, .8, .11–.16. The family's history and its reason for being one row per code are in the
- * catalogue's AI_RUN_CHECKS header, which stays with the rows left there. */
+/* C-22's run rows: C-22.5, .8, .11–.16. The family's history and its reason for being one row per code are in the
+ * catalogue's AI_RUN_CHECKS header, which stays with the rows left there. C-22.7 (`checkSkillVersion`'s, R8) is named,
+ * not held: `skills` claims the row (its R25) and reads it from the catalogue, so it stays there until BOB rules
+ * which module holds it; `./skill-version.mjs` reads it by name. */
 export const AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
      which bound and where it stopped". A close with no bound named is the
@@ -21,32 +23,6 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'The run stopped without saying what stopped it. '
       + 'Not finding something and not finishing the search are different facts, '
       + 'and only one of them licenses a conclusion.',
-  },
-  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
-     bias manifest in force, the launching project's standard pair, and THE
-     SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
-     a hat" and a version is only interpretable against them. SK-1's row makes
-     the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
-     disclosure standard), and a condition that may be omitted is not recorded:
-     it is recorded by the runs that felt like it.
-
-     REFUSED AT THE OPEN, beside the two principals, for the same reason those
-     are: refusing later would mean a run had already searched under
-     instructions nobody can name. Two ways to fail and ONE code, because they
-     are one fact — the run object cannot say what it ran under. The worse of
-     the two is a version that names no pack: `3` reads as an answer and
-     identifies nothing, which is the blank-principal shape PL-4 measured one
-     field over, arriving on a condition instead of an identity.
-
-     A WHOLE-FUNCTION `where`, and it is the case the convention above blesses:
-     `checkSkillVersion` is small, single-purpose, and the only refusal it makes
-     is this one — `src/airun.mjs`'s three check functions are the named model. */
-  AI_RUN_SKILL_VERSION_UNNAMED: {
-    check: 'C-22.7',
-    where: 'src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open',
-    translation: 'This run did not say which version of its instructions it was working under. '
-      + 'What a run found can only be read against the instructions it was given, so the record '
-      + 'asks for that version before the run starts rather than guessing at it afterwards.',
   },
   /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
      THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.

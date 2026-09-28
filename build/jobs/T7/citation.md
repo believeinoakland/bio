@@ -1,6 +1,6 @@
 # citation (T7)
 
-**Status** · session_01LCMxfQu4jDdgzASY25yF14 · depth 2 · COMPLETE · handled B2
+**Status** · session_01LCMxfQu4jDdgzASY25yF14 · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -47,3 +47,19 @@ Found in other modules and in generated artifacts (none changed by me). Each mea
 - `node checks/ownership.mjs /home/user/bio citation tranche/T7` → ownership: 11 files changed by citation between tranche/T7 and HEAD; legacy-store: 7 line(s) added, 1328 removed; legacy-checks: 0 line(s) added, 106 removed; 0 failures
 
 Size (session_01LCMxfQu4jDdgzASY25yF14): test runs 24, module lines 1038
+
+## J3 · COMPLETE
+
+**B3 applied** (inquiry merged, K190): `citationOf` now takes its inquiry services by default from inquiry itself: `inquiryServices(inquiryOf(host))` = the instance's `earned` (R13) with inquiry's exported `checkLegExtentGrammar` (R5) and `BASIS_ROLES` (R4). A caller may still pass its own (tests do, to control the registry). The store's `citationOf(ctx, {inquiry: …})` line (with its comment) is removed, and so is its `BASIS_ROLES` import from the catalogue, which nothing in the store reads any more. Ownership over this change: legacy-store 0 lines added, 8 removed.
+
+**Tests and checks** (on `job/T7/citation` after merging `tranche/T7` @ B3):
+- Module: `node --test bio-plane/test/m/citation/` → tests 49, pass 49, fail 0. The one new test checks that the default services are inquiry's own (R2, R8). The fixture now takes the grammar and roles from `src/inquiry/index.mjs`.
+- Through the plane (store → citation → the real inquiry): cite 73/0, citeproject-inquiry 37/0, edges 50/0, selection 71/0, fw19-extent-arms 36/0. citeinquiry is 49/1 with its two source pins pointed at `src/citation/index.mjs` in a scratch copy (only the roster regex is left, as J1 item 1 says). rec-183 and d168 are unchanged from J1 (their row-import pins).
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio citation` → architecture: 8 product files, 28 relative imports (0 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio citation` → coverage: 1 modules, 11 of 11 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio citation tranche/T7` → ownership: 5 files changed by citation between tranche/T7 and HEAD; legacy-store: 0 line(s) added, 8 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures
+
+J1 still stands, except item 13, which this closes. The plane bundle is stale again for this change (J1 item 8).
+
+Size (session_01LCMxfQu4jDdgzASY25yF14): test runs 30, module lines 1046

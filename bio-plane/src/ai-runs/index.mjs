@@ -1283,8 +1283,10 @@ export class AiRuns {
          a completion is DELAYED by a backlog and never dropped by one. */
       const done = (this.#wait().completions(r.run, AiRuns.AI_RUN_WAKE_TICK_BATCH) || []).slice(0, AiRuns.AI_RUN_WAKE_TICK_BATCH);
       if (!done.length) continue;      // the row's own EXISTS already proved otherwise
+      /* D-583: `expired` is a completion too (capture-requests R29); each state is counted as itself. */
       const captured = done.filter((q) => q.state === "captured").length;
-      const refused = done.length - captured;
+      const expired = done.filter((q) => q.state === "expired").length;
+      const refused = done.length - captured - expired;
       /* D-260 — THE DECISION IS MADE BEFORE THE ENTRY IS WRITTEN, so the entry can say which it was. */
       const decision = this.#aiRunResumeDecision(r, resumer);
       const bad = this.ctx.storage.transactionSync(() => {
@@ -1315,7 +1317,7 @@ export class AiRuns {
           ...this.#aiRunRestatedState(r.run),
           governed: false,
           detail: `the daemon answered ${done.length} capture request(s) this run was waiting on `
-                + `(${captured} captured, ${refused} refused). The run is resumable: its own log `
+                + `(${captured} captured, ${refused} refused, ${expired} expired). The run is resumable: its own log `
                 + `carries what each request established, and §14b.7's resumed run reads it and `
                 + `continues rather than restarting. ${decision.says}`,
         }, iso, 0);
@@ -1324,7 +1326,7 @@ export class AiRuns {
         this.#wait().markWoken(done.map((q) => q.request), iso);
         return null;
       });
-      wakes.push({ run: r.run, completions: done.length, captured, refused,
+      wakes.push({ run: r.run, completions: done.length, captured, refused, expired,
                    woken: !bad, ...(bad ? { unwritable: bad } : { expires: until }),
                    resume: decision.dispatch ? "DISPATCH" : decision.withheld });
       if (!bad && decision.dispatch) dispatches.push({ run: r.run, context_id: r.context_id });
@@ -1339,7 +1341,7 @@ export class AiRuns {
       if (w) w.dispatch = outcome;
     }
     return { at: iso, held: holds.length, holds, woken: wakes.length, wakes,
-             dispatched: wakes.filter((w) => w.dispatch && w.dispatch.state === "DISPATCHED").length };
+             dispatched: wakes.filter((w) => w.dispatch && (w.dispatch.state === "DISPATCHED" || w.dispatch.state === "RUNNING")).length };
   }
 
   /* =====================================================================
@@ -1463,10 +1465,15 @@ export class AiRuns {
       /* The sentinel is lowercase and compared on its own line: this outcome is a dispatch STATE, not a refusal
          code, and a code-shaped literal inside a `reason:` expression is read into DEC-49's census as one. */
       const elapsed = String(e && e.message) === "dispatch-wait-elapsed";
-      outcome = { state: "SILENT", status: null,
-                  reason: elapsed ? "no answer within the bound" : "the call did not complete" };
+      /* B6 (AGENT-WORKER #1 REPORT 2): a segment answers when it ends, and a model segment can run past the wait. The
+         request was delivered and nothing refused it, so it is RUNNING, not silent: no failure entry is written (the
+         segment's own ticks record what it does, and a segment that dies lets the lease lapse to the reaper). Only a
+         call that did not complete is SILENT. */
+      outcome = elapsed
+        ? { state: "RUNNING", status: null, reason: "no answer within the bound: the segment is still running" }
+        : { state: "SILENT", status: null, reason: "the call did not complete" };
     } finally { clearTimeout(timer); }
-    if (outcome.state !== "DISPATCHED") {
+    if (outcome.state !== "DISPATCHED" && outcome.state !== "RUNNING") {
       const refusal = this.#aiRunAppend(d.run, {
         level: "internet", subject: d.context_id, ...this.#aiRunRestatedState(d.run), governed: false,
         detail: `Resumption: the dispatch to agent-worker did not complete (${outcome.state}: ${outcome.reason}). `
@@ -1603,6 +1610,10 @@ export class AiRuns {
          means we looked and there was no bar. A consumer can tell those apart;
          a null could not, which is why no null is published here. */
       standard: this.#standardForRun(row),
+      /* B6 (AGENT-WORKER #1 REPORT 3): the run's resumable scratch as its last tick wrote it (R12), so a resumed
+         segment continues its work list rather than restarting it; null when it cannot be read back. Never a
+         transcript (DEC-61): it is the work list the run itself sent. */
+      state: safeJson(row.state),
     } };
   }
 
@@ -2219,16 +2230,17 @@ export class AiRuns {
 
   /** R28: the run's facts a producer gates on, for a held run the viewer can see; null for a blank id, an absent
    *  run and an invisible one alike. Never throws, writes nothing. Whether the caller holds it is R5 over
-   *  `principal_plane`. */
+   *  `principal_plane`; `principal_claude` is the level that pays, which a production under the run records
+   *  (capture-requests' request row). */
   runFor(run, viewer) {
     try {
       const id = run == null ? "" : String(run).trim();
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
-      const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane
+      const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude
                              FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? { run: r.run, status: r.status, mode: r.mode, context_type: r.context_type,
-                   context_id: r.context_id, principal_plane: r.principal_plane } : null;
+                   context_id: r.context_id, principal_plane: r.principal_plane, principal_claude: r.principal_claude } : null;
     } catch { return null; }
   }
 

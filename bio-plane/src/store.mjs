@@ -34,11 +34,6 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             supersession never lands and cannot audit clean either. Before this
             item `supersedes` had no producer and no requirements at all. */
          BUNDLE_ID_RE, supersedesEdgeFindings,
-         /* REC-37: the basis ROLE vocabulary, imported for the widened cite's
-            own refusal and for op=affordances' published vocabularies. The one
-            place the words live is the catalog function that enforces them; a
-            second copy here is exactly the drift the MAP RULE exists to stop. */
-         BASIS_ROLES,
          /* REC-51 (2026-08-04): the basis GRADE vocabulary, for the same reason
             BASIS_ROLES is imported one line up, and it arrives one level BELOW
             the doctrine sentences REC-43/REC-48/REC-50 composed. Those three
@@ -110,10 +105,6 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          /* PL-9 / DEC-49: the C-number, the wire code and the canned translation
             for the meaning-grain read's two refusals, as ONE row read from the
             catalog rather than restated here. */
-         /* REC-69 / DEC-49: the C-number, the wire code and the canned
-            translation for the context-keyed run list's three refusals, as ONE
-            row read from the catalog rather than restated here. */
-         AI_RUNS_CONTEXT_CHECKS,
          /* PL-10 / DEC-49: the C-number, the wire code and the canned
             translation for the version chain's three refusals, as ONE row read
             from the catalog rather than restated here. */
@@ -144,22 +135,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
          /* And the catalog's OWN canonical serializer, used for F10's
             idempotence key rather than a second one written here. */
          canonicalJson,
-         /* PL-4 / IS-4 / SWEEP 4b.1: the capture-request door's DEC-49 rows, the
-            two CLOSED vocabularies DEC-47's conduct is expressed in, and the ONE
-            user-agent legibility predicate. Imported for the same reason as
-            everything above it: the drain's conduct check and the suite that
-            drives it must be reading the SAME roster, or the rule and its test
-            can only agree by coincidence. */
-         CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
          civicosUserAgent,
-         /* D-491 / IC-276: C-83's rows, imported READ-ONLY and for ONE purpose —
-            the drain asks whether the code op=acquire sent belongs to the render
-            family, so a render refused can be held under its own name instead of
-            reported as a fetch that failed. The family is DECLARED in index.mjs's
-            span (`is-render-admit`) and every code is minted there; nothing here
-            refuses with one, which is why this import cannot conscript this file
-            into that family's governed span. */
-         RENDER_CAPTURE_CHECKS,
          /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
             three and the REVOKE's two live here; the gate's four live in
             index.mjs, because what a scope may REACH is a question only the OPS
@@ -209,11 +185,13 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, routeFinding, observerRef, TESTIMONY_PATH, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
+import { captureRequestsOf, captureRequestsOps, renderHoldReason } from "./capture-requests/index.mjs";
 import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
 import { governorOf, governorRoutes } from "./host-governor/index.mjs";
 import { captureOf, captureOps, captureOwns } from "./capture/index.mjs";
 import { connectionsOf, connectionsOps, connectionsOwns, refsReplacedOf } from "./connections/index.mjs";
+import { inquiryOf, inquiryOps, inquiryOwns, legCapped, supersededByOf, LEG_BACKFILL_MAX } from "./inquiry/index.mjs";
 import { citationOf, citationOps } from "./citation/index.mjs";
 import { extractionOf, extractionOps, extractionOwns, labelTerms, normAlias, refTermSources, CAPTURE_TEXT_UNIT_CAP,
          CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "./extraction/index.mjs";
@@ -686,7 +664,6 @@ export class Store extends DurableObject {
       { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
       { name: "monitor_fired", keys: ["subject"] },
       { name: "suggest_refusals", keys: ["target"] },
-      { name: "capture_requests", keys: ["target"] },
       { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
       { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
       { name: "capture_text_fts", keys: [] }, { name: "selection_items", keys: [] }, { name: "selections", keys: [] }, { name: "review_comments", keys: [] }, { name: "statement_acknowledgements", keys: [] }, { name: "review_grants", keys: [] },
@@ -703,7 +680,8 @@ export class Store extends DurableObject {
       .filter((t) => !ENTITIES_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !RETRIEVAL_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !observationLogOwns(t))
-      .filter((t) => !connectionsOwns(t)));   /* each extracted owner declares its own (K23) */
+      .filter((t) => !connectionsOwns(t))
+      .filter((t) => !inquiryOwns(t)));   /* each extracted owner declares its own (K23) */
     /* K31: promotion, which reaches record-core and membership through their factories on this ctx; legacy-store
        registers its share of every promotion (later modules' checks, projections and facts) until each is extracted. */
     /* provenance (K61): declares its tables and joins every promotion before legacy-store does, so its register write
@@ -714,10 +692,6 @@ export class Store extends DurableObject {
     /* N39 (K71): the two authorities observation-log's fence delegates (its R13), answered by legacy-store until
        capture-requests (a request's target and lead inquiry) and ai-runs (whether the viewer may read the run) are
        extracted and register their own. */
-    observations.registerAuthority("sweep", (request) => {
-      const r = this.#one(`SELECT target, lead_inquiry FROM capture_requests WHERE request = ? LIMIT 1`, request);
-      return r ? [r.target, r.lead_inquiry].filter(Boolean) : null;
-    });
     const promotion = promotionOf(ctx);
     /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */
     /* content (K61): created on extraction's instance here, so its stale mark (REC-82, its R22) is registered before
@@ -757,20 +731,21 @@ export class Store extends DurableObject {
     /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
        (R19, R23), and it marks its own dirt on entities' notice (R17). legacy-store registers observation-log's row per
        derivation (its R8) and its derivation statement with connections (R3, R5) until observation-log does. */
-    /* citation (K61, K120's pattern): the inquiry services it builds against (inquiry R4, R5, R13), answered by
-       legacy-store until inquiry is extracted. */
-    citationOf(ctx, { inquiry: { earned: (s, t, c) => this.earnedBasisRegistry(s, t, c), checkLegExtentGrammar, BASIS_ROLES } });
     connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
     connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
+    promotion.registerFact("publishedRegistry", "legacy-store", (id, targets) => this.publishedRegistryFor(id, targets));
+    /* inquiry (K31, K61): its check and projection join every promotion before legacy-store's step (its R11, R12);
+       legacy-store answers reevaluation's obligation (R21, R25) and strength's pair (R28) until each is extracted. */
+    inquiryOf(ctx).onRaised("reevaluation", ({ target, viewer }) => this.#reevalRaisedBy(target, viewer));
+    inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
     strengthModule(ctx, { inquiry: { basisFor: (id) => this.basisFor(id), earned: (e, t) => this.earnedBasisRegistry(e, t),
       legCapped: (g, e, t) => Store.#capturedAt(g, e, t), subjectEntityOf: (id) => this.#subjectEntityOf(id) },
       versions: { currentOf: (p, i, v) => this.#currentVersionOf(p, i, v) } });   /* strength (K61), until inquiry and basis-versions are extracted */
     /* bias (K61): joins every promotion before legacy-store (R8–R10); the store registers the AI runs as the bias debt's
        work products (R33) and arms the scheduler on a lens change (R23) until ai-runs and scheduler are extracted. */
     const bias = biasOf(ctx, { env });
-    aiRunsOf(ctx, env).registerWaitSource("legacy-store", this.#runWaitSource());   /* ai-runs R16 until capture-requests */
     bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
@@ -783,6 +758,10 @@ export class Store extends DurableObject {
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
+    /* capture-requests (K58, K61): its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs'
+       (its R28), and it registers its wait source with ai-runs (ai-runs R41). */
+    captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
+      runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
     capture.on("source-outcome", "legacy-store", async (o) => (o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null));
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
@@ -933,14 +912,7 @@ export class Store extends DurableObject {
          would serve no seek anybody makes. REC-12's state columns are
          unindexed for the same reason and its comment says so. */
       ["bundles", "inquiry_superseded_by", "TEXT"],
-      /* REC-42 / DEC-32: the OR branch a basis leg belongs to. Additive and
-         nullable exactly like every column above, and here that is not merely
-         convenient — it is THE CORRECTNESS REQUIREMENT. A leg written before
-         this column existed reads NULL, falls into the one implicit ground, and
-         derives the SAME weakest-leg answer it derived before: a basis nobody
-         structured can never become stronger by an upgrade. Independent
-         sufficiency is only ever reached by an affirmative, attributed act. */
-      ["inquiry_basis", "ground", "TEXT"],
+      /* REC-42: `inquiry_basis.ground` is inquiry's migration now (its R36). */
       /* PL-2 / IS-2: the three attribution columns on PL-1's version projection.
          Additive and nullable exactly like every column above, and here that is
          also the correctness requirement: a version projected before this item
@@ -963,33 +935,6 @@ export class Store extends DurableObject {
          though it had. Backfilling any value here — even an empty one — would
          manufacture the affirmation DEC-32 requires be affirmatively claimed. */
       ["inquiry_basis_versions", "affirmed_parts", "TEXT"],
-      /* PL-15 / D-213: the OTHER question a requested capture bears on. Additive
-         and nullable for the same reason every column above is — a request
-         written before this item existed was made under the question the run was
-         working and named no lead, and NULL states exactly that. A non-null
-         default here would invent an observation nobody made, which on THIS
-         column would mint a member-facing notification out of a migration. */
-      ["capture_requests", "lead_inquiry", "TEXT"],
-      /* FL-4 / IS-9: the instant the run waiting on this request was woken for
-         its completion. Additive and nullable for the same reason every column
-         above is — a request written before this item existed was never woken,
-         because nothing existed to wake it, and NULL states exactly that. A
-         non-null default would claim the run had been told about a completion
-         nobody delivered, which on THIS column would mean a wake that never
-         happened reading as one that did. */
-      ["capture_requests", "run_woken_at", "TEXT"],
-      /* D-491 / IC-276: does this request ask for the page as a visitor saw it
-         (CLIENT-RENDERED.md, BOB #32 item 3). THE ONE COLUMN IN THIS LIST THAT
-         IS NOT NULLABLE, and the distinction is the point rather than an
-         exception: every column above is nullable because a legacy row carried
-         an unstated value that a default would INVENT. This one has no unstated
-         value to invent. A request written before the column existed could not
-         ask for a render — no door read the flag, and no drain could have
-         honoured one — so 0 states what was true of that row, and a NULL here
-         would mean "we do not know whether this asked for a render" about a row
-         that demonstrably could not have. Backfilled by the ALTER so a migrated
-         store and a fresh install present the same table. */
-      ["capture_requests", "render", "INTEGER NOT NULL DEFAULT 0"],
       /* CASE-1 / DEC-72: the member finding's PINNED VERSION and the publisher's
          AUTHORED ROLE for it. Additive and nullable for the reason every column
          above is, and here NULL carries two facts this item exists to keep
@@ -1022,21 +967,7 @@ export class Store extends DurableObject {
          either side of a project's bar moving. The full reasoning is at the
          column in schema.mjs. */
       ["published_cases", "bar", "TEXT"],
-      /* REC-82 / IC-83: WHAT PART OF THE DOCUMENT A BASIS LEG RESTS ON. Additive
-         and nullable for the reason every column above is, and NULL here is a
-         state of the record rather than a missing value: a leg promoted before
-         this column existed named no extent, because no surface could carry one.
-         NO BACKFILL PASS RUNS, and that is a property of the design rather than
-         an omission — the content id is a HASH of (capture, extent, chain), so a
-         legacy leg's `document` row is derivable at any time from the target it
-         already names. It is minted on the leg's first read (`ensureLegContent`)
-         and on its next promotion, both deterministically and both to the SAME
-         id. A migration that wrote the column would be a second writer for a
-         value one function already answers, and it would have to choose a
-         capture for a leg nobody was looking at.
-         NOT NULL is IC-83's SETTLED condition and NOT this landing's: I5 is
-         CHANGING at 1.11.0 until REC-82 and REC-83 have both landed. */
-      ["inquiry_basis", "content_id", "TEXT"],
+      /* REC-82: `inquiry_basis.content_id` is inquiry's migration now (its R36). */
       /* REC-82 / IC-83, and the column arrives WITHOUT its writer on purpose.
          The version-leg grammar that lets a version leg name an extent is
          REC-84, so every row this plane writes today reads NULL here. Landing
@@ -1090,10 +1021,12 @@ export class Store extends DurableObject {
     provenanceOf(this.ctx).migrate();   /* provenance's tables (R41), likewise: its schema is its own */
     contentOf(this.ctx).migrate();      /* content's tables (R39), likewise, with the chain_kind and cited_as migrations */
     connectionsOf(this.ctx).migrate();  /* connections' tables (R36), likewise, with the pair columns' migrations */
+    inquiryOf(this.ctx).migrate();      /* inquiry's tables (R36), their columns' migrations and the superseded-by backfill */
     governorOf(this.ctx, { env: this.env }).migrate();   /* host-governor's table and its purge exemption (R24) */
     captureOf(this.ctx).migrate();      /* capture's tables, likewise */
     extractionOf(this.ctx).migrate();   /* extraction's tables, their migrations and the name-term backfill (R37) */
     observationLogOf(this.ctx).migrate();   /* observation-log's tables (R22, R23), before ai-runs folds the pre-fold run log into them */
+    captureRequestsOf(this.ctx).migrate();   /* capture-requests' table, its additive columns and indexes (R35) */
     aiRunsOf(this.ctx, this.env).migrate();   /* ai-runs' two late columns and the ai_run_log fold (its R38) */
     entitiesOf(this.ctx).migrate();     /* entities' tables, R8's withdrawal columns and their purge declaration (R30) */
     contradictionOf(this.ctx).migrate();   /* contradiction's table and its purge declaration (R22) */
@@ -1160,17 +1093,6 @@ export class Store extends DurableObject {
          note    TEXT
        )`);
 
-    /* REC-17: the same backfill for the supersession reverse index, and it is
-       NOT bounded by a page count because it cannot be. It is bounded by the
-       number of `supersedes` EDGES in the store, which is the number of
-       divisions anybody has performed — a handful where the projection backfill
-       is tens of thousands of documents. Derived from `refs`, which is itself a
-       projection of the citing documents, so this restates nothing: it answers
-       the reverse question from the forward edges that already landed. */
-    for (const r of this.sql.exec(
-      `SELECT DISTINCT target_id FROM refs WHERE kind='supersedes'`))
-      this.#writeSupersededBy(r.target_id);
-
     /* D-432: the opaque minter's ledger learns every gated id that already stands in a live row, and every one the
        counter issued for an untailed gated prefix — LAST, because it reads tables the schema pass above creates.
        Every boot, idempotently; `#seedMintLedger` says what it reads and what it cannot see. */
@@ -1213,41 +1135,8 @@ export class Store extends DurableObject {
     return next < today;
   }
 
-  /* REC-17 / P-64: maintain ONE bundle's `inquiry_superseded_by` from the
-     `supersedes` edges that point AT it. Derived from `refs` — which promote
-     projects from the superseding documents' own frontmatter — so this is a
-     reverse VIEW of the forward edges and never a second place the relationship
-     is stated (D-21, and REC-16's D5: the division is authored in bundle.md and
-     no op writes a division table).
-
-     Called from promote for three id sets, and all three are needed:
-       - the supersedes targets this promotion ADDS (a child naming its parent),
-       - the ones it REMOVED (a revision that dropped the edge; without this the
-         parent would keep claiming a successor that no longer names it),
-       - the promoted bundle's OWN row, because a bundle can be created AFTER
-         something already superseded it and would otherwise never be told.
-     An UPDATE against an id with no row is a no-op, which is the right
-     behaviour for an edge whose target is not in the store: C-6.2 already
-     treats an unresolvable target as an error and op=dangling reports it. */
-  #writeSupersededBy(targetId) {
-    if (!targetId) return null;
-    const ids = [...this.sql.exec(
-      `SELECT bundle_id FROM refs WHERE target_id=? AND kind='supersedes' ORDER BY bundle_id`, targetId)]
-      .map((r) => r.bundle_id);
-    /* NULL and not the empty string when nothing supersedes it: an empty string
-       is a value a reader has to know to disbelieve, and every other additive
-       column here says "no writer" with NULL. */
-    const val = ids.length ? ids.join(",") : null;
-    this.sql.exec(`UPDATE bundles SET inquiry_superseded_by=? WHERE bundle_id=?`, val, targetId);
-    return ids;
-  }
-
-  /* The column read back as a list. ONE parser, so no caller splits the string
-     itself and none can disagree about the separator. */
-  static supersededByOf(row) {
-    const v = row && typeof row.inquiry_superseded_by === "string" ? row.inquiry_superseded_by : "";
-    return v ? v.split(",").filter((x) => x !== "") : [];
-  }
+  /* R16: the superseded-by column read back: inquiry's one parser. */
+  static supersededByOf(row) { return supersededByOf(row); }
 
   /* retrieval (K3, K61): its services, reached by the store's own callers and the old battery through these. */
   reproject(a) { return retrievalOf(this.ctx).reproject(a); }
@@ -1345,37 +1234,6 @@ export class Store extends DurableObject {
       `SELECT capture_sha, promotion_key, at FROM inquiry_migration_replays WHERE bundle_id=?`, bundleId);
     return mig ? { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
                    migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } } : null;
-  }
-
-  /** ai-runs R16's wait source, over `capture_requests`, registered until capture-requests (K71, N39) fills it: the
-   *  requests a running run waits on, the completions the daemon has landed and the run has not been told of. */
-  #runWaitSource() {
-    return {
-      configured: () => this.#captureRequestConfigured(),
-      tickMs: () => this.#captureRequestTickMs(),
-      holds: (iso, limit) => this.#rows(
-        `SELECT r.run,
-                (SELECT count(*) FROM capture_requests cr
-                  WHERE cr.run = r.run AND cr.state IN ('requested','draining') AND cr.expires > ?) outstanding
-           FROM ai_runs r
-          WHERE r.status = 'running'
-            AND EXISTS (SELECT 1 FROM capture_requests cr
-                         WHERE cr.run = r.run AND cr.state IN ('requested','draining') AND cr.expires > ?)
-          ORDER BY r.run LIMIT ?`, iso, iso, limit),
-      woken: (limit) => this.#rows(
-        `SELECT r.run FROM ai_runs r
-          WHERE r.status = 'running'
-            AND EXISTS (SELECT 1 FROM capture_requests cr
-                         WHERE cr.run = r.run AND cr.state IN ('captured','refused') AND cr.run_woken_at IS NULL)
-          ORDER BY r.run LIMIT ?`, limit).map((r) => r.run),
-      completions: (run, limit) => this.#rows(
-        `SELECT request, state FROM capture_requests
-          WHERE run = ? AND state IN ('captured','refused') AND run_woken_at IS NULL
-          ORDER BY updated, request LIMIT ?`, run, limit),
-      markWoken: (requests, iso) => {
-        for (const q of requests) this.sql.exec(`UPDATE capture_requests SET run_woken_at = ? WHERE request = ?`, iso, q);
-      },
-    };
   }
 
   /** The FACTS behind op=affordances (REC-19), and only the facts: what this
@@ -1943,9 +1801,9 @@ export class Store extends DurableObject {
          an unconfigured or idle instance holds no alarm at all — the
          self-termination property REC-1 prized and the Free tier is paid for. */
       { name: "capture-request-drain",
-        due:  (now) => this.#captureRequestPending() > 0 ? now : null,
-        wake: (now) => this.#captureRequestPending() > 0 ? now + this.#captureRequestTickMs() : null,
-        tick: (now) => this.captureRequestDrain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
+        due:  (now) => captureRequestsOf(this.ctx).drainPending() > 0 ? now : null,
+        wake: (now) => captureRequestsOf(this.ctx).drainPending() > 0 ? now + captureRequestsOf(this.ctx).drainIntervalMs() : null,
+        tick: (now) => captureRequestsOf(this.ctx).drain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
       /* FL-4 / IS-9 / INVESTIGATIVE-SESSION.md §14b.3 — THE SUSPENDED RUN'S
          WAKE: the TENTH consumer on the one alarm, and ONE APPENDED ENTRY
          exactly as SCHEDULER.md instructs: *"append an entry to
@@ -2306,245 +2164,8 @@ export class Store extends DurableObject {
      interleaving two accounts of the same exchange. */
   static CORRESPOND_LEASE_MS = 30000;
 
-  /* S-11 step 3: bulk disposition of inquiries (né Problems, né Focuses),
-   * weight `refuse`.
-   *
-   * The first selection-backed action to move an OBJECT's state rather than an
-   * edge's. Steps 1 and 2 edited a Project's `references` block; this edits
-   * `current_state` on each selected inquiry, which is heavier: an edge is a
-   * claim about a relationship, and a state is a claim about where the group's
-   * thinking has got to.
-   *
-   * WEIGHT `refuse`, hard-coded exactly as `cite` hard-codes `report`. The whole
-   * set moves or none of it does, because a half-run bulk state change leaves
-   * the operator unable to know which half ran.
-   *
-   * ONLY `deferred` AND `dismissed`. Every other inquiry state is entered by
-   * its own act with its own entry requirements (REC-13/14/16 bring them),
-   * never by a bulk state flip. Refused by name rather than by omission, so
-   * the operator learns why.
-   *
-   * THE REASON IS NOT POLITENESS. C-2.8 requires a non-empty
-   * `disposition_reason` for both target states, so a disposition without one
-   * produces a bundle the catalog rejects. Refusing here is the difference
-   * between refusing a write and writing something that fails its own checks. */
-  dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
-    /* DISPOSITIONS is the PUBLISHED set, imported from affordances.mjs
-       (REC-11's folded chore). This method held its own literal copy from the
-       REC-19 wave's separate claims, with the affordances suite pinning the
-       two arrays identical; the import is what makes that pin unnecessary —
-       one array, no drift to pin against. */
-    /* Legal transitions, IMPORTED from the catalog's own table (REC-10). The
-       comment here used to claim exactly that over a literal second copy of
-       the machine; DATA-MODEL.md §2.7 caught the claim being false, and this
-       import is what makes it true. deferred->deferred is absent, which is
-       what makes a stale view a refusal rather than a silent no-op. */
-    const INQUIRY_STATES = STATES.inquiry.legal;
-    const LEGAL = STATES.inquiry.edges;
-
-    if (!INQUIRY_STATES.includes(to))
-      return { ok: false, reason: "BAD_TARGET_STATE", to, legal: INQUIRY_STATES,
-               detail: `an inquiry's state is one of ${INQUIRY_STATES.join(", ")}` };
-    if (!DISPOSITIONS.includes(to))
-      return { ok: false, reason: "NOT_A_DISPOSITION", to, dispositions: DISPOSITIONS,
-               detail: "only deferring and dismissing are dispositions: every other inquiry state is "
-                     + "entered by its own act, with its own entry requirements, never by a bulk state flip." };
-
-    const why = String(reason ?? "").trim();
-    if (!why)
-      return { ok: false, reason: "NO_REASON",
-               detail: "C-2.8 requires a non-empty disposition_reason for deferred and dismissed, so a "
-                     + "disposition with no reason would produce a bundle the catalog rejects." };
-    if (why.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(why))
-      return { ok: false, reason: "BAD_REASON",
-               detail: `a reason is at most ${Store.EDGE_REASON_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
-
-    const sel = this.selectionResolve({ handle, viewer, owner, weight: "refuse" });
-    if (!sel.ok) return sel;
-    if (!sel.members.length)
-      return { ok: false, reason: "EMPTY_SELECTION", handle, drift: sel.drift,
-               detail: "this selection resolves to no members, so there is nothing to dispose" };
-
-    /* Refused WHOLE, offenders named, never narrowed to the valid subset. The
-       operator picked a set; disposing part of it decides something they did
-       not. Same rule cite applies to a selection carrying a non-Information. */
-    const offenders = [], illegal = [], published = [];
-    for (const id of sel.members) {
-      const b = this.#one(`SELECT object_type, current_state FROM bundles WHERE bundle_id=?`, id);
-      /* Judged by the NORMALIZED type through the catalog's own map, so a
-         legacy `focus` or `problem` row (should one predate the boot
-         normaliser) and a canonical `inquiry` row answer the same way. */
-      if (!b || normalizeType(b.object_type) !== "inquiry") { offenders.push(id); continue; }
-      /* ==== CASE-4 / DEC-72: A PUBLISHED CASE CANNOT BE QUIETLY SET DOWN, AND
-         THIS GUARD EXISTS BECAUSE THE RULE LOST ITS CARRIER RATHER THAN BECAUSE
-         ANYONE CHANGED IT.
-         The catalog's STATES comment has said it since REC-14, in these words:
-         *"DELIBERATELY NOT ADDED: `published -> deferred|dismissed`. Ageing is
-         what happens to a finding NOBODY published (D-79); a published case
-         cannot quietly stop being worked on, because it is already out in the
-         world."* The enforcement was the EDGE TABLE — `published` had no
-         disposition edges — and under DEC-72 a case member sits at `concluded`,
-         which does carry them (REC-13's rule that a conclusion nobody published
-         still ages). So without this, publishing a case would become the way to
-         make it deferrable, and D-79's ruling would be reversed by a lifecycle
-         change nobody read as reversing it.
-         REFUSED BY NAME rather than as a generic ILLEGAL_TRANSITION, on
-         PUBLISHED_CANNOT_DIVIDE's precedent: the two say different things to a
-         member, and "this is not a legal move in the table" would be false here
-         — the move IS in the table, and what forbids it is the case relation. */
-      if (this.#caseRelationOf(id).member) { published.push({ id, from: b.current_state }); continue; }
-      if (!(LEGAL[b.current_state] || []).includes(to)) illegal.push({ id, from: b.current_state });
-    }
-    /* DEC-49 REGION is-dispose-inquiries — REC-64/C-33.13. The kind check alone;
-       the transition check below refuses with a code eight sites mint. */
-    if (offenders.length)
-      /* né NOT_PROBLEMS: REC-10's one wire change inside this op (DATA-MODEL
-         §2.7 change 13 — the refusal stops naming a construct that no longer
-         exists). */
-      return { ok: false, reason: "NOT_INQUIRIES", offenders: offenders.sort(),
-               detail: "disposition moves an inquiry's state, and this selection carries something else. "
-                     + "The set is refused whole rather than narrowed to the inquiries in it." };
-    /* END DEC-49 REGION is-dispose-inquiries */
-    /* CASE-4 / DEC-72. Before the generic transition refusal, for
-       PUBLISHED_CANNOT_DIVIDE's reason: a member told the move is illegal would
-       go looking at the state table and find the edge sitting right there. */
-    if (published.length)
-      return { ok: false, reason: "PUBLISHED_CANNOT_BE_SET_DOWN", to,
-               offenders: published.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "a finding that is a member of a published case cannot be deferred or dismissed. "
-                     + "AGEING IS WHAT HAPPENS TO A FINDING NOBODY PUBLISHED (D-79): a question the group "
-                     + "quietly stopped working is indistinguishable from one that was never asked, which "
-                     + "is why it is made visible rather than left to vanish. A published case is already "
-                     + "out in the world and cannot stop being worked on quietly — a reader is holding it. "
-                     + "What IS available is the route DEC-12 built: reopen it (op=reopen), and let the "
-                     + "next edition say what changed." };
-    if (illegal.length)
-      return { ok: false, reason: "ILLEGAL_TRANSITION", to, offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
-               detail: "these are not legal moves in the catalog's state table. A move to the state "
-                     + "something is already in usually means the view was taken before someone else's "
-                     + "disposition, so it is refused rather than treated as a no-op." };
-
-    /* REC-17 / D-5: THE WALK-BACK EDGES, and the criterion is the corpus's own
-       rather than a preference. `SB-CORE.md:1507` says retire is "the existing
-       TERMINAL transition, which already refuses on a downstream consequence
-       (CITED) rather than on the actor", and that is the whole rule:
-       **terminal acts on a cited inquiry REFUSE with CITED; reversible acts
-       raise the re-evaluation OBLIGATION.** `dismissed` is terminal in the
-       sense that matters here — the question is ABANDONED, and nothing succeeds
-       it — so an inquiry a live basis leg still reasons from is refused, with
-       the offenders named and the DOCUMENT PATH'S OWN REMEDY WORDING
-       (SB-CORE.md:944-949, which retire's CITED already words). `deferred` is
-       reversible and is NOT refused: it raises the obligation below.
-       NO NEW MECHANISM AND NO NEW REFUSAL NAME — this is retire's `CITED` over
-       REC-11's reverse index, which is why it is one lookup and not a walk.
-       A PUBLISHED dependent counts here, and that is the point rather than a
-       side effect: its basis is frozen inside a signed edition, so if the
-       question beneath it is abandoned its panel names a question nobody will
-       ever answer while its frozen strength still reads. That is the harm this
-       item's second negative control produces on purpose. */
-    if (to === "dismissed") {
-      const cited = [];
-      for (const id of sel.members) {
-        const rests = this.#restsOnLive(id);
-        if (rests.all.length) cited.push({ id, citedBy: rests.all });
-      }
-      if (cited.length)
-        return { ok: false, reason: "CITED", to, offenders: cited.sort((a, b) => a.id < b.id ? -1 : 1),
-                 detail: "live basis legs still rest on these questions. Dismissing one abandons it, and a "
-                       + "claim resting on an abandoned question would go on reading at a strength nobody "
-                       + "will ever re-examine — the downstream consequence retire already refuses on. "
-                       + "Withdraw those legs first (sever the citation with a reason), or DEFER instead: "
-                       + "deferring is reversible and raises the re-evaluation obligation on every "
-                       + "dependent rather than stranding it." };
-    }
-
-    const when = stampInstant("second");
-    const disposed = [];
-    for (const id of sel.members) {
-      const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-      const cur = this.#one(`SELECT bundle_sha, current_state FROM bundles WHERE bundle_id=?`, id);
-      if (!liveMd || liveMd.content === null)
-        return { ok: false, reason: "NO_DOCUMENT", bundleId: id,
-                 detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
-      let text = liveMd.content;
-      /* C-4.2: prior_state obliges a state_history ENTRY. Naming where a state
-         came from without recording the transition leaves the document asserting
-         a history it does not carry, which the catalog rejects and which is
-         worse than not naming it: the entry is the record, prior_state is only
-         a pointer at it. Five fields, per the catalog: timestamp, from_state,
-         to_state, blurb, author. */
-      const withHistory = Store.#appendStateHistory(text, {
-        timestamp: when, from_state: cur.current_state, to_state: to,
-        blurb: why, author: author || "member" });
-      if (!withHistory)
-        return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", bundleId: id, disposedSoFar: disposed,
-                 detail: "this document's state_history block is not in a shape this grammar can extend in "
-                       + "place, and a disposition that recorded no transition would leave prior_state "
-                       + "pointing at a history the document does not carry (C-4.2)" };
-      text = withHistory;
-      text = Store.#setScalar(text, "prior_state", cur.current_state);
-      text = Store.#setScalar(text, "current_state", to);
-      /* D-169: setOrAdd, not set. C-2.8 requires a non-empty disposition_reason
-         for deferred and dismissed, and the setup page's intake (mdFor) writes an
-         inquiry with NO disposition_reason line; #setScalar returns the text
-         UNCHANGED for an absent key, so the state moved and the requirement went
-         unmet — the record held a bundle its own catalogue rejects. A document
-         already carrying the line is rewritten in place, byte-identical to before. */
-      text = Store.#setOrAddScalar(text, "disposition_reason", `"${why}"`);
-      text = Store.#setScalar(text, "last_updated", `"${when}"`);
-      /* C-13.2: last_updated moving requires a Session Log entry. What the
-         record is FOR is saying who did what and why, and a state change
-         appearing with no account of it is an unaccountable change. */
-      const entry = `### Session ${when} | ${to === "deferred" ? "Deferred" : "Dismissed"} | ${author || "member"}\n`
-                  + `Trigger: selection ${handle}\n`
-                  + `Changes: state ${cur.current_state} to ${to}. Reason: ${why}.\n`;
-      const at = text.indexOf("## Session Log");
-      if (at < 0) text += "\n## Session Log\n\n" + entry;
-      else {
-        const nxt = text.indexOf("\n## ", at + 1);
-        const cutAt = nxt === -1 ? text.length : nxt + 1;
-        text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
-      }
-
-      const carried = [];
-      for (const r of this.sql.exec(
-        `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, id))
-        carried.push(r.content !== null
-          ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-          : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-      const bytes = new TextEncoder().encode(text);
-      const parsed = parseFrontmatter(text);
-      const fm = parsed.data || {};
-      const promoted = this.promote({
-        bundleId: id, base: cur.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-        author: author || "member",
-        files: [{ path: "bundle.md", text, bytes: bytes.length,
-                  sha256: createSha256().update(bytes).hex() }, ...carried],
-        meta: { object_type: "inquiry", title: fm.title,
-                current_state: to, prior_state: cur.current_state,
-                created: fm.created, last_updated: when,
-                criticality: fm.criticality ?? null },
-      });
-      if (!promoted.ok) return { ...promoted, bundleId: id, disposedSoFar: disposed };
-      disposed.push(id);
-    }
-    /* REC-17 / D-5, the OTHER half: a REVERSIBLE act raises the obligation,
-       exactly as supersession does. Nothing is written to the dependents — the
-       obligation is a QUERY (P-64), derived from the state this act just moved
-       — and what is returned here is the act TELLING THE ACTOR what its move
-       put a second look on. Reported for `deferred` only: the `dismissed` arm
-       never reaches here, because a cited inquiry cannot be dismissed at all. */
-    const raised = disposed.flatMap((id) =>
-      this.#reevalRaisedBy(id, viewer).map((d) => ({ ...d, target: id })));
-    return { ok: true, to, reason: why, handle, disposed: disposed.sort(),
-             weight: "refuse", drift: sel.drift,
-             ...(to === "deferred"
-               ? { reevaluation: { source: "deferred", since: when, raised } }
-               : {}) };
-  }
-
+  /* R20–R22, R39: disposing a selection of inquiries: inquiry's. */
+  dispose(...a) { return inquiryOf(this.ctx).dispose(...a); }
   /* The dependents ONE act just put a second look on, named in the actor's own
      answer — the same reverse lookup op=reevaluations runs, and GATED THE SAME
      WAY (REC-30): a dependent the actor may not see is WITHHELD, with no count
@@ -2895,61 +2516,8 @@ export class Store extends DurableObject {
                      + "discharged by one of them acting (DEC-72, D-266's scoping, D-79's ageing)." };
   }
 
-  /* THE ONE live-basis-leg predicate (REC-17 / D-5). Which inquiries REASON
-   * FROM this one — `SELECT ... FROM inquiry_basis WHERE target_id=?`, the
-   * single indexed lookup REC-11 built `inquiry_basis_target` for, and the
-   * whole mechanism P-64 asks for. #citesInto answers the CITATION question for
-   * information objects; this answers the BASIS question for inquiries, and the
-   * two are deliberately separate because a citation and a leg of a claim are
-   * different relationships (D-21, REC-11).
-   *
-   * LIVE, and each exclusion is a rule rather than a filter:
-   *   - the citing document is read for the REFERENCE entry's status, exactly
-   *     the way #citesInto reads it (basis ⊆ references[], C-6.3 as REC-11
-   *     rewrote it), so a SEVERED edge does not block: severing is the recorded
-   *     decision to stop relying, and treating it as live would make the
-   *     refusal unclearable by the very act doctrine prescribes for clearing it.
-   *   - a citing document that CANNOT BE READ counts as live. Refusing on what
-   *     cannot be verified is the conservative arm and it is retire's already.
-   *   - a `divided` dependent does not block. It is TERMINAL (DEC-28) and its
-   *     legs were re-homed onto children that carry their own, so its basis is
-   *     frozen history; counting it would refuse an act on behalf of a question
-   *     that has been carried forward, and the remedy — sever the leg — cannot
-   *     be performed on a terminal document at all.
-   *
-   * The offenders are named by (bundle_id, ord): REC-11's ord is what makes a
-   * leg ADDRESSABLE, and one document legitimately carries two legs (D4). */
-  #restsOnLive(id) {
-    const confirmed = [], severed = [], frozen = [];
-    for (const r of this.#rows(
-      `SELECT ib.bundle_id, ib.ord, ib.role, b.current_state, b.object_type
-         FROM inquiry_basis ib JOIN bundles b ON b.bundle_id = ib.bundle_id
-        WHERE ib.target_id=? ORDER BY ib.bundle_id, ib.ord`, id)) {
-      const leg = { bundle_id: r.bundle_id, ord: r.ord, role: r.role || null,
-                    state: r.current_state };
-      if (r.current_state === "divided") continue;
-      /* D-267: the same one severance confirmation #citesInto and the queue's
-         ancestor walk read, with NO relation constraint — a basis leg is a
-         reference entry and the leg does not restate the rel. */
-      if (this.#refEdgeSevered(r.bundle_id, id)) { severed.push(leg); continue; }
-      /* FROZEN vs WORKING, and the split is the D-5 refinement this item makes
-         (reported to CONDUCT rather than buried): a `published` dependent's
-         basis is inside a SIGNED EDITION and cannot be edited at all, so it can
-         never withdraw a leg. Both sets are returned; which one an act refuses
-         on is the ACT's rule, stated at the act. */
-      /* CASE-4 / DEC-72: the question is THE CASE RELATION, not the state word.
-         The sentence above is unchanged and is now literally true rather than
-         true by proxy: what makes a dependent's basis unwithdrawable is that its
-         current version is the one a case froze and signed — which is what the
-         pin says, and what `current_state: published` used to stand in for.
-         A dependent that was published and has since been reopened is WORKING
-         again and belongs in `confirmed`, which is exactly where the state word
-         put it too; the difference is that this asks the fact directly. */
-      (this.#caseRelationOf(r.bundle_id).member ? frozen : confirmed).push(leg);
-    }
-    return { confirmed, frozen, severed, all: [...confirmed, ...frozen] };
-  }
-
+  /* R17: the live legs resting on an id: inquiry's. */
+  #restsOnLive(id) { return inquiryOf(this.ctx).restsOnLive(id); }
   /* REC-181: RETIREMENT'S ONE CITATION PREDICATE, shared by `retire` and by
    * `promote`'s transition into `retired`. §4.1 of State Rules v1.5 (BOB #30):
    * a retired item is not citable, and the terminal transition refuses while a
@@ -9803,969 +9371,9 @@ export class Store extends DurableObject {
      that accompanies it. Nothing derives meaning from the index. */
   static MEMBER_ROLES = ["load_bearing", "supporting"];
 
-  /* REC-16: DIVIDING an inquiry. open|surfaced|concluded -> `divided`, which is
-   * TERMINAL (DEC-28), with the parent's legs re-homed onto children that each
-   * supersede it.
-   *
-   * WHY THIS EXISTS AND IS NOT HOUSEKEEPING. Weakest-link composition means an
-   * inquiry mixing one well-supported claim with one thin one is worth exactly
-   * the thin one. Without division a member's only options are to OVERCLAIM or
-   * to STAY SILENT, and both are failures of the same kind this repository's
-   * threat model is about. Division is the honest third move: say that the
-   * question was two questions, and answer each at what it is actually worth.
-   *
-   * AND THE ABUSE IS THE SAME MECHANISM (R4), which is why the disclosure below
-   * is the point of this act rather than a detail. Dividing would otherwise be a
-   * CHEAPER WAY TO SHED A FINDING THAT CUTS AGAINST YOU than severing it: move
-   * the inconvenient leg onto a child nobody publishes and the published half
-   * looks stronger, with nothing on the record saying what happened. Three
-   * things close that, and all three are enforced rather than encouraged:
-   *
-   *   1. NO LEG MAY BE DROPPED. Every ord in the parent's basis is apportioned
-   *      to at least one child, INCLUDING every `cuts_against` leg, and the
-   *      refusal names the orphans (NO_APPORTIONMENT). Severance is the act that
-   *      removes material and it costs a per-leg reason; division only re-homes,
-   *      so it does not do severance's work at a discount (DEC-29(a)).
-   *   2. EACH CHILD NAMES ITS PARENT AND EVERY SIBLING, in its own bundle.md, in
-   *      the keys REC-14 reserved for exactly this and projected through the
-   *      ordinary promote path. A reader who can see one half must be able to
-   *      see that the other half EXISTS.
-   *   3. THE PARENT RECORDS WHERE EVERY LEG WENT, in `division_apportionment`,
-   *      and the catalog's `divided` entry requirements refuse the state without
-   *      it — so a hand-written document cannot wear `divided` while quietly
-   *      losing a leg.
-   *
-   * ONE AUTHORED REASON FOR THE WHOLE DIVISION (DEC-29(a)), and NO per-leg
-   * reason. The per-leg judgement is already recorded per leg, in the
-   * apportionment; a second one would be friction theatre on an act whose
-   * disclosure is already total. Do not add one by inference.
-   *
-   * AUTHOR-SCOPED, SETTLED (DEC-30): any `contribute` holder, act attributed. A
-   * machine credential is refused BY SHAPE (MACHINE_CANNOT_DIVIDE), the
-   * MACHINE_CANNOT_CONCLUDE precedent — a machine may surface a question and may
-   * never decide that the group's question was malformed. Owner-scoping was the
-   * alternative and was refused for a reason worth keeping here: division is how
-   * a member escapes an overclaiming mix, and de-escalation must never require
-   * permission from someone whose incentive may run the other way.
-   *
-   * NO NEW TABLE (decision D5). The division is AUTHORED in bundle.md and the
-   * children's `supersedes` edges reach `refs` through the projection that
-   * already exists. A division table written by an op would be the first
-   * relationship in this record that exists outside the document asserting it.
-   *
-   * THE MACHINE IS THE CATALOG'S, through vocabFor over the DECLARED spelling,
-   * so a legacy focus/problem document — whose own vocabulary has no `divided`
-   * — is refused rather than quietly given a state its contract never had. */
-  divide({ target, reason = "", children = null, viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-divide — REC-64/C-32.7. The fence alone. */
-    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
-      return { ok: false, reason: "MACHINE_CANNOT_DIVIDE",
-               detail: "dividing is a named member's judgement that the group's own question was malformed — "
-                     + "that it was two questions — and that judgement carries a name. A machine credential "
-                     + "may surface a question and gather what it rests on; it may not restructure the "
-                     + "record's questions. Sign in as a member." };
-    /* END DEC-49 REGION is-machine-divide */
-    const why = String(reason ?? "").trim();
-    if (!why)
-      return { ok: false, reason: "NO_REASON",
-               detail: "a division records WHY the question was two questions. One authored reason covers the "
-                     + "whole restructuring (DEC-29) and nothing is derived, defaulted or proposed: "
-                     + "'divided' with no account of why is a state change wearing a correction's clothes." };
-    if (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why))
-      return { ok: false, reason: "BAD_REASON",
-               detail: `the reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
-    if (!target)
-      return { ok: false, reason: "NO_TARGET",
-               detail: "a division restructures ONE question: pass target=<inquiry id>" };
-
-    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
-       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
-       absent one, so the refusal discloses nothing. */
-    const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha, b.group_id FROM bundles b
-       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "inquiry")
-      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "dividing splits a question, and only an inquiry carries one." };
-
-    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its state cannot be moved" };
-    const parentText = liveMd.content;
-    const fm = parseFrontmatter(parentText).data || {};
-
-    /* PUBLISHED_CANNOT_DIVIDE, refused BY NAME and BEFORE the generic edge
-       check, because the two say different things to the member. DEC-12 changed
-       PUBLISHING — a case may be reopened and republished at a new edition — and
-       it did not change this. An EDITION says the case continues; a DIVISION
-       says the parent was MALFORMED. A signed edition cannot be retroactively
-       declared malformed without erasing what a reader already relied on, and
-       the honest route is the one DEC-12 built: reopen it, and let the next
-       edition say what changed. */
-    /* CASE-4 / DEC-72: THE CASE RELATION, not the state word. The refusal's
-       name, its reasoning and its remedy are unchanged — what changes is that
-       "is this a published case" is now asked of the pin rather than of a
-       lifecycle state that no longer exists. Keying it on `published` after the
-       removal would have made this refusal unreachable, and a signed edition
-       would have become divisible with the suite green. */
-    if (this.#caseRelationOf(target).member)
-      return { ok: false, reason: "PUBLISHED_CANNOT_DIVIDE", target, from: b.current_state,
-               detail: "a published case cannot be divided. An EDITION says the case continues; a DIVISION "
-                     + "says the parent was malformed, and a hash somebody has already relied on cannot be "
-                     + "retroactively declared malformed. Reopen it (op=reopen) and publish what changed as "
-                     + "a new edition, which is the act DEC-12 built for exactly this." };
-
-    /* THE MAP RULE: the machine is the catalog's, looked up through vocabFor
-       over the DECLARED spelling, never STATES.inquiry by a raw key. */
-    const spec = vocabFor(STATES, fm.object_type ?? b.object_type);
-    const legalFrom = (spec?.edges?.[b.current_state]) || [];
-    if (!legalFrom.includes("divided"))
-      return { ok: false, reason: "ILLEGAL_TRANSITION", to: "divided", target,
-               from: b.current_state, object_type: fm.object_type ?? b.object_type,
-               detail: "this is not a legal move in the catalog's state table for this document's own "
-                     + "vocabulary. An inquiry divides from open (or its `surfaced` alias) or from "
-                     + "concluded; something deferred or dismissed is picked back up first (op=reopen), "
-                     + "and a legacy focus/problem document has no divided state at all until its "
-                     + "frontmatter is modernized." };
-
-    /* REC-17 / D-5: division is TERMINAL for the parent, so it takes the same
-       `CITED` refusal dismissal takes — retire's refusal on a downstream
-       consequence rather than on the actor — over REC-11's reverse index. No
-       new mechanism and no new refusal name.
-       AND THE SET IT REFUSES ON IS NARROWER THAN DISMISSAL'S, which is this
-       item's one judgment call and is reported to CONDUCT rather than buried.
-       A WORKING dependent (open, concluded, deferred, dismissed) blocks:
-       C-6.2's remedies for a leg whose target moved are "restore from history",
-       "re-point to the successor" and "sever with a reason", and a working
-       document can perform all three — so it is told now, with the offenders
-       named, rather than discovering it later. A PUBLISHED dependent does NOT
-       block, for the reason the two acts differ: dismissal ABANDONS a question
-       and leaves nothing to re-point to, while a division CARRIES IT FORWARD
-       into children that supersede it and are resolvable in both directions
-       (REC-16). Refusing there would make a case's own publication the thing
-       that freezes a malformed question in the record forever — the exact
-       overclaim division exists to let a member escape (R4/DEC-28) — and the
-       published edition is not stranded: it keeps answering with its own
-       signature (DEC-12) and its authors get R7's obligation, which is what
-       this item builds. */
-    const restsOn = this.#restsOnLive(target);
-    if (restsOn.confirmed.length)
-      return { ok: false, reason: "CITED", target, offenders: restsOn.confirmed,
-               detail: "live basis legs still rest on this question. Dividing it declares it MALFORMED and "
-                     + "ends it, and a claim resting on it would be left pointing at a question the record "
-                     + "has withdrawn. Withdraw those legs first (sever the citation with a reason), or "
-                     + "re-point them at the child that carries the half they rely on once it exists." };
-
-    /* THE CHILDREN, and the apportionment they carry. Both AUTHORED: nothing
-       here proposes a split, guesses a question, or distributes a leg. */
-    const kids = Array.isArray(children) ? children.filter((c) => c && typeof c === "object") : [];
-    if (kids.length < 2)
-      return { ok: false, reason: "TOO_FEW_CHILDREN", target, got: kids.length,
-               detail: "a division produces at least TWO questions. One child is a rename and zero is a "
-                     + "deletion, and neither is what dividing claims about the parent." };
-    const ids = kids.map((c) => String(c.id ?? "").trim());
-    for (const id of ids)
-      if (!BUNDLE_ID_RE.test(id) || normalizeType(OBJECT_TYPES[id.split("-")[0]]) !== "inquiry")
-        return { ok: false, reason: "BAD_CHILD_ID", target, child: id,
-                 detail: "each child is named with a canonical INQ- id: a division produces questions, and "
-                       + "the id grammar is what makes them addressable by everything that will cite them." };
-    if (new Set(ids).size !== ids.length)
-      return { ok: false, reason: "BAD_CHILD_ID", target, children: ids,
-               detail: "two children carry the same id: a leg apportioned to a child named twice has one "
-                     + "home, not two." };
-    if (ids.includes(target))
-      return { ok: false, reason: "BAD_CHILD_ID", target,
-               detail: "a division's child cannot be the parent itself: the parent is terminal and the "
-                     + "children are what carry the question forward." };
-    for (const id of ids) {
-      const exists = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, id);
-      if (exists)
-        return { ok: false, reason: "CHILD_EXISTS", target, child: id,
-                 detail: "this id already names a bundle. A division CREATES its children, so re-using an "
-                       + "existing id would overwrite a question somebody else is working on." };
-    }
-    for (const c of kids) {
-      const q = String(c.question ?? "").trim();
-      if (!q)
-        return { ok: false, reason: "NO_CHILD_QUESTION", target, child: String(c.id ?? ""),
-                 detail: "each child is a QUESTION and its question is authored, never derived from the "
-                       + "parent's. The whole claim a division makes is that these are two different "
-                       + "questions, so a child that cannot state its own has not been shown to be one." };
-      if (q.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(q))
-        return { ok: false, reason: "BAD_CHILD_QUESTION", target, child: String(c.id ?? ""),
-                 detail: `a child's question is at most ${Store.RELEASE_ACK_MAX} characters and cannot `
-                       + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
-                       + `has no escapes` };
-    }
-
-    /* THE APPORTIONMENT. Addressed by ORDINAL, because duplicate targets are
-       legal by design (D4 — one document, two legs) and keying on the target
-       would let one assignment discharge two legs. A leg may land on ONE child
-       or on BOTH; what it may not do is land nowhere. */
-    const legs = Array.isArray(fm.basis) ? fm.basis.filter((l) => l && typeof l === "object") : [];
-    if (!legs.length)
-      return { ok: false, reason: "NO_APPORTIONMENT", target, orphans: [],
-               detail: "this inquiry rests on nothing, so there is nothing to apportion and both children "
-                     + "would inherit nothing. A standing objective with no legs is not two questions yet "
-                     + "(DEC-22); it is one question nobody has gathered anything for." };
-    const homes = new Map();               // ord -> [child ids], in children order
-    for (let k = 0; k < kids.length; k++) {
-      const raw = Array.isArray(kids[k].legs) ? kids[k].legs : null;
-      if (!raw || !raw.length)
-        return { ok: false, reason: "NO_APPORTIONMENT", target, child: ids[k],
-                 detail: `${ids[k]} was apportioned no leg of the parent's basis. A child that inherits `
-                       + `nothing is a NEW question, not a half of this one — open it as its own inquiry `
-                       + `rather than calling it a division.` };
-      for (const o of raw) {
-        const ord = Number(o);
-        if (!Number.isInteger(ord) || ord < 0 || ord >= legs.length)
-          return { ok: false, reason: "BAD_APPORTIONMENT", target, child: ids[k], ord: o,
-                   detail: `a leg is apportioned by its ORDINAL in the parent's basis (0..${legs.length - 1}); `
-                         + `'${o}' names none. Ordinals rather than targets, because one document `
-                         + `legitimately carries two legs (D4).` };
-        if (!homes.has(ord)) homes.set(ord, []);
-        if (!homes.get(ord).includes(ids[k])) homes.get(ord).push(ids[k]);
-      }
-    }
-    const orphans = [];
-    for (let i = 0; i < legs.length; i++) if (!homes.has(i)) orphans.push(i);
-    if (orphans.length) {
-      const cutting = orphans.filter((i) => legs[i].role === "cuts_against");
-      return { ok: false, reason: "NO_APPORTIONMENT", target,
-               orphans: orphans.map((i) => ({ ord: i, target: legs[i].target ?? null, role: legs[i].role ?? null })),
-               cuts_against_orphans: cutting.length,
-               detail: `every leg gets a home. ${orphans.length} leg(s) were apportioned to no child`
-                     + (cutting.length ? `, and ${cutting.length} of them CUT AGAINST this inquiry` : "")
-                     + ". Division RE-HOMES material and only severance REMOVES it, which is why dividing "
-                     + "cannot do severance's work at a discount (R4): apportion them, or sever them with "
-                     + "a reason, which is the act that takes material out of a question." };
-    }
-
-    const when = stampInstant("second");
-    /* D-436: THE CHILDREN ARE CREATIONS, written AFTER the parent's revision — so whether each can name its producing
-       group is asked HERE, before anything moves, and never discovered by a child refused after the parent is
-       already divided. A child's bytes are derived from the parent's and carry its `group:` line; `promote` stamps
-       the store's recorded group over it, or, recording none, keeps the parent's. With neither, no child could name
-       one. This line was a literal fallback. */
-    if (!this.#producingGroup() && !(typeof fm.group === "string" && fm.group.trim()))
-      return this.#groupUndetermined("inquirydivide",
-        `${target}'s children would be new documents that must name the group that produced them; this store `
-        + `records none and ${target}'s own document names none, so nothing was divided.`);
-
-    /* THE CHILDREN ARE DERIVED FROM THE PARENT'S OWN DOCUMENT, not built from a
-       template here. A template would be this file's private idea of what an
-       inquiry looks like, and it would fall behind the catalog's the first time
-       the shape moved; deriving means a child is conformant for whatever
-       contract the parent was authored under, which is the same reason every
-       projection in this file reads the document rather than restating it. What
-       is REPLACED is everything the child must not inherit: the parent's answer,
-       the parent's history, the parent's session log. */
-    const plans = [];
-    for (let k = 0; k < kids.length; k++) {
-      const id = ids[k];
-      const q = String(kids[k].question).trim();
-      const sibs = ids.filter((x) => x !== id);
-      const mine = [...homes.entries()].filter(([, to]) => to.includes(id)).map(([ord]) => ord).sort((x, y) => x - y);
-      const childLegs = mine.map((ord) => legs[ord]);
-      let text = parentText;
-      text = Store.#setScalar(text, "id", id);
-      text = Store.#setScalar(text, "title", `"${Store.#fmSafe(deriveInquiryTitle(q) ?? q)}"`);
-      text = Store.#setScalar(text, "current_state", "open");
-      text = Store.#setScalar(text, "prior_state", "null");
-      text = Store.#setOrAddScalar(text, "created", `"${when}"`);
-      text = Store.#setOrAddScalar(text, "last_updated", `"${when}"`);
-      /* A NEW document has no history of its own, and inheriting the parent's
-         would be the child claiming transitions it never made — the append-only
-         surface C-5.1 guards, filled with somebody else's past. REMOVED and
-         re-opened rather than overwritten in place: a parent that has been
-         concluded carries a populated BLOCK, and setting the key line alone
-         would leave its indented entries behind as array items belonging to
-         nothing (C-2.1's "array item outside any block", which is exactly what
-         the catalog said the first time this was written the short way). */
-      text = Store.#removeBlock(text, "state_history");
-      text = Store.#setOrAddScalar(text, "state_history", "[]");
-      /* The parent's ANSWER is not the child's. An inquiry authored before
-         `concluded` existed carries neither key; one divided out of a concluded
-         parent carries both, and carrying them forward would put the parent's
-         conclusion on an open question nobody has answered. */
-      text = Store.#setOrAddScalar(text, "conclusion", `""`);
-      /* REC-136: and the reading the parent's conclusion ADOPTED (§7.1 item 6)
-         is the parent's answer too — cleared for the rule above. #setScalar,
-         not setOrAdd: a parent concluded before item 6 carries neither key,
-         and adding two empty ones to its children would be bytes nobody asked
-         for. */
-      text = Store.#setScalar(text, "conclusion_version", `""`);
-      text = Store.#setScalar(text, "conclusion_claim", `""`);
-      text = Store.#setOrAddScalar(text, "falsifier", `""`);
-      /* REC-117, AND IT IS THE SECOND HALF OF THE SAME RULE THE THREE LINES
-         ABOVE STATE. A parent concluded under a falsifier override carries the
-         pair; carrying it into a child would put a member's name, and their
-         acceptance that no falsifier could be stated, on an OPEN question
-         nobody has answered — the parent's answer arriving on the child by the
-         one route the lines above exist to close. Swept rather than noticed:
-         these are the only two sites in this file that write `falsifier`. */
-      text = Store.#setOrAddScalar(text, "falsifier_override_by", `""`);
-      text = Store.#setOrAddScalar(text, "falsifier_override_at", `""`);
-      text = Store.#setOrAddScalar(text, "disposition_reason", `""`);
-      /* THE DISCLOSURE (R4), in the keys REC-14 RESERVED for it with no
-         producer. This act is the producer. */
-      text = Store.#setOrAddScalar(text, "division_parent", target);
-      text = Store.#setOrAddScalar(text, "division_siblings", `[${sibs.join(", ")}]`);
-      /* references: the apportioned legs' targets, plus the supersedes edge back
-         to the parent WITH ITS REASON — the requirement C-6.1 gains with this
-         item, because before it `supersedes` passed on the strength of being in
-         a list and had no producer at all. */
-      const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string"))];
-      text = Store.#setOrAddBlock(text, "references", [
-        ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
-        `  - target: ${target}`, "    rel: supersedes", "    status: confirmed",
-        `    reason: "${Store.#fmSafe(why)}"`]);
-      text = Store.#setOrAddBlock(text, "basis", childLegs.flatMap((l) => [
-        `  - target: ${l.target}`,
-        `    role: ${l.role ?? "supports"}`,
-        ...(l.grade !== undefined && l.grade !== null ? [`    grade: ${l.grade}`] : []),
-        ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
-        ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
-        ...(l.target_edition !== undefined ? [`    target_edition: ${l.target_edition}`] : []),
-        ...(l.author ? [`    author: ${l.author}`] : []),
-        ...(l.date ? [`    date: ${l.date}`] : []),
-        ...(typeof l.note === "string" ? [`    note: "${Store.#fmSafe(l.note)}"`] : [])]));
-      /* The parent's division block is the PARENT's, never the child's: a child
-         carrying one would claim to have been divided itself. */
-      text = Store.#removeBlock(text, "division");
-      text = Store.#removeBlock(text, "division_apportionment");
-      text = Store.#setSection(text, "## Question", [q]);
-      /* THE DISCLOSURE FOR A PERSON TO READ, beside the frontmatter the gates
-         and the projections read — the same two-places discipline op=publish
-         takes with `## What This Excludes`. A disclosure only a parser can find
-         is not a disclosure. */
-      text = Store.#setSection(text, "## What It Rests On", [
-        `Divided out of ${target} on ${when} by ${who}.`, "",
-        why, "",
-        `The other half of that question stays on the record: ${sibs.join(", ")}. `
-        + `${target} is the divided parent and records where every leg went, including any leg that cuts `
-        + `against this question.`]);
-      text = Store.#setSection(text, "## Conclusion", []);
-      text = Store.#setSection(text, "## What Would Falsify This", []);
-      text = Store.#setSection(text, "## Session Log", [
-        `### Session ${when} | Divided out | ${who}`,
-        `Trigger: op=inquirydivide on ${target}`,
-        `Changes: created from ${target}, ${childLegs.length} leg(s) apportioned here.`,
-        `Parent: ${target}`,
-        `Siblings: ${sibs.join(", ")}`,
-        `Reason: ${why}`]);
-      plans.push({ id, q, sibs, mine, legs: childLegs, text });
-    }
-
-    /* PRE-FLIGHT EVERY CHILD BEFORE ANYTHING IS WRITTEN, through the catalog's
-     * own functions — the ones promote itself will run.
-     *
-     * WHY IT IS HERE AND NOT LEFT TO promote. The parent has to be written
-     * FIRST: a child's disclosure is checked against the PARENT's own
-     * `division.into`, so a child written before the parent moved would be
-     * refused NO_SIBLING_DISCLOSURE by a parent that has not been divided yet.
-     * That ordering is the right one — a child supersedes a parent that IS
-     * divided — but it means a child refused at ITS write would leave a terminal
-     * parent naming a question that does not exist. So every child is judged
-     * here, against the same rules, before the parent moves; what remains after
-     * this gate is the promote-internal failures (a collision, an oversize
-     * inline), which cannot arise for a freshly created document of this size.
-     *
-     * The alternative — write the children first and skip the resolved check
-     * while the parent is mid-division — was rejected outright: an exemption
-     * saying "the disclosure is not checked during the act that produces
-     * disclosures" is the hole this whole item exists to close. */
-    for (const pl of plans) {
-      const cf = parseFrontmatter(pl.text).data || {};
-      const findings = [];
-      supersedesEdgeFindings(cf, findings);
-      divisionDisclosureFindings(cf, findings);
-      checkInquiryBasis(cf, findings, this.publishedRegistryFor(pl.id,
-        pl.legs.map((l) => l.target).filter((t) => typeof t === "string")),
-        /* REC-18: the earned registry for the CHILD, judged before the parent
-           moves exactly as every other rule here is. A child inherits the
-           parent's subject_entity through the copied frontmatter, so an
-           apportioned earned leg is re-confirmed against the record rather than
-           carried across on trust. */
-        this.earnedRegistryForDoc(cf, pl.legs));
-      const errs = findings.filter((x) => x.severity === "error");
-      if (errs.length)
-        return { ok: false, reason: "CHILD_REFUSED", target, child: pl.id,
-                 findings: errs.map((x) => ({ check: x.check, detail: x.message })),
-                 detail: `the document this division would create for ${pl.id} would not pass the catalog, `
-                       + `so nothing was written: the parent is untouched and no child exists. A division `
-                       + `that landed half-applied would leave a terminal parent naming a question nobody `
-                       + `can open.` };
-    }
-
-    /* THE PARENT MOVES FIRST, and every child follows. The pre-flight above is
-       why this order and not the other. */
-    let text = parentText;
-    const withHistory = Store.#appendStateHistory(text, {
-      timestamp: when, from_state: b.current_state, to_state: "divided",
-      blurb: why, author: who });
-    if (!withHistory)
-      return { ok: false, reason: "UNSPLICEABLE_STATE_HISTORY", target,
-               detail: "this document's state_history block cannot be extended in place, and a division "
-                     + "recording no transition would leave prior_state pointing at a history the document "
-                     + "does not carry (C-4.2)" };
-    text = withHistory;
-    text = Store.#setScalar(text, "prior_state", b.current_state);
-    text = Store.#setScalar(text, "current_state", "divided");
-    /* `disposition_reason` is UNTOUCHED (DEC-28). Division's reason belongs to
-       the ACT; routing it through the disposition field would make one field
-       carry two grammars — a stance toward a question, and an account of a
-       restructuring — and every consumer of the field would have to know which
-       one it was holding. */
-    text = Store.#setOrAddBlock(text, "division", [
-      `  reason: "${Store.#fmSafe(why)}"`,
-      `  apportioned_by: ${who}`,
-      `  at: "${when}"`,
-      `  into: [${ids.join(", ")}]`]);
-    /* WHERE EVERY LEG WENT, one row per (leg, child). A second top-level key
-       rather than a member of the map above because the restricted grammar
-       cannot express an array of objects inside a map — the same split REC-14's
-       completeness / completeness_excluded pair takes, for the same reason.
-       `role` is carried on the row so the account is readable without joining it
-       back to basis[]: what a reader checks first is where the legs that CUT
-       AGAINST the case went. */
-    const rows = [];
-    for (let i = 0; i < legs.length; i++)
-      for (const to of homes.get(i))
-        rows.push([`  - ord: ${i}`, `    target: ${legs[i].target}`,
-                   `    role: ${legs[i].role ?? "supports"}`, `    to: ${to}`]);
-    text = Store.#setOrAddBlock(text, "division_apportionment", rows.flat());
-    text = Store.#setScalar(text, "last_updated", `"${when}"`);
-    /* The account in the BODY as well as the frontmatter, the op=publish
-       precedent: the frontmatter is what the gates and the projections read,
-       this is what a person reads. The parent's own conclusion, where it had
-       one, is kept above it — a division does not unsay what the group
-       concluded, it says the question was two questions. */
-    text = Store.#setSection(text, "## Conclusion", [
-      ...(typeof fm.conclusion === "string" && fm.conclusion.trim() ? [fm.conclusion, ""] : []),
-      `Divided on ${when} by ${who} into ${ids.join(", ")}: ${why}`, "",
-      "Where every leg went:", "",
-      ...legs.map((l, i) => `- ${l.target}${l.role === "cuts_against" ? " (cuts against)" : ""} -> `
-                          + `${homes.get(i).join(", ")}`)]);
-
-    const entry = `### Session ${when} | Divided | ${who}\n`
-                + `Trigger: op=inquirydivide on ${target}\n`
-                + `Changes: state ${b.current_state} to divided (terminal).\n`
-                + `Into: ${ids.join(", ")}\n`
-                + `Reason: ${why}\n`
-                + `Apportioned: ${legs.length} leg(s), ${rows.length} placement(s), `
-                + `${legs.filter((l) => l.role === "cuts_against").length} cutting against.\n`;
-    const at = text.indexOf("## Session Log");
-    if (at < 0) text += "\n## Session Log\n\n" + entry;
-    else {
-      const nxt = text.indexOf("\n## ", at + 1);
-      const cutAt = nxt === -1 ? text.length : nxt + 1;
-      text = text.slice(0, cutAt) + entry + "\n" + text.slice(cutAt);
-    }
-
-    const carried = [];
-    for (const r of this.sql.exec(
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
-      carried.push(r.content !== null
-        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-    const bytes = new TextEncoder().encode(text);
-    const promoted = this.promote({
-      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-      author: who,
-      files: [{ path: "bundle.md", text, bytes: bytes.length,
-                sha256: createSha256().update(bytes).hex() }, ...carried],
-      meta: { object_type: fm.object_type ?? b.object_type,
-              title: fm.title, current_state: "divided", prior_state: b.current_state,
-              created: fm.created, last_updated: when,
-              criticality: fm.criticality ?? null },
-    });
-    if (!promoted.ok) return { ...promoted, target };
-
-    const created = [];
-    for (const pl of plans) {
-      const cb = new TextEncoder().encode(pl.text);
-      const cp = this.promote({
-        bundleId: pl.id, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-        author: who,
-        files: [{ path: "bundle.md", text: pl.text, bytes: cb.length,
-                  sha256: createSha256().update(cb).hex() }],
-        meta: { object_type: fm.object_type ?? b.object_type,
-                title: deriveInquiryTitle(pl.q) ?? pl.q,
-                current_state: "open", prior_state: null,
-                created: when, last_updated: when,
-                criticality: fm.criticality ?? null },
-      });
-      if (!cp.ok)
-        return { ...cp, target, child: pl.id, created: created.map((c) => c.id),
-                 detail: "the parent is divided and this child could not be written. Every child was judged "
-                       + "against the catalog before anything moved, so this is a storage failure rather "
-                       + "than a malformed document; the parent names it in division.into and it can be "
-                       + "written again under the same id." };
-      created.push({ id: pl.id, question: pl.q, siblings: pl.sibs, legs: pl.mine, bundleSha: cp.bundleSha });
-    }
-
-    return { ok: true, target, from: b.current_state, to: "divided", terminal: true,
-             bundleSha: promoted.bundleSha,
-             into: ids, children: created,
-             apportionment: legs.map((l, i) => ({ ord: i, target: l.target ?? null,
-               role: l.role ?? "supports", to: homes.get(i) })),
-             cuts_against: legs.filter((l) => l.role === "cuts_against").length,
-             reason: why, apportioned_by: who, at: when, weight: "single",
-             /* REC-17: supersession is the ORIGINAL raiser of R7's obligation
-                (P-64), and this act is its producer. The dependents named here
-                are the FROZEN ones — a working dependent would have refused the
-                act above — and nothing is written to them: the obligation is a
-                query, derived from the supersedes edge the children just made,
-                and their strengths are untouched. */
-             reevaluation: { source: "supersession", since: when,
-                             raised: this.#reevalRaisedBy(target, viewer) },
-             next: "each child is OPEN and carries a supersedes edge back to this parent, this parent's id "
-                 + "and every sibling's. This question is terminal: it is answered by its children now." };
-  }
-
-  /* ================================================================   * REC-45 / DEC-32: `op=inquiryground` — THE ACT THAT AUTHORS THE STRUCTURE.
-   *
-   * REC-42 built the partition and both gates that defend it, and left one gap
-   * routed rather than closed: NOTHING AUTHORED IT. Grounds reached the record
-   * only through a hand-written `bundle.md` promoted by op=promote, so DEC-32
-   * clause 6 — *"RESTRUCTURING AFTER SEEING THE STRENGTH IS LEGAL, RECORDED AND
-   * ATTRIBUTED — never blocked… the system may NOTICE the pattern"* — was
-   * unreachable in both halves at once, because neither RECORDING nor NOTICING
-   * is possible without an act that carries a reason. This is that act.
-   *
-   * IT IS BUILT ON op=publish's STAMPING SHAPE, and the split is the same one:
-   *   AUTHORED, caller-supplied, never prefilled — WHICH legs are grouped
-   *   together, what each group is called, the optional STATEMENT on a group,
-   *   and the REASON for a restructuring. Nothing here proposes a partition,
-   *   guesses a label, or moves a leg on a member's behalf.
-   *   STAMPED by the server — `asserted_by` and `at` on every group, taken from
-   *   the authenticated session and the clock and NEVER from a parameter.
-   *
-   * AND THE STAMP IS THE POINT OF THE ITEM. REC-42's gate already refuses a
-   * MACHINE asserter and an UNDATED assertion; what it cannot refuse is a
-   * caller who supplies a well-formed name and a well-formed date belonging to
-   * somebody else, or belonging to an hour before the strength was shown. So a
-   * caller's `asserted_by`/`at` are DELETED from every row before the stamp
-   * (the op=promote `ownerMemberId` precedent, and the reason it is DELETE and
-   * not OVERWRITE: overwriting is a property of the code path taken, deletion
-   * is a property of the input, and only the second survives somebody later
-   * adding an arm). CLAUDE.md's rule is exactly this one — a provenance hop a
-   * caller can hand us is one a caller can invent — and this is the last door
-   * on the one field in the record that makes a finding STRONGER.
-   *
-   * WHAT COUNTS AS A RESTRUCTURE, and it is decided from the RECORD:
-   * the inquiry is in FIRST AUTHORSHIP when its standing document carries NO
-   * partition at all — no leg names a group and there is no `grounds` key — and
-   * is being RESTRUCTURED in every other case. A reason is REQUIRED on the
-   * second and required on neither half of the first; DEC-32's clause is about
-   * a member who *"may legitimately realise their structure was wrong"*, and
-   * there must be a structure for that to be true of. The distinction is NOT a
-   * parameter and must never become one: a caller who could declare "this is my
-   * first time" could walk past the reason gate on every restructuring they
-   * made. REMOVING a partition is a restructure too, and takes a reason like
-   * any other — it changes an authored structure, and the fact that it moves in
-   * the conservative direction is a fact about the ANSWER, not about the act.
-   *
-   * WHAT CARRIES FORWARD AND WHAT IS RE-STAMPED, which is the other half of
-   * making clause 6 legible. A group's row asserts that ITS LEGS are enough on
-   * their own, so the assertion is ABOUT the legs: a group whose leg set and
-   * statement are unchanged keeps the `asserted_by` and `at` it already had,
-   * and a group whose membership moved becomes THIS member's assertion, NOW.
-   * Re-stamping everything would erase the one thing DEC-32 says the date is
-   * for — *"a structure authored after a strength was seen is a different act
-   * from one authored before it, and only a date lets a reader tell"* — and
-   * carrying everything forward would let a member re-cut a group under
-   * somebody else's name and an older date.
-   *
-   * ONE GRAMMAR, AT BOTH GATES, AND NO SECOND ONE HERE. The candidate document
-   * is judged by `checkInquiryBasis` — the catalog's own function, the same one
-   * op=promote runs at the write and the checker runs at the gate — over the
-   * SAME two registries promote injects, and it is judged BEFORE a byte moves.
-   * The refusal is even called `BASIS_REFUSED`, promote's name, because one
-   * function answering twice should not answer under two names. So every REC-42
-   * refusal fires through this act: an unattributed label, a half-labelled
-   * basis, a machine asserter, an undated assertion, a duplicate label and an
-   * empty group. What is refused HERE and could not be refused there is the
-   * mapping this act introduces and the document does not have — an ordinal
-   * naming no leg, and one leg claimed by two groups.
-   *
-   * THE PARTITION IS ADDRESSED BY ORDINAL and never by target id, which is
-   * REC-16's apportionment decision for REC-16's reason: D4 makes duplicate
-   * targets legal, a basis legitimately cites one document for two legs, and
-   * target-keying would let one instruction move two legs a member meant to
-   * separate. `ord` is the leg's position in `basis[]`, which is what
-   * `inquiry_basis` already keys on.
-   *
-   * TWO STATES REFUSE BY NAME, on op=inquirydivide's precedent that a refusal
-   * should say which rule it met. `published`: the pair and the per-group
-   * breakdown are inside signed, ratified bytes, and re-cutting the partition
-   * underneath them would leave the document composing to something an edition
-   * on the record contradicts — DEC-12's route is reopen, restructure,
-   * republish. `divided`: the parent was declared MALFORMED and carried forward
-   * into children, and re-deriving a terminal parent's strength moves a number
-   * its children's own disclosure already pointed at.
-   *
-   * WHAT IS DELIBERATELY NOT HERE. No NOTICER. DEC-32 says the system MAY
-   * notice a weak leg moved into its own group immediately after a strength
-   * drop and surface it; this act makes that possible and does not do it, and
-   * the difference matters — noticing is a derived read with a surface half
-   * (UI-27's), and building it inside the act would put a judgement about the
-   * member's motive in the same function that must never refuse them (*"a
-   * machine may not refuse the act and must not hide it"*). What this act does
-   * instead is leave the evidence a noticer needs where an append-only history
-   * keeps it: the pair AS IT STOOD BEFORE the act and after it, written into
-   * the Session Log entry beside the reason, and returned to the caller.
-   */
-  groundInquiry({ target, grounds, reason = "", viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    /* DEC-49 REGION is-machine-ground — REC-64/C-32.8. The fence alone. */
-    if (!who || isMachineIdentity(who))                 /* REC-46: one predicate */
-      return { ok: false, reason: "MACHINE_CANNOT_GROUND",
-               detail: "grouping is a named member's judgement that some of their reasons are enough on "
-                     + "their own to carry their answer, and it is the one act in this record that makes a "
-                     + "finding STRONGER. A machine credential may surface a question and gather what it "
-                     + "rests on; it may not decide that part of the gathering was sufficient by itself. "
-                     + "Sign in as a member." };
-    /* END DEC-49 REGION is-machine-ground */
-    if (!target)
-      return { ok: false, reason: "NO_TARGET",
-               detail: "grouping authors the structure of ONE question: pass target=<inquiry id>" };
-    if (grounds === undefined)
-      return { ok: false, reason: "NO_PARTITION", target,
-               detail: "pass grounds[] — an array of { ground, legs: [ord, ...], statement? }, one entry per "
-                     + "group, where each ord is a leg's position in this question's basis. Pass an EMPTY "
-                     + "array to remove the grouping entirely and let the answer read as its weakest leg "
-                     + "again; that is a restructuring like any other and takes a reason." };
-
-    /* REC-25 / D-15: the same fail-closed viewer gate every read takes. An
-       inquiry the viewer may not see answers NO_SUCH_BUNDLE, identical to an
-       absent one, so the refusal discloses nothing. */
-    const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type, b.current_state, b.bundle_sha FROM bundles b
-       WHERE b.bundle_id=? AND (${gate.sql})`, target, ...gate.args);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "inquiry")
-      return { ok: false, reason: "NOT_AN_INQUIRY", target, object_type: b.object_type,
-               detail: "a basis is what a QUESTION rests on, and only an inquiry carries one." };
-    /* CASE-4 / DEC-72: THE CASE RELATION, not the state word — divide's reason
-       exactly, and the stakes here are higher, because this act RAISES A GRADE.
-       A restructure that reached a member of a signed edition would leave the
-       document composing to something the edition on the record contradicts,
-       which is what the refusal below says and what the removal of the state
-       would silently have permitted. */
-    if (this.#caseRelationOf(target).member)
-      return { ok: false, reason: "PUBLISHED_CANNOT_RESTRUCTURE", target, from: b.current_state,
-               detail: "a published case's composed strength and its per-group breakdown are inside signed, "
-                     + "ratified bytes. Re-cutting the structure underneath them would leave this document "
-                     + "composing to something the edition on the record contradicts. Reopen it "
-                     + "(op=reopen), restructure, and publish what changed as a new edition — the route "
-                     + "DEC-12 built for exactly this." };
-    if (b.current_state === "divided")
-      return { ok: false, reason: "DIVIDED_CANNOT_RESTRUCTURE", target, from: b.current_state,
-               detail: "this question was declared malformed and carried forward into children that "
-                     + "supersede it. Re-deriving its strength now would move a number its children's own "
-                     + "disclosure already points at. Restructure the CHILD that carries the half you mean." };
-
-    const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    if (!liveMd || liveMd.content === null)
-      return { ok: false, reason: "NO_DOCUMENT", target,
-               detail: "this inquiry has no readable bundle.md, so its structure cannot be authored" };
-    let text = liveMd.content;
-    const fm = parseFrontmatter(text).data || {};
-    const all = Array.isArray(fm.basis) ? fm.basis : [];
-    const legs = all.filter((l) => l && typeof l === "object");
-    if (!legs.length)
-      /* D-484: routed through the ONE governed site (see `actNoBasis`). */
-      return actNoBasis("a grouping is a partition OF THE LEGS, and this question rests on nothing yet. Cite "
-                      + "what it rests on first (op=cite); an assertion that nothing is enough on its own is "
-                      + "not a thing the record can hold.", { target });
-    if (legs.length !== all.length)
-      return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
-               detail: "this question's basis carries an entry that is not a leg, so the ordinals a "
-                     + "partition addresses cannot be lined up against the document. Nothing was written." };
-
-    /* WHAT STANDS TODAY, read from the DOCUMENT — `inquiry_basis` is a
-       projection of it and never a second place to state it (D-21). */
-    const standingLabel = legs.map((l) => typeof l.ground === "string" && l.ground.trim() ? l.ground.trim() : null);
-    const standingRows = Array.isArray(fm.grounds) ? fm.grounds : [];
-    const standingByLabel = new Map();
-    for (const r of standingRows)
-      if (r && typeof r === "object" && typeof r.ground === "string" && !standingByLabel.has(r.ground))
-        standingByLabel.set(r.ground, r);
-    /* THE DISTINCTION, decided here and from the record alone. Any standing
-       label OR any standing `grounds` key — even an empty or malformed one —
-       is a structure this act is about to replace. */
-    const restructure = standingLabel.some((g) => g !== null)
-                     || (fm.grounds !== undefined && fm.grounds !== null);
-
-    const why = String(reason ?? "").trim();
-    if (restructure && !why)
-      return { ok: false, reason: "NO_REASON", target, restructure: true,
-               detail: "this question already carries an authored structure, so changing it is a REVISION "
-                     + "and records WHY. Restructuring after seeing a strength is legal and is never "
-                     + "blocked (DEC-32) — the defence is that it is visible, which it is not without an "
-                     + "account of it. Nothing here is derived, defaulted or prefilled. A FIRST grouping "
-                     + "needs no reason: there is no earlier structure for it to be a revision of." };
-    if (why && (why.length > Store.RELEASE_ACK_MAX || /["\\\r\n]/.test(why)))
-      return { ok: false, reason: "BAD_REASON", target,
-               detail: `a reason is at most ${Store.RELEASE_ACK_MAX} characters and cannot contain a quote, `
-                     + `a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
-
-    /* ---------------- the caller's partition, mapped onto the legs ----------
-       THE SHAPE ARMS BELOW ARE THE MAPPING AND NOTHING ELSE. Every rule about
-       what a LABEL may say, who may assert it, and whether the partition is
-       total belongs to the catalog's `checkGrounds` and is applied to the
-       CANDIDATE further down — one grammar, at both gates, never a second copy
-       written here because it was convenient. */
-    if (!Array.isArray(grounds))
-      return { ok: false, reason: "BAD_PARTITION", target,
-               detail: "grounds must be an ARRAY of groups, each { ground, legs: [ord, ...] }" };
-    const nextLabel = new Array(legs.length).fill(null);
-    const claimed = new Map();          // ord -> the label that claimed it
-    const asked = [];                   // [{ label, ords, statement }] in the caller's own order
-    for (let i = 0; i < grounds.length; i++) {
-      const row = grounds[i];
-      if (!row || typeof row !== "object" || Array.isArray(row))
-        return { ok: false, reason: "BAD_PARTITION", target, at: i,
-                 detail: `grounds[${i}] is not an object` };
-      const label = typeof row.ground === "string" ? row.ground.trim() : row.ground;
-      const ords = row.legs;
-      if (!Array.isArray(ords))
-        return { ok: false, reason: "BAD_PARTITION", target, at: i,
-                 detail: `grounds[${i}].legs must be an array of ordinals — a group is a partition OF THE `
-                       + `LEGS, and a group naming none asserts that nothing is enough on its own. Legs are `
-                       + `addressed by ORDINAL (their position in basis[]) and never by target id, because `
-                       + `one document legitimately carries two legs (D4).` };
-      const stmt = row.statement === undefined || row.statement === null ? null : row.statement;
-      if (stmt !== null && (typeof stmt !== "string"
-          || stmt.length > Store.EDGE_REASON_MAX || /["\\\r\n]/.test(stmt)))
-        return { ok: false, reason: "BAD_STATEMENT", target, at: i,
-                 detail: `grounds[${i}].statement is at most ${Store.EDGE_REASON_MAX} characters and cannot `
-                       + `contain a quote, a backslash, or a newline: the restricted frontmatter grammar `
-                       + `has no escapes` };
-      for (const raw of ords) {
-        if (!Number.isInteger(raw) || raw < 0 || raw >= legs.length)
-          return { ok: false, reason: "BAD_PARTITION", target, at: i, ord: raw ?? null, legs: legs.length,
-                   detail: `grounds[${i}].legs names ord ${JSON.stringify(raw) ?? "null"}, and this question `
-                         + `has legs 0..${legs.length - 1}. An ordinal that addresses no leg groups nothing.` };
-        if (claimed.has(raw))
-          return { ok: false, reason: "BAD_PARTITION", target, ord: raw,
-                   claimed_by: [claimed.get(raw), label],
-                   detail: `basis[${raw}] is claimed by two groups. A leg belongs to exactly ONE group: a `
-                         + `leg that is needed whatever else holds is NECESSARY, and the honest way to say `
-                         + `so is to leave the reasons ungrouped — an ungrouped basis is read as no `
-                         + `stronger than its weakest leg, which is the conservative reading.` };
-        claimed.set(raw, label);
-        nextLabel[raw] = label;
-      }
-      asked.push({ label, ords: [...ords].sort((x, y) => x - y), statement: stmt });
-    }
-
-    /* ------------------------------------------- the stamp, and what carries */
-    const when = stampInstant("second");
-    const ordsOf = (label) => standingLabel.reduce((a, g, i) => (g === label ? [...a, i] : a), []);
-    const same = (a, c) => a.length === c.length && a.every((v, i) => v === c[i]);
-    const rowsOut = asked.map((a) => {
-      const prior = typeof a.label === "string" ? standingByLabel.get(a.label) : undefined;
-      const priorStmt = prior && typeof prior.statement === "string" ? prior.statement : null;
-      /* CARRIED FORWARD only when the assertion is genuinely the same one: the
-         same legs and the same statement. And only when the standing row's own
-         attribution is usable — a document that reached the store carrying a
-         nameless or undated row (a replayed history: the gate's shape refusals
-         honour the replay exemption) is re-stamped rather than trusted, which
-         fails toward THIS member owning what they just authored. */
-      const carry = !!prior && same(a.ords, ordsOf(a.label)) && priorStmt === a.statement
-                 && typeof prior.asserted_by === "string" && prior.asserted_by.trim() !== ""
-                 && typeof prior.at === "string" && prior.at.trim() !== "";
-      return { ground: a.label, legs: a.ords, statement: a.statement,
-               /* A caller's own `asserted_by`/`at` never appear in this object.
-                  They are not overwritten from `row` — `row` is never read for
-                  them at all, which is the same thing DELETE buys at the trust
-                  boundary and is why the suite asserts a caller's values are
-                  DISCARDED rather than merely losing. */
-               asserted_by: carry ? Store.#fmSafe(prior.asserted_by) : Store.#fmSafe(who),
-               at: carry ? Store.#fmSafe(prior.at) : when,
-               carried_forward: carry };
-    });
-
-    /* NOTHING MOVED, so nothing is recorded. An act that writes a reason, a
-       Session Log entry and a promotion over an identical partition is a
-       revision of nothing, and a record that holds one has a restructuring in
-       it that never happened. */
-    if (same(nextLabel.map((g) => String(g)), standingLabel.map((g) => String(g)))
-        && rowsOut.every((r) => r.carried_forward)
-        && standingByLabel.size === rowsOut.length)
-      return { ok: false, reason: "PARTITION_UNCHANGED", target,
-               detail: "this is the structure this question already carries, leg for leg. Nothing was "
-                     + "written: a revision that changes nothing would put a restructuring in the record "
-                     + "that did not happen." };
-
-    /* ---------------- ONE GRAMMAR, judged before a byte moves ---------------
-       The CANDIDATE frontmatter, checked by the catalog's own function over the
-       same two registries op=promote injects at the write. This is the act's
-       gate and the write's gate running the same rule twice on purpose (the
-       checkGatheringGrammar precedent), and it is also what guarantees a label
-       has passed GROUND_LABEL_RE — no quotes, no colons, no newlines — before
-       any of it is written into a restricted-grammar block. */
-    const grouped = nextLabel.some((g) => g !== null);
-    const candidate = { ...fm,
-      basis: legs.map((l, i) => {
-        if (nextLabel[i] === null) { const { ground, ...rest } = l; return rest; }
-        return { ...l, ground: nextLabel[i] };
-      }) };
-    if (grounds.length) candidate.grounds = rowsOut.map((r) => ({ ground: r.ground,
-      asserted_by: r.asserted_by, at: r.at, ...(r.statement === null ? {} : { statement: r.statement }) }));
-    else delete candidate.grounds;
-    const bf = [];
-    checkInquiryBasis(candidate, bf, this.publishedRegistryFor(target,
-      legs.map((l) => l.target).filter((t) => typeof t === "string")),
-      this.earnedRegistryForDoc(candidate, candidate.basis));
-    const errs = bf.filter((x) => x.severity === "error");
-    if (errs.length)
-      return { ok: false, reason: "BASIS_REFUSED", target,
-               findings: errs.map((x) => ({ check: x.check, detail: x.message, repairs: x.repairs ?? [] })),
-               detail: "the structure this would author is refused by the SAME catalog function op=promote "
-                     + "runs at the write, so nothing was written. Every group is a claim that its legs are "
-                     + "enough on their own, and that claim carries a name and a date." };
-
-    /* ---------------------------------------------------- and now the bytes */
-    const before = this.strengthOf(target);
-    const spliced = Store.#spliceBasisGround(text, nextLabel);
-    if (!spliced)
-      return { ok: false, reason: "UNSPLICEABLE_BASIS", target,
-               detail: "this document's basis block is not in a shape this grammar can edit in place. "
-                     + "Nothing was written — a partial edit of a basis is worse than none." };
-    text = spliced;
-    text = grounds.length
-      ? Store.#setOrAddBlock(text, "grounds", rowsOut.flatMap((r) => [
-          `  - ground: ${r.ground}`,
-          `    asserted_by: ${r.asserted_by}`,
-          `    at: "${r.at}"`,
-          ...(r.statement === null ? [] : [`    statement: "${r.statement}"`])]))
-      /* REMOVED, not emptied. An unstructured basis must read BYTE-IDENTICALLY
-         to one that was never grouped (REC-42's clause 2), and a document left
-         wearing an empty `grounds:` key is not that document. */
-      : Store.#removeBlock(text, "grounds");
-    text = Store.#setScalar(text, "last_updated", `"${when}"`);
-    /* C-13.2: last_updated moving requires a Session Log entry, and it is where
-       DEC-32 clause 6's RECORD lives — this act moves no state, so there is no
-       state_history entry to carry it and the log is the durable trace. THE
-       PAIR AS IT STOOD BEFORE goes in beside the reason: that is the evidence a
-       noticer needs (*"a weak leg moved into its own branch immediately after a
-       strength drop"*), left where an append-only history keeps it rather than
-       reconstructed later by something that would have to guess. */
-    /* MK-2: the testimony axis joins the line ONLY when it carries something —
-       the freeze's rule (publishCase), so an ordinary question's log reads
-       byte for byte as it always did. */
-    const w = (p) => `capture ${p.capture.state === "graded" ? p.capture.grade : p.capture.state}, `
-                   + `connection ${p.connection.state === "graded" ? p.connection.grade : p.connection.state}`
-                   + (p.testimony && p.testimony.state !== "unrated"
-                       ? `, testimony ${p.testimony.state === "graded" ? p.testimony.grade : p.testimony.state}` : "");
-    text = Store.#appendSessionLog(text,
-      `### Session ${when} | ${restructure ? "Restructured" : "Grouped"} | ${who}\n`
-      + `Trigger: op=inquiryground on ${target}\n`
-      + `Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(s) — `
-          + rowsOut.map((r) => `${r.ground}: ${r.legs.join(", ")}`).join("; ")
-          : `grouping removed; ${legs.length} leg(s) read as necessary again`}.\n`
-      + (restructure ? `Reason: ${why}\n` : "First grouping: no earlier structure to revise.\n")
-      + `Strength before: ${w(before)}.\n`);
-
-    const carried = [];
-    for (const r of this.sql.exec(
-      `SELECT path, content, blob_sha, sha256, bytes FROM files WHERE bundle_id=? AND path<>'bundle.md'`, target))
-      carried.push(r.content !== null
-        ? { path: r.path, text: r.content, bytes: r.bytes, sha256: r.sha256 }
-        : { path: r.path, blobSha: r.blob_sha, sha256: r.sha256, bytes: r.bytes });
-
-    const bytes = new TextEncoder().encode(text);
-    const promoted = this.promote({
-      bundleId: target, base: b.bundle_sha, snapKey: `${when.replace(/[-:]/g, "")}_${Store.#rand(4)}`,
-      author: who,
-      files: [{ path: "bundle.md", text, bytes: bytes.length,
-                sha256: createSha256().update(bytes).hex() }, ...carried],
-      /* NO STATE MOVES. The meta carries the document's own state forward
-         unchanged — this act authors what a question rests on, not where it
-         stands — which is why it is not in index.mjs's STATE_ACTIONS. */
-      meta: { object_type: fm.object_type ?? b.object_type,
-              title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
-              created: fm.created, last_updated: when,
-              criticality: fm.criticality ?? null },
-    });
-    if (!promoted.ok) return { ...promoted, target };
-    const after = this.strengthOf(target);
-
-    /* `weight: "single"` for conclude's reason, and here it is load-bearing
-       rather than conventional: one question's structure is authored at a time,
-       and a bulk grouping would raise a set of grades with one sentence
-       standing for all of them. */
-    return { ok: true, target, act: restructure ? "restructured" : "authored",
-             grouped, grounds: rowsOut, legs: legs.length,
-             reason: restructure ? why : null, asserted_by: who, at: when, weight: "single",
-             bundleSha: promoted.bundleSha,
-             /* DEC-32 clause 6's noticing material, returned as well as
-                recorded. NOT a judgement: the act reports what the pair was and
-                what it is, and says nothing about why the member moved. */
-             /* MK-2: every axis, from the one list — a third axis moved by a
-                restructure is the same noticing material as the other two. */
-             strength: { before: Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, before[a]])),
-                         after: Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, after[a]])) },
-             next: grouped
-               ? "each group's strength is its weakest leg, and this question's is its strongest group. "
-                 + "Every group carries the name and the date of the member who asserted it was enough on "
-                 + "its own, and a published case carries the per-group breakdown inside the signed bytes."
-               : "this question reads as its weakest leg again, which is the conservative reading and the "
-                 + "one an ungrouped basis always takes." };
-  }
-
-  /* REC-45: set or clear the `ground:` line on each basis leg, addressed BY
-     POSITION and touching nothing else in the document.
-     `byOrd[i]` is the label for basis[i], or null to remove any label it has.
-
-     WHY A SPLICE AND NOT A REWRITE of the block: a leg carries authored fields
-     this act has no business restating — a grade, its source, a hunch's author
-     and date, a note — and rebuilding the block from the parsed frontmatter
-     would silently re-emit every one of them through this function's idea of
-     the grammar. #spliceEdgeStatus's discipline exactly: walk the entries, edit
-     the one line that is ours, and refuse (null) rather than guess if the block
-     is not in a shape this can address. */
-  static #spliceBasisGround(text, byOrd) {
-    const lines = text.split("\n");
-    if (lines[0] !== "---") return null;
-    const end = lines.indexOf("---", 1);
-    if (end === -1) return null;
-    let at = -1;
-    for (let i = 1; i < end; i++) if (/^basis:/.test(lines[i])) { at = i; break; }
-    if (at === -1) return null;
-    const starts = [];
-    let blockEnd = at;
-    for (let i = at + 1; i < end; i++) {
-      if (lines[i].trim() === "") continue;
-      if (/^ {2}- /.test(lines[i])) { starts.push(i); blockEnd = i; continue; }
-      if (/^\s/.test(lines[i])) { blockEnd = i; continue; }
-      break;
-    }
-    /* An entry count that does not match the parsed leg count means the
-       ordinals this was handed do not address the entries in front of it, and a
-       partial edit of a basis is worse than no edit at all. */
-    if (starts.length !== byOrd.length) return null;
-    const segs = [];
-    for (let s = 0; s < starts.length; s++) {
-      const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : blockEnd + 1) - 1;
-      const kept = [];
-      for (let i = from; i <= to; i++) if (!/^\s+ground:/.test(lines[i])) kept.push(lines[i]);
-      if (byOrd[s] !== null) kept.push(`    ground: ${byOrd[s]}`);
-      segs.push(kept);
-    }
-    return [...lines.slice(0, starts[0]), ...segs.flat(), ...lines.slice(blockEnd + 1)].join("\n");
-  }
+  /* R23–R28: dividing a question and grouping its legs: inquiry's. */
+  divide(...a) { return inquiryOf(this.ctx).divide(...a); }
+  groundInquiry(...a) { return inquiryOf(this.ctx).ground(...a); }
 
   /* Frontmatter-safe: the restricted grammar has no escapes, and these strings
      are DERIVED (a strength detail, a bar's explanation) rather than authored,
@@ -12298,16 +10906,6 @@ export class Store extends DurableObject {
                    findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
       }
 
-      /* REC-11: an inquiry's basis[] is validated at the WRITE, before anything
-       * lands — the same reasoning as the gathering grammar above, and by the
-       * CATALOG'S OWN function, so the store's view and the checker's view are
-       * one rule. Shape refusals honour the replay exemption exactly as the
-       * gathering check does (the record's history must be holdable verbatim);
-       * the SELF and CYCLE refusals below do not, because acyclicity is a
-       * structural invariant of the store itself — a faithfully replayed
-       * history was acyclic when it was written, so an honest replay never
-       * meets them.
-       */
       const basisMd = files.find((f) => f.path === "bundle.md");
       /* Parsed ONCE for both arms below. REC-16's supersession check is NOT
          inquiry-scoped — `supersedes` is in the vocabulary for every type and
@@ -12320,127 +10918,7 @@ export class Store extends DurableObject {
          envelope is the FALLBACK and not the authority: a bundle.md held as a blob, or one stating no type, leaves
          the record nothing else to go on, and that case is byte-identical to what this line did before D-510. */
       const isInquiry = promotedType === "inquiry";
-      const basisFm = isInquiry ? docFmW : null;
-      const basisLegs = basisFm && Array.isArray(basisFm.basis)
-        ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
-      /* REC-42: `|| grounds` so the two gates stay ONE rule. A document may
-         carry a grounds[] block with no basis at all, and the catalog checks it
-         (an assertion of independent sufficiency over no legs); without this the
-         write path would silently accept what the checker refuses, which is the
-         drift the single-function discipline exists to prevent. */
-      if (basisFm && !pkg.replay
-          && ((basisFm.basis !== undefined && basisFm.basis !== null)
-              || (basisFm.grounds !== undefined && basisFm.grounds !== null))) {
-        const bf = [];
-        /* REC-14: C-21.2 runs HERE too, with the published projection injected,
-           so an over-strong inherited grade is refused at the write and not
-           only at the gate — the checkGatheringGrammar precedent, and the
-           reason the rule lives in ONE catalog function that both sides run. */
-        /* REC-18: and the EARNED registry beside it, injected on identical
-           terms — what `resolutions` and `register` hold about the targets this
-           basis names is the record, not this document, so the write path is
-           where an earned grade can be confirmed at all. This is the enforcement
-           point for D1(b): a caller states the grade the record earns or the
-           write is refused, in either direction. */
-        checkInquiryBasis(basisFm, bf, this.publishedRegistryFor(bundleId,
-          basisLegs.map((l) => l.target).filter((t) => typeof t === "string")),
-          this.earnedRegistryForDoc(basisFm, basisLegs));
-        const errs = bf.filter((x) => x.severity === "error");
-        if (errs.length)
-          /* REC-18: `repairs` now travels with the refusal, as it already does
-             through runGate. DEC-8 is that the PLANE publishes the refusal
-             contract and the surface renders it — and for an EARNED grade the
-             repair is the whole of the remedy ("state grade A; op=earnedbasis
-             answers what each target earns before you write it"). Dropping it
-             left a member told they were wrong and not told what right was,
-             which is the shape of gate that pressures someone into guessing.
-             ADDITIVE: an existing caller reading only check+detail is unaffected. */
-          return { ok: false, reason: "BASIS_REFUSED",
-                   findings: errs.map((x) => ({ check: x.check, detail: x.message,
-                                                /* REC-84 / DEC-49: A CODE ON A BASIS FINDING NOW TRAVELS
-                                                   WITH ITS CANNED TRANSLATION. `checkInquiryBasis`'s arms
-                                                   carried no code until the extent grammar joined it, and
-                                                   that grammar RELAYS the content-extent family's codes —
-                                                   which is what tells a member citing a web page (`dom`,
-                                                   refused by name) from one who mistyped a kind. Sending
-                                                   the code WITHOUT the translation is the exact condition
-                                                   DEC-49 ended, and `basisVersionFindings`' own mapping
-                                                   below paid for it once with `translation: undefined`
-                                                   reaching a member. Absent for every arm that carries no
-                                                   code, so nothing existing changes shape. */
-                                                ...(x.code ? { code: x.code,
-                                                               translation: CONTENT_EXTENT_CHECKS[x.code]?.translation } : {}),
-                                                ...(x.repairs ? { repairs: x.repairs } : {}) })) };
-        /* REC-82 / IC-83: THE CONTENT EXTENT, refused at the write and BEFORE
-           anything lands, on `checkInquiryBasis`'s own terms and inside its own
-           guard — so a leg naming a part of a document the record cannot address
-           cannot be smuggled in through the write path any more than a malformed
-           leg can. The rule is ONE catalogue function (`checkContentExtent`), so
-           the gate and this door cannot hold two answers.
-           *
-           * IT RUNS AFTER THE LEG GRAMMAR AND NOT BEFORE. A leg whose TARGET is
-           * not a canonical bundle id has already been refused above, so this
-           * arm never resolves a capture for an id nothing could name — and a
-           * member with one broken leg gets the complaint about the leg rather
-           * than a second complaint about an extent they never wrote.
-           *
-           * THE REFUSAL RIDES `BASIS_REFUSED`. No new envelope and no new op:
-           * `op=promote` already publishes this shape, `civicos-ui` already
-           * renders it, and a second reason string for "your basis was refused"
-           * would be a vocabulary split serving nothing. The C-45 code and its
-           * canned translation travel WITH the finding (DEC-49), which is what
-           * makes the refusal named to the member rather than merely numbered. */
-        /* REC-84: THE LOOP THAT WAS HERE IS NOW `#contentLegRefusals`, because a
-           version's legs need the identical pass and two copies of "which parts
-           may this leg point at" is D-164's own finding arriving inside the
-           construct built to close it. The arms are REC-82's verbatim, plus the
-           two a NAMED content id can fail (C-45.5 / C-45.6). */
-        const cerrs = contentOf(this.ctx).legRefusals(
-          basisLegs, contentOf(this.ctx).citationPlan(basisLegs), (i) => `basis[${i}]`);
-        if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
-      }
-      /* REC-18: an inquiry naming a SUBJECT ENTITY that does not resolve in this
-         store is refused, on op=promote's own supersedes-target precedent a few
-         lines below — an id that points a reader at nothing while claiming this
-         question is about it. The catalog checks the SHAPE (ENT-YYYY-NNNN, a
-         pure fact about the bytes); only the store can say whether the registry
-         holds it. REPLAY IS EXEMPT for the same reason every shape arm is: the
-         record's history must be holdable verbatim, and an entity purged later
-         must not make an old promotion unreplayable. */
-      if (isInquiry && docFmW && !pkg.replay && typeof docFmW.subject_entity === "string"
-          && docFmW.subject_entity.trim() !== "") {
-        const se = docFmW.subject_entity.trim();
-        if (!this.#one(`SELECT entity_id FROM entities WHERE entity_id=?`, se))
-          return { ok: false, reason: "SUBJECT_REFUSED", target: se,
-                   findings: [{ check: "C-2.8",
-                     detail: `subject_entity '${se}' does not resolve in this store: an inquiry naming its `
-                           + `subject names an entry in the SUBJECT REGISTRY, and this one names a key no `
-                           + `entity has. Register the subject with op=entitycreate, or omit subject_entity `
-                           + `— an inquiry may name no subject, and then no leg of it earns an A/B/C `
-                           + `connection grade (DEC-15).` }] };
-      }
-      /* REC-16 / R4: THE SUPERSESSION EDGE AND THE DIVISION DISCLOSURE, checked
-       * at the WRITE, on exactly the basis arm's reasoning above — the catalog's
-       * own functions, so the store's view and the checker's view are ONE rule
-       * and a malformed supersession neither lands nor audits clean.
-       *
-       * TWO REFUSALS, because they are two different failures and a member
-       * needs to be told which one they hit. SUPERSESSION_REFUSED is about the
-       * EDGE: it carries no reason, or its target is not a canonical id, or it
-       * points at nothing in this store. NO_SIBLING_DISCLOSURE is about the
-       * DISCLOSURE: the child does not name every other child of its division.
-       *
-       * THE COMPLETENESS OF THE SIBLING SET CAN ONLY BE ANSWERED HERE. The pure
-       * check can see that a child names SOME siblings; only the store can see
-       * the parent's own `division.into` and say whether it named ALL of them,
-       * and that is the whole of what R4 protects — a child disclosing one
-       * sibling while a second exists is exactly as blind for a reader as one
-       * disclosing none. So the resolved comparison is against the parent
-       * document, and it names the siblings that were left out.
-       *
-       * REPLAY IS EXEMPT from the shape arms, the gathering-grammar precedent:
-       * the record's own history contains documents written before this rule
-       * existed and must be holdable verbatim. */
+      /* REC-11, REC-18, REC-42: the basis grammar and the subject entity are inquiry's check (its R11). */
       /* REC-24: THE ACTION ARM, and it is the inquiry basis arm above line for
        * line — the catalog's own functions run at the WRITE, so the store's view
        * and the checker's view are ONE rule and a malformed action neither lands
@@ -12591,62 +11069,7 @@ export class Store extends DurableObject {
                              + `claims to be what came back from an ask that is not here` }] };
         }
       }
-      if (docFmW && !pkg.replay) {
-        const sf = [];
-        supersedesEdgeFindings(docFmW, sf);
-        const serrs = sf.filter((x) => x.severity === "error");
-        if (serrs.length)
-          return { ok: false, reason: "SUPERSESSION_REFUSED",
-                   findings: serrs.map((x) => ({ check: x.check, detail: x.message })) };
-        for (const r of (Array.isArray(docFmW.references) ? docFmW.references : [])) {
-          if (!r || typeof r !== "object" || r.rel !== "supersedes") continue;
-          if (r.target === bundleId)
-            return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
-                     findings: [{ check: "C-6.1",
-                       detail: `${bundleId} supersedes itself: a question cannot be the thing it replaced` }] };
-          if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, r.target))
-            return { ok: false, reason: "SUPERSESSION_REFUSED", target: r.target,
-                     findings: [{ check: "C-6.1",
-                       detail: `supersedes target '${r.target}' does not resolve in this store: an edge that `
-                             + `asserts a lineage must name a question that exists, or it points a reader at `
-                             + `nothing while claiming a replacement happened` }] };
-        }
-        const df = [];
-        divisionDisclosureFindings(docFmW, df);
-        const derrs = df.filter((x) => x.severity === "error");
-        if (derrs.length)
-          return { ok: false, reason: "NO_SIBLING_DISCLOSURE",
-                   findings: derrs.map((x) => ({ check: x.check, detail: x.message })) };
-        const parentId = typeof docFmW.division_parent === "string" && docFmW.division_parent !== "null"
-          ? docFmW.division_parent : null;
-        if (parentId) {
-          const pmd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, parentId);
-          const pfm = pmd && pmd.content !== null ? (parseFrontmatter(pmd.content).data || {}) : null;
-          const into = pfm && pfm.division && Array.isArray(pfm.division.into)
-            ? pfm.division.into.filter((x) => typeof x === "string") : null;
-          if (!into || !into.includes(bundleId))
-            return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
-                     detail: `${parentId} does not record ${bundleId} as one of the questions it was divided `
-                           + `into, so the parent and the child disagree about whether this division happened. `
-                           + `A child names a parent that names it back, or the disclosure is a claim nobody `
-                           + `can check.` };
-          const declared = new Set(Array.isArray(docFmW.division_siblings) ? docFmW.division_siblings : []);
-          const missing = into.filter((x) => x !== bundleId && !declared.has(x));
-          const invented = [...declared].filter((x) => !into.includes(x));
-          if (missing.length || invented.length)
-            return { ok: false, reason: "NO_SIBLING_DISCLOSURE", parent: parentId,
-                     missing, not_siblings: invented,
-                     detail: (missing.length
-                       ? `this child does not name ${missing.join(", ")}, which ${parentId} was also divided `
-                       + `into. A reader who can see one half of a divided inquiry must be able to see that `
-                       + `the other half EXISTS — otherwise dividing is a cheaper way to shed a finding that `
-                       + `cuts against you than severing it, and invariant 7 falls to a housekeeping `
-                       + `operation (R4). `
-                       : "")
-                     + (invented.length
-                       ? `it also names ${invented.join(", ")}, which ${parentId} was not divided into.` : "") };
-        }
-      }
+      /* REC-16: the supersession edge and the division disclosure are inquiry's check (its R11). */
       /* PL-1 / IS-1: THE BASIS-VERSION ARM, and it is the inquiry basis arm
        * above line for line — the catalog's own function runs at the WRITE, so
        * the store's view and the checker's view are ONE rule and a malformed
@@ -12784,32 +11207,7 @@ export class Store extends DurableObject {
         }
         /* END DEC-49 REGION basis-version-freeze */
       }
-      if (basisLegs.length) {
-        /* R3: the basis graph is a DAG, enforced HERE, at the write that would
-         * close the cycle — before REC-11 the record's only acyclicity
-         * protection was a side effect of op=cite refusing non-information
-         * members, and this table is what removes that refusal's reach. The
-         * refusal NAMES THE PATH it found, because "cycle refused" without the
-         * path leaves the member to re-derive the walk the store just did.
-         */
-        /* DEC-49 REGION is-basis-acyclic — REC-64/C-33.22-23. Both ways a basis
-           write would close a loop, in one span because they are one rule. */
-        for (const leg of basisLegs) {
-          if (leg.target === bundleId)
-            return { ok: false, reason: "SELF_BASIS", path: [bundleId, bundleId],
-                     detail: `${bundleId} cannot rest on itself: a question is not evidence for its own answer` };
-        }
-        const inqTargets = [...new Set(basisLegs
-          .filter((l) => typeof l.target === "string"
-                      && normalizeType(OBJECT_TYPES[l.target.split("-")[0]]) === "inquiry")
-          .map((l) => l.target))];
-        const cycle = this.#basisCyclePath(bundleId, inqTargets);
-        if (cycle)
-          return { ok: false, reason: "BASIS_CYCLE", path: cycle,
-                   detail: `this write would close a cycle: ${cycle.join(" -> ")}. `
-                         + `An inquiry's basis is a DAG; the chain above already rests on ${bundleId}.` };
-        /* END DEC-49 REGION is-basis-acyclic */
-      }
+      /* R3: the basis DAG (C-33.22, C-33.23) is inquiry's check (its R11). */
   }
 
   /* K31 (promotion R39): legacy-store's share of every promotion's projections, run after `record-core.commit`
@@ -12817,16 +11215,9 @@ export class Store extends DurableObject {
   #promoteProjections(c) {
     const { pkg, bundleId, base, meta, author, register, files, promotedType, promotedState, owner } = stepContext(c);
     const cur = c.head, newSha = c.bundleSha, docFmW = c.docFm, isInquiry = promotedType === "inquiry";
-    const basisFm = isInquiry ? docFmW : null;
-    const basisLegs = basisFm && Array.isArray(basisFm.basis) ? basisFm.basis.filter((l) => l && typeof l === "object") : [];
     const testimony = pkg[TESTIMONY_PATH] || null;
     const surfacing = !cur && promotedType === "inquiry" && typeof pkg.assistantPrincipal === "string" && pkg.assistantPrincipal.trim()
       ? { run: String(pkg.run).trim(), principal: pkg.assistantPrincipal.trim() } : null;
-    const migration = (!cur && !surfacing && promotedType === "inquiry" && pkg.migrationReplay && typeof pkg.migrationReplay === "object"
-        && typeof pkg.migrationReplay.capture === "string" && pkg.migrationReplay.capture)
-      ? { capture: pkg.migrationReplay.capture,
-          promotion: typeof pkg.migrationReplay.promotion === "string" ? pkg.migrationReplay.promotion : null }
-      : null;
       /* D-497: the SIGHT INDEX follows the bundle row that decides whether this is a project at all. ONE call
          covers all three arrivals — a project created here gains a row carrying the derivation's default, a
          bundle promoted INTO a project gains one, and a bundle promoted OUT of `project` loses its row rather
@@ -12834,193 +11225,7 @@ export class Store extends DurableObject {
          it is idempotent: a revision that changes neither recomputes the same row. */
       this.#reindexProjectSight(bundleId);
 
-      /* REC-17: the supersedes targets this revision is REPLACING, read before
-         the delete. A revision that drops a `supersedes` edge must un-tell the
-         parent, and after the delete there is nothing left to read. */
-      const supersededBefore = refsReplacedOf(c, "supersedes");
-      /* REC-17 / P-64: the reverse index, in the SAME transaction as the refs it
-         derives from — the discipline every projection in this function keeps,
-         so the lookup can never be a revision behind the edges. Three id sets
-         (added, removed, and this bundle's own row); the set is de-duplicated
-         because a revision that keeps an edge names the same target twice. */
-      for (const t of new Set([...supersededBefore,
-                               ...[...this.sql.exec(
-                                 `SELECT target_id FROM refs WHERE bundle_id=? AND kind='supersedes'`, bundleId)]
-                                 .map((r) => r.target_id),
-                               bundleId]))
-        this.#writeSupersededBy(t);
-
-      /* REC-11: inquiry_basis, projected WHOLE from basis[] in this SAME
-         transaction as refs and by the same delete-then-insert discipline, so
-         it is a projection of the document and never a second place to state
-         it (D-21). The legs were validated above, before anything landed;
-         target_type is denormalised from the id prefix through the catalog's
-         own map so the walk never re-derives it. ord is the leg's position in
-         basis[], which is what makes a leg ADDRESSABLE and lets one document
-         be cited for two legs (D4 — the reason refs could not carry this). */
-      /* REC-82 / IC-83 — THE AUTHORED EDGE'S REFERENT, READ BEFORE THE DELETE,
-         on `supersededBefore`'s precedent twenty lines above and for a reason
-         that is not housekeeping.
-         *
-         * `inquiry_basis` is delete-then-insert re-projected on EVERY promotion.
-         * The content address is `hash(capture, extent, CHAIN)`, so a projection
-         * that re-minted from the LIVE chain would hand the leg a DIFFERENT row
-         * the first time anything re-read the document — and an unrelated
-         * revision promoted after a better OCR engine ran would silently move an
-         * authored citation onto a transcription the member never saw. Bob ruled
-         * 2026-09-14: *"the record never moves an authored edge's target without
-         * a member's act, even when the passage is byte-identical."* A resolver
-         * is exactly where that rule is lost without anybody deciding to lose it.
-         *
-         * SO THE PRIOR REFERENT IS CARRIED FORWARD when the leg still names the
-         * SAME target and the SAME extent — the two things a member authors. Key
-         * on (target, canonical extent) and NOT on `ord`: a member who reorders
-         * their basis has not re-pointed anything, and keying on position would
-         * move every leg below an insertion.
-         *
-         * A CHANGED EXTENT MINTS ANEW, and that is the other half of the same
-         * rule rather than an exception to it: narrowing a citation from the
-         * document to a paragraph is an AUTHORED ACT (5.3 — "there should be a
-         * means for a member to make that reference more specific"), so it is
-         * exactly the act that is allowed to move the referent. */
-      const priorContent = new Map();
-      /* The scan is HOISTED out of the for-header rather than inlined into it,
-         and it is not a style point: `derivation-bounds.test.mjs`'s reader
-         counts a scan that sits inside a loop's own header as a scan PER ROW,
-         so `for (const r of this.#rows(...))` self-classifies as amplifying and
-         put `promote` itself on REC-66's roster. One read, then one pass over
-         what it returned, is what this actually is. */
-      /* REC-220: AND BY CAPTURE, for a leg that NAMES one. `extent_capture` is the member's (or the
-         act's, at the moment of citing) statement of WHICH BYTES the leg rests on, so a prior referent
-         about DIFFERENT bytes is not carried over it — that would be the record overriding an authored
-         pin, 5.8's forbidden direction with the member's act present. A leg naming no capture keeps
-         the (target, extent) key exactly as before. */
-      const priorContentAt = new Map();
-      const priorRows = this.#rows(
-        `SELECT b.target_id AS t, b.content_id AS cid, c.extent AS ext, c.capture_sha AS cap
-           FROM inquiry_basis b LEFT JOIN content c ON c.content_id = b.content_id
-          WHERE b.bundle_id=? AND b.content_id IS NOT NULL`, bundleId);
-      for (const r of priorRows)
-        if (r.ext != null) {
-          priorContent.set(`${r.t}\u0000${r.ext}`, r.cid);
-          if (r.cap != null) priorContentAt.set(`${r.t}\u0000${r.ext}\u0000${r.cap}`, r.cid);
-        }
-      const contentProjected = [];
-      /* ONE resolution for the whole basis, on the refusal arm's own terms and
-         through the same method — see `#contentPlanFor`. */
-      const contentPlan = isInquiry ? contentOf(this.ctx).citationPlan(basisLegs) : new Map();
-      this.sql.exec(`DELETE FROM inquiry_basis WHERE bundle_id=?`, bundleId);
-      if (isInquiry) {
-        for (let i = 0; i < basisLegs.length; i++) {
-          const leg = basisLegs[i];
-          if (typeof leg.target !== "string") continue; // replay of a malformed shape: unprojectable
-          /* REC-82 / IC-83: THE LEG'S REFERENT, minted or FOUND here — in the same
-             transaction and by the same projection pass as every other column,
-             so the row and the document cannot drift. Three things make this a
-             mint-or-find and not a projection, and each is deliberate:
-             *
-             * (1) THE CONTENT ROW IS NOT DELETED WITH THE PROJECTION. The line
-             *     above deletes every `inquiry_basis` row for this bundle and
-             *     rebuilds them, because they are a view of `basis[]`. Content
-             *     rows are NOT: an edge depends on one, so `mintContent` inserts
-             *     OR IGNOREs and a re-promotion finds exactly the row the first
-             *     promotion minted, keeping its `minted_by` and its `at` — which
-             *     record who first cited this passage and when, and are not
-             *     ours to move.
-             * (2) TWO CITERS OF ONE PASSAGE GET ONE ROW BY CONSTRUCTION, because
-             *     the id is `hash(capture, canonical extent, chain)` and not an
-             *     allocated number. There is no dedup pass here because there is
-             *     nothing to dedup.
-             * (3) A REFUSED EXTENT NEVER REACHES THIS LINE. The arm above ran
-             *     `checkContentExtent` over every leg before anything landed, so
-             *     a null here means the record holds no capture of the target
-             *     (or the target is an inquiry) — UNDETERMINED AND STATED, never
-             *     a row invented to fill a column.
-             *
-             * REPLAY REACHES HERE WITH THE ARM ABOVE SKIPPED, exactly as every
-             * other shape rule is skipped on replay: the record's own history
-             * must be holdable verbatim. A replayed leg whose extent this plane
-             * would now refuse therefore mints nothing and projects NULL, which
-             * is the honest reading of "this row was written under rules that
-             * did not exist" — never a row minted retroactively for it. */
-          /* REC-84 renamed this local from `legContentId`, which SHADOWED the
-             catalogue's `legContentId()` import inside this block — a function
-             this loop now has to call. The shadow parsed, ran, and would have
-             thrown `not a function` only on the path that reads an authored id;
-             renamed rather than aliased so there is one name for one thing. */
-          let legRowId = null, legCarried = false, legMinted = false, legUndetermined = null;
-          const cp = contentPlan.get(i);
-          if (cp && cp.isInfo) {
-            const ext = cp.extent;
-            /* REC-84 / IC-84 (1): A LEG THAT NAMES ITS ROW OUTRIGHT IS TAKEN AT
-               ITS WORD, and nothing is minted for it. The refusal arm above has
-               already established that the row EXISTS and is about this leg's
-               target (C-45.5 / C-45.6), so this is a FIND with the lookup
-               already paid for. It is checked before the carry-forward map on
-               purpose: naming an id IS the member's act of saying which part
-               this leg rests on, and carrying a prior referent over it would be
-               the record overriding an authored citation — the exact direction
-               Bob's 5.8 forbids, with the member's act present rather than
-               absent. */
-            const namedRow = legContentId(leg);
-            if (namedRow) { legRowId = namedRow; }
-            else {
-              const carried = cp.authored
-                ? priorContentAt.get(`${leg.target}\u0000${canonicalExtent(ext)}\u0000${cp.captureSha}`)
-                : priorContent.get(`${leg.target}\u0000${canonicalExtent(ext)}`);
-              if (carried) { legRowId = carried; legCarried = true; }
-              else if (cp.captureSha) {
-                const mint = this.mintContent({ bundleId: leg.target, captureSha: cp.captureSha,
-                  extent: ext, mintedBy: CONTENT_MINTED_BY_PLANE, at: meta.last_updated || null, ctx: cp.ctx });
-                if (mint.ok) { legRowId = mint.content_id; legMinted = mint.minted;
-                               legUndetermined = mint.undetermined || null; }
-              }
-            }
-            /* The ROW is not read here. `contentRow` is a read, and a read inside
-               this loop is the amplification REC-66 / D-227's ratchet counts —
-               it is what kept `promote` itself on that roster. The ids are
-               collected and resolved in ONE set-based pass after the loop. */
-            if (legRowId)
-              contentProjected.push({ ord: i, target: leg.target, content_id: legRowId,
-                extent_kind: ext.kind, minted: legMinted, carried: legCarried,
-                ...(legUndetermined ? { undetermined: legUndetermined } : {}) });
-          }
-          this.sql.exec(
-            `INSERT INTO inquiry_basis (bundle_id,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-            bundleId, i, leg.target,
-            /* '' rather than NULL on a replayed malformed shape, mirroring the
-               refs projection's kind fallback: the columns are NOT NULL. */
-            normalizeType(OBJECT_TYPES[leg.target.split("-")[0]]) ?? "",
-            typeof leg.role === "string" ? leg.role : "",
-            leg.grade ?? null, leg.grade_axis ?? null, leg.grade_source ?? null,
-            typeof leg.note === "string" ? leg.note : null,
-            /* The document's own authored date (required on a hunch), never the
-               server's clock: delete-then-insert re-projects every promotion,
-               so a server stamp here would silently re-date every leg. */
-            leg.date != null ? String(leg.date) : null,
-            /* REC-42: the OR branch, projected exactly as authored and NEVER
-               invented. Absent, empty or non-string is NULL — the implicit
-               single ground — because the one direction this projection must
-               never take is INTO structure: a leg nobody grouped must land
-               where the weakest-leg rule still holds. checkInquiryBasis has
-               already refused any label with no attributed `grounds[]` row, at
-               this write and in the catalog, so a label that reaches here was
-               asserted by a named member. */
-            typeof leg.ground === "string" && leg.ground.trim() ? leg.ground.trim() : null,
-            /* REC-82: NULL is a first-class answer here and the reasons are on
-               the mint above — an inquiry leg, or an information object this
-               record holds no bytes of. It is never a document-extent row
-               invented to avoid the null. */
-            legRowId);
-        }
-      }
-      /* REC-82: and the STANDING of each referent, resolved in ONE pass over the
-         ids the loop collected rather than one read per leg — see the note at
-         the push above. `#contentStandings` is where the reads live, so this
-         function keeps exactly the shape the derivation-bounds roster measured
-         it at before this item. */
-      if (contentProjected.length) contentOf(this.ctx).projectStandings(contentProjected);
+      /* REC-11, REC-17, REC-82: the superseded-by index and inquiry_basis with its content rows are inquiry's (its R12). */
       /* PL-1 / IS-1: THE BASIS VERSIONS, projected WHOLE from basis_versions[],
          basis_version_grounds[] and basis_version_legs[] in this SAME
          transaction as inquiry_basis above and by the same delete-then-insert
@@ -13234,48 +11439,14 @@ export class Store extends DurableObject {
             cpName, e.at != null ? String(e.at) : "");
         }
       }
-      /* REC-14 / C-9: inquiry_exclusions, projected WHOLE from
-         completeness_excluded[] in the SAME transaction and by the same
-         delete-then-insert discipline as inquiry_basis above — a projection of
-         the document, never a second place to state it (D-21). The BYTES make
-         the assertion storable and signable; only this INDEXED projection makes
-         "which published cases excluded this document" ASKABLE, which is
-         invariant 7's only mechanical enforcement point at the case level.
-
-         target_id stays NULL when the row names something not in the record —
-         an outstanding records request has no id to point at — and the catalog
-         has already refused any row carrying NEITHER a target nor prose. */
-      this.sql.exec(`DELETE FROM inquiry_exclusions WHERE bundle_id=?`, bundleId);
-      if (isInquiry && basisFm && Array.isArray(basisFm.completeness_excluded)) {
-        const comp = (basisFm.completeness && typeof basisFm.completeness === "object") ? basisFm.completeness : {};
-        for (let i = 0; i < basisFm.completeness_excluded.length; i++) {
-          const row = basisFm.completeness_excluded[i];
-          if (!row || typeof row !== "object") continue;   // replay of a malformed shape: unprojectable
-          this.sql.exec(
-            `INSERT INTO inquiry_exclusions (bundle_id,ord,edition,target_id,description,reason,author,at)
-             VALUES (?,?,?,?,?,?,?,?)`,
-            bundleId, i, Number.isInteger(basisFm.edition) ? basisFm.edition : null,
-            typeof row.target === "string" ? row.target : null,
-            typeof row.description === "string" ? row.description : "",
-            typeof row.reason === "string" ? row.reason : "",
-            typeof comp.author === "string" ? comp.author : "",
-            typeof comp.at === "string" ? comp.at : "");
-        }
-      }
+      /* REC-14 / C-9: inquiry_exclusions is inquiry's projection (its R12). */
       /* REC-12: re-derive this inquiry's per-axis strength CACHE from the legs
          just projected, in the SAME transaction, so the cache can never be a
          revision behind the basis it summarises. It is still only a cache: a
          leg raised in an inquiry BENEATH this one does not re-promote this
          document, so the columns go stale by design and strengthOf() is what
          anything needing the truth calls. */
-      this.#writeStrengthProjection(bundleId, isInquiry,
-        /* REC-18: the declared subject, projected from the SAME parsed bytes the
-           earned registry was built from a moment ago — never re-parsed, so the
-           value enforced at the write and the value the gate later reads are one
-           value. Empty string normalises to NULL: "named nothing" and "named the
-           empty string" are the same fact and the column states it once. */
-        basisFm && typeof basisFm.subject_entity === "string" && basisFm.subject_entity.trim()
-          ? basisFm.subject_entity.trim() : null);
+      this.#writeStrengthProjection(bundleId, isInquiry);
 
       /* MK-1 / IC-134: the register row is provenance's projection (R1), written before this one. */
 
@@ -13285,16 +11456,7 @@ export class Store extends DurableObject {
          to roll the whole promotion back rather than return a half. */
       const testimonyWrote = pkg[TESTIMONY_PATH] ? this.#testimonyWithin(bundleId, pkg) : null;
 
-      /* REC-173: the migration replay's instance row, in the creation's own transaction — a replayed question cannot
-         exist without the row saying it was migrated, and a refused creation writes none. */
-      let migrated = null;
-      if (!cur && migration) {
-        const ts = new Date().toISOString();
-        this.sql.exec(
-          `INSERT INTO inquiry_migration_replays (bundle_id, capture_sha, promotion_key, at) VALUES (?,?,?,?)`,
-          bundleId, migration.capture, migration.promotion, ts);
-        migrated = { capture: migration.capture, promotion: migration.promotion, at: ts };
-      }
+      /* REC-173: the migration replay's row is inquiry's projection (its R12). */
 
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       /* ==== CASE-4 / DEC-72: THE REVISION FLAG, RAISED AT THE MINT ============
@@ -13319,21 +11481,6 @@ export class Store extends DurableObject {
         /* MK-1: present ONLY on the testimony path, which is a method of this
            class, so no existing caller's answer gains a key. */
         ...(testimonyWrote ? { testimony: testimonyWrote } : {}),
-        /* REC-173: present ONLY on a creation admitted as a migration replay, naming the provenance capture and the
-           Drive promotion that listed its bytes — so no other caller's answer gains a key. */
-        ...(migrated ? { migration_replay: migrated } : {}),
-        /* REC-82 / IC-83: WHAT THE WRITER DID WITH EACH LEG'S REFERENT, on the
-           write path's own surface. A mechanism believed on the strength of its
-           EXISTENCE rather than its behaviour is the defect this project meets
-           most, and a content row is invisible from every op that exists today
-           (the `content` read is REC-83's) — so without this a caller could not
-           tell a row that was MINTED from one that was FOUND, nor a citation
-           that stayed put across a re-extraction from one that moved. `carried`
-           is the authored edge holding its ground; `stale` and `says` are the
-           row still resolving and saying what it is. ADDITIVE: absent on a
-           promotion with no content-bearing leg, and a caller reading only
-           ok/bundleSha/rowVersion is unaffected. */
-        ...(contentProjected.length ? { content: contentProjected } : {}),
         /* REC-84 / IC-84 (2): THE SAME SURFACE FOR THE VERSION LEGS, on REC-82's
            precedent above and for REC-82's stated reason — a column no op can
            see is a mechanism believed on its existence. `op=basisversions` is
@@ -14126,117 +12273,11 @@ export class Store extends DurableObject {
                                      cited: citedRow ? Number(citedRow.n) : 0 }) };
   }
 
-  /** THE LEGACY BACKFILL — a leg promoted before this column existed, read for
-   *  the first time.
-   *
-   *  DETERMINISTIC BECAUSE THE ID IS A HASH. There is no allocator, so "mint the
-   *  row this leg would have had" is a pure function of the target the leg
-   *  already names: the whole document (Bob, 5.3 — a citation with no stated
-   *  part means the whole document and reads `document`, never `unstated`), the
-   *  capture `#captureForContent` resolves, and the chain as it stands. Running
-   *  it twice, or in two sessions, or after a replay, produces the same id — so
-   *  this is a read that happens to write rather than a migration with a
-   *  direction.
-   *
-   *  IT WRITES THE COLUMN AS WELL AS THE ROW, so the second read is a lookup.
-   *  Not doing so would leave the projection permanently disagreeing with the
-   *  row it resolves to, which is the drift `inquiry_basis` is delete-then-
-   *  inserted to prevent.
-   *
-   *  THE HONEST NULLS, and each is a different fact stated rather than invented:
-   *  a leg whose target is an INQUIRY has no capture behind it at all (an
-   *  inquiry is not a document — DEC-21 — and IC-83's "every leg targets
-   *  content" is written about the information arm); a leg whose target
-   *  information object the record holds no bytes for has nothing to address.
-   *  Both answer null and say which. */
-  ensureLegContent(bundleId, ord) {
-    const leg = this.#one(
-      `SELECT bundle_id, ord, target_id, target_type, content_id
-         FROM inquiry_basis WHERE bundle_id=? AND ord=?`, bundleId, ord);
-    if (!leg) return { ok: false, reason: "NO_LEG",
-                       detail: `no basis leg ${ord} on ${bundleId}` };
-    if (leg.content_id)
-      return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
-    /* REC-83: THE CASE IS NAMED, NOT ONLY DESCRIBED. IC-83's AMENDMENT 2 says
-       the reads must state WHICH of the two legitimate nulls they met and never
-       collapse them, and a reader that has to pattern-match an English sentence
-       to tell them apart is a reader that will collapse them. The code is
-       decided HERE because this is where the distinction is made; every read
-       carries it rather than re-deriving it from `target_type`. */
-    if (leg.target_type !== "information")
-      return { ok: true, content_id: null, minted: false, backfilled: false,
-               null_case: "INQUIRY_TARGET",
-               why: `basis[${ord}] rests on ${leg.target_id}, which is an inquiry rather than a `
-                  + `document. An inquiry has no capture and therefore no part to point at — the `
-                  + `content axis ranges over documents (DEC-21), and this is undetermined and `
-                  + `stated rather than a document-extent row invented for it` };
-    const sha = contentOf(this.ctx).captureFor(leg.target_id);
-    if (!sha)
-      return { ok: true, content_id: null, minted: false, backfilled: false,
-               null_case: "NO_BYTES_HELD",
-               why: `this record holds no capture of ${leg.target_id}, so there are no bytes for a `
-                  + `content row to address. Absence here is a fact about what was captured and `
-                  + `never evidence about what the document says (CLAUDE.md's sparse rule)` };
-    const out = this.mintContent({ bundleId: leg.target_id, captureSha: sha,
-                                   extent: { kind: "document" },
-                                   mintedBy: CONTENT_MINTED_BY_PLANE });
-    if (!out.ok) return out;
-    this.sql.exec(`UPDATE inquiry_basis SET content_id=? WHERE bundle_id=? AND ord=?`,
-      out.content_id, bundleId, ord);
-    return { ...out, backfilled: true };
-  }
+  /** R15: a leg's content row, backfilled on first read: inquiry's. */
+  ensureLegContent(...a) { return inquiryOf(this.ctx).ensureLegContent(...a); }
 
   /** The content row behind an id, labelled (R16): content's. */
   contentRow(...a) { return contentOf(this.ctx).contentRow(...a); }
-
-  /** IC-84 (4)'s other half — THE LEGACY BACKFILL, WIRED.
-   *
-   *  REC-82 landed `ensureLegContent` as a pure function with NO CALLER and
-   *  said so in its own suite rather than leaving the gap to be found. This is
-   *  the caller: the first read that asks what a leg earns mints the
-   *  `document` row a leg written before the column existed should always have
-   *  had. Deterministic because the id is a hash, so it is a read that happens
-   *  to write rather than a migration with a direction — running it twice, in
-   *  two sessions, or after a replay produces the same id.
-   *
-   *  ONE TRANSACTION FOR THE WHOLE BASIS, not one per leg.
-   *
-   *  THE TWO LEGITIMATE NULLS COME BACK AS THEMSELVES AND ARE CARRIED, NEVER
-   *  COLLAPSED (IC-83's AMENDMENT 2): an inquiry target has no capture and no
-   *  part to point at (DEC-21), and a target the record holds no bytes of has
-   *  nothing to address. `ensureLegContent` answers each with its own `why`,
-   *  and this pass puts that sentence on the leg so every read that meets the
-   *  null states WHICH it is.
-   *
-   *  BOUNDED, AND THE BOUND IS STATED IN THE ANSWER. A basis's leg count is
-   *  unbounded by the schema and `ensureLegContent` does a small fixed number
-   *  of reads per leg, so an unbounded backfill behind a member-callable read
-   *  is REC-66's amplification arriving at a new door. It is capped, and a read
-   *  that hit the cap says so and leaves the rest for the next read — safe
-   *  precisely because the id is a pure function of the leg.
-   *
-   *  WHAT THE INSTRUMENT CANNOT SEE, stated because it matters: the
-   *  derivation-bounds walk counts `this.sql.exec(` and `#rows(` INSIDE a
-   *  tainted loop, and `this.ensureLegContent(...)` is a method call it cannot
-   *  follow. This loop would NOT appear on that roster even unbounded. The
-   *  bound is here because the amplification is real, not because the walk
-   *  asked for it. */
-  #backfillLegContent(bundleId, legs) {
-    const need = legs.filter((l) => !l.content_id);
-    const run = need.slice(0, Store.LEG_BACKFILL_MAX);
-    if (!run.length) return { ran: 0, truncated: false };
-    const outcomes = new Map();
-    this.ctx.storage.transactionSync(() => {
-      for (const l of run) outcomes.set(l.ord, this.ensureLegContent(bundleId, l.ord));
-    });
-    for (const l of run) {
-      const o = outcomes.get(l.ord);
-      if (!o || !o.ok) { l.why_no_content = o && o.detail ? o.detail : null; continue; }
-      if (o.content_id) { l.content_id = o.content_id; l.backfilled = !!o.backfilled; }
-      else { l.null_case = o.null_case || null; l.why_no_content = o.why || null; }
-    }
-    return { ran: run.length, truncated: need.length > run.length };
-  }
 
   /** op=content, the fixed-key read (R17–R19), and the crop of a cited PDF image (R32, D-419): content's. */
   contentRead(...a) { return contentOf(this.ctx).contentRead(...a); }
@@ -14357,387 +12398,10 @@ export class Store extends DurableObject {
     return entitiesOf(this.ctx).strongestByCapture(entityId);
   }
 
-  /* ===================== REC-18 · THE EARNED BASIS GRADES ===========   *
-   * DATA-MODEL D1(b), as DEC-15 closed it: a document leg's CONNECTION grade is
-   * EARNED — the strongest resolution of that document's captures to the
-   * inquiry's SUBJECT ENTITY — and its CAPTURE grade is earned from the capture
-   * record. Both are computed HERE, server-side, and the write path refuses a
-   * leg stating anything else (checkEarnedLeg). The rule is the recogniser's own,
-   * moved up one layer: "the RECOGNISER never mints a D; the model holds it so a
-   * member can testify, never the machine" (schema.mjs:739-743).
-   *
-   * ONE FUNCTION, THREE CONSUMERS, and that is deliberate: op=promote's write
-   * path, the ratification gate, and op=earnedbasis (the read a surface uses to
-   * fill a leg in BEFORE writing it) all call this. A member who cannot learn
-   * what a leg earns is a member the refusal pressures into inventing one, which
-   * is the failure mode CLAUDE.md names about gates.
-   */
-
-  /* The inquiry's declared subject, from the DOCUMENT and not from the column.
-     The projection is a cache like every other; the bytes are the authority,
-     and at promote time the column has not been written yet. */
-  #subjectEntityOf(bundleId) {
-    const row = this.#one(`SELECT inquiry_subject_entity FROM bundles WHERE bundle_id=?`, bundleId);
-    return row && row.inquiry_subject_entity ? row.inquiry_subject_entity : null;
-  }
-
-  /* THE CAPTURE-AXIS CEILING is doctrine rather than a tuning knob, and as of
-     REC-43 / DEC-39 it is DECLARED IN THE CHECK CATALOG rather than here.
-     `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
-     and the value is unchanged; what moved is WHERE it is written, so that the
-     published co-attestation fence can be composed from it (affordances.mjs
-     cannot import this file — this file imports IT). The doctrine, the reason
-     for the direction and the derivation of the unreachable letter above it are
-     all at the declaration in `checks/bio-checks.mjs`, beside `checkEarnedLeg`,
-     which is the arm that refuses a leg claiming more than this. This class
-     keeps no copy: a second literal "B" here is precisely the drift the move
-     exists to prevent, and the affordances suite pins its absence. */
-
-  /** The earned registry for one inquiry over one set of basis targets.
-   *
-   *  CONNECTION: the strongest resolution of each target document's captures to
-   *  the subject entity, through #strongestResolutionsFor — the SAME collapse
-   *  op=concerns, op=connect and op=thread make, reused rather than restated so
-   *  a leg's grade cannot drift from the grade that document appears at in the
-   *  reverse index. A/B/C ONLY: a grade-D resolution is a member's testimony
-   *  (op=resolvetestify), so a document known to concern the subject only by
-   *  testimony earns NOTHING here and its leg is testimony, with its own author
-   *  and date. That is the machine-never-mints-a-D rule holding at this layer
-   *  too, and it is why the D rows are dropped rather than passed through.
-   *
-   *  CAPTURE: whether the record holds registered captures for that document.
-   *  Read from `register`, which is what op=promote writes when a bundle's
-   *  bytes are registered — the capture record itself, never a caller's claim.
-   *
-   *  Bounded by the TARGETS asked about (a basis, or a caller's list) and not by
-   *  the corpus, and it runs two indexed reads per call rather than a probe per
-   *  leg — publishedRegistryFor's shape and for its reason. */
-  /*  REC-83 / IC-84 (3) — THE THIRD ARGUMENT, AND WHY THE ANSWER STAYS
-   *  BYTE-IDENTICAL WITHOUT IT. `contentIds` is the set of content rows the
-   *  caller's legs point at. Given none — which is every existing caller: the
-   *  write path (`earnedRegistryForDoc`), the ratification gate, and the two
-   *  internal registry reads — this function returns EXACTLY what it returned
-   *  before this item, with no `earned.content` key at all. That is not
-   *  caution: a document-grain leg's earned basis must not move because the
-   *  record learned to answer at a finer grain, and the over-strictness arm of
-   *  this item's control set asserts it against a figure measured on the
-   *  pristine tree.
-   *
-   *  THE CONTENT BLOCK IS DERIVED FROM `earned.connection`, NOT BESIDE IT. A
-   *  `document` row earns what its document earns, taken from the map this
-   *  function just built rather than recomputed — so the two grains cannot
-   *  disagree, which is the same reason this is ONE function with three
-   *  consumers in the first place. */
-  earnedBasisRegistry(subjectEntity, targetIds = [], contentIds = []) {
-    const ids = [...new Set((Array.isArray(targetIds) ? targetIds : [])
-      .filter((t) => typeof t === "string" && t))];
-    const ent = subjectEntity
-      ? this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, subjectEntity)
-      : null;
-    const out = { subject_entity: subjectEntity || null,
-                  subject_label: ent ? ent.label : null,
-                  subject_known: !!ent,
-                  /* MK-2 / IC-142: a `testimony` map joins these two ONLY when a
-                     target asked about IS an authored observation (CASE 0 below)
-                     — REC-83's `content` precedent, for its reason: a caller who
-                     asked about no observation gets an answer byte-identical to
-                     the one it got before the axis existed, and every existing
-                     consumer is on that path. Readers take its absence as "no
-                     target here is an observation", which is exactly what it is. */
-                  earned: { connection: {}, capture: {} } };
-    if (!ids.length) return out;
-    const want = new Set(ids);
-    if (subjectEntity) {
-      /* Collapse per CAPTURE first (the established collapse), then take the
-         strongest of a document's captures — a document may hold several, and
-         D1(b)'s words are "the strongest resolution of that document's
-         CAPTURES". Doing it in this order rather than one max over the raw rows
-         keeps the two steps visible and keeps the per-capture step the shared
-         one. */
-      const perCapture = this.#strongestResolutionsFor(subjectEntity);
-      for (const c of perCapture.values()) {
-        if (!c.bundle_id || !want.has(c.bundle_id)) continue;
-        /* A/B/C ONLY. The machine never mints a D.
-           REC-51 LEFT THIS LITERAL DELIBERATELY, and it is the ONE grade-letter
-           literal still standing anywhere in src/. It is NOT a copy of
-           `BASIS_GRADES` — it is a strict SUBSET of it carrying its own
-           doctrine: the grades a MACHINE may mint. Grade D is a member's
-           TESTIMONY (op=resolvetestify), recorded with an author and a date, and
-           the recogniser never produces one; `checkEarnedLeg` types that 'D' at
-           the enforcement point itself, so there is no exported constant to
-           compose from and MINTING ONE WOULD BE A RULING — what a machine may
-           earn, and whether that set follows the catalog when the catalog moves,
-           is a doctrine question and no DEC is open in it. Deriving it (say, as
-           "all but the weakest") would silently answer it.
-           So it is held the way REC-50 held op=acquire's archive letter: OPEN BY
-           DECISION, NOT BY OVERSIGHT, and guarded by two assertions in
-           hygiene.test.mjs rather than by this comment — one naming it as the
-           single stated limit of detector (C), the other pinning that it stays a
-           contiguous STRONGEST-FIRST PREFIX of `BASIS_GRADES`. Pinning that
-           relation asserts no VALUE, so it is not a ruling; what it buys is that
-           a catalog change which reorders or renames the vocabulary FAILS here
-           by name instead of leaving this subset quietly meaning something new. */
-        if (!["A", "B", "C"].includes(c.grade)) continue;
-        const cur = out.earned.connection[c.bundle_id];
-        if (!cur || Store.#GRADE_RANK[c.grade] > Store.#GRADE_RANK[cur.grade])
-          out.earned.connection[c.bundle_id] = { grade: c.grade, capture_sha: c.capture_sha, captures: 0 };
-      }
-      for (const c of perCapture.values())
-        if (c.bundle_id && out.earned.connection[c.bundle_id]) out.earned.connection[c.bundle_id].captures++;
-      for (const [id, e] of Object.entries(out.earned.connection))
-        /* mode 'value': `resolutions` holds the grade ITSELF, so the leg must
-           state this letter and no other. */
-        e.mode = "value",
-        e.why = `${id} resolves to ${subjectEntity}${ent ? ` (${ent.label})` : ""} at grade ${e.grade} — the `
-              + `strongest of the ${e.captures} capture(s) of that document the recogniser matched to this `
-              + `subject. Grade states HOW it was matched (framework 8.1) and nothing about how credible the `
-              + `document is.`;
-    }
-    /* THE CAPTURE RECORD IS BOTH PLACES A CAPTURE LANDS, and asking only one of
-       them would earn nothing for half the corpus. `register` holds the captures
-       a promotion REGISTERED against a bundle's files; `readings` holds the ones
-       a captured document's provenance carried. A document acquired through
-       op=acquire has both; one intaken with a provenance document has only the
-       second. The union is what "the record holds bytes for this document"
-       actually means. */
-    /* ================= REC-88 / D-349 · THE FIDELITY BOUND ================
-     *
-     * THE CHAIN TRAVELS WITH THE CAPTURE, IN THE SAME READ. The union above is
-     * unchanged in WHAT it enumerates — one row per distinct (bundle, capture)
-     * — and gains a LEFT JOIN onto `reading_text_source`, the projection that
-     * already holds every capture's chain. So this is still ONE indexed read
-     * and this function is still the two-reads-per-call shape it was built in;
-     * what moved is that the rows come back per capture and the count is taken
-     * here instead of by `GROUP BY`. `count(*)` over the same union and a
-     * length over the same rows are the same number by construction, and the
-     * §7 pin asserts it stayed 1 where it was 1.
-     *
-     * A LEFT join, deliberately: a capture the record holds bytes of but has
-     * never READ has no row there, and that is not a missing fact — it is an
-     * UNTRANSCRIBED capture, which `captureBound(null, …)` already answers for
-     * by passing the byte grade through. An INNER join would have silently
-     * dropped every unread capture out of the capture axis, which is most of
-     * the corpus (CAP-9 measured 88 captured documents and 0 readings on this
-     * project's own instance) — the fence-tighter-than-its-rule failure, and it
-     * would have read as this item working. */
-    /* THE SCAN STAYS IN THE `for` HEADER, AND THAT IS NOT A STYLE CHOICE — IT
-       IS A MEASURED ONE. The first draft of this item hoisted it to a `const`
-       and read the rows out of that, which is the same query, the same rows and
-       the same work. `derivation-bounds.test.mjs`'s FLOOR then fired: its
-       classifier reads amplification off a loop whose iterable IS a row source,
-       so hoisting removed `earnedBasisRegistry` from the unbounded-scan roster
-       (33 -> 32) while the method's behaviour was identical. A roster that
-       shrinks because the READER lost sight of a method is exactly what that
-       floor exists to catch, and the correct response is to keep the shape the
-       instrument can see rather than to move its figure. The blind spot itself
-       — that the matcher is sensitive to this spelling — is recorded in
-       MEASUREMENTS.md with both rosters diffed. */
-    const perBundle = new Map();
-    for (const r of this.#rows(
-      `SELECT u.bundle_id AS bundle_id, u.capture_sha AS capture_sha, ts.chain AS chain,
-              (SELECT ra.authored FROM register ra WHERE ra.capture_sha = u.capture_sha) AS authored FROM (
-         SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
-         UNION
-         SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (SELECT value FROM json_each(?))
-       ) u LEFT JOIN reading_text_source ts ON ts.capture_sha = u.capture_sha`,
-      /* D-443: the list is bound TWICE, so one variable per id failed from ~50 targets (D-36). */
-      JSON.stringify(ids), JSON.stringify(ids))) {
-      if (!r.bundle_id) continue;
-      if (!perBundle.has(r.bundle_id))
-        perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0 });
-      const e = perBundle.get(r.bundle_id);
-      /* MK-1 / D-184: A MEMBER'S AUTHORED WORDS ARE NOT A CAPTURE ON THIS AXIS.
-         The capture axis measures the act of reading a document in (DEC-21's
-         amendment); nobody read these bytes in from anywhere, so they contribute
-         NO LETTER and are not counted as a capture — `captureBound(null, …)`
-         would otherwise have passed the byte grade straight through and earned an
-         observation the fetch ceiling, which is strength it does not have
-         (`MEMBER-KNOWLEDGE-DESIGN.md` §3). Counted apart, so the entry below can
-         SAY why the axis is undetermined rather than fall silent. */
-      if (r.authored === 1) { e.authored++; continue; }
-      e.n++;
-      /* THE RULE ITSELF IS `captureBound`'S AND IS NOT RESTATED HERE. It is
-         handed the capture's chain and the BYTE grade, and it answers the
-         weakest link of the two — a letter, or null for UNDETERMINED. This file
-         does not know that an OCR step weakens and an attestation does not, it
-         does not know that an unmeasured transcription is null rather than
-         "fine", and it must not learn: DEC-4's arithmetic has one home. */
-      const chain = safeJson(r.chain);
-      const b = captureBound(chain, EARNED_CAPTURE_CEILING);
-      if (isTranscribed(chain)) e.transcribed++;
-      if (b == null) continue;          /* undetermined contributes no letter; `e.bound` stays null unless another capture supplies one */
-      /* THE STRONGEST OVER THE DOCUMENT'S CAPTURES, which is the collapse this
-         same function already makes on the connection axis ("the strongest
-         resolution of that document's CAPTURES") — reused so the two axes
-         cannot drift about what a document with several captures means.
-         `mode: 'ceiling'` decides the direction on its own: the entry states
-         the MAXIMUM any leg may claim, so a document one of whose captures
-         genuinely supports B must not be refused a B because a second, weaker
-         capture of the same document exists. That would be a fence tighter than
-         its rule. Every capture's own bound is still visible to a reader
-         through `op=textprovenance`, which publishes the chain per capture. */
-      e.bound = e.bound == null ? b
-        : (BASIS_GRADES.indexOf(b) < BASIS_GRADES.indexOf(e.bound) ? b : e.bound);
-    }
-    for (const [bundleId, e] of perBundle) {
-      /* MK-1 — CASE 0: THE DOCUMENT IS A MEMBER'S AUTHORED OBSERVATION AND HOLDS
-         NO CAPTURE OF ANYTHING. Present with a NULL grade, on CASE 2's rule: an
-         absent entry would say "the record holds no bytes for this document",
-         which is false — it holds exactly the member's words. The leg may state
-         no capture grade, which suspends the axis and names it; it may not state
-         a letter. Its grade is testimony, on the axis MK-2 built beside this one. */
-      if (!e.n && e.authored) {
-        /* MK-2 / IC-142 — THE TESTIMONY AXIS, EARNED FROM THE REGISTER. What the
-           record holds is that these bytes are a member's authored words (the
-           flag only op=testify can set, C-53.8), and the ruling is what that is
-           worth: TESTIMONY_GRADE, on the observing member's trust. mode 'value'
-           on resolution's precedent — the record holds the letter, so a leg
-           states that letter and no other (checkTestimonyLeg).
-           NOTHING ELSE IS READ HERE, AND THAT ABSENCE IS THE RULE: no
-           attestation, no co-signature, no count of members who agree. The
-           design's words (section 3): a second member's attestation does NOT
-           raise it, because a co-signature is not a second observation. A
-           second member who saw the same thing records their own, and the case
-           then rests on two testimonies, each at this letter. */
-        (out.earned.testimony ||= {})[bundleId] = {
-          mode: "value", grade: TESTIMONY_GRADE, authored: e.authored,
-          why: `${bundleId} is a member's own firsthand observation, recorded through op=testify: it is `
-             + `graded as testimony, ${TESTIMONY_GRADE}, and stands on the observing member's trust. Nothing `
-             + `raises it — another member agreeing with it is a co-signature, not a second observation.` };
-        out.earned.capture[bundleId] = {
-          mode: "ceiling", grade: null, captures: 0, authored: e.authored,
-          determined: false,
-          undetermined_because: "CAPTURE_AXIS_AUTHORED",
-          /* CORRECTED BY MK-2, never exempted: this read "this build does not
-             yet carry that axis", which was true until the axis landed. */
-          empty_level: "testimony — this document is a member's own firsthand observation, graded on that "
-                     + `member's trust on the testimony axis at ${TESTIMONY_GRADE} `
-                     + "(MEMBER-KNOWLEDGE-DESIGN.md section 3); the capture axis does not apply to it",
-          why: `${bundleId} is a member's authored observation: its bytes are the member's own words, `
-             + `recorded through op=testify, and nothing was read in from anywhere. The capture axis `
-             + `measures that act, so it earns no letter here — a ${EARNED_CAPTURE_CEILING} would be true of `
-             + `the bytes and would read as strength the observation does not have. A leg may state NO `
-             + `capture grade, which suspends the axis and names it; it may not state a letter. Its grade `
-             + `is testimony, ${TESTIMONY_GRADE}, on the testimony axis.` };
-        continue;
-      }
-      if (!e.n) continue;
-      const captureWord = `${bundleId} holds ${e.n} capture(s) in the record`;
-      /* The unreachable letter is DERIVED, never typed (REC-48): it is the rank
-         immediately above EARNED_CAPTURE_CEILING in the same BASIS_GRADES array
-         checkEarnedLeg compares this leg against, so the sentence a member reads
-         and the refusal that enforces it cannot say different things. */
-      const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it `
-                    + `needs a chain-of-custody web archive, which this plane cannot produce and does not `
-                    + `claim (CAPTURE-FIDELITY.md).`;
-      /* CASE 1 — NOTHING TRANSCRIBED THIS DOCUMENT'S TEXT, so there is no
-         fidelity to bound the bytes by and the answer is the one this record
-         has given since REC-18, BYTE FOR BYTE. That identity is not caution: a
-         leg on publisher-typed text must not move because the record learned to
-         ask a question whose answer for it is "no change", and IC-84's §7
-         over-strictness arm pins exactly that. No new key appears here. */
-      if (!e.transcribed) {
-        out.earned.capture[bundleId] = {
-          /* mode 'ceiling', and the difference from the connection axis is not a
-             softening — it is the record being honest about what it holds. There
-             is no per-document capture grade column anywhere in this schema, so
-             the record cannot say "this document's capture is worth C"; what it
-             CAN say is that it holds bytes for the document and what the strongest
-             capture this plane produces is worth. A leg may not claim more than
-             that (which is what makes grade A unreachable rather than merely
-             discouraged); a weaker letter is the member's account of a poorer
-             route and stays theirs. */
-          mode: "ceiling",
-          grade: EARNED_CAPTURE_CEILING, captures: e.n,
-          why: `${captureWord}, so the strongest capture grade it can `
-             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
-             + `receipt.`,
-          ceiling };
-        continue;
-      }
-      /* CASE 2 — EVERY TRANSCRIPTION OF THIS DOCUMENT IS UNMEASURED, so the
-         bound is UNDETERMINED and the axis says so. THE ENTRY IS STILL PRESENT
-         WITH A NULL GRADE, and that distinction is the whole of DEC-49's rule
-         applied to a grade: an ABSENT entry means "the record holds no bytes for
-         this document", a PRESENT entry with a null grade means "the record
-         holds the bytes and cannot say what the text derived from them is worth".
-         Collapsing the two would tell a member to go capture a document the
-         record already has. The empty level is NAMED rather than described,
-         because a member who is told what is missing can go and get it. */
-      if (e.bound == null) {
-        out.earned.capture[bundleId] = {
-          mode: "ceiling", grade: null, captures: e.n,
-          determined: false,
-          undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
-          empty_level: "transcription fidelity — this document's text was derived by a machine and no "
-                     + "step in that derivation carries a measured fidelity (the MEASUREMENTS ledger, per engine, "
-                     + "per version)",
-          why: `${captureWord}, but every transcription of its text is UNMEASURED: no step in the `
-             + `provenance of this document's text carries a measured fidelity, so what a leg resting on `
-             + `that text may claim about how it was captured is undetermined. That is a statement, not a `
-             + `permission — DEC-4 bounds the capture axis by transcription fidelity as its weakest link, `
-             + `so an unmeasured derivation bounds it to nothing rather than to ${EARNED_CAPTURE_CEILING}. `
-             + `A leg may state NO capture grade, which suspends the axis and names it; it may not state a `
-             + `letter this record cannot support.`,
-          ceiling };
-        continue;
-      }
-      /* CASE 3 — A MEASURED FIDELITY, AND IT IS THE CEILING NOW. When the
-         weakest link is the BYTES the letter is unchanged and the entry is
-         byte-identical to case 1 by construction (`captureBound` never raises,
-         so `bound === EARNED_CAPTURE_CEILING` means fidelity did not bind) —
-         which is why a document OCR'd at B earns exactly what it earned before
-         and gains no key. When the weakest link is the FIDELITY the letter
-         falls, and only then does the entry say so. */
-      if (e.bound === EARNED_CAPTURE_CEILING) {
-        out.earned.capture[bundleId] = {
-          mode: "ceiling",
-          grade: EARNED_CAPTURE_CEILING, captures: e.n,
-          why: `${captureWord}, so the strongest capture grade it can `
-             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
-             + `receipt.`,
-          ceiling };
-        continue;
-      }
-      out.earned.capture[bundleId] = {
-        mode: "ceiling", grade: e.bound, captures: e.n,
-        bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
-        why: `${captureWord}, and the bytes as this instance fetched them would be worth `
-           + `${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that `
-           + `derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of `
-           /* THE WORDING AVOIDS "grade a", and deliberately: `hygiene.test.mjs`
-              detector (B) refuses any module spelling the capture rule's own
-              letters beside the word "grade", in any case — so that the letters
-              have exactly one home and are composed from the constant rather
-              than typed. It cannot tell the ARTICLE "a" from the GRADE "A", and
-              a fence that is spelling-blind in the safe direction is the right
-              fence; this sentence moves rather than the rule. Caught by the
-              suite on this item's own first full run. */
-           + `byte provenance and transcription fidelity, with no third scale (DEC-4), so the strongest `
-           + `capture grade this document can earn is ${e.bound}. Transcription never RAISES a capture `
-           + `grade, and it is not a separate measurement a member can cite instead.`,
-        ceiling };
-    }
-    /* REC-83 / IC-84 (3): THE SAME REGISTRY, AT CONTENT GRAIN. Keyed by content
-       row, added only when the caller named rows — so the answer every existing
-       consumer gets is unchanged, and a `document`-extent row's connection is
-       the document's own entry above rather than a second computation of it. */
-    if (Array.isArray(contentIds) && contentIds.length)
-      out.earned.content = contentOf(this.ctx).standings(contentIds, out.earned.connection);
-    for (const [id, axis] of Object.entries(connectionsOf(this.ctx).portionAxes(contentIds, { entityId: subjectEntity }))) if (out.earned.content?.[id]?.connection?.grain === "portion") out.earned.content[id].connection = axis;
-    return out;
-  }
-
-  /* The registry as the WRITE PATH and the GATE need it: the subject this
-     document declares, over the targets this document's basis names. Takes the
-     frontmatter because at promote time the bytes are the only authority — the
-     projection column is written from them a few lines later. */
-  earnedRegistryForDoc(fm, legs) {
-    const subject = fm && typeof fm.subject_entity === "string" && fm.subject_entity
-      ? fm.subject_entity : null;
-    return this.earnedBasisRegistry(subject,
-      (Array.isArray(legs) ? legs : []).map((l) => l && l.target).filter((t) => typeof t === "string"));
-  }
+  /* R13: the earned registry and the declared subject: inquiry's. */
+  #subjectEntityOf(...a) { return inquiryOf(this.ctx).subjectEntityOf(...a); }
+  earnedBasisRegistry(...a) { return inquiryOf(this.ctx).earned(...a); }
+  earnedRegistryForDoc(...a) { return inquiryOf(this.ctx).earnedForDoc(...a); }
 
   /* The injectable clock. Env-overridable exactly as REC-5 made its cadence/batch env-overridable
      (BIO_NOW_MS), so a suite pins "now" and the overdue computation is deterministic; a caller may
@@ -15424,11 +13088,8 @@ export class Store extends DurableObject {
    *  reported rather than silently absorbed. */
   #conditionsCaptureRequested(viewer, now, identity = null) {
     const out = [];
-    const seen = this.#bundleGate("cr.target", viewer);
-    for (const r of this.#rows(
-      `SELECT cr.* FROM capture_requests cr
-        WHERE cr.state='captured' AND (${seen.sql}) ORDER BY cr.captured_at, cr.request`, ...seen.args)) {
-      const attribution = this.#captureRequestAttribution(r);
+    for (const r of captureRequestsOf(this.ctx).completed({ viewer }).requests) {
+      const attribution = r.attribution;
       /* DEFENCE IN DEPTH, AND STATED AS SUCH RATHER THAN CLAIMED AS A CONTROL.
          The drain refuses to capture a row it cannot attribute, so no `captured`
          row reaching this walk can fail the composer today and this `continue`
@@ -15590,12 +13251,8 @@ export class Store extends DurableObject {
    *  member acts over something that may still be refused at the drain. */
   #findingsOutOfInquiryLead(viewer, now, identity = null) {
     const out = [];
-    const seen = this.#bundleGate("cr.lead_inquiry", viewer);
-    for (const r of this.#rows(
-      `SELECT cr.* FROM capture_requests cr
-        WHERE cr.state='captured' AND cr.lead_inquiry IS NOT NULL AND cr.lead_inquiry <> ''
-          AND (${seen.sql}) ORDER BY cr.captured_at, cr.request`, ...seen.args)) {
-      const attribution = this.#captureRequestAttribution(r);
+    for (const r of captureRequestsOf(this.ctx).leads({ viewer }).requests) {
+      const attribution = r.attribution;
       /* THE SAME DEFENCE `#conditionsCaptureRequested` STATES, for the same
          reason and with the same honesty about what it is. The drain refuses to
          capture a row it cannot attribute, so no `captured` row reaching this
@@ -16679,20 +14336,14 @@ export class Store extends DurableObject {
    *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
   #conditionsRenderDeferred(viewer, now, identity = null) {
     const out = [];
-    const seen = this.#bundleGate("cr.target", viewer);
-    for (const r of this.#rows(
-      `SELECT cr.* FROM capture_requests cr
-        WHERE cr.render = 1
-          AND (cr.state = 'expired' OR (cr.state = 'requested' AND cr.code IS NOT NULL))
-          AND (${seen.sql})
-        ORDER BY cr.updated, cr.request`, ...seen.args)) {
+    for (const r of captureRequestsOf(this.ctx).rendersHeld({ viewer }).requests) {
       /* EVERY RENDER THE DRAIN HAS HELD, UNDER WHATEVER CODE IT LAST CARRIED, and every one that EXPIRED. A render
          held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request for the
          same host wins the slot, and that overwrites the row's code (measured, capturerequests.test.mjs 7d) — so
          showing C-83 codes alone would make the item VANISH for a tick while the render still waits, which is the
          silence the ruling forbids. A row never yet attempted (no code) is simply queued and is not shown. The
          reason is the code's own family's sentence; a code no family catalogues says so. */
-      const row = Store.#renderHoldReason(r.code);
+      const row = renderHoldReason(r.code);
       const words = row.translation
         || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
       const released = r.state === "expired";
@@ -18261,74 +15912,10 @@ export class Store extends DurableObject {
     };
   }
 
-  /* REC-11 / R3: would writing edges bundleId -> each of `targets` close a
-   * cycle in the basis graph? The graph is the inquiry-typed rows of
-   * inquiry_basis; by induction every prior write kept it acyclic, so a cycle
-   * through the NEW edges exists iff bundleId is reachable FROM one of the
-   * targets along stored edges. Depth-first with a visited set, so the walk is
-   * bounded by the store's edge count and needs no depth bound here (REC-12's
-   * read-time walk carries one because IT must answer under a budget; a write
-   * guard over an acyclic store terminates by construction). bundleId's own
-   * outgoing edges are irrelevant: this promotion REPLACES them, and the walk
-   * stops the moment it reaches bundleId anyway.
-   *
-   * Returns the full cycle path [bundleId, target, ..., bundleId] for the
-   * refusal to name, or null. */
-  #basisCyclePath(bundleId, targets) {
-    for (const t of targets) {
-      const path = [bundleId, t];
-      const found = this.#basisReach(t, bundleId, new Set([t]), path);
-      if (found) return found;
-    }
-    return null;
-  }
-  #basisReach(from, goal, seen, path) {
-    const next = this.#rows(
-      `SELECT target_id FROM inquiry_basis WHERE bundle_id=? AND target_type='inquiry' ORDER BY ord`, from);
-    for (const r of next) {
-      if (r.target_id === goal) return [...path, goal];
-      if (seen.has(r.target_id)) continue;
-      seen.add(r.target_id);
-      const found = this.#basisReach(r.target_id, goal, seen, [...path, r.target_id]);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  /* REC-11: read a bundle's basis legs back, in document order — the ord that
-     makes a leg addressable. A read of the PROJECTION; bundle.md stays the
-     authority. */
-  basisFor(bundleId) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "basis requires ?id=" };
-    const legs = this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground
-       FROM inquiry_basis WHERE bundle_id=? ORDER BY ord`, bundleId);
-    return { ok: true, bundleId, legs };
-  }
-
-  /* REC-11: "which inquiries rest on this document" — E2's question and
-     REC-17's re-evaluation obligation — as ONE indexed lookup on
-     inquiry_basis_target, never a graph walk. Answers for an INFO- target and
-     for an INQ- target alike, because a leg to an inquiry is the same edge. */
-  restingOn(targetId) {
-    if (!targetId) return { ok: false, reason: "NO_ID", detail: "restson requires ?id=" };
-    /* D-280, site (d) — `#restsOnLive`'s UNCONFIRMED TWIN. `inquiry_basis` is a
-       projection of `references[]` that drops the STATUS, so this read could
-       not tell a leg somebody still rests on from one they recorded the
-       decision to withdraw. IT PUBLISHES THE STATUS RATHER THAN FILTERING ON
-       IT, which is `op=backlinks`' posture and deliberately NOT `#restsOnLive`'s:
-       this is the projection read back — "which inquiries name this document as
-       a leg" — and a withdrawn leg is a fact the record keeps. Dropping rows
-       here would make a READ disagree with the table it reads, and a caller
-       that wants the live set has `#restsOnLive`'s ops. Additive: no row and no
-       field is removed (IC-61). */
-    const dependents = this.#rows(
-      `SELECT bundle_id, ord, role, grade, grade_axis, grade_source
-       FROM inquiry_basis WHERE target_id=? ORDER BY bundle_id, ord`, targetId)
-      .map((d) => ({ ...d,
-        status: this.#refEdgeSevered(d.bundle_id, targetId) ? "severed" : "confirmed" }));
-    return { ok: true, targetId, dependents };
-  }
+  /* R11, R16: the basis cycle guard and the basis reads: inquiry's. */
+  #basisCyclePath(...a) { return inquiryOf(this.ctx).cyclePath(...a); }
+  basisFor(...a) { return inquiryOf(this.ctx).basisFor(...a); }
+  restingOn(...a) { return inquiryOf(this.ctx).restingOn(...a); }
 
   /* ================================================================   * REC-17 / P-64: THE RE-EVALUATION OBLIGATION, AS A QUERY AND NOT A FLAG.
    *
@@ -18701,55 +16288,8 @@ export class Store extends DurableObject {
   static STRENGTH_AXES = STRENGTH_AXES;
   strengthOf(bundleId) { return strengthModule(this.ctx).strengthOf(bundleId); }
 
-  /* REC-105 / D-373 · ONE LEG'S CAPTURE LETTER, RESOLVED AGAINST WHAT THE
-     RECORD CAN EARN FOR ITS TARGET. Static, pure, and given the registry's own
-     entry rather than reaching for it: the ARITHMETIC of the bound lives in
-     `captureBound` (CPDF-10's module) and the SENTENCE lives in
-     `earnedBasisRegistry`, so this function decides neither and only applies
-     what it was handed. Returns null when there is nothing to do, and a null
-     return is what keeps the untouched shapes byte-identical rather than
-     re-composed into an identical value — an equality produced by running the
-     same code twice costs nothing.
-
-     THREE CASES, AND THEY ARE THE SAME THREE `#versionLegsAsMembers` TAKES.
-     Reused deliberately rather than re-decided: two reads of one fact that
-     answer it differently is the defect this item exists to close, and writing
-     a second policy here would open a new one at a different site.
-
-       NO ENTRY      the record holds no registered capture of that document, so
-                     it states no ceiling. Nothing to bound by, and inventing one
-                     would be a fence tighter than its rule. Unchanged — and this
-                     shape is unreachable at the write anyway, because
-                     `checkEarnedLeg` already refuses a leg claiming a letter on
-                     a document the record holds no bytes of.
-       NULL GRADE    a transcription with no MEASURED fidelity. DEC-4 bounds the
-                     axis to nothing rather than to the byte ceiling, so the leg
-                     claims nothing and says why, naming the empty level. It is
-                     INERT (DEC-18) — present, named, not load-bearing — and it
-                     is not dropped and not invented.
-       A CEILING     the member's letter STANDS and is CAPPED, never raised. A
-                     letter at or under the ceiling comes back unchanged with no
-                     `why`, which is what makes publisher-typed text identical to
-                     the byte. */
-  static #capturedAt(stated, earned, targetId) {
-    if (!earned || earned.mode !== "ceiling") return null;
-    if (earned.grade == null)
-      return { grade: null,
-               why: earned.why
-                 ?? `what this document's capture can support is undetermined, so this leg claims nothing `
-                  + `on the capture axis` };
-    if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;
-    /* THE LETTERS ARE INTERPOLATED AND NEVER TYPED. hygiene.test.mjs detector
-       (B) refuses any module spelling the capture rule's own letters beside the
-       word it is a grade of, so that the letters have exactly ONE home and are
-       composed from the record rather than restated here. And no backticks in
-       this comment: this method's body is lifted into analystvocab's
-       member-facing corpus, for the reason recorded in #strengthWalk. */
-    return { grade: earned.grade,
-             why: `the record can support no more than ${earned.grade} for ${targetId}, so this leg `
-                + `is read at ${earned.grade} here and not at the ${stated} it carries. `
-                + `${earned.why ?? ""}`.trimEnd() };
-  }
+  /* R14: one leg's capture letter against what its target earns: inquiry's `legCapped`. */
+  static #capturedAt(...a) { return legCapped(...a); }
 
 
   /* REC-12: the projection CACHE, per axis, written inside promote's
@@ -18795,17 +16335,14 @@ export class Store extends DurableObject {
      rather than in #writeProjection because it is inquiry-only and this is the
      inquiry projection writer; #writeProjection runs for every object type and
      would have to learn a type test to hold it. */
-  #writeStrengthProjection(bundleId, isInquiry, subjectEntity = null) {
+  #writeStrengthProjection(bundleId, isInquiry) {
     if (!isInquiry) return null;
     const s = this.strengthOf(bundleId);
-    const n = this.#one(`SELECT count(*) AS c FROM inquiry_basis WHERE bundle_id=?`, bundleId).c;
     this.sql.exec(
       `UPDATE bundles SET inquiry_capture_strength=?, inquiry_capture_state=?,
-              inquiry_connection_strength=?, inquiry_connection_state=?, inquiry_basis_count=?,
-              inquiry_subject_entity=?
+              inquiry_connection_strength=?, inquiry_connection_state=?
          WHERE bundle_id=?`,
-      s.capture.grade, s.capture.state, s.connection.grade, s.connection.state, n,
-      subjectEntity || null, bundleId);
+      s.capture.grade, s.capture.state, s.connection.grade, s.connection.state, bundleId);
     return s;
   }
 
@@ -18838,7 +16375,7 @@ export class Store extends DurableObject {
     // record-core R22: every declared table (legacy-store's are declared in the constructor), in one transaction.
     recordOf(this.ctx).transact(() => {
       recordOf(this.ctx).purge({ bundleId });
-      if (bundleId) this.sql.exec(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?`, bundleId);
+      if (bundleId) captureRequestsOf(this.ctx).clearLead(bundleId);
     });
     const after = this.#counts({ proof: true });
     const d = (k) => before[k] - after[k];
@@ -21629,191 +19166,8 @@ export class Store extends DurableObject {
    *  inquiry invisible -> the whole answer withheld as an absent one; a TARGET
    *  the viewer may not see -> dropped from the registry, with the fact that
    *  something was dropped stated and NO id and NO count leaked. */
-  /** REC-220 — WHICH VERSION EACH LEG RESTS ON, AND WHETHER THE RECORD CAN SAY (Bob, 2026-09-25 00:40Z,
-   *  rule 1). Sets `version` on every leg onto a DOCUMENT, in place, from the leg's own BYTES:
-   *
-   *    `pinned`        the bytes name the capture — `extent_capture` (written by op=cite at the act since
-   *                    REC-220, or by op=narrow, or by the author) or a `content_id` (a hash over its
-   *                    capture). `by` says which. This is a fact the record holds.
-   *    `only_capture`  no pin, and the record holds exactly ONE capture of the document: there is only one
-   *                    version the leg can rest on.
-   *    `undetermined`  no pin, and the record holds SEVERAL captures. The leg's content row is about the
-   *                    capture the resolver answered when the question was first projected, carried
-   *                    forward since in a DERIVED table (REC-82) — not a record of which bytes the member
-   *                    read. That row's capture is named as `resolved_capture`, and it is never back-filled
-   *                    into the leg by guess.
-   *
-   *  A leg onto a question (no bytes, DEC-21) or one whose document the record holds no capture of gets
-   *  no `version`; its `null_case` already says which. TWO set-based reads, never one per leg (the
-   *  derivation-bounds class): the document's bytes once, one grouped count per CHUNK of targets, one content read per chunk of ids. */
-  #legVersions(id, legs) {
-    const docs = legs.filter((l) => normalizeType(l.target_type) === "information");
-    if (!docs.length) return;
-    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-    const bytesLegs = md && md.content !== null ? (parseFrontmatter(md.content).data?.basis || []) : [];
-    /* CHUNKED under D-36's ~100-variable ceiling (the store's own `SELECTION_ID_CHUNK`): the count names
-       each chunk TWICE (both halves of the union), so it takes half a chunk at a time. */
-    const targets = [...new Set(docs.map((l) => l.target))];
-    const held = new Map();
-    const half = Math.floor(Store.SELECTION_ID_CHUNK / 2);
-    for (let i = 0; i < targets.length; i += half) {
-      const part = targets.slice(i, i + half), qs = part.map(() => "?").join(",");
-      for (const r of this.#rows(
-        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n FROM (
-           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
-           UNION ALL
-           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
-         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, r.n);
-    }
-    const cids = [...new Set(docs.map((l) => l.content_id).filter(Boolean))];
-    const capOf = new Map();
-    for (let i = 0; i < cids.length; i += Store.SELECTION_ID_CHUNK) {
-      const part = cids.slice(i, i + Store.SELECTION_ID_CHUNK);
-      for (const r of this.#rows(
-        `SELECT content_id, capture_sha FROM content WHERE content_id IN (${part.map(() => "?").join(",")})`,
-        ...part)) capOf.set(r.content_id, r.capture_sha);
-    }
-    for (const l of docs) {
-      const n = held.get(l.target) || 0;
-      if (!n) continue;
-      const bl = bytesLegs[l.ord] && typeof bytesLegs[l.ord] === "object" && bytesLegs[l.ord].target === l.target
-        ? bytesLegs[l.ord] : {};
-      const cap = l.content_id ? capOf.get(l.content_id) ?? null : null;
-      const pin = typeof bl.extent_capture === "string" && bl.extent_capture.trim() ? "extent_capture"
-                : legContentId(bl) ? "content_id" : null;
-      l.version = pin ? { state: "pinned", by: pin, capture: cap }
-                : n === 1 ? { state: "only_capture", capture: cap }
-                : { state: "undetermined", resolved_capture: cap, captures_held: n,
-                    detail: `the record holds ${n} captures of ${l.target} and this leg's bytes name none of `
-                          + `them, so which version it was made against is undetermined. The capture named is `
-                          + `the one the record resolved when this question was first projected; it is not `
-                          + `a record of what the member read, and nothing here moves it` };
-    }
-  }
-
-  earnedBasis({ id, targets = null, viewer = null } = {}) {
-    if (!id) return { ok: false, reason: "NO_ID", detail: "earnedbasis requires ?id=<inquiry>" };
-    if (!this.#viewerSees(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
-    const b = this.#one(`SELECT object_type, inquiry_subject_entity FROM bundles WHERE bundle_id=?`, id);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
-    if (normalizeType(b.object_type) !== "inquiry")
-      return { ok: false, reason: "NOT_AN_INQUIRY", target: id,
-               detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about `
-                     + `an INQUIRY's legs — what each candidate target earns against the question's subject `
-                     + `— and only an inquiry has a basis.` };
-    const asked = targets
-      ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, 200)
-      : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id)
-          .map((r) => r.target_id);
-    const visible = asked.filter((t) => this.#viewerSees(t, viewer));
-    const withheld = visible.length !== asked.length;
-    /* ================= REC-83 / IC-84 (3) · THE LEG PASS ==================
-     *
-     * The registry above answers per DOCUMENT, which is the question a member
-     * asks BEFORE writing a leg ("what would this target earn me?"). This pass
-     * answers the other question, which only exists now that a leg can name a
-     * PART: what does the leg I ALREADY WROTE earn, given the extent it names?
-     *
-     * IT RUNS EVEN WHEN `targets` WAS GIVEN, because the legs are a fact about
-     * the inquiry and not about the caller's list — a surface filling in a new
-     * leg still wants to see what the existing ones stand on.
-     *
-     * THE READ IS NOT CAPPED, AND THAT IS A DECISION THE INSTRUMENT MADE ME
-     * MAKE RATHER THAN A DEFAULT. The first draft put `LIMIT ?` on it at
-     * `CONTENT_EARNED_MAX`. `test/bounds.test.mjs`'s walk then found a
-     * THIRTY-SECOND capped op and named `earnedbasis` as capped-but-undriven —
-     * which was the right answer to the wrong design. This read is over exactly
-     * the population the `asked` read three lines up already enumerates
-     * UNCAPPED: the same table, the same bundle, one row per leg. Capping one
-     * and not the other would publish two different populations in one answer
-     * and silently omit legs whose targets are listed — the drift this method's
-     * own comments warn about, installed by a bound nobody asked for. A basis is
-     * bounded by what a member authored in one document, and the answer says so
-     * by listing it whole. What IS bounded is the BACKFILL below, because it
-     * WRITES.
-     *
-     * WHAT THE OTHER INSTRUMENT SEES, stated because the two disagree about
-     * this line: `derivation-bounds.test.mjs` seeds its taint on an unbounded
-     * `#rows` and then looks for amplification INSIDE a loop over it — another
-     * loop, a `this.sql.exec(`, or another `#rows(`. There is none here (the
-     * backfill's writes are behind a method call the walk cannot follow, and
-     * they are bounded on their own terms), so this read does not put
-     * `earnedBasis` on that roster either. Both figures were re-measured after
-     * the cap came off and both are unmoved.
-     *
-     * D-15, THE SAME POSTURE ONE OBJECT DOWN: a leg whose target the viewer may
-     * not see is DROPPED, and the fact that something was dropped is stated with
-     * no id and no count — op=backlinks' posture, which this op already takes
-     * for `asked`. */
-    const legRows = this.#rows(
-      `SELECT ord, target_id, target_type, content_id FROM inquiry_basis
-        WHERE bundle_id=? ORDER BY ord`, id);
-    const legsVisible = legRows.filter((l) => this.#viewerSees(l.target_id, viewer));
-    const legsWithheld = legsVisible.length !== legRows.length;
-    const legs = legsVisible.map((l) => ({ ord: l.ord, target: l.target_id,
-                                           target_type: l.target_type, content_id: l.content_id }));
-    /* IC-84 (4): THE BACKFILL, WIRED HERE AND NOWHERE ELSE.
-     *
-     * A READ THAT WRITES, DELIBERATELY AND DECLARED. `op=earnedbasis` is
-     * `mutating: false` in the OPS table and stays so, and the reason is not
-     * convenience — index.mjs's own doctrine is that *"a mutating arm hiding
-     * inside a non-mutating op would pass the gate that exists to stop exactly
-     * that"*. This is not that arm. Nothing here is an ACT: the row minted is
-     * `hash(capture, canonical extent, chain)` over rows the record already
-     * holds, so its value is fixed before this call and running it twice, in
-     * two sessions, or after a replay produces the same id. It changes no state
-     * a caller could have caused differently and grants nobody anything —
-     * which is why IC-83 could rule *"a legacy leg is backfilled to its
-     * `document` row on first read"* in the first place. Flipping the op to
-     * `mutating: true` would be the alternative and it is WORSE than the
-     * problem: SESSION_OPS would then gate a read the shipped composer already
-     * calls, an undeclared interface change on I3 wearing the costume of
-     * caution. THE REVERSAL, if this reading is rejected, is one line — delete
-     * this call and let `op=promote`'s projection mint the row at the leg's
-     * next promotion, which it already does and which
-     * `content-extent.test.mjs` already drives. */
-    const backfill = this.#backfillLegContent(id, legs);
-    const reg = this.earnedBasisRegistry(b.inquiry_subject_entity || null, visible,
-      legs.map((l) => l.content_id).filter(Boolean));
-    /* THE TWO LEGITIMATE NULLS, STATED AS WHICH AND NEVER COLLAPSED (IC-83's
-       AMENDMENT 2). A leg whose target is an INQUIRY has no capture and no part
-       to point at (DEC-21); a leg whose target information object this record
-       holds no bytes of has nothing to address. Both are `content_id: NULL` and
-       they are DIFFERENT FACTS — one is about what kind of thing was cited, the
-       other about what this record has captured — so the discriminator comes
-       from `ensureLegContent`, which is where the distinction is decided, and
-       is carried here rather than re-derived. A leg still NULL with no case
-       named is one the bound above did not reach, and that is said too. */
-    this.#legVersions(id, legs);
-    for (const l of legs) {
-      if (l.content_id) continue;
-      if (!l.null_case && !l.why_no_content) {
-        l.null_case = "NOT_YET_RESOLVED";
-        l.why_no_content = `this read's backfill bound (${Store.LEG_BACKFILL_MAX} legs) stopped before `
-          + `this leg. Nothing is wrong with it — ask again and the next read continues, because the `
-          + `content id is a pure function of the leg and needs no cursor`;
-      }
-    }
-    return { ok: true, bundleId: id, ...reg, asked: visible,
-             legs,
-             /* The bound, published rather than left to be inferred from a
-                short list — REC-60's rule about an answer that was cut. */
-             ...(backfill.truncated ? { backfill_truncated: true } : {}),
-             ...(legsWithheld ? { legs_out_of_view: true } : {}),
-             /* Stated, never silently shortened — and with no id and no count,
-                because the count IS the leak (op=backlinks' posture). */
-             ...(withheld ? { out_of_view: true } : {}),
-             detail: reg.subject_entity
-               ? `${id} names ${reg.subject_entity}${reg.subject_label ? ` (${reg.subject_label})` : ""} as its `
-               + `subject. A target listed under earned.connection may be written as a leg with `
-               + `grade_source: resolution AT THAT GRADE and no other; one listed under earned.capture may be `
-               + `written with grade_source: capture at that grade. A target absent from a list earns nothing `
-               + `on that axis — the honest leg is testimony (grade D, with an author and a date) or no grade `
-               + `at all, which suspends the axis and names the leg rather than pretending to a number.`
-               : `${id} names NO subject entity, so no leg of it earns an A/B/C connection grade. That is a `
-               + `stated position, not a defect (DEC-15): the capture axis still earns from the capture `
-               + `record, and a connection a member can account for is testimony at grade D.` };
-  }
+  /** R15: what each leg earns, with its content row and the capture it rests on: inquiry's. */
+  earnedBasis(...a) { return inquiryOf(this.ctx).earnedBasis(...a); }
 
   /* REC-14 / P8's justifying query, and the reason inquiry_exclusions exists as
      a TABLE and not only as bytes: "WHICH CASES EXCLUDED THIS DOCUMENT" —
@@ -24336,904 +21690,9 @@ export class Store extends DurableObject {
     };
   }
 
-  /* ==============================================================
-   * PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR AND ITS DRAIN.
-   *
-   * THE SPINE, AND IT IS THE ITEM: THE AI DOES NOT CAPTURE. IT REQUESTS, AND
-   * THE DAEMON CAPTURES WITH PROVENANCE PRESERVED. Bob, 2026-08-05: *"capturing
-   * a document (with provenance preserved) is something the daemon does
-   * (sometimes at the suggestion of an AI)."* So the requester holds no capture
-   * write at all and never touches the provenance chain, which is the foundation
-   * the whole trust model rests on. `captureRequest` writes a ROW and cannot
-   * fetch; `captureRequestDrain` fetches and cannot be reached by a caller.
-   *
-   * THE GATE IS A SHAPE, NOT A CLASS LIST, and that is deliberate. op=acquire's
-   * capture-request arm admits a row in `draining`, and `draining` is set by the
-   * drain inside the tick that then fetches — so a caller holding a real request
-   * id still cannot make the plane fetch for it. A class list would have to name
-   * `ai`, a class PL-11 has not minted yet; a shape holds the day it arrives.
-   *
-   * DEC-47's CONDUCT IS ENFORCED ONCE, AT THE DRAIN. The authorisation question
-   * is CLOSED — the inquiry and the session launch ARE the authorisation, and a
-   * member asked to approve forty URLs *"has not done the research and cannot
-   * judge them"*. What remains is behaviour: a UA with a contact URL, a purpose
-   * token, and rate. All three fire in `is-capture-conduct` and nowhere else.
-   *
-   * AND ROBOTS.TXT IS NOT ONE OF THEM. BOB-3, RULED 2026-08-07: disallows do not
-   * bar capture of publicly available documents, and the member-browser UA is
-   * permitted. There is no robots rule in this span and the drain fetches no
-   * `robots.txt`. The suite drives a document under a `Disallow` path and
-   * asserts it CAPTURES, because an absence by decision needs an arm.
-   *
-   * ATTRIBUTION STATES BOTH PRINCIPALS (DEC-27(b), DEC-55.4). The act is the
-   * DAEMON'S, performed AT THE SESSION'S REQUEST, and the record names the
-   * plane-credential principal AND the Claude-account principal — never a token
-   * value, and never a person's name in the actor slot. A record naming one of
-   * the two is the defect, so the composer refuses and the capture is not made.
-   * ================================================================== */
-
-  /** How many requests one drain tick will act on, and how many per host. The
-   *  per-host figure is ONE and it is DEC-47's rate rule in its smallest honest
-   *  form: *"a stranger's server has no relationship with this instance"*, so a
-   *  tick does not burst one host even when the token bucket would admit it. */
-  static CAPTURE_REQUEST_TICK_BATCH = 10;
-  static CAPTURE_REQUEST_PER_HOST_PER_TICK = 1;
-  /** How long a request stays interesting. SCRATCH, on `capture_sessions`'
-   *  shape: a work list with an expiry, not record. */
-  static CAPTURE_REQUEST_TTL_MS = 86_400_000;   // 24h
-  /** The cadence between drain ticks when work is waiting. */
-  static CAPTURE_REQUEST_TICK_MS = 60_000;
-
-  #captureRequestTickMs() {
-    const v = Number(this.env && this.env.CAPTURE_REQUEST_TICK_MS);
-    return Number.isFinite(v) && v >= 0 ? v : Store.CAPTURE_REQUEST_TICK_MS;
-  }
-  /** INERT unless configured, exactly as the archive monitor is: no self
-   *  binding and no daemon credential means no wake, no alarm and no behaviour
-   *  change on an instance that has not wired this. */
-  #captureRequestConfigured() {
-    /* D-334: PRESENCE, exactly as before — `#monitorTokenBound()` is the old
-       `#monitorToken()` expression under its real name. Whether the bound
-       credential is LIVE is asked at the fire site, where it is awaitable and
-       where spending it is what a wrong answer would cost. */
-    return !!(this.env && this.env.SELF && typeof this.env.SELF.fetch === "function" && this.#monitorTokenBound());
-  }
-  #captureRequestPending() {
-    if (!this.#captureRequestConfigured()) return 0;
-    return this.#one(`SELECT count(*) c FROM capture_requests WHERE state='requested'`).c;
-  }
-
-  /** op=capturerequest — THE DOOR. It writes a row. It fetches NOTHING.
-   *
-   *  Read this function looking for an outbound call and there is none, which is
-   *  the item's whole claim expressed as an absence: the suite asserts that
-   *  absence over this span's own source, because a fence you can only see by
-   *  reading carefully is a fence that grows a hole nobody notices. */
-  captureRequest(a = {}) {
-    const args = a || {};
-    const refusal = (code, detail, extra) => {
-      const row = CAPTURE_REQUEST_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check,
-               translation: row.translation, detail, ...(extra || {}) };
-    };
-
-    /* DEC-49 REGION is-capture-request
-     *
-     * THE SPAN `CAPTURE_REQUEST_CHECKS`' door rows name (REC-71). A REGION and
-     * not the whole function, so a refusal that arrives here later is not
-     * conscripted into this family by a `where` that claims too much. The local
-     * helper is `refusal` and every code is a STRING LITERAL at its site, which
-     * is what makes arm C of the DEC-49 guard able to COMPARE them rather than
-     * merely read past them (REC-71's measurement, PL-3's fix). */
-    const run = String(args.run ?? "").trim();
-    const runRow = run
-      ? this.#one(`SELECT run, status, context_type, context_id, principal_plane, principal_claude FROM ai_runs WHERE run=?`, run)
-      : null;
-    /* REC-168 (INVESTIGATIVE-SESSION.md §11 item 5, the `op=capturerequest` paragraph, BOB #28, 2026-09-22): A
-       REQUEST THAT NAMES A RUN IS A PRODUCTION OF THAT RUN, so it names a RUNNING run whose PRINCIPAL is the caller.
-       Until this landed the door asked only `running`, never whose, and copied the run's principals onto the row —
-       so a member could file a request under another member's run and the record credited that member with it.
-       REC-165's three questions, in REC-165's order:
-       (a) SIGHT — a run whose context this viewer cannot see answers exactly as a never-minted id does, byte for
-           byte but for the id (§7.9: a refusal would say the run exists). `#aiRunInSight` is the tick's, the
-           close's and `op=suggest`'s own predicate, so the run `op=airun` hides is the run this hides.
-       (b) POSITION — REC-152's `runPrincipalGate`, the caller being the control plane's `principal` stamp
-           (`RUN_PRODUCTION_ACTIONS`), never a field sent; its refusal relayed field by field.
-       (c) STATUS — the run is running; the pre-existing refusal, unchanged in code and words.
-       Rule 1's TARGET is NOT asked: a request names an address, not a question (BOB #28). A request naming NO run
-       is refused below exactly as before — the door has always required one (DEC-47), so there is no run-less
-       request for this rule to reach, and nothing about that arm moved. */
-    const requestRunSeen = !!runRow && this.#aiRunInSight(run, args.viewer ?? null);
-    if (!requestRunSeen)
-      return refusal("CAPTURE_REQUEST_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
-              + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
-              + `live session is a fetch nothing authorised.`
-            : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation "
-              + "(DEC-47), and a request naming no session names no authorisation.",
-        { run: run || null });
-    const notPrincipal = runPrincipalGate({ caller: args.caller ?? null, principal: runRow.principal_plane,
-                                            act: "requesting a capture under a run" });
-    /* RELAYED FIELD BY FIELD AND NEVER SPREAD (REC-165's relay: a spread is a return whose VERDICT the DEC-49
-       guard cannot read). The code, check and translation are the gate's own (C-22.12's literal stays there). */
-    if (notPrincipal)
-      return { ok: false, reason: notPrincipal.code, code: notPrincipal.code, check: notPrincipal.check,
-               translation: notPrincipal.translation, detail: notPrincipal.detail, run,
-               note: "a capture request names a run its caller holds. Nothing was requested or written" };
-    if (runRow.status !== "running")
-      return refusal("CAPTURE_REQUEST_NO_RUN",
-        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION `
-        + `LAUNCH the authorisation for reaching a public source, so a request that cannot name a `
-        + `live session is a fetch nothing authorised.`,
-        { run });
-
-    const address = String(args.address ?? "").trim();
-    if (!isPublicHttpsLocator(address))
-      return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        `'${address.slice(0, 80) || "(none)"}' is not a public https locator. DEC-47 scopes what a `
-        + `session may reach to "areas that anybody can go through", and this address is not one on `
-        + `its face.`, { address: address || null });
-    let host = null;
-    try { host = new URL(address).host.toLowerCase(); } catch { host = null; }
-    if (!host)
-      return refusal("CAPTURE_REQUEST_NOT_PUBLIC",
-        "this address has no host this plane can read, and the per-host pacing DEC-47 requires is "
-        + "computed from one.", { address });
-
-    const target = String(args.target ?? "").trim();
-    const gate = viewerPredicate(args.viewer ?? null);
-    const b = target
-      ? this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-                  target, ...gate.args)
-      : null;
-    if (!b || normalizeType(b.object_type) !== "inquiry")
-      return refusal("CAPTURE_REQUEST_NOT_AN_INQUIRY",
-        `${target.slice(0, 60) || "(none)"} is not a question readable here. A requested capture is `
-        + `accountable to the question it was asked under, and a fetch belonging to nothing is a fetch `
-        + `nobody can account for afterwards.`, { target: target || null });
-
-    /* PL-15 / D-213 — THE LEAD, and it is OPTIONAL by construction. Absent on
-       every ordinary request, and absent is the common case: a run working one
-       question and capturing for that question names nothing here.
-
-       WHEN IT IS PRESENT it must be a question this caller can read, exactly as
-       `target` must, and for the identical reason — a lead filed under a bundle
-       the caller cannot see would let this door probe for the existence of a
-       project nobody invited them to, which is the D-15 leak `#queueCaseFor`
-       already refuses one surface over. Reusing `gate` rather than recompiling
-       it: one predicate, one compilation point.
-
-       AND IT MAY NOT BE THE TARGET. A "lead" pointing back at the question the
-       run is already working is not out-of-inquiry evidence at all — it is
-       ordinary evidence wearing the notification's clothes, and admitting it
-       would put a FINDING on inquiry A's own queue saying *evidence for another
-       question was found*, about A. Refused rather than normalised to NULL: a
-       caller whose field was silently dropped learns nothing about where the
-       distinction is, which is the same argument the spine check below makes. */
-    const lead = String(args.lead_inquiry ?? args.lead ?? "").trim();
-    if (lead) {
-      const lb = this.#one(
-        `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
-        lead, ...gate.args);
-      if (!lb || normalizeType(lb.object_type) !== "inquiry")
-        return refusal("CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
-          `${lead.slice(0, 60)} is not a question readable here. A lead says which OTHER question this `
-          + `evidence bears on, so it names a question or it names nothing — a document, a project or a `
-          + `bundle id nothing answers to would give the notification a home that cannot hold it.`,
-          { lead_inquiry: lead });
-      if (lead === target)
-        return refusal("CAPTURE_REQUEST_LEAD_IS_THE_TARGET",
-          `this request names ${lead.slice(0, 60)} as both the question it was made under and the `
-          + `question the evidence bears on. That is ordinary evidence for this question, which needs `
-          + `no lead: a lead exists to give evidence for ANOTHER question a home (D-213), and one `
-          + `pointing back here would file a notification about this question saying evidence for a `
-          + `different one was found.`, { lead_inquiry: lead, target });
-    }
-
-    /* THE SPINE, AT THE DOOR. A request that arrives carrying bytes, a digest or
-       a provenance hop is a caller trying to be the fetcher. Refused BY NAME
-       rather than by dropping the fields: CLAUDE.md's rule is that a provenance
-       hop a caller can hand us is one a caller can invent, and a caller whose
-       fields were silently ignored learns nothing about where the fence is. */
-    const brought = ["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]
-      .filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
-    if (brought.length)
-      return refusal("CAPTURE_REQUEST_CARRIES_A_CAPTURE",
-        `this request carries ${brought.join(", ")}, and a request carries none of them. The AI does `
-        + `not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's `
-        + `structural gate, DEC-60).`, { fields: brought });
-
-    /* D-491 / IC-276 — THE RENDER FLAG, AND IT IS READ STRICTLY BECAUSE READING
-       IT LOOSELY IS THE DEFECT. `render: true` asks the drain for the page as a
-       visitor saw it (CLIENT-RENDERED.md, BOB #32 item 3: an unattended sweep MAY
-       render). Absent, null and `false` are the document as the site serves it —
-       a caller saying "no render" is ANSWERED and not refused, because a fence
-       tighter than its rule is an undeclared interface change wearing the costume
-       of caution.
-
-       ANY OTHER VALUE IS REFUSED BY NAME. That is C-83.1's argument at this door:
-       a `render: "yes"` normalised to 0 queues a plain capture, and the served
-       shell is then filed as the content — the one outcome the C-83 family exists
-       to prevent. It is worse here than at op=acquire by exactly the row's
-       lifetime: the call that dropped the flag is gone, the drain fetches under a
-       flag nobody can see was dropped, and the request reads afterwards as one
-       that never asked for a render. */
-    const renderRaw = args.render ?? null;
-    if (renderRaw !== null && renderRaw !== false && renderRaw !== true)
-      return refusal("CAPTURE_REQUEST_RENDER_MALFORMED",
-        `render=${JSON.stringify(renderRaw).slice(0, 40)} is not a value this door reads. Send `
-        + `render: true for the page as a visitor saw it, or nothing for the document as the site `
-        + `serves it.`, { render: null });
-    const render = renderRaw === true ? 1 : 0;
-
-    /* END DEC-49 REGION is-capture-request */
-
-    /* BOTH PRINCIPALS ARE COPIED FROM THE RUN AND NEVER FROM THE CALLER — a
-       caller that could name its own principals could name somebody else's —
-       AND THEY ARE NOT JUDGED HERE.
-       CORRECTED 2026-09-23 BY REC-168 (BOB #28): the PLANE principal is now the CALLER's, as the control plane
-       STAMPED it — still never a field the caller sent. The run's copy could name somebody other than who asked
-       (the defect this item closes), and after the gate above the stamp is the run's principal in the one form
-       REC-152 compares, spelled as the account that asked (a member's session or the credential she minted,
-       D-199 (4)'s composite kept). The CLAUDE principal is still the run's: it is the account the run's budget is
-       paid from, which the request does not choose. The first draft of this door refused an
-       incomplete attribution at the write as well as at the drain, and DRIVING
-       THE FAMILY EXPOSED THAT AS A DEFECT: with identical predicates at both
-       points, the door's refusal makes the DRAIN'S unreachable, so one of the
-       two codes could never be driven and a refusal nobody can drive is a
-       refusal nobody can prove fires (DEC-49's floor, and the same defect class
-       as a control that passes while asserting nothing). It is judged ONCE, at
-       the drain, which is also where this item's conduct is judged and for the
-       same reason: the drain is the last point before anything leaves, and a row
-       can outlive the rules the door applied to it. */
-
-    /* Conduct is NOT checked here and that is the design rather than an
-       omission: one enforcement point at the drain. What IS recorded here is
-       what the drain will enforce over — the purpose token and the UA mode ride
-       the row unvalidated, and the drain turns away what it cannot honour. */
-    const purpose = String(args.purpose ?? "").trim();
-    const uaMode = String(args.ua_mode ?? args.uaMode ?? "civicos").trim();
-    /* REC-168: the stamp the gate above passed, trimmed as the gate reads it. */
-    const callerPlane = String(args.caller ?? "").trim();
-
-    const nowMs = args.at ? Date.parse(args.at) : Date.now();
-    const now = Store.#aiIso(nowMs);
-    const request = String(args.request ?? "").trim()
-      || `CR-${now.replace(/[-:TZ]/g, "")}-${Store.#rand(6)}`;
-
-    /* IDEMPOTENT ON (run, address, render). A run that asks twice for the same
-       document has asked once: the second ask returns the standing row rather
-       than queueing a second fetch at somebody else's server. That is DEC-47's
-       rate rule arriving at the door as arithmetic rather than as politeness.
-
-       `render` JOINED THE KEY WITH D-491, AND NOT AS A CONVENIENCE. The rendered
-       page and the served document are NOT the same document — that is D-64's
-       founding claim, and the plane files them under two digests and calls the
-       rendered one the primary. A key of (run, address) alone would answer a
-       render ask with a standing plain row, `already: true`, and a render nobody
-       ever performed: the run's ask silently unmet, and the answer agreeing with
-       a row that says something else. Two rows is the honest shape, and DEC-47's
-       politeness is not spent by it — the drain admits ONE request per host per
-       tick, so the second lands in a later tick either way. */
-    const standing = this.#one(
-      `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
-      run, address, render);
-    if (standing)
-      return { ok: true, request: standing.request, run, target: standing.target, address,
-               host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
-               /* PL-15: the STANDING row's lead, never this call's. Idempotence
-                  means the second ask returns what the first one recorded, and
-                  echoing the caller's field back would report a lead nothing
-                  stored — the answer disagreeing with the row it stands for. */
-               lead_inquiry: standing.lead_inquiry ?? null,
-               /* D-491: the STANDING row's flag, on the identical reasoning the
-                  lead above carries — and here it cannot disagree with the call,
-                  because the flag is part of the key this row was found by. */
-               render: standing.render === 1,
-               state: standing.state, requested: false, already: true,
-               principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
-
-    this.sql.exec(
-      `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
-      request, run, target, address, host, purpose, uaMode,
-      callerPlane, runRow.principal_claude,
-      now, now, Store.#aiIso(nowMs + Store.CAPTURE_REQUEST_TTL_MS), lead || null, render);
-    return { ok: true, request, run, target, address, host, purpose, ua_mode: uaMode,
-             lead_inquiry: lead || null,
-             /* D-491: the flag AS THE ROW WAS WRITTEN — the same `render` the
-                INSERT bound, not the field the caller sent, so an answer saying
-                `render: true` cannot disagree with the value the drain will
-                read. It is not a re-read of the row, and this comment says so
-                rather than letting the next reader assume one. */
-             render: render === 1,
-             state: "requested", requested: true, already: false,
-             principals: { plane: callerPlane, claude: runRow.principal_claude },
-             detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
-                   + "this queue, and DEC-47's conduct rules are applied there." };
-  }
-
-  /** THE ATTRIBUTION, composed in ONE place, refusing rather than half-stating.
-   *
-   *  DEC-27(b): *"the assistant captured this, at Anna's request"* — the record
-   *  states BOTH. Here that is three names and not two: the ACTOR is the daemon
-   *  and must be MACHINE-SHAPED (REC-2's `token:<class>`, never a person's
-   *  name), and behind it stand the run's two principals, which are different
-   *  principals and not two spellings of one. A record naming only one of the
-   *  two is the defect this composer exists to make impossible. */
-  #captureRequestAttribution(row) {
-    const actor = `${MACHINE_AUTHOR_PREFIX}daemon`;
-    /* TRIMMED, and that is not tidiness. `aiRunOpen`'s own guard is `!principal`
-       — so a run opened with a principal of WHITESPACE passes it and stores " ",
-       and a record naming " " names nobody while looking like it names
-       somebody. That is the worse direction of the two: an absent principal is
-       visibly absent, a blank one reads as present. Caught here rather than
-       repaired in PL-5's landed check, which is a neighbouring family's rule and
-       is delegated rather than reached into (REC-71's lesson). */
-    const plane = String((row && row.principal_plane) || "").trim();
-    const claude = String((row && row.principal_claude) || "").trim();
-    if (!row || !plane || !claude)
-      return { ok: false, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
-               plane: plane || null, claude: claude || null };
-    /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION, and there is deliberately
-       NO REFUSAL FOR IT. `actor` is `MACHINE_AUTHOR_PREFIX` — REC-2's
-       `token:` — concatenated with a literal, so it cannot be a person's name
-       and a branch refusing one would be a gate for a condition this code cannot
-       produce. That is the empty gate this project refuses everywhere else, and
-       it would also mint a DEC-49 code nobody could ever drive. The property is
-       asserted instead, over this composer's own output, in
-       test/capturerequests.test.mjs. */
-    return {
-      ok: true, actor, machine_attributed: true,
-      at_the_request_of: { run: row.run, inquiry: row.target },
-      principals: { plane, claude },
-      /* The sentence a surface renders, composed from the fields above so it
-         cannot say something the fields do not. Both principals appear in it
-         because DEC-27(b) is about what the RECORD STATES, and a structured
-         field a surface may or may not open is not a statement. */
-      statement: `the daemon captured this, at the investigative session's request `
-               + `(run ${row.run}), under ${plane}, paid by ${claude}`,
-    };
-  }
-
-  /** op=capturerequestdrain, and the `capture-request-drain` alarm consumer.
-   *  THE ONLY THING IN THIS PLANE THAT TURNS A REQUEST INTO A FETCH. */
-  async captureRequestDrain({ limit = null, actor = "consumer", now = null } = {}) {
-    if (!this.#captureRequestConfigured())
-      return { configured: false, drained: 0, captured: [], refused: [], held: [], remaining: 0,
-               detail: "no self binding or no daemon credential: this instance drains nothing and "
-                     + "holds no alarm for it" };
-    /* NOT RE-ENTRANT, for the reason MEASURED on the archive monitor: a tick
-       that reaches op=acquire over env.SELF re-enters this same Durable Object
-       and can arm an alarm underneath the tick still awaiting its own fetch. */
-    if (this.#tickRunning.has("capture-request-drain"))
-      return { configured: true, busy: true, drained: 0, captured: [], refused: [], held: [],
-               remaining: this.#captureRequestPending() };
-    this.#tickRunning.add("capture-request-drain");
-    try {
-      const nowMs = Number.isFinite(now) ? now : Date.now();
-      const at = Store.#aiIso(nowMs);
-      const cap = Math.max(1, Math.min(Number(limit) || Store.CAPTURE_REQUEST_TICK_BATCH,
-                                       Store.CAPTURE_REQUEST_TICK_BATCH));
-      /* D-523 — A HELD RENDER ENDS AT ITS ROW'S OWN `expires`, RECORDED UNDETERMINED WITH ITS C-83 REASON AND
-         RELEASED, NEVER DROPPED SILENTLY (BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24
-         by BOB #33"). D-491's hold below says *"The row's own `expires` bounds the hold"*, and until this sweep
-         NOTHING READ `expires` HERE: the drain selected every `requested` row whatever its age, so a render this
-         instance could not do was asked for again on every tick for as long as the row existed, and when it
-         ended nothing said what became of it. The hold is kept (the ruling's KEEP) and is now bounded in fact.
-
-         `expired` IS A STATE OF ITS OWN, and neither of the two it could be mistaken for. Not `refused`: nothing
-         refused the ask, and a refusal is terminal because of what the ask SAID, while this ends because the
-         time it was valid for ran out. Not `captured`: nothing was filed. The C-83 code the row was held under is
-         KEPT, so the record says WHY the render never happened, and the content is UNDETERMINED — what the page
-         showed is not known to this instance, and saying "absent" would claim a look that was never made.
-
-         EVERY RENDER REQUEST PAST ITS `expires`, WHATEVER ITS LAST CODE — MEASURED, not chosen for tidiness. A
-         render held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request
-         for the same host wins the tick's one slot (CAPTURE_CONDUCT_TICK_SPENT overwrites the row's code), and
-         the first draft of this sweep, which matched C-83 codes only, let exactly that row through past its
-         `expires` to be ASKED AGAIN — a render performed after the ask lapsed, had a renderer been bound by
-         then (capturerequests.test.mjs 7d, the tick before expiry). So the bound is the ROW's, and the reason
-         recorded is the code the row carries, read off the family that minted it (`#renderHoldReason`). A PLAIN
-         request past its `expires` is still drained: that is not a render, the ruling does not reach it, and it
-         is a separate defect named in D-523's report rather than widened into here. Bounded by the tick's batch,
-         and BEFORE the batch is selected, so an expired row never takes a slot a live one could use; a backlog
-         past the batch is released on the next tick. */
-      const expired = [];
-      {
-        for (const q of this.#rows(
-          `SELECT * FROM capture_requests WHERE state='requested' AND render=1 AND expires <= ?
-            ORDER BY expires, request LIMIT ?`, at, cap)) {
-          const reason = Store.#renderHoldReason(q.code);
-          const why = String(q.detail || "").slice(0, 400);
-          const said = `held under ${reason.check || "no catalogued check"} ${q.code || "(no code: never attempted)"} `
-                     + `until this request expired at ${q.expires}. `
-                     + "The render was never performed and nothing was filed for it, so what the page showed "
-                     + "is UNDETERMINED"
-                     + (why ? ` — the reason last given: ${why}` : " — no further detail was carried");
-          this.sql.exec(
-            `UPDATE capture_requests SET state='expired', detail=?, updated=? WHERE request=? AND state='requested'`,
-            said.slice(0, 600), at, q.request);
-          /* GOVERNED, on D-491's own reasoning for the hold: every C-83 admission refusal is a fact about US, so
-             the look is an indeterminate we GOVERNED, never the source failing. The condition is named now that
-             the vocabulary has a kind for it (D-491 declined to invent one, correctly, and D-523 minted it). */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
-            detail: `${reason.check || "no catalogued check"} ${q.code || "(no code)"}: the render expired `
-                  + `UNDETERMINED at ${q.expires} and the request is released — ${why || "no detail was carried"}`,
-          }, at, 0);
-          expired.push({ request: q.request, address: q.address, host: q.host,
-                         code: q.code ?? null, check: reason.check, translation: reason.translation,
-                         render: { state: "expired", content: "undetermined" },
-                         expires: q.expires, detail: said });
-        }
-      }
-      const queued = this.#rows(
-        `SELECT * FROM capture_requests WHERE state='requested' ORDER BY requested_at, request LIMIT ?`, cap);
-      const captured = [], refused = [], held = [];
-      const hostsThisTick = new Map();
-
-      for (const q of queued) {
-        const verdict = this.#captureRequestConduct(q, nowMs, hostsThisTick);
-        if (!verdict.ok) {
-          const row = CAPTURE_REQUEST_CHECKS[verdict.code];
-          const answer = { request: q.request, address: q.address, host: q.host,
-                           code: verdict.code, check: row.check, translation: row.translation,
-                           detail: verdict.detail };
-          this.sql.exec(
-            `UPDATE capture_requests SET state=?, code=?, detail=?, attempts=attempts+1, updated=? WHERE request=?`,
-            verdict.terminal ? "refused" : "requested", verdict.code, verdict.detail, at, q.request);
-          /* THE RUN IS TOLD, IN THE RECORD'S OWN VOCABULARY. A governed hold is
-             D-104's split and carries `governed: true` with
-             LOOKED_INDETERMINATE, because OUR pacing holding a host is a fact
-             about US and never about the source — writing "source unreachable"
-             here is the exact thing D-104 exists to stop. */
-          /* REC-93: through the ONE append site, under the authority that
-             actually made the look. The vocabulary is UNCHANGED — D-104's split
-             still travels as `governed` with LOOKED_INDETERMINATE, because our
-             pacing holding a host is a fact about US and writing "source
-             unreachable" here is the exact thing D-104 exists to stop. */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE",
-            governed: verdict.governed === true,
-            condition: verdict.condition || null,
-            detail: `${row.check} ${verdict.code}: ${verdict.detail}`,
-          }, at, 0);
-          (verdict.terminal ? refused : held).push(answer);
-          continue;
-        }
-
-        /* `draining` IS THE FENCE. It is set HERE, by the drain, in the tick
-           that then fetches — and op=acquire's capture-request arm admits
-           nothing else. So the window in which this plane will fetch for a
-           request is exactly the window in which the drain is doing it. */
-        this.sql.exec(`UPDATE capture_requests SET state='draining', attempts=attempts+1, updated=? WHERE request=?`,
-                      at, q.request);
-        hostsThisTick.set(q.host, (hostsThisTick.get(q.host) || 0) + 1);
-        const r = await this.#fireCaptureRequest(q);
-        if (r.ok) {
-          this.sql.exec(
-            `UPDATE capture_requests SET state='captured', code=NULL, detail=?, capture_sha=?, captured_at=?, updated=? WHERE request=?`,
-            verdict.attribution.statement, r.sha || null, at, at, q.request);
-          /* PRESENT, and the detail is the ATTRIBUTION — so the run's own log
-             carries the sentence naming both principals rather than a bare
-             "captured". */
-          /* REC-93: PRESENT NOW CARRIES WHAT IT FOUND. `r.sha` was already in
-             hand at this line and was simply not recorded — C-22.10's refusal is
-             what turned that from a nicety into a requirement, and the sweep
-             authority could not have satisfied it otherwise. The detail stays
-             the ATTRIBUTION, so the log still carries the sentence naming both
-             principals rather than a bare "captured". */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "PRESENT", governed: false,
-            resultKind: "capture", resultRef: r.sha || null,
-            detail: verdict.attribution.statement,
-          }, at, 0);
-          captured.push({ request: q.request, address: q.address, sha: r.sha || null,
-                          grade: r.grade ?? null, attribution: verdict.attribution });
-        } else if (r.renderCode) {
-          /* D-491 / IC-276 — A RENDER THIS INSTANCE COULD NOT DO IS DEFERRED, AND
-             THE SERVED SHELL IS NEVER FILED IN ITS PLACE (CLIENT-RENDERED.md, BOB
-             #32 item 3: *"the tick records the render as DEFERRED (undetermined).
-             It never records the shell as though it were the content."*).
-             op=acquire decides every way a render cannot happen before it fetches
-             anything, so there is nothing to fall back TO — and that is the
-             property, not a convenience: a fallback here would file the frame of
-             a page as the page, which is the whole of C-83 undone by its own
-             consumer.
-
-             THE ROW IS HELD, NOT REFUSED, and `requested` is what holds it. Every
-             C-83 admission refusal names a condition that can change without the
-             request changing — a renderer gets bound, the allowance rolls over at
-             midnight UTC, a cooling-off host comes back — so the next tick asks
-             again. A terminal `refused` would make an instance's CURRENT inability
-             a permanent fact about the ask. The row's own `expires` bounds the
-             hold, so this is not an unbounded retry.
-
-             THE CODE IS THE ONE THE PLANE SENT, never collapsed into a single
-             deferral word. C-83.3's sentence and C-83.4's are different sentences
-             — one says this instance cannot render at all, the other says it can
-             and has spent today's allowance, and only the second may tell a member
-             to ask again after midnight. Recording either under the other's
-             translation would be the record saying more than it can support. */
-          const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
-          const why = String(r.detail || r.reason || "").slice(0, 400);
-          /* THE HOST'S SLOT IS GIVEN BACK, AND THIS IS A DEFECT D-491 WOULD HAVE
-             INTRODUCED RATHER THAN A TIDY-UP. The per-host count is taken before
-             the fire, which is right for every other outcome because every other
-             outcome SENT something — CONDUCT 3's own sentence is *"this tick has
-             already fetched from <host> once"*. A deferred render fetched nothing.
-             Left counted, the oldest row wins the host's one slot every tick and
-             defers again, so a plain request behind a render this instance cannot
-             do would be answered CAPTURE_CONDUCT_TICK_SPENT until the render row
-             expired 24 hours later: starvation caused by a request that never
-             touched the host. Driven in `capturerequests.test.mjs` block 7c, where
-             a plain request for the SAME host is captured in the same tick as the
-             deferral. It is a rollback and not a re-ordering: nothing else about
-             the rate rule moves, and a render that DOES load the page spends the
-             slot exactly as any other fetch. */
-          hostsThisTick.set(q.host, Math.max(0, (hostsThisTick.get(q.host) || 1) - 1));
-          this.sql.exec(
-            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
-            r.renderCode, why, at, q.request);
-          /* GOVERNED, AND ON D-104's OWN REASONING RATHER THAN BY ANALOGY: every
-             one of these is a fact about US — our allowance, our per-host pacing,
-             our missing renderer — and none of them is the source failing or even
-             being asked. Writing this as an ungoverned indeterminate would put
-             "we looked and could not tell" against an address nothing was sent
-             to, and the archive fallback reads exactly that counter (D-104). No
-             `condition` is named: the queue's vocabulary has no kind for a
-             deferred render, and `client-rendered-shell` would claim a shell was
-             captured when nothing was fetched at all. Inventing a kind is an
-             interface change to another surface's roster and is NOT taken here.
-             CORRECTED BY D-523: the kind now EXISTS — `render-deferred`, minted
-             under BOB #33's ruling of 2026-09-24 19:54Z through NOTIFICATIONS.md's
-             catalogue — so the look names it. The reasoning above for not
-             inventing one stands; what changed is that it was ruled and catalogued. */
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: true, condition: "render-deferred",
-            detail: `${renderRow.check} ${r.renderCode}: the render was deferred and nothing was `
-                  + `filed — ${why || "no detail was carried"}`,
-          }, at, 0);
-          held.push({ request: q.request, address: q.address, host: q.host,
-                      code: r.renderCode, check: renderRow.check, translation: renderRow.translation,
-                      /* THE TICK'S OWN WORD FOR IT, in op=acquire's vocabulary so
-                         a reader needs no second one: the content is UNDETERMINED
-                         and says so, which is what keeps a deferral out of the
-                         coverage a captured row would imply. */
-                      /* D-520: the STATE is op=acquire's own word when it sent one — a render
-                         over the concurrency cap is `waiting` (C-83.8), not `deferred`: nothing
-                         was taken from the day's allowance, and the next tick is expected to
-                         run it. `deferred` is kept for every code that sends no word. */
-                      render: { state: r.renderState || "deferred", content: "undetermined" },
-                      detail: why });
-        } else {
-          this.sql.exec(
-            `UPDATE capture_requests SET state='requested', code=?, detail=?, updated=? WHERE request=?`,
-            "CAPTURE_FETCH_FAILED", String(r.reason || "").slice(0, 400), at, q.request);
-          this.#observe({
-            ...this.#lookAuthority(q),
-            level: "document", subjectKind: "address", subject: q.address,
-            state: "LOOKED_INDETERMINATE", governed: false,
-            detail: `the fetch did not land: ${String(r.reason || "").slice(0, 200)}`,
-          }, at, 0);
-          held.push({ request: q.request, address: q.address, host: q.host,
-                      code: "CAPTURE_FETCH_FAILED", detail: String(r.reason || "") });
-        }
-      }
-      return { configured: true, actor, at, drained: captured.length + refused.length + held.length,
-               captured, refused, held, expired, remaining: this.#captureRequestPending() };
-    } finally { this.#tickRunning.delete("capture-request-drain"); }
-  }
-
-  /** D-523 — THE REASON A RENDER WAS HELD, in DEC-49 words, read off the family that MINTED the code: C-83 for a
-   *  render op=acquire could not do, C-28 for the drain's own conduct holds. A code in neither (the drain's
-   *  `CAPTURE_FETCH_FAILED` is written to the row and catalogued nowhere) or no code at all answers `check` and
-   *  `translation` NULL, stated as such rather than given a sentence nobody minted. */
-  static #renderHoldReason(code) {
-    const own = (fam) => code && Object.prototype.hasOwnProperty.call(fam, code) ? fam[code] : null;
-    const row = own(RENDER_CAPTURE_CHECKS) || own(CAPTURE_REQUEST_CHECKS);
-    return { code: code ?? null, family: own(RENDER_CAPTURE_CHECKS) ? "C-83" : row ? "C-28" : null,
-             check: row ? row.check : null, translation: row ? row.translation : null };
-  }
-
-  /** DEC-47's CONDUCT, and this is the ONE place it is applied. */
-  #captureRequestConduct(q, nowMs, hostsThisTick) {
-    /* DEC-49 REGION is-capture-conduct
-     *
-     * THE SPAN `CAPTURE_REQUEST_CHECKS`' conduct and attribution rows name
-     * (REC-71). Everything between this marker and its `END` is a DEC-49
-     * GOVERNED SITE: every refusal inside it owes a code with a canned
-     * translation, and the codes are STRING LITERALS at their sites so arm C can
-     * compare them rather than read past them.
-     *
-     * ORDER IS DELIBERATE. Attribution first, because a capture nobody can
-     * account for should not be made even if every other rule passes; then the
-     * two rules about WHAT WE SAY (purpose, agent), because they are facts about
-     * this submission and cost nothing; then RATE last, because it is the only
-     * one that is TEMPORARY — a held request is still queued, and running it
-     * last means a request refused for what it says is never also reported as
-     * merely paced. */
-    const attribution = this.#captureRequestAttribution(q);
-    if (!attribution.ok)
-      return { ok: false, terminal: true, code: "CAPTURE_ATTRIBUTION_ONE_PRINCIPAL",
-               detail: `this request names `
-                     + `${attribution.plane && !attribution.claude ? "only the plane principal" : ""}`
-                     + `${!attribution.plane && attribution.claude ? "only the Claude-account principal" : ""}`
-                     + `${!attribution.plane && !attribution.claude ? "neither principal" : ""}`
-                     + `, and DEC-27(b) requires the record to state BOTH: whose plane scope the writes `
-                     + `ran under, and WHICH LEVEL of the Claude-account cascade paid. No fetch is made `
-                     + `for an act the record could not attribute.` };
-
-    /* CONDUCT 2 — THE PURPOSE TOKEN. Checked before the agent because it is a
-       COMPONENT of the agent: `purpose` is what lets a source tell a first
-       capture from a routine re-check, so a purpose outside the roster would
-       produce an agent string that misdescribes what we are doing. */
-    if (!CAPTURE_PURPOSES.includes(q.purpose))
-      return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_NO_PURPOSE",
-               detail: `'${String(q.purpose || "").slice(0, 40) || "(none)"}' is not one of the purposes `
-                     + `this instance can truthfully name: ${CAPTURE_PURPOSES.join(", ")}. DEC-47 requires `
-                     + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
-                     + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
-
-    /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms. */
-    if (!CAPTURE_UA_MODES.includes(q.ua_mode))
-      return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
-               detail: `'${String(q.ua_mode || "").slice(0, 40) || "(none)"}' is not one of the legible `
-                     + `agent forms: ${CAPTURE_UA_MODES.join(", ")}. BIO does not disguise its requests, `
-                     + `and a mode this door cannot express is a string nobody could account for.` };
-    /* THE TWO FORMS ARE LEGIBLE FOR DIFFERENT REASONS, and conflating them was a
-       real defect in the first draft of this check — caught by driving BOB-3's
-       own permitted case, which the contact-URL test REFUSED. A browser agent
-       carries no `(+url)` component and never has: what makes it honest is that
-       it is an agent a member ACTUALLY USED, recorded on the question, delegated
-       rather than invented. What makes the CivicOS form honest is the contact
-       component D-94 measured. So the rule is applied per form, and a single
-       predicate over both would have made the ruling unimplementable. */
-    let ua;
-    if (q.ua_mode === "member-browser") {
-      /* BOB-3 / DEC-47's access-parity amendment: the member's OWN browser agent
-         is PERMITTED for publicly available documents, because delegating an
-         agent a member actually uses is speaking as themselves through a tool
-         they run. What it is NOT is a licence to invent one — so the agent must
-         have been RECORDED on the inquiry, and an unrecorded one is refused
-         rather than substituted. */
-      ua = this.#captureRequestMemberAgent(q.target);
-      if (!ua)
-        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",
-                 detail: `this request asked to fetch as the member's own browser and `
-                       + `${q.target} records no member agent. BOB-3 permits DELEGATING an agent a `
-                       + `member actually used; composing one would be inventing a client that does `
-                       + `not exist, which is the fabricated-Mozilla case wearing the ruling's clothes.` };
-    } else {
-      /* The honest product string, composed by the catalog's ONE composer — the
-         same function op=acquire will send, not a copy of it. THE CONTACT-URL
-         RULE APPLIES HERE and only here: D-94's ladder measured that removing
-         the component flips admission 200 to 403 uniformly, so a CivicOS string
-         without it is both dishonest and useless. */
-      ua = civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, q.purpose);
-      if (!userAgentIsLegible(ua))
-        return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
-                 detail: `the agent this fetch would carry names no contact anybody could reach. D-94's `
-                       + `ladder MEASURED that removing the contact component flips admission 200 to 403 `
-                       + `uniformly, so this is the component that decides whether the fetch happens at `
-                       + `all — and being blocked honestly is a fact we can record.` };
-    }
-
-    /* CONDUCT 3 — RATE, and BOTH halves are NON-TERMINAL: a held request is
-       still queued and is fetched when the wait is over. */
-    if (this.#captureRequestHostHeld(q.host, nowMs))
-      return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
-               code: "CAPTURE_CONDUCT_HOST_HELD",
-               detail: `${q.host} is in cool-off: it refused us or asked us to slow down, and the `
-                     + `per-host governor is holding the interval it named. DEC-47 bounds discovery `
-                     + `more tightly than re-fetch because a stranger's server has no relationship `
-                     + `with this instance.` };
-    if ((hostsThisTick.get(q.host) || 0) >= Store.CAPTURE_REQUEST_PER_HOST_PER_TICK)
-      return { ok: false, terminal: false, governed: true, condition: "governor-holding-host",
-               code: "CAPTURE_CONDUCT_TICK_SPENT",
-               detail: `this tick has already fetched from ${q.host} once. A person opens a few tabs `
-                     + `and then reads; a loop opens forty, so the drain spreads requests across ticks `
-                     + `rather than emptying the queue at one host's expense.` };
-    /* END DEC-49 REGION is-capture-conduct */
-
-    return { ok: true, ua, attribution };
-  }
-
-  /** Is the per-host governor holding this host? A NON-CONSUMING read — the
-   *  drain must not spend a token it is not about to use, because op=acquire's
-   *  own `governedFetch` spends one on the way out and a double spend would
-   *  make this instance pace itself twice as hard as it declared. */
-  #captureRequestHostHeld(host, nowMs) {
-    return governorOf(this.ctx).isHeld(host, nowMs);
-  }
-
-  /** The member agent RECORDED on the inquiry, or null. Read from the question's
-   *  own frontmatter, which is where inquiry creation would put it — and null is
-   *  answered honestly rather than defaulted, because a default here is exactly
-   *  the invented client BOB-3 does not license. */
-  #captureRequestMemberAgent(target) {
-    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    if (!md || md.content === null) return null;
-    const fm = parseFrontmatter(md.content).data || {};
-    const ua = fm.member_user_agent;
-    return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
-  }
-
-  /** The fetch, through op=acquire, exactly as the archive monitor fires its
-   *  own — the capture path, its provenance and its grade stay where they
-   *  already live, and this consumer only DECIDES and INVOKES.
-   *
-   *  IT SENDS TWO FIELDS AND NOTHING ELSE — `via` and `request`. The address,
-   *  the purpose, the agent and (D-491) WHETHER TO RENDER are read by op=acquire
-   *  FROM THE ROW, through `captureRequestDraining`, so what leaves this instance
-   *  is exactly what the conduct check judged. Passing them in the body would
-   *  have made the check an assertion about a value the sender could still differ
-   *  from, which is the "checked one thing, sent another" gap in its smallest
-   *  form. D-491 did NOT add a third field for the render, and that is why.
-   *
-   *  WHAT COMES BACK OUT, D-491: a refused render is named. op=acquire decides
-   *  every way a render cannot happen BEFORE it fetches anything and answers a
-   *  C-83 code; this returns that code as `renderCode` so the drain can hold the
-   *  row under it instead of reporting a fetch that was never attempted. `reason`
-   *  is unchanged for every other failure. */
-  async #fireCaptureRequest(q) {
-    try {
-      /* K58: capture's trusted in-process arm, handed the draining row's own address, purpose, agent and render flag
-         (what the conduct check judged); no credential and no request body carry them. */
-      const d = this.captureRequestDraining({ request: q.request });
-      const res = d.draining ? await captureOf(this.ctx).acquire({}, { cls: "daemon", member: false, storeName: this.#ownNamespace() || "bio",
-        captureRequest: { locator: d.address, purpose: d.purpose, agent: d.ua_mode === "member-browser" ? d.agent : null, render: d.render } })
-        : { status: 403, body: { ok: false, reason: "CAPTURE_NOT_DRAINING" } };
-      const out = res.body;
-      const doc = out && out.ok && out.document;
-      if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256,
-                        grade: doc.capture && doc.capture.grade };
-      const reason = (out && (out.reason || out.error)) || `http ${res.status}`;
-      /* D-491: A RENDER REFUSED IS NOT A FETCH THAT FAILED, and the discriminator
-         is read off the CATALOGUE rather than off a spelling this method invents
-         — the code the plane sent is looked up in the family that owns it, so a
-         row added to C-83 later is recognised here without a second list to keep
-         in step. `q.render` is asked as well, so a code arriving on a row that
-         asked for no render is treated as the ordinary failure it must be. */
-      const renderCode = q.render === 1 && typeof reason === "string"
-        && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
-      return { ok: false, reason,
-               renderCode,
-               /* D-520: op=acquire's word for the held render (`waiting`, `deferred`), read and
-                  never invented; any other value is dropped rather than carried into the record. */
-               renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred")
-                 ? out.render.state : null,
-               detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
-    } catch (e) {
-      /* D-205: the message is the plane's own, never the exception's, because a
-         thrown error can carry a query string and a query string can carry a
-         credential. */
-      return { ok: false, reason: "the fetch did not complete and this plane did not record why" };
-    }
-  }
-
-  /** Is this request row in `draining`? op=acquire's capture-request arm asks
-   *  exactly this and admits nothing else.
-   *
-   *  IT ANSWERS WITH THE ROW'S OWN address, purpose AND agent, and that is the
-   *  point rather than a convenience: op=acquire then takes NONE of them from
-   *  the request body. The drain sends two fields — `via` and `request` — and
-   *  everything that decides what leaves this instance is read from the row the
-   *  conduct check just judged. A value a caller can supply is a value a caller
-   *  can differ from what was checked. */
-  captureRequestDraining({ request }) {
-    const r = request
-      ? this.#one(`SELECT * FROM capture_requests WHERE request=?`, request)
-      : null;
-    if (!r)
-      return { request: request || null, found: false, state: null, draining: false,
-               address: null, purpose: null, ua_mode: null, agent: null,
-               /* D-491: FALSE on a row that does not exist, and that is the
-                  fail-closed direction — an absent row asks for no render, so a
-                  silence here can never turn into a render nobody requested. */
-               render: false };
-    const agent = r.ua_mode === "member-browser"
-      ? this.#captureRequestMemberAgent(r.target)
-      : civicosUserAgent(this.env && this.env.VERSION, this.env && this.env.INSTANCE_NAME, r.purpose);
-    return { request: r.request, found: true, state: r.state, draining: r.state === "draining",
-             address: r.address, purpose: r.purpose, ua_mode: r.ua_mode, agent: agent || null,
-             /* D-491 / IC-276: WHETHER THIS ROW ASKED FOR THE RENDERED PAGE, on
-                the identical reasoning the three fields above it carry. op=acquire
-                takes it FROM HERE and never from the request body, so what this
-                instance renders is what the drain's conduct check judged — a value
-                a caller can supply is a value a caller can differ from what was
-                checked, and a render is a second load of the page. */
-             render: r.render === 1,
-             run: r.run, target: r.target };
-  }
-
-  /** op=capturerequests — a read, for a run and for an operator.
-   *
-   *  GATED AT THE TARGET through `#bundleGate`, the one predicate every read
-   *  here compiles (D-15's single compilation point), and `count` is counted
-   *  BEHIND the gate rather than beside it, so a total larger than the rows
-   *  cannot arise. A request under a question the caller was never invited to is
-   *  absent exactly as one that was never made, and nothing publishes how many
-   *  the gate removed, because that count is the leak. An absent or unrecognised
-   *  viewer stamp compiles to DENY, so a missing stamp is an outage and never a
-   *  disclosure. */
-  captureRequests({ run = null, target = null, state = null, limit = null, viewer = null } = {}) {
-    const cap = Math.max(1, Math.min(Number(limit) || 200, 1000));
-    const seen = this.#bundleGate("cr.target", viewer);
-    const where = [`(${seen.sql})`], args = [...seen.args];
-    if (run) { where.push("cr.run=?"); args.push(String(run)); }
-    if (target) { where.push("cr.target=?"); args.push(String(target)); }
-    if (state) { where.push("cr.state=?"); args.push(String(state)); }
-    /* CAP + 1 SO THE ANSWER CAN SAY IT WAS CUT. REC-57's rule and this suite's
-       own: a read cut at its cap must SAY SO or a caller believes it saw
-       everything. `limit` is the bound APPLIED after clamping, never the number
-       asked for, so an over-ask is answered at the ceiling and the ceiling is
-       what is published. */
-    const found = this.#rows(
-      `SELECT cr.* FROM capture_requests cr WHERE ${where.join(" AND ")}
-        ORDER BY cr.requested_at, cr.request LIMIT ?`, ...args, cap + 1);
-    const rows = found.slice(0, cap);
-    return { count: rows.length, limit: cap, truncated: found.length > cap, requests: rows.map((r) => ({
-      request: r.request, run: r.run, target: r.target, address: r.address, host: r.host,
-      purpose: r.purpose, ua_mode: r.ua_mode, state: r.state, code: r.code, detail: r.detail,
-      capture_sha: r.capture_sha, attempts: r.attempts, requested_at: r.requested_at,
-      updated: r.updated, expires: r.expires, captured_at: r.captured_at,
-      /* PL-15 / D-213: THE LEAD, PUBLISHED. Additive — every existing reader
-         keeps the shape it reads — and it is not decoration. This projection is
-         explicit rather than a row spread, so a column omitted here is a column
-         no caller can see: a run cannot read back the observation it filed, and
-         an operator cannot see a lead pointing at a purged question. The second
-         of those is the one that matters, because a MACHINE viewer's bundle
-         gate is `1=1` and this read is therefore the only place a stale pointer
-         is visible at all. FOUND BY DRIVING IT: the suite's purge arm filtered
-         on this field before it was published, so it counted zero for every
-         input and would have passed over a missing purge clause. */
-      lead_inquiry: r.lead_inquiry ?? null,
-      /* FL-4 / IS-9: WHEN THE RUN WAITING ON THIS REQUEST WAS TOLD, and NULL
-         means the daemon has answered and the run has not been told yet.
-         Published for the reason the field above it was, applied to this
-         column: the projection is explicit, so a column omitted here is a
-         column no caller can see — and the wake is the one fact about a
-         request that is about the RUN rather than about the fetch. An operator
-         looking at a suspended run needs to be able to tell "the daemon has not
-         answered" from "the daemon answered and nothing collected it", and
-         those are the two states this one field distinguishes. Additive, on
-         PL-15's precedent: no existing reader's shape moves. */
-      run_woken_at: r.run_woken_at ?? null,
-      /* D-491 / IC-276: WHAT THIS REQUEST ASKED FOR, and it is published for the
-         reason the two fields above it are — this projection is explicit, so a
-         column omitted here is a column NO caller can see. It is the field that
-         makes a held row legible: a row sitting at `requested` under C-83.3 with
-         no `render` beside it reads as a fetch that keeps failing, when what it
-         is is a render this instance cannot yet do. A run cannot otherwise read
-         back what it asked, and an operator cannot tell the two apart. */
-      render: r.render === 1,
-      /* D-523 (BOB #33 RULED 2026-09-24 19:54Z): WHAT BECAME OF A RENDER THIS INSTANCE COULD NOT DO, in the words
-         the drain and op=queue use. `deferred` while the row is held under its C-83 code, `expired` once its
-         `expires` passed and the drain released it — and in both the content is UNDETERMINED, because nothing of
-         what a visitor saw was captured. NULL on a plain request and on a render not yet attempted, so those read
-         exactly as they did. The reason is the code's own family's row (C-83, or C-28 when the drain's rate rule
-         held it that tick), never re-typed; `#renderHoldReason` says which. */
-      render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
-        ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
-            content: "undetermined", code, check, translation }))(Store.#renderHoldReason(r.code))
-        : null,
-      /* THE ATTRIBUTION IS ON THE READ, composed by the same one function the
-         drain used. A row whose principals cannot both be named answers with the
-         refusal rather than with a half attribution — the read cannot state less
-         carefully than the write did. */
-      attribution: this.#captureRequestAttribution(r) })) };
-  }
+  /* The capture requests (the door, the drain, the reads): `capture-requests`' (K58; its R1–R42). The drain stays
+     reachable as a Durable Object method for the scheduler's consumer and the suites that drive it. */
+  captureRequestDrain(o) { return captureRequestsOf(this.ctx).drain(o); }
 
   aiCredentialMint(...a) { return membershipOf(this.ctx).aiCredentialMint(...a); }
 
@@ -25284,7 +21743,7 @@ export class Store extends DurableObject {
    * work is safely resumable because `ensureLegContent` is a pure function of
    * the leg — a read that stops at the cap says so and the next read continues
    * from where it stopped, with no cursor to mint and no state to keep. */
-  static LEG_BACKFILL_MAX = 50;
+  static LEG_BACKFILL_MAX = LEG_BACKFILL_MAX;   /* inquiry R15's bound, read by the old battery */
 
   static #aiIso(ms) { return stampInstant("second", ms); }
 
@@ -25325,16 +21784,6 @@ export class Store extends DurableObject {
     const hasReading = !!this.#one(`SELECT 1 x FROM readings WHERE capture_sha = ?`, captureSha);
     return missingCause({ hasArtifact: hasReading, registeredAt, firstRowAt: observationLogOf(this.ctx).firstRowAt("content") });
   }
-
-  /** THE FRONTIER, §5 — the latest row per `(level, subject_kind, subject)`: observation-log's view (its R9). */
-  #frontierLatest(level, opts = {}) { return observationLogOf(this.ctx).latest(level, opts); }
-
-  /** §5: `last_verified` and unreachable since, derived: observation-log's (its R10). */
-  #frontierVerification(...a) { return observationLogOf(this.ctx).verification(...a); }
-
-  /** REC-103 / IC-105 — THE ROW-WHOLE FENCE (§6) over the document arm's rows: observation-log's (its R13), with the
-   *  `sweep` and `run` authorities answered by the resolvers the constructor registers (N39). */
-  #frontierDocumentVisible(viewer) { return observationLogOf(this.ctx).rowGate(viewer); }
 
   /** REC-96 — HOW MANY SUBJECTS A CASE'S `searched` SECTION COMPUTES OVER.
    *  A bound rather than a scan (D-225/REC-70), and the overflow is PUBLISHED as
@@ -26791,6 +23240,7 @@ export class Store extends DurableObject {
         ...biasOps(biasOf(this.ctx), url, body),
         ...extractionOps(extractionOf(this.ctx), url, body, this.env),
         ...connectionsOps(connectionsOf(this.ctx), url, body, this.env),
+        ...inquiryOps(inquiryOf(this.ctx), url, body),
         ...citationOps(citationOf(this.ctx), url),
         /* MK-4 / D-681: the lead's ops, observation-log's (K3); the stamps are the control plane's, read from the query. */
         ...observationLogOps(observationLogOf(this.ctx), url, body),
@@ -26838,14 +23288,6 @@ export class Store extends DurableObject {
            parts so ratification can re-fetch them; `recordreuseverdicts` commits
            the outcomes the control plane produced; `reuseverdicts` reads them
            (also surfacing the free posthoc verdicts by source_capture). */
-        /* REC-11: the basis projection, read back. `basis` is a bundle's legs
-           in document order; `restson` is the reverse index — which inquiries
-           rest on this document (or on this inquiry), ONE indexed lookup on
-           inquiry_basis_target. DO-internal reads for the battery and for
-           REC-12's derivation; E2/REC-17 give them their control-plane
-           surfaces. */
-        basis: () => this.basisFor(url.searchParams.get("id")),
-        restson: () => this.restingOn(url.searchParams.get("id")),
         /* REC-17 / P-64: the RE-EVALUATION OBLIGATION, derived on read over the
            same reverse index. `?target=` asks it of one moved thing; with no
            target it sweeps every id a leg names. GATED — `viewer` is stamped by
@@ -26863,14 +23305,6 @@ export class Store extends DurableObject {
                                           target: url.searchParams.get("target"),
                                           limit: url.searchParams.get("limit"),
                                           outstandingOnly: url.searchParams.get("outstanding") === "1" }),
-        /* REC-18: what each candidate leg EARNS, before it is written. GATED —
-           `viewer` is stamped by the control plane and an absent one fails
-           closed. It answers from `earnedBasisRegistry`, which is the SAME
-           function op=promote and the ratification gate enforce with, so this
-           read and that refusal cannot disagree. */
-        earnedbasis: () => this.earnedBasis({ id: url.searchParams.get("id"),
-                                              targets: url.searchParams.get("targets"),
-                                              viewer: url.searchParams.get("viewer") }),
         /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
            `extras` hands the store EVERY parameter name that arrived so the op
            can refuse a predicate or a page by name rather than ignoring it. The
@@ -27153,26 +23587,7 @@ export class Store extends DurableObject {
              AFTER the body's spread, so a `caller` the body carries is overwritten rather than believed. */
           caller: url.searchParams.get("principal"),
         }),
-        /* PL-4 / IS-4. THE SPLIT BETWEEN THESE IS THE SAFETY PROPERTY, and it is
-           `taskenqueue`/`taskdrain`'s split one door over: `capturerequest`
-           writes a row and cannot fetch, `capturerequestdrain` fetches and is
-           not a member verb, and `capturerequestdraining` is a READ op=acquire's
-           capture-request arm asks so it can admit the drain and nobody else. */
-        capturerequest: () => this.captureRequest({
-          ...(body || {}),
-          viewer: url.searchParams.get("viewer"),
-          /* REC-168: the caller's PRINCIPAL, stamped by the control plane (REC-152's one expression, via
-             `RUN_PRODUCTION_ACTIONS`) and SET AFTER the body's spread, so a `caller` the body carries is
-             overwritten rather than believed. */
-          caller: url.searchParams.get("principal"),
-        }),
-        capturerequestdrain: () => this.captureRequestDrain(body || {}),
-        capturerequestdraining: () => this.captureRequestDraining(
-          body || { request: url.searchParams.get("request") }),
-        capturerequests: () => this.captureRequests({
-          run: url.searchParams.get("run"), target: url.searchParams.get("target"),
-          state: url.searchParams.get("state"), limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer") }),
+        ...captureRequestsOps(captureRequestsOf(this.ctx), url, body),
         /* D-98. Five ops, and the split between them is the safety property:
            `taskenqueue` is all the capture path can reach, and it writes only to
            the queue; `taskdrain` is the sole writer of tasks; the rest are
@@ -27302,10 +23717,6 @@ export class Store extends DurableObject {
           after: url.searchParams.get("after"),
           limit: url.searchParams.get("limit"),
           viewer: url.searchParams.get("viewer") }),
-        dispose: () => this.dispose({ handle: url.searchParams.get("handle"),
-          to: url.searchParams.get("to"), reason: url.searchParams.get("reason"),
-          viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),
-          author: url.searchParams.get("author") }),
         /* REC-13. No `handle` and no `owner`: concluding is not a set
            application (see conclude() above), so it takes the ONE target and
            the viewer/author stamps the control plane sets. */
@@ -27383,30 +23794,6 @@ export class Store extends DurableObject {
           /* REC-217 / §3 rule 13 (BOB #33): the draft this act publishes, named by the publisher — optional
              and additive, on the search params as the one-line form a probe can reach, like `project`. */
           draft: url.searchParams.get("draft") || (body || {}).draft || null,
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
-        /* REC-16, publishcase's shape exactly: the BODY carries the authored
-           material (the children and their apportionments are arrays, which a
-           query string cannot express honestly), and the viewer and the author
-           come from the SEARCH PARAMS where the control plane stamps them — so
-           they are spread SECOND and a caller-supplied author in the body is
-           overwritten, never honoured. */
-        inquirydivide: () => this.divide({ ...(body || {}),
-          target: url.searchParams.get("target") || (body || {}).target,
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author") }),
-        /* REC-45, inquirydivide's shape exactly, and the SPREAD ORDER is the
-           load-bearing part rather than a convention. The BODY carries the
-           authored material — the partition is an array of objects each holding
-           an array of ordinals, which a query string cannot express honestly —
-           and the viewer and the author come from the SEARCH PARAMS where the
-           control plane stamps them, so they are spread SECOND and a
-           caller-supplied `author` in the body is overwritten, never honoured.
-           A caller-supplied `asserted_by`/`at` never reaches this line at all:
-           groundInquiry reads them from NO input, which is the delete-then-stamp
-           discipline arriving one layer in. */
-        inquiryground: () => this.groundInquiry({ ...(body || {}),
-          target: url.searchParams.get("target") || (body || {}).target,
           viewer: url.searchParams.get("viewer"),
           author: url.searchParams.get("author") }),
         publishededitions: () => this.publishedEditions(url.searchParams.get("id")),

@@ -21,13 +21,14 @@ async function prodWorld() {
   return w;
 }
 
-test("R28: runFor answers the run's gating facts for a held run the viewer can see, and null for a blank id, an absent run and an invisible one alike; it never throws and writes nothing", async () => {
+test("R28: runFor answers the run's gating facts (principal_claude, the level that pays, included) for a held run the viewer can see, and null for a blank id, an absent run and an invisible one alike; it never throws and writes nothing", async () => {
   const w = await prodWorld();
   const before = w.dump();
   assert.deepEqual(w.runs.runFor("R1", "member:dan"),
-    { run: "R1", status: "running", mode: "check", context_type: "inquiry", context_id: INQ, principal_plane: ORG });
+    { run: "R1", status: "running", mode: "check", context_type: "inquiry", context_id: INQ, principal_plane: ORG, principal_claude: "instance" });
   assert.deepEqual(w.runs.runFor(" RH ", "member:ann"),
-    { run: "RH", status: "running", mode: "check", context_type: "project", context_id: HIDDEN, principal_plane: "member:ann/t1" });
+    { run: "RH", status: "running", mode: "check", context_type: "project", context_id: HIDDEN, principal_plane: "member:ann/t1",
+      principal_claude: "instance" });
   for (const [run, viewer] of [["", "admin"], ["  ", "admin"], [null, "admin"], ["R404", "admin"], ["RH", "member:dan"], ["RH", null],
                                ["R1", "who-knows"], [{ toString() { throw new Error("x"); } }, "admin"]])
     assert.equal(w.runs.runFor(run, viewer), null, `${typeof run} ${viewer}`);

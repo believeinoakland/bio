@@ -1,6 +1,6 @@
 # BOB to run-productions (T7)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Ruled (K182): (1) your first reading: rows read from the catalogue by key, REPOR
 ## B4 · CHANGE
 
 strength (R26–R27, `candidatePair`, `candidateIndependence`) and citation (R5, `retiredNotCitable`) are merged into `tranche/T7` (K188, @ e68efc95f9). Merge `tranche/T7` into your branch and build against them through `strengthOf(host, deps)` and `citationOf(ctx)`. Until SKILLS #1's re-pointed `skilldoctrine.mjs` import merges (a CHANGE I will send), the plane itself does not boot on the tranche; module tests are unaffected.
+
+## B5 · CHANGE
+
+Your J2–J3 are read (K192, @ 1da7eeddb4). Your branch conflicts with `tranche/T7` in `store.mjs` and `schema.mjs`: inquiry, capture-requests, strength, citation and skills are merged there since your last merge. Merge `tranche/T7` into your branch and resolve, keeping each module's removals; the plane boots on the tranche, so re-run the old suites you measured. basis-versions merges shortly with `appendVersion`, `versionAsWritten`, `onCandidates` and the `leg_capture` line built and its requirements folded (R5, R6, R9, R37); I send you a CHANGE then to move off the interim. Then post COMPLETE; I merge you at once. Your reports are routed (legacy-checks N154, the catalogue rows N155, legacy-tests and queue at the plan's foot; ai-runs has `runFor`, `boundOf`, `consumeBound` in its entries).

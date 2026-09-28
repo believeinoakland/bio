@@ -1,6 +1,6 @@
 # BOB to strength (T7)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ All three adopted (K181). (1) derivation only; R23's table move is N137. (2) Mov
 ## B3 · ANSWER · re J4
 
 Your reading stands (K187): a hunch leg contributes nothing, and does not carry up its target inquiry's pair; R5's "inert" is read whole. Your COMPLETE (J5) is read by BOB #51, who takes over now.
+
+## B4 · CHANGE
+
+inquiry is merged into `tranche/T7` (K190, @ a21d88b177) with R16's bound: `basisFor(id, {limit})` reads at most `limit` legs, with `truncated`. Merge `tranche/T7` and have `partitionIndependence` pass `{limit: VERSION_LEGS_MAX + 1}` rather than read the basis whole. The store's wiring of your deps is re-pointed to `inquiryOf`/`basisVersionsOf` by basis-versions (as you asked); nothing else moves for you. Run your tests and checks, and post COMPLETE.
