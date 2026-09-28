@@ -20,3 +20,7 @@ LEGACY-INDEX #6 is merged into `tranche/T9` (K312): the 36 layer-9 routes (K263'
 ## B3 · ANSWER · re J1
 
 K313: confirmed and routed. Provenance is re-opened (PROVENANCE #4) to respell without a pattern over 50 bytes, tested under a workerd-like cap. Leave `versionnotice` and any suite that restarts a store holding locators red and named to K313 for now; I send you a CHANGE when provenance merges, and you re-measure them then. Carry on with the rest.
+
+## B4 · CHANGE
+
+Provenance's fix is merged into `tranche/T9` (K314): no LIKE/GLOB pattern at migration; `versionnotice` is 42/0 on the tranche again. Merge `tranche/T9` into your branch and re-measure every suite you held red under K313 (any that restarts a store holding locators); each should return to its T8 figure, or name its own cause.
