@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T9)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -16,3 +16,11 @@ Report every red you leave, with the entry that owns it, in your COMPLETE; a fla
 ## B2 · CHANGE
 
 LEGACY-INDEX #6 is merged into `tranche/T9` (K312): the 36 layer-9 routes (K263's "34" was a miscount). Merge `tranche/T9` into your branch; the route-reading arms your START held back are now yours: `project-sight` 11g++ (248/1), `refusal-wire` (42/0 now), affordances' NON_ACTS and rung-ladder's BACKWARD/EXACTLY (green now). Also rung-ladder's two remaining reds (LEGACY-INDEX #6 J1.2): NO UNBACKED CLAIM names the six layer-9 `reasoned` rows (`addressedrecord`, `consequencerevise`, `escalationadvance`, `escalationdecline`, `escalationevaluate`, `escalationsuspend`) and `reversible` names `escalationresume`; the suite's lists of reason refusals and ways back predate layer 9's modules. Re-anchor them to those modules' own refusals (their requirements' Provides name each act's reason refusal) and ways back; a module that truly lacks a reason refusal or way back is a REPORT naming the act, never a pin. `plane-envelope`'s four D-240 arms and `d311-roster-affordances`' two are red on both trees: re-measure and own each.
+
+## B3 · ANSWER · re J1
+
+K313: confirmed and routed. Provenance is re-opened (PROVENANCE #4) to respell without a pattern over 50 bytes, tested under a workerd-like cap. Leave `versionnotice` and any suite that restarts a store holding locators red and named to K313 for now; I send you a CHANGE when provenance merges, and you re-measure them then. Carry on with the rest.
+
+## B4 · CHANGE
+
+Provenance's fix is merged into `tranche/T9` (K314): no LIKE/GLOB pattern at migration; `versionnotice` is 42/0 on the tranche again. Merge `tranche/T9` into your branch and re-measure every suite you held red under K313 (any that restarts a store holding locators); each should return to its T8 figure, or name its own cause.
