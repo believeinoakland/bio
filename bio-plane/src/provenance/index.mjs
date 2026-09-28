@@ -1112,6 +1112,62 @@ class Provenance {
       .map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
   }
 
+  /** R49 · K171 (13), K176 — every attestation the record holds for a capture, for `filings`' exhibits (its R9): read
+   *  from the document entries of the capture's home (R4) that name it, in the order recorded, each naming the bundle
+   *  and the file it is recorded in. Two eras of the same facts are read alike: the daemon's `timestamp {authority,
+   *  token_file}` and bare `co_archive` locator (State Rules v1.5 §4.1), and `op=attest`'s answer as the plane records
+   *  it, `attestations: [{kind: "rfc3161", service, file, sha256}]` and `co_archive {service, locator}`. `at` is the
+   *  instant of the entry's matching attempt, when the entry recorded one. It asks no authority and verifies no
+   *  token's signature, and says so. An empty list is the earned "none recorded" only when the home's register was
+   *  read; with no home (a capture registered only by its parts has none under the whole's digest) or an unreadable
+   *  register the answer is `undetermined`, with why (R37). */
+  attestationsOf(captureSha) {
+    const s = bareSha(captureSha);
+    if (!s || !/^[0-9a-f]{64}$/.test(s))
+      return { ok: false, reason: "BAD_SHA", detail: "attestationsOf takes the sha256 of a capture: 64 hex characters" };
+    const note = "read from what the record holds: no timestamp authority or archive was asked, and no token's "
+               + "signature was verified here";
+    const home = this.homeOf(s);
+    const answer = (attestations, why) => ({ ok: true, sha256: s, registered: !!home, attestations,
+                                             ...(why ? { undetermined: why } : {}), note });
+    if (!home)
+      return answer([], "no register row names this capture under a bundle that exists, so the record states no "
+                      + "attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
+    const PATH = "data/provenance.json";
+    const f = this.#record.readFile(home.bundleId, PATH);
+    if (!f) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    const reg = safeJson(f.text);
+    if (!isObj(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
+    const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const out = [];
+    for (const d of reg.documents) {
+      if (!isObj(d) || !isObj(d.capture) || bareSha(d.capture.sha256) !== s) continue;
+      const tries = Array.isArray(d.attestation_attempts) ? d.attestation_attempts.filter(isObj) : [];
+      const when = (match) => { const a = tries.find(match); return a && str(a.attempted) ? { at: a.attempted } : {}; };
+      const where = { bundle: home.bundleId, path: PATH };
+      if (isObj(d.timestamp)) {
+        const service = str(d.timestamp.service) || str(d.timestamp.authority);
+        out.push({ kind: "rfc3161", ...(service ? { service } : {}),
+                   ...(str(d.timestamp.token_file) ? { file: str(d.timestamp.token_file) } : {}),
+                   ...(service ? when((a) => a.ok === true && a.service === service && a.kind !== "co-archive") : {}), ...where });
+      }
+      for (const t of Array.isArray(d.attestations) ? d.attestations : []) {
+        if (!isObj(t) || t.kind !== "rfc3161") continue;
+        const tokenSha = bareSha(t.sha256);
+        out.push({ kind: "rfc3161", ...(str(t.service) ? { service: str(t.service) } : {}),
+                   ...(str(t.file) ? { file: str(t.file) } : {}), ...(tokenSha ? { token_sha: tokenSha } : {}),
+                   ...when((a) => a.ok === true && tokenSha && bareSha(a.token_sha256) === tokenSha), ...where });
+      }
+      const co = typeof d.co_archive === "string" ? { locator: str(d.co_archive) }
+               : isObj(d.co_archive) ? { service: str(d.co_archive.service), locator: str(d.co_archive.locator) } : null;
+      if (co && co.locator)
+        out.push({ kind: "co_archive", ...(co.service ? { service: co.service } : {}), locator: co.locator,
+                   ...when((a) => a.ok === true && a.kind === "co-archive" && a.archived_locator === co.locator), ...where });
+    }
+    return answer(out, null);
+  }
+
   /* ===================================================================== *
    * THE ACQUISITION RECEIPTS (R13–R16, R47).
    * ===================================================================== */
