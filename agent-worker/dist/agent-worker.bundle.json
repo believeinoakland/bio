@@ -378,8 +378,8 @@
     },
     {
       "path": "../bio-plane/src/provenance/schema.mjs",
-      "bytes": 15881,
-      "sha256": "829f0c31d4977887bb19b94d380ac4d17e7516de74db94d84719625c396e1203"
+      "bytes": 15946,
+      "sha256": "ace251b296e5c2893c0fc30b26a86414ba376e4db84a9588edd8ca22acc71105"
     },
     {
       "path": "../bio-plane/src/query.mjs",

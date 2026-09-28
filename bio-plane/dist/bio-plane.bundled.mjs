@@ -9000,11 +9000,12 @@ function migrateProvenance(sql) {
   }
   respellReceiptInstants(sql);
 }
-var WHOLE_SECOND_GLOB = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]Z";
+var WHOLE_SECOND = "strftime('%Y-%m-%dT%H:%M:%SZ', ?)";
 function respellReceiptInstants(sql) {
-  for (const col of ["first_retrieved", "last_retrieved"])
-    sql.exec(`UPDATE captured_locators SET ${col} = strftime('%Y-%m-%dT%H:%M:%SZ', ${col})
-               WHERE ${col} NOT GLOB '${WHOLE_SECOND_GLOB}' AND strftime('%Y-%m-%dT%H:%M:%SZ', ${col}) IS NOT NULL`);
+  for (const col of ["first_retrieved", "last_retrieved"]) {
+    const spelled = WHOLE_SECOND.replace("?", col);
+    sql.exec(`UPDATE captured_locators SET ${col} = ${spelled} WHERE ${spelled} IS NOT NULL AND ${spelled} <> ${col}`);
+  }
 }
 
 // src/host-governor/schema.mjs
