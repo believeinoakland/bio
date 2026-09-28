@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R77). Extracted from the legacy store (T3-2); the legacy
+ * Requirements: build/requirements/membership.md (R1–R78; T9's N123 revocation notice `onRevoked`, N142's `inSight` and
+ * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
  *
@@ -12,7 +13,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS, MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS,
          CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS,
-         CASE_AUTHORITY_CHECKS } from "../../checks/bio-checks.mjs";
+         CASE_AUTHORITY_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
@@ -73,6 +74,73 @@ export function noSuchProject(projectId, extra = null) {
   /* END DEC-49 REGION is-project-seen */
 }
 
+/* R79's "the modules' total order": the layer order of `build/modules.json`, its ids by layer and then by their place in
+   the file (K270). Product code cannot read `build/` at run time, so it is held here, as promotion holds its copy for
+   R39; this module's R79 test holds it equal to the file, so a change there fails the suite until the list follows. */
+export const MODULE_ORDER = Object.freeze([
+  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
+          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
+          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 2 */ "record-core", "membership", "promotion",
+  /* 3 */ "host-governor", "provenance", "capture-sources", "capture",
+  /* 4 */ "calibration", "extraction", "content",
+  /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
+  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "ai-runs", "run-productions",
+          "capture-requests", "skills", "agent-worker",
+  /* 7 */ "intent", "reevaluation",
+  /* 8 */ "publication", "ratification", "case-authoring", "review",
+  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
+  /* 10 */ "monitoring", "scheduler", "legacy-store",
+  /* 11 */ "affordances", "queue", "instance-setup", "control-plane", "legacy-index", "legacy-ui", "installer",
+           "legacy-tests",
+]);
+
+const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+const LISTENER_REFUSAL_FIELDS = new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
+
+/** R81 (N202, K231, K285; moved from promotion's R49, membership being the earliest module that registers listeners,
+ *  K275): the one site that mints LISTENER_MALFORMED and LISTENER_DECLARED. Every registration of a listener asks it
+ *  before recording the registration: this module's (R79), promotion's (through its R49) and every later module's.
+ *  `held` is what the caller already holds for the slot: a list of `{module}`, or, for a slot that takes one
+ *  registration whoever makes it, that one registration or null. Answers the refusal, with `extra` (the caller's own
+ *  fields) beside its own and never replacing them, and its row's `check` and `translation` once legacy-checks holds
+ *  the row (N206); else null. Writes nothing and never throws. (Promotion's built text, moved as it was, K285.) */
+export function listenerRefusal(held, module, fn, extra) {
+  const refuse = (code, detail, fields) => {
+    let row = null;
+    try { row = Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code) ? REGISTRATION_CHECKS[code] : null; }
+    catch { row = null; }
+    /* The refusal's own fields are never the caller's, `check` and `translation` included while no row is held: a
+       caller's copy would claim a catalogue row that does not exist. */
+    let own = {};
+    try {
+      if (isObj(extra)) own = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
+    } catch { own = {}; }
+    return { ...own, ok: false, reason: code, code, detail, ...fields,
+             ...(row ? { check: row.check, translation: row.translation } : {}) };
+  };
+  /* DEC-49 REGION is-listener-registration */
+  try {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return refuse("LISTENER_MALFORMED", "a listener names the module that registers it and its function", {});
+    if (Array.isArray(held)) {
+      if (held.some((h) => isObj(h) && h.module === module))
+        return refuse("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
+      return null;
+    }
+    if (isObj(held)) {
+      const holder = typeof held.module === "string" ? held.module : null;
+      return refuse("LISTENER_DECLARED", `this listener is already registered${holder ? ` by ${holder}` : ""}, and it `
+                    + `takes one registration`, { module: holder });
+    }
+    return null;
+  } catch (e) {
+    return refuse("LISTENER_MALFORMED",
+      `the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`, {});
+  }
+  /* END DEC-49 REGION is-listener-registration */
+}
+
 /* A whole-second instant, the record's `…:00Z` spelling (the legacy store's the whole-second spelling). */
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 
@@ -128,6 +196,36 @@ export class Membership {
     return true;
   }
   #declared = false;
+
+  /* ===== R79 (N123, K159, K285) — THE REVOCATION NOTICE (K31's pattern) =====
+   *
+   * A later module that holds something a member's standing grants (capture-sources' `member` credentials, its R63)
+   * registers once at start, and is told the moment a member is revoked, inside the revoking act: R8's carried
+   * removal and R20's revocation. The notice is `{memberId, by, at}`, the act's own actor and time. It is called after
+   * the act's writes, in the caller's transaction, once per listener in the modules' total order (`MODULE_ORDER`; an
+   * unknown module last, in the order it registered). A listener's answer is not read, and one that throws changes
+   * neither the revocation, its answer, nor another listener's notice: the listener's module still meets the revoked
+   * status at its own next read (capture-sources R63), so a failure here is never a credential kept. A write that
+   * leaves a revoked member revoked notifies nobody. Registration's refusals are R81's. */
+  #revokedListeners = [];   // {module, fn, seq}
+
+  onRevoked(module, fn) {
+    const refused = listenerRefusal(this.#revokedListeners, module, fn);
+    if (refused) return refused;
+    this.#revokedListeners.push({ module, fn, seq: this.#revokedListeners.length });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.#revokedListeners.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  #announceRevoked(memberId, by, at) {
+    for (const l of this.#revokedListeners) {
+      try {
+        const r = l.fn({ memberId, by: by ?? null, at });
+        if (r && typeof r.then === "function") r.then(null, () => {});
+      } catch { /* a listener's failure never changes the revocation or another listener's notice */ }
+    }
+  }
 
   /* ===== Services later modules read (K57, R64–R73), and the canon rules N18 built (R10, R11, R18, R19) ===== */
 
@@ -223,10 +321,13 @@ export class Membership {
     if (!this.isAdministrator(by))
       return { ok: false, reason: "NOT_AN_ADMIN", by,
                detail: "the record of who holds hosting access is kept by the administrators (4.8). Nothing was written." };
-    const h = String(holders ?? "").trim().slice(0, 500);
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.11 */
-    /* DEC-49 REGION is-hosting-access-holders */
-    if (!h) return refusal("NO_HOLDERS", "name who holds hosting access. Nothing was written.");
+    /* DEC-49 REGION is-hosting-access-holders — N195: the whole refusal, the holders' reading with it. */
+    const h = String(holders ?? "").trim().slice(0, 500);
+    if (!h)
+      return refusal("NO_HOLDERS",
+        "name who holds hosting access: the record keeps the group's answer as it was given, and an empty "
+      + "answer records nobody. Nothing was written.");
     /* END DEC-49 REGION is-hosting-access-holders */
     const at = new Date().toISOString();
     const n = note === null || note === undefined || String(note).trim() === "" ? null : String(note).slice(0, 280);
@@ -234,11 +335,22 @@ export class Membership {
     return { ok: true, holders: h, note: n, recorded_by: by, at };
   }
 
-  hostingAccess() {
-    const history = this.#rows(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq`);
-    return { ok: true, recorded: history.length > 0, current: history.length ? history[history.length - 1] : null,
-             history };
+  /* N70: BOUNDED, AND THE BOUND IS PUBLISHED (R48's shape): the history grows with every answer the group records, so
+     `limit` is the cap applied (the caller may lower it, never raise it), `truncated` is measured by reading one row
+     past it, and the page is the first `limit` records in the order they were recorded. `current`, the latest
+     record, is read on its own, so a cut history never changes what the answer is. */
+  hostingAccess({ limit = null } = {}) {
+    const cap = Math.max(1, Math.min(Number(limit) || Membership.HOSTING_ACCESS_LIMIT, Membership.HOSTING_ACCESS_LIMIT));
+    const found = this.#rows(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq LIMIT ?`, cap + 1);
+    const truncated = found.length > cap;
+    const current = this.#one(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq DESC LIMIT 1`);
+    return { ok: true, recorded: current !== null, current, history: truncated ? found.slice(0, cap) : found,
+             limit: cap, truncated };
   }
+
+  /* N70: the history's page size, a chosen ceiling (`PROJECT_DIRECTORY_LIMIT`'s reasoning): generous enough that a
+     group reading who holds its hosting access rarely meets it, published whenever it cuts. */
+  static HOSTING_ACCESS_LIMIT = 200;
 
   /* R19 (section 3, "Pairing"): whether a member's cover-and-handle pairing is published is a per-member decision
      the member or an administrator may make. The roster's cover stays an administrator's view (R17); the published
@@ -264,16 +376,23 @@ export class Membership {
      stamp and `administer` its administer stamp (memberList's, D-157): an administrator is one the stamp says
      administers, the founder's viewer once the instance is claimed, or a viewer naming an active administrator.
      Fails closed: with neither stamp a caller is shown the published pairings alone. */
-  memberPairings({ viewer = null, administer = null } = {}) {
+  /* N70: bounded as `hostingAccess` is: the first `limit` pairings by handle (200 at most, the caller's to lower),
+     `truncated` measured by reading one row past the cap. */
+  memberPairings({ viewer = null, administer = null, limit = null } = {}) {
     const self = this.positionalMember(viewer);
     const admin = administer === true || administer === "1"
       || (viewer === Membership.ROOT_ADMIN && this.isAdministrator(Membership.ROOT_ADMIN))
       || (self !== null && this.isAdministrator(self));
-    return { ok: true, pairings: this.#rows(
+    const cap = Math.max(1, Math.min(Number(limit) || Membership.MEMBER_PAIRINGS_LIMIT, Membership.MEMBER_PAIRINGS_LIMIT));
+    const found = this.#rows(
       `SELECT handle, cover, pairing_published FROM members
-        WHERE handle IS NOT NULL AND (pairing_published=1 OR ? OR member_id=?) ORDER BY handle`,
-      admin ? 1 : 0, self).map((r) => ({ handle: r.handle, cover: r.cover, published: r.pairing_published === 1 })) };
+        WHERE handle IS NOT NULL AND (pairing_published=1 OR ? OR member_id=?) ORDER BY handle LIMIT ?`,
+      admin ? 1 : 0, self, cap + 1).map((r) => ({ handle: r.handle, cover: r.cover, published: r.pairing_published === 1 }));
+    const truncated = found.length > cap;
+    return { ok: true, pairings: truncated ? found.slice(0, cap) : found, limit: cap, truncated };
   }
+
+  static MEMBER_PAIRINGS_LIMIT = 200;
 
   /* R18 (section 7.8): the projects a member participates in, for an administrator's roster. */
   #projectsOf(memberId) {
@@ -820,8 +939,10 @@ export class Membership {
    * caller who can already see the project (an invited member, or an administrator, §7.3) — and
    * say nothing a caller did not already know. Asked the other way round, the positional refusal is
    * the oracle (the suite's `position-first` control arm measures exactly that). */
+  /* N142: a named service (the layer-6 modules gate with it and `viewerPredicate`), so it is total: an id that is not
+     a non-empty string names no bundle, and nothing it is handed makes it throw. */
   inSight(bundleId, viewer) {
-    if (!bundleId) return false;
+    if (typeof bundleId !== "string" || !bundleId) return false;
     const g = viewerPredicate(viewer);
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, bundleId, ...g.args);
   }
@@ -850,7 +971,7 @@ export class Membership {
 
   sight(bundleId, viewer) {
     if (this.inSight(bundleId, viewer)) return Membership.SIGHT_FULL;
-    if (!viewerPredicate(viewer).member) return Membership.SIGHT_NONE;
+    if (!viewerPredicate(viewer).member || typeof bundleId !== "string") return Membership.SIGHT_NONE;
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId);
     if (!b || b.object_type !== "project") return Membership.SIGHT_NONE;
     return this.visibilityOf(bundleId) === "discoverable" ? Membership.SIGHT_EXISTENCE : Membership.SIGHT_NONE;
@@ -1647,18 +1768,14 @@ export class Membership {
     /* The sole owner acts alone. Past that, every existing owner must have
        voted, and votes from members who are no longer owners do not count. */
     if (owners.length > 1) {
-      const have = this.#rows(
-        `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
-        projectId, target.member_id).map((r) => r.voter).filter((v) => owners.includes(v));
+      const have = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter);
       const awaiting = owners.filter((o) => !have.includes(o));
       if (awaiting.length)
         return { ok: false, reason: "CONSENSUS_REQUIRED", projectId, handle,
                  have: have.sort(), awaiting: awaiting.sort(),
                  detail: "every existing owner must agree to an addition beyond the second" };
     }
-    const deciders = this.#rows(
-      `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='add' AND target=?`,
-      projectId, target.member_id).map((r) => r.voter).filter((v) => owners.includes(v)).sort();
+    const deciders = this.#ownerVotes(projectId, "add", target.member_id, owners).map((v) => v.voter).sort();
     this.sql.exec(
       `UPDATE project_participants SET owner=1, owner_order=(SELECT COALESCE(MAX(owner_order), 0) + 1 FROM project_participants WHERE project_id=?), updated=? WHERE project_id=? AND member_id=?`,
       projectId, now, projectId, target.member_id);
@@ -1802,20 +1919,16 @@ export class Membership {
       `INSERT INTO project_owner_votes (project_id,kind,target,voter,reason,created) VALUES (?,'remove',?,?,?,?)`,
       projectId, target.member_id, by, why, now);
 
-    const votes = this.#rows(
-      `SELECT voter FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=?`,
-      projectId, target.member_id)
-      .map((r) => r.voter)
-      .filter((v) => owners.includes(v) && (math.targetMayVote || v !== target.member_id));
+    const counted = this.#ownerVotes(projectId, "remove", target.member_id, owners)
+      .filter((v) => math.targetMayVote || v.voter !== target.member_id);
+    const votes = counted.map((v) => v.voter);
     if (votes.length < math.votesNeeded)
       return { ok: false, reason: "VOTES_SHORT", projectId, handle,
                have: votes.length, need: math.votesNeeded, ...math, deciders: votes.sort() };
 
     /* Carried. They stay a PARTICIPANT: 7.10 says removing ownership leaves
        them on the project, and removing them from it entirely is then 7.7. */
-    const reasons = this.#rows(
-      `SELECT voter, reason FROM project_owner_votes WHERE project_id=? AND kind='remove' AND target=? ORDER BY voter`,
-      projectId, target.member_id).filter((v) => votes.includes(v.voter)).map((v) => v.reason).filter(Boolean);
+    const reasons = counted.map((v) => v.reason).filter(Boolean);
     this.sql.exec(`UPDATE project_participants SET owner=0, owner_order=NULL, updated=? WHERE project_id=? AND member_id=?`,
       now, projectId, target.member_id);
     this.#recordOwnerDecision(projectId, "remove", target.member_id, [...votes].sort(), reasons, now);
@@ -2024,6 +2137,17 @@ export class Membership {
   #committedOwners(projectId) {
     return this.#rows(`SELECT member_id FROM project_participants WHERE project_id=? AND owner=1 AND state<>'leaving'`,
       projectId).map((r) => r.member_id);
+  }
+
+  /* N70: THE VOTES THAT COUNT on one proposal, `{voter, reason}` in voter order: those of the current `owners` (a
+     former owner's vote does not count), joined in SQL and bounded by the owner count, which cuts nothing, since the
+     table holds one row per voter per proposal (its key). */
+  #ownerVotes(projectId, kind, target, owners) {
+    return this.#rows(
+      `SELECT v.voter, v.reason FROM project_owner_votes v
+         JOIN project_participants p ON p.project_id = v.project_id AND p.member_id = v.voter AND p.owner = 1
+        WHERE v.project_id=? AND v.kind=? AND v.target=? ORDER BY v.voter LIMIT ?`,
+      projectId, kind, target, owners.length);
   }
 
   /* R42: a carried ownership decision, kept with its deciders and reasons. */
@@ -2240,6 +2364,7 @@ export class Membership {
     this.sql.exec(`UPDATE members SET status='revoked', status_by=?, updated=? WHERE member_id=?`, by, now, memberId);
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
     this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by, memberId);
+    if (m.status !== "revoked") this.#announceRevoked(memberId, by, now);   /* N123 */
     return { ok: true, memberId, removed: true, ...math,
              deciders: votes.map((v) => v.voter).sort(), reasons: votes.map((v) => v.reason).filter(Boolean),
              alsoDo: "removing an administrator in the application is half of an ejection. The other half is "
@@ -2535,6 +2660,7 @@ export class Membership {
       this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
       /* REC-159: the cascade is this act's too, so the keys it revokes name its actor. */
       this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, actor, memberId);
+      if (m.status !== "revoked") this.#announceRevoked(memberId, actor, now);   /* N123 */
     }
     return { ok: true, memberId, status, by: Membership.#statusBy(actor), ...(demoted ? { demoted: true,
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: "
@@ -3085,10 +3211,10 @@ export function membershipOps(m, url, body, env) {
         /* N18: the canon rules built in T3 (R10, R11, R19). `by` is the control plane's stamp, read after the body. */
         adminresign: () => m.adminResign({ by: url.searchParams.get("by") }),
         hostingaccessset: () => m.hostingAccessSet({ ...(body || {}), by: url.searchParams.get("by") }),
-        hostingaccess: () => m.hostingAccess(),
+        hostingaccess: () => m.hostingAccess({ limit: url.searchParams.get("limit") }),   /* N70 */
         memberpairingset: () => m.memberPairingSet({ ...(body || {}), by: url.searchParams.get("by") }),
         /* N85 (K124): the viewer and administer stamps decide what each caller sees; absent, the published alone. */
         memberpairings: () => m.memberPairings({ viewer: url.searchParams.get("viewer"),
-          administer: url.searchParams.get("administer") })
+          administer: url.searchParams.get("administer"), limit: url.searchParams.get("limit") })   /* N70 */
   };
 }
