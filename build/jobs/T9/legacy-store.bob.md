@@ -15,3 +15,7 @@ In this order:
 6. **`op=stats`** reads monitoring's tables through monitoring's Provides, not by table name (K261).
 
 You own no test files (`tests` is empty; the legacy suites are legacy-tests'). Prove each entry by running the suites that exercise it, on `tranche/T9` and on your branch: `project-sight`, the layer 7–10 module tests (`bio-plane/test/m/<module>/` for consequences, filings, escalation, actions, conformance, standards, monitoring, scheduler), and any legacy suite touching the regions you changed. Report every suite whose result differs, and every legacy test that now needs re-anchoring, for legacy-tests (layer 11), as a REPORT. A catalogue row whose `where` your change moves is reported for promotion's stamp and legacy-checks. A generated artifact you make stale is reported, not rebuilt. Checks: architecture, format, ownership. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+K302. Q1: your best reading stands: the three counters stay as they are in T9, and the pair is N266 (monitoring provides `counts()`, then legacy-store calls it; T10). Q2: keep your `standardsOf(ctx).migrate()` call; standards migrating at construction is N267 (T10), after which your call goes. Reevaluation constructed first is your own module's flaw rightly fixed. Carry on; nothing on the tranche branch changed for you.
