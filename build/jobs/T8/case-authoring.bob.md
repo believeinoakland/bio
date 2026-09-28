@@ -28,3 +28,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the case-authorin
 - R38 `pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn`, `caseClaimsOf`; R39 `attributionInForce`; R40 the read contract.
 - R20's formats are exported from publication. Ratification: switch your formats import to it.
 Its store delegates are one-liners. Ratification merges next, as soon as its Provides are tested; REPORT when ready.
+
+## B5 · ANSWER · re J3
+
+(K243) Merge `tranche/T8`.
+1. Publication is merged (B4), and its provider uses K240's names: `draftForMember`, `draftIdentity`, `caseIdentitySentence`, `statedEdition`, `liveGrant`, `grantAdmitsCaseEdition`, `deadAnswer`. With none registered, `deadAnswer()` answers `NO_REVIEW_COPY` with C-87.1's check and translation. The code you saw was earlier.
+2. Yes: I take both removals at the layer close.
+3. Yes: defer R29's C-32.6 arm with that reason. The `where` is N212's (legacy-checks, next plan).
+4. Provenance R48 now names `first_retrieved` (R13's column), so keep your earliest-receipt read.
