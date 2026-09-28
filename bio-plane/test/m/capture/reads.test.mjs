@@ -7,6 +7,9 @@ import { fresh, receipt, register, bucket, governor, provenance, storage, H } fr
 import { captureOf, captureOps, READ_LIMIT } from "../../../src/capture/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { governorOf } from "../../../src/host-governor/index.mjs";
+/* The control plane's envelope reader (index.mjs `doAnswer`), as it is handed to the ops (N247). */
+const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
+  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
 
 const hex = (i) => i.toString(16).padStart(64, "0");
 const route = (c, name, qs = "", body = null) => captureOps(c, new URL(`http://x/${name}?${qs}`), body, c.env)[name]();
@@ -271,8 +274,8 @@ test("R29 (N187): op=navchanges answers at most `limit` observations, the newest
   const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
   const stub = { async fetch(u) { const url = new URL(u); return json({ ok: true, result: captureOps(c, url, null, c.env)[url.pathname.slice(1)]() }); } };
   const { linksOp } = await import("../../../src/capture/ops.mjs");
-  const via = await (await linksOp(new URL(`https://p/?op=links&host=${host}&limit=9000`), stub, { json, storeSilent: () => json({}, 502), viewer: "class:admin" })).json();
+  const via = await (await linksOp(new URL(`https://p/?op=links&host=${host}&limit=9000`), stub, { json, storeSilent: () => json({}, 502), doAnswer, viewer: "class:admin" })).json();
   assert.deepEqual([via.limit, via.observations, via.truncated], [500, 500, true]);
-  const dflt = await (await linksOp(new URL(`https://p/?op=links&host=${host}`), stub, { json, storeSilent: () => json({}, 502), viewer: "class:admin" })).json();
+  const dflt = await (await linksOp(new URL(`https://p/?op=links&host=${host}`), stub, { json, storeSilent: () => json({}, 502), doAnswer, viewer: "class:admin" })).json();
   assert.deepEqual([dflt.limit, dflt.observations], [200, 200]);
 });

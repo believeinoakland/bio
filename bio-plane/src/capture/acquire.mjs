@@ -1,4 +1,4 @@
-/* capture — THE ACQUISITION ACT (R1–R20, R33–R38, R41, R42, R55), moved from `op=acquire`'s handler in `legacy-index`
+/* capture — THE ACQUISITION ACT (R1–R20, R33–R38, R41, R42, R55, R60–R62), moved from `op=acquire`'s handler in `legacy-index`
  * (T4-4). It is a service inside the Durable Object (K72 (11)): the Worker's op forwards to it, and the capture-request
  * drain calls it in process through its trusted arm (K58). It fetches, hashes and stores the bytes as they arrive,
  * records the fetch as a receipt, profiles what it is, captures a page's supporting files, requests co-attestation,
@@ -33,9 +33,10 @@ export async function sha256Hex(v) {
 }
 
 /* The row readers of the refusal families capture's arms answer with (C-48 the Drive arm, C-83 the render arm). The
-   code is a STRING LITERAL at each site so the DEC-49 guard can compare it; a code with no sentence throws. `driveRow`
-   is exported (T4-6) because `op=monitor`'s Drive tick answers C-48.8 and C-48.9 from the same catalogue family. */
-export const driveRow = (code) => {
+   code is a STRING LITERAL at each site so the DEC-49 guard can compare it; a code with no sentence throws. N228:
+   `driveRow` is no longer exported: monitoring answers its tick's C-48.8 and C-48.9 from `DRIVE_CAPTURE_CHECKS`
+   itself, so no module reads capture's. */
+const driveRow = (code) => {
   const row = DRIVE_CAPTURE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`driveRow: ${code} has no DRIVE_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
@@ -135,11 +136,46 @@ export function profileView(core) {
 const renderLocale = (view) => renderLocaleFor(view);
 
 /* R7, R36: every outbound fetch through the host governor (host-governor R15–R17), under the agent this module
-   composes. The governor is reached in process (K72 (2)). */
-async function governedFetch(cap, target, purpose, delegated = null) {
+   composes. The governor is reached in process (K72 (2)). `headers` are R61's conditional request headers;
+   `credential` is R62's (capture-sources R56's entry), sent by `scopedFetch` to its own host only. */
+async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null } = {}) {
   const g = cap.governor;
-  return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated), fetch: (u, i) => fetch(u, i),
+  return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated),
+    fetch: headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i),
     governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null });
+}
+
+/* R62: the kinds of credential a member may supply (capture-sources R55), and how each rides a request. */
+const CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
+const REDIRECT_MAX = 20;
+const base64Of = (text) => btoa(String.fromCharCode(...new TextEncoder().encode(text)));
+/* A supplied agent is a DELEGATED one, so it is sent through R7's one function, which returns it verbatim. */
+function withCredential(headers, credential, env, purpose) {
+  if (credential.kind === "user-agent") return { ...headers, "user-agent": userAgent(env, purpose, credential.secret) };
+  if (credential.kind === "login") return { ...headers, authorization: `Basic ${base64Of(credential.secret)}` };
+  return { ...headers, authorization: credential.secret };
+}
+
+/* R61, R62: the fetch the governor calls, adding R61's conditional headers and, on the address's OWN host only,
+   R62's credential. With a credential, redirects are followed BY HAND so that a hop to another host is fetched
+   without it (capture-sources R56's caller obligation): the runtime's own following would carry the header on. */
+function scopedFetch(target, { headers, credential, env, purpose }) {
+  let home = null;
+  try { home = new URL(target).hostname.toLowerCase(); } catch { home = null; }
+  return async (u, init = {}) => {
+    const plain = { ...(init.headers || {}), ...(headers || {}) };
+    if (!credential) return fetch(u, { ...init, headers: plain });
+    let url = String(u);
+    for (let hop = 0; ; hop++) {
+      let host = null;
+      try { host = new URL(url).hostname.toLowerCase(); } catch { host = null; }
+      const res = await fetch(url, { ...init, redirect: "manual", headers: host && host === home ? withCredential(plain, credential, env, purpose) : plain });
+      const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
+      if (!loc || hop >= REDIRECT_MAX) return res;
+      try { await res.body?.cancel?.(); } catch { /* the hop's body is not read */ }
+      url = new URL(loc, url).href;
+    }
+  };
 }
 
 /** R3's decision, in ONE place so the lookup and the capture cannot disagree about when the fallback may fire or
@@ -289,12 +325,22 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   }
   /* K58: EVERYTHING THAT DECIDES WHAT LEAVES THIS INSTANCE COMES FROM THE ROW the drain's conduct check judged: the
      address, the purpose, the agent, and whether to render. */
-  let crPurpose = null, crAgent = null;
+  let crPurpose = null, crAgent = null, crOrigin = null, crHeldSha = null, crCredential = null;
   if (captureRequest) {
     body.locator = captureRequest.locator;
     crPurpose = captureRequest.purpose || null;
     crAgent = captureRequest.agent || null;
     if (captureRequest.render === true) body.render = true; else delete body.render;
+    /* R60 (capture-requests R38): the sweep the drain's row names, never a body's `matchedSweep`. */
+    const o = captureRequest.origin;
+    if (o && typeof o === "object" && o.matched_sweep != null && o.matched_sweep !== "")
+      crOrigin = { kind: "sweep", matched_sweep: o.matched_sweep, deeming_actor: o.deeming_actor ?? null };
+    /* R61 (capture-requests R39): the capture the record holds of this address; anything but 64 hex is ignored. */
+    if (typeof captureRequest.heldSha === "string" && /^[0-9a-f]{64}$/.test(captureRequest.heldSha)) crHeldSha = captureRequest.heldSha;
+    /* R62 (capture-requests R41): the one credential admitted for this request's scope (capture-sources R56). */
+    const cr = captureRequest.credential;
+    if (cr && typeof cr === "object" && CREDENTIAL_KINDS.includes(cr.kind) && typeof cr.secret === "string" && cr.secret !== "")
+      crCredential = cr;
   }
   /* R4, CAP-8 — THE GOOGLE DRIVE HOST STACK (Bob, 2026-09-14: keep the link, export an OpenDocument version). The
      recognition, the composition and the fetch all happen inside the ONE call that files the bytes. */
@@ -420,9 +466,14 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     try { await cap.recordSourceOutcome({ addressNorm: addrNorm, outcome, status: status ?? null, at: retrieved }); }
     catch { /* an unrecorded outcome must not turn a fetch into an error */ }
   };
+  /* R61: conditional against the validators the held capture's own fetch was served with at this address. A render
+     fetches its shell unconditionally: the capture it files is the rendered document, not the shell. */
+  const validators = crHeldSha && !renderAsked ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
+  const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
+                                     ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
   let res;
   try {
-    const g = await governedFetch(cap, locator, crPurpose || "acquire", crAgent);
+    const g = await governedFetch(cap, locator, crPurpose || "acquire", crAgent, { headers: conditional, credential: crCredential });
     if (g.refusedByGovernor) {
       await noteOutcome("governed", null);
       return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
@@ -432,7 +483,21 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     res = g.res;
   } catch (e) {
     await noteOutcome("fetch_failed", null);
-    return answer(502, { ok: false, reason: "FETCH_FAILED", detail: String(e && e.message || e), locator });
+    /* R62: a thrown fetch's message can carry what rode the request, so none is carried when a credential did. */
+    return answer(502, { ok: false, reason: "FETCH_FAILED", locator,
+      detail: crCredential ? "the fetch did not complete; its error is not carried because a supplied credential rode it"
+                           : String(e && e.message || e) });
+  }
+  /* R61: the source says the held capture is still what it serves. It ASSERTS the bytes and does not serve them, so
+     nothing is filed and no receipt is written; the attempt is a success of the source (R8). */
+  if (conditional && res.status === 304) {
+    await noteOutcome("success", 304);
+    try { await res.body?.cancel?.(); } catch { /* nothing to read */ }
+    return answer(200, { ok: true, existed: true, unchanged: true, capture: { sha256: crHeldSha },
+      basis: `the source answered 304 Not Modified to a request conditional on the validators its fetch of the held `
+           + `capture ${crHeldSha.slice(0, 12)} was served with (${Object.keys(conditional).join(", ")}), so no new capture `
+           + "was made and no receipt written: the source asserted these bytes, it did not serve them",
+      store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
   }
   /* DEC-49 REGION is-drive-export — there is NO FALLBACK: a 403, a 404 or an HTML answer ends the capture with the
      failure named; nothing reaches back for the application page. */
@@ -651,6 +716,12 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   } catch { /* an unfiled receipt is not a failed capture */ }
   /* provenance R34 (K59): an archive-sourced capture's receipt is signed with the instance's own key. A signing that
      cannot be made (no key bound) is stated on the answer, never a failed capture. */
+  /* R61: what the source said about these bytes, kept for a later conditional fetch of the same document. */
+  if (via === "direct" && !renderRecorded) {
+    try { cap.recordValidators({ addressNorm: addrNorm, captureSha: sha, etag: res.headers.get("etag"),
+                                 lastModified: res.headers.get("last-modified"), at: retrieved }); }
+    catch { /* an unrecorded validator costs a later request its condition, never this capture */ }
+  }
   let receiptSignature = null;
   if (via === "archive.org") {
     try { receiptSignature = await cap.provenance?.signReceipt?.({ captureSha: sha, retrievalLocator: locator, retrieved }) ?? null; }
@@ -754,6 +825,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
       sha256: sha, encoding: "binary", bytes: total,
       ...(ct ? { content_type: ct } : {}),
       ...(renderRecorded ? {} : { transport }),
+      /* R62: that a supplied credential rode the fetch, whose and at which scope, never its secret. */
+      ...(crCredential ? { credentialed: { credential: crCredential.credential ?? null, kind: crCredential.kind,
+                                           supplied_by: crCredential.supplied_by ?? null, scope: crCredential.scope ?? null,
+                                           project: crCredential.project ?? null },
+                           reproducible_by_public: false } : {}),
     },
     ...(renderRecorded ? {
       pair: { primary: "rendered", rendered: { file: `snapshots/${name}`, sha256: sha },
@@ -763,13 +839,17 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     ...(multipart ? { parts: parts.map((p, i) => ({ file: `snapshots/${name}.part${String(i).padStart(3, "0")}`, sha256: p.sha256, bytes: p.bytes })) } : {}),
     /* Derived artifacts are named on the SAME register document, never as documents of their own (C-18.3). */
     ...(subs ? { renditions: subs.renditions } : {}),
-    origin: { kind: body.matchedSweep ? "sweep" : "named_request",
-              ...(body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}) },
+    /* R60: on the capture-request arm the origin is the drain's row's, never the body's. */
+    origin: captureRequest ? (crOrigin || { kind: "named_request" })
+      : { kind: body.matchedSweep ? "sweep" : "named_request",
+          ...(body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}) },
     attestation_attempts: attestations,
   };
   return answer(200, {
     ok: true, existed,
     ...(existedUndetermined ? { existed_undetermined: existedUndetermined } : {}),
+    /* R61: the bytes are the capture the record already holds. */
+    ...(crHeldSha && sha === crHeldSha ? { held: true } : {}),
     document,
     ...(multipart ? { parts: parts.length } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
