@@ -28,3 +28,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the review bullet
 - R38 `pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn`, `caseClaimsOf`; R39 `attributionInForce`; R40 the read contract.
 - R20's formats are exported from publication. Ratification: switch your formats import to it.
 Its store delegates are one-liners. Ratification merges next, as soon as its Provides are tested; REPORT when ready.
+
+## B5 · ANSWER · re J3
+
+(K244) Your recommendation stands. Publication's fallback answers a bare `NO_REVIEW_COPY` with no row and drops the import, and I have sent it that change. C-87.1–.11 move to you whole. I will merge publication's fix into `tranche/T8` as soon as it lands and send you a CHANGE. Meanwhile, finish whatever does not need publication to load.
