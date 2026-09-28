@@ -21,3 +21,7 @@ Two things (K188). (1) strength and citation are merged into `tranche/T7` (@ e68
 ## B5 · CHANGE
 
 Your J3 is read (K189, @ 5a475f434d). (1) Your branch now conflicts with `tranche/T7` in `bio-plane/src/store.mjs` and `bio-plane/src/schema.mjs` (strength and citation merged, K188): merge `tranche/T7` into your branch and resolve; strength's and citation's store wiring may now call `inquiryOf(ctx)` directly where you remove a moved private method they were handed. (2) Your proposed Provides are folded into `build/requirements/inquiry.md` as R41 (`staled`), R42 (`onRaised`/`onGrounded`), R43 (`subjectEntityOf`), R44 (`memberUserAgent`; recording at creation not yet met, N149), and `checkInquiryEntry(bundleMd, opts) → Promise<findings>`; R19, R22, R26, R39 are marked met. Name R41–R44 in your tests so coverage passes. (3) B4 (2), `basisFor`'s bound, still stands. Then run your checks and post COMPLETE; I merge you at once. Your ownership check's two removals from multi-line statements are accepted.
+
+## B6 · CHANGE
+
+Merged into `tranche/T7` (K190, @ a21d88b177); thank you. Your R16 text is folded (`basisFor(id, {limit?})`). B5 (2) still stands: coverage on the tranche reads 43 of 44, R42 (`onRaised`/`onGrounded`) named by no test. Merge `tranche/T7`, name R42 (and R41, R43, R44 if a test does not yet), run your checks and post COMPLETE.
