@@ -1,7 +1,7 @@
 /* monitoring R26 (driveShells) and R32 (monitoring): the two reads, each through the viewer's sight. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, infoMd, V, NOW_MS, DAEMON } from "./fixture.mjs";
+import { world, sha, infoMd, V, NOW, NOW_MS, DAEMON } from "./fixture.mjs";
 import { monitoringOps, DRIVE_SHELLS_LIMIT_DEFAULT, DRIVE_SHELLS_LIMIT_MAX, DRIVE_SHELLS_RETRIEVALS_MAX, MONITORING_READ_MAX }
   from "../../../src/monitoring/index.mjs";
 
@@ -94,4 +94,49 @@ test("R32 monitoring({viewer}): every monitored address the viewer may see, with
   const routed = monitoringOps(w.m, new URL(`http://do/monitoring?viewer=${encodeURIComponent(DAEMON)}&now=${NOW_MS}`), {}).monitoring();
   assert.equal(routed.items.length, 3);
   assert.ok(V);
+});
+
+test("R32 monitoring({viewer}): a row names no bundle the viewer cannot see — versions, newer_unmonitored and a disagreement withhold a hidden project's, absent and never a placeholder; its member is told them (B4, K268)", () => {
+  const w = world();
+  const ADDR = "https://records.example.org/r32-hidden";
+  const at = (w2, s, retrieved) => w2.prov.recordReceipt({ address: ADDR, addressNorm: ADDR, captureSha: s, retrieved, via: "direct",
+    retrievalLocator: ADDR, context: { authorityKind: "sweep", authority: "x", actorClass: "plane", actor: null, observe: false } });
+  /* hidden project 1: an OLDER monitored version at the address, authoring a different frequency (a disagreement) */
+  const old = w.monitored("INFO-2026-0901-hidden-older", ADDR, "r32 hidden older", { freq: "weekly" });
+  /* the shared document: the current monitored version */
+  const cur = w.monitored("INFO-2026-0902-shared", ADDR, "r32 shared current", { freq: "daily" });
+  /* hidden project 2: a NEWER version that does not ask to be monitored */
+  const nw = w.monitored("INFO-2026-0903-hidden-newer", ADDR, "r32 hidden newer", { enabled: false });
+  at(w, old.cap, "2026-07-01T00:00:00Z"); at(w, cur.cap, "2026-07-02T00:00:00Z"); at(w, nw.cap, "2026-07-03T00:00:00Z");
+  const HIDDEN = ["INFO-2026-0901-hidden-older", "INFO-2026-0903-hidden-newer"];
+  /* both are projects of carol's, hidden from every member session that is not a participant */
+  for (const p of HIDDEN) {
+    w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id=?`, p);
+    w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, 'carol', 'joined', 1, ?, ?)`, p, NOW, NOW);
+  }
+  const rowOf = (r) => r.items.find((i) => i.address === ADDR) || null;
+
+  /* the member: every version, the newer one stated, the disagreement stated */
+  const c = rowOf(w.m.monitoring({ viewer: V("carol"), now: NOW_MS }));
+  assert.equal(c.bundle, "INFO-2026-0902-shared");
+  assert.deepEqual([...c.versions].sort(), ["INFO-2026-0902-shared", ...HIDDEN].sort());
+  assert.deepEqual(c.newer_unmonitored, ["INFO-2026-0903-hidden-newer"]);
+  assert.deepEqual(c.disagreement.authored.map((a) => a.bundle).sort(), ["INFO-2026-0901-hidden-older", "INFO-2026-0902-shared"]);
+  /* a machine credential is not filtered (D-15) */
+  assert.deepEqual(rowOf(w.m.monitoring({ viewer: DAEMON, now: NOW_MS })).versions.length, 3);
+
+  /* the non-member: the shared address is still listed (the arm is live), and nothing in the answer names a hidden id */
+  const dAns = w.m.monitoring({ viewer: V("dave"), now: NOW_MS });
+  const d = rowOf(dAns);
+  assert.ok(d, "the shared document's address is listed to the non-member");
+  assert.deepEqual(d.versions, ["INFO-2026-0902-shared"]);
+  assert.equal("newer_unmonitored" in d, false, "a list left with nothing seen is not stated, never a placeholder");
+  assert.equal("disagreement" in d, false, "a disagreement only a hidden version makes is not stated");
+  for (const id of HIDDEN) assert.equal(JSON.stringify(dAns).includes(id), false, `dave's answer names ${id}`);
+  /* and it reads exactly as if the hidden versions did not exist: the same row a world without them answers */
+  const w2 = world();
+  const cur2 = w2.monitored("INFO-2026-0902-shared", ADDR, "r32 shared current", { freq: "daily" });
+  at(w2, cur2.cap, "2026-07-02T00:00:00Z");
+  const alone = rowOf(w2.m.monitoring({ viewer: V("dave"), now: NOW_MS }));
+  assert.deepEqual(d, alone);
 });
