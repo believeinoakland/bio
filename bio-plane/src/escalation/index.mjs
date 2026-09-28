@@ -27,7 +27,7 @@
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `getSetting`, `declarePurge`;
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
- *   conformance    `determinationRead` (its R9), `determinationsFor` (its R11).
+ *   conformance    `determinationRead` (its R9), `determinationsFor` (its R11); default `conformanceOf(host)` (K252).
  *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
  *   actions        `actionRead` (its R29), `actionFacts` (its R12, the one clock rule).
  *   filings        `filingsFor` (its R13), `availableActions` (its R21).
@@ -37,6 +37,7 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
@@ -582,7 +583,7 @@ export class Escalation {
       return p.ok ? { ok: true, id } : p;
     });
     if (!r.ok) return r;
-    const read = this.escalationRead({ id: r.id, viewer: null });
+    const read = this.escalationRead({ id: r.id, viewer });
     return { ok: true, id: r.id, stage: 1, stage_name: STAGES[1], standards: pursued, determination, project,
              opened_by: author, at, proposed: read.proposed };
   }
@@ -961,9 +962,10 @@ export function escalationOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     /* A provider merged into the tranche is reached through its factory on the same host unless given (K248, K250);
        one not yet merged stays an injected dep, and its absence refuses (PROVIDER_UNAVAILABLE). */
+    const conformance = d.conformance || (() => conformanceOf(host, { record, membership, promotion }));
     const consequences = d.consequences
-      || (() => consequencesModule(host, { record, membership, promotion, ...(d.conformance ? { conformance: d.conformance } : {}) }));
-    i = new Escalation({ ...d, storage, record, membership, promotion, consequences });
+      || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
+    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences });
     instances.set(host, i);
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
