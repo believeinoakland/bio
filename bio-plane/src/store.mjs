@@ -754,7 +754,7 @@ export class Store extends DurableObject {
        legacy-store answers reevaluation's obligation (R21, R25) and strength's pair (R28) until each is extracted. */
     inquiryOf(ctx).onRaised("reevaluation", ({ target, viewer }) => this.#reevalRaisedBy(target, viewer));
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
-    strengthModule(ctx, { inquiry: { basisFor: (id, o) => this.basisFor(id, o), earned: (e, t) => this.earnedBasisRegistry(e, t),
+    strengthModule(ctx, { inquiry: { basisFor: (id) => this.basisFor(id), earned: (e, t) => this.earnedBasisRegistry(e, t),
       legCapped: (g, e, t) => Store.#capturedAt(g, e, t), subjectEntityOf: (id) => this.#subjectEntityOf(id) },
       versions: { currentOf: (p, i, v) => this.#currentVersionOf(p, i, v) } });   /* strength (K61), until inquiry and basis-versions are extracted */
     /* bias (K61): joins every promotion before legacy-store (R8–R10); the store registers the AI runs as the bias debt's

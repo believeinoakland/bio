@@ -606,7 +606,8 @@ export class Strength {
         parts.push({ label, ords: [...ords] });
       }
       /* The question's own reasons, read one past the bound so a basis larger than a reading may hold is observed. */
-      const legRows = this.#legsOf(inq, { limit: VERSION_LEGS_MAX + 1 })
+      /* Bounded in SQL by inquiry's R16 `limit`; the slice holds the bound for a provider that reads whole. */
+      const legRows = this.#legsOf(inq, { limit: VERSION_LEGS_MAX + 1 }).slice(0, VERSION_LEGS_MAX + 1)
         .map((l) => ({ ord: l.ord, target_id: l.target_id, target_type: l.target_type, role: l.role }));
       if (legRows.length > VERSION_LEGS_MAX)
         return refusal("PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
