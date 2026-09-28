@@ -33661,6 +33661,10 @@ var Calibration = class {
   #now;
   #listeners = [];
   // R12: {module, fn, seq}, kept in the modules' order
+  #subjectListeners = [];
+  // R18: the same shape
+  #signalListeners = [];
+  // R19: the same shape
   constructor({ sql, record, order, now } = {}) {
     this.#sql = sql;
     this.#record = record;
@@ -33756,11 +33760,38 @@ var Calibration = class {
    *  A malformed or repeated registration is refused through membership's `listenerRefusal` (its R81; N202), the one
    *  site of `LISTENER_MALFORMED` and `LISTENER_DECLARED`. */
   onCalibration(module, fn) {
-    const refused = listenerRefusal(this.#listeners, module, fn);
+    return this.#register(this.#listeners, module, fn);
+  }
+  /** R18 (N223): a later module's listener, called once after each successful `calibrationSubjectRegister` with
+   *  `{engine, probe_id, next_probe}`, in the modules' order (`scheduler` registers its `arm`). Refused as R12. */
+  onSubjectRegistered(module, fn) {
+    return this.#register(this.#subjectListeners, module, fn);
+  }
+  /** R19 (N223): a later module's listener, called once after each signal `calibrationSignalRecord` records with
+   *  `{engine, next_probe}`, in the modules' order (`scheduler` registers its `arm`). Refused as R12. */
+  onSignalRecorded(module, fn) {
+    return this.#register(this.#signalListeners, module, fn);
+  }
+  /* One registration into one slot: membership's `listenerRefusal` first (its R81, the one site of its two codes),
+     then kept in the modules' total order, a module outside it after every one in it, in registration order. */
+  #register(held, module, fn) {
+    const refused = listenerRefusal(held, module, fn);
     if (refused) return refused;
-    this.#listeners.push({ module, fn, seq: this.#listeners.length });
-    this.#listeners.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    held.push({ module, fn, seq: held.length });
+    held.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
+  }
+  /* R18, R19: the post-write notices. Told after the write has stood, each listener once, in the modules' order, and
+     each with its own copy of the notice, so nothing it does reaches the write, its answer or another listener: one
+     that throws or rejects is isolated here (retrieval R52's pattern). A listener's answer is not read. */
+  async #notify(held, notice) {
+    for (const l of held) {
+      const copy = JSON.parse(JSON.stringify(notice));
+      try {
+        await l.fn(copy);
+      } catch {
+      }
+    }
   }
   /* ---------------------------------------------------------------- R4, R5: recording a measurement */
   /** RECORD A CALIBRATION — a probe ran, and this is what it measured (`op=calibrate`).
@@ -33915,7 +33946,7 @@ var Calibration = class {
    *  enforced three ways: `checkSignal` refuses a signal shaped like a measurement; `nextProbeDue` takes the minimum
    *  against the cadence's own instant; and nothing anywhere reads a signal when computing a cap, a grade or a
    *  drift verdict. ABSENCE OF AN ANNOUNCEMENT IS NOT EVIDENCE OF NO CHANGE. */
-  calibrationSignalRecord(pkg = {}) {
+  async calibrationSignalRecord(pkg = {}) {
     const p = pkg && typeof pkg === "object" && !Array.isArray(pkg) ? pkg : {};
     const now = this.#now();
     const sig = {
@@ -33947,6 +33978,8 @@ var Calibration = class {
          FROM calibration_subjects WHERE engine=?`,
       sig.engine
     );
+    const next = subject ? this.#nextProbe(subject, now) : null;
+    await this.#notify(this.#signalListeners, { engine: sig.engine, next_probe: next });
     return {
       ok: true,
       signal_id: id,
@@ -33954,7 +33987,7 @@ var Calibration = class {
       source: sig.source,
       observed_at: observed,
       probe_by_ms: by,
-      next_probe: subject ? this.#nextProbe(subject, now) : null,
+      next_probe: next,
       armed: !!subject,
       changed_grades: 0,
       stood_in_for_probe: false,
@@ -33966,7 +33999,7 @@ var Calibration = class {
    *  calibration, because the engine that most needs calibrating is one nothing has ever measured, and that state
    *  must be registrable and visible. A never-probed subject is due immediately (`nextProbeDue`'s `never-probed`
    *  branch). REGISTERING IS NOT MEASURING: this writes no cap, no score, nothing a grade could rest on. */
-  calibrationSubjectRegister(pkg = {}) {
+  async calibrationSubjectRegister(pkg = {}) {
     const p = pkg && typeof pkg === "object" && !Array.isArray(pkg) ? pkg : {};
     const now = this.#now();
     const engine = typeof p.engine === "string" ? p.engine.trim() : "";
@@ -33995,6 +34028,8 @@ var Calibration = class {
          FROM calibration_subjects WHERE engine=?`,
       engine
     );
+    const next = this.#nextProbe(s, now);
+    await this.#notify(this.#subjectListeners, { engine, probe_id: probeId, next_probe: next });
     return {
       ok: true,
       engine,
@@ -34002,7 +34037,7 @@ var Calibration = class {
       enabled: !!enabled,
       cadence_ms: CALIBRATION_CADENCE_MS,
       cadence: cadenceSentence(),
-      next_probe: this.#nextProbe(s, now),
+      next_probe: next,
       measured: false,
       why: `${engine} is registered for calibration in this instance. Registering is not measuring: no fidelity is claimed for it and nothing rests on it until a probe runs. ${s.last_probe_ms == null ? `Nothing has ever probed it, so a probe is due immediately` : `The next probe is due at its own cadence`} \u2014 ${cadenceSentence()}`
     };
@@ -40410,6 +40445,7 @@ var Extraction = class {
   #sql;
   #storage;
   #listeners = [];
+  #indexListeners = [];
   #declared = false;
   #stepped = false;
   #calListening = false;
@@ -40560,11 +40596,19 @@ var Extraction = class {
    *  in, with `unitsBefore` (the capture's indexed units before the write, null when never indexed), and a throw
    *  fails the whole write. */
   onReading(module, fn) {
-    const refused = listenerRefusal(this.#listeners, module, fn);
+    return this.#register(this.#listeners, module, fn);
+  }
+  /** R62 (N294): the index notice, registered as R24's are, raised after each `indexTestimony` write (R61) and
+   *  never by R19's writer, whose index outcome reaches its listeners as R24's `indexed`. */
+  onIndexed(module, fn) {
+    return this.#register(this.#indexListeners, module, fn);
+  }
+  #register(list2, module, fn) {
+    const refused = listenerRefusal(list2, module, fn);
     if (refused) return refused;
     const i = MODULE_ORDER.indexOf(module);
-    this.#listeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.#listeners.length });
-    this.#listeners.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
+    list2.push({ module, fn, rank: i === -1 ? Infinity : i, seq: list2.length });
+    list2.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
     return { ok: true, module };
   }
   /* ---- reading (R1–R18) ---- */
@@ -41024,6 +41068,36 @@ var Extraction = class {
       skipped_named: skippedNamed,
       state
     };
+  }
+  /** R61 (N294, K337): a member's authored observation (provenance R28) indexed as its capture's own text, inside
+   *  the caller's transaction (a nested `transact` joins it). The capture's index is replaced by R22's rule over one
+   *  unit, the words whole at `{kind: "document"}`, `seq` 0, chain null; words holding no glyph are dropped by that
+   *  rule and index nothing. No reading, history, reference, name term or text-source row is written, because no
+   *  reader ran over the words, and R24's listeners are not called; R62's are, and a throw from one fails the write.
+   *  A request naming no bundle or capture writes nothing and answers `written: 0`. */
+  indexTestimony({ bundleId = null, captureSha = null, words = null, author = null } = {}) {
+    if (typeof bundleId !== "string" || !bundleId || typeof captureSha !== "string" || !captureSha)
+      return {
+        offered: 0,
+        written: 0,
+        bytes: 0,
+        truncated: 0,
+        over_bound: 0,
+        wire_over_bound: 0,
+        unaddressable: 0,
+        unaddressed: [],
+        chain_kind: "undetermined",
+        skipped: [],
+        skipped_named: 0,
+        state: null,
+        why: "an authored observation is indexed under its bundle and its capture digest, and one was not named"
+      };
+    return this.core.transact(() => {
+      const indexed = this.indexUnits(bundleId, captureSha, [{ extent: { kind: "document" }, text: words, seq: 0 }], null);
+      for (const l of this.#indexListeners)
+        l.fn({ bundleId, captureSha, indexed, author, container: "document" });
+      return indexed;
+    });
   }
   /* ---- reading the record (R27–R30, R36, R37) ---- */
   /** R27 (`op=reading`). */

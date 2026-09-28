@@ -103,8 +103,8 @@
     },
     {
       "path": "../bio-plane/src/calibration/index.mjs",
-      "bytes": 28780,
-      "sha256": "923590f947f33784da4e6211360519a01661628e25467d592dc8071aa53cbe75"
+      "bytes": 30819,
+      "sha256": "2884431fec158a934690d4ac3ae64b7f9f9f083c48f3cc663c8007e8a126ff20"
     },
     {
       "path": "../bio-plane/src/calibration/schema.mjs",
@@ -263,8 +263,8 @@
     },
     {
       "path": "../bio-plane/src/extraction/index.mjs",
-      "bytes": 65427,
-      "sha256": "de902988ada56af71e3bd1cfa0aff9b8056f8a87511123bc4b3d7014d812fb2a"
+      "bytes": 67322,
+      "sha256": "f8d0d7ea5e80374254149c8a25cff839523a1de09b1f6ba2138a24b780b854ab"
     },
     {
       "path": "../bio-plane/src/extraction/pipeline.mjs",
