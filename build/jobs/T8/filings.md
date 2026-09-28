@@ -79,3 +79,7 @@ Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 19, module lines 1336
 ## J5 · REPORT
 
 For BOB to fold into filings' requirements (codes are interface detail, K238's precedent, as standards' J2): R1's and R14's NO_AUTHOR is the catalogue's generic code (minted in store and provenance for other conditions), so the DEC-49 guard's arm G refuses a C-115 row for it; filings mints FILING_NO_PREPARER (C-115.1, R1) and THEORY_NO_PROPOSER (C-115.27, R14). R14's NO_SUCH_STANDARD and R21's NO_SUCH_DETERMINATION are now standards' and conformance's own refusals passed through (naming the id), never re-minted; with the provider absent filings answers THEORY_STANDARD_UNREADABLE and DETERMINATION_UNREADABLE (K248). Also for standards: standardsOf does not migrate its tables at construction (filings' fixture calls migrate itself).
+
+## J6 · COMPLETE
+
+B4 and B5 applied: standards defaulted to standardsOf and tested real; conformance's settled shape read; each C-115 code has one mint site (DEC-49 guard clean for filings). 30/30 tests, 21/21 ids; the four checks clean. Record §Completion · B4, B5; REPORT J5.
