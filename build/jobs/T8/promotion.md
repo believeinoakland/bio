@@ -1,6 +1,6 @@
 # promotion (T8)
 
-**Status** · session_01YGxAM3S1q5VWSShovpg56h · depth 2 · WORKING · handled B2
+**Status** · session_01YGxAM3S1q5VWSShovpg56h · depth 2 · RUNNING until 2026-09-28T10:13:32Z (users' suites, here and on the base) · handled B2
 
 ## J1 · QUESTION
 
