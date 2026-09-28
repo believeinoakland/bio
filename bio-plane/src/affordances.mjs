@@ -731,13 +731,6 @@ export const RUNGS = {
      the act revises what stands" (K212), `inquiryground`'s shape; adopting or opening a question asks none. */
   triage:             "reasoned",   // NO_REASON (intent R16: a proposal is deferred or dismissed with a reason)
   reevaluationrecord: "reasoned",   // REEVALUATION_NOTE_MALFORMED (reevaluation R16: the note is the account)
-  /* T8 layer 11, on R27's rule (K208 (2)): layer 9's acts that refuse without the member's authored reason. */
-  consequencerevise:  "reasoned",   // NO_REASON (consequences R6: a part is revised with its reason)
-  addressedrecord:    "reasoned",   // NO_REASON (consequences R9: addressed or not, with a reason)
-  escalationevaluate: "reasoned",   // NO_REASON (escalation R10: a response is read with a reason)
-  escalationadvance:  "reasoned",   // NO_REASON (escalation R13: an edge is taken with a reason)
-  escalationdecline:  "reasoned",   // NO_REASON (escalation R13: a proposed stage is declined with a reason)
-  escalationsuspend:  "reasoned",   // NO_REASON (escalation R15; escalationresume takes it back, and the higher rung is stated)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -776,9 +769,6 @@ export const RUNGS = {
   versioncurrent:       "reversible",  // a further versioncurrent stands the project on another reading
   actionlaws:           "reversible",  // a further actionlaws restates the list
   projectvisibilityset: "reversible",  // the owner sets it again
-  /* T8 layer 11: resuming asks no reason (escalation R15: an optional one is kept), and a further suspension takes it
-     back. */
-  escalationresume:     "reversible",  // escalationsuspend takes it back
 };
 
 
@@ -1028,28 +1018,10 @@ export const RUNG_ABSENT = {
   /* K219 (T7): `capturerequestdrain`'s and `capturerequest`'s ground — the machinery a decided act rides on. */
   reevaluationraise:    { ground: "substrate", is: "reevaluation's bounded sweep raising the version notices; the unattended path, stamping nothing (reevaluation R14)" },
   capturerequestretry:  { ground: "substrate", is: "re-queues a capture request the source refused, once a member supplied what it asked; the capture is the act (capture-requests R42)" },
-  /* T8 layer 11 (K208 (2)), keyed to layer 9's op maps (legacy-index's names for escalation's services), on R27's rule:
-     each is a member's act on the record, or a proposal stored apart that settles nothing, corrected forward, that asks
-     no authored reason, or asks one only as a proposal's why (`actionlawspropose` and `contradictionpropose`'s
-     precedent), and that no published act takes back. `determine` asks a reason only where it supersedes, under a
-     code (`BAD_REASON`) outside JUSTIFICATION_REFUSALS, so it is stated `undetermined` here (J3 asks BOB). */
-  standarddeclare:      { ground: "undetermined", is: "a member records a standard the record holds — citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
-  standardpropose:      { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
-  standardadopt:        { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
-  determine:            { ground: "undetermined", is: "a member determines a government act compliant, noncompliant or unclear against named standards, resting on published findings; never edited, superseded once by a later determination with its reason (conformance R1, R7)" },
-  comparisonpropose:    { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled; never a determination (conformance R12)" },
-  consequencerecord:    { ground: "undetermined", is: "a member records what a breach did and to whom — a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1–R6)" },
-  filingprepare:        { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1–R5)" },
-  filingapprove:        { ground: "undetermined", is: "a member approves a filing draft's text, or their edit of it, at most once; the approved text is theirs (filings R6)" },
-  filingsent:           { ground: "undetermined", is: "a member records that an approved filing was sent, as one `sent` correspondence entry on the action linked both ways, `actioncorrespond`'s ground (filings R7)" },
-  counselpacket:        { ground: "undetermined", is: "a member names counsel and assembles a counsel packet from the record for a Tier 3 action, marked for counsel's review and never fileable; assembling again makes a new version (filings R8–R12)" },
-  theorypropose:        { ground: "undetermined", is: "a member or a machine PROPOSES a candidate legal theory and remedy against named standards with its why, stored apart and labelled; never the group's position (filings R14)" },
-  escalationopen:       { ground: "undetermined", is: "a member opens an escalation of a live noncompliant determination at stage 1; one open or suspended escalation per determination (escalation R1)" },
-  escalationattach:     { ground: "undetermined", is: "a member attaches a breach action to an escalation's current stage, 2, 5 or 7, a stage-7 act stating its accountability purpose; never detached (escalation R9, R12)" },
-  escalationend:        { ground: "undetermined", is: "a member ends an escalation, only when compliance is restored for every standard pursued and the consequences are addressed; never reopened (escalation R14)" },
+  /* T8 layer 11 (K208 (2)): actions R28's proposal, on `actionlawspropose`'s ground — a proposal stored apart that asks
+     its basis as a proposal's why and that nothing published takes back. Layer 9's other acts are held until the
+     durable object dispatches them (N216, T9; K263, K264). */
   actionriskpropose:    { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" },
-  /* `export`'s ground: the bytes are already the record's; this hands them over and logs who took them. */
-  counselpacketexport:  { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2348,33 +2320,7 @@ export const NON_ACTS = {
   versionkeep: "notice-directed: keeps a reference on the earlier capture, keyed by notice; travels with the notice (reevaluation R14)",
   reevaluationrecord: "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note",
   workobjective: "run-directed: opens an assistant's run on a project's objective, keyed by (run, project); the run is the subject and no bundle state offers it",
-  /* T8 layer 11 (K208 (2)): layer 9's acts, keyed to their op maps (escalation's names are legacy-index's, its J1). Their
-     subjects are a standard, a determination, a consequence part, a filing or packet, an escalation and a proposal:
-     STD-, CONF-, CONS- and ESC- bundles carry one recorded state (or an escalation's own stages) that `affordanceFacts`
-     does not describe, and the rest are rows, so no applies() over the facts could say when to offer them. Their reads
-     carry no `NEEDS` row and are not named here (R12). */
-  standarddeclare: "standard-directed: a member records a standard (citation, kind, issuer, captured text, period), optionally superseding an earlier one; writes an STD- bundle",
-  standardpropose: "standard-directed: a member or a machine proposes a standard with its why, keyed by proposal id; writes a `standard_proposals` row, never a standard",
-  standardadopt: "proposal-directed: a member adopts a standard proposal, keyed by proposal id; writes an STD- bundle naming it",
-  determine: "act-directed: a member determines a government act against named standards on published findings, keyed by (project, act); writes a CONF- bundle",
-  comparisonpropose: "project-directed: a machine or a member proposes a comparison, rows and questions and never an outcome, keyed by project; writes a `comparison_proposals` row",
-  consequencerecord: "determination-directed: a member records one consequence part against one standard's noncompliant outcome, keyed by (determination, standard); writes a CONS- bundle",
-  consequencerevise: "consequence-directed: a member revises a consequence part with its reason, keyed by part id; writes a successor CONS- bundle, the earlier one kept",
-  addressedrecord: "consequence-directed: a member records a part addressed or not addressed, with a reason, keyed by part id; writes a `consequence_addressed` row",
-  filingprepare: "action-directed: a draft filing pre-filled from the record, keyed by action id; writes a `filing_drafts` row labelled as its preparer's",
-  filingapprove: "filing-directed: a member approves a draft's text as theirs, keyed by filing id; writes a `filing_approvals` row",
-  filingsent: "filing-directed: a member records that an approved filing was sent, keyed by filing id; writes a `filing_sendings` row and one correspondence entry on the action",
-  counselpacket: "action-directed: a member names counsel and assembles a counsel packet, keyed by action id; writes a new `counsel_packets` version, never published",
-  counselpacketexport: "packet-directed: hands a member one packet version's bytes and logs the export, keyed by (packet id, version)",
-  theorypropose: "action-directed: a member or a machine proposes a candidate theory and remedy with its why, keyed by action (and packet); writes a `theory_proposals` row",
-  escalationopen: "determination-directed: a member opens an escalation of a live noncompliant determination, keyed by determination id; writes an ESC- bundle",
-  escalationattach: "escalation-directed: a member attaches a breach action to the current stage, keyed by (escalation, action); appends to the escalation's log",
-  escalationevaluate: "escalation-directed: a member reads a counterparty's response with a reason, keyed by escalation id; appends to its log",
-  escalationadvance: "escalation-directed: a member advances an escalation along an edge with a reason, keyed by escalation id; appends to its log",
-  escalationdecline: "escalation-directed: a member declines a proposed stage for now with a reason, keyed by escalation id; appends to its log",
-  escalationend: "escalation-directed: a member ends an escalation, keyed by escalation id; appends to its log, never reopened",
-  escalationsuspend: "escalation-directed: a member suspends an escalation with a reason, keyed by escalation id; appends to its log",
-  escalationresume: "escalation-directed: a member resumes a suspended escalation at its stage, keyed by escalation id; appends to its log",
+  /* T8 layer 11 (K208 (2)): actions R28, keyed to actions' op map; `actionlawspropose`'s reason. */
   actionriskpropose: "action-directed: a machine or a member proposes an action's risk tier with its basis, keyed by (action, proposer); writes an `action_risk_proposals` row, never the tier",
 };
 

@@ -41,12 +41,12 @@ test("R19: triage, graded `reasoned` (K219), is refused without a reason where i
   assert.equal(w.i.triage({ proposal: "monitoring::c-2", act: "defer", reason: "not now", author: IV("bob"), viewer: IV("bob") }).ok, true);
 });
 
-/* T8 layer 11: layer 9's six `reasoned` acts, driven at their own modules' interfaces over their fixtures (the durable
-   object dispatches none of layer 9's ops until N216, K250). Each is called well-formed but without its reason, then
-   with one; escalationresume, `reversible`, is taken back by a further suspension. */
+/* T8 layer 11: layer 9's six acts graded `reasoned` for T9 (their rows are held until the durable object dispatches them,
+   N216; K263, K264), driven at their own modules' interfaces over their fixtures. Each is called well-formed but without
+   its reason, then with one; escalationresume, graded `reversible`, is taken back by a further suspension. The backing
+   is what the held rows will rest on. */
 import { world as cWorld, V as CV } from "../consequences/fixture.mjs";
 import { seeded as escSeeded, opened, toStage, V as EV } from "../escalation/fixture.mjs";
-import { RUNG_ABSENT } from "../../../src/affordances.mjs";
 
 const cScene = () => {
   const S = "STD-2026-0001-law", DOC = "INFO-2026-0001-doc", INQ = "INQ-2026-0001-cause";
@@ -64,9 +64,8 @@ const cScene = () => {
 };
 const NO_WHY = [undefined, "", "   "];
 
-test("R19: consequencerevise and addressedrecord, graded `reasoned`, are refused without their reason with a code in "
+test("R19: consequencerevise and addressedrecord, graded `reasoned` for T9 (K264), are refused without their reason with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with one", () => {
-  assert.equal(RUNGS.consequencerevise, "reasoned"); assert.equal(RUNGS.addressedrecord, "reasoned");
   for (const reason of NO_WHY) {
     const w = cScene();
     const rv = w.c.consequenceRevise({ id: w.id, reason, author: CV("alice") });
@@ -84,8 +83,6 @@ test("R19: consequencerevise and addressedrecord, graded `reasoned`, are refused
 test("R19: escalationevaluate, escalationadvance, escalationdecline and escalationsuspend, graded `reasoned`, are "
    + "refused without their reason with a code in JUSTIFICATION_REFUSALS, and accepted with one", () => {
   const who = { author: EV("bob"), viewer: EV("bob") };
-  for (const op of ["escalationevaluate", "escalationadvance", "escalationdecline", "escalationsuspend"])
-    assert.equal(RUNGS[op], "reasoned", op);
   for (const reason of NO_WHY) {
     const a = escSeeded(); opened(a);
     for (const [op, r] of [["advance", a.esc.escalationAdvance({ id: a.E, to: 2, reason, ...who })],
@@ -104,10 +101,9 @@ test("R19: escalationevaluate, escalationadvance, escalationdecline and escalati
   assert.equal(ev.ok, true, JSON.stringify(ev).slice(0, 300));
 });
 
-test("R2: escalationresume, graded `reversible`, is taken back by a published act — a further suspension — and "
+test("R2: escalationresume, graded `reversible` for T9 (K264), is taken back by a published act — a further suspension — and "
    + "escalationsuspend, which it takes back, is stated at its higher rung `reasoned`", () => {
   const who = { author: EV("bob"), viewer: EV("bob") };
-  assert.equal(RUNGS.escalationresume, "reversible"); assert.ok(!Object.hasOwn(RUNG_ABSENT, "escalationresume"));
   const w = escSeeded(); opened(w);
   assert.equal(w.esc.escalationSuspend({ id: w.E, reason: "waiting on counsel", ...who }).ok, true);
   assert.equal(w.esc.escalationResume({ id: w.E, ...who }).ok, true);

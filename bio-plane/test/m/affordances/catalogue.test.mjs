@@ -56,19 +56,16 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
   ]);
 });
 
-/* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung; T8 layer 11 grades layer 9's
-   acts on R27's rule (six `reasoned`, `escalationresume` `reversible`). */
+/* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung. */
 test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   const want = {
     irreversible: ["publish"],
     attested: ["attest", "caseratify", "ratify"],
     terminal: ["retire"],
-    reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
-      "versionhide", "versionrevert"],
-    reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
-      "aspirationretire", "biasdebtresolve", "conclude", "connectionassert", "consequencerevise", "discharge", "dispose",
-      "escalationadvance", "escalationdecline", "escalationevaluate", "escalationsuspend", "filemembershipjudge", "goalclose",
+    reversible: ["actionlaws", "cite", "projectvisibilityset", "versionaccept", "versioncurrent", "versionhide", "versionrevert"],
+    reasoned: ["actionmove", "actionrisktier", "adminremove", "aliaswithdraw", "aspirationdepart", "aspirationretire",
+      "biasdebtresolve", "conclude", "connectionassert", "discharge", "dispose", "filemembershipjudge", "goalclose",
       "inquirydivide", "inquiryground", "narrow", "projectownerremove", "projectownerrescue", "proposedispose",
       "reevaluationrecord", "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever",
       "themewithdraw", "triage", "versionconsider", "versionreject", "withdrawconclusion"],
@@ -325,11 +322,7 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     "transcriptionattest", "testify", "lead", "leadshare", "attribute", "casedraft", "reviewcomment", "statementack",
     "leadlook", "themedeclare", "themeplace", "themepropose", "progressiondefine", "resolvetestify",
     "contradictionpropose", "objectivecondition", "goaldeclare", "goallink", "aspirationdeclare", "aspirationdeadend",
-    "workobjective", "versionadopt", "versionkeep",
-    /* T8 layer 11: layer 9's acts that ask no authored reason (or only a proposal's why) and that nothing takes back */
-    "standarddeclare", "standardpropose", "standardadopt", "determine", "comparisonpropose", "consequencerecord",
-    "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen", "escalationattach",
-    "escalationend", "actionriskpropose"].sort());
+    "workobjective", "versionadopt", "versionkeep", "actionriskpropose" /* T8 layer 11: actions R28's proposal */].sort());
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {
@@ -337,34 +330,30 @@ test("R27: no new rung is added — the ladder keeps its five", () => {
   assert.ok(Object.values(RUNGS).every((r) => RUNG_LADDER.includes(r)));
 });
 
-/* K208 (2), T8 layer 11: every op layers 7–10 route is accounted for, keyed to each module's own op map (escalation's
-   names are the control plane's, LEGACY-INDEX #5 J1): each mutating one has a NON_ACTS row or a published act and a rung
-   or a stated absence. Reads carry no NEEDS row, so NON_ACTS names none of them (R12's `stale`). */
+/* K208 (2), T8 layer 11, as K263 and K264 rule: of the ops layers 7–10 add, the control plane routes in T8 only
+   actions' `actionriskpropose` (mutating) and monitoring's `monitoring` (a read, `driveshells`' cut, no NEEDS row).
+   Layer 9's other ops answer UNKNOWN_OP until the durable object dispatches them (N216, T9), so their rows are held:
+   none of them is named in NON_ACTS, RUNGS or RUNG_ABSENT, and nothing reads `stale` through T8. The rows are in the
+   job's record for T9. */
 import { standardsOps } from "../../../src/standards/index.mjs";
 import { conformanceOps } from "../../../src/conformance/index.mjs";
 import { consequencesOps } from "../../../src/consequences/index.mjs";
 import { filingsOps } from "../../../src/filings/index.mjs";
-test("R3 R12: each mutating op of layer 9's modules is published or a NON_ACT, with a rung or a stated absence, and no "
-   + "read of theirs is named in NON_ACTS", () => {
+test("R3 R12: actionriskpropose is a NON_ACT with a stated absence, monitoring is named nowhere, and layer 9's held "
+   + "ops are in none of the tables (K264)", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
-  const READS = new Set(["standard", "standards", "standardinforce", "determination", "determinations", "comparison",
-    "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions",
-    "escalation", "escalationsdue", "monitoring"]);
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
     "escalationend", "escalationsuspend", "escalationresume", "escalation", "escalationsdue"];
-  const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps),
-    ...ESCALATION, "actionriskpropose", "monitoring"];
-  assert.equal(ops.length, 6 + 5 + 6 + 9 + 10 + 2);
-  const mutating = ops.filter((op) => !READS.has(op));
-  assert.equal(mutating.length, 23);
-  const published = new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
-  assert.deepEqual(mutating.filter((op) => !published.has(op) && !Object.hasOwn(NON_ACTS, op)), []);
-  assert.deepEqual(mutating.filter((op) => !Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op)), []);
-  assert.deepEqual(ops.filter((op) => READS.has(op) && (Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op)
-    || Object.hasOwn(RUNG_ABSENT, op))), []);
-  /* the table legacy-index routes (J1): mutating ops gated, reads ungated — R12 answers nothing unaccounted for them */
-  const table = ops.map((op) => ({ op, mutating: !READS.has(op), gated: !READS.has(op) }));
+  const held = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION];
+  assert.equal(held.length, 6 + 5 + 6 + 9 + 10);
+  const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
+    || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
+  assert.deepEqual(held.filter(named), []);
+  assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
+  assert.equal(RUNG_ABSENT.actionriskpropose?.ground, "undetermined");
+  assert.ok(!named("monitoring"));
+  const table = [{ op: "actionriskpropose", mutating: true, gated: true }, { op: "monitoring", mutating: false, gated: false }];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
 });
