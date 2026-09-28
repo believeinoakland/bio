@@ -11,7 +11,8 @@
  *   record      record-core, `recordOf(host)` unless a test passes its own (K61).
  *   membership  membership, `membershipOf(host)` unless a test passes its own (K61).
  *   now         the module's clock, an ISO instant (default: the wall clock).
- *   order       the modules' total order (ids), which registered steps run in; unknown modules run last.
+ *   order       the modules' total order (ids), which registered steps and listeners run in (R39, R45, R46);
+ *               `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
  */
 
 import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS,
@@ -52,6 +53,27 @@ const sameInstant = (a, b) => {
   return Number.isFinite(x) && Number.isFinite(y) ? x === y : String(a).trim() === String(b).trim();
 };
 const cut = (v, n) => String(v).slice(0, n);
+
+/* R39's "the modules' total order": the layer order of `build/modules.json`, its ids by layer and then by their place in
+   the file (K270). Product code cannot read `build/` at run time, so it is held here; the R39 test holds it equal to the
+   file, so a change there fails this module's suite until the list follows it. */
+const MODULE_ORDER = Object.freeze([
+  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
+          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
+          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 2 */ "record-core", "membership", "promotion",
+  /* 3 */ "host-governor", "provenance", "capture-sources", "capture",
+  /* 4 */ "calibration", "extraction", "content",
+  /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
+  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "ai-runs", "run-productions",
+          "capture-requests", "skills", "agent-worker",
+  /* 7 */ "intent", "reevaluation",
+  /* 8 */ "publication", "ratification", "case-authoring", "review",
+  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
+  /* 10 */ "monitoring", "scheduler", "legacy-store",
+  /* 11 */ "affordances", "queue", "instance-setup", "control-plane", "legacy-index", "legacy-ui", "installer",
+           "legacy-tests",
+]);
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 /* The families whose rows this module's refusals carry (Uses; K93 (2)), and promotion's own rows last. A code is held
@@ -149,7 +171,7 @@ class Promotion {
     this.#record = record;
     this.#membership = membership;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
-    this.#order = Array.isArray(order) ? order : [];
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
   }
 
   /* ---------------------------------------------------------------- R39, R40: the registry */
