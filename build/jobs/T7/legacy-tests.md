@@ -1,6 +1,6 @@
 # legacy-tests (T7)
 
-**Status** · session_01EbJbvw2MqsPnPv5f2PjGVo · depth 2 · NEEDS BOB · handled B3
+**Status** · session_01EbJbvw2MqsPnPv5f2PjGVo · depth 2 · NEEDS BOB · handled B4
 
 **Contract** (legacy module, no requirements file; `build/modules.json`): paths `civicos-ui/check-refusal-codes.mjs`, `civicos-ui/check-semantics.mjs`; tests `bio-plane/test/`, `civicos-ui/test/` (except `bio-plane/test/m/<module>/`, each module's own). Entries: layer 11's legacy-tests line in `build/plan/current.md` and every forwarded item naming legacy-tests (B1).
 
