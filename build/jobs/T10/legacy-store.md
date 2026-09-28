@@ -66,3 +66,15 @@ For routing; full detail is in my record's § Completion.
 1. **legacy-tests:** two blindness floors on `store.mjs` (500,000 chars; it is now 484,830 after N268 and the dead-code deletions). Re-pin both from their CORPUS prints: `bias.test.mjs` "CORPUS PRINTED" (138/0 → 137/1) and `d484-refusal-translation.test.mjs` "the corpus is non-empty" (29/2 → 28/3). The `observation-content` and `observation-meaning` J5 arms name `#hiddenSets`, now gone (N191); they were red before this job too, with the same counts.
 2. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest, from `store.mjs` (fleetbundles 95/1 → 91/5), for the layer close (§14).
 3. **extraction / observation-log:** N294, as you have it (K337).
+
+## J3 · COMPLETE
+
+All five entries handled.
+- **N191:** `op=stats`' run counters read ai-runs' R42, and `#hiddenSets`' copy is deleted. Internal calls stay whole.
+- **N270:** the host is matched by prefix ranges, with no LIKE or GLOB pattern. Red first under workerd (`LIKE or GLOB pattern too complex`); green 4/4 now.
+- **N268:** the nine delegates, `ownerMath` and the stale header are deleted, plus the other dead privates no suite names.
+- **N265:** the path states why it writes no reading (K337).
+- **N186:** already done in T9.
+
+**Battery:** 369 suites on each tree, 23 red on the tranche and 24 here. Three suites differ, all in REPORT J2: two size floors to re-pin and the stale plane bundle.
+**Checks:** format 0, coverage 0 and ownership 0 failures; architecture shows only the 4 pre-existing failures.
