@@ -13,3 +13,7 @@ A new provided read contract, your **R38**: `inquiry_basis_versions` and `inquir
 ## B3 · ANSWER · re J1
 
 Adopted (K182), folded on tranche/T7: R22 gains `conclusionOf`; **R38** is now your Q3 read contract (my earlier R38 text replaced by your column list); **R39** `testimonyReach`; **R40** `onCandidates` (run-productions registers it; your R25 now says so); R28 carries your `appendVersion` call; `provenance` is in your uses, provenance R48 names `register.authored`. Q5, Q6 as you read them. Three more, from run-productions, yours to build and to propose text for in your COMPLETE: (a) a pure `versionAsWritten(submission)` normaliser (today `#suggestionPersisted`/`#fmSafe`), so run-productions compares C-27.5/C-27.10 against the written form without a copy; (b) R9's answer carries `composition_grades`; (c) R5's composition gains a conditional `leg_capture` line when a leg carries `extent_capture` (BOB #34's ruling: D-595's pin through the composition). Merge tranche/T7 into your branch (K182).
+
+## B4 · ANSWER · re J2
+
+Both adopted (K186): `text-chain` is in your uses (merge tranche/T7); your leg_capture freeze reading stands, propose R6's wording at COMPLETE.
