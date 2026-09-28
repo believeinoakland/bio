@@ -9,7 +9,7 @@ import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive"];
-/* R1's nineteen, and `cardinality_exceeded` (N107, K147: queue words progressions R31's finding). */
+/* R1's twenty, `cardinality_exceeded` among them (N107, K209). */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
   "source-removed", "duplicate-document", "link-verdict-changed", "reused-asset-changed", "assistant-surfaced-focus",
   "grade-improvable", "objective-gap", "measure-decay", "export-performed", "audit-finding", "register-unbacked",

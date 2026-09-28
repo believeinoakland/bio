@@ -119,12 +119,36 @@ test("R9 (N107): one FINDING per (progression, stage), the cardinality finding a
   assert.deepEqual(contract.basis.kinds, ["missing_predecessor"]);
   assert.equal(contract.basis.cardinality_exceeded, undefined);
   assert.equal(contract.basis.n, 2);
-  // homes and options are asked of exactly the item's subjects (R7, R12)
-  for (const it of items) {
-    assert.deepEqual(it.case.of, it.subject.bundles.length < 8 ? it.subject.bundles : it.case.of);
-    assert.deepEqual(it.options, [{ act: "cite", on: it.case.of }]);
-  }
   assert.equal(asked.homes.length, 3); assert.equal(asked.options.length, 3);
+});
+
+test("R12 (N107's share): options are the caller's acts on the item's subjects, and the item carries the instance-scope key", async () => {
+  const w = await seeded();
+  const feed = w.p.proposalsFeed(Date.parse(NOW));
+  const { deps, asked } = caller(w, { max: 3 });
+  const items = proposalFindingItems(feed, deps);
+  items.forEach((it, i) => {
+    // homes and options are asked once each, of every subject the viewer may see, in order; the cut to the first
+    // eight is the options' own (the caller's `#queueOptions`), the named bundles are cut at subjectsMax
+    assert.deepEqual(asked.homes[i], asked.options[i]);
+    assert.deepEqual(it.case.of, asked.homes[i]);
+    assert.deepEqual(it.options, [{ act: "cite", on: asked.options[i] }]);
+    assert.deepEqual(it.subject.bundles, asked.homes[i].slice(0, 3));
+    // the disposition is keyed <progression>::<stage> at instance scope and requires the definition version the
+    // item was derived against: the subject carries all three, and the item is a FINDING
+    assert.equal(it.class, "FINDING");
+    assert.equal(`FINDING::${it.subject.progression_key}::${it.subject.stage_key}`, it.id);
+    assert.ok(Number.isInteger(it.subject.definition_version));
+    assert.equal(it.basis.progression_key, it.subject.progression_key);
+    assert.equal(it.basis.stage_key, it.subject.stage_key);
+  });
+  // the key the item publishes is the key the act accepts: deciding it at that version removes exactly that item
+  const need = items.find((i) => i.kind === "cardinality_exceeded");
+  const r = w.p.disposeProposal({ key: `${need.subject.progression_key}::${need.subject.stage_key}`, to: "deferred",
+                                  reason: "checking", definitionVersion: need.subject.definition_version, decidedBy: "member:bob" });
+  assert.equal(r.ok, true);
+  const after = proposalFindingItems(w.p.proposalsFeed(Date.parse(NOW)), caller(w).deps).map((i) => i.id).sort();
+  assert.deepEqual(after, items.map((i) => i.id).filter((id) => id !== need.id).sort());
 });
 
 test("R9: the grade is the weakest instance's; subjects the viewer may not see are not named; at most subjectsMax", async () => {
