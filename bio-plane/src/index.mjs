@@ -5126,8 +5126,8 @@ export default {
       if (g) return g.silent ? storeSilent(op) : json(g.body, g.status);
     }
 
-    if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)),
-      { json, storeSilent, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
+    if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer,
+      viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
 
     if (op === "capture") return captureObjectOp(req, url, env,
       { json, storageAbsent, requiredArgument, key: (s) => captureKey(storeName, s), storeName, cls });
@@ -5143,8 +5143,8 @@ export default {
     if (op === "acquire") {
       /* K72 (8), (11): the acquisition is capture's service in the Durable Object; this op forwards to it and then
          runs the reading block below over what it filed, until `extraction` takes the block (K49). */
-      const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)),
-        { json, storeSilent, storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
+      const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent,
+        storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
       if (acquired.response) return acquired.response;
       const read = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { storeSilent, storeName });
       if (read.response) return read.response;
