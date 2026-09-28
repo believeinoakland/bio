@@ -230,6 +230,7 @@ import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem,
          serializeMutedKinds, parseMutedKinds, suppressedBy } from "./queuestate.mjs";
+import { proposalFindingItems } from "./queue/proposals.mjs";
 /* The retrieval surface is compiled, never assembled here. This file executes
    statements and maintains the index; it builds no query. That is what makes the
    D-15 viewer gate a SINGLE compilation point rather than a convention: there is
@@ -336,10 +337,6 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, STANDA
    Its own import line, so REC-153's edit of the list above and this one cannot collide at integration. */
 import { runPrincipalGate } from "./airun.mjs";
 import { contradictionOf, contradictionOps } from "./contradiction/index.mjs";
-/* D-500: §5.1's top-end bound — is this subject's entry provably at or after the log's first row at its
-   level — decided ONCE in `airun.mjs`, beside the cause vocabulary it answers into, and asked by the content
-   and meaning readers below. Its own import line, for the reason REC-152's gives. */
-import { enteredAfterFirstRow } from "./airun.mjs";
 /* D-516 / BOB #33: that rule now answers THREE ways, so the two readers below map an ANSWER to a cause
    word instead of reading a boolean. The words and the band's cause key are imported rather than spelled
    at either site, for the reason the line above gives: the point of D-500 was one rule in one place, and a
@@ -12130,63 +12127,13 @@ export class Store extends DurableObject {
        and #queueAncestors both take the viewer and would answer nothing for
        them anyway. */
     const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
-    for (const p of feed.proposals) {
-      const subjects = [];
-      for (const inst of p.instances)
-        for (const r of this.#rows(
-          `SELECT DISTINCT pi.bundle_id FROM progression_instances pi
-            WHERE pi.progression_key=? AND pi.entity_id=? AND (${findingSeen.sql})
-            ORDER BY pi.bundle_id`,
-          p.progression_key, inst.entity_id, ...findingSeen.args))
-          if (!subjects.includes(r.bundle_id)) subjects.push(r.bundle_id);
-      items.push({
-        id: `FINDING::${p.key}`,
-        class: "FINDING",
-        /* The ESCALATED kind leads when the stage has also crossed a deadline —
-           one kind, as the contract has one column, with the full set on the
-           basis so nothing is lost. */
-        kind: p.overdue ? "overdue_successor" : "missing_predecessor",
-        case: this.#queueAncestors(subjects, viewer),
-        subject: { kind: "progression_stage", id: null,
-                   progression_key: p.progression_key, stage_key: p.stage_key,
-                   definition_version: p.definition_version,
-                   bundles: subjects.slice(0, Store.QUEUE_OPTION_SUBJECTS_MAX) },
-        /* D-527: THE EARLIER DECISION TRAVELS WITH THE REOPENED QUESTION.
-           `proposalsFeed` already builds this object for a proposal a revision put
-           back in the open feed (REC-184, framework §8.2) and it is published here
-           UNCHANGED — the same object, no second derivation, `null` where nobody
-           has ever decided. It rode only on `op=proposals`, which NO surface reads
-           (UI-14 retired it for this op), so the one feed a member opens by habit
-           carried the reopened question and said nothing about the answer somebody
-           had already given it — a member meeting it is shown a question nobody
-           has answered when the record holds a decision, which is the record
-           claiming less than it holds. The `disposed` block below does carry the
-           row, and that is not the same fact reaching the reader: it is a JOIN on
-           a list bounded by QUEUE_DISPOSED_MAX, so a member with sixty-four
-           standing decisions meets the reopened item with its prior decision cut
-           off the end of the answer. `applies` is false wherever this is non-null
-           by construction and not by assertion — a decision that still governed
-           would have aged this finding out of the feed before it reached here. */
-        prior_disposition: p.prior_disposition,
-        summary: `${p.progression_label}: the '${p.stage_label}' stage is ${p.required} required and absent`,
-        detail: `${p.n} instance${p.n === 1 ? "" : "s"} of this progression reach${p.n === 1 ? "es" : ""} `
-              + `'${p.stage_label}' without it` + (p.overdue ? `, ${p.overdue_count} past a declared deadline` : ""),
-        basis: { source: "proposalsFeed", progression_key: p.progression_key, stage_key: p.stage_key,
-                 kinds: p.kinds, n: p.n, grade: p.grade, grade_determined: p.grade_determined,
-                 overdue_count: p.overdue_count, surfaced_by: p.surfaced_by,
-                 detail: "a finding is DERIVED (D-79): the record's own question, aggregated one per "
-                       + "(progression, stage), graded the weakest instance and never averaged." },
-        /* A derived finding is recomputed on every read and has no creation
-           instant to age from. Undetermined, and STATED rather than filled in
-           with the read's own clock — which would age every finding to zero. */
-        age: { state: "undetermined", reason: "derived_on_read",
-               detail: "a derived finding is recomputed at read time and has no creation instant; "
-                     + "the temporal signal it does carry is overdue_count on the basis" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#queueOptions(subjects, viewer, identity),
-      });
-    }
+    items.push(...proposalFindingItems(feed, {
+      subjectsOf: (pk, eid) => this.#rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi
+          WHERE pi.progression_key=? AND pi.entity_id=? AND (${findingSeen.sql}) ORDER BY pi.bundle_id`,
+        pk, eid, ...findingSeen.args).map((r) => r.bundle_id),
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity),
+      subjectsMax: Store.QUEUE_OPTION_SUBJECTS_MAX }));
 
     /* -------------------------------- FINDING · PL-15 / D-213 · THE LEAD
        The FINDING half's SECOND producer, and the first one that is not derived
