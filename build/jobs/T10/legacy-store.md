@@ -59,3 +59,10 @@
   - ownership: 2 files changed, 0 failures.
 
 Size (session_01C3P8MSsxkBCWQp6eTA78eb): test runs 752, module lines 7,612
+
+## J2 · REPORT
+
+For routing; full detail is in my record's § Completion.
+1. **legacy-tests:** two blindness floors on `store.mjs` (500,000 chars; it is now 484,830 after N268 and the dead-code deletions). Re-pin both from their CORPUS prints: `bias.test.mjs` "CORPUS PRINTED" (138/0 → 137/1) and `d484-refusal-translation.test.mjs` "the corpus is non-empty" (29/2 → 28/3). The `observation-content` and `observation-meaning` J5 arms name `#hiddenSets`, now gone (N191); they were red before this job too, with the same counts.
+2. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest, from `store.mjs` (fleetbundles 95/1 → 91/5), for the layer close (§14).
+3. **extraction / observation-log:** N294, as you have it (K337).
