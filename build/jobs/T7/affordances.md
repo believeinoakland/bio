@@ -1,6 +1,6 @@
 # affordances (T7)
 
-**Status** · session_01Uzmu9LYFCjcYb7iowFaKQZ · depth 2 · WORKING · handled B9
+**Status** · session_01Uzmu9LYFCjcYb7iowFaKQZ · depth 2 · COMPLETE · handled B9
 
 ## J1 · QUESTION
 
