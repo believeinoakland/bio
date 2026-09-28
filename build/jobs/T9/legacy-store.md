@@ -62,3 +62,7 @@ For routing. Full detail is in my record's § Completion.
 3. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` from `store.mjs` (fleetbundles 95/1 → 91/5), for the layer close (§14).
 4. **promotion / legacy-checks:** no catalogue row's `where` moves.
 5. **Seen on both trees, not mine:** `acquire` is intermittent (a TypeError after 78 passes, the same on tranche and branch). `capturerequests`' two rate-rule arms are timing-sensitive (138/2 once, 140/0 on re-run).
+
+## J3 · COMPLETE
+
+All six START items handled: N216, N89/N193/N243, N28, N208 and the deletions applied; op=stats deferred as N266 (K302). Also fixed in my own module: reevaluation is now built before actions, so its env reaches it (R25). Battery on both trees: 4 suites differ, all explained in REPORT J2 (two re-anchors, the stale bundle, two intermittents). The driver through the durable object: 12/0 on this branch; on the tranche every layer-9 op answers unknown op. format 0, ownership 0, architecture only the 3 N13 failures the tranche has too. Record § Completion.
