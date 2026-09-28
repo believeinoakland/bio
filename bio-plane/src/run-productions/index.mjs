@@ -6,9 +6,10 @@
  * catalogue (C-27 and C-104, `checks.mjs`).
  *
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
- * `membership`, `content`, `connections`, `strength` and `citation` through their factories, and `ai-runs` and
- * `basis-versions` as injected providers written to their Provides (K120): `deps.interim` builds those not yet
- * extracted from what the legacy store hands over (`interim.mjs`). It declares its tables to purge (R17, K23).
+ * `membership`, `content`, `connections`, `strength`, `citation` and `basis-versions` through their factories, and
+ * `ai-runs` as an injected provider written to its Provides (K120): `deps.interim` builds it from what the legacy store
+ * hands over until ai-runs is extracted (`interim.mjs`). It declares its tables to purge (R17, K23) and registers its
+ * candidate source with basis-versions (R14; its R40).
  *
  * WHAT THIS MODULE DOES NOT DO (§4, §10): it accepts, hides, rejects or makes current nothing; it captures and requests
  * nothing; it notifies nobody; it opens no run, writes no run and no bound row (R18), and it reads a run only through
@@ -20,6 +21,7 @@ import { contentOf, mintLabel } from "../content/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
+import { basisVersionsOf, versionsIn, versionAsWritten } from "../basis-versions/index.mjs";
 import { runPrincipalGate } from "../airun.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain } from "../textchain.mjs";
@@ -73,43 +75,10 @@ export function posFields(pos) {
   return rest;
 }
 
-/** WHAT A SUGGESTION WILL HOLD, DERIVED ONCE (REC-75, D-234). Every authored value as the document stores it
- *  (`asWritten`, the grammar's one escape: idempotent, so the write quoting it again changes nothing); a field the write
- *  would omit is null, because an omitted line and a blank one are different documents; the grounds the write drops
- *  are dropped. It normalises no further than the document does. Both C-27.10's candidate and the write read it, so
- *  what was compared and what is written are one value.
+/** WHAT A SUGGESTION WILL HOLD is basis-versions' `versionAsWritten` (its R5, REC-75, D-234): the one normaliser the
+ *  write and C-27.10's comparison both read. A level is carried by the empty-level kind only.
  *
- *  A MACHINE'S STAMP NEVER REACHES `asserted_by` (PL-19, DEC-65): under the single-part licence its ground rows carry
- *  `SUFFICIENCY_UNCLAIMED`, while the version's `author` still names the machine (R4). Every leg is a `document` leg,
- *  a literal and never a parameter (REC-84), and names the capture it rests on when one is known (R9, D-595). */
-export function suggestionAsWritten(asWritten, { kind, name, description, claim, relationship, derived_from, run,
-                                                 author, at, level, observed_at, grounds, legs }) {
-  const fs = (s) => asWritten(String(s ?? ""));
-  const blank = (x) => !(typeof x === "string" && x.trim() !== "");
-  const opt = (x) => (blank(x) ? null : fs(x));
-  return {
-    version: {
-      name: fs(name), kind: fs(kind), description: fs(description), claim: opt(claim),
-      relationship: fs(String(relationship ?? "and").trim().toLowerCase()),
-      derived_from: opt(derived_from), run: fs(run),
-      author: blank(author) ? null : fs(author), at: fs(at),
-      level: kind === "level-empty" ? opt(level) : null,
-      observed_at: kind === "level-empty" ? opt(observed_at) : null,
-    },
-    grounds: (grounds || []).filter((g) => g && !blank(g.ground)).map((g) => ({
-      ground: fs(g.ground),
-      asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? ""),
-      at: fs(at), statement: opt(g?.statement) })),
-    legs: (legs || []).map((l) => ({
-      target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
-      ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
-      grade_source: opt(l?.grade_source), note: opt(l?.note), date: opt(l?.date),
-      extent_kind: "document",
-      extent_capture: typeof l?.extent_capture === "string" && HEX64.test(l.extent_capture) ? l.extent_capture : null })),
-  };
-}
-
-/** The candidate as a frontmatter object, so its canonical composition is basis-versions' one composer's (its R5)
+ *  The candidate as a frontmatter object, so its canonical composition is basis-versions' one composer's (its R5)
  *  over exactly the shape the document will hold, never a second composer. */
 export function suggestionFrontmatter(id, p) {
   const name = p.version.name;
@@ -266,7 +235,7 @@ export class RunProductions {
        write, so the caller's name is compared after it too, or a name the escape folds would pass here and be
        refused at the promotion in another family's words. */
     const name = String(args.name ?? "").trim();
-    const nameWritten = this.basisVersions.asWritten(name);
+    const nameWritten = versionAsWritten({ name }).version.name;
     if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))
       return refusal("SUGGEST_NAME_TAKEN",
         `'${name.slice(0, 60)}' already names a reading of ${target}. §6 rule 2: a version name is `
@@ -484,13 +453,14 @@ export class RunProductions {
        held composition (basis-versions' R38 read contract) with the name, the parentage and the clock taken out
        (`substanceOf`). A comparison that did
        not reach every held reading cannot say this one is new, so past the bound it fails closed (C-27.16). */
-    const persisted = suggestionAsWritten(this.basisVersions.asWritten, {
+    const persisted = versionAsWritten({
       kind, name, description: args.description, claim: args.claim,
       relationship: args.relationship, derived_from: args.derived_from,
-      run, author: who || null, at: nowIso, level, observed_at: observedAt,
+      run, author: who || null, at: nowIso,
+      level: kind === "level-empty" ? level : null, observed_at: kind === "level-empty" ? observedAt : null,
       grounds: groundsIn, legs: legsIn.map((l, i) => ({ ...l, extent_capture: pins[i] })),
     });
-    const candidate = this.basisVersions.basisVersionsOf(suggestionFrontmatter(target, persisted))[0] ?? null;
+    const candidate = versionsIn(suggestionFrontmatter(target, persisted))[0] ?? null;
     const mine = candidate ? substanceOf(candidate.composition) : "";
     const held = this.#rows(
       `SELECT name, composition FROM inquiry_basis_versions WHERE bundle_id=? LIMIT ?`, target, SUGGEST_VERSIONS_MAX + 1);
@@ -524,6 +494,7 @@ export class RunProductions {
       version: { name: pv.name, kind: pv.kind, description: pv.description,
                  ...(pv.claim === null ? {} : { claim: pv.claim }), relationship: pv.relationship,
                  derived_from: pv.derived_from, run: pv.run,
+                 ...(pv.author === null ? {} : { author: pv.author }), at: pv.at,
                  ...(pv.level === null ? {} : { level: pv.level }),
                  ...(pv.observed_at === null ? {} : { observed_at: pv.observed_at }) },
       grounds: persisted.grounds.map((g) => ({ ground: g.ground, asserted_by: g.asserted_by, at: g.at,
@@ -875,13 +846,12 @@ export function runProductionsOf(host, deps) {
     p = new RunProductions({ storage: d.storage || host.storage, record, membership, content, connections,
                              aiRuns: need("aiRuns"), strength: d.strength || strengthOf(host, { record, membership }),
                              citation: d.citation || citationOf(host, { record, membership, content }),
-                             basisVersions: need("basisVersions"), now: d.now || null });
+                             basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
+                             now: d.now || null });
     instances.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
-    /* R14: the extract arm of basis-versions' narrow candidates (its R40), once basis-versions offers the registration;
-       until then the legacy store's narrow reads `candidates` itself. */
-    if (typeof p.basisVersions.onCandidates === "function")
-      p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
+    /* R14: the extract arm of basis-versions' narrow candidates (its R40). */
+    p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
   return p;
 }
