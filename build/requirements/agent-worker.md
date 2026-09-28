@@ -27,7 +27,7 @@ Terms. A **refusal** is `{ok:false, reason, code, detail, worker:"agent-worker",
 The run's facts come from the record, never the body:
 - **R9** `op=airun` for the run: silent 502 `PLANE_SILENT`; refused 403 `PLANE_REFUSED`; no session 404 `NO_SUCH_RUN`. Mode, budget, pass limit and context are read from it; a `mode` in the body has no effect.
 - **R10** When accounts resolved (R6) and the run's recorded payer (`session.principal.claude`) is not the resolved level: 409 `RUN_NAMES_A_DIFFERENT_PAYER` with `recorded`, `resolved` and `levels`, before any step.
-- **R11** `op=airunlog` for the run: silent 502, refused 403. `resumed_from` is the number of entries it holds, and a resumed run continues rather than restarting. A resumed run continues at the state `op=airun` publishes (`session.state`, ai-runs R19) when it is not null, and starts from the `resume` step otherwise. *(not yet met: T10, N153)*
+- **R11** `op=airunlog` for the run: silent 502, refused 403. `resumed_from` is the number of entries it holds, and a resumed run continues rather than restarting. A resumed run continues at the state `op=airun` publishes (`session.state`, ai-runs R19) when it is not null, and starts from the `resume` step otherwise.
 - **R12** The target is the run's context: an inquiry context's id; for a project context, the one question in its published `context.questions`; otherwise `null`, with a `basis` stating why (UNDETERMINED: none, several, not published, or an unread context kind). Never a project id.
 
 The control-flow table (`CONTROL_FLOW`, `nextStep`, pure):

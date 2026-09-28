@@ -50,7 +50,9 @@ var CONTROL_FLOW = {
     does: "\xA714b.7 \u2014 read this run's OWN log and continue from it rather than restarting",
     judged: null,
     logs: true,
-    to: ["plan", "close"]
+    /* R11, N153: a run whose last tick published its state continues at the step that state names, so every
+       row after the gate is an edge from here; a run with none starts its pass at `plan`. */
+    to: ["plan", "fanout", "collect", "compose", "dedup", "submit", "adjust", "next-pass", "close"]
   },
   plan: {
     does: "open a pass: the pass counter is the TABLE's and the search targets are the model's",
@@ -273,9 +275,14 @@ function nextStep(state) {
     };
   switch (at3) {
     case "resume":
+      if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
+        return {
+          step: s.resumeAt,
+          why: `this run's last tick published its state at '${s.resumeAt}' with ${Number(s.pass) || 0} pass(es) done, and its log carries ${Number(s.resumedFrom) || 0} observation(s); continuing rather than restarting (\xA714b.7)`
+        };
       return {
         step: "plan",
-        why: s.resumedFrom > 0 ? `this run's log carries ${s.resumedFrom} observation(s); continuing rather than restarting (\xA714b.7)` : "this run's log is empty; starting the first pass"
+        why: (s.resumedFrom > 0 ? `this run's log carries ${s.resumedFrom} observation(s); continuing rather than restarting (\xA714b.7)` : "this run's log is empty; starting the first pass") + (s.resumeBasis ? `. ${s.resumeBasis}` : "")
       };
     case "plan":
       return { step: "fanout", why: `pass ${Number(s.pass) + 1}: fan out across all ${LEVELS.length} levels` };
@@ -322,6 +329,71 @@ function nextStep(state) {
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
   return { step: "close", why: `'${at3}' has no transition`, bound: "completed" };
+}
+function advance(state, decision) {
+  const s = state || {};
+  const to = String(decision && decision.step || "close");
+  if (to === "close") return { ...s, step: "close" };
+  const next = to === "adjust" ? { ...s, step: "adjust", refusedSubmission: s.submission ?? null, adjusted: false } : { ...s, step: to, refusal: null, adjusted: false, refusedSubmission: null };
+  if (s.step === "resume") {
+    next.resumeAt = null;
+    next.resumeBasis = null;
+  }
+  return to === "next-pass" ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
+}
+var RESUMABLE = [
+  "step",
+  "pass",
+  "targets",
+  "reports",
+  "reportsRefused",
+  "rereads",
+  "holdings",
+  "candidates",
+  "queue",
+  "submission",
+  "refusal",
+  "refusedSubmission",
+  "adjusted"
+];
+function resumableState(state) {
+  const s = state || {};
+  const out = {};
+  for (const k of RESUMABLE) out[k] = s[k] === void 0 ? null : s[k];
+  return out;
+}
+var list = (v) => Array.isArray(v) ? v : [];
+var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
+function resumeFrom(published) {
+  const p = record(published);
+  if (!p || !Object.prototype.hasOwnProperty.call(p, "step") || p.step == null)
+    return {
+      at: null,
+      state: null,
+      basis: published == null ? "The run publishes no state it can be read back from, so this segment starts from the resume row" : "The run's published state names no step yet, so this segment starts from the resume row"
+    };
+  const at3 = String(p.step);
+  const pass = Number(p.pass);
+  if (!CONTROL_FLOW.resume.to.includes(at3) || !Number.isInteger(pass) || pass < 0)
+    return {
+      at: null,
+      state: null,
+      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at3).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
+    };
+  return { at: at3, basis: null, state: {
+    pass,
+    targets: list(p.targets),
+    reports: list(p.reports),
+    reportsRefused: list(p.reportsRefused),
+    rereads: Number(p.rereads) > 0 ? Number(p.rereads) : 0,
+    holdings: record(p.holdings),
+    candidates: list(p.candidates),
+    queue: list(p.queue),
+    submission: record(p.submission),
+    refusal: record(p.refusal),
+    refusedSubmission: record(p.refusedSubmission),
+    adjusted: p.adjusted === true
+  } };
 }
 var PRESENT_UNBACKED_NOTE = "the model judged PRESENT at this step, but this entry can name nothing that was found, and the record refuses a PRESENT that names nothing (C-22.10) \u2014 so it is recorded as LOOKED_INDETERMINATE: a look happened, and the record cannot tell from it that the thing is there";
 function stepLog(state, decision) {
@@ -599,8 +671,8 @@ function citedAddresses(reports) {
 function documentHoldings(resolved) {
   const documents = /* @__PURE__ */ new Map();
   const unchained = [], undetermined = [];
-  const list2 = Array.isArray(resolved) ? resolved : [];
-  for (const r of list2) {
+  const list3 = Array.isArray(resolved) ? resolved : [];
+  for (const r of list3) {
     if (!r || typeof r !== "object") continue;
     if (r.refused) {
       undetermined.push({
@@ -647,7 +719,7 @@ function documentHoldings(resolved) {
   return {
     /* THE COUNT A READER WILL TAKE AS COVERAGE, and it counts DOCUMENTS. */
     documents: docs.length,
-    citations: list2.length,
+    citations: list3.length,
     versions_cited: docs.reduce((n, d) => n + d.versions_cited.length, 0),
     versions_held: docs.reduce((n, d) => n + d.versions_held, 0),
     unchained: unchained.length,
@@ -6854,24 +6926,24 @@ function checkCaseDocument(fm, ctx = {}) {
   if (caseDocumentRequiresV4Disclosures(fm)) {
     const bm = fm?.bias_manifest;
     if (bm && typeof bm === "object" && !Array.isArray(bm)) {
-      const list2 = fm?.bias_manifest_pins_proposed;
+      const list3 = fm?.bias_manifest_pins_proposed;
       const n = bm.pins_proposed;
-      if (!Number.isInteger(n) || n < 0 || !Array.isArray(list2)) {
+      if (!Number.isInteger(n) || n < 0 || !Array.isArray(list3)) {
         findings.push(f(
           C41.PENDING,
           "error",
-          `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list2) ? `of ${list2.length}` : "absent"}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication \xA73 rule 18)`,
+          `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list3) ? `of ${list3.length}` : "absent"}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication \xA73 rule 18)`,
           ["re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing"]
         ));
-      } else if (list2.length !== n) {
+      } else if (list3.length !== n) {
         findings.push(f(
           C41.PENDING,
           "error",
-          `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list2.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
+          `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list3.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
           ["re-publish through op=publish"]
         ));
       } else {
-        const bad = list2.filter((x) => !(x && typeof x === "object" && typeof x.bundle_id === "string" && x.bundle_id.trim() && typeof x.revision === "string" && /^[0-9a-f]{64}$/.test(x.revision) && (x.scope === "instance" || x.scope === "project")));
+        const bad = list3.filter((x) => !(x && typeof x === "object" && typeof x.bundle_id === "string" && x.bundle_id.trim() && typeof x.revision === "string" && /^[0-9a-f]{64}$/.test(x.revision) && (x.scope === "instance" || x.scope === "project")));
         if (bad.length > 0)
           findings.push(f(
             C41.PENDING,
@@ -13972,7 +14044,7 @@ function validateInto(p, errors) {
   const str = (path, v, what) => {
     if (!isStr(v)) err(path, "VALUE_INVALID", `${what} is a non-empty string`);
   };
-  const list2 = (path, v) => {
+  const list3 = (path, v) => {
     if (!Array.isArray(v)) {
       err(path, "VALUE_INVALID", "a list");
       return [];
@@ -13988,7 +14060,7 @@ function validateInto(p, errors) {
   };
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
-  if (own(p, "systems")) list2("systems", p.systems).forEach((s, i) => {
+  if (own(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
     const at3 = `systems[${i}]`;
     if (!entry(at3, s)) return;
     fields(at3, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
@@ -14014,7 +14086,7 @@ function validateInto(p, errors) {
     if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at3}.provenance_stated`, "VALUE_INVALID", "true or false");
     basis(at3, s);
   });
-  if (own(p, "mixed_hosts")) list2("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
+  if (own(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
     const at3 = `mixed_hosts[${i}]`;
     if (!entry(at3, m)) return;
     fields(at3, m, ["host", "why", "basis"]);
@@ -14038,7 +14110,7 @@ function validateInto(p, errors) {
       str(`${at3}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list2(`${at3}.forms`, s.forms).forEach((f2, i) => {
+      list3(`${at3}.forms`, s.forms).forEach((f2, i) => {
         const fa = `${at3}.forms[${i}]`;
         if (!entry(fa, f2)) return;
         fields(fa, f2, ["form", "pattern", "normal", "clean", "basis"]);
@@ -14071,7 +14143,7 @@ function validateInto(p, errors) {
         basis(fa, f2);
         if (isStr(f2.form) && re && normalOk) spaceForms[name].set(f2.form, f2);
       });
-      if (name === "enactment" && own(s, "kinds")) list2(`${at3}.kinds`, s.kinds).forEach((k, i) => {
+      if (name === "enactment" && own(s, "kinds")) list3(`${at3}.kinds`, s.kinds).forEach((k, i) => {
         const ka = `${at3}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
@@ -14091,7 +14163,7 @@ function validateInto(p, errors) {
       });
     }
   }
-  if (own(p, "crosswalks")) list2("crosswalks", p.crosswalks).forEach((x, i) => {
+  if (own(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
     const at3 = `crosswalks[${i}]`;
     if (!entry(at3, x)) return;
     fields(at3, x, ["space", "forms", "pairs", "source", "basis"]);
@@ -14104,7 +14176,7 @@ function validateInto(p, errors) {
     else forms.forEach((f2, j) => {
       if (!known.has(f2)) err(`${at3}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f2)}'`);
     });
-    list2(`${at3}.pairs`, x.pairs).forEach((pair, j) => {
+    list3(`${at3}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
         err(`${at3}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
         return;
@@ -14125,7 +14197,7 @@ function validateInto(p, errors) {
         err(at3, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
         continue;
       }
-      list2(at3, entries).forEach((e, i) => {
+      list3(at3, entries).forEach((e, i) => {
         const ea = `${at3}[${i}]`;
         if (!entry(ea, e)) return;
         if (key === "codes") {
@@ -14156,7 +14228,7 @@ function validateInto(p, errors) {
       }
     }
   }
-  if (own(p, "search_terms")) list2("search_terms", p.search_terms).forEach((t, i) => {
+  if (own(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
     const at3 = `search_terms[${i}]`;
     if (!entry(at3, t)) return;
     fields(at3, t, ["term", "basis"]);
@@ -14164,7 +14236,7 @@ function validateInto(p, errors) {
     basis(at3, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
-  if (own(p, "records_laws")) list2("records_laws", p.records_laws).forEach((l, i) => {
+  if (own(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
     const at3 = `records_laws[${i}]`;
     if (!entry(at3, l)) return;
     fields(at3, l, ["level", "name", "citation", "basis"]);
@@ -14184,7 +14256,7 @@ function validateInto(p, errors) {
     }
   }
   const codeKeys = new Set(own(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
-  if (own(p, "standard_sources")) list2("standard_sources", p.standard_sources).forEach((s, i) => {
+  if (own(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
     const at3 = `standard_sources[${i}]`;
     if (!entry(at3, s)) return;
     fields(at3, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
@@ -14197,7 +14269,7 @@ function validateInto(p, errors) {
     if (own(s, "code") && !codeKeys.has(s.code)) err(`${at3}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
     basis(at3, s);
   });
-  if (own(p, "counterparties")) list2("counterparties", p.counterparties).forEach((c, i) => {
+  if (own(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
     const at3 = `counterparties[${i}]`;
     if (!entry(at3, c)) return;
     fields(at3, c, ["role", "body", "level", "elected", "oversight", "basis"]);
@@ -14210,7 +14282,7 @@ function validateInto(p, errors) {
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
-  if (own(p, "action_kinds")) list2("action_kinds", p.action_kinds).forEach((k, i) => {
+  if (own(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
     const at3 = `action_kinds[${i}]`;
     if (!entry(at3, k)) return;
     fields(at3, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
@@ -14222,7 +14294,7 @@ function validateInto(p, errors) {
     }
     str(`${at3}.label`, k.label, "label");
     if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at3}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own(k, "laws")) list2(`${at3}.laws`, k.laws).forEach((l, j) => {
+    if (own(k, "laws")) list3(`${at3}.laws`, k.laws).forEach((l, j) => {
       if (!lawNames.has(l)) err(`${at3}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
     });
     if (own(k, "venue")) {
@@ -14245,7 +14317,7 @@ function validateInto(p, errors) {
     }
     basis(at3, k);
   });
-  if (own(p, "deadlines")) list2("deadlines", p.deadlines).forEach((d, i) => {
+  if (own(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
     const at3 = `deadlines[${i}]`;
     if (!entry(at3, d)) return;
     fields(at3, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
@@ -14268,7 +14340,7 @@ function validateInto(p, errors) {
     str(`${at3}.citation`, d.citation, "citation");
     basis(at3, d);
   });
-  if (own(p, "legal_organisations")) list2("legal_organisations", p.legal_organisations).forEach((o, i) => {
+  if (own(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
     const at3 = `legal_organisations[${i}]`;
     if (!entry(at3, o)) return;
     fields(at3, o, ["name", "evaluates", "contacts", "basis"]);
@@ -14292,7 +14364,7 @@ function validateInto(p, errors) {
   });
   if (own(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
-    list2("holidays", p.holidays).forEach((h, i) => {
+    list3("holidays", p.holidays).forEach((h, i) => {
       const at3 = `holidays[${i}]`;
       if (!entry(at3, h)) return;
       fields(at3, h, ["year", "days", "basis"]);
@@ -14300,7 +14372,7 @@ function validateInto(p, errors) {
       else if (years.has(h.year)) err(`${at3}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
       else years.add(h.year);
       const dates = /* @__PURE__ */ new Set();
-      list2(`${at3}.days`, h.days).forEach((d, j) => {
+      list3(`${at3}.days`, h.days).forEach((d, j) => {
         const da = `${at3}.days[${j}]`;
         if (!entry(da, d)) return;
         fields(da, d, ["date", "name"]);
@@ -14323,7 +14395,7 @@ var deepFreeze2 = (o) => {
 };
 var clone = (o) => o === void 0 ? void 0 : JSON.parse(JSON.stringify(o));
 var HELD = new Map([oakland_alameda_default, test_port_ellery_default].map((p) => [p.id, deepFreeze2(clone(p))]));
-function list() {
+function list2() {
   return [...HELD.values()].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0).map((p) => ({ id: p.id, name: p.name, covers: p.covers.slice(), test: p.test === true }));
 }
 function get(id) {
@@ -15167,7 +15239,7 @@ var PdfDoc = class {
    *  (empty-user-password) PDF transparently. Cached; call after scanTopLevel. */
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
-    let enc = false;
+    let enc2 = false;
     for (const v of this.objects.values()) {
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
       if (!map) continue;
@@ -15175,11 +15247,11 @@ var PdfDoc = class {
       const isStandard = filter && filter.t === "name" && filter.v === "Standard";
       const hasRevision = map.R != null && typeof this.resolve(map.R) === "number";
       if (isStandard && hasRevision) {
-        enc = true;
+        enc2 = true;
         break;
       }
     }
-    return this._encrypted = enc;
+    return this._encrypted = enc2;
   }
   /** The document information dictionary — the trailer's `/Info` (D-251).
    *
@@ -15751,8 +15823,8 @@ function fontWidths(doc, map, subtype, isType0) {
   return { widths, why: null };
 }
 function cidWidths(doc, map) {
-  const enc = nameOf(doc, map.Encoding);
-  if (enc !== "Identity-H" && enc !== "Identity-V") {
+  const enc2 = nameOf(doc, map.Encoding);
+  if (enc2 !== "Identity-H" && enc2 !== "Identity-V") {
     return { widths: null, why: "cid_encoding_not_identity" };
   }
   const descArr = doc.resolve(map.DescendantFonts);
@@ -15772,8 +15844,8 @@ function cidWidths(doc, map) {
       }
       const next = items[i + 1];
       if (next && typeof next === "object" && next.t === "arr") {
-        const list2 = next.items.map((x) => numOf(doc, x));
-        for (let k = 0; k < list2.length; k++) if (list2[k] != null) table.set(c + k, list2[k]);
+        const list3 = next.items.map((x) => numOf(doc, x));
+        for (let k = 0; k < list3.length; k++) if (list3[k] != null) table.set(c + k, list3[k]);
         i += 2;
         continue;
       }
@@ -20782,21 +20854,21 @@ function csvSignatures(bytes) {
   if (!b.length) {
     return { ok: false, why: "empty_body" };
   }
-  const enc = encodingSignature(b);
-  const body = b.subarray(enc.bomBytes);
+  const enc2 = encodingSignature(b);
+  const body = b.subarray(enc2.bomBytes);
   const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
   let headText;
   try {
-    headText = enc.encoding ? new TextDecoder(enc.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
+    headText = enc2.encoding ? new TextDecoder(enc2.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
   } catch {
-    return { ok: false, why: `decoder_unavailable:${enc.encoding}`, encoding: enc };
+    return { ok: false, why: `decoder_unavailable:${enc2.encoding}`, encoding: enc2 };
   }
-  return { ok: true, b, enc, body, delim: delimiterSignature(headText) };
+  return { ok: true, b, enc: enc2, body, delim: delimiterSignature(headText) };
 }
 async function csvParts(bytes) {
   const sig = csvSignatures(bytes);
   if (!sig.ok) return sig;
-  const { b, enc, body, delim } = sig;
+  const { b, enc: enc2, body, delim } = sig;
   const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
     ok: false,
     text: "undetermined",
@@ -20809,11 +20881,11 @@ async function csvParts(bytes) {
   let records = null, transport = false, invalidUtf16 = false;
   if (!guard) {
     let text;
-    if (enc.encoding === "utf-16le" || enc.encoding === "utf-16be") {
+    if (enc2.encoding === "utf-16le" || enc2.encoding === "utf-16be") {
       try {
-        text = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body);
+        text = new TextDecoder(enc2.encoding, { fatal: true, ignoreBOM: true }).decode(body);
       } catch {
-        text = new TextDecoder(enc.encoding, { fatal: false, ignoreBOM: true }).decode(body);
+        text = new TextDecoder(enc2.encoding, { fatal: false, ignoreBOM: true }).decode(body);
         invalidUtf16 = true;
       }
     } else {
@@ -20827,7 +20899,7 @@ async function csvParts(bytes) {
     format: "csv",
     bytes: b,
     bodyBytes: body.length,
-    encoding: enc,
+    encoding: enc2,
     delimiter: delim,
     guard,
     records,
@@ -20926,10 +20998,10 @@ function csvText(parts) {
   const undetermined = [];
   const lines = [];
   let cellCount = 0, usedRows = 0, usedCols = 0;
-  parts.records.forEach((record, r0) => {
+  parts.records.forEach((record2, r0) => {
     const row = r0 + 1;
     const vals = [];
-    record.forEach((raw, c0) => {
+    record2.forEach((raw, c0) => {
       const col = c0 + 1;
       const read2 = fieldValue(raw, parts);
       if (read2.why) {
@@ -21591,8 +21663,8 @@ function readerView(ctx) {
   if (LEGACY_VIEW === null) {
     LEGACY_VIEW = {};
     try {
-      if (typeof combine === "function" && typeof list === "function") {
-        const r = combine(list().filter((x) => !x.test).map((x) => x.id));
+      if (typeof combine === "function" && typeof list2 === "function") {
+        const r = combine(list2().filter((x) => !x.test).map((x) => x.id));
         if (r && r.ok && r.view) LEGACY_VIEW = r.view;
       }
     } catch {
@@ -21620,8 +21692,8 @@ function vocabRegex(p, wrap, extra) {
 }
 function vocabulary(ctx, key) {
   const v = readerView(ctx).vocabulary;
-  const list2 = v && typeof v === "object" ? v[key] : null;
-  return Array.isArray(list2) ? list2.filter((e) => e && typeof e === "object") : [];
+  const list3 = v && typeof v === "object" ? v[key] : null;
+  return Array.isArray(list3) ? list3.filter((e) => e && typeof e === "object") : [];
 }
 function vocabPatterns(ctx, key, wrap, extra) {
   const out = [];
@@ -23917,158 +23989,6 @@ var RUN_ENDINGS = {
 var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
 var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
 
-// ../bio-plane/src/strength/arithmetic.mjs
-var STRENGTH_AXES = Object.freeze(["capture", "connection", "testimony"]);
-var DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
-var GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
-
-// ../bio-plane/src/strength/checks.mjs
-var at2 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
-var VERSION_STRENGTH_CHECKS = Object.freeze({
-  VERSION_STRENGTH_NO_INQUIRY: {
-    check: "C-30.1",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "This asks how strongly one question is answered, and no question was named. There is no default question here and there must not be one."
-  },
-  VERSION_STRENGTH_NOT_AN_INQUIRY: {
-    check: "C-30.2",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "That is not a question, so there is nothing here to say how strongly it is answered. Only a question carries readings of the evidence, and only a reading has a strength."
-  },
-  /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
-     same reason: there is no "the latest reading" and no default. A strength
-     computed over a reading the caller did not mean is a number about the wrong
-     thing, which is worse than being asked which was meant. */
-  VERSION_STRENGTH_NO_VERSION: {
-    check: "C-30.3",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "Say which reading of the evidence to measure, or say which project is asking so that the reading it stands on can be used. There is no default reading, because a strength reported for a reading nobody meant is a number about something else."
-  },
-  VERSION_STRENGTH_NO_SUCH_VERSION: {
-    check: "C-30.4",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "No reading by that name belongs to this question, or this project has not said which reading it stands on. An empty answer here would say the question rests on nothing when the truth is that nobody has pointed at anything yet."
-  },
-  VERSION_STRENGTH_UNKNOWN_STATE: {
-    check: "C-30.5",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "One of the words used to say which readings to count is not one this record knows. The set is closed on purpose: a strength that quietly counted readings nobody recognises would be a number no reader could check."
-  },
-  /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
-     unaccepted version is done by CALCULATING OVER IT, never by making it
-     current."* So this is not a dead end — it names the widening that turns the
-     request into an honest WHAT-IF, and the what-if answer then carries its own
-     state-set line (DEC-40) wherever it renders. */
-  VERSION_STRENGTH_STATE_EXCLUDED: {
-    check: "C-30.6",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "Nobody has adopted that reading, so it is not what this record answers with. You can still see what it would come to \u2014 ask for it as a what-if by saying which kinds of reading to count \u2014 and the answer will say on its face that that is what it is."
-  },
-  /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
-     super-conclusion over them and MUST NOT derive a single case-level
-     strength — that would be R2's forbidden composition at a new altitude, and
-     it is exactly the 'one letter' the project has refused four times."* The
-     same refusal one altitude DOWN, because the temptation is identical and the
-     harm is identical: two measurements over two populations reported as one
-     number is the record claiming something neither population supports. */
-  VERSION_STRENGTH_COMPOSED: {
-    check: "C-30.7",
-    where: at2("#refusePairComposed", "is-pair-composed"),
-    translation: "This answer tried to report one overall figure for a question, and there is no such figure. How well the documents were captured and how firmly they connect to the subject are two separate measurements over two separate things, and averaging them or picking one would state something neither of them says."
-  },
-  /* DEC-40 determination 2, and its own negative control: *"a filtered
-     rendering states its filter IN DEC-34's per-page header … An unfiltered
-     rendering says so too, or absence of the line becomes the ambiguity."* §12
-     transplants it verbatim: *"A what-if pair carries its state-set line
-     wherever it renders."* So EVERY answer carries the line, including the
-     default one — an answer with no line is the shape a reader cannot tell from
-     the record's own. */
-  VERSION_STRENGTH_UNFILTERED: {
-    check: "C-30.8",
-    where: at2("#refusePairComposed", "is-pair-composed"),
-    translation: "This answer did not say which readings it counted, and a strength separated from that is a misreading waiting to happen. Every answer here says on its face whether it is the record's own or a view somebody constructed."
-  },
-  VERSION_STRENGTH_TOO_MANY_STATES: {
-    check: "C-30.9",
-    where: at2("versionStrength", "is-version-strength"),
-    translation: "More kinds of reading were named than this record has. The bound is said here rather than applied quietly, so nothing is dropped without you being told."
-  }
-});
-var VERSION_STRENGTH_DEFAULT_STATES = VERSION_STATES.filter((s) => s === "accepted");
-var VERSION_STRENGTH_INERT_SOURCES = ["hunch"];
-var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
-  PARTITION_INDEPENDENCE_NO_INQUIRY: {
-    check: "C-71.1",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "This asks whether the groups of reasons behind one question share a source, and no question was named. There is no default question here and there must not be one."
-  },
-  PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
-    check: "C-71.2",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "That is not a question you can read here, so it has no reasons to group. Only a question rests on reasons, and a question you may not see answers exactly as one that does not exist."
-  },
-  PARTITION_INDEPENDENCE_UNREADABLE: {
-    check: "C-71.3",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "The grouping of reasons could not be read. Send it as a list of groups, each group a list of the positions of the reasons in it, or as groups each carrying a name and its positions. Every group needs at least one reason and a name no other group has."
-  },
-  PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
-    check: "C-71.4",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "The grouping names a reason this question does not have. It was not dropped quietly, because an answer about groups the question does not hold would be an answer about something else."
-  },
-  PARTITION_INDEPENDENCE_LEG_TWICE: {
-    check: "C-71.5",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "One reason was put in two groups. Each reason belongs to exactly one group, because a reason shared by two groups would make them share a source by construction."
-  },
-  PARTITION_INDEPENDENCE_NOT_TOTAL: {
-    check: "C-71.6",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "Some of this question's reasons are in no group. A grouping covers every reason, as a written reading does, so that what is checked here is what would be written."
-  },
-  PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
-    check: "C-71.7",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
-  },
-  /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
-     groups, answering independence on its own with no strength beside it. Two refusals the arm owes,
-     numbered on in C-71 because they are refusals of the same op and neither is a statement about a
-     strength. */
-  PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
-    check: "C-71.8",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
-  },
-  PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
-    check: "C-71.9",
-    where: at2("partitionIndependence", "is-partition-independence"),
-    translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
-  }
-});
-var STRENGTH_BAR_CHECKS = Object.freeze({
-  MACHINE_CANNOT_DECLARE: {
-    check: "C-32.9",
-    where: at2("strengthBarSet", "is-machine-strength-bar"),
-    translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
-  },
-  STRENGTH_BAR_NOT_ADMIN: {
-    check: "C-107.1",
-    where: at2("strengthBarSet", "is-admin-strength-bar"),
-    translation: "The standard of evidence a new project starts from is set for the whole group, so only an administrator can change it. A project can still declare its own standard in its own document. Nothing was changed."
-  }
-});
-
-// ../bio-plane/src/strength/schema.mjs
-var STRENGTH_EXEMPT_TABLES = Object.freeze(["group_strength_bar"]);
-
-// ../bio-plane/src/strength/index.mjs
-var VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
-var PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"]);
-var MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
-var ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
-
 // ../pdf-worker/src/dctdecode.mjs
 var ZIGZAG = Int32Array.from([
   0,
@@ -25876,6 +25796,178 @@ var INQUIRY_ROWS = Object.freeze({
   // C-32.8
 });
 
+// ../bio-plane/src/basis-versions/schema.mjs
+var BASIS_VERSIONS_TABLES = Object.freeze(["inquiry_basis_versions", "inquiry_basis_version_legs"]);
+
+// ../bio-plane/src/basis-versions/index.mjs
+var VERSION_ACT_TO = Object.freeze({
+  accept: "accepted",
+  reject: "rejected",
+  consider: "considering",
+  revert: "suggested",
+  current: null,
+  hide: null
+});
+
+// ../bio-plane/src/strength/arithmetic.mjs
+var STRENGTH_AXES = Object.freeze(["capture", "connection", "testimony"]);
+var DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
+var GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
+
+// ../bio-plane/src/strength/checks.mjs
+var at2 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
+var VERSION_STRENGTH_CHECKS = Object.freeze({
+  VERSION_STRENGTH_NO_INQUIRY: {
+    check: "C-30.1",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "This asks how strongly one question is answered, and no question was named. There is no default question here and there must not be one."
+  },
+  VERSION_STRENGTH_NOT_AN_INQUIRY: {
+    check: "C-30.2",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "That is not a question, so there is nothing here to say how strongly it is answered. Only a question carries readings of the evidence, and only a reading has a strength."
+  },
+  /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
+     same reason: there is no "the latest reading" and no default. A strength
+     computed over a reading the caller did not mean is a number about the wrong
+     thing, which is worse than being asked which was meant. */
+  VERSION_STRENGTH_NO_VERSION: {
+    check: "C-30.3",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "Say which reading of the evidence to measure, or say which project is asking so that the reading it stands on can be used. There is no default reading, because a strength reported for a reading nobody meant is a number about something else."
+  },
+  VERSION_STRENGTH_NO_SUCH_VERSION: {
+    check: "C-30.4",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "No reading by that name belongs to this question, or this project has not said which reading it stands on. An empty answer here would say the question rests on nothing when the truth is that nobody has pointed at anything yet."
+  },
+  VERSION_STRENGTH_UNKNOWN_STATE: {
+    check: "C-30.5",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "One of the words used to say which readings to count is not one this record knows. The set is closed on purpose: a strength that quietly counted readings nobody recognises would be a number no reader could check."
+  },
+  /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
+     unaccepted version is done by CALCULATING OVER IT, never by making it
+     current."* So this is not a dead end — it names the widening that turns the
+     request into an honest WHAT-IF, and the what-if answer then carries its own
+     state-set line (DEC-40) wherever it renders. */
+  VERSION_STRENGTH_STATE_EXCLUDED: {
+    check: "C-30.6",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "Nobody has adopted that reading, so it is not what this record answers with. You can still see what it would come to \u2014 ask for it as a what-if by saying which kinds of reading to count \u2014 and the answer will say on its face that that is what it is."
+  },
+  /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
+     super-conclusion over them and MUST NOT derive a single case-level
+     strength — that would be R2's forbidden composition at a new altitude, and
+     it is exactly the 'one letter' the project has refused four times."* The
+     same refusal one altitude DOWN, because the temptation is identical and the
+     harm is identical: two measurements over two populations reported as one
+     number is the record claiming something neither population supports. */
+  VERSION_STRENGTH_COMPOSED: {
+    check: "C-30.7",
+    where: at2("refusePairComposed", "is-pair-composed"),
+    translation: "This answer tried to report one overall figure for a question, and there is no such figure. How well the documents were captured and how firmly they connect to the subject are two separate measurements over two separate things, and averaging them or picking one would state something neither of them says."
+  },
+  /* DEC-40 determination 2, and its own negative control: *"a filtered
+     rendering states its filter IN DEC-34's per-page header … An unfiltered
+     rendering says so too, or absence of the line becomes the ambiguity."* §12
+     transplants it verbatim: *"A what-if pair carries its state-set line
+     wherever it renders."* So EVERY answer carries the line, including the
+     default one — an answer with no line is the shape a reader cannot tell from
+     the record's own. */
+  VERSION_STRENGTH_UNFILTERED: {
+    check: "C-30.8",
+    where: at2("refusePairComposed", "is-pair-composed"),
+    translation: "This answer did not say which readings it counted, and a strength separated from that is a misreading waiting to happen. Every answer here says on its face whether it is the record's own or a view somebody constructed."
+  },
+  VERSION_STRENGTH_TOO_MANY_STATES: {
+    check: "C-30.9",
+    where: at2("versionStrength", "is-version-strength"),
+    translation: "More kinds of reading were named than this record has. The bound is said here rather than applied quietly, so nothing is dropped without you being told."
+  }
+});
+var VERSION_STRENGTH_DEFAULT_STATES = VERSION_STATES.filter((s) => s === "accepted");
+var VERSION_STRENGTH_INERT_SOURCES = ["hunch"];
+var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
+  PARTITION_INDEPENDENCE_NO_INQUIRY: {
+    check: "C-71.1",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "This asks whether the groups of reasons behind one question share a source, and no question was named. There is no default question here and there must not be one."
+  },
+  PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
+    check: "C-71.2",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "That is not a question you can read here, so it has no reasons to group. Only a question rests on reasons, and a question you may not see answers exactly as one that does not exist."
+  },
+  PARTITION_INDEPENDENCE_UNREADABLE: {
+    check: "C-71.3",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "The grouping of reasons could not be read. Send it as a list of groups, each group a list of the positions of the reasons in it, or as groups each carrying a name and its positions. Every group needs at least one reason and a name no other group has."
+  },
+  PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
+    check: "C-71.4",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "The grouping names a reason this question does not have. It was not dropped quietly, because an answer about groups the question does not hold would be an answer about something else."
+  },
+  PARTITION_INDEPENDENCE_LEG_TWICE: {
+    check: "C-71.5",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "One reason was put in two groups. Each reason belongs to exactly one group, because a reason shared by two groups would make them share a source by construction."
+  },
+  PARTITION_INDEPENDENCE_NOT_TOTAL: {
+    check: "C-71.6",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "Some of this question's reasons are in no group. A grouping covers every reason, as a written reading does, so that what is checked here is what would be written."
+  },
+  PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
+    check: "C-71.7",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
+  },
+  /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
+     groups, answering independence on its own with no strength beside it. Two refusals the arm owes,
+     numbered on in C-71 because they are refusals of the same op and neither is a statement about a
+     strength. */
+  PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
+    check: "C-71.8",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
+  },
+  PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
+    check: "C-71.9",
+    where: at2("partitionIndependence", "is-partition-independence"),
+    translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
+  }
+});
+var STRENGTH_BAR_CHECKS = Object.freeze({
+  MACHINE_CANNOT_DECLARE: {
+    check: "C-32.9",
+    where: at2("strengthBarSet", "is-machine-strength-bar"),
+    translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
+  },
+  STRENGTH_BAR_NOT_ADMIN: {
+    check: "C-107.1",
+    where: at2("strengthBarSet", "is-admin-strength-bar"),
+    translation: "The standard of evidence a new project starts from is set for the whole group, so only an administrator can change it. A project can still declare its own standard in its own document. Nothing was changed."
+  },
+  /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
+     refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
+  BAD_GRADE: {
+    check: "C-107.2",
+    where: at2("strengthBarSet", "is-strength-bar-grade"),
+    translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
+  }
+});
+
+// ../bio-plane/src/strength/schema.mjs
+var STRENGTH_EXEMPT_TABLES = Object.freeze(["group_strength_bar"]);
+
+// ../bio-plane/src/strength/index.mjs
+var VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
+var PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"]);
+var MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
+var ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
+
 // ../bio-plane/src/citation/index.mjs
 var EXTENT_PARAMS = Object.freeze({
   extent_kind: "text",
@@ -25895,18 +25987,304 @@ var EXTENT_PARAMS = Object.freeze({
   content_id: "text"
 });
 
-// ../bio-plane/src/basis-versions/schema.mjs
-var BASIS_VERSIONS_TABLES = Object.freeze(["inquiry_basis_versions", "inquiry_basis_version_legs"]);
+// ../bio-plane/src/bias/checks.mjs
+var BIAS_CHECKS2 = {
+  /* Statement anatomy, the shape half: an id that an override can name, a kind
+     in the closed set of three, and a declarative to apply. */
+  BIAS_STATEMENT_MALFORMED_SHAPE: {
+    check: "C-26.1",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate",
+    translation: "One of these bias statements is missing something the record needs to apply it: a stable name, one of the three kinds it can be, or the sentence itself. The three kinds are raising scrutiny on a source, blocking or licensing an inference, and asserting an evidenced pattern \u2014 a standard of evidence is not one of them; that is a bar."
+  },
+  /* Safeguard 4: subjects are registry entries, not free text. */
+  BIAS_STATEMENT_SUBJECT_NOT_REGISTERED: {
+    check: "C-26.2",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate",
+    translation: "That statement names its subject in prose rather than pointing at the subject registry. Registry entries are what let the record notice when a project statement and an instance statement are about the same thing \u2014 in prose, nothing can tell, and a collision that is quiet is the one this construct exists to prevent."
+  },
+  /* The justification requirement, on every kind. */
+  BIAS_STATEMENT_NO_JUSTIFICATION: {
+    check: "C-26.3",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate",
+    translation: "That statement does not say why the lens is held. A declared bias the system honours is one its author justified; without that it is an unstated prior with a form around it."
+  },
+  /* kind=pattern IS analysis, so it cites or it stays in draft. */
+  BIAS_PATTERN_UNCITED: {
+    check: "C-26.4",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate",
+    translation: "A pattern statement is a claim about how an institution actually behaves, so it is analysis and needs evidence in the record. It can be written in draft without one; it cannot leave draft without one."
+  },
+  /* DEC-54 scope FOUR: the malformedness refusal. */
+  BIAS_STATEMENT_ISSUES_A_VERDICT: {
+    check: "C-26.5",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate",
+    translation: "That statement assigns a truth value to a source wholesale, and declared bias may never issue verdicts. It may raise scrutiny, it may block an inference, and it may assert a pattern it can evidence. The construct that fights undeclared distortion is held to a higher standard than the distortion, so this is refused whoever declares it."
+  },
+  /* DEC-54 scope ONE: split bars from bias. */
+  BIAS_STATEMENT_IS_A_BAR: {
+    check: "C-26.6",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate; and src/bias/index.mjs biasInhale, which routes the same sentences into bars[] instead",
+    translation: "That is a standard of evidence \u2014 how strong support must be before you assert it \u2014 and a standard is a BAR rather than a lens. Declare it as your project's required strength, where it will actually refuse work that falls short. Filed here it would refuse nothing, because a declared bias is disclosed and never gates."
+  },
+  /* DEC-54 scope TWO: the unenforceable residue is a published output. */
+  BIAS_RESIDUE_UNSTATED: {
+    check: "C-26.7",
+    where: "src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate",
+    translation: "This bias set is adopted and does not say what it does NOT check. A case held to a standard has to say which parts of that standard this system verifies and which it does not \u2014 the parts that can be counted are rarely the parts that protect, and enforcing only the countable half while staying silent would carry the authority of the whole policy without its substance."
+  },
+  /* DEC-54 scope THREE: inhale proposes, never installs. */
+  BIAS_INHALE_CANNOT_ADOPT: {
+    check: "C-26.8",
+    where: "src/bias/index.mjs biasInhale, reached from op=biasinhale",
+    translation: "Reading a policy proposes a bias set; it never adopts one. Adopting is something a member does with their name on it, because otherwise a group could say it follows an organisation's standards without anybody in the group having agreed to anything."
+  },
+  /* The adoption's own two. A machine credential holds no name to put on an
+     authored act (DEC-46, D-90, D-82), and an adoption of a set that was never
+     proposed would reach `adopted` around the state machine. */
+  BIAS_ADOPTION_NOT_AUTHORED: {
+    check: "C-26.9",
+    where: "src/bias/index.mjs biasAdopt, reached from op=biasadopt",
+    translation: "Adopting a bias set is an authored, attributed act and an automated credential has no name to put on it. Sign in as a member."
+  },
+  /* THE WRITE PATH'S OWN REFUSAL, and it is here because VF-2's DEC-49 guard
+     found it missing — which is the guard working exactly as its ruling
+     intends. `promote` refuses a malformed bias set with `reason:
+     "BIAS_REFUSED"` and a `findings[]` array in which EVERY entry already
+     carries its own C-number, code and canned translation. That looked
+     complete and was not: a surface renders a translation keyed on the code the
+     plane SENT, and the code it sends FIRST — the one on the envelope — had no
+     row at all. A member meeting it would meet machine vocabulary while the
+     translations sat one level down in a list the surface had no reason to
+     open. So the container gets a translation of its own, and it says the one
+     thing the per-finding translations cannot: that NOTHING LANDED.
+     ITS `where` NAMES `store.mjs` RATHER THAN THE CATALOGUE, unlike its ten
+     siblings, because that is where it FIRES — and naming the site is what puts
+     this code inside the guard's governed set. The ten above fire in
+     `checkBiasExtension` and say so.
+     NARROWED TO A REGION 2026-08-08 BY REC-71, AND PL-12'S REASONING ABOVE IS
+     PRESERVED RATHER THAN OVERTURNED — only the GRAIN was wrong. This read
+     `src/store.mjs promote`, and at whole-function granularity that claimed all
+     ~960 other lines of `promote` for BIAS_CHECKS: **34 long-standing refusals
+     were conscripted and the UI harness went red a second time within hours of
+     the first, in the family next door.** BEING AN ENVELOPE IS A FACT ABOUT THE
+     REFUSAL'S SHAPE — it wraps per-finding codes — AND SAYS NOTHING ABOUT ITS
+     SPAN. This one fires at a single statement inside a single `if`. The reasoning
+     in full, including what WOULD justify the wider spelling, is at the marker in
+     `store.mjs`; see also the "WHAT A `where` MEANS" block at the head of this
+     file. */
+  BIAS_REFUSED: {
+    check: "C-26.11",
+    where: "src/bias/index.mjs promotionCheck > bias-set-refusal, reached from op=promote",
+    translation: "That bias set was not written. One or more of its statements is not something the record can honour, and each one is named below with what is wrong with it. Nothing was saved, so nothing needs undoing \u2014 correct the statements and write it again."
+  },
+  /* C-26.12, BIAS_ILLEGAL_TRANSITION, is promotion's (its R15, `bias-state-edge`) and its row stays in the catalogue,
+     which promotion reads and which cannot import this module; it joins this family by reference, below. */
+  BIAS_ADOPTION_NOT_PROPOSED: {
+    check: "C-26.10",
+    where: "src/bias/index.mjs biasAdopt, reached from op=biasadopt",
+    translation: "That bias set has not been proposed for adoption, so there is nothing to adopt yet. A set is written, then proposed, then adopted \u2014 and the middle step is what stops a set becoming binding without anybody having offered it."
+  },
+  /* ---------------------------------------------------------------------------
+       REC-207 — SETTLING A BIAS DEBT (BOB #32, 2026-09-23 23:42Z). Seven rows, in
+       the EXISTING family rather than a new one, on SK-1's rule: a new `*_CHECKS`
+       family is a floor in `civicos-ui/check-refusal-codes.mjs` that buys slack for
+       everybody else's walk, and these refusals are bias's in the plainest sense —
+       they are the conditions under which the record declines to record that a
+       member has settled the obligation a lens change raised.
+  
+       TWO REGIONS, NOT ONE, and the split is the order of the answers rather than
+       tidiness. `is-bias-debt-resolve-shape` holds the four conditions about the
+       ACT — no run named, no member behind the call, a machine, no stated reason —
+       and every one of them is answered BEFORE the record is read, so a caller who
+       cannot see the run learns nothing from which refusal they get.
+       `is-bias-debt-resolve-subject` holds the two about the DEBT, after the gated
+       lookup, where an unseen debt and an absent one are deliberately ONE answer.
+       --------------------------------------------------------------------------- */
+  BIAS_DEBT_NO_RUN: {
+    check: "C-26.13",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
+    translation: "Nothing was settled, because the request did not say which piece of work it is about. A bias debt belongs to one assistant run \u2014 the one whose lens changed \u2014 so settling it has to name that run."
+  },
+  BIAS_DEBT_NO_ACTOR: {
+    check: "C-26.14",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
+    translation: "Nothing was settled, because this request has no member behind it. Deciding that a change in the group's declared lens does not affect a piece of work is somebody's judgement, and the record keeps whose it was. Sign in and do it as yourself."
+  },
+  BIAS_DEBT_MACHINE_CANNOT_RESOLVE: {
+    check: "C-26.15",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
+    translation: "Nothing was settled. This was asked by a machine credential, and saying that a lens change does not affect a finding is a person's judgement about the work \u2014 not something an automated account can decide on anyone's behalf. A machine may raise this and show it to you; answering it is yours."
+  },
+  BIAS_DEBT_NO_REASON: {
+    check: "C-26.16",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
+    translation: "Nothing was settled, because no reason was given. The whole of what this act puts on the record is why you judged that the change in the lens does not bear on this work \u2014 without it the record would say only that somebody decided, and a later reader could not tell whether the question was answered or waved away. Say why, and it is settled."
+  },
+  BIAS_DEBT_REASON_TOO_LONG: {
+    check: "C-26.17",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-shape, reached from op=biasdebtresolve",
+    translation: "Nothing was settled, because the reason given is longer than this record holds for one. Nothing about it was wrong \u2014 it is a size limit and not a judgement about what you wrote. Put the reasoning where it belongs in the work and give the short form of it here."
+  },
+  BIAS_DEBT_NO_SUCH_DEBT: {
+    check: "C-26.18",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve",
+    translation: "Nothing was settled, because there is no open bias debt on that run here. Either the run never carried one, or it has already been settled, or it is not a run you can open."
+  },
+  BIAS_DEBT_ALREADY_SETTLED: {
+    check: "C-26.19",
+    where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve",
+    translation: "Nothing was added, because this one has already been settled \u2014 by the lens moving back, by a re-run under the lens now in force, or by a member who gave their reason. What settled it is on the record and is not overwritten. If the lens changes again, the obligation is raised again as a new one."
+  },
+  /* K102 (R11): an instance-scope adoption is an administrator's act ("Admins define instance bias"); the adoption
+  stays signed by its author. */
+  BIAS_ADOPTION_NOT_AN_ADMINISTRATOR: {
+    check: "C-26.20",
+    where: "src/bias/index.mjs biasAdopt, reached from op=biasadopt",
+    translation: "Nothing was adopted. A lens over the whole instance is set by its administrators, and you are not one. A project's owners set a lens over that project's work: ask an administrator to adopt this set for the instance, or adopt it for a project you own."
+  },
+  BIAS_ILLEGAL_TRANSITION: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION
+};
 
-// ../bio-plane/src/basis-versions/index.mjs
-var VERSION_ACT_TO = Object.freeze({
-  accept: "accepted",
-  reject: "rejected",
-  consider: "considering",
-  revert: "suggested",
-  current: null,
-  hide: null
+// ../bio-plane/src/bias/schema.mjs
+var BIAS_TABLES = Object.freeze([
+  "bias_statements",
+  "bias_adoptions",
+  "bias_debts",
+  "bias_debt_sweeps",
+  "bias_debt_settlements"
+]);
+
+// ../bio-plane/src/bias/index.mjs
+var enc = new TextEncoder();
+var BIAS_ROW_BY_CHECK = new Map(Object.entries(BIAS_CHECKS2).map(([code, row]) => [row.check, { code, row }]));
+
+// ../bio-plane/src/contradiction.mjs
+var CONTRADICTION_LABELS = Object.freeze(["world", "record", "precision", "unrelated", "undetermined"]);
+
+// ../bio-plane/src/contradiction/index.mjs
+var CONTRADICTION_TABLES = Object.freeze(["contradiction_candidates"]);
+var CONTRADICTION_KEYS = Object.freeze({
+  K1: Object.freeze({
+    key: "K1",
+    name: "one inquiry, opposite roles",
+    feeds: "world",
+    join: "a supports leg and a cuts_against leg of the SAME inquiry, each resting on a passage",
+    why: "the inquiry already holds both sides; what is missing is anyone proposing the discrepancy itself as the conclusion shape"
+  }),
+  K2: Object.freeze({
+    key: "K2",
+    name: "one subject, two held claims",
+    feeds: "record",
+    join: "two inquiries with the same subject entity, each with an ACCEPTED reading carrying a claim",
+    why: "two things the group HOLDS about one subject \u2014 the case that carries a duty"
+  }),
+  K3: Object.freeze({
+    key: "K3",
+    name: "one referent, two held claims",
+    feeds: "record",
+    join: "two accepted readings, of different inquiries, whose legs rest on the SAME passage (or, where no passage is named, the same captured document)",
+    why: "we read the same text two ways"
+  }),
+  K4: Object.freeze({
+    key: "K4",
+    name: "one entity, two sources of different kind or date",
+    feeds: "world",
+    join: "two cited passages whose documents RESOLVE (established) to the same entity, from different doctypes, or with different dates, AS THEIR READERS STATE THEM",
+    why: "a rule against the act it governs, or one body's statement at one date against its statement at another"
+  })
 });
+var LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: "shared_referent", K4: "discriminator" });
+var CONTRADICTION_ABSENCE = Object.freeze({
+  viewer: "this read was made with NO VIEWER the record recognises, so it compared nothing and every key below is empty for want of a reader rather than for want of material. This is an outage, not a statement about the record: ask again with a member's session",
+  inquiry: "no question is in scope at all. Nothing has been asked here yet, so there is nothing for any key to pair \u2014 the record is EMPTY at the question level and says nothing whatever about whether the world contains contradictions",
+  leg: "questions exist and NONE of them rests on anything. Nothing has been cited, so there are no two sides to put beside each other",
+  role: "questions rest on material, but not ONE of them holds both a leg that supports it and a leg that cuts against it. That is a fact about how the questions are argued, not about whether the record contains a discrepancy",
+  referent: "both sides exist, but the legs name no PASSAGE \u2014 they rest on a whole document, on a sub-question, or on bytes this record does not hold. A pair whose sides cannot be quoted is not a pair a member could judge, so none was formed",
+  subject: "questions exist and NONE of them names a registered subject. K2 pairs by subject, so this is absence at the SUBJECT level: the claims may well disagree and nothing here can see it",
+  reading: "questions exist and none of them holds an ACCEPTED reading. A suggested, considering or rejected reading is not something the group HOLDS, so there is no held assertion to pair. Nothing is claimed about what the questions would say if they were read",
+  claim: "accepted readings exist and none of them carries a CLAIM. What the group holds is therefore unstated in the one field this key can read, which is absence in OUR record rather than agreement in it",
+  shared_entity: "cited passages and established resolutions exist, but no two documents resolve to the SAME subject. There is nothing about one entity to compare",
+  content: "no passage of any document has been cited or marked citable. Nothing has been extracted at the content level, which says nothing about what the documents say",
+  cited: "passages exist and none of them is cited by any reading. This key compares what the record RESTS ON, and it rests on none of them",
+  resolution: "cited passages exist and their documents carry no ESTABLISHED resolution to any subject. Nobody has confirmed what these documents are about, so there is no entity to pair them under \u2014 the next move is to resolve them, not to conclude they are unrelated",
+  shared_side: "questions hold both a supporting and a cutting leg, and each names a passage, but no ONE question holds both at once. The two sides of this key are the two sides of a SINGLE question, and none has them",
+  shared_subject: "held claims and registered subjects both exist, and no two accepted claims share a subject. Every subject is spoken to once, so there is nothing about one subject for the record to disagree with itself about",
+  shared_referent: "held claims rest on passages, and no two claims of DIFFERENT questions rest on the same one. Each passage is read by at most one held claim, so no text is read two ways here",
+  discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by kind or by date. Either the readers state the same kind and the same date on both, or they state neither \u2014 and where a value is missing the pair was left unformed rather than guessed. The counts beside this say which"
+});
+
+// ../bio-plane/src/ai-runs/schema.mjs
+var AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
+
+// ../bio-plane/src/ai-runs/deployment.mjs
+var GATE_ADDRESS = {
+  file: "agent-worker/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
+  modes_export: "MODES",
+  table_export: "CONTROL_FLOW",
+  row: "gate-mode",
+  first_step_export: "FIRST_STEP",
+  decision_function: "nextStep",
+  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
+};
+var SEQUENCING_SOURCE = "docs/development/INVESTIGATIVE-SESSION.md";
+var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
+var DEPLOYMENT_SEQUENCE = {
+  id: "check-deploys-first",
+  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
+     mode that deploys first, and every later index is a mode that enables only
+     after the one before it has been verified live. */
+  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
+     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
+     is ARM B3's whole demand (the two rosters are ONE set, held in both
+     directions) and ARM B4's (index 0 stays the only deployed mode; every later
+     index, `extract` included, is not). The pack's digest moves with this line
+     by construction and nothing needs bumping by hand. */
+  order: ["check", "investigate", "extract"],
+  first_deployed_mode: "check",
+  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
+     because a session cannot verify its own copying by re-reading it. */
+  text: "CHECK IS THE FIRST DEPLOYED MODE",
+  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
+  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
+  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
+  source: SEQUENCING_SOURCE,
+  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
+     standard: one pin proves the sentence was copied; two prove the RULING is
+     the one both surfaces carry, so a sequencing quietly reversed on either
+     fails here rather than in a review nobody re-runs. */
+  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
+  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
+  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
+     half is this area's, and saying so is the point rather than a disclaimer. */
+  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
+  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
+  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
+     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
+     cannot leave it stale by editing prose around it. `null` is not "unknown":
+     it is "no live run has been verified", and the suite holds it against the
+     landed flag, which is still `false`. */
+  verification_recorded: null,
+  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
+  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
+  gate: GATE_ADDRESS,
+  /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
+     refused a mode, and this said so; `op=airunopen` now refuses a mode not in `DEPLOYED_MODES` below with C-109.1, so
+     no run, and no production under a run, exists in a mode not deployed. `enforced_by_row` stays: the fleet member's
+     first row still refuses first inside the harness (agent-worker R14), and the two are tallied apart. */
+  enforced_by: ["C-109.1"],
+  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
+  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
+     landed sources rather than believed. */
+  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. The plane's open refuses a mode not deployed (C-109.1, ai-runs R40), so the RECORD holds no run in one; what neither gate reaches is a run's own work outside the plane's ops. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
+  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
+  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
+};
+var DEPLOYED_MODES = Object.freeze(DEPLOYMENT_SEQUENCE.order.slice(
+  0,
+  DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2
+));
+var DEFAULT_MODE = DEPLOYED_MODES[0];
 
 // ../bio-plane/src/run-productions/checks.mjs
 var SUGGEST_CHECK_KEYS = Object.freeze(Object.keys(SUGGEST_CHECKS).filter((k) => SUGGEST_CHECKS[k].check !== "C-27.15"));
@@ -25938,7 +26316,7 @@ var PAIR_AXES = Object.freeze([...STRENGTH_AXES]);
 // ../bio-plane/src/skilldoctrine.mjs
 var SKILL_CHECK_KEYS = Object.freeze(["AI_RUN_SKILL_VERSION_UNNAMED"]);
 var SKILL_CHECKS = Object.freeze(Object.fromEntries(
-  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])
+  SKILL_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS2[k]])
 ));
 var JUDGEMENT_ID = "investigative-judgement";
 var JUDGEMENT_EDITION = "1";
@@ -26223,72 +26601,6 @@ var PERMITTED_AUTO_COMPOSITION = {
      rather than left to be inferred from the prohibition it sits under. */
   stops_at: "the first new word. A connective sentence written to make the excerpts read well is generated wording, and it is the first prohibition's subject however small it is."
 };
-var GATE_ADDRESS = {
-  file: "agent-worker/src/harness.mjs",
-  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
-  modes_export: "MODES",
-  table_export: "CONTROL_FLOW",
-  row: "gate-mode",
-  first_step_export: "FIRST_STEP",
-  decision_function: "nextStep",
-  why_it_is_first: "a run in a mode that is not deployed terminates before it has spent anything, so the gate cannot be reached around by exhausting something else first"
-};
-var SEQUENCING_SOURCE = TABLE_SOURCE;
-var SEQUENCING_ALSO_NAMED_IN = "docs/archive/IS-SWEEP-2026-08-07.md";
-var DEPLOYMENT_SEQUENCE = {
-  id: "check-deploys-first",
-  /* THE SEQUENCING, AND THE POSITION IN THIS ARRAY IS THE CLAIM: index 0 is the
-     mode that deploys first, and every later index is a mode that enables only
-     after the one before it has been verified live. */
-  /* `extract` APPENDED 2026-09-14 by FLEET on SK-8's delegation, IN THE SAME
-     COMMIT as the row entered `agent-worker/src/harness.mjs`'s `MODES` — which
-     is ARM B3's whole demand (the two rosters are ONE set, held in both
-     directions) and ARM B4's (index 0 stays the only deployed mode; every later
-     index, `extract` included, is not). The pack's digest moves with this line
-     by construction and nothing needs bumping by hand. */
-  order: ["check", "investigate", "extract"],
-  first_deployed_mode: "check",
-  /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser,
-     because a session cannot verify its own copying by re-reading it. */
-  text: "CHECK IS THE FIRST DEPLOYED MODE",
-  role: "this session, run with this objective against an EXISTING conclusion, IS DEC-24's CHECK role \u2014 the record read adversarially, by the machine aimed at self-directed overclaiming, the threat model the doctrine names",
-  because: "also the safest first deployment, because a run over a concluded inquiry has the smallest authorisation surface and the clearest ground truth to be measured against",
-  satisfies: "Deploying that mode first satisfies the enacted instruction without a second architecture",
-  source: SEQUENCING_SOURCE,
-  /* AND PINNED A SECOND TIME, TO A DOCUMENT THAT PHRASES IT DIFFERENTLY. SK-3's
-     standard: one pin proves the sentence was copied; two prove the RULING is
-     the one both surfaces carry, so a sequencing quietly reversed on either
-     fails here rather than in a review nobody re-runs. */
-  also_named_in: "DEC-55's enacted CHECK-first instruction and DEC-60 are satisfied by one build: the session run with \xA72's objective against an existing conclusion IS the CHECK role; deploy that mode first. No second architecture.",
-  also_named_in_source: SEQUENCING_ALSO_NAMED_IN,
-  /* WHAT MUST HAPPEN BEFORE THE SECOND MODE ENABLES, AND WHO OWNS IT. Neither
-     half is this area's, and saying so is the point rather than a disclaimer. */
-  enabling_condition: "CHECK's FIRST LIVE RUN, verified in the instance's own scratch namespace against a CONCLUDED inquiry, swept after, with `op=audit` clean.",
-  enabling_condition_owned_by: "VF-4, which waits on DS-4 (DIST's gated deploy)",
-  /* THE HONEST STATE OF THAT CONDITION AT THIS COMMIT, AS DATA RATHER THAN AS A
-     SENTENCE IN A COMMENT — so the suite can assert it and so a later session
-     cannot leave it stale by editing prose around it. `null` is not "unknown":
-     it is "no live run has been verified", and the suite holds it against the
-     landed flag, which is still `false`. */
-  verification_recorded: null,
-  /* HOW THE SECOND MODE ACTUALLY ENABLES, and it is deliberately not a switch. */
-  enables_how: "by an EDIT to the landed table under review \u2014 `MODES.investigate.deployed`. A mode that could be enabled by a request parameter would be a gate the caller holds, which is no gate at all.",
-  gate: GATE_ADDRESS,
-  /* NO C-NUMBER, AND THAT IS A FACT ABOUT THE RECORD RATHER THAN AN OMISSION
-     HERE. Nothing in the check catalogue refuses a mode, so citing a C-number
-     would be citing something that does not exist. `enforced_by_row` is a THIRD
-     kind of backing beside SK-2's C-numbers and SK-3's instruction-only, and the
-     suite prints all three rather than collapsing them — a control-flow row is
-     code, but it is not a refusal at the record's edge and must not be tallied
-     as one. */
-  enforced_by: [],
-  enforced_by_row: `${GATE_ADDRESS.file}:${GATE_ADDRESS.table_export}["${GATE_ADDRESS.row}"]`,
-  /* REQUIRED, AND MEASURED. Every clause is re-measured by the suite against the
-     landed sources rather than believed. */
-  does_not_reach: "a DEPLOYMENT. The gate refuses a RUN whose mode is not deployed; nothing refuses shipping a build with the flag already flipped, and no instrument reads a release note. It also does not reach the RECORD: `ai_runs.mode` is free text in the plane's schema with no vocabulary check and no C-number over it, so a caller that never runs this harness can open a run in any mode string at all and the plane will store it. What the gate refuses is one fleet member's own control flow, which is the smallest authorisation surface \xA72 asked for and is also the whole of its reach. And it cannot verify its own enabling condition: `deployed: true` is an edit, and the REVIEW of that edit \u2014 not this text and not that flag \u2014 is what holds CHECK's live verification in front of it.",
-  /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
-  holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
-};
 var ABSENCE_FACTS = {
   meaning: {
     fact: "nothing derived",
@@ -26470,7 +26782,7 @@ var SOURCING = {
   bounds: "imported",
   /* airun.mjs RUN_BOUNDS + RUN_ENDINGS */
   refusals: "imported",
-  /* checks/bio-checks.mjs AI_RUN_CHECKS */
+  /* airun.mjs AI_RUN_CHECKS (ai-runs) */
   vocabularies: "driven",
   /* op=affordances .vocabularies */
   acts: "driven",
@@ -26809,6 +27121,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     governed: false,
     condition: null
   };
+  const resumed = resumeFrom(session.state ?? null);
+  state = resumed.at ? { ...state, ...resumed.state, resumeAt: resumed.at, resumeBasis: null } : { ...state, resumeAt: null, resumeBasis: resumed.basis };
   let jx = 0;
   let ended = null, steps = 0, segmentStopped = null;
   while (steps < maxSteps) {
@@ -26893,10 +27207,16 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     const consume = { ...work.consume || {}, runtime: spentThisStep };
     const entry = stepLog(state, decision);
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
+    const after = advance(state, decision);
     const tick = await call(
       "airuntick",
       null,
-      { run: runId, log: entry ? [entry] : [], consume }
+      {
+        run: runId,
+        log: entry ? [entry] : [],
+        consume,
+        ...CONTROL_FLOW.resume.to.includes(after.step) ? { state: resumableState(after) } : {}
+      }
     );
     if (!tick.reached) return { refusal: planeSilent(tick) };
     const tickAnswer = planeAnswer(tick, "airuntick");
@@ -26937,7 +27257,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
         break;
       }
     }
-    state = { ...state, level: null, observed: null, governed: false, condition: null };
+    const look = { level: null, observed: null, governed: false, condition: null };
+    state = { ...state, ...look };
     if (decision.step === "close") {
       const closed = planeAnswer(
         await call("airunclose", null, { run: runId, bound: decision.bound || "completed" }),
@@ -26953,14 +27274,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       state = { ...state, step: "close" };
       break;
     }
-    state = decision.step === "adjust" ? { ...state, step: "adjust", refusedSubmission: state.submission ?? null, adjusted: false } : {
-      ...state,
-      step: decision.step,
-      refusal: null,
-      adjusted: false,
-      refusedSubmission: null
-    };
-    if (decision.step === "next-pass") state = { ...state, pass: state.pass + 1 };
+    state = { ...after, budget: state.budget, ...look };
   }
   return {
     mode: state.mode,
