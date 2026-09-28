@@ -36,3 +36,26 @@ Two questions. I carry on with my best reading of each; neither blocks the op ro
 3. **The shapes disagree.** Skills R10 validates each recipe step's `act` against `published.catalog`'s ids, which are `ACTS` only. The recipes' steps name an `op` (`searchfields`, `search`, `meaningrows`, `concerns`, `image`, `acquire`, `projection`, `cite`, `queue`, …), most of which are reads, not acts. Published as they are, `renderPack` would throw on the first step.
 
 Best reading: N144 cannot be applied in this job. I leave R17 as it is and defer my share with this cause. It needs your R17 fold, a ruling on where the registry lives (moved into the plane with legacy-ui reading it, or the UI build publishing it), and a skills R10 reading of `act` against the ops the plane emits. If you rule instead that the registry moves into my module now (for example `bio-plane/src/affordances/surfaces.mjs`, published under R17's new keys, with app.html's copy left for legacy-ui), say so and I will build it.
+
+## J3 · QUESTION
+
+The op rows are done: every op layers 7–10 route is accounted for, keyed to each module's op map (escalation's names are LEGACY-INDEX #5 J1's). Two questions remain, and then COMPLETE.
+
+**Rows applied** (K208 (2), R27's rule):
+- **23 mutating ops** get a `NON_ACTS` row: standards 3, conformance 2, consequences 3, filings 6, escalation 8, and `actionriskpropose`.
+- **Rungs:**
+  - `reasoned`, each refusing `NO_REASON` without the member's reason (no new code): `consequencerevise`, `addressedrecord`, `escalationevaluate`, `escalationadvance`, `escalationdecline`, `escalationsuspend`. Each is driven at its own module's interface in `backing.test.mjs`, refused without its reason and accepted with one.
+  - `reversible`: `escalationresume`, which asks no reason; a further suspension takes it back, and the test drives that.
+  - `substrate`: `counselpacketexport`, on `export`'s ground.
+  - `undetermined` (15): `standarddeclare`, `standardadopt`, `consequencerecord`, `filingapprove`, `filingsent` (`actioncorrespond`'s ground), `counselpacket`, `escalationopen`, `escalationattach`, `escalationend`, `determine` (see Q3); and the proposals `standardpropose`, `theorypropose`, `actionriskpropose`, `comparisonpropose`, `filingprepare`. The first three ask a why, and stay `undetermined` on `contradictionpropose`'s and `actionlawspropose`'s precedent.
+- **The reads** (`standard`, `standards`, `standardinforce`, `determination`, `determinations`, `comparison`, `consequence`, `consequencesof`, `addressed`, `counselpacketread`, `filingsfor`, `availableactions`, `escalation`, `escalationsdue`, and monitoring R32's `monitoring`) get no `NON_ACTS` row. Legacy-index gives reads no `NEEDS` row (K153), so R12 would call such a row `stale`. `monitoring` is `driveshells`' cut, a read like it.
+- **Transient red, as K208 (2)'s:**
+  - Until legacy-index's `OPS`/`NEEDS` rows merge, `unaccounted` over today's table answers these 23 as `stale`.
+  - The legacy `affordances.test.mjs` ("NON_ACTS names only ops in NEEDS") and `rung-ladder.test.mjs` (BACKWARD, and its exact count) are red the same way.
+  - `rung-ladder`'s NO UNDER-CLAIM and backing scans do not read layer 9's op maps (`T5_OP_MAPS`), and escalation's `NO_REASON` sits behind a module-level `refuseReason`, which that scan does not follow. Both are for legacy-tests.
+
+**Q3. `determine` and `BAD_REASON`.** Conformance asks a reason only where a determination supersedes one (`#supersession`). That is `triage`'s and `inquiryground`'s shape under K212. But it refuses under `BAD_REASON`, for both an absent and a malformed reason. Everywhere else in the plane, `BAD_REASON` is the malformed code beside `NO_REASON` (store, citation, actions, inquiry, progressions, basis-versions, promotion). So adding it to `JUSTIFICATION_REFUSALS` would widen the family to a code that means "malformed" at nine sites. Best reading, applied: `determine` is `undetermined`. The alternatives are to add `BAD_REASON` to the family and grade it `reasoned`, or for conformance to answer an absent reason with `NO_REASON` (conformance's change, N-row).
+
+**Q4. Uses.** Keying the rows to the op maps and driving the backing means my tests import `standards`, `conformance`, `consequences`, `filings` (their `*Ops` maps) and `escalation`'s and `consequences`' fixtures. The architecture check fails on those five imports (6 failures), because none is in my `uses`. All are layer 9, before 11, and affordances grades their acts, so the uses are real (K212's and K221's precedent). Best reading: add all five to affordances' `uses` in `modules.json` and to its Uses list. The other checks pass: format 0 failures; coverage 27 of 27; ownership 0 legacy lines added or removed.
+
+**Tests** (with index.mjs's `ACQUIRE_GRADE_NOTE` import re-pointed to capture locally, legacy-index's N80 share; not committed): `node --test bio-plane/test/m/affordances/` → 75 tests, 72 pass, 0 fail, 3 todo (R16, R18: N176; R26 live: N231).
