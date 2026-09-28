@@ -1486,9 +1486,11 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        read off its code path whole (src/intent/index.mjs `contacts`, `pursuitOf`, `proposals` with `#pursuit`,
        `#project`, `#setAside`, `#allProposals`, `#conditioned`; src/reevaluation/index.mjs `notices` with `#redactor`
        and `#captureSeer`) and each hidden-project arm DRIVEN in this suite's T8 section above.
-       `monitoring` (monitoring R32) is deliberately LEFT UNCLASSIFIED and red: driven above, it hands the uninvited
-       member the id of a hidden project that holds a version at a monitored address (the row's `versions`, and
-       `newer_unmonitored`, list every bundle at the address; only the row's own `bundle` is asked `inSight`). */
+       `monitoring` (monitoring R32) was left unclassified and red at first: it handed the uninvited member the id of a
+       hidden project holding a version at a monitored address (the row's `versions` and `newer_unmonitored`). CLASSIFIED
+       2026-09-28 once tranche/T8's sight fix (K267–K269) reached this branch: every bundle a row names now passes
+       `inSight`, read off src/monitoring/index.mjs `monitoring` and `#withheld` whole, and the three op=monitoring arms
+       in the T8 section above drive it on the hidden project. */
     aspirationcontacts: "intent R13, R23 (N199): each pair of held aspirations naming a common entity or progression. "
       + "GATED per aspiration: the pairs are drawn only from the aspirations the viewer may see (Intent#pursuit), and "
       + "a PROJECT's aspiration is seen only by a viewer who sees its owning project (Intent#project: `existenceAct`, "
@@ -1507,6 +1509,14 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "a set-aside act is listed only when the viewer sees the project it concerns — the project named with it, else "
       + "the one its gap key names (`intent::<project>::…`, Intent#projectOfAct) — with no count of the withheld. "
       + "Stamped fail-closed with INTENT_READS. It writes nothing.",
+    monitoring: "monitoring R32 (K267–K269): every monitored address the viewer may see, with its plan row. GATED "
+      + "per bundle: a row is listed only when the viewer sees the version it checks (`membership.inSight` over the row's "
+      + "`bundle`), and every other bundle the row names passes the same `inSight` (Monitoring#withheld): `versions` "
+      + "keeps the seen ones, `newer_unmonitored` keeps the seen ones or is dropped, and a disagreement is restated over "
+      + "the seen versions' authored words or dropped — so a version filed in a project the caller was never invited to "
+      + "is ABSENT, never a placeholder, with no count of the withheld (`counts` and `truncated` are taken over the rows "
+      + "the viewer sees). The viewer is stamped fail-closed in index.mjs (`driveshells`' reason, REC-25). It writes "
+      + "nothing.",
     reevaluationnotices: "reevaluation R14, R20 (N200, K224): the pushed notices, for the queue that renders them. "
       + "GATED twice: a notice whose HOLDER the viewer may not see is withheld whole in SQL (viewerPredicate over "
       + "`bundles`, JOINed on the holder) and not counted; in a visible notice the NEWER version is withheld whole when "
