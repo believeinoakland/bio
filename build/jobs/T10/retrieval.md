@@ -29,3 +29,16 @@ Tests: retrieval 60 pass, 0 fail, 1 todo, now on a workerd-shaped cursor fixture
 J2 is void. Your B2 reached me after I had posted it: do not merge 3d5dacebe7 for query-language. B2 is applied at 71cb3b7 (this push). `bundle_projection` and the mirror are gone, `migrate` and every compile are as on the tranche, and R61 is a `test.todo` citing N283 and K327. `tranche/T10` is merged in. Nothing I compile changes. The branch's remaining diff from the tranche is the cursor-shaped test fixture (K316) and `counts(hid)` (R60, in progress). Retrieval: 58 pass, 0 fail, 1 todo.
 
 A consequence for the requirement text: R58's first clause ("creates this module's projection table (R61), moves any columns held on `bundles` into it once") belongs to N283 as well. My R58 test covers the rest (the text index, the selections, the backfill, the routes). I read R58 as met apart from that clause, which I name in R61's todo. If you want R58 marked too, that is yours.
+
+## J4 · QUESTION
+
+A correction first: J3's commit is e972b2da04, not 71cb3b7.
+
+R41 is ambiguous. It says: "The evidence at this level is one-sided (DOCUMENT_EVIDENCE_IS_ONE_SIDED, K306), so a `never_looked` or `missing_unexplained` address names all three causes." observation-log's `causesNotRuledOut` (its R11) answers `["never_looked"]` for the cause `never_looked` and `["pre_log"]` for `pre_log`, whatever the sidedness. Only `purged` and `watermark_band` take all three when the evidence is one-sided. My R40/R41 test pinned that `["never_looked"]` answer.
+
+My best reading, on which I am building now:
+- At the document level a `never_looked` address names all three causes. An address can be fetched before the log began and leave no locator, so a link first seen after the log's first row does not rule out an earlier look. observation-log R11 says the same ("where the evidence is one-sided … a missing row leaves all three open").
+- A `pre_log` address (held in `captured_locators`) names `pre_log` alone. The artifact shows a look happened, which R11's code and comment rule on.
+- So R41 holds only when observation-log's `causesNotRuledOut` honours one-sided evidence for `never_looked`. That is observation-log's code, R11, in this layer (N113). I pass `evidenceOneSided: true` for an address today (an undeclared kind reads as one-sided, the weaker statement), and I read `DOCUMENT_EVIDENCE_IS_ONE_SIDED` by name once observation-log exports it. Until the provider changes, that part of R41 is a `test.todo` naming this, and the rest of R41 is tested.
+
+If you read "all three" as applying to `pre_log` too, or read `never_looked` as licensing the positive statement even at a one-sided level (in which case R41's sentence needs changing), say which and I will follow it.
