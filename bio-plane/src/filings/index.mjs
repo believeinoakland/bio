@@ -18,7 +18,7 @@
  *                                   `captureFor`.
  *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32).
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11).
- *   standards      `standardRead` (its R5), `inForce` (R7).
+ *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`).
  *   profiles       a function answering the active profiles (ids or profile objects) to combine; default record-core's
@@ -35,6 +35,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, proposalLabel, parseFrontmatter, MACHINE_CLASS_PREFIX,
          sha256HexSync } from "../../checks/bio-checks.mjs";
@@ -122,7 +123,7 @@ export class Filings {
     this.#deps = { host, publication, provenance, content };
     this.actions = actions;
     this.conformance = conformance;
-    this.standards = standards;
+    this.#deps.standards = standards;
     this.consequences = consequences;
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
@@ -134,6 +135,7 @@ export class Filings {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
+  get standards() { return this.#deps.standards ||= (this.#deps.host ? standardsOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -178,10 +180,28 @@ export class Filings {
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
      module answers actions' read (K248: refused, never passed). */
   #noAction(id) {
+    /* DEC-49 REGION is-no-such-action */
     return { ok: false, reason: "NO_SUCH_ACTION", action: str(id),
              detail: this.actions && typeof this.actions.actionRead === "function"
                ? "no action by that id is readable here; one you may not see answers the same"
                : "no module answers an action's read here, so no action is readable" };
+    /* END DEC-49 REGION is-no-such-action */
+  }
+
+  /* R6, R7, R19: the one answer for a draft that is absent or whose action the viewer may not see. */
+  #noFiling(id) {
+    /* DEC-49 REGION is-no-such-filing */
+    return { ok: false, reason: "NO_SUCH_FILING", filing: str(id),
+             detail: "no draft by that id is readable here; one you may not see answers the same" };
+    /* END DEC-49 REGION is-no-such-filing */
+  }
+
+  /* R11, R14, R19: the one answer for a packet (or version) that is absent or whose action the viewer may not see. */
+  #noPacket(id) {
+    /* DEC-49 REGION is-no-such-packet */
+    return { ok: false, reason: "NO_SUCH_PACKET", id: str(id),
+             detail: "no counsel packet by that id and version is readable here; one you may not see answers the same" };
+    /* END DEC-49 REGION is-no-such-packet */
   }
 
   /* A determination as conformance's read answers it (its R9), or null. */
@@ -191,7 +211,11 @@ export class Filings {
     if (!d || d.ok === false) return null;
     return {
       id: str(d.id) || str(id), project: str(d.project), act: isObj(d.act) ? d.act : {},
-      findings: Array.isArray(d.findings) ? d.findings : [], standards: Array.isArray(d.standards) ? d.standards : [],
+      /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
+      findings: (Array.isArray(d.findings) ? d.findings : [])
+        .map((f) => (isObj(f) ? { ...f, id: str(f.finding) || str(f.id) } : f)),
+      standards: (Array.isArray(d.standards) ? d.standards : [])
+        .map((x) => (isObj(x) ? { ...x, id: str(x.standard) || str(x.id) } : x)),
       live: d.live !== false && !str(d.superseded_by), superseded_by: str(d.superseded_by),
       basis_changed: isObj(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null,
     };
@@ -312,7 +336,7 @@ export class Filings {
   filingPrepare({ action = null, preparer = null, viewer = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-filing-prepare */
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "no stamped preparer: a draft names who prepared it" };
+    if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
     if (CLOSED.includes(a.current_state))
@@ -416,8 +440,7 @@ export class Filings {
                detail: who ? `'${who.slice(0, 60)}' is a machine identity: a machine prepares, and a member approves`
                            : "no member is named as the one approving" };
     const d = this.#draft(filing, viewer);
-    if (!d) return { ok: false, reason: "NO_SUCH_FILING", filing: str(filing),
-                     detail: "no draft by that id is readable here; one you may not see answers the same" };
+    if (!d) return this.#noFiling(filing);
     const held = this.#one(`SELECT approved_by, at FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     if (held) return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, approved_by: held.approved_by, at: held.at,
                        detail: "a draft is approved at most once; prepare a new draft to approve another text" };
@@ -455,8 +478,7 @@ export class Filings {
                detail: who ? `'${who.slice(0, 60)}' is a machine identity: only a member files and records it`
                            : "no member is named as the one who sent it" };
     const d = this.#draft(filing, viewer);
-    if (!d) return { ok: false, reason: "NO_SUCH_FILING", filing: str(filing),
-                     detail: "no draft by that id is readable here; one you may not see answers the same" };
+    if (!d) return this.#noFiling(filing);
     if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
       return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before it is recorded as sent" };
     const sent = this.#one(`SELECT ord, sent_on, recorded_by FROM filing_sendings WHERE filing_id=?`, d.filing_id);
@@ -464,13 +486,13 @@ export class Filings {
                        recorded_by: sent.recorded_by, detail: "this draft is already recorded as sent" };
     /* END DEC-49 REGION is-filing-sent */
     if (!this.actions || typeof this.actions.actionCorrespond !== "function")
-      return { ok: false, reason: "NO_SUCH_ACTION", action: d.action_id, detail: "no module records an action's correspondence" };
+      return this.#noAction(d.action_id);
     const now = this.#when();
     const out = this.record.transact(() => {
       const c = this.actions.actionCorrespond({ target: d.action_id, direction: "sent", at,
         ...(medium != null ? { medium } : {}), ...(artifactSha != null ? { artifactSha } : {}),
         ...(account != null ? { account } : {}), viewer, author: who });
-      if (!c || c.ok === false) return c || { ok: false, reason: "NO_SUCH_ACTION", action: d.action_id };
+      if (!c || c.ok === false) return c || this.#noAction(d.action_id);
       const ord = Number.isInteger(Number(c.ord)) ? Number(c.ord) : null;
       this.sql.exec(`INSERT INTO filing_sendings (filing_id, action_id, ord, sent_on, medium, artifact_sha, account,
                        recorded_by, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -755,11 +777,8 @@ export class Filings {
   /** R11, R12: a packet's version (the latest unless one is named), read only by a member who may see the action. */
   counselPacketRead({ id = null, version = null, viewer = null } = {}) {
     const rows = this.#packet(id, viewer);
-    /* DEC-49 REGION is-packet-read */
     const r = rows ? (version == null || version === "" ? rows[rows.length - 1] : rows.find((x) => Number(x.version) === Number(version))) : null;
-    if (!r) return { ok: false, reason: "NO_SUCH_PACKET", id: str(id),
-                     detail: "no counsel packet by that id and version is readable here; one you may not see answers the same" };
-    /* END DEC-49 REGION is-packet-read */
+    if (!r) return this.#noPacket(id);
     const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
                                  ORDER BY export_id`, r.packet_id, r.version)
       .map((e) => ({ exported_by: e.author, at: e.at, counsel: parse(e.counsel), sha: e.sha }));
@@ -844,28 +863,31 @@ export class Filings {
                   proposer = null, viewer = null } = {}) {
     const who = str(proposer);
     /* DEC-49 REGION is-theory-propose */
-    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "no stamped proposer: a proposal names who made it" };
+    if (!who) return { ok: false, reason: "THEORY_NO_PROPOSER", detail: "no stamped proposer: a proposal names who made it" };
     let actionId = str(action), packetId = null;
     if (str(packet)) {
       const rows = this.#packet(packet, viewer);
-      if (!rows) return { ok: false, reason: "NO_SUCH_PACKET", id: str(packet),
-                          detail: "no counsel packet by that id is readable here; one you may not see answers the same" };
+      if (!rows) return this.#noPacket(packet);
       packetId = rows[0].packet_id; actionId = rows[0].action_id;
     }
     const a = this.#action(actionId, viewer);
     if (!a) return this.#noAction(actionId);
     const t = typeof theory === "string" ? theory.trim() : "";
-    if (!t || t.length > THEORY_TEXT_MAX)
-      return { ok: false, reason: "NO_THEORY", max: THEORY_TEXT_MAX, detail: `state the candidate theory in at most ${THEORY_TEXT_MAX} characters` };
     const rem = remedy == null ? null : String(remedy).trim() || null;
-    if (rem !== null && rem.length > THEORY_TEXT_MAX)
-      return { ok: false, reason: "NO_THEORY", max: THEORY_TEXT_MAX, detail: `the remedy is over ${THEORY_TEXT_MAX} characters` };
+    if (!t || t.length > THEORY_TEXT_MAX || (rem !== null && rem.length > THEORY_TEXT_MAX))
+      return { ok: false, reason: "NO_THEORY", max: THEORY_TEXT_MAX,
+               detail: `state the candidate theory, and any remedy, each in at most ${THEORY_TEXT_MAX} characters` };
     const list = (Array.isArray(standards) ? standards : typeof standards === "string" ? standards.split(",") : [])
       .map((s) => String(s ?? "").trim()).filter(Boolean);
     if (!list.length) return { ok: false, reason: "NO_STANDARDS", detail: "a candidate theory names the standards it rests on" };
-    for (const s of list)
-      if (!this.#standard(s, viewer))
-        return { ok: false, reason: "NO_SUCH_STANDARD", standard: s, detail: `no standard by the id '${s.slice(0, 60)}' is readable here` };
+    const reads = this.standards && typeof this.standards.standardRead === "function"
+      ? list.map((s) => this.#call(() => this.standards.standardRead({ id: s, viewer }))) : null;
+    if (!reads || reads.some((r) => !r))
+      return { ok: false, reason: "THEORY_STANDARD_UNREADABLE",
+               detail: "no module answers a standard's read here, so the standards named cannot be read" };
+    /* standards' own refusal (its NO_SUCH_STANDARD, C-112) passes through as it came, naming the standard. */
+    const refused = reads.find((r) => r.ok === false);
+    if (refused) return refused;
     const w = typeof why === "string" ? why.trim() : "";
     if (!w || w.length > THEORY_WHY_MAX)
       return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: `say why in at most ${THEORY_WHY_MAX} characters` };
@@ -931,9 +953,14 @@ export class Filings {
   /** R21: R15's block for one determination, for `escalation` (its R8). */
   availableActions({ determination = null, viewer = null } = {}) {
     /* DEC-49 REGION is-available-actions */
+    const raw = this.conformance && typeof this.conformance.determinationRead === "function"
+      ? this.#call(() => this.conformance.determinationRead({ id: str(determination), viewer })) : null;
+    if (!raw)
+      return { ok: false, reason: "DETERMINATION_UNREADABLE", determination: str(determination),
+               detail: "no module answers a determination's read here, so none is readable" };
+    /* conformance's own refusal (its NO_SUCH_DETERMINATION) passes through as it came: absent and unseen, one answer. */
+    if (raw.ok === false) return raw;
     const d = this.#det(determination, viewer);
-    if (!d) return { ok: false, reason: "NO_SUCH_DETERMINATION", determination: str(determination),
-                     detail: "no determination by that id is readable here; one you may not see answers the same" };
     /* END DEC-49 REGION is-available-actions */
     return { ok: true, determination: d.id, live: d.live, ...this.#block([d], this.#view()) };
   }

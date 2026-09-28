@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { world as publicationWorld, V, NOW } from "../publication/fixture.mjs";
 import { filingsOf, filingsOps } from "../../../src/filings/index.mjs";
 import { consequencesModule } from "../../../src/consequences/index.mjs";
+import { standardsOf } from "../../../src/standards/index.mjs";
 import { isMachineIdentity } from "../../../checks/bio-checks.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
@@ -63,35 +64,16 @@ export function conformanceStandIn() {
       const d = held.get(id);
       if (!d || !sees(d, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
       const { audience, ...rest } = structuredClone(d);
+      /* K252's settled shape: a finding is named `finding`, a standard `standard`; `outcomes` beside them. */
       return { ok: true, live: !rest.superseded_by, ...rest,
-               outcomes: rest.standards.map((s) => ({ standard: s.id, outcome: s.outcome })) };
+               findings: rest.findings.map(({ id: finding, ...f }) => ({ finding, role: "load_bearing", ...f })),
+               standards: rest.standards.map(({ id: standard, ...x }) => ({ standard, in_force: null, rows: [], ...x })),
+               outcomes: rest.standards.map((x) => ({ standard: x.id, outcome: x.outcome })) };
     },
     determinationsFor({ finding, live, viewer }) {
       const items = [...held.values()].filter((d) => sees(d, viewer) && (!live || !d.superseded_by)
         && d.findings.some((f) => f && f.id === finding)).map((d) => ({ id: d.id }));
       return { ok: true, items, truncated: false };
-    },
-  };
-}
-
-/** standards, as its R5 and R7 state. */
-export function standardsStandIn() {
-  const held = new Map();
-  return {
-    held,
-    standardRead({ id, viewer }) {
-      const s = held.get(id);
-      if (!s || !sees(s, viewer)) return { ok: false, reason: "NO_SUCH_STANDARD" };
-      const { audience, ...rest } = structuredClone(s);
-      return { ok: true, ...rest };
-    },
-    inForce(id, date) {
-      const s = held.get(id);
-      if (!s) return { state: "undetermined", why: "no such standard" };
-      const { from, to } = s.period || {};
-      if ((from && date < from) || (to && date > to)) return { state: "not_in_force", why: "outside its period" };
-      if (!from) return { state: "undetermined", why: "its start is not stated" };
-      return { state: "in_force", why: null };
     },
   };
 }
@@ -114,7 +96,11 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const pub = w.signFinding(F, { edges: [{ to: DOC, kind: "cites", disclosure: "serve" }] });
   if (!pub.ok) throw new Error(`fixture publish refused: ${JSON.stringify(pub)}`);
   w.record.setSetting("jurisdiction_profiles", [PROFILE], V("olive"));
-  const actions = actionsStandIn(w), conformance = conformanceStandIn(), standards = standardsStandIn();
+  const actions = actionsStandIn(w), conformance = conformanceStandIn();
+  /* standards is the real module (merged early, K251). */
+  const standards = standardsOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion,
+                                          content: w.content, now: () => w.clock.now });
+  standards.migrate();
   /* consequences is the real module (merged early, K250), reading the conformance stand-in. */
   const consequences = consequencesModule(w.host, { record: w.record, membership: w.membership, promotion: w.promotion,
     conformance, content: w.content, provenance: w.prov, inquiry: w.k, now: () => w.clock.now });
@@ -125,16 +111,19 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const f = filingsOf(w.host, deps);
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
-  standards.held.set("STD-2026-0001", { id: "STD-2026-0001", cite: "P.E.B.L. § 12", kind: "ordinance",
-    issuer: "Port Ellery Selectboard", text: [evidenceCid], period: { from: "2020-01-01", to: null }, superseded_by: null });
-  standards.held.set("STD-2026-0002", { id: "STD-2026-0002", cite: "MCBC 2025-3", kind: "commitment",
-    issuer: "Marlow County Commission", text: [evidenceCid], period: { from: null, to: null }, superseded_by: null });
+  const declare = (over) => {
+    const r = standards.standardDeclare({ text: [evidenceCid], author: V("olive"), viewer: V("olive"), ...over });
+    if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
+    return r.id;
+  };
+  const S1 = declare({ cite: "P.E.B.L. § 12", kind: "ordinance", issuer: "Port Ellery Selectboard", period: { from: "2020-01-01", to: "2030-12-31" } });
+  const S2 = declare({ cite: "MCBC 2025-3", kind: "commitment", issuer: "Marlow County Commission", period: { from: null, to: null } });
   conformance.held.set("CONF-2026-0001", {
     id: "CONF-2026-0001", project: proj,
     act: { id: "ACT-2026-0001", description: "the works order let on 2026-03-02", actor: { role: "Selectboard", body: "Port Ellery Selectboard" },
            at: "2026-03-02", evidence: [evidenceCid] },
     findings: [{ id: F, case: CASE, edition: 1, version_sha: pin }],
-    standards: [{ id: "STD-2026-0001", outcome: "noncompliant" }, { id: "STD-2026-0002", outcome: "compliant" }],
+    standards: [{ id: S1, outcome: "noncompliant" }, { id: S2, outcome: "compliant" }],
     rows: [], superseded_by: null, basis_changed: null, author: V("olive"), at: NOW });
   const action = (id, over = {}) => {
     const a = { id, kind: "bylaw_complaint", risk_tier: 1, current_state: "active",
@@ -148,7 +137,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
     return a;
   };
   const x = {
-    ...w, w, f, proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, action,
+    ...w, w, f, proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, action, S1, S2, declare,
     op(name, query = {}, body = null) {
       const url = new URL(`http://do/${name}`);
       for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));

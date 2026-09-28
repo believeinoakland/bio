@@ -32,11 +32,11 @@ function retemplate(x, id, patch) {
   return { ...p, id, action_kinds: p.action_kinds.map((k) => (k.kind === "bylaw_complaint" ? { ...k, ...patch } : k)) };
 }
 
-test("R1 refusals in order: NO_AUTHOR, NO_SUCH_ACTION (absent and invisible one answer), ACTION_CLOSED, FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET, KIND_NO_TEMPLATE; each with a negative control", () => {
+test("R1 refusals in order: NO_AUTHOR (FILING_NO_PREPARER), NO_SUCH_ACTION (absent and invisible one answer), ACTION_CLOSED, FILING_TIER_UNDETERMINED, TIER3_COUNSEL_PACKET, KIND_NO_TEMPLATE; each with a negative control", () => {
   const x = world();
   x.action(A);
-  assert.equal(prep(x, { preparer: "" }).reason, "NO_AUTHOR");
-  assert.equal(prep(x, { action: "ACTION-NONE", preparer: " " }).reason, "NO_AUTHOR", "asked first");
+  assert.equal(prep(x, { preparer: "" }).reason, "FILING_NO_PREPARER");
+  assert.equal(prep(x, { action: "ACTION-NONE", preparer: " " }).reason, "FILING_NO_PREPARER", "asked first");
   const absent = prep(x, { action: "ACTION-NONE" });
   x.action("ACTION-HIDDEN", { audience: [V("olive")] });
   const hidden = prep(x, { action: "ACTION-HIDDEN" });
@@ -119,7 +119,7 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   assert.deepEqual([by.counterparty_body.value, by.counterparty_body.source], ["Port Ellery Selectboard", A]);
   assert.deepEqual([by.act.value, by.act.source], ["the works order let on 2026-03-02", "CONF-2026-0001"]);
   assert.deepEqual([by.act_date.value, by.act_date.source], ["2026-03-02", "CONF-2026-0001"]);
-  assert.deepEqual([by.standards.value, by.standards.source], ["P.E.B.L. § 12; MCBC 2025-3", "STD-2026-0001, STD-2026-0002"]);
+  assert.deepEqual([by.standards.value, by.standards.source], ["P.E.B.L. § 12; MCBC 2025-3", `${x.S1}, ${x.S2}`]);
   assert.deepEqual([by.findings.value, by.findings.source],
                    ["INQ-2026-0001 (case CASE-2026-0001, edition 1)", "INQ-2026-0001@CASE-2026-0001/1"]);
   assert.deepEqual([by.governing_laws.value, by.governing_laws.source], ["P.E.B.L. § 4", A]);

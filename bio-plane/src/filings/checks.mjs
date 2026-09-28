@@ -1,16 +1,19 @@
 /* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21). DEC-49: every
  * refusal this module answers carries its code, its catalogue row and the member's translation. The family is C-115
- * (K248). A refusal another module answers (`actions.actionCorrespond`'s, R7) passes through as it came. */
+ * (K248). A refusal another module answers passes through as it came: `actions.actionCorrespond`'s (R7), standards'
+ * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. R1's and R14's
+ * `NO_AUTHOR` is the catalogue's generic code, minted elsewhere for other conditions, so each act here has its own
+ * (`FILING_NO_PREPARER`, `THEORY_NO_PROPOSER`), as standards did for its R1 (K251). */
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
 export const FILINGS_CHECKS = Object.freeze({
-  NO_AUTHOR: {
+  FILING_NO_PREPARER: {
     check: "C-115.1", where: at("filingPrepare", "is-filing-prepare"),
-    translation: "Nobody is named as the one preparing or proposing this. Every draft and proposal names who made it.",
+    translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it.",
   },
   NO_SUCH_ACTION: {
-    check: "C-115.2", where: at("filingPrepare", "is-filing-prepare"),
+    check: "C-115.2", where: at("#noAction", "is-no-such-action"),
     translation: "There is no action by that id that you can read here. An action you may not see answers exactly as one "
       + "that does not exist.",
   },
@@ -38,7 +41,7 @@ export const FILINGS_CHECKS = Object.freeze({
     translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them.",
   },
   NO_SUCH_FILING: {
-    check: "C-115.8", where: at("filingApprove", "is-filing-approve"),
+    check: "C-115.8", where: at("#noFiling", "is-no-such-filing"),
     translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers "
       + "exactly as one that does not exist.",
   },
@@ -91,7 +94,7 @@ export const FILINGS_CHECKS = Object.freeze({
     translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel.",
   },
   NO_SUCH_PACKET: {
-    check: "C-115.20", where: at("counselPacketRead", "is-packet-read"),
+    check: "C-115.20", where: at("#noPacket", "is-no-such-packet"),
     translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you "
       + "may not see answers exactly as one that does not exist.",
   },
@@ -107,18 +110,21 @@ export const FILINGS_CHECKS = Object.freeze({
     check: "C-115.23", where: at("theoryPropose", "is-theory-propose"),
     translation: "A candidate theory names the standards it rests on.",
   },
-  NO_SUCH_STANDARD: {
+  THEORY_STANDARD_UNREADABLE: {
     check: "C-115.24", where: at("theoryPropose", "is-theory-propose"),
-    translation: "A standard the theory names is not one you can read here.",
+    translation: "The standards the theory names cannot be read here, so the proposal is not recorded.",
   },
   THEORY_WHY_REFUSED: {
     check: "C-115.25", where: at("theoryPropose", "is-theory-propose"),
     translation: "Say why the theory is proposed, in at most 1,000 characters.",
   },
-  NO_SUCH_DETERMINATION: {
+  DETERMINATION_UNREADABLE: {
     check: "C-115.26", where: at("availableActions", "is-available-actions"),
-    translation: "There is no determination by that id that you can read here. One you may not see answers exactly as "
-      + "one that does not exist.",
+    translation: "No determination can be read here, so the actions available against its offices cannot be listed.",
+  },
+  THEORY_NO_PROPOSER: {
+    check: "C-115.27", where: at("theoryPropose", "is-theory-propose"),
+    translation: "Nobody is named as the one proposing this theory. Every proposal names who made it.",
   },
 });
 

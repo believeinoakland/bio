@@ -19,7 +19,7 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
     seen.add(code);
   };
   const f = x.f;
-  expect(f.filingPrepare({ action: A, preparer: "" }), "NO_AUTHOR");
+  expect(f.filingPrepare({ action: A, preparer: "" }), "FILING_NO_PREPARER");
   expect(f.filingPrepare({ action: "NONE", preparer: V("bo"), viewer: V("bo") }), "NO_SUCH_ACTION");
   x.action("ACTION-CLOSED", { current_state: "resolved" });
   expect(f.filingPrepare({ action: "ACTION-CLOSED", preparer: V("bo"), viewer: V("bo") }), "ACTION_CLOSED");
@@ -53,13 +53,22 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 each refusal of this module carries its code, 
   const p = f.counselPacket({ action: "ACTION-T3", counsel, author: V("bo"), viewer: V("bo") });
   expect(f.counselPacketRead({ id: "NONE", viewer: V("bo") }), "NO_SUCH_PACKET");
   expect(f.counselPacketExport({ id: p.id, author: MACHINE }), "MACHINE_CANNOT_EXPORT");
-  const tp = (o) => f.theoryPropose({ action: "ACTION-T3", theory: "t", standards: ["STD-2026-0001"], why: "w", proposer: V("bo"), viewer: V("bo"), ...o });
+  const tp = (o) => f.theoryPropose({ action: "ACTION-T3", theory: "t", standards: [x.S1], why: "w", proposer: V("bo"), viewer: V("bo"), ...o });
   expect(tp({ theory: "" }), "NO_THEORY");
   expect(tp({ standards: [] }), "NO_STANDARDS");
-  expect(tp({ standards: ["STD-NONE"] }), "NO_SUCH_STANDARD");
+  expect(tp({ proposer: "" }), "THEORY_NO_PROPOSER");
+  const ns = tp({ standards: ["STD-NONE"] });
+  assert.deepEqual([ns.reason, ns.id], ["NO_SUCH_STANDARD", "STD-NONE"], "standards' own refusal passes through as it came");
+  assert.match(String(ns.check), /^C-112\./, "standards' row, not this family's");
   expect(tp({ why: "" }), "THEORY_WHY_REFUSED");
   expect(f.filingsFor({ action: "NONE", viewer: V("bo") }), "NO_SUCH_ACTION");
-  expect(f.availableActions({ determination: "NONE", viewer: V("bo") }), "NO_SUCH_DETERMINATION");
+  const nd = f.availableActions({ determination: "NONE", viewer: V("bo") });
+  assert.deepEqual([nd.reason, "check" in nd], ["NO_SUCH_DETERMINATION", false], "conformance's refusal passes through as it came");
+  const bare = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,
+                             actions: x.actions, now: () => x.clock.now });
+  expect(bare.availableActions({ determination: "CONF-2026-0001", viewer: V("bo") }), "DETERMINATION_UNREADABLE");
+  expect(bare.theoryPropose({ action: "ACTION-T3", theory: "t", standards: ["STD-X"], why: "w", proposer: V("bo"), viewer: V("bo") }),
+         "THEORY_STANDARD_UNREADABLE");
   assert.deepEqual([...seen].sort(), Object.keys(FILINGS_CHECKS).sort(), "every row of the family is answered");
   const checks = Object.values(FILINGS_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length);
@@ -73,7 +82,7 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
   const r = bare.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   assert.equal(r.reason, "NO_SUCH_ACTION");
   assert.match(r.detail, /no module answers an action's read/);
-  assert.equal(bare.availableActions({ determination: "CONF-2026-0001", viewer: V("bo") }).reason, "NO_SUCH_DETERMINATION");
+  assert.equal(bare.availableActions({ determination: "CONF-2026-0001", viewer: V("bo") }).reason, "DETERMINATION_UNREADABLE");
   const noConformance = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,
                                       actions: x.actions, standards: x.standards, now: () => x.clock.now });
   x.action(A);

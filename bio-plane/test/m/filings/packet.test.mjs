@@ -46,7 +46,7 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   const x = tier3({ correspondence: [
     { ord: 0, direction: "sent", at: "2026-03-10", account: "letter", author: V("bo") },
     { ord: 1, direction: "received", at: "2026-03-12", party: "the clerk", artifact_sha: sha(`the text of ${DOC}`), author: V("bo") }] });
-  const part = (over) => x.consequences.consequenceRecord({ determination: "CONF-2026-0001", standard: "STD-2026-0001",
+  const part = (over) => x.consequences.consequenceRecord({ determination: "CONF-2026-0001", standard: x.S1,
     affected: { kind: "fund", description: "the harbour works fund" }, period: { from: "2026-03-02", to: "2026-06-30" },
     author: V("olive"), viewer: V("olive"), ...over });
   const assessed = part({ measure: { unit: "money", currency: "USD", value: 1000 },
@@ -80,8 +80,8 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   assert.deepEqual(ex[docSha].attestations.items, []);
   /* standards: citation, kind, issuer, text content ids, in force at the act's date */
   assert.deepEqual(s.standards.items.map((i) => [i.standard, i.cite, i.kind, i.issuer, i.in_force.state, i.outcome]), [
-    ["STD-2026-0001", "P.E.B.L. § 12", "ordinance", "Port Ellery Selectboard", "in_force", "noncompliant"],
-    ["STD-2026-0002", "MCBC 2025-3", "commitment", "Marlow County Commission", "undetermined", "compliant"]]);
+    [x.S1, "P.E.B.L. § 12", "ordinance", "Port Ellery Selectboard", "in_force", "noncompliant"],
+    [x.S2, "MCBC 2025-3", "commitment", "Marlow County Commission", "undetermined", "compliant"]]);
   assert.deepEqual(s.standards.items[0].text, [x.evidenceCid]);
   /* theories: empty, said in words */
   assert.deepEqual(s.theories.items, []);
@@ -189,7 +189,7 @@ test("R12 assembling again makes a new version and earlier versions stay readabl
   assert.deepEqual(x.f.counselPacketRead({ id: v1.id, version: 1, viewer: V("olive") }).basis_changed.causes.map((c) => c.cause),
                    ["determination_flagged"]);
   x.conformance.held.get("CONF-2026-0001").basis_changed = null;
-  x.standards.held.get("STD-2026-0002").superseded_by = "STD-2026-0009";
+  const s2b = x.declare({ cite: "MCBC 2025-3A", kind: "commitment", issuer: "Marlow County Commission", supersedes: x.S2 });
   x.conformance.held.get("CONF-2026-0001").superseded_by = "CONF-2026-0002";
   /* a later edition of the finding's case */
   const roles = [{ target: F, version_sha: x.pin }];
@@ -209,14 +209,14 @@ test("R14 any credential may propose a candidate theory and remedy against named
   const x = tier3();
   const v1 = pack(x);
   const prop = (over = {}) => x.f.theoryPropose({ packet: v1.id, theory: "The order breached the bylaw's vote requirement.",
-    remedy: "Rescission of the order.", standards: ["STD-2026-0001"], why: "the determination finds it noncompliant",
+    remedy: "Rescission of the order.", standards: [x.S1], why: "the determination finds it noncompliant",
     proposer: V("bo"), viewer: V("bo"), ...over });
-  assert.equal(prop({ proposer: "" }).reason, "NO_AUTHOR");
+  assert.equal(prop({ proposer: "" }).reason, "THEORY_NO_PROPOSER");
   assert.equal(prop({ packet: "CPK-NONE" }).reason, "NO_SUCH_PACKET");
   assert.equal(prop({ packet: null, action: "ACTION-NONE" }).reason, "NO_SUCH_ACTION");
   assert.equal(prop({ standards: [] }).reason, "NO_STANDARDS");
-  const bad = prop({ standards: ["STD-2026-0001", "STD-NONE"] });
-  assert.deepEqual([bad.reason, bad.standard], ["NO_SUCH_STANDARD", "STD-NONE"]);
+  const bad = prop({ standards: [x.S1, "STD-NONE"] });
+  assert.deepEqual([bad.reason, bad.id, bad.check], ["NO_SUCH_STANDARD", "STD-NONE", "C-112.10"], "standards' own refusal, naming it");
   assert.equal(prop({ why: "x".repeat(1001) }).reason, "THEORY_WHY_REFUSED");
   assert.equal(prop({ why: "" }).reason, "THEORY_WHY_REFUSED");
   assert.equal(prop({ why: "x".repeat(1000) }).ok, true, "1,000 characters is allowed");
@@ -230,7 +230,7 @@ test("R14 any credential may propose a candidate theory and remedy against named
   assert.equal(items.length, 2);
   for (const t of items) {
     assert.equal(t.candidate, true);
-    assert.deepEqual(t.standards, ["STD-2026-0001"]);
+    assert.deepEqual(t.standards, [x.S1]);
     assert.ok(t.label && t.label.says);
   }
   assert.match(v2.sections.theories.says, /never the group's position/);

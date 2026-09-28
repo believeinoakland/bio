@@ -24,7 +24,7 @@ function busy() {
   x.f.counselPacketExport({ id: p1.id, version: 1, author: V("olive"), viewer: V("olive") });
   x.clock.now = "2026-09-28T03:00:00Z";
   const p2 = x.f.counselPacket({ action: T3, counsel: { name: "B. Counsel", organisation: "Other Chambers" }, author: V("olive"), viewer: V("olive") });
-  x.f.theoryPropose({ action: T3, theory: "A breach.", standards: ["STD-2026-0001"], why: "named", proposer: V("bo"), viewer: V("bo") });
+  x.f.theoryPropose({ action: T3, theory: "A breach.", standards: [x.S1], why: "named", proposer: V("bo"), viewer: V("bo") });
   return { x, d1, d2, p1, p2, text };
 }
 
@@ -66,7 +66,7 @@ test("R15 the available-actions block of a published case a live determination r
   assert.deepEqual(b.determinations.map((d) => d.determination), ["CONF-2026-0001"]);
   const [d] = b.determinations;
   assert.deepEqual([d.office.role, d.office.body, d.office.in_profile], ["Selectboard", "Port Ellery Selectboard", true]);
-  assert.deepEqual(d.tier3.standards, ["STD-2026-0001"], "the standards the theory rests on: those found noncompliant");
+  assert.deepEqual(d.tier3.standards, [x.S1], "the standards the theory rests on: those found noncompliant");
   assert.deepEqual(d.tier3.factual_basis, [{ finding: F, case: CASE, edition: 1 }]);
   assert.equal(d.tier3.counsel, COUNSEL_SENTENCE);
   const bytes = JSON.stringify(b);
@@ -96,9 +96,9 @@ test("R15 the block is registered with publication once, at start, and computed 
   assert.equal(again.reason, "PROVIDER_DECLARED");
   assert.equal(filingsOf(x.host), x.f, "one instance per host");
   const first = block(x);
-  x.standards.held.set("STD-2026-0003", { id: "STD-2026-0003", cite: "x", kind: "ordinance", issuer: "y", text: [], period: {} });
-  x.conformance.held.get("CONF-2026-0001").standards.push({ id: "STD-2026-0003", outcome: "noncompliant" });
-  assert.deepEqual(block(x).determinations[0].tier3.standards, ["STD-2026-0001", "STD-2026-0003"], "computed at the read");
+  const s3 = x.declare({ cite: "P.E.B.L. § 13", kind: "ordinance", issuer: "Port Ellery Selectboard", period: { from: "2020-01-01", to: null } });
+  x.conformance.held.get("CONF-2026-0001").standards.push({ id: s3, outcome: "noncompliant" });
+  assert.deepEqual(block(x).determinations[0].tier3.standards, [x.S1, s3], "computed at the read");
   assert.notDeepEqual(first, block(x));
 });
 
@@ -166,7 +166,7 @@ test("R19 drafts, approvals, sendings, packets, exports and proposals are append
   x.actions.held.get(T3).audience = [V("olive")];
   assert.equal(x.f.counselPacketRead({ id: p1.id, viewer: V("bo") }).reason, "NO_SUCH_PACKET");
   assert.equal(x.f.filingsFor({ action: T3, viewer: V("bo") }).reason, "NO_SUCH_ACTION");
-  assert.equal(x.f.theoryPropose({ action: T3, theory: "t", standards: ["STD-2026-0001"], why: "w", proposer: V("bo"), viewer: V("bo") }).reason,
+  assert.equal(x.f.theoryPropose({ action: T3, theory: "t", standards: [x.S1], why: "w", proposer: V("bo"), viewer: V("bo") }).reason,
                "NO_SUCH_ACTION");
   x.action(A);
   const d = x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });

@@ -143,7 +143,7 @@ test("R16 nothing a machine writes approves, sends, names counsel or exports; a 
   assert.equal(x.f.counselPacket({ action: "ACTION-T3", counsel, author: MACHINE, viewer: MACHINE }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
   const p = x.f.counselPacket({ action: "ACTION-T3", counsel, author: V("olive"), viewer: V("olive") });
   assert.equal(x.f.counselPacketExport({ id: p.id, version: 1, author: MACHINE, viewer: MACHINE }).reason, "MACHINE_CANNOT_EXPORT");
-  const t = x.f.theoryPropose({ action: "ACTION-T3", theory: "A breach of the bylaw.", standards: ["STD-2026-0001"],
+  const t = x.f.theoryPropose({ action: "ACTION-T3", theory: "A breach of the bylaw.", standards: [x.S1],
                                 why: "the determination names it", proposer: MACHINE, viewer: MACHINE });
   assert.deepEqual([t.ok, t.proposal.label.machine_work], [true, true]);
   assert.deepEqual([x.count("filing_sendings"), x.count("counsel_packet_exports")], [0, 0]);
