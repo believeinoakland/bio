@@ -8675,55 +8675,6 @@ export const ACT_SHAPE_CHECKS = {
       + 'its own limits is claiming to cover everything, and that is the overclaim this record '
       + 'exists to refuse.',
   },
-  BAD_NOTE: {
-    check: 'C-33.15',
-    where: 'src/store.mjs cite > is-cite-note',
-    translation: 'A note here is at most two hundred characters and cannot contain a quotation '
-      + 'mark, a backslash or a line break. Those characters would silently reshape the document '
-      + 'rather than appear in it, so the note is declined instead of mangled.',
-  },
-  NO_ROLE: {
-    check: 'C-33.16',
-    where: 'src/store.mjs cite > is-cite-role',
-    translation: 'A leg of a question\'s basis has to say what the material DOES for the answer, '
-      + 'and this one does not say. It is never assumed: material that cuts against the case is '
-      + 'first-class here, and guessing would put a claim about your reasoning in the record that '
-      + 'you did not make.',
-  },
-  BAD_ROLE: {
-    check: 'C-33.17',
-    where: 'src/store.mjs cite > is-cite-role',
-    translation: 'That is not one of the parts a piece of basis can play. The set is closed and is '
-      + 'published beside the act itself, so the choices can be read rather than remembered.',
-  },
-  ROLE_NOT_APPLICABLE: {
-    check: 'C-33.18',
-    where: 'src/store.mjs cite > is-cite-role',
-    translation: 'What material does for an answer is a property of a question\'s basis, and the '
-      + 'thing citing here is a case. A case\'s citation carries no such part, so this one would '
-      + 'be dropped rather than recorded — and a field stated in one place and honoured nowhere is '
-      + 'how a record and the pages built from it drift apart.',
-  },
-  SEVERED_EDGE: {
-    check: 'C-33.19',
-    where: 'src/store.mjs cite > is-cite-severed',
-    translation: 'Somebody already recorded a decision to cut this dependency, which is different '
-      + 'from there never having been one. Citing it again would neither reverse that decision nor '
-      + 'step around it, so putting the link back is a separate act that records its own reason.',
-  },
-  /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT
-     CITABLE". A sub-number of this family, as C-33.15..19 (cite's other
-     regions) are; C-33.38 is REC-175's. The translation NAMES THE DOOR, the
-     REC-117 rule: cite what superseded it, or re-collect the source. */
-  RETIRED_NOT_CITABLE: {
-    check: 'C-33.39',
-    where: 'src/store.mjs cite > is-cite-retired',
-    translation: 'The group has retired this material, recording that it is superseded or no longer '
-      + 'stands, so a citation made now would read to everyone after you as live support nobody will '
-      + 'look at again. Cite whatever superseded it, or collect the source again as a new item and '
-      + 'cite that. A document its publisher withdrew or changed is a different thing and can still '
-      + 'be cited.',
-  },
   CAS_STALE: {
     check: 'C-33.21',
     where: 'src/promotion/index.mjs #promote > is-promote-cas',
@@ -11103,63 +11054,6 @@ export const CONTENT_EXTENT_CHECKS = {
       + 'reference that says "this document, that passage" is two claims that do not meet, and a '
       + 'reader following it would be shown material the citation never meant.',
   },
-  /* REC-97 / IC-90 — THE FOUR WAYS THE ACT THAT WRITES A LEG CAN BE HANDED AN
-     EXTENT IT MUST NOT WRITE, and every one of them exists because the
-     alternative was already measured: until this item `op=cite` destructured
-     seven named parameters and an `extent_kind` sent beside them WAS DROPPED IN
-     SILENCE, so a member who chose a page got a leg resting on the whole
-     document with nothing anywhere saying the choice went nowhere. A parameter
-     nobody reads is a parameter nobody can refuse, and a silent drop is the
-     D-21 class: a field authored in one place and honoured nowhere.
-
-     THEY ARE IN THIS FAMILY AND NOT A NEW ONE, on REC-84's own rule two rows up
-     (SK-1's floor rule) and on the same substantive ground: this family's
-     subject is *the ways the record could come to point at nothing*, and an act
-     that writes a leg the member did not describe is the widest of them. No new
-     `node tools/mintid.mjs C` id: these are sub-numbers of an allocated family,
-     exactly as C-45.5 and C-45.6 were.
-
-     WHAT IS NOT HERE, DELIBERATELY. A leg whose extent is MALFORMED or names an
-     unlanded kind is refused through `checkLegExtentGrammar` — REC-84's ONE
-     checker, which this act ROUTES ITS COMPOSED LEG THROUGH and re-implements
-     nothing of — and comes back under `BASIS_REFUSED`, which is `op=promote`'s
-     own name for exactly that verdict. `suggest` set that precedent in words:
-     *"one function answering twice should not answer under two names."* A fifth
-     code here would be a second name for a refusal the record already has. */
-  UNKNOWN_EXTENT_FIELD: {
-    check: 'C-45.7',
-    where: 'src/store.mjs cite > is-cite-extent',
-    translation: 'Part of what was sent with this citation names a field this act does not '
-      + 'carry, so the record cannot tell what part of the document you meant. It is refused '
-      + 'rather than ignored: a field that is accepted and quietly dropped leaves you with a '
-      + 'citation that looks like the one you made and is not. The fields this act does take '
-      + 'are listed beside the refusal.',
-  },
-  EXTENT_NOT_APPLICABLE: {
-    check: 'C-45.8',
-    where: 'src/store.mjs cite > is-cite-extent',
-    translation: 'Which part of a document a citation rests on is something a QUESTION\'s basis '
-      + 'records, and the thing citing here is a case. A case\'s citation names the document and '
-      + 'has nowhere to put a page or a passage, so this one would be dropped rather than '
-      + 'recorded — and a field stated in one place and honoured nowhere is how a record and the '
-      + 'pages built from it drift apart.',
-  },
-  EXTENT_ON_MANY: {
-    check: 'C-45.9',
-    where: 'src/store.mjs cite > is-cite-extent',
-    translation: 'A part of a document is a part of ONE document, and this citation would write '
-      + 'a leg for several. Writing the same page or passage onto each of them would put claims '
-      + 'in the record you never made — you named one part once. Cite the one document you mean '
-      + 'this part of, and cite the rest separately.',
-  },
-  BAD_EXTENT_VALUE: {
-    check: 'C-45.10',
-    where: 'src/store.mjs cite > is-cite-extent',
-    translation: 'One of the values describing which part of the document you mean cannot be '
-      + 'written into the record as it stands — it is empty, too long, or contains a quotation '
-      + 'mark, a backslash, a line break or a comment mark, and those characters would silently '
-      + 'reshape the document rather than appear in it. It is declined instead of mangled.',
-  },
   /* D-420 — AN IMAGE CITED BY PAGE AND RECTANGLE WHERE THE PAGE PAINTS NO
      IMAGE. Not C-45.1: that code is "the address is outside the container" and
      this address is INSIDE it — the page exists and the rectangle is on it. What
@@ -12615,88 +12509,6 @@ export const PROJECT_ID_CHECKS = {
     translation: 'Ids of this kind are given by the record when the thing itself is created, and are not '
       + 'handed out in advance. Create the project, case, draft, grant or task through its own action and '
       + 'the record will answer with its id. Nothing was allocated.',
-  },
-};
-
-/* REC-146 / C-60 — THE CONTRADICTION PAIRING READ'S REFUSALS
- * (`CONTRADICTION-IDENTIFY-DESIGN.md` section 4, section 9 item 1).
- *
- * ONE refusal, and the family is one row rather than padded out, because the read
- * takes exactly one argument that can be wrong. `limit` is CLAMPED and not refused
- * (a number out of range is a caller asking for more than the plane gives, which the
- * published `limit` already answers); an absent or unrecognised viewer is not refused
- * either — it fails CLOSED through `viewerPredicate` and the answer SAYS the read saw
- * nothing, which is the section 6 obligation and not a refusal.
- *
- * WHY THE KEY IS REFUSED RATHER THAN IGNORED, and it is `MEANING_ROWS_UNKNOWN_ARM`'s
- * reasoning at C-23.2 one construct over: `key=` SELECTS A JOIN. A misspelled key that
- * silently ran all four — or none — would answer a question the caller did not ask, and
- * on THIS surface an answer reads as a census of what was compared. Section 4's own rule
- * is that keys are ADDED, never tuned, precisely so the per-key figures stay comparable
- * across runs; a key name that answered from a different key would make them incomparable
- * while looking complete. So the refusal NAMES the keys the record holds. */
-export const CONTRADICTION_PAIR_CHECKS = {
-  CONTRADICTION_KEY_UNKNOWN: {
-    check: 'C-60.1',
-    where: 'src/store.mjs contradictionPairs > is-contradiction-key-unknown',
-    translation: 'The record pairs assertions by named keys, and that is not one of them. Rather than '
-      + 'answer from a different key and let the answer look like a complete comparison, it says so and '
-      + 'names the keys it holds. Ask again with one of them, or with none at all to run every key.',
-  },
-};
-
-/* REC-147 / C-93 — THE CONTRADICTION CANDIDATE'S REFUSALS (`CONTRADICTION-IDENTIFY-DESIGN.md` section 5,
- * section 8, section 9 item 3). op=contradictionpropose is the ONE door a run's judgement enters the record by, and
- * every refusal here is asked of the WHOLE batch before anything is written, so a refused batch leaves nothing.
- *
- * WHY THE PAIR IS CHECKED AGAINST THE PAIRING AND NOT TAKEN FROM THE CALLER: a candidate says the record put these
- * two side by side for this key. A pair a caller can hand us is a provenance hop a caller can invent (CLAUDE.md
- * section 5), so the plane re-forms the pairs for THIS viewer and writes only a proposal naming one of them, with
- * the referents and versions the PLANE read, never the ones the body sent. The run's principal is REC-152's gate,
- * relayed with its own code, and is not restated here. */
-export const CONTRADICTION_CANDIDATE_CHECKS = {
-  CANDIDATE_NO_PROPOSER: {
-    check: 'C-93.1',
-    where: 'src/store.mjs contradictionPropose > is-candidate-no-proposer',
-    translation: 'A proposed contradiction records who proposed it, and this request arrived by a route that '
-      + 'does not say. Rather than write a proposal nobody can be held to, nothing was written.',
-  },
-  CANDIDATE_NO_RUN: {
-    check: 'C-93.2',
-    where: 'src/store.mjs contradictionPropose > is-candidate-no-run',
-    translation: 'A proposed contradiction is machine work, and machine work happens inside a run a member '
-      + 'opened. No open run by that name is visible here, so nothing was written. Open a run, then propose.',
-  },
-  CANDIDATE_RUN_NOT_RUNNING: {
-    check: 'C-93.3',
-    where: 'src/store.mjs contradictionPropose > is-candidate-run-not-running',
-    translation: 'That run has ended. Its work is read against the conditions it was formed under, and those '
-      + 'stopped being current when it stopped, so nothing was written. Open a new run to go on working.',
-  },
-  CANDIDATE_NO_PROPOSALS: {
-    check: 'C-93.4',
-    where: 'src/store.mjs contradictionPropose > is-candidate-no-proposals',
-    translation: 'The request carried no proposals. An empty answer is not a judgement that found nothing; that '
-      + 'belongs in the run log, which says which level was empty. Nothing was written.',
-  },
-  CANDIDATE_LABEL_UNKNOWN: {
-    check: 'C-93.5',
-    where: 'src/store.mjs contradictionPropose > is-candidate-label-unknown',
-    translation: 'A proposal carries exactly one of five labels: world, record, precision, unrelated or '
-      + 'undetermined. One proposal in this batch carried something else, so none of the batch was written.',
-  },
-  CANDIDATE_NO_REASON: {
-    check: 'C-93.6',
-    where: 'src/store.mjs contradictionPropose > is-candidate-no-reason',
-    translation: 'Each proposal says in one sentence why it carries its label, so the member judging it can see '
-      + 'what the machine saw. One proposal in this batch had no reason, so none of the batch was written.',
-  },
-  CANDIDATE_PAIR_NOT_FORMED: {
-    check: 'C-93.7',
-    where: 'src/store.mjs contradictionPropose > is-candidate-pair-not-formed',
-    translation: 'A proposal must name a pair the record itself put side by side for that key, as you can see '
-      + 'it now. One proposal in this batch named two things the pairing does not pair, so none of the batch '
-      + 'was written. Read the pairs again and propose over those.',
   },
 };
 

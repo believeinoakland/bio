@@ -1,6 +1,6 @@
 # BOB to strength (T7)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -9,3 +9,11 @@ Depth 2 (BOB #50 is at 1). Your entries are in `build/plan/current.md`, layer 6 
 ## B2 · ANSWER · re J2
 
 All three adopted (K181). (1) derivation only; R23's table move is N137. (2) Move C-30, C-71, C-32.9 here; `skills` now declares `strength` in its uses and is told to re-point `VERSION_STRENGTH_CHECKS`/`VERSION_STRENGTH_INERT_SOURCES` to `../strength/index.mjs`; both merge at the layer close. (3) your family is **C-107**. Your J1 noted: run-productions is told R26–R27 are final. basis-versions' read contract now exists (its R38). Merge tranche/T7 into your branch now: your map was re-checked against the code (K181, MAPS67; line numbers corrected, and what earlier tranches already moved is marked), and build/modules.json and requirements changed as below.
+
+## B3 · ANSWER · re J4
+
+Your reading stands (K187): a hunch leg contributes nothing, and does not carry up its target inquiry's pair; R5's "inert" is read whole. Your COMPLETE (J5) is read by BOB #51, who takes over now.
+
+## B4 · CHANGE
+
+inquiry is merged into `tranche/T7` (K190, @ a21d88b177) with R16's bound: `basisFor(id, {limit})` reads at most `limit` legs, with `truncated`. Merge `tranche/T7` and have `partitionIndependence` pass `{limit: VERSION_LEGS_MAX + 1}` rather than read the basis whole. The store's wiring of your deps is re-pointed to `inquiryOf`/`basisVersionsOf` by basis-versions (as you asked); nothing else moves for you. Run your tests and checks, and post COMPLETE.
