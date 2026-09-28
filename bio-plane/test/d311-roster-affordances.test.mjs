@@ -99,7 +99,10 @@ await enrol("nell", "member");                /* invited by nobody; exists only 
 let snapSeq = 0;
 const projectMd = (name) => ["---", "object_type: project", `title: "${name}"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
-  "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "",
+  "required_strength:", "  capture: B", "  connection: C",
+  /* 2026-09-28 (T7 LEGACY-TESTS #4; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Fixture objective."',
+  "---", "", "## Summary", "", "A project.", "",
   "## Session Log", ""].join("\n");
 const mkProject = async (name) => {
   const text = projectMd(name);

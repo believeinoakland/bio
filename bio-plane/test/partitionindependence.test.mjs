@@ -32,7 +32,9 @@ import { dirname, join } from "node:path";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5): `partitionIndependence` and `#independenceOf` moved out
+   of store.mjs into src/strength/index.mjs, names unchanged; ARM E1 reads the method there. */
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -249,7 +251,7 @@ console.log("\n--- E. one implementation: the method calls #independenceOf and w
   const decomment = (src) => src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
     .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
-  const CODE = decomment(STORE_SRC);
+  const CODE = decomment(STRENGTH_SRC);
   const start = CODE.indexOf("  partitionIndependence(a = {}) {");
   const end = start < 0 ? -1 : CODE.indexOf("\n  }\n", start);
   const body = start < 0 || end < 0 ? "" : CODE.slice(start, end);

@@ -19,7 +19,12 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync, existsSync } fro
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
-const SRC = { store: "src/store.mjs", index: "src/index.mjs" };
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests): contradiction (T7) took `op=contradictionpairs`' reader out of
+   `store.mjs` into `src/contradiction/index.mjs` (the level ladder, the date-determination line, and the K1/K3 SQL);
+   arms level, undetermined, dedup and overstrict patch the same text there. The viewer arm's anchor did not move.
+   The restore's MINIMUM is per file, because the module is about 53 KB where store.mjs was over 1 MB. */
+const SRC = { store: "src/store.mjs", index: "src/index.mjs", contradiction: "src/contradiction/index.mjs" };
+const MIN_BYTES = { store: 100000, index: 100000, contradiction: 30000 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* DECLARED BEFORE ARMING. `must_fail` names an assertion FRAGMENT that must be
@@ -43,7 +48,7 @@ const ARMS = {
        record claiming more than it can support. So the arm demands the four keys
        name the `viewer` LEVEL — an outage, said as one. */
     must_see: '["viewer","viewer","viewer","viewer"]' },
-  level: { file: "store",
+  level: { file: "contradiction",
     find: `      const empty = ladder.find((r) => !r.present);`,
     to:   `      const empty = { level: "inquiry" };  /* ARMED */`,
     why: "THE ITEM'S OWN ARM. Every key now names the same level whatever the record holds. MUST "
@@ -52,7 +57,7 @@ const ARMS = {
        + "still correct, and that is the point: a detector can be RIGHT about what it compared and "
        + "LYING about what it found nothing in",
     must_fail: "THE WALK, AS A SET", must_pass: "ALL FOUR KEYS FORM" },
-  undetermined: { file: "store",
+  undetermined: { file: "contradiction",
     find: `                          : datesKnown && da.date !== db.date ? "date" : null;`,
     to:   `                          : da.date !== db.date ? "date" : null;  /* ARMED */`,
     why: "THE GUESS. A date nobody stated now counts as a date that differs, so the pair FORMS on "
@@ -67,7 +72,7 @@ const ARMS = {
        asked BY IDENTITY (does the legitimate pair survive?) which a loosening
        cannot move, and this row names that one. */
     must_pass: "OVER-STRICTNESS, ASKED BY IDENTITY AND NOT BY COUNT" },
-  dedup: { file: "store",
+  dedup: { file: "contradiction",
     find: `                        AND d2.bundle_id > d1.bundle_id`,
     to:   `                        AND d2.bundle_id <> d1.bundle_id  /* ARMED */`,
     why: "ONE PAIR COUNTED TWICE, once from each side. MUST fail: the no-double-count arm and the "
@@ -75,7 +80,7 @@ const ARMS = {
        + "is the finding — a figure that is exactly double is still a figure, and only an assertion "
        + "about the SET can see it",
     must_fail: "no pair is counted twice", must_pass: "S0 EMPTY STORE" },
-  overstrict: { file: "store",
+  overstrict: { file: "contradiction",
     find: `         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
         WHERE l1.content_id IS NOT NULL`,
     to:   `         JOIN inquiry_basis_versions v2 ON v2.bundle_id = l2.bundle_id AND v2.name = l2.name
@@ -137,7 +142,7 @@ for (const [name, arm] of Object.entries(ARMS)) {
     try { execFileSync("cmp", ["-s", path, pristine]); } catch { cmpOk = false; }
     /* THE MINIMUM GUARD: a restore that is byte-identical to an EMPTY file is
        byte-identical and worthless. */
-    const restored = after === before && cmpOk && bytes > 100000;
+    const restored = after === before && cmpOk && bytes > MIN_BYTES[arm.file];
     rows.push({ name, patched, ...tl,
                 declared_see: arm.must_see ?? null,
                 saw_see: arm.must_see ? out.includes(arm.must_see) : null,

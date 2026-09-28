@@ -34,6 +34,12 @@ import { dirname, join } from "node:path";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5, RUN-PRODUCTIONS #1): `#independenceOf`, `versionStrength`
+   and `partitionIndependence` moved out of store.mjs into src/strength/index.mjs, and the write gate (`op=suggest`'s
+   CHECK 4, was the store's `suggestVersion`) into src/run-productions/index.mjs, which reaches the one derivation
+   through strength's `candidateIndependence` (strength R27, N60). ARM C1 and C2 read those files. */
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
+const RUNPROD_SRC = readFileSync(SRC("run-productions/index.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -278,27 +284,32 @@ console.log("\n--- C. the gate and the ceremony cannot come to disagree ---");
   const decomment = (src) => src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
     .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
-  const CODE = decomment(STORE_SRC);
+  const CODE = decomment(STRENGTH_SRC);
+  /* The same census over every file a consumer lives in: strength (the definition and its three calls: the write
+     gate's `candidateIndependence`, the ceremony's `versionStrength`, the elicitation's `partitionIndependence`),
+     run-productions (the write gate, which must call `candidateIndependence` and walk nothing itself) and the store. */
+  const ALL = [STRENGTH_SRC, RUNPROD_SRC, STORE_SRC].map(decomment).join("\n");
   const defs = (CODE.match(/#independenceOf\s*\(/g) || []).length;
   const calls = (CODE.match(/this\.#independenceOf\s*\(/g) || []).length;
+  const gateCalls = (decomment(RUNPROD_SRC).match(/\.candidateIndependence\s*\(/g) || []).length;
   /* CORRECTED 2026-09-24 by D-525, never exempted: this matched `FROM captured_locators WHERE capture_sha=?`,
      the TABLE AND ITS KEY, which is every read of that table by a sha and not the ORIGIN WALK the arm pins.
      The walk reads ADDRESSES (`address_norm`) — what independence is derived from. D-525's `driveShells`
      reads the same table by sha for a different question, `retrieval_locator` (which address the plane
      fetched), and the old matcher counted it as a second origin walk. The pin now matches the walk's own
      shape; a second inlined origin walk still reads `address_norm` by sha and still fails here. */
-  const walks = (CODE.match(/SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=\?/g) || []).length;
+  const walks = (ALL.match(/SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=\?/g) || []).length;
   console.log(`  reach: 1 definition expected, ${calls} call site(s) found, ${walks} locator walk(s) in the file`);
   /* CORRECTED 2026-09-23 by REC-161, never exempted: this pinned TWO call sites, which was the consumer
      count on the day D-271 wrote it and never the rule. The rule is ONE DEFINITION and ONE ORIGIN WALK;
      REC-161 (INVESTIGATIVE-SESSION.md §12 clause (c)) adds the THIRD consumer, `op=partitionindependence`,
      which calls the same `#independenceOf` over a PROPOSED partition. The pin stays EXACT rather than
      becoming a floor, so a fourth consumer still has to come here and say where it is. */
-  t("ARM C1 — ONE DEFINITION, THREE CALL SITES, AND EXACTLY ONE ORIGIN WALK IN THE FILE. The write "
-  + "gate, the ceremony's read and the elicitation's proposed-partition read (REC-161) are the three "
-  + "consumers, and a second inlined walk is what this pin exists to catch — behaviour would be "
-  + "identical the day it was written",
-    [defs - calls, calls, walks], [1, 3, 1]);
+  t("ARM C1 — ONE DEFINITION, THREE CALL SITES, AND EXACTLY ONE ORIGIN WALK ACROSS THE FILES. The write "
+  + "gate (through strength's `candidateIndependence`, called once by run-productions), the ceremony's read "
+  + "and the elicitation's proposed-partition read (REC-161) are the three consumers, and a second inlined "
+  + "walk is what this pin exists to catch — behaviour would be identical the day it was written",
+    [defs - calls, calls, gateCalls, walks], [1, 3, 1, 1]);
 
   t("ARM C2 — and what the walk can and cannot see, stated rather than implied: it derives from "
   + "`register` (capture shas) and `captured_locators` (addresses), so it sees a shared BUNDLE, a "

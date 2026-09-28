@@ -1745,10 +1745,29 @@ t("op=capturerequests: an over-ask is answered at the ceiling and the CEILING is
 /* THE DRAIN. Its bound is not a read cut and not a refusal: it PACES an outward
    act, so what a caller would lose if it went unpublished is not "did I see
    everything" but "is there more work queued at somebody else's server". The
-   instance here is not configured for draining (no SELF binding), which is the
-   honest state to assert it in — the answer still says so rather than reporting
-   an empty tick, and `remaining` is still the signal. */
-const DRAIN1 = await POST("op=capturerequestdrain&token=adm-r57", { limit: 1 });
+   instance is asserted UNCONFIGURED for draining, which is the honest state to
+   assert it in — the answer still says so rather than reporting an empty tick,
+   and `remaining` is still the signal.
+   RE-POINTED 2026-09-28 (T7, legacy-tests; K216): "configured" is runtime-limits
+   R26's bound, which capture-requests R11/R37 read: DAEMON_TOKEN or ADMIN_TOKEN
+   bound (K58's in-process arm retired SELF). This suite's plane binds ADMIN_TOKEN,
+   so it IS configured; the unconfigured drain is asked of a plane with neither
+   token bound, through its store's own route (no token can authenticate the op
+   there, which is the state being asserted). */
+const DRAIN1 = await (async () => {
+  const bare = new Miniflare({
+    modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
+    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+    durableObjects: { STORE: { className: "Store", useSQLite: true } },
+    r2Buckets: ["CAPTURES", "PUBLISHED"],
+    bindings: { MEMBER_TOKEN: "mem-r57", VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" },
+  });
+  try {
+    const bns = await bare.getDurableObjectNamespace("STORE");
+    return rP(await (await bns.get(bns.idFromName("bio")).fetch("http://x/capturerequestdrain",
+      { method: "POST", body: JSON.stringify({ limit: 1 }) })).json());
+  } finally { await bare.dispose(); }
+})();
 t("op=capturerequestdrain: an unconfigured instance SAYS it drains nothing rather than reporting an "
 + "empty tick — a stated absence, never a silent no-op",
   [DRAIN1.configured, DRAIN1.drained, typeof DRAIN1.detail === "string"], [false, 0, true]);

@@ -26,16 +26,21 @@ import { readFileSync, writeFileSync, copyFileSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
-const SRC = { store: "src/store.mjs", judge: "test/contradiction-judge-baseline.mjs",
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests): contradiction (T7) took the pairing and the candidate door out of
+   `store.mjs` into `src/contradiction/index.mjs`: `#contradictionK2` is `#k2`, `#appendContradictionCandidate` is
+   `#append` (now called inside `this.#record.transact`, over `this.#sql` and with the `state`/`origin` columns, which
+   the twosites arm's inline second site copies so it stays behaviourally identical). Arms pairing, twosites,
+   idempotent and unformed patch the moved text there; the other arms' anchors did not move. */
+const SRC = { store: "src/store.mjs", contradiction: "src/contradiction/index.mjs", judge: "test/contradiction-judge-baseline.mjs",
               gate: "test/contradiction-gate.mjs",
               /* REC-147 */ prompt: "src/contradiction.mjs", recorded: "test/contradiction-judge-recorded.mjs" };
-const MIN_BYTES = { store: 100000, judge: 3000, gate: 3000, prompt: 3000, recorded: 8000 };
+const MIN_BYTES = { store: 100000, contradiction: 30000, judge: 3000, gate: 3000, prompt: 3000, recorded: 8000 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 const ARMS = {
   baseline: { file: null, why: "nothing armed. MUST be green" },
-  pairing: { file: "store",
-    find: `        : name === "K2" ? this.#contradictionK2(viewer, cap)`,
+  pairing: { file: "contradiction",
+    find: `        : name === "K2" ? this.#k2(viewer, cap)`,
     to:   `        : name === "K2" ? { pairs: [], truncated: false, notes: [] }  /* ARMED */`,
     why: "§7 CONTROL 1 — K2 disabled in the plane. The fixture's record pairs on K2 are no longer "
        + "compared. MUST fail: K2 COMPARED, naming K2. MUST NOT fail: K1 COMPARED",
@@ -66,19 +71,19 @@ const ARMS = {
        + "oracle (correct work) arm. MUST NOT fail: the always-world arm, which fails either way",
     must_fail: "OVER-STRICTNESS OF THE GATE ITSELF", must_pass: "AN ALWAYS-`world` JUDGEMENT FAILS" },
   /* ---- REC-147 ---- */
-  twosites: { file: "store",
-    find: `      for (const row of rows) written.push(this.#appendContradictionCandidate(row));`,
-    to:   `      for (const row of rows) { const had = this.#one(\`SELECT 1 AS x FROM contradiction_candidates WHERE candidate=?\`, row.candidate); if (!had) this.sql.exec(\`INSERT INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)\`, row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle, row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at); written.push(!had); }  /* ARMED */`,
+  twosites: { file: "contradiction",
+    find: `    const written = this.#record.transact(() => rows.map((row) => this.#append(row)));`,
+    to:   `    const written = this.#record.transact(() => rows.map((row) => { const had = this.#one(\`SELECT 1 AS x FROM contradiction_candidates WHERE candidate=?\`, row.candidate); if (!had) this.#sql.exec(\`INSERT INTO contradiction_candidates (candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind, b_ref, b_version, b_bundle_id, run, proposed_by, label, reason, state, origin, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'proposed','machine',?)\`, row.candidate, row.key, row.a.kind, row.a.ref, row.a.version, row.a.bundle, row.b.kind, row.b.ref, row.b.version, row.b.bundle, row.run, row.proposed_by, row.label, row.reason, row.at); return !had; }));  /* ARMED */`,
     why: "THE ROW'S CONTROL — a SECOND append site, behaviourally identical, written inline in the op. MUST fail: "
        + "the one-site arm. MUST NOT fail: the re-run arm, which the second site honours",
     must_fail: "§8's ONE APPEND SITE", must_pass: "A RE-RUN OVER UNCHANGED REFERENTS WRITES NOTHING NEW" },
-  idempotent: { file: "store",
+  idempotent: { file: "contradiction",
     find: `sides: [handle(x), handle(y)] }))`,
     to:   `sides: [handle(x), handle(y)], nonce: Math.random() }))  /* ARMED */`,
     why: "THE KEY NO LONGER NAMES ONLY WHAT WAS COMPARED — a re-run duplicates. MUST fail: the re-run arm. MUST NOT "
        + "fail: the one-site arm",
     must_fail: "A RE-RUN OVER UNCHANGED REFERENTS WRITES NOTHING NEW", must_pass: "§8's ONE APPEND SITE" },
-  unformed: { file: "store",
+  unformed: { file: "contradiction",
     find: 'const f = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);',
     to:   'const f = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`) || { key, a, b };  /* ARMED */',
     why: "THE CALLER'S PAIR IS TAKEN ON ITS WORD — the provenance hop a caller can invent. MUST fail: the invented "

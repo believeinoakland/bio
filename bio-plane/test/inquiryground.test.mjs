@@ -59,6 +59,7 @@ import { createHash } from "node:crypto";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 
@@ -160,8 +161,9 @@ const groundLines = (rows) => rows === null ? [] : rows.length
       ...(r.at === null ? [] : [`    at: "${r.at ?? NOW}"`])])]
   : ["grounds: []"];
 
+let SUBJECT = null;   /* the questions' registered subject, minted before the fixture (K187's re-read, below) */
 const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
-                         refs = [], legs = [], grounds = null, extra = [] } = {}) => ["---",
+                         refs = [], legs = [], grounds = null, extra = [], subject = SUBJECT } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, `current_state: ${state}`, "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -172,6 +174,7 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
+  ...(subject ? [`subject_entity: ${subject}`] : []),
   ...legLines(legs), ...groundLines(grounds), ...extra,
   "---", "",
   "## Question", "", question, "",
@@ -218,7 +221,36 @@ const mustPromote = async (...a) => {
 
 const CH_CAP = "INFO-2026-1000-charter-cap", CH_CON = "INFO-2026-1000-charter-con";
 const CO_CAP = "INFO-2026-1000-code-cap", CO_CON = "INFO-2026-1000-code-con";
-for (const d of [CH_CAP, CH_CON, CO_CAP, CO_CON]) await mustPromote(d, infoMd(d), "information");
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102), never exempted. The two CONNECTION legs were authored as HUNCHES
+   at C and A, and a hunch is now inert in every pair and named as a hunch (INVESTIGATIVE-SESSION §12), so the
+   connection axis would read UNRATED before and after the act and the act could not be seen reaching it. The same
+   letters are now EARNED by resolution against the questions' registered subject (entities' recogniser, framework
+   §8.1): the charter's connection document is a NAME match (C), the code's a KEY match (A). The fixture's letters,
+   groups and expected pairs are unchanged. */
+SUBJECT = (await POST(`op=entitycreate&token=${CAROL}`,
+  { kind: "ordinance", label: "City Charter Transfer Authority", aliases: ["ordinance:1000"] })).entity_id;
+const CON_SHA = { [CH_CON]: sha("capture-of-charter-con-rec45"), [CO_CON]: sha("capture-of-code-con-rec45") };
+const promoteRead = async (id, entity) => {
+  const text = infoMd(id);
+  const doc = registerDoc({ capture: { sha256: CON_SHA[id], encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW, entities: [entity] } },
+    { file: "snapshots/d.bin" });
+  const prov = JSON.stringify({ documents: [doc] });
+  const r = await POST(`op=promote&token=${CAROL}`, {
+    bundleId: id, base: null, snapKey: `${id}-new-${String(++snapKeySeq).padStart(4, "0")}`,
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)],
+    register: [{ path: "snapshots/d.bin", sha256: CON_SHA[id], encoding: "binary", bytes: 10 }],
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
+            created: NOW, last_updated: LATER } });
+  if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
+  await POST(`op=resolve&token=${CAROL}`, { captureSha: CON_SHA[id] });
+};
+for (const d of [CH_CAP, CO_CAP]) await mustPromote(d, infoMd(d), "information");
+await promoteRead(CH_CON, { ref: "ordinance:9999", kind: "ordinance", key: "9999",
+                            label: "City Charter Transfer Authority" });                /* a NAME match: C */
+await promoteRead(CO_CON, { ref: "ordinance:1000", kind: "ordinance", key: "1000",
+                            label: "Ordinance No. 1000" });                             /* the KEY: A */
 
 /* THE FIXTURE THAT MAKES THE ACT FALSIFIABLE, REC-42's exactly:
      charter (legs 0,1):  capture B, connection C
@@ -228,7 +260,7 @@ for (const d of [CH_CAP, CH_CON, CO_CAP, CO_CON]) await mustPromote(d, infoMd(d)
    BOTH axes and the two axes are set by DIFFERENT groups, which is what makes
    "the act reached the arithmetic" a measurement rather than a hope. */
 const HUNCH = { author: "carol", date: "2026-08-04" };
-const g = (target, grade, axis, source = axis === "capture" ? "capture" : "hunch") =>
+const g = (target, grade, axis, source = axis === "capture" ? "capture" : "resolution") =>
   ({ target, role: "supports", grade, axis, source, ...(source === "hunch" ? HUNCH : {}) });
 const FOUR = [g(CH_CAP, "B", "capture"), g(CH_CON, "C", "connection"),
               g(CO_CAP, "C", "capture"), g(CO_CON, "A", "connection")];

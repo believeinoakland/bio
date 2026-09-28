@@ -107,6 +107,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CASE_MEMBER_ROLES, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { SCHEMA } from "../src/schema.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- caseproduction ---");
@@ -118,6 +119,8 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5): `#projectBar` is strength's `projectBar`. */
+const STRENGTH_SRC = readFileSync(fileURLToPath(new URL("../src/strength/index.mjs", import.meta.url)), "utf8");
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -265,6 +268,7 @@ const RUTH = await enrol("ruth", "ruth-passphrase-1", "member", ["contribute", "
 rP(await POST("op=signeradd&token=adm-case2", { keyB64, memberId: "pilar", comment: "pilar laptop" }));
 
 /* ---- documents ---- */
+let SUBJECT = null;   /* the findings' registered subject, minted in §1 (K187's re-read, below) */
 const NOW = "2026-07-01T00:00:00Z";
 const LATER = "2026-07-02T00:00:00Z";
 const refLines = (targets) => targets.length
@@ -282,7 +286,7 @@ const legLines = (legs) => legs.length
    the accepted reading its conclusion adopts — see `conclude` above. */
 const inquiryMd = (id, opts) => withAdoptableReading(inquiryMdBare(id, opts));
 const inquiryMdBare = (id, { question = `What does ${id} rest on?`, state = "open",
-                         refs = [], legs = [] } = {}) => ["---",
+                         refs = [], legs = [], subject = SUBJECT } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, `current_state: ${state}`, "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -293,6 +297,8 @@ const inquiryMdBare = (id, { question = `What does ${id} rest on?`, state = "ope
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
+  /* 2026-09-28 (T7; K187): the findings' registered subject, which the connection legs' letters are earned against. */
+  ...(subject ? [`subject_entity: ${subject}`] : []),
   ...legLines(legs),
   "---", "",
   "## Question", "", question, "",
@@ -367,6 +373,7 @@ console.log("\n--- 1. the fixture: two projects, one owner who is not the creato
 
 const INFO_CAP = "INFO-2026-2200-capture-b";
 const INFO_CONN = "INFO-2026-2200-connection-c";
+const INFO_CONN_B = "INFO-2026-2200-connection-b";
 /* CORRECTED 2026-09-18 (REC-141): minted below by createProject, not chosen. */
 let PROJ, PROJ_OTHER;
 /* STRONG derives (capture B, connection B) and WEAK derives (capture B,
@@ -395,31 +402,59 @@ const INQ_BAR_A = "INQ-2026-2200-barpair-strong";
 const INQ_BAR_B = "INQ-2026-2200-barpair-weak";
 
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected");
-await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102), never exempted. The connection legs were authored as HUNCHES at B
+   and C over one document, and a hunch is now inert in every pair and named as a hunch (INVESTIGATIVE-SESSION §12):
+   every finding here would read connection UNRATED and the bar comparison this suite is about would see nothing on
+   that axis. The same two letters are now ones the record COUNTS, EARNED by resolution against the findings'
+   registered subject (entities' recogniser, framework §8.1): a document whose reference's KEY matches the subject's
+   registered identifier earns B (INFO_CONN_B), one whose NAME matches earns C (INFO_CONN). Every finding, grade and
+   bar is otherwise as it was: STRONG derives (B, B), WEAK (B, C). */
+SUBJECT = rP(await POST(`op=entitycreate&token=${NADIA}`,
+  { kind: "ordinance", label: "Sewer Transfer Ordinance", aliases: ["2200"] })).entity_id;
+const CONN_SHA = { [INFO_CONN_B]: sha("capture-of-conn-b-case2"), [INFO_CONN]: sha("capture-of-conn-c-case2") };
+const promoteRead = async (id, entity) => {
+  const md = infoMd(id);
+  const doc = registerDoc({ capture: { sha256: CONN_SHA[id], encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW, entities: [entity] } },
+    { file: "snapshots/d.bin" });
+  const prov = JSON.stringify({ documents: [doc] });
+  const r = rP(await POST(`op=promote&token=${PILAR}`, {
+    bundleId: id, base: null, snapKey: `20260810T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
+            created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)],
+    register: [{ path: "snapshots/d.bin", sha256: CONN_SHA[id], encoding: "binary", bytes: 10 }] }));
+  if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
+  rP(await POST(`op=resolve&token=${NADIA}`, { captureSha: CONN_SHA[id] }));
+};
+await promoteRead(INFO_CONN_B, { ref: "ordinance:2200", kind: "ordinance", key: "2200", label: "Ordinance 2200" });
+await promoteRead(INFO_CONN, { ref: "ordinance:9999", kind: "ordinance", key: "9999", label: "Sewer Transfer Ordinance" });
+const connDoc = (g) => (g === "B" ? INFO_CONN_B : INFO_CONN);
 const legs = (connGrade) => [
   { target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
-  { target: INFO_CONN, grade: connGrade, axis: "connection", source: "hunch",
-    author: "pilar", date: "2026-08-10" }];
+  { target: connDoc(connGrade), grade: connGrade, axis: "connection", source: "resolution" }];
+const refsFor = (g) => [INFO_CAP, connDoc(g)];
 await mustPromote(INQ_STRONG, inquiryMd(INQ_STRONG,
-  { question: "Was the sewer transfer authorised?", refs: [INFO_CAP, INFO_CONN], legs: legs("B") }),
+  { question: "Was the sewer transfer authorised?", refs: refsFor("B"), legs: legs("B") }),
   "inquiry", "open");
 await mustPromote(INQ_WEAK, inquiryMd(INQ_WEAK,
-  { question: "Did the marina fund contribute?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }),
+  { question: "Did the marina fund contribute?", refs: refsFor("C"), legs: legs("C") }),
   "inquiry", "open");
 await mustPromote(INQ_SPARE, inquiryMd(INQ_SPARE,
-  { question: "Who indexed the memo?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }),
+  { question: "Who indexed the memo?", refs: refsFor("C"), legs: legs("C") }),
   "inquiry", "open");
 /* The refusal-only members. INQ_BAR_A clears the bar and INQ_BAR_B does not, so
    §5's refusal act has the same shape as its acceptance act and the two differ
    in nothing but which findings they name. */
 await mustPromote(INQ_SUPP_A, inquiryMd(INQ_SUPP_A,
-  { question: "Was the notice posted?", refs: [INFO_CAP, INFO_CONN], legs: legs("B") }), "inquiry", "open");
+  { question: "Was the notice posted?", refs: refsFor("B"), legs: legs("B") }), "inquiry", "open");
 await mustPromote(INQ_SUPP_B, inquiryMd(INQ_SUPP_B,
-  { question: "Was the notice posted in time?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
+  { question: "Was the notice posted in time?", refs: refsFor("C"), legs: legs("C") }), "inquiry", "open");
 await mustPromote(INQ_BAR_A, inquiryMd(INQ_BAR_A,
-  { question: "Did the clerk receive it?", refs: [INFO_CAP, INFO_CONN], legs: legs("B") }), "inquiry", "open");
+  { question: "Did the clerk receive it?", refs: refsFor("B"), legs: legs("B") }), "inquiry", "open");
 await mustPromote(INQ_BAR_B, inquiryMd(INQ_BAR_B,
-  { question: "Did the clerk acknowledge it?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
+  { question: "Did the clerk acknowledge it?", refs: refsFor("C"), legs: legs("C") }), "inquiry", "open");
 
 const BAR = { capture: "B", connection: "B", author: "nadia", at: "2026-07-03T00:00:00Z" };
 PROJ = await createProject("PROJ-2026-2200-auditor",
@@ -866,15 +901,16 @@ console.log("\n--- 7. the removal: DEC-17's composition and the group-default pu
   t("`#requiredStrengthFor` IS GONE FROM THE PLANE ENTIRELY — DEC-17's strictest-across-citers "
   + "composition cannot be reached by any door, which the supersession table calls for in those words",
     /#requiredStrengthFor\s*\(/.test(STORE_SRC), false);
-  const bodyOf = (name) => {
-    const at = STORE_SRC.indexOf(name);
-    return at < 0 ? "" : STORE_SRC.slice(at, at + 1400);
-  };
-  const pb = bodyOf("#projectBar(projectId) {");
-  t("and its replacement WALKS NO EDGES AT ALL: #projectBar reads ONE project's bundle.md and "
+  /* RE-ANCHORED 2026-09-28 (T7; STRENGTH #1 J5): `#projectBar` is strength's `projectBar(projectId)`, read to its
+     own closing brace; the severance predicate is looked for under both its spellings (connections'
+     `edgeSevered`, the store's `#refEdgeSevered`). */
+  t("`#requiredStrengthFor` is not in strength either — the composition did not move with the bar",
+    /requiredStrengthFor\s*\(/.test(STRENGTH_SRC), false);
+  const pb = /\n  projectBar\(projectId\) \{[\s\S]*?\n  \}\n/.exec(STRENGTH_SRC)?.[0] ?? "";
+  t("and its replacement WALKS NO EDGES AT ALL: projectBar reads ONE project's bundle.md and "
   + "consults neither the refs table nor the severance predicate — a walk left standing would be the "
   + "composition surviving in a new name",
-    [pb.length > 0, pb.includes("FROM refs"), pb.includes("#refEdgeSevered"), pb.includes("group_strength_bar")],
+    [pb.length > 0, pb.includes("FROM refs"), /edgeSevered/.test(pb), pb.includes("group_strength_bar")],
     [true, false, false, false]);
   t("THE GROUP DEFAULT IS NOT A PUBLICATION BAR: the group declares one, a project declares nothing, "
   + "and the project's answer is ABSENT rather than the group's — the removed path made visible",
@@ -1152,7 +1188,7 @@ console.log("\n--- 10. D-450: a bar declared on ONE axis publishes, ratifies, an
 {
   const INQ_ONE = "INQ-2026-2200-oneaxis";
   await mustPromote(INQ_ONE, inquiryMd(INQ_ONE,
-    { question: "Was the memo circulated?", refs: [INFO_CAP, INFO_CONN], legs: legs("C") }), "inquiry", "open");
+    { question: "Was the memo circulated?", refs: refsFor("C"), legs: legs("C") }), "inquiry", "open");
   const PROJ_ONE = await createProject("PROJ-2026-2200-oneaxis", projectMd(null,
     { name: "PROJ-2026-2200-oneaxis",
       bar: { capture: "B", connection: "null", author: "nadia", at: "2026-07-03T00:00:00Z" } }), NADIA);

@@ -35,7 +35,8 @@
  *      as not yet load-bearing. UNRATED — D-160's word, and the retired one is
  *      not written in this file either, see RETIRED_WORD below — is the
  *      BOUNDARY CASE where no leg on that axis is graded, and every ungraded
- *      leg is named, one or many. A hunch composes NORMALLY (DEC-15).
+ *      leg is named, one or many. A hunch is INERT and named as a hunch
+ *      (strength R5, K187, 2026-09-28; it read "composes NORMALLY (DEC-15)").
  *   4. THE DEPTH BOUND (R3). The walk carries REC-20's EXPORTED
  *      QUEUE_ANCESTOR_DEPTH — one constant, two walks — and an over-depth chain
  *      reports `undetermined` NAMING THE DEPTH rather than throwing. A store-
@@ -65,11 +66,17 @@ const t = (label, got, want) => {
 
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
-/* The derivation's own region of store.mjs, so a source assertion below is
-   about THIS item's code and not about the whole file. */
-const REGION = STORE_SRC.slice(
-  STORE_SRC.indexOf("REC-12: STRENGTH at inquiry altitude"),
-  STORE_SRC.indexOf("/* Eviction. The store is append-only"));
+/* The derivation's own region, so a source assertion below is about THIS item's code and not about a whole file.
+   RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5): the axes, `#weakestOf`, `#groundResult` and
+   `#axisResult` moved out of store.mjs into src/strength/arithmetic.mjs (as `weakestOf`, `groundResult`,
+   `axisResult`), and `#strengthWalk`, `#captureBoundsFor`, `strengthOf`, `inquiryStrength`, `#redactAxis` and the
+   cache's pair into src/strength/index.mjs (`#walk`, `#captureBoundsFor`, `#pairOver`, `strengthOf`,
+   `inquiryStrength`, `cacheOf`). The region is the whole arithmetic and the class from its head to the pair over a
+   version (`#versionLegsAsMembers`, which the store's region never held either). */
+const STRENGTH_IDX = readFileSync(SRC("strength/index.mjs"), "utf8");
+const REGION = readFileSync(SRC("strength/arithmetic.mjs"), "utf8") + "\n" + STRENGTH_IDX.slice(
+  STRENGTH_IDX.indexOf("export class Strength {"),
+  STRENGTH_IDX.indexOf("  #versionLegsAsMembers("));
 /* D-160: the word this behaviour used to be called, ASSEMBLED FROM HALVES so
    that this file does not carry it either — it names the OPPOSITE behaviour in
    SB-OUTPUT §5.1, and a suite that spells it while forbidding it hands the next
@@ -248,12 +255,20 @@ const MIX = "INQ-2026-0900-mixed";
     s.capture.weakest.target_id === CON_D || s.capture.grade === "D", false);
   t("the CONNECTION axis never reads a CAPTURE leg's grade (connection composed with capture)",
     s.connection.weakest.target_id === CAP_C || s.connection.grade === "C", false);
-  t("a connection-graded leg is NAMED as not load-bearing on capture, with the axis said out loud",
-    s.capture.not_load_bearing.map((m) => [m.target_id, /connection axis/.test(m.why || "")])
-      .sort(), [[CON_A, true], [CON_D, true]]);
-  t("and the populations are DISJOINT by construction: two graded members each side of four legs",
+  /* RE-READ 2026-09-28 BY K187 (strength R5, K102), never exempted: CON_A's connection A is a HUNCH (the fixture's
+     default connection source, see HUNCH above), and a hunch is now inert in every pair and named as a hunch
+     (INVESTIGATIVE-SESSION §12), where DEC-15 had it compose normally. So CON_A is named on BOTH axes as a hunch and
+     is load-bearing on neither; CON_D (testimony, D) is the connection leg that still says its axis out loud on
+     capture. The disjointness is unchanged: no leg is load-bearing on two axes. */
+  t("a connection-graded leg is NAMED as not load-bearing on capture, with the axis said out loud; the HUNCH is named as a hunch (R5)",
+    s.capture.not_load_bearing.map((m) => [m.target_id, /connection axis/.test(m.why || ""), /hunch/.test(m.why || "")])
+      .sort(), [[CON_A, false, true], [CON_D, true, false]]);
+  t("and the populations are DISJOINT by construction: two graded members on capture, one on connection (the hunch "
+  + "inert and named there too, K187), of four legs each side",
     [s.capture.load_bearing, s.capture.population,
-     s.connection.load_bearing, s.connection.population], [2, 4, 2, 4]);
+     s.connection.load_bearing, s.connection.population,
+     s.connection.not_load_bearing.some((m) => m.target_id === CON_A && m.grade_source === "hunch" && /hunch/.test(m.why || ""))],
+    [2, 4, 1, 4, true]);
 
   /* NO CODE PATH PRODUCING A SINGLE COMPOSED LETTER — asserted three ways,
      because "we did not compose them" is a property of the code and of the
@@ -268,8 +283,10 @@ const MIX = "INQ-2026-0900-mixed";
     [false, false]);
   t("the derivation never calls #weakerGrade — R1: its `|| 0` ranks an unknown below D",
     /#weakerGrade\s*\(/.test(REGION), false);
-  t("and it never composes the two axes through one reduce: #weakestOf is called PER AXIS",
-    (REGION.match(/Store\.#weakestOf\(/g) || []).length, 1);
+  /* RE-ANCHORED (T7; STRENGTH #1 J5): `Store.#weakestOf` is the module function `weakestOf`; its one call is
+     inside `groundResult`, which `axisResult` runs per ground of ONE axis. The definition is not a call. */
+  t("and it never composes the two axes through one reduce: weakestOf is called PER AXIS",
+    (REGION.match(/(?<!function )\bweakestOf\(/g) || []).length, 1);
   t("D-160: the word is UNRATED, and the retired one (opposite meaning in SB-OUTPUT §5.1) is absent",
     [/UNRATED/.test(REGION), new RegExp(RETIRED_WORD, "i").test(REGION)], [true, false]);
 }
@@ -279,24 +296,31 @@ const LEAF = "INQ-2026-0901-leaf", PARENT = "INQ-2026-0901-parent";
 const L_CAP = "INFO-2026-0901-leaf-cap", L_CON = "INFO-2026-0901-leaf-con", P_CAP = "INFO-2026-0901-par-cap";
 {
   for (const d of [L_CAP, L_CON, P_CAP]) await promote(d, infoMd(d), "information");
-  const leafLegs = [g(L_CAP, "C", "capture"), g(L_CON, "B", "connection")];
+  /* RE-READ 2026-09-28 BY K187 (strength R5), never exempted: the leaf's connection leg was a HUNCH at B and the
+     parent's edge to the leaf a HUNCH at A. A hunch is now inert and a hunch leg to an inquiry inherits NOTHING, so
+     the inheritance this section is about could not be seen through either. The leaf's connection leg is now a
+     member's testimony (D, the one letter testimony is worth, R1), and the parent's edge to the leaf carries no grade
+     of its own: an ungraded inquiry leg still contributes the target's pair (R2), which is this section's claim. */
+  const leafLegs = [g(L_CAP, "C", "capture"), g(L_CON, "D", "connection", "testimony")];
   const leaf0 = inquiryMd(LEAF, { refs: leafLegs.map((l) => l.target), legs: leafLegs });
   await promote(LEAF, leaf0, "inquiry");
   const sl = await strength(LEAF);
-  t("the leaf reads its own pair: capture C, connection B",
-    [sl.capture.grade, sl.connection.grade], ["C", "B"]);
+  t("the leaf reads its own pair: capture C, connection D",
+    [sl.capture.grade, sl.connection.grade], ["C", "D"]);
 
-  const parentLegs = [g(P_CAP, "B", "capture"), g(LEAF, "A", "connection")];
+  const parentLegs = [g(P_CAP, "B", "capture"), bare(LEAF)];
   await promote(PARENT, inquiryMd(PARENT, { refs: parentLegs.map((l) => l.target), legs: parentLegs }), "inquiry");
   const sp = await strength(PARENT);
   t("CAPTURE inherits the leaf's capture (C), not its connection: B here, C beneath, weakest C",
     [sp.capture.grade, sp.capture.weakest.inherited_from, sp.capture.weakest.through],
     ["C", LEAF, L_CAP]);
-  t("CONNECTION inherits the leaf's connection (B), not its capture: A on the edge itself, B beneath",
-    [sp.connection.grade, sp.connection.weakest.inherited_from, sp.connection.weakest.through],
-    ["B", LEAF, L_CON]);
-  t("the leg to the inquiry is ITSELF an edge and sits in the connection population carrying its own A",
-    sp.connection.not_load_bearing.length + sp.connection.load_bearing, 3);
+  t("CONNECTION inherits the leaf's connection (D), not its capture: nothing on the edge itself, D beneath",
+    [sp.connection.grade, sp.connection.weakest?.inherited_from ?? null, sp.connection.weakest?.through ?? null],
+    ["D", LEAF, L_CON]);
+  t("the leg to the inquiry is ITSELF an edge and sits in the connection population, named as carrying no grade of its own",
+    [sp.connection.not_load_bearing.length + sp.connection.load_bearing,
+     sp.connection.not_load_bearing.some((m) => m.target_id === LEAF && m.via === "leg" && /carries no grade/.test(m.why || ""))],
+    [3, true]);
   t("an inquiry is not a document, so the leg itself contributes nothing to CAPTURE — only what it reaches",
     sp.capture.population, 2);
 
@@ -307,7 +331,7 @@ const L_CAP = "INFO-2026-0901-leaf-cap", L_CON = "INFO-2026-0901-leaf-con", P_CA
   const before = await search(`capture:C`);
   t("the cached column answers a query: the parent is found at capture C",
     before.hits.some((h) => h.bundle_id === PARENT), true);
-  const leafLegs2 = [g(L_CAP, "B", "capture"), g(L_CON, "B", "connection")];
+  const leafLegs2 = [g(L_CAP, "B", "capture"), g(L_CON, "D", "connection", "testimony")];
   await promote(LEAF, inquiryMd(LEAF, { refs: leafLegs2.map((l) => l.target), legs: leafLegs2 }),
                 "inquiry", sha(leaf0));
   t("the DERIVATION is right the instant the leg beneath is raised: the parent now reads capture B",
@@ -325,13 +349,15 @@ const L_CAP = "INFO-2026-0901-leaf-cap", L_CON = "INFO-2026-0901-leaf-con", P_CA
 console.log("\n--- 3. an ungraded leg is INERT, not unrating (DEC-18); UNRATED is the boundary case ---");
 {
   const INERT = "INQ-2026-0902-inert";
-  const legs = [g(CAP_B, "B", "capture"), g(CON_A, "A", "connection"), bare(UNGR1)];
+  /* RE-READ 2026-09-28 BY K187 (strength R5): the connection leg here was a HUNCH at A, now inert; it is a member's
+     testimony (D) so the connection axis still has a graded leg for the ungraded one to sit beside. */
+  const legs = [g(CAP_B, "B", "capture"), g(CON_D, "D", "connection", "testimony"), bare(UNGR1)];
   await promote(INERT, inquiryMd(INERT, { refs: legs.map((l) => l.target), legs }), "inquiry");
   const s = await strength(INERT);
   t("the ungraded leg does NOT unrate and does NOT floor: capture still reads B from its graded leg",
     [s.capture.state, s.capture.grade, s.capture.weakest.target_id], ["graded", "B", CAP_B]);
-  t("and the other axis reads too: connection A, from ITS graded leg",
-    [s.connection.state, s.connection.grade], ["graded", "A"]);
+  t("and the other axis reads too: connection D, from ITS graded leg",
+    [s.connection.state, s.connection.grade], ["graded", "D"]);
   t("the ungraded leg is EXCLUDED from both populations — one load-bearing member on each axis",
     [s.capture.load_bearing, s.connection.load_bearing], [1, 1]);
   t("and it is NAMED on both, present and not yet load-bearing — inert never means invisible",
@@ -339,17 +365,21 @@ console.log("\n--- 3. an ungraded leg is INERT, not unrating (DEC-18); UNRATED i
      s.connection.not_load_bearing.some((m) => m.target_id === UNGR1 && /carries no grade/.test(m.why))],
     [true, true]);
 
-  /* DEC-15: a hunch grade composes NORMALLY — present and asserted, never
-     treated as undetermined — and stays VISIBLE as a hunch, because REC-15's
-     pre-flight refuses to publish while one is outstanding. */
+  /* RE-READ 2026-09-28 BY K187 (strength R5, K102; INVESTIGATIVE-SESSION §12), never exempted. This arm read
+     DEC-15's "a hunch grade composes NORMALLY — present and asserted, never treated as undetermined". R5 replaces
+     that: a hunch is INERT in every pair, whatever it states, and is always NAMED as a hunch, so the live pair and the
+     pair over a version agree. It stays VISIBLE, because REC-15's pre-flight (HUNCH DEBT) still refuses to publish
+     while one is outstanding. */
   const HUNCH = "INQ-2026-0902-hunch";
   const hlegs = [g(CON_A, "B", "connection", "hunch", { author: "casey", date: "2026-08-03" }),
                  g(CAP_C, "C", "capture")];
   await promote(HUNCH, inquiryMd(HUNCH, { refs: hlegs.map((l) => l.target), legs: hlegs }), "inquiry");
   const h = await strength(HUNCH);
-  t("a hunch grade is load-bearing and composes normally (DEC-15), and says it is a hunch",
-    [h.connection.state, h.connection.grade, h.connection.weakest.grade_source, h.connection.load_bearing],
-    ["graded", "B", "hunch", 1]);
+  t("a hunch grade is INERT (R5): its axis is unrated with nothing load-bearing, and the leg is NAMED as a hunch",
+    [h.connection.state, h.connection.grade, h.connection.load_bearing,
+     h.connection.not_load_bearing.some((m) => m.target_id === CON_A && m.grade_source === "hunch" && /hunch/.test(m.why || "")),
+     h.capture.state, h.capture.grade],
+    ["unrated", null, 0, true, "graded", "C"]);
 
   const UNRATED = "INQ-2026-0902-unrated";
   const ulegs = [bare(UNGR1), bare(UNGR2, "cuts_against")];
@@ -381,13 +411,21 @@ console.log("\n--- 4. the walk carries R3's depth bound, and exhaustion is `unde
   /* Deepest first, so every write is legal: d8 rests on a document, and dK on
      d(K+1). Eight links is two more than the bound. */
   await promote(D(8), inquiryMd(D(8), { refs: [CAP_B], legs: [g(CAP_B, "B", "capture")] }), "inquiry");
+  /* RE-READ 2026-09-28 BY K187: each link was a HUNCH at A, and a hunch leg to an inquiry now inherits nothing
+     (R5), so the chain would stop at the first link. The links carry no grade: an ungraded inquiry leg still
+     contributes the target's pair (R2), which is the walk this section bounds. */
   for (let i = 7; i >= 0; i--)
-    await promote(D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [g(D(i + 1), "A", "connection")] }), "inquiry");
+    await promote(D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [bare(D(i + 1))] }), "inquiry");
 
   const bound = Number(/QUEUE_ANCESTOR_DEPTH\s*=\s*(\d+)/.exec(STORE_SRC)[1]);
-  t("the bound is REC-20's EXPORTED constant, INHERITED and not a second one minted here",
+  /* RE-ANCHORED 2026-09-28 (T7; STRENGTH #1 J5, strength R2): the walk's bound is now strength's own
+     `DEPTH_BOUND = 6` (src/strength/arithmetic.mjs: "equal to the queue's ancestor depth, and this module's own"),
+     no longer an import of REC-20's QUEUE_ANCESTOR_DEPTH. What stays pinned: the answer's bound, the queue's constant
+     and strength's are the same 6, and strength mints exactly ONE bound and no second spelling of it. */
+  t("the bound is 6 everywhere: the answer, REC-20's QUEUE_ANCESTOR_DEPTH, and strength's ONE DEPTH_BOUND (R2)",
     [(await strength(D(0))).depth_bound, bound,
-     /(?:STRENGTH|BASIS)_(?:DEPTH|BOUND)\s*=/.test(REGION)], [6, 6, false]);
+     (REGION.match(/\bDEPTH_BOUND\s*=\s*(\d+)/g) || []).map((m) => Number(/(\d+)$/.exec(m)[1])),
+     /(?:STRENGTH|BASIS)_(?:DEPTH|BOUND)\s*=/.test(REGION)], [6, 6, [6], false]);
 
   const deep = await strength(D(0));
   t("a chain deeper than the bound reports `undetermined` on BOTH axes rather than throwing",

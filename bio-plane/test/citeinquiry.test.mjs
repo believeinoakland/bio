@@ -84,7 +84,10 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 import { checkBundle, parseFrontmatter, BASIS_ROLES } from "../checks/bio-checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; CITATION #1 J1.1): `cite`, its dispatch entry and the
+   splices moved out of `store.mjs` into `src/citation/index.mjs` (the class `Citation`'s `cite`, and the
+   op map `citationOps`' `cite:` entry). The two source reads below read them there. */
+const CITATION_SRC = readFileSync(fileURLToPath(new URL("../src/citation/index.mjs", import.meta.url)), "utf8");
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -162,6 +165,8 @@ const projectMd = (id, title) => ["---",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
+  /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Decide whether the sewer fund paid for the marina."',
   "---", "", "## Summary", "", "A case.", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
@@ -382,8 +387,12 @@ t("every leg carries the role the member stated, and no other",
    is the assertion that notices a grade control arriving — and it noticed this
    widening, which is the shape working. The roster is corrected; the claim is
    re-stated below it so a future reader cannot mistake the list for the point. */
-const citeParams = (/cite: \(\) => this\.cite\(\{[\s\S]*?\n        \}\),/.exec(STORE_SRC)[0]
-  .match(/^\s+([a-z_]+):/gm) || []).map((x) => x.trim().replace(":", "")).sort();
+/* RE-ANCHORED 2026-09-28 (T7; CITATION #1 J1.1): the dispatch entry is now `citationOps`' `cite: () => c.cite({…})`
+   in `src/citation/index.mjs`, which writes several keys per line, so the roster reads every top-level key of
+   that call's argument (its comments stripped) rather than one key per line. The totality is unchanged. */
+const citeParams = ((/cite: \(\) => c\.cite\(\{([\s\S]*?)\n    \}\),/.exec(CITATION_SRC)[1]
+  .replace(/\/\*[\s\S]*?\*\//g, "").match(/(?:^|[\s,])([a-z_]+):\s/g)) || [])
+  .map((x) => x.replace(/[\s,:]/g, "")).sort();
 /* CORRECTED 2026-09-18 BY REC-134, NEVER EXEMPTED: the ninth, `identity`, is the control
    plane's POSITIONAL stamp (who the actor is), read by the project arm's check that the actor
    has joined the project it cites into (IC-152, C-56). It is server-stamped, never a
@@ -469,7 +478,11 @@ const self = await cite(SUB, [SUB], "&role=supports");
 t("a question citing ITSELF is refused SELF_BASIS — a question is not evidence for its own answer",
   [self.ok, self.reason, self.path], [false, "SELF_BASIS", [SUB, SUB]]);
 t("cite holds NO cycle rule of its own — it never calls the walk, and the guard it reaches is REC-11's",
-  /#basisCyclePath\(/.test(STORE_SRC.split("cite({ project")[1].split("static #setScalar")[0]), false);
+  /* RE-ANCHORED 2026-09-28 (T7; CITATION #1 J1.1, INQUIRY #1 J3): `cite` is `Citation`'s last method in
+     `src/citation/index.mjs`, and the walk is inquiry's `cyclePath` (the store keeps `#basisCyclePath` as a
+     one-line delegate to it); neither name is called inside the act. */
+  /(#basisCyclePath|\bcyclePath)\(/.test(CITATION_SRC.split("  cite({ project")[1]
+    .split("/* ------------------------------------------------------------------ reaching it */")[0]), false);
 
 /* ===================== 8. THE CASE ARM, UNCHANGED ======================== */
 console.log("\n--- 8. the widening took nothing away: citing onto a case is what it always was ---");
