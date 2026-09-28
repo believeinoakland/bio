@@ -28,6 +28,10 @@ import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
 import { checkBundle, withProducingGroup, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { registerChecks } from "../src/provenance/index.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; ACTIONS R37): C-2.10's action arms (the counterparty's among them) left the
+   catalogue's `checkBundle` for actions' `checkActionExtension`, which actions registers with record-core's audit and
+   with promotion; `legacy-checks` no longer runs the action arm. The intake's action bytes are judged by both. */
+import { checkActionExtension } from "../src/actions/checks.mjs";
 
 /* D-436 (IC-172): the setup page no longer names a producing group — the plane writes it into every creation from the
    store's one recorded value — so the page's bytes are judged below AS THE PLANE HOLDS THEM, through the catalogue's
@@ -191,9 +195,14 @@ console.log("\n--- the intake form writes conformant bundles ---");
      table is DERIVED rather than remembered, so a hand-kept literal beside it
      must move whenever the catalogue does. That it failed here is the assertion
      working, not a regression. */
+  /* MOVED 2026-09-28 (T8, legacy-tests), not exempted, for the reason the note above gives: the catalogue gained the
+     action layer's record objects `standard`, `determination` and `consequence` (K171 (1), N129: one state,
+     `recorded`), `escalation` (escalation R21, first state `open`) and intent's pursuit documents `aspiration`
+     (`held`) and `goal` (`open`) (K198 (2), N159) — thirteen keys, in the catalogue's order. */
   t("first states come from the catalog, not from memory, legacy spellings included", ui.FIRST_STATE,
     { information: "collected", inquiry: "open", focus: "surfaced", project: "forming", action: "planned",
-      bias: "draft", problem: "surfaced" });
+      bias: "draft", standard: "recorded", determination: "recorded", consequence: "recorded",
+      escalation: "open", aspiration: "held", goal: "open", problem: "surfaced" });
 
   const now = "2026-07-24T12:00:00Z";
   /* CORRECTED 2026-09-21 BY D-436 (IC-172), never exempted. These assertions judged the page's bytes AS IT SENDS THEM,
@@ -216,6 +225,8 @@ console.log("\n--- the intake form writes conformant bundles ---");
     const { findings } = await checkBundle({
       folderName: id, files: f2, sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true,
     });
+    /* T8: and actions' arm over the same front matter (see the import above) — it runs only for an action. */
+    checkActionExtension({ fm: parseFrontmatter(text).data, nowMs: Date.parse(now) }, findings);
     const errs = findings.filter((x) => x.severity === "error");
     for (const x of errs.slice(0, 4)) console.log(`         ${type}: ${x.check} ${x.message.slice(0, 110)}`);
     if (type === "action") {
@@ -262,6 +273,7 @@ console.log("\n--- the intake form writes conformant bundles ---");
           "What the member wrote.", now, false, null, act), INTAKE_GROUP);
         const r = await checkBundle({ folderName: id, files: new Map([["bundle.md", authored]]),
           sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+        checkActionExtension({ fm: parseFrontmatter(authored).data, nowMs: Date.parse(now) }, r.findings);   /* T8, as above */
         const e2 = r.findings.filter((x) => x.severity === "error");
         for (const x of e2.slice(0, 4)) console.log(`         action: ${x.check} ${x.message.slice(0, 110)}`);
         t(`an action bundle carrying ${label} has zero errors`, e2.length, 0);

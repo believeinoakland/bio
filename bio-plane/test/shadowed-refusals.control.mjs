@@ -36,15 +36,25 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): seven of the eight guards left `store.mjs` with their methods — BAD_HANDLE,
+   NOT_ACTIVE, NOT_AN_OWNER and NO_OWNERS to `src/membership/` (T3), the courtesy lock LEASE_HELD reads to
+   `src/record-core/` (`acquireLease`, T3), NO_AUTHOR to `src/provenance/` (T4), EDITION_NOT_INCREMENTED to
+   `src/publication/` (T8) — so each arm edits the file that now holds its guard, under the same restore guarantee.
+   NO_CASE's guard (`#queueCaseFor`) is still the store's. */
 const F = {
   store: ROOT + "src/store.mjs",
+  membership: ROOT + "src/membership/index.mjs",
+  recordCore: ROOT + "src/record-core/index.mjs",
+  provenance: ROOT + "src/provenance/index.mjs",
+  publication: ROOT + "src/publication/index.mjs",
   suite: ROOT + "test/shadowed-refusals.test.mjs",
 };
 const SUITE = "shadowed-refusals.test.mjs";
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
-const MIN_BYTES = { store: 500000, suite: 10000 };
+const MIN_BYTES = { store: 500000, membership: 100000, recordCore: 25000, provenance: 75000, publication: 100000,
+                    suite: 10000 };
 
 /* THE PRISTINE COPIES, ON DISK, UNIQUELY NAMED PER ARM. `cmp` compares them
    byte for byte against the restored file, so the restore is checked by an
@@ -158,13 +168,13 @@ arm("(1) **BAD_HANDLE.** Widen the handle grammar so a capital and a space are l
   + "fail — and what it will answer instead is the enrolment SUCCEEDING, which is the point: the "
   + "refusal in front of it (NO_HANDLE) and the two behind it (HANDLE_TAKEN, PASSWORD_TOO_SHORT) are "
   + "all satisfied by the payload, so nothing else can catch this.",
-  [["store", `if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))`, `if (false && !/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))`]],
+  [["membership", `if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))`, `if (false && !/^[a-z0-9][a-z0-9-]{1,40}$/.test(h))`]],
   [PINS.BAD_HANDLE], othersHeldOpen("BAD_HANDLE"));
 
 arm("(2) **LEASE_HELD.** Neuter the courtesy lock's conflict test — a lease held by somebody else no "
   + "longer conflicts — and a second member writes into an action the first is holding. The pin must "
   + "fail, and so must the `ord` 0 arm, because the refused call will have appended after all.",
-  [["store", `      if (cur && cur.actor !== actor && Date.parse(cur.expires) > now)`,
+  [["recordCore", `      if (cur && cur.actor !== actor && Date.parse(cur.expires) > now)`,
               `      if (false && cur && cur.actor !== actor && Date.parse(cur.expires) > now)`]],
   [PINS.LEASE_HELD], othersHeldOpen("LEASE_HELD"));
 
@@ -178,22 +188,22 @@ arm("(3) **NO_CASE.** Let an unnamed case through `#queueCaseFor`. The pin must 
 arm("(4) **NOT_ACTIVE.** Let a revoked member be made an owner. Anchored on the two lines TOGETHER "
   + "because `target.status !== \"active\"` occurs four times in this file and an arm that armed four "
   + "sites would not be the arm it reports.",
-  [["store", `    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };\n    const p = this.#participation(projectId, target.member_id);`,
-              `    if (false && target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };\n    const p = this.#participation(projectId, target.member_id);`]],
+  [["membership", `    if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };\n    const p = this.participation(projectId, target.member_id);`,
+              `    if (false && target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };\n    const p = this.participation(projectId, target.member_id);`]],
   [PINS.NOT_ACTIVE], othersHeldOpen("NOT_ACTIVE"));
 
 arm("(5) **NOT_AN_OWNER.** Let a vote be cast to remove somebody who is not an owner. The pin must "
   + "fail, and it will answer LAST_OWNER or VOTES_SHORT — refusals BEHIND it — which is what an "
   + "instrument driving this code with an incomplete payload would have been reading all along.",
-  [["store", `    if (!this.#isProjectOwner(projectId, target.member_id))\n      return { ok: false, reason: "NOT_AN_OWNER", handle };`,
-              `    if (false && !this.#isProjectOwner(projectId, target.member_id))\n      return { ok: false, reason: "NOT_AN_OWNER", handle };`]],
+  [["membership", `    if (!this.isProjectOwner(projectId, target.member_id))\n      return { ok: false, reason: "NOT_AN_OWNER", handle };`,
+              `    if (false && !this.isProjectOwner(projectId, target.member_id))\n      return { ok: false, reason: "NOT_AN_OWNER", handle };`]],
   [PINS.NOT_AN_OWNER], othersHeldOpen("NOT_AN_OWNER"));
 
 arm("(6) **NO_OWNERS.** Let an administrator 'rescue' a project that has no owner rows at all — a "
   + "machine-created project rather than a stranded one. This is the arm that matters most of the "
   + "eight: with it gone, 7.13's single exception becomes a route by which an administrator takes "
   + "ownership of a project nobody ever owned.",
-  [["store", `    if (!owners.length)\n      return { ok: false, reason: "NO_OWNERS",`,
+  [["membership", `    if (!owners.length)\n      return { ok: false, reason: "NO_OWNERS",`,
               `    if (false && !owners.length)\n      return { ok: false, reason: "NO_OWNERS",`]],
   [PINS.NO_OWNERS], othersHeldOpen("NO_OWNERS"));
 
@@ -201,17 +211,19 @@ arm("(7) **NO_AUTHOR.** Let a provenance chain be rebuilt with no name against i
   + "and answer NO_BUNDLE or NO_SUCH_BUNDLE — the two directly behind it. The op-level arms beside "
   + "the pin must stay GREEN: they assert that no CALLER can reach this refusal, which is a fact "
   + "about the control plane and not about the store's guard.",
-  [["store", `    if (!who)\n      return { ok: false, reason: "NO_AUTHOR",`,
-              `    if (false && !who)\n      return { ok: false, reason: "NO_AUTHOR",`]],
+  /* RE-ANCHORED 2026-09-28 (T8): the guard is `!who || isMachineIdentity(who)` since REC-158 (R21); only the BLANK
+     half is this pin's, so only it is neutered, and every machine class is still refused by name at the op. */
+  [["provenance", `    if (!who || isMachineIdentity(who))\n      return { ok: false, reason: "NO_AUTHOR",`,
+              `    if ((false && !who) || isMachineIdentity(who))\n      return { ok: false, reason: "NO_AUTHOR",`]],
   [PINS.NO_AUTHOR],
   [...othersHeldOpen("NO_AUTHOR"),
-   "BEHAVIOURALLY: NOT ONE caller class reaches NO_AUTHOR through the op",
+   "BEHAVIOURALLY: a signed-in member passes the fence under her own name",
    "STRUCTURALLY: `provenancechain` is stamped with a server-decided author"]);
 
 arm("(8) **EDITION_NOT_INCREMENTED.** Let a revision republish under an edition that does not move "
   + "the number. The pin must fail — and the harm is the one the refusal's own detail names: a second, "
   + "differently-signed document at an edition a reader has already cited.",
-  [["store", `      if (!existed && highest && ed <= highest)`, `      if (false && !existed && highest && ed <= highest)`]],
+  [["publication", `    if (!existed && highest && ed <= highest)`, `    if (false && !existed && highest && ed <= highest)`]],
   [PINS.EDITION_NOT_INCREMENTED], othersHeldOpen("EDITION_NOT_INCREMENTED"));
 
 /* ===================== THE SET, AND THE BLINDNESS ========================= */
@@ -231,8 +243,8 @@ arm("(10) **THE WALK MUST BE ABLE TO GO BLIND AND SAY SO.** Make the refusal-sit
   + "estate — REC-70's lesson on the floor side. THE EIGHT PINS MUST STAY GREEN: they are driven "
   + "through the ops and do not depend on the walk at all, so if they went red here the walk would be "
   + "load-bearing on the pins and the suite would be measuring itself.",
-  [["suite", `  const CODE = /(?:reason:\\s*"([A-Z][A-Z0-9_]{2,})"|\\brefusals?\\s*\\(\\s*"([A-Z][A-Z0-9_]{2,})"|\\brefuse\\s*\\(\\s*"([A-Z][A-Z0-9_]{2,})")/g;`,
-              `  const CODE = /(?:\\bTHIS_MATCHES_NOTHING_AT_ALL\\b)()()()/g;`]],
+  [["suite", `  const CODE = /(?:reason:\\s*"([A-Z][A-Z0-9_]{2,})"|\\brefusals?\\s*\\(\\s*"([A-Z][A-Z0-9_]{2,})"|\\brefuse\\s*\\(\\s*"([A-Z][A-Z0-9_]{2,})"|\\brefusal\\s*\\(\\s*[A-Z][A-Z0-9_]*\\s*,\\s*"([A-Z][A-Z0-9_]{2,})")/g;`,
+              `  const CODE = /(?:\\bTHIS_MATCHES_NOTHING_AT_ALL\\b)()()()()/g;`]],
   ["(the walk reached a real corpus before anything is claimed over it",
    "every one of the eight is a refusal THIS PLANE STILL MINTS"],
   [...Object.values(PINS)]);
@@ -262,7 +274,8 @@ console.log("\n=== (11) OVER-STRICTNESS, AND IT IS BUILT INTO EVERY PIN. Each of
     "and with her own assent the SAME payload carries and she stops being an owner",
     "and the SAME administrator, handle and reason rescue the project that HAS owner rows",
     "and the SAME call WITH a name gets past this refusal into the ordinary report",
-    "and the SAME revision, same member, same key and same gate, ratifies once its bytes claim an edition that moves the number",
+    /* RE-ANCHORED 2026-09-28 (T8): the label the suite prints since D-431 drove this guard at the committer. */
+    "and the SAME bytes, same member and same key, commit once the edition they author moves the number",
   ];
   console.log(`  MEASURED: ${r.pass} pass, ${r.fail} fail${r.noFoot ? "  ** THE SUITE NEVER REACHED ITS FOOT" : ""}`);
   const broken = want.filter((w) => r.named.some((n) => n.includes(w)));

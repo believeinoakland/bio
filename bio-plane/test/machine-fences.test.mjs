@@ -178,6 +178,8 @@ import { readGitProvenance, repoPath, reportProvenance } from "../scripts/proven
 import { isMachineIdentity, isMachineStamp, MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { RATIFY_MACHINE_FENCE_CHECKS } from "../src/ratification/checks.mjs";   /* T8: the ratify rows moved */
+import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (strength R5, K187) */
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
@@ -190,7 +192,10 @@ const SRC = (f) => join(DIR, "..", "src", f);
    BASIS-VERSIONS #1 J4.1), MACHINE_CANNOT_DIVIDE and MACHINE_CANNOT_GROUND to inquiry (`#divide`, `#ground`;
    INQUIRY #1 J2.2), MACHINE_CANNOT_DECLARE to strength (`strengthBarSet`; STRENGTH #1 J5) — so those three modules,
    extracted from the store, join the corpus the harvest and the method walk read. */
-const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength"];
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): eight more left store.mjs with their acts — MACHINE_CANNOT_CORRESPOND,
+   _MOVE_ACTION, _SET_LAWS and _SET_RISK_TIER (and the new _STATE_RECORDS_LAW, C-32.20) to actions, MACHINE_CANNOT_PUBLISH
+   to case-authoring (`#publishCase`), MACHINE_CANNOT_REVIEW to review — so those modules join the corpus. */
+const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength", "actions", "case-authoring", "review"];
 const STORE_SRC = [readFileSync(SRC("store.mjs"), "utf8"),
   ...EXTRACTED.flatMap((m) => readdirSync(SRC(m)).filter((f) => f.endsWith(".mjs")).sort()
     .map((f) => readFileSync(SRC(`${m}/${f}`), "utf8")))]
@@ -319,8 +324,11 @@ const actionMd = (id) => ["---",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   `group: ${GROUP}`, "references: []", "state_history: []",
-  "action_kind: cpra_request", "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  /* RE-READ 2026-09-28 (T8, legacy-tests): `cpra_request` is no kind this instance offers (ACTIONS C-101.1, the
+     kinds are records_request, request_for_comment, other); the records request is `records_request`. Fixture. */
+  "action_kind: records_request", "risk_tier: 1",
+  /* RE-READ 2026-09-28 (T8): a NEW named counterparty is an office, its role and its body (ACTIONS R9, C-101.3). */
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "", "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
@@ -507,13 +515,25 @@ const fence = (code, payload, machineAnswer) => {
   const CONN = "INFO-2026-7300-publish-connection";
   const LEFT = "INFO-2026-7300-publish-left-out";
   const INQ = "INQ-2026-7300-publish";
-  for (const d of [CAP, CONN, LEFT])
+  for (const d of [CAP, LEFT])
     await mustPromote(d, infoMd(d), "information", RUTH, {}, [],
       [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${d}`), encoding: "binary", bytes: 10 }]);
-  const legs = ["basis:",
+  /* RE-READ 2026-09-28 (T8, legacy-tests; strength R5, K187), never exempted: the connection leg was a `hunch`, and
+     publish now refuses a case resting on one (UNCLEARED_HUNCH) — so the member half of this pair failed for a reason
+     that is not the fence. Fixture, not subject: CONN carries a READING naming the inquiry's subject entity, resolved,
+     so the connection C is EARNED (`earned-connection.mjs`), as publishedcase's case earns it. */
+  const EARN = await connectionAtC(async (b) => POST(`op=entitycreate&token=${RUTH}`, b));
+  {
+    const cap = sha(`capture-of-${CONN}`);
+    await mustPromote(CONN, infoMd(CONN), "information", RUTH, {}, EARN.files(cap, "snapshots/doc.bin"),
+      [{ path: "snapshots/doc.bin", sha256: cap, encoding: "binary", bytes: 10 }]);
+    const res = await POST(`op=resolve&token=${RUTH}`, { captureSha: cap });
+    if (res?.ok === false) throw new Error(`resolve ${CONN}: ${JSON.stringify(res).slice(0, 400)}`);
+  }
+  const legs = [`subject_entity: ${EARN.entityId}`, "basis:",
     `  - target: ${CAP}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
     `  - target: ${CONN}`, "    role: supports", "    grade: C", "    grade_axis: connection",
-    "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
+    "    grade_source: resolution"].join("\n");
   const md = inquiryMd(INQ, { question: "Was the sewer transfer authorised?", refs: [CAP, CONN] })
     .replace("---\n\n## Question", `${legs}\n---\n\n## Question`);
   /* CORRECTED 2026-09-18 (REC-136, §7.1 item 6): the conclusion this fixture
@@ -827,7 +847,9 @@ const fence = (code, payload, machineAnswer) => {
   const ACT = "ACTN-2026-7300-laws";
   await mustPromote(ACT, actionMd(ACT), "action", RUTH, { current_state: "planned" });
   const BODY = { laws: [{ level: "state", citation: "Cal. Gov. Code § 7920.000 et seq." },
-                        { level: "local", citation: "Oakland Municipal Code ch. 2.20" }] };
+                        { level: "city", citation: "Oakland Municipal Code ch. 2.20" }] };
+  /* RE-READ 2026-09-28 (T8, legacy-tests): the legal levels are federal, state, county and city now (ACTIONS
+     `#lawEntries`, BAD_LAW_LEVEL C-73.3); the Oakland code is the `city` level. Fixture, not subject. */
   const m = await POST(`op=actionlaws&token=${AI}&target=${ACT}`, BODY);
   fence("MACHINE_CANNOT_SET_LAWS",
     "a real action and two well-formed citations at two legal levels — the payload the member sets the list "
@@ -935,6 +957,35 @@ const fence = (code, payload, machineAnswer) => {
     [ra && ra.ok, (await view()).tier], [true, 2]);
 }
 
+/* --------------------------------------------- (xvi) STATE_RECORDS_LAW */
+{
+  /* ADDED 2026-09-28 (T8, legacy-tests) — D-689 / C-32.20 (ACTIONS R5, RECORDS_LAW_FENCE_CHECKS). The sixteenth
+     fence arrived with the actions module, and block 1's harvest (widened to `src/actions/`, whose acts left the
+     store) reads it, so block 3's equality names it until it is driven here. NOT an act: the fence stands inside
+     `promote`'s action block and refuses a machine STATING `law` on a records_request. The payload is a member's
+     creation of one, well-formed in every field (a records_request, an office as its counterparty, one citation),
+     which the member lands on the next line; and the liar's arm — a fence refusing every machine promote of a
+     records request — fails on the machine's creation stating NO law, which lands. */
+  const ACT = "ACTN-2026-7300-records-law";
+  /* The tier is left UNDETERMINED: a machine stating one is C-32.19's refusal (block xv), which would stand in front
+     of this fence and absorb it — measured on the first run of this block. */
+  const withLaw = actionMd(ACT).replace("risk_tier: 1", "risk_tier: undetermined").replace("action_kind: records_request",
+    'action_kind: records_request\nlaw: "Cal. Gov. Code § 7920.000 et seq."');
+  const m = await promote(ACT, withLaw, "action", AI, { current_state: "planned" });
+  fence("MACHINE_CANNOT_STATE_RECORDS_LAW",
+    "a records_request created with an office as its counterparty and ONE citation as its law — the payload "
+    + "the member creates it with on the next line",
+    codeOf(m));
+  t("  the record was not written under the machine's call", await stateOf(ACT), null);
+  const r = await promote(ACT, withLaw, "action", RUTH, { current_state: "planned" });
+  t("  and the SAME payload creates the action for a signed-in member", [r.ok, await stateOf(ACT)], [true, "planned"]);
+  const ACT2 = "ACTN-2026-7301-records-law-unstated";
+  const bare = await promote(ACT2, actionMd(ACT2).replace("risk_tier: 1", "risk_tier: undetermined"), "action", AI,
+    { current_state: "planned" });
+  t("a machine credential's creation of a records_request stating NO law lands — the fence refuses the law, "
+  + "never a machine's records request", [bare.ok, await stateOf(ACT2)], [true, "planned"]);
+}
+
 /* ====================================================================== 3
  * THE SWEEP AND THE COMPLETENESS ARM.
  * ==================================================================== */
@@ -943,16 +994,17 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
   const drivenCodes = DRIVEN.map((d) => d.code).sort();
   /* MOVED 12 -> 13 on 2026-09-18 by REC-126 (C-32.16 MACHINE_CANNOT_REVIEW, block xiii).
      MOVED 13 -> 14 on 2026-09-23 by D-149 (C-32.18 MACHINE_CANNOT_SET_LAWS, block xiv).
-     MOVED 14 -> 15 at c19-batch10 by REC-189 (C-32.19 MACHINE_CANNOT_SET_RISK_TIER, minted C-32.18, block xv). */
-  t("(fifteen fences were actually driven — the guard before the equality, because two empty sets are "
-  + "equal and prove nothing)", drivenCodes.length, 15);
+     MOVED 14 -> 15 at c19-batch10 by REC-189 (C-32.19 MACHINE_CANNOT_SET_RISK_TIER, minted C-32.18, block xv).
+     MOVED 15 -> 16 on 2026-09-28 (T8, legacy-tests) by D-689 (C-32.20 MACHINE_CANNOT_STATE_RECORDS_LAW, block xvi). */
+  t("(sixteen fences were actually driven — the guard before the equality, because two empty sets are "
+  + "equal and prove nothing)", drivenCodes.length, 16);
   /* CORRECTED 2026-09-24 by D-503, never exempted: this label read "EVERY MACHINE_CANNOT_* THE PLANE
      can mint", and that is wider than the arm can support. `HARVEST` reads `src/store.mjs` ALONE, and
      the plane mints five more fence codes in `src/index.mjs` (the two MACHINE_CANNOT_RATIFY* and the
      three OPERATOR_TOKEN_CANNOT_*) which this equality has never been able to see. Those are block
      3b's, harvested and driven there; the two arms together are the whole plane, and neither claims
      to be. The old wording was the defect this file exists to find, in this file. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength) mints was driven under a COMPLETE payload — the codes "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength, actions, case-authoring, review) mints was driven under a COMPLETE payload — the codes "
   + "`src/index.mjs` mints are block 3b's, and were outside this corpus, not inside it (D-503)",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);
@@ -1022,7 +1074,11 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
  * ==================================================================== */
 console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN through the op ---");
 {
-  const INDEX_BARE = decomment(readFileSync(SRC("index.mjs"), "utf8"));
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): op=ratify and op=caseratify left src/index.mjs for the ratification
+     module (`ratifyOp`, `caseRatifyOp` in src/ratification/ops.mjs, RATIFICATION J-T8), taking their four fences and
+     their rows (RATIFY_MACHINE_FENCE_CHECKS) with them; the Worker's corpus is index.mjs AND that file. */
+  const INDEX_BARE = decomment([readFileSync(SRC("index.mjs"), "utf8"),
+                                readFileSync(SRC("ratification/ops.mjs"), "utf8")].join("\n"));
   const INDEX_HARVEST = [...new Set([...INDEX_BARE.matchAll(/"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g)]
     .map((m) => m[1]))].sort();
   console.log(`    src/index.mjs mints ${INDEX_HARVEST.length} fence code(s): ${INDEX_HARVEST.join(", ")}`);
@@ -1039,8 +1095,11 @@ console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN thro
   };
   /* The refusal's SENTENCE is the catalogue's, never one typed at the site (DEC-49),
      so each pin asks the row rather than repeating its words here. */
-  const catGot = (r, code) => [r && r.check, r && r.translation === MACHINE_FENCE_CHECKS[code]?.translation];
-  const catWant = (code) => [MACHINE_FENCE_CHECKS[code]?.check, true];
+  /* RE-ANCHORED 2026-09-28 (T8): the four ratify rows are the ratification module's own table now, not the
+     catalogue's; the row is asked where it lives. */
+  const FENCE_ROW = (code) => MACHINE_FENCE_CHECKS[code] ?? RATIFY_MACHINE_FENCE_CHECKS[code];
+  const catGot = (r, code) => [r && r.check, r && r.translation === FENCE_ROW(code)?.translation];
+  const catWant = (code) => [FENCE_ROW(code)?.check, true];
 
   /* ---------------------------------------- (a)+(b) THE TWO RATIFICATION ACTS */
   if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -1260,7 +1319,9 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
     .filter((m) => !/^(if|for|while|switch|catch|return|constructor)$/.test(m[1]));
   const methods = heads.map((h, i) => ({
     name: h[1], body: STORE_BARE.slice(h.index, i + 1 < heads.length ? heads[i + 1].index : STORE_BARE.length) }));
-  const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})")/g;
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the modules mint through `refusal(<TABLE>, "CODE", …)` — the row's
+     table first — and case-authoring's MACHINE_CANNOT_PUBLISH is spelled so; that spelling is the fourth alternative. */
+  const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefusal\s*\(\s*[A-Z][A-Z0-9_]*\s*,\s*"([A-Z][A-Z0-9_]{2,})")/g;
   /* An IDENTITY guard: the 300 characters in front of the refusal ask WHO the
      caller is rather than WHAT they sent. Deliberately generous — see the
      header's note on which direction this errs in. */
@@ -1339,7 +1400,7 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
   for (const m of methods) {
     const seq = [];
     for (const h of m.body.matchAll(CODE)) {
-      const c = h[1] || h[2] || h[3];
+      const c = h[1] || h[2] || h[3] || h[4];
       if (!seq.some((s) => s.code === c)) seq.push({ code: c, at: h.index });
     }
     seq.forEach((s, i) => {
@@ -1364,7 +1425,7 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
       if (call < 0) continue;
       const behind = new Set();
       for (const h of m.body.slice(call).matchAll(CODE)) {
-        const c = h[1] || h[2] || h[3];
+        const c = h[1] || h[2] || h[3] || h[4];
         if (c !== hr.code) behind.add(c);
       }
       rows.push({ method: `${m.name} -> ${hr.method}`, code: hr.code, shadows: behind.size,

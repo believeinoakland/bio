@@ -98,12 +98,29 @@ import { fileURLToPath } from "node:url";
    above DETECTOR A, and `verdict-reader.mjs`'s own header. */
 import { verdictOf, readerDrift } from "./verdict-reader.mjs";
 /* D-561: C-69.2 and C-98, read from the rows, never a hand copy. */
-import { DISPATCH_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";
+import { DISPATCH_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): C-98's rows moved with the published reads into
+   publication's own family. */
+import { PUBLISHED_READ_CHECKS } from "../src/publication/checks.mjs";
 /* T4 (legacy-tests): held-open (iii) moved with the governor's Worker side into host-governor (R17). */
 import { governedFetch, governorOverStub } from "../src/host-governor/index.mjs";
 
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6, PUBLICATION #1 J4.6): THE WORKER SIDE IS THREE FILES.
+   T8 layer 8 moved op=ratify and op=caseratify out of index.mjs into `src/ratification/ops.mjs` (`ratifyOp`,
+   `caseRatifyOp`, handed `json`, `doAnswer` and `storeSilent` by the control plane), and the published reads
+   (op=verify's bytes, op=publishedbytes, op=publishedcase) and the case container's assembly into
+   `src/publication/worker.mjs` (`publishedRoutes`, `assembleCaseContainer`, reaching the plane's helpers through the
+   bound `P`/`plane()`). Every detector below asks of that code exactly what it asked of index.mjs, so PART 1 reads
+   the three as ONE corpus, index.mjs first so its line numbers stay true: `WORKER_FILES` joined in order, each file
+   opened by a handler-region mark (`handlerRegion`) so no guard in one file can vouch for a spread in another.
+   Two more Worker halves left index.mjs in T6–T8 and are read for the same reason: op=knock's (`capture/doorbell.mjs`,
+   `knockOp`) and op=monitor's (`monitoring/index.mjs`, `monitorOp`, MONITORING #1 J3.1). */
+const WORKER_FILES = ["index.mjs", "ratification/ops.mjs", "publication/worker.mjs", "capture/doorbell.mjs",
+                      "monitoring/index.mjs"];
 const SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const RAW = readFileSync(SRC_PATH, "utf8");
+const FILE_MARK = (f) => `\nif (op === "__file ${f}") {}\n`;
+const RAW = WORKER_FILES.map((f, i) => (i ? FILE_MARK(f) : "")
+  + readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8")).join("");
 
 let pass = 0, fail = 0;
 const ok = (label, cond) => {
@@ -148,9 +165,13 @@ const blank = (s) => s
    an anchor that admits a METHOD NAME because it matched the callee's spelling
    rather than its structure. The negated class is what makes it structural — a
    receiver is what turns `json(` into somebody else's method. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): publication's worker half calls the control plane's own `json` through
+   its bound helpers — `P.json(` and `plane().json(` — which is the helper this walk means, spelled through a binding,
+   and NOT a `.json()` METHOD on a Response or a Request. So those two receivers, and only those, are admitted; the
+   REC-67 pair below still refuses every other `.json(`. */
 function jsonCalls(src) {
   const out = [];
-  const re = /(?<![.\w$])json\(/g;
+  const re = /(?<![.\w$])(?:P\.|plane\(\)\.)?json\(/g;
   let m;
   while ((m = re.exec(src))) {
     let i = m.index + m[0].length, depth = 1;
@@ -174,7 +195,9 @@ function jsonCalls(src) {
    The reach delta below is what proves this bound reaches every site. */
 function handlerRegion(src, at) {
   const before = src.slice(0, at);
-  const marks = [...before.matchAll(/\n\s*(?:if \(op ===|const renderFinding =|if \(req\.method ===)/g)];
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): + an exported async function's head, which is how the handlers that
+     left index.mjs are organised (`ratifyOp`, `caseRatifyOp`, `publishedRoutes`, `assembleCaseContainer`). */
+  const marks = [...before.matchAll(/\n\s*(?:if \(op ===|const renderFinding =|if \(req\.method ===|export async function )/g)];
   const from = marks.length ? marks[marks.length - 1].index : 0;
   return src.slice(from, at);
 }
@@ -360,14 +383,14 @@ function doFetchSites(src) {
 
 const SRC = blank(RAW);
 
-console.log("\n--- PART 1: the source-level sweep over src/index.mjs ---");
+console.log(`\n--- PART 1: the source-level sweep over the Worker side (src/${WORKER_FILES.join(", src/")}) ---`);
 /* REC-67 · THE CORPUS THIS WALK ACTUALLY READS, PRINTED AND GUARDED IN BOTH
    DIRECTIONS. Narrowing an anchor must not narrow its reach to nothing, so the
    site count is printed every run and the reader is driven over a synthetic
    pair: a bare `json(` is FOUND and a `.json()` method call is REFUSED. Without
    the second half the correction is unprovable; without the first it could have
    been made by matching nothing at all. */
-console.log(`  CORPUS: src/index.mjs ${SRC.split("\n").length} lines · `
+console.log(`  CORPUS: ${WORKER_FILES.length} files, ${SRC.split("\n").length} lines · `
           + `${jsonCalls(SRC).length} json() call sites (the anchor excludes \`.json()\` method calls; `
           + `${[...SRC.matchAll(/\bjson\(/g)].length} match a spelling-only anchor)`);
 t("REC-67 CORPUS GUARD: the walk reads a real corpus of json() sites, and the anchor refuses a "
@@ -590,8 +613,9 @@ ok(`REACH (A) names the sites rather than counting them — ${JSON.stringify(aPl
    written back at their own sites rather than appended to the end of the file —
    a plant at the end proves only that the regex fires somewhere. */
 const B_PLANTS = [
-  ['if (!c.ok) return json({ ok: false, ...c }, 404);',
-   'if (!c.ok) return json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);'],
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): op=publishedcase's site is publication's worker half now, through `P`. */
+  ['if (!c.ok) return P.json({ ok: false, ...c }, 404);',
+   'if (!c.ok) return P.json({ ok: false, ...(c || { reason: "NOT_PUBLISHED" }) }, 404);'],
   ['return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);',
    'return json({ ok: false, ...(r || { reason: "NO_QUEUE" }), store: storeName, tokenClass: cls }, 400);'],
   ['return json({ ok: false, ...facts, store: storeName, tokenClass: cls },',
@@ -704,8 +728,10 @@ ok(`REACH (C), AS A DELTA — a NEW unconverted Durable Object read appears in t
    `.fetch(` in the region sits inside a `doAnswer(`. That is checkable without
    knowing what any site does with its answer, which is exactly why it survives
    a shape the three detectors above have not met yet. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; RATIFICATION #2 J6): the handler is `ratifyOp` in
+   `src/ratification/ops.mjs` now, the body `if (op === "ratify") {` held in index.mjs, moved whole. */
 function ratifyRegion(src) {
-  const from = src.indexOf('if (op === "ratify") {');
+  const from = src.indexOf("export async function ratifyOp(req, stub, ctx) {");
   if (from < 0) return null;
   let i = src.indexOf("{", from), depth = 0;
   for (; i < src.length; i++) {
@@ -773,8 +799,12 @@ function rawInRatify(src) {
              "const listOut = { result: (await (await stub.fetch(`http://do/list?viewer=${ratViewer}`)).json()).result };")
     .replace("const reusedOut = await doAnswer(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`));",
              "const reusedOut = { result: (await (await stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`)).json()).result };")
+    /* CORRECTED 2026-09-28 (T8, legacy-tests), never exempted: this plant opened `{ answered: true, result: …` and never
+       closed it. Inside index.mjs's `fetch` the stray brace was balanced by an OUTER closer, so the region merely ran
+       long; `ratifyOp` is a top-level function, so the region never closed and detector D read nothing. The plant is
+       the same fire-and-forget write, brace-balanced. */
     .replace("const vOut = await doAnswer(stub.fetch(new Request(\"http://do/recordreuseverdicts\", {",
-             "const vOut = { answered: true, result: await stub.fetch(new Request(\"http://do/recordreuseverdicts\", {");
+             "const vOut = { answered: true }; await stub.fetch(new Request(\"http://do/recordreuseverdicts\", {");
   const dPlanted = rawInRatify(dPlant);
   ok(`REACH (D), AS A DELTA — un-converting the two sites this item was NAMED for plus the `
      + `fire-and-forget write takes detector D from ${(raw || []).length} to ${dPlanted.length} `
@@ -815,7 +845,8 @@ function rawInRatify(src) {
     unchecked, []);
   /* Reach, as a delta and against the real defect: drop the real guard line at
      the site arm (e) drops it at, and D2 must name that binding. */
-  const d2Plant = SRC.replace('if (!pubOut.answered) return storeSilent("ratify/publish");\n      ', "");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the moved handler is indented one level less. */
+  const d2Plant = SRC.replace('if (!pubOut.answered) return storeSilent("ratify/publish");\n    ', "");
   const d2Region = ratifyRegion(d2Plant);
   const d2Unchecked = [...d2Region.text.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*await doAnswer\(/g)]
     .map((m) => m[1])
@@ -1008,7 +1039,10 @@ console.log("\n--- site 7: op=queue (reason:\"NO_QUEUE\" invented) ---");
 
 console.log("\n--- site 8: op=monitor (reason:\"ABSENT\" invented) ---");
 {
-  await poison("image");
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3.1): the monitor's look runs in the Durable Object's
+     `monitor` service now, so the Worker opens ONE envelope, `do/monitor`, and the image is read in process. The
+     store is made to fail THERE, the one read the op makes; the claim is unchanged. */
+  await poison("monitor");
   const bad = await POST("op=monitor&token=adm-rec52", { bundleId: "INQ-nope" });
   ok("a Durable Object failure is NOT reported as the bundle being absent — ABSENT is also the "
      + "fail-closed answer for a bundle the viewer may not see, which is what made it convincing",

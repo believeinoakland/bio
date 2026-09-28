@@ -115,7 +115,14 @@ console.log("\nBLOCK A — the machine/member boundary, in words a member can re
      arrive from a tree that never wrote it (D-238), and an arrival can only push
      a floor UP. */
   const mintedRepro = new Set();
-  const srcFiles = fs.readdirSync(SRC).filter((f) => f.endsWith(".mjs"));
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the plane's source is no longer one flat directory — T3–T8 moved the
+     acts, and the fences they mint, into `src/<module>/` (T8 alone: actions, case-authoring, review, ratification) — so
+     the harvest reads every `.mjs` under `src/` except a module's `test/` or `dist/`, each named by its path under
+     `src/`. Read flat, it saw the fences only where a top-level file happened to spell them. */
+  const walkSrc = (rel = "") => fs.readdirSync(path.join(SRC, rel), { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? (["test", "dist"].includes(e.name) ? [] : walkSrc(rel ? `${rel}/${e.name}` : e.name))
+      : e.name.endsWith(".mjs") ? [rel ? `${rel}/${e.name}` : e.name] : []);
+  const srcFiles = walkSrc().sort();
   const PROV = readGitProvenance(REPO);
   const inCommit = (f) => PROV.inHead === null ? true : PROV.inHead.has(repoPath(REPO, path.join(SRC, f)));
   const perFile = {};
@@ -141,13 +148,29 @@ console.log("\nBLOCK A — the machine/member boundary, in words a member can re
     ],
   });
 
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): a fence's row is the catalogue's OR its module's — T8's modules took
+     fence rows with them (actions' ACTION_FENCE_CHECKS and RECORDS_LAW_FENCE_CHECKS, review's C-32.16, ratification's
+     RATIFY_MACHINE_FENCE_CHECKS, and the layer-9 families) — so the rows are harvested from the catalogue AND every
+     `src/<module>/checks.mjs`, by the same `_CHECKS` suffix, discovered and never listed. A row object met twice (a
+     module re-exporting a family, a view whose rows are another family's) is ONE row: dedupe by identity, as the DEC-49
+     guard's harvest does, so A3's "exactly one place" still means one home. */
+  const FAMILY_SOURCES = [["checks/bio-checks.mjs", CATALOGUE]];
+  for (const d of fs.readdirSync(SRC, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort())
+    if (fs.existsSync(path.join(SRC, d, "checks.mjs")))
+      FAMILY_SOURCES.push([`src/${d}/checks.mjs`, await import(`../src/${d}/checks.mjs`)]);
   const rows = new Map();          // code -> [family, ...]
-  for (const [fam, table] of Object.entries(CATALOGUE)) {
+  const rowText = new Map();       // code -> its canned translation (the first home's)
+  const seenRow = new Set();
+  for (const [, mod] of FAMILY_SOURCES)
+  for (const [fam, table] of Object.entries(mod)) {
     if (!/_CHECKS$/.test(fam) || !table || typeof table !== "object") continue;
     for (const [code, row] of Object.entries(table)) {
       if (!code.startsWith(FENCE_PREFIX)) continue;
       if (typeof row?.translation !== "string" || !row.translation.trim()) continue;
+      if (seenRow.has(row)) continue;
+      seenRow.add(row);
       rows.set(code, [...(rows.get(code) || []), fam]);
+      if (!rowText.has(code)) rowText.set(code, row.translation);
     }
   }
   console.log(`  corpus: ${minted.size} fence code(s) minted in the plane; ${rows.size} carry a canned `
@@ -201,7 +224,7 @@ console.log("\nBLOCK A — the machine/member boundary, in words a member can re
   t("ARM A6: no fence's translation restates the machine word a member is being spared — a code "
     + "inside the sentence is the member decoding it anyway",
     [...rows.keys()].filter((c) => {
-      const txt = [...Object.values(CATALOGUE)].find((x) => x?.[c])[c].translation;
+      const txt = rowText.get(c);   /* T8: the row's own home, the catalogue's or its module's */
       return /\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/.test(txt);
     }).sort(), []);
 }
@@ -222,8 +245,13 @@ console.log("\nBLOCK B — every fence sits inside a GOVERNED span (source; REC-
      MACHINE_CANNOT_GROUND (`#divide`, `#ground`) to inquiry (INQUIRY #1 J2.2), MACHINE_CANNOT_DECLARE
      (`strengthBarSet > is-machine-strength-bar`) to strength (STRENGTH #1 J5) — as MACHINE_CANNOT_REOPEN went to
      promotion at T3. The walk reads the store's corpus with the modules extracted from it. */
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): and six more left the store WITH their regions in T8 —
+     MACHINE_CANNOT_MOVE_ACTION, _CORRESPOND, _SET_LAWS and _SET_RISK_TIER to actions (ACTIONS #1 J2.4, with T8's
+     MACHINE_CANNOT_STATE_RECORDS_LAW), MACHINE_CANNOT_PUBLISH to case-authoring (CASE-AUTHORING #1 J5) and
+     MACHINE_CANNOT_REVIEW to review (REVIEW #1 J4). */
   const store_src = [storeCorpus(["record-core", "membership", "promotion"]),
-    ...["inquiry", "basis-versions", "strength"].map((m) => fs.readFileSync(path.join(SRC, m, "index.mjs"), "utf8"))]
+    ...["inquiry", "basis-versions", "strength", "actions", "case-authoring", "review"]
+      .map((m) => fs.readFileSync(path.join(SRC, m, "index.mjs"), "utf8"))]
     .join("\n");   /* each module's minting code (index.mjs); its checks.mjs holds the rows, and their prose */
   const regionSpans = [];
   for (const m of store_src.matchAll(/\/\*[\s*]*DEC-49 REGION\s+(is-machine-[\w-]+)/g)) {
@@ -342,8 +370,8 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* MACHINE_FENCE_CHECKS — SK-1's eleven, D-229's eleven, REC-73's ten */
     ["C-32.1", "MACHINE_CANNOT_RELEASE"],
     ["C-32.2", "MACHINE_CANNOT_CONCLUDE"],
-    ["C-32.3", "MACHINE_CANNOT_MOVE_ACTION"],
-    ["C-32.4", "MACHINE_CANNOT_CORRESPOND"],
+    /* C-32.3: moved to PINNED_MOVED below (T8) */
+    /* C-32.4: moved to PINNED_MOVED below (T8) */
     ["C-32.5", "MACHINE_CANNOT_REOPEN"],
     ["C-32.6", "MACHINE_CANNOT_PUBLISH"],
     ["C-32.7", "MACHINE_CANNOT_DIVIDE"],
@@ -355,17 +383,17 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        this family whose region lives in the CONTROL PLANE (`src/index.mjs fetch`)
        rather than at the top of a store method. D-PIN-B failed until they were
        written here, which is the pair of arms doing its job. */
-    ["C-32.12", "MACHINE_CANNOT_RATIFY"],
-    ["C-32.13", "MACHINE_CANNOT_RATIFY_CASE"],
+    /* C-32.12: moved to PINNED_MOVED below (T8) */
+    /* C-32.13: moved to PINNED_MOVED below (T8) */
     /* REC-125 / IC-137, 2026-09-18 — D-421 DECIDED: the operator's BEARER tokens
        may not deliver either ratification. Same family, same control-plane home,
        and D-PIN-B failed naming exactly these two until they were written here. */
-    ["C-32.14", "OPERATOR_TOKEN_CANNOT_RATIFY"],
-    ["C-32.15", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE"],
+    /* C-32.14: moved to PINNED_MOVED below (T8) */
+    /* C-32.15: moved to PINNED_MOVED below (T8) */
     /* REC-126 / IC-145, 2026-09-18 — the review copy's authoring acts (draft,
        grant, revoke) share one fence at the store's `#reviewAuthor`. D-PIN-B
        failed naming exactly this row until it was written here. */
-    ["C-32.16", "MACHINE_CANNOT_REVIEW"],
+    /* C-32.16: moved to PINNED_MOVED below (T8) */
     /* D-136, 2026-09-19 — D-421's ruling applied to SECTION 4 GOVERNANCE: an
        operator's bearer token delivers no §4.7 vote and no §4.9 capability edit.
        Same family, same control-plane home as C-32.14/C-32.15, and ONE row for
@@ -376,21 +404,21 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-32.17", "OPERATOR_TOKEN_CANNOT_GOVERN"],
     /* D-149, 2026-09-23 — a machine credential may not state the laws that govern an action's request
        (BIO_Case_Making_v0_1.md §2). D-PIN-B failed naming exactly this row until it was written here. */
-    ["C-32.18", "MACHINE_CANNOT_SET_LAWS"],
+    /* C-32.18: moved to PINNED_MOVED below (T8) */
     /* REC-189, 2026-09-24 (minted C-32.18; renumbered C-32.19 at c19-batch10, D-149 holding C-32.18) — D-182's ruling on the write side: a machine credential may not set or change an
        action's risk tier. Inside `promote`'s action block, a region and not a method. D-PIN-B failed naming
        exactly this row until it was written here. */
-    ["C-32.19", "MACHINE_CANNOT_SET_RISK_TIER"],
+    /* C-32.19: moved to PINNED_MOVED below (T8) */
     /* ACT_SHAPE_CHECKS — the single-homed tail, plus §14a's capability sentence */
     ["C-33.1", "NO_CONCLUSION"],
     ["C-33.2", "NO_FALSIFIER"],
-    ["C-33.3", "NO_RESOLUTION"],
-    ["C-33.4", "RESOLUTION_WITHOUT_RESOLVING"],
-    ["C-33.5", "BAD_DIRECTION"],
-    ["C-33.6", "BAD_DATE"],
-    ["C-33.7", "CAPTURE_AND_TESTIMONY"],
-    ["C-33.8", "NEITHER_CAPTURE_NOR_TESTIMONY"],
-    ["C-33.9", "UNREGISTERED_ARTIFACT"],
+    /* C-33.3: moved to PINNED_MOVED below (T8) */
+    /* C-33.4: moved to PINNED_MOVED below (T8) */
+    /* C-33.5: moved to PINNED_MOVED below (T8) */
+    /* C-33.6: moved to PINNED_MOVED below (T8) */
+    /* C-33.7: moved to PINNED_MOVED below (T8) */
+    /* C-33.8: moved to PINNED_MOVED below (T8) */
+    /* C-33.9: moved to PINNED_MOVED below (T8) */
     ["C-33.10", "NO_ACKNOWLEDGMENT"],
     ["C-33.11", "NO_MITIGATION"],
     ["C-33.12", "ENTRY_REQUIREMENTS"],
@@ -507,7 +535,20 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     "strength STRENGTH_BAR_CHECKS": (await import("../src/strength/checks.mjs")).STRENGTH_BAR_CHECKS,
     "citation CITE_CHECKS": (await import("../src/citation/checks.mjs")).CITE_CHECKS,
     "ai-runs AI_RUN_ACT_SHAPE_CHECKS": (await import("../src/ai-runs/checks.mjs")).AI_RUN_ACT_SHAPE_CHECKS,
+    /* T8 (legacy-tests, 2026-09-28): see the RE-PINNED note below. */
+    "actions ACTION_FENCE_CHECKS": (await import("../src/actions/checks.mjs")).ACTION_FENCE_CHECKS,
+    "actions ACTION_ACT_CHECKS": (await import("../src/actions/checks.mjs")).ACTION_ACT_CHECKS,
+    "ratification RATIFY_MACHINE_FENCE_CHECKS": (await import("../src/ratification/checks.mjs")).RATIFY_MACHINE_FENCE_CHECKS,
+    "review REVIEW_COPY_CHECKS": (await import("../src/review/checks.mjs")).REVIEW_COPY_CHECKS,
   };
+  /* RE-PINNED 2026-09-28 (T8, legacy-tests): SIXTEEN more rows left the catalogue's two families with their ids, codes
+     and translations unchanged, each `where` re-pointed at the region its module mints in — C-32.3
+     MACHINE_CANNOT_MOVE_ACTION, C-32.4 MACHINE_CANNOT_CORRESPOND, C-32.18 MACHINE_CANNOT_SET_LAWS and C-32.19
+     MACHINE_CANNOT_SET_RISK_TIER to actions' `ACTION_FENCE_CHECKS`, and C-33.3–C-33.9 (the action moves' and
+     correspondence's act-shape rows) to its `ACTION_ACT_CHECKS` (ACTIONS #1); C-32.12–C-32.15, the four ratification
+     fences, to ratification's `RATIFY_MACHINE_FENCE_CHECKS` (RATIFICATION #2); C-32.16 MACHINE_CANNOT_REVIEW to
+     review's `REVIEW_COPY_CHECKS` (REVIEW #1, split from the family by number). Pinned and resolved here, where they
+     now live, exactly as T5-12's five and T7's thirteen are. */
   const PINNED_MOVED = [
     ["C-33.20", "NO_SUCH_SELECTION", "retrieval SELECTION_CHECKS"],
     ["C-33.32", "SET_MOVED", "retrieval SELECTION_CHECKS"],
@@ -527,8 +568,24 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.45", "AI_RUN_RERUN_SELF", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
     ["C-33.46", "AI_RUN_RERUN_UNKNOWN", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
     ["C-33.47", "AI_RUN_RERUN_OTHER_CONTEXT", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
+    ["C-32.3", "MACHINE_CANNOT_MOVE_ACTION", "actions ACTION_FENCE_CHECKS"],
+    ["C-32.4", "MACHINE_CANNOT_CORRESPOND", "actions ACTION_FENCE_CHECKS"],
+    ["C-32.18", "MACHINE_CANNOT_SET_LAWS", "actions ACTION_FENCE_CHECKS"],
+    ["C-32.19", "MACHINE_CANNOT_SET_RISK_TIER", "actions ACTION_FENCE_CHECKS"],
+    ["C-33.3", "NO_RESOLUTION", "actions ACTION_ACT_CHECKS"],
+    ["C-33.4", "RESOLUTION_WITHOUT_RESOLVING", "actions ACTION_ACT_CHECKS"],
+    ["C-33.5", "BAD_DIRECTION", "actions ACTION_ACT_CHECKS"],
+    ["C-33.6", "BAD_DATE", "actions ACTION_ACT_CHECKS"],
+    ["C-33.7", "CAPTURE_AND_TESTIMONY", "actions ACTION_ACT_CHECKS"],
+    ["C-33.8", "NEITHER_CAPTURE_NOR_TESTIMONY", "actions ACTION_ACT_CHECKS"],
+    ["C-33.9", "UNREGISTERED_ARTIFACT", "actions ACTION_ACT_CHECKS"],
+    ["C-32.12", "MACHINE_CANNOT_RATIFY", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
+    ["C-32.13", "MACHINE_CANNOT_RATIFY_CASE", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
+    ["C-32.14", "OPERATOR_TOKEN_CANNOT_RATIFY", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
+    ["C-32.15", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
+    ["C-32.16", "MACHINE_CANNOT_REVIEW", "review REVIEW_COPY_CHECKS"],
   ];
-  t("ARM D-PIN-M: each of the eighteen moved rows (T5-12's five, T7's thirteen) is in its module's table under the SAME C-number and code, with a "
+  t("ARM D-PIN-M: each of the thirty-four moved rows (T5-12's five, T7's thirteen, T8's sixteen) is in its module's table under the SAME C-number and code, with a "
     + "translation — the catalogue's number did not change owner silently",
     PINNED_MOVED.filter(([n, c, tbl]) => !(MODULE_TABLES[tbl]?.[c]?.check === n
       && typeof MODULE_TABLES[tbl][c].translation === "string" && MODULE_TABLES[tbl][c].translation.trim()))
@@ -554,8 +611,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        `where` naming `src/store.mjs` (the catalogue's rows to re-point, reported to legacy-checks): `conclude`,
        `#withdrawConclusion`, `#setProjectConclusion` to basis-versions; `divide`, `groundInquiry`, `dispose`,
        `#promoteChecks > is-basis-acyclic` to inquiry. Each region moved WITH its markers. */
+    /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): + case-authoring, whose `#publishCase` took the regions of the two
+       catalogue rows that still name `src/store.mjs publishCase` (C-32.6 MACHINE_CANNOT_PUBLISH, C-33.14 NO_STATEMENT)
+       — moved WITH their markers; the stale `where`s are the catalogue's to re-point (the DEC-49 guard names both). */
     if (!srcCache.has(rel)) srcCache.set(rel, rel === "src/store.mjs"
-      ? storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions"])
+      ? storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions", "case-authoring"])
       : fs.readFileSync(path.join(HERE, "..", rel), "utf8"));
     return srcCache.get(rel);
   };
@@ -610,7 +670,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
       + `(${String(row.where).split(",")[0]})`,
       [span !== null, span !== null && span.includes(`"${code}"`)], [true, true]);
   }
-  t("ARM D0-M: all eighteen moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 18);
+  t("ARM D0-M: all thirty-four moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 34);
   console.log(`  corpus: ${rowsSeen} rows across ${FAMILIES.length} families, each resolved against `
             + `the plane's source and each naming its own C-number`);
   /* THE CORPUS FLOOR. Without it a families list that stopped resolving would
@@ -694,7 +754,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        across 2 families") on `job/T7/legacy-tests` over the merged tranche, never 64 - 13: THIRTEEN departures and no
        arrival, each named at MODULE_TABLES above (strength one, citation six, ai-runs six). The thirteen are resolved
        where they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
-    rowsSeen, 51);
+    /* MOVED 51 -> 35 on 2026-09-28 (T8, legacy-tests), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 35 rows
+       across 2 families") on `job/T8/legacy-tests` over the merged tranche, never 51 - 16: SIXTEEN departures and no
+       arrival, each named at MODULE_TABLES above (actions eleven, ratification four, review one). The sixteen are
+       resolved where they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
+    rowsSeen, 35);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

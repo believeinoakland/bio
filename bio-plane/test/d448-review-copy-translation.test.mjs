@@ -86,10 +86,14 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { REVIEW_COPY_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; REVIEW #1 J4): C-87.1–.11 moved with the review copy's acts into review's
+   own family (`src/review/checks.mjs`, ids and sentences unchanged, each `where` naming its region in
+   `src/review/index.mjs`), and the acts — with their eleven mint sites, their regions and the op map binding `act` —
+   into `src/review/index.mjs`. The structural half reads that module now; every claim is the one it made of store.mjs. */
+import { REVIEW_COPY_CHECKS } from "../src/review/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+const REVIEW_SRC = readFileSync(fileURLToPath(new URL("../src/review/index.mjs", import.meta.url)), "utf8");
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -128,9 +132,17 @@ console.log("\n--- d448: the review copy's eleven refusals, translated ---");
  * THE CORPUS IS NON-EMPTY AND IS PRINTED. A headline assertion over an empty
  * corpus has passed in this repository three times; the floor is stated here.
  * ======================================================================== */
-const CODES = Object.keys(REVIEW_COPY_CHECKS);
-console.log(`  corpus: ${CODES.length} codes in REVIEW_COPY_CHECKS — ${CODES.join(", ")}`);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; REVIEW #1 J4): review's family also holds C-32.16 MACHINE_CANNOT_REVIEW,
+   split from MACHINE_FENCE_CHECKS by number when the module took it (its interface test is review's). This suite's
+   subject stays the ELEVEN C-87 rows; the family's one other row is PINNED by name and number below, so a twelfth
+   C-87 code, or a row nobody accounted for, still fails here rather than being filtered away. */
+const C87 = Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).filter(([, r]) => /^C-87\./.test(r.check)));
+const CODES = Object.keys(C87);
+console.log(`  corpus: ${CODES.length} C-87 codes in REVIEW_COPY_CHECKS — ${CODES.join(", ")}`);
 t("the family is the ELEVEN codes UI-68's surface can show, and no fewer", CODES.length, 11);
+t("and its only other row is C-32.16 MACHINE_CANNOT_REVIEW, the fence review took with it",
+  Object.entries(REVIEW_COPY_CHECKS).filter(([c]) => !(c in C87)).map(([c, r]) => [c, r.check]),
+  [["MACHINE_CANNOT_REVIEW", "C-32.16"]]);
 
 /* ========================================================================= 1
  * THE CATALOGUE ROWS. A row per code, each carrying a C-number, a `where`
@@ -154,21 +166,21 @@ const NUMBERED = {
 };
 t("the pinned numbering covers every code in the family, and no more",
   Object.keys(NUMBERED).sort().join(","), CODES.slice().sort().join(","));
-for (const [code, row] of Object.entries(REVIEW_COPY_CHECKS)) {
+for (const [code, row] of Object.entries(C87)) {
   t(`${code} holds its own catalogue row, ${NUMBERED[code]}`, row.check, NUMBERED[code]);
   t(`${code}'s \`where\` names a REGION, not a whole function`,
-    /^src\/store\.mjs \S+ > is-[a-z0-9-]+$/.test(row.where || ""), true);
+    /^src\/review\/index\.mjs \S+ > is-[a-z0-9-]+$/.test(row.where || ""), true);
   /* A translation that merely re-spells the code is the non-translation DEC-49 ended. */
   const words = String(row.translation || "").trim();
   t(`${code} carries a canned sentence that is prose, not the code re-spelled`,
     words.length > 60 && !words.includes(code) && !/^[A-Z_ ]+$/.test(words), true);
 }
 /* No two codes may share a sentence: a copied translation is one code's words on another's condition. */
-const sentences = Object.values(REVIEW_COPY_CHECKS).map(r => r.translation);
+const sentences = Object.values(C87).map(r => r.translation);
 t("no two of the eleven share a translation", new Set(sentences).size, 11);
 /* Every region name is distinct, or two rows would claim one span. */
 t("no two of the eleven share a `where`",
-  new Set(Object.values(REVIEW_COPY_CHECKS).map(r => r.where)).size, 11);
+  new Set(Object.values(C87).map(r => r.where)).size, 11);
 
 /* ========================================================================= 2
  * THE ROUTING, PINNED STRUCTURALLY. Each code is minted EXACTLY ONCE, through
@@ -188,26 +200,26 @@ console.log("\n--- 2. every code is minted once, through the helper, inside its 
 const REGION_OPEN = (n) => new RegExp(`/\\*[\\s*]*DEC-49 REGION\\s+(${n})\\b`);
 const REGION_CLOSE = (n) => new RegExp(`/\\*[\\s*]*END DEC-49 REGION\\s+(${n})\\b`);
 const regionText = (name) => {
-  const o = REGION_OPEN(name).exec(STORE_SRC), c = REGION_CLOSE(name).exec(STORE_SRC);
+  const o = REGION_OPEN(name).exec(REVIEW_SRC), c = REGION_CLOSE(name).exec(REVIEW_SRC);
   if (!o || !c || c.index <= o.index) return null;
-  const afterOpen = STORE_SRC.indexOf("*" + "/", o.index);
+  const afterOpen = REVIEW_SRC.indexOf("*" + "/", o.index);
   const start = afterOpen < 0 || afterOpen > c.index ? o.index : afterOpen + 2;
-  return STORE_SRC.slice(start, c.index);
+  return REVIEW_SRC.slice(start, c.index);
 };
-for (const [code, row] of Object.entries(REVIEW_COPY_CHECKS)) {
+for (const [code, row] of Object.entries(C87)) {
   const region = row.where.split(" > ")[1];
   const span = regionText(region);
-  t(`${code}'s region \`${region}\` exists in store.mjs, opened and closed`, span !== null, true);
+  t(`${code}'s region \`${region}\` exists in src/review/index.mjs, opened and closed`, span !== null, true);
   if (span === null) continue;
   /* The helper call, by the identifier arm C reads (`\brefusal\s*\(\s*"CODE"`). */
-  const calls = [...STORE_SRC.matchAll(new RegExp(`\\brefusal\\s*\\(\\s*"${code}"`, "g"))].length;
-  t(`${code} is minted through the \`refusal\` helper EXACTLY ONCE in store.mjs`, calls, 1);
+  const calls = [...REVIEW_SRC.matchAll(new RegExp(`\\brefusal\\s*\\(\\s*"${code}"`, "g"))].length;
+  t(`${code} is minted through the \`refusal\` helper EXACTLY ONCE in src/review/index.mjs`, calls, 1);
   t(`${code}'s one mint is INSIDE its own region \`${region}\``,
     (span.match(new RegExp(`\\brefusal\\s*\\(\\s*"${code}"`)) || []).length, 1);
   /* The pre-D-448 shape is gone: a bare object literal naming the code would carry no translation
      of its own and would leave arm C judging a codeless refusal at a governed site. */
   t(`${code} is no longer returned as a bare \`reason:\` object literal`,
-    new RegExp(`reason:\\s*"${code}"`).test(STORE_SRC), false);
+    new RegExp(`reason:\\s*"${code}"`).test(REVIEW_SRC), false);
 }
 
 /* ========================================================================= 3
@@ -312,8 +324,8 @@ await wire("a comment that says nothing", "REVIEW_NO_COMMENT_TEXT",
  * ======================================================================== */
 console.log("\n--- 4. the two the wire cannot reach, and why (at the code, not by assumption) ---");
 const IDX_SRC = readFileSync(IDX, "utf8");
-t("REVIEW_UNKNOWN_ACT: the store binds `act` as a literal per op, so no caller presents a fourth",
-  ["draft", "grant", "revoke"].every(a => STORE_SRC.includes(`act: "${a}"`)), true);
+t("REVIEW_UNKNOWN_ACT: the review module's op map binds `act` as a literal per op, so no caller presents a fourth",
+  ["draft", "grant", "revoke"].every(a => REVIEW_SRC.includes(`act: "${a}"`)), true);
 t("REVIEW_NO_SECRET: op=reviewgrant MINTS the secret in the control plane and always sets secretSha",
   /inner\.searchParams\.set\("secretSha", await sha256Hex\(secret\)\)/.test(IDX_SRC), true);
 

@@ -81,6 +81,14 @@ import { AI_CREDENTIAL_CHECKS, CAPTURE_REQUEST_CHECKS, VERSION_ACT_CHECKS,
 /* RE-ANCHORED 2026-09-28 (STRENGTH #1 J5, its R24): C-32.9 MACHINE_CANNOT_DECLARE left `MACHINE_FENCE_CHECKS` for
    strength's own `STRENGTH_BAR_CHECKS`, id and translation unchanged, so the registry this suite reads includes it. */
 import { STRENGTH_BAR_CHECKS } from "../src/strength/index.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests): five of the family left `MACHINE_FENCE_CHECKS` with their acts for the
+   modules' own tables, ids and translations unchanged — MACHINE_CANNOT_MOVE_ACTION, _CORRESPOND, _SET_LAWS and
+   _SET_RISK_TIER for actions' ACTION_FENCE_CHECKS, MACHINE_CANNOT_REVIEW for review's REVIEW_COPY_CHECKS — and the
+   actions module minted a sixteenth, C-32.20 MACHINE_CANNOT_STATE_RECORDS_LAW (RECORDS_LAW_FENCE_CHECKS). The
+   registry this suite reads is the rows where they now live. */
+import { ACTION_FENCE_CHECKS, RECORDS_LAW_FENCE_CHECKS } from "../src/actions/checks.mjs";
+import { REVIEW_COPY_CHECKS } from "../src/review/checks.mjs";
+import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (strength R5, K187) */
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 /* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for section 10's harvest. */
@@ -364,7 +372,7 @@ t("and it is not one layer wearing three hats: the six attempts sit across THREE
    free — measured five times in this repository, once over 131 op names — so
    the registry is the source and the wire is the subject, never the reverse. */
 const REGISTRY = { ...VERSION_ACT_CHECKS, ...MACHINE_FENCE_CHECKS, ...STRENGTH_BAR_CHECKS, ...CAPTURE_REQUEST_CHECKS,
-                   ...AI_CREDENTIAL_CHECKS };
+                   ...AI_CREDENTIAL_CHECKS, ...ACTION_FENCE_CHECKS, ...RECORDS_LAW_FENCE_CHECKS, ...REVIEW_COPY_CHECKS };
 t("every code on the roster is in the catalog, and the catalog is what the C-numbers below are "
 + "compared against — never a number typed into this file",
   ROSTER.filter((r) => !(r.code in REGISTRY)).map((r) => r.code), []);
@@ -509,12 +517,29 @@ console.log("\n--- 4. publish: a concluded case with every authored field the ce
   const CONN = "INFO-2026-9000-publish-connection";
   const LEFT = "INFO-2026-9000-publish-left-out";
   const INQ = "INQ-2026-9000-publish";
-  for (const d of [CAP, CONN, LEFT])
+  for (const d of [CAP, LEFT])
     await mustPromote(d, infoMd(d), "information", RUTH, {}, CAPTURE_REGISTER(d));
-  const legs = ["basis:",
+  /* RE-READ 2026-09-28 (T8, legacy-tests; strength R5, K187), never exempted: the connection leg was a `hunch`, and
+     op=publish now refuses a case resting on one (UNCLEARED_HUNCH) — so the member half of this pair failed for a
+     reason that is not the fence. Fixture, not subject: CONN carries a READING naming the inquiry's subject entity,
+     resolved, so the connection C is EARNED (`earned-connection.mjs`). This suite's `promote` carries bundle.md
+     alone, so CONN's promote is written out here with the reading's files beside it. */
+  const EARN = await connectionAtC(async (b) => POST(`op=entitycreate&token=${RUTH}`, b));
+  {
+    const cap = sha(`capture-of-${CONN}`), text = infoMd(CONN);
+    const c = await POST(`op=promote&token=${RUTH}`, {
+      bundleId: CONN, base: null, snapKey: `${CONN}-${String(++snapKeySeq).padStart(6, "0")}`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...EARN.files(cap, "snapshots/doc.bin")],
+      register: [{ path: "snapshots/doc.bin", sha256: cap, encoding: "binary", bytes: 10 }],
+      meta: { object_type: "information", group: GROUP, current_state: "collected", created: NOW, last_updated: LATER } });
+    if (!c.ok) throw new Error(`promote ${CONN}: ${JSON.stringify(c).slice(0, 700)}`);
+    const res = await POST(`op=resolve&token=${RUTH}`, { captureSha: cap });
+    if (res?.ok === false) throw new Error(`resolve ${CONN}: ${JSON.stringify(res).slice(0, 400)}`);
+  }
+  const legs = [`subject_entity: ${EARN.entityId}`, "basis:",
     `  - target: ${CAP}`, "    role: supports", "    grade: B", "    grade_axis: capture", "    grade_source: capture",
     `  - target: ${CONN}`, "    role: supports", "    grade: C", "    grade_axis: connection",
-    "    grade_source: hunch", "    author: ruth", "    date: 2026-08-04"].join("\n");
+    "    grade_source: resolution"].join("\n");
   /* CORRECTED 2026-09-18 (REC-136, INVESTIGATIVE-SESSION.md §7.1 item 6): a
      conclusion drawn with no project NAMES the accepted reading whose claim it
      adopts, and an unnamed one is refused NO_CLAIM. This fixture concluded with
@@ -924,6 +949,24 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
         meta: { object_type: "action", group: "believe-in-oakland",
                 current_state: "planned", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
     })()],
+    /* ADDED 2026-09-28 (T8, legacy-tests) — D-689 / C-32.20. Not an act either: the fence stands inside `promote`'s
+       action block and refuses a machine STATING `law` on a records_request, so the thinnest payload that reaches it
+       is a records_request creation stating one, its tier left undetermined so C-32.19 is not what answers. The
+       completeness arm went red naming it until it was driven here. */
+    MACHINE_CANNOT_STATE_RECORDS_LAW: ["promote", (() => {
+      const id = "ACTN-2026-9001-records-law";
+      const text = ["---", `id: ${id}`, "object_type: action", "schema: action@1", `title: "Action ${id}"`,
+        "current_state: planned", "prior_state: null", 'created: "2026-07-01T00:00:00Z"',
+        'last_updated: "2026-07-01T00:00:00Z"', "produced_by:", "  mode: assisted", "  capability_tier: session",
+        "group: believe-in-oakland", "references: []", "state_history: []", "action_kind: records_request",
+        'law: "Cal. Gov. Code § 7920.000 et seq."', "risk_tier: undetermined", "counterparty:", "  state: named",
+        "  role: City Clerk", "  body: City of Oakland", "---", "", "## Plan", "", "P.",
+        "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+      return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
+        files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+        meta: { object_type: "action", group: "believe-in-oakland",
+                current_state: "planned", created: "2026-07-01T00:00:00Z", last_updated: "2026-07-01T00:00:00Z" } };
+    })()],
   };
   /* HARVESTED, NEVER TYPED: a thirteenth fence must not arrive unmeasured, and
      the harvest is asserted non-empty BEFORE anything is compared over it — a
@@ -936,7 +979,11 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   /* RE-ANCHORED 2026-09-28 (T7 layer 6): MACHINE_CANNOT_CONCLUDE and MACHINE_CANNOT_MOVE_VERSION moved to
      basis-versions (BASIS-VERSIONS #1 J4.1), MACHINE_CANNOT_DIVIDE and MACHINE_CANNOT_GROUND to inquiry (INQUIRY #1
      J2.2), MACHINE_CANNOT_DECLARE to strength (STRENGTH #1 J5), each extracted from the store with its act. */
-  const STORE_BARE = storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions", "strength"])
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): MACHINE_CANNOT_MOVE_ACTION, _CORRESPOND, _SET_LAWS, _SET_RISK_TIER (and
+     the new _STATE_RECORDS_LAW) left with their acts for actions, MACHINE_CANNOT_PUBLISH for case-authoring
+     (`#publishCase`), MACHINE_CANNOT_REVIEW for review — each extracted from the store. */
+  const STORE_BARE = storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions", "strength",
+                                  "actions", "case-authoring", "review"])
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
   const HARVEST = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("the harvest found a REAL family and not an empty one — the guard is the evidence, never the "
@@ -946,7 +993,7 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      plane can mint" also covers the five fences minted in `src/index.mjs`, which this suite does not
      drive. Those five are harvested and driven, each under a payload a human then succeeds with, by
      `machine-fences.test.mjs` block 3b (D-503), which holds the same equality over them. */
-  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, and `src/{inquiry,basis-versions,strength}/`, T7) mints, so a thirteenth cannot arrive "
+  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, `src/{inquiry,basis-versions,strength}/`, T7, and `src/{actions,case-authoring,review}/`, T8) mints, so a thirteenth cannot arrive "
   + "unmeasured (the five `src/index.mjs` mints are machine-fences.test.mjs block 3b's, D-503)",
     [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
     [[], []]);
@@ -998,7 +1045,8 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
        with no edit to it. */
     /* MOVED 14 -> 15 on 2026-09-24 by REC-189 (merged at c19-batch10): C-32.19 MACHINE_CANNOT_SET_RISK_TIER
        (minted C-32.18), the same way — no edit to the decoration. */
-    [mute, explained.length], [[], 15]);
+    /* MOVED 15 -> 16 on 2026-09-28 (T8, legacy-tests) by D-689: C-32.20 MACHINE_CANNOT_STATE_RECORDS_LAW, driven above. */
+    [mute, explained.length], [[], 16]);
   t("(and the set is asserted EMPTY by name rather than by count, so a thirteenth fence written the "
   + "mute way lands here as a FAILURE naming itself rather than as a silent fall)",
     mute.includes("MACHINE_CANNOT_PUBLISH"), false);
@@ -1007,9 +1055,12 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   + "rule exists. That is what VF-5's finding bought.",
     /* MOVED 13 -> 14 by D-149, and the fence it added is named: it was written with no knowledge of this
        rule and arrived explained, which is the claim. MOVED 14 -> 15 by REC-189 at c19-batch10, named the same way. */
-    explained.length === 15 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
+    /* MOVED 15 -> 16 on 2026-09-28 (T8) by D-689, named the same way. Since T8 a module's row is carried at the
+       module's own refusal site (`refusal(<its table>, …)`) and the control plane's decoration reads the catalogue:
+       what this arm measures is unchanged — every fence arrives explained, with nobody editing this rule. */
+    explained.length === 16 && explained.includes("MACHINE_CANNOT_MOVE_VERSION")
       && explained.includes("MACHINE_CANNOT_REVIEW") && explained.includes("MACHINE_CANNOT_SET_LAWS")
-      && explained.includes("MACHINE_CANNOT_SET_RISK_TIER"), true);
+      && explained.includes("MACHINE_CANNOT_SET_RISK_TIER") && explained.includes("MACHINE_CANNOT_STATE_RECORDS_LAW"), true);
 }
 
 } finally {

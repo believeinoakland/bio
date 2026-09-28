@@ -306,9 +306,15 @@ arm("i", "op=purge's refusal built AT ITS SITE in an unanticipated spelling — 
    Section 3's own harvest sees the same loss (it reads `store.mjs` too), so its
    floor line may fail as well; that is the older instrument agreeing, not a
    second variable. */
-arm("j", "MACHINE_CANNOT_REVIEW's mint removed from its site — src/store.mjs (THE SUBJECT)", STORE,
-  (s) => s.replace('return { ok: false, reason: "MACHINE_CANNOT_REVIEW",',
-                   'return { ok: false, reason: "THE_MACHINE_MAY_NOT_REVIEW",'),
+/* RE-AIMED 2026-09-28 (T8, legacy-tests; REVIEW #1 J4): MACHINE_CANNOT_REVIEW left the store AND this family — review
+   took the fence and its row (C-32.16, now REVIEW_COPY_CHECKS, `src/review/index.mjs`) — so dropping its mint could no
+   longer leave a MACHINE_FENCE_CHECKS row minted nowhere, which is this arm's whole claim. The arm is aimed at
+   MACHINE_CANNOT_RELEASE instead: a fence whose row is still MACHINE_FENCE_CHECKS' (C-32.1) and whose mint is still
+   store.mjs's (`release > is-machine-release`). Same edit, same declaration: section 3b MUST name it under
+   `cataloguedMintedNowhere`, BY NAME. */
+arm("j", "MACHINE_CANNOT_RELEASE's mint removed from its site — src/store.mjs (THE SUBJECT)", STORE,
+  (s) => s.replace('return { ok: false, reason: "MACHINE_CANNOT_RELEASE",',
+                   'return { ok: false, reason: "THE_MACHINE_MAY_NOT_RELEASE",'),
   "RED");
 
 /* ---------------------------------------------------------------- ARM k

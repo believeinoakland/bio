@@ -143,7 +143,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { checkCaseDocument, parseFrontmatter, STATEMENT_ACK_CHECKS } from "../checks/bio-checks.mjs";
+import { checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): C-33's statement-ack rows moved with
+   `acknowledgeStatement` into case-authoring's own family. */
+import { STATEMENT_ACK_CHECKS } from "../src/case-authoring/checks.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
   console.log("\n--- d150-statement-acknowledgement ---");

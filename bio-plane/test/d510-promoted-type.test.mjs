@@ -86,7 +86,11 @@ const actionMd = (id) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []",
-  "action_kind: cpra_request", "risk_tier: undetermined",
+  /* RE-READ 2026-09-28 (T8, legacy-tests): `cpra_request` is no kind this instance offers (ACTIONS R10, C-101.1) and a
+     NEW named counterparty is an office, its role and its body (R9, C-101.3), both refused at the write now — so the
+     document would no longer LAND if nothing else stopped it, which §1's "nothing landed" arm and §4's over-strictness
+     arms rest on. Fixture, not subject: the records request is `records_request`, addressed to an office. */
+  "action_kind: records_request", "risk_tier: undetermined",
   "action_basis:", `  - target: ${INQ_FIXTURE}`, "    kind: advances",
   "    note: the question this request serves", "    date: 2026-07-24",
   /* An entry that satisfies capture-or-testify (DEC-13) by ACCOUNT, so the action block's own shape checks
@@ -96,7 +100,7 @@ const actionMd = (id) => [
   "correspondence:", "  - direction: sent", `    at: ${NOW}`, "    medium: email",
   "    party: City Clerk", "    account: asked the clerk for the transfer ledger",
   "    author: ruth",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   "---", "",
   "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", "",
@@ -253,7 +257,7 @@ t("…and its CORRESPONDENCE ledger too, from the document's own correspondence[
   (p?.action?.correspondence ?? []).map((e) => [e.direction, e.party]),
   [["sent", "City Clerk"]]);
 t("…and the action's kind reads from the same bytes, so column and type no longer disagree",
-  [p?.action_kind, p?.action?.kind], ["cpra_request", "cpra_request"]);
+  [p?.action_kind, p?.action?.kind], ["records_request", "records_request"]);
 
 /* ================================================== 4. OVER-STRICTNESS */
 console.log("\n--- 4. over-strictness: what agreed before still lands, and an alias is not a disagreement ---");

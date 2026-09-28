@@ -90,7 +90,9 @@ const named = (r, re) => r.fails.some((f) => re.test(f));
 
 const ARMS = [
   { n: 1, what: "THE FENCE — a manifest reaches a SEARCH sub-session's spawn payload",
-    file: "src/store.mjs",
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T8): the spawn payload left store.mjs with the run (ai-runs, T7, be60f36d39);
+       the anchor occurs once there. */
+    file: "src/ai-runs/index.mjs",
     from: "      standard_pair: row.standard_pair,",
     to: "      standard_pair: row.standard_pair,\n      bias: row.bias_manifest,",
     marker: "bias: row.bias_manifest,",
@@ -134,7 +136,9 @@ const ARMS = [
     expect: (r) => r.hygiene.fail > 0 && r.bias.fail > 0 },
 
   { n: 5, what: "A CARRIED-FORWARD ACKNOWLEDGEMENT (DEC-46, C-21.1's byte-check) — the refusal removed",
-    file: "src/store.mjs",
+    /* RE-ANCHORED 2026-09-28 (legacy-tests T8): the byte-check left store.mjs with `#publishCase` (case-authoring, T8);
+       the anchor occurs once there. */
+    file: "src/case-authoring/index.mjs",
     from: `const REASON = { bias_acknowledgement: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD" };`,
     to: `const REASON = { bias_acknowledgement_disabled: "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD" };`,
     marker: "bias_acknowledgement_disabled",
