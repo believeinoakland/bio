@@ -13,7 +13,7 @@ Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mail
 - **provenance** · N92 (`provenanceAudit` registers with record-core's `registerAuditCheck`, R59, and drops its wrapper); N111 (R48's contract names `register.registered` and `captured_locators.address_norm`; proposed and folded as N109).
 - **capture-sources** · the K103/K109 credentials capture-requests R41–R42 read (R55–R63), as folded (K157–K159; Bob answered its Opens, K158); not N123 (membership offers no revocation notice yet).
 
-### Layer 4 (K157: content's N117 precedes inquiry's `onStale`)
+### Layer 4 · CLOSED 2026-09-28 ~00:40 UTC (both merged; plane bundle regenerated, fleetbundles 96/0; archived, rows in `build/metrics/T7.csv`) (K157: content's N117 precedes inquiry's `onStale`)
 - **content** · N117 (its share: bound `markStale`, R41: one read and one update per re-read, never a notice per row inside promotion's transaction, as the store's REC-66/D-227 did); N119 (R32 states the crop's wire encoding, `bytes_base64`, D-419; the module or the route encodes it).
 - **extraction** · N108 (`readings`, `reading_refs`, `reading_ref_terms` and `capture_text_skipped` stated as a read contract with the term fold; the unit writer names sheets, so D-672 is whole; proposed and folded as N109).
 
