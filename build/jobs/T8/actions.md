@@ -69,3 +69,7 @@ Complete again after B4 (J4). Everything else as J3.
 ## J6 · COMPLETE
 
 B5 and B6 (K252) applied: tranche/T8 merged; conformance defaults to conformanceOf(host), created with actions so its step joins before any promotion; R8 reads the R9 shape (live, superseded_by; NO_SUCH_DETERMINATION). R8's todo is now a test over the real module (no determination: refused) with a stand-in in R9's shape for the live and superseded arms. test/m/actions: 29 tests, 29 pass, 0 todo; format, architecture, coverage (41/41) and ownership pass. Record's completion section updated.
+
+## J7 · COMPLETE
+
+B7 (K256) applied: each act's promotion carries its viewer (the responds_to revision its author), and R8's step reads the determination as that viewer, else as the author. New test over the real conformance: a correspondence and a move on a breach action resting on a live determination the author sees are accepted; an author who cannot see its project is refused ACTION_NO_DETERMINATION. tranche/T8 merged; test/m/actions 30/30; format, architecture, coverage (41/41), ownership pass. Record updated.
