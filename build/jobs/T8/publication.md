@@ -43,3 +43,46 @@ My readings where the plan, map and requirements leave something open. I am buil
 - Checks: format 0 failures; architecture 0 failures; ownership 1 failure, the N127 lines (store 8106–8108) you said you would read at the close.
 
 I am still working: R13, R15, R16, R18, R19, R31, R33, R34 tests, R30 and R32 as `test.todo`, and the full REPORT on other modules. COMPLETE follows.
+
+## J4 · REPORT
+
+What this job found in other modules, or made stale there. Each item is described against that module's requirements; none of it is changed here.
+
+1. **The movers' snapshot rows (B2 item 3).** Each of these is built on the snapshot branch in code that case-authoring or review moves:
+   - D-618, D-680, D-703, D-725 and D-728: in `publishCase`, `#statementWriter` and the named-draft binding (case-authoring R12, R21).
+   - D-683 and D-720: in `#statementAcknowledgements` (case-authoring R20).
+   - D-626, D-708 and D-721: in `#caseIdentitySentence` and the draft and statementack sentences (review, or case-authoring R9 and R19).
+
+   D-742 needs the live record (it re-keys pre-D-720 acknowledgements), so no job can do it at extraction.
+2. **record-core (R37), provenance (R48), connections: read contracts my Uses name but their Provides do not state.** R18's export reads these columns in its own SQL, as the store did:
+   - `files.bytes` and `files.blob_sha`, `bundles.bundle_sha`, `row_version`, `created` and `last_updated`, the whole `manifest` table, and `history.created`;
+   - `register.bytes`, and `register.author` (R17 reads it too);
+   - connections' `refs` (`target_id`, `kind`).
+
+   Proposed: state them in those modules' contracts, or give those modules export reads.
+3. **legacy-checks.** The catalogue still defines R20's formats and predicates, because C-41 reads them. `publication` re-exports them until C-41 leaves with ratification (B3). Its prose headers above `INSTALLATION_CHECKS` and `ATTRIBUTION_CHECKS` still describe C-68.5 and C-92.1–.9, which now live here. A comment can only be changed by an addition, so I left them.
+4. **promotion (R34): `CATALOG_VERSION` is owed a bump.** C-44.2, C-68.5, C-92.1–.9 and all of C-98 left the catalogue, and T8's 1.38.0 re-opening (Contradictory 1) should count them. The control plane's `dec49Attach` finds families in the catalogue only, so every refusal of this module now carries its code, check and translation at its own site. The DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`) harvests `_CHECKS` families from the catalogue file, so it no longer sees this module's four families (`CASE_RESOLUTION_CHECKS`, `PUBLISHED_STORE_CHECKS`, `PUBLISHED_READ_CHECKS`, `ATTRIBUTION_ACT_CHECKS`) until it reads `src/publication/checks.mjs` as well.
+5. **One untranslated refusal.** D-734's `CASE_DOCUMENT_UNSERVABLE` (at `op=publishedbytes`, adopted as it was built) has no catalogue row. A row would be C-98.9, and that is a requirement change (R13, R33), so it is yours to decide.
+6. **legacy-tests: old-battery reds this job adds, measured against `tranche/T8`.** Every one is a pin on moved source, a moved row or a moved import. None is a behaviour change. Figures are base → branch.
+   - The imports fail on moved rows: `publishedcase` and `plane-envelope` import `PUBLISHED_READ_CHECKS` from the catalogue; `d470-catalog-census` and `d278-codeless-refusals` read the moved rows.
+   - Source anchors on moved store, index or schema text:
+     - `case-opened`: 13 FAIL.
+     - `caseobject`: 4.
+     - `caseflip`: 1.
+     - `caselifecycle`: 2.
+     - `multicase`: 12 (its census walks `store.mjs`).
+     - `mk7-attribution`: 3.
+     - `frontier-chunk`: 1.
+     - `ratify-authority`: 1 (`static publishedGraphEdges` is now a module function).
+     - `refusal-wire`: 2.
+     - `reviewcopy-inband`: 2 (`inbandQuartet` is now called from `publication/worker.mjs`).
+   - Walked ratchets, re-pinned from their print: `gate-reads` 1→5 FAIL (it now finds `excludedBy`, `publishededitions` and `publishedcase` in `src/publication/index.mjs`); `meaning-bounds` 3→7; `derivation-bounds` 7→14; `bounds` 5→7.
+   - Unchanged: `casesign`, `casepin`, `rec170-manifest-pair`, `exportnotice`, `affordances`, `opaque-ids`, `provenance-marker`, `reviewcopy`, `deliverer`, `doorbell`, `check-firing` and `d50-project-names` pass as on base.
+   - civicos-ui's `several-cases-choice` and `case-frozen-pair` read C-44.2 from the catalogue.
+7. **Generated artifacts (§14) are stale:**
+   - the plane bundle (`bio-plane/dist`, its source);
+   - agent-worker's bundle (`bio-checks.mjs` is an input, K189);
+   - `newgroup/src/release.mjs` and `release/bio-plane.bundled.mjs`, which embed the plane.
+8. **`test/m/`: 1,901 tests, 2 fail. Both are red on `tranche/T8` too:**
+   - `citation/invariants` R5 (the catalogue now admits `aspiration`, N159's layer 1);
+   - `connections/factory` (N131).
