@@ -203,7 +203,7 @@ test("R20 the factory migrates its tables at construction (K267): after escalati
   membership.migrate();
   const promotion = promotionOf(host, { record, membership });
   const esc = escalationOf(host, { record, membership, promotion });
-  const held = () => st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'escalation%' ORDER BY name`).map((r) => r.name);
+  const held = () => [...st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'escalation%' ORDER BY name`)].map((r) => r.name);
   assert.deepEqual(held(), [...tables].sort());
   const all = record.purge({});
   assert.equal(all.ok, true);

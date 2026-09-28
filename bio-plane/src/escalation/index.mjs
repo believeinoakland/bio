@@ -136,7 +136,8 @@ export class Escalation {
   /** The module's tables (R20); run at creation, and safe to run again (each `CREATE ... IF NOT EXISTS`). */
   migrate() { migrateEscalation(this.sql); }
 
-  #rows(q, ...a) { return this.sql.exec(q, ...a); }
+  /* workerd's `sql.exec` answers a cursor, never an array: every read is spread into one (LEGACY-TESTS #6 J2). */
+  #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { return this.#rows(q, ...a)[0] || null; }
 
   /* The active profiles' combined view (record-core R26, jurisdictions R12–R16), or null: undetermined wherever a
