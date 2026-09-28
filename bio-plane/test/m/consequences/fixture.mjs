@@ -1,5 +1,5 @@
 /* consequences over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   inquiry, strength), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. Two stand-ins
+   inquiry, strength; inquiry reaches its own connections and entities), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. Two stand-ins
    the test controls: `conformance` (not yet merged into this tranche; it answers `determinationRead` as conformance R9
    states it, gated on the project's sight) and the passage text of a content row (content provides no read of it yet;
    see the module's header). Every test drives `consequences` at its interface. */
@@ -10,9 +10,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
-import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
-import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { consequencesModule } from "../../../src/consequences/index.mjs";
 
@@ -88,22 +86,17 @@ export function world({ passages = true, group = "test-group", superseded = null
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
   content.migrate();
-  const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture: {} });
-  const entities = connections.entities;
-  entities.migrate();
-  connections.migrate();
-  const inquiry = inquiryOf(host, { record, membership, promotion, content, connections, entities,
+  /* inquiry reaches connections and entities on this host itself (not this module's uses). */
+  const inquiry = inquiryOf(host, { record, membership, promotion, content,
     retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, provenance: prov,
     now: () => clock.now });
   inquiry.migrate();
-  const basisVersions = basisVersionsOf(host, { record, membership, promotion, content,
-    inquiry: { earned: (s, t) => inquiry.earned(s, t), legCapped, cyclePath: (id, t) => inquiry.cyclePath(id, t) },
-    now: () => clock.now });
-  basisVersions.migrate();
+  inquiry.entities.migrate();
+  inquiry.connections.migrate();
   const strength = strengthOf(host, { record, membership,
     inquiry: { basisFor: (id, o) => inquiry.basisFor(id, o), earned: (e, t) => inquiry.earned(e, t), legCapped,
                subjectEntityOf: (id) => inquiry.subjectEntityOf(id) },
-    versions: basisVersions, producingGroup: () => group, now: () => clock.now });
+    producingGroup: () => group, now: () => clock.now });
 
   /* conformance R9, as far as R1 reads it. */
   const determinations = new Map();
