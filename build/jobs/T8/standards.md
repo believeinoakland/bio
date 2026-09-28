@@ -36,3 +36,46 @@ The exact answer shapes (every refusal is `{ok: false, reason, code, check, tran
 - R5's `NO_ID` is the generic code that content, inquiry, publication and strength mint row-less (the catalogue's REC-64 rule, K163). A row in my family would have claimed all their sites, so **`NO_ID` stays row-less** here too, with the same code. C-112.11 is left unused so no row is renumbered.
 
 **For legacy-tests (layer 11):** `check-refusal-codes.mjs` has the same 115 FAIL lines as base (`tranche/T8` @ 9ca625cb29). Its ratchets grow by my 18 new rows: `rows` 636 → 654, `census` 924 → 942, `reach` 672 → 690 (floors 633 / 919 / 668, already slack on base). Re-pin from its print. `hygiene` 1333/2, `refusal-wire` 37/6, `machinefences-dec49` 80/4 and `machine-fences` 80/9 are identical to base.
+
+## Completion
+
+**Entries applied.**
+- Built per its requirements (map: nothing moves; K171 (3), (12)).
+  - `bio-plane/src/standards/`: `index.mjs` holds `standardsOf(host, deps)`, the services R1–R10, `sourceOf` (R3), `standardsOps` and the registered check (R11). `checks.mjs` is the C-112 family (K248, 18 rows). `schema.mjs` holds the tables `standards`, `standard_texts`, `standard_proposals` and `standard_adoptions`, append-only and declared to purge (R14).
+  - A standard is a `STD-<year>-NNNN-<kind>` bundle of type `standard`, promoted outside any project (R15, K171 (12)); its bundle audits clean.
+  - No legacy module was touched.
+- R3's source `level` is read from jurisdictions R23/R31 (N130), `undetermined` when an entry states none.
+- R9's label is `proposalLabel(proposer, "standard")` (N129).
+- BOB's answers to J1 (B2, K248), all four readings standing:
+  - R3: profiles that disagree answer undetermined.
+  - R5: the viewer gate is membership R43 through `inSight`.
+  - R11: the step `STANDARD_WRITTEN_ELSEWHERE`, replays admitted.
+  - The family is C-112.
+- My own readings, stated in the code:
+  - R2: a text passage whose document the viewer may not see is answered as not held.
+  - R7: period bounds are inclusive.
+  - R8: `source` filters on the matched source's name, or on `undetermined`; `cite` is a case-insensitive substring.
+  - R10: a field the adopting member does not state is the proposal's, and the answer names which fields were.
+  - R12: each act refuses an unknown field by name (`STANDARD_FIELD_UNKNOWN`).
+
+**Deferred.** None of this module's work. Two codes differ from R1's and R5's text for the DEC-49 guard; BOB is asked to fold them (REPORT J2): `MACHINE_CANNOT_DECLARE_STANDARD`, and a row-less `NO_ID`.
+
+**Found in other modules / stale artifacts** (REPORT J2):
+- legacy-index and affordances route and publish the six ops.
+- legacy-tests re-pins the `check-refusal-codes` ratchets (rows, census and reach each +18).
+- No generated artifact is stale yet.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/standards/`: tests 16, pass 16, fail 0, todo 0 (`declare` 6, `read` 3, `proposals` 2, `invariants` 5).
+- Negative controls, each failing only the tests it should, each restored green:
+  - R11's check off: R11 and R4 fail;
+  - the profile-disagreement rule ignored: R3 fails;
+  - the `at` filter off: R8 fails;
+  - the text sight test off: R2 fails;
+  - the `to` bound ignored: R7 fails.
+- Old battery against base (`tranche/T8` @ 9ca625cb29):
+  - Identical: `hygiene` 1333/2, `refusal-wire` 37/6, `machinefences-dec49` 80/4, `machine-fences` 80/9.
+  - `civicos-ui/check-refusal-codes.mjs`: 115 FAIL lines on both. Only the ratchet figures grow with the new rows.
+- format: 69 modules, 64 requirements files; 0 failures. architecture: 8 product files, 27 relative imports; 0 failures. coverage: 15 of 15 live requirement ids named by a test; 0 failures. ownership: 9 files changed by standards; 0 failures.
+
+Size (session_01UmVjw9n9gtCPtw463X9hRc): test runs 14, module lines 781
