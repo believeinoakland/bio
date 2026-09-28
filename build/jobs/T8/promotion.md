@@ -90,3 +90,19 @@ See J2: `CASE_CATALOGUE_FAILED`'s row and `STEP_DECLARED`'s now-single site (leg
   - ownership: 6 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
 
 Size (session_01YD4sPbdrGsgL4xn1Cbrnsp): test runs 45, module lines 2233
+
+## J4 · REPORT
+
+Found by this re-opening (B3). None of them is changed here.
+
+1. **legacy-tests (N147's share, 1.38.0):** `d470-catalog-census.test.mjs` needs the 1.38.0 row. Record it from the suite's own print on this tree:
+   - count 395, digest `c22e257463a71e5ef07465bd8960687b586dd556c964b1b437451325da8b4db2`, source `4108bfa49f11a4de75a5902772fdde1d34c366eea6695a24e4796eafe5004f58` (esbuild 0.25.12);
+   - `changed: ["C-2.8", "C-2.10", "C-6.1"]`: the arms `checkBundle` no longer runs (see the constant's note in `src/gate.mjs`);
+   - the 1.37.0 row too, if it is still unrecorded (J2 item 3's figures), since ratifications were stamped 1.37.0 in between;
+   - A5's literal moves to 1.38.0, with any pinned `gateVersion` (`ratify.test.mjs`).
+   - **A1's floors are now red on the measured figures:** count 395 against a floor of 400, and 44 literal emission sites against 45. The one literal site that left is C-11.1 (`checkActionExtension`'s clock arm, now actions'). Both floors are to re-pin from the print.
+2. **ratification and legacy-checks (R38, "the checks are carried"):** C-41.1–C-41.15 did not leave the catalogue file in layer 8. Ratification defines its own `CASE_DOCUMENT_FAMILY` in `src/ratification/checks.mjs`, and `bio-checks.mjs` keeps its copy for `checkCaseDocument`, promotion's fallback before a catalogue registers (R33, R47). So two definitions of the C-41 rows exist, and the census counts the file's. Once ratification registers at every host, the file's copy (and `checkCaseDocument`'s per-member arm) is a candidate to retire, which would be a departure and the next stamp. Your B3 lists C-41 among layer 8's departures; the census says it has not departed.
+3. **Generated artifacts (§14):** this job changes `bio-plane/src/gate.mjs`, so `agent-worker/dist/agent-worker.bundled.mjs` is stale (`fleetbundles`: the agent-worker rows fail, ocr-worker and pdf-worker pass). `bio-plane/dist/bio-plane.bundled.mjs` embeds the same source, so it is stale too. Regenerate both at the close.
+4. **actions (K253), for the record:** promotion's write-path suite no longer probes `GOVERNING_LAWS_REWRITTEN` or `RISK_TIER_REWRITTEN`. Their rows moved to `src/actions/`, which promotion cannot import, so their enforcement at the write is actions' to test.
+5. **affordances (layer 9, not promotion's):** its suite reads 43/22 on this branch and the same 43/22 on `tranche/T8` @ 732edcdf90; after layer 2 it read 65/0. One cause: its fixture creates `ACTN-2026-9400-request` with `action_kind: cpra_request`, which actions now refuses on creation (`ACTION_KIND_UNKNOWN`, C-101.1: records_request, request_for_comment, other). The 22 tests that fail all build on that one refused promotion. The fix is in the affordances fixture (a kind actions offers), a legacy-tests or affordances job's to make.
+6. **Other reds in users' suites, the same on the base as here (already in J2 item 6):** citation R5 (48/1) and connections "R24, R18, K155" (59/1).
