@@ -710,8 +710,9 @@ export class Store extends DurableObject {
        provenance R47), and listens to extraction's reading notice once extraction exists (below). */
     const observations = observationLogOf(ctx, { extraction: null,
       provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" }) });
-    /* N39 (K71): the `run` authority observation-log's fence delegates (its R13), answered by legacy-store until
-       ai-runs (whether the viewer may read the run) is extracted; capture-requests registers `sweep` itself. */
+    /* N39 (K71): the two authorities observation-log's fence delegates (its R13), answered by legacy-store until
+       capture-requests (a request's target and lead inquiry) and ai-runs (whether the viewer may read the run) are
+       extracted and register their own. */
     observations.registerAuthority("run", (run, viewer) => this.aiRunLog({ run, viewer, limit: 1 }).found === true);
     const promotion = promotionOf(ctx);
     /* extraction (K31, K61): its projection joins every promotion before legacy-store's (R20). */

@@ -1,4 +1,4 @@
-/* capture-requests over the modules it uses, the record's own ones real (record-core, membership, provenance,
+/* capture-requests over the modules it uses, the record's own ones real (record-core, membership,
    observation-log, host-governor, capture-sources' credentials) on a real SQLite database (node:sqlite) standing in
    for a Durable Object's storage. `capture`'s in-process arm is a stand-in the test scripts (K61: a test may pass its
    own instance), recording exactly what it was handed; ai-runs' run sight (`runFor`) is a table of runs the test
@@ -7,7 +7,6 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { governorOf } from "../../../src/host-governor/index.mjs";
 import { credentialsOf } from "../../../src/capture-sources/credentials.mjs";
@@ -78,11 +77,9 @@ export function world({ env = ENV, configured, credentials = true } = {}) {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const prov = provenanceOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
-  prov.migrate();
   const ex = { onReading: () => ({ ok: true }), readingOf: () => null, unitsOf: () => ({ units: [], state: null }),
                capturesReadFor: () => [] };
-  const obs = observationLogOf(host, { record, membership, provenance: prov, extraction: ex, now });
+  const obs = observationLogOf(host, { record, membership, provenance: null, extraction: ex, now });
   obs.migrate();
   const governor = governorOf(host, { env, now, record });
   governor.migrate();
@@ -105,7 +102,7 @@ export function world({ env = ENV, configured, credentials = true } = {}) {
                                        ...(configured !== undefined ? { configured } : {}) });
   cr.migrate();
   const w = {
-    st, host, record, membership, prov, obs, governor, creds, capture, runs, cr, clock, waitRegs,
+    st, host, record, membership, obs, governor, creds, capture, runs, cr, clock, waitRegs,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     req: (id) => st.sql.exec(`SELECT * FROM capture_requests WHERE request=?`, id)[0] ?? null,
