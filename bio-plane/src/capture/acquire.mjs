@@ -141,7 +141,7 @@ const renderLocale = (view) => renderLocaleFor(view);
 async function governedFetch(cap, target, purpose, delegated = null, { headers = null, credential = null } = {}) {
   const g = cap.governor;
   return hostGovernedFetch(target, { userAgent: userAgent(cap.env, purpose, delegated),
-    fetch: headers || credential ? scopedFetch(target, { headers, credential }) : (u, i) => fetch(u, i),
+    fetch: headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i),
     governor: g ? { admit: (q) => g.governorAdmit(q), report: (q) => g.governorReport(q) } : null });
 }
 
@@ -149,8 +149,9 @@ async function governedFetch(cap, target, purpose, delegated = null, { headers =
 const CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 const REDIRECT_MAX = 20;
 const base64Of = (text) => btoa(String.fromCharCode(...new TextEncoder().encode(text)));
-function withCredential(headers, credential) {
-  if (credential.kind === "user-agent") return { ...headers, "user-agent": credential.secret };
+/* A supplied agent is a DELEGATED one, so it is sent through R7's one function, which returns it verbatim. */
+function withCredential(headers, credential, env, purpose) {
+  if (credential.kind === "user-agent") return { ...headers, "user-agent": userAgent(env, purpose, credential.secret) };
   if (credential.kind === "login") return { ...headers, authorization: `Basic ${base64Of(credential.secret)}` };
   return { ...headers, authorization: credential.secret };
 }
@@ -158,7 +159,7 @@ function withCredential(headers, credential) {
 /* R61, R62: the fetch the governor calls, adding R61's conditional headers and, on the address's OWN host only,
    R62's credential. With a credential, redirects are followed BY HAND so that a hop to another host is fetched
    without it (capture-sources R56's caller obligation): the runtime's own following would carry the header on. */
-function scopedFetch(target, { headers, credential }) {
+function scopedFetch(target, { headers, credential, env, purpose }) {
   let home = null;
   try { home = new URL(target).hostname.toLowerCase(); } catch { home = null; }
   return async (u, init = {}) => {
@@ -168,7 +169,7 @@ function scopedFetch(target, { headers, credential }) {
     for (let hop = 0; ; hop++) {
       let host = null;
       try { host = new URL(url).hostname.toLowerCase(); } catch { host = null; }
-      const res = await fetch(url, { ...init, redirect: "manual", headers: host && host === home ? withCredential(plain, credential) : plain });
+      const res = await fetch(url, { ...init, redirect: "manual", headers: host && host === home ? withCredential(plain, credential, env, purpose) : plain });
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
       if (!loc || hop >= REDIRECT_MAX) return res;
       try { await res.body?.cancel?.(); } catch { /* the hop's body is not read */ }
