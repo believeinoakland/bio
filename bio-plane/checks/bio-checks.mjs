@@ -7831,43 +7831,6 @@ export const QUEUE_MINT_CHECKS = {
  * zero cost, measured five times.
  * ========================================================================= */
 export const CASE_DERIVATION_CHECKS = {
-  CASE_IDENTITY_AMBIGUOUS: {
-    check: 'C-44.1',
-    where: 'src/store.mjs publishCase > case-identity-derivation',
-    translation: 'This publication did not say which case it is. The findings you are publishing '
-      + 'already serve more than one published case, and a finding is allowed to serve many — so '
-      + 'the record cannot work out from them alone whether you are publishing a further edition '
-      + 'of one of those cases or starting a new case that rests on the same work. Nothing has '
-      + 'been published and nothing has changed. Say which case this is, or say that it is a new '
-      + 'one, and publish again.',
-  },
-  /* REC-217 (BIO_Publication_v0_1.md §3 rule 13; BOB #33, 2026-09-24 19:14Z) — THE PUBLISHER NAMES THE DRAFT
-     A CASE WAS PREPARED IN, and at that act the readings taken through it bind to the case it produced. The
-     three conditions under which that link would be FALSE are refused here, in this family because each is
-     about the case identity the act publishes: the same question C-44.1 asks of the members, asked of the
-     draft. Each is its own row and its own region, for three different mistakes. Asked before a case id is
-     minted, so a refusal spends none — and none of them can refuse a publication that names no draft. */
-  PUBLISH_DRAFT_NOT_FOUND: {
-    check: 'C-44.3',
-    where: 'src/store.mjs publishCase > is-publish-draft-found',
-    translation: 'The draft named for this case is not a draft of this project that you can open. Nothing was '
-      + 'published. Name the draft this case was prepared in, or publish without naming one; readings of a '
-      + 'draft that was not named are then counted in the case file and not attributed to anyone.',
-  },
-  PUBLISH_DRAFT_NOT_THIS_CASE: {
-    check: 'C-44.4',
-    where: 'src/store.mjs publishCase > is-publish-draft-this-case',
-    translation: 'The draft named here was prepared for a different case than the one being published, so its '
-      + 'readers did not read this one. Nothing was published. Publish the case that draft is for, or name '
-      + 'the draft of this case.',
-  },
-  PUBLISH_DRAFT_ALREADY_BOUND: {
-    check: 'C-44.5',
-    where: 'src/store.mjs publishCase > is-publish-draft-bound',
-    translation: 'That draft has already been named as the draft of another published case, and the people who '
-      + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
-      + 'Nothing was published.',
-  },
 };
 
 /* =========================================================================
@@ -12045,77 +12008,6 @@ const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
 /* The leg keys that can only mean "this leg counts BECAUSE of a theme". No leg
    grammar reads either; a leg carrying one is claiming membership as a reason. */
 const THEME_LEG_KEYS = ["theme", "themes"];
-
-/* IC-246 / C-82 (minted with `node tools/mintid.mjs C` by c19-unionfix, 2026-09-24) — op=statementack's refusals
- * (BIO_Publication_v0_1.md §3 rule 11). C-82.1, STATEMENT_ACK_DOCUMENTS_OVER_BOUND, is RETIRED (D-521, 2026-09-25)
- * and its number is not reused. It refused over a bound of 8 unsigned case documents per acknowledgement, and the
- * read it guarded returns at most two rows by its keys (REC-194 made it one; REC-217's draft link made it two), so
- * no input could reach it. A catalogued refusal that cannot occur is a claim the record makes about itself. */
-export const STATEMENT_ACK_CHECKS = {
-  /* D-507 / IC-270 — THE SIX REFUSALS THAT REACHED A MEMBER AS MACHINE WORDS. UI-89's worker measured it
-     at the surface: of the seven conditions `acknowledgeStatement` refuses on, only C-82.1 above held a
-     row, so the other six arrived carrying the plane's authored `detail` and NO canned translation, which
-     is the state DEC-49 exists to make impossible (`BIO_Assistant_and_AI_Roles_v0_1.md` rule 10). The
-     obstacle was the same STRUCTURAL one D-484 met at `NO_BASIS`: a row holds ONE `where` naming the
-     SMALLEST SPAN in which its refusal is enforced, and `acknowledgeStatement`'s `refusal` helper stood
-     BELOW all six, so none of them could be built through it and none could honestly hold a row. The six
-     returns now go through the helper, each inside its own DEC-49 region, and each carries the sentence
-     below beside its unchanged `reason` and `detail`.
-     THE WORDS ARE BOB #33's, approved 2026-09-24 and used verbatim. One was checked against the code and
-     is right rather than narrow: C-82.5 says "This draft", and the case-DOCUMENT door cannot reach it —
-     `publishCase` refuses `NO_STATEMENT` (region `is-publish-statement`) before authoring any document, so
-     every case document in the store carries a non-empty `completeness.statement` and the draft door is
-     the only one that reaches an empty one. */
-  STATEMENT_ACK_NO_SUBJECT: {
-    check: 'C-82.2',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-subject',
-    translation: 'Say which statement you are acknowledging: a draft case, or a case document, by its case '
-      + 'and edition, that has been written but not yet signed.',
-  },
-  STATEMENT_ACK_ALREADY_SIGNED: {
-    check: 'C-82.3',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-signed',
-    translation: 'This edition of the case is already signed, and the signature covers its list of who '
-      + 'acknowledged the statement, so a new acknowledgement could not appear in it. A signed edition is '
-      + 'corrected only by publishing the next edition.',
-  },
-  STATEMENT_ACK_NOT_A_PARTICIPANT: {
-    check: 'C-82.4',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-participant',
-    translation: 'Only someone who has joined the project that makes this case, or someone given a review '
-      + 'copy of it, can acknowledge its statement. Being able to see a project is not the same as having '
-      + 'joined it: an invited member who has not joined yet, and an administrator, cannot acknowledge it.',
-  },
-  STATEMENT_ACK_NO_STATEMENT: {
-    check: 'C-82.5',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-statement',
-    translation: 'This draft does not yet say what its case leaves out, so there is nothing to acknowledge. '
-      + 'Once an editor of the draft writes that statement, you can acknowledge it.',
-  },
-  STATEMENT_ACK_BY_ITS_AUTHOR: {
-    check: 'C-82.6',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-by-its-author',
-    /* CONDUCT #20 at c20-batch23: REC-212 sends a SECOND person through this code — the member who PUBLISHED the
-       case, who did not write its statement (§3 rule 13) — and the D-507 sentence told them "You wrote this
-       statement", which is false of them. Generalised at the union to be true of both; the words go to BOB #33,
-       who approved the originals, to confirm or replace. */
-    translation: 'You wrote this statement or published this case, so you have already read it. An acknowledgement '
-      + 'means a second person has read what the case leaves out, so it has to come from someone else: another '
-      + 'participant in the project, or a reader given a review copy. The case can be published without one, '
-      + 'and will say so.',
-  },
-  STATEMENT_ACK_AUTHOR_UNDETERMINED: {
-    check: 'C-82.7',
-    where: 'src/store.mjs acknowledgeStatement > is-statement-ack-author-undetermined',
-    /* CONDUCT #20 at c20-batch23: REC-212 reaches this code from a CASE DOCUMENT that states its writer could not
-       be established, where "this draft" and "ask an editor to save it again" are both false. Generalised at the
-       union to name both routes; to BOB #33 with the other. */
-    translation: 'The record does not say who wrote this statement, so it cannot tell whether you are its author. '
-      + 'For a draft, ask an editor of the project to save the statement again; for a published case, it can be '
-      + 'published again from a draft that records who wrote it. You can acknowledge it after that. The case can '
-      + 'be published either way.',
-  },
-};
 
 /* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS,
  * which reached a member as machine words (`BIO_Publication_v0_1.md` §6A, §6A.4; DEC-49).
