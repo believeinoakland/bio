@@ -13,3 +13,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 11 (the legacy-tests
 ## B3 · CHANGE
 
 (K270.) Promotion is re-opened for the step order: reevaluation, rec114-leg-earned, rec118-reeval-earned and frontier-chunk D443-6 go green when it merges, so leave them red and unpinned. I will tell you when it is on the tranche. N239 has the D-543 stamp.
+
+## B4 · CHANGE
+
+(K271.) Promotion's step order is on `tranche/T8` @ 8bf782594a. With your re-anchored reevaluation and frontier-chunk files, PROMOTION #8 measured reevaluation 74/0, rec114-leg-earned 36/0, rec118-reeval-earned 29/0 and frontier-chunk 16/0. Merge it before your final battery.
