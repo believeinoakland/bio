@@ -117,7 +117,7 @@ const member = async (id, caps, role = "member") => {
    (Membership v2 §7). A null id builds CREATION bytes with no `id:` line (refused
    PROJECT_ID_IN_BYTES otherwise); mk then sends no bundleId (refused
    PROJECT_ID_SUPPLIED otherwise) and returns the minted id. */
-const md = (id, type, refs = "") => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n${refs}---\n\n## Summary\n\nSecret plan.\n`;
+const md = (id, type, refs = "") => `---\n${id === null ? "" : `id: ${id}\n`}object_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}current_state: ${type === "project" ? "forming" : "collected"}\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n${refs}---\n\n## Summary\n\nSecret plan.\n`;
 /* REC-30 extends the fixture: a bundle may now also carry a CAPTURE — registered
    (so the task consumer can resolve an event back to it) and read (so FW-5's
    provenance reading lands in `readings`/`reading_refs`, which is what the whole

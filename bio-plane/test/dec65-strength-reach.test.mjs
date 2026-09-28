@@ -192,10 +192,21 @@ const topLevelFns = (lines) => {
   }
   return spansFrom(lines, marks);
 };
-const CALL_RE = /(?:this|Store)\.(#?[A-Za-z_$][\w$]*)\s*\(|(?:^|[^.\w$])([A-Za-z_$][\w$]*)\s*\(/g;
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5, INQUIRY #1 J3). The arithmetic left the store's one
+   class: `#strengthWalk` is strength's `Strength#walk` (src/strength/index.mjs), reached through `#pairOver`;
+   `#axisResult`, `#groundResult` and `#weakestOf` are the module functions `axisResult`, `groundResult`, `weakestOf`
+   (src/strength/arithmetic.mjs); and what the walk asks of the basis and the registry (`basisFor`, `earned`,
+   `legCapped`, `subjectEntityOf`; the store's `basisFor`, `earnedBasisRegistry`, `#capturedAt`) is inquiry's
+   `Inquiry` class, reached as `this.inquiry.<method>(` (strength's `inquiry` is `inquiryOf(ctx)`, K194). So the
+   universe is now: the methods of `Strength` and of `Inquiry`, named `Strength.<m>` and `Inquiry.<m>`; and the
+   top-level functions of the two strength files, of inquiry, of every relative module those files import a
+   function from, and of the catalogue. A call resolves as it runs: `this.m(` / `this.#m(` to the caller's own
+   class, `Strength.#m(` to strength's, `this.inquiry.m(` to inquiry's, and a bare `f(` to a top-level function.
+   The recogniser, the comment-stripping, the property vocabulary and the unresolved report are unchanged. */
+const CALL_RE = /(?:this|Store|Strength|Inquiry)\.(#?[A-Za-z_$][\w$]*)\s*\(|this\.inquiry\.([A-Za-z_$][\w$]*)\s*\(|(?:^|[^.\w$])([A-Za-z_$][\w$]*)\s*\(/g;
 const callsIn = (body) => {
   const found = new Set(); let m; CALL_RE.lastIndex = 0;
-  while ((m = CALL_RE.exec(body))) found.add(m[1] || m[2]);
+  while ((m = CALL_RE.exec(body))) found.add(m[1] ? m[1] : m[2] ? `inquiry:${m[2]}` : m[3]);
   return found;
 };
 /* JS keywords and platform globals a bare-call regex necessarily picks up.
@@ -219,20 +230,38 @@ const NOT_A_CALLEE = new Set(["if", "for", "while", "switch", "catch", "return",
    written. */
 const FIELD_RE = /\basserted_by\b/;
 
-function reachFrom(storeRaw, checksRaw, roots) {
-  const s = scan(storeRaw), c = scan(checksRaw);
-  const sStripped = s.stripped.split("\n"), sCode = s.code.split("\n");
-  const cStripped = c.stripped.split("\n"), cCode = c.code.split("\n");
-  const classAt = sStripped.findIndex((l) => /^export class Store extends DurableObject/.test(l));
-  const marksIn = (lines) => [...methodsOf(lines, classAt).keys()].sort().join(",");
-  const desync = marksIn(sStripped) !== marksIn(sCode);
-  const methods = methodsOf(sCode, classAt);
-  const checkFns = topLevelFns(cCode);
-  const text = (f, sp) => (f === "store" ? sStripped : cStripped).slice(sp.from, sp.to).join("\n");
-  const code = (f, sp) => (f === "store" ? sCode : cCode).slice(sp.from, sp.to).join("\n");
+/* `files` is `{ name: {raw, cls} }`: `cls` names the class a file holds (`Strength`, `Inquiry`), whose methods are
+   `<cls>.<m>`; every file's top-level functions join the universe under their own names (the first file wins). */
+function reachFrom(files, roots) {
+  const F = {};
+  for (const [name, f] of Object.entries(files)) {
+    const sc = scan(f.raw);
+    F[name] = { ...f, stripped: sc.stripped.split("\n"), code: sc.code.split("\n") };
+  }
   const universe = new Map();
-  for (const [n, spans] of methods) universe.set("Store." + n, { file: "store", spans });
-  for (const [n, spans] of checkFns) if (!universe.has(n)) universe.set(n, { file: "checks", spans });
+  let desync = false, methodCount = 0, checkFnCount = 0;
+  const methods = new Map();
+  for (const [name, f] of Object.entries(F)) {
+    if (!f.cls) continue;
+    const at = f.stripped.findIndex((l) => new RegExp(`^export class ${f.cls}\\b`).test(l));
+    f.classAt = at;
+    if (at < 0) continue;
+    const marksIn = (lines) => [...methodsOf(lines, at).keys()].sort().join(",");
+    if (marksIn(f.stripped) !== marksIn(f.code)) desync = true;
+    for (const [n, spans] of methodsOf(f.code, at)) {
+      universe.set(`${f.cls}.${n}`, { file: name, spans });
+      methods.set(`${f.cls}.${n}`, { file: name, spans });
+      methodCount++;
+    }
+  }
+  for (const [name, f] of Object.entries(F)) {
+    const fns = topLevelFns(f.code);
+    if (name === "checks") checkFnCount = fns.size;
+    for (const [n, spans] of fns) if (!universe.has(n)) universe.set(n, { file: name, spans });
+  }
+  const text = (f, sp) => F[f].stripped.slice(sp.from, sp.to).join("\n");
+  const code = (f, sp) => F[f].code.slice(sp.from, sp.to).join("\n");
+  const clsOf = (key) => key.includes(".") ? key.split(".")[0] : null;
 
   const seen = new Set(), unresolved = new Set(), queue = [...roots];
   while (queue.length) {
@@ -244,10 +273,14 @@ function reachFrom(storeRaw, checksRaw, roots) {
     for (const sp of ent.spans)
       for (const call of callsIn(code(ent.file, sp))) {
         if (NOT_A_CALLEE.has(call)) continue;
-        const m = "Store." + call;
-        if (universe.has(m)) { if (!seen.has(m)) queue.push(m); }
-        else if (universe.has(call)) { if (!seen.has(call)) queue.push(call); }
-        else unresolved.add(call);
+        /* inquiry's services are its class methods, or (for `legCapped`) the module function it exports. */
+        const target = call.startsWith("inquiry:")
+            ? (universe.has(`Inquiry.${call.slice(8)}`) ? `Inquiry.${call.slice(8)}` : call.slice(8))
+          : universe.has(`${clsOf(cur)}.${call}`) ? `${clsOf(cur)}.${call}`
+          : universe.has(`Strength.${call}`) && call.startsWith("#") ? `Strength.${call}`
+          : call;
+        if (universe.has(target)) { if (!seen.has(target)) queue.push(target); }
+        else unresolved.add(call.replace(/^inquiry:/, ""));
       }
   }
   const readers = [];
@@ -257,7 +290,7 @@ function reachFrom(storeRaw, checksRaw, roots) {
     const ent = universe.get(name);
     if (!ent) continue;
     for (const sp of ent.spans) {
-      if (FIELD_RE.test(text(ent.file, sp))) readers.push(`${name}@${sp.from + 1}`);
+      if (FIELD_RE.test(text(ent.file, sp))) readers.push(`${name}@${ent.file}:${sp.from + 1}`);
       const body = code(ent.file, sp); let m; PROP_RE.lastIndex = 0;
       while ((m = PROP_RE.exec(body))) props.add(m[1]);
     }
@@ -272,9 +305,10 @@ function reachFrom(storeRaw, checksRaw, roots) {
       if (!ent) continue;
       for (const sp of ent.spans) {
         const body = code(ent.file, sp);
-        if (new RegExp(`(?:const|let|var|function)\\s+${nm}\\b`).test(body)) return "local binding";
-        if (new RegExp(`^\\s*(?:static\\s+)?(?:async\\s+)?#?${nm}\\s*\\(`, "m").test(body)
-            && universe.has("Store.#" + nm)) return "its own declaration line";
+        if (new RegExp(`(?:const|let|var|function)\\s+${nm.replace(/[$]/g, "\\$")}\\b`).test(body)) return "local binding";
+        if (new RegExp(`^\\s*(?:static\\s+)?(?:async\\s+)?#?${nm.replace(/^#/, "").replace(/[$]/g, "\\$")}\\s*\\(`, "m").test(body)
+            && [...universe.keys()].some((k) => k.endsWith(`.#${nm.replace(/^#/, "")}`) || k.endsWith(`.${nm}`)))
+          return "its own declaration line";
       }
     }
     return null;
@@ -284,18 +318,35 @@ function reachFrom(storeRaw, checksRaw, roots) {
     const why = declaredSomewhere(nm);
     if (why) (explained[why] ??= []).push(nm); else unknown.push(nm);
   }
-  const walkCallers = [];
-  for (const [n, spans] of methods)
-    for (const sp of spans) if (callsIn(code("store", sp)).has("#strengthWalk"))
-      walkCallers.push(`${n}@${sp.from + 1}`);
+  const callersOf = (callee) => {
+    const out = [];
+    for (const [n, m] of methods)
+      for (const sp of m.spans) if (callsIn(code(m.file, sp)).has(callee)) out.push(`${n.split(".").slice(1).join(".")}@${sp.from + 1}`);
+    return out;
+  };
   return { closure: [...seen].sort(), readers, unresolved: [...unresolved].sort(),
-           explained, unknown, walkCallers, methodCount: methods.size,
-           checkFnCount: checkFns.size, desync, props: [...props].sort(),
-           sStripped, sCode, methods, universe, text, code, classAt };
+           explained, unknown, walkCallers: callersOf("#walk"), pairCallers: callersOf("#pairOver"),
+           methodCount, checkFnCount, desync, props: [...props].sort(), universe, text, code };
 }
 
-const STORE_RAW = readFileSync(SRC("store.mjs"), "utf8");
+const STRENGTH_RAW = readFileSync(SRC("strength/index.mjs"), "utf8");
+const ARITH_RAW = readFileSync(SRC("strength/arithmetic.mjs"), "utf8");
+const INQUIRY_RAW = readFileSync(SRC("inquiry/index.mjs"), "utf8");
 const CHECKS_RAW = readFileSync(CHK, "utf8");
+/* Every relative module the class files import a function from, so a helper they call is in the universe and is
+   read by the same recogniser (the catalogue is read under its own name). */
+const importedModules = (raw, dir) => [...raw.matchAll(/^import\s*\{[^}]*\}\s*from\s*"(\.{1,2}\/[^"]+\.mjs)";/gm)]
+  .map((m) => fileURLToPath(new URL(m[1], new URL(`../src/${dir}/`, import.meta.url))))
+  .filter((f) => f !== CHK);
+const FILES = (strengthRaw = STRENGTH_RAW) => {
+  const out = { strength: { raw: strengthRaw, cls: "Strength" }, arithmetic: { raw: ARITH_RAW },
+                inquiry: { raw: INQUIRY_RAW, cls: "Inquiry" } };
+  for (const f of [...new Set([...importedModules(STRENGTH_RAW, "strength"), ...importedModules(INQUIRY_RAW, "inquiry")])])
+    if (!/strength\/(index|arithmetic)\.mjs$|inquiry\/index\.mjs$/.test(f)) out[f] = { raw: readFileSync(f, "utf8") };
+  out.checks = { raw: CHECKS_RAW };
+  return out;
+};
+const ROOT = "Strength.#walk";
 const SCHEMA_RAW = readFileSync(SRC("schema.mjs"), "utf8");
 
 try {
@@ -303,44 +354,47 @@ try {
 /* ==================================================================== 0 */
 console.log("--- 0. the corpus, and the instrument's own defect first ---");
 
-const R = reachFrom(STORE_RAW, CHECKS_RAW, ["Store.#strengthWalk"]);
-console.log(`  CORPUS  store.mjs ${STORE_RAW.split("\n").length} lines · ${R.methodCount} methods`
-          + ` · bio-checks.mjs ${R.checkFnCount} top-level functions`);
+const R = reachFrom(FILES(), [ROOT]);
+console.log(`  CORPUS  strength + inquiry ${R.methodCount} class methods`
+          + ` · bio-checks.mjs ${R.checkFnCount} top-level functions · universe ${R.universe.size}`);
 t("the scanner's two outputs agree on where the methods are — a desync here is the INSTRUMENT "
   + "wrong, and it was, before the regex arm existed",
   R.desync, false);
 /* FLOORS, not equalities: both files grow. A floor catches the instrument
    silently reading a truncated or unparsed file, which is what an assertion
    over an EMPTY corpus looks like from the outside. */
+/* RE-FLOORED (T7): the two classes hold fewer methods than the store's one class did; the floor still fails a
+   truncated or unparsed file. */
 t("the method roster is non-empty and floored, so a headline over an empty corpus cannot pass",
-  [R.methodCount > 300, R.checkFnCount > 80], [true, true]);
-t("`#strengthWalk` is FOUND, so the walk this file is about is the walk it measured",
-  R.closure.includes("Store.#strengthWalk"), true);
+  [R.methodCount > 60, R.checkFnCount > 80], [true, true]);
+t("`#walk` is FOUND, so the walk this file is about is the walk it measured",
+  R.closure.includes(ROOT), true);
 
 /* ==================================================================== 1 */
 console.log("--- 1. THE REACH: nothing in the arithmetic reads the attribution ---");
 
 console.log(`  CLOSURE (${R.closure.length}) ${R.closure.join(" ")}`);
-t("the arithmetic closure is non-empty and floored — it is COMPUTED from `#strengthWalk`, "
+t("the arithmetic closure is non-empty and floored — it is COMPUTED from `#walk`, "
   + "never listed, so a helper added tomorrow is swept without editing this file",
-  [R.closure.length >= 8, R.closure.includes("Store.#axisResult"),
-   R.closure.includes("Store.#groundResult"), R.closure.includes("Store.#weakestOf")],
-  [true, true, true, true]);
+  [R.closure.length >= 8, R.closure.includes("axisResult"),
+   R.closure.includes("groundResult"), R.closure.includes("weakestOf"),
+   R.closure.includes("Inquiry.basisFor"), R.closure.includes("legCapped")],
+  [true, true, true, true, true, true]);
 t("NOT ONE FUNCTION IN THE ARITHMETIC NAMES THE FIELD — the measurement this item was "
   + "delegated, with its reach printed above",
   R.readers, []);
 
 /* THE MATCHER PROVED SENSITIVE, over a source that DOES read it. A recogniser
    that finds nothing is worthless until it has found something. */
-const MUTATED = STORE_RAW.replace(
-  `                     ground: leg.ground ?? null };`,
-  `                     ground: leg.ground ?? null, asserted_by: leg.asserted_by ?? null };`);
+const MUTATED = STRENGTH_RAW.replace(
+  `grade_source: leg.grade_source ?? null, ground: leg.ground ?? null };`,
+  `grade_source: leg.grade_source ?? null, ground: leg.ground ?? null, asserted_by: leg.asserted_by ?? null };`);
 t("the mutation the sensitivity arm needs actually applied (an arm that never armed is a finding)",
-  MUTATED !== STORE_RAW, true);
-const RM = reachFrom(MUTATED, CHECKS_RAW, ["Store.#strengthWalk"]);
+  MUTATED !== STRENGTH_RAW, true);
+const RM = reachFrom(FILES(MUTATED), [ROOT]);
 t("RE-RUN over a source that DOES read the field, the same recogniser FINDS it — so the zero "
   + "above is a measurement and not a walk looking in the wrong place",
-  [RM.readers.length, RM.readers.map((x) => x.split("@")[0])], [1, ["Store.#strengthWalk"]]);
+  [RM.readers.length, RM.readers.map((x) => x.split("@")[0])], [1, [ROOT]]);
 
 /* AND IT DOES NOT CITE PROSE. A sweep that reads its own comments would report
    a reader here, and this repository has already had a sweep arm fail by
@@ -352,14 +406,15 @@ t("RE-RUN over a source that DOES read the field, the same recogniser FINDS it �
    mutation applied" — which is the finding this file's own comment says an arm
    that never armed is. The anchor is now the method name plus its first
    parameter, which is unique in the file and cannot be broken by a later one. */
-const WALK_ANCHOR = `  #strengthWalk(bundleId, depth, bound,`;
-const COMMENTED = STORE_RAW.replace(
+/* RE-ANCHORED (T7): the walk is `#walk(bundleId, depth, bound,` in src/strength/index.mjs, unique there. */
+const WALK_ANCHOR = `  #walk(bundleId, depth, bound,`;
+const COMMENTED = STRENGTH_RAW.replace(
   WALK_ANCHOR,
   `  /* nothing here reads asserted_by, and this comment says so */\n` + WALK_ANCHOR);
-t("the comment-only mutation applied", COMMENTED !== STORE_RAW, true);
+t("the comment-only mutation applied", COMMENTED !== STRENGTH_RAW, true);
 t("naming the field in a COMMENT inside the arithmetic does NOT register as a reader — the "
   + "comment-stripping is load-bearing, not decoration",
-  reachFrom(COMMENTED, CHECKS_RAW, ["Store.#strengthWalk"]).readers, []);
+  reachFrom(FILES(COMMENTED), [ROOT]).readers, []);
 
 /* THE WHOLE PROPERTY VOCABULARY, PRINTED. This is what the static arm CANNOT
    see stated as something a reader can check: it cannot tell an attribution
@@ -381,11 +436,14 @@ t("every callee name the matcher could not resolve is EXPLAINED — nothing is s
 /* ==================================================================== 2 */
 console.log("--- 2. THE SUPPLY: what a leg can even carry when it reaches the arithmetic ---");
 
-console.log(`  CALL SITES OF #strengthWalk: ${R.walkCallers.join(", ")}`);
-t("there are exactly FOUR call sites — the walk's own recursion and THREE suppliers — so the "
-  + "supply is enumerable rather than assumed",
-  [R.walkCallers.length, R.walkCallers.map((x) => x.split("@")[0])],
-  [4, ["#strengthWalk", "strengthOf", "versionStrength", "suggestVersion"]]);
+console.log(`  CALL SITES OF #walk: ${R.walkCallers.join(", ")} · OF #pairOver: ${R.pairCallers.join(", ")}`);
+/* RE-ANCHORED (T7; STRENGTH #1 J5): the walk is called by its own recursion and by `#pairOver` alone, which builds
+   the capture bound once (R1); the THREE suppliers call `#pairOver`: `strengthOf`, `versionStrength`, and
+   `candidatePair` (was the store's `suggestVersion`, whose candidate pair run-productions now asks of strength, R26). */
+t("there are exactly TWO call sites of the walk — its own recursion and `#pairOver` — and exactly THREE suppliers "
+  + "of `#pairOver`, so the supply is enumerable rather than assumed",
+  [R.walkCallers.map((x) => x.split("@")[0]).sort(), R.pairCallers.map((x) => x.split("@")[0]).sort()],
+  [["#pairOver", "#walk"], ["candidatePair", "strengthOf", "versionStrength"]]);
 
 /* NO SQL COLUMN CARRIES IT, on either table the arithmetic reads from. Asserted
    over the schema's own text, and asserted in BOTH directions: the `connections`
@@ -395,7 +453,11 @@ t("there are exactly FOUR call sites — the walk's own recursion and THREE supp
    connections module (T5 layer 4; it is declared in src/connections/schema.mjs). The schema read here is
    schema.mjs AND that file, so the both-directions pin still finds the other table's column where it lives. */
 const CONNECTIONS_SCHEMA_RAW = readFileSync(SRC("connections/schema.mjs"), "utf8");
-const schema = scan(SCHEMA_RAW + "\n" + CONNECTIONS_SCHEMA_RAW).stripped;
+/* RE-ANCHORED 2026-09-28 (T7; INQUIRY #1 J2.2, BASIS-VERSIONS #1): `inquiry_basis` (with the comment stating the
+   omission) moved to src/inquiry/schema.mjs, and `inquiry_basis_version_legs` to src/basis-versions/schema.mjs. */
+const INQUIRY_SCHEMA_RAW = readFileSync(SRC("inquiry/schema.mjs"), "utf8");
+const VERSIONS_SCHEMA_RAW = readFileSync(SRC("basis-versions/schema.mjs"), "utf8");
+const schema = scan([SCHEMA_RAW, CONNECTIONS_SCHEMA_RAW, INQUIRY_SCHEMA_RAW, VERSIONS_SCHEMA_RAW].join("\n")).stripped;
 const tableBody = (name) => {
   const m = new RegExp(`CREATE TABLE IF NOT EXISTS ${name} \\(([\\s\\S]*?)\\n\\);`).exec(schema);
   return m ? m[1] : null;
@@ -410,13 +472,15 @@ t("neither table the arithmetic reads legs from projects the attribution — AND
    hasCol("connections", "asserted_by")],
   [false, false, true]);
 t("the schema states the omission on purpose rather than by oversight, at the `inquiry_basis` site",
-  /THE ATTRIBUTION IS NOT PROJECTED HERE/.test(SCHEMA_RAW), true);
+  /THE ATTRIBUTION IS NOT PROJECTED HERE/.test(INQUIRY_SCHEMA_RAW), true);
 
 /* THE THIRD SUPPLIER BUILDS ITS LEGS AS A LITERAL, so its field set is
    readable directly. Named here because it is the one supply route that does
    NOT come from a SELECT list and therefore could carry anything a caller
    handed the endpoint. */
-const walkLegsLit = /const walkLegs = legsIn\.map\(\(l, k\) => \(\{([\s\S]*?)\}\)\);/.exec(scan(STORE_RAW).stripped);
+/* RE-ANCHORED (T7; STRENGTH #1 J1, J5): the candidate legs are built by strength's `static #candidateLeg(l, k)`,
+   which returns the closed literal (run-productions hands `op=suggest`'s legs to `candidatePair`). */
+const walkLegsLit = /static #candidateLeg\(l, k\) \{[\s\S]*?return \{([\s\S]*?)\};/.exec(scan(STRENGTH_RAW).stripped);
 t("`op=suggest`'s candidate legs are built as a CLOSED literal and the attribution is not one "
   + "of its keys — the one supply route a caller's own bytes could otherwise ride in on",
   [walkLegsLit !== null, walkLegsLit ? FIELD_RE.test(walkLegsLit[1]) : "NOT FOUND"],
@@ -544,7 +608,23 @@ const shaOf = async (id) => (await GET(`op=list&token=${RUTH}&limit=1000`))
 const CH_CAP = "INFO-2026-4000-charter-cap", CH_CON = "INFO-2026-4000-charter-con";
 const CO_CAP = "INFO-2026-4000-code-cap", CO_CON = "INFO-2026-4000-code-con";
 const PR_CON = "INFO-2026-4000-practice-con";
-for (const d of [CH_CAP, CH_CON, CO_CAP, CO_CON, PR_CON]) await mustPromote(d, infoMd(d), "information");
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102), never exempted: the three CONNECTION legs were authored as HUNCHES
+   at C, A and D, and a hunch is now inert in every pair and named as a hunch (INVESTIGATIVE-SESSION §12), so the
+   connection axis would read UNRATED and the maximum would do no visible work on it. The same three letters are now
+   ones the record COUNTS: C and A EARNED by resolution against the question's registered subject (a name match
+   reaches C, the composite key A, as §3b's letters are earned), and D a member's testimony (the one letter
+   testimony is worth, strength R1). Nothing else moved: the same parts, the same letters, the same experiment. */
+const E_FUND = (await POST(`op=entitycreate&token=${RUTH}`,
+  { kind: "fund", label: "Charter Reserve Fund", aliases: ["fund:7777"] })).entity_id;
+const FUND_SHA = { [CH_CON]: sha("capture-of-charter-con-3a"), [CO_CON]: sha("capture-of-code-con-3a") };
+const fundReading = (s, ent) => ({ capture: { sha256: s, encoding: "binary", bytes: 10 },
+  reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW, entities: [ent] } });
+for (const d of [CH_CAP, CO_CAP, PR_CON]) await mustPromote(d, infoMd(d), "information");
+await mustPromote(CH_CON, infoMd(CH_CON), "information", null, fundReading(FUND_SHA[CH_CON],
+  { ref: "fund:0000", kind: "fund", key: "0000", label: "Charter Reserve Fund" }));   /* a NAME match: C */
+await mustPromote(CO_CON, infoMd(CO_CON), "information", null, fundReading(FUND_SHA[CO_CON],
+  { ref: "fund:7777", kind: "fund", key: "7777", label: "Fund No. 7777" }));          /* the KEY: A */
+for (const d of [CH_CON, CO_CON]) await POST(`op=resolve&token=${RUTH}`, { captureSha: FUND_SHA[d] });
 
 const HUNCH = { author: "ruth", date: "2026-08-05" };
 const leg = (target, grade, axis, ground, source = axis === "capture" ? "capture" : "hunch") =>
@@ -555,15 +635,15 @@ const leg = (target, grade, axis, ground, source = axis === "capture" ? "capture
    maximum ignored the attribution". Capture and connection are set by
    DIFFERENT parts, so a single composed answer could not pass either. */
 const LEGS = [
-  leg(CH_CAP, "B", "capture", "charter"), leg(CH_CON, "C", "connection", "charter"),
-  leg(CO_CAP, "C", "capture", "code"), leg(CO_CON, "A", "connection", "code"),
-  leg(PR_CON, "D", "connection", "practice"),
+  leg(CH_CAP, "B", "capture", "charter"), leg(CH_CON, "C", "connection", "charter", "resolution"),
+  leg(CO_CAP, "C", "capture", "code"), leg(CO_CON, "A", "connection", "code", "resolution"),
+  leg(PR_CON, "D", "connection", "practice", "testimony"),
 ];
 const TARGETS = LEGS.map((l) => l.target);
 const INQ = "INQ-2026-4000-three-parts";
 
 const A_ROWS = [{ ground: "charter" }, { ground: "code" }, { ground: "practice" }];
-await mustPromote(INQ, inquiryMd(INQ, { refs: TARGETS, legs: LEGS, grounds: A_ROWS }), "inquiry");
+await mustPromote(INQ, inquiryMd(INQ, { refs: TARGETS, legs: LEGS, grounds: A_ROWS, subject: E_FUND }), "inquiry");
 const pairOf = async (id) => {
   const r = await GET(`op=inquirystrength&token=${RUTH}&id=${id}`);
   return { capture: r?.capture ?? null, connection: r?.connection ?? null };
@@ -584,7 +664,7 @@ const B_ROWS = [
   { ground: "charter", by: "gus", at: AT2 },
   { ground: "code", by: "ruth", at: AT1, statement: "The code section is sufficient by itself." },
 ];
-await mustPromote(INQ, inquiryMd(INQ, { refs: TARGETS, legs: LEGS, grounds: B_ROWS }),
+await mustPromote(INQ, inquiryMd(INQ, { refs: TARGETS, legs: LEGS, grounds: B_ROWS, subject: E_FUND }),
                   "inquiry", await shaOf(INQ));
 const P2 = await pairOf(INQ);
 t("EVERY attribution fact rewritten across THREE parts — different members, dates, statements, "
@@ -596,7 +676,7 @@ t("EVERY attribution fact rewritten across THREE parts — different members, da
    pair — otherwise the two equalities above cost nothing to produce and are
    not evidence of anything. */
 const MERGED = LEGS.map((l) => l.ground === "code" ? { ...l, ground: "charter" } : l);
-await mustPromote(INQ, inquiryMd(INQ, { refs: TARGETS, legs: MERGED,
+await mustPromote(INQ, inquiryMd(INQ, { refs: TARGETS, legs: MERGED, subject: E_FUND,
     grounds: [{ ground: "charter" }, { ground: "practice" }] }), "inquiry", await shaOf(INQ));
 const P3 = await pairOf(INQ);
 t("SENSITIVITY: change what the arithmetic DOES read — the part LABEL — and the pair moves on "

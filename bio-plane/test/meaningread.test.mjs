@@ -91,7 +91,11 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 import { CONTENT_SCHEMA } from "../src/content/schema.mjs";
 import { ENTITIES_SCHEMA } from "../src/entities/schema.mjs";
 import { EXTRACTION_SCHEMA } from "../src/extraction/schema.mjs";
-const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), ENTITIES_SCHEMA, CONTENT_SCHEMA, EXTRACTION_SCHEMA].join("\n");
+/* RE-ANCHORED 2026-09-28 (INQUIRY #1 J2.2): `inquiry_basis`, the `leg` arm's table, moved to inquiry's
+   `INQUIRY_SCHEMA` (`src/inquiry/schema.mjs`) with its DDL unchanged; it joins the schema read. */
+import { INQUIRY_SCHEMA } from "../src/inquiry/schema.mjs";
+const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), ENTITIES_SCHEMA, CONTENT_SCHEMA, EXTRACTION_SCHEMA,
+                    INQUIRY_SCHEMA].join("\n");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `op=meaningrows`, its executor and its refusal rows moved to
    retrieval (`src/retrieval/index.mjs`), and the gate is minted only in membership's `viewerPredicate`, which
@@ -409,6 +413,8 @@ const infoMd = (id, prose = "A captured document about the sewer fund.") => ["--
    read from the answer. */
 const projectMd = () => ["---", "object_type: project",
   `current_state: forming`, `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Keep the resolved document inside the project."',
   "---", "", "## Summary", "", "A project the uninvited must not learn about.", ""].join("\n");
 
 const promote = async (id, text, type, extraFiles = [], register = [], tok = "mem-pl9") => rP(await post("promote", {

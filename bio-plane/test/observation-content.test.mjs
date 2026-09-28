@@ -157,6 +157,12 @@ import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC = {
   airun:  readFileSync(new URL("../src/airun.mjs", import.meta.url), "utf8"),
+  /* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1, N49): the content-axis constant's one definition moved from `airun.mjs`
+     (which now re-exports it) to observation-log's `vocabulary.mjs`; A2/A2b allow the spelling there and nowhere else. */
+  vocab:  readFileSync(new URL("../src/observation-log/vocabulary.mjs", import.meta.url), "utf8"),
+  /* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): retrieval's hidden-run tail is registered by ai-runs; J5
+     reads it there. (No content-axis member is spelled in it: A2 walks it too.) */
+  runs:   readFileSync(new URL("../src/ai-runs/index.mjs", import.meta.url), "utf8"),
   store:  readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8"),
   index:  readFileSync(new URL("../src/index.mjs", import.meta.url), "utf8"),
   chain:  readFileSync(new URL("../src/textchain.mjs", import.meta.url), "utf8"),
@@ -246,7 +252,7 @@ t("A1: the constant carries FOUR states and every one of them has a sentence a m
 {
   const offenders = [];
   for (const [file, src] of Object.entries(SRC)) {
-    if (file === "airun" || file === "self") continue;
+    if (file === "vocab" || file === "self") continue;   /* T7: the definition's home is `vocab` now; `airun` is walked */
     for (const m of MEMBERS) {
       const n = src.split(m).length - 1;
       if (n) offenders.push(`${file}:${m}x${n}`);
@@ -261,9 +267,11 @@ t("A1: the constant carries FOUR states and every one of them has a sentence a m
      other direction, because a matcher that finds nothing over a corpus it never
      read passes exactly as loudly. Three headline totality assertions in this
      repository passed over an empty corpus. */
-  t("A2b: REACH — the same walk over `airun.mjs`, which IS allowed to spell them, finds all four. "
-  + "Without this row A2 would pass identically over a walk that was reading nothing",
-    MEMBERS.filter((m) => SRC.airun.includes(m)).length, 4);
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1, N49): the constant's definition is observation-log's
+     `vocabulary.mjs` now, so REACH is measured there. */
+  t("A2b: REACH — the same walk over observation-log's `vocabulary.mjs`, which IS allowed to spell them, finds all "
+  + "four. Without this row A2 would pass identically over a walk that was reading nothing",
+    MEMBERS.filter((m) => SRC.vocab.includes(m)).length, 4);
 }
 
 t("A3: and THIS SUITE spells none of them either — every arm here derives its words from the "
@@ -450,8 +458,10 @@ let snapSeq = 0;
    saying one thing under an envelope saying another. `promote` believed the envelope, which is the defect
    D-510 closes — and the fixture is the shape that defect let through, so it is corrected rather than
    exempted: a document now says what it is. Nothing this suite asserts is about the type. */
+/* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so a project's document states one. */
 const doc = (id, title, type = "information") => `---\nobject_type: ${type}\ngroup: believe-in-oakland\n`
-  + `title: ${title}\ncurrent_state: collected\n---\n\n# ${title}\n`;
+  + `title: ${title}\n${type === "project" ? 'objective: "Keep this capture private."\n' : ""}`
+  + `current_state: collected\n---\n\n# ${title}\n`;
 const promote = async (id, { type = "information", reading = null, captureSha = null,
                             register = [], author = undefined } = {}) => {
   const text = doc(id, `Bundle ${id}`, type);
@@ -1074,8 +1084,12 @@ const G_WITHHELD = 1;             /* eeee — SHA_PROJ, inside the private proje
     [/const tally = this\.#tally\("content", viewer\);/.test(CONTENT_ARM)
        && (SRC.frontier.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length === 1,
      /BOB #32, 2026-09-24 02:30Z/.test(SRC.store),
-     (SRC.store.match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
-     (SRC.store.match(/registerHiddenRunTail\("legacy-store", \(viewer\) => this\.#hiddenRunTail\(viewer\)\)/g) || []).length],
+     /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): the tail is ai-runs'
+        `hiddenRunTail`, registered from its constructor; the store's `#hiddenRunTail` and registration are gone. The
+        tail does NOT reach `#hiddenSets` — it spells the subtraction itself — so the ONE-place census follows it into
+        ai-runs' text beside the store's and reads 2. Not re-pinned: REPORTED to ai-runs and legacy-store. */
+     ((SRC.store + "\n" + SRC.runs).match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
+     (SRC.runs.match(/retrieval\.registerHiddenRunTail\("ai-runs", \(viewer\) => this\.hiddenRunTail\(viewer\)\)/g) || []).length],
     [true, true, 1, 1]);
 }
 

@@ -70,7 +70,7 @@ const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema:
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "---", "", "## Summary", "", "A captured document.", "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
-const projectMd = (title, cites) => ["---", "object_type: project", `title: "${title}"`, "current_state: forming",
+const projectMd = (title, cites) => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "",

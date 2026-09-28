@@ -88,7 +88,7 @@ const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "schema:
   "visuals: []", "---", "", "## Summary", "", "A captured document.", "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 const projectMd = (id, title, cites = [], summary = "A project.") => ["---", ...(id === null ? [] : [`id: ${id}`]),
-  "object_type: project", `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", summary, "",

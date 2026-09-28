@@ -81,7 +81,7 @@ const DAN = await enrol("dan", "member");     /* JOINED PA, not an owner */
 const ZED = await enrol("zed", "member");     /* joined PA, then asked to leave */
 
 let snapSeq = 0;
-const projectMd = (name) => ["---", "object_type: project", `title: "${name}"`, "current_state: forming",
+const projectMd = (name) => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "${name}"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "",
   "## Session Log", ""].join("\n");

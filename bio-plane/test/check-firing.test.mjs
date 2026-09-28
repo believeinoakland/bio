@@ -79,6 +79,10 @@ import { join as joinPath } from "node:path";
 import { checkBundle, CHECK_RETIREMENTS, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { recordChecks } from "../src/promotion/index.mjs";
 import { registerChecks } from "../src/provenance/index.mjs";
+/* RE-ANCHORED 2026-09-28 (REEVALUATION #1 J2.10, its R22): C-10.1 left the catalogue's `checkBundle` for reevaluation's
+   `checkReevalPending`, which the gate runs as a promotion step (its errors refuse) and the audit as a registered audit
+   check over the same front matter. */
+import { checkReevalPending } from "../src/reevaluation/checks.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -158,7 +162,8 @@ const fmInsert = (md, ...lines) => {
    takes them.
    RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): the C-18 register arms (C-18.1 @2, C-18.3,
    C-18.4, C-18.9, release authority) left the catalogue for provenance's `registerChecks`, which the gate runs over
-   the same image after the catalogue (`withRegisterChecks`) and the audit after the pass (`provenanceAudit`). The
+   the same image after the catalogue (`withRegisterChecks`) and the audit through provenance's registered audit
+   check (`registerAuditCheck("provenance", …)` in `provenanceOf`, record-core R59; N92 retired `provenanceAudit`). The
    findings of a bundle are now all three; the register arms are asked of `registerChecks` over the same files and
    front matter, every finding (a warning included, as C-18.4 is). */
 async function findingsFor(type, files, extra = {}) {
@@ -169,7 +174,9 @@ async function findingsFor(type, files, extra = {}) {
   const md = files.get("bundle.md");
   const fm = typeof md === "string" ? parseFrontmatter(md).data : null;
   return [...findings, ...await recordChecks({ folderName: idFor(type), files, sha256: shaHex, ...extra }),
-          ...registerChecks({ files, fm })];
+          ...registerChecks({ files, fm }),
+          /* T7: and reevaluation's C-10.1, over the same front matter at the suite's clock (see the import above). */
+          ...(fm ? checkReevalPending(fm, { nowMs: extra.nowMs ?? NOWMS }) : [])];
 }
 const has = (fs, id) => fs.some((f) => f.check === id);
 

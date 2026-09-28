@@ -55,7 +55,11 @@ const t = (label, got, want) => {
 };
 
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; INQUIRY #1 J2.2): the three inquiry tables, `inquiry_basis` and its
+   index `inquiry_basis_target` among them, moved to src/inquiry/schema.mjs, and `restingOn` is inquiry's
+   (src/inquiry/index.mjs); the two source pins in ยง2 read them there. */
+const SCHEMA_SRC = readFileSync(SRC("inquiry/schema.mjs"), "utf8");
+const INQUIRY_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
 const mf = new Miniflare({
   modules: true, script: STORE_SRC,
   modulesRoot: "/", scriptPath: SRC("store.mjs"),
@@ -200,9 +204,9 @@ console.log("\n--- 2. the reverse index: which inquiries rest on this document โ
      still being one lookup. The slice now ends at restingOn's own closing brace,
      so the assertion measures what its label says. */
   t("and it is ONE lookup: restingOn runs a single statement against inquiry_basis, no walk",
-    (STORE_SRC.slice(STORE_SRC.indexOf("restingOn(targetId)"),
-                     STORE_SRC.indexOf("\n  }", STORE_SRC.indexOf("restingOn(targetId)")))
-      .match(/FROM inquiry_basis/g) || []).length, 1);
+    (INQUIRY_SRC.slice(INQUIRY_SRC.indexOf("\n  restingOn(targetId) {"),
+                       INQUIRY_SRC.indexOf("\n  }", INQUIRY_SRC.indexOf("\n  restingOn(targetId) {") + 1))
+      .match(/FROM inquiry_basis\b/g) || []).length, 1);
 }
 
 console.log("\n--- 3. the DAG, enforced at the write that would close the cycle (R3) ---");

@@ -71,6 +71,7 @@ import { parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({
@@ -302,7 +303,31 @@ const KID_A = "INQ-2026-1700-authority";
 const KID_B = "INQ-2026-1700-signature";
 
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected");
-await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102), never exempted: the case's connection C was a HUNCH, and a hunch
+   is now inert in every pair and named as a hunch (INVESTIGATIVE-SESSION §12), so the case would publish with its
+   connection axis UNRATED and block 6's dependent could not inherit C from it. The same C is now EARNED by
+   resolution against the case's registered subject — a NAME match (entities' recogniser, framework §8.1). The leg on
+   the moved question keeps its authored hunch at B: it is not the determining member on either axis, as the
+   comment below says, and the obligation's leg row still reads it as authored. The pair is (B, C) as before. */
+const SUBJECT = rP(await POST(`op=entitycreate&token=${PILAR}`,
+  { kind: "ordinance", label: "Sewer Fund Transfer Authority", aliases: ["ordinance:1700"] })).entity_id;
+{
+  const md = infoMd(INFO_CONN), capSha = sha("capture-of-connection-c-rec17");
+  const doc = registerDoc({ capture: { sha256: capSha, encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
+               entities: [{ ref: "ordinance:9999", kind: "ordinance", key: "9999",
+                            label: "Sewer Fund Transfer Authority" }] } }, { file: "snapshots/d.bin" });
+  const prov = JSON.stringify({ documents: [doc] });
+  const r = rP(await POST(`op=promote&token=${PILAR}`, {
+    bundleId: INFO_CONN, base: null, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
+            created: NOW, last_updated: LATER },
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)],
+    register: [{ path: "snapshots/d.bin", sha256: capSha, encoding: "binary", bytes: 10 }] }));
+  if (r.ok === false) throw new Error(`promote ${INFO_CONN}: ${JSON.stringify(r)}`);
+  rP(await POST(`op=resolve&token=${PILAR}`, { captureSha: capSha }));
+}
 await mustPromote(INFO_X, infoMd(INFO_X), "information", "collected");
 
 /* THE MOVED QUESTION rests on one document, which is what makes it DIVISIBLE
@@ -328,14 +353,13 @@ await mustPromote(INQ_MOVED, inquiryMd(INQ_MOVED, {
    is an INQUIRY, which earns nothing from the recogniser in any case: an inquiry
    is not a captured document. */
 const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
-                   { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
-                     author: "pilar", date: "2026-08-04" },
+                   { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" },
                    { target: INQ_MOVED, grade: "B", axis: "connection", source: "hunch",
                      author: "pilar", date: "2026-08-04" }];
 /* REC-136: INQ_CASE is concluded (twice), so it carries an accepted reading to adopt. */
 await mustPromote(INQ_CASE, withAdoptableReading(inquiryMd(INQ_CASE, {
   question: "Did the City transfer sewer funds without authority?",
-  refs: [INFO_CAP, INFO_CONN, INQ_MOVED], legs: CASE_LEGS })), "inquiry", "open");
+  refs: [INFO_CAP, INFO_CONN, INQ_MOVED], legs: CASE_LEGS, extra: [`subject_entity: ${SUBJECT}`] })), "inquiry", "open");
 
 await mustPromote(INQ_BLOCKED, inquiryMd(INQ_BLOCKED, {
   question: "Who signed the transfer memo?",
@@ -642,12 +666,17 @@ console.log("\n--- 7. op=reevaluations is a GATED read, and its viewer is the se
   const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
   t("the op is in the ONE viewer-stamp condition in index.mjs",
     /op === "reevaluations"/.test(src), true);
-  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-  const body = store.slice(store.indexOf("  reevaluations({"), store.indexOf("  #reevalMoved("));
-  t("the read takes BOTH gate shapes: the target through #viewerSees, the rows through #bundleRedactor",
-    [/#viewerSees\(target, viewer\)/.test(body), /#bundleRedactor\(viewer\)/.test(body)], [true, true]);
+  /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; REEVALUATION #1 J3): `reevaluations` and the act's echo
+     `#reevalRaisedBy` moved out of store.mjs into src/reevaluation/index.mjs (`reevaluations`, `raise`). Its two gate
+     shapes are the module's own, over membership's one viewer rule (its R43): the target through `#visible`, the
+     rows through `#redactor` — the store's `#viewerSees` and `#bundleRedactor` under the module's names. */
+  const reevalSrc = readFileSync(fileURLToPath(new URL("../src/reevaluation/index.mjs", import.meta.url)), "utf8");
+  const body = reevalSrc.slice(reevalSrc.indexOf("  reevaluations({"), reevalSrc.indexOf("  #legsEarned("));
+  t("the read takes BOTH gate shapes: the target through #visible, the rows through #redactor",
+    [body.length > 500, /this\.#visible\(t0, viewer\)/.test(body), /this\.#redactor\(viewer\)/.test(body)],
+    [true, true, true]);
   t("an act's echo is gated the same way — a write does not buy a weaker read posture",
-    /#reevalRaisedBy\(targetId, viewer\)\s*\{[\s\S]{0,400}#bundleRedactor\(viewer\)/.test(store), true);
+    /\n  raise\(\{[^\n]*\) \{[\s\S]{0,400}this\.#redactor\(viewer\)/.test(reevalSrc), true);
   /* The classification itself is asserted STRUCTURALLY, in gate-reads.test.mjs,
      over index.mjs's OPS table: an unclassified read op fails that suite. Named
      here so a reader of this suite knows where the other half lives. */
@@ -660,25 +689,41 @@ console.log("\n--- 7. op=reevaluations is a GATED read, and its viewer is the se
 console.log("\n--- 8. STRUCTURAL: a query and not a flag, and no verdict computed from strength ---");
 {
   const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; REEVALUATION #1 J3, INQUIRY #1 J3): the obligation read is
+     reevaluation's `reevaluations` (src/reevaluation/index.mjs); the reverse lookup, the supersession column and
+     `restsOnLive` are inquiry's (src/inquiry/index.mjs), which reevaluation reads through `restingOn`,
+     `supersededBy` and `restsOnLive`. Each pin reads the file its subject now lives in; the column census covers all
+     three. Before this re-anchoring the two `readBody` pins passed over an EMPTY slice (neither anchor is in
+     store.mjs any more), which is a vacuous green, not a measurement. */
+  const reevalSrc = readFileSync(fileURLToPath(new URL("../src/reevaluation/index.mjs", import.meta.url)), "utf8");
+  const inquirySrc = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
   /* THE TITLE OF THE ITEM, as a property of the source. The three reeval
      columns are written in exactly ONE place — the projection derived from the
      document's own `reeval_pending` — and no derivation anywhere assigns them.
      A stored obligation would go stale in both directions and would put the
      plane's verdict where the member's belongs. */
   t("no code path ASSIGNS reeval_flag/since/source: they are projected from the document and never derived into",
-    (store.match(/reeval_(flag|since|source)\s*=(?!=)/g) || []), []);
-  const readBody = store.slice(store.indexOf("  reevaluations({"), store.indexOf("  #reevalMoved("));
+    ([store, reevalSrc, inquirySrc].join("\n").match(/reeval_(flag|since|source)\s*=(?!=)/g) || []), []);
+  const readBody = reevalSrc.slice(reevalSrc.indexOf("  reevaluations({"), reevalSrc.indexOf("  #legsEarned("));
+  t("(instrument) the obligation's own read is FOUND, so the two pins below read a real body and not an empty slice",
+    readBody.length > 500, true);
   t("the obligation is derived on READ — reevaluations() writes nothing at all",
     readBody.match(/\b(INSERT|UPDATE|DELETE)\b/g) || [], []);
   t("the reverse lookup is ONE indexed query on inquiry_basis_target, exactly as the item specifies",
-    /FROM inquiry_basis WHERE target_id=\?/.test(store), true);
+    [/FROM inquiry_basis WHERE target_id=\?/.test(inquirySrc), /this\.inquiry\.restingOn\(t\)/.test(readBody)],
+    [true, true]);
   t("and the supersession half is a COLUMN READ, not a scan: the reverse of a supersedes edge is projected",
-    [/inquiry_superseded_by/.test(store),
-     /SELECT bundle_id FROM refs WHERE target_id=\? AND kind='supersedes'/.test(store)], [true, true]);
+    [/inquiry_superseded_by/.test(inquirySrc),
+     /SELECT bundle_id FROM refs WHERE target_id=\? AND kind='supersedes'/.test(inquirySrc),
+     /this\.inquiry\.supersededBy\(targetId\)/.test(reevalSrc)], [true, true, true]);
   t("NOTHING in the obligation is computed from a strength: the pair is read out and never compared",
     readBody.match(/GRADE_RANK|weakerGrade|weakestOf/g) || [], []);
+  /* RE-ANCHORED (T7; INQUIRY #1 J3): the two CITED refusals are inquiry's `dispose` and `divide`, which call its
+     `restsOnLive`; the store's `affordanceFacts` calls `#restsOnLive`, now the one-line delegate to it. */
   t("the two CITED refusals and op=affordances run the SAME predicate, so a published act and a refusal cannot disagree",
-    (store.match(/#restsOnLive\(/g) || []).length >= 4, true);
+    [(inquirySrc.match(/this\.restsOnLive\(/g) || []).length >= 2,
+     /#restsOnLive\(id\) \{ return inquiryOf\(this\.ctx\)\.restsOnLive\(id\); \}/.test(store),
+     /this\.#restsOnLive\(target\)/.test(store)], [true, true, true]);
   const aff = readFileSync(fileURLToPath(new URL("../src/affordances.mjs", import.meta.url)), "utf8");
   t("the act catalogue reads that predicate's COUNTS and never its ids: an affordance names no dependent",
     [/rested_on\?\.working/.test(aff), /rested_on\.[a-z]*\.map/.test(aff)], [true, false]);

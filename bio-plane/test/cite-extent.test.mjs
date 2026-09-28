@@ -60,7 +60,12 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { parseFrontmatter, legExtent, legHasAuthoredExtent,
-         CONTENT_EXTENT_KINDS, CONTENT_EXTENT_CHECKS } from "../checks/bio-checks.mjs";
+         CONTENT_EXTENT_KINDS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T7 LEGACY-TESTS #4; CITATION #1 J1.2): C-45.7–C-45.10 left the catalogue's
+   `CONTENT_EXTENT_CHECKS` with `cite` and are citation's `CITE_EXTENT_CHECKS` (src/citation/checks.mjs,
+   exported by src/citation/index.mjs), numbers, codes and translations unchanged, each `where` now the act's
+   region in src/citation/index.mjs. */
+import { CITE_EXTENT_CHECKS } from "../src/citation/index.mjs";
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `legContentId` left the catalogue with content (T5-3,
    content REPORT 1); its home is src/content/extent.mjs, the grammar's one public face (K138). */
 import { legContentId } from "../src/content/extent.mjs";
@@ -141,6 +146,8 @@ const projectMd = (id, name = id) => ["---",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
+  /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Decide whether the transfer table supports the diversion."',
   "---", "", "## Summary", "", "A case.", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
@@ -351,14 +358,14 @@ t("OVER-STRICTNESS: an empty extent field on the CASE arm is not refused either"
    governed SITE the guard goes and reads, and a translation that exists. The
    CODE is what a member's surface keys on and is asserted at each refusal above;
    the C-NUMBER is the rule, and this is where it is pinned. */
-t("C-45.7 / C-45.8 / C-45.9 / C-45.10 are rows of the content-extent family, each naming the act's own governed region",
+t("C-45.7 / C-45.8 / C-45.9 / C-45.10 are rows of citation's extent family, each naming the act's own governed region",
   ["UNKNOWN_EXTENT_FIELD", "EXTENT_NOT_APPLICABLE", "EXTENT_ON_MANY", "BAD_EXTENT_VALUE"]
-    .map((k) => { const r = CONTENT_EXTENT_CHECKS[k] || {};
+    .map((k) => { const r = CITE_EXTENT_CHECKS[k] || {};
                   return [k, r.check, r.where, typeof r.translation === "string" && r.translation.length > 120]; }),
-  [["UNKNOWN_EXTENT_FIELD", "C-45.7", "src/store.mjs cite > is-cite-extent", true],
-   ["EXTENT_NOT_APPLICABLE", "C-45.8", "src/store.mjs cite > is-cite-extent", true],
-   ["EXTENT_ON_MANY", "C-45.9", "src/store.mjs cite > is-cite-extent", true],
-   ["BAD_EXTENT_VALUE", "C-45.10", "src/store.mjs cite > is-cite-extent", true]]);
+  [["UNKNOWN_EXTENT_FIELD", "C-45.7", "src/citation/index.mjs cite > is-cite-extent", true],
+   ["EXTENT_NOT_APPLICABLE", "C-45.8", "src/citation/index.mjs cite > is-cite-extent", true],
+   ["EXTENT_ON_MANY", "C-45.9", "src/citation/index.mjs cite > is-cite-extent", true],
+   ["BAD_EXTENT_VALUE", "C-45.10", "src/citation/index.mjs cite > is-cite-extent", true]]);
 
 /* ===================== 4. THE CATALOGUE'S GATE ========================== */
 console.log("\n--- 4. the GRAMMAR's verdict, under promote's own name and with its own codes ---");

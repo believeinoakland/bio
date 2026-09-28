@@ -54,7 +54,8 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+/* LEGACY-TESTS #4 (T7): C-22.8 (AI_RUN_NOT_PROJECT_MEMBER) left the catalogue for ai-runs (R35, AI-RUNS #2 REPORT J6.1). */
+import { AI_RUNS_CHECKS as AI_RUN_CHECKS } from "../src/ai-runs/index.mjs";
 import { PROJECT_GATE_GROUNDS, projectGate } from "../src/airun.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -136,7 +137,8 @@ const inquiryMd = (id) => ["---",
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7): a
    creation names no bundleId (PROJECT_ID_SUPPLIED) and its bytes carry no id line (PROJECT_ID_IN_BYTES);
    the id is read from the answer. For a project, `id` below is only the title's label. */
-const projectMd = (id) => ["---", "object_type: project",
+/* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
+const projectMd = (id) => ["---", "object_type: project", 'objective: "Trace where the money went."',
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");

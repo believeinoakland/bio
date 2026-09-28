@@ -276,7 +276,7 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [] } = {}
    creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation,
    `name` the label its title is built from (the id was, which kept each title unique). */
 const projectMd = (id, name = id) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", "schema: project@1",
   `title: "Project ${name}"`, "current_state: active", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",

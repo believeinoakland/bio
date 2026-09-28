@@ -51,7 +51,12 @@ const SRC = (f) => join(DIR, "..", "src", f);
 /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; the membership and promotion extractions, machine-fences' precedent):
    the four ai-credential methods, their DEC-49 regions and the session-token generator moved to `src/membership/`,
    and `reopen` (MACHINE_CANNOT_REOPEN) to `src/promotion/`; the store's corpus is `store.mjs` AND those modules. */
-const STORE_SRC = storeCorpus(["membership", "promotion"]);
+/* WIDENED 2026-09-28 (T7, legacy-tests; BASIS-VERSIONS #1 REPORT J4.1, and T7's layer 6): the store's MACHINE_CANNOT_*
+   sites for concluding and moving a version (MACHINE_CANNOT_CONCLUDE, MACHINE_CANNOT_MOVE_VERSION) moved to
+   `src/basis-versions/`, dividing and grounding (MACHINE_CANNOT_DIVIDE, MACHINE_CANNOT_GROUND) to `src/inquiry/`, and
+   declaring the bar (MACHINE_CANNOT_DECLARE) to `src/strength/`; the corpus is the store's as it stood before those
+   extractions too. (intent and reevaluation mint fences of their own that never were the store's; not widened to.) */
+const STORE_SRC = storeCorpus(["membership", "promotion", "basis-versions", "inquiry", "strength"]);
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 /* The ai_credentials DDL moved with membership's tables (R57–R59) into `src/membership/schema.mjs`. */
@@ -177,8 +182,9 @@ const INQ = "INQ-2026-5100-ai-credential";
    the answer. (The old literal "PRJ-2026-5100-ruths-own" was only a label.) */
 let PRJ;
 {
+  /* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
   const md = ["---", "object_type: project", "schema: project@1",
-    `title: "Ruth's own project"`, "current_state: collected", "prior_state: null",
+    `title: "Ruth's own project"`, 'objective: "Keep Ruth\'s work private."', "current_state: collected", "prior_state: null",
     `created: "${NOW}"`, `last_updated: "${LATER}"`, "group: believe-in-oakland",
     "references: []", "state_history: []", "---", "", "## Notes", ""].join("\n");
   const a = await POST(`op=promote&token=${RUTH}`, {
@@ -658,7 +664,7 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      `machine-fences.test.mjs` block 3b (D-503). The corpus is NOT widened here: this suite's subject
      is the store's fence set under a credential, and widening it would make this arm red over acts
      it was never written to drive. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3) mints was driven under an `ai` credential — a complete "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3, and `src/basis-versions/`, `src/inquiry/` and `src/strength/`, T7) mints was driven under an `ai` credential — a complete "
   + "sweep OF THAT CORPUS, and it says so because it was checked, not because it looks like one. The "
   + "five `src/index.mjs` mints are machine-fences.test.mjs block 3b's (D-503)",
     minted.filter((c) => !(c in ACTS)), []);

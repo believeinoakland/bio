@@ -97,6 +97,14 @@ import { ADOPTED_READING, ADOPTED_CLAIM, adoptedVersionParam } from "./adoptable
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1, INQUIRY #1 J2.2; T7 layer 6): the transition body
+   `#moveVersionState`, its six entry points (`versionAccept` … `versionHide`), `#setProjectCurrentVersion` and
+   `VERSION_ACT_TO` moved out of store.mjs into src/basis-versions/index.mjs; the basis cycle walk
+   (`#basisCyclePath`/`#basisReach`) moved into src/inquiry/index.mjs as `cyclePath`/`#basisReach`, which the accept
+   asks through `this.inquiry.cyclePath`. The pins read those files; store.mjs stays in the corpus so a second
+   implementation left behind there is still counted. */
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
+const INQ_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const AFF_SRC = readFileSync(SRC("affordances.mjs"), "utf8");
 const CHECKS_SRC = readFileSync(fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url)), "utf8");
@@ -133,10 +141,10 @@ const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?
    hoisted above the blocks that call it and the file still reads top to bottom:
    it is an instrument and not a subject. */
 function machineBlock() {
-  const at = STORE_SRC.indexOf("#moveVersionState(act, args)");
+  const at = BV_SRC.indexOf("#moveVersionState(act, args) {");
   if (at < 0) return "";
-  const end = STORE_SRC.indexOf("\n  #setProjectCurrentVersion(", at);
-  return STORE_SRC.slice(at, end < 0 ? at + 20000 : end);
+  const end = BV_SRC.indexOf("\n  #setProjectCurrentVersion(", at);
+  return BV_SRC.slice(at, end < 0 ? at + 20000 : end);
 }
 
 try {
@@ -241,6 +249,8 @@ const infoMd = (id) => ["---",
    creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
 const projectMd = (id, refs = []) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Decide what the sewer fund transfers rest on."',
   ...(refs.length ? ["references:", ...refs.flatMap((x) => [`  - rel: cites`,
       `    status: confirmed`, `    target: ${x}`])] : ["references: []"]),
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
@@ -890,15 +900,18 @@ console.log("\n--- 8. the machine published, and the six acts derived over REAL 
 console.log("\n--- 9. the implementation-count pin, and the three layers of the fence ---");
 {
   const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, " ");
-  const CODE = strip(STORE_SRC), ICODE = strip(INDEX_SRC), KCODE = strip(CHECKS_SRC);
+  /* RE-ANCHORED 2026-09-28 (see STORE_SRC above): the store, basis-versions and inquiry together are the corpus in
+     which each rule must have ONE implementation; a second one in any of the three is counted. */
+  const PLANE_SRC = STORE_SRC + "\n" + BV_SRC + "\n" + INQ_SRC;
+  const CODE = strip(PLANE_SRC), ICODE = strip(INDEX_SRC), KCODE = strip(CHECKS_SRC);
   t("WALK GUARD (both ways): the stripper removed a substantial share of each source AND left the code "
   + "standing — a walk over an empty corpus reports a clean answer about nothing (REC-70's ceiling "
   + "without a floor)",
-    [CODE.length < STORE_SRC.length * 0.8, CODE.includes("#moveVersionState(act, args)"),
+    [CODE.length < PLANE_SRC.length * 0.8, CODE.includes("#moveVersionState(act, args)"),
      ICODE.length < INDEX_SRC.length * 0.9, ICODE.includes("const VERSION_ACTIONS"),
      KCODE.length < CHECKS_SRC.length * 0.8, KCODE.includes("export const VERSION_MACHINE")],
     [true, true, true, true, true, true]);
-  console.log(`  corpus: ${CODE.length} code chars in store.mjs, ${ICODE.length} in index.mjs, `
+  console.log(`  corpus: ${CODE.length} code chars in store.mjs + basis-versions + inquiry, ${ICODE.length} in index.mjs, `
     + `${KCODE.length} in bio-checks.mjs`);
 
   const count = (src, re) => (src.match(re) || []).length;
@@ -913,7 +926,8 @@ console.log("\n--- 9. the implementation-count pin, and the three layers of the 
     "the reason predicate's home":    count(KCODE, /export const versionNeedsReason/g),
     "the reason-state array's home":  count(KCODE, /export const VERSION_REASON_REQUIRED/g),
     "the machine's home":             count(KCODE, /export const VERSION_MACHINE/g),
-    "the cycle walk's home":          count(CODE, /#basisCyclePath\(bundleId, targets\)\s*\{/g),
+    /* RE-ANCHORED 2026-09-28: `#basisCyclePath` is inquiry's `cyclePath` now (the store keeps a one-line delegate). */
+    "the cycle walk's home":          count(CODE, /\bcyclePath\(bundleId, targets\)\s*\{/g),
     /* TWO reads and ONE rule: the guard, and the `legal:` set the refusal hands
        back so a member is told what they COULD have done rather than being left
        to re-derive it. Both are inside the one transition body, which is the
@@ -937,16 +951,21 @@ console.log("\n--- 9. the implementation-count pin, and the three layers of the 
     [count(CODE, /return this\.#moveVersionState\("/g),
      VERBS.every((v) => new RegExp(`#moveVersionState\\("${v}"`).test(CODE))],
     [6, true]);
+  /* RE-ANCHORED 2026-09-28 (INQUIRY #1 J2.2, BASIS-VERSIONS #1 J4.1): the old 3 was the definition plus its two
+     callers in one file. The walk is now inquiry's `cyclePath`: one definition, the inquiry basis check calls it as
+     `this.cyclePath(` and the accept path as `this.inquiry.cyclePath(`, and `#basisReach` is its one recursion
+     (definition, the call from cyclePath, the recursive call). Each is counted by name. */
   t("AND THE CYCLE CHECK CALLS THE EXISTING WALK — one definition, and the accept path is a SECOND "
   + "caller of it rather than a second walk that would drift from the first (PL-1's recorded edge)",
-    [count(CODE, /#basisCyclePath\(/g), count(CODE, /#basisReach\(/g)], [3, 3]);
+    [count(CODE, /\bcyclePath\(bundleId, targets\)\s*\{/g), count(CODE, /this\.cyclePath\(/g),
+     count(CODE, /this\.inquiry\.cyclePath\(/g), count(CODE, /#basisReach\(/g)], [1, 1, 1, 3]);
   /* REACH: the same walk over a corpus that DOES carry the forbidden thing FINDS
      it, so a 1 is evidence of absence rather than of a reader that cannot see. */
   const doubled = CODE + "\n  if (!who || isMachineIdentity(who)) return { reason: 'MACHINE_CANNOT_MOVE_VERSION' };\n"
-                       + "\n  #basisCyclePath(bundleId, targets) { return null; }\n";
+                       + "\n  cyclePath(bundleId, targets) { return null; }\n";
   t("REACH: the same walk over a source that DOES carry a second implementation FINDS it — the pin is "
   + "a pin and not an exemption",
-    [count(doubled, /MACHINE_CANNOT_MOVE_VERSION/g), count(doubled, /#basisCyclePath\(bundleId, targets\)\s*\{/g)],
+    [count(doubled, /MACHINE_CANNOT_MOVE_VERSION/g), count(doubled, /\bcyclePath\(bundleId, targets\)\s*\{/g)],
     [2, 2]);
 
   /* THE THREE LAYERS, EACH WITH ITS OWN ASSERTION. The control breaks each with
@@ -961,7 +980,7 @@ console.log("\n--- 9. the implementation-count pin, and the three layers of the 
   t("FENCE LAYER 2 (the endpoint capability, index.mjs NEEDS): all six require `contribute`",
     VERBS.map((v) => new RegExp(`versio\\w*${v}:\\s+"contribute"`).test(ICODE)),
     VERBS.map(() => true));
-  t("FENCE LAYER 3 (the transition, store.mjs): the ONE machine-identity refusal is inside the ONE "
+  t("FENCE LAYER 3 (the transition, basis-versions/index.mjs): the ONE machine-identity refusal is inside the ONE "
   + "transition body",
     [machineBlock().includes("MACHINE_CANNOT_MOVE_VERSION"),
      machineBlock().includes("isMachineIdentity(who)")],

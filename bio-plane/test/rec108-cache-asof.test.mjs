@@ -70,6 +70,9 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
+/* T7 (legacy-tests; STRENGTH #1, K181): the pair over a version, `#versionLegsAsMembers` included, moved from store.mjs
+   into `src/strength/index.mjs`; the VERSION-path pin reads it there. */
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
@@ -445,7 +448,10 @@ console.log("\n--- 6. SOURCE PINS: properties of the CODE, not of one fixture --
     { found: wts.length > 0, walks: /inquiry_basis|strengthOf|writeStrengthProjection/.test(wts) },
     { found: true, walks: false });
   t("and the projection writer still derives from strengthOf() and touches no second source",
-    /#writeStrengthProjection\(bundleId, isInquiry, subjectEntity = null\) \{[\s\S]*?const s = this\.strengthOf\(bundleId\);/.test(STORE_SRC), true);
+    /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; INQUIRY #1's extraction, 28a46ec22e): the writer lost its
+       `subjectEntity = null` parameter (REC-18's `inquiry_subject_entity` write left it with the inquiry
+       projection); the claim — it derives from `strengthOf()` and nothing else — is pinned on the new signature. */
+    /#writeStrengthProjection\(bundleId, isInquiry\) \{[\s\S]*?const s = this\.strengthOf\(bundleId\);/.test(STORE_SRC), true);
 }
 
 console.log("\n--- 7. THE READER CENSUS, DRIVEN: IS THERE A FOURTH? ---");
@@ -506,7 +512,13 @@ console.log("\n--- 7. THE READER CENSUS, DRIVEN: IS THERE A FOURTH? ---");
      "no fourth" without naming it would be the absence-with-two-causes failure
      `CLAUDE.md` forbids. Pinned by source, because it is correct and must stay. */
   t("the VERSION path is a further reader and is ALREADY CORRECT (REC-88) — named, not omitted",
-    /#versionLegsAsMembers[\s\S]{0,4000}?earnedBasisRegistry\(/.test(STORE_SRC), true);
+    /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; STRENGTH #1, 1bee8b81d4): `#versionLegsAsMembers` moved to strength,
+       where it resolves through `this.inquiry.earned(` — the function the store's `earnedBasisRegistry` is now a
+       one-line delegate to (`inquiryOf(this.ctx).earned(...a)`). Both halves pinned, so "the same registry" is
+       read and not assumed. */
+    [/#versionLegsAsMembers[\s\S]{0,4000}?this\.inquiry\.earned\(/.test(STRENGTH_SRC),
+     /earnedBasisRegistry\(\.\.\.a\) \{ return inquiryOf\(this\.ctx\)\.earned\(\.\.\.a\); \}/.test(STORE_SRC)]
+      .every(Boolean), true);
 }
 
 await mf.dispose();

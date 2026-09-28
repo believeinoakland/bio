@@ -389,14 +389,20 @@ t("AND A DIFFERENT LABEL OVER THE SAME REFERENTS IS NOT A NEW CANDIDATE — the 
   const files = (manifest.inputs ?? []).map((x) => x.path).filter((f) => f.endsWith(".mjs"));
   const hits = (re) => files.flatMap((f) => [...readFileSync(planeRoot + f, "latin1").matchAll(re)].map((m) => ({ f, i: m.index })));
   const inserts = hits(/\b(?:INSERT(?:\s+OR\s+\w+)?|REPLACE)\s+INTO\s+contradiction_candidates\b/gi);
-  const storeSrc = readFileSync(planeRoot + "src/store.mjs", "latin1");
-  const siteAt = storeSrc.indexOf("  #appendContradictionCandidate(row) {");
+  /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; CONTRADICTION #1 J2.2): the candidate door moved out of store.mjs
+     into src/contradiction/index.mjs, and the store's `#appendContradictionCandidate` is now the module's `#append`
+     (still exactly one insert, inside one method); the table's purge declaration moved with it (`declarePurge`).
+     The site and the declaration are read there; the census over every bundled source is unchanged. */
+  const SITE_FILE = "src/contradiction/index.mjs";
+  const storeSrc = readFileSync(planeRoot + SITE_FILE, "latin1");
+  const siteAt = storeSrc.indexOf("  #append(row) {");
   const siteEnd = storeSrc.indexOf("\n  }\n", siteAt);
-  const inSite = inserts.filter((h) => h.f === "src/store.mjs" && h.i > siteAt && h.i < siteEnd).length;
+  const inSite = siteAt < 0 ? 0 : inserts.filter((h) => h.f === SITE_FILE && h.i > siteAt && h.i < siteEnd).length;
   console.log(`  append sites: ${inserts.length} over ${files.length} bundled source files; inside the one site: ${inSite}`);
   t("§8's ONE APPEND SITE: exactly one insert into contradiction_candidates in the plane's bundled sources, and it "
-  + "is inside #appendContradictionCandidate",
-    [files.includes("src/store.mjs") && files.length > 20, inserts.length, inSite], [true, 1, 1]);
+  + "is inside contradiction's #append",
+    [files.includes("src/store.mjs") && files.includes(SITE_FILE) && files.length > 20, inserts.length, inSite],
+    [true, 1, 1]);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): purge's two arms were two literal
      `DELETE FROM contradiction_candidates` lines in store.mjs. Purge moved to `record-core`, which deletes from each
      DECLARED table with its one generic statement, in both arms (per bundle by the declared keys, whole-store by

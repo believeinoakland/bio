@@ -57,7 +57,12 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { controlPen } from "./pen.mjs";
 
 const ARM = (process.argv[2] || "none").toLowerCase();
-const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4; REEVALUATION #1 J2.10): op=reevaluations and this item's resolver
+   `#reevalLegsEarned` moved out of store.mjs into src/reevaluation/index.mjs as `#legsEarned(obligations)`, which asks
+   inquiry's registry (`this.inquiry.earned`) and applies inquiry's `legCapped`. Every arm patches that file now; each
+   find was counted against it (exactly once) before it was written, and the arms mean what they meant. */
+const TARGET = fileURLToPath(new URL("../src/reevaluation/index.mjs", import.meta.url));
+const TARGET_NAME = "reevaluation/index.mjs";
 const SUITE = fileURLToPath(new URL("./rec118-reeval-earned.test.mjs", import.meta.url));
 const PEN = `${controlPen("rec118")}/`;
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -107,12 +112,8 @@ const ARMS = {
        wrong thing and reports success at refuting is CONDUCT #11's
        arm-that-did-not-arm class with the sign flipped. The preceding `for`
        line is unique to this method and disambiguates it. */
-    find: "    for (const o of obligations) for (const l of (o.legs ?? [])) if (bounded(l)) targets.add(l.target_id);\n"
-        + "    const cap = targets.size\n"
-        + "      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})",
-    with: "    for (const o of obligations) for (const l of (o.legs ?? [])) if (bounded(l)) targets.add(l.target_id);\n"
-        + "    const cap = targets.size\n"
-        + "      ? (this.earnedBasisRegistry(null, [...targets]) ? {} : {})",
+    find: "      try { cap = this.inquiry.earned(null, [...targets])?.earned?.capture || {}; } catch { cap = {}; }",
+    with: "      try { cap = this.inquiry.earned(null, [...targets]) ? {} : {}; } catch { cap = {}; }",
     mustFail: ["op=reevaluations PUBLISHES THE EARNED LETTER",
                "and `grade_why` NAMES THE TARGET",
                "THE TWO HALVES OF ONE ANSWER NOW AGREE ABOUT THE SAME LEG",
@@ -142,10 +143,10 @@ const ARMS = {
         + "note that 'THE TWO HALVES OF ONE ANSWER NOW AGREE' still PASSES under it, because "
         + "capping alone produces the agreement. Without this arm a fix that silently replaced a "
         + "member's authored letter would satisfy this item's headline acceptance.",
-    find: "                 target_edition: l.target_edition ?? null,\n"
+    find: "                 status: l.status === \"severed\" ? \"severed\" : \"confirmed\",\n"
         + "                 grade_authored: l.grade ?? null,\n"
         + "                 grade_why: res ? res.why : null };",
-    with: "                 target_edition: l.target_edition ?? null };",
+    with: "                 status: l.status === \"severed\" ? \"severed\" : \"confirmed\" };",
     mustFail: ["op=reevaluations PUBLISHES THE EARNED LETTER",
                "and `grade_why` NAMES THE TARGET",
                "the authored letter and the strength block GENUINELY DISAGREE",
@@ -193,24 +194,26 @@ const ARMS = {
         + "instead of a `.map` with an object literal. Correct work in a spelling this item did not "
         + "anticipate MUST PASS. An arm that fails here would mean the suite is asserting the "
         + "IMPLEMENTATION rather than the answer.",
-    find: "      o.legs = (o.legs ?? []).map((l) => {\n"
-        + "        const res = bounded(l) ? Store.#capturedAt(l.grade, cap[l.target_id], l.target_id) : null;\n"
+    find: "      o.legs = o.legs.map((l) => {\n"
+        + "        const res = bounded(l) ? legCapped(l.grade, cap[l.target_id], l.target_id) : null;\n"
         + "        return { ord: l.ord, role: l.role || null,\n"
         + "                 grade: res ? res.grade : (l.grade ?? null),\n"
         + "                 grade_axis: l.grade_axis ?? null,\n"
         + "                 grade_source: l.grade_source ?? null,\n"
         + "                 target_edition: l.target_edition ?? null,\n"
+        + "                 status: l.status === \"severed\" ? \"severed\" : \"confirmed\",\n"
         + "                 grade_authored: l.grade ?? null,\n"
         + "                 grade_why: res ? res.why : null };\n"
         + "      });",
     with: "      const out = [];\n"
-        + "      for (const l of (o.legs ?? [])) {\n"
-        + "        const res = bounded(l) ? Store.#capturedAt(l.grade, cap[l.target_id], l.target_id) : null;\n"
+        + "      for (const l of o.legs) {\n"
+        + "        const res = bounded(l) ? legCapped(l.grade, cap[l.target_id], l.target_id) : null;\n"
         + "        const row = { ord: l.ord, role: l.role || null,\n"
         + "                      grade: res ? res.grade : (l.grade ?? null),\n"
         + "                      grade_axis: l.grade_axis ?? null,\n"
         + "                      grade_source: l.grade_source ?? null,\n"
         + "                      target_edition: l.target_edition ?? null,\n"
+        + "                      status: l.status === \"severed\" ? \"severed\" : \"confirmed\",\n"
         + "                      grade_authored: l.grade ?? null,\n"
         + "                      grade_why: res ? res.why : null };\n"
         + "        out.push(row);\n"
@@ -246,13 +249,13 @@ const runSuite = () => {
 
 const spec = ARM === "none" ? null : ARMS[ARM];
 if (ARM !== "none" && !spec) { console.error(`no such arm: ${ARM}`); process.exit(2); }
-const FLOOR = 500000;
+const FLOOR = 50000;
 
 mkdirSync(PEN, { recursive: true });
-const pristine = readFileSync(STORE, "utf8");
+const pristine = readFileSync(TARGET, "utf8");
 /* UNIQUELY NAMED PER ARM. A shared `pristine.mjs` is how one arm's damage gets
    restored as another arm's baseline. */
-const copy = `${PEN}store.mjs.pristine.${ARM}.mjs`;
+const copy = `${PEN}reevaluation-index.mjs.pristine.${ARM}.mjs`;
 writeFileSync(copy, pristine);
 const beforeSha = sha(pristine);
 /* BYTES ON DISK, NOT STRING LENGTH: this file holds multi-byte characters, so a
@@ -260,17 +263,17 @@ const beforeSha = sha(pristine);
    unchanged file, and a check printing one against the other reads as a mismatch
    on a perfect restore — the instrument crying wolf exactly when it must be
    believed. */
-const beforeBytes = statSync(STORE).size;
-console.log(`REC-118 NC · arm ${ARM} · target store.mjs`);
-console.log(`  pristine store.mjs: ${beforeBytes} bytes on disk · sha256 ${beforeSha.slice(0, 16)}`);
-if (beforeBytes < FLOOR) { console.error("FLOOR: pristine store.mjs is implausibly small — refusing"); process.exit(3); }
+const beforeBytes = statSync(TARGET).size;
+console.log(`REC-118 NC · arm ${ARM} · target ${TARGET_NAME}`);
+console.log(`  pristine ${TARGET_NAME}: ${beforeBytes} bytes on disk · sha256 ${beforeSha.slice(0, 16)}`);
+if (beforeBytes < FLOOR) { console.error(`FLOOR: pristine ${TARGET_NAME} is implausibly small — refusing`); process.exit(3); }
 
 if (spec) {
   console.log(`  WHAT: ${spec.what}`);
   const hits = pristine.split(spec.find).length - 1;
   console.log(`  anchor occurs ${hits} time(s) — an arm must anchor EXACTLY once`);
   if (hits !== 1) { console.error("ARM NEVER ARMED (or anchored twice). That is a FINDING, not a skip."); process.exit(4); }
-  writeFileSync(STORE, pristine.replace(spec.find, spec.with));
+  writeFileSync(TARGET, pristine.replace(spec.find, spec.with));
   console.log(`  DECLARED BEFORE RUNNING — must FAIL: ${spec.mustFail.length}; must PASS: ${spec.mustPass.length}`);
 }
 
@@ -284,11 +287,11 @@ if (res.failed.length) console.log(res.failed.map((f) => {
 }).join("\n"));
 
 /* RESTORE FIRST, VERIFY SECOND. */
-writeFileSync(STORE, readFileSync(copy));
-const afterSha = sha(readFileSync(STORE, "utf8"));
+writeFileSync(TARGET, readFileSync(copy));
+const afterSha = sha(readFileSync(TARGET, "utf8"));
 let cmpOk = false;
-try { execFileSync("cmp", ["-s", STORE, copy]); cmpOk = true; } catch { cmpOk = false; }
-const bytes = statSync(STORE).size;
+try { execFileSync("cmp", ["-s", TARGET, copy]); cmpOk = true; } catch { cmpOk = false; }
+const bytes = statSync(TARGET).size;
 console.log(`  restored: ${bytes} bytes on disk (was ${beforeBytes}) · sha256 ${afterSha.slice(0, 16)}`
   + ` · byte-identical by sha256: ${afterSha === beforeSha ? "YES" : "NO"}`
   + ` · by cmp: ${cmpOk ? "YES" : "NO"}`

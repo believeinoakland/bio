@@ -197,7 +197,7 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations and routes re-inlined */
-import { reinlineLayer5 } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes re-inlined */
+import { reinlineLayer5, T7_MODULES } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes re-inlined; T7: and layers 6-7's */
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -242,7 +242,17 @@ const t = (label, got, want) => {
    callers' corpus is byte-identical). Without it the walk printed `op=resolve` and `op=frontier` as publishing NO
    collection and `op=instance` as neither. Every figure and name below is diffed BY NAME against this suite's
    print on the T5 opening (64386f16eb, 93 pass / 3 fail), not re-pinned. */
-const SRC_STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text;
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; layers 6 and 7 of T7): eleven more modules (inquiry, basis-versions,
+   contradiction, reevaluation, run-productions, ai-runs, capture-requests, capture-sources, citation, intent, strength)
+   left the store behind delegations and spreads of their routes (`...aiRunsOps(aiRunsOf(this.ctx, this.env), url,
+   body),`, `...strengthOps(strengthModule(this.ctx), url, body),` …), so the walk read delegations again: `op=airunlog`,
+   `op=versionstrength` and every other op those spreads carry left the DISPATCH denominator altogether. The corpus is
+   T5's with a second pass of the same re-inliner over T7's modules (`{ modules: T7_MODULES }`, `t5-extracted.mjs`,
+   which states the two spellings it reads beyond T5's); every figure and name below is diffed BY NAME against this
+   suite's print on the T7 opening (f986aec704), not re-pinned. */
+const SRC_STORE = reinlineLayer5(
+  reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own
@@ -1056,7 +1066,13 @@ t("D-240 (e) THE MIS-READ IS NAMED, NOT ABSORBED — a return excluded while it 
 + "is one this reader could be wrong about. Two are, both SUCCESS answers whose first boolean-shaped "
 + "property is a DATUM (`rootOfTrust: false`, `ungrouped: false`), and they are pinned by name",
   EX.excludedWithCollection,
-  ["#conditionHomes[ungrouped:reasons]", "#sessionRights[rootOfTrust:capabilities+member]"]);
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests), from this run's print, diffed by name against the T7 opening's: ONE
+     ARRIVAL, and it is NOT a misread — `open[started:deployed]` is ai-runs' `open` (AI-RUNS #1, T7 layer 7, read now that
+     its routes are re-inlined), whose `AI_RUN_MODE_NOT_DEPLOYED` return (C-109.1) is a genuine REFUSAL (`started: false`,
+     a code, a check, "Nothing was written") that carries the list of deployed modes. The reader excludes it correctly;
+     it is named here because this roster names every excluded return that publishes a list, so a third misread cannot
+     hide behind it. The two SUCCESS misreads are unchanged. */
+  ["#conditionHomes[ungrouped:reasons]", "#sessionRights[rootOfTrust:capabilities+member]", "open[started:deployed]"]);
 t("D-240 (e2) AND NEITHER OF THEM IS REACHED BY A DISPATCHED OP, so no ratchet in this file moves on "
 + "their account — asserted rather than assumed, because that is the only reason (e) is a named "
 + "residual instead of a defect this item owes a fix for",
@@ -1332,6 +1348,18 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
        with `Promise.all(parts.map(…)).then(merge)`, and this reader takes a returned `.map(` for a bare array. The
        answer is one row object. Recorded rather than corrected: a reader change is not this job's.
      The renamed members (`readingnameplan -> namingPlan`) are the same ops under their module's method names. */
+  /* T7 (legacy-tests), 2026-09-28 — NOT MOVED, AND GREEN AT 43 FOR A REASON THAT IS STATED RATHER THAN ENJOYED. With
+     layers 6-7 re-inlined the walk PRINTS 43 against the T7 opening's (f986aec704) 51, diffed BY NAME:
+       NINE DEPARTURES, each a read that was FIXED: `chromeof`, `inboxlist`, `linksto`, `recordlinkverdict`,
+       `recordsiteassets`, `resolvelinks`, `reuseverdicts`, `sitechrome` (CAPTURE #3 N90: bounded and paged, now on the
+       BOUNDED roster — `reusedparts` stays, capture R26) and `basis` (INQUIRY #1: `basisFor` takes a `limit` and
+       publishes `truncated`, now BOUNDED).
+       ONE ARRIVAL, a NEW read, NOT absorbed: `pursuit -> pursuitOf` (INTENT #1: `goals`, `triaged`, `capture_requests`
+       off every `intent_triage` row of the projects asked about, no bound published). REPORTED to intent.
+       TWO RENAMED, the same ops: `airun` (aiRunRead -> ai-runs' `read`), `airuntick` (aiRunTick -> `tick`).
+     So 51 - 9 + 1 = 43, and the ceiling holds only because `basis` left in the same tranche that `pursuit` arrived: a
+     COUNT cannot see that swap, which is why it is written here by name. Inside the 43 are still N70's two
+     (`hostingaccess`, `memberpairings`, T3's REPORT 3) and T5's `projection` misread. */
   BARE_OPS.length <= 43, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
@@ -1475,7 +1503,9 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               written `this.#rows(…)`, which this reader sees (the store's `[...this.sql.exec(…)]` it did not), so the
               op lands here — DISPATCHED, scanning rows, no verdict — rather than in NO_COLLECTION. The same read as
               before; the reader sees it now. (This pin was already red at T3's close for T3's REPORT 3–4.) */
-           "siteassets->siteAssets",
+           /* REMOVED 2026-09-28 (T7, legacy-tests; CAPTURE #3 REPORT J2.3, N90): `siteassets->siteAssets` LEFT — the
+              read is bounded and paged now (`limit` 200, clamped 1…1000, `truncated`, `next`), so it is no longer a
+              scan this walk cannot judge. */
            "taskdrain->taskDrain",
            /* ADDED 2026-08-08 (REC-67) — the SECOND member that is not a write
               path, and it arrives the same way PL-15's did: it was on the BARE
@@ -1493,7 +1523,20 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
               rather than absorbed, because "9" satisfied by a different nine is
               exactly what this arm exists to refuse. Whether it should be
               BOUNDED is PL-14's family's question, and it is delegated. */
-           "versionstrength->versionStrength"]);
+           /* REMOVED 2026-09-28 (T7, legacy-tests; STRENGTH #1): `versionstrength->versionStrength` LEFT, and NOT because
+              the plane got better — THE READER LOST SIGHT OF IT, named so it is not read as progress. The method moved
+              into strength (`strengthOps`, re-inlined above) and its leg read (`this.#rows(…)` inline in the store) is now
+              the private helper `#versionLegs`, which it CONSULTS rather than returns; this walk reads a method's own
+              segment (and only the private delegates it RETURNS), so the op now reads as publishing no collection and
+              scanning no rows (NO_COLLECTION). It is the same stated limit as the 21 other dispatched ops whose only row
+              scan sits in a consulted private helper (measured on this tree: counting consulted helpers would enrol 22
+              ops here at once, a reader redesign rather than a re-anchor). REPORTED as this instrument's own blind spot. */
+           /* STILL RED, NOT RE-PINNED (record-core's REPORT R3, T6; N70): `audit->auditPass` ARRIVES (legacy-store's
+              `auditPass` builds its sighted set with an unbounded scan and calls record-core's pass, so the walk sees a
+              scan and no verdict) and `projectfork->forkProject` / `projectowneradd->projectOwnerAdd` LEAVE (their reads
+              are record-core's and membership's services now). Red identically on `tranche/T6` and the T7 opening; left
+              red for its owners, as this job was told. */
+          ]);
 t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape shrinks the "
 + "DENOMINATOR too — otherwise the reach fractions above are computed against a constant and "
 + "would keep reading '82 of 156' over a source this reader could no longer parse",
@@ -1505,10 +1548,17 @@ t("REACH IS A DELTA (dispatch denominator): breaking the dispatch arrow shape sh
 t("REC-70: `op=airunlog` is now ON the BOUNDED roster and OFF the bare one — measured off the "
 + "source by the corrected walk, which is the whole evidence that the blindness is fixed",
   [BARE_OPS.includes("airunlog"), BOUNDED_OPS.includes("airunlog")], [false, true]);
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #1, T7 layer 7): `aiRunLog` MOVED into ai-runs as `log`
+   (`op=airunlog` is an entry of `aiRunsOps`, re-inlined above, and the roster prints `op=airunlog -> log`), so the five
+   arms below read that method where the corpus holds it, and its two figures where they now live — `AiRuns`' statics
+   in `src/ai-runs/index.mjs`, read as `AiRuns.AI_RUN_LOG_LIMIT_*` at the call site. RE-READ, not re-pinned: the same
+   `found: true`, the same `LIMIT ?` at `cap + 1`, the same 200 and 5000, and REC-70's note still in the body. */
+const AIRUNLOG = SEGMENTS.get("log") || "";
+const AIRUNS_SRC = readFileSync(new URL("../src/ai-runs/index.mjs", import.meta.url), "utf8");
 t("REC-70: and it is graded WITHOUT `ok: true` — this method still answers `found: true`, "
 + "deliberately, so a walk that had merely been taught one more literal would still miss it",
-  [/\bfound\s*:\s*true/.test(SEGMENTS.get("aiRunLog") || "NOPE"),
-   /\bok\s*:\s*true/.test(SEGMENTS.get("aiRunLog") || "ok: true")], [true, false]);
+  [/\bfound\s*:\s*true/.test(AIRUNLOG || "NOPE"),
+   /\bok\s*:\s*true/.test(AIRUNLOG || "ok: true")], [true, false]);
 /* D-227 IS OPEN AND BITES EXACTLY HERE. The walk grades what a method
    PUBLISHES, so removing `LIMIT ?` while leaving the envelope honest still
    reads as bounded — CONDUCT measured that at REC-60's integration. The SQL
@@ -1528,18 +1578,18 @@ t("REC-70 / D-227: the SQL BOUND itself, pinned off aiRunLog's own comment-strip
      declaration going stale while its subject stays alive (M-12's class) — so
      it is corrected here, never exempted. */
   [/FROM observation_log WHERE authority_kind = 'run' AND authority = \?\s+ORDER BY seq LIMIT \?/
-     .test(SEGMENTS.get("aiRunLog") || ""),
-   /run,\s*cap \+ 1\)/.test(SEGMENTS.get("aiRunLog") || "")], [true, true]);
+     .test(AIRUNLOG),
+   /run,\s*cap \+ 1\)/.test(AIRUNLOG)], [true, true]);
 t("REC-70: the cap comes from the plane's OWN figures and is not a literal at the call site — "
 + "`AI_RUN_LOG_LIMIT_DEFAULT`/`_MAX` are named constants, so the pair can be read and re-decided "
 + "in one place rather than found by grep",
-  [/Store\.AI_RUN_LOG_LIMIT_DEFAULT/.test(SEGMENTS.get("aiRunLog") || ""),
-   /Store\.AI_RUN_LOG_LIMIT_MAX/.test(SEGMENTS.get("aiRunLog") || "")], [true, true]);
+  [/AiRuns\.AI_RUN_LOG_LIMIT_DEFAULT/.test(AIRUNLOG),
+   /AiRuns\.AI_RUN_LOG_LIMIT_MAX/.test(AIRUNLOG)], [true, true]);
 t("REC-70: NEITHER FIGURE IS NEW — 200 is op=exportlog's default (the plane's only other "
 + "append-only seq-ordered log) and 5000 is op=list's ceiling, which op=projection and the "
 + "meaning layer both reused rather than minting a second",
-  [/static AI_RUN_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
-   /static AI_RUN_LOG_LIMIT_MAX = 5000;/.test(SRC_STORE),
+  [/static AI_RUN_LOG_LIMIT_DEFAULT = 200;/.test(AIRUNS_SRC),
+   /static AI_RUN_LOG_LIMIT_MAX = 5000;/.test(AIRUNS_SRC),
    /static EXPORT_LOG_LIMIT_DEFAULT = 200;/.test(SRC_STORE),
    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=projection's ceiling moved with the projection to retrieval
       (T5-10), where it is a module constant of `src/retrieval/projection.mjs`; the same figure, read at its home. */
@@ -1557,7 +1607,7 @@ t("REC-70: NEITHER FIGURE IS NEW — 200 is op=exportlog's default (the plane's 
 t("REC-70: THE CAUSE IS RECORDED AT THE SITE — `aiRunLog` carries, IN ITS BODY, why the ratchet "
 + "could not see it, so the next reader meets the blind spot at the code and the segmenter that "
 + "reads this file meets it too",
-  /REC-70[^]{0,6000}?found\s*:\s*true/i.test(segments(SRC_STORE).get("aiRunLog") || ""), true);
+  /REC-70[^]{0,6000}?found\s*:\s*true/i.test(segments(SRC_STORE).get("log") || ""), true);
 
 /* ------------------------------------------------ REACH, AS DELTAS.
    A walk that matches nothing reports zero and passes forever. Each reader is re-run over a

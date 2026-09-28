@@ -540,9 +540,17 @@ const SEGMENTS = segments(CODE);
    widens to their files the same way, `<module>/<file>:<method>`, and from T5 on the CLASS walk (the ratchet, the
    by-name rosters, the hoist partition, the admissions) reads this same corpus, as the census has since T3: a member
    that moved is the same work, and a class read off store.mjs alone fell 26 -> 17 because the READER stopped seeing it. */
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; layers 6 and 7 of T7): eleven more modules left store.mjs — inquiry,
+   basis-versions, contradiction, reevaluation, run-productions, ai-runs, capture-requests, capture-sources, citation,
+   intent and strength — and their row sources, truncation claims and CLASS members with them (`earnedBasisRegistry`,
+   `reevaluations`, `changedFromAudit`, `#contradictionK3*`, `basisVersions`, `suggestVersion`, `extractProposals` …).
+   The corpus widens to their files the same way, `<module>/<file>:<method>`, T5-12's reason exactly: a class read off
+   store.mjs and T5's modules alone fell because the READER stopped seeing the moved work. */
 const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
                    "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
-                   "observation-log", "retrieval"];
+                   "observation-log", "retrieval",
+                   "inquiry", "basis-versions", "contradiction", "reevaluation", "run-productions", "ai-runs",
+                   "capture-requests", "capture-sources", "citation", "intent", "strength"];
 const MODULE_TEXTS = EXTRACTED.flatMap(moduleFiles)
   .map((f) => [f.replace(/\.mjs$/, ""), readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")]);
 /* The modules' method segments, named `<module>/<file>:<method>`, over the text `xf` makes of each file. */
@@ -599,11 +607,6 @@ const D384_STAYS = [
     helpers: ["edgeSevered"],
     amplification: "per citing row, #refEdgeSevered reads the citer's bundle.md and parses its "
       + "frontmatter — `refs` drops the withdrawal status, so it can only be read from the document (D-267)" },
-  { name: "#conditionsCaptureRequested", site: "case: this.#conditionHomes([r.target], viewer),",
-    helpers: ["#conditionHomes", "#queueOptions"],
-    amplification: "per captured request, #conditionHomes walks ancestors (#queueAncestors: up to "
-      + "QUEUE_ANCESTOR_DEPTH rounds, each node two unbounded edge scans and a document read per edge) "
-      + "and #queueOptions runs affordanceFacts per subject" },
   { name: "#conditionsCaptureUnattended", site: "case: this.#conditionHomes([b.bundle_id], viewer),",
     helpers: ["#conditionHomes", "#queueOptions"],
     amplification: "per machine-authored bundle, three #one reads of manifest and bundles, then the "
@@ -623,15 +626,23 @@ const D384_STAYS = [
     helpers: ["#conditionHomes", "#queueOptions"],
     amplification: "per live capture session, a register read, then #conditionHomes' ancestor walk "
       + "and #queueOptions" },
-  { name: "#findingsOutOfInquiryLead", site: "const basisEntry = this.#leadBasisAbsence(r.capture_sha);",
-    helpers: ["#leadBasisAbsence", "#queueAncestors", "#queueOptions"],
-    amplification: "per captured lead, #leadBasisAbsence's four reads, a bundles read, the "
-      + "#queueAncestors walk and #queueOptions" },
   { name: "#queueAncestorEdges", site: "!this.#refEdgeSevered(id, nodeId, rel)", helpers: ["#refEdgeSevered"],
     amplification: "per basis and per citing row, `consider` reads the citer's document through "
       + "#refEdgeSevered — and this method is itself called per node per round by #queueAncestors" },
-  { name: "#restsOnLive", site: "(this.#caseRelationOf(r.bundle_id).member ? frozen : confirmed)",
-    helpers: ["#caseRelationOf", "#refEdgeSevered", "#caseClaimInBytes"],
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; INQUIRY #1, T7 layer 6): `#restsOnLive` MOVED WHOLE into inquiry as
+     `restsOnLive` (the store keeps a one-line delegation), so it is read where it lives (`home`). RE-READ, not re-pinned:
+     the same unbounded `inquiry_basis ⋈ bundles WHERE target_id=?` in its `for` header, and per leg the same two reads —
+     the severance read, now connections' `edgeSevered` (`this.connections.edgeSevered(r.bundle_id, id)`), and the case
+     relation, now asked as promotion's `caseMember` fact (`this.#caseMember(…)`), which legacy-store answers with
+     `!!this.#caseRelationOf(id).member` — #caseRelationOf, whose #caseClaimInBytes is the unbounded scan of every unsigned
+     case document. `readsThrough` does not follow a module's held service (`this.connections.`) or a registered fact,
+     so the helpers are named where their code is (connections' `edgeSevered`; the store's #caseRelationOf and
+     #caseClaimInBytes), and `via` holds the two hops it cannot follow: the member's own severance call and the store's
+     registration of the fact, each of which must still occur as written. */
+  { name: "#restsOnLive", home: "inquiry/index:restsOnLive", site: "(this.#caseMember(r.bundle_id) ? frozen : confirmed)",
+    via: [{ in: "inquiry/index:restsOnLive", text: "this.connections.edgeSevered(r.bundle_id, id)" },
+          { in: "store", text: `promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member)` }],
+    helpers: ["connections/index:edgeSevered", "#caseRelationOf", "#caseClaimInBytes"],
     amplification: "per basis leg, #refEdgeSevered's document read and #caseRelationOf — two reads "
       + "PLUS #caseClaimInBytes, itself an UNBOUNDED scan of every unsigned case document, parsed: a "
       + "scan per row, the quadratic shape this class exists for" },
@@ -644,13 +655,37 @@ const D384_STAYS = [
      as written; the store's `proposalsFeed` is now a delegation to progressions' `proposalsFeed` (R18), which
      `readsThrough` follows, and which is itself ADMITTED below (`T5_STAYS`) for the per-instance `#assemble` it still
      makes over every threaded instance. The site and the per-proposal instance loop are unchanged. */
-  { name: "queueFeed", site: "for (const inst of p.instances)", helpers: ["proposalsFeed", "#queueAncestors", "#queueOptions"],
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; QUEUE #1, N107): the per-proposal loop MOVED out of the store into queue's
+     `proposalFindingItems` (`src/queue/proposals.mjs`, a free function), which `queueFeed` now calls with the reads as
+     closures. RE-READ, not re-pinned: per proposal and per instance, `subjectsOf` — the store's closure, still one
+     `progression_instances` scan (`this.#rows(…)`) — then `homesOf` (#queueAncestors) and `optionsOf` (#queueOptions) per
+     proposal. The site is the call; `via` holds the closure's scan in the store and the per-instance loop in queue's file,
+     each as written, since this walk reads neither a closure nor a free function as a method. */
+  { name: "queueFeed", site: "const proposalItems = proposalFindingItems(feed, {",
+    via: [{ in: "store", text: "subjectsOf: (pk, eid) => this.#rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi" },
+          { in: "store", text: "homesOf: (subjects) => this.#queueAncestors(subjects, viewer)," },
+          { in: "store", text: "optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity)," },
+          { file: "queue/proposals.mjs", text: "for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])" }],
+    helpers: ["proposalsFeed", "#queueAncestors", "#queueOptions"],
     amplification: "per proposal — proposalsFeed's output, itself derived over an unbounded scan and "
       + "in this class — one progression_instances scan per instance, and #queueAncestors and "
       + "#queueOptions per proposal; it also composes #findingsOutOfInquiryLead and the four "
       + "#conditions* producers, whose per-row reads stay above" },
 ];
 const D384_LEAVES = [
+  /* MOVED 2026-09-28 FROM D384_STAYS (T7, legacy-tests; CAPTURE-REQUESTS #1 REPORT J2.5, its R26/R27, D-581) — RE-READ,
+     NOT RE-PINNED, as that report asked. Both admissions rested on the unbounded walk of `capture_requests` each loops
+     over; the loop now iterates capture-requests' `completed({ viewer })` / `leads({ viewer })`, whose one read is
+     `#bounded`: `… ORDER BY … LIMIT ?` at `cap + 1` (CAPTURE_REQUEST_READ_LIMIT / _MAX), on an index, cut and flagged
+     `truncated`. The per-row work (#conditionHomes' ancestor walk, #leadBasisAbsence, #queueOptions) is unchanged and
+     now runs over that LIMIT-bounded page: D-384's LEAVES ground exactly (`auditPass`'s, below). The admission check
+     reds on both for that reason — no unbounded row source left to amplify over. */
+  { name: "#conditionsCaptureRequested", why: "its per-row work (#conditionHomes' ancestor walk, #queueOptions) runs over "
+      + "capture-requests' `completed()` page, a LIMIT-bounded read at cap + 1 (D-581, capture-requests R26/R27) — no "
+      + "unbounded row source is left under the loop" },
+  { name: "#findingsOutOfInquiryLead", why: "its per-row work (#leadBasisAbsence's reads, the #queueAncestors walk, "
+      + "#queueOptions) runs over capture-requests' `leads()` page, a LIMIT-bounded read at cap + 1 (D-581, "
+      + "capture-requests R26/R27) — no unbounded row source is left under the loop" },
   { name: "#caseClaimInBytes", why: "one pass over unsigned case documents parsing each row's OWN text — "
       + "linear, no read per row. Where it IS amplified is named: #restsOnLive reaches it once per leg" },
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; RETRIEVAL #1, T5-10): the frontier's levels MOVED into retrieval's
@@ -698,7 +733,8 @@ const D384_LEAVES = [
       + "with the NEXT segment's header scan, because `*eachImage` could not open a segment of its "
       + "own; that generator now opens one, is counted in the CENSUS in its own right, and this "
       + "verdict no longer depends on the reader's blind spot" },
-  { name: "earnedBasisRegistry", why: "one pass folding the union scan into a Map, then one pass over "
+  /* T7 (legacy-tests): moved whole into inquiry as `earned` (the store's `earnedBasisRegistry` is a delegation to it). */
+  { name: "earnedBasisRegistry", home: "inquiry/index:earned", why: "one pass folding the union scan into a Map, then one pass over "
       + "the Map — linear, no read per row. REC-88's worked example: inline and hoisted now agree" },
   { name: "frontier", home: "retrieval/frontier:#document", why: "#frontierVerification and a register read per row over a LIMIT-bounded "
       + "page under the published FRONTIER_LIMIT_MAX; the only unbounded scan is the tally GROUP BY, "
@@ -1122,9 +1158,23 @@ t("REC-66: the bound is the plane's OWN pair and is not a literal at the call si
        #judgeChrome (T4's new site-chrome derivation, capture R28-R29, D-701: per page and per host, writes per row)}.
        ARRIVALS NAMED, not graded here; they are T3's and T4's code, reached now because the reader follows the corpus.
    The seven dispatched arrivals and departures are in CLASS OPS below. */
-const CLASS_MEASURED_2026_08_08 = 33;
+/* MOVED 33 -> 28 on 2026-09-28 by legacy-tests (T7), READ FROM THIS RUN'S PRINT over the corpus widened by T7's eleven
+   modules (see EXTRACTED) and DIFFED BY NAME against the same walk run on the T5 close (073b3f5fb1, 33 — this figure's
+   tree) and the T7 opening (f986aec704, 32), never 33 - 5:
+   - LEFT, EACH BY A FIX (5): record-core/index:auditPass (T6, record-core N117: its cursor read is `LIMIT`-bounded — the
+     one movement between T5's close and T7's opening); capture/index:recordSiteAssets (CAPTURE #3 N90: the posthoc
+     verdicts appended by one INSERT … SELECT, the reusers read `LIMIT cap + 1`); content/index:markStale (CONTENT #2
+     N117: its read carries `LIMIT ?`); and the ADMITTED #conditionsCaptureRequested and #findingsOutOfInquiryLead
+     (CAPTURE-REQUESTS #1, R26/R27, D-581: their row source is a LIMIT-bounded page now; re-read into `D384_LEAVES`).
+   - MOVED, STILL SEEN (2): changedFromAudit, reevaluations -> reevaluation/index:{changedFromAudit, reevaluations}
+     (REEVALUATION #1); and the ADMITTED #restsOnLive -> inquiry/index:restsOnLive (INQUIRY #1, re-read at its `home`).
+   - ARRIVED AND NOT TAKEN INTO THIS FIGURE (1): intent/index:#measure (INTENT #1, R4: the objective's matched instances —
+     every DISTINCT entity threaded under a progression key, read UNBOUNDED, then `progressions.readInstance` per related
+     instance). New work of the class's shape, so it is REPORTED to intent rather than moved into the ceiling: the
+     CEILING, the by-name roster and the identity arm below stay red naming it until intent bounds it or BOB admits it. */
+const CLASS_MEASURED_2026_08_08 = 28;
 console.log(`  RATCHET: ${CLASS_ALL.size} methods derive over an unbounded scan (${CLASS.size} seen by the walk, ${ADMITTED.size} admitted by name), `
-          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES), moved to 33 on 2026-09-27 by legacy-tests T5-12 (the walk reads the extracted modules: 9 moved members renamed, 2 admitted in T5_STAYS; arrivals content/index:markStale (R41) and six of T3's and T4's modules' methods, named above the figure)`);
+          + `${CLASS_OPS.length} of them dispatched — measured 2026-08-08, moved to 31 on 2026-08-10 by D-280 (the arrival is #routeTask), moved to 30 the same day by CASE-2 (the departure is #requiredStrengthFor, removed with DEC-17's composition under DEC-72), moved to 31 on 2026-09-10 by CASE-4 (the arrival is #flagCasesOnRevision, DEC-72's revision flag), moved to 32 the same day by CASE-5b (the arrival is #caseClaimInBytes, over UNSIGNED case documents only), moved to 33 on 2026-09-14 by REC-93 (the arrival is frontier), moved to 34 on 2026-09-15 by REC-94 (the arrival is #frontierContent, the same reader's content level), moved to 35 the same day by REC-95 (the arrival is #frontierMeaning, the same reader's MEANING level — one reader, three levels, three movements), moved to 36 on 2026-09-17 by REC-96 (the arrival is #searchedForCase, which is that SAME reader a fourth time — the case-scoped read behind the completeness statement's searched section, D-196), moved to 37 on 2026-09-17 by REC-116 (the arrival is provenanceRoutesMarked, the standing-marker roster — REC-69's 2026-08-09 delegation, unbuilt for 39 days). REC-116'S ARRIVAL IS LEGITIMATE AND THE REASON IS WORTH THE LINE: its PAGE is bounded and uses an index on both columns, but its CENSUS deliberately is not — a GROUP BY over every standing row, because a finding-equals-one count can only report what it was told to look for and a third finding arriving in that table would be silently missing from the assessed count. Inverting the question costs the census the index and puts the method in this class, and that trade was taken deliberately rather than discovered. THE MOVEMENT CARRIES A FINDING ABOUT THIS INSTRUMENT AND IT IS RECORDED RATHER THAN GAMED: REC-96's first draft read the log once PER SUBJECT PER LEVEL (3N statements) and scored scans-per-row=4; batching it into one MAX(seq) GROUP BY per level per chunk of 50 — #frontierContent's own existing shape — cut the real statement count by ~50x and the score went UP to 5, because this classifier counts ROW SOURCES INSIDE LOOPS structurally and not amplification. The faster code was kept and the figure moved; contorting the method to score better would be optimising the proxy against the work. MOVED 37 -> 24 on 2026-09-18 by M0-63 (D-384 enacted: the for-header credit left perRowScan; 14 seen by the walk + 10 admitted BY NAME with their helper-hidden per-row reads; 13 left, each named with its reason in D384_LEAVES), moved to 33 on 2026-09-27 by legacy-tests T5-12 (the walk reads the extracted modules: 9 moved members renamed, 2 admitted in T5_STAYS; arrivals content/index:markStale (R41) and six of T3's and T4's modules' methods, named above the figure), moved to 28 on 2026-09-28 by legacy-tests T7 (five left by fixes — record-core auditPass, capture recordSiteAssets, content markStale, and the admitted #conditionsCaptureRequested and #findingsOutOfInquiryLead; changedFromAudit, reevaluations and #restsOnLive moved; the arrival intent/index:#measure is REPORTED, not taken)`);
 t("RATCHET: the class is a CEILING — a NEW method that amplifies work over an unbounded scan pushes "
 + "this over the figure measured on 2026-08-08 and fails here, with the roster printed above so the "
 + "failure names it",
@@ -1148,10 +1198,15 @@ t("RATCHET: the dispatched members are pinned BY NAME, not merely counted — a 
      (progressions, an ADMITTED member now), readingname (entities' `namingDocuments`), select/selection/selectionrelease
      (retrieval). ARRIVALS: `recordsiteassets` and `resolvelinks`, capture's routes (T4) — the two capture members of the
      class the widened walk reaches (see the ratchet's note); their spread was never read before. */
-  CLASS_OPS, ["biasmanifest->bias/index:biasManifest", "changedfromaudit->changedFromAudit", "export->exportManifest",
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests), from this run's print, diffed by name: `recordsiteassets` LEFT with its
+     method (CAPTURE #3 N90, see the ratchet's note); `changedfromaudit` and `reevaluations` are entries of reevaluation's
+     routes now (REEVALUATION #1), named where the methods live. No arrival: intent's #measure is reached by no op
+     directly. */
+  CLASS_OPS, ["biasmanifest->bias/index:biasManifest", "changedfromaudit->reevaluation/index:changedFromAudit",
+              "export->exportManifest",
               "proposals->progressions/index:proposalsFeed",
               "publishedcase->publishedCase", "queue->queueFeed", "readingname->entities/index:namingDocuments",
-              "recordsiteassets->capture/index:recordSiteAssets", "reevaluations->reevaluations",
+              "reevaluations->reevaluation/index:reevaluations",
               "resolvelinks->capture/index:resolveLinks",
               "select->retrieval/index:selectionCreate", "selection->retrieval/index:selectionResolve",
               "selectionrelease->retrieval/index:selectionRelease"]);
@@ -1295,11 +1350,14 @@ t("M0-63 (D-384): across ALL of store.mjs, hoisting a for-header row source to a
   [HOIST_MOVES, CENSUS_SEGMENTS.filter(([, b]) => hoistRowSources(b).hoists > 0).length > 20], [[], true]);
 
 const D384_NAMES = [...D384_STAYS.map((s) => s.name), ...D384_LEAVES.map((l) => l.name)];
+/* RE-PINNED 2026-09-28 (T7, legacy-tests): 10 STAY + 13 LEAVE -> 8 + 15. The population is the same 23; two members
+   MOVED between the lists by a re-read, named at `D384_LEAVES`: #conditionsCaptureRequested and #findingsOutOfInquiryLead
+   (capture-requests R26/R27, D-581: their row source is now a LIMIT-bounded page). */
 t("M0-63 (D-384): every member appears in EXACTLY ONE of the two by-name lists, and the lists sum to "
-+ "the measured population — 10 STAY + 13 LEAVE = 23. A member in neither list, or both, is the "
-+ "defect this row exists to remove",
++ "the measured population — 8 STAY + 15 LEAVE = 23 (10 + 13 until capture-requests bounded two row sources, T7). "
++ "A member in neither list, or both, is the defect this row exists to remove",
   [D384_STAYS.length, D384_LEAVES.length, new Set(D384_NAMES).size, [...D384_NAMES].sort()],
-  [10, 13, HOIST_FRAGILE_2026_09_16.length, [...HOIST_FRAGILE_2026_09_16].sort()]);
+  [8, 15, HOIST_FRAGILE_2026_09_16.length, [...HOIST_FRAGILE_2026_09_16].sort()]);
 t("M0-63 (D-384): no disposition is bare — every STAYS names its amplification and every LEAVES its "
 + "reason, in words at the site",
   [...D384_STAYS.map((s) => [s.name, s.amplification.length > 40]),
@@ -1323,7 +1381,11 @@ t("M0-63 (D-384): every LEAVES member is OUT of the class, and every STAYS membe
 const OF_MODULE = { recordOf: "record-core", membershipOf: "membership", promotionOf: "promotion", governorOf: "host-governor",
   provenanceOf: "provenance", captureOf: "capture", calibrationOf: "calibration", extractionOf: "extraction",
   contentOf: "content", entitiesOf: "entities", connectionsOf: "connections", progressionsOf: "progressions",
-  biasOf: "bias", observationLogOf: "observation-log", retrievalOf: "retrieval" };
+  biasOf: "bias", observationLogOf: "observation-log", retrievalOf: "retrieval",
+  /* T7 (legacy-tests), 2026-09-28: the factories of the modules EXTRACTED gained (see it), so a call is followed there. */
+  inquiryOf: "inquiry", basisVersionsOf: "basis-versions", contradictionOf: "contradiction", reevaluationOf: "reevaluation",
+  runProductionsOf: "run-productions", aiRunsOf: "ai-runs", captureRequestsOf: "capture-requests", credentialsOf: "capture-sources",
+  citationOf: "citation", intentOf: "intent", strengthOf: "strength" };
 const inModule = (mod, y, file = null) => (file && ALL_SEGMENTS.has(`${file}:${y}`) ? `${file}:${y}`
   : [...MODULE_SEGMENTS.keys()].find((k) => k.startsWith(`${mod}/`) && k.endsWith(`:${y}`)) || null);
 const calleesOf = (name, b) => {
@@ -1361,7 +1423,10 @@ t("M0-63 (D-384): each ADMITTED member still holds an unbounded row source and a
       : a.unbounded > 0 && a.loops > 0;
     const at = (h) => (key.includes(":") && !h.includes(":")
       ? inModule(key.split("/")[0], h, key.slice(0, key.indexOf(":"))) || h : h);
-    return [s.name, src, body.includes(s.site),
+    /* T7: `via` (see #restsOnLive's entry) — the hops `readsThrough` cannot follow, each held AS WRITTEN where it is. */
+    const via = (s.via || []).every((v) => (v.file ? decomment(readFileSync(new URL(`../src/${v.file}`, import.meta.url), "utf8"))
+      : v.in === "store" ? CODE : ALL_SEGMENTS.get(v.in) || "").includes(v.text));
+    return [s.name, src, body.includes(s.site) && via,
             s.helpers.filter((h) => !readsThrough(at(h)))];
   }).filter(([, src, site, dead]) => !src || !site || dead.length),
   []);
@@ -1369,10 +1434,13 @@ t("M0-63 (D-384): each ADMITTED member still holds an unbounded row source and a
 t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on its own — REC-88's "
 + "draft hoisted exactly this method's scan and it left the class for no reason but the spelling. With "
 + "the credit gone it is OUT in BOTH spellings, which is the agreement D-384 asked for",
-  [CLASS_ALL.has("earnedBasisRegistry"),
-   (() => { const a = analyse(SEGMENTS.get("earnedBasisRegistry") || "");
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; INQUIRY #1 J2.2): the method MOVED WHOLE into inquiry as `earned` (the
+     store's `earnedBasisRegistry` is a one-line delegation), so the worked example is read where its code is. RE-READ:
+     the same union scan inline in its `for` header, folded into a Map and one pass over the Map. */
+  [CLASS_ALL.has("inquiry/index:earned"),
+   (() => { const a = analyse(ALL_SEGMENTS.get("inquiry/index:earned") || "");
             return Boolean(a.unbounded && a.loops && a.amplified); })(),
-   (() => { const h = hoistRowSources(SEGMENTS.get("earnedBasisRegistry") || "");
+   (() => { const h = hoistRowSources(ALL_SEGMENTS.get("inquiry/index:earned") || "");
             const a = analyse(h.body);
             return [h.hoists, Boolean(a.unbounded && a.loops && a.amplified)]; })()],
   [false, false, [1, false]]);
@@ -1386,15 +1454,20 @@ t("M0-40 -> M0-63: `earnedBasisRegistry` is the WORKED EXAMPLE and is pinned on 
    ratchet's note for every name): 16 -> 21. Seven members MOVED and are read under their module names; #overdueScan and
    proposalsFeed LEFT the walk with their scan (now `#pairs()`) and are ADMITTED in `T5_STAYS`; content/index:markStale
    arrived (content R41); six of T3's and T4's modules' methods arrived with the widened corpus. */
+/* RE-PINNED 2026-09-28 (T7, legacy-tests), 21 -> 18, from this run's print, diffed by name (every name at the ratchet's
+   note): LEFT record-core/index:auditPass, capture/index:recordSiteAssets, content/index:markStale (each fixed); MOVED
+   changedFromAudit and reevaluations to reevaluation/index. NOT PINNED: the arrival intent/index:#measure (REPORTED),
+   so this arm reds naming it. */
 const CLASS_ROSTER_2026_09_18 = [
   "#flagCasesOnRevision", "#frozenPairsByCase",
   "bias/index:biasManifest",
-  "capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "capture/index:recordSiteAssets",
+  "capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome",
   "capture/index:resolveLinks",
-  /* c19-unionfix, 2026-09-24: D-256's `changedFromAudit`, the arrival the CLASS ratchet above names. */
-  "changedFromAudit", "content/index:markStale", "entities/index:namingDocuments", "exportManifest",
+  "entities/index:namingDocuments", "exportManifest",
   "progressions/index:#assemble",
-  "publishedCase", "publishedRegistryFor", "record-core/index:auditPass", "record-core/index:commit", "reevaluations",
+  "publishedCase", "publishedRegistryFor", "record-core/index:commit",
+  /* c19-unionfix, 2026-09-24: D-256's `changedFromAudit`, the arrival the CLASS ratchet above names (reevaluation's, T7). */
+  "reevaluation/index:changedFromAudit", "reevaluation/index:reevaluations",
   "retrieval/index:selectionCreate", "retrieval/index:selectionRelease", "retrieval/index:selectionResolve",
   "retrieval/index:sweepSelections",
 ];
@@ -1456,8 +1529,10 @@ t("M0-40 OVER-STRICTNESS, the other direction: a member whose BODY carries the a
      the old `#assembleInstance` was NO INLINE ROW SOURCE, and the module reads its exceptions (`progression_exceptions`) in a `for`
      header, a spelling of the same read; and four of the widened corpus's T3/T4 arrivals (record-core's commit and auditPass,
      capture's #chromeDeriveCapture and #judgeChrome) carry an inline row source and body amplification. */
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests): record-core/index:auditPass LEFT with the class (T6, record-core N117 bounded
+     its cursor read; the same diff on T5's close and T7's opening). No arrival: intent's #measure has no inline row source. */
   HOIST.stable, ["capture/index:#chromeDeriveCapture", "capture/index:#judgeChrome", "entities/index:namingDocuments",
-                 "progressions/index:#assemble", "publishedCase", "record-core/index:auditPass",
+                 "progressions/index:#assemble", "publishedCase",
                  "record-core/index:commit", "retrieval/index:selectionRelease"]);
 
 /* ================================================== THE CENSUS, GRADED (REC-99 · D-365).
@@ -1768,7 +1843,40 @@ t("CENSUS: the roster this ratchet grades IS the figure the CORPUS line prints �
    TWO DEPARTURES, both fixed by CONNECTIONS #2 and nothing else: connections/index:asserted (R54, now LIMIT-bounded:
    legacy-tests' REPORT 6, which named it here) and connections/index:fileMembership (R59, LIMIT-bounded with it). No
    arrival. */
-const SCANNING_MEASURED_2026_09_15 = 188;
+/* UPDATED 2026-09-28 (T7, legacy-tests), 188 -> 196, READ FROM THE CENSUS ROSTER THIS RUN PRINTED over the corpus
+   widened by T7's eleven modules (see EXTRACTED; 209) and DIFFED BY NAME against the same census run on T5's close
+   073b3f5fb1 (188, this figure's tree) and on the T7 opening f986aec704 (187), never 188 + 8:
+     - T6 (1 departure): record-core/index:auditPass (record-core N117, its cursor read `LIMIT`-bounded).
+     - DEPARTED BY A FIX (12): #conditionsCaptureRequested, #findingsOutOfInquiryLead, #conditionsRenderDeferred (their
+       walks of `capture_requests` are capture-requests' `#bounded` pages now, R26/R27, D-581); capture/index:{chromeOf,
+       inboxList, linksTo, recordLinkVerdict, recordSiteAssets, reuseVerdicts, siteAssets, siteChrome} (CAPTURE #3 N90:
+       bounded and paged, `limit` 200 clamped 1…1000, each still graded below under `:found`); content/index:markStale
+       (CONTENT #2 N117, `LIMIT ?`).
+     - MOVED, ONE FOR ONE, the same read under the module's name (15): #aiRunSearchState, #aiRunTerminate,
+       #runContextQuestions -> ai-runs/index:{#aiRunSearchState, #aiRunTerminate, #runContextQuestions}; #aiRunReap,
+       aiRunRead, aiRunTick -> ai-runs/index:{reap, read, tick}; #basisReach, #legVersions, basisFor, earnedBasis,
+       restingOn -> inquiry/index:{#basisReach, #legVersions, basisFor, earnedBasis, restingOn}; earnedBasisRegistry ->
+       inquiry/index:earned; #restsOnLive -> inquiry/index:restsOnLive; changedFromAudit, reevaluations ->
+       reevaluation/index:{changedFromAudit, reevaluations}.
+     - MOVED INTO TWO (+1): #promoteProjections' two unbounded reads are the modules' projections now,
+       inquiry/index:project (the content legs of `inquiry_basis`, and the `supersedes` read #promoteProjections held as
+       `[...this.sql.exec(…)]`) and basis-versions/index:project (the version legs).
+     - READS THE READER NEVER SAW (+3), spelled `[...this.sql.exec(…)]` in the store and `this.#rows(…)` in the module:
+       inquiry/index:writeSupersededBy (was #writeSupersededBy), inquiry/index:migrate (the store's `SELECT DISTINCT
+       target_id FROM refs WHERE kind='supersedes'` boot pass and its PRAGMAs) and ai-runs/index:migrate (PRAGMAs).
+     - THE READERS' OWN DEFINITIONS (+17), `#rows`/`#one` in ai-runs, basis-versions (#rows), capture-requests,
+       capture-sources/credentials, contradiction, inquiry (#rows), intent, reevaluation (#rows), run-productions and
+       strength — the helpers every extracted module has carried since T3.
+   NOT TAKEN INTO THIS FIGURE — NEW UNBOUNDED READS, REPORTED to their owners, so the CEILING below reds on them until
+   each is bounded or admitted (13; the printed roster names them): inquiry/index:{projectsDrawingOn (R39: every project
+   citing the inquiry, a severance read each), staled (the `onStale` listener: a stale capture's content ids, then their
+   legs), exclusionsNaming (an UNUSED copy of legacy-store `excludedBy`'s `inquiry_exclusions` read)};
+   capture-requests/index:waitSource (R29/D-583: a GROUP BY run over outstanding requests and every run with an untold
+   completion); capture-sources/credentials:{credentialList (every stored credential), credentialsForFetch (one host's)};
+   reevaluation/index:{#records (every `reevaluation_records` row), raiseNotices (the divided among a caller's holders)};
+   intent/index:{#departures (one project's), #triaged (every `intent_triage` row), pursuitOf (the triage rows of the
+   projects asked about), watchSet and #measure (every entity threaded under a progression key)}. */
+const SCANNING_MEASURED_2026_09_15 = 196;
 t("CENSUS IS A CEILING: a method that gains an unbounded row source pushes the printed figure "
 + "over what was measured on 2026-09-15 and FAILS HERE — which is precisely what D-365 measured "
 + "NOT happening, when removing a SQL `LIMIT` from a capped read moved this number and nothing "
@@ -1949,9 +2057,11 @@ t("WHAT THIS CANNOT GRADE IS NAMED, NEVER SCORED ZERO: six `truncated` figures a
      calibration/index:worseSupersessions:page (calibration R11: `page = one ? this.#rows(…) : this.#rows(…)`, both
      `LIMIT ?` at `cap + 1`) and extraction/index:capturesReadFor:page (extraction R51, K138: `page` assigned `LIMIT ?` at
      `cap + 1` inside a `try`, declared `let page = []` above it). */
-  ["#backfillLegContent:need", "#lawProposalsFor:all", "bias/index:biasInhale:bars",
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests), from this arm's print, diffed by name: `#backfillLegContent:need` MOVED with
+     its method into inquiry (inquiry/index:#backfillLegContent:need, the same claim). No arrival, no departure. */
+  ["#lawProposalsFor:all", "bias/index:biasInhale:bars",
    "calibration/index:worseSupersessions:page", "entities/index:namingDocuments:merged",
-   "extraction/index:capturesReadFor:page", "queueFeed:dispAll", "queueFeed:items",
+   "extraction/index:capturesReadFor:page", "inquiry/index:#backfillLegContent:need", "queueFeed:dispAll", "queueFeed:items",
    "retrieval/frontier:#content:never", "retrieval/frontier:#document:never", "retrieval/frontier:#meaning:never",
    "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
 /* T5-12: the deltas below break the WIDENED corpus (`corpusWith`), since the readers they test read it. */
@@ -2227,8 +2337,10 @@ t("OUT OF REACH, BY NAME AND WITH ITS REASON — the deliverable of D-369's row 
      DERIVED from `missing` — the Frontier reader passes the cap-carrying fetch through a helper this one-method walk does
      not follow, the loss of reach D-389's note above took for `#frontierContent:page`; and ONE ARRIVAL,
      extraction/index:capturesReadFor:page (ASSEMBLED by its `let page = []` declaration; its read is `LIMIT ?` at `cap + 1`). */
-  ["#backfillLegContent:need", "#lawProposalsFor:all", "bias/index:biasInhale:bars",
-   "entities/index:namingDocuments:merged", "extraction/index:capturesReadFor:page", "queueFeed:dispAll",
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests): `#backfillLegContent:need` MOVED into inquiry, the same reason on its row. */
+  ["#lawProposalsFor:all", "bias/index:biasInhale:bars",
+   "entities/index:namingDocuments:merged", "extraction/index:capturesReadFor:page",
+   "inquiry/index:#backfillLegContent:need", "queueFeed:dispAll",
    "queueFeed:items", "retrieval/frontier:#content:never", "retrieval/frontier:#document:never",
    "retrieval/frontier:#meaning:never", "retrieval/frontier:#page:gated", "retrieval/index:#contentAxisTally:raw"]);
 
@@ -2274,7 +2386,7 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
    /* c19-unionfix, 2026-09-24 — two arrivals, each measured on the union. `actionQuotes` (D-148) joins the
       DEFENDED half: its page is graded by name by REC-99's inversion, so PARTITIONED below does not gain it.
       `changedFromAudit` (D-256) is blind to BOTH halves — see PARTITIONED. */
-   "actionQuotes", "bias/index:biasManifest", "changedFromAudit",
+   "actionQuotes", "bias/index:biasManifest", "reevaluation/index:changedFromAudit",
    "entities/index:namingDocuments",
    /* REC-116, 2026-09-17 — the arrival, and it joins the DEFENDED half rather
       than D-369's set 2: `provenanceRoutesMarked` publishes a bound AND scans
@@ -2309,7 +2421,22 @@ t("SET 2, NAMED BY NAME: the methods whose published bound the CENSUS COUNT is b
    /* RE-PINNED 2026-09-27 (T5-12, K155), 12 -> 11: connections/index:asserted LEFT, bounded in SQL by CONNECTIONS #2
       (REPORT 6's fix), so it no longer holds the unbounded scan that made it census-blind. */
    "extraction/index:documentsByReference", "extraction/index:reextractBasis",
-   "extraction/index:unitsOf"].sort());
+   "extraction/index:unitsOf",
+   /* RE-PINNED 2026-09-28 (T7, legacy-tests), 11 -> 15, from the printed roster, diffed by name. MOVED (1):
+      changedFromAudit -> reevaluation/index:changedFromAudit (above). ARRIVED (4), each read:
+      - capture/index:resolveLinks (CAPTURE #3 N90, its REPORT J2.2(b)): a published bound on its page beside the per-link
+        read of the target's direct captures, which stays whole; DEFENDED, its page graded by name (`resolveLinks:found`).
+      - inquiry/index:basisFor (INQUIRY #1): a `limit` arm whose page is `LIMIT ?` at `limit + 1` and graded by name
+        (`inquiry/index:basisFor:rows`), beside the whole-basis read the other callers take; DEFENDED.
+      - reevaluation/index:raiseNotices (REEVALUATION #1, new): its page is graded by name
+        (`reevaluation/index:raiseNotices:page`); the unbounded half is the divided among the holders the caller hands in.
+        DEFENDED. Its unbounded read is one of the census's REPORTED arrivals.
+      - intent/index:pursuitOf (INTENT #1, new): its `truncated` republishes capture-requests' read of the requests
+        (`!!(read && read.truncated)`, the UNREAD roster below), beside every triage row of the projects asked about,
+        unbounded — blind to BOTH halves (PARTITIONED below). Its unbounded read is one of the census's REPORTED
+        arrivals; it is named here because it is census-blind by construction, the other half of the same fact. */
+   "capture/index:resolveLinks", "inquiry/index:basisFor", "reevaluation/index:raiseNotices",
+   "intent/index:pursuitOf"].sort());
 t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blind to the COUNT but "
 + "DEFENDED by REC-99's inversion, which grades its row source by name; the other five are blind "
 + "to BOTH halves and are D-369's set 2 exactly. Reporting six as one number would put a method "
@@ -2328,7 +2455,10 @@ t("SET 2, PARTITIONED — and the partition is the point. `#calDriftFor` is blin
       an in-memory cut of the LISTING (`from + listed.length < all.length`, `biasManifest`'s OFFSET form, which
       the grader's spelling cannot read — declared in the UNREAD roster below), while its verdict totals are
       counted over every affected bundle by design. */
-   "changedFromAudit", "queueFeed"].sort());
+   "reevaluation/index:changedFromAudit", "queueFeed",
+   /* RE-PINNED 2026-09-28 (T7, legacy-tests), 7 -> 8: changedFromAudit MOVED (reevaluation/index); intent/index:pursuitOf
+      ARRIVED, blind to both halves for the reason at SET 2 (its unbounded read is REPORTED with the census). */
+   "intent/index:pursuitOf"].sort());
 
 /* ---- AND THE CLAIMS THE GRADER'S OWN SPELLING CANNOT READ AT ALL.
    FOUND BY THIS ITEM AND NAMED RATHER THAN FIXED, because widening `TRUNC_RE` would enlarge
@@ -2416,8 +2546,12 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
       by name in the GRADED roster one block up — `#contradictionK3Same:rows` and
       `#contradictionK3Doc:rows` — each over a statement the published cap bounds. So this entry
       is a composite of two measurements this file already made, and not an unmeasured claim. */
-   "#contradictionK3: same.truncated || doc.truncated",
-   "basisVersions: from + versions.length < total",
+   /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; CONTRADICTION #1 REPORT J2.3): the method MOVED into contradiction as
+      `#k3`, and its two arms as `#k3Same` / `#k3Doc` — graded by name as `contradiction/index:#k3Same:rows` and
+      `contradiction/index:#k3Doc:rows`. The same claim, still the composite of those two. */
+   "contradiction/index:#k3: same.truncated || doc.truncated",
+   /* T7 (legacy-tests): MOVED with basis-versions (BASIS-VERSIONS #1), the same claim. */
+   "basis-versions/index:basisVersions: from + versions.length < total",
    /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): three claims MOVED, the same text under the module's name —
       `biasManifest` (bias/index), `deriveConnections` (connections/index:derive), `search` (retrieval/index). No arrival,
       no departure; 14 -> 18 republications (not claims; counted at the print). */
@@ -2433,11 +2567,22 @@ t("WHAT THE GRADER'S OWN SPELLING CANNOT READ IS COUNTED AND NAMED, never merely
    /* c19-unionfix, 2026-09-24 — D-256's `changedFromAudit`, DECLARED HERE because this suite says a new one must
       be. `biasManifest`'s OFFSET form exactly: `all` is every affected bundle, measured; `listed` is the page cut
       from it at CHANGED_FROM_AUDIT_LIMIT. A comparison of two measured figures, not an unmeasured claim. */
-   "changedFromAudit: from + listed.length < all.length",
+   /* T7 (legacy-tests): MOVED with reevaluation (REEVALUATION #1), the same claim. */
+   "reevaluation/index:changedFromAudit: from + listed.length < all.length",
    "connections/index:derive: rowsCut || distinct.length > endsCap",
-   "extractProposals: listed.length >= n",
+   /* RE-PINNED 2026-09-28 (T7, legacy-tests; RUN-PRODUCTIONS #1), from this run's print, diffed by name:
+      `extractProposals: listed.length >= n` LEFT this roster by becoming READABLE — run-productions' `extractProposals`
+      measures its claim `rows.length > …` off a `LIMIT`-bounded read, graded by name one block up
+      (`run-productions/index:extractProposals:rows`); and `suggestVersion`'s claim MOVED into run-productions' `suggest`,
+      reworded `recorded ? recorded.legs_complete === false : false` — the same claim, since `legs_complete` is always a
+      boolean (basis-versions' `leg_count` comparison). */
+   "run-productions/index:suggest: recorded ? recorded.legs_complete === false : false",
+   /* T7 (legacy-tests), an ARRIVAL, named: intent's `pursuitOf` (INTENT #1) republishes capture-requests' read's
+      `truncated` inside a parenthesis (`truncated = !!(read && read.truncated)`), which the republication reader above
+      does not parse, so it is declared here, as REC-146's rule asks, rather than left in no roster. The figure is graded
+      where it is measured (`capture-requests/index:#bounded:found`). */
+   "intent/index:pursuitOf: !!(read && read.truncated",
    "retrieval/index:search: ids.length >= IDS_MAX",
-   "suggestVersion: rc ? !rc.legs_complete : false",
    /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, R16): the same claim, moved with `versionChain`
       into provenance, read off the widened corpus under its module name. No arrival, no departure. */
    "provenance/index:versionChain: from + versions.length < total"].sort());

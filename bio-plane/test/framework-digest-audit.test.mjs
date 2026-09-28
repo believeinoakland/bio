@@ -164,7 +164,8 @@ const promoteWith = async (docs) => {
   return { id, promoted: r.ok !== false && answer.ok !== false, answer };
 };
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.3 left the catalogue with the other C-18
-   register arms for provenance's `registerChecks`; op=audit runs them after the pass (`provenanceAudit`) and the gate
+   register arms for provenance's `registerChecks`; op=audit runs them as provenance's registered audit check
+   (`registerAuditCheck("provenance", …)` in `provenanceOf`, record-core R59; N92 retired `provenanceAudit`) and the gate
    after the catalogue (`withRegisterChecks`). So "the bundle's findings the way op=audit produces them" is both. */
 const auditChecksFor = async (id) => {
   const img = (await get(`op=image&id=${encodeURIComponent(id)}`)).result || {};

@@ -29,6 +29,9 @@ const AFF = P("../src/affordances.mjs");
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): connections (T5) took `op=backlinks`' read out of `store.mjs` into
    `src/connections/index.mjs`; arm (f) patches it there. The other arms' anchors did not move. */
 const CONNECTIONS = P("../src/connections/index.mjs");
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests): citation (T7) took `cite` and `#edgeTransition` (sever/reinstate)
+   out of `store.mjs` into `src/citation/index.mjs`; arms (a), (b) and (c) patch them there. Their anchor text did not change. */
+const CITATION = P("../src/citation/index.mjs");
 const SUITE = P("./citeproject-inquiry.test.mjs");
 const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
 
@@ -40,7 +43,7 @@ const ARMS = [
   { id: "0-BASELINE", file: null,
     declared: "nothing is edited. The suite must be GREEN, or every row below is measuring a "
             + "broken tree rather than a broken subject." },
-  { id: "a-cite-case-arm", file: STORE,
+  { id: "a-cite-case-arm", file: CITATION,
     declared: "put `cite`'s CASE arm back to Information-only. THE RULING ARM: the whole item is "
             + "downstream of this one predicate, so most of the suite must fail and the FIRST "
             + "failure must be the act itself.",
@@ -52,7 +55,7 @@ const ARMS = [
     }
     if (offenders.length)
       return ontoInquiry` },
-  { id: "b-sever-mirror", file: STORE,
+  { id: "b-sever-mirror", file: CITATION,
     declared: "put `#edgeTransition`'s member test back to Information-only, leaving `cite` widened. "
             + "THE ASYMMETRY ARM: a case could then JOIN a question and never LEAVE it, which is "
             + "the shape this item exists to prevent, so the WITHDRAWAL arms must fail and the "
@@ -65,7 +68,7 @@ const ARMS = [
     }
     if (offenders.length)
       return { ok: false, reason: "NOT_INFORMATION", project, handle, offenders: offenders.sort(),` },
-  { id: "c-over-strict", file: STORE,
+  { id: "c-over-strict", file: CITATION,
     declared: "widen `cite`'s member test to admit ANY type. THE OVER-STRICTNESS ARM, and it is the "
             + "one that proves the widening is EXACTLY ONE TYPE WIDE rather than simply open: the "
             + "action, the case-cites-case and the case-cites-itself arms must fail.",

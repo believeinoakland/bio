@@ -115,6 +115,11 @@ const POST = async (q, body) => (await mf.dispatchFetch(`http://x/api/?${q}`,
 const anonCase = async (args) => rP(await (await mf.dispatchFetch(`http://x/api/?op=publishedcase&${args}`)).json());
 
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 layer 6): the version door `#moveVersionState` and its published fence moved to
+   src/basis-versions/index.mjs (BASIS-VERSIONS #1 J4.1), and its two neighbours `#divide` (PUBLISHED_CANNOT_DIVIDE)
+   and `#ground` (PUBLISHED_CANNOT_RESTRUCTURE) to src/inquiry/index.mjs (INQUIRY #1 J2.2). */
+const BV_SRC = readFileSync(fileURLToPath(new URL("../src/basis-versions/index.mjs", import.meta.url)), "utf8");
+const INQ_SRC = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
 
 /* ---- keys and roster ---- */
 const dir = mkdtempSync(join(tmpdir(), "casepin-"));
@@ -521,7 +526,9 @@ console.log("\n--- 2. the four acts that MOVE a reading are refused on a publish
      described in a comment. If either is ever removed, this arm says so. */
   t("the two neighbouring doors already refused this and are still shut — the fence added here is the "
   + "THIRD on a corridor where two were shut, not a new policy",
-    [/PUBLISHED_CANNOT_DIVIDE/.test(STORE_SRC), /PUBLISHED_CANNOT_RESTRUCTURE/.test(STORE_SRC)],
+    /* RE-ANCHORED 2026-09-28: both doors are minted in inquiry's `#divide` and `#ground` now, and the pin asks for
+       the refusal as MINTED (`reason: "…"`) rather than for the word anywhere. */
+    [/reason: "PUBLISHED_CANNOT_DIVIDE"/.test(INQ_SRC), /reason: "PUBLISHED_CANNOT_RESTRUCTURE"/.test(INQ_SRC)],
     [true, true]);
 }
 
@@ -646,8 +653,10 @@ console.log("\n--- 5. `hide` and `current` are OUTSIDE the fence, and the line i
        asked `b.current_state === "published"` and now asks the CASE RELATION,
        because DEC-72 removed that state. `to !== null` is the half this arm is
        actually about and it is unchanged. */
+    /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the fence is in basis-versions' `#moveVersionState`, still
+       drawn on `to !== null`, and the case relation is promotion's fact `caseMember` (promotion R40) there. */
     [MOVERS.length, NON_MOVERS.length,
-     /to !== null && this\.#caseRelationOf\(target\)\.member/.test(STORE_SRC)],
+     /if \(to !== null\) \{\s*const member = this\.promotion\.fact\("caseMember", target\)/.test(BV_SRC)],
     [4, 2, true]);
 }
 

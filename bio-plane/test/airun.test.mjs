@@ -49,7 +49,9 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
-import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): C-22.5, .8 and .11–.16 left the catalogue for
+   `src/ai-runs/checks.mjs` (R35); `airun.mjs` exports `AI_RUN_CHECKS` as the catalogue's remaining C-22 rows
+   (observation-log's, and C-22.7) merged with ai-runs' own, so the family this suite counts is read whole from there. */
 import { OBSERVATION_STATES, OBSERVATION_LEVELS, RUN_BOUNDS, RUN_ENDINGS,
          DEFINITIVE_STATES, translationOf, finishedBound,
          /* FL-8 / IC-67: the THIRD run vocabulary and the ONE function that keys
@@ -57,13 +59,18 @@ import { OBSERVATION_STATES, OBSERVATION_LEVELS, RUN_BOUNDS, RUN_ENDINGS,
             hold the plane's keying against the plane's catalogue, and an
             expectation typed here would be a copy that agrees with itself for
             free (the class this repository has now paid for five times). */
-         RUN_STATUS, RUN_NEVER_STARTED, runStatusFor } from "../src/airun.mjs";
+         RUN_STATUS, RUN_NEVER_STARTED, runStatusFor, AI_RUN_CHECKS } from "../src/airun.mjs";
 import { QUEUE_CONDITION_KINDS } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 const INDEX_SRC = readFileSync(IDX, "utf8");
 const AIRUN_SRC = readFileSync(fileURLToPath(new URL("../src/airun.mjs", import.meta.url)), "utf8");
+/* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1, N49): the run's mechanism moved from `store.mjs` to `src/ai-runs/index.mjs`
+   (`#aiRunTerminate`, the reaper's `reapDue`/`reapWake`/`reap`), and `checkCondition` from `airun.mjs` to
+   observation-log's `vocabulary.mjs`; the source arms read each from where it now lives. */
+const RUNS_SRC = readFileSync(fileURLToPath(new URL("../src/ai-runs/index.mjs", import.meta.url)), "utf8");
+const OBSVOCAB_SRC = readFileSync(fileURLToPath(new URL("../src/observation-log/vocabulary.mjs", import.meta.url)), "utf8");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -292,13 +299,17 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      declared at the open states a positive allowance; an absent or zero `allowed` was opened at 0, which reads as no
      ceiling, §14b item 6, BOB #30), a fact about the run's budget, so the family holds SIXTEEN.
      `rec177-allowance.test.mjs` drives it through op=airunopen. */
-  t("ARM D1: the C-22 family is SIXTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
+  /* CORRECTED A NINTH TIME 2026-09-28 (T7, legacy-tests; LEGACY-CHECKS #2 REPORT 10), on the same terms: C-22.17
+     (`AI_LOG_NEVER_LOOKED_STORED` — a NEVER_LOOKED stored as a look at a subject, observation-log R3, K148), minted by
+     LEGACY-CHECKS #2 in the T6 catalogue, so the family holds SEVENTEEN. Read here through `airun.mjs`'s merged
+     `AI_RUN_CHECKS`, since C-22.5, .8 and .11–.16 now live in `src/ai-runs/checks.mjs`. */
+  t("ARM D1: the C-22 family is SEVENTEEN C-numbers — IS-6's six, SK-1's skill-version condition, "
     + "PL-18's project-membership gate, REC-93's two for the folded observation log, REC-153's "
-    + "context-kind check, REC-152's principal, REC-169's two budget figures, REC-172's unknown bound "
-    + "and REC-177's unstated allowance",
+    + "context-kind check, REC-152's principal, REC-169's two budget figures, REC-172's unknown bound, "
+    + "REC-177's unstated allowance and observation-log's stored NEVER_LOOKED",
     codes.map((c) => AI_RUN_CHECKS[c].check).sort(),
-    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.2", "C-22.3", "C-22.4",
-     "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
+    ["C-22.1", "C-22.10", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.17", "C-22.2", "C-22.3",
+     "C-22.4", "C-22.5", "C-22.6", "C-22.7", "C-22.8", "C-22.9"]);
   t("ARM D2: every code carries a CANNED TRANSLATION — an untranslated code must not exist to be sent",
     codes.filter((c) => typeof AI_RUN_CHECKS[c].translation !== "string"
                      || AI_RUN_CHECKS[c].translation.length < 40), []);
@@ -310,7 +321,11 @@ console.log("\n--- ARM D · DEC-49: a code with a canned translation, read from 
      opens both of these files and reads them. */
   t("ARM D3: every allocation NAMES ITS ENFORCEMENT SITE in a pure check module, so the catalogue "
     + "can be walked to the code",
-    codes.filter((c) => !/^src\/(airun|skillpack)\.mjs /.test(AI_RUN_CHECKS[c].where || "")), []);
+    /* WIDENED BY NAME 2026-09-28 (T7, legacy-tests; LEGACY-CHECKS #2 REPORT 10, AI-RUNS #2 J6 fix 5): observation-log's
+       rows (C-22.1–.4, .6, .9, .10, .17) name `checkObservation`/`checkCondition`, which N49 moved out of `airun.mjs`
+       into observation-log's pure `src/observation-log/vocabulary.mjs`. A third pure check module, named, not an
+       open `where`. */
+    codes.filter((c) => !/^src\/(airun|skillpack|observation-log\/vocabulary)\.mjs /.test(AI_RUN_CHECKS[c].where || "")), []);
   /* THE MAP IS READ FROM ONE PLACE. airun.mjs must not spell a translation of
      its own — a hand copy agrees at zero cost, measured five times. */
   t("ARM D4: airun.mjs holds NO second copy of any translation",
@@ -402,11 +417,16 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
      the alarm, which is the sprawl REC-1 decided against. */
   const wrangler = readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.meta.url)), "utf8");
   t("ARM S5: no cron trigger exists", /"crons"\s*:/.test(wrangler), false);
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the registry entry now asks ai-runs
+     (`aiRunsOf(...).reapDue(now) > 0`, `.reapWake(now)`), whose bodies — `#aiRunReapPending` and `#aiRunReapWake`
+     until the extraction — are read from `src/ai-runs/index.mjs`. Same two claims: due only over a LAPSED lease, and
+     a null wake with no run in flight. */
   t("ARM S6: the reaper is an INTERVAL consumer — due only when a lease has actually lapsed, so it "
     + "fires at its own moment and no other's",
-    /name: "ai-run-reap",[\s\S]{0,200}?due:\s*\(now\)\s*=>\s*this\.#aiRunReapPending\(now\)\s*>\s*0/.test(regBody), true);
+    [/name: "ai-run-reap",[\s\S]{0,200}?due:\s*\(now\)\s*=>\s*aiRunsOf\(this\.ctx, this\.env\)\.reapDue\(now\)\s*>\s*0/.test(regBody),
+     /\n  reapDue\(now\)\s*\{[\s\S]{0,200}?status = 'running' AND expires < \?/.test(RUNS_SRC)], [true, true]);
   t("ARM S7: and it SELF-TERMINATES — its wake is null when no run is in flight",
-    /#aiRunReapWake\(now\)\s*\{[\s\S]{0,240}?return null;/.test(STORE_SRC), true);
+    /\n  reapWake\(now\)\s*\{[\s\S]{0,240}?return null;/.test(RUNS_SRC), true);
 }
 
 /* ========================================================================= *
@@ -748,12 +768,14 @@ console.log("\n--- ARM C/F · the two endings that are not bounds ---");
    *  test moves with it and proves nothing — the class that has now bitten
    *  five items in this repository.
    * ------------------------------------------------------------------- */
-  const TERM = /#aiRunTerminate\(\{[\s\S]*?\n  \/\* ---- DEC-63/.exec(STORE_SRC);
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): `#aiRunTerminate` moved whole, with the DEC-63
+     block after it, from `store.mjs` into `src/ai-runs/index.mjs`; the same region is read from there. */
+  const TERM = /#aiRunTerminate\(\{[\s\S]*?\n  \/\* ---- DEC-63/.exec(RUNS_SRC);
   const termBody = TERM ? TERM[0] : "";
-  console.log(`  ARM W corpus: ${termBody.length} chars of #aiRunTerminate read from store.mjs's own source; `
+  console.log(`  ARM W corpus: ${termBody.length} chars of #aiRunTerminate read from ai-runs' own source; `
     + `${Object.keys(RUN_BOUNDS).length} bounds + ${Object.keys(RUN_ENDINGS).length} endings walked against `
     + `${Object.keys(RUN_STATUS).length} statuses`);
-  t("ARM W0 (REACH): `#aiRunTerminate` was actually located in store.mjs's source and is over 1500 chars — "
+  t("ARM W0 (REACH): `#aiRunTerminate` was actually located in ai-runs' source and is over 1500 chars — "
     + "a region that failed to match would make every source assertion below vacuous",
     termBody.length > 1500, true);
   /* W1 IS THE SOURCE HALF AND IT IS DELIBERATELY NOT A RESTATEMENT OF W2/H1.
@@ -875,7 +897,11 @@ const REFUSED = "RUN-2026-0807-refusals";
     r4b && [r4b.check, r4b.code], ["C-22.4", "AI_RUN_CONDITION_UNKNOWN"]);
   t("ARM R4c: and there is exactly ONE implementation of it — the entry check DELEGATES rather than "
     + "restating, which is what makes R4 and R4b controls rather than two copies agreeing",
-    [...AIRUN_SRC.matchAll(/hasOwnProperty\.call\(conditionKinds/g)].length, 1);
+    /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1, N49): `checkCondition` moved from `airun.mjs`
+       to observation-log's `vocabulary.mjs` (which `airun.mjs` re-exports), so the ONE implementation is counted over
+       both files: exactly one, wherever it lives. */
+    [...AIRUN_SRC.matchAll(/hasOwnProperty\.call\(conditionKinds/g),
+     ...OBSVOCAB_SRC.matchAll(/hasOwnProperty\.call\(conditionKinds/g)].length, 1);
 
   /* On its own run, for the reason stated at R4: under its control this close
      SUCCEEDS, and it must not end the run the arms after it are using. */
@@ -1190,15 +1216,17 @@ console.log("\n--- ARM X · one bound function, not two that agree ---");
      and the wrong direction of that mistake (passing over prose) is how an arm
      goes green on a body it never read. It now ends at the method's own closing
      brace. */
-  const reapFrom = STORE_SRC.indexOf("  #aiRunReap(now) {");
-  const reapTo = STORE_SRC.indexOf("\n  }\n", reapFrom);
-  const reaper = STORE_SRC.slice(reapFrom, reapTo);
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the reaper is ai-runs' `reap(now)` (it was the
+     store's `#aiRunReap(now)`), and both `finishedBound(` sites moved with `#aiRunTerminate` and the tick. */
+  const reapFrom = RUNS_SRC.indexOf("\n  reap(now) {");
+  const reapTo = RUNS_SRC.indexOf("\n  }\n", reapFrom + 1);
+  const reaper = reapFrom > -1 ? RUNS_SRC.slice(reapFrom, reapTo) : "";
   console.log(`  corpus: ${reaper.split("\n").length} lines of reaper body`);
   t("ARM X6a: the reaper body is locatable and non-trivial", reapFrom > -1 && reaper.split("\n").length > 5, true);
   t("ARM X6: the reaper contains no arithmetic over bounds — it supplies a clock and takes the "
     + "one function's answer", /allowed|consumed|>=/.test(reaper), false);
   t("ARM X7: and there is exactly ONE call site deciding which bound stopped a run",
-    [...STORE_SRC.matchAll(/finishedBound\(/g)].length, 2);
+    [...STORE_SRC.matchAll(/finishedBound\(/g), ...RUNS_SRC.matchAll(/finishedBound\(/g)].length, 2);
 }
 
 /* ------------------------------------------------------------------------- *
@@ -1219,7 +1247,9 @@ console.log("\n--- ARM PQ · D-451: a project run publishes the questions it con
 {
   const ADM = `token=${TOK}`;   /* the member deploy token: the suite's own, and the one its surfacing run wraps */
   const E = encodeURIComponent;
-  const projMd = ["---", "object_type: project", "current_state: forming", `created: "${T0}"`,
+  /* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
+  const projMd = ["---", "object_type: project", 'objective: "Find which questions the project may land on."',
+    "current_state: forming", `created: "${T0}"`,
     `last_updated: "${T0}"`, "references: []", "---", "", "## Summary", "", "D-451's project.", "",
     "## Session Log", ""].join("\n");
   let projSeq = 0;

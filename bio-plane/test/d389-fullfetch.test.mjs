@@ -95,7 +95,7 @@ const readingOf = () => ({ content_type: "meeting_calendar", reader_version: 1, 
 const promote = async (id, type, shas) => {
   /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: a project's bytes said `collected` (information's word) under a
      `forming` label, and the projection took the label; the record now takes the bytes, so they state `forming`. */
-  const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
+  const text = `---\nobject_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}group: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
   /* T4 (legacy-tests; provenance K121): each reading carrier completed to C-18.1's intake shape, which is now refused
      at the write; each document names the file the promotion REGISTERS for its capture, and the bundle holds it
      (`register-doc.mjs`). */

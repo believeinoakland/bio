@@ -76,6 +76,7 @@ import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { INSTALLATION_CHECKS, PUBLISHED_READ_CHECKS } from "../checks/bio-checks.mjs";   /* D-549: C-68.5; D-561: C-98 — read from the rows, never a hand copy */
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
 import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 /* D-431: the loose branch's bundle is made EVIDENCE OF A RATIFIED CASE (Publication rule 2). */
 import { restOnARatifiedCase } from "./ratified-evidence.mjs";
@@ -222,7 +223,7 @@ const legLines = (legs) => legs.length
       ...(l.edition !== undefined ? [`    target_edition: ${l.edition}`] : [])])]
   : [];
 const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
-                         refs = [], legs = [] } = {}) => ["---",
+                         refs = [], legs = [], extra = [] } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, `current_state: ${state}`, "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -233,7 +234,7 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
-  ...legLines(legs),
+  ...legLines(legs), ...extra,
   "---", "",
   "## Question", "", question, "",
   "## What It Rests On", "",
@@ -312,7 +313,17 @@ await mf.dispatchFetch(`http://x/api/capture?token=mem-rec22&sha256=${WORKING_SH
 const DOC_CAP_SHA = sha("publishedcase-INFO_CAP-bytes");
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected", VERA, null,
   { register: [{ path: "snapshots/source.bin", sha256: DOC_CAP_SHA, bytes: 512, encoding: "binary" }] });
-await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
+/* RE-READ 2026-09-28 (T7, legacy-tests; strength R5, K187): INFO_CONN carries a READING naming the case's subject
+   entity by name, resolved, so the case's connection C is EARNED (`earned-connection.mjs`); a hunch is inert now. */
+const CONN = await connectionAtC(async (b) => rP(await POST(`op=entitycreate&token=${VERA}`, b)));
+{
+  const cap = sha("publishedcase-INFO_CONN-bytes");
+  await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected", VERA, null,
+    { files: CONN.files(cap, "snapshots/reading.bin"),
+      register: [{ path: "snapshots/reading.bin", sha256: cap, bytes: 10, encoding: "binary" }] });
+  const res = rP(await POST(`op=resolve&token=${VERA}`, { captureSha: cap }));
+  if (res?.ok === false) throw new Error(`resolve ${INFO_CONN}: ${JSON.stringify(res).slice(0, 400)}`);
+}
 await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected");
 
 /* The case rests on one CAPTURE-graded leg at B and one CONNECTION-graded leg at
@@ -326,11 +337,14 @@ await mustPromote(CASE, withAdoptableReading(inquiryMd(CASE, { question: "Was th
      `resolution` is now EARNED against the inquiry's subject entity and this
      question names none, so the capture leg says `capture` (earning B from the
      capture INFO_CAP now registers — the doctrine's own value for a direct
-     capture) and the connection leg says `hunch`, the honest name for an
-     authored connection grade and the only authored source above D (DEC-15). */
+     capture) and the connection leg said `hunch`, the honest name for an
+     authored connection grade and the only authored source above D (DEC-15).
+     RE-READ 2026-09-28 (T7, legacy-tests; strength R5, K187), never exempted: a hunch is INERT in every pair now, so
+     the pair would read (capture B, connection unrated). The connection C is EARNED instead — a `resolution` of
+     INFO_CONN's reading against this question's subject entity, at the correspondence tier. */
   legs: [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
-         { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
-           author: "vera", date: "2026-08-04" }] })), "inquiry", "open",
+         { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" }],
+  extra: [`subject_entity: ${CONN.entityId}`] })), "inquiry", "open",
   VERA, null, {
     /* THE CAPTURED PART TRAVELS WITH THE CASE, so the published container holds
        a blob and not only text — the file manifest states per-file sha AND

@@ -417,6 +417,9 @@ import { SCHEMA as BUILT_SCHEMA } from "../src/schema.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
+/* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1): the run's mechanism left the store for `src/ai-runs/index.mjs` — the
+   `ai_run_log` fold is ai-runs' `migrate()` (R38) and the rollup is its `#aiRunSearchState`. */
+const SRC_RUNS = readFileSync(new URL("../src/ai-runs/index.mjs", import.meta.url), "utf8");
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' sources, for B4's census (record-core R21). */
 import { storeCorpus, moduleSources } from "./extracted-sources.mjs";
 const SRC_SCHEMA = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
@@ -482,9 +485,15 @@ t("A1: `observation_log` is declared in observation-log's schema (was schema.mjs
    asked where the order now lives: the assembled `SCHEMA` does not carry the log (so it cannot land after the
    governor's block), still ends on that block, and the store runs the module's `migrate()` after the schema pass and
    BEFORE the fold (`PRAGMA table_info(ai_run_log)`), which copies into this table. */
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the fold (`PRAGMA table_info(ai_run_log)` and
+   its copy) moved from the store's #migrate into ai-runs' `migrate()`, which the store's #migrate calls AFTER
+   observation-log's. So "created before the fold copies into it" is the order of those two calls in the store, and
+   the fold is asserted to be inside ai-runs' `migrate()`. */
 {
   const mig = SRC_STORE.indexOf("observationLogOf(this.ctx).migrate();");
-  const fold = SRC_STORE.indexOf("PRAGMA table_info(ai_run_log)");
+  const runsMig = SRC_RUNS.indexOf("\n  migrate() {");
+  const fold = SRC_RUNS.indexOf("PRAGMA table_info(ai_run_log)") > runsMig && runsMig > -1
+    ? SRC_STORE.indexOf("aiRunsOf(this.ctx, this.env).migrate();") : -1;
   const gov = BUILT_SCHEMA.indexOf("CREATE TABLE IF NOT EXISTS host_governor");
   t("A2: and it is created BEFORE the fold copies into it, outside schema.mjs's literal, which still ends on the "
   + "host_governor block (the standing schema rule)",
@@ -536,18 +545,25 @@ console.log("\n--- B · one append site, and the refusals are read out of the ma
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R2, R22): the append site moved to the module's
      `observe` (`src/observation-log/index.mjs`); the fold's one-time copy stays in the store's #migrate. The census
      is over both texts, each counted, so a second writer in either is caught. */
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the fold's one-time copy left the store's
+     #migrate for ai-runs' `migrate()`, so the census counts three texts: the store (now none), observation-log (the
+     append) and ai-runs (the fold). */
   const inserts = [[...SRC_STORE.matchAll(/INSERT INTO observation_log\b/g)].length,
-                   [...SRC_OBS.matchAll(/INSERT INTO observation_log\b/g)].length];
+                   [...SRC_OBS.matchAll(/INSERT INTO observation_log\b/g)].length,
+                   [...SRC_RUNS.matchAll(/INSERT INTO observation_log\b/g)].length];
   t("B1: there is EXACTLY ONE `INSERT INTO observation_log` outside the migration (observation-log's append), "
-  + "and the store holds only the fold's",
-    inserts, [1, 1]);   /* the store: #migrate's one-time fold copy; the module: the append site */
-  t("B2: and the second is the FOLD's one-time copy inside #migrate, not a second writer",
-    /PRAGMA table_info\(ai_run_log\)[\s\S]{0,1200}INSERT INTO observation_log/.test(SRC_STORE), true);
+  + "and the only other is the fold's, in ai-runs' migrate (the store holds none)",
+    inserts, [0, 1, 1]);   /* the store: none; the module: the append site; ai-runs: the one-time fold copy */
+  const runsMig = SRC_RUNS.indexOf("\n  migrate() {"), runsMigEnd = SRC_RUNS.indexOf("\n  }\n", runsMig + 1);
+  t("B2: and the second is the FOLD's one-time copy inside ai-runs' migrate(), not a second writer",
+    runsMig > -1 && /PRAGMA table_info\(ai_run_log\)[\s\S]{0,1200}INSERT INTO observation_log/
+      .test(SRC_RUNS.slice(runsMig, runsMigEnd)), true);
   /* NO UPDATE AND NO DELETE except the whole-store purge — §3's first rule:
      "a log that can be rewritten is not evidence of anything". */
   t("B3: nothing UPDATEs the table — append-only is a property of the code, not a promise",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; observation-log R22): the module's text is read too. */
-    [...(SRC_STORE + "\n" + SRC_OBS).matchAll(/UPDATE observation_log\b/g)].length, 0);
+    /* T7: and ai-runs' text, where the fold now lives. */
+    [...(SRC_STORE + "\n" + SRC_OBS + "\n" + SRC_RUNS).matchAll(/UPDATE observation_log\b/g)].length, 0);
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; record-core R21, R22): the one DELETE was purge's literal
      whole-store line in store.mjs. Purge moved to `record-core`, which deletes from each DECLARED table with ONE
      generic statement; a table declared with no keys is cleared by the whole-store arm only. So the census is
@@ -1049,7 +1065,9 @@ console.log("\n--- I · REC-103: the document frontier withholds row-whole (§6)
      id the record holds it under — SECRET is the minted one. */
   const mk = async (id, type, capture) => {
     const mint = type === "project";
-    const text = `---\n${mint ? "" : `id: ${id}\n`}object_type: ${type}\n---\n\n## Summary\n\n${id}\n`;
+    /* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so a project states one. */
+    const text = `---\n${mint ? "" : `id: ${id}\n`}object_type: ${type}\n`
+      + `${mint ? 'objective: "Keep this project private."\n' : ""}---\n\n## Summary\n\n${id}\n`;
     const r = await POST(`op=promote&token=${TOK}`, {
       ...(mint ? {} : { bundleId: id }), base: null, snapKey: `20260916T0900${id.length % 10}0Z_${sha(id).slice(0, 8)}`,
       /* CORRECTED 2026-09-25 (D-563, C-86.3), never exempted: this label contradicted the title the other documents
@@ -1667,8 +1685,14 @@ console.log("\n--- J · REC-110: the tally is ungated ON PURPOSE (D-386 ruled (a
        once, in the store's `#hiddenSets`. */
     [(SRC_FRONTIER.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length,
      (SRC_FRONTIER.match(/this\.#tally\("(?:document|content|meaning)", viewer\)/g) || []).length,
-     (SRC.match(/registerHiddenRunTail\("legacy-store", \(viewer\) => this\.#hiddenRunTail\(viewer\)\)/g) || []).length,
-     (SRC.match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
+     /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): the tail is registered by
+        ai-runs now (`retrieval.registerHiddenRunTail("ai-runs", …)` in its constructor), and the store's
+        `#hiddenRunTail` and its registration are gone. ai-runs' `hiddenRunTail` does NOT reach the store's
+        `#hiddenSets`: it spells the subtraction itself. So the "written in exactly ONE place" census follows the
+        tail into ai-runs' text beside the store's — and reads 2 (store `#hiddenSets` for `op=stats`' two readers,
+        ai-runs `hiddenRunTail` for the three tallies). Not re-pinned: REPORTED to ai-runs and legacy-store. */
+     (SRC_RUNS.match(/retrieval\.registerHiddenRunTail\("ai-runs", \(viewer\) => this\.hiddenRunTail\(viewer\)\)/g) || []).length,
+     ((SRC + "\n" + SRC_RUNS).match(/NOT \(authority_kind = 'run' AND COALESCE\(authority, ''\) IN /g) || []).length,
      /BOB #32, 2026-09-24 02:30Z/.test(SRC)],
     [1, 3, 1, 1, true]);
 }
@@ -1729,8 +1753,10 @@ console.log("\n--- K · REC-100: the rollup referent, built (D-366 closed) ---")
      read, PRESENT is chosen iff that read returned a PRESENT group, and the
      group's MAX(seq) is the referent. K1/K4 then drive it. */
   {
-    const i = SRC_STORE.indexOf("  #aiRunSearchState(run, stoppedByBound) {");
-    const body = SRC_STORE.slice(i, SRC_STORE.indexOf("\n  }\n", i));
+    /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): `#aiRunSearchState` moved with the run's
+       mechanism from `store.mjs` into `src/ai-runs/index.mjs`, whole. */
+    const i = SRC_RUNS.indexOf("  #aiRunSearchState(run, stoppedByBound) {");
+    const body = SRC_RUNS.slice(i, SRC_RUNS.indexOf("\n  }\n", i));
     t("K0: THE FALSIFIER — the rollup's state and its referent come from ONE grouped read over the "
     + "run's non-terminal rows, PRESENT iff that read has a PRESENT group, and the referent is that "
     + "group's latest seq; the bound override never produces PRESENT",

@@ -79,6 +79,7 @@ import { checkBundle, STATES, SUBJECT_POSITIONS, checkCaseDocument,
          parseFrontmatter as parseFm } from "../checks/bio-checks.mjs";
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
 import { SCHEMA } from "../src/schema.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -366,12 +367,13 @@ let snapSeq = 0;
    to be: a captured document. */
 /* CORRECTED 2026-09-18 (REC-141, IC-158): `id` null creates a PROJECT with NO bundleId — the plane mints
    the id and a creation naming one is refused PROJECT_ID_SUPPLIED (C-59.1); the id is read from the answer. */
-const promote = async (id, md, type, state, tok = PILAR, base = null) => {
+/* T7 (legacy-tests): `extraFiles` carries a cited document's reading beside its bundle.md (`earned-connection.mjs`). */
+const promote = async (id, md, type, state, tok = PILAR, base = null, extraFiles = []) => {
   const r = rP(await POST(`op=promote&token=${tok}`, {
     ...(id === null ? {} : { bundleId: id }), base, snapKey: `20260804T${String(100000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
     meta: { object_type: type, group: "believe-in-oakland",
             current_state: state, /* promotion R12 */ created: docDate(md, "created") ?? NOW, last_updated: docDate(md, "last_updated") ?? LATER },
-    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...extraFiles],
     register: type === "information"
       ? [{ path: "snapshots/doc.bin", sha256: sha(`capture-of-${id}`), encoding: "binary", bytes: 10 }]
       : [],
@@ -412,7 +414,17 @@ const PROJ_NAME = "PROJ-2026-1400-auditor";
 let PROJ;
 
 await mustPromote(INFO_CAP, infoMd(INFO_CAP), "information", "collected");
-await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected");
+/* RE-READ 2026-09-28 (T7, legacy-tests; strength R5, K187): the CONNECTION leg's document carries a READING that
+   names the case's subject entity by name, and that reading is resolved — so the leg's C is EARNED (a resolution at
+   the correspondence tier, `earned-connection.mjs`) rather than a hunch, which strength R5 now reads as inert. */
+const CONN = await connectionAtC(async (b) => rP(await POST(`op=entitycreate&token=${PILAR}`, b)));
+{
+  const cap = sha(`capture-of-${INFO_CONN}`);
+  await mustPromote(INFO_CONN, infoMd(INFO_CONN), "information", "collected", PILAR, null,
+    CONN.files(cap, "snapshots/doc.bin"));
+  const res = rP(await POST(`op=resolve&token=${PILAR}`, { captureSha: cap }));
+  if (res?.ok === false) throw new Error(`resolve ${INFO_CONN}: ${JSON.stringify(res).slice(0, 400)}`);
+}
 await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected");
 /* The case rests on one CAPTURE-graded leg at B and one CONNECTION-graded leg
    at C, so its frozen pair is (capture B, connection C) — two DIFFERENT letters
@@ -429,18 +441,21 @@ await mustPromote(INFO_LEFTOUT, infoMd(INFO_LEFTOUT), "information", "collected"
    this question names none. So: the CAPTURE leg says `capture`, and it earns B
    from the capture the promote helper now registers — the doctrine's own value
    ("grade B is what a direct capture by this instance is worth; it is not grade
-   A and this surface will not say it is"). The CONNECTION leg says `hunch`,
-   which is the honest name for an authored connection grade and the only
+   A and this surface will not say it is"). The CONNECTION leg said `hunch`,
+   which was the honest name for an authored connection grade and the only
    authored source permitted above D, carrying the author and date DEC-15
-   requires. */
+   requires.
+   RE-READ 2026-09-28 (T7, legacy-tests; strength R5, K187), never exempted: a hunch is now INERT in every pair, so
+   the case would reach connection UNRATED. The pair is still (capture B, connection C); the C is now EARNED — a
+   `resolution` of INFO_CONN's reading against the case's subject entity (`subject_entity` below), at the
+   correspondence tier, which is C. */
 const CASE_LEGS = [{ target: INFO_CAP, grade: "B", axis: "capture", source: "capture" },
-                   { target: INFO_CONN, grade: "C", axis: "connection", source: "hunch",
-                     author: "pilar", date: "2026-08-04" }];
+                   { target: INFO_CONN, grade: "C", axis: "connection", source: "resolution" }];
 /* REC-136: INQ_CASE and INQ_THIN are CONCLUDED below, so each carries an
    accepted reading to adopt (§7.1 item 6). INQ_OPEN is never concluded and is
    left exactly as it was. */
 await mustPromote(INQ_CASE, withAdoptableReading(inquiryMd(INQ_CASE, { question: "Was the sewer transfer authorised?",
-  refs: [INFO_CAP, INFO_CONN], legs: CASE_LEGS })), "inquiry", "open");
+  refs: [INFO_CAP, INFO_CONN], legs: CASE_LEGS, extra: [`subject_entity: ${CONN.entityId}`] })), "inquiry", "open");
 await mustPromote(INQ_THIN, withAdoptableReading(inquiryMd(INQ_THIN, { question: "Who signed the memo?",
   refs: [INFO_CAP], legs: [{ target: INFO_CAP }] })), "inquiry", "open");
 await mustPromote(INQ_OPEN, inquiryMd(INQ_OPEN, { question: "Does this recur?",

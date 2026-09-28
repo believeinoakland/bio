@@ -75,12 +75,22 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
+import { VERSION_STATES, VERSION_MACHINE, BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5, strength R24): C-30 (`VERSION_STRENGTH_CHECKS`), the
+   default state set and the hunch roster left the catalogue with the pair over a version and are strength's
+   (src/strength/checks.mjs, exported by src/strength/index.mjs); ids, codes and translations unchanged, each `where`
+   re-pointed to src/strength/index.mjs. */
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES,
-         VERSION_STRENGTH_INERT_SOURCES, VERSION_STATES, VERSION_MACHINE,
-         BASIS_GRADES, EARNED_CAPTURE_CEILING } from "../checks/bio-checks.mjs";
+         VERSION_STRENGTH_INERT_SOURCES } from "../src/strength/index.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7; STRENGTH #1 J5): `versionStrength`, `#refusePairComposed`, `#versionLegsAsMembers`
+   and `#strengthWalk` moved out of store.mjs into src/strength/index.mjs (`versionStrength`, the module function
+   `refusePairComposed`, `#versionLegsAsMembers`, `#walk` reached through `#pairOver`), and `#axisResult`,
+   `#groundResult`, `#weakestOf` into src/strength/arithmetic.mjs (`axisResult`, `groundResult`, `weakestOf`). The
+   source pins below read the module; STRENGTH_SRC is both files, the class's first. */
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8") + "\n"
+                   + readFileSync(SRC("strength/arithmetic.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 
 let pass = 0, fail = 0;
@@ -213,6 +223,8 @@ const projectMd = (id, refs = []) => ["---", ...(id === null ? [] : [`id: ${id}`
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(refs.length ? ["references:", ...refs.flatMap((x) => [`  - rel: cites`,
       `    status: confirmed`, `    target: ${x}`])] : ["references: []"]),
+  /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Decide what the sewer transfers rest on."',
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 
 let snapSeq = 0;
@@ -390,21 +402,23 @@ console.log("\n--- 1. the pair is never composed into one number — asserted, n
 {
   /* THE GUARD IS REACHED, pinned over comment-stripped REAL source rather than
      trusted: DEC-44's refusal is worth nothing if the return path can miss it. */
-  const s = strip(STORE_SRC);
-  t("`#refusePairComposed` is DEFINED once and REACHED on the way out — one definition, one call",
-    [count(s, "#refusePairComposed(") - 1, /return this\.#refusePairComposed\(out\) \?\? out;/.test(s)],
-    [1, true]);
+  const s = strip(STRENGTH_SRC);
+  t("`refusePairComposed` is DEFINED once and REACHED on the way out — one definition, one call",
+    [count(s, "refusePairComposed(") - 1, count(s, "function refusePairComposed("),
+     /return refusePairComposed\(out\) \?\? out;/.test(s)],
+    [1, 1, true]);
   /* AND THE READER IS RE-RUN OVER A SOURCE THAT DOES COMPOSE, and required to
      find it. A walk that reports "no composition" over a corpus it cannot see
      is the failure this repository has measured more than once. */
   /* CORRECTED BY MK-2 (IC-142): the answer's `pair` is now built from the axis
      list (`Object.fromEntries(Store.STRENGTH_AXES…)`) rather than typed as two
      keys, so the reader and its planted composition follow that spelling. */
-  const PAIR_SRC = "pair: Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, pair[a]])),";
+  /* RE-ANCHORED (T7; STRENGTH #1 J5): the axis list is the module's `STRENGTH_AXES`, its map variable `ax`. */
+  const PAIR_SRC = "pair: Object.fromEntries(STRENGTH_AXES.map((ax) => [ax, pair[ax]])),";
   const composed = s.replace(PAIR_SRC, `${PAIR_SRC} strength: "B",`);
   const seesIt = (src) => /pair: Object\.fromEntries\([^\n]*\),\s*strength:/.test(src);
   t("the same reader run over a source that DOES compose FINDS it — the walk is not blind",
-    [seesIt(s), seesIt(composed)], [false, true]);
+    [s.includes(PAIR_SRC), seesIt(s), seesIt(composed)], [true, false, true]);
   t("and DEC-44's refusal is a CATALOGUE ROW with a canned translation, not a comment",
     [chk("VERSION_STRENGTH_COMPOSED").check,
      (chk("VERSION_STRENGTH_COMPOSED").translation ?? "").length > 40], ["C-30.7", true]);
@@ -638,7 +652,7 @@ console.log("\n--- 7. DEC-40: the answer states which readings it counted, on it
   /* THE GUARD, not merely the convention: an answer with no line is REFUSED. */
   t("and a missing line is a REFUSAL with a canned translation, not a formatting lapse",
     [chk("VERSION_STRENGTH_UNFILTERED").check,
-     /src\/store\.mjs #refusePairComposed/.test(chk("VERSION_STRENGTH_UNFILTERED").where ?? "")],
+     /src\/strength\/index\.mjs #refusePairComposed/.test(chk("VERSION_STRENGTH_UNFILTERED").where ?? "")],
     ["C-30.8", true]);
 }
 
@@ -793,8 +807,8 @@ console.log("\n--- 9. the op through the control plane: refusals, the gate, and 
     }), true);
   t("the two self-guards carry their OWN `where`, so neither site conscripts the other's refusals",
     selfGuards.map((k) => chk(k).where ?? null),
-    ["src/store.mjs #refusePairComposed > is-pair-composed",
-     "src/store.mjs #refusePairComposed > is-pair-composed"]);
+    ["src/strength/index.mjs #refusePairComposed > is-pair-composed",
+     "src/strength/index.mjs #refusePairComposed > is-pair-composed"]);
   t("NO canned translation uses the analyst's vocabulary on a member's screen (DEC-32 cl. 1, D-226)",
     Object.entries(VERSION_STRENGTH_CHECKS)
       .filter(([, r]) => /\bground\b|\bpartition\b|\bAND\b|\bOR\b|disjunct/.test(r.translation))
@@ -802,20 +816,20 @@ console.log("\n--- 9. the op through the control plane: refusals, the gate, and 
   /* THE REGION MARKER IS REAL AND NON-TRIVIAL — REC-71's rule, and the span is
      asserted rather than assumed, because a `where` that stops resolving is an
      arm that stopped running while still reporting green. */
-  const open = STORE_SRC.indexOf("DEC-49 REGION is-version-strength");
-  const close = STORE_SRC.indexOf("END DEC-49 REGION is-version-strength");
+  const open = STRENGTH_SRC.indexOf("DEC-49 REGION is-version-strength");
+  const close = STRENGTH_SRC.indexOf("END DEC-49 REGION is-version-strength");
   const span = open >= 0 && close > open
-    ? STORE_SRC.slice(open, close).split("\n").length : 0;
+    ? STRENGTH_SRC.slice(open, close).split("\n").length : 0;
   t("the region is DECLARED in the source, opened once, closed once, and is a real span",
-    [count(STORE_SRC, "DEC-49 REGION is-version-strength"), span > 30], [2, true]);
+    [count(STRENGTH_SRC, "DEC-49 REGION is-version-strength"), span > 30], [2, true]);
   t("and the refusals inside it name their codes as STRING LITERALS, so the guard can compare them",
-    count(STORE_SRC.slice(open, close), 'refusal("VERSION_STRENGTH_') >= 6, true);
+    count(STRENGTH_SRC.slice(open, close), 'refusal("VERSION_STRENGTH_') >= 6, true);
 }
 
 /* ================ 10. ONE ARITHMETIC, REACHED THROUGH ONE SEAM ========== */
 console.log("\n--- 10. the arithmetic is reached, never restated ---");
 {
-  const s = strip(STORE_SRC);
+  const s = strip(STRENGTH_SRC);
   /* IS-6's C-22.4 control passed vacuously at 98/98 because a rule had TWO
      implementations and removing either left the other absorbing the control.
      A count pin is what a behavioural arm cannot do. */
@@ -825,16 +839,19 @@ console.log("\n--- 10. the arithmetic is reached, never restated ---");
      would count one and report a single implementation triumphantly. Measured —
      the control's first run armed `#axisResultAgain` and this pin, written with
      the paren, stayed GREEN at 88/88. */
-  t("DEC-32's composition is implemented ONCE — one `#axisResult`, one `#groundResult`, one `#weakestOf`",
-    [count(s, "static #axisResult"), count(s, "static #groundResult"), count(s, "static #weakestOf")],
+  /* RE-ANCHORED (T7; STRENGTH #1 J5): the three are module functions now, `function axisResult`, `function
+     groundResult`, `function weakestOf`, counted by the same stable prefix (no paren) over both files. */
+  t("DEC-32's composition is implemented ONCE — one `axisResult`, one `groundResult`, one `weakestOf`",
+    [count(s, "function axisResult"), count(s, "function groundResult"), count(s, "function weakestOf")],
     [1, 1, 1]);
   const body = (() => {
     const at = s.indexOf("versionStrength(a = {})");
-    const end = s.indexOf("\n  #versionLegsAsMembers", at);
+    const end = s.indexOf("\n  #versionLegs(", at);
     return at < 0 ? "" : s.slice(at, end > at ? end : at + 20000);
   })();
+  /* RE-ANCHORED (T7): the version path hands its legs to the ONE walk through `#pairOver(inq, resolved.legs)`. */
   t("and `versionStrength` composes nothing itself — it hands legs to the ONE walk and reports",
-    [body.length > 500, /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(body),
+    [body.length > 500, /this\.#pairOver\(inq, resolved\.legs\)/.test(body),
      /Math\.(min|max)/.test(body), /GRADE_RANK/.test(body)], [true, true, false, false]);
   /* CORRECTED 2026-09-15 by REC-105, NEVER EXEMPTED. This pin spelled
      `#strengthWalk`'s signature PARAMETER FOR PARAMETER, so REC-105's fifth
@@ -845,18 +862,25 @@ console.log("\n--- 10. the arithmetic is reached, never restated ---");
      line — and it additionally pins that the bound map is a SEPARATE parameter
      from `legsOverride`, which is what keeps the version path structurally
      unable to reach it (IC-102). */
+  /* RE-ANCHORED (T7; STRENGTH #1 J5): `#strengthWalk` is `#walk`, its basis read `this.#legsOf(bundleId)`
+     (inquiry's `basisFor`). The capture bound is still a SEPARATE parameter, so no leg can carry one; what changed
+     with the extraction is that `#pairOver` now COMPUTES it for every path from the record (strength R1, R19: "every
+     path now bounds a capture grade by what the record earns", STRENGTH #1 J5), the version path included, where
+     REC-105's version path passed none. That is the requirement's, not a pin's, and it is pinned as such. */
   t("the seam it uses is PL-3's `legsOverride` parameter and not a second walk",
-    [count(s, "#strengthWalk(bundleId, depth, bound,"),
-     count(s, "legsOverride ?? (this.basisFor(bundleId).legs ?? [])")], [1, 1]);
-  t("and REC-105's capture bound rides a SEPARATE parameter, so a version's legs cannot carry one",
-    [/#strengthWalk\(bundleId, depth, bound, legsOverride = null, captureBounds = null\)/.test(s),
-     /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(s)], [true, true]);
+    [count(s, "#walk(bundleId, depth, bound,"),
+     count(s, "legsOverride ?? this.#legsOf(bundleId)")], [1, 1]);
+  t("and REC-105's capture bound rides a SEPARATE parameter, computed from the record and never from a version's legs",
+    [/#walk\(bundleId, depth, bound, legsOverride, captureBounds\)/.test(s),
+     /this\.#pairOver\(inq, resolved\.legs\)/.test(s),
+     /this\.#walk\(bundleId, 0, DEPTH_BOUND, topLegs, this\.#captureBoundsFor\(bundleId, DEPTH_BOUND, topLegs\)\)/.test(s)],
+    [true, true, true]);
   /* AND THE READER RE-RUN OVER A SOURCE THAT DOES RESTATE IT, required to find
      it — a walk over a corpus it cannot see reports one implementation
      triumphantly. */
-  const doubled = s.replace("static #axisResult(", "static #axisResultTwo(x){return x;}\n  static #axisResult(");
+  const doubled = s.replace("export function axisResult(", "function axisResultTwo(x){return x;}\nexport function axisResult(");
   t("the same reader over a source carrying a SECOND composition finds two — the pin is not blind",
-    [count(s, "static #axisResult"), count(doubled, "static #axisResult")], [1, 2]);
+    [count(s, "function axisResult"), count(doubled, "function axisResult")], [1, 2]);
   t("no schema change rode this item: the version tables are PL-1's, unaltered",
     [/versionStrength/.test(readFileSync(SRC("schema.mjs"), "utf8")),
      count(s, "CREATE TABLE IF NOT EXISTS inquiry_basis_versions")], [false, 0]);

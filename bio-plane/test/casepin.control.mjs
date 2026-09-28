@@ -60,6 +60,12 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-casepin");             /* inside this worktree, rule 1 */
 const STORE = join(ROOT, "src", "store.mjs");
+/* ADDED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1): the version door `#moveVersionState` and its published
+   fence moved to basis-versions, where the case relation is promotion's fact `caseMember`. Arms (c) and (d) edit it
+   there; the pin write, the ceremony and the roster SELECT stay in store.mjs. */
+const BV = join(ROOT, "src", "basis-versions", "index.mjs");
+const BV_FENCE = '    if (to !== null) {\n      const member = this.promotion.fact("caseMember", target);\n'
+               + '      if (!member.ok) return { ...member, act, target, version: vname };\n      if (member.value)';
 const SUITE = join(DIR, "casepin.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -160,7 +166,7 @@ const ARMS = {
          "           ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,",
          "           ratified_at=? WHERE case_id=? AND edition=?`,") },
 
-  c: { files: [STORE],
+  c: { files: [BV],
        label: "(c) THE MINT IS NOT ENFORCED: remove the PUBLISHED_CANNOT_MOVE_VERSION arm, so an edit "
             + "touching a published version LANDS instead of being routed to a new edition. The door goes "
             + "back to standing open while its two neighbours stay shut",
@@ -170,11 +176,11 @@ const ARMS = {
         `this.#caseRelationOf(target).member`. The fence is the same fence and the
         arm is the same arm — `false &&` in front of it — only the question it asks
         is now spelled as the case RELATION rather than the state. */
-       apply: () => edit(STORE,
-         '    if (to !== null && this.#caseRelationOf(target).member)',
-         '    if (false && to !== null && this.#caseRelationOf(target).member)') },
+     /* RE-ANCHORED 2026-09-28: the fence is basis-versions' `if (to !== null) { … if (member.value)`; `false &&` goes
+        in front of the member test, the arm unchanged in meaning. */
+       apply: () => edit(BV, BV_FENCE, BV_FENCE.replace("      if (member.value)", "      if (false && member.value)")) },
 
-  d: { files: [STORE],
+  d: { files: [BV],
        label: "(d) OVER-STRICTNESS — the direction a control usually forgets. Widen the fence from the four "
             + "acts that MOVE a state to all six, catching `hide` (a display prune that D-214 rules never "
             + "deletes) and `current` (a PROJECT's stance, written on the project). Nothing about a published "
@@ -183,9 +189,8 @@ const ARMS = {
      /* ARM (d) RE-ANCHORED 2026-09-13 BY M0-25, same cause as (c) (`7e10ca9`,
         CASE-4). The over-strictness direction is unchanged: drop `to !== null` and
         the fence widens from the four acts that MOVE a state to all six. */
-       apply: () => edit(STORE,
-         '    if (to !== null && this.#caseRelationOf(target).member)',
-         '    if (this.#caseRelationOf(target).member)') },
+     /* RE-ANCHORED 2026-09-28: drop `to !== null` from basis-versions' fence and it widens to all six acts. */
+       apply: () => edit(BV, BV_FENCE, BV_FENCE.replace("    if (to !== null) {", "    if (true) {")) },
 
   e: { files: [STORE],
        label: "(e) THE FREEZE IS WRITTEN AND NO READER CAN SEE IT: drop `version_sha` from "

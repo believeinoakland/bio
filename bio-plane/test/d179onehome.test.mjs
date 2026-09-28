@@ -93,7 +93,7 @@ const infoMd = (id, note = "A captured document.") => ["---", `id: ${id}`, "obje
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []", "---", "", "## Summary", "", note, "", "## Provenance Notes", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
-const projectMd = () => ["---", "object_type: project", `title: "Hidden project 0179"`, "current_state: forming",
+const projectMd = () => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "Hidden project 0179"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", "A project.", "",
   "## Session Log", ""].join("\n");

@@ -40,12 +40,16 @@ import { controlPen } from "./pen.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): `aiRunsInContext` is ai-runs' `listInContext` (AI-RUNS #1), and its
+   delegate `aiRunRead` is `read`; arms 1, 2 and 6 arm `src/ai-runs/index.mjs`, arm 3 the renamed ROLE cell. Arms 4, 5
+   and 7 are the `airuns` suite's and are left as they were. */
 const P = {
+  airuns: join(PLANE, "src/ai-runs/index.mjs"),
   store:  join(PLANE, "src/store.mjs"),
   schema: join(PLANE, "src/schema.mjs"),
   cond:   join(PLANE, "test/run-conditions.test.mjs"),
 };
-const MIN_BYTES = { store: 500000, schema: 50000, cond: 20000 };
+const MIN_BYTES = { airuns: 100000, store: 500000, schema: 50000, cond: 20000 };
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
@@ -128,7 +132,7 @@ if (bc.fail !== 0 || ba.fail !== 0 || bc.pass < 1 || ba.pass < 1) {
    matrix. These two are the whole basis of that exemption. */
 arm({
   name: "a SELECTS reader starts PROJECTING a stored column",
-  file: "store",
+  file: "airuns",
   from: "SELECT r.run FROM ai_runs r",
   to:   "SELECT r.run, r.status FROM ai_runs r",
   mustFail: "run-conditions ARM W8, naming `aiRunsInContext PROJECTS stored column status`",
@@ -146,8 +150,8 @@ arm({
 
 arm({
   name: "a SELECTS reader stops DELEGATING — it calls no PUBLISHES reader",
-  file: "store",
-  from: "this.aiRunRead({ run: r.run, viewer })",
+  file: "airuns",
+  from: "this.read({ run: r.run, viewer })",
   to:   "this.aiRunNotAPublisherAtAll({ run: r.run, viewer })",
   mustFail: "run-conditions ARM W8, naming `aiRunsInContext CALLS NO PUBLISHES reader`",
   mustNotFail: "ARM W3 — still classified. (airuns.test.mjs also goes red at RUNTIME, which is correct and is not this arm's subject)",
@@ -168,7 +172,7 @@ arm({
 arm({
   name: "the SELECTS classification is REMOVED — W3's totality must fail exactly as it did on 2026-08-08",
   file: "cond",
-  from: '  aiRunsInContext:    "SELECTS",\n',
+  from: '  listInContext:      "SELECTS",\n',
   to:   "",
   mustFail: "ARM W3 naming `aiRunsInContext`, AND the ARM W8 GUARD (a corpus of zero SELECTS readers)",
   mustNotFail: "ARM W4 — the publisher set is unaffected by an unclassified reader",
@@ -176,7 +180,7 @@ arm({
     const r = conditions();
     console.log(`    run-conditions: ${r.pass} pass, ${r.fail} fail`);
     for (const f of failedArms(r.out)) console.log(`      FAILED: ${f}`);
-    const w3 = /FAIL {2}ARM W3:/.test(r.out) && /aiRunsInContext/.test(r.out);
+    const w3 = /FAIL {2}ARM W3:/.test(r.out) && /listInContext/.test(r.out);
     const guard = /FAIL {2}ARM W8 GUARD/.test(r.out);
     const w4 = /FAIL {2}ARM W4/.test(r.out);
     console.log(`    ACTUAL: W3 named it: ${w3} · W8 GUARD fell: ${guard} · W4 fell: ${w4} (declared false)`);
@@ -258,7 +262,7 @@ arm({
    against must PASS. A fence tighter than its rule is not a safer fence. */
 arm({
   name: "OVER-STRICTNESS — the same correct projection in a spelling W8 was not written against",
-  file: "store",
+  file: "airuns",
   from: "SELECT r.run FROM ai_runs r",
   to:   "SELECT DISTINCT r.run AS run FROM ai_runs r",
   mustFail: "NOTHING. This is still a SELECTS reader projecting only the key.",

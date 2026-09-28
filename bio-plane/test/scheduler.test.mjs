@@ -95,7 +95,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -305,8 +305,16 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
      run's own alarm or cron -> the one-alarm assertion fails". Before FL-4 this
      suite had no such assertion, so the control it declared could not have
      failed anything. Corrected rather than exempted. */
-  const setSites = (bare.match(/storage\.setAlarm\(/g) || []).length;
-  const delSites = (bare.match(/storage\.deleteAlarm\(/g) || []).length;
+  /* WIDENED 2026-09-28 (LEGACY-TESTS #4): "every setAlarm in the PLANE" was the store's source while the store held
+     every consumer. The consumers' bodies have since left it for their modules (the run wake is ai-runs' `wake`, the
+     drain capture-requests'), and a module that armed its own alarm would sit outside a store-only count, so the two
+     counts are over every file of `src/`; the span they must fall inside is still the store's `#reconcileAlarm`. */
+  const PLANE_BARE = (function walk(d) {
+    return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(join(d, e.name))
+      : e.name.endsWith(".mjs") ? [decomment(readFileSync(join(d, e.name), "utf8"))] : []);
+  })(join(DIR, "..", "src")).join("\n");
+  const setSites = (PLANE_BARE.match(/storage\.setAlarm\(/g) || []).length;
+  const delSites = (PLANE_BARE.match(/storage\.deleteAlarm\(/g) || []).length;
   const reconcileAt = bare.indexOf("async #reconcileAlarm(now, reg, exact = false) {");
   /* THE END ANCHOR IS CODE AND NOT A COMMENT, and the first draft of this arm
      got it wrong: `decomment` blanks comments before the walk, so an anchor

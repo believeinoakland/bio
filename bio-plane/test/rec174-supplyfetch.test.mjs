@@ -98,7 +98,7 @@ const boot = async () => {
   const promote = async (id, type, shas, readings = {}) => {
     /* CORRECTED 2026-09-25 (D-563, C-86.4), never exempted: a project's bytes said `collected` (information's word) under a
        `forming` label, and the projection took the label; the record now takes the bytes, so they state `forming`. */
-    const text = `---\nobject_type: ${type}\ngroup: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
+    const text = `---\nobject_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}group: believe-in-oakland\ntitle: ${id}\ncurrent_state: ${type === "project" ? "forming" : "collected"}\n---\n\n# ${id}\n`;
     const regPath = (s) => `data/${shas.indexOf(s)}-${s.slice(0, 4)}.pdf`;
     /* T4 (legacy-tests; provenance K121): an INFORMATION bundle's reading carriers completed to C-18.1's intake
        shape, which is now refused at the write, each naming its capture at the path the register below gives it, and

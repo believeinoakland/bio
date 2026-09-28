@@ -43,6 +43,10 @@ import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { DatabaseSync } from "node:sqlite";
 import { VERSION_NOTICE_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (REEVALUATION #1 J2.10, its R10): C-80.1 VERSION_NOTICE_NO_SUBJECT and C-80.2
+   VERSION_NOTICE_NO_INQUIRY moved with op=versionnotice to reevaluation's `VERSION_NOTICE_SUBJECT_CHECKS`; C-80.3
+   VERSION_NOTICE_NO_CONTENT stays in the catalogue's `VERSION_NOTICE_CHECKS` as content's. The family is both. */
+import { VERSION_NOTICE_SUBJECT_CHECKS } from "../src/reevaluation/index.mjs";
 import { normalizeAddress } from "../src/subresources.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -106,6 +110,8 @@ const infoMd = (id) => ["---",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const projectMd = () => ["---", "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Hold the newer contract for the team that owns it."',
   "---", "", "## Summary", "", "A project the uninvited must not learn about.", ""].join("\n");
 const extentLines = (l) => [
   ...(l.kind ? [`    extent_kind: ${l.kind}`] : []),
@@ -425,10 +431,12 @@ t("a question that does not exist, and a document id given as a question: VERSIO
 t("a passage that does not exist: VERSION_NOTICE_NO_CONTENT (C-80.3)",
   [codeOf(await notice(`content=${"0".repeat(64)}`)), (await notice(`content=${"0".repeat(64)}`))?.check],
   ["VERSION_NOTICE_NO_CONTENT", "C-80.3"]);
+const NOTICE_FAMILY = { ...VERSION_NOTICE_SUBJECT_CHECKS, ...VERSION_NOTICE_CHECKS };
 t("the refusal family is three rows, all C-80, each with a translation a member can read",
-  [Object.keys(VERSION_NOTICE_CHECKS).length,
-   Object.values(VERSION_NOTICE_CHECKS).every((r) => /^C-80\.\d+$/.test(r.check) && r.translation.length > 60)],
-  [3, true]);
+  [Object.keys(NOTICE_FAMILY).length,
+   Object.values(NOTICE_FAMILY).every((r) => /^C-80\.\d+$/.test(r.check) && r.translation.length > 60),
+   Object.values(NOTICE_FAMILY).map((r) => r.check).sort()],
+  [3, true, ["C-80.1", "C-80.2", "C-80.3"]]);
 const cut = await notice(`target=${INQ}&limit=2`);
 t("THE BOUND: limit=2 answers the first two legs, publishes the 2 it applied, and says it was cut",
   [cut?.count, cut?.limit, cut?.truncated, (cut?.notices || []).map((n) => n.ord), all?.truncated, all?.limit],

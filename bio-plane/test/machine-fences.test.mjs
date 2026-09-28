@@ -185,8 +185,15 @@ const SRC = (f) => join(DIR, "..", "src", f);
 /* RE-ANCHORED 2026-09-26 (T3, legacy-tests): the store's promote and reopen were extracted to `promotion`
    (src/promotion/, K31), taking MACHINE_CANNOT_REOPEN with them, so the store's corpus is `store.mjs` AND the
    module extracted from it. The index's block (3b) is unchanged. */
+/* RE-ANCHORED 2026-09-28 (T7 layer 6, legacy-tests): five more of the family left store.mjs with their acts —
+   MACHINE_CANNOT_CONCLUDE and MACHINE_CANNOT_MOVE_VERSION to basis-versions (`conclude`, `#moveVersionState`;
+   BASIS-VERSIONS #1 J4.1), MACHINE_CANNOT_DIVIDE and MACHINE_CANNOT_GROUND to inquiry (`#divide`, `#ground`;
+   INQUIRY #1 J2.2), MACHINE_CANNOT_DECLARE to strength (`strengthBarSet`; STRENGTH #1 J5) — so those three modules,
+   extracted from the store, join the corpus the harvest and the method walk read. */
+const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength"];
 const STORE_SRC = [readFileSync(SRC("store.mjs"), "utf8"),
-  ...readdirSync(SRC("promotion")).filter((f) => f.endsWith(".mjs")).sort().map((f) => readFileSync(SRC(`promotion/${f}`), "utf8"))]
+  ...EXTRACTED.flatMap((m) => readdirSync(SRC(m)).filter((f) => f.endsWith(".mjs")).sort()
+    .map((f) => readFileSync(SRC(`${m}/${f}`), "utf8")))]
   .join("\n");
 
 let pass = 0, fail = 0;
@@ -945,7 +952,7 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
      three OPERATOR_TOKEN_CANNOT_*) which this equality has never been able to see. Those are block
      3b's, harvested and driven there; the two arms together are the whole plane, and neither claims
      to be. The old wording was the defect this file exists to find, in this file. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/promotion/`, extracted from it) mints was driven under a COMPLETE payload — the codes "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength) mints was driven under a COMPLETE payload — the codes "
   + "`src/index.mjs` mints are block 3b's, and were outside this corpus, not inside it (D-503)",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);

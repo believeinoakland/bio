@@ -88,7 +88,12 @@ const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
    decision's comment moved to content's `CONTENT_SCHEMA` (`src/content/schema.mjs`); `inquiry_basis`' indexes stay
    in schema.mjs. The schema read is both texts. */
 import { CONTENT_SCHEMA } from "../src/content/schema.mjs";
-const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), CONTENT_SCHEMA].join("\n");
+/* RE-ANCHORED 2026-09-28 (T7 layer 6; INQUIRY #1 J2.2, BASIS-VERSIONS #1 J4.1): `inquiry_basis` and its index
+   `inquiry_basis_content` moved to inquiry's `INQUIRY_SCHEMA` (`src/inquiry/schema.mjs`), and the version legs with
+   `inquiry_basis_version_legs_content` to basis-versions' `BASIS_VERSIONS_SCHEMA`; both join the schema read. */
+import { INQUIRY_SCHEMA } from "../src/inquiry/schema.mjs";
+import { BASIS_VERSIONS_SCHEMA } from "../src/basis-versions/schema.mjs";
+const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), CONTENT_SCHEMA, INQUIRY_SCHEMA, BASIS_VERSIONS_SCHEMA].join("\n");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),

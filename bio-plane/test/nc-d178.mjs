@@ -14,11 +14,17 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 
 const SRC = "src/store.mjs";
-const ANCHOR = "            publishedRegistry: this.publishedRegistryFor(row.bundle_id, targets),\n";
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4): RECORD-CORE #1 (d7bf074cb0) moved the sweep's per-row loop into
+   record-core's `auditPass` (R18–R20); the injection this control arms is now the store's `auditPass` `context`
+   callback, which hands record-core `{earnedRegistry, publishedRegistry}` per bundle id. `drop` removes the key
+   (the callback's object closes on the same line), `liar` hands an empty object, as before. RE-RUN
+   2026-09-28 on a scratch copy of the tree (K187's re-fixtured suite): baseline 8/0, drop 3/5, liar 4/4, each by the
+   names declared below, every restore byte-identical. */
+const ANCHOR = "                 publishedRegistry: this.publishedRegistryFor(id, targets) };\n";
 const ARMS = {
   baseline: null,
-  drop: "",
-  liar: "            publishedRegistry: {},\n",
+  drop: "                 };\n",
+  liar: "                 publishedRegistry: {} };\n",
 };
 const h = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const dir = mkdtempSync(join(process.cwd(), "test/.nc-d178-"));

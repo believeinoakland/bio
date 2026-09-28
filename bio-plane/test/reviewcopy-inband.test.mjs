@@ -113,6 +113,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
 import { ratifyCase } from "./caseceremony.mjs";
 /* REC-200: M0-107's budget helper — a hand-rolled wall-clock deadline is UNCHECKABLE by construction
    (`scripts/budgetsweep.mjs`), and an expired budget must read NOT MEASURED rather than as a finding. */
@@ -193,7 +194,8 @@ rP(await POST("op=signeradd&token=adm-r148", { keyB64: irisKey, memberId: "iris"
 
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 /* THE PUBLISHING PROJECT declares BOTH floors, and DIFFERENT ones — capture C, connection D — which the lead
-   clears (its legs are caseflip's: an earned capture B, a hunch connection C), so a swap of the axes is
+   clears (its legs are caseflip's: an earned capture B, an earned connection C — RE-READ 2026-09-28 (T7; strength R5,
+   K187): the connection leg was a hunch, which is inert in every pair now), so a swap of the axes is
    visible on the published side too. A SECOND project declares CONNECTION ONLY, so block 2 sees two
    floors that differ and a swap of the axes is visible; it is drafted and never published.
    CORRECTED by D-450 (2026-09-25): this said a one-axis bar "cannot be SIGNED today (C-41.12 refuses the
@@ -210,15 +212,21 @@ const PROJ_ASYM = await makePublishingProject({
   bar: { capture: "null", connection: "D", author: "iris", at: NOW } });
 
 let snapSeq = 0;
-const promote = async (id, text, objectType, state, register = []) => rP(await POST("op=promote&token=adm-r148", {
+/* T7 (legacy-tests): `files` carries a cited document's reading beside its bundle.md (`earned-connection.mjs`). */
+const promote = async (id, text, objectType, state, register = [], files = []) => rP(await POST("op=promote&token=adm-r148", {
   bundleId: id, base: null,
   snapKey: `20260923T${String(200000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
   meta: { object_type: objectType, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER },
-  files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
+  files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }, ...files],
   register,
 }));
 const INFO = "INFO-2026-1480-memo", LEAD = "INQ-2026-1480-lead";
+/* RE-READ 2026-09-28 (T7, legacy-tests; strength R5, K187): the lead's connection leg was a `hunch`, INERT in every
+   pair now, so the case reached connection UNRATED and was refused BELOW_PROJECT_STRENGTH against the D floor. Its
+   C is EARNED instead — INFO's reading names the lead's subject entity by name and is resolved (the correspondence
+   tier, `earned-connection.mjs`). */
+const CONN = await connectionAtC(async (b) => rP(await POST("op=entitycreate&token=adm-r148", b)));
 const infoMd = ["---", `id: ${INFO}`, "object_type: information", "schema: information@1",
   `title: "Info ${INFO}"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -246,15 +254,21 @@ const inquiryMd = ["---", `id: ${LEAD}`, "object_type: inquiry", "schema: inquir
   "basis:", `  - target: ${INFO}`, "    role: supports", "    grade: B",
   "    grade_axis: capture", "    grade_source: capture",
   `  - target: ${INFO}`, "    role: supports", "    grade: C",
-  "    grade_axis: connection", "    grade_source: hunch", "    author: iris", `    date: ${NOW.slice(0, 10)}`,
+  "    grade_axis: connection", "    grade_source: resolution",
+  `subject_entity: ${CONN.entityId}`,
   "---", "", "## Question", "", "Was the transfer authorised?", "",
   "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "",
   "## Session Log", "", `### Session ${LATER} | Formation | agent`,
   "Trigger: surfacing", "Changes: created.", "", "## Review Notes", ""].join("\n");
 /* A REGISTERED CAPTURE, because the lead states an EARNED capture grade over it (C-2.8). */
 if ((await promote(INFO, infoMd, "information", "collected",
-  [{ path: "snapshots/source.bin", sha256: sha("rc148-INFO-bytes"), bytes: 512, encoding: "binary" }]))?.ok === false)
+  [{ path: "snapshots/source.bin", sha256: sha("rc148-INFO-bytes"), bytes: 512, encoding: "binary" }],
+  CONN.files(sha("rc148-INFO-bytes"), "snapshots/source.bin")))?.ok === false)
   await bail("promote info", {});
+{
+  const res = rP(await POST("op=resolve&token=adm-r148", { captureSha: sha("rc148-INFO-bytes") }));
+  if (res?.ok === false) await bail("resolve info", res);
+}
 {
   const r = await promote(LEAD, withAdoptableReading(inquiryMd), "inquiry", "open");
   if (r?.ok === false) await bail("promote lead", r);

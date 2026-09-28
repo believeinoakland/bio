@@ -46,10 +46,17 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("rec97");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests): citation (T7) took the cite act out of `store.mjs`. `cite` (with its
+   UNKNOWN_EXTENT_FIELD and EXTENT_ON_MANY refusals and the `authored` line) and the `cite:` dispatch entry (now in
+   `citationOps`, its `extent:` bag folded onto one line) are in `src/citation/index.mjs`; `#legExtentLines` became the
+   module function `legExtentLines` in `src/citation/splice.mjs`. Every arm inserts the same edit at the moved site. */
+const CITATION = join(PLANE, "src/citation/index.mjs");
+const SPLICE = join(PLANE, "src/citation/splice.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const MIN_BYTES = 20000;   // both files are hundreds of KB; a restore over a stub must fail loudly.
+const MIN_BYTES = 20000;   // the act's files are tens or hundreds of KB; a restore over a stub must fail loudly.
+/* `splice.mjs` is a small module (about 9 KB) by construction, so its guard is its own floor, not a relaxed one. */
+const minBytes = (f) => (f === SPLICE ? 5000 : MIN_BYTES);
 
 const runOne = (suite) => {
   const r = spawnSync(process.execPath, [`test/${suite}`],
@@ -80,7 +87,7 @@ const ARMS = {
   },
 
   splice: {
-    files: [STORE],
+    files: [SPLICE],
     why: "THE ITEM'S OWN CONTROL — the silent drop REPRODUCED. `#legExtentLines` returns [] "
        + "always, so the act accepts the extent, refuses nothing, and writes NOTHING into the "
        + "bytes: a member who named page 2 gets a leg resting on the whole document",
@@ -93,13 +100,13 @@ const ARMS = {
     mustPass: "every refusal arm in sections 3, 4 and 5 — they fire BEFORE the splice, which is "
             + "what says this arm broke the writer and not the gate; and the byte-identity pin in "
             + "section 8, because a cite that names no part has no extent lines to lose",
-    patch: () => arm(STORE,
-      "  static #legExtentLines(l) {\n    const keys",
-      "  static #legExtentLines(l) {\n    if (true) return [];\n    const keys"),
+    patch: () => arm(SPLICE,
+      "export function legExtentLines(l) {\n  const keys",
+      "export function legExtentLines(l) {\n  if (true) return [];\n  const keys"),
   },
 
   bag: {
-    files: [STORE],
+    files: [CITATION],
     why: "the act is handed NOTHING — the `cite:` dispatch entry passes `{}` instead of the "
        + "parameters the caller sent. This is the pre-item plane exactly: a parameter nobody "
        + "reads is a parameter nobody can refuse",
@@ -108,32 +115,31 @@ const ARMS = {
                "an extent on a CASE's citation edge is refused BY NAME",
                "ONE extent across a selection that would write SEVERAL legs is refused"],
     mustPass: "the byte-identity pin in section 8 — the pre-item act is what it measures",
-    patch: () => arm(STORE,
-      "          extent: Object.fromEntries([...url.searchParams]\n"
-      + "            .filter(([k]) => k === \"content_id\" || k.startsWith(\"extent_\"))),",
-      "          extent: {},"),
+    patch: () => arm(CITATION,
+      "      extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === \"content_id\" || k.startsWith(\"extent_\"))),",
+      "      extent: {},"),
   },
 
   unknown: {
-    files: [STORE],
+    files: [CITATION],
     why: "neuter the UNKNOWN_EXTENT_FIELD refusal, so a field the act does not carry is DROPPED "
        + "IN SILENCE — the defect in miniature, one field wide",
     mustFail: ["a field the act does not carry is refused BY NAME",
                "and it wrote nothing — a refused act leaves the question exactly as it was"],
     mustPass: "every other refusal arm; the typo must be the ONLY thing that changes",
-    patch: () => arm(STORE,
+    patch: () => arm(CITATION,
       "    if (unknownFields.length)\n      return { ok: false, reason: \"UNKNOWN_EXTENT_FIELD\"",
       "    if (false && unknownFields.length)\n      return { ok: false, reason: \"UNKNOWN_EXTENT_FIELD\""),
   },
 
   many: {
-    files: [STORE],
+    files: [CITATION],
     why: "neuter the EXTENT_ON_MANY refusal, so ONE member's ONE page is written onto EVERY leg "
        + "the act composes — the record holding claims nobody made",
     mustFail: ["ONE extent across a selection that would write SEVERAL legs is refused",
                "every one of those refusals wrote NOTHING"],
     mustPass: "every other refusal arm, and every end-to-end arm (they cite one document each)",
-    patch: () => arm(STORE,
+    patch: () => arm(CITATION,
       "    if (authored.length && add.length > 1)",
       "    if (false && authored.length && add.length > 1)"),
   },
@@ -168,7 +174,7 @@ const ARMS = {
   },
 
   overstrict: {
-    files: [STORE],
+    files: [CITATION],
     why: "THE OVER-STRICTNESS DIRECTION — make the act REFUSE a cite that names no part at all. "
        + "An absent extent IS the whole document (Bob's 5.3, no `unstated`), so this is the "
        + "direction that would refuse every citation in the record and push a member toward "
@@ -207,7 +213,7 @@ const ARMS = {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): stale since REC-86, whose `op=narrow` repeats the `authored`
        line, so the anchor occurred twice and the arm did not arm; found in this sweep. It now carries the cite act's
        own next line, so it names that one site; the arm inserts the same refusal there. */
-    patch: () => arm(STORE,
+    patch: () => arm(CITATION,
       "    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? \"\").trim() !== \"\").sort();\n    if (authored.length && !ontoInquiry)",
       "    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? \"\").trim() !== \"\").sort();\n"
       + "    if (!authored.length && ontoInquiry)\n"
@@ -237,7 +243,7 @@ for (const name of names) {
   });
   for (const s of saved) {
     console.log(`  PRISTINE   ${s.f.replace(REPO + "/", "")}  ${s.bytes} bytes  sha256 ${s.sha.slice(0, 12)}…`);
-    if (s.bytes < MIN_BYTES) { console.log(`  FINDING    pristine copy is under ${MIN_BYTES} bytes — refusing to proceed`); process.exit(2); }
+    if (s.bytes < minBytes(s.f)) { console.log(`  FINDING    pristine copy is under ${minBytes(s.f)} bytes — refusing to proceed`); process.exit(2); }
   }
   const armed = a.patch();
   console.log(`  ARMED      ${armed.armed ? "yes" : "NO"}  (patch matched ${armed.matches}×)`);

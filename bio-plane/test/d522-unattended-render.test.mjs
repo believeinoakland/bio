@@ -216,16 +216,21 @@ t("the shell carries no content — it is the frame of the page, so a capture ho
 
 /* ====================================================================== A */
 console.log("\n--- A. an UNATTENDED request for a client-rendered source COMPLETES as a rendered capture ---");
-const ID_RENDER = "CR-D522-1-RENDER";
+/* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the door MINTS the request id (R7, "never a
+   body's `request`"), so the three ids below are read off each request's answer instead of being named in its body;
+   the id's shape is the mint's (`CR-<instant>-<hex>`). Every arm about what happens to the request is unchanged. */
+const MINTED = /^CR-\d{14}-[0-9a-f]+$/;
+let ID_RENDER = null;
 let renderedSha = null;
 /* THE EXPECTED DIGEST IS COMPUTED HERE FROM THE FIXTURE, never read back from the drain: B's first draft compared the
    log against the drain's own `sha`, so with the carry dropped (arm 1) both named the SHELL and B passed — an
    equality that cost nothing. Found by the negative control. */
 const WANT_RENDERED = sha(Buffer.from(renderedHtml(new URL(RENDER_PAGE).pathname), "utf-8"));
 {
-  const rq = await request({ address: RENDER_PAGE, render: true, request: ID_RENDER });
+  const rq = await request({ address: RENDER_PAGE, render: true });
+  ID_RENDER = rq.request ?? null;
   t("the run's request for the page as a visitor saw it is QUEUED with the flag on the row",
-    [rq.ok, rq.requested, rq.render, rq.request], [true, true, true, ID_RENDER]);
+    [rq.ok, rq.requested, rq.render, MINTED.test(String(rq.request))], [true, true, true, true]);
 
   const seen0 = SEEN.length, calls0 = RENDER_CALLS;
   const d = await drain();
@@ -275,9 +280,9 @@ console.log("\n--- B. the run's log names the RENDERED document as what was foun
 /* ====================================================================== C */
 console.log("\n--- C. WITHIN THE ALLOWANCE: the next unattended render the day cannot pay for is DEFERRED ---");
 {
-  const ID2 = "CR-D522-2-RENDER";
-  const rq = await request({ address: RENDER_PAGE_2, render: true, request: ID2 });
-  t("a second render request is queued", [rq.ok, rq.render], [true, true]);
+  const rq = await request({ address: RENDER_PAGE_2, render: true });
+  const ID2 = rq.request ?? null;
+  t("a second render request is queued", [rq.ok, rq.render, MINTED.test(String(ID2))], [true, true, true]);
   const seen0 = SEEN.length, calls0 = RENDER_CALLS;
   const d = await drain();
   const h = (d.held || []).find((x) => x.request === ID2);
@@ -292,9 +297,10 @@ console.log("\n--- C. WITHIN THE ALLOWANCE: the next unattended render the day c
 /* ====================================================================== D */
 console.log("\n--- D. OVER-STRICTNESS: a PLAIN request captures the served document, and nothing renders it ---");
 {
-  const ID3 = "CR-D522-3-PLAIN";
-  const rq = await request({ address: PLAIN_PAGE, request: ID3 });
-  t("a request that does not ask for a render is queued without the flag", [rq.ok, rq.render], [true, false]);
+  const rq = await request({ address: PLAIN_PAGE });
+  const ID3 = rq.request ?? null;
+  t("a request that does not ask for a render is queued without the flag", [rq.ok, rq.render, MINTED.test(String(ID3))],
+    [true, false, true]);
   const calls0 = RENDER_CALLS;
   const d = await drain();
   const cap = (d.captured || []).find((c) => c.request === ID3);

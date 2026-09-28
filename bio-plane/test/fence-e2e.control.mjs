@@ -46,6 +46,11 @@ const F = {
   checks: ROOT + "checks/bio-checks.mjs",
   index:  ROOT + "src/index.mjs",
   store:  ROOT + "src/store.mjs",
+  /* ADDED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1): the version fence arm (4) edits moved from store.mjs to
+     basis-versions' `#moveVersionState`. */
+  bv:     ROOT + "src/basis-versions/index.mjs",
+  /* ADDED 2026-09-28 (LEGACY-TESTS #4): the capture-conduct gate arm (2) edits is capture's `acquire` now. */
+  acquire: ROOT + "src/capture/acquire.mjs",
   agent:  ROOT + "../agent-worker/src/index.mjs",
   suite:  SUITE,
 };
@@ -53,7 +58,7 @@ const F = {
    numbers are deliberately far below the real sizes — this guards emptiness and
    truncation, not growth, and a ratchet on source size is not this item's
    subject. */
-const MIN_BYTES = { checks: 100000, index: 100000, store: 400000, agent: 5000, suite: 10000 };
+const MIN_BYTES = { checks: 100000, index: 100000, store: 400000, bv: 20000, acquire: 5000, agent: 5000, suite: 10000 };
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = {}, ORIGINAL_SHA = {};
@@ -177,7 +182,10 @@ arm("(2)", "**THE CAPTURE-CONDUCT LAYER, ALONE.** PL-4's spine: the plane fetche
   + "from inside its own drain. Neuter it and the machine performs the fetch itself. MUST FAIL: "
   + "attempt 5 and the member/daemon half beside it. MUST NOT FAIL: 1-4 and 6 — this gate is not an "
   + "identity fence and nothing about who is calling changes here.",
-  [["index", "if (!d || d.draining !== true) {", "if (false) {"]],
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the gate left index.mjs with capture (`acquire`, capture R1/K58) and
+     is spelled `!captureRequest && body.via === "capture-request"`; the old anchor occurred zero times (already on
+     tranche/T6). The arm is the same: the in-process-only arm stops refusing from outside. */
+  [["acquire", `  if (!captureRequest && body.via === "capture-request") {`, `  if (false) {`]],
   ["5. direct capture (op=acquire)"],
   ["1. accept (op=versionaccept)", "2. make-current (op=versioncurrent)",
    "3. hide (op=versionhide)", "4. publish (op=publish)",
@@ -200,8 +208,11 @@ arm("(3)", "**THE CREDENTIAL-SHAPE LAYER, ALONE.** `aiReachesAsMember` returns t
   + "door. MUST NOT FAIL: 1-5, which are already inside the floor and gain nothing from widening it "
   + "— and NOT attempt 6's code assertion, because the check BEHIND the floor answers the same code, "
   + "which is the finding this arm produced.",
-  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");`,
-             `  return true || (!!spec && Array.isArray(spec.classes) && spec.classes.includes("member"));`]],
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): REC-159 added a second line to `aiReachesAsMember`'s return
+     (`&& !Array.isArray(spec.machineClasses)`), so the one-line anchor ended at a `;` that is no longer there and
+     occurred zero times (already on tranche/T6). The arm is the same: the whole return is made true. */
+  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses);`,
+             `  return true || (!!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses));`]],
   ["it is the MEMBER-FLOOR branch that answers", "the DECLARATION is refused at the mint too"],
   ["1. accept (op=versionaccept)", "2. make-current (op=versioncurrent)",
    "3. hide (op=versionhide)", "4. publish (op=publish)", "5. direct capture (op=acquire)"]);
@@ -241,8 +252,9 @@ arm("(6)", "**OVER-STRICTNESS: A FENCE TIGHTER THAN ITS RULE IS NOT A SAFER FENC
   + "watching only those would report this as fine — and the MEMBER arms must fail, because they are "
   + "what makes each payload provably complete. MUST FAIL: the member arms for accept, make-current "
   + "and hide, and the preview arm in block 9. MUST NOT FAIL: attempts 1-3 themselves, 4, 5 or 6.",
-  [["store", `    const who = String(a.author ?? "").trim();\n    if (!who || isMachineIdentity(who))\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`,
-              `    const who = String(a.author ?? "").trim();\n    if (true)\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`]],
+  /* RE-ANCHORED 2026-09-28: the fence is basis-versions' `#moveVersionState` now, byte-identical. */
+  [["bv", `    const who = String(a.author ?? "").trim();\n    if (!who || isMachineIdentity(who))\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`,
+           `    const who = String(a.author ?? "").trim();\n    if (true)\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`]],
   ["the SAME payload accepts the reading for a signed-in member",
    "the SAME payload makes it current for a signed-in member",
    "the SAME payload hides it for a signed-in member",

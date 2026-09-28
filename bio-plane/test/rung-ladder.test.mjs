@@ -239,9 +239,12 @@ function methodBody(src, name) {
 
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; progressions R27): progressions answers its refusals through its own
    DEC-49 helper `refusal("CODE", …)` (src/progressions/checks.mjs), the same class of refusal as `refuse("CODE"`. */
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; INTENT #1, AFFORDANCES #1 J4.4): intent mints each of its refusals
+   through its own DEC-49 table `mint.CODE(…)` (src/intent/index.mjs), the same class of refusal again. */
 const jre = new RegExp(
   `reason:\\s*"(${JUSTIFICATION_REFUSALS.join("|")})"`
-  + `|refus(?:e|al)\\("(${JUSTIFICATION_REFUSALS.join("|")})"`, "g");
+  + `|refus(?:e|al)\\("(${JUSTIFICATION_REFUSALS.join("|")})"`
+  + `|\\bmint\\.(${JUSTIFICATION_REFUSALS.join("|")})\\s*\\(`, "g");
 
 /* THE VERSION FAMILY IS HELD OUT OF THE TEXTUAL SCAN DELIBERATELY, and this is
    the sharpest thing in the file. All six version acts route through ONE
@@ -250,14 +253,19 @@ const jre = new RegExp(
    finding the code in the shared helper promotes FOUR ops to a rung the store
    does not enforce. That is the same defect as grading a file by a word in its
    comments (REC-70, REC-64). These six are decided by the exported predicate. */
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; AFFORDANCES #1 J4.4, BASIS-VERSIONS #1): the table moved out of
+   store.mjs with the version acts and is basis-versions' `export const VERSION_ACT_TO = Object.freeze({…})`
+   (src/basis-versions/index.mjs); the store keeps `static VERSION_ACT_TO = VERSION_ACT_TO;` as an alias of it. It is
+   read there, by the same key/value scan. */
+const basisVersionsSrc = moduleSources("basis-versions");
 const VERSION_ACT_TO = (() => {
-  const m = /static\s+VERSION_ACT_TO\s*=\s*\{([\s\S]*?)\};/.exec(storeSrc);
+  const m = /export\s+const\s+VERSION_ACT_TO\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/.exec(basisVersionsSrc);
   if (!m) return null;
   const out = {};
   for (const r of m[1].matchAll(/(\w+)\s*:\s*(?:"([a-z]+)"|null)/g)) out[r[1]] = r[2] ?? null;
   return out;
 })();
-t("`Store.VERSION_ACT_TO` was read out of the store — the six acts' target states",
+t("`VERSION_ACT_TO` was read out of basis-versions — the six acts' target states",
   VERSION_ACT_TO && Object.keys(VERSION_ACT_TO).sort(),
   ["accept", "consider", "current", "hide", "reject", "revert"]);
 t("and only two of the six target a state that REQUIRES a reason",
@@ -288,6 +296,14 @@ t("`membershipOps` was read out of membership's source — the ops the store's d
 const refusesIn = (b) => { const h = jre.test(b); jre.lastIndex = 0; return h; };
 function demandsInBody(body, src, depth = 0) {
   if (refusesIn(body)) return true;
+  /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4): a module method whose WHOLE body hands the act to a part of the same
+     module (connections' `withdrawFromTheme(a) { return this.themes.withdraw(a); }`, into src/connections/themes.mjs)
+     is that act's own decomposition, followed exactly as the store's one-line delegations are. */
+  const handOff = /^\s*return this\.[a-z][A-Za-z0-9_]*\.([A-Za-z][A-Za-z0-9_]*)\([^()]*\);\s*$/.exec(body);
+  if (handOff && depth < 2) {
+    const hb = methodBody(src, handOff[1]);
+    if (hb != null && demandsInBody(hb, src, depth + 1)) return true;
+  }
   for (const dm of new Set([...body.matchAll(/this\.(#[A-Za-z][A-Za-z0-9_]*)\s*\(/g)].map((x) => x[1]))) {
     const bb = methodBody(src, dm);
     if (bb != null && refusesIn(bb)) return true;
@@ -306,12 +322,22 @@ function demandsInBody(body, src, depth = 0) {
    module's own source (one hop into its private helpers, as for the store). */
 const T5_OP_MAPS = [["entities", "entitiesOps"], ["progressions", "progressionOps"], ["connections", "connectionsOps"],
   ["bias", "biasOps"], ["calibration", "calibrationOps"], ["extraction", "extractionOps"],
-  ["observation-log", "observationLogOps"]];
+  ["observation-log", "observationLogOps"],
+  /* T7 (legacy-tests; AFFORDANCES #1 J4.4, INTENT #1): intent's acts are spread into the store's map by `intentOps`. */
+  ["intent", "intentOps"],
+  /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4): T7's layer 6 moved more acts out of the store, each spread into its
+     map the same way: `sever` and `reinstate` are citation's (CITATION #1 J2), `dispose`, `inquirydivide` and
+     `inquiryground` inquiry's (INQUIRY #1 J3), `conclude`, `withdrawconclusion` and the version acts basis-versions',
+     and the strength, run-productions, contradiction, reevaluation, capture-requests and ai-runs ops their modules'. */
+  ["citation", "citationOps"], ["inquiry", "inquiryOps"], ["basis-versions", "basisVersionsOps"],
+  ["strength", "strengthOps"], ["run-productions", "runProductionsOps"], ["contradiction", "contradictionOps"],
+  ["reevaluation", "reevaluationOps"], ["capture-requests", "captureRequestsOps"], ["ai-runs", "aiRunsOps"]];
 const T5_ROUTES = new Map();
 for (const [mod, fn] of T5_OP_MAPS) {
   const src = moduleSources(mod);
   const map = methodBody(src.replace(new RegExp(`^export function ${fn}`, "m"), `  ${fn}`), fn) ?? "";
-  for (const x of map.matchAll(/^\s{4}([a-z][a-z0-9]*)\s*:\s*(?:async\s*)?\(\)\s*=>\s*(?:\(\{\s*\.\.\.)?[a-z]\.([A-Za-z0-9_]+)\s*\(/gm))
+  /* RE-ANCHORED 2026-09-28 (T7): the receiver may be more than one letter (`basisVersionsOps` names it `bv`). */
+  for (const x of map.matchAll(/^\s{4}([a-z][a-z0-9]*)\s*:\s*(?:async\s*)?\(\)\s*=>\s*(?:\(\{\s*\.\.\.)?[a-z][a-z0-9]*\.([A-Za-z0-9_]+)\s*\(/gm))
     if (!T5_ROUTES.has(x[1])) T5_ROUTES.set(x[1], { method: x[2], src });
 }
 t("the T5 modules' op maps were read — relationdeclare and discharge route to entities and progressions",
@@ -362,8 +388,11 @@ t("NO UNBACKED CLAIM: every op declared `reasoned` really is refused without an 
    is the only evidence accepted, because "I found no obstacle" is an outcome
    that costs nothing to produce and is therefore not evidence (CLAUDE.md). */
 const reversible = Object.entries(RUNGS).filter(([, r]) => r === "reversible").map(([o]) => o).sort();
+/* CORRECTED 2026-09-28 (T7; K211, affordances R2's R27 ruling, AFFORDANCES #1 J4.4): four more acts carry
+   `reversible` — `actionlaws`, `projectvisibilityset`, `versionaccept` and `versioncurrent`. */
 t("`reversible` is carried by exactly the acts with a published way back",
-  reversible, ["cite", "versionhide", "versionrevert"]);
+  reversible, ["actionlaws", "cite", "projectvisibilityset", "versionaccept", "versioncurrent",
+               "versionhide", "versionrevert"]);
 t("nothing declared `reversible` is one the store refuses without an account "
 + "(the FW-14 row's own negative control: `reversible` on op=retire must fail, "
 + "and it fails HERE, because retire refuses NO_REASON)",
@@ -375,10 +404,13 @@ t("nothing declared `reversible` is one the store refuses without an account "
    not assigned it. The backing is mechanical: cite writes `status: "confirmed"`
    and sever's `from` set accepts exactly that, so the act that takes a citation
    back accepts what citing wrote. Both halves read out of the store. */
-const citeStatuses = [...storeSrc.matchAll(/rel:\s*"cites",\s*target,\s*status:\s*"([a-z]+)"/g)]
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; CITATION #1 J2): `cite`, `sever` and `#edgeTransition` moved out of
+   store.mjs into src/citation/index.mjs; both halves are read there. */
+const citationSrc = moduleSources("citation");
+const citeStatuses = [...citationSrc.matchAll(/rel:\s*"cites",\s*target,\s*status:\s*"([a-z]+)"/g)]
   .map((m) => m[1]);
 const severFrom = (() => {
-  const m = /sever\(\{[\s\S]*?from:\s*\[([^\]]*)\]/.exec(storeSrc);
+  const m = /sever\(\{[\s\S]*?from:\s*\[([^\]]*)\]/.exec(citationSrc);
   return m ? [...m[1].matchAll(/"([a-z]+)"/g)].map((x) => x[1]) : null;
 })();
 t("op=cite writes its edges at ONE status, read out of the store",
@@ -388,7 +420,7 @@ t("and op=sever's `from` set accepts that status — so the plane publishes an a
   severFrom !== null && severFrom.includes("confirmed"), true);
 t("severing is not erasure, so `reversible` is not overclaiming: the edge lands "
 + "in `severed`, a status the record keeps",
-  severFrom !== null && /to:\s*"severed"/.test(storeSrc), true);
+  severFrom !== null && /to:\s*"severed"/.test(citationSrc), true);
 
 /* ------------------------- 5. the absence half is a STATEMENT, not a blank */
 console.log("\n--- 5. the stated absences say something ---");

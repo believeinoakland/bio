@@ -33,8 +33,16 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 REPORT J2.5 and its map §4): the endpoint left
+   `src/store.mjs`. `suggestVersion` is `suggest` in `src/run-productions/index.mjs` (with `substanceOf`), the one
+   normaliser `#suggestionPersisted` is basis-versions' `versionAsWritten` in `src/basis-versions/grammar.mjs` (with the
+   composer's conditional kind line), and the shared reader behind `op=basisversions` is basis-versions'
+   `versionCollections` and its projection in `src/basis-versions/index.mjs`. Each arm's edit is the same edit at the
+   same condition, re-aimed at the file the code now lives in; no arm's declared failures were changed. */
 const F = {
-  store: ROOT + "src/store.mjs",
+  rp: ROOT + "src/run-productions/index.mjs",
+  bv: ROOT + "src/basis-versions/index.mjs",
+  grammar: ROOT + "src/basis-versions/grammar.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -107,7 +115,7 @@ arm("(1) CHECK 1 — THE REACHABLE LEG (C-27.8), the other five HELD OPEN. "
   + "D-168's trap is the sharp half: with this refusal gone a leg citing RETIRED information LANDS, and "
   + "every later reader sees live support for the answer. A type-only check — which is all `op=cite` has "
   + "— would have passed it too, which is why this check is not a type check.",
-  [["store", `    if (unreachable.length)\n      return remember(refusal("SUGGEST_LEG_UNREACHABLE",`,
+  [["rp", `    if (unreachable.length)\n      return remember(refusal("SUGGEST_LEG_UNREACHABLE",`,
              `    if (false)\n      return remember(refusal("SUGGEST_LEG_UNREACHABLE",`]],
   ["CHECK 1: a leg naming a document",
    "CHECK 1 / D-168 — THE TRAP",
@@ -121,7 +129,7 @@ arm("(2) CHECK 2 — THE PAIR COMPUTES OVER THE DECLARED PARTITION (C-27.9), the
      two axis tests to `Store.STRENGTH_AXES.some(...)` and this arm's anchor then
      matched ZERO sites — the harness refused to arm blind here and never reached
      its foot, so every arm below this one had stopped running. */
-  [["store", `    if (pairError || Store.STRENGTH_AXES.some((a) => axisBad(pair?.[a])) || partitionDisagrees)`,
+  [["rp", `    if (pairError || PAIR_AXES.some((x) => axisBad(pair?.[x])) || partitionDisagrees)`,
              `    if (false)`]],
   ["CHECK 2: legs sitting in a part", "THE DRIVEN SET EQUALS THE REGISTRY"],
   ["CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
@@ -130,7 +138,7 @@ arm("(3) CHECK 3 — DIFFERS IN SUBSTANCE (C-27.10), the other five HELD OPEN. "
   + "§6 rule 8 is Bob's own write gate. With it gone the same reading lands twice under two names and "
   + "the review pile grows with nothing in it to review. Note the RENAMED-RESUBMIT arm fails with it, "
   + "because that arm's convergence IS this check.",
-  [["store", `    if (twin)\n      return remember(refusal("SUGGEST_NOT_DIFFERENT",`,
+  [["rp", `    if (twin)\n      return remember(refusal("SUGGEST_NOT_DIFFERENT",`,
              `    if (false)\n      return remember(refusal("SUGGEST_NOT_DIFFERENT",`]],
   ["CHECK 3: a reading identical in substance", "THE DRIVEN SET EQUALS THE REGISTRY"],
   ["CHECK 1: a leg naming a document", "CHECK 4 / D-195:", "CHECK 6:"]);
@@ -139,7 +147,7 @@ arm("(4) CHECK 4 — D-195 INDEPENDENCE (C-27.11), the other five HELD OPEN. "
   + "*The Judith Miller error with arithmetic behind it*: with this gone, two parts of a reading that "
   + "the record can trace to ONE upstream address are offered as separate routes, and the MAXIMUM makes "
   + "the finding look better supported for a reason that is not there.",
-  [["store", `    if (shared.length)\n      return remember(refusal("SUGGEST_BRANCHES_NOT_INDEPENDENT",`,
+  [["rp", `    if (shared.length)\n      return remember(refusal("SUGGEST_BRANCHES_NOT_INDEPENDENT",`,
              `    if (false)\n      return remember(refusal("SUGGEST_BRANCHES_NOT_INDEPENDENT",`]],
   ["CHECK 4 / D-195:", "THE DRIVEN SET EQUALS THE REGISTRY"],
   ["CHECK 1: a leg naming a document", "CHECK 2:", "CHECK 5:", "CHECK 6:"]);
@@ -148,7 +156,7 @@ arm("(5) CHECK 5 — NO BOILERPLATE (C-27.12), the other five HELD OPEN. "
   + "The `counterparty: to be named` defect at machine scale. AND THE OVER-STRICTNESS ARMS MUST STAY "
   + "GREEN: a check that refuses correct work is a defect in the check, so this arm proves the refusal "
   + "is doing work WITHOUT proving it does too much.",
-  [["store", `    if (filler.length)\n      return remember(refusal("SUGGEST_BOILERPLATE",`,
+  [["rp", `    if (filler.length)\n      return remember(refusal("SUGGEST_BOILERPLATE",`,
              `    if (false)\n      return remember(refusal("SUGGEST_BOILERPLATE",`]],
   ["CHECK 5: a required field filled", "THE DRIVEN SET EQUALS THE REGISTRY"],
   ["a description in Spanish", "A REAL SENTENCE THAT QUOTES A PLACEHOLDER",
@@ -159,7 +167,7 @@ arm("(6) CHECK 6 — NO UNWRITABLE STATE (C-27.13), the other five HELD OPEN. "
   + "record holds a decision no member made. NOTE the second condition under this code — a machine "
   + "asserting structure — is a SEPARATE branch and stays live, which is why the two are asserted "
   + "separately in the suite and only the first fails here.",
-  [["store", `    if (forbidden.length)\n      return remember(refusal("SUGGEST_UNWRITABLE_STATE",`,
+  [["rp", `    if (forbidden.length)\n      return remember(refusal("SUGGEST_UNWRITABLE_STATE",`,
              `    if (false)\n      return remember(refusal("SUGGEST_UNWRITABLE_STATE",`]],
   /* CORRECTED AFTER RUNNING, and the correction is a finding rather than a
      tidy-up. This arm first declared that the DEC-49 FLOOR would fail with it,
@@ -179,7 +187,7 @@ arm("(7) F10 — THE IDEMPOTENCE KEY. This is the arm the plan names: neuter the
   + "and a verbatim resubmit stops being a structural no-op. The second submission is EVALUATED again, "
   + "`repeats` never moves, and a retry loop is then caught only by the budget — which the design says "
   + "is the BACKSTOP and not the mechanism.",
-  [["store", `    if (prior) {`, `    if (false && prior) {`]],
+  [["rp", `    if (prior) {`, `    if (false && prior) {`]],
   ["the first submission is EVALUATED and refused", "and the RETRY IS COUNTED"],
   ["CHECK 1: a leg naming a document", "CHECK 5:", "CHECK 6:"]);
 
@@ -198,8 +206,8 @@ arm("(9) THE CONDITIONAL KIND LINE IN THE COMPOSITION. PL-1 froze every existing
   + "composition with NO kind line, so emitting one UNCONDITIONALLY changes the composition of every "
   + "version already in any record and the next promotion of any of them fails the freeze. This arm "
   + "makes the line unconditional and requires the freeze arm to say so.",
-  [["store", `        ...(kind === null ? [] : [\`kind\\t\${c(kind)}\`]),`,
-             `        \`kind\\t\${c(kind)}\`,`]],
+  [["grammar", `      ...(kind === null ? [] : [\`kind\\t\${c(kind)}\`]),`,
+             `      \`kind\\t\${c(kind)}\`,`]],
   ["a version carrying NO kind composes with NO kind line"],
   ["CHECK 1: a leg naming a document"]);
 
@@ -230,12 +238,12 @@ arm("(D-231a) THE CLOCK, RE-ARMED — restore `substanceOf` to what it was befor
   + "deliberately crosses a second boundary may fail. That split is exactly what made this suite green "
   + "standalone at ~510ms and red under a loaded battery, and it is why two sessions each saw a green "
   + "re-run and could not name it.",
-  [["store", `    const substanceOf = (c) => String(c).split("\\n")
-      .filter((ln) => !/^name\\t/.test(ln) && !/^derived_from\\t/.test(ln))
-      .map((ln) => (ln.startsWith("ground\\t")`,
-             `    const substanceOf = (c) => String(c).split("\\n")
-      .filter((ln) => !/^name\\t/.test(ln) && !/^derived_from\\t/.test(ln))
-      .map((ln) => (false && ln.startsWith("ground\\t")`]],
+  [["rp", `  return String(composition).split("\\n")
+    .filter((ln) => !/^name\\t/.test(ln) && !/^derived_from\\t/.test(ln))
+    .map((ln) => (ln.startsWith("ground\\t")`,
+             `  return String(composition).split("\\n")
+    .filter((ln) => !/^name\\t/.test(ln) && !/^derived_from\\t/.test(ln))
+    .map((ln) => (false && ln.startsWith("ground\\t")`]],
   /* BOTH ARMS, AND THE SECOND ONE IS THE RECEIPT. Re-arming the clock does not
      just redden the boundary arm — the duplicate it fails to refuse LANDS, so
      the inquiry holds 7 readings where block 3 asserts 6, and `STRUCTURALLY
@@ -258,8 +266,8 @@ arm("(D-231b) OVER-BLANKED BY ONE FIELD — widen D-231's exclusion so the groun
   + "different stated reasons collapse into one and the second is refused as a duplicate — so the "
   + "OVER-STRICTNESS arm must fail while the boundary arm stays GREEN. A fence that refuses correct work "
   + "is a defect in the fence, and a fix one field too wide is exactly that.",
-  [["store", `        ? ln.split("\\t").map((f, i) => (i === 3 ? "" : f)).join("\\t")`,
-             `        ? ln.split("\\t").map((f, i) => (i >= 3 ? "" : f)).join("\\t")`]],
+  [["rp", `ln.split("\\t").map((f, i) => (i === 3 ? "" : f)).join("\\t")`,
+             `ln.split("\\t").map((f, i) => (i >= 3 ? "" : f)).join("\\t")`]],
   ["AND A READING DIFFERING ONLY IN WHAT IT SAYS ITS EVIDENCE SHOWS LANDS"],
   ["D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
    "CHECK 3: a reading identical in substance", "CHECK 1: a leg naming a document"]);
@@ -280,8 +288,8 @@ arm("(D-234a) THE `#fmSafe` HALF REVERTED — make the one normaliser's value tr
   + "what was WRITTEN. EVERY PUNCTUATED DUPLICATE MUST LAND AGAIN — this is the arm proving the "
   + "normalisation is what refuses. THE D-231 BOUNDARY ARM MUST STAY GREEN, which is what says the "
   + "clock half and the punctuation half are two defects and not one.",
-  [["store", `    const fs = (s) => Store.#fmSafe(s);`,
-             `    const fs = (s) => String(s ?? "");`]],
+  [["grammar", `  const fs = (x) => fmSafe(x);`,
+             `  const fs = (x) => String(x ?? "");`]],
   /* AND `STRUCTURALLY NOTHING MOVED` FALLS WITH THEM, which is the same second
      receipt (D-231a) carries and for the same reason: a duplicate that is not
      refused LANDS, so block 3's absolute version count is one too high. Declared
@@ -301,8 +309,8 @@ arm("(D-234b) OVER-NORMALISED, AND IT MUST FAIL THE OTHER WAY — the control th
   + "only in the punctuation of a QUOTED SOURCE collapse into one and the second is refused. That is "
   + "the opposite defect and the worse one: a gate refusing correct work. THE OVER-STRICTNESS ARM MUST "
   + "FAIL and the duplicate arms MUST NOT.",
-  [["store", `    const fs = (s) => Store.#fmSafe(s);`,
-             `    const fs = (s) => Store.#fmSafe(s).replace(/\\s+/g, " ").replace(/[;,'\\u201c\\u201d]/g, "");`]],
+  [["grammar", `  const fs = (x) => fmSafe(x);`,
+             `  const fs = (x) => fmSafe(x).replace(/\\s+/g, " ").replace(/[;,'\\u201c\\u201d]/g, "");`]],
   /* AND THE PUBLICATION ARM FAILS WITH THEM, DECLARED RATHER THAN DISCOVERED —
      it was NOT in this list on the first run and the harness printed it as an
      undeclared failure, which is the harness working. The reason is right: an
@@ -332,9 +340,9 @@ arm("(D-234c) THE PUBLICATION REVERTED, AND IT IS COMPOUND ON PURPOSE. REC-75 de
      spelling, and the arm's DECLARED failures grew by two: with the composition
      coming off the candidate again, D-235's cross-op arm sees it and D-235's
      structural pin sees the identifier. */
-  [["store", `    const fs = (s) => Store.#fmSafe(s);`,
-             `    const fs = (s) => String(s ?? "");`],
-   ["store", `      composition: recorded ? recorded.composition : null,`,
+  [["grammar", `  const fs = (x) => fmSafe(x);`,
+             `  const fs = (x) => String(x ?? "");`],
+   ["rp", `      composition: recorded ? recorded.composition : null,`,
              `      composition: candidate ? candidate.composition : null,`]],
   ["REC-75 — `composition` PUBLISHES THE RECORD'S BYTES",
    "AND IT IS THE SAME STRING `op=basisversions` PUBLISHES FOR THAT VERSION",
@@ -352,7 +360,7 @@ arm("(D-234d) THE NAME COMPARISON REVERTED — the same defect one field over, f
   + "but a NEWLINE folds to a SPACE, and the grammar allows spaces. Compare the raw name again and a "
   + "reading named `the ledger<newline>account` walks past this endpoint's own check and is refused by "
   + "`promote` in ANOTHER family's words, over a document this endpoint had already composed.",
-  [["store", `    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))`,
+  [["rp", `    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === nameWritten))`,
              `    if (existing.some((r) => r && typeof r === "object" && String(r.name ?? "").trim() === name))`]],
   ["D-234 / THE CLASS SWEEP: a name that FOLDS"],
   ["D-234 (1) THE QUOTATION MARK", "D-231 — AND IT IS STILL REFUSED A WHOLE SECOND LATER",
@@ -376,8 +384,9 @@ arm("(D-234e) THE STRUCTURAL RATCHET — put ONE field of the write back on raw 
   + "justification: `q()` applies `#fmSafe` and `#fmSafe` is idempotent, so this edit emits identical "
   + "bytes and NO behavioural arm can see it. A source the behaviour cannot distinguish is a source only "
   + "a structural pin can hold.",
-  [["store", `                  \`    description: \${q(pv.description)}\`,`,
-             `                  \`    description: \${q(args.description)}\`,`]],
+  /* RE-ANCHORED 2026-09-28: the region no longer quotes; it hands `pv`'s values to `appendVersion`, which does. */
+  [["rp", `description: pv.description,`,
+          `description: args.description,`]],
   ["REC-75: EVERY VALUE THE WRITE QUOTES COMES FROM THE ONE NORMALISER"],
   ["WALK GUARD for that arm",
    "D-234 (1) THE QUOTATION MARK", "D-234 (2) THE BACKSLASH", "D-234 (3) THE NEWLINE",
@@ -404,8 +413,8 @@ arm("(D-235a) THE COLLECTIONS RE-SOURCED FROM THE CANDIDATE — put `legs` and `
   + "PIN MUST FAIL WITH THEM — declared rather than discovered, because the pin bans exactly the two "
   + "identifiers this edit reintroduces. The NAME arm must stay GREEN, which is what says the three "
   + "fields are three fields and not one thing measured three times.",
-  [["store", `      legs: rc ? rc.legs : null,`, `      legs: candidate ? candidate.legs : null,`],
-   ["store", `      grounds: rc ? rc.grounds : null,`, `      grounds: declaredLabels,`]],
+  [["rp", `      legs: recorded ? recorded.legs ?? null : null,`, `      legs: candidate ? candidate.legs : null,`],
+   ["rp", `      grounds: recorded ? recorded.grounds ?? null : null,`, `      grounds: declaredLabels,`]],
   ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
    "AND THE LEGS ARE THE PROJECTION'S OWN ROWS",
@@ -421,7 +430,7 @@ arm("(D-235b) THE NAME RE-SOURCED FROM THE SUBMISSION — `version: name` again.
   + "answer's `version` straight back named a reading the record does not hold. `VERSION_NAME_RE` "
   + "admits a space and `#fmSafe` folds a newline INTO one, which is the whole of the reachable gap. "
   + "THE NAME ARM AND THE CROSS-OP ARM MUST FAIL; the ground-label arm must stay GREEN.",
-  [["store", `      version: recorded ? recorded.name : null,`, `      version: name,`]],
+  [["rp", `      version: recorded ? recorded.name : null,`, `      version: name,`]],
   ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
    "D-235 (6) THE RECORD GROUP IS BUILT FROM THE READ-BACK"],
@@ -437,8 +446,10 @@ arm("(D-235c) THE READ-BACK ITSELF BROKEN — point the lookup at a version name
   + "nothing the answer publishes `null` and `composition_of: \"unread\"` rather than substituting the "
   + "candidate. An undetermined value STATED is first-class; a substituted one that looks like the "
   + "record's is the record claiming more than it can support.",
-  [["store", `         FROM inquiry_basis_versions WHERE bundle_id=? AND name=?\`, target, pv.name);`,
-             `         FROM inquiry_basis_versions WHERE bundle_id=? AND name=?\`, target, pv.name + " (no such version)");`]],
+  /* RE-ANCHORED 2026-09-28: the read-back is `op=basisversions`' own read through the provider; the lookup is the
+     `find` by the name the normaliser wrote. */
+  [["rp", `readBack.versions.find((v) => v && v.name === persisted.version.name)`,
+          `readBack.versions.find((v) => v && v.name === persisted.version.name + " (no such version)")`]],
   ["D-235 (1) `version` PUBLISHES THE NAME THE RECORD HOLDS",
    "D-235 (2) `grounds` PUBLISHES THE PART LABELS",
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
@@ -455,7 +466,7 @@ arm("(D-235d) THE LABEL DE-TOTALISED — drop ONE field out of the computed sour
   + "unchanged and only the answer's account of itself is wrong, so nothing else can see it. That is "
   + "the arm's justification rather than a weakness in it — a label nobody checks is a label that goes "
   + "stale silently, which is this repository's most-repeated finding.",
-  [["store", `      for (const k of Object.keys(group)) fields_of[k] = src;`,
+  [["rp", `      for (const k of Object.keys(group)) fields_of[k] = src;`,
              `      for (const k of Object.keys(group)) if (k !== "legs") fields_of[k] = src;`]],
   ["D-235 (4) THE LABEL IS TOTAL",
    "AND THE PARTITION IS THE DECISION, PINNED"],
@@ -474,8 +485,8 @@ arm("(D-235e) THE BLANK PART LABEL RE-ADMITTED — drop the `filter(Boolean)` fr
   + "declared, in a list of the parts a reading declares. ONLY THE REPLAY ARM MAY FAIL — every "
   + "submission-path arm must stay green, which is what says the filter is aimed at the path that can "
   + "actually reach it.",
-  [["store", `      .map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();`,
-             `      .map((l) => String(l.ground ?? "").trim()))].sort();`]],
+  [["bv", `    const grounds = [...new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();`,
+          `    const grounds = [...new Set(legs.map((l) => String(l.ground ?? "").trim()))].sort();`]],
   ["D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE"],
   ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
@@ -492,8 +503,8 @@ arm("(D-235f) OVER-REACH, AND IT MUST FAIL THE OTHER WAY — make the shared rea
      SELECT in `#versionLegsEarned(...)`, so the old anchor matched zero sites.
      The filter now applies to the EARNED legs, which is the list the reader
      returns — the arm still drops the leg as well as the blank label. */
-  [["store", `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX));`,
-             `      bundleId, row.name, Store.BASIS_VERSION_LEGS_MAX)).filter((l) => String(l.ground ?? "").trim());`]],
+  [["bv", `      bundleId, row.name, BASIS_VERSION_LEGS_MAX));`,
+          `      bundleId, row.name, BASIS_VERSION_LEGS_MAX)).filter((l) => String(l.ground ?? "").trim());`]],
   ["D-235 (5b) AND THE REPLAY PATH IS WHERE THE BLANK LABEL IS REACHABLE"],
   ["D-235 (2) `grounds` PUBLISHES THE PART LABELS",
    "D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
@@ -505,7 +516,7 @@ arm("(D-235g) `kind` DROPPED FROM `op=basisversions`' ANSWER — the row's own c
   + "MUST FAIL (its disagreement list names `kind!=kind`), THE PER-KIND ARM MUST FAIL for all five, AND "
   + "THE HAND-COMPOSED ARM MUST FAIL (the key is absent, not null); the name, grounds and over-strictness "
   + "arms must stay GREEN.",
-  [["store", `        kind: r.kind ?? null,\n`, ``]],
+  [["bv", `        kind: r.kind ?? null, author: r.author, at: r.at,`, `        author: r.author, at: r.at,`]],
   ["D-235 (3) EVERY CROSS-CHECKABLE RECORD-SOURCED FIELD",
    "D-235 EACH OF THE FIVE READS THE SAME KIND FROM BOTH OPS",
    "D-235 (7) A HAND-COMPOSED VERSION PUBLISHES `kind: null`"],

@@ -459,11 +459,18 @@ console.log("\n--- 4. DEC-15's lifecycle: a hunch is CLEARED INTO the earned pat
              note: "the dates line up and the amounts match" }] });
   await mustPromote(HUNCH_CASE, hunchMd, "inquiry");
   const before = await legOf(HUNCH_CASE, DOC_A);
-  t("the hunch composes NORMALLY (DEC-15): present, load-bearing, and visibly a hunch",
-    [before?.grade ?? null, before?.grade_source ?? null], ["B", "hunch"]);
+  /* RE-READ 2026-09-28 BY K187 (strength R5, K102; INVESTIGATIVE-SESSION §12), never exempted. These two read
+     DEC-15's "a hunch composes NORMALLY: present, load-bearing" and "the axis reads at the hunch's grade". R5
+     replaces that: a hunch is INERT in every pair, whatever it states, and is always NAMED as a hunch. What stays
+     is the lifecycle this block is about: the hunch is in the record from the moment it is made, visibly a hunch,
+     and it is CLEARED into the earned path below. */
+  t("the hunch is PRESENT and VISIBLY a hunch from the moment it is made, and INERT in the pair (R5): named, not counted",
+    [before?.grade ?? null, before?.grade_source ?? null, /hunch/.test(before?.why ?? "")], [null, "hunch", true]);
   const debtBefore = (await get("inquirystrength", `id=${HUNCH_CASE}`)).connection;
-  t("the axis reads at the hunch's grade — treating it as undetermined would destroy the traversability",
-    [debtBefore.state, debtBefore.grade], ["graded", "B"]);
+  t("the connection axis takes NO grade from it: a hunch is not evidence (R5), so the axis is unrated until it is cleared",
+    [debtBefore.state, debtBefore.grade,
+     (debtBefore.not_load_bearing ?? []).some((m) => m.target_id === DOC_A && m.grade_source === "hunch")],
+    ["unrated", null, true]);
 
   /* PHASE TWO: clearing it. HUNCH DEBT is cleared by RE-RUNNING the evaluation
      under the current set — the leg is re-stated with the source that accounts
@@ -477,8 +484,9 @@ console.log("\n--- 4. DEC-15's lifecycle: a hunch is CLEARED INTO the earned pat
   const after = await legOf(HUNCH_CASE, DOC_A);
   t("the leg now reads 'resolution' — the HUNCH DEBT is SETTLED, not merely relabelled",
     [after?.grade ?? null, after?.grade_source ?? null], ["A", "resolution"]);
+  /* RE-READ (K187): the hunch's letter is read off the bytes it was authored in, since the pair no longer counts it. */
   t("the cleared leg states the grade the record actually earns, which is not the grade the hunch guessed",
-    [after?.grade, before?.grade], ["A", "B"]);
+    [after?.grade, /\n {4}grade: ([A-D])\n/.exec(hunchMd)?.[1] ?? null], ["A", "B"]);
   t("NO HUNCH REMAINS ON THE AXIS: nothing load-bearing is still carrying HUNCH DEBT",
     (await hunchLegs(HUNCH_CASE)).length, 0);
 

@@ -366,7 +366,7 @@ try {
     "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
     `### Session ${LATER9} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
     "## Review Notes", ""].join("\n");
-  const projectMd9 = (title, cites) => ["---", "object_type: project", `title: "${title}"`,
+  const projectMd9 = (title, cites) => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`,
     "current_state: forming", `created: "${NOW9}"`, `last_updated: "${LATER9}"`,
     "references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"]),
     "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "",

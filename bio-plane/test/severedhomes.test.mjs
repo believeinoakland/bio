@@ -104,7 +104,14 @@ const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.
 const CONNECTIONS_SRC = readdirSync(fileURLToPath(new URL("../src/connections/", import.meta.url)))
   .filter((f) => f.endsWith(".mjs")).sort()
   .map((f) => readFileSync(fileURLToPath(new URL(`../src/connections/${f}`, import.meta.url)), "utf8")).join("\n");
-const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC;
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; INQUIRY #1 J2.2, REEVALUATION #1 J2.10): `#restsOnLive` and
+   `restingOn` moved to inquiry (src/inquiry/index.mjs, `restsOnLive`, `restingOn`, calling
+   `this.connections.edgeSevered(`), and `reevaluations` to reevaluation (src/reevaluation/index.mjs). The census
+   reads store.mjs, connections, inquiry and reevaluation, so every reader stays in view wherever it now lives. */
+const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, import.meta.url)))
+  .filter((f) => f.endsWith(".mjs")).sort()
+  .map((f) => readFileSync(fileURLToPath(new URL(`../src/${m}/${f}`, import.meta.url)), "utf8")).join("\n");
+const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation")].join("\n");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -195,6 +202,8 @@ const projectMd = (id, refs, name = id) => ["---",
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
+  /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Decide what these documents show."',
   "---", "", "## Summary", "", "A project.", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
 
@@ -445,7 +454,7 @@ t("NOT WALKED IS NOT DELETED: `op=backlinks` still names the withdrawn project a
    formerly the store's #citesInto). The same six sites, no arrival and no departure; the store's delegate
    `#refEdgeSevered(...a)` is neither. */
 const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\s*\(citingId/g) || []).length;
-const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered)\(/g) || []).length;
+const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length;
 /* CORRECTED 2026-08-10 BY D-280, AND THE OLD ASSERTION IS SAID TO BE WRONG
    RATHER THAN EXEMPTED. It read `[1, 3]`. It was RIGHT when written — three was
    every reader of the rule the day D-267 landed — and it became wrong the
@@ -487,10 +496,19 @@ const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered)\(/g) |
    is. It asks to PUBLISH a status and never to drop the leg (DEC-70: severance
    discharges support, never connection); `d280-strengthbar.test.mjs` §7 SITE (c) pins
    that no `continue` rides on it, and `reevaluation.test.mjs` block 9 drives it. */
-t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `#citesInto`, "
-+ "`#restsOnLive`, `#queueAncestorEdges`, D-280's two surviving sites `#routeTask` and "
-+ "`restingOn`, and REC-160's `reevaluations`, which MARKS a severed leg without dropping it. It was "
-+ "SIX until CASE-2 removed `#requiredStrengthFor` under DEC-72, five until REC-160. D-267 exists "
+/* CORRECTED 2026-09-28 (T7 LEGACY-TESTS #4), SIX STAYS SIX, AND BOTH MOVES ARE NAMED HERE AS THE PARAGRAPHS ABOVE
+   REQUIRE. ONE DEPARTURE: `reevaluations` (now reevaluation's, REEVALUATION #1 J2.10) no longer calls the predicate
+   itself; it reads each dependent leg's `status` from inquiry's `restingOn`, which asks the ONE predicate per row,
+   and marks the leg from it — DEC-70's pin moved with it (`d280-strengthbar.test.mjs` §7 SITE (c)). ONE ARRIVAL:
+   inquiry's `projectsDrawingOn` (INQUIRY #1, inquiry R39: the projects drawing on a question, for
+   DRAWN_ON_BY_SEVERAL_PROJECTS), which asks the same predicate rather than copying it. The others moved without
+   changing: `#citesInto` is connections' `citesInto`, `#restsOnLive` and `restingOn` inquiry's, and
+   `#queueAncestorEdges` and `#routeTask` are still the store's. */
+t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `citesInto`, "
++ "`restsOnLive`, `#queueAncestorEdges`, D-280's two surviving sites `#routeTask` and "
++ "`restingOn`, and inquiry R39's `projectsDrawingOn`; REC-160's `reevaluations` now reads the status "
++ "`restingOn` publishes and MARKS a severed leg without dropping it. It was SIX until CASE-2 removed "
++ "`#requiredStrengthFor` under DEC-72, five until REC-160. D-267 exists "
 + "because the rule had four inline implementations and a fifth reader that did not know it "
 + "existed, and NO behavioural arm can see a faithful copy",
   [defs, calls], [1, 6]);

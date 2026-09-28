@@ -36,7 +36,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+/* LEGACY-TESTS #4 (T7): C-22.11 (AI_RUN_NO_SUCH_CONTEXT) left the catalogue for ai-runs (R35, AI-RUNS #2 REPORT J6.1). */
+import { AI_RUNS_CHECKS as AI_RUN_CHECKS } from "../src/ai-runs/index.mjs";
 
 /* The control driver points this at an armed copy of the sources. */
 const SRC_DIR = process.env.AIRUN_CONTEXTKIND_SRC || fileURLToPath(new URL("../src", import.meta.url));
@@ -98,7 +99,8 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: 
   "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
 /* REC-141 (IC-158): a project's id is MINTED by the plane — the creation names none, and the answer carries it. */
-const projectMd = (title) => ["---", "object_type: project", `title: "${title}"`,
+/* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
+const projectMd = (title) => ["---", "object_type: project", `title: "${title}"`, 'objective: "Account for the fund."',
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 const infoMd = (id) => ["---", `id: ${id}`, "object_type: information", "current_state: collected",

@@ -441,7 +441,7 @@ t("a leg whose `theme` is null, or whose NOTE mentions a theme, is not claimed",
 
 /* ===================== 5. VISIBILITY ===================== */
 console.log("\n--- 5. a document the reader cannot see ---");
-const projMd = () => ["---", "object_type: project", "current_state: forming",
+const projMd = () => ["---", "object_type: project", "objective: \"Fixture objective.\"", "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 const pr = await post("promote", { base: null,

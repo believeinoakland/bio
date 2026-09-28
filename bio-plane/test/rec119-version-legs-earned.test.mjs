@@ -68,7 +68,16 @@ import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1, RUN-PRODUCTIONS #1 J2.5, INQUIRY #1 J2.2): `#versionCollections` and
+   this item's resolver `#versionLegsEarned` moved out of store.mjs into src/basis-versions/index.mjs as
+   `versionCollections` and `#legsEarned(rows)`, which ask inquiry's registry (`inq.earned`, formerly the store's
+   `earnedBasisRegistry`) and apply inquiry's `legCapped` (whose store name, `Store.#capturedAt`, is now a one-line
+   delegate); the composition builder moved to basis-versions' grammar.mjs and the freeze compares through its
+   `sameComposition` (K186's `leg_capture` allowance); op=suggest moved to run-productions and reads the version back
+   through basis-versions' `basisVersions`. The pins read those files. */
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
+const BV_GRAMMAR_SRC = readFileSync(SRC("basis-versions/grammar.mjs"), "utf8");
+const RP_SRC = readFileSync(SRC("run-productions/index.mjs"), "utf8");
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
@@ -450,29 +459,36 @@ console.log("\n--- 7. OVER-STRICTNESS — NOTHING IS CAPPED THAT MUST NOT BE ---
 
 console.log("\n--- 8. SOURCE PINS — ONE ARITHMETIC, ONE REGISTRY CALL, ONE READER ---");
 {
-  const m = /#versionLegsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  const m = /#legsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(BV_SRC)?.[0] ?? "";
+  /* RE-ANCHORED 2026-09-28: the arithmetic is reached by its home name, inquiry's `legCapped`. */
   t("the resolver EXISTS and calls `Store.#capturedAt` — REC-105's arithmetic, reused rather than restated",
-    { found: m.length > 0, calls_capturedAt: /Store\.#capturedAt\(/.test(m) },
+    { found: m.length > 0, calls_capturedAt: /inq\.legCapped\(/.test(m) },
     { found: true, calls_capturedAt: true });
   t("it mints NO letter of its own anywhere in its body",
     /["']\s*[ABCD]\s*["']/.test(m), false);
   t("it asks the registry ONCE for the whole version rather than once per leg — a per-row probe on a member-facing read",
-    (m.match(/earnedBasisRegistry\(/g) || []).length, 1);
+    (m.match(/\.earned\(/g) || []).length, 1);
   t("it does NOT reach for `strengthOf` — the leg letter comes from the registry, never copied out of the envelope's other half",
     /strengthOf\(/.test(m), false);
   /* THE TWO OPS READ ONE READER, which is D-235's whole argument and is what makes block 3's
      agreement structural rather than a coincidence of two implementations. */
-  const vc = /#versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  const vc = /\n  versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(BV_SRC)?.[0] ?? "";
+  /* RE-ANCHORED 2026-09-28: op=suggest reads its recorded version back through op=basisversions' own reader
+     (`this.basisVersions.basisVersions({ id: target, …`), which calls `versionCollections` — still ONE reader. */
   t("BOTH consumers go through the ONE collection reader, and that reader is where the resolution happens — so neither op can be fixed without the other",
-    { resolver_called_in_collections: /#versionLegsEarned\(/.test(vc),
-      basisversions_reads_it: /#versionCollections\(inq, r\)/.test(STORE_SRC),
-      suggest_reads_it: /#versionCollections\(target, recorded\)/.test(STORE_SRC) },
+    { resolver_called_in_collections: /this\.#legsEarned\(/.test(vc),
+      basisversions_reads_it: /this\.versionCollections\(inq, r\)/.test(BV_SRC),
+      suggest_reads_it: /this\.basisVersions\.basisVersions\(\{ id: target/.test(RP_SRC) },
     { resolver_called_in_collections: true, basisversions_reads_it: true, suggest_reads_it: true });
   /* THE FREEZE IS NOT TOUCHED BY THIS ITEM, pinned at the source, because the whole ruling rests
      on those bytes not moving. */
   t("the composition BUILDER and the FREEZE COMPARISON are untouched — the ruling rests on those bytes not moving, so an edit to either would be a defect in this item",
-    { builder_emits_authored_leg_line: /\.\.\.legs\.map\(\(l, k\) => `leg\\t\$\{k\}/.test(STORE_SRC),
-      freeze_compares_stored_column: /prior\.composition === v\.composition/.test(STORE_SRC) },
+    /* RE-ANCHORED 2026-09-28: the builder is basis-versions' grammar.mjs; the freeze is basis-versions'
+       `basis-version-freeze` region, comparing the STORED column through `sameComposition`, whose first clause is the
+       byte equality (its one allowance is K186's: a held composition with no `leg_capture` line). */
+    { builder_emits_authored_leg_line: /\.\.\.legs\.map\(\(l, k\) => `leg\\t\$\{k\}/.test(BV_GRAMMAR_SRC),
+      freeze_compares_stored_column: /if \(!prior \|\| sameComposition\(prior\.composition, v\.composition\)\) continue;/.test(BV_SRC)
+        && /export function sameComposition\(held, offered\) \{\n  if \(held === offered\) return true;/.test(BV_GRAMMAR_SRC) },
     { builder_emits_authored_leg_line: true, freeze_compares_stored_column: true });
 }
 

@@ -108,7 +108,9 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { AI_RUNS_CONTEXT_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): C-36.1–.3 (AI_RUNS_CONTEXT_CHECKS) left the catalogue
+   for ai-runs (R35); read from the module that now holds the family. */
+import { AI_RUNS_CONTEXT_CHECKS } from "../src/ai-runs/index.mjs";
 import { RUN_CONTEXTS } from "../src/airun.mjs";
 /* REC-90: the index sweep's second exculpation reads the COMPILER'S OWN REGISTRY
    to answer "is this column a meaning arm's filter column", rather than matching
@@ -118,6 +120,9 @@ import { MEANING } from "../src/query.mjs";
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SRC_STORE = readFileSync(new URL("../src/store.mjs", import.meta.url), "utf8");
 const SRC_SCHEMA = readFileSync(new URL("../src/schema.mjs", import.meta.url), "utf8");
+/* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1): the store's `aiRunsInContext` (op=airuns) moved into ai-runs as
+   `listInContext`, with its DEC-49 region `is-airuns-context`; section C reads it from there. */
+const SRC_RUNS = readFileSync(new URL("../src/ai-runs/index.mjs", import.meta.url), "utf8");
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' sources, for the SWEEP's corpus (record-core R21). */
 import { moduleFiles, moduleSources } from "./extracted-sources.mjs";
 /* T5-12 (legacy-tests), 2026-09-27: the store's dispatch map with T5's route spreads expanded, for the "dispatched" arms. */
@@ -171,7 +176,9 @@ const member = async (id, caps, role = "member") => {
    creation names no bundleId (PROJECT_ID_SUPPLIED) and its bytes no id line (PROJECT_ID_IN_BYTES); `mk`
    returns the id the plane answered with, and for a project `id` is only its title's label. */
 const bundleMd = (id, type) => [
+  /* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so a project states one. */
   "---", ...(type === "project" ? [] : [`id: ${id}`]), `object_type: ${type}`,
+  ...(type === "project" ? ['objective: "Find out what the project is investigating."'] : []),
   `current_state: ${type === "project" ? "forming" : type === "inquiry" ? "open" : "collected"}`,
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "---", "", "## Summary", "", "A fixture.", "",
 ].join("\n");
@@ -397,11 +404,13 @@ const segments = (code) => {
   return out;
 };
 const CODE = decomment(SRC_STORE);
-const SEGS = segments(CODE);
-const SEG = SEGS.get("aiRunsInContext") || "";
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the method is ai-runs' `listInContext` (it was the
+   store's `aiRunsInContext`), read off ai-runs' own comment-stripped source by the same segmenter. */
+const SEGS = segments(decomment(SRC_RUNS));
+const SEG = SEGS.get("listInContext") || "";
 t("SEGMENT GUARD: the walk below actually found the method, and found a plausible amount of it — a "
 + "segment this reader could not locate would make every assertion in this section vacuous",
-  [SEG.length > 400, /aiRunsInContext\(\{/.test(SEG)], [true, true]);
+  [SEG.length > 400, /listInContext\(\{/.test(SEG)], [true, true]);
 t("SEGMENT GUARD: and the segmenter is bounded by the NEXT method rather than running into it",
   /#biasForRun/.test(SEG), false);
 t("THE GATE IS `#bundleGate` ON `context_id` — the same call its three run-id-keyed siblings make",
@@ -493,8 +502,9 @@ t("and each row's `where` names a REGION rather than the whole method — DEC-49
       exactly that and failed against a correct region — recorded rather than
       quietly fixed, because a matcher that counts its own closing marker is how
       a guard starts disagreeing with the thing it guards. */
-   (SRC_STORE.match(/\/\* DEC-49 REGION is-airuns-context/g) || []).length,
-   (SRC_STORE.match(/END DEC-49 REGION is-airuns-context/g) || []).length],
+   /* RE-ANCHORED 2026-09-28 (T7, legacy-tests): the region moved with the method into `src/ai-runs/index.mjs`. */
+   (SRC_RUNS.match(/\/\* DEC-49 REGION is-airuns-context/g) || []).length,
+   (SRC_RUNS.match(/END DEC-49 REGION is-airuns-context/g) || []).length],
   [true, 1, 1]);
 
 /* ARM R · OVER-STRICTNESS. A correctly formed request in a spelling this file
@@ -565,16 +575,26 @@ console.log("\n--- SWEEP: an ACCESS PATH the schema built for a question no op a
    calibration, entities, connections, progressions, bias, observation-log and retrieval theirs; extraction's REPORT
    names `reading_text_source_kind`'s reader, now `extraction/index.mjs`), so the corpus is widened to their files on
    BOTH sides, as T3's and T4's were. */
+/* WIDENED 2026-09-28 (T7, legacy-tests; T6's and T7's layers): twelve more modules left the legacy plane with their own
+   SQL, and those with tables their own `schema.mjs` (ai-runs took `ai_runs`, `ai_run_bounds` and `ai_runs_context`,
+   AI-RUNS #2 REPORT J6.1), so the corpus is widened to their files on BOTH sides, as T3's, T4's and T5's were. */
 const EXTRACTED = ["record-core", "membership", "promotion", "host-governor", "provenance", "capture",
                    "calibration", "extraction", "content", "entities", "connections", "progressions", "bias",
-                   "observation-log", "retrieval"];
+                   "observation-log", "retrieval",
+                   "ai-runs", "basis-versions", "capture-requests", "capture-sources", "citation", "contradiction",
+                   "inquiry", "intent", "queue", "reevaluation", "run-productions", "strength"];
 const EXTRACTED_SRC = moduleSources(EXTRACTED);
 const PURGE_COMPOSED = [...(SRC_STORE + "\n" + EXTRACTED_SRC).matchAll(/\{ name: "(\w+)", keys: \[([^\]]*)\]/g)]
   .map((m) => [m[1], [...m[2].matchAll(/"(\w+)"/g)].map((k) => k[1])]).filter(([, keys]) => keys.length)
   .map(([name, keys]) => `DELETE FROM ${name} WHERE ${keys.map((k) => `${k}=?`).join(" OR ")}`).join("\n");
-const SQLSRC = decomment(SRC_STORE) + "\n"
+/* T7 (legacy-tests): an SQL line comment (`-- …` at a line's start, inside a schema's template text) is prose, not a
+   statement, and is stripped as `decomment` strips JavaScript's: the widening above brought in `inquiry/schema.mjs`,
+   whose comment on `inquiry_basis_grade_source` QUOTES `SELECT bundle_id FROM inquiry_basis WHERE grade_source = ?`,
+   and the reader credited that quotation as a reader of the index. Stripping can only lengthen the roster. */
+const sqlDecomment = (text) => text.split("\n").filter((L) => !/^\s*--/.test(L)).join("\n");
+const SQLSRC = sqlDecomment(decomment(SRC_STORE) + "\n"
              + decomment(readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8")) + "\n"
-             + decomment(EXTRACTED_SRC) + "\n" + PURGE_COMPOSED;
+             + decomment(EXTRACTED_SRC)) + "\n" + PURGE_COMPOSED;
 const INDEXES = [...(SRC_SCHEMA + "\n" + EXTRACTED.flatMap(moduleFiles).filter((f) => f.endsWith("/schema.mjs"))
   .map((f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")).join("\n")).matchAll(/CREATE INDEX IF NOT EXISTS\s+(\w+)\s+ON\s+(\w+)\s*\(([^)]*)\)/g)]
   .map((m) => ({ index: m[1], table: m[2], lead: m[3].split(",")[0].trim() }));
@@ -704,6 +724,11 @@ t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow 
 + "one thing UI-49 had to find by trying to build a surface",
   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests): 14 -> 13, the ceiling tightened WITH the floor below (no row of
      slack); the one departure, `resolutions_grade`, is named at the floor and pinned by name after the roster pin. */
+  /* MEASURED 2026-09-28 (T7, legacy-tests), NOT RE-PINNED: over the widened corpus this reads 14 against the
+     ceiling of 13. The same sweep over `origin/tranche/T6` (bfaf7e6287, the T5 corpus) reads the same thirteen names
+     as here; the one arrival is `intent_triage_key` (`intent_triage(proposal_key)`, INTENT #1's table), which no
+     statement filters — intent reads the table whole `ORDER BY seq` and keys it in JS. A ceiling does not rise
+     because an index arrived with no reader; the red is REPORTED to intent. (Departures: none.) */
   unread.length <= 13, true);   /* REC-104: 13 -> 14, and the arrival is NAMED and EXCULPATED below:
                                    `content_chain_kind`, filtered by `content:chain` through the
                                    compiler's registry, which this reader cannot see — the same

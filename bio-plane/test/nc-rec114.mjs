@@ -40,6 +40,11 @@ import { controlPen } from "./pen.mjs";
 const ARM = (process.argv[2] || "none").toLowerCase();
 const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
 const QUERY = fileURLToPath(new URL("../src/query.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the listing resolver `#legEarnedCapture` moved to retrieval (T5, retrieval
+   R12/R55); it holds the three conditions and asks the store's REGISTERED leg-grade resolver once per page, which
+   applies `Store.#capturedAt` (inquiry's `legCapped`). Arms (a), (b), (c) and (e) patch it there; every find was
+   counted against the file (exactly once) before it was written. */
+const RETRIEVAL = fileURLToPath(new URL("../src/retrieval/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./rec114-leg-earned.test.mjs", import.meta.url));
 const PEN = `${controlPen("rec114")}/`;
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -54,7 +59,7 @@ const CENSUS_HELD_OPEN = [
   "the corpus is FLOORED",
   "the fifth reader is REACHED",
   "A FIFTH READER, NAMED AND DRIVEN",
-  "A SIXTH READER, NAMED",
+  "THE SIXTH READER IS CLOSED",
   "...and its CAPPED TWIN",
   "both of its consumers are MEMBER-CLASS",
   "`basisFor` is the raw seam",
@@ -65,7 +70,7 @@ const CENSUS_HELD_OPEN = [
    is an arm that never armed, and both have happened in this estate. */
 const ARMS = {
   a: {
-    file: STORE,
+    file: RETRIEVAL,
     what: "THE ITEM'S OWN — THE FIX REMOVED. `#legEarnedCapture` hands every row straight back, so "
         + "`op=meaningrows&rows=leg` publishes the AUTHORED letter again, uncapped, exactly as it did "
         + "before this item. This is the arm the ROW names: the listing must go back to publishing the "
@@ -104,15 +109,23 @@ const ARMS = {
                "ANOTHER MEANING ARM IS BYTE-IDENTICAL"],
   },
   b: {
-    file: STORE,
+    file: RETRIEVAL,
     what: "THE MEMBER'S ACT ERASED. The letter is capped correctly but `grade_authored` and "
         + "`grade_why` are not published — the OTHER defensible answer to this item's doctrine "
         + "question, implemented. THIS IS THE ARM THAT PROVES THE RULING'S COMPROMISE IS REAL "
         + "rather than decorative: without it, a fix that silently replaced a member's authored "
         + "letter would pass every assertion about the earned one.",
-    find: "      return { ...r,\n               grade: res ? res.grade : (r ? r.grade : null),\n"
-        + "               grade_authored: r ? r.grade : null,\n               grade_why: res ? res.why : null };",
-    with: "      return { ...r,\n               grade: res ? res.grade : (r ? r.grade : null) };",
+    /* RE-ANCHORED 2026-09-28: retrieval's resolver publishes the two fields on each of its three returns (an
+       unbounded leg, a leg the resolver answered nothing for, a resolved leg), so all three drop them. */
+    find: "      if (!bounded(r)) return { ...r, grade: r ? r.grade : null, grade_authored: r ? r.grade : null, grade_why: null };\n"
+        + "      const res = Array.isArray(resolved) ? resolved[i++] : (i++, null);\n"
+        + "      /* No resolver (R55), or one that answers null for a leg whose authored letter stands. */\n"
+        + "      if (!res || typeof res !== \"object\") return { ...r, grade: r.grade, grade_authored: r.grade, grade_why: null };\n"
+        + "      return { ...r, grade: res.grade ?? null, grade_authored: r.grade, grade_why: res.why ?? null };",
+    with: "      if (!bounded(r)) return { ...r, grade: r ? r.grade : null };\n"
+        + "      const res = Array.isArray(resolved) ? resolved[i++] : (i++, null);\n"
+        + "      if (!res || typeof res !== \"object\") return { ...r, grade: r.grade };\n"
+        + "      return { ...r, grade: res.grade ?? null };",
     mustFail: ["PUBLISHES THE EARNED LETTER, with the AUTHORED letter beside it and a reason",
                "READER 1 — the bare listing",
                "READER 2 — `leg:grade=B`",
@@ -133,7 +146,7 @@ const ARMS = {
                "ANOTHER MEANING ARM IS BYTE-IDENTICAL"],
   },
   c: {
-    file: STORE,
+    file: RETRIEVAL,
     what: "THE AXIS IGNORED. The capture ceiling is applied to EVERY leg carrying a letter, not "
         + "only to capture-axis legs — the fence tighter than its rule, wearing the costume of "
         + "caution. A connection leg's earned answer is a VALUE the write already pins, so capping "
@@ -188,27 +201,32 @@ const ARMS = {
                "A CONNECTION-AXIS LEG ON A RE-READ DOCUMENT IS UNTOUCHED"],
   },
   e: {
-    file: STORE,
+    file: RETRIEVAL,
     what: "OVER-STRICTNESS — THE SAME RULE IN A SPELLING THIS ITEM DID NOT ANTICIPATE. The `.map` "
         + "is rewritten as an explicit `for` loop assigning the three fields one at a time. It is "
         + "the same arithmetic, the same conditions and the same output, written the other way. "
         + "CORRECT WORK IN AN UNANTICIPATED SPELLING MUST PASS — an arm that fails here would mean "
         + "the suite is pinning a STYLE and calling it a rule.",
+    /* RE-ANCHORED 2026-09-28: retrieval's `.map` over its three returns, written as a `for` loop. */
     find: "    return rows.map((r) => {\n"
-        + "      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;\n"
-        + "      return { ...r,\n"
-        + "               grade: res ? res.grade : (r ? r.grade : null),\n"
-        + "               grade_authored: r ? r.grade : null,\n"
-        + "               grade_why: res ? res.why : null };\n"
+        + "      if (!bounded(r)) return { ...r, grade: r ? r.grade : null, grade_authored: r ? r.grade : null, grade_why: null };\n"
+        + "      const res = Array.isArray(resolved) ? resolved[i++] : (i++, null);\n"
+        + "      /* No resolver (R55), or one that answers null for a leg whose authored letter stands. */\n"
+        + "      if (!res || typeof res !== \"object\") return { ...r, grade: r.grade, grade_authored: r.grade, grade_why: null };\n"
+        + "      return { ...r, grade: res.grade ?? null, grade_authored: r.grade, grade_why: res.why ?? null };\n"
         + "    });",
     with: "    const out = [];\n"
         + "    for (const r of rows) {\n"
-        + "      let res = null;\n"
-        + "      if (bounded(r)) res = Store.#capturedAt(r.grade, cap[r.target_id], r.target_id);\n"
         + "      const row = { ...r };\n"
-        + "      row.grade = res ? res.grade : (r ? r.grade : null);\n"
-        + "      row.grade_authored = r ? r.grade : null;\n"
-        + "      row.grade_why = res ? res.why : null;\n"
+        + "      if (!bounded(r)) { row.grade = r ? r.grade : null; row.grade_authored = r ? r.grade : null; row.grade_why = null; }\n"
+        + "      else {\n"
+        + "        const res = Array.isArray(resolved) ? resolved[i] : null;\n"
+        + "        i += 1;\n"
+        + "        const ok = !!res && typeof res === \"object\";\n"
+        + "        row.grade = ok ? (res.grade ?? null) : r.grade;\n"
+        + "        row.grade_authored = r.grade;\n"
+        + "        row.grade_why = ok ? (res.why ?? null) : null;\n"
+        + "      }\n"
         + "      out.push(row);\n"
         + "    }\n"
         + "    return out;",
@@ -249,7 +267,7 @@ const runSuite = () => {
 const spec = ARM === "none" ? null : ARMS[ARM];
 if (ARM !== "none" && !spec) { console.error(`no such arm: ${ARM}`); process.exit(2); }
 const TARGET = spec ? spec.file : STORE;
-const NAME = TARGET === STORE ? "store.mjs" : "query.mjs";
+const NAME = TARGET === STORE ? "store.mjs" : TARGET === RETRIEVAL ? "retrieval-index.mjs" : "query.mjs";
 const FLOOR = TARGET === STORE ? 500000 : 50000;
 
 mkdirSync(PEN, { recursive: true });

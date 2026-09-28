@@ -46,7 +46,11 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ACT_SHAPE_CHECKS, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T7 LEGACY-TESTS #4; CITATION #1 J1.3): C-33.39 left the catalogue's `ACT_SHAPE_CHECKS`
+   with `cite`, `sever` and `reinstate` and is citation's `CITE_CHECKS.RETIRED_NOT_CITABLE` (number, code and
+   translation unchanged). */
+import { CITE_CHECKS } from "../src/citation/index.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const ADM = "adm-r183", MTOK = "mem-r183";
@@ -77,7 +81,7 @@ const DO = async (path, body) => {
 const E = encodeURIComponent;
 const must = (label, r) => { if (!r || r.ok === false) throw new Error(`${label}: ${JSON.stringify(r).slice(0, 900)}`); return r; };
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
-const ROW = ACT_SHAPE_CHECKS.RETIRED_NOT_CITABLE;
+const ROW = CITE_CHECKS.RETIRED_NOT_CITABLE;
 
 try {
 
@@ -114,6 +118,8 @@ const infoMd = (id, { state = "collected", prior = null, history = [], sourceSta
 const projectMd = (name) => ["---", "object_type: project", `title: "Project ${name}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "required_strength:", "  capture: B", "  connection: C",
+  /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Decide what this case can rest on."',
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
 
 let snapSeq = 0;

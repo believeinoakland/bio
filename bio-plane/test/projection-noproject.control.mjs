@@ -34,6 +34,11 @@ const STORE = join(ROOT, "src", "store.mjs");
    (`retrieval.registerProjectionDecoration("legacy-store", …)`, retrieval REPORT 11), which the single-bundle arm
    applies. Arms (a) and (c) now edit that decoration's call; arm (b) edits retrieval's list arm. */
 const RETRIEVAL = join(ROOT, "src", "retrieval", "index.mjs");
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1, R23): the ONE reader moved to basis-versions as
+   `noProjectConclusionOf(inquiryId)`; the store's `#noProjectConclusionOf` is a one-line delegate to it, and the
+   decoration still calls the delegate. Arm (a) copies the reader in basis-versions and points the decoration at the
+   copy; arm (c) is unchanged (the decoration's call is in store.mjs). */
+const BV = join(ROOT, "src", "basis-versions", "index.mjs");
 const SUITE = join(DIR, "projection-noproject.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -56,28 +61,28 @@ const CALL = `                    no_project_conclusion: type === "inquiry" ? th
 /* The copy's call spelled out whole, not derived by a `.replace` of the reader's
    name: that name occurs at two call sites, and m025-arm-anchor-witness reads a
    `.replace(` literal as an anchor that must occur once in its subject. */
-const CALL_COPY = `                    no_project_conclusion: type === "inquiry" ? this.#noProjectConclusionOfCopy(row.bundle_id) : null };`;
-const HEAD = "  #noProjectConclusionOf(inquiryId) {\n";
+const CALL_COPY = `                    no_project_conclusion: type === "inquiry" ? basisVersionsOf(this.ctx).noProjectConclusionOfCopy(row.bundle_id) : null };`;
+const HEAD = "  noProjectConclusionOf(inquiryId) {\n";
 const BRANCH = `"the inquiry carries no such reading"`;
 
 const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes three-arms-working from three-arms-broken",
               apply: () => {} },
 
-  a: { files: [STORE],
+  a: { files: [BV, STORE],
        label: "(A) A SECOND READER, COPIED: projection() calls #noProjectConclusionOfCopy, the reader verbatim "
             + "but for ONE branch no fixture reaches (the named-reading-is-absent sentence)",
        apply: () => {
-         if (DRY) { DRY.push({ file: STORE, needle: HEAD }, { file: STORE, needle: CALL }); return; }
-         const src = readFileSync(STORE, "latin1");
+         if (DRY) { DRY.push({ file: BV, needle: HEAD }, { file: STORE, needle: CALL }); return; }
+         const src = readFileSync(BV, "latin1");
          const at = src.indexOf(HEAD);
          const end = src.indexOf("\n  }\n", at);
          if (at < 0 || end < 0 || src.indexOf(HEAD, at + 1) >= 0) throw new Error("ARM a: the reader's head is not unique");
          const reader = src.slice(at, end + "\n  }\n".length);
          if (reader.split(BRANCH).length !== 2) throw new Error("ARM a: the branch to vary is not in the reader exactly once");
-         const copy = reader.replace("#noProjectConclusionOf(inquiryId)", "#noProjectConclusionOfCopy(inquiryId)")
+         const copy = reader.replace("noProjectConclusionOf(inquiryId)", "noProjectConclusionOfCopy(inquiryId)")
                             .replace(BRANCH, `"no reading of that name is carried by this inquiry"`);
-         writeFileSync(STORE, src.slice(0, end + "\n  }\n".length) + "\n" + copy + src.slice(end + "\n  }\n".length), "latin1");
+         writeFileSync(BV, src.slice(0, end + "\n  }\n".length) + "\n" + copy + src.slice(end + "\n  }\n".length), "latin1");
          edit(STORE, CALL, CALL_COPY);
        } },
 

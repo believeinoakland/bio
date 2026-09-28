@@ -114,7 +114,7 @@ const inquiryMd = (id) => ["---",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   `### Session ${LATER} | Formation | agent`, "Trigger: surfacing", "Changes: created.", "",
   "## Review Notes", ""].join("\n");
-const projectMd = (name) => ["---", "object_type: project", `title: "Project ${name}"`,
+const projectMd = (name) => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "Project ${name}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");

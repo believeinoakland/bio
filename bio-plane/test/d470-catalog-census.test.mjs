@@ -582,6 +582,18 @@ const CATALOG_CENSUS = {
   "1.35.0": { count: 519, digest: "e4d92a7e563ee9a0052239476766b449021eee501a6d2d7547a2e53c370c56bf",
               changed: [],
               source: "32b7b0bb91da53a06a4a3e5c3549cee4d3a40a61f37847edff15802be03eb89b" },
+  /* 1.36.0 (PROMOTION #5, T6 layer 2, 2026-09-27, LEGACY-CHECKS #2 REPORT 7; recorded by legacy-tests, LEGACY-TESTS #4,
+     T7): THIRTY-ONE ARRIVALS, no departures, none changed (519 -> 550) — C-22.17, C-28.17, C-28.18, C-81.11-.14,
+     C-102.1-.5, C-103.1-.7 and C-104.1-.12, named by diffing this suite's census on `tranche/T5` against
+     `tranche/T6`; PROMOTION #5's own note counts 31, LEGACY-CHECKS #2's list names 30 and omits C-104.12, which the
+     census holds. Count, digest and source are PROMOTION #5's print of this suite when it minted the version, re-measured
+     identical on `origin/tranche/T6`. T7's extractions then took SIXTY-ONE rows out of the catalogue file with the
+     version unmoved (550 -> 489; reevaluation's C-10.1 among them, which is also A1's one departed literal site), so
+     A3 and A9 name the census that has no version of its own until CATALOG_VERSION moves (legacy-tests' T7 REPORT to
+     promotion). */
+  "1.36.0": { count: 550, digest: "d35d735ccace42ab30a04939c19caa764e252f3e28d50b7b213bfd48d9d62c05",
+              changed: [],
+              source: "66baec44ad8ce11923787ac18b567062257490ff00d7fd699a6acb426693bc5c" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -637,8 +649,11 @@ say(`  the stamp: ${GATE_VERSION}`);
    RE-PINNED 2026-09-27 (T5-12, legacy-tests): the literal-site floor 50 -> 46, the measured figure. The seven that
    left are C-26.1-C-26.7, `checkBiasExtension`'s sites, which BIAS #1 moved to `src/bias/checks.mjs` with the rows
    (1.35.0); every other literal site of the T5 opening (53) is still here, compared by name. */
+/* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, T7): the literal-site floor 46 -> 45, the measured figure. The one that left
+   is C-10.1 (`reeval_pending`'s shape, five literal sites in `checkBundle`), which REEVALUATION #1 moved with its number
+   to `src/reevaluation/checks.mjs` (K6, its R23); every other literal site of T6 (46) is still here, compared by name. */
 t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
-  [count >= 400, tables.size >= 40, literal.size >= 46], [true, true, true]);
+  [count >= 400, tables.size >= 40, literal.size >= 45], [true, true, true]);
 
 /* (A2) EVERY EMISSION SITE RESOLVES. A computed site is not scored zero: it is
    named here or it fails. */
@@ -778,9 +793,10 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
    hand with the constant, which is its whole rule. */
 /* UPDATED 2026-09-26 (T3, legacy-tests): 1.31.0 -> 1.32.0, promotion's move of four checks (K64).
    UPDATED 2026-09-27 (T4, legacy-tests): 1.32.0 -> 1.33.0, promotion's T4-2b.
-   UPDATED 2026-09-27 (T5-12, legacy-tests): 1.33.0 -> 1.35.0, promotion's N86 (1.34.0) and K150 (1.35.0). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.35.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.35.0)", "1.35.0"]);
+   UPDATED 2026-09-27 (T5-12, legacy-tests): 1.33.0 -> 1.35.0, promotion's N86 (1.34.0) and K150 (1.35.0).
+   UPDATED 2026-09-28 (LEGACY-TESTS #4, T7): 1.35.0 -> 1.36.0, PROMOTION #5's T6 move (LEGACY-CHECKS #2 REPORT 7). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.36.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.36.0)", "1.36.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

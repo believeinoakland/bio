@@ -109,7 +109,8 @@ const inquiryMd = (id) => ["---",
   "---", "", "## Question", "", `Did ${id} happen?`, "", "## What It Rests On", "",
   "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
   "## Review Notes", ""].join("\n");
-const projectMd = () => ["---", "object_type: project",
+/* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
+const projectMd = () => ["---", "object_type: project", 'objective: "Find out whether it did."',
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
@@ -415,7 +416,11 @@ console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row,
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-26.13–C-26.19 moved with the bias debt out of the catalogue
      into `src/bias/checks.mjs` (BIAS #1, R29, K146); read from the same (possibly armed) source tree. C-33.45–47
      are still the catalogue's. */
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): C-33.45–47 (AI_RUN_RERUN_SELF, _UNKNOWN,
+     _OTHER_CONTEXT) left the catalogue's ACT_SHAPE_CHECKS for ai-runs' AI_RUN_ACT_SHAPE_CHECKS (R35); read from the
+     module that now holds them, in the same (possibly armed) source tree. */
   const BIAS = await import(join(SRC_DIR, "bias", "checks.mjs"));
+  const RUNS = await import(join(SRC_DIR, "ai-runs", "checks.mjs"));
   const rows = [
     ["BIAS_DEBT_NO_RUN", "C-26.13", BIAS.BIAS_CHECKS], ["BIAS_DEBT_NO_ACTOR", "C-26.14", BIAS.BIAS_CHECKS],
     ["BIAS_DEBT_MACHINE_CANNOT_RESOLVE", "C-26.15", BIAS.BIAS_CHECKS],
@@ -423,9 +428,9 @@ console.log("\n--- ARM C · THE CATALOGUE: every code this item mints has a row,
     ["BIAS_DEBT_REASON_TOO_LONG", "C-26.17", BIAS.BIAS_CHECKS],
     ["BIAS_DEBT_NO_SUCH_DEBT", "C-26.18", BIAS.BIAS_CHECKS],
     ["BIAS_DEBT_ALREADY_SETTLED", "C-26.19", BIAS.BIAS_CHECKS],
-    ["AI_RUN_RERUN_SELF", "C-33.45", CAT.ACT_SHAPE_CHECKS],
-    ["AI_RUN_RERUN_UNKNOWN", "C-33.46", CAT.ACT_SHAPE_CHECKS],
-    ["AI_RUN_RERUN_OTHER_CONTEXT", "C-33.47", CAT.ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_SELF", "C-33.45", RUNS.AI_RUN_ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_UNKNOWN", "C-33.46", RUNS.AI_RUN_ACT_SHAPE_CHECKS],
+    ["AI_RUN_RERUN_OTHER_CONTEXT", "C-33.47", RUNS.AI_RUN_ACT_SHAPE_CHECKS],
   ];
   t("ARM C1 (TEN CODES, TEN ROWS): every refusal this item mints carries its declared C-number, a `where` "
     + "naming where it fires, and a canned translation a surface can render instead of the machine word",
