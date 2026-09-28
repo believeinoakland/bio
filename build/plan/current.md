@@ -8,7 +8,7 @@ Opened by BOB #50, 2026-09-27 ~23:50 UTC (PROCESS-MECHANICS §5), under the mail
 
 
 
-### Layer 3
+### Layer 3 · CLOSED 2026-09-28 ~00:25 UTC (all three merged; plane bundle regenerated, fleetbundles 96/0; K178; archived, rows in `build/metrics/T7.csv`)
 - **capture** · N103 (drop the unused `readingInputs` and `acquireOp`'s reading inputs); N90 (bound its six unbounded routes; meaning-bounds' ceiling moves back); N122 (`captureOf` adopts a later caller's `env` or governor, or refuses loudly; tested at the interface); N109 (the read contract on `links`: the job proposes its Provides text in a QUESTION, BOB folds it, as K152).
 - **provenance** · N92 (`provenanceAudit` registers with record-core's `registerAuditCheck`, R59, and drops its wrapper); N111 (R48's contract names `register.registered` and `captured_locators.address_norm`; proposed and folded as N109).
 - **capture-sources** · the K103/K109 credentials capture-requests R41–R42 read (R55–R63), as folded (K157–K159; Bob answered its Opens, K158); not N123 (membership offers no revocation notice yet).
