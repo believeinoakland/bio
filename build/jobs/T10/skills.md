@@ -24,7 +24,7 @@ If instead you rule the row does move into skills' paths, it needs ai-runs to st
 
 **Deferred.** None of this module's. R10 stays not met: the plane publishes no surfaces or recipes (SK-5, N144).
 
-**Found in other modules (reported in J3):**
+**Found in other modules (reported in J2):**
 1. legacy-checks: the catalogue row C-22.7's `where` still reads `src/skillpack.mjs checkSkillVersion, called from store.mjs aiRunOpen`. N156 deleted that site, so the DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`) now fails once more: "arm C could not find function checkSkillVersion in src/skillpack.mjs" (79 → 80 failures; the other 79 were there before). The one mint is `src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open`. It is a one-line re-point, or it rides with N289.
 2. legacy-tests: `bio-plane/test/skillsequencing.test.mjs` goes from 26/1 to 24/3. ARM C4 (`enforced_by` empty), F1 (the instruction-only count) and F2 (the old "does not reach the RECORD" residue) pin the retired copy. N156 says these pins move with it (AI-RUNS #2 J6.3). The baseline's one red is unchanged.
 3. agent-worker (generated artifact, §14): `agent-worker/dist/agent-worker.bundled.mjs` is stale; `requirements.test.mjs` R45 fails on its two freshness arms (inputs `skillpack.mjs`, `skilldoctrine.mjs`). R48's behaviour passes. BOB regenerates.
