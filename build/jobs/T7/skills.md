@@ -21,3 +21,28 @@ Adds to J1 (J1's three readings stand). **R10: a change to `renderPack`'s input,
 - **R10** When `published.recipes` is a list, `recipes` has `sourcing` `driven`, a non-empty `load_when` and `body` the recipes unchanged; `renderPack` throws, naming the recipe, the step and the unknown name, and renders nothing, when a recipe has no steps, or a step names a surface not in `published.surfaces` or an act not among `published.catalog`'s ids, so a pack rendered at build fails the build. *(not yet met in the product: the plane publishes neither, SK-5; `affordances`' to publish)*
 
 If you prefer R10 left wholly unbuilt, say so and I drop it; R9 is met either way.
+
+## J3 · COMPLETE
+
+**Completion (SKILLS #1).** Handled through B3; tranche/T7 merged (K181, K182).
+
+**Entries applied**
+- **Extract per map and requirements (K102).** The code already sat at its paths. C-22.7 is this module's row, named by key (`SKILL_CHECK_KEYS`, `SKILL_CHECKS` in `skilldoctrine.mjs`, re-exported by `skillpack.mjs`) and selected from the catalogue, its text staying in `AI_RUN_CHECKS` while ai-runs holds its own copy of the predicate (R25, K181 (7)). `checkSkillVersion` refuses through it. The levels, states and definitive set are imported from `observation-log/index.mjs`, no longer from `airun.mjs`.
+- **R21** (not yet met, now met): `FOUR_LEVEL_RULE` "absence at one level is not evidence of absence at the next" and `SEARCH_COMPLETENESS` "all four levels — meaning, content, documents, and the open internet — may need to be searched, in any order" are §14.3's sentences, `AUTHORED_SOURCES` and `FACTS_SOURCE` name the Content Framework, and the resident `four_level` carries `section: "Part II §14.3"`. The four facts are §14.3's, meaning's now "nothing derived" (R19 as folded). The comments citing `CLAUDE.md` for the rule now cite §14.3.
+- **R10** (K182): `renderPack` carries `published.recipes` as a `driven` layer and throws, naming the recipe, step and unknown name, on a recipe with no steps or a step whose surface is not in `published.surfaces` or whose act is not a catalogue id. Absent, R9's stated absence is unchanged. It stays not yet met in the product until the plane publishes both (N144).
+- **N53, its share:** this module's tests are under `bio-plane/test/m/skills/` and read nothing later in the order. The MODES-equals-order dereference of `agent-worker/src/harness.mjs` is agent-worker's (its R44), and the `decorateAct` spelling pin is control-plane's; the comments naming the old suites now say so. Releasing the four old `bio-plane/test/skill*.test.mjs` suites and their controls is legacy-tests' share.
+- **N70, its share:** the doctrine's source moved to canon (R21). Old skillpack suite now **49 pass, 0 fail** (F3, F4 green). Old skilldoctrine **42 pass, 1 fail**: ARM E3 still pins the facts to `CLAUDE.md` by design; it is legacy-tests' to release (N53). Old skillprohibitions 30/0, skillsequencing 27/0.
+
+**Not applied, and why:** B2's re-point of `VERSION_STRENGTH_CHECKS` and `VERSION_STRENGTH_INERT_SOURCES` to `../strength/index.mjs` is not made. Neither `bio-plane/src/strength/` on this branch nor `job/T7/strength` @ 1732b0f8 has that file yet, so re-pointing now would leave this module unable to load and its tests unrunnable. `skilldoctrine.mjs`'s import comment says it re-points when the family moves. **Please send a CHANGE once STRENGTH #1's `strength/index.mjs` exports both names**, or merge it; I re-point and re-run steps 5–7 against it. Until then the import stays the catalogue's, and it breaks at the layer close if strength removes C-30 from the catalogue first.
+
+**Found in other modules**
+- `ai-runs`: old `test/airun.test.mjs` ARM D1 and D3 are red, 132 pass / 2 fail, identically on `tranche/T7` without my change (the C-22 family count and each allocation's enforcement site). Not caused here.
+- **Process tool:** `mail state --set WORKING` exits non-zero ("Command failed: git commit") when the state is already WORKING, because there is nothing to commit. It should treat a no-op as success.
+- No generated artifact staled by this job: the plane bundle (`not_product`) is rebuilt at the close; the agent-worker bundle does not include these files.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/skills/`: tests 29, pass 29, fail 0 (every R1–R26 named; R1's imported-empty arm drives the real `renderPack` in a child process with observation-log's entry mocked). Negative controls, run by hand and reverted: a changed word in the four-level rule fails R21; a typed `"LOOKED_ABSENT"` literal fails R23; a moved fact fails R19 and R21; a fence selector that stops selecting fails R1 and R7.
+- Users: `agent-worker/test/wire-vocabulary.test.mjs` 83 passed, 0 failed (imports `reportsAs`). Old battery driving C-22.7 at the open: airun-contextkind 44/0, aicredential 97/0, machinefences-dec49 89/0.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture skills`: 6 product files, 19 relative imports; 0 failures. `coverage skills`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership skills tranche/T7`: 7 files changed; legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_01LeLpLCKuivZWf56gFwdetG): test runs 16, module lines 1700
