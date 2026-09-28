@@ -7213,9 +7213,14 @@ export const QUEUE_MINT_CHECKS = {
  * IT IS AN ALLOCATION CARRYING ITS ENFORCEMENT SITE, on AI_RUN_CHECKS' precedent,
  * and `checkBundle` does not call it: the condition is about an ACT's arguments
  * against the published record, and there is no such thing in a bundle document.
- * The C-number, the wire code and the translation are ONE ROW here, and
- * `src/store.mjs` imports this and holds no second copy — a hand copy agrees at
- * zero cost, measured five times.
+ * The C-number, the wire code and the translation are ONE ROW, and no module
+ * holds a second copy — a hand copy agrees at zero cost, measured five times.
+ *
+ * EMPTY SINCE T8 (layer 8). C-44.1 and C-44.3–.5 are case-authoring's
+ * (`src/case-authoring/checks.mjs` CASE_DERIVATION_CHECKS), C-44.2 publication's
+ * (`src/publication/checks.mjs`). The empty export remains only because
+ * case-authoring's R29 suite still imports it by name to show its rows left
+ * here; it goes, with this header, once that suite no longer reads it (N212).
  * ========================================================================= */
 export const CASE_DERIVATION_CHECKS = {
 };
@@ -7299,7 +7304,7 @@ export const MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_PUBLISH: {
     check: 'C-32.6',
-    where: 'src/store.mjs publishCase > is-machine-publish',
+    where: 'src/case-authoring/index.mjs #publishCase > is-machine-publish',
     translation: 'Publishing puts the group\'s name on a case, together with an assertion that it '
       + 'is complete and a stated position on putting it to the people it concerns. Both of those '
       + 'are declared judgements, and the credential that asked here is an automated one. It can '
@@ -7526,7 +7531,7 @@ export const ACT_SHAPE_CHECKS = {
   },
   NO_STATEMENT: {
     check: 'C-33.14',
-    where: 'src/store.mjs publishCase > is-publish-statement',
+    where: 'src/case-authoring/index.mjs #publishCase > is-publish-statement',
     translation: 'A published case has to say what it does NOT cover. A case that is silent about '
       + 'its own limits is claiming to cover everything, and that is the overclaim this record '
       + 'exists to refuse.',
@@ -8167,9 +8172,13 @@ export const REQUIRED_ARGUMENT_CHECKS = {
        the token it failed to match.
 
    The translations are addressed to WHOEVER INSTALLED THE COPY, because that is
-   the only person who can act on them — all but C-68.5 (D-549), whose ops are
-   public and whose sentence is therefore written for a member of the public. `error` is kept beside every code
+   the only person who can act on them. `error` is kept beside every code
    byte-identical (D-270's pattern), so no consumer reading it moves.
+
+   C-68.5 (D-549, NO_PUBLISHED_STORE), whose ops are public and whose sentence is
+   written for a member of the public, is publication's (`src/publication/checks.mjs`
+   PUBLISHED_STORE_CHECKS), which raises it first; this family keeps C-68.1–.4
+   (T9, N214).
    =========================================================================== */
 export const INSTALLATION_CHECKS = {
   EVIDENCE_STORAGE_NOT_CONFIGURED: {
@@ -8731,7 +8740,7 @@ export const DRIVE_CAPTURE_CHECKS = {
      and `test/monitor-assess.test.mjs` drives both of these by name. */
   DRIVE_TICK_EXPORT_IS_THE_SHELL: {
     check: 'C-48.8',
-    where: 'src/index.mjs fetch > is-drive-tick-export',
+    where: 'src/monitoring/index.mjs monitor > is-drive-tick-export',
     translation: 'The check of that Google Drive document did not run: the export address answered '
       + 'with a web page rather than a document, which is what Drive does when a file stops being '
       + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
@@ -8745,7 +8754,7 @@ export const DRIVE_CAPTURE_CHECKS = {
      the document CHANGED on every visit — the cry-wolf this row exists to end. */
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
     check: 'C-48.9',
-    where: 'src/index.mjs fetch > is-drive-tick-bytes',
+    where: 'src/monitoring/index.mjs monitor > is-drive-tick-bytes',
     translation: 'The check of that Google Drive document did not run: the export address said it '
       + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
       + 'than the label, so the application page was recognised and not compared against the '
@@ -10297,13 +10306,14 @@ export const TRANSCRIBE_CHECKS = {
  *   is-testify-words     the words and the date the member says they observed it
  *   is-testify-bytes     whether the canonical bytes (header + words) are already
  *                        registered — reachable only by pre-registering them
- *   is-testimony-publish-bundle / is-testimony-publish-case (src/index.mjs)
- *                        THE PUBLICATION FENCE (C-53.10–.12), NARROWED BY MK-7:
+ *   is-testimony-publish-bundle / is-testimony-publish-case
+ *                        THE PUBLICATION FENCE (C-53.10–.12, now ratification's
+ *                        RATIFY_TESTIMONY_CHECKS, not in this family), NARROWED BY MK-7:
  *                        it stands only over an observation that still names
  *                        its author in its own files (written before MK-6,
  *                        §4.1), a finding resting on one, or a case over such a
  *                        finding. Every other observation crosses under MK-7's
- *                        attribution (ATTRIBUTION_CHECKS, C-92)
+ *                        attribution (C-92: publication's and ratification's)
  *   is-testimony-fence  THE REFUSALS THE ITEM EXISTS FOR, at op=promote — the one
  *                        write path — so no route but op=testify can set the flag,
  *                        and no revision can quietly change what it says: an
@@ -10318,7 +10328,7 @@ export const TRANSCRIBE_CHECKS = {
  *
  * WHAT IS NOT HERE, each by design: the `testimony` grade axis (§3) is MK-2's
  * and lives in C-2.8 (`checkTestimonyLeg`, IC-142), not in this family; the
- * attribution level on the case act (§4) is MK-7's, in ATTRIBUTION_CHECKS (C-92).
+ * attribution level on the case act (§4) is MK-7's, C-92 (publication's and ratification's).
  * ===================================================================== */
 /* =====================================================================
  * C-92 — THE ATTRIBUTION ACT AND ITS GATE (MK-7; MEMBER-KNOWLEDGE-DESIGN.md
@@ -10346,6 +10356,13 @@ export const TRANSCRIBE_CHECKS = {
  *
  * PROVISIONAL, carried to Bob: §4.4's narrow veto (C-92.10 is that veto) and
  * §4.6's reading of `name` as the member's handle (C-92.9).
+ *
+ * EMPTY SINCE T8. The act's rows, C-92.1–.9, are publication's
+ * (`src/publication/checks.mjs` ATTRIBUTION_ACT_CHECKS); the gate's, C-92.10–.12,
+ * are ratification's (`src/ratification/checks.mjs` RATIFY_ATTRIBUTION_CHECKS).
+ * The empty export remains only because ratification's R14 suite still reads it
+ * to show its rows left here; it goes, with this header, once that suite no
+ * longer reads it (N214).
  * ===================================================================== */
 export const ATTRIBUTION_CHECKS = {
 };
@@ -11883,9 +11900,19 @@ export const PER_ITEM_CHECKS = {
  * T8 (N128, PROMOTION #5's REPORT) adds promotion's own malformed registrations, C-102.6 and C-102.7. Each
  * `where` names a REGION promotion marks, not the whole function, because `registerFact` and `registerStep` also
  * refuse STEP_DECLARED. Not here, on the REC-64 rule (ACT_SHAPE_CHECKS' header: a row cannot claim one of many
- * sites): STEP_DECLARED, which promotion's R40 and R47 mint at three registrations for one condition, and
- * LISTENER_DECLARED and LISTENER_MALFORMED, each minted for one condition by about a dozen modules' listener
- * registrations. Their shape (one shared code, or one per site) waits on BOB's ruling (N128).
+ * sites): LISTENER_DECLARED and LISTENER_MALFORMED, each minted for one condition by about a dozen modules'
+ * listener registrations. Under K231's rule, one code one site, their rows follow once those registrations call
+ * the one helper that mints each (N202).
+ *
+ * T9 (N206, N214) adds three rows, each at one site:
+ *   C-102.8  STEP_DECLARED, now minted only by promotion's helper `stepDeclared`, which `registerStep`,
+ *            `registerFact` and `registerCaseCatalogue` call for their one condition (K231, promotion R40, R47);
+ *   C-102.9  CASE_CATALOGUE_FAILED, the case gate's finding when the case-document catalogue a later module
+ *            registered throws or answers no list of findings: the gate fails closed (promotion R33, R47);
+ *            C-102.3's reasoning one door over. Its `where` names the one function that builds that finding,
+ *            which `runCaseGate` calls, not `runCaseGate` itself, whose ordinary answer is no refusal;
+ *   C-102.10 CASE_MEMBER_REFUSED, the refusal ratification's registered step answers when a document claims
+ *            to be a published case member and does not carry what one must (ratification R9, C-2.8's arm).
  * ========================================================================= */
 export const REGISTRATION_CHECKS = {
   AUDIT_CHECK_DECLARED: {
@@ -11935,6 +11962,26 @@ export const REGISTRATION_CHECKS = {
     translation: 'A part of this instance tried to add its own check to every promotion without naming itself, '
       + 'so nothing was registered. This is a fault in how the instance was built, not in the record, and '
       + 'nothing in the record changed.',
+  },
+  STEP_DECLARED: {
+    check: 'C-102.8',
+    where: 'src/promotion/index.mjs stepDeclared',
+    translation: 'A part of this instance tried to register something it had already registered, or that '
+      + 'another part already provides, so the second registration was refused and the first still stands. '
+      + 'This is a fault in how the instance was built, not in the record, and nothing in the record changed.',
+  },
+  CASE_CATALOGUE_FAILED: {
+    check: 'C-102.9',
+    where: 'src/gate.mjs caseCatalogueFailed',
+    translation: 'The checks a case document must pass could not be run over this one, so it was not passed. '
+      + 'The fault is in the checks, not the document, and nothing was signed.',
+  },
+  CASE_MEMBER_REFUSED: {
+    check: 'C-102.10',
+    where: 'src/ratification/index.mjs check',
+    translation: 'This document claims to be part of a published case, and it does not carry what a part of '
+      + 'a published case must carry, so it was not written. Each problem is named beside this message. '
+      + 'Nothing in the record changed.',
   },
 };
 
