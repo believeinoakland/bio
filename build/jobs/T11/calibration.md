@@ -26,3 +26,7 @@ CALIBRATION #3 (the first session of this job to start in T11).
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture calibration`: 8 product files, 21 relative imports; 0 failures. `coverage calibration`: 19 of 19 live requirement ids named by a test; 0 failures. `ownership calibration tranche/T11`: legacy-checks and legacy-store 0 added, 0 removed; 0 failures.
 
 Size (session_014Qef6d2cmQSeamSR91bGRi): test runs 4, module lines 1095
+
+## J1 · COMPLETE
+
+Done: N223's calibration share. R18 onSubjectRegistered and R19 onSignalRecorded (retrieval R52's pattern): registered through membership listenerRefusal, run in MODULE_ORDER, each told once after the write with its own copy, awaited, a throwing or rejecting listener isolated; a refused act tells no one. calibrationSubjectRegister and calibrationSignalRecord are now async so scheduler's async arm is awaited (answers unchanged; the dispatcher already awaits ops; R9's services stay sync) - for scheduler's layer-10 job. calibration 56/56; extraction 75/75 and scheduler 46/0/6 todo, identical to the tranche; legacy calibration.test 113/0; format, architecture, coverage 19/19, ownership 0 failures. For you to strike: R18/R19's not-yet-met marks, and the Status line's stale not-yet-met list (R4, R5, R8, R10-R12, R16 are all met and tested). Stale, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs. No catalogue row added or changed.
