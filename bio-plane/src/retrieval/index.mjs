@@ -10,13 +10,14 @@
  * promotion, extraction and observation-log through their factories on the same `ctx`; observation-log's services and
  * vocabulary (its R1, R9–R13, R18–R21) are read through `observationOf` below, which a test may replace. */
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf, stepContext } from "../promotion/index.mjs";
 import { extractionOf, CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../extraction/index.mjs";
 import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED,
          MISSING_ROW_CAUSES, MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
          INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
-         contentAxisFor, observationCoverage, causesNotRuledOut, missingCause } from "../observation-log/index.mjs";
+         DOCUMENT_EVIDENCE_IS_ONE_SIDED, contentAxisFor, observationCoverage, causesNotRuledOut, missingCause }
+  from "../observation-log/index.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
 import { normalizeType } from "../../checks/bio-checks.mjs";
@@ -62,6 +63,13 @@ export const CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1
 /* D-724: the words a skipped unit is served in. */
 export const CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
 
+/* The bundles a gate does NOT admit, as a parenthesised set `{sql, args}` (the shape run-productions' and this module's
+   `counts(hid)` take), or null for a gate that admits every bundle. D-464: the complement of the one gate, so a count
+   taken through it and one taken through `viewerPredicate` can never disagree about who is hidden. */
+const hiddenSet = (gate) => (gate && gate.scope !== "member"
+  ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args }
+  : null);
+
 /* A CPDF-10 column this module WROTE as JSON, read back: null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
@@ -82,8 +90,13 @@ const rand = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))]
 /* HAS THIS ANSWER CHANGED AT ALL — the ONE place the plane asks that, and it is deliberately NOT `moved` (REC-55).
    `moved` means PER-ROW movement. A QUERY selection stores no rows, so a query whose membership SWAPS AT A CONSTANT
    COUNT has `moved` false over a set that is not the set the operator saw; its whole account of movement is the digest.
-   On an ENUMERATED selection `digestChanged` is never set, so this is exactly `moved` there. */
-export const answerChanged = (drift, moved) => moved || drift?.digestChanged === true;
+   On an ENUMERATED selection `digestChanged` is never set, so this is exactly `moved` there. R59 (N142): the one rule
+   R20's SET_MOVED and `citation`'s set-moved note read; a boolean, pure, never throws (a drift it cannot read is no
+   digest change). */
+export function answerChanged(drift, moved) {
+  if (moved === true) return true;
+  try { return !!drift && typeof drift === "object" && drift.digestChanged === true; } catch { return false; }
+}
 
 export class Retrieval {
   #storage; #sql; #now; #selectionNow; #order;
@@ -105,7 +118,9 @@ export class Retrieval {
     this.observation = observation;
     this.#now = typeof now === "function" ? now : () => Date.now();
     this.#selectionNow = typeof selectionNow === "function" ? selectionNow : () => Date.now();
-    this.#order = Array.isArray(order) ? order : [];
+    /* The modules' total order listeners and decorations run in: membership's `MODULE_ORDER` (its R83), unless a test
+       hands its own. */
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
     this.frontierReader = new Frontier(this);
   }
 
@@ -228,12 +243,12 @@ export class Retrieval {
     return { sql: ` AND authority_kind <> 'run'`, args: [] };
   }
 
-  /** R52: a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`. */
+  /** R52 (N202): a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`, in
+   *  the modules' total order. A malformed registration, or a second by the same module, is refused by membership's
+   *  `listenerRefusal` (its R81), the one site of LISTENER_MALFORMED and LISTENER_DECLARED. */
   onSelectionCreated(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#selectionListeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(this.#selectionListeners, module, fn);
+    if (refused) return refused;
     this.#selectionListeners.push({ module, fn, seq: this.#selectionListeners.length });
     this.#selectionListeners.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
@@ -699,10 +714,7 @@ export class Retrieval {
     return {
       checked: rows.length, findings, orphans,
       counts: { bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-                indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
-                                      (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN
-                                        (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})))`,
-                                   ...gate.args).c,
+                indexed: this.#indexedCount(hiddenSet(gate)),
                 keyed: this.#one(`SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
                                  ...gate.args).c },
       limit: cap,
@@ -710,6 +722,36 @@ export class Retrieval {
       orphans_limit: SEARCH_ORPHAN_MAX,
       orphans_truncated: orphans.length >= SEARCH_ORPHAN_MAX,
       ok: findings.length === 0 && orphans.length === 0,
+    };
+  }
+
+  /* R17, R60: the text index's rows less those a hidden bundle claims through its key (R1); an orphan (a row no bundle
+     claims) names nothing and stays, so a reader's parity still sees it. The one spelling of R17's rule. */
+  #indexedCount(hid) {
+    if (!hid) return this.#one(`SELECT count(*) c FROM bundles_fts`).c;
+    return this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                        (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c;
+  }
+
+  /** R60 (N171, K209; for `queue`): `{indexed, selections, selectionItems}`, the text index's rows, the held selections
+   *  and their items. `hid` (`{sql, args}`, a parenthesised set of the bundle ids the caller may not see, as
+   *  run-productions' `counts`) leaves out the index rows a hidden bundle claims (R17's `indexed` rule), the items
+   *  naming a hidden bundle, and a selection holding such an item (R29: no count includes what the caller may not see,
+   *  and a selection's existence is a fact about the bundles in it). With no `hid`, every row counts. Synchronous,
+   *  writes nothing, never throws: a figure it cannot read is null, never a zero. */
+  counts(hid = null) {
+    const h = hid && typeof hid === "object" && typeof hid.sql === "string"
+      ? { sql: hid.sql, args: Array.isArray(hid.args) ? hid.args : [] } : null;
+    const read = (f) => { try { const n = Number(f()); return Number.isFinite(n) ? n : null; } catch { return null; } };
+    return {
+      indexed: read(() => this.#indexedCount(h)),
+      selections: read(() => (h
+        ? this.#one(`SELECT count(*) c FROM selections WHERE handle NOT IN
+                       (SELECT handle FROM selection_items WHERE bundle_id IN ${h.sql})`, ...h.args).c
+        : this.#one(`SELECT count(*) c FROM selections`).c)),
+      selectionItems: read(() => (h
+        ? this.#one(`SELECT count(*) c FROM selection_items WHERE COALESCE(bundle_id, '') NOT IN ${h.sql}`, ...h.args).c
+        : this.#one(`SELECT count(*) c FROM selection_items`).c)),
     };
   }
 
@@ -894,11 +936,9 @@ export class Retrieval {
         `SELECT handle, kind, q, n, created, touched, expires FROM selections WHERE owner=? ORDER BY created DESC`, owner),
       caps: { maxItems: SELECTION_MAX_ITEMS, maxPerOwner: SELECTION_MAX_PER_OWNER },
       bytes: (() => {
-        const g = viewer === undefined ? null : viewerPredicate(viewer);
-        const hide = g && g.scope !== "member";
+        const hid = viewer === undefined ? null : hiddenSet(viewerPredicate(viewer));
         return this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`
-          + (hide ? ` WHERE bundle_id NOT IN (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))` : ""),
-          ...(hide ? g.args : [])).b;
+          + (hid ? ` WHERE bundle_id NOT IN ${hid.sql}` : ""), ...(hid ? hid.args : [])).b;
       })(),
     };
   }
@@ -1025,7 +1065,8 @@ export function observationOf(o, sql) {
   return {
     vocabulary: { OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_STATES, CONTENT_AXIS_UNDETERMINED, MISSING_ROW_CAUSES,
                   MEANING_MISSING_ROW_CAUSES, CONTENT_EVIDENCE_IS_ONE_SIDED, MEANING_EVIDENCE_IS_ONE_SIDED,
-                  INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY },
+                  INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
+                  DOCUMENT_EVIDENCE_IS_ONE_SIDED },
     contentAxisFor, observationCoverage, causesNotRuledOut, missingCause,
     /* §5.1 at the meaning level (K80): an unrecognised subject kind takes the weakest cause, never the strongest. */
     missingMeaningCause(kind, subject, entered) {
@@ -1049,7 +1090,7 @@ const instances = new WeakMap();
  *  call only: `record`, `membership`, `promotion`, `extraction` (each defaulting to its factory on `host`),
  *  `observation` (`observationOf` over observation-log's factory by default), `now` (milliseconds; the clock the
  *  projection's action facts are judged at), `selectionNow` (the selections' clock, the wall clock by default),
- *  and `order` (the modules' total order, for the order listeners and decorations run in). At creation it declares its
+ *  and `order` (the modules' total order listeners and decorations run in; membership's `MODULE_ORDER` by default). At creation it declares its
  *  tables to purge (R33) and joins every promotion (R1). */
 export function retrievalOf(host, deps) {
   let r = instances.get(host);

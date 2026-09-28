@@ -62,7 +62,7 @@ test("R36, R40: a built level answers found, built, level, limit, truncated, loo
   assert.equal(w.retrieval.frontier({ level: "document", viewer: MACHINE, limit: 2 }).looked.length, 2);
 });
 
-test("R40, R41: never_looked is each address in the deferred partition with no document row, with from_document, in address order — read through §5.1's causes: an address held in captured_locators is pre_log in missing_unexplained, one first seen before the level's first row is undetermined; every such row carries not_ruled_out and evidence_one_sided", () => {
+test("R40, R41: never_looked is each address in the deferred partition with no document row, with from_document, in address order — read through §5.1's causes: an address held in captured_locators is pre_log in missing_unexplained and names pre_log alone, one first seen before the level's first row is undetermined; the level's evidence is one-sided (DOCUMENT_EVIDENCE_IS_ONE_SIDED), so every never_looked address names all three causes; every such row carries not_ruled_out and evidence_one_sided", () => {
   const w = world();
   const c = w.cap("a", "a");
   w.doc("INFO-1", {}, { captures: [c] });
@@ -76,9 +76,11 @@ test("R40, R41: never_looked is each address in the deferred partition with no d
   w.st.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations)
                  VALUES ('https://example.org/held', 'https://example.org/held', ?, 'direct', ?, ?, 1)`, c.sha, T0, T0);
   const f = w.retrieval.frontier({ level: "document", viewer: V("vera") });
-  assert.deepEqual(f.never_looked.map((r) => [r.subject, r.from_document, r.missing_cause, r.not_ruled_out]),
-    [["https://example.org/a-new", c.sha, "never_looked", ["never_looked"]],
-     ["https://example.org/b-new", c.sha, "never_looked", ["never_looked"]]]);
+  assert.deepEqual(VOCAB.DOCUMENT_EVIDENCE_IS_ONE_SIDED, { address: true }, "the level's sidedness, read by name");
+  const all = ["pre_log", "purged", "never_looked"];
+  assert.deepEqual(f.never_looked.map((r) => [r.subject, r.from_document, r.missing_cause, r.not_ruled_out, r.evidence_one_sided]),
+    [["https://example.org/a-new", c.sha, "never_looked", all, true],
+     ["https://example.org/b-new", c.sha, "never_looked", all, true]]);
   assert.equal(f.never_looked_count, 2);
   assert.deepEqual(f.missing_unexplained.map((r) => [r.subject, r.missing_cause, r.not_ruled_out, r.evidence_one_sided]),
     [["https://example.org/held", "pre_log", ["pre_log"], true],

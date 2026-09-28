@@ -277,3 +277,5 @@ test("R58: migrate() creates the projection columns, their indexes, the keyed te
   assert.equal(routes(url("reproject"), { limit: 3 }).reproject().reprojected, 1);
   assert.deepEqual(Object.keys(routes(url("projectionplan")).projectionplan()), ["source_status", "produced_mode", "schema_id", "reeval_flag"]);
 });
+
+test.todo("R61: the projection columns of R2 and fts_id held in bundle_projection, keyed by bundle_id, declared to purge, not on bundles — moved to T11 with its readers (monitoring, actions, legacy-store): N283, K327");

@@ -39,9 +39,10 @@ export class Frontier {
    *  rule (R11). The subject kind is passed in and never guessed; an undeclared kind publishes `evidence_one_sided:
    *  true`, the weaker statement, and `causesNotRuledOut` then names every cause (REC-107). */
   #causeSet(sidedness, subjectKind, missingCause) {
-    const oneSided = sidedness && Object.prototype.hasOwnProperty.call(sidedness, subjectKind)
-      ? sidedness[subjectKind] : undefined;
-    return { evidence_one_sided: oneSided !== false,
+    const oneSided = !(sidedness && Object.prototype.hasOwnProperty.call(sidedness, subjectKind)
+      && sidedness[subjectKind] === false);
+    /* The sidedness published and the sidedness the causes are read under are one value, never two. */
+    return { evidence_one_sided: oneSided,
              not_ruled_out: this.obs.causesNotRuledOut(missingCause, { evidenceOneSided: oneSided }) };
   }
 
