@@ -44,3 +44,7 @@ Found in other modules while applying N98, N102, N104:
 4. **connections / capture** (red on the baseline, not text-chain's): `test/m/connections/factory.test.mjs` "R24, R18, K155 …" fails with capture's R58 refusal from `captureOf` (a second `env` for one storage). Same result with text-chain before this job.
 5. **Generated artifacts stale** (manifest §14): `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` include `src/textchain.mjs`. Not rebuilt; for the layer close.
 6. **text-chain requirements** (wording): R72 still reads as not met ("Today R71's equal-kind rule answers false", "built but not merged"); it is met and tested.
+
+## J3 · COMPLETE
+
+Every entry applied (N98, N102, N104) under J1's proposed ids R87–R91; record's Completion section has the tests and checks. 93/93 text-chain tests; users' suites green except connections' baseline failure (J2). Q1 still open: say if you renumber and I will follow.
