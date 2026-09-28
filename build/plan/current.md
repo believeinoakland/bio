@@ -26,7 +26,7 @@ Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.m
 ### Layer 2 (order: `record-core`, `promotion`)
 
 - **record-core** · N162 (R37's `files` contract adds `content`); N69 (its share: `textAtSha`, which publication R2 and ratification R3 read; their requirements say it is not yet provided).
-- **promotion** · N67 and N69 (their share: the case-document catalogue registration ratification fills, which R33 then runs instead of `checkCaseDocument`; promotion's requirements do not state it yet, so BOB writes it first); N142 (its share: `INLINE_MAX` into Provides); N70 (its share: `fact`'s nested refusal against the D-240 reader, meaning-bounds); N147 (its share: a MINOR `CATALOG_VERSION` stamp for layer 6's departures; see "Contradictory" on timing).
+- **promotion** · N67 and N69 (their share: the case-document catalogue registration ratification fills, which R33 then runs instead of `checkCaseDocument`; promotion's requirements do not state it yet, so BOB writes it first); N142 (its share: `INLINE_MAX` into Provides); N70 (its share: `fact`'s nested refusal against the D-240 reader, meaning-bounds); N147 (its share: a MINOR `CATALOG_VERSION` stamp for layer 6's departures; see "Contradictory" on timing). N202 (its share, K231): `STEP_DECLARED` is minted at one site, a helper `registerStep`, `registerFact` and `registerCaseCatalogue` (R40, R47) all call; and the regions `is-fact-named` and `is-step-named` that C-102.6 and C-102.7 name (LEGACY-CHECKS #3 J2.2).
 
 ### Layer 3 (order: `capture`)
 
