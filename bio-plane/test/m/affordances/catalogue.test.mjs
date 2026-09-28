@@ -53,7 +53,7 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
   ]);
 });
 
-/* R2 as folded (K211): the eight ops graded for T7's entries, and R27's reassignment. */
+/* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung. */
 test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   const want = {
@@ -64,8 +64,8 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
     reasoned: ["actionmove", "actionrisktier", "adminremove", "aliaswithdraw", "aspirationdepart", "aspirationretire",
       "biasdebtresolve", "conclude", "connectionassert", "discharge", "dispose", "filemembershipjudge", "goalclose",
       "inquirydivide", "inquiryground", "narrow", "projectownerremove", "projectownerrescue", "proposedispose",
-      "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever", "themewithdraw",
-      "versionconsider", "versionreject", "withdrawconclusion"],
+      "reevaluationrecord", "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever",
+      "themewithdraw", "triage", "versionconsider", "versionreject", "withdrawconclusion"],
   };
   const got = {};
   for (const [op, r] of Object.entries(RUNGS)) (got[r] ??= []).push(op);
@@ -209,7 +209,7 @@ test("R19: the justification family names only codes that ask the member for an 
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
   for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
-    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "NO_LABEL", "NO_CITATION", "NO_BODY", "NO_TITLE"])
     assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
@@ -278,7 +278,7 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     "transcriptionattest", "testify", "lead", "leadshare", "attribute", "casedraft", "reviewcomment", "statementack",
     "leadlook", "themedeclare", "themeplace", "themepropose", "progressiondefine", "resolvetestify",
     "contradictionpropose", "objectivecondition", "goaldeclare", "goallink", "aspirationdeclare", "aspirationdeadend",
-    "triage", "workobjective"].sort());
+    "workobjective", "versionadopt", "versionkeep"].sort());
 });
 
 test("R27: no new rung is added — the ladder keeps its five", () => {

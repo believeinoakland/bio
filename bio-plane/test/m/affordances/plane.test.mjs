@@ -401,6 +401,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
     aspirationretire: () => DO(`aspirationretire?viewer=admin`, { aspiration: aspId, author: "member:ruth" }),
     biasdebtresolve: () => POST(`op=biasdebtresolve&token=${W.IRIS}`, { run: "RUN-aff-1" }),
     actionrisktier: () => POST(`op=actionrisktier&token=${W.IRIS}&target=${E(W.ACTN)}`, { tier: 2 }),
+    reevaluationrecord: () => POST(`op=reevaluationrecord&token=${W.IRIS}`, { dependent: W.INQ2, target: W.INQ }),
   };
   const got = {};
   for (const [op, f] of Object.entries(DRIVE)) got[op] = codeOf(await f());
@@ -412,7 +413,7 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
     "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
-    "biasdebtresolve", "actionrisktier", "narrow" /* narrow: backing.test.mjs */];
+    "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

@@ -56,3 +56,7 @@ Re-opens your job (P10; LEGACY-INDEX #4 REPORT J1.1, K219). legacy-index is merg
 ## B10 · CHANGE
 
 Two more for this re-opening (K220, from your own J4 REPORT and LEGACY-INDEX #4's J1.4): (1) rec165-production-principal (28/7) and extractrun (6/2): ai-runs R40 (C-109.1) refuses an extract run while extract is not deployed, as approved; re-pin each suite to that refusal at open and retire their extractpropose arms (run-productions' own tests cover them). (2) d260-resume (21/2): agent-worker R40 is built; mock the model behind Miniflare's outboundService as agent-worker/test/requirements.test.mjs does, so no suite reaches the network. (3) d419-content-crop.test.mjs declares its negative control, so coverage --strict and owed-controls A13b go green. Record completion again with the lot.
+
+## B11 · CHANGE
+
+AFFORDANCES #1's rows are merged into tranche/T7 (K221): affordances and rung-ladder are green on the tranche. Merge the tranche before you measure and record completion.
