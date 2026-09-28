@@ -111,7 +111,7 @@ before(async () => {
       ...sc("ground", "g1"), ...sc("grade", "B"), ...sc("grade_axis", "capture"), ...sc("grade_source", "capture")] : []),
     "---", "", "## Question", "", "Did it?", "", "## What It Rests On", "", "## Conclusion", "",
     "## What Would Falsify This", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-  const actnMd = (id) => [...fm(id, "action", "planned", ["references: []"]), ...tail, "action_kind: cpra_request",
+  const actnMd = (id) => [...fm(id, "action", "planned", ["references: []"]), ...tail, "action_kind: records_request",
     "target_body:", "  name: The records office", "---", "", "## Request", "", "Records.", "", "## Session Log", "",
     "## Review Notes", ""].join("\n");
   W.INFO = "INFO-2026-9400-ledger"; W.INFO2 = "INFO-2026-9401-minutes";

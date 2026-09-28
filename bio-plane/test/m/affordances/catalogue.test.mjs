@@ -14,6 +14,9 @@ import * as promotion from "../../../src/promotion/index.mjs";
 import * as recordCore from "../../../src/record-core/index.mjs";
 import * as basisVersions from "../../../src/basis-versions/index.mjs";
 import * as content from "../../../src/content/index.mjs";
+import * as actions from "../../../src/actions/index.mjs";
+import * as ratification from "../../../src/ratification/index.mjs";
+import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS,
@@ -111,23 +114,64 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
   const same = [
-    ["law_levels", C.LAW_LEVELS], ["dispositions", inquiry.DISPOSITIONS], ["subject_positions", C.SUBJECT_POSITIONS],
-    ["basis_roles", inquiry.BASIS_ROLES], ["entity_kinds", entities.ENTITY_KINDS],
-    ["relation_kinds", entities.RELATION_KINDS], ["stage_requiredness", progressions.STAGE_REQUIREDNESS],
-    ["action_basis_kinds", C.ACTION_BASIS_KINDS], ["correspondence_directions", C.CORRESPONDENCE_DIRECTIONS],
-    ["correspondence_stages", C.CORRESPONDENCE_STAGES], ["correspondence_outcomes", C.CORRESPONDENCE_OUTCOMES],
-    ["resolutions", C.RESOLUTIONS], ["version_states", basisVersions.VERSION_MACHINE.legal],
-    ["version_edges", basisVersions.VERSION_MACHINE.edges],
+    ["law_levels", actions.LAW_LEVELS], ["dispositions", inquiry.DISPOSITIONS],
+    ["subject_positions", ratification.SUBJECT_POSITIONS], ["basis_roles", inquiry.BASIS_ROLES],
+    ["entity_kinds", entities.ENTITY_KINDS], ["relation_kinds", entities.RELATION_KINDS],
+    ["stage_requiredness", progressions.STAGE_REQUIREDNESS], ["action_basis_kinds", actions.ACTION_BASIS_KINDS],
+    ["correspondence_directions", actions.CORRESPONDENCE_DIRECTIONS],
+    ["correspondence_stages", actions.CORRESPONDENCE_STAGES], ["correspondence_outcomes", actions.CORRESPONDENCE_OUTCOMES],
+    ["resolutions", actions.RESOLUTIONS], ["risk_tiers", actions.RISK_TIERS],
+    ["version_states", basisVersions.VERSION_MACHINE.legal], ["version_edges", basisVersions.VERSION_MACHINE.edges],
     ["version_reason_required", basisVersions.VERSION_REASON_REQUIRED], ["rung_ladder", RUNG_LADDER],
     ["rung_correction_path", IRREVERSIBLE_CORRECTION_PATH], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
     ["sufficiency_claim_states", C.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
+  assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
 });
 
-test.todo("R4 R26: `action_kind` is the value `actions` answers at the moment of the call, and `risk_tiers` is actions' "
-  + "RISK_TIERS — not yet met: no `actions` module exists yet (layer 9); both are read from legacy-checks' "
-  + "ACTION_KINDS and RISK_TIERS, and ACTION_KINDS names local kinds (N65)");
+/* R26: the kinds come from actions at the moment of the call (its R10, R40), the tiers are actions' own. Every
+   profile the jurisdictions module lists is taken alone and all together, so a view that adds kinds is exercised. */
+const views = () => {
+  const ids = profiles().map((p) => p.id);
+  const out = [["no profile active", null]];
+  for (const id of ids) { const c = combine([id]); if (c && c.ok) out.push([id, c.view]); }
+  const all = combine(ids); if (all && all.ok) out.push([ids.join("+"), all.view]);
+  return out;
+};
+test("R26 R4: risk_tiers is actions' RISK_TIERS, and action_kind, with no instance to ask, is actions' answer with no "
+   + "profile active — the product's kinds alone, no kind held here", () => {
+  assert.equal(VOCABULARIES.risk_tiers, actions.RISK_TIERS);
+  assert.deepEqual(VOCABULARIES.action_kind, actions.actionKinds(null));
+  assert.equal(VOCABULARIES.action_kind, actions.PRODUCT_KINDS);
+});
+
+test("R26 R4: vocabulariesFor(kinds) publishes as action_kind exactly the kinds actions answers for the instance's view, "
+   + "the product's kinds then the profiles', and every other vocabulary as the same object", () => {
+  const vs = views();
+  assert.ok(vs.some(([, v]) => actions.actionKinds(v).length > actions.PRODUCT_KINDS.length),
+    "some profile adds a kind, so the instrument sees the view");
+  for (const [name, view] of vs) {
+    const kinds = actions.actionKinds(view);
+    const v = A.vocabulariesFor(kinds);
+    assert.deepEqual(v.action_kind, kinds, name);
+    assert.deepEqual(v.action_kind.slice(0, actions.PRODUCT_KINDS.length), [...actions.PRODUCT_KINDS], name);
+    assert.deepEqual(Object.keys(v), Object.keys(VOCABULARIES), name);
+    for (const k of Object.keys(VOCABULARIES)) if (k !== "action_kind") assert.equal(v[k], VOCABULARIES[k], `${name}: ${k}`);
+  }
+  for (const bad of [undefined, null, [], "records_request", [1], [""], [null]])
+    assert.equal(A.vocabulariesFor(bad).action_kind, actions.PRODUCT_KINDS, JSON.stringify(bad));
+});
+
+test("R26: no action kind is held in this module — none of legacy-checks' local kinds, and no profile's, appears in its "
+   + "published text or tables", () => {
+  const local = C.ACTION_KINDS.filter((k) => !actions.PRODUCT_KINDS.includes(k));
+  const fromProfiles = views().flatMap(([, v]) => actions.actionKinds(v)).filter((k) => !actions.PRODUCT_KINDS.includes(k));
+  const kinds = [...new Set([...local, ...fromProfiles])];
+  assert.ok(kinds.length > 0, "the instrument has kinds to look for");
+  const text = JSON.stringify(outward());
+  assert.deepEqual(kinds.filter((k) => text.includes(k)), []);
+});
 
 test("R5: inquirydivide carries DIVIDE_PROMPT, inquiryground GROUND_PROMPT, attest ATTEST_FENCE, and every other act's prompt is null", () => {
   const prompts = Object.fromEntries([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]
@@ -153,12 +197,12 @@ test("R5: ATTEST_FENCE is DEC-39's wording verbatim, its two letters composed fr
   assert.equal(A.attestFence("C", "B"), quote.replace("Grade B capture", "Grade C capture").replace("Grade A", "Grade B"));
 });
 
-test("R5: ACQUIRE_GRADE_NOTE is composed the same way, and both composers throw when either letter is absent", () => {
-  assert.equal(A.ACQUIRE_GRADE_NOTE, A.acquireGradeNote(C.EARNED_CAPTURE_CEILING, C.UNREACHABLE_CAPTURE_GRADE));
-  assert.match(A.acquireGradeNote("C", "B"), /^Grade C: .* Grade B needs .* raises C toward/);
-  for (const f of [A.attestFence, A.acquireGradeNote])
-    for (const [c, u] of [[null, "A"], ["B", null], [undefined, undefined], ["", "A"], ["B", ""]])
-      assert.throws(() => f(c, u));
+test("R5: the fence's composer throws when either letter is absent; op=acquire's note is capture's and no copy of it "
+   + "is held here (N80)", () => {
+  for (const [c, u] of [[null, "A"], ["B", null], [undefined, undefined], ["", "A"], ["B", ""]])
+    assert.throws(() => A.attestFence(c, u));
+  assert.equal(A.acquireGradeNote, undefined);
+  assert.equal(A.ACQUIRE_GRADE_NOTE, undefined);
 });
 
 test("R5: GROUND_PROMPT and every label use none of AND, OR, disjunction, branch or ground (DEC-32 clause 1)", () => {
@@ -248,7 +292,7 @@ const outward = () => {
     else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) add(`${where}.${k}`, x); };
   for (const a of [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]) { add(`${a.id}.label`, a.label); add(`${a.id}.prompt`, a.prompt); }
   add("NON_ACTS", NON_ACTS); add("RUNG_ABSENT", RUNG_ABSENT); add("RUNG_ABSENCE_GROUNDS", RUNG_ABSENCE_GROUNDS);
-  add("IRREVERSIBLE_CORRECTION_PATH", IRREVERSIBLE_CORRECTION_PATH); add("ACQUIRE_GRADE_NOTE", A.ACQUIRE_GRADE_NOTE);
+  add("IRREVERSIBLE_CORRECTION_PATH", IRREVERSIBLE_CORRECTION_PATH);
   add("VOCABULARIES", VOCABULARIES); add("MACHINE_REFUSALS", MACHINE_REFUSALS);
   return out;
 };

@@ -67,33 +67,40 @@
  * reads, and an action now publishes both.
  */
 
-import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, RESOLUTIONS, RISK_TIERS, LAW_LEVELS,
-         /* D-147: the lifecycle's two closed sets, from the catalog that judges them (C-94). */
-         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES,
+import { STATES,
          /* REC-43 / DEC-39. The two letters the co-attestation fence states are
             the RULE's own, imported from where the refusal that enforces it is
             computed, so the sentence a member reads and the grade the gate will
             accept cannot drift. See ATTEST_FENCE below. */
          EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
-         /* PL-2 / IS-2. THE SIXTH STATE MACHINE, imported from where it is
-            defined — the `op=dispose` hazard, not repeated. §6 rule 4 requires
-            it: *"the machine publishes the new machine through op=affordances,
-            or every surface showing version states holds a second copy of the
-            rule — the drift class DEC-8 closed."* */
-         VERSION_MACHINE, VERSION_REASON_REQUIRED,
          /* PL-17 / DEC-65. The third `asserted_by` state and its texts, imported
             from the one module that mints the value — a surface holding its own
             copy of what "nobody claimed this" is called is the same drift every
             import in this list exists to close. */
          SUFFICIENCY_CLAIM_STATES,
-         /* SK-7: the four states of a content row's `minted_by`, imported from
-            the module that CLASSIFIES the value for the identical reason the
-            line above is — a surface holding its own copy of what "a machine
-            marked this citable" is called is the drift every import here
-            closes, and this one lands on a field 14.4 requires be labelled. */
-         CONTENT_MINT_STATES,
          normalizeType, vocabFor } from "../checks/bio-checks.mjs";
+/* N65 (3), R26: the action loop's vocabularies are `actions'`, the module whose acts refuse against them (its R40):
+   the kinds it offers with no profile active (`PRODUCT_KINDS`, R10), the risk tiers, the governing-law levels
+   (`jurisdictions'` array, which actions re-exports and `op=actionlaws` refuses against), a leg's kinds, the
+   correspondence directions, stages and outcomes (D-147, C-94), and how an action ended. No kind is held here. */
+import { PRODUCT_KINDS, RISK_TIERS, LAW_LEVELS, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
+         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, RESOLUTIONS } from "./actions/index.mjs";
+/* REC-14 / DEC-13: the three subject positions are `ratification'`s, whose case-document check refuses against them
+   (C-2.8, C-41). */
+import { SUBJECT_POSITIONS } from "./ratification/index.mjs";
+/* REC-37: a leg's roles are `inquiry'`s, whose `op=cite` refuses without one (NO_ROLE / BAD_ROLE). */
+import { BASIS_ROLES } from "./inquiry/index.mjs";
+/* PL-2 / IS-2. THE SIXTH STATE MACHINE, imported from where it is defined and
+   enforced — `basis-versions` — the `op=dispose` hazard, not repeated. §6 rule 4
+   requires it: *"the machine publishes the new machine through op=affordances,
+   or every surface showing version states holds a second copy of the rule — the
+   drift class DEC-8 closed."* */
+import { VERSION_MACHINE, VERSION_REASON_REQUIRED } from "./basis-versions/index.mjs";
+/* SK-7: the four states of a content row's `minted_by`, imported from the
+   module that CLASSIFIES the value — a surface holding its own copy of what "a
+   machine marked this citable" is called is the drift every import here closes,
+   and this one lands on a field 14.4 requires be labelled. */
+import { CONTENT_MINT_STATES } from "./content/index.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -349,52 +356,10 @@ export const attestFence = (ceiling, unreachable) => {
 
 export const ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 
-/* op=acquire's `note` — the THIRD hand-written statement of the same doctrine,
- * closed by REC-48 (2026-08-04) on exactly REC-43's mechanism and deliberately
- * NOT on REC-43's sentence.
- *
- * IT IS NOT THE ATTEST FENCE AND MUST NOT BE REPLACED BY IT. Different act,
- * different reader, different moment. `ATTEST_FENCE` is the prompt on the
- * `attest` ACT: it is read by a member who is DECIDING whether to co-attest,
- * which is why DEC-39 made it answer "what question does this answer?" before
- * anything else. This string is the RECEIPT op=acquire hands back to a caller
- * who has just received bytes and is not deciding anything — it states what the
- * capture it just made is worth, in one line, beside the capture's own
- * `grade` field. Widening it into a second fence would put two accounts of
- * co-attestation in front of one member; narrowing the fence to this would lose
- * the part the ruling exists to add. They say different things ON PURPOSE.
- *
- * THE WORDING IS UNCHANGED BY THIS ITEM, and that is a judgement rather than a
- * default. Its third clause ("co-attestation raises <ceiling> toward evidentiary
- * weight") is the same claim as the fence's own third part ("it strengthens a
- * Grade <ceiling> capture toward evidentiary weight"), so the note states a
- * SUBSET of ruled wording and cannot overclaim relative to it. What DEC-39
- * corrected was a surface presenting that clause AS the co-attestation decision
- * prompt with nothing else beside it; this is not that surface, and the full
- * fence is one op=affordances call away on the act that does decide. If a later
- * reading finds the receipt is where members actually form the belief, that is
- * a ruling about which surface owns the fence, not an edit to make here quietly.
- *
- * THE TWO LETTERS ARE COMPOSED, WHICH IS THE ITEM. `Grade B` and `Grade A` were
- * typed here in their own letters until 2026-08-04, a third copy that agreed
- * with the rule at zero cost; both now come from the enforcement point, and the
- * composed string is character-identical to the literal it replaced while the
- * ceiling stands at B — which is the point, since a change of doctrine is
- * exactly when a copy stops agreeing and this stops being a copy.
- *
- * IT REFUSES TO COMPOSE A SENTENCE IT CANNOT MAKE TRUE, for `attestFence`'s
- * reason and with its consequence: a load failure that stops the plane, never a
- * fallback that ships "Grade null needs a chain-of-custody web archive". */
-export const acquireGradeNote = (ceiling, unreachable) => {
-  if (!ceiling || !unreachable)
-    throw new Error("op=acquire's note states what this surface earns AND the grade above it; "
-                  + "with no grade above the ceiling the sentence cannot be composed truthfully");
-  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a `
-       + "chain-of-custody web archive, which this surface cannot produce. Co-attestation raises "
-       + `${ceiling} toward evidentiary weight.`;
-};
-
-export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
+/* N80 (T8): op=acquire's `note` (`acquireGradeNote`, `ACQUIRE_GRADE_NOTE`) is `capture`'s, which composes its own
+ * answer from the same two letters and refuses to compose it without both (`capture/acquire.mjs`; K225 (4)).
+ * The copy that stood here, REC-48's third statement of the doctrine, left with it: the note is a receipt of the act
+ * that captured, and this module publishes what may be done, not what an act answered. */
 
 /* ===========================================================================
  * FW-14 — THE WEIGHT LADDER, ASSIGNED TO EVERY MUTATING OP OR STATED ABSENT.
@@ -538,12 +503,17 @@ export const RUNG_ABSENCE_GROUNDS = {
 };
 
 /* The object vocabularies, published the way op=searchfields publishes the
- * query language, so a surface never keeps a copy. action_kind is the check
- * catalogue's own C-2.10 suite, imported from the module that enforces it. */
+ * query language, so a surface never keeps a copy. Each is the object its
+ * enforcing module refuses against (R4). */
 export const VOCABULARIES = {
-  action_kind: ACTION_KINDS,
-  /* D-149. The three levels a records request's governing law is stated at, published so the surface that
-     offers `op=actionlaws` keeps no copy — the catalog's array, which C-2.10 and the act's refusal also read. */
+  /* R26 (N65 (3)): the kinds an action may be created with are `actions'` answer (its R10, R40): the product's own,
+     then the active profiles' `action_kinds`. Which profiles are active is an instance's setting, so this module-level
+     value is actions' answer with none active (`PRODUCT_KINDS`), and `vocabulariesFor(kinds)` below publishes the
+     answer an instance's actions gives at the moment of the call. No kind is held here. */
+  action_kind: PRODUCT_KINDS,
+  /* D-149. The levels a records request's governing law is stated at, published so the surface that offers
+     `op=actionlaws` keeps no copy — `actions'` array (jurisdictions', which it re-exports), which the act's
+     refusal (BAD_LAW_LEVEL) and C-2.10 read. */
   law_levels: LAW_LEVELS,
   dispositions: DISPOSITIONS,
   /* REC-14 / DEC-13. Published so a ceremony surface never keeps its own copy
@@ -584,10 +554,10 @@ export const VOCABULARIES = {
      could be authored with a counterparty and a kind and nothing it rests on.
      Present-and-refused is what a published vocabulary prevents; absent-and-
      stated is what a surface must do until there is one.
-     Imported from `bio-checks.mjs`, where C-2.10's own findings validate
-     against them (`actionBasisFindings`, `correspondenceFindings`) and where
-     store.mjs's BAD_DIRECTION refusal reads its `legal` list — the same
-     direction `action_kind` and `basis_roles` above already take. One array. */
+     `actions'` arrays (N65 (3)), against which C-2.10's own findings validate
+     (`actionBasisFindings`, `correspondenceFindings`) and whose BAD_DIRECTION
+     refusal reads its `legal` list — the same direction `action_kind` above
+     takes. One array. */
   action_basis_kinds: ACTION_BASIS_KINDS,
   correspondence_directions: CORRESPONDENCE_DIRECTIONS,
   /* D-147: THE RECORDS-REQUEST LIFECYCLE's closed sets — the stages an entry may state, by direction, and the
@@ -608,17 +578,17 @@ export const VOCABULARIES = {
      rendered anywhere a refusal has not happened. Published, it is a fact about
      what an action may be, available to a surface that is merely describing the
      act.
-     Imported from `bio-checks.mjs` where C-2.10's own finding validates against
-     it and where store.mjs's NO_RESOLUTION refusal reads its `legal` list — the
-     same direction `action_kind`, `basis_roles`, `action_basis_kinds` and
-     `correspondence_directions` above already take. One array, three readers. */
+     `actions'` array (N65 (3)), against which C-2.10's own finding validates
+     and whose NO_RESOLUTION refusal reads its `legal` list — the same direction
+     `action_kind`, `action_basis_kinds` and `correspondence_directions` above
+     take. One array, three readers. */
   resolutions: RESOLUTIONS,
   /* D-182 (BIO_Case_Making_v0_1.md §2, `risk_tier`, RULED by BOB #21): an action's risk tier IN WORDS — Bob's
      three from the mission of record and the UNDETERMINED that is written wherever no member stated one. A
      code->text map for `sufficiency_claim_states`' reason below: the sentence IS the tier's meaning, and a
      surface holding its own copy would be the surface deciding what tier 2 means, which is why app.html's
-     arm could offer no chooser before this. Imported from `bio-checks.mjs`, where C-2.10 validates against
-     it and `riskTierState()` turns a stored value into one of its keys. One map, three readers. */
+     arm could offer no chooser before this. `actions'` map (R26, its R40), against which C-2.10 validates and
+     whose `riskTierState()` turns a stored value into one of its keys. One map, three readers. */
   risk_tiers: RISK_TIERS,
   /* PL-2 / IS-2 — THE SIXTH STATE MACHINE, PUBLISHED. §6 rule 4's third
      consequence is not a nicety: without this, every surface that shows a
@@ -682,6 +652,16 @@ export const VOCABULARIES = {
      projection already carries the plane's own answer in its `mint` block. */
   content_mint_states: CONTENT_MINT_STATES,
 };
+
+/* R26 (N65 (3)): the vocabularies an instance publishes, with `action_kind` the kinds its `actions` accepts at the
+ * moment of the call (actions R10, R40: `actionsOf(host).kinds()`, the product's own and then the active profiles'),
+ * and every other key the same object `VOCABULARIES` holds (R4). Pure: the caller asks actions and hands the answer
+ * here. An answer that is not a list of strings is not a kind list, and the product's kinds are published instead
+ * (actions' answer with no profile active), never a partial list. */
+export function vocabulariesFor(kinds) {
+  const ok = Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => typeof k === "string" && k.length > 0);
+  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS };
+}
 
 
 /* THE ASSIGNMENT. Every entry carries the source or the enforcement that BACKS
