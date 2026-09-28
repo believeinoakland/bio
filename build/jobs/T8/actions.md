@@ -58,3 +58,7 @@ Job complete on job/T8/actions: every plan entry applied, 41 of 41 live ids name
 ## J4 · REPORT
 
 B4 applied (after J3): actionRead answers state_history, the action's state moves in order, each {state, at, by} (from the document's state_history: to_state, timestamp, author), for R25's wording. clockPropose counts from the day after the start event (calendar: start + days; business: each weekday after the start not on the view's holidays, undetermined past a year the calendar does not list) and states counted_from: "the day after <start>" beside the entry, as filings does. Tests 30, pass 29, todo 1; the checks still pass.
+
+## J5 · COMPLETE
+
+Complete again after B4 (J4). Everything else as J3.
