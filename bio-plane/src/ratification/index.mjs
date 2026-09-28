@@ -27,7 +27,7 @@
  *   publication    the case documents, the case relation and pins, the registries, the attribution facts, and the two
  *                  commits (its R2, R4, R7, R17, R22).
  *
- * READ CONTRACTS it reads in its own SQL: record-core's `manifest` and `history` (`gateFacts`' manifest and history
+ * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest` and `history` (`gateFacts`' manifest and history
  * lists, as they were), inquiry's `inquiry_basis` (`bundle_id`, `target_id`, its R40), and connections' `refs`
  * (`gateFacts`' `dangling` list, kept as it was; reported, since connections states no read contract yet). */
 
@@ -92,6 +92,15 @@ export class Ratification {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
+  #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
+
+  /* publication R40's read contract: a case document's row, unfenced (in-process; the Worker asked standing), and a
+     case's owning project (`cases`, keyed on `case_id` alone; null for a case older than DEC-72, `null` row for none). */
+  #caseDocumentRow(caseId, edition) {
+    return this.#one(`SELECT doc_sha, text, sig_armored, ratified_at FROM case_documents WHERE case_id=? AND edition=?`,
+                     caseId, Number(edition));
+  }
+  #caseOwner(caseId) { return this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId); }
 
 
   /* ===== REC-135 / INVESTIGATIVE-SESSION.md §7.1 item 4 (BOB #15, 2026-09-18) —
@@ -285,7 +294,7 @@ export class Ratification {
     const want = Ratification.#conclusionRowParsed(bundleId, conc);
     const pinned = [];
     for (const e of editions) {
-      const d = this.publication.caseDocumentRow(e.case_id, e.edition);
+      const d = this.#caseDocumentRow(e.case_id, e.edition);
       const rows = d && typeof d.text === "string" ? (parseFrontmatter(d.text).data || {}).case_conclusions : null;
       const had = Array.isArray(rows)
         ? rows.find((r) => r && typeof r === "object" && String(r.target ?? "") === String(bundleId)) || null
@@ -453,7 +462,7 @@ export class Ratification {
                      + `mean this plane asserting a group's case on their behalf. Review the case document `
                      + `(op=casedocument) and ratify it (op=caseratify).` };
     return this.record.transact(() => {
-      const doc = this.publication.caseDocumentRow(id, ed);
+      const doc = this.#caseDocumentRow(id, ed);
       if (!doc) return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed };
       if (doc.doc_sha !== docSha)
         return { ok: false, reason: "CASE_RATIFY_STALE", caseId: id, edition: ed,
@@ -605,7 +614,7 @@ export class Ratification {
           : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case — two acts, `
             + `two names (BIO_Publication §3 rule 13).` };
       })();
-      const owner = this.publication.caseOwner(id);
+      const owner = this.#caseOwner(id);
       if (owner && owner.project_id !== project)
         return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", caseId: id, edition: ed,
                  declared: owner.project_id, signed: project,
@@ -735,7 +744,7 @@ export class Ratification {
       if (pinnedBy.length) {
         const byProject = new Map();
         for (const pin of pinnedBy) {
-          const owner = this.publication.caseOwner(pin.case_id);
+          const owner = this.#caseOwner(pin.case_id);
           const pid = owner ? owner.project_id ?? null : null;
           if (!byProject.has(pid)) byProject.set(pid, []);
           byProject.get(pid).push(`${pin.case_id} edition ${Number(pin.edition)}`);
