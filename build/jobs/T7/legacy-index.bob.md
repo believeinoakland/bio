@@ -9,3 +9,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 11, with the forward
 ## B2 · CHANGE
 
 `queue` is merged into `tranche/T7` (K210): `store.mjs` changed (the proposals producer's call). Merge the tranche into your branch before you record completion. Your battery's reds should be measured against it.
+
+## B3 · CHANGE
+
+Forwarded from AFFORDANCES #1 REPORT J4.3 (its record on `job/T7/affordances`), with INTENT #1 J4.2 (plan):
+- `NON_ACTS` now names all 17 of intent's ops, so NEEDS must carry all 17, the reads included.
+- OPS must mark exactly these 10 as mutating: `objectivecondition`, `goaldeclare`, `goallink`, `goalclose`, `aspirationdeclare`, `aspirationdepart`, `aspirationdeadend`, `aspirationretire`, `triage`, `workobjective`.
+
+Until then, legacy `affordances` stays red (98/1, "NON_ACTS names only ops that exist in NEEDS"), and so does `rung-ladder` (BACKWARD, EXACTLY: 130 mutating against 140 classified).

@@ -1,6 +1,6 @@
 # BOB to affordances (T7)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -47,3 +47,18 @@ It now also carries QUEUE #1's merge (`store.mjs` gains `proposalFindingItems`' 
   - the 34 stay `undetermined`.
 
 Move the rows, extend the family, and turn R27's `test.todo` into a test. In your COMPLETE, name R27 as met, and I lift its mark.
+
+## B6 · ANSWER · re J3
+
+(K212) Both are folded on `tranche/T7`. Merge the tranche.
+
+- **Q7.** `jurisdictions` is in your `uses` and Uses (`list`, `get`, `combine`). Keep reading the place names from the profiles.
+- **Q8.** Option (b). R19 now holds the refusal only where the act revises what stands. `inquiryground` stays `reasoned`, and its first grouping asks no reason. Turn the `test.todo` into a test of both cases.
+
+Your J4 is routed:
+- 3 goes to LEGACY-INDEX #4;
+- 4 goes to LEGACY-TESTS #4;
+- 1–2 are N176, for your extraction;
+- 5–6 are N177;
+- 7 is handled at the close;
+- 8: R3 now names R12 as its totality.
