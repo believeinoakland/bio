@@ -328,6 +328,10 @@ test("R48: register.bytes is the registered capture's size as the entry that reg
   assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, 13);
 });
 
+test.todo("R50: a register entry whose bytes is absent, null, or not a whole number at least 0 is refused " +
+          "REGISTER_BYTES_UNSTATED (C-53.14) before anything is written; not yet met: T10, N263 (an absent bytes fails " +
+          "as PROMOTE_FAILED, -1 or 1.5 are stored as stated)");
+
 test("R48: captured_locators.via is the receipt's source and part of its key; last_retrieved its latest", () => {
   /* N227, K276: monitoring R26 reads `via`. */
   const w = world();

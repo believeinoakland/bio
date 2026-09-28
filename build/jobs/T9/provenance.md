@@ -31,6 +31,23 @@
 
 Size (session_017KrztZChBMPxWJ41xnLD4i): test runs 8, module lines 3175
 
+## Completion (PROVENANCE #4, re-opened by B2, K313)
+
+**Entry applied** (B2): `respellReceiptInstants` (`bio-plane/src/provenance/schema.mjs`, R48, N133) no longer uses a GLOB pattern. The 76-byte `NOT GLOB` whole-second test exceeded workerd's 50-byte LIKE/GLOB cap, so any durable object holding a `captured_locators` row failed at boot. The already-spelled test is now `strftime('%Y-%m-%dT%H:%M:%SZ', col) <> col` (with `IS NOT NULL`, so a value naming no instant is left): a row whose value is its own whole-second spelling is untouched, so the respelling stays idempotent. No LIKE or GLOB anywhere in the module now.
+
+**Test added:** `R48: the whole-second respelling runs at every boot under workerd's 50-byte LIKE/GLOB cap, idempotent` (register.test.mjs) wraps the record's `sql.exec` to refuse any LIKE/GLOB pattern over 50 bytes, literal or bound, as workerd does. It migrates twice over receipts that have a fraction, an offset, a space-separated spelling, garbage and an already whole-second value, then runs the receipt services under the same cap. It was red on the old code (`LIKE or GLOB pattern too complex` from `respellReceiptInstants`) and is green now.
+
+**Also:** R50 (N263, added since my last job, `not yet met: T10`) had no test, so coverage failed. It now has a `test.todo` that names its cause, as B1 directs. Nothing else is deferred.
+
+**Found in other modules / for BOB:** Generated artifact made stale again: the plane bundle (`agent-worker/dist/agent-worker.bundled.mjs`, inputs include `src/provenance/schema.mjs`). It was not rebuilt (§14).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/provenance/*.test.mjs`: tests 63, pass 62, fail 0, todo 1 (R50).
+- `node --test bio-plane/test/versionnotice.test.mjs`: `versionnotice: 42 pass, 0 fail` (on the old code, 3 pass, 1 fail).
+- `format`: 0 failures. `architecture provenance`: 0 failures. `coverage provenance`: 50 of 50 live ids named; 0 failures. `ownership provenance tranche/T9`: 0 failures.
+
+Size (session_0161QPugnHiTsuxwXcBoAXHa): test runs 9, module lines 3177
+
 ## J1 · REPORT
 
 Found outside my module (details in my record's Completion): (1) provenance.md lines 111-112 state attestationsOf's header twice in two shapes; the first matches R49 and the code, the second should go. (2) A register entry with bytes absent/null fails the promotion as PROMOTE_FAILED (NOT NULL); -1 or 1.5 are stored as stated (R48: 'as the entry states it'); a named refusal would need a legacy-checks row — proposed for a later tranche, not built. (3) membership exports MODULE_ORDER, read by promotion and now provenance (R47's order; production passed none, so listeners ran in registration order — fixed), but membership's Provides does not name it. (4) Stale artifact: agent-worker/dist/agent-worker.bundled.mjs (inputs src/provenance/index.mjs, schema.mjs); not rebuilt. (5) connections' test 'R24, R18, K155' (factory.test.mjs) fails on tranche/T9 with and without my change: captureOf refuses a second env (capture R58).
