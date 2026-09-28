@@ -1,6 +1,6 @@
 # Plan: tranche T7
 
-**Status** · OPEN · BOB #51 · session_01VeHxGRFgrBHRiCEaudvt7p · depth 1
+**Status** · OPEN · BOB #52 · session_01P3CaMiSJuizZkigy1ePVZ2 · depth 1
 
 **Jobs** · capture: CAPTURE #3 session_01L2yS2q9k4fhVDfNH5pKtLX; provenance: PROVENANCE #2 session_018s8qz5yiBJo3WgGQi652po; capture-sources: CAPTURE-SOURCES #2 session_01KeNRofea8FepQThMPbuAiL; content: CONTENT #2 session_014cVKFvJhGvHewaQ6myVSLX; extraction: EXTRACTION #2 session_01E5kejJCTLEwWFYSLe7y9uh; inquiry: INQUIRY #1 session_01YYR9hsb5M6F1ofjMmxnVQj; citation: CITATION #1 session_01LCMxfQu4jDdgzASY25yF14; basis-versions: BASIS-VERSIONS #1 session_01F5QeEchurud7ZcEMw3BUKd; strength: STRENGTH #1 session_01HtJxXzMSHvzQXnWcPtibm8; contradiction: CONTRADICTION #1 session_01CNWDMUKyWAYEbbdCmSKxyK; run-productions: RUN-PRODUCTIONS #1 session_01Phb9xWYe7qD4YrUzf54unC; capture-requests: CAPTURE-REQUESTS #1 session_01NwvumqeZpXpPVxqHF2TYjC; skills: SKILLS #1 session_01LeLpLCKuivZWf56gFwdetG; agent-worker: AGENT-WORKER #1 session_01MQd6LoFbeLZ3gwnxAGgWZw; ai-runs: AI-RUNS #2 session_01WypBtD6YhawXPvfZkGWd5r; intent: INTENT #1 session_01GQGyDoacLdEkcPzHjpqTBg; reevaluation: REEVALUATION #1 session_01NEVHbroPLayAoiuTkg5UL2
 
