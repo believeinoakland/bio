@@ -148,8 +148,8 @@
     },
     {
       "path": "../bio-plane/src/content/index.mjs",
-      "bytes": 89877,
-      "sha256": "89ac9a806c1979e8f27192b38a4f06d4db49eb4d3f5003550ffe44b85669f290"
+      "bytes": 90051,
+      "sha256": "08e23d5e84288989af7bfe9f49240a3559a4ba0bc2d559c39ca96c73fc80f8fe"
     },
     {
       "path": "../bio-plane/src/content/notice.mjs",

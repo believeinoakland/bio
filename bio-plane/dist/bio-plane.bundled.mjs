@@ -43572,14 +43572,16 @@ var Content = class {
    * ===================================================================== */
   /** R46: the text of a held row's passage, or null. A typing (R24) answers its text byte for byte; any other row the
    *  text the capture's index holds at exactly the row's extent, by the one rule R31 grades a cited passage by
-   *  (`heldTextAt`). Null for a row not held, one cited as `bytes` (R4), or text not held whole there: a caller reads
-   *  null as the passage held in a form not read, never as empty text. No viewer: a caller that shows the text asks
-   *  sight first (R37). Writes nothing; never throws. */
+   *  (`heldTextAt`). Null for a row not held, one marked stale (R22: the index now holds the newer reading's text at
+   *  that extent, which may not be the text cited; N264), one cited as `bytes` (R4), or text not held whole there: a
+   *  caller reads null as the passage held in a form not read, never as empty text. No viewer: a caller that shows the
+   *  text asks sight first (R37). Writes nothing; never throws. */
   passageText(contentId) {
     try {
       const id = typeof contentId === "string" ? contentId.trim() : "";
-      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, cited_as FROM content WHERE content_id=?`, id) : null;
-      if (!r || r.cited_as === "bytes") return null;
+      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, cited_as, stale FROM content
+                                  WHERE content_id=?`, id) : null;
+      if (!r || r.stale || r.cited_as === "bytes") return null;
       const typed = this.#one(`SELECT text FROM transcriptions WHERE content_id=?`, r.content_id);
       if (typed) return typeof typed.text === "string" ? typed.text : null;
       const e = safeJson5(r.extent);
