@@ -1,6 +1,6 @@
 # provenance (T7)
 
-**Status** · session_018s8qz5yiBJo3WgGQi652po · depth 2 · WORKING · handled B3
+**Status** · session_018s8qz5yiBJo3WgGQi652po · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
