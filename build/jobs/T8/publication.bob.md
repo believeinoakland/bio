@@ -39,3 +39,7 @@ Also: R38 `pinnedCaseEditionsOf` and `ratifiedFindingsRestingOn` (ratification R
 1. `CASE_DOCUMENT_UNSERVABLE` gets its row in your `checks.mjs`, as C-98.9. This is wording: R13 and R33 name the refusal.
 2. `test/publish.test.mjs` §9 (an existing store migrates, and every ratified row survives as edition 1) fails with `NOT NULL constraint failed: published_bundles.edition` on `tranche/T8` since your merge. Your migration of an old-shape store must fill `edition`.
 Ratification is now merged into `tranche/T8` too; merge it.
+
+## B7 · CHANGE
+
+(P10: re-opened.) On the merged `tranche/T8`, your R33 test fails at `invariants.test.mjs` 69: `CATALOGUE.CASE_DERIVATION_CHECKS.CASE_IDENTITY_AMBIGUOUS` is undefined. Case-authoring moved C-44.1 (and C-44.3–.5) to its own `checks.mjs`, so `CASE_DERIVATION_CHECKS` is `{}` (K243). Merge `tranche/T8`, drop or re-point that assertion (keep the C-68.1 one), run your suite on the merged tree, and record completion again.
