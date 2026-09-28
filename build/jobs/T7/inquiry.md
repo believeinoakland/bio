@@ -57,3 +57,14 @@ Found while extracting `inquiry`; none is mine to change.
 - `node checks/ownership.mjs … inquiry tranche/T7`: legacy-store 43 added, 2,834 removed; 2 failures, both K140's case (a line changed only by removing text): `store.mjs` 13926 `this.#writeStrengthProjection(bundleId, isInquiry);` (the subject argument dropped, since inquiry writes the column) and 19645 (the same method's UPDATE losing `inquiry_basis_count`/`inquiry_subject_entity`). Every other added line imports or calls `inquiry`, or is a one-line comment naming it; three registrations in the constructor call `inquiryOf` or `promotion.registerFact` (for BOB's review).
 
 Size (session_01YYR9hsb5M6F1ofjMmxnVQj): test runs 52, module lines 2998
+
+## J4 · COMPLETE
+
+B4 applied.
+1. `tranche/T7` (strength, citation @ e68efc95f9) merged into `job/T7/inquiry`. Seven conflicts in `store.mjs` and one in `schema.mjs`, each resolved to both removals: citation's `#edgeTransition`/`sever`/`reinstate` and routes, strength's `strength`/`inquirystrength`/`strengthbar` routes and `group_strength_bar`, and mine. The store keeps both registrations: `strengthModule(ctx, {inquiry: …})`, whose four services still reach inquiry through the store's delegates (`basisFor`, `earnedBasisRegistry`, `#capturedAt`, `#subjectEntityOf`), and `citationOf`, left as merged. Re-pointing strength's wiring to `inquiryOf`/`basisVersionsOf` waits for basis-versions, as B4 says. `earned` keeps its answer shape `{earned: {connection: {target: {grade, why, …}}, capture, testimony?, content?}}`.
+2. R16's bound: `basisFor(id, {limit})`. A positive integer `limit` reads at most `limit` legs in SQL, the first by ord, with `limit` and `truncated` (measured by reading one more); without it the basis is read whole, as the strength walk needs. Proposed R16 text: "`basisFor(id, {limit?})` answers the projected legs in order; with a positive integer `limit`, at most that many, the first by ord, bounded in the read, with `limit` and `truncated`." strength's `partitionIndependence` can pass `{limit: VERSION_LEGS_MAX + 1}`.
+3. Found on `tranche/T7` itself, not caused by this job: the plane does not boot under Miniflare, because `src/skilldoctrine.mjs` (skills) imports `VERSION_STRENGTH_CHECKS` from `bio-checks.mjs`, which strength moved to `src/strength/checks.mjs` (K181 (3): skills re-points). Every Miniflare suite fails at start until skills merges, so I could not re-run the old battery after this merge. Before it, the results were those of J2.
+
+**Tests and checks after the merge**: `node --test bio-plane/test/m/inquiry/` 50 pass, 0 fail; `test/m/strength/` and `test/m/citation/` 88 pass, 0 fail. format 0 failures; architecture 0; coverage 40 of 40; ownership 43 added, 2,834 removed, the same 2 failures J3 names (K140's case, now at `store.mjs` 11668 and 16604).
+
+Size (session_01YYR9hsb5M6F1ofjMmxnVQj): test runs 58, module lines 3008
