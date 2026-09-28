@@ -2,7 +2,7 @@
  * the evidence store by digest, what capture learns about sources and sites (reachability, site assets, links and
  * the host's chrome, capture sessions, the platform's ceiling, the render allowance), the event queue an
  * undetermined capture raises, and the doorbell (`doorbell.mjs`). It writes no bundle: no intake path writes live
- * state (R33). Requirements: build/requirements/capture.md (R1–R56). Extracted from `legacy-store` and
+ * state (R33). Requirements: build/requirements/capture.md (R1–R62). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -1187,6 +1187,35 @@ export class Capture {
       this.#sql.exec(`DELETE FROM task_queue WHERE kind=? AND capture_sha=?`, kind, captureSha);
       return { found: true };
     } catch { return { found: false }; }
+  }
+
+  /* ==================================================================== *
+   * R61 (N140, K287): the validators a filed direct capture was served with
+   * ==================================================================== */
+
+  /** R61: what the source sent about the bytes of the capture this fetch filed (`ETag`, `Last-Modified`), under the
+   *  document address. Written by the acquisition act on every filed direct capture; a later write for the same pair
+   *  replaces it. Never throws. */
+  recordValidators({ addressNorm, captureSha, etag = null, lastModified = null, at = null } = {}) {
+    try {
+      if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX64.test(captureSha))
+        return { recorded: false };
+      this.#sql.exec(`INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
+                      ON CONFLICT(address_norm, capture_sha) DO UPDATE SET etag = excluded.etag,
+                        last_modified = excluded.last_modified, at = excluded.at`,
+                     addressNorm, captureSha, etag || null, lastModified || null, at && ISO_INSTANT.test(at) ? at : stampSecond());
+      return { recorded: true };
+    } catch { return { recorded: false }; }
+  }
+
+  /** R61: the validators recorded for one capture at one document address, or null when none was sent or none is
+   *  recorded. Never throws. */
+  validatorsOf({ addressNorm, captureSha } = {}) {
+    try {
+      const r = this.#one(`SELECT etag, last_modified FROM capture_validators WHERE address_norm = ? AND capture_sha = ?`,
+                          addressNorm, captureSha);
+      return r && (r.etag || r.last_modified) ? { etag: r.etag || null, lastModified: r.last_modified || null } : null;
+    } catch { return null; }
   }
 
   /* ==================================================================== *

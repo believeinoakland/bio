@@ -393,6 +393,18 @@ CREATE TABLE IF NOT EXISTS link_chrome (
   at           TEXT NOT NULL,
   PRIMARY KEY (host, address_norm)
 );
+-- R61 (N140, K287): the validators a filed direct capture's own fetch was served with, so a later request for the
+-- same document address can be fetched conditionally against the capture the record already holds. One row per
+-- (document address, capture); a column the source did not send is NULL. Evidence of what the source said about
+-- ITS bytes, never used to name a capture: a 304 answered against these files no capture (R61).
+CREATE TABLE IF NOT EXISTS capture_validators (
+  address_norm  TEXT NOT NULL,
+  capture_sha   TEXT NOT NULL,
+  etag          TEXT,
+  last_modified TEXT,
+  at            TEXT NOT NULL,
+  PRIMARY KEY (address_norm, capture_sha)
+);
 -- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
 -- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
 CREATE TABLE IF NOT EXISTS knock_key (
@@ -418,5 +430,5 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
 /* record-core R21/R46: what purge clears (whole-store only: none is keyed to a bundle) and what it never clears.
    The exempt five are operational facts about this instance, not corpus-derived (hygiene's census). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
-  "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome"];
+  "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators"];
 export const CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key"];

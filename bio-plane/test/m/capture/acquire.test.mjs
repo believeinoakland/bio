@@ -561,3 +561,102 @@ test("R37 R38: each refusal carries its catalogue row, and nothing in the answer
   for (const a of answers.slice(0, 3)) assert.ok(a.check && a.translation, `${a.reason} carries its row`);
   assert.ok(!/oakland|alameda/i.test(JSON.stringify(answers)));
 });
+
+/* The drain's in-process arm (K58), as capture-requests fires it. */
+const arm = (w, routes, captureRequest, body = {}) => run(w, routes, body, { cls: "daemon", member: false, sessMember: null,
+  captureRequest: { locator: "https://a.example/doc", purpose: "investigate", agent: null, render: false, ...captureRequest } });
+
+test("R60 (N140): the capture-request arm files the drain's own origin as a sweep, never a body's; without one it is a named request", async () => {
+  const w = world();
+  const routes = { "https://a.example/doc": () => page("<p>d</p>", { "content-type": "text/plain" }) };
+  const actor = { run: "RUN-1", plane: "member:m1", claude: "acct-1" };
+  const sw = await arm(w, routes, { origin: { matched_sweep: "INQ-2026-0001", deeming_actor: actor } }, { matchedSweep: "FORGED" });
+  assert.equal(sw.status, 200);
+  assert.deepEqual(sw.body.document.origin, { kind: "sweep", matched_sweep: "INQ-2026-0001", deeming_actor: actor });
+  const plain = await arm(w, routes, {}, { matchedSweep: "FORGED" });
+  assert.deepEqual(plain.body.document.origin, { kind: "named_request" }, "the body's matchedSweep is ignored on this arm");
+  const empty = await arm(w, routes, { origin: { deeming_actor: actor } });
+  assert.deepEqual(empty.body.document.origin, { kind: "named_request" }, "an origin naming no sweep is not a sweep");
+  const member = await run(w, routes, { locator: "https://a.example/doc", matchedSweep: "SWEEP-1" });
+  assert.deepEqual(member.body.document.origin, { kind: "sweep", matched_sweep: "SWEEP-1", deeming_actor: "m1" }, "other arms unchanged");
+});
+
+test("R61 (N140): with the held capture's digest the arm fetches conditionally on the validators its own fetch recorded; a 304 files nothing and writes no receipt; without validators, identical bytes answer held", async () => {
+  const w = world();
+  const LM = "Wed, 01 Jul 2026 00:00:00 GMT";
+  const doc = (extra = {}) => page("the document", { "content-type": "text/plain", etag: '"v1"', "last-modified": LM, ...extra });
+  const first = await run(w, { "https://a.example/doc": () => doc() }, { locator: "https://a.example/doc" });
+  const heldSha = first.body.document.capture.sha256;
+  assert.deepEqual(w.rows(`SELECT address_norm, capture_sha, etag, last_modified FROM capture_validators`).map((x) => ({ ...x })),
+                   [{ address_norm: "https://a.example/doc", capture_sha: heldSha, etag: '"v1"', last_modified: LM }]);
+  const puts = () => w.b.calls.filter((c) => c[0] === "put").length;
+  const [p0, r0] = [puts(), w.prov.receipts.length];
+  const nm = await arm(w, { "https://a.example/doc": () => new Response(null, { status: 304 }) }, { heldSha });
+  const sent = nm.net.seen[0].init.headers;
+  assert.deepEqual([sent["if-none-match"], sent["if-modified-since"]], ['"v1"', LM]);
+  assert.equal(nm.status, 200);
+  assert.deepEqual([nm.body.ok, nm.body.existed, nm.body.unchanged, nm.body.capture], [true, true, true, { sha256: heldSha }]);
+  assert.match(nm.body.basis, /304/); assert.equal(nm.body.document, undefined);
+  assert.deepEqual([puts(), w.prov.receipts.length], [p0, r0], "no capture filed, no receipt written");
+  const reach = w.c.sourceReachability({ addressNorm: "https://a.example/doc" });
+  assert.deepEqual([reach.last_outcome, reach.last_status, reach.consecutive_failures], ["success", 304, 0]);
+  /* The source ignores the condition: the same bytes are the held capture. */
+  const same = await arm(w, { "https://a.example/doc": () => doc() }, { heldSha });
+  assert.deepEqual([same.body.held, same.body.existed, same.body.document.capture.sha256], [true, true, heldSha]);
+  /* No validators recorded for the pair: unconditional, and identical bytes answer held. */
+  const w2 = world();
+  const bare = await arm(w2, { "https://a.example/doc": () => page("the document", { "content-type": "text/plain" }) }, {});
+  const h2 = bare.body.document.capture.sha256;
+  const again = await arm(w2, { "https://a.example/doc": () => page("the document", { "content-type": "text/plain" }) }, { heldSha: h2 });
+  assert.equal(again.net.seen[0].init.headers["if-none-match"], undefined);
+  assert.equal(again.net.seen[0].init.headers["if-modified-since"], undefined);
+  assert.deepEqual([again.body.held, again.body.existed], [true, true]);
+  const changed = await arm(w2, { "https://a.example/doc": () => page("new bytes", { "content-type": "text/plain" }) }, { heldSha: h2 });
+  assert.equal(changed.body.held, undefined, "other bytes are a new capture");
+  /* A heldSha that is not 64 hex is ignored; a 304 nobody asked for is the source refusing. */
+  const junk = await arm(w, { "https://a.example/doc": () => new Response(null, { status: 304 }) }, { heldSha: heldSha.toUpperCase() });
+  assert.equal(junk.net.seen[0].init.headers["if-none-match"], undefined);
+  assert.deepEqual([junk.status, junk.body.reason, junk.body.status], [502, "SOURCE_REFUSED", 304]);
+  const other = await arm(w, { "https://a.example/other": () => new Response(null, { status: 304 }) }, { heldSha, locator: "https://a.example/other" });
+  assert.equal(other.net.seen[0].init.headers["if-none-match"], undefined, "validators are the held capture's at THIS address");
+});
+
+test("R62 (N140): a supplied credential rides the fetch to its own host only, as its kind says; the capture records whose it was and that the public cannot reproduce it, and never the secret", async () => {
+  const w = world();
+  const SECRET = "alice:s3cret-pass";
+  const cred = (kind, secret = SECRET) => ({ credential: "CRED-1", kind, secret, supplied_by: "m1", scope: "project", project: "PROJ-1" });
+  const routes = (u) => u === "https://a.example/doc" ? new Response(null, { status: 302, headers: { location: "/login-done" } })
+    : u === "https://a.example/login-done" ? new Response(null, { status: 301, headers: { location: "https://cdn.example/file" } })
+    : u === "https://cdn.example/file" ? page("members only", { "content-type": "text/plain" }) : null;
+  const r = await arm(w, routes, { credential: cred("login") });
+  assert.equal(r.status, 200);
+  const hops = r.net.seen.map((x) => [x.url, x.init.headers.authorization ?? null, x.init.redirect]);
+  const basic = `Basic ${Buffer.from(SECRET).toString("base64")}`;
+  assert.deepEqual(hops, [["https://a.example/doc", basic, "manual"], ["https://a.example/login-done", basic, "manual"],
+                          ["https://cdn.example/file", null, "manual"]], "followed by hand; another host gets no credential");
+  assert.deepEqual(r.body.document.capture.credentialed, { credential: "CRED-1", kind: "login", supplied_by: "m1", scope: "project", project: "PROJ-1" });
+  assert.equal(r.body.document.capture.reproducible_by_public, false);
+  const everything = JSON.stringify([r.body, w.prov.receipts]);
+  assert.ok(!everything.includes(SECRET) && !everything.includes(Buffer.from(SECRET).toString("base64")), "the secret is nowhere");
+  const plainRoutes = { "https://a.example/doc": () => page("d", { "content-type": "text/plain" }) };
+  const ua = await arm(w, plainRoutes, { credential: cred("user-agent", "Mozilla/5.0 (member's own)") });
+  assert.equal(ua.net.seen[0].init.headers["user-agent"], "Mozilla/5.0 (member's own)");
+  assert.equal(ua.net.seen[0].init.headers.authorization, undefined);
+  assert.equal(ua.body.document.capture.credentialed.kind, "user-agent");
+  const other = await arm(w, plainRoutes, { credential: cred("other", "Bearer tok-123") });
+  assert.equal(other.net.seen[0].init.headers.authorization, "Bearer tok-123");
+  assert.match(other.net.seen[0].init.headers["user-agent"], /CivicOS/, "R7's agent stays when the credential is not an agent");
+  /* A thrown fetch carries no message when a credential rode it. */
+  const boom = await arm(w, () => new Error(`refused for ${SECRET}`), { credential: cred("login") });
+  assert.equal(boom.body.reason, "FETCH_FAILED"); assert.ok(!JSON.stringify(boom.body).includes(SECRET));
+  const bare = await arm(w, () => new Error("plain failure"), {});
+  assert.match(bare.body.detail, /plain failure/, "without a credential the error is carried as before");
+  /* Without a credential, or with a malformed one, nothing is marked and the runtime follows redirects. */
+  for (const c of [undefined, { kind: "password", secret: "x" }, { kind: "login", secret: "" }]) {
+    const n = await arm(w, plainRoutes, c ? { credential: c } : {});
+    assert.equal(n.body.document.capture.credentialed, undefined);
+    assert.equal(n.body.document.capture.reproducible_by_public, undefined);
+    assert.equal(n.net.seen[0].init.redirect, "follow"); assert.equal(n.net.seen[0].init.headers.authorization, undefined);
+  }
+});
+
