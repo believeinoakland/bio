@@ -34,6 +34,7 @@ Terms. An **act** is `{id?, description, actor: {role, body}, at | period, evide
 
 **comparisonPropose({project, act, standards, rows, questions?, proposer, viewer}) → `{ok, proposal}`**
 - **R12** A comparison prepared by a machine (the Government Compliance Analysis skill) or suggested by a member is stored apart, labelled with who made it and whether it is machine work (`legacy-checks`' `proposalLabel(proposer, "comparison")`, K171), and answered with a sentence saying it is not a determination. It carries rows and questions and never an outcome: a proposal naming one is refused `PROPOSAL_CANNOT_DETERMINE`. A determination may name the proposal it drew on, and the proposal records that. *(not yet met: new module)*
+- **R18** `determine` takes `proposal?`, the id of the comparison (R12) it drew on (absent, invisible or of another project: `NO_SUCH_PROPOSAL`), and `comparisonRead({id, viewer})` answers a comparison with its label (R12) and the determinations that drew on it. A determination carries at most 50 findings, 50 standards, 200 rows, 20 questions and 50 evidence content ids, and a comparison the same; over any, `DETERMINATION_TOO_LARGE` naming the part and the cap (K249). *(not yet met: K249)*
 
 ## Private
 

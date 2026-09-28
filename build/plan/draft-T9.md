@@ -53,7 +53,7 @@
 
 ### Layer 10
 
-- **legacy-store** · N28, N89, N193 (K223), N205: its own job; it may add to `store.mjs`, which an extracting job may not.
+- **legacy-store** · N28, N89, N193 (K223), N205, N216: its own job; it may add to `store.mjs`, which an extracting job may not.
 
 ### Layer 11
 
