@@ -1,5 +1,5 @@
 /* publication over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   connections, inquiry, basis-versions), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   connections, inquiry, basis-versions; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module registers (legacy-store's fact `producingGroup`, the review provider) is a stand-in the
    test controls. The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
    test through R21 and R22, exactly as those modules call them. Every test drives `publication` at its interface. */
@@ -9,7 +9,6 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
-import { contentOf } from "../../../src/content/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
@@ -81,9 +80,10 @@ export function world({ group = "test-group" } = {}) {
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   for (const t of EXTRACTION_JOINED) st.db.exec(t);
-  const content = contentOf(host, { record, membership, provenance: prov, extraction: NO_READINGS, now: () => clock.now });
+  /* content (which inquiry and basis-versions use) is reached through connections' factory on this host. */
+  const connections = connectionsOf(host, { record, membership, promotion, extraction: NO_READINGS, capture: {} });
+  const content = connections.content;
   content.migrate();
-  const connections = connectionsOf(host, { record, membership, promotion, content, extraction: NO_READINGS, capture: {} });
   connections.entities.migrate();
   connections.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities: connections.entities,

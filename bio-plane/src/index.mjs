@@ -62,7 +62,8 @@ import { isPublicHttpsLocator, parseFrontmatter, createSha256, normalizeType,
          /* CASE-4 / DEC-72: THE CASE RELATION, asked of signed bytes. Imported
             rather than restated so the ratify committer and the catalog that
             refuses on the same fact cannot answer it differently. */
-         isCaseMemberBytes } from "../checks/bio-checks.mjs";
+         isCaseMemberBytes,
+         } from "../checks/bio-checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
