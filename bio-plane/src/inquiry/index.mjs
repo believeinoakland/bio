@@ -503,6 +503,17 @@ export class Inquiry {
       by: r.author ?? null, reason: r.blurb ?? null })) };
   }
 
+  /** The member-browser agent the inquiry's own document records (`member_user_agent`, trimmed), or null when none is
+   *  recorded: never a default, which would be an invented client (capture-requests reads it, its R3, R14). */
+  memberUserAgent(id) {
+    try {
+      const md = id ? this.record.readFile(id, "bundle.md") : null;
+      const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+      const ua = fm && typeof fm === "object" ? fm.member_user_agent : null;
+      return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
+    } catch { return null; }
+  }
+
   /* ---------------------------------------------------------------- content R41: a re-read that staled rows */
 
   /** Registered on content's `onStale`: the legs resting on each affected or undetermined row (and, past the notice's

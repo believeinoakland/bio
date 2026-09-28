@@ -71,3 +71,14 @@ test("R33 every read naming an inquiry or project the viewer may not see answers
   assert.deepEqual(w.k.stateHistory(P, V("bob")), w.k.stateHistory("INQ-2026-0099-x", V("bob")).reason === "NO_SUCH_BUNDLE"
     ? { ok: false, reason: "NO_SUCH_BUNDLE", target: P } : null);
 });
+
+test("R12 subjectEntityOf and memberUserAgent (proposed R43, R44): what the inquiry records, or null, never a default", () => {
+  const w = world(); w.entity("ENT-2026-0001");
+  w.inquiry("INQ-2026-0001-q", { subject: "ENT-2026-0001", extra: ['member_user_agent: "  Mozilla/5.0 test  "'] });
+  w.inquiry("INQ-2026-0002-r");
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0001-q"), "ENT-2026-0001");
+  assert.equal(w.k.subjectEntityOf("INQ-2026-0002-r"), null);
+  assert.equal(w.k.memberUserAgent("INQ-2026-0001-q"), "Mozilla/5.0 test");
+  assert.equal(w.k.memberUserAgent("INQ-2026-0002-r"), null);
+  assert.equal(w.k.memberUserAgent("INQ-2026-0099-x"), null);
+});
