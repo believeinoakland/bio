@@ -1,14 +1,19 @@
-/* intent over the modules it uses, each the real one (record-core, membership, promotion, entities, progressions), on a
-   real SQLite database (node:sqlite) standing in for a Durable Object's storage. What progressions reads from
-   `extraction` and `provenance` (a capture's date) is not asked here. The acts intent takes through later-in-the-call
-   modules it reaches lazily (inquiry's `dispose`, retrieval's `selectionCreate`, ai-runs' `open`, a capture request's
-   outcome) are stand-ins the test controls and records. Every test drives `intent` at its interface. */
+/* intent over the modules it uses, each the real one (record-core, membership, promotion, entities, progressions,
+   inquiry, with the modules inquiry itself uses), on a real SQLite database (node:sqlite) standing in for a Durable
+   Object's storage. Three are stand-ins in the shape of their Provides, which the test controls and records:
+   retrieval's selections (`selectionCreate`, R18; `selectionResolve`, R19, which inquiry's dispose reads), ai-runs'
+   `open` (R9–R10) and capture-requests' read (`captureRequests`, R23). Every test drives `intent` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
+import { contentOf } from "../../../src/content/index.mjs";
+import { connectionsOf } from "../../../src/connections/index.mjs";
+import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
@@ -44,6 +49,9 @@ export function world({ now = NOW } = {}) {
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  /* the columns inquiry writes on record-core's `bundles` (its R40), which the store's additive list creates */
+  for (const c of ["inquiry_basis_count INTEGER", "inquiry_subject_entity TEXT", "inquiry_superseded_by TEXT"])
+    st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { now };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   record.migrate();
@@ -51,24 +59,51 @@ export function world({ now = NOW } = {}) {
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  const entities = entitiesOf(host, { record, membership, provenance: {}, now: () => clock.now });
+  promotion.registerFact("caseMember", "legacy-store", () => false);
+  promotion.registerFact("publishedRegistry", "legacy-store", () => null);
+  const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
+  prov.migrate();
+  const extraction = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
+  extraction.migrate();
+  const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
+  content.migrate();
+  const entities = entitiesOf(host, { record, membership, provenance: prov, now: () => clock.now });
   entities.migrate();
+  const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture: {}, entities });
+  connections.migrate();
   const progressions = progressionsOf(host, { record, entities, extraction: { readingOf: () => null },
                                               provenance: { homeOf: () => null }, now: () => clock.now });
   progressions.migrate();
-  const calls = { dispose: [], selections: [], open: [] };
-  const disposeAnswer = { fn: () => ({ ok: true }) };
-  const inquiry = { dispose: (a) => { calls.dispose.push(a); return disposeAnswer.fn(a); } };
-  const retrieval = { selectionCreate: (a) => { calls.selections.push(a); return { handle: `SEL-${calls.selections.length}`, n: a.ids.length }; } };
+  const calls = { selections: [], open: [], requests: [] };
+  const selections = new Map();
+  const retrieval = {
+    async selectionCreate(a) {
+      calls.selections.push(a);
+      if (!a.owner) return { ok: false, reason: "NO_OWNER" };
+      const handle = `sel-${calls.selections.length}`;
+      selections.set(handle, { owner: a.owner, members: [...a.ids] });
+      return { ok: true, handle, kind: "enumerated", n: a.ids.length };
+    },
+    selectionResolve({ handle, owner }) {
+      const s = selections.get(handle);
+      if (!s) return { ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" };
+      if (owner !== s.owner) return { ok: false, reason: "NOT_YOURS" };
+      return { ok: true, members: s.members, drift: null };
+    },
+  };
+  const inquiry = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval,
+                                    provenance: prov, now: () => clock.now });
+  inquiry.migrate();
   const aiRuns = { open: async (a) => { calls.open.push(a); return { run: a.run ?? null, started: true, status: "running" }; } };
-  const outcomes = new Map();
-  const captureRequests = { outcomeOf: (id) => outcomes.get(id) ?? null };
+  /* capture-requests' read (its R23): the rows the viewer may see, oldest first, bounded */
+  const requests = [];
+  const captureRequests = { captureRequests: (a) => { calls.requests.push(a); return { count: requests.length, limit: a.limit, truncated: false, requests: [...requests] }; } };
   const i = intentOf(host, { record, membership, promotion, entities, progressions, inquiry, retrieval, aiRuns,
                              captureRequests, now: () => clock.now });
   i.migrate();
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, entities, progressions, i, clock, calls, disposeAnswer, outcomes,
+    st, host, record, membership, promotion, entities, progressions, inquiry, i, clock, calls, requests,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,

@@ -186,7 +186,7 @@ test("R14 pursuitOf answers the goals and objectives opened under the aspiration
   w.i.linkObjective({ goal: g, project: w.P, author: V("bob") });
   w.i.registerSource("monitoring", () => [{ key: "fetch-1", kind: "capture-failed", grade: null,
     basis: { capture_requests: ["CREQ-1", "CREQ-2"] }, instances: [{ url: "https://example.org/a" }] }]);
-  w.outcomes.set("CREQ-1", { state: "captured" });
+  w.requests.push({ request: "CREQ-1", state: "captured", code: null, capture_sha: "abc", captured_at: w.clock.now });
   const open = w.i.proposals({ project: w.P, viewer: V("bob") }).proposals;
   const prog = open.find((p) => p.source === "progressions");
   const mon = open.find((p) => p.source === "monitoring");
@@ -197,7 +197,11 @@ test("R14 pursuitOf answers the goals and objectives opened under the aspiration
   assert.deepEqual(p.goals.map((x) => x.id), [g]);
   assert.deepEqual(p.goals[0].objectives.map((o) => o.project), [w.P]);
   assert.deepEqual(p.triaged.map((t) => [t.proposal, t.act, t.reason]), [[prog.key, "defer", "After the audit."], [mon.key, "dismiss", "Known outage."]]);
-  assert.deepEqual(p.capture_requests, [{ request: "CREQ-1", outcome: { state: "captured" } }, { request: "CREQ-2", outcome: null }]);
+  assert.deepEqual(p.capture_requests[0], { request: "CREQ-1", outcome: { state: "captured", code: null, capture_sha: "abc", captured_at: w.clock.now } });
+  assert.equal(p.capture_requests[1].request, "CREQ-2");
+  assert.equal(p.capture_requests[1].outcome, null, "a request the read does not answer has no outcome, never a guess");
+  assert.match(p.capture_requests[1].why, /not held|may not see/);
+  assert.deepEqual(w.calls.requests.at(-1), { viewer: V("bob"), limit: 1000 }, "read under the viewer's sight");
   assert.deepEqual(p.dead_ends.map((d) => d.note), ["No index exists."]);
   assert.ok(!/progress|percent|complet|share/i.test(Object.keys(p).join(" ")), "no completion figure");
   assert.equal(w.i.pursuitOf({ aspiration: "ASP-2026-0099", viewer: V("bob") }).reason, "NO_SUCH_ASPIRATION");

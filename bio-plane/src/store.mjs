@@ -395,6 +395,7 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
    can come to disagree with itself. */
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { progressionsOf, progressionOps, PROGRESSIONS_TABLES } from "./progressions/index.mjs";
+import { intentOf, intentOps } from "./intent/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES, barAxisWords } from "./strength/index.mjs";
 /* SK-1: the doctrine pack's own refusal, imported for the reason every check in
    this file is — the rule has ONE implementation and this file holds no copy of
@@ -744,6 +745,7 @@ export class Store extends DurableObject {
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env), interim: runProductionsInterim({
       aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
     }) });
+    intentOf(ctx);   /* intent (K61, K198): its check (R1, R2, R26) joins every promotion before legacy-store's; its audit check keeps C-2.9 (R22) */
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
     promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
@@ -1001,6 +1003,7 @@ export class Store extends DurableObject {
     entitiesOf(this.ctx).migrate();     /* entities' tables, R8's withdrawal columns and their purge declaration (R30) */
     contradictionOf(this.ctx).migrate();   /* contradiction's table and its purge declaration (R22) */
     progressionsOf(this.ctx).migrate();   /* progressions' tables and REC-184's column (R29) */
+    intentOf(this.ctx).migrate();   /* intent's tables (R24) */
 
     /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
        between the store's birth and the record of whose store it is. */
@@ -18900,6 +18903,7 @@ export class Store extends DurableObject {
         ...entitiesOps(entitiesOf(this.ctx), url, body),
         ...contradictionOps(contradictionOf(this.ctx), url, body),
         ...progressionOps(progressionsOf(this.ctx), url, body),
+        ...intentOps(intentOf(this.ctx), url, body),
         ...basisVersionsOps(basisVersionsOf(this.ctx), url, body),
         ...strengthOps(strengthModule(this.ctx), url, body),
         promote: () => promotionOf(this.ctx).promote(body),

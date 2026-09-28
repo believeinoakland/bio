@@ -16,9 +16,9 @@
  * audit check with `record-core` (R59) and its tables with purge (R24). `deps`:
  *   record, membership, promotion, entities, progressions   the modules it uses, through their factories on the same
  *                host unless a test passes its own.
- *   inquiry      `dispose` (R17), reached lazily; aiRuns `open` (R18), reached lazily.
- *   retrieval    `selectionCreate` (R17: inquiry's dispose takes a selection; J1 Q3), reached lazily.
- *   captureRequests  a request's outcome for R14 (J2 Q6); absent, an outcome reads null with why.
+ *   inquiry      `dispose` (R17); aiRuns `open` (R18); retrieval `selectionCreate` (R17: inquiry's dispose takes a
+ *                selection, K198); captureRequests `captureRequests`, a request's outcome (R14, K200). Each through its
+ *                factory on the same host, reached lazily on first use, unless a test passes its own.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
 import { isMachineIdentity, normalizeType } from "../../checks/bio-checks.mjs";
@@ -29,6 +29,8 @@ import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
+import { retrievalOf } from "../retrieval/index.mjs";
+import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { INTENT_CHECKS, refusal } from "./checks.mjs";
 import { INTENT_TABLES, migrateIntent } from "./schema.mjs";
 import { ASPIRATION, GOAL, ASPIRATION_SCOPES, GRADES, TOKEN, quotable, q, parseFm, setField, removeBlock, setBlock,
@@ -43,8 +45,9 @@ export { ASPIRATION_SCOPES } from "./doc.mjs";
 export const TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
 /** R17 (Suggestions): the ageing interval's setting in record-core, and its default in days (C-10.1's staleness age). */
 export const AGEING_SETTING = "intent_ageing_days", AGEING_DEFAULT_DAYS = 30;
-/** R17: the plane actor the ageing act is taken under. */
-export const PLANE_ACTOR = "plane:intent";
+/** R17: the plane actor the ageing act is taken under, and the machine sight it selects and disposes with (a scheduler's
+ *  tick has no member behind it; membership R43 lets a machine credential see every bundle). */
+export const PLANE_ACTOR = "plane:intent", PLANE_VIEWER = "class:daemon";
 /** R6: the kind a gap is offered as (`queue`'s vocabulary, D-76). */
 export const GAP_KIND = "objective-gap";
 /** R16: a reason's bound, the restricted grammar's edge reason (a reason may travel into a document's front matter). */
@@ -385,7 +388,7 @@ export class Intent {
       }
       const placed = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
       const missing = stages.filter((s) => !placed.has(s));
-      /* J2 Q5's reading: a missing stage is short whatever the grade; the grade decides only once the stages are in. */
+      /* R4 (K200): a missing required stage is short whatever the grade; the grade decides only once the stages are in. */
       if (missing.length) {
         short.push({ ...row, why: { stages_missing: missing }, documents: this.#documents(inst) });
         continue;
@@ -758,12 +761,21 @@ export class Intent {
                          author: r.author, at: r.at }))
       : [];
     const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
+    let held = new Map(), truncated = false;
+    if (named.length) {
+      /* capture-requests' read (its R23), under the viewer's sight: a request it does not answer is not held, or is one
+         the viewer may not see, and reads so; never a guessed outcome. */
+      const read = this.#lazy(this.captureRequests).captureRequests({ viewer, limit: 1000 });
+      held = new Map(((read && read.requests) || []).map((r) => [r.request, r]));
+      truncated = !!(read && read.truncated);
+    }
     const capture_requests = named.map((id) => {
-      const cr = this.#lazy(this.captureRequests);
-      if (!cr || typeof cr.outcomeOf !== "function")
-        return { request: id, outcome: null, why: "intent reads no capture request's outcome (J2 Q6: capture-requests is not among its uses)" };
-      const o = cr.outcomeOf(id, viewer);
-      return { request: id, outcome: o ?? null };
+      const r = held.get(id);
+      if (!r) return { request: id, outcome: null,
+                       why: truncated ? "not among the requests the read answered (it was cut at its bound)"
+                                      : "no such request is held, or it is one you may not see" };
+      return { request: id, outcome: { state: r.state, code: r.code ?? null, capture_sha: r.capture_sha ?? null,
+                                       captured_at: r.captured_at ?? null } };
     });
     return { ok: true, aspiration: this.#aspirationView(a), goals, triaged, capture_requests,
              dead_ends: deadEndsOf(a.text), taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null };
@@ -952,7 +964,7 @@ export class Intent {
   /** R17 (called by `scheduler`): a question an assistant surfaced that no member has acted on within the instance's
    *  ageing interval moves to `deferred`, with its reason, through inquiry's dispose act under the plane's actor.
    *  Nothing is deleted. */
-  ageSurfaced(now) {
+  async ageSurfaced(now) {
     const nowMs = now == null || now === "" ? Date.parse(this.now()) : Number.isFinite(Number(now)) ? Number(now) : Date.parse(now);
     const days = this.ageingDays();
     const cutoff = nowMs - days * 86400000;
@@ -976,9 +988,9 @@ export class Intent {
     const inquiry = this.#lazy(this.inquiryRef), retrieval = this.#lazy(this.retrievalRef);
     for (const id of due) {
       /* One question per selection, so one refused question never holds back another (inquiry R22 moves a set whole). */
-      const sel = retrieval.selectionCreate({ ids: [id], kind: "enumerated", owner: PLANE_ACTOR, viewer: null });
+      const sel = await retrieval.selectionCreate({ ids: [id], kind: "enumerated", owner: PLANE_ACTOR, viewer: PLANE_VIEWER });
       if (!sel || !sel.handle) { refused.push({ id, reason: sel && sel.reason ? sel.reason : "NO_SELECTION" }); continue; }
-      const r = inquiry.dispose({ handle: sel.handle, to: "deferred", reason, viewer: null, owner: PLANE_ACTOR,
+      const r = inquiry.dispose({ handle: sel.handle, to: "deferred", reason, viewer: PLANE_VIEWER, owner: PLANE_ACTOR,
                                   author: PLANE_ACTOR });
       if (r && r.ok) aged.push(id); else refused.push({ id, reason: r ? r.reason : "DISPOSE_FAILED" });
     }
@@ -1088,7 +1100,9 @@ export function intentOf(host, deps) {
     i = new Intent({ ...d, storage, record, membership, promotion,
                      entities: d.entities || entitiesOf(host, { record, membership }),
                      progressions: d.progressions || progressionsOf(host, { record }),
-                     inquiry: d.inquiry || (() => inquiryOf(host)), aiRuns: d.aiRuns || (() => aiRunsOf(host)) });
+                     inquiry: d.inquiry || (() => inquiryOf(host)), aiRuns: d.aiRuns || (() => aiRunsOf(host)),
+                     retrieval: d.retrieval || (() => retrievalOf(host)),
+                     captureRequests: d.captureRequests || (() => captureRequestsOf(host)) });
     instances.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
