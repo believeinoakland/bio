@@ -82656,6 +82656,7 @@ var Filings = class _Filings {
     storage,
     record,
     host = null,
+    membership = null,
     publication = null,
     provenance = null,
     content = null,
@@ -82669,7 +82670,7 @@ var Filings = class _Filings {
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, publication, provenance, content, actions, conformance, standards, consequences };
+    this.#deps = { host, membership, publication, provenance, content, actions, conformance, standards, consequences };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
@@ -82679,6 +82680,9 @@ var Filings = class _Filings {
     }
   }
   /* The earlier modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  get membership() {
+    return this.#deps.membership ||= this.#deps.host ? membershipOf(this.#deps.host, { record: this.record }) : null;
+  }
   get publication() {
     return this.#deps.publication ||= publicationOf(this.#deps.host);
   }
@@ -82782,6 +82786,22 @@ var Filings = class _Filings {
       id: str9(id),
       detail: "no counsel packet by that id and version is readable here; one you may not see answers the same"
     };
+  }
+  /* R11, R13 (K316): whether `viewer` may see the project of every determination and consequence a draft's or a packet
+     version's `basis` draws on. A basis draws on at most its one determination, and a consequence is a part of that
+     determination (consequences R1), so in its project: the project stored on the basis, else the determination's as
+     the plane reads it. A draft that drew on no determination draws on no project. Fails closed: a project not readable,
+     or no membership module to ask, is not seen. membership's `inSight` is the sight conformance R15 and consequences
+     R13 withhold by. */
+  #sees(basis, viewer) {
+    const det = isObj11(basis) ? str9(basis.determination) : null;
+    if (!det) return true;
+    const project = str9(basis.project) || (this.#det(det, MACHINE_READER) || {}).project || null;
+    return this.#inSight(project, viewer);
+  }
+  #inSight(id, viewer) {
+    const m = this.membership;
+    return !!str9(id) && !!m && typeof m.inSight === "function" && this.#call(() => m.inSight(id, viewer)) === true;
   }
   /* A determination as conformance's read answers it (its R9), or null. */
   #det(id, viewer) {
@@ -83023,6 +83043,7 @@ ${text3}`;
       tier: gov.tier,
       counterparty: a.counterparty ?? null,
       determination: det ? det.id : null,
+      project: det ? det.project : null,
       governing_laws: a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null
     };
   }
@@ -83045,11 +83066,11 @@ ${text3}`;
     if (json2(laws) !== json2(was.governing_laws ?? null)) changed.push("the governing laws");
     return changed;
   }
-  /* A draft the viewer may see (through its action), or null (R19). */
+  /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). */
   #draft(id, viewer) {
     const f8 = str9(id);
     const d = f8 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f8) : null;
-    return d && this.#action(d.action_id, viewer) ? d : null;
+    return d && this.#action(d.action_id, viewer) && this.#sees(parse2(d.basis), viewer) ? d : null;
   }
   /* ---------------------------------------------------------------- R6: filingApprove */
   /** R6: a member approves the draft's text or an edited text, at most once; the approved text is the member's. */
@@ -83429,8 +83450,10 @@ ${text3}`;
       standards: det.standards.map((s) => str9(isObj11(s) ? s.id : s)).filter(Boolean)
     };
   }
-  /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. */
-  #basisChanged(basis) {
+  /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. Asked
+   *  only for a version `viewer` may see (R11, R13), so the determination's causes are in a project it sees; a
+   *  superseding standard it may not see is not named. */
+  #basisChanged(basis, viewer) {
     const causes = [];
     const d = this.#det(basis.determination, MACHINE_READER);
     if (!d || !d.live) causes.push({
@@ -83456,7 +83479,12 @@ ${text3}`;
     }
     for (const s of basis.standards || []) {
       const r = this.#standard(s, MACHINE_READER);
-      if (r && str9(r.superseded_by)) causes.push({ cause: "standard_superseded", standard: s, by: str9(r.superseded_by) });
+      if (r && str9(r.superseded_by))
+        causes.push({
+          cause: "standard_superseded",
+          standard: s,
+          ...this.#inSight(str9(r.superseded_by), viewer) ? { by: str9(r.superseded_by) } : { by: null, why: "an object you may not see" }
+        });
     }
     return causes;
   }
@@ -83538,16 +83566,19 @@ ${text3}`;
       says: "prepared for counsel's review from the record; it is never published and is not in a form that can be filed"
     };
   }
-  /* A packet the viewer may see, through its action (R11, R19): its rows, or null. */
+  /* A packet's versions the viewer may see, through its action and the project each version draws on (R11, R19;
+     K316): its rows, or null when it may see none. */
   #packet(id, viewer) {
     const p = str9(id);
     const rows = p ? this.#rows(`SELECT * FROM counsel_packets WHERE packet_id=? ORDER BY version`, p) : [];
-    return rows.length && this.#action(rows[0].action_id, viewer) ? rows : null;
+    if (!rows.length || !this.#action(rows[0].action_id, viewer)) return null;
+    const seen = rows.filter((r) => this.#sees(parse2(r.basis), viewer));
+    return seen.length ? seen : null;
   }
-  #version(r, rows) {
+  #version(r, rows, viewer) {
     const counsel = parse2(r.counsel) || {};
     const marking = counselMarking(counsel);
-    const causes = this.#basisChanged(parse2(r.basis) || {});
+    const causes = this.#basisChanged(parse2(r.basis) || {}, viewer);
     return {
       ok: true,
       id: r.packet_id,
@@ -83561,14 +83592,15 @@ ${text3}`;
       versions: rows.map((x) => Number(x.version))
     };
   }
-  /** R11, R12: a packet's version (the latest unless one is named), read only by a member who may see the action. */
+  /** R11, R12: a packet's version (the latest the viewer may see unless one is named), read only by a member who may see
+   *  the action and the project of every determination and consequence it draws on (K316). */
   counselPacketRead({ id = null, version = null, viewer = null } = {}) {
     const rows = this.#packet(id, viewer);
     const r = rows ? version == null || version === "" ? rows[rows.length - 1] : rows.find((x) => Number(x.version) === Number(version)) : null;
     if (!r) return this.#noPacket(id);
     const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
                                  ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse2(e.counsel), sha: e.sha }));
-    return { ...this.#version(r, rows), exports };
+    return { ...this.#version(r, rows, viewer), exports };
   }
   /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
   static render(v) {
@@ -83625,23 +83657,39 @@ ${text3}`;
     };
   }
   /* ---------------------------------------------------------------- R13: filingsFor */
-  /** R13: the action's drafts and counsel packets, in creation order; the read `escalation` uses. */
+  /* R13 (K316): the first `n` rows of `q` (ordered, without LIMIT) whose basis the viewer may see; the others are read
+     past, never named or counted. Read a page at a time, each page spread before the next read, so no cursor is left
+     open while sight is asked. */
+  #seenRows(n, viewer, q6, ...a) {
+    const out = [];
+    for (let offset = 0; out.length < n; offset += FILINGS_FOR_MAX) {
+      const page = this.#rows(`${q6} LIMIT ? OFFSET ?`, ...a, FILINGS_FOR_MAX, offset);
+      for (const r of page) if (out.length < n && this.#sees(parse2(r.basis), viewer)) out.push(r);
+      if (page.length < FILINGS_FOR_MAX) break;
+    }
+    return out;
+  }
+  /** R13: the action's drafts and counsel packets, in creation order; the read `escalation` uses. A draft or packet
+   *  version drawing on a determination or consequence in a project the viewer may not see is left out, and nothing of
+   *  it is named (K316). */
   filingsFor({ action = null, viewer = null } = {}) {
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
-    const drafts = this.#rows(
-      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, ap.approved_by, ap.at AS approved_at, ap.sha,
+    const drafts = this.#seenRows(
+      FILINGS_FOR_MAX + 1,
+      viewer,
+      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, ap.approved_by, ap.at AS approved_at, ap.sha,
               s.ord, s.sent_on, s.recorded_by, s.recorded_at
          FROM filing_drafts d LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
          LEFT JOIN filing_sendings s ON s.filing_id=d.filing_id
-        WHERE d.action_id=? ORDER BY d.prepared_at, d.filing_id LIMIT ?`,
-      a.id,
-      FILINGS_FOR_MAX + 1
+        WHERE d.action_id=? ORDER BY d.prepared_at, d.filing_id`,
+      a.id
     );
-    const versions = this.#rows(
-      `SELECT * FROM counsel_packets WHERE action_id=? ORDER BY at, packet_id, version LIMIT ?`,
-      a.id,
-      FILINGS_FOR_MAX + 1
+    const versions = this.#seenRows(
+      FILINGS_FOR_MAX + 1,
+      viewer,
+      `SELECT * FROM counsel_packets WHERE action_id=? ORDER BY at, packet_id, version`,
+      a.id
     );
     return {
       ok: true,
@@ -83656,7 +83704,7 @@ ${text3}`;
       })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
-        const causes = this.#basisChanged(parse2(r.basis) || {});
+        const causes = this.#basisChanged(parse2(r.basis) || {}, viewer);
         return {
           packet: r.packet_id,
           version: Number(r.version),
