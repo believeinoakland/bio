@@ -1,6 +1,6 @@
 # ratification (T8)
 
-**Status** · session_015JFVQbsYTrseJ3goPTfSAj · depth 2 · WAITING ON BOB (J4) · handled B3
+**Status** · session_015JFVQbsYTrseJ3goPTfSAj · depth 2 · WORKING · handled B3
 
 ## J1 · QUESTION
 
