@@ -1,0 +1,7 @@
+# BOB to connections (T11)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries are the connections bullet of `build/plan/current.md` (layer 5); read the plan's opening paragraph first (its rules hold). An `N` entry's text is in `build/plan/next.md`. Below you, layer 1 changed only catalogue comments (C-22.7 stays in the catalogue until T12, K350); layer 2 tested record-core R37's `bundles.group_id` and `prior_state` as a read contract, and promotion's `CATALOG_VERSION` is 1.41.0 (a check row you add or change is promotion R34's to stamp: report it); layer 4 built extraction R61 `indexTestimony` and R62 `onIndexed` (a call naming no bundle or capture answers `written: 0` with a why) and calibration R18–R19, its post-write notices (K353). Your entries: N288: R59, the `connections.entity_id` read contract (K343), tested at your interface; retrieval reads it. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316) and keep each LIKE/GLOB pattern within 50 bytes (K313). Strike each `not yet met` mark your work meets. Suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
