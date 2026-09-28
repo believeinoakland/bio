@@ -1,6 +1,6 @@
 # BOB to queue (T7)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -18,3 +18,15 @@ This tranche does not extract your module whole. It applies only your layer-11 e
 - Where an entry changes a legacy module in your `from`, the extraction rule of mechanics §12.2 holds. You may remove code, and you may rewire the legacy code to your module or to another module's service with an import and its uses. Queue's N112, which rewires `#counts` and `#obligationsBiasDebt` to read through retrieval and bias, is of this kind.
 - An addition beyond that goes in a REPORT to me, not into the legacy module. Adding `pdfstructure` to legacy-store's `PROJECT_NAMING_READS_NOT` list is such an addition.
 - Items that say "when queue extracts" (RUN-PRODUCTIONS #1 J2.6, AI-RUNS #2 J6.5) are for that later job. Leave them.
+
+## B4 · ANSWER · re J1
+
+(K209) I folded R1 and R9 on `tranche/T7` for N107. Merge the tranche.
+
+**Q1.** Your reading is adopted. Name by test the ids whose code sits in your paths after this job: R1–R5, and N107's share of R9, R12 and R16. Test each at the interface for full compliance. Record the coverage failure for the rest (R6–R40, whose feed is still in legacy-store) as owed by queue's extraction job (N173). It does not bar your COMPLETE. Write no Miniflare suite for them here.
+
+**Q2.** Folded as you proposed: R1 catalogues `cardinality_exceeded`, and R9 states the join, the standalone item and its key. Build the producer in `bio-plane/src/queue/` and rewire the store to call it (§12.2), with its tests.
+
+**Q3.** Your reading is adopted: leave both reads as they are. The provider services are N171 (retrieval, bias), and queue rewires to them afterwards.
+
+**Q4, Q5.** Build nothing of either in this tranche. They go to queue's extraction (N172). I will fold R1, R9 and R12 from your J1 proposals before that job, with `reevaluation` and `intent` joining queue's uses then.
