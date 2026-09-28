@@ -44,7 +44,7 @@ Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #
 
 - **affordances** · K264's share of N216: the 22 layer-9 `NON_ACTS` rows and rungs exactly as AFFORDANCES #2's record states them, now the durable object dispatches their ops; N45 and N176 with the extraction of `affordanceFacts` from legacy-store per its map (K225).
 - **legacy-index** · K263's share of N216: the 34 layer-9 routes exactly as LEGACY-INDEX #5's record states them (names, classes, stamps, `NEEDS`).
-- **legacy-tests** · re-anchor or retire what T9's layers break; N240's and promotion's re-opening's census re-pins (d470, A5's literal, pinned `gateVersion`s) from the suite's print; N248 (the seven dead anchors, N57's remainder, refusal-wire 41/1 after N212); the reds T9's earlier layers own, re-measured after their fixes.
+- **legacy-tests** · re-anchor or retire what T9's layers break; N240's and promotion's re-opening's census re-pins (d470, A5's literal, pinned `gateVersion`s) from the suite's print; N248 (the seven dead anchors, N57's remainder, refusal-wire 41/1 after N212); the reds T9's earlier layers own, re-measured after their fixes; `check-semantics`, bias-vocabulary and add-surface's new-type arms recorded as waiting on the UI's replacement (N241, K283).
 
 **Size.** 22 jobs: layer 1 7, layer 2 3, layer 3 4, layer 4 3, layer 10 1, layer 11 3 (K274). T8 had 23.
 
@@ -54,4 +54,4 @@ Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #
 - **Still waiting**, as T8's plan says: N22, N26, N30, N31 (N14: `tools/` has not retired), N34's remainder, N75's deployed measurement, DIST-14, N137, N136.
 - **N211, N221, N249's catalogue share:** the copies of `checkCaseDocument` and `checkPublishedExtension` retire only once promotion, affordances and ai-runs stop importing them; promotion cannot import ratification (it is earlier), so this needs its design first (T10).
 - **N217:** ruled (K275); its sites are in layers 7–9 (T10).
-- **N241:** Bob's (legacy-ui and the six new types).
+- **N241:** waits on the UI's replacement (Bob, K283); legacy-tests records its arms as waiting on it.
