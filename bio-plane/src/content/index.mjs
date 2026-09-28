@@ -29,7 +29,7 @@ import { checkChain, checkAttestation, derivationCap, gradeCeiling, extentCovers
 import { getFormat } from "../formats.mjs";
 import { cropImage } from "../../../pdf-worker/src/imagecrop.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { CONTENT_SCHEMA, CONTENT_TABLES, migrateContent } from "./schema.mjs";
@@ -39,7 +39,7 @@ import {
   unitChainKind,
 } from "./extent.mjs";
 import { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, extentBoundUnheld, gradeAcross,
-         affectsOf } from "./notice.mjs";
+         affectsOf, heldTextAt } from "./notice.mjs";
 
 export * from "./extent.mjs";
 export { CONTENT_SCHEMA, CONTENT_TABLES } from "./schema.mjs";
@@ -124,12 +124,15 @@ const staleSays = (extent) =>
   + `as it was transcribed then — the record keeps it rather than moving it, because moving an authored citation is `
   + `a member's act and not the record's`;
 
-/** A capture's units as `gradeAcross` compares them: each extent in its canonical form (extraction R36 answers it
- *  parsed), and a missing answer as none held. */
+/** A capture's units as `gradeAcross` and `heldTextAt` read them: each extent in its canonical form (extraction R36
+ *  answers it parsed), in `seq` order (R36 answers them so; a unit with no `seq` keeps its place), and a missing answer
+ *  as none held. */
 function normUnits(u) {
-  const units = u && Array.isArray(u.units) ? u.units : [];
-  return { units: units.map((x) => ({ ...x, extent: typeof x.extent === "string" ? x.extent : canonicalExtent(x.extent),
-                                      truncated: !!x.truncated })),
+  const units = u && Array.isArray(u.units) ? u.units.filter((x) => x && typeof x === "object") : [];
+  const seq = (x) => (Number.isFinite(x.seq) ? x.seq : Infinity);
+  return { units: units.map((x, i) => ({ x, i })).sort((a, b) => (seq(a.x) - seq(b.x)) || (a.i - b.i))
+             .map(({ x }) => ({ ...x, extent: typeof x.extent === "string" ? x.extent : canonicalExtent(x.extent),
+                                truncated: !!x.truncated })),
            state: u ? u.state ?? null : null };
 }
 
@@ -778,12 +781,16 @@ export class Content {
 
   /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each re-read that
    *  stales a row whose passage the new text affects or cannot be told, `fn` is called ONCE with the re-read's notice
-   *  (`markStale`): the graded rows it must tell, and the count of rows past the bound, ungraded and so undetermined. */
+   *  (`markStale`): the graded rows it must tell, and the count of rows past the bound, ungraded and so undetermined.
+   *  N202: a malformed or repeated registration is refused by membership's `listenerRefusal` (its R81), the one site
+   *  of LISTENER_MALFORMED and LISTENER_DECLARED; the listeners run in the modules' total order (`MODULE_ORDER`, its
+   *  R83; an unknown module last, in the order it registered). */
   onStale(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED" };
-    if (this.staleListeners.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED", module };
-    this.staleListeners.push({ module, fn });
+    const refused = listenerRefusal(this.staleListeners, module, fn);
+    if (refused) return refused;
+    this.staleListeners.push({ module, fn, seq: this.staleListeners.length });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.staleListeners.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
     return { ok: true };
   }
 
@@ -1062,9 +1069,17 @@ export class Content {
     return memo.get(captureSha);
   }
 
-  /** The notice for ONE stored row (`extent` as JSON text). The legacy store's question arm (reevaluation's) calls it
-   *  per passage with one `memo`, because one newer capture is usually asked about by every leg citing it. */
+  /** N161: the notice for ONE row a caller has read from `content` through R45's read contract (`{content_id,
+   *  capture_sha, bundle_id, extent_kind, extent, ref, cited_as}`, `extent` as stored), for `viewer`'s version chains.
+   *  No sight gate and no C-80.3: the caller gates the row (R37). Reevaluation calls it per passage with one `memo` for
+   *  its read, because one newer capture is usually asked about by every leg citing it. Writes nothing; never throws:
+   *  a row that is not an object, or a read that fails, answers null. */
   noticeForRow(row, viewer, memo = new Map()) {
+    if (!isObj(row)) return null;
+    try { return this.#noticeForRow(row, viewer, memo instanceof Map ? memo : new Map()); } catch { return null; }
+  }
+
+  #noticeForRow(row, viewer, memo) {
     const extent = safeJson(row.extent);
     const cap = VERSION_NOTICE_ADDRESSES_MAX;
     /* The addresses the capture was retrieved from: provenance's `captured_locators` (its R48 read contract). */
@@ -1145,10 +1160,34 @@ export class Content {
                content: cid };
     }
     /* END DEC-49 REGION is-passage-notice */
-    return { ok: true, ...this.noticeForRow(r, viewer), states: VERSION_NOTICE_STATES, grades: VERSION_NOTICE_GRADES,
+    return { ok: true, ...this.#noticeForRow(r, viewer, new Map()), states: VERSION_NOTICE_STATES, grades: VERSION_NOTICE_GRADES,
              wrote: false, proposal_only: true,
              visible_to: "the version chains here are the ones visible to you; a version filed in a project you were not "
                + "invited to is not in them" };
+  }
+
+  /* ===================================================================== *
+   * THE PASSAGE'S TEXT (R46; N215, K249), for a later module that reads what a cited passage says (consequences R2).
+   * ===================================================================== */
+
+  /** R46: the text of a held row's passage, or null. A typing (R24) answers its text byte for byte; any other row the
+   *  text the capture's index holds at exactly the row's extent, by the one rule R31 grades a cited passage by
+   *  (`heldTextAt`). Null for a row not held, one cited as `bytes` (R4), or text not held whole there: a caller reads
+   *  null as the passage held in a form not read, never as empty text. No viewer: a caller that shows the text asks
+   *  sight first (R37). Writes nothing; never throws. */
+  passageText(contentId) {
+    try {
+      const id = typeof contentId === "string" ? contentId.trim() : "";
+      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, cited_as FROM content WHERE content_id=?`, id)
+        : null;
+      if (!r || r.cited_as === "bytes") return null;
+      const typed = this.#one(`SELECT text FROM transcriptions WHERE content_id=?`, r.content_id);
+      if (typed) return typeof typed.text === "string" ? typed.text : null;
+      const e = safeJson(r.extent);
+      if (!isObj(e)) return null;
+      const held = heldTextAt({ ...e, kind: r.extent_kind }, normUnits(this.extraction.unitsOf(r.capture_sha)));
+      return typeof held.text === "string" ? held.text : null;
+    } catch { return null; }
   }
 
   /* ===================================================================== *

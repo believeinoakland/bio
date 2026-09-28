@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, LAYER } from "./fixture.mjs";
 import { CONTENT_READ_PARAMS, CONTENT_EARNED_MAX, STALE_GRADED_MAX, canonicalExtent } from "../../../src/content/index.mjs";
+import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 
 const DOC = "INFO-2026-0001-a";
 const OCR = [{ step: "layer", tier: 1, cap: null }, { step: "ocr", engine: "t", version: "1", cap: "C", measured_by: "m" }];
@@ -246,4 +247,25 @@ test("R41: through extraction's reading notice, the units before the write (its 
   assert.equal(told.length, 1);
   assert.deepEqual(told[0].rows.map((n) => [n.content_id, n.grade, n.affects]), [[moved, "NOT_FOUND", "affected"]], "the unchanged page is A: nobody is told");
   assert.equal(told[0].rows.some((n) => n.content_id === same), false);
+});
+
+test("R41 (N202): onStale's refusals are membership's listenerRefusal's (its R81), and the listeners run once per re-read in the modules' total order (its R83), an unknown module last", () => {
+  const w = world();
+  const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { chain: OCR, pageCount: 1 });
+  w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: { kind: "pdf-page", page: 0 }, mintedBy: V("bo") });
+  const calls = [];
+  const fn = (m) => (n) => calls.push([m, n.staled]);
+  for (const [module, f] of [["", fn("")], [null, fn("x")], ["inquiry", "not a function"], ["inquiry", null]])
+    assert.deepEqual(w.content.onStale(module, f), listenerRefusal([], module, f), "LISTENER_MALFORMED, as R81 mints it");
+  assert.equal(w.content.onStale("inquiry", null).code, "LISTENER_MALFORMED");
+  const order = ["zz-unknown", "reevaluation", "inquiry", "aa-unknown", "entities"];
+  for (const m of order) assert.deepEqual(w.content.onStale(m, fn(m)), { ok: true });
+  const again = fn("inquiry");
+  assert.deepEqual(w.content.onStale("inquiry", again), listenerRefusal([{ module: "inquiry" }], "inquiry", again));
+  assert.deepEqual([w.content.onStale("inquiry", again).code, w.content.onStale("inquiry", again).module], ["LISTENER_DECLARED", "inquiry"]);
+  const NEW = [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "2", cap: "B", measured_by: "m" }];
+  assert.equal(w.content.markStale(a.sha, NEW), 1);
+  const known = order.filter((m) => MODULE_ORDER.includes(m)).sort((x, y) => MODULE_ORDER.indexOf(x) - MODULE_ORDER.indexOf(y));
+  assert.deepEqual(calls.map((c) => c[0]), [...known, "zz-unknown", "aa-unknown"], "total order, unknown modules last in registration order");
+  assert.deepEqual(calls.map((c) => c[1]), order.map(() => 1), "each called once, with the re-read's notice");
 });
