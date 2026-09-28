@@ -12,7 +12,7 @@
  *   membership  membership, `membershipOf(host)` unless a test passes its own (K61).
  *   now         the module's clock, an ISO instant (default: the wall clock).
  *   order       the modules' total order (ids), which registered steps and listeners run in (R39, R45, R46);
- *               `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
+ *               membership's `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
  */
 
 import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS,
@@ -21,7 +21,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, noSuchProject, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
@@ -30,6 +30,9 @@ import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
+/* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
+   modules, which call either spelling of the one function. */
+export { listenerRefusal } from "../membership/index.mjs";
 
 /** The instance's inline bound (R6, R48): a file held as text is at most 1 MiB of UTF-8. A later module that bounds
  *  what it hands to a promotion reads this constant rather than its own. */
@@ -54,26 +57,8 @@ const sameInstant = (a, b) => {
 };
 const cut = (v, n) => String(v).slice(0, n);
 
-/* R39's "the modules' total order": the layer order of `build/modules.json`, its ids by layer and then by their place in
-   the file (K270). Product code cannot read `build/` at run time, so it is held here; the R39 test holds it equal to the
-   file, so a change there fails this module's suite until the list follows it. */
-const MODULE_ORDER = Object.freeze([
-  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
-          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
-          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
-  /* 2 */ "record-core", "membership", "promotion",
-  /* 3 */ "host-governor", "provenance", "capture-sources", "capture",
-  /* 4 */ "calibration", "extraction", "content",
-  /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
-  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "ai-runs", "run-productions",
-          "capture-requests", "skills", "agent-worker",
-  /* 7 */ "intent", "reevaluation",
-  /* 8 */ "publication", "ratification", "case-authoring", "review",
-  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
-  /* 10 */ "monitoring", "scheduler", "legacy-store",
-  /* 11 */ "affordances", "queue", "instance-setup", "control-plane", "legacy-index", "legacy-ui", "installer",
-           "legacy-tests",
-]);
+/* R39's "the modules' total order" is membership's `MODULE_ORDER` (one list, one site), held equal to
+   `build/modules.json` by membership's R79 test and this module's R39 test. */
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 /* The families whose rows this module's refusals carry (Uses; K93 (2)), and promotion's own rows last. A code is held
@@ -145,13 +130,13 @@ function stampGroup(files, slug) {
 const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", code: "FACT_UNAVAILABLE",
   check: REGISTRATION_CHECKS.FACT_UNAVAILABLE.check, translation: REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation, fact, detail });
 
-/* R39, R40, R47 (K231, N202): a second registration of what one registrant already holds (a step, a fact, the case
-   catalogue) is refused here, the one site that mints STEP_DECLARED; `held` names what was registered twice. */
-const stepDeclared = (held, detail) => ({ ok: false, reason: "STEP_DECLARED", ...held, detail });
-
-/* R45, R46, R47 (N202's share within promotion): a listener or catalogue registered without its module's name or a
-   function to call, refused here, the one site in this module that mints LISTENER_MALFORMED. */
-const listenerMalformed = (detail) => ({ ok: false, reason: "LISTENER_MALFORMED", detail });
+/* R39, R40, R47 (K231, N254): a second registration of what one registrant already holds (a step, a fact, the case
+   catalogue) is refused here, the one site that mints STEP_DECLARED (C-102.8); `held` names what was registered twice. */
+function stepDeclared(held, detail) {
+  const row = REGISTRATION_CHECKS.STEP_DECLARED;
+  return { ok: false, reason: "STEP_DECLARED", code: "STEP_DECLARED", check: row.check, translation: row.translation,
+           ...held, detail };
+}
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
   detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
@@ -197,10 +182,8 @@ class Promotion {
 
   /* R45, R46: a later module's listener joins `list` once, kept in the modules' total order. */
   #listen(list, module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return listenerMalformed("a listener names the module that registers it and its function");
-    if (list.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(list, module, fn);
+    if (refused) return refused;
     list.push({ module, fn, seq: list.length });
     list.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
@@ -287,8 +270,9 @@ class Promotion {
   /* R47: a later module (ratification) registers, once, the case-document catalogue `fn(fm, ctx) → findings` that R33
      runs in place of the catalogue's `checkCaseDocument`. Any second registration is refused, whoever makes it. */
   registerCaseCatalogue(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return listenerMalformed("a case-document catalogue names the module that registers it and its function");
+    /* R49: membership's listenerRefusal answers the malformed case; a second registration is R47's STEP_DECLARED. */
+    const malformed = listenerRefusal(null, module, fn);
+    if (malformed) return malformed;
     if (this.#caseCatalogue)
       return stepDeclared({ module: this.#caseCatalogue.module },
                           `the case-document catalogue is already registered by ${this.#caseCatalogue.module}`);
@@ -863,10 +847,8 @@ class Promotion {
     const sight = head && viewer !== null && viewer !== undefined ? String(membership.sight(projectId, viewer)).toUpperCase() : "FULL";
     const seen = head && sight === "EXISTENCE" ? membership.existenceAct(projectId, viewer) : null;
     if (seen) return seen;
-    if (!head || sight !== "FULL")
-      return { ok: false, reason: "NO_SUCH_PROJECT", project: projectId ?? null,
-               detail: "no project answers to that id here. A project you cannot see is answered exactly as one that "
-                     + "does not exist, so this is not a hint either way." };
+    /* R42 (N208): an unseen project and an absent id get membership's one answer (its R78, C-70.5). */
+    if (!head || sight !== "FULL") return noSuchProject(projectId);
     if (normalizeType(head.type) !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = membership.participation(projectId, by);
     if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",

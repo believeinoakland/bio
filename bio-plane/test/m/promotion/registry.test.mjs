@@ -349,7 +349,9 @@ test("R39, R40, R47: STEP_DECLARED is one answer at every registration that alre
   const twice = [p.registerStep("later", {}), p.registerFact("citedBy", "later", () => []),
                  p.registerCaseCatalogue("later", () => [])];
   for (const r of twice) {
-    assert.deepEqual([r.ok, r.reason], [false, "STEP_DECLARED"]);
+    assert.deepEqual([r.ok, r.reason, r.code], [false, "STEP_DECLARED", "STEP_DECLARED"]);
+    /* One code, one site (N254): every STEP_DECLARED carries its row, C-102.8. */
+    assert.deepEqual([r.check, r.translation], [REGISTRATION_CHECKS.STEP_DECLARED.check, REGISTRATION_CHECKS.STEP_DECLARED.translation]);
     assert.equal(typeof r.detail, "string");
     assert.equal(typeof r.module, "string", "it names the module that holds the registration");
   }
@@ -362,4 +364,46 @@ test("R39, R40, R47: STEP_DECLARED is one answer at every registration that alre
   }
   /* Nothing a refused registration named was registered. */
   assert.equal(p.fact("f").reason, "FACT_UNAVAILABLE");
+});
+
+test("R49: promotion's listener registrations refuse through membership's listenerRefusal (its R81), which this module re-exports as the one function", async () => {
+  const promotion = await import("../../../src/promotion/index.mjs");
+  const membership = await import("../../../src/membership/index.mjs");
+  /* One function, two spellings: the re-export is membership's own. */
+  assert.equal(promotion.listenerRefusal, membership.listenerRefusal);
+  const { listenerRefusal } = membership;
+  const fn = () => null;
+  const { p } = makePromotion();
+  /* onCommitted and onReopened (R45, R46): accepted once, then every refusal is listenerRefusal's answer, byte for byte. */
+  for (const reg of ["onCommitted", "onReopened"]) {
+    assert.deepEqual(p[reg]("a", fn), { ok: true, module: "a" });
+    assert.deepEqual(p[reg]("b", fn), { ok: true, module: "b" });
+    for (const m of ["a", "b"]) {
+      const r = p[reg](m, fn);
+      assert.deepEqual([r.ok, r.reason, r.module], [false, "LISTENER_DECLARED", m]);
+      assert.deepEqual(r, listenerRefusal([{ module: "a" }, { module: "b" }], m, fn));
+    }
+    for (const [m, f] of [["", fn], [null, fn], [7, fn], ["c", null], ["c", "fn"]]) {
+      const r = p[reg](m, f);
+      assert.equal(r.reason, "LISTENER_MALFORMED");
+      assert.deepEqual(r, listenerRefusal([], m, f));
+    }
+  }
+  /* R47's malformed case is listenerRefusal's; its second registration stays R47's STEP_DECLARED, never a listener's. */
+  for (const [m, f] of [["", fn], [null, fn], ["ratification", null], ["ratification", "fn"]]) {
+    const r = p.registerCaseCatalogue(m, f);
+    assert.equal(r.reason, "LISTENER_MALFORMED");
+    assert.deepEqual(r, listenerRefusal(null, m, f));
+  }
+  assert.equal(p.registerCaseCatalogue("ratification", fn).ok, true);
+  assert.equal(p.registerCaseCatalogue("publication", fn).reason, "STEP_DECLARED");
+  /* A refused registration registers nothing: the listeners that were accepted are the only ones called. */
+  const seen = [];
+  const q = makePromotion();
+  q.p.onCommitted("a", () => seen.push("a"));
+  q.p.onCommitted("a", () => seen.push("second"));
+  q.p.onCommitted("", () => seen.push("unnamed"));
+  assert.equal(q.p.promote(create(ID, infoDoc(ID))).ok, true);
+  await tick();
+  assert.deepEqual(seen, ["a"]);
 });

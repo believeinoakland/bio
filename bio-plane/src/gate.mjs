@@ -243,7 +243,14 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    standards C-112, conformance C-113, consequences C-114, filings C-115, escalation C-116 and actions C-117. MINOR,
    rule 17 moving the stamp for departures and changed checks. Census 491 -> 395, sha256 c22e2574…, behaviour source
    4108bfa4…: the d470 suite's own print on this tree, whose re-pin (A1's floors, A3, A5, A9) is legacy-tests'. */
-export const CATALOG_VERSION = "1.38.0";
+/* 1.39.0 (PROMOTION #9, T9 layer 2, 2026-09-28; N240, K284): THREE ARRIVALS, ONE DEPARTURE, NONE CHANGED. After 1.38.0
+   was minted, monitoring moved C-18.5's emission site out of `bio-checks.mjs` (N240: the census printed 394 under
+   1.38.0, so R34 did not hold at T8's close), and T9's layer 1 (LEGACY-CHECKS #4, N206, N214) added C-102.8 STEP_DECLARED,
+   C-102.9 CASE_CATALOGUE_FAILED and C-102.10 CASE_MEMBER_REFUSED and moved the `where`s of C-32.6 and C-33.14 (N212) and
+   C-48.8 and C-48.9 (N226), which name where a refusal is minted and change no check's condition, code or translation.
+   MINOR, rule 17 moving the stamp for arrivals and a departure. Census 395 -> 397, sha256 e1c688c5…, behaviour source
+   9927c1ad…: the d470 suite's own print on this tree, whose re-pin (A3, A5, A9) is legacy-tests'. */
+export const CATALOG_VERSION = "1.39.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -356,6 +363,14 @@ const te = new TextEncoder();
    itself — its BODY (C-3.1's section followed the block into it) and each member's `basis` at the
    PINNED bytes (C-2.8's testimony-row and per-ground arms read it). Omitting `memberBasis` BLINDS
    those two arms rather than softening them; the store supplies it with the rest of the facts. */
+/* R33, N254: the one finding the case gate makes of its own, CASE_CATALOGUE_FAILED (C-102.9), when the catalogue it
+   runs threw `e` or answered no list of findings: it has judged nothing, so the document is not passed. */
+function caseCatalogueFailed(e) {
+  return { check: "CASE_CATALOGUE_FAILED", severity: "error",
+           message: `the case-document catalogue could not judge this document, so it is not passed: `
+                  + String(e && e.message ? e.message : e).slice(0, 200) };
+}
+
 /* R33, R47: `catalogue` is the case-document catalogue promotion runs, the one a later module registered with the
    promotion instance (ratification's), else the catalogue's own `checkCaseDocument`. A catalogue that throws or does
    not answer with findings has judged nothing, so the gate fails closed on it (never throws, never passes). */
@@ -367,9 +382,7 @@ export function runCaseGate({ caseId, edition, fm, priorCase, body = null, membe
     if (!Array.isArray(findings) || !findings.every((x) => x && typeof x === "object"))
       throw new Error("the catalogue answered no list of findings");
   } catch (e) {
-    findings = [{ check: "CASE_CATALOGUE_FAILED", severity: "error",
-                  message: `the case-document catalogue could not judge this document, so it is not passed: `
-                         + String(e && e.message ? e.message : e).slice(0, 200) }];
+    findings = [caseCatalogueFailed(e)];
   }
   const errors = findings
     .filter((x) => x.severity === "error")

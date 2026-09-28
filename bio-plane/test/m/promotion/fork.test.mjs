@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, T0 } from "./fixtures.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const NOW = "2026-09-26T08:00:00.000Z";
 function origin(files = [{ path: "notes.md", text: "kept" }], refs = "[]") {
@@ -33,6 +34,9 @@ test("R42: sight before position — existence answers PROJECT_SEEN_NOT_A_PARTIC
   const absent = p.forkProject({ projectId: "PROJ-2026-9999-none", title: "Other", by: "dee", viewer: "member:dee" });
   assert.equal(unseen.reason, "NO_SUCH_PROJECT");
   assert.deepEqual({ ...unseen, project: null }, { ...absent, project: null });
+  /* NO_SUCH_PROJECT is minted once, by membership (its R78, N208): the answer is membership's own, byte for byte. */
+  assert.deepEqual(unseen, noSuchProject(id));
+  assert.deepEqual(absent, noSuchProject("PROJ-2026-9999-none"));
   membership.discoverable.add(id);
   const ex = p.forkProject({ projectId: id, title: "Other", by: "dee", viewer: "member:dee" });
   assert.deepEqual([ex.reason, ex.project, ex.name], ["PROJECT_SEEN_NOT_A_PARTICIPANT", id, "Sewer Fund"]);
