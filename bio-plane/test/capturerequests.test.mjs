@@ -143,6 +143,14 @@ const mf = new Miniflare({
                  runs and the assertions are deterministic (the task-drain
                  suite's trick, carried by the archive monitor). */
               CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000",
+              /* AND THE TASK DRAIN'S, which the two above do not reach (LEGACY-TESTS #6, T9, measured): every capture
+                 arms `task-drain` at +TASK_DRAIN_DELAY_MS (1 s by default), and when that alarm fires the scheduler
+                 ticks EVERY consumer that is due (scheduler R1) — `capture-request-drain` is due whenever a row is
+                 `requested` (capture-requests R37), whatever its own cadence. So a real drain (actor "alarm") ran
+                 between the suite's hand-driven ones and, when the wall clock put it inside 7c/7d, captured the plain
+                 row 7c asks "LAST and never drained" (the log's last RENDERABLE line lost its condition) and re-deferred
+                 the rate-held render under C-83.4 (its C-28 code overwritten): 137/3, 138/2, 139/1 by the second. */
+              TASK_DRAIN_DELAY_MS: "3600000",
               /* D-491: TODAY'S RENDER ALLOWANCE IS ZERO IN THIS FIXTURE, and that
                  is the instrument rather than a corner case. With a renderer bound
                  (below) the plane's render admission reaches its LAST gate and
