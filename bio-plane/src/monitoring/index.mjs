@@ -1787,6 +1787,7 @@ export class Monitoring {
     /* R35: a clock marked overdue can meet an escalation stage's trigger; escalation proposes the next stage and a
        member advances it. Asked with this module's own viewer (conformance answers a call with no viewer as unseen). */
     const escalations = marked.length ? this.escalationsDue(nowMs) : null;
+    if (escalations) this.#escalated = { at, action: marked.map((x) => x.action).join(", "), answer: escalations };
     return { ok: true, at, marked, failed, truncated, escalations };
   }
 
@@ -1830,6 +1831,19 @@ export class Monitoring {
     return { ok: true, ords, dates, revision: r.bundleSha ?? null };
   }
 
+  /** R35: an action's promotion committed (promotion R45): a response recorded against it can meet a stage's trigger,
+   *  so escalation is asked; its answer is held as the latest one monitoring has seen (`escalationsSeen`). A replay
+   *  asks nothing. Asking is a read, so a commit that recorded no response costs one read and changes nothing. */
+  actionCommitted({ bundleId = null, type = null, replay = false } = {}) {
+    if (replay || type !== "action" || !bundleId) return null;
+    const answer = this.escalationsDue(this.now());
+    this.#escalated = { at: stampInstant("second", this.now()), action: bundleId, answer };
+    return this.#escalated;
+  }
+  #escalated = null;
+  /** R35: the latest answer escalation gave monitoring, and when and why it asked; null before any. */
+  escalationsSeen() { return this.#escalated; }
+
   /** R35: escalation R16's open edges whose trigger is met, read as this module's machine viewer. */
   escalationsDue(nowMs = null) {
     try {
@@ -1860,6 +1874,7 @@ export function monitoringOf(host, deps) {
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
     record.registerAuditCheck("monitoring", (image) => m.audit(image));
+    promotion.onCommitted("monitoring", (n) => m.actionCommitted(n));
     const intent = d.intent === null ? null : m.intent;
     if (intent && typeof intent.registerSource === "function")
       intent.registerSource("monitoring", ({ project, viewer } = {}) => m.proposals({ project, viewer }));
