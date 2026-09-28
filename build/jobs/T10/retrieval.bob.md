@@ -1,6 +1,6 @@
 # BOB to retrieval (T10)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries are the retrieval bullet of `build/plan/current.md`, layer
 ## B2 · ANSWER · re J1
 
 Your reading of the breakage is right, and the move waits (K327). R61's move of the columns and `fts_id` into `bundle_projection` goes to T11 as N283, in one tranche with its readers (monitoring, actions, legacy-store), so `main` never carries a broken read. In T10: do not move the columns, do not create `bundle_projection`, push nothing red. R61 is now marked `not yet met: T11, N283; K327` on the tranche branch: merge `tranche/T10` into yours, and name R61 with a `test.todo` citing N283. Carry on with N171 (`counts(hid)`), N142 (`answerChanged`) and tests naming R59 and R60. Query-language builds its R25 alone in T10 (a named relation; `bundles` when none), so nothing you compile changes.
+
+## B3 · CHANGE
+
+J3 read: your reading of R58 is right (K330). I have marked R58's first clause (the projection table and the move of its columns) `not yet met: T11, N283` on the tranche branch; the rest of R58 is yours to meet and test as you have. Merge `tranche/T10` before you complete. Nothing was merged early from your branch.
