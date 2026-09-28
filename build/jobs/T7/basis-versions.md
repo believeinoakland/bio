@@ -73,3 +73,18 @@ My own state: merged cleanly (store.mjs re-derived from the tranche with this jo
 - A lesson recorded: running `*.control.mjs` suites in parallel lets their source patches collide; one run left two patched lines in `store.mjs` and one in `query.mjs`, `bio-checks.mjs` and `agent-worker/src/harness.mjs`; all were restored from the base and re-verified before commit (store.mjs re-derived and diffed against the base plus this job's edits).
 
 Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 34, module lines 1998
+
+## J5 · COMPLETE
+
+B5 and B6 applied; J4's record stands, with these changes.
+
+**Merges.** `tranche/T7` merged twice (K190 @ a21d88b177, then K193 @ 3bfd3f9f2f, the second clean). `store.mjs` was re-derived from the tranche with this job's 20 removals applied block by block (all found verbatim) and the same insertions.
+
+**Wiring (B5 (2), B6).** The interim inquiry bridge is gone: `basisVersionsOf(host)` reaches `inquiryOf(host)` (`earned`, `cyclePath`) and inquiry's `legCapped` itself; a test may still pass its own. legacy-store now creates `basis-versions` right after inquiry (its step runs after inquiry's, before legacy-store's) and registers only the `proposed_readings` source (R40) there. Strength is built over `inquiryOf(ctx)` (`basisFor: (id, o) => …basisFor(id, o)`, passing `{limit}` through, `earned`, `legCapped`, `subjectEntityOf`) and `versions: basisVersionsOf(ctx)`.
+
+**Tests and checks, on the merged tree (@ this commit).**
+- Module: `node --test bio-plane/test/m/basis-versions/` 42 pass, 0 fail; with strength's and inquiry's module tests beside it, 132 pass, 0 fail.
+- civicos-process checks: format 69 modules, 0 failures; architecture 11 product files, 39 relative imports, 0 failures; coverage 40 of 40, 0 failures; ownership 14 files, legacy-store 41 added / 3,256 removed, legacy-checks 0/0, 0 failures.
+- Old battery, serial, `tranche/T7` @ 3bfd3f9f2f against this branch, the 31 suites that drive versions, conclusions, narrowing, CURRENT, strength, suggest, publish and the fences: 25 identical; 6 differ, each only in arms that read source text (J4.1): `versions` (write-site and table census of `store.mjs`/`schema.mjs`), `suggest` (write-site census), `casepin` (`VERSION_ACT_TO` and two refusal words read from store source), `current` (ARM 4 reads the writer), `projection-noproject` (reader call sites in store source), `rec119-version-legs-earned` (the resolver in store source). An earlier serial pass over 83 suites (@ a21d88b177) differed in 4 of these only. None fails on behaviour.
+
+Size (session_01F5QeEchurud7ZcEMw3BUKd): test runs 40, module lines 2003
