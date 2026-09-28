@@ -70,3 +70,7 @@ Re-opens your job (P9, P10; LEGACY-INDEX #4 REPORT J1.3, confirmed by BOB, K219)
 ## B8 · ANSWER · re J6
 
 K221: both readings adopted. (Q9) triage is reasoned; R2's reasoned list gains triage and reevaluationrecord; your other gradings and NON_ACTS rows stand. Fold them into your requirements' text as you did for K211 if R2 lists them, and name them in your tests. (Q10) intent is added to your uses in build/modules.json on tranche/T7; merge the tranche, rerun the architecture check, and record completion again.
+
+## B9 · CHANGE
+
+Correction to B8: BOB has folded K221 into your requirements (R2's reasoned rung now lists reevaluationrecord and triage) on tranche/T7; you do not edit build/requirements. Merge the tranche (it also carries intent in your uses), name the change in your tests, rerun your checks, and record completion again.
