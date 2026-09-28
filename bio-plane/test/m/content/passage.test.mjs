@@ -87,6 +87,35 @@ test("R46: passageText answers null for a row not held, one cited as bytes, and 
   }
 });
 
+test("R46 (N264): passageText answers null for a row R41 marked stale, never the newer reading's text at that extent, even where that text is unchanged", () => {
+  const { w, a, mint, text } = setup();
+  const p0 = mint(P(0)), p1 = mint(P(1)), whole = mint({ kind: "document" });
+  const t = w.content.transcribe({ bundleId: DOC, extent: P(1), text: "typed by hand", transcriber: V("ty"), viewer: V("ty") });
+  /* the negative control: before the re-read, each row answers the text it was cited under */
+  assert.deepEqual([text(p0), text(p1), text(whole), text(t.content_id)],
+    ["first page", "second page", "first page\nsecond page\nthird page", "typed by hand"]);
+  /* the re-read, through extraction's reading notice (its R24): the index now holds the new reading's units, and the
+     rows cited under the old chain are marked stale (R22) */
+  const NEW = [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "2", cap: "B", measured_by: "m" }];
+  const unitsBefore = w.ex.units[a.sha];
+  w.ex.units[a.sha] = { units: [U(P(0), "first page", 0), U(P(1), "second page, re-read", 1), U(P(2), "third page", 2)], state: "whole" };
+  w.read(a.sha, { chain: NEW, pageCount: 3 });
+  const listener = w.ex.listeners.find((l) => l.module === "content");
+  assert.deepEqual(listener.fn({ bundleId: DOC, captureSha: a.sha, reading: {}, chainBefore: LAYER, chainAfter: NEW, unitsBefore,
+                                 indexed: null, author: V("bo") }), { staled: 3 });
+  const stale = (id) => w.row(`SELECT stale FROM content WHERE content_id=?`, id).stale;
+  assert.deepEqual([stale(p0), stale(p1), stale(whole), stale(t.content_id)], [1, 1, 1, 0]);
+  assert.equal(text(p1), null, "never the newer reading's text at the extent");
+  assert.equal(text(p0), null, "stale is null even where the text at the extent is byte-identical");
+  assert.equal(text(whole), null);
+  assert.equal(text(` ${p1} `), null);
+  /* a typing is never staled (R22) and keeps its text; a row minted under the new chain is current and answers it */
+  assert.equal(text(t.content_id), "typed by hand");
+  const fresh = mint(P(1));
+  assert.notEqual(fresh, p1, "the new chain is a new address (R3)");
+  assert.equal(text(fresh), "second page, re-read");
+});
+
 /** An older capture `a` of an address with indexed pages, a newer capture `b` of the same address, and two rows. */
 function versions() {
   const w = world();

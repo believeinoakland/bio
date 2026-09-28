@@ -169,6 +169,34 @@ test("R16: every read of a row carries its mint label, member, plane, machine or
   assert.equal(t.code, "TEXT_ATTEST_MACHINE");
 });
 
+test("R13, R16, R28 (N201): a member's leg on a machine-minted row lands on the machine's row, never a second one; the row keeps the machine's mark and says it is machine work", () => {
+  const w = world();
+  const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 3 });
+  const machine = w.content.contentMint({ bundleId: DOC, extent: { kind: "pdf-page", page: 1 }, mintedBy: "class:ai", viewer: "class:ai",
+                                          at: "2026-09-10T00:00:00Z" });
+  assert.deepEqual([machine.ok, machine.minted, machine.mint.state], [true, true, "machine_marked"]);
+  const before = w.snapshot();
+  /* the member's leg cites the same passage by its extent, or names the machine's row outright */
+  const byExtent = { target: DOC, extent_kind: "pdf-page", extent_page: 1, at: "2026-09-20T00:00:00Z" };
+  const byId = { target: DOC, content_id: machine.content_id };
+  assert.deepEqual(w.content.citationRefusals([byExtent, byId], (i) => `leg[${i}]`), [], "the leg is not refused");
+  const r1 = w.content.resolveCitation(byExtent), r2 = w.content.resolveCitation(byId);
+  assert.deepEqual([r1.content_id, r1.minted], [machine.content_id, false], "the machine's row, found, not minted again");
+  assert.deepEqual([r2.content_id, r2.minted], [machine.content_id, false]);
+  assert.deepEqual(w.snapshot(), before, "no second row, and the machine's row byte for byte: its minter and instant kept");
+  assert.equal(w.count("content"), 1);
+  /* every read of the row the member's leg now points at labels it machine work, never the member's or the plane's */
+  const row = w.content.contentRow(r1.content_id);
+  assert.deepEqual([row.minted_by, row.at, row.mint], ["class:ai", "2026-09-10T00:00:00Z", mintLabel("class:ai")]);
+  assert.equal(row.mint.machine_work, true);
+  assert.deepEqual(w.content.contentRead({ id: r1.content_id, viewer: V("bo"), extras: ["id", "viewer"] }).mint, mintLabel("class:ai"));
+  const legs = [{ content_id: r1.content_id }]; w.content.projectStandings(legs);
+  assert.deepEqual([legs[0].minted_by, legs[0].mint], ["class:ai", mintLabel("class:ai")]);
+  /* the over-strictness arm: a leg on a passage nothing marked mints the plane's row (R28), never labelled machine work */
+  const own = w.content.resolveCitation({ target: DOC, extent_kind: "pdf-page", extent_page: 2 });
+  assert.deepEqual([own.minted, w.content.contentRow(own.content_id).mint.state], [true, "plane_minted"]);
+});
+
 test("R34: a row is never rewritten or deleted but by its bundle's purge, and nothing moves a reference by itself", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 2 });
