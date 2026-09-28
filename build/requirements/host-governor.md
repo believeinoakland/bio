@@ -50,6 +50,10 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 **op=governorconfig** (a write)
 - **R19** Reached by the `admin` and `probe` classes and, among sessions, by the founder's session alone; an enrolled administrator's and a member's session are refused (the refusal and its wording are the session gate's, `control-plane`). Refuses a missing `host` with `NEED_HOST` and a present `appetite_per_min` that is not a positive number with `BAD_APPETITE`; an absent one clears the host's appetite (R11). A store that does not answer is reported as silence, never `{ok: true}`.
 
+**How the module is reached: governorOf(ctx, opts?) → the instance** (K61)
+
+- **R26** (N132; K287) Answers the one `HostGovernor` for a Durable Object's storage (another handle on the same storage answers the same instance). `opts` is `{env, now, random, record}`: the bindings R3 reads, the clock, the jitter source, and record-core's instance (`recordOf(ctx)` by default). An option a caller supplies after the instance exists is never silently dropped: an `env`, `now` or `random` the instance took by default is adopted from the first later caller that supplies it (an `env` with no bindings counts as supplied), and R3 reads the adopted `env` from the next admission on; one that differs from what an earlier caller supplied (an `env` differs when any binding differs; `now` or `random` when it is another function), or any `record` other than the one held, is refused by a throw naming the option, before the caller gets an instance, and a refused call changes nothing. A call supplying nothing answers the instance unchanged. *(not yet met: T9, N132)*
+
 ## Private
 
 ### Uses
