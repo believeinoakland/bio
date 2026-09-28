@@ -2618,6 +2618,21 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        An entry that has stopped being true is removed rather than kept as a
        courtesy — the entry did its job, which was to make a blind spot VISIBLE until
        somebody measured it. */
+    /* ADDED 2026-09-28 (T7, legacy-tests), NINE AT ONCE: T7's extractions moved code these suites read out of
+       `src/store.mjs` into `src/<module>/`, so each now walks `src/` (and its module directories) to find the code
+       where it lives. Each reads the PLANE'S OWN SOURCE and asserts a finding about it (a site count, a roster, a
+       single write site), the class `mint-ledger` and `instance-group` are named for; none floors on a count of the
+       files its walk found, and an untracked file dropped in `src/` would be read as source, which is what the
+       product's own build would do too. */
+    "bio-plane/test/current.test.mjs",            // src/ module schemas, one writer and one column asserted exact
+    "bio-plane/test/d334-monitor-credential.test.mjs", // src/, selecting and arming sites asserted exact (0 and 1)
+    "bio-plane/test/dec65-single-part.test.mjs",  // src/, the one stamp site asserted exact
+    "bio-plane/test/rec169-consume.test.mjs",     // src/, each bound's consume site asserted present
+    "bio-plane/test/refusal-wire.test.mjs",       // src/ module directories, the static walk over moved acts
+    "bio-plane/test/run-conditions.test.mjs",     // src/, W6's "no other file reads ai_runs" (a ceiling at zero)
+    "bio-plane/test/scheduler.test.mjs",          // src/, setAlarm/deleteAlarm sites asserted by name
+    "bio-plane/test/suggest.test.mjs",            // src/, ONE version write site asserted exact
+    "bio-plane/test/versions.test.mjs",           // src/ and module schemas, one write site and no second table
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));
@@ -2687,7 +2702,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
   /* MOVED 44 -> 45 by D-535 (2026-09-25), from the figure this suite PRINTED on the item's tree over origin/main 964da679
      (`45 walking file(s)`): the one is `test/statepaths.test.mjs`, whose new plane-citation scan walks bio-plane/src and
      bio-plane/checks — GUARDED through scripts/provenance.mjs, the only walker the item adds. */
-  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 52)`,
+  t(`the census REACHES the estate rather than a corner of it (${census.length} walking file(s), floor 62)`,
     /* MOVED 39 -> 40 by CONDUCT #16 at REC-176's merge onto REC-175 (each moved 38 -> 39): the merged tree PRINTED 40,
        rec175-digest and rec176-snapkey both walkers. */
     /* MOVED 40 -> 41 by CONDUCT #16 (rec178-bytes named above): printed 41 on the batch6 merge. */
@@ -2717,7 +2732,7 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
        (`52 walking file(s)`) against the T5 opening's 47 (64386f16eb), diffed by name: no departure, five arrivals,
        `t5-extracted.mjs`, `bias.test.mjs`, `d280-strengthbar.test.mjs`, `severedhomes.test.mjs` and
        `group-identity.test.mjs`, each now listing `src/<module>/` for code T5 moved there (named above). */
-    census.length >= 52, true);
+    census.length >= 62, true);
   t(`every walk of this class is GUARDED or NAMED — a new one is a decision, not a silence (${JSON.stringify(newlyUnguarded)})`,
     newlyUnguarded, []);
   t(`and the named list has not gone stale — every entry still exists and still walks (${JSON.stringify(goneFromList)})`,
