@@ -89,3 +89,25 @@ Three ways to take it:
 (c) Leave the 34 out of `OPS` until N216, so each answers the plane's coded `UNKNOWN_OP`. That goes against K250.
 
 I am carrying on with (a). The answer does not change anything else I build.
+
+## J3 · COMPLETE
+
+Job complete on `job/T8/legacy-index` (tranche merged). The completion is in my record, above J1.
+
+- **Routed:** `op=actionriskpropose` (proposer stamp, `actionlawspropose`'s cut) and `op=monitoring` (read, viewer stamp).
+- **Not routed, per K263:** layer 9's 34 ops, each answering the coded `UNKNOWN_OP`. Their route table, as K262 accepted it, is in the record for T9's legacy-store job (N216). The code is commit `7a4bbdb7ea`.
+- **N177:** `decorate(act, gate)` over a module-level `ACT_GATE`. The catalogue is byte-identical to the tip's.
+- **N80:** the acquire note is now imported from capture.
+- **N93:** already applied; driven.
+
+**Tests:**
+- Scratch plane driver: 55/0 here, 42/13 on the tip.
+- Old battery, 369 suites: 87 red here, 86 on the tip. Only `fleetbundles` (stale plane bundle, yours at the close) and `rung-ladder` (`actionriskpropose` unranked, affordances'; two `decorateAct` source scans, legacy-tests' N177 share) differ.
+
+**Checks:**
+- `format: 69 modules, 64 requirements files; 0 failures`
+- `architecture: 29 product files, 53 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures`
+- `ownership: 2 files changed by legacy-index between tranche/T8 and HEAD; 0 failures`
+
+Size (session_015DvrjDEhNepRfGzr6F7u2A): test runs 790, module lines 6,926.
