@@ -151,44 +151,21 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
   assert.deepEqual([all.items.length, all.truncated], [500, true]);
 });
 
-test("R3 R14 a provider this host was not given is never read as met or empty: the read and every act that needs it answer PROVIDER_UNAVAILABLE naming it, and nothing is written", () => {
-  for (const missing of ["filings"]) {
-    const w = seeded({ omit: [missing] });
+test("R3 R14 a provider this host does not have is never read as met or empty: the read and every act that needs it answer PROVIDER_UNAVAILABLE naming it, and nothing is written", () => {
+  for (const missing of ["conformance", "consequences", "actions", "filings"]) {
+    const w = seeded();
+    toStage(w, 5);
+    delete w.esc.deps[missing];
     const before = w.snapshot();
-    const tried = [];
-    const o = w.esc.escalationOpen({ determination: w.D, author: V("bob"), viewer: V("bob") });
-    tried.push(o);
-    if (o.ok) {
-      w.E = o.id;
-      tried.push(w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob") }));
-      if (missing === "actions") {
-        /* actions is read once an action is named or attached */
-        assert.equal(w.esc.escalationAdvance({ id: w.E, to: 2, reason: "Go.", author: V("bob"), viewer: V("bob") }).ok, true);
-        const snap = w.snapshot();
-        const r = w.esc.escalationAttach({ id: w.E, action: "ACTN-2026-0001-act", author: V("bob"), viewer: V("bob") });
-        assert.deepEqual([r.reason, r.provider], ["PROVIDER_UNAVAILABLE", "actions"]);
-        assert.deepEqual(w.snapshot(), snap);
-        continue;
-      }
-      if (missing === "filings") {
-        /* filings is read at stage 5 only: every earlier read and act answers without it */
-        assert.equal(w.esc.escalationRead({ id: w.E, viewer: V("bob") }).ok, true);
-        continue;
-      }
-      tried.push(w.esc.escalationRead({ id: w.E, viewer: V("bob") }));
-      assert.equal(tried.at(-1).reason, "PROVIDER_UNAVAILABLE", `${missing}: the read`);
-    } else assert.deepEqual(w.snapshot(), before, missing);
-    const r = tried.find((x) => x.reason === "PROVIDER_UNAVAILABLE");
-    assert.ok(r, missing);
-    assert.deepEqual([r.reason, r.provider, r.check], ["PROVIDER_UNAVAILABLE", missing, "C-116.44"], missing);
+    const answers = [w.esc.escalationRead({ id: w.E, viewer: V("bob") }),
+      missing === "actions" ? w.esc.escalationAttach({ id: w.E, action: w.N, author: V("bob"), viewer: V("bob") })
+        : missing === "conformance" ? w.esc.escalationOpen({ determination: w.D, author: V("alice"), viewer: V("alice") })
+        : missing === "consequences" ? w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob") }) : null].filter(Boolean);
+    /* escalationEnd asks compliance before consequences, so with consequences absent only the read is asked */
+    for (const r of answers.slice(0, missing === "consequences" ? 1 : 2))
+      assert.deepEqual([r.reason, r.provider, r.check], ["PROVIDER_UNAVAILABLE", missing, "C-116.44"], missing);
+    assert.deepEqual(w.snapshot(), before, missing);
   }
-  /* filings absent at stage 5: the read refuses rather than listing nothing available */
-  const w = seeded();
-  toStage(w, 5);
-  w.stand.filings.availableActions = undefined;
-  delete w.esc.deps.filings;
-  const r = w.esc.escalationRead({ id: w.E, viewer: V("bob") });
-  assert.deepEqual([r.reason, r.provider], ["PROVIDER_UNAVAILABLE", "filings"]);
 });
 
 test("R3 R14 consequences, merged (K250), is reached through consequencesModule on the same host when not given: with no consequence recorded the exit reads undetermined and escalationEnd answers CONSEQUENCES_UNDETERMINED from the real module", () => {

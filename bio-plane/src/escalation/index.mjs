@@ -31,7 +31,7 @@
  *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
  *   actions        `actionRead` (its R29: the ledger, legs, `breach`, counterparty); default `actionsOf(host)` (K253).
  *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function.
- *   filings        `filingsFor` (its R13), `availableActions` (its R21).
+ *   filings        `filingsFor` (its R13), `availableActions` (its R21); default `filingsOf(host)` (K248, B8).
  *   view           the active profiles' combined view (`jurisdictions.combine`, record-core R26), or null.
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
 
@@ -41,6 +41,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, actionFacts } from "../actions/index.mjs";
+import { filingsOf } from "../filings/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
 import { ESCALATION, escalationId, escalationDoc, appendEntry, logOf, logSection, parseFm } from "./doc.mjs";
@@ -963,9 +964,10 @@ export function escalationOf(host, deps) {
        one not yet merged stays an injected dep, and its absence refuses (PROVIDER_UNAVAILABLE). */
     const conformance = d.conformance || (() => conformanceOf(host, { record, membership, promotion }));
     const actions = d.actions || (() => actionsOf(host, { record, membership, promotion }));
+    const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
     const consequences = d.consequences
       || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
-    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions });
+    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
     instances.set(host, i);
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });

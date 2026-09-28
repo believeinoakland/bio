@@ -1,7 +1,7 @@
 /* escalation over the real layer-9 providers merged into the tranche (K250, K252): conformance's own scene (a
    published finding, a standard in force, a project with olive its owner and pat joined), escalation reaching
    `conformanceOf`, `consequencesModule` and `actionsOf` through its factory defaults on the same host (K250, K252,
-   K253). Filings is a stand-in until it merges. */
+   K253) and `filingsOf` (B8). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { scene, V } from "../conformance/fixture.mjs";
@@ -11,11 +11,10 @@ import { actionsOf } from "../../../src/actions/index.mjs";
 function real() {
   const s = scene();
   const { w } = s;
-  const filings = { filingsFor: () => ({ ok: true, drafts: [], packets: [] }), availableActions: () => ({ ok: true, kinds: [] }) };
   /* actions on this host without retrieval's projection columns, which conformance's scene does not migrate; escalation
      then reaches this instance through its default (one instance per host). */
   actionsOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, retrieval: null, conformance: w.c });
-  s.esc = escalationOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, filings,
+  s.esc = escalationOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion,
                                  now: () => w.clock.now });
   s.esc.migrate();
   return s;
@@ -72,6 +71,10 @@ test("R9 over the real actions: a breach action resting on the determination att
   assert.equal(x.esc.escalationAttach({ id: E, action: "ACTN-2026-0999-none", author: V("pat"), viewer: V("pat") }).reason, "NO_SUCH_ACTION");
   assert.equal(x.esc.escalationAttach({ id: E, action: N, author: V("pat"), viewer: V("pat") }).ok, true);
   assert.deepEqual(x.esc.escalationRead({ id: E, viewer: V("pat") }).actions.map((a) => [a.action, a.stage]), [[N, 2]]);
+  /* filings, reached through its default on this host, answers the available actions for the determination (R8's read) */
+  const av = x.esc.filings.availableActions({ determination: d.id, viewer: V("pat") });
+  assert.equal(av.ok, true, JSON.stringify(av).slice(0, 300));
+  assert.equal(av.determination, d.id);
 });
 
-test.todo("R5 R6 over the real actions: a sent entry on the attached breach action, recorded through actions.actionCorrespond, meets 2→3, and a reply after it meets 3→4 — blocked by actions: actionCorrespond (and its other acts that revise an action) promote without the viewer, so actions' own R8 check reads the determination with no viewer, the real conformance answers it unseen, and every correspondence on a breach action is refused ACTION_NO_DETERMINATION (REPORT J3). Stages 2 and 3 are tested over the actions stand-in in stages.test.mjs.");
+test.todo("R5 R6 over the real actions: a sent entry on the attached breach action, recorded through actions.actionCorrespond, meets 2→3, and a reply after it meets 3→4 — blocked by actions: actionCorrespond (and its other acts that revise an action) promote without the viewer, so actions' own R8 check reads the determination with no viewer, the real conformance answers it unseen, and every correspondence on a breach action is refused ACTION_NO_DETERMINATION (REPORT J3). Stages 2 and 3, and stage 5 with its available actions and filings, are tested over the stand-ins in stages.test.mjs.");
