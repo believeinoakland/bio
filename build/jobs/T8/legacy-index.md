@@ -1,6 +1,6 @@
 # legacy-index (T8)
 
-**Status** · session_015DvrjDEhNepRfGzr6F7u2A · depth 2 · RUNNING until 2026-09-28T11:52:05Z (the old battery on this branch and on the tranche tip) · handled B1
+**Status** · session_015DvrjDEhNepRfGzr6F7u2A · depth 2 · RUNNING until 2026-09-28T11:52:05Z (the old battery on this branch and on the tranche tip) · handled B2
 
 ## J1 · REPORT
 
