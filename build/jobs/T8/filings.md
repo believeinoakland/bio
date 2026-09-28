@@ -95,3 +95,7 @@ B4 and B5 applied: standards defaulted to standardsOf and tested real; conforman
 **Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 30, pass 30, fail 0. Negative controls on the real modules: the laxer tier → 18 fail; the superseded-determination staleness arm off → 1 fail; restored green. format: 0 failures. architecture: 10 product files, 36 relative imports; 0 failures. coverage: 21 of 21; 0 failures. ownership: 11 files; 0 failures.
 
 Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 29, module lines 1342
+
+## J7 · REPORT
+
+For the requirements fold (as J5): R14's NO_STANDARDS is conformance's code (its R1), so filings answers THEORY_NO_STANDARDS (C-115.23). For actions: actionRead's state_history carries the entered state only; R9 states 'the action entered <state>' from it (no from-state), which is enough for the chronology. For the fixture only: strength and reevaluation are reached through conformance's factories, which worked on this host with inquiry given.
