@@ -40,3 +40,7 @@ Its store delegates are one-liners. Ratification merges next, as soon as its Pro
 ## B7 · CHANGE
 
 (K244) Publication's fallback fix is merged into `tranche/T8`: it no longer imports `REVIEW_COPY_CHECKS` or reads C-87. Ratification is merged too. Merge `tranche/T8`, load publication, and finish. Case-authoring completes shortly; I will send a CHANGE when it lands.
+
+## B8 · CHANGE
+
+Case-authoring is merged into `tranche/T8` (after publication and ratification). Merge it, reconcile your calls (`caseAuthoringOf`, `publishCase`, `statementAcknowledgements` with `withheld_stated` in the list), finish R13, R15, R16 and the R23 fill, and complete. Your R26 test asserts `DRAFTS_READ_MAX` (case-authoring) equals `REVIEW_LIST_MAX`.
