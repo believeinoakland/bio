@@ -2492,47 +2492,6 @@ function checkInquiryExtension(ctx, findings) {
         ['add a basis[] leg naming what the conclusion rests on, and the same target in references[]']));
     }
   }
-  /* REC-14: the `published` ENTRY REQUIREMENTS, on the same principle as
-     `concluded` above — a state is not a label a document may wear, it is a
-     claim the document has to be able to carry. Everything here is authored by
-     the group and stamped INTO the bytes that get signed, so what the case says
-     about its own limits is inside the hash forever.
-
-     THE COMPLETENESS BLOCK (C-9, DEC-13). A statement of what the case does not
-     cover; an EXCLUSION LIST that may legitimately be EMPTY but whose FIELD may
-     not be ABSENT (an empty list is a claim — we left nothing out — and silence
-     is not); and the group's POSITION ON PUTTING THE CASE TO ITS SUBJECT with
-     its JUSTIFICATION. DEC-13 is exact about what that last one gates: the
-     position must be DECLARED AND JUSTIFIED, NEVER that contact happened and
-     NEVER that the answer was favourable. So all three positions below pass
-     identically and nothing anywhere reads which one it is.
-
-     THE FROZEN PAIR (DEC-21/R2) and THE DECLARED BAR (DEC-17 as amended), side
-     by side and never composed: what this case reached on each axis, beside
-     what the group said in advance it required. An ABSENT bar gates nothing and
-     is STATED as absent — an absent bar is not a bar of zero.
-
-     THE EDITION (DEC-12) is what makes the whole thing safe: edition 2 does not
-     overwrite edition 1, it joins it.
-
-     CASE-4 / DEC-72, 2026-09-10: THE CONDITION MOVED AND NOT ONE REQUIREMENT
-     DID. This read `fm.current_state === 'published'`, and it was right when
-     written: `published` was the state, so the state was the question. DEC-72
-     makes publication THE CASE RELATION, so the question is now asked of the
-     relation — `case_id`, which REC-44 put inside the bytes the member signs for
-     precisely the reason that makes it the right field here: it is covered by
-     the signature, exactly as `current_state` was.
-
-     THE OVER-STRICTNESS THIS AVOIDS IS THE POINT AND IT IS WORTH STATING. A
-     naive removal leaves this line testing a word nothing writes any more, so
-     the entire published ceremony — the completeness statement, the exclusion
-     FIELD, the declared and justified subject position, the frozen pair, the
-     bar, the edition, the case id, the scope, the roles — stops being checked
-     ON EVERY DOCUMENT, silently and with the suite green. The requirements are
-     what DEC-72 explicitly does NOT touch ("the ceremony is unchanged"), so
-     losing them to a state removal would be the change taking something nobody
-     ruled on. */
-  if (isCaseMemberBytes(fm)) checkPublishedExtension(fm, findings);
   /* CASE-4 / DEC-72: AND THIS IS WHERE THE `case_id` REQUIREMENT SURVIVES. The
      membership claim is the PAIR, so a document asserting a case EDITION while
      naming no case would otherwise slip past the whole ceremony by being
@@ -2732,41 +2691,6 @@ export const STRENGTH_STATES = ['graded', 'unrated', 'undetermined'];
  *  and the suite asserts all three agree by PARSING the schema rather than by
  *  restating it, because a vocabulary written three times is one that drifts. */
 export const CASE_MEMBER_ROLES = ['load_bearing', 'supporting'];
-
-/** REC-14: the three ASSERTED fields of a completeness block, in one place so
- *  the gate (C-21.1), the store's own pre-flight and the frozen projection all
- *  compare the same thing.
- *
- *  `author` and `at` are deliberately NOT here. They are STAMPS: `at` is the
- *  server's clock and always differs, so comparing it is an equality that costs
- *  nothing to produce, and `author` may legitimately be the same member twice —
- *  requiring it to change would be requiring a different person to sign the
- *  next edition. `subject_position` is not here either: it is a vocabulary
- *  choice, and a group whose position has not changed must not be pushed into
- *  changing it. What must be authored FRESH is what is ASSERTED — the
- *  statement, the justification for the position, and the exclusion list. */
-/** REC-47 / DEC-46 (a): the AUTHORED bias acknowledgement, read off the
- *  frontmatter exactly as completenessFields reads its three. Named once and
- *  exported so the store's pre-flight, the gate and the ratify-commit path
- *  cannot drift about which bytes are being compared — the drift hazard REC-44
- *  measured five times over. */
-export function biasAcknowledgementOf(fm) {
-  const v = fm && typeof fm.bias_acknowledgement === 'string' ? fm.bias_acknowledgement : null;
-  return v === null || v === 'null' ? null : v;
-}
-
-export function completenessFields(fm) {
-  const c = (fm && typeof fm.completeness === 'object' && fm.completeness) || {};
-  const rows = Array.isArray(fm?.completeness_excluded) ? fm.completeness_excluded : [];
-  return {
-    statement: typeof c.statement === 'string' ? c.statement : null,
-    subject_justification: typeof c.subject_justification === 'string' ? c.subject_justification : null,
-    excluded: JSON.stringify(rows.map((r) => [
-      r && typeof r.target === 'string' ? r.target : null,
-      r && typeof r.description === 'string' ? r.description : '',
-      r && typeof r.reason === 'string' ? r.reason : ''])),
-  };
-}
 
 function checkPublishedExtension(fm, findings) {
   const e = fm.edition;
@@ -8094,64 +8018,6 @@ export const MACHINE_FENCE_CHECKS = {
       + 'one — it may surface the work and prepare what it needs, and closing work that is '
       + 'nobody\'s is still closing it. Sign in to resolve it.',
   },
-  /* REC-123 / IC-132 — THE TWO RATIFICATIONS, and they are the first of this
-     family that live in the CONTROL PLANE rather than at the top of a store
-     method, because both handlers do their work there: the signature is
-     verified and the gate run in `index.mjs`, and the store is handed only the
-     verified attestor. TRACED BY DRIVING, 2026-09-18: an `ai` credential whose
-     member-authored scope named op=ratify / op=caseratify, carrying a registered
-     member's VALID signature, PUBLISHED the finding and COMMITTED the case, and
-     the record named the MEMBER as having done it. The scope check was the only
-     thing in front of either, and a broader scope passes a scope check.
-     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4: *"No machine credential
-     performs the attested act"*; both acts sit at the `attested` rung.
-     WHAT THESE TWO DO NOT REFUSE: the operator's own ENV-BINDING credentials
-     (ADMIN/MEMBER/PROBE tokens). REC-123 left them open as a provisional and
-     raised D-421; BOB #14 DECIDED it (REFUSE), and C-32.14 / C-32.15 below are
-     that ruling, landed by REC-125. */
-  MACHINE_CANNOT_RATIFY: {
-    check: 'C-32.12',
-    where: 'src/index.mjs fetch > is-machine-ratify-bundle',
-    translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
-      + 'and the member whose key signed it has to be the one who does it. The credential that asked '
-      + 'here is an assistant\'s: it can prepare the finding and lay out what will be signed, and it '
-      + 'cannot carry the signature in for you. Sign in and ratify it yourself.',
-  },
-  MACHINE_CANNOT_RATIFY_CASE: {
-    check: 'C-32.13',
-    where: 'src/index.mjs fetch > is-machine-ratify-case',
-    translation: 'Ratifying a case commits the group\'s own assertions about it — its scope, its '
-      + 'completeness, its position on the people it concerns — under a member\'s signature. The '
-      + 'credential that asked here is an assistant\'s: it can assemble the case document, and it '
-      + 'cannot be the one who commits it. Sign in and ratify it yourself.',
-  },
-  /* REC-125 / IC-137 — D-421, DECIDED by BOB #14 applying
-     `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 4 (no new doctrine): an
-     ATTESTED act is performed ONLY by a named member's OWN AUTHENTICATED
-     SESSION, and the operator's bearer tokens may no longer deliver one, even
-     carrying a member's valid signature. *The signature proves who AUTHORISED;
-     the credential that delivers it decides WHEN the record changes, and the
-     record names the actor.* ONE ROW PER ACT, like C-32.12 / C-32.13, and ONE
-     ROW FOR EVERY BEARER CLASS rather than one per class: the refusal is keyed
-     on how the caller ARRIVED (not through a session), so the class is named in
-     the answer's `tokenClass` and the rule does not need a row per token. */
-  OPERATOR_TOKEN_CANNOT_RATIFY: {
-    check: 'C-32.14',
-    where: 'src/index.mjs fetch > is-operator-ratify-bundle',
-    translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
-      + 'and it is delivered by that member signed in as themselves. The credential that asked here '
-      + 'is one of the operator\'s access tokens for this copy, not a person: a valid signature does '
-      + 'not change that, because the credential that carries it in decides when the record changes. '
-      + 'Sign in as the member whose key signed it and ratify it there.',
-  },
-  OPERATOR_TOKEN_CANNOT_RATIFY_CASE: {
-    check: 'C-32.15',
-    where: 'src/index.mjs fetch > is-operator-ratify-case',
-    translation: 'Ratifying a case commits the group\'s own assertions about it under a member\'s '
-      + 'signature, and it is delivered by that member signed in as themselves. The credential that '
-      + 'asked here is one of the operator\'s access tokens for this copy, not a person, and a valid '
-      + 'signature does not change that. Sign in as the member whose key signed it and ratify it there.',
-  },
   /* REC-126 / DEC-31 / IC-145 — THE REVIEW COPY's three authoring acts (draft,
      grant, revoke) share ONE fence, because they are one doctrine: the act is
      ADDRESSED and ATTRIBUTED (`BIO_Publication_v0_1.md` §6A.2), so the record
@@ -11291,28 +11157,6 @@ export const TRANSCRIBE_CHECKS = {
  * §4.6's reading of `name` as the member's handle (C-92.9).
  * ===================================================================== */
 export const ATTRIBUTION_CHECKS = {
-  /* PROVISIONAL (§4.4, carried to Bob): THE NARROW VETO. An edition reaching an unchosen observation is not
-     signed, so each member has a veto over the use of their own words and over nothing else: the owner's
-     recourse is an edition without the finding that rests on it. */
-  ATTRIBUTION_UNCHOSEN: {
-    check: 'C-92.10',
-    where: 'src/index.mjs fetch > is-attribution-gate',
-    translation: 'This case edition uses a member\'s firsthand observation whose author has not yet chosen how '
-      + 'it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask '
-      + 'the author to choose, or prepare the edition without the finding that rests on it.',
-  },
-  ATTRIBUTION_STATEMENT_STALE: {
-    check: 'C-92.11',
-    where: 'src/index.mjs fetch > is-attribution-gate',
-    translation: 'This case document states an attribution for an observation that its author\'s choices no '
-      + 'longer give. Prepare the case document again so it states what the authors chose, then sign that.',
-  },
-  ATTRIBUTION_UNSTATED: {
-    check: 'C-92.12',
-    where: 'src/index.mjs fetch > is-attribution-ratify',
-    translation: 'This observation\'s words are published only beside a signed case that states whose they '
-      + 'are, and no signed case does yet. Sign the case document that uses it first.',
-  },
 };
 
 export const TESTIMONY_CHECKS = {
@@ -11387,44 +11231,6 @@ export const TESTIMONY_CHECKS = {
     translation: 'This document is a member\'s own observation, and this revision no longer says so. '
       + 'Removing that would let a member\'s word read as a captured document. What the document is '
       + 'cannot be revised; to withdraw an observation, record a new one.',
-  },
-  /* MK-1 (A) — THE PUBLICATION FENCE, measured before it was built
-     (`test/mk1-publish-probe.mjs`): op=ratify on an observation whose bytes were
-     in the working bucket PUBLISHED its words, its provenance document and the
-     observer's handle; a finding resting on one, and a case over that finding,
-     ratified. MEMBER-KNOWLEDGE-DESIGN.md §4 puts WHAT a published case may show
-     of a member's observation at the attesting member's chosen level.
-     LIFTED BY MK-7 AS ITS OWN ACT, AND NARROWED RATHER THAN DELETED: the three
-     codes now refuse only an observation that still NAMES ITS AUTHOR in its own
-     files — one written before MK-6 (§4.1: "Authored bundles written before the
-     change carry the member id and STAY FENCED") — and what rests on one. No
-     level can hide a name the bundle itself prints, because the level lives
-     outside the bundle. Every other observation crosses under C-92. The old
-     sentences said the record could not YET honour the choice; since MK-7 it
-     can, so they would now be false, and they are corrected, not kept. */
-  TESTIMONY_UNPUBLISHABLE: {
-    check: 'C-53.10',
-    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
-    translation: 'This document is a member\'s own firsthand observation, recorded before the record stopped '
-      + 'writing its author\'s name into the observation\'s own files. Publishing it would publish that name '
-      + 'whatever level its author chose, so it is not published. Its author can record it again as a new '
-      + 'observation, which names nobody in its files.',
-  },
-  TESTIMONY_CITED_UNPUBLISHABLE: {
-    check: 'C-53.11',
-    where: 'src/index.mjs fetch > is-testimony-publish-bundle',
-    translation: 'This finding rests, directly or through another finding, on a member\'s firsthand '
-      + 'observation recorded before the record stopped writing its author\'s name into the observation\'s '
-      + 'own files, so it is not published. Rest the finding on a newer observation of the same thing, or '
-      + 'publish it without that observation in its basis.',
-  },
-  TESTIMONY_CASE_UNPUBLISHABLE: {
-    check: 'C-53.12',
-    where: 'src/index.mjs fetch > is-testimony-publish-case',
-    translation: 'A finding in this case rests, directly or through another finding, on a member\'s '
-      + 'firsthand observation recorded before the record stopped writing its author\'s name into the '
-      + 'observation\'s own files, so the case is not published: that name would be published whatever '
-      + 'level its author chose. Rest the finding on a newer observation, or leave it out of this edition.',
   },
   /* D-179 — ONE CAPTURE, ONE HOME, THE ORIGINAL's (BOB #26, 2026-09-22;
      `BIO_Intake_Doctrine_v1_1.md` §8). C-53.8 generalised from an authored
@@ -11834,26 +11640,6 @@ export const CASE_AUTHORITY_CHECKS = {
   },
 };
 
-/* REC-167 / C-65 — A CASE DOCUMENT IS SIGNED ONLY WHILE ITS PROJECT STILL STANDS ON THE CONCLUSION
- * IT RECORDS (INVESTIGATIVE-SESSION.md §7.1 item 4: `NOT_CONCLUDED` at `op=caseratify` reads the
- * publishing project's relationship; item 9's comparison, asked of the one document being signed).
- * Measured before this existed (M-92, REC-157): a project concluded, `op=publish` prepared an edition
- * whose document recorded that conclusion, the project WITHDREW, and `op=caseratify` still committed
- * the edition — the signed record then said the project stood on a conclusion it had given up. Asked
- * in `ratifyCaseDocument`, per roster member, after the owner-signer check and the idempotent retry
- * and before any write: the question must be concluded for the document's project AND that
- * conclusion must be the one the document records. The route out is item 9's: publish again. */
-export const CASE_CONCLUSION_CHECKS = {
-  CASE_CONCLUSION_MOVED: {
-    check: 'C-65.1',
-    where: 'src/store.mjs ratifyCaseDocument > is-caseratify-conclusion-moved',
-    translation: 'This case document records a conclusion its project no longer stands on: since the '
-      + 'document was prepared, the project withdrew that conclusion or concluded again differently. '
-      + 'Signing it would publish a conclusion nobody holds. Nothing was committed. Publish the case '
-      + 'again from the project, so the document records what the project stands on now, and sign that.',
-  },
-};
-
 /* D-85 / C-66 — AN ASSISTANT OPENS A QUESTION ONLY INSIDE A RUN IT HOLDS (INVESTIGATIVE-SESSION.md §11
  * item 5, rule 2, BOB #25, 2026-09-21). Framework §12 lets an assistant open a question unattended and §13
  * requires it to carry the lens in force when it did; that lens exists only on a run (§3, RULED), and the
@@ -11901,50 +11687,6 @@ export const SURFACE_CHECKS = {
       + 'against the history it holds: the replay must name the provenance file for this document, already '
       + 'uploaded, whose records list this document and exactly this version of it. A replay is excused from '
       + 'the rules a new save must meet only when that check succeeds. Nothing was saved.',
-  },
-};
-
-/* REC-140 / C-58 — WHAT `op=ratify` MAY PUBLISH AT ALL (BIO_Publication_v0_1.md §3 rule 2,
- * *"Only findings that are part of a project can be published"*, as BOB #15 applied it to
- * D-429 on 2026-09-18). A PROJECT's own document is the group's thinking, not a finding: a
- * project publishes THROUGH ITS CASES (DEC-72), so the project bundle is refused by type,
- * whoever signs and whoever delivers — its owner included. Measured before this existed
- * (`test/ratify-authority.test.mjs`): an enrolled administrator with no role in a project,
- * carrying the signature of a member who was neither its owner nor a participant, PUBLISHED
- * the project's own document under that member's name. Asked AFTER sight (a caller who
- * cannot see the project is answered as for a bundle that does not exist, so this refusal is
- * said only to someone who can already see it) and BEFORE the signature is weighed. */
-export const RATIFY_SCOPE_CHECKS = {
-  RATIFY_PROJECT_BUNDLE: {
-    check: 'C-58.1',
-    where: 'src/index.mjs fetch > is-ratify-project-bundle',
-    translation: 'A project\'s own document is not published. A project publishes through its cases: '
-      + 'publish a case from the project, have an owner sign the case document, and then ratify the '
-      + 'findings in it. Nothing was published.',
-  },
-  /* D-431 (2026-09-19, IC-161): `op=ratify` PUBLISHES NOTHING OUTSIDE A RATIFIED CASE
-   * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
-   * publications outside a case and pinned them as measured: an information bundle in no case, a
-   * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
-   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
-   * refusals and the retry, and ONE region carries both, because the one condition — no ratified
-   * case pins this sha and none of their pinned findings rests on this bundle — is split only by
-   * what the bundle IS. */
-  RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: {
-    check: 'C-58.2',
-    where: 'src/store.mjs publish > is-ratify-outside-a-case',
-    translation: 'A finding is published only as part of a case its project has ratified, and no ratified '
-      + 'case holds this version of it. Publish it into a case from its project, have an owner of the '
-      + 'project sign the case document first, and then ratify this finding at the version the case '
-      + 'holds. Nothing was published.',
-  },
-  RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: {
-    check: 'C-58.3',
-    where: 'src/store.mjs publish > is-ratify-outside-a-case',
-    translation: 'This is published only as evidence for a case, and no finding in any ratified case '
-      + 'rests on it. Cite it from a finding, publish that finding\'s case and have an owner of the '
-      + 'project sign the case document; an owner of that project can then sign this. Nothing was '
-      + 'published.',
   },
 };
 

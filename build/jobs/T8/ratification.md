@@ -1,0 +1,221 @@
+# ratification (T8)
+
+**Status** · session_015JFVQbsYTrseJ3goPTfSAj · depth 2 · COMPLETE · handled B4
+
+## J1 · QUESTION
+
+Four readings. I am building on each now; only the first decides when I can finish the store half.
+
+1. **Publication, concurrently (sequencing and seam).** `publish`, `ratifyCaseDocument` and `gateFacts` call publication's private helpers, not only its Provides: `#pinnedCaseEditionsOf`, `#soleCase`, `#caseDocMemberFrozen`, `#frozenFromPinningDocuments`, `#caseEditionState`, `#ratifiedFindingsRestingOn`, `#caseClaimsOf`, `#dischargeCaseFlags`, `#publishEdges`, `publishedGraphEdges`, `publishedRegistryFor`/`publishedCaseRegistryFor`, `attributionStatedFor`, `observationsNamingAuthor`. Publication's map §6.1 also says its job "carves the SQL out of `ratifyCaseDocument` and `publish`" — the same methods I remove from `store.mjs`.
+   **Best reading:**
+   - PUBLICATION writes R22 as new code in its own module and does not edit those two store methods. I remove them and call `publicationOf(host)`.
+   - The split follows R22's words. `commitEdition` takes the member-edition half: the rule-12 frozen pair, `EDITION_EXISTS`/`EDITION_NOT_INCREMENTED`, `CASE_ASSERTION_DIVERGED`, the per-case discharge, the bar projection, `published_bundles`/`published_shas`, edges, and the case-edition state it answers. `commitCaseEdition` takes the case rows, the pins and the signature columns.
+   - Ratification keeps what decides who may publish: R3's order through `CASE_CONCLUSION_MOVED`, `CASE_PRODUCTION_DIVERGED`, R5's authority and scope arms, and R13's reading of the signed bytes.
+   - For R5's scope arms I need two reads from publication: the ratified case editions pinning (id, sha), and the ratified findings resting on an id. Their bodies are `#pinnedCaseEditionsOf` and `#ratifiedFindingsRestingOn`, and neither is named in publication's Provides.
+   - Please put those two reads into publication's Provides (R4's neighbourhood), or tell me they are `caseRelation`'s.
+   - Please ask BOB-side for an early merge of publication (§4). I write the store half against those names now and test it once publication lands.
+2. **Code in legacy-checks that earlier modules import.** legacy-checks cannot import from me (§12.2). Removing these names breaks three importers outside my `from`:
+   - `checkCaseDocument`: promotion's free `runCaseGate` default and its instance fallback (`gate.mjs` 35/348, `promotion/index.mjs` 21/279).
+   - `SEARCHED_SUBJECT_SOURCES`: ai-runs (`airun.mjs` 92, 205).
+   - `SUBJECT_POSITIONS`: affordances (`affordances.mjs` 70, 554).
+
+   **Best reading:**
+   - Ratification holds the canonical code (`src/ratification/checks.mjs`) and registers it: the case catalogue through `registerCaseCatalogue`, and `checkPublishedExtension` as a promotion check on `isCaseMemberBytes` bytes.
+   - In legacy-checks I remove the rows (C-32.12–.15, C-53.10–.12, C-58, C-65, C-92.10–.12) and the `checkPublishedExtension` call in `checkInquiryExtension` (Decided 2). Nothing outside legacy-store and legacy-index reads the rows by code.
+   - I leave legacy-checks' `checkCaseDocument` (with its private `checkPublishedExtension`), `SUBJECT_POSITIONS` and `SEARCHED_SUBJECT_SOURCES` in place, only while promotion, affordances and ai-runs import them. My suite asserts the copies agree, as for `isCaseMemberBytes`.
+   - I REPORT the three removals owed: promotion drops the `checkCaseDocument` default and fallback; affordances imports `SUBJECT_POSITIONS` from here; ai-runs' is N138's.
+3. **`#caseConclusionRowLines` (the one writer of a `case_conclusions` row).** R1's comparison (`#conclusionRowParsed`) renders what a new edition would record through it. Case-authoring's map gives it to case-authoring, which is later than me, so I cannot import it.
+   **Best reading:** it moves here as `caseConclusionRowLines(m, c)` with the frontmatter-safe helper it uses (a copy of `#fmSafe`'s rule, exported as R1's), and `store.mjs`' `#caseDocumentText` is rewired to import it. Please tell CASE-AUTHORING that its `#caseDocumentText` imports it from ratification.
+4. **`op=caseratify`'s gate must run on the promotion instance (K233), which lives in the Durable Object, not the Worker.** I add one store-half op, `casegate` (the case document at its `doc_sha`, with `priorCase` and `memberBasis` from the same facts), which the Worker handler calls after the signature verifies, in R2's order. I decide this under P17 unless you say otherwise.
+
+## J2 · QUESTION
+
+Replaces J1. Items 2–4 are J1's, unchanged. Item 1 now names exactly what I need from publication.
+
+1. **Publication, concurrently (the seam and the sequence).** `publish`, `ratifyCaseDocument`, `gateFacts` and R1's comparison read and write publication's tables through its private helpers. Publication's map §6.1 also has its job "carve the SQL out of" the two store methods I remove.
+   **Best reading:**
+   - PUBLICATION writes R21/R22 as new code in its module and leaves those store methods to me. I remove them and call `publicationOf(host)`.
+   - I build now against the names below and test once BOB merges publication early (§4).
+   - The ones marked *new* are not in publication's Provides today. Please have them stated there, or tell me which existing service covers each.
+
+   Reads:
+   - (a) `caseDocumentFacts` (R2), as it stands.
+   - (b) *new* `caseDocumentRow(case, edition)`: the in-process, unfenced row `{doc_sha, text, sig_armored, attestor_key, ratified_at}` or null. R3 reads the bytes it commits from it, and R1 reads the recorded conclusion rows from it (`#editionsRecordingConclusion` reads `case_documents.text` today).
+   - (c) *new* `caseOwner(case)`: the `cases.project_id`, or null. Used by R3's `CASE_PRODUCTION_DIVERGED` and by R5's authority per owning project.
+   - (d) *new* `pinnedCaseEditionsOf(id, sha)`: the ratified case editions pinning those bytes, the newest edition per case, as `{case_id, edition, role}` (today's `#pinnedCaseEditionsOf`). Used by R5's first arm and by C-58.2.
+   - (e) *new* `ratifiedFindingsRestingOn(id)`: `[{case_id, finding, project}]` (today's `#ratifiedFindingsRestingOn`). Used by C-58.3.
+   - (f) *new* `caseClaimsOf(id)`: the cases a finding is pinned or prepared into (today's `#caseClaimsOf`). R7 reads `publishedCaseRegistryFor(caseClaimsOf(id))`.
+   - (g) `publishedRegistryFor`, `publishedCaseRegistryFor` (R7), `attributionStatedFor` and `observationsNamingAuthor` (R17), and `publishedGraphEdges(fm)` (the static the Worker builds edges with), all as they stand.
+
+   Writes:
+   - (h) `commitCaseEdition({case, edition, project, scope, completeness, biasAcknowledgement, bar, roster: [{bundle_id, role, version_sha}], sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy, at})` inside my transaction.
+     - It answers `existed` or `CASE_EDITION_ALREADY_RATIFIED` as R22 says.
+     - It also answers `awaiting` (the roster members not yet published at their pins) and the case edition's state for the container (today's `#caseEditionState`).
+     - Ratification computes `completeness` from the signed bytes (R13, `completenessFields`) and calls `dischargeCaseFlags` itself (R3).
+   - (i) `commitEdition({bundleId, bundleSha, edition?, title, completeness, strength, memberCarriesBlocks, group, edges, shas, attestorKey, attestorMember, gateVersion, sigArmored, deliveredBy, at})` inside my transaction, taking everything in today's `publish` after the authority and scope arms:
+     - the rule-12 frozen pair, `EDITION_EXISTS` and `EDITION_NOT_INCREMENTED`;
+     - `CASE_ASSERTION_DIVERGED`, the per-case discharge and the bar projection;
+     - `published_bundles`, `published_shas` and the edges (R35 included);
+     - the answer fields `op=ratify` forwards today: `edition`, `existed`, `ratifiedAt`, `edges`, `caseCount`, `barUndetermined`, `frozenFrom`, `strengthUndetermined`, `caseId`/`caseEdition`/`case`, `containerCases`.
+   - Ratification keeps what decides who may publish: R3's refusals through `CASE_PRODUCTION_DIVERGED`, and R5's authority and scope arms (C-58.2, C-58.3).
+2. As J1 item 2: legacy-checks keeps `checkCaseDocument` (and its private `checkPublishedExtension`), `SUBJECT_POSITIONS` and `SEARCHED_SUBJECT_SOURCES` only while promotion, affordances and ai-runs import them.
+   - Ratification holds and registers the canonical code, and the rows move.
+   - C-2.8's case-member arm leaves `checkInquiryExtension`. It is registered with promotion (a step check, replays exempt) and with record-core's audit (R59), and `op=ratify` runs it over the image after the catalogue, as it does bias's and the register's. So neither the gate nor the audit loses it.
+   - I REPORT the three removals owed.
+3. As J1 item 3: `caseConclusionRowLines` moves here with R1, and `#caseDocumentText` imports it. Please tell CASE-AUTHORING.
+4. As J1 item 4: the store-half op `casegate` runs `promotionOf(host).runCaseGate` (K233) over the document at the signed `doc_sha`.
+
+## J3 · BLOCKED
+
+Cause: **context**. This session has passed half its window. The work is pushed on `job/T8/ratification`, and B2/B3 (K240, K241) are applied as far as they go before publication lands.
+
+**Done (steps 1–4 in part):**
+- `bio-plane/src/ratification/checks.mjs`: R8, R9, R14.
+  - Moved: C-41, `checkCaseDocument`, `checkPublishedExtension` (exported), the vocabularies, and the rows as `RATIFY_MACHINE_FENCE_CHECKS`, `RATIFY_TESTIMONY_CHECKS`, `RATIFY_ATTRIBUTION_CHECKS`, `CASE_CONCLUSION_CHECKS` and `RATIFY_SCOPE_CHECKS`, with `where` re-pointed and `rowOf(code)`.
+  - New: `caseMemberFindings`, `caseMemberImageFindings`, `withCaseMemberChecks` (the C-2.8 case-member arm at promotion, audit and the ratify gate).
+  - The formats are still imported from `bio-checks.mjs`; switch them to publication R20 when it lands.
+- `bio-plane/src/ratification/index.mjs`: the store half. R1 (`caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines`, `fmSafe`), R7 `gateFacts`, the `casegate` gate (K233), R3 `ratifyCaseDocument` (commits through `publication.commitCaseEdition`, then `dischargeCaseFlags`), R5 `publish` (authority and scope, then `publication.commitEdition`), `check`/`audit` (R9), `ratificationOf` (registers the catalogue, the step and the audit check) and `ratificationOps` (`gatefacts`, `casegate`, `caseratify`, `publish`).
+  - It reads `case_documents` and `cases` through R40.
+  - It calls publication's R38 (`pinnedCaseEditionsOf`, `ratifiedFindingsRestingOn`, `caseClaimsOf`), R2, R7, R17 and R22 by the J2 shapes.
+- `bio-plane/src/ratification/ops.mjs`: the Worker half. `caseRatifyOp` and `ratifyOp`, with the stamps and helpers passed in, the gate through `do/casegate`, and `withCaseMemberChecks` after the catalogue.
+  - It imports `publishedGraphEdges` from `../publication/index.mjs` and `deliveringPrincipal`/`delivererOf` from `../deliverer.mjs`.
+- Legacy, removals and rewiring only:
+  - legacy-store: R1 block, `#caseConclusionRowLines`, `ratifyCaseDocument`, `gateFacts`/`publish` and three dispatch entries removed. Added: one import, one `ratificationOf(ctx)` at construction, the ops spread, and four call sites rewired.
+  - legacy-index: two handlers and three row helpers removed, two call lines and one import added, and the unused import names dropped.
+  - legacy-checks: the rows, the call at 2535 with its comment, `biasAcknowledgementOf` and `completenessFields` removed. `checkCaseDocument`, `SUBJECT_POSITIONS`, `SEARCHED_SUBJECT_SOURCES`, `CASE_MEMBER_ROLES`, `isCaseMemberBytes` and `caseEditionClaimed` are kept (N211, Decided 6).
+- `bio-plane/test/m/ratification/checks.test.mjs`: 14 pass, 0 fail (R8, R9, R14, R15).
+
+**The plane does not load yet.** `ratification/index.mjs` and `ops.mjs` import `../publication/index.mjs`, which lands with publication's early merge (K240 (2)).
+
+**Next, for the restarted job:**
+1. On BOB's CHANGE (publication merged), merge `tranche/T8`.
+   - Reconcile the call names and shapes with publication's built R2, R7, R17, R20, R22, R35, R38 and `publishedGraphEdges`.
+   - Switch the formats import to publication.
+   - Confirm the store and Worker load, and that `assembleCaseContainer` is still passed in from legacy-index.
+2. Write the store-half and ceremony tests in `test/m/ratification/`: R1 (one arm per `why`), R2 (order of refusals), R3 and R5 (the retry arms), R4, R6, R7 (identical bytes for hidden and absent), R10–R13, R16. Also the registration arms of R8 and R9 (`promotionOf(host).runCaseGate` runs this catalogue; a promotion of malformed case-member bytes is refused; the audit counts it).
+   - Use a world fixture like reevaluation's. An id that does not hold gets a `test.todo` naming its cause.
+3. Polish comments naming `#caseRelationOf` and `#publishEdges` in `index.mjs`.
+4. Run the four checks and the old battery's affected suites, then REPORT:
+   - legacy-tests re-anchors: `casesign`, `caseratify-conclusion`, `ratify-authority`, `publish`, `case-project-conclusion.control`, `check-refusal-codes`'s families, the d470 census for 1.38.0;
+   - the stale bundles (plane, agent-worker, newgroup `release.mjs`);
+   - a catalogue row for `CASE_MEMBER_REFUSED` (legacy-checks, next plan);
+   - `gateFacts`' `dangling` read of connections' `refs`, which has no contract.
+5. Record completion (step 7).
+
+## J4 · REPORT
+
+RATIFICATION #2 has restarted from J3 and done everything that does not need publication on `tranche/T8`. I am now waiting for your CHANGE saying publication has merged (B3).
+
+**Done since J3 (pushed on `job/T8/ratification`):**
+- The comments in `index.mjs` now use the current names of the moved services (J3 next step 3).
+- Store-half and ceremony tests are in `test/m/ratification/`. They run over a world fixture: the real record-core, membership and promotion, with providers the test controls for basis-versions, provenance, inquiry and publication's reads and R22 commits.
+  - R1: one arm per `why`, plus the comparison over rows written by `caseConclusionRowLines`.
+  - R2: `op=caseratify`'s full order through `caseRatifyOp`, using a real SSHSIG, plus the `casegate` gate.
+  - R3: its order of refusals and what it hands `commitCaseEdition`, plus the retry arms.
+  - R4: `op=ratify`'s full order through `ratifyOp`.
+  - R5: C-58.2/.3 and the authority arms, including several projects.
+  - R6: the copy by hash, the container assembled once, and the reuse report, including a store silence after the commit.
+  - R7: the identical-bytes arm and the existence act.
+  - R8 and R9: through promotion's `runCaseGate`, the promotion step and the audit sweep.
+  - R10–R13 and R15.
+  - R16 is a `test.todo`: publication R35 is not yet met (K102).
+- I built the plane against publication's WIP (`754f85f516`) in a scratch merge. There, `test/m/ratification/`: 64 pass, 0 fail, 1 todo.
+- Checks on my branch: format 0 failures; architecture 0 failures; coverage 16 of 16 ids named; ownership 0 failures (legacy-store +8/−1212, legacy-checks +0/−258, legacy-index +3/−975).
+
+**For the merge of publication and ratification:**
+- `bio-checks.mjs` has one conflict. Both sides remove their rows from `ATTRIBUTION_CHECKS`, which leaves it empty.
+- `index.mjs` has three conflicts:
+  - Hunks 1–2 (the `bio-checks.mjs` import): keep both sides' removals.
+  - Hunk 3 (the two handlers): take ratification's two delegating lines. Publication's only edit inside them was `publishedGraphEdges` from publication, and `ratification/ops.mjs` already has it.
+
+**Still to do after the CHANGE:**
+- Reconcile my calls with publication's built R22 (`commitEdition`/`commitCaseEdition` are not in its WIP yet), R38 and R20. Switch the case-document formats import in `checks.mjs` to publication.
+- Run the old battery's affected suites.
+- Record completion.
+
+**Found in other modules (repeated at completion):**
+- legacy-tests re-anchors: `casesign`, `caseratify-conclusion`, `ratify-authority`, `publish`, `case-project-conclusion.control`, the `check-refusal-codes` families, and the d470 census for 1.38.0.
+- Stale generated bundles: the plane, agent-worker, and newgroup `release.mjs`.
+- `CASE_MEMBER_REFUSED` has no catalogue row (legacy-checks, next plan).
+- `gateFacts`' `dangling` list reads connections' `refs`, which states no read contract.
+
+## J5 · REPORT
+
+**Publication: a reference to evidence that is not yet published is dropped, not recorded as `name`, so ratification R16 cannot hold end to end.**
+
+- `publication.publishEdges` (index.mjs 2268) gets `publishedGraphEdges`' `references` as `serve`-class edges.
+  - When the target is not yet published, it drops the edge (`dropped++`) and writes no row.
+- R35 (`#promoteNamedEdges`) later turns a `name` edge into `serve` when its target is published. But no `name` row exists for such a reference.
+  - So a finding ratified before its evidence never gains the edge, and the evidence's publication links nothing.
+- Against the requirements:
+  - publication R22: edges are "`serve` only to a published target, `name` otherwise".
+  - ratification R5 says the same, and R16 depends on it ("a case's evidence published after its finding is linked, not only named").
+  - The drop is REC-22's older rule ("dropped for pointing at unpublished material").
+- **Needs your ruling (policy):** a `name` edge to unpublished material publishes that material's id in the published graph. Is that intended, or should R22/R5/R16 read differently?
+
+What ratification tests now:
+- R16's mechanism, through the real publication: a `name` edge from a published finding turns `serve` when its target is published, a division edge never turns, and nothing else changes.
+- The end-to-end arm is a `test.todo` naming this cause.
+
+Also found in publication, red on `tranche/T8` without ratification:
+- `test/publish.test.mjs` §9 ("an EXISTING store migrates: every ratified row survives as edition 1") fails with `NOT NULL constraint failed: published_bundles.edition` when migrating an old-shape store.
+
+## J6 · COMPLETE
+
+**Completion record (RATIFICATION #1 and #2).** The branch is `job/T8/ratification`, merged with `tranche/T8` after B4 (publication).
+
+**Entries applied (layer 8, the ratification bullet):**
+- **Extracted per the map and the requirements** (K3, K6, K31, K57, K61, K83 (3), K93 (3), K94, K102):
+  - `src/ratification/index.mjs` is the store half: R1, R2's `casegate` (K233), R3, R5 and R7, plus the registrations.
+  - `src/ratification/ops.mjs` is the Worker half: R2, R4 and R6.
+  - `src/ratification/checks.mjs` holds R8, R9, R14 and the rows.
+  - Legacy code was changed only by removal and rewiring (ownership check: 0 failures).
+- **Reconciled with publication as built (B4):**
+  - `commitCaseEdition` now gets `completeness` and `bar` as objects and answers `state`.
+  - The group is read by publication; this module no longer reads `textAtSha`.
+  - The case-document formats come from publication (R20).
+  - Nine `store.mjs` delegates to publication are removed; only the moved ceremonies called them.
+- **R16:** tested through publication R35. Its end-to-end arm is a `test.todo`: publication's `publishEdges` drops a reference to unpublished evidence (J5).
+- **N67 and N69 (its share):**
+  - This module registers promotion's case-document catalogue, and C-41 moved here.
+  - R9 registers `checkPublishedExtension` as a promotion step and an audit check. It also runs at `op=ratify`'s gate.
+  - The C-2.8 call at `bio-checks.mjs` 2535 is removed.
+- **N69 (legacy-checks' share):** the suite asserts that legacy-checks' copies agree with this module's: `isCaseMemberBytes`, `caseEditionClaimed`, and `checkCaseDocument` with its vocabularies.
+- **`op=caseratify`'s gate** runs on the promotion instance (`casegate`, K233).
+
+**Deferred:** R16's end-to-end arm (and R5's "`name` otherwise" edge arm), until publication records such an edge (J5).
+
+**Found in other modules:**
+- **publication:**
+  - `publishEdges` drops a reference to unpublished evidence instead of recording it `name` (its R22), so R35 has nothing to turn. This needs Bob's ruling on publishing an unpublished id (J5).
+  - `test/publish.test.mjs` §9 fails its old-store migration on `tranche/T8` too.
+- **legacy-tests re-anchors** (source-text or row imports that moved; none is a behaviour change):
+  - `casesign` 76/1: CASE_UNSIGNED is named in `store.mjs`.
+  - `caseratify-conclusion`: imports `CASE_CONCLUSION_CHECKS` from `bio-checks.mjs`.
+  - `ratify-authority` 29/3: `RATIFY_SCOPE_CHECKS` from `bio-checks.mjs`, and the region `src/index.mjs fetch > is-ratify-project-bundle`.
+  - `case-opened` 13/18: `store.mjs` regions `publish`, `publishedCase` and `#caseEditionState`, the last two publication's.
+  - `publishedcase`: `PUBLISHED_READ_CHECKS` from `bio-checks.mjs`, publication's.
+  - `d470-catalog-census` 11/2: the census pin for the moved rows, and A5's 1.36.0 against 1.37.0.
+- **Stale generated bundles** (mechanics §14): `bio-plane/dist` (plane), agent-worker (it reads `bio-checks.mjs`), newgroup `release.mjs`.
+- **legacy-checks:** `CASE_MEMBER_REFUSED` (R9's step refusal) has no catalogue row. Next plan.
+- **connections:** `gateFacts`' `dangling` list reads `refs` in this module's SQL, and connections states no read contract for it.
+- **basis-versions:** `d484-refusal-translation` 29/1 fails on NO_BASIS's `where`. It is not ratification's.
+
+**Tests and checks run on the merged branch:**
+- `node --test bio-plane/test/m/ratification/`: pass 65, fail 0, todo 1.
+- `node --test bio-plane/test/m/publication/`: pass 41, fail 0.
+- `node --test bio-plane/test/m/promotion/`: pass 64, fail 0.
+- Legacy suites that drive this module's behaviour, all 0 fail:
+  - ratify 43 pass
+  - case-authority 26 pass
+  - case-project-conclusion 25 pass
+  - case-edition-conclusion 36 pass
+  - reuse-ratify 36 pass
+  - d278-codeless-refusals 19 pass
+- `format`: 69 modules, 64 requirements files; 0 failures.
+- `architecture` ratification: 11 product files, 44 relative imports; 0 failures.
+- `coverage` ratification: 16 of 16 live requirement ids named by a test; 0 failures.
+- `ownership` ratification tranche/T8: 0 failures. legacy-store +8/−1212, legacy-checks +0/−258, legacy-index +3/−975.
+
+Size (session_018gC7F7HKgtN9WEz93FAf9j): see its archive; it restarted on context (J3).
+Size (session_015JFVQbsYTrseJ3goPTfSAj): test runs 38, module lines 3031
