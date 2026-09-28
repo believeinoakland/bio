@@ -29,3 +29,13 @@ Size (session_01C1JzBJzAyWM9NPi1FuZxsZ): test runs 6, module lines 3473
 ## J1 · REPORT
 
 Provided part pushed early (§4): R61 `indexTestimony({bundleId, captureSha, words, author}) → indexed` and R62 `onIndexed(module, fn)` are on `job/T11/extraction` @ f688b385fb, methods of `extractionOf(ctx)`, as worded. observation-log (layer 5) can register R62 and legacy-store (layer 10) call R61 against it. One detail beyond the wording, decided on my reading: a call naming no bundle or capture digest writes nothing, calls no listener, and answers `written: 0` with a `why` (R61: it throws only when a listener throws). Tests and the rest of the job follow.
+
+## J2 · COMPLETE
+
+N294 applied and pushed on job/T11/extraction (code f688b385fb, tests 6fe…, record c3dc8abdcb; details in my record's Work section).
+R61 indexTestimony and R62 onIndexed are built as worded, methods of extractionOf(ctx). R61 joins the caller's transaction, replaces the capture's index by R22's writer over one {kind: document} unit (seq 0, chain null), writes no reading-table row, calls no R24 listener, and raises R62 in MODULE_ORDER; a listener throw fails the write and the caller's. Beyond the wording: a call naming no bundle or capture writes nothing and answers written: 0 with a why (J1).
+The test fixture now answers workerd's cursor and refuses LIKE/GLOB patterns over 50 bytes (K316, K313); the whole module suite passes on it.
+Marks met, for you to strike: R61's and R62's not-yet-met (N294). R63 and R31's N285 clause are test.todo (T12, K347).
+Tests: extraction 81 pass, 0 fail, 2 todo; test/m 2426 pass, 0 fail, 27 todo. format, architecture, coverage (58 of 58) and ownership: 0 failures.
+Stale: bio-plane/dist/bio-plane.bundled.mjs (its inputs include src/extraction/index.mjs). Not rebuilt. Found in other modules: nothing new; legacy-store's #testimonyWithin can now call R61 (its layer-10 share). Deferred: nothing.
+Size (session_01C1JzBJzAyWM9NPi1FuZxsZ): test runs 6, module lines 3473
