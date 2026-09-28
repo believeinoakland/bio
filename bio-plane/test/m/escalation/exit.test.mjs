@@ -152,7 +152,7 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
 });
 
 test("R3 R14 a provider this host was not given is never read as met or empty: the read and every act that needs it answer PROVIDER_UNAVAILABLE naming it, and nothing is written", () => {
-  for (const missing of ["conformance", "consequences", "actions", "filings"]) {
+  for (const missing of ["conformance", "actions", "filings"]) {
     const w = seeded({ omit: [missing] });
     const before = w.snapshot();
     const tried = [];
@@ -189,4 +189,16 @@ test("R3 R14 a provider this host was not given is never read as met or empty: t
   delete w.esc.deps.filings;
   const r = w.esc.escalationRead({ id: w.E, viewer: V("bob") });
   assert.deepEqual([r.reason, r.provider], ["PROVIDER_UNAVAILABLE", "filings"]);
+});
+
+test("R3 R14 consequences, merged (K250), is reached through consequencesModule on the same host when not given: with no consequence recorded the exit reads undetermined and escalationEnd answers CONSEQUENCES_UNDETERMINED from the real module", () => {
+  const w = seeded({ omit: ["consequences"] });
+  w.clock.now = "2026-09-20T00:00:00Z";
+  opened(w);
+  const x = w.esc.escalationRead({ id: w.E, viewer: V("bob") }).exit.consequences;
+  assert.deepEqual([x.state, x.ids, x.why], ["undetermined", [], "no consequence recorded"]);
+  w.determine({ project: w.P, act: actOf(w), outcomes: bothCompliant, at: "2026-09-21T00:00:00Z" });
+  const r = end(w);
+  assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED");
+  assert.equal(w.count("consequence_parts") >= 0, true, "the real module's tables exist on this host");
 });

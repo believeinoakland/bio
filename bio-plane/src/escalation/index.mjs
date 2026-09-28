@@ -28,7 +28,7 @@
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `getSetting`, `declarePurge`;
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (its R11).
- *   consequences   `addressed` (its R9).
+ *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
  *   actions        `actionRead` (its R29), `actionFacts` (its R12, the one clock rule).
  *   filings        `filingsFor` (its R13), `availableActions` (its R21).
  *   view           the active profiles' combined view (`jurisdictions.combine`, record-core R26), or null.
@@ -37,6 +37,7 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
+import { consequencesModule } from "../consequences/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
 import { ESCALATION, escalationId, escalationDoc, appendEntry, logOf, logSection, parseFm } from "./doc.mjs";
@@ -964,7 +965,11 @@ export function escalationOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
-    i = new Escalation({ ...d, storage, record, membership, promotion });
+    /* A provider merged into the tranche is reached through its factory on the same host unless given (K248, K250);
+       one not yet merged stays an injected dep, and its absence refuses (PROVIDER_UNAVAILABLE). */
+    const consequences = d.consequences
+      || (() => consequencesModule(host, { record, membership, promotion, ...(d.conformance ? { conformance: d.conformance } : {}) }));
+    i = new Escalation({ ...d, storage, record, membership, promotion, consequences });
     instances.set(host, i);
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
