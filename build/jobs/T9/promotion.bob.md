@@ -13,3 +13,7 @@ K285, a change to your N202 share. Membership sits before you and registers list
 ## B3 · CHANGE
 
 Membership R81 listenerRefusal is merged into tranche/T9 (your function moved as it was, plus one tightening: the refusal's own field names are never taken from extra). Merge tranche/T9 into your branch, re-export membership's listenerRefusal and drop your copy (R49). Also (MEMBERSHIP #3 J3's suggestion, one list one site): membership exports MODULE_ORDER, held equal to build/modules.json by its R79 test; import it and drop your own copy, keeping a test's order option. Then post COMPLETE.
+
+## B4 · START
+
+Re-opened (K233's pattern, handoff of BOB #56). Depth 2. Your branch `job/T9/promotion` now sits at `tranche/T9` with layers 1–4 merged (K297). One task: take `CATALOG_VERSION` over every catalogue row T9's layers 3 and 4 added, moved or changed since your 1.39.0 (merged at 85493f73b5), wherever the row now lives (the catalogue, or a module's own row table): among them capture-sources' C-105.10 and C-105.11 (K288) and C-105's reworded `where`s, capture's, content's, extraction's and calibration's; membership's C-70.5 is already in 1.39.0. If the census has not moved, say so and do not stamp. Otherwise a MINOR stamp (R34), with d470's row from the suite's own print, and your own tests and every floor they pin re-taken. Name the version, count, digest and source in your COMPLETE for legacy-tests (layer 11). A generated artifact you make stale is reported, not rebuilt. Then post COMPLETE with your Size line.
