@@ -28,6 +28,23 @@ Read whole: `roles/JOB.md`; B1; the plan's opening paragraph and layer 2; N275 a
 
 Size (session_01ASTMYa8KNLdKEKcGwkyoBG): test runs 7, module lines 2299
 
+
+## Work (PROMOTION #11, B2 CHANGE, K350)
+
+Merged `tranche/T11` (ca7816a67e): LEGACY-CHECKS #6 restored C-22.7's row in the catalogue, code, condition and translation identical to before N289 (a comment added). The plane boots again.
+
+**Applied** (907fb5feac): 1.41.0's note in `src/gate.mjs` now reads the catalogue file's census as it stands after the restore. C-22.7 stays in the catalogue until ai-runs holds its own copy (K350, N299), so it is not a departure. **This replaces the census figures in my first COMPLETE (J1):** from the d470 suite's own print on this tree, **version 1.41.0, count 397, digest e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007, source 9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e**, equal to 1.40.0's, because every arrival and departure 1.41.0 stamps is in a module's own table. So legacy-tests' 1.41.0 row must carry `changed: ["C-22.1", "C-22.17"]` (and its `source`) or A4 names a collision. A3 and A5 stay red until that re-pin. Nothing else in 1.41.0's reckoning changes.
+
+**Tests and checks run** (on 907fb5feac):
+- `node --test bio-plane/test/m/promotion/`: tests 67, pass 67, fail 0 (`write-path.test.mjs` boots the plane and passes).
+- `node --test bio-plane/test/m/` (every module, the plane-booting users of promotion's services included): tests 2443, pass 2418, fail 0, todo 25.
+- `node --test bio-plane/test/d470-catalog-census.test.mjs`: A3 and A5 red (legacy-tests' re-pin to 1.41.0), every other arm ok.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture`: 16 product files, 57 relative imports; 0 failures. `coverage`: 49 of 49 live requirement ids named by a test; 0 failures. `ownership`: 3 files changed by promotion between tranche/T11 and HEAD; legacy-checks and legacy-store 0 lines; 0 failures.
+
+**Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` (and `.bundle.json`), still carrying 1.40.0. Not rebuilt. **Found in other modules:** none. **Deferred:** nothing.
+
+Size (session_01ASTMYa8KNLdKEKcGwkyoBG): test runs 10, module lines 2300
+
 ## J1 · COMPLETE
 
 Both entries applied and pushed on job/T11/promotion (7702929d29; record d2b1b1e954).
