@@ -91,3 +91,7 @@ No generated artifact is stale: nothing bundled imports conformance yet.
 - `node checks/ownership.mjs … conformance tranche/T8`: 8 files; 0 failures.
 
 Size (session_01F4NHaY2fe7KVfrhugvz5hD): test runs 12, module lines 1213
+
+## J4 · COMPLETE
+
+Complete: see the Completion section of this record. 29/29 tests on the real standards; format, architecture, coverage and ownership clean.
