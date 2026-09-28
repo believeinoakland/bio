@@ -173,3 +173,30 @@ test("R34 isEstablished(grade) is true exactly for A and B", async () => {
   assert.deepEqual(["A", "B", "C", "D", null, undefined, "", "a", "E"].map((g) => isEstablished(g)),
                    [true, true, false, false, false, false, false, false, false]);
 });
+
+test("R13 (N202) registrations are refused through membership's listenerRefusal (LISTENER_MALFORMED, LISTENER_DECLARED) and the listeners run in the modules' total order, whatever order they registered in", async () => {
+  const { listenerRefusal, MODULE_ORDER } = await import("../../../src/membership/index.mjs");
+  const { e, read } = world();
+  e.createEntity({ kind: "office", label: "Alpha" });
+  read("INFO-1", sha("r13o"), [{ kind: "a", key: "1", label: "Alpha" }]);
+  const f = () => {};
+  for (const reg of ["onResolved", "onResolveAttempt"]) {
+    for (const [m, fn] of [["", f], [null, f], ["bias", null], ["bias", "fn"]])
+      assert.deepEqual(e[reg](m, fn), listenerRefusal([], m, fn), `${reg} ${m} ${fn}`);
+    assert.equal(e[reg]("", f).code, "LISTENER_MALFORMED");
+  }
+  const order = [], attempts = [];
+  /* registered against the order: a later module first, then an unknown one, then earlier ones */
+  for (const m of ["observation-log", "zz-unlisted", "connections", "progressions"]) {
+    assert.equal(e.onResolved(m, () => order.push(m)).ok, true);
+    assert.equal(e.onResolveAttempt(m, () => attempts.push(m)).ok, true);
+  }
+  const dup = e.onResolved("connections", f);
+  assert.deepEqual(dup, listenerRefusal([{ module: "connections" }], "connections", f));
+  assert.deepEqual([dup.code, dup.module], ["LISTENER_DECLARED", "connections"]);
+  e.resolve({ captureSha: sha("r13o") });
+  const byOrder = ["connections", "progressions", "observation-log"];
+  assert.deepEqual(byOrder.map((m) => MODULE_ORDER.indexOf(m)), [...byOrder.map((m) => MODULE_ORDER.indexOf(m))].sort((x, y) => x - y));
+  assert.deepEqual(order, [...byOrder, "zz-unlisted"], "total order, a module not in it last");
+  assert.deepEqual(attempts, [...byOrder, "zz-unlisted"]);
+});
