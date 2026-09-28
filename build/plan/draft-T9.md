@@ -35,10 +35,10 @@
 - **entities** · N110 (the read contract gains `entities(entity_id, at)`); N126 (widen region `is-alias-named`); N135 (`resolutions` as a read contract in Provides, with its test).
 - **connections** · N125 (`themes.mjs` re-exports C-81.11–C-81.14 from `THEME_CHECKS`, drops its copy); N131 (`m/connections/factory.test.mjs` line 18 asserts capture R58's refusal, or the arm goes).
 - **progressions** · N118 (its share: C-100's rows in one `where` grammar, no rows for other modules' codes); N63 (its share: R33's notice, if its mark still holds).
-- **bias** · N143 (delete `bias/interim.mjs`, its re-export and its "R33 (interim)" test; K182 (3)); N118 (its share: `BIAS_REFUSED`'s `where` names the public `promotionCheck`); N63 (its share: R41's due and wake, if its mark still holds).
+- **bias** · N171 (its share: `counts(hid)`, `uncleared`); N143 (delete `bias/interim.mjs`, its re-export and its "R33 (interim)" test; K182 (3)); N118 (its share: `BIAS_REFUSED`'s `where` names the public `promotionCheck`); N63 (its share: R41's due and wake, if its mark still holds).
 - **observation-log** · N113 (`DOCUMENT_EVIDENCE_IS_ONE_SIDED`, approved K158); N118 (its share: `AI_LOG_NEVER_LOOKED_STORED`, C-22.17, at region `is-never-looked-stored`); N134 (`CAPTURE_TEXT_UNIT_CONTAINERS` gains `xlsx`, `ods`, `csv`; the reason and vocabulary sentences corrected); N139 (its share: `contentObservationsFor`, D-375).
 - **query-language** · N104 (its share: `MACHINE_READ_KINDS` re-exported from text-chain); N106 (its share, with retrieval: compiled statements read retrieval's own table).
-- **retrieval** · N106 (its share: projection columns and `fts_id` off `bundles` into a table of its own; record-core R37's note then goes); N142 (its share: `answerChanged` into Provides).
+- **retrieval** · N171 (its share: `counts(hid)`); N106 (its share: projection columns and `fts_id` off `bundles` into a table of its own; record-core R37's note then goes); N142 (its share: `answerChanged` into Provides).
 
 ### Layer 6
 
@@ -52,5 +52,7 @@
 - **agent-worker** · N153 (its share: read `op=airun`'s `state` on resume); N157 (its share: its bundle carries what it runs).
 
 ### Layer 11
+
+- **queue** · N171's rewire, N172, N173, with its extraction if the layer-11 extractions open here.
 
 - **legacy-tests** · re-anchor or retire what T9's layers break.
