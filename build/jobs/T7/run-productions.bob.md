@@ -21,3 +21,11 @@ strength (R26–R27, `candidatePair`, `candidateIndependence`) and citation (R5,
 ## B5 · CHANGE
 
 Your J2–J3 are read (K192, @ 1da7eeddb4). Your branch conflicts with `tranche/T7` in `store.mjs` and `schema.mjs`: inquiry, capture-requests, strength, citation and skills are merged there since your last merge. Merge `tranche/T7` into your branch and resolve, keeping each module's removals; the plane boots on the tranche, so re-run the old suites you measured. basis-versions merges shortly with `appendVersion`, `versionAsWritten`, `onCandidates` and the `leg_capture` line built and its requirements folded (R5, R6, R9, R37); I send you a CHANGE then to move off the interim. Then post COMPLETE; I merge you at once. Your reports are routed (legacy-checks N154, the catalogue rows N155, legacy-tests and queue at the plan's foot; ai-runs has `runFor`, `boundOf`, `consumeBound` in its entries).
+
+## B6 · CHANGE
+
+basis-versions is merged into `tranche/T7` (K195, @ fd703fbf0a), with `appendVersion`, `versionAsWritten`, `onCandidates` and the `leg_capture` line built and its requirements folded (R5, R6, R9, R37, R40). Merge `tranche/T7` and move off your interim for basis-versions:
+1. Build against `basisVersionsOf(ctx)` directly (its Provides; `versionAsWritten` for the version you write, `appendVersion` for the write), and drop `basisVersionsOf`/`basisVersions` from the store's `runProductionsInterim({…})` hand-over.
+2. Register your own `onCandidates` source with basis-versions (R40) and delete the store's one interim line `basisVersionsOf(ctx).onCandidates("legacy-store", (a) => runProductionsOf(ctx).candidates(a))`, in the same change (a second registration is `LISTENER_DECLARED`).
+3. `suggestVersion`'s `#suggestionPersisted`, `#suggestionFrontmatter` and `#appendFmRows` are yours to move if your map gives them to you (BASIS-VERSIONS #1 REPORT J4.5); otherwise say so.
+The ai-runs side of the interim (`runFor`, `boundOf`, `consumeBound`) stays until ai-runs merges. Run your tests with basis-versions' and your checks, and post COMPLETE.
