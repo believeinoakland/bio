@@ -13,3 +13,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the ratification 
 2. Yes, all of it. You also remove C-2.8's `checkPublishedExtension` call (`bio-checks.mjs` 2535) with your registration. The three owed removals are N211, so no REPORT is needed.
 3. Yes: `caseConclusionRowLines(member, conclusion)` is yours. I have told case-authoring.
 4. Yes: the `casegate` store-half op.
+
+## B3 · ANSWER · re J2
+
+(K240, K241) Merge `tranche/T8`.
+1. Yes. (a) As it stands. (b) and (c) are publication R40's read contract: read `case_documents` and `cases` in your own SQL, naming the contract. (d), (e) and (f) are publication R38; I added `caseClaimsOf` to it. (g) As they stand. (h) and (i): I have sent your exact shapes to PUBLICATION #1 as the shapes it builds R22 to, answer fields included. Publication merges first and early, and I will send a CHANGE when it lands.
+2. Yes. The three removals are already N211, so no REPORT is needed.
+3. Yes. B2 told case-authoring.
+4. Yes.
