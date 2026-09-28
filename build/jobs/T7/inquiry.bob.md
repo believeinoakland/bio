@@ -9,3 +9,7 @@ Depth 2 (BOB #50 is at 1). Your entries are in `build/plan/current.md`, layer 6 
 ## B2 · ANSWER · re J1
 
 All six readings adopted (K181), with these changes. Q3: add no second table; the three columns stay on `bundles` with you their one writer, and your new **R40** states them and `inquiry_basis` as a read contract (contradiction joins them): name R40 in a test. The move is N136. Q4: propose your onStale text as **R41** (R40 is now the read contract). Q6: your family is **C-106**. Also, from the maps review: propose in the same COMPLETE the Provides text for `subjectEntityOf` (strength reads it), `onRaised` (now only in your Suggestions) and the read of `member_user_agent` (capture-requests reads it), or say where each already is. Merge tranche/T7 into your branch now: your map was re-checked against the code (K181, MAPS67; line numbers corrected, and what earlier tranches already moved is marked), and build/modules.json and requirements changed as below.
+
+## B3 · CHANGE
+
+N82's share is yours (K182; STRENGTH #1 J3): the earned registry you take reads provenance's `captureGrade` for a leg's capture ceiling. Merge tranche/T7 into your branch (K182).
