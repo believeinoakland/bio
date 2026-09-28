@@ -70281,6 +70281,26 @@ function refuseDateInvalid(date) {
     { date: typeof date === "string" ? date.slice(0, 40) : null }
   );
 }
+function standardsOps(s, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = body || {};
+  return {
+    standarddeclare: () => s.standardDeclare({ ...b, viewer: qp("viewer") }),
+    standard: () => s.standardRead({ id: qp("id"), viewer: qp("viewer") }),
+    standards: () => s.standardsIn({
+      at: qp("at"),
+      kind: qp("kind"),
+      source: qp("source"),
+      cite: qp("cite"),
+      after: qp("after"),
+      limit: qp("limit"),
+      viewer: qp("viewer")
+    }),
+    standardinforce: () => s.inForce(qp("id"), qp("date")),
+    standardpropose: () => s.standardPropose({ ...b, viewer: qp("viewer") }),
+    standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") })
+  };
+}
 var instances16 = /* @__PURE__ */ new WeakMap();
 function standardsOf(host, deps) {
   let s = instances16.get(host);
@@ -71745,6 +71765,28 @@ function conformanceOf(host, deps) {
     c.reevaluation.onBasisChanged("conformance", (e) => c.basisChanged(e));
   }
   return c;
+}
+function conformanceOps(c, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  const stamped = { author: qp("author"), viewer: qp("viewer") };
+  return {
+    determine: () => c.determine({ ...b, ...stamped }),
+    determination: () => c.determinationRead({ id: qp("id") ?? b.id, viewer: qp("viewer") }),
+    determinations: () => c.determinationsFor({
+      project: qp("project"),
+      act: qp("act"),
+      standard: qp("standard"),
+      finding: qp("finding"),
+      outcome: qp("outcome"),
+      live: qp("live"),
+      after: qp("after"),
+      limit: qp("limit"),
+      viewer: qp("viewer")
+    }),
+    comparisonpropose: () => c.comparisonPropose({ ...b, proposer: qp("author"), viewer: qp("viewer") }),
+    comparison: () => c.comparisonRead({ id: qp("id") ?? b.id, viewer: qp("viewer") })
+  };
 }
 
 // src/actions/checks.mjs
@@ -79971,6 +80013,4103 @@ function decorate(act, gate) {
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
 
+// src/consequences/figures.mjs
+var OPS = Object.freeze(["sum", "difference", "count", "product", "ratio"]);
+var SCALES = Object.freeze({
+  thousand: 3,
+  k: 3,
+  million: 6,
+  m: 6,
+  mm: 6,
+  mn: 6,
+  billion: 9,
+  bn: 9,
+  b: 9,
+  trillion: 12,
+  tn: 12
+});
+var FIGURE = /^(-|\()?\s*([$€£¥])?\s*(-)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)\s*([a-z]+)?\s*(\))?$/i;
+var fold = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
+function parseFigure(figure2) {
+  if (typeof figure2 !== "string" || !fold(figure2)) return { ok: false, why: "no figure was stated as read" };
+  const m = FIGURE.exec(fold(figure2));
+  if (!m) return { ok: false, why: `"${fold(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
+  const [, lead, , minus, digits, word, close] = m;
+  if (lead === "(" !== (close === ")")) return { ok: false, why: "an opening parenthesis is not closed, or the reverse" };
+  if (lead === "-" && minus) return { ok: false, why: "the figure carries two minus signs" };
+  let exp = 0;
+  if (word) {
+    const w = word.toLowerCase();
+    if (!(w in SCALES)) return { ok: false, why: `"${word}" is not a scale word this module reads` };
+    exp = SCALES[w];
+  }
+  const plain = digits.replace(/,/g, "");
+  const decimals = Math.max(0, (plain.split(".")[1] || "").length - exp);
+  const number = Number(`${plain}e${exp}`) * (lead || minus ? -1 : 1);
+  if (!Number.isFinite(number)) return { ok: false, why: "the figure is not a finite number" };
+  return { ok: true, number: Object.is(number, -0) ? 0 : number, decimals };
+}
+function passageHolds(text3, figure2) {
+  if (typeof text3 !== "string" || typeof figure2 !== "string") return false;
+  const f8 = fold(figure2);
+  return f8 !== "" && fold(text3).includes(f8);
+}
+var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
+var toPrecision = (x) => Number(x.toPrecision(15));
+function compute(op, operands) {
+  const n = operands.length;
+  const need = { difference: 2, ratio: 2 }[op];
+  if (!OPS.includes(op)) return { ok: false, code: "op_unknown", why: `"${String(op)}" is not one of ${OPS.join(", ")}` };
+  if (n === 0 || need && n < need)
+    return { ok: false, code: "operand_missing", why: `a ${op} needs ${need ? `exactly ${need}` : "at least one"} operand${need ? "s" : ""}, and ${n} ${n === 1 ? "was" : "were"} given` };
+  if (need && n > need)
+    return { ok: false, code: "operands_extra", why: `a ${op} takes exactly ${need} operands, and ${n} were given` };
+  if (op === "count") return { ok: true, value: n };
+  const nums = operands.map((o) => o.number);
+  const dec = Math.max(0, ...operands.map((o) => o.decimals || 0));
+  if (op === "sum") return { ok: true, value: toDecimals(nums.reduce((a, b) => a + b, 0), dec) };
+  if (op === "difference") return { ok: true, value: toDecimals(nums[0] - nums[1], dec) };
+  if (op === "product") return { ok: true, value: toPrecision(nums.reduce((a, b) => a * b, 1)) };
+  if (nums[1] === 0) return { ok: false, code: "division_by_zero", why: "a ratio's second operand is zero" };
+  return { ok: true, value: toPrecision(nums[0] / nums[1]) };
+}
+function addMeasures(measures) {
+  if (!measures.length) return null;
+  let low = 0;
+  let high = 0;
+  let dec = 0;
+  let ranged = false;
+  for (const m of measures) {
+    const lo = m.range ? m.range.low : m.value;
+    const hi = m.range ? m.range.high : m.value;
+    if (m.range) ranged = true;
+    dec = Math.max(dec, decimalsOf(lo), decimalsOf(hi));
+    low += lo;
+    high += hi;
+  }
+  low = toDecimals(low, dec);
+  high = toDecimals(high, dec);
+  return ranged ? { range: { low, high } } : { value: low };
+}
+function decimalsOf(x) {
+  const s = String(x);
+  if (/e/i.test(s)) return 0;
+  return (s.split(".")[1] || "").length;
+}
+
+// src/consequences/schema.mjs
+var CONSEQUENCES_SCHEMA = `
+-- R1\u2013R6, R14: ONE ROW PER PART, the part's bundle id its key. determination,
+-- standard and project are the breach it is recorded against (the project is
+-- the determination's, read when recorded, so every read gates on it, R13).
+-- affected, measure and period are the canonical JSON of what was recorded;
+-- state is computed, assessed or undetermined. value is the module's own
+-- arithmetic for a computed part (JSON: {value} or {range}), grade its weakest
+-- operand's capture letter (null when undetermined) and grade_why the named
+-- weakest link; op the computation. rationale and rests_on are an assessment's;
+-- undetermined_why an undetermined part's reason code and words. causation is
+-- the inquiry named (or null) and causation_state what it was when recorded
+-- (established or unproven), causation_why the words. machine is 1 for a
+-- machine's computed part (R2). supersedes names the part this one revises
+-- (R6), at most once (UNIQUE), with its reason.
+CREATE TABLE IF NOT EXISTS consequence_parts (
+  bundle_id         TEXT PRIMARY KEY,
+  determination     TEXT NOT NULL,
+  standard          TEXT NOT NULL,
+  project           TEXT,
+  affected          TEXT NOT NULL,
+  measure           TEXT,
+  period            TEXT NOT NULL,
+  state             TEXT NOT NULL,
+  op                TEXT,
+  value             TEXT,
+  grade             TEXT,
+  grade_why         TEXT,
+  rationale         TEXT,
+  rests_on          TEXT,
+  undetermined_code TEXT,
+  undetermined_why  TEXT,
+  causation         TEXT,
+  causation_state   TEXT NOT NULL,
+  causation_why     TEXT NOT NULL,
+  machine           INTEGER NOT NULL DEFAULT 0,
+  author            TEXT NOT NULL,
+  at                TEXT NOT NULL,
+  supersedes        TEXT UNIQUE,
+  reason            TEXT
+);
+CREATE INDEX IF NOT EXISTS consequence_parts_determination ON consequence_parts (determination, standard);
+-- R2: A COMPUTED PART'S OPERANDS, in order: the content id, the figure as the
+-- author read it, the number this module parsed from it, the capture the
+-- passage is of, and that capture's grade (provenance.captureGrade) as it read
+-- when recorded: grade (null when undetermined), route, determined, basis.
+CREATE TABLE IF NOT EXISTS consequence_operands (
+  part_id      TEXT NOT NULL,
+  ord          INTEGER NOT NULL,
+  content_id   TEXT NOT NULL,
+  figure       TEXT,
+  number       REAL,
+  capture_sha  TEXT,
+  grade        TEXT,
+  route        TEXT,
+  determined   INTEGER NOT NULL DEFAULT 0,
+  basis        TEXT,
+  PRIMARY KEY (part_id, ord)
+);
+-- R9: A MEMBER'S ADDRESSED RECORD, one row per act, append-only; the latest by
+-- seq is the part's state. evidence is the JSON list of content ids or
+-- findings.
+CREATE TABLE IF NOT EXISTS consequence_addressed (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  part_id    TEXT NOT NULL,
+  state      TEXT NOT NULL,
+  evidence   TEXT NOT NULL,
+  reason     TEXT NOT NULL,
+  author     TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS consequence_addressed_part ON consequence_addressed (part_id, seq);
+`;
+var CONSEQUENCES_TABLES = Object.freeze([
+  "consequence_parts",
+  Object.freeze({ name: "consequence_operands", keys: Object.freeze(["part_id"]) }),
+  Object.freeze({ name: "consequence_addressed", keys: Object.freeze(["part_id"]) })
+]);
+function migrateConsequences(sql) {
+  const bare2 = CONSEQUENCES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const stmt of bare2.split(";")) if (stmt.trim()) sql.exec(stmt.trim());
+}
+
+// src/consequences/checks.mjs
+var at7 = (fn) => `src/consequences/index.mjs ${fn}`;
+var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at7(fn), translation });
+var CONSEQUENCES_CHECKS = Object.freeze({
+  NO_SUCH_DETERMINATION: row(1, "#record", "A consequence is recorded against a determination you can see. One you may not see is answered exactly as one that does not exist."),
+  NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the live determination found noncompliant. A superseded determination's parts stay readable and are not carried forward."),
+  NOT_A_PARTICIPANT: row(3, "#record", "Recording a consequence is work inside the determination's project, done by a member who has joined it. A machine may prepare a computed part and answers no project's authority."),
+  AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", "Who or what is affected is a class, a fund, a program, a service, a body or other, with a description."),
+  AFFECTED_INDIVIDUAL: row(5, "checkAffected", "People are counted as a class or named in their official role, never singled out: no part names an individual."),
+  MEASURE_UNKNOWN_UNIT: row(6, "checkMeasure", "A measure counts money, benefits, services, time or a count."),
+  MEASURE_INVALID: row(7, "checkMeasure", "A measure's value, or its range's bounds, are finite numbers, the range in order, and a currency belongs only to money."),
+  PERIOD_INVALID: row(8, "checkPeriod", "A consequence runs over a period: two dates, the start not after the end."),
+  MACHINE_CANNOT_ASSESS: row(9, "#basis", "An assessment is a member's judgment. A machine may compute a part from the record's own figures and propose an assessment as text; it never records one."),
+  NO_RATIONALE: row(10, "#basis", "An assessed value says why."),
+  BAD_RATIONALE: row(11, "#basis", "A rationale is at most 2,000 characters."),
+  BASIS_UNREADABLE: row(12, "#computation", "A computation names its operation and its operands: each the content whose passage holds the figure, and the figure as read."),
+  NO_SUCH_EVIDENCE: row(13, "#resolvesEvidence", "Evidence, and what an assessment rests on, are content or findings this record holds and you may see."),
+  NO_SUCH_PART: row(14, "#part", "No consequence part answers to that id. One you may not see is answered exactly as one that does not exist."),
+  ALREADY_SUPERSEDED: row(15, "consequenceRevise", "A part that has been revised is read, not revised or addressed again: its successor carries the record forward."),
+  NO_REASON: row(16, "consequenceRevise", "A revision, and an addressed record, say why."),
+  BAD_REASON: row(17, "consequenceRevise", "A reason is at most 500 characters."),
+  MACHINE_CANNOT_ADDRESS: row(18, "addressedRecord", "Whether a consequence has been addressed is a member's judgment, with evidence. A machine never records it."),
+  ADDRESSED_UNKNOWN_STATE: row(19, "addressedRecord", "A part is recorded addressed or not_addressed."),
+  ADDRESSED_NO_EVIDENCE: row(20, "addressedRecord", "A consequence is recorded addressed with the evidence that it was. Partial redress does not end an escalation.")
+});
+
+// src/consequences/index.mjs
+var AFFECTED_KINDS = Object.freeze(["class", "fund", "program", "service", "body", "other"]);
+var UNITS = Object.freeze(["money", "benefits", "services", "time", "count"]);
+var PART_STATES = Object.freeze(["computed", "assessed", "undetermined"]);
+var ADDRESSED_STATES = Object.freeze(["addressed", "not_addressed"]);
+var UNDETERMINED_WHY = Object.freeze({
+  not_in_record: "the figure is not in the record",
+  form_not_read: "the record holds it in a form not read",
+  not_assessed: "nobody has assessed it",
+  not_computable: "the record holds the figures, and the computation named cannot be carried out over them"
+});
+var RATIONALE_MAX = 2e3;
+var REASON_MAX3 = 500;
+var PERSON_KINDS = /* @__PURE__ */ new Set([
+  "person",
+  "persons",
+  "individual",
+  "individuals",
+  "human",
+  "resident",
+  "citizen",
+  "member",
+  "employee",
+  "official",
+  "named_person",
+  "name"
+]);
+var PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"];
+var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
+var INTERNAL = `${MACHINE_CLASS_PREFIX}admin`;
+var str8 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var isObj10 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var q3 = (v) => JSON.stringify(v ?? null);
+var json = (v) => v == null ? null : JSON.stringify(v);
+var parse = (s) => {
+  if (s == null) return null;
+  try {
+    return JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+var machine = (who2) => !str8(who2) || isMachineIdentity(str8(who2));
+var second = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
+var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var HEX644 = /^[0-9a-f]{64}$/;
+var DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
+function refuse4(code, detail, extra = {}) {
+  const row2 = CONSEQUENCES_CHECKS[code];
+  return {
+    ok: false,
+    reason: code,
+    code,
+    ...row2 ? { check: row2.check, translation: row2.translation } : {},
+    detail,
+    ...extra
+  };
+}
+function checkAffected(a) {
+  if (!isObj10(a)) return refuse4("AFFECTED_UNKNOWN_KIND", `an affected is {kind, description, role?}, kind one of ${AFFECTED_KINDS.join(", ")}. Nothing was written.`);
+  const kind = str8(a.kind) ? a.kind.trim().toLowerCase() : null;
+  const personKey = [a, isObj10(a.role) ? a.role : {}].flatMap((o) => PERSON_KEYS.filter((k) => o[k] != null && o[k] !== ""));
+  if (kind && PERSON_KINDS.has(kind) || personKey.length)
+    return refuse4("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}: record a class (kind "class") or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
+  if (!kind || !AFFECTED_KINDS.includes(kind) || !str8(a.description))
+    return refuse4("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `"${String(a.kind ?? "")}" is not a kind of affected` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
+  let role = null;
+  if (a.role != null) {
+    if (!isObj10(a.role) || !str8(a.role.role) || !str8(a.role.body))
+      return refuse4("AFFECTED_INDIVIDUAL", "a role is an office, {role, body}: the office and the body it belongs to, never a person. Nothing was written.", { kind });
+    role = { role: a.role.role.trim(), body: a.role.body.trim() };
+  }
+  return { ok: true, affected: { kind, description: a.description.trim(), ...role ? { role } : {} } };
+}
+function checkMeasure(m) {
+  if (m == null) return { ok: true, measure: null };
+  if (!isObj10(m) || !str8(m.unit) || !UNITS.includes(m.unit.trim()))
+    return refuse4(
+      "MEASURE_UNKNOWN_UNIT",
+      `a measure's unit is one of ${UNITS.join(", ")}. Nothing was written.`,
+      { unit: isObj10(m) ? m.unit ?? null : null }
+    );
+  const unit = m.unit.trim();
+  const bad = (why) => refuse4("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
+  if (m.currency != null && m.currency !== "") {
+    if (unit !== "money") return bad(`a currency belongs to a measure of money, and this one is of ${unit}`);
+    if (!str8(m.currency)) return bad("a currency is named by its code, such as USD");
+  }
+  const hasValue = m.value !== void 0 && m.value !== null;
+  const hasRange = m.range !== void 0 && m.range !== null;
+  if (hasValue && hasRange) return bad("a measure carries a value or a range, not both");
+  const out = { unit, ...str8(m.currency) ? { currency: m.currency.trim().toUpperCase() } : {} };
+  if (hasValue) {
+    if (typeof m.value !== "number" || !Number.isFinite(m.value)) return bad("the value is not a finite number");
+    out.value = m.value;
+  }
+  if (hasRange) {
+    const [low, high] = Array.isArray(m.range) ? m.range : isObj10(m.range) ? [m.range.low, m.range.high] : [];
+    if (typeof low !== "number" || !Number.isFinite(low) || typeof high !== "number" || !Number.isFinite(high))
+      return bad("a range's bounds are two finite numbers, {low, high}");
+    if (low > high) return bad("the range is reversed: its low bound is above its high bound");
+    out.range = { low, high };
+  }
+  return { ok: true, measure: out };
+}
+function checkPeriod(p) {
+  const bad = (why) => refuse4("PERIOD_INVALID", `${why}. Nothing was written.`);
+  if (!isObj10(p)) return bad("a period is {from, to}: the dates the consequence ran between");
+  const from = str8(p.from);
+  const to = str8(p.to);
+  if (!from || !to || !DATE.test(from) || !DATE.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)))
+    return bad("a period's from and to are dates, YYYY-MM-DD, or instants");
+  if (Date.parse(from) > Date.parse(to)) return bad("the period is reversed: it ends before it starts");
+  return { ok: true, period: { from, to } };
+}
+var Consequences = class {
+  #deps;
+  constructor({
+    storage,
+    record,
+    membership,
+    promotion,
+    host = null,
+    conformance = null,
+    content = null,
+    provenance = null,
+    inquiry = null,
+    strength = null,
+    passageText = null,
+    now = null
+  } = {}) {
+    this.sql = storage.sql;
+    this.record = record;
+    this.membership = membership;
+    this.promotion = promotion;
+    this.#deps = { host, conformance, content, provenance, inquiry, strength, passageText };
+    this.now = typeof now === "function" ? now : () => stampInstant("second");
+  }
+  /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  get content() {
+    return this.#deps.content ||= contentOf(this.#deps.host);
+  }
+  get provenance() {
+    return this.#deps.provenance ||= provenanceOf(this.#deps.host);
+  }
+  get inquiry() {
+    return this.#deps.inquiry ||= inquiryOf(this.#deps.host);
+  }
+  get strength() {
+    return this.#deps.strength ||= strengthOf(this.#deps.host);
+  }
+  get conformance() {
+    return this.#deps.conformance;
+  }
+  migrate() {
+    migrateConsequences(this.sql);
+  }
+  #rows(qs, ...a) {
+    return [...this.sql.exec(qs, ...a)];
+  }
+  #one(qs, ...a) {
+    for (const r of this.sql.exec(qs, ...a)) return r;
+    return null;
+  }
+  #when() {
+    const w = this.now();
+    return second(typeof w === "string" && w ? w : stampInstant("second"));
+  }
+  /* R2: the text of the passage an operand names, or null when it is held in a form this module does not read. */
+  #passageText(contentId) {
+    try {
+      const fn = this.#deps.passageText || (typeof this.content.passageText === "function" ? (id) => this.content.passageText(id) : null);
+      const t = fn ? fn(contentId) : null;
+      return typeof t === "string" ? t : isObj10(t) && typeof t.text === "string" ? t.text : null;
+    } catch {
+      return null;
+    }
+  }
+  /* R13 (K171 (10)): whether the viewer sees a project's contents: sight first, FULL only. An internal caller (no
+     viewer) is not asked; a part outside any project is seen as its determination is. */
+  #seesProject(project, viewer) {
+    if (viewer === null || viewer === void 0 || !project) return true;
+    return this.membership.sight(project, viewer) === "full";
+  }
+  /* R1: the determination through conformance's read (its R9), as `{id, project, outcome(standard), live}`; null when
+     absent, invisible, or conformance is not here to answer (fail closed). Read through one adapter so the spelling of
+     conformance's answer lives in one place. */
+  #determination(id, viewer) {
+    const c = this.conformance;
+    if (!str8(id) || !c || typeof c.determinationRead !== "function") return null;
+    let d;
+    try {
+      d = c.determinationRead({ id, viewer: viewer ?? INTERNAL });
+    } catch {
+      return null;
+    }
+    if (!isObj10(d) || d.ok === false) return null;
+    const body = isObj10(d.determination) ? { ...d, ...d.determination } : d;
+    const outcomes = body.outcomes ?? body.outcome_per_standard ?? body.standards ?? null;
+    const outcome = (std) => {
+      if (Array.isArray(outcomes)) {
+        const o = outcomes.find((x) => isObj10(x) && (x.standard === std || x.id === std || isObj10(x.standard) && x.standard.id === std));
+        return o ? o.outcome ?? null : null;
+      }
+      if (isObj10(outcomes)) {
+        const v = outcomes[std];
+        return isObj10(v) ? v.outcome ?? null : v ?? null;
+      }
+      return null;
+    };
+    const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
+    const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
+    return { id, project: body.project ?? null, outcome, live };
+  }
+  /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
+  #part(id, viewer) {
+    if (!str8(id)) return null;
+    const r = this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id);
+    if (!r || !this.#seesProject(r.project, viewer)) return null;
+    return r;
+  }
+  #successor(id) {
+    return this.#one(`SELECT bundle_id FROM consequence_parts WHERE supersedes=?`, id)?.bundle_id ?? null;
+  }
+  /* R5: a named inquiry's causation, as it reads now: established when it is an inquiry the reader may see that has
+     concluded and is not superseded; unproven otherwise, with why. */
+  #causationNow(inquiryId, viewer) {
+    if (!str8(inquiryId))
+      return {
+        state: "unproven",
+        inquiry: null,
+        why: "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not establish it (DEC-14), so the causation is unproven until one concludes"
+      };
+    const who2 = viewer ?? INTERNAL;
+    const info = this.record.bundleInfo(inquiryId);
+    if (!info || !this.membership.inSight(inquiryId, who2) || normalizeType(info.type) !== "inquiry")
+      return {
+        state: "unproven",
+        inquiry: inquiryId,
+        why: "the inquiry named is not one this record holds that you may see, so it establishes nothing here"
+      };
+    const head = this.record.head(inquiryId);
+    const st = head ? head.currentState : null;
+    const sup = this.#supersededBy(inquiryId);
+    if (sup.length)
+      return {
+        state: "unproven",
+        inquiry: inquiryId,
+        why: `the inquiry named has been superseded (by ${sup.join(", ")}), so its finding does not stand`
+      };
+    if (!CONCLUDED.has(st))
+      return {
+        state: "unproven",
+        inquiry: inquiryId,
+        why: `the inquiry named is ${st ?? "in no state"}, not concluded: until it concludes that the harm follows from the act, the causation is unproven`
+      };
+    return {
+      state: "established",
+      inquiry: inquiryId,
+      why: `the inquiry named has concluded; its finding is that the harm follows from the act`
+    };
+  }
+  #supersededBy(id) {
+    try {
+      const s = this.inquiry.supersededBy(id);
+      return Array.isArray(s) ? s : s ? [s] : [];
+    } catch {
+      return [];
+    }
+  }
+  /* R9, R3: an evidence or rests-on id resolves to a content row, or a finding (an inquiry), the author may see. */
+  #resolvesEvidence(id, who2) {
+    if (!str8(id)) return false;
+    if (HEX644.test(id)) {
+      const row2 = this.content.contentRow(id);
+      return !!row2 && this.membership.inSight(row2.bundle_id, who2);
+    }
+    const info = this.record.bundleInfo(id);
+    return !!info && normalizeType(info.type) === "inquiry" && this.membership.inSight(id, who2);
+  }
+  /* ===================================================================== *
+   * R1–R6: RECORDING A PART
+   * ===================================================================== */
+  /** R1–R5: record one part against one standard's noncompliant outcome of a live determination. */
+  consequenceRecord(args = {}) {
+    return this.#record(args, null);
+  }
+  /** R6: a part is never edited; a revision records a successor with R1's refusals, and the earlier part stays
+   *  readable with the link. The successor keeps the earlier part's determination and standard. */
+  consequenceRevise(args = {}) {
+    const { id = null, reason = null, author = null, viewer = null } = args;
+    const who2 = viewer ?? author;
+    const old = this.#part(id, who2);
+    if (!old) return refuse4("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { id });
+    const next = this.#successor(old.bundle_id);
+    if (next) return refuse4("ALREADY_SUPERSEDED", `${old.bundle_id} has already been revised by ${next}; revise that one. Nothing was written.`, { id: old.bundle_id, superseded_by: next });
+    if (!str8(reason)) return refuse4("NO_REASON", "a revision says why the part is revised. Nothing was written.");
+    if (reason.trim().length > REASON_MAX3)
+      return refuse4("BAD_REASON", `a revision's reason is at most ${REASON_MAX3} characters. Nothing was written.`);
+    const pick2 = (k, stored) => k in args ? args[k] : stored;
+    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse(old.rests_on) || [] } : { why: old.undetermined_code };
+    return this.#record({
+      determination: old.determination,
+      standard: old.standard,
+      affected: pick2("affected", parse(old.affected)),
+      measure: pick2("measure", parse(old.measure)),
+      period: pick2("period", parse(old.period)),
+      basis: pick2("basis", oldBasis),
+      causation: pick2("causation", old.causation),
+      author,
+      viewer
+    }, { supersedes: old.bundle_id, reason: reason.trim() });
+  }
+  #record({
+    determination = null,
+    standard = null,
+    affected = null,
+    measure = null,
+    period = null,
+    basis = null,
+    causation = null,
+    author = null,
+    viewer = null
+  } = {}, rev) {
+    const who2 = viewer ?? (str8(author) || null);
+    const byMachine = machine(author);
+    const d = this.#determination(determination, who2);
+    if (!d || !this.#seesProject(d.project, who2))
+      return refuse4("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { determination });
+    if (!str8(standard) || d.outcome(standard) !== "noncompliant" || !d.live)
+      return refuse4(
+        "NOT_NONCOMPLIANT",
+        !d.live ? `${d.id} has been superseded: a consequence is recorded against a live determination, and the parts of the earlier one stay readable, not carried forward. Nothing was written.` : `${d.id}'s outcome for ${str8(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did. Nothing was written.`,
+        { determination: d.id, standard: standard ?? null }
+      );
+    if (!byMachine && d.project) {
+      const denied = this.membership.projectAuthority(d.project, str8(author), "joined", "consequenceRecord");
+      if (denied) return refuse4("NOT_A_PARTICIPANT", `recording a consequence is work inside ${d.project}, and ${str8(author)} has not joined it. Nothing was written.`, { project: d.project });
+    }
+    const a = checkAffected(affected);
+    if (!a.ok) return a;
+    const m = checkMeasure(measure);
+    if (!m.ok) return m;
+    const p = checkPeriod(period);
+    if (!p.ok) return p;
+    const b = this.#basis(basis, m.measure, who2, byMachine);
+    if (!b.ok) return b;
+    const cause = this.#causationNow(causation, who2);
+    const at14 = this.#when();
+    return this.record.transact(() => {
+      const id = `${this.record.allocId("CONS", at14.slice(0, 4)).id}-${a.affected.kind}`;
+      const part = {
+        determination: d.id,
+        standard,
+        project: d.project,
+        affected: a.affected,
+        measure: b.measure,
+        period: p.period,
+        state: b.state,
+        causation: cause,
+        author: str8(author) ?? "",
+        machine: byMachine,
+        at: at14,
+        supersedes: rev ? rev.supersedes : null,
+        reason: rev ? rev.reason : null,
+        ...b.doc
+      };
+      const done = this.promotion.promote({
+        bundleId: id,
+        base: null,
+        snapKey: `${at14.replace(/[-:]/g, "")}_${rand7(4)}`,
+        author: str8(author) ?? INTERNAL,
+        files: [{ path: "bundle.md", text: partDoc(id, part) }],
+        meta: { object_type: "consequence", title: titleOf2(part), current_state: "recorded", created: at14, last_updated: at14 }
+      });
+      if (done.ok === false) return done;
+      this.sql.exec(
+        `INSERT INTO consequence_parts (bundle_id, determination, standard, project, affected, measure,
+          period, state, op, value, grade, grade_why, rationale, rests_on, undetermined_code, undetermined_why,
+          causation, causation_state, causation_why, machine, author, at, supersedes, reason)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        d.id,
+        standard,
+        d.project,
+        json(a.affected),
+        json(b.measure),
+        json(p.period),
+        b.state,
+        b.op ?? null,
+        json(b.value),
+        b.grade ?? null,
+        b.gradeWhy ?? null,
+        b.rationale ?? null,
+        json(b.restsOn),
+        b.undeterminedCode ?? null,
+        b.undeterminedWhy ?? null,
+        cause.inquiry,
+        cause.state,
+        cause.why,
+        byMachine ? 1 : 0,
+        str8(author) ?? "",
+        at14,
+        rev ? rev.supersedes : null,
+        rev ? rev.reason : null
+      );
+      (b.operands || []).forEach((o, i) => this.sql.exec(
+        `INSERT INTO consequence_operands (part_id, ord, content_id,
+          figure, number, capture_sha, grade, route, determined, basis) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        i,
+        o.content,
+        o.figure ?? null,
+        o.number ?? null,
+        o.capture_sha ?? null,
+        o.grade ?? null,
+        o.route ?? null,
+        o.determined ? 1 : 0,
+        o.basis ?? null
+      ));
+      return { ok: true, id, part: this.#answer(this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id), who2) };
+    });
+  }
+  /* R2–R4: what the basis makes of the part: its state, measure and the fields that state carries, or a refusal. */
+  #basis(basis, measure, who2, byMachine) {
+    const computation = isObj10(basis) && ("op" in basis || "operands" in basis);
+    if (computation) return this.#computation(basis, measure, who2);
+    const hasFigure = measure && ("value" in measure || "range" in measure);
+    if (byMachine)
+      return refuse4("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
+    if (hasFigure) {
+      const rationale = isObj10(basis) ? str8(basis.rationale) : null;
+      if (!rationale) return refuse4("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
+      if (rationale.length > RATIONALE_MAX)
+        return refuse4("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
+      const rests = basis.rests_on ?? basis.restsOn ?? [];
+      if (!Array.isArray(rests)) return refuse4("BASIS_UNREADABLE", "what an assessment rests on is a list of content ids or findings, possibly empty. Nothing was written.");
+      const unknown = rests.filter((x) => !this.#resolvesEvidence(x, who2));
+      if (unknown.length) return refuse4("NO_SUCH_EVIDENCE", "an assessment rests on content or findings this record holds and you may see. Nothing was written.", { unknown: unknown.map((x) => typeof x === "string" ? x : null) });
+      return {
+        ok: true,
+        state: "assessed",
+        measure,
+        rationale,
+        restsOn: rests.map(String),
+        doc: { rationale, rests_on: rests.map(String) }
+      };
+    }
+    const code = isObj10(basis) && str8(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
+    return {
+      ok: true,
+      state: "undetermined",
+      measure,
+      undeterminedCode: code,
+      undeterminedWhy: UNDETERMINED_WHY[code],
+      doc: { undetermined: code }
+    };
+  }
+  /* R2, R4: a computation over the record. The value is this module's arithmetic over the figures the passages hold;
+     an operand not held, or a figure its passage does not hold, leaves the computation lacking it (undetermined). */
+  #computation(basis, measure, who2) {
+    const op = str8(basis.op);
+    if (!op || !OPS.includes(op))
+      return refuse4(
+        "BASIS_UNREADABLE",
+        `a computation names its op, one of ${OPS.join(", ")}. Nothing was written.`,
+        { op: basis.op ?? null }
+      );
+    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj10(o) || !str8(o.content)))
+      return refuse4("BASIS_UNREADABLE", "a computation's operands are a list of {content, figure}: the content id whose passage holds the figure, and the figure as read. Nothing was written.");
+    const operands = [];
+    let lacking = null;
+    for (const [i, raw] of basis.operands.entries()) {
+      const o = { content: raw.content.trim(), figure: typeof raw.figure === "string" ? raw.figure : raw.figure == null ? null : String(raw.figure) };
+      const row2 = this.content.contentRow(o.content);
+      if (!row2 || !this.membership.inSight(row2.bundle_id, who2 ?? INTERNAL)) {
+        lacking ||= { code: "not_in_record", why: `operand ${i} names content this record does not hold, or that you may not see` };
+        operands.push(o);
+        continue;
+      }
+      o.capture_sha = row2.capture_sha;
+      const g = this.provenance.captureGrade(row2.capture_sha) || {};
+      Object.assign(o, { grade: g.grade ?? null, route: g.route ?? null, determined: !!g.determined, basis: g.basis ?? null });
+      if (op !== "count") {
+        if (o.figure == null || !String(o.figure).trim()) {
+          lacking ||= { code: "not_in_record", why: `operand ${i} states no figure as read` };
+        } else {
+          const f8 = parseFigure(o.figure);
+          if (!f8.ok) return refuse4("BASIS_UNREADABLE", `operand ${i}: ${f8.why}. Nothing was written.`, { operand: i });
+          const text3 = this.#passageText(o.content);
+          if (text3 === null)
+            lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
+          else if (!passageHolds(text3, o.figure))
+            lacking ||= { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` };
+          else Object.assign(o, { number: f8.number, decimals: f8.decimals });
+        }
+      }
+      operands.push(o);
+    }
+    const stored = operands.map(({ decimals, ...o }) => o);
+    const docOps = stored.map((o) => ({ content: o.content, figure: o.figure }));
+    if (!lacking && !measure)
+      lacking = { code: "not_assessed", why: "no measure is stated, so the computation has no unit" };
+    let result = null;
+    if (!lacking) {
+      result = compute(op, operands);
+      if (!result.ok && result.code === "operands_extra")
+        return refuse4("BASIS_UNREADABLE", `${result.why}. Nothing was written.`);
+      if (!result.ok) lacking = { code: result.code === "operand_missing" ? "not_in_record" : "not_computable", why: result.why };
+    }
+    const unitOnly = measure ? { unit: measure.unit, ...measure.currency ? { currency: measure.currency } : {} } : null;
+    if (lacking)
+      return {
+        ok: true,
+        state: "undetermined",
+        op,
+        measure: unitOnly,
+        operands: stored,
+        undeterminedCode: lacking.code,
+        undeterminedWhy: `${UNDETERMINED_WHY[lacking.code]}: ${lacking.why}`,
+        doc: { op, operands: docOps, undetermined: lacking.code }
+      };
+    const rank5 = (g) => BASIS_GRADES.indexOf(g);
+    const open = stored.findIndex((o) => !o.grade);
+    let grade = null;
+    let gradeWhy;
+    if (open >= 0) {
+      gradeWhy = `operand ${open}'s capture grade is undetermined (${stored[open].basis ?? stored[open].route ?? "no route"}), so the weakest link is not known`;
+    } else {
+      const w = stored.reduce((acc, o, i) => rank5(o.grade) > rank5(stored[acc].grade) ? i : acc, 0);
+      grade = stored[w].grade;
+      gradeWhy = `the weakest operand is ${w} (content ${stored[w].content}), whose capture grade is ${grade} (${stored[w].route}); a computation is as strong as its weakest figure (DEC-21)`;
+    }
+    return {
+      ok: true,
+      state: "computed",
+      op,
+      measure: { ...unitOnly, value: result.value },
+      value: { value: result.value },
+      grade,
+      gradeWhy,
+      operands: stored,
+      doc: { op, operands: docOps, value: result.value, grade }
+    };
+  }
+  #operands(id) {
+    return this.#rows(`SELECT * FROM consequence_operands WHERE part_id=? ORDER BY ord`, id);
+  }
+  #addressedOf(id) {
+    return this.#one(`SELECT * FROM consequence_addressed WHERE part_id=? ORDER BY seq DESC LIMIT 1`, id);
+  }
+  /* ===================================================================== *
+   * THE ANSWER FOR ONE PART (R2–R5, R7, R8, R12)
+   * ===================================================================== */
+  #answer(r, viewer) {
+    const who2 = viewer ?? INTERNAL;
+    const out = {
+      id: r.bundle_id,
+      determination: r.determination,
+      standard: r.standard,
+      project: r.project,
+      affected: parse(r.affected),
+      measure: parse(r.measure),
+      period: parse(r.period),
+      state: r.state,
+      author: r.author || null,
+      at: r.at,
+      supersedes: r.supersedes,
+      reason: r.reason,
+      superseded_by: this.#successor(r.bundle_id)
+    };
+    if (r.state === "computed" || r.op) {
+      const ops = this.#operands(r.bundle_id).map((o) => {
+        const row2 = this.content.contentRow(o.content_id);
+        const seen = row2 && this.membership.inSight(row2.bundle_id, who2);
+        return seen ? {
+          content: o.content_id,
+          figure: o.figure,
+          number: o.number,
+          capture: o.capture_sha,
+          grade: o.grade,
+          route: o.route,
+          determined: !!o.determined
+        } : { content: null, says: "an object you may not see" };
+      });
+      out.computation = { op: r.op, operands: ops };
+    }
+    if (r.state === "computed") {
+      out.grade = { grade: r.grade, determined: r.grade !== null, why: r.grade_why };
+      out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
+    } else if (r.state === "assessed") {
+      out.assessment = {
+        by: r.author,
+        at: r.at,
+        rationale: r.rationale,
+        rests_on: parse(r.rests_on) || [],
+        says: (parse(r.rests_on) || []).length ? "a member's assessment, resting on the ids listed" : "a member's assessment, resting on nothing in the record (stated as none)"
+      };
+      out.label = { machine_work: false, says: "a member's assessment: never presented, summed or graded as computed" };
+    } else {
+      out.undetermined = {
+        code: r.undetermined_code,
+        why: r.undetermined_why,
+        says: "undetermined: not known, and never read as zero"
+      };
+    }
+    out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
+    if (r.causation_state === "established" && r.causation) {
+      let s = null;
+      try {
+        s = this.strength.inquiryStrength({ id: r.causation, viewer: who2 });
+      } catch {
+        s = null;
+      }
+      out.causation.strength = s && s.ok ? {
+        capture: s.capture ?? null,
+        connection: s.connection ?? null,
+        testimony: s.testimony ?? null,
+        says: "per axis, never composed (DEC-44)"
+      } : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
+      if (!this.membership.inSight(r.causation, who2)) {
+        out.causation.inquiry = null;
+        out.causation.why = "an object you may not see";
+      }
+    }
+    const a = this.#addressedOf(r.bundle_id);
+    out.addressed = a ? { state: a.state, evidence: parse(a.evidence) || [], reason: a.reason, by: a.author, at: a.at } : { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
+    const changed = this.#basisChanged(r, who2);
+    if (changed.length) out.basis_changed = changed;
+    return out;
+  }
+  /* R8: a notice, never a recomputation: an operand passage whose document has a newer capture that does not carry it,
+     or a causation inquiry reopened or superseded since the part was recorded. */
+  #basisChanged(r, who2) {
+    const causes = [];
+    if (r.op) {
+      for (const o of this.#operands(r.bundle_id)) {
+        let n = null;
+        try {
+          n = this.content.passageNotice({ contentId: o.content_id, viewer: who2 });
+        } catch {
+          n = null;
+        }
+        if (n && n.affects === "affected")
+          causes.push({ cause: "newer_capture", operand: o.ord, why: `a newer capture of operand ${o.ord}'s document does not carry its passage; nothing is recomputed until a member revises this part` });
+      }
+    }
+    if (r.causation) {
+      const sup = this.#supersededBy(r.causation);
+      if (sup.length) causes.push({ cause: "causation_superseded", why: "the causation inquiry has been superseded" });
+      else if (r.causation_state === "established") {
+        const head = this.record.head(r.causation);
+        let reopened = head && !CONCLUDED.has(head.currentState);
+        if (!reopened) {
+          let h = null;
+          try {
+            h = this.inquiry.stateHistory(r.causation);
+          } catch {
+            h = null;
+          }
+          reopened = !!(h && h.ok && h.transitions.some((t) => t.to === "open" && t.at && instantOrder(t.at, r.at) > 0));
+        }
+        if (reopened) causes.push({ cause: "causation_reopened", why: "the causation inquiry has been reopened since this part was recorded" });
+      }
+    }
+    return causes;
+  }
+  /* ===================================================================== *
+   * R6, R7: READS
+   * ===================================================================== */
+  /** R6, R13: one part, superseded or not, with its links; absent and unseen are one answer. */
+  consequenceRead({ id = null, viewer = null } = {}) {
+    const r = this.#part(id, viewer);
+    if (!r) return refuse4("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.", { id });
+    return { ok: true, part: this.#answer(r, viewer) };
+  }
+  /* The live parts of a determination (not revised by a successor), optionally of one standard, in id order. */
+  #liveParts(determination, standard = null) {
+    return this.#rows(
+      `SELECT p.* FROM consequence_parts p WHERE p.determination=? AND (? IS NULL OR p.standard=?)
+        AND NOT EXISTS (SELECT 1 FROM consequence_parts s WHERE s.supersedes = p.bundle_id) ORDER BY p.bundle_id`,
+      determination,
+      standard,
+      standard
+    );
+  }
+  /** R7: every live part of the determination, totals only within one state, unit and currency, and the parts that
+   *  are undetermined or unproven, in front of the member. */
+  consequencesOf({ determination = null, standard = null, viewer = null } = {}) {
+    const d = this.#determination(determination, viewer);
+    if (!d || !this.#seesProject(d.project, viewer))
+      return refuse4("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.", { determination });
+    const rows = this.#liveParts(d.id, str8(standard)).filter((r) => this.#seesProject(r.project, viewer));
+    const parts = rows.map((r) => this.#answer(r, viewer));
+    const groups = /* @__PURE__ */ new Map();
+    for (const p of parts) {
+      if (p.state === "undetermined" || !p.measure) continue;
+      const key = `${p.state}\0${p.measure.unit}\0${p.measure.currency ?? ""}`;
+      if (!groups.has(key)) groups.set(key, { state: p.state, unit: p.measure.unit, currency: p.measure.currency ?? null, items: [] });
+      groups.get(key).items.push(p);
+    }
+    const totals = [...groups.values()].map((g) => ({
+      state: g.state,
+      unit: g.unit,
+      currency: g.currency,
+      ...addMeasures(g.items.map((p) => p.measure)),
+      parts: g.items.map((p) => p.id),
+      says: `${g.state} parts only, in ${g.unit}${g.currency ? ` (${g.currency})` : ""}: never added to parts in another state, unit or currency`
+    }));
+    return {
+      ok: true,
+      determination: d.id,
+      standard: str8(standard),
+      parts,
+      totals,
+      undetermined: parts.filter((p) => p.state === "undetermined").map((p) => p.id),
+      unproven: parts.filter((p) => p.causation.state === "unproven").map((p) => p.id),
+      says: parts.length ? "each part is what it is: computed, assessed or undetermined; nothing here is composed into one figure, and nothing ranks it" : "no consequence recorded"
+    };
+  }
+  /* ===================================================================== *
+   * R9: ADDRESSED
+   * ===================================================================== */
+  /** R9: a member records a part addressed or not, with evidence and a reason. */
+  addressedRecord({ id = null, state = null, evidence = null, reason = null, author = null, viewer = null } = {}) {
+    if (machine(author))
+      return refuse4("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
+    const who2 = viewer ?? str8(author);
+    const r = this.#part(id, who2);
+    if (!r) return refuse4("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { id });
+    const next = this.#successor(r.bundle_id);
+    if (next) return refuse4("ALREADY_SUPERSEDED", `${r.bundle_id} has been revised by ${next}; record it on that one. Nothing was written.`, { id: r.bundle_id, superseded_by: next });
+    if (r.project) {
+      const denied = this.membership.projectAuthority(r.project, str8(author), "joined", "addressedRecord");
+      if (denied) return refuse4("NOT_A_PARTICIPANT", `recording whether a consequence is addressed is work inside ${r.project}, and ${str8(author)} has not joined it. Nothing was written.`, { project: r.project });
+    }
+    if (!ADDRESSED_STATES.includes(state))
+      return refuse4(
+        "ADDRESSED_UNKNOWN_STATE",
+        `a part is recorded ${ADDRESSED_STATES.join(" or ")}. Nothing was written.`,
+        { state: state ?? null }
+      );
+    if (!str8(reason)) return refuse4("NO_REASON", "the record says why. Nothing was written.");
+    if (reason.trim().length > REASON_MAX3)
+      return refuse4("BAD_REASON", `a reason is at most ${REASON_MAX3} characters. Nothing was written.`);
+    const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
+    if (state === "addressed" && !ev.length)
+      return refuse4("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
+    const unknown = ev.filter((x) => !this.#resolvesEvidence(x, who2));
+    if (unknown.length) return refuse4("NO_SUCH_EVIDENCE", "evidence is content or findings this record holds and you may see. Nothing was written.", { unknown: unknown.map((x) => typeof x === "string" ? x : null) });
+    const at14 = this.#when();
+    this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at)
+      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str8(author), at14));
+    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str8(author), at: at14 };
+  }
+  /** R9: per part, and overall: `addressed` only when every live part is addressed; any undetermined part or unproven
+   *  causation makes it `undetermined` (what is not known cannot be addressed); otherwise any part not addressed, or
+   *  never assessed, makes it `not_addressed`. No live part is `undetermined`, "no consequence recorded" (K172). Read
+   *  for a superseded determination too (escalation R14). */
+  addressed({ determination = null, viewer = null } = {}) {
+    const d = this.#determination(determination, viewer);
+    if (!d || !this.#seesProject(d.project, viewer))
+      return refuse4("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.", { determination });
+    const parts = this.#liveParts(d.id).filter((r) => this.#seesProject(r.project, viewer)).map((r) => {
+      const a = this.#addressedOf(r.bundle_id);
+      return {
+        id: r.bundle_id,
+        standard: r.standard,
+        part_state: r.state,
+        causation: r.causation_state,
+        addressed: a ? a.state : "never_assessed"
+      };
+    });
+    if (!parts.length)
+      return { ok: true, determination: d.id, state: "undetermined", parts, why: "no consequence recorded" };
+    const open = parts.filter((p) => p.part_state === "undetermined" || p.causation === "unproven");
+    if (open.length)
+      return {
+        ok: true,
+        determination: d.id,
+        state: "undetermined",
+        parts,
+        why: `${open.map((p) => p.id).join(", ")} ${open.length === 1 ? "is" : "are"} undetermined or unproven, so whether the consequences are addressed is not known`
+      };
+    const not = parts.filter((p) => p.addressed !== "addressed");
+    if (not.length)
+      return {
+        ok: true,
+        determination: d.id,
+        state: "not_addressed",
+        parts,
+        why: `${not.map((p) => p.id).join(", ")} ${not.length === 1 ? "is" : "are"} not addressed or never assessed; partial redress does not end an escalation`
+      };
+    return { ok: true, determination: d.id, state: "addressed", parts, why: "every live part is recorded addressed, with evidence" };
+  }
+};
+function titleOf2(p) {
+  return `${p.affected.kind}: ${p.affected.description}`.replace(/\s+/g, " ").slice(0, 110);
+}
+function partDoc(id, p) {
+  const { causation, ...rest } = p;
+  const body = { ...rest, causation: { state: causation.state, inquiry: causation.inquiry } };
+  return [
+    "---",
+    `id: ${id}`,
+    "object_type: consequence",
+    "schema: consequence@1",
+    `title: ${q3(titleOf2(p))}`,
+    "current_state: recorded",
+    "prior_state: null",
+    `created: ${q3(p.at)}`,
+    `last_updated: ${q3(p.at)}`,
+    `determination: ${q3(p.determination)}`,
+    `standard: ${q3(p.standard)}`,
+    `part_state: ${p.state}`,
+    `causation: ${q3(causation.inquiry)}`,
+    `supersedes: ${q3(p.supersedes)}`,
+    `author: ${q3(p.author)}`,
+    `machine_work: ${p.machine ? "true" : "false"}`,
+    "produced_by:",
+    `  mode: ${p.machine ? "agent" : "human"}`,
+    "  capability_tier: session",
+    "references: []",
+    "state_history: []",
+    "annotations_open: 0",
+    "reeval_pending:",
+    "  flag: false",
+    "  since: null",
+    "  source: null",
+    "visuals: []",
+    "---",
+    "",
+    "## Part",
+    "",
+    "```json",
+    JSON.stringify(body, null, 2),
+    "```",
+    "",
+    ...p.reason ? ["## Why It Was Revised", "", p.reason, ""] : [],
+    "## Session Log",
+    "",
+    `### Session ${p.at} | Recorded | ${p.author || "machine"}`,
+    `Changes: consequence part recorded${p.supersedes ? `, superseding ${p.supersedes}` : ""}.`,
+    ""
+  ].join("\n");
+}
+var instances21 = /* @__PURE__ */ new WeakMap();
+function consequencesModule(host, deps) {
+  let c = instances21.get(host);
+  if (!c) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
+    c = new Consequences({ ...d, host, storage, record, membership, promotion });
+    instances21.set(host, c);
+    c.migrate();
+    record.declarePurge("consequences", CONSEQUENCES_TABLES);
+  }
+  return c;
+}
+function consequencesOps(c, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = isObj10(body) ? body : {};
+  const stamps = { author: qp("author"), viewer: qp("viewer") };
+  return {
+    consequencerecord: () => c.consequenceRecord({ ...b, ...stamps }),
+    consequencerevise: () => c.consequenceRevise({ ...b, ...stamps }),
+    consequence: () => c.consequenceRead({ id: qp("id"), viewer: qp("viewer") }),
+    consequencesof: () => c.consequencesOf({
+      determination: qp("determination"),
+      standard: qp("standard"),
+      viewer: qp("viewer")
+    }),
+    addressedrecord: () => c.addressedRecord({ ...b, ...stamps }),
+    addressed: () => c.addressed({ determination: qp("determination"), viewer: qp("viewer") })
+  };
+}
+
+// src/filings/schema.mjs
+var FILINGS_SCHEMA = `
+-- R5: A DRAFT, prepared from the record and stored apart from the action. One
+-- row per preparation (preparing again is a new row). governing is the tier
+-- answer as it read (the kind's, the action's, which governs); blanks and
+-- unfilled the filled and unfilled blanks; basis what the draft read, so R6
+-- can say what changed since (tier, counterparty, determination, laws).
+CREATE TABLE IF NOT EXISTS filing_drafts (
+  filing_id     TEXT PRIMARY KEY,
+  action_id     TEXT NOT NULL,
+  kind          TEXT NOT NULL,
+  tier          INTEGER NOT NULL,
+  governing     TEXT NOT NULL,
+  text          TEXT NOT NULL,
+  blanks        TEXT NOT NULL,
+  unfilled      TEXT NOT NULL,
+  advisory      TEXT,
+  venue         TEXT,
+  preparer      TEXT NOT NULL,
+  prepared_at   TEXT NOT NULL,
+  basis         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS filing_drafts_action ON filing_drafts (action_id, filing_id);
+-- R6: A MEMBER'S APPROVAL, at most one per draft (the key). text is the
+-- approved text, the member's (the draft's or an edited one); sha its SHA-256.
+CREATE TABLE IF NOT EXISTS filing_approvals (
+  filing_id     TEXT PRIMARY KEY,
+  action_id     TEXT NOT NULL,
+  text          TEXT NOT NULL,
+  sha           TEXT NOT NULL,
+  approved_by   TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+-- R7: THE SENDING A MEMBER RECORDED, at most one per draft: the action's
+-- correspondence entry (ord) it is, so the entry and the draft name each other.
+CREATE TABLE IF NOT EXISTS filing_sendings (
+  filing_id     TEXT PRIMARY KEY,
+  action_id     TEXT NOT NULL,
+  ord           INTEGER,
+  sent_on       TEXT NOT NULL,
+  medium        TEXT,
+  artifact_sha  TEXT,
+  account       TEXT,
+  recorded_by   TEXT NOT NULL,
+  recorded_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS filing_sendings_entry ON filing_sendings (action_id, ord);
+-- R8\u2013R12: A COUNSEL PACKET, one id per action, one row per version. sections
+-- holds the six sections as assembled; basis what they drew on (determination,
+-- each finding's edition, each standard), so R12 can flag a later change
+-- without changing the version.
+CREATE TABLE IF NOT EXISTS counsel_packets (
+  packet_id     TEXT NOT NULL,
+  version       INTEGER NOT NULL,
+  action_id     TEXT NOT NULL,
+  counsel       TEXT NOT NULL,
+  author        TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  sections      TEXT NOT NULL,
+  basis         TEXT NOT NULL,
+  PRIMARY KEY (packet_id, version)
+);
+CREATE INDEX IF NOT EXISTS counsel_packets_action ON counsel_packets (action_id, packet_id, version);
+-- R11: WHO EXPORTED WHICH VERSION, when, for which counsel, and the digest of
+-- the bytes handed over.
+CREATE TABLE IF NOT EXISTS counsel_packet_exports (
+  export_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  packet_id     TEXT NOT NULL,
+  version       INTEGER NOT NULL,
+  action_id     TEXT NOT NULL,
+  author        TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  counsel       TEXT NOT NULL,
+  sha           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS counsel_packet_exports_packet ON counsel_packet_exports (packet_id, version);
+-- R14: A CANDIDATE THEORY AND REMEDY, stored apart and labelled; never the
+-- group's position.
+CREATE TABLE IF NOT EXISTS theory_proposals (
+  theory_id     TEXT PRIMARY KEY,
+  action_id     TEXT NOT NULL,
+  packet_id     TEXT,
+  theory        TEXT NOT NULL,
+  remedy        TEXT,
+  standards     TEXT NOT NULL,
+  why           TEXT NOT NULL,
+  proposer      TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS theory_proposals_action ON theory_proposals (action_id, theory_id);
+`;
+var FILINGS_TABLES = Object.freeze([
+  { name: "filing_drafts", keys: ["action_id"] },
+  { name: "filing_approvals", keys: ["action_id"] },
+  { name: "filing_sendings", keys: ["action_id"] },
+  { name: "counsel_packets", keys: ["action_id"] },
+  { name: "counsel_packet_exports", keys: ["action_id"] },
+  { name: "theory_proposals", keys: ["action_id"] }
+]);
+function migrateFilings(sql) {
+  const bare2 = FILINGS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/filings/checks.mjs
+var at8 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
+var FILINGS_CHECKS = Object.freeze({
+  FILING_NO_PREPARER: {
+    check: "C-115.1",
+    where: at8("filingPrepare", "is-filing-prepare"),
+    translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it."
+  },
+  NO_SUCH_ACTION: {
+    check: "C-115.2",
+    where: at8("#noAction", "is-no-such-action"),
+    translation: "There is no action by that id that you can read here. An action you may not see answers exactly as one that does not exist."
+  },
+  ACTION_CLOSED: {
+    check: "C-115.3",
+    where: at8("filingPrepare", "is-filing-prepare"),
+    translation: "The action is resolved or abandoned, so nothing is prepared for it."
+  },
+  FILING_TIER_UNDETERMINED: {
+    check: "C-115.4",
+    where: at8("filingPrepare", "is-filing-prepare"),
+    translation: "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first."
+  },
+  TIER3_COUNSEL_PACKET: {
+    check: "C-115.5",
+    where: at8("filingPrepare", "is-filing-prepare"),
+    translation: "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead."
+  },
+  KIND_NO_TEMPLATE: {
+    check: "C-115.6",
+    where: at8("filingPrepare", "is-filing-prepare"),
+    translation: "The jurisdiction profile holds no template for this kind of action (or its profiles disagree on one), so there is nothing to pre-fill."
+  },
+  MACHINE_CANNOT_APPROVE: {
+    check: "C-115.7",
+    where: at8("filingApprove", "is-filing-approve"),
+    translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them."
+  },
+  NO_SUCH_FILING: {
+    check: "C-115.8",
+    where: at8("#noFiling", "is-no-such-filing"),
+    translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist."
+  },
+  ALREADY_APPROVED: {
+    check: "C-115.9",
+    where: at8("filingApprove", "is-filing-approve"),
+    translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text."
+  },
+  FILING_STALE: {
+    check: "C-115.10",
+    where: at8("filingApprove", "is-filing-approve"),
+    translation: "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now."
+  },
+  STILL_UNFILLED: {
+    check: "C-115.11",
+    where: at8("filingApprove", "is-filing-approve"),
+    translation: "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved."
+  },
+  TEXT_UNWRITABLE: {
+    check: "C-115.12",
+    where: at8("filingApprove", "is-filing-approve"),
+    translation: "The text is empty, too long, or not readable as text, so it cannot be recorded as approved."
+  },
+  MACHINE_CANNOT_FILE: {
+    check: "C-115.13",
+    where: at8("filingRecordSent", "is-filing-sent"),
+    translation: "Only a named member can record that a filing was sent. The instance sends nothing itself."
+  },
+  NOT_APPROVED: {
+    check: "C-115.14",
+    where: at8("filingRecordSent", "is-filing-sent"),
+    translation: "A member approves the draft before it is recorded as sent."
+  },
+  ALREADY_SENT: {
+    check: "C-115.15",
+    where: at8("filingRecordSent", "is-filing-sent"),
+    translation: "This draft is already recorded as sent, and that record stands."
+  },
+  MACHINE_CANNOT_NAME_COUNSEL: {
+    check: "C-115.16",
+    where: at8("counselPacket", "is-counsel-packet"),
+    translation: "Only a named member can name the group's counsel and assemble a packet for them."
+  },
+  NOT_TIER3: {
+    check: "C-115.17",
+    where: at8("counselPacket", "is-counsel-packet"),
+    translation: "A counsel packet is assembled only for an action whose governing tier is 3. A Tier 1 or 2 action is prepared as a filing."
+  },
+  NO_COUNSEL: {
+    check: "C-115.18",
+    where: at8("counselPacket", "is-counsel-packet"),
+    translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional."
+  },
+  NO_DETERMINATION: {
+    check: "C-115.19",
+    where: at8("counselPacket", "is-counsel-packet"),
+    translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel."
+  },
+  NO_SUCH_PACKET: {
+    check: "C-115.20",
+    where: at8("#noPacket", "is-no-such-packet"),
+    translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist."
+  },
+  MACHINE_CANNOT_EXPORT: {
+    check: "C-115.21",
+    where: at8("counselPacketExport", "is-packet-export"),
+    translation: "Only a named member can hand a counsel packet to counsel."
+  },
+  NO_THEORY: {
+    check: "C-115.22",
+    where: at8("theoryPropose", "is-theory-propose"),
+    translation: "State the candidate theory, and any remedy, in words that are not too long."
+  },
+  THEORY_NO_STANDARDS: {
+    check: "C-115.23",
+    where: at8("theoryPropose", "is-theory-propose"),
+    translation: "A candidate theory names the standards it rests on."
+  },
+  THEORY_STANDARD_UNREADABLE: {
+    check: "C-115.24",
+    where: at8("theoryPropose", "is-theory-propose"),
+    translation: "The standards the theory names cannot be read here, so the proposal is not recorded."
+  },
+  THEORY_WHY_REFUSED: {
+    check: "C-115.25",
+    where: at8("theoryPropose", "is-theory-propose"),
+    translation: "Say why the theory is proposed, in at most 1,000 characters."
+  },
+  DETERMINATION_UNREADABLE: {
+    check: "C-115.26",
+    where: at8("availableActions", "is-available-actions"),
+    translation: "No determination can be read here, so the actions available against its offices cannot be listed."
+  },
+  THEORY_NO_PROPOSER: {
+    check: "C-115.27",
+    where: at8("theoryPropose", "is-theory-propose"),
+    translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
+  }
+});
+function rowOf5(code) {
+  return Object.prototype.hasOwnProperty.call(FILINGS_CHECKS, code) ? FILINGS_CHECKS[code] : null;
+}
+
+// src/filings/dates.mjs
+var DATE_RE5 = /^(\d{4})-(\d{2})-(\d{2})$/;
+var COUNTED_FROM = "counted from the day after the start event";
+function realDate(v) {
+  const m = DATE_RE5.exec(String(v ?? ""));
+  if (!m) return null;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.toISOString().slice(0, 10) === m[0] ? m[0] : null;
+}
+var addDays = (iso3, n) => new Date(Date.parse(`${iso3}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+function deadlineDate({ start = null, days = null, count = null, holidays = null } = {}) {
+  const from = realDate(start);
+  if (!from) return { state: "undetermined", why: "no start event is recorded, so no date is computed from it" };
+  if (!Number.isInteger(days) || days < 0)
+    return { state: "undetermined", why: "the rule states no whole number of days (the profiles may disagree on it)" };
+  if (count === "calendar")
+    return { state: "determined", date: addDays(from, days), counted: `${days} calendar days, ${COUNTED_FROM}` };
+  if (count !== "business")
+    return { state: "undetermined", why: "the rule states no count (calendar or business days), so no date is computed" };
+  const years = /* @__PURE__ */ new Map();
+  for (const h of Array.isArray(holidays) ? holidays : [])
+    if (h && Number.isInteger(Number(h.year)))
+      years.set(Number(h.year), new Set((Array.isArray(h.days) ? h.days : []).map((d) => d && d.date)));
+  let day = from, n = 0;
+  for (let guard = 0; n < days; guard++) {
+    if (guard > 3700) return { state: "undetermined", why: "the count runs past ten years" };
+    day = addDays(day, 1);
+    const y = Number(day.slice(0, 4));
+    if (!years.has(y))
+      return {
+        state: "undetermined",
+        why: `the business-day count reaches into ${y}, a year the profile's holiday calendar does not list (or withholds, the active profiles disagreeing), so it is not counted`
+      };
+    const wd = (/* @__PURE__ */ new Date(`${day}T00:00:00Z`)).getUTCDay();
+    if (wd !== 0 && wd !== 6 && !years.get(y).has(day)) n++;
+  }
+  return {
+    state: "determined",
+    date: day,
+    counted: `${days} business days on the profile's holiday calendar, ${COUNTED_FROM}`
+  };
+}
+
+// src/filings/index.mjs
+var FILING_BLANKS = Object.freeze({
+  counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
+  counterparty_body: "the body of that office",
+  act: "what the government did, as the action's determination states it",
+  act_date: "when it did it (a date, or a period from and to)",
+  standards: "the citations of the standards the determination names",
+  findings: "each finding the determination rests on, with its published case edition",
+  governing_laws: "the governing laws a member stated for the action",
+  law: "the law a records request is made under, as the action states it",
+  clock: "the action's clock entries, each with its basis",
+  venue: "where the kind is filed (the profile's venue name)",
+  venue_how: "by what means it is filed (the profile's venue means)",
+  group: "the producing group",
+  date: "the date the draft was prepared"
+});
+var unfilledMarker = (name) => `[UNFILLED: ${name}]`;
+var UNFILLED_RE = /\[UNFILLED: [^\]\n]*\]/;
+var BLANK_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
+var FILING_TEXT_MAX = 65536;
+var THEORY_WHY_MAX = 1e3;
+var THEORY_TEXT_MAX = 2e3;
+var COUNSEL_FIELD_MAX = 200;
+var FILINGS_FOR_MAX = 200;
+var counselMarking = (counsel) => `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`;
+var COUNSEL_SENTENCE = "Such an action requires competent counsel: no template is offered for it, and the group names counsel to evaluate it.";
+var TIER_WORDS = Object.freeze({
+  1: "Tier 1: a member may prepare and file it from the record's template.",
+  2: "Tier 2: a member may prepare it from the record's template; legal review is recommended before filing.",
+  3: "Tier 3: requires competent counsel; no template is offered, and a counsel packet is prepared for counsel the group names.",
+  undetermined: "The risk tier is undetermined: neither the profile nor a member has stated it."
+});
+var CLOSED = Object.freeze(["resolved", "abandoned"]);
+var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
+var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
+var str9 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var json2 = (v) => JSON.stringify(v ?? null);
+var parse2 = (s) => {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return null;
+  }
+};
+var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var utf8 = (s) => new TextEncoder().encode(s).length;
+var WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+var withRow3 = (r) => {
+  const row2 = r && r.ok === false && !r.check ? rowOf5(r.reason) : null;
+  return row2 ? { ...r, code: r.reason, check: row2.check, translation: row2.translation } : r;
+};
+var SERVICES = Object.freeze([
+  "filingPrepare",
+  "filingApprove",
+  "filingRecordSent",
+  "counselPacket",
+  "counselPacketRead",
+  "counselPacketExport",
+  "filingsFor",
+  "theoryPropose",
+  "availableActions"
+]);
+var byDayThenSource = (a, b) => a.day < b.day ? -1 : a.day > b.day ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : 0;
+var Filings = class _Filings {
+  #deps;
+  constructor({
+    storage,
+    record,
+    host = null,
+    publication = null,
+    provenance = null,
+    content = null,
+    actions = null,
+    conformance = null,
+    standards = null,
+    consequences = null,
+    producingGroup = null,
+    profiles = null,
+    now = null
+  } = {}) {
+    this.sql = storage.sql;
+    this.record = record;
+    this.#deps = { host, publication, provenance, content, actions, conformance, standards, consequences };
+    this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
+    this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
+    this.now = typeof now === "function" ? now : () => stampInstant("second");
+    for (const m of SERVICES) {
+      const fn = this[m].bind(this);
+      this[m] = (...a) => withRow3(fn(...a));
+    }
+  }
+  /* The earlier modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  get publication() {
+    return this.#deps.publication ||= publicationOf(this.#deps.host);
+  }
+  get provenance() {
+    return this.#deps.provenance ||= provenanceOf(this.#deps.host);
+  }
+  get content() {
+    return this.#deps.content ||= contentOf(this.#deps.host);
+  }
+  /* The layer-9 modules, each its own factory on the same host unless given (K253); with no host, absent, and every
+     service that needs one refuses (K248). */
+  get standards() {
+    return this.#deps.standards ||= this.#deps.host ? standardsOf(this.#deps.host) : null;
+  }
+  get conformance() {
+    return this.#deps.conformance ||= this.#deps.host ? conformanceOf(this.#deps.host) : null;
+  }
+  get consequences() {
+    return this.#deps.consequences ||= this.#deps.host ? consequencesModule(this.#deps.host) : null;
+  }
+  get actions() {
+    return this.#deps.actions ||= this.#deps.host ? actionsOf(this.#deps.host) : null;
+  }
+  migrate() {
+    migrateFilings(this.sql);
+  }
+  #rows(q6, ...a) {
+    return [...this.sql.exec(q6, ...a)];
+  }
+  #one(q6, ...a) {
+    for (const r of this.sql.exec(q6, ...a)) return r;
+    return null;
+  }
+  #when() {
+    const w = this.now();
+    return typeof w === "string" && w ? w : stampInstant("second");
+  }
+  #call(fn) {
+    try {
+      return fn();
+    } catch {
+      return null;
+    }
+  }
+  /* ---------------------------------------------------------------- the reads of the modules it uses */
+  /* R20: the active profiles' combined view (record-core R26, jurisdictions R12–R16), or none, with why. */
+  #view() {
+    const ids = this.#call(() => this.profiles());
+    if (!Array.isArray(ids) || !ids.length)
+      return { view: null, conflicts: [], why: "no jurisdiction profile is active on this instance" };
+    const c = combine(ids);
+    if (!c || !c.ok) return { view: null, conflicts: [], why: "the active jurisdiction profiles do not combine" };
+    return { view: c.view, conflicts: c.conflicts || [], why: null };
+  }
+  /* An action the viewer may see, as actions' read answers it (its R29), or null: absent, invisible and not an action
+     are one answer (R1, R19). */
+  #action(id, viewer) {
+    const target = str9(id);
+    if (!target || !this.actions || typeof this.actions.actionRead !== "function") return null;
+    const a = this.#call(() => this.actions.actionRead({ id: target, viewer }));
+    if (!a || a.ok === false) return null;
+    const cp = isObj11(a.counterparty) ? a.counterparty : null;
+    return {
+      id: str9(a.id) || target,
+      kind: str9(a.kind),
+      risk_tier: [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined",
+      current_state: str9(a.current_state),
+      counterparty: cp,
+      clock: Array.isArray(a.clock) ? a.clock.filter(isObj11) : [],
+      legs: Array.isArray(a.legs) ? a.legs.filter(isObj11) : [],
+      correspondence: Array.isArray(a.correspondence) ? a.correspondence.filter(isObj11) : Array.isArray(a.ledger) ? a.ledger.filter(isObj11) : [],
+      state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj11) : null,
+      governing_laws: isObj11(a.governing_laws) ? a.governing_laws : null,
+      law: str9(a.law)
+    };
+  }
+  /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
+     module answers actions' read (K248: refused, never passed). */
+  #noAction(id) {
+    return {
+      ok: false,
+      reason: "NO_SUCH_ACTION",
+      action: str9(id),
+      detail: this.actions && typeof this.actions.actionRead === "function" ? "no action by that id is readable here; one you may not see answers the same" : "no module answers an action's read here, so no action is readable"
+    };
+  }
+  /* R6, R7, R19: the one answer for a draft that is absent or whose action the viewer may not see. */
+  #noFiling(id) {
+    return {
+      ok: false,
+      reason: "NO_SUCH_FILING",
+      filing: str9(id),
+      detail: "no draft by that id is readable here; one you may not see answers the same"
+    };
+  }
+  /* R11, R14, R19: the one answer for a packet (or version) that is absent or whose action the viewer may not see. */
+  #noPacket(id) {
+    return {
+      ok: false,
+      reason: "NO_SUCH_PACKET",
+      id: str9(id),
+      detail: "no counsel packet by that id and version is readable here; one you may not see answers the same"
+    };
+  }
+  /* A determination as conformance's read answers it (its R9), or null. */
+  #det(id, viewer) {
+    if (!str9(id) || !this.conformance || typeof this.conformance.determinationRead !== "function") return null;
+    const d = this.#call(() => this.conformance.determinationRead({ id: str9(id), viewer }));
+    if (!d || d.ok === false) return null;
+    return {
+      id: str9(d.id) || str9(id),
+      project: str9(d.project),
+      act: isObj11(d.act) ? d.act : {},
+      /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
+      findings: (Array.isArray(d.findings) ? d.findings : []).map((f8) => isObj11(f8) ? { ...f8, id: str9(f8.finding) || str9(f8.id) } : f8),
+      standards: (Array.isArray(d.standards) ? d.standards : []).map((x) => isObj11(x) ? { ...x, id: str9(x.standard) || str9(x.id) } : x),
+      live: d.live !== false && !str9(d.superseded_by),
+      superseded_by: str9(d.superseded_by),
+      basis_changed: isObj11(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
+    };
+  }
+  /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
+   *  exists that the viewer may not see. */
+  #restsOn(action, viewer) {
+    let hidden = false;
+    for (const l of action.legs) {
+      if (l.kind && l.kind !== "rests_on") continue;
+      const d = this.#det(l.target, viewer);
+      if (d) {
+        if (d.live) return { det: d, hidden: false };
+        continue;
+      }
+      const m = this.#det(l.target, MACHINE_READER);
+      if (m && m.live) hidden = true;
+    }
+    return { det: null, hidden };
+  }
+  #standard(id, viewer) {
+    if (!str9(id) || !this.standards || typeof this.standards.standardRead !== "function") return null;
+    const s = this.#call(() => this.standards.standardRead({ id: str9(id), viewer }));
+    return s && s.ok !== false ? s : null;
+  }
+  /* standards R7, read as `{state, why}` whatever its spelling. */
+  #inForce(id, date) {
+    if (!date) return { state: "undetermined", why: "the act's date is not a single day, so which standard was in force is not asked" };
+    if (!this.standards || typeof this.standards.inForce !== "function")
+      return { state: "undetermined", why: "no module answers whether a standard was in force" };
+    const r = this.#call(() => this.standards.inForce(id, date));
+    if (typeof r === "string") return { state: r, why: null };
+    if (isObj11(r) && str9(r.state)) return { state: r.state, why: r.why ?? null };
+    return { state: "undetermined", why: "whether the standard was in force could not be read" };
+  }
+  /** The governing tier (Terms, R2; K102): the stricter of the kind's tier in the profile and the action's own;
+   *  `undetermined` when the action's is; the action's alone when the profile gives the kind none, stated so. */
+  governingTier(action, v = this.#view()) {
+    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === action.kind) : null;
+    const kindTier = entry && [1, 2, 3].includes(entry.tier) ? entry.tier : null;
+    const withheld = v.conflicts.some((c) => c.at === `action_kinds[${action.kind}].tier`);
+    const base = { action_tier: action.risk_tier, kind_tier: kindTier };
+    if (action.risk_tier === "undetermined")
+      return {
+        tier: "undetermined",
+        ...base,
+        says: "the action's risk tier is undetermined, and it is never read as 1: a member states it first"
+      };
+    if (kindTier === null)
+      return {
+        tier: action.risk_tier,
+        ...base,
+        says: `${withheld ? "the active profiles disagree on this kind's tier, so none is given" : v.view ? "the profile gives this kind no tier" : v.why}; the action's own tier alone governs`
+      };
+    const tier = Math.max(kindTier, action.risk_tier);
+    return { tier, ...base, says: `the stricter of the kind's tier in the profile (${kindTier}) and the action's (${action.risk_tier}) governs` };
+  }
+  /* ---------------------------------------------------------------- R1–R5: filingPrepare */
+  /* R3: every blank's value and source, or why it has none. `det` the determination (null), `hidden` whether one the
+     viewer may not see exists. */
+  #values(action, det, hidden, entry, viewer, when) {
+    const out = {};
+    const none = (why) => ({ why });
+    const cp = action.counterparty;
+    const cpNamed = cp && cp.state === "named";
+    const role = cpNamed ? str9(cp.role) || str9(cp.name) : null;
+    const cpWhy = !cp ? "the action states no counterparty" : cp.state === "undetermined" ? "the action's counterparty is undetermined" : "the action's counterparty names no such part";
+    out.counterparty_role = role ? { value: role, source: action.id } : none(cpWhy);
+    out.counterparty_body = cpNamed && str9(cp.body) ? { value: str9(cp.body), source: action.id } : none(cpWhy);
+    const detWhy = hidden ? "the determination the action rests on is not one you may see" : !this.conformance ? "no module answers determinations here, so the record's value cannot be read" : "the action rests on no live determination, so the record holds no value for it";
+    if (det) {
+      const act = det.act || {};
+      out.act = str9(act.description) ? { value: str9(act.description), source: det.id } : none("the determination states no act");
+      const period = isObj11(act.period) ? act.period : null;
+      out.act_date = str9(act.at) ? { value: str9(act.at), source: det.id } : period && (str9(period.from) || str9(period.to)) ? { value: `${str9(period.from) || "undetermined"} to ${str9(period.to) || "undetermined"}`, source: det.id } : none("the determination states no date for the act, so it is undetermined");
+      const cites = [], srcs = [];
+      let withheld = false;
+      for (const s of det.standards) {
+        const sid = str9(isObj11(s) ? s.id : s);
+        const r = sid ? this.#standard(sid, viewer) : null;
+        if (!r || !str9(r.cite)) {
+          withheld = true;
+          continue;
+        }
+        cites.push(str9(r.cite));
+        srcs.push(sid);
+      }
+      out.standards = withheld ? none("a standard the determination names is not one you may see") : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
+      const fs = det.findings.filter((f8) => isObj11(f8) && str9(f8.id));
+      out.findings = fs.length !== det.findings.length ? none("a finding the determination rests on is not one you may see") : fs.length ? {
+        value: fs.map((f8) => `${f8.id} (case ${f8.case ?? "undetermined"}, edition ${f8.edition ?? "undetermined"})`).join("; "),
+        source: fs.map((f8) => `${f8.id}@${f8.case ?? "?"}/${f8.edition ?? "?"}`).join(", ")
+      } : none("the determination names no finding");
+    } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
+    const gl = action.governing_laws;
+    const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l) => str9(isObj11(l) ? l.citation : l)).filter(Boolean) : [];
+    out.governing_laws = laws.length ? { value: laws.join("; "), source: action.id } : none("no member has stated the action's governing laws, so they are undetermined");
+    out.law = action.law ? { value: action.law, source: action.id } : none("the action states no law it is made under, so it is undetermined");
+    const clock = action.clock.filter((c) => str9(c.date) && str9(c.basis));
+    out.clock = clock.length ? { value: clock.map((c) => `${c.date}: ${str9(c.text) || str9(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action.id } : none("the action holds no clock entry with a date and a basis");
+    const venue = entry && isObj11(entry.venue) ? entry.venue : null;
+    const vsrc = venue ? `profile:${venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` : null;
+    out.venue = venue && str9(venue.name) ? { value: str9(venue.name), source: vsrc } : none("the profile gives this kind no venue (or its profiles disagree), so it is undetermined");
+    out.venue_how = venue && str9(venue.how) ? { value: str9(venue.how), source: vsrc } : none("the profile gives no means of filing");
+    const g = str9(this.#call(() => this.producingGroup()));
+    out.group = g ? { value: g, source: "setting:producing_group" } : none("no producing group is recorded for this instance");
+    out.date = { value: when.slice(0, 10), source: `clock:${when}` };
+    return out;
+  }
+  /** R1–R5: a draft pre-filled from the record into the profile's template for the action's kind. */
+  filingPrepare({ action = null, preparer = null, viewer = null } = {}) {
+    const who2 = str9(preparer);
+    if (!who2) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
+    const a = this.#action(action, viewer);
+    if (!a) return this.#noAction(action);
+    if (CLOSED.includes(a.current_state))
+      return {
+        ok: false,
+        reason: "ACTION_CLOSED",
+        action: a.id,
+        state: a.current_state,
+        detail: `the action is ${a.current_state}; nothing is prepared for a closed action`
+      };
+    const v = this.#view();
+    const gov = this.governingTier(a, v);
+    if (gov.tier === "undetermined")
+      return {
+        ok: false,
+        reason: "FILING_TIER_UNDETERMINED",
+        action: a.id,
+        governing: gov,
+        detail: "the action's risk tier is undetermined and is never read as 1: a member states it first (op=actionrisktier)"
+      };
+    if (gov.tier === 3)
+      return {
+        ok: false,
+        reason: "TIER3_COUNSEL_PACKET",
+        action: a.id,
+        governing: gov,
+        detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet"
+      };
+    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) : null;
+    const conflicted = v.conflicts.some((c) => c.at === `action_kinds[${a.kind}].template`);
+    if (!entry || typeof entry.template !== "string" || !entry.template.trim())
+      return {
+        ok: false,
+        reason: "KIND_NO_TEMPLATE",
+        action: a.id,
+        kind: a.kind,
+        detail: conflicted ? "the active profiles give different templates for this kind, so none is given" : !v.view ? `${v.why}, so no template is held for this kind` : "the profile holds no template for this kind"
+      };
+    const when = this.#when();
+    const { det, hidden } = this.#restsOn(a, viewer);
+    const values = this.#values(a, det, hidden, entry, viewer, when);
+    const names = [...new Set([...entry.template.matchAll(BLANK_RE)].map((m) => m[1]))];
+    const blanks = [], unfilled = [];
+    for (const n of names) {
+      const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n] : { why: "filings fills no blank by this name, so the record holds no value for it" };
+      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source });
+      else unfilled.push({ name: n, why: val.why });
+    }
+    const filled = new Map(blanks.map((b) => [b.name, b.value]));
+    let text3 = entry.template.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
+    let advisory = null;
+    if (gov.tier === 2) {
+      advisory = str9(entry.advisory);
+      if (advisory) text3 = `${advisory}
+
+${text3}`;
+      else {
+        text3 = `${unfilledMarker("advisory")}
+
+${text3}`;
+        unfilled.unshift({ name: "advisory", why: "the profile gives no advisory note for this kind (or its profiles disagree), so it is undetermined; a member writes one in before the draft can be approved" });
+      }
+    }
+    const venue = isObj11(entry.venue) ? {
+      name: entry.venue.name ?? null,
+      how: entry.venue.how ?? null,
+      source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue`
+    } : { state: "undetermined", why: "the profile gives this kind no venue" };
+    const basis = this.#basisOf(a, det, gov);
+    const year = when.slice(0, 4);
+    return this.record.transact(() => {
+      const { id } = this.record.allocId("FIL", year);
+      this.sql.exec(
+        `INSERT INTO filing_drafts (filing_id, action_id, kind, tier, governing, text, blanks, unfilled,
+                       advisory, venue, preparer, prepared_at, basis) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id,
+        a.id,
+        a.kind,
+        gov.tier,
+        json2(gov),
+        text3,
+        json2(blanks),
+        json2(unfilled),
+        advisory,
+        json2(venue),
+        who2,
+        when,
+        json2(basis)
+      );
+      return {
+        ok: true,
+        id,
+        action: a.id,
+        tier: gov.tier,
+        governing: gov,
+        text: text3,
+        blanks,
+        unfilled,
+        ...gov.tier === 2 ? { advisory } : {},
+        venue,
+        label: proposalLabel(who2, "filing_draft"),
+        prepared_by: who2,
+        at: when,
+        evidence: false,
+        says: DRAFT_SAYS
+      };
+    });
+  }
+  /* R6: what a draft read, so its staleness is stated by name. */
+  #basisOf(a, det, gov) {
+    return {
+      tier: gov.tier,
+      counterparty: a.counterparty ?? null,
+      determination: det ? det.id : null,
+      governing_laws: a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null
+    };
+  }
+  /* R6: what changed since the draft, by name; [] when nothing did. Read as the plane reads it, so a change the
+     approving member cannot see is still named. */
+  #staleness(draft) {
+    const was = parse2(draft.basis) || {};
+    const a = this.#action(draft.action_id, MACHINE_READER);
+    if (!a) return ["the action is no longer held"];
+    const changed = [];
+    const gov = this.governingTier(a);
+    if (gov.tier !== was.tier) changed.push(`the governing tier (was ${was.tier}, now ${gov.tier})`);
+    if (json2(a.counterparty ?? null) !== json2(was.counterparty ?? null)) changed.push("the counterparty");
+    const then = was.determination ? this.#det(was.determination, MACHINE_READER) : null;
+    const now = this.#restsOn(a, MACHINE_READER).det;
+    if (was.determination && (!then || !then.live))
+      changed.push(`the determination ${was.determination} was superseded${then && then.superseded_by ? ` by ${then.superseded_by}` : ""}`);
+    else if ((now ? now.id : null) !== (was.determination ?? null)) changed.push("the determination the action rests on");
+    const laws = a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null;
+    if (json2(laws) !== json2(was.governing_laws ?? null)) changed.push("the governing laws");
+    return changed;
+  }
+  /* A draft the viewer may see (through its action), or null (R19). */
+  #draft(id, viewer) {
+    const f8 = str9(id);
+    const d = f8 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f8) : null;
+    return d && this.#action(d.action_id, viewer) ? d : null;
+  }
+  /* ---------------------------------------------------------------- R6: filingApprove */
+  /** R6: a member approves the draft's text or an edited text, at most once; the approved text is the member's. */
+  filingApprove({ filing = null, text: text3 = void 0, author = null, viewer = null } = {}) {
+    const who2 = str9(author);
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_APPROVE",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: a machine prepares, and a member approves` : "no member is named as the one approving"
+      };
+    const d = this.#draft(filing, viewer);
+    if (!d) return this.#noFiling(filing);
+    const held = this.#one(`SELECT approved_by, at FROM filing_approvals WHERE filing_id=?`, d.filing_id);
+    if (held) return {
+      ok: false,
+      reason: "ALREADY_APPROVED",
+      filing: d.filing_id,
+      approved_by: held.approved_by,
+      at: held.at,
+      detail: "a draft is approved at most once; prepare a new draft to approve another text"
+    };
+    const changed = this.#staleness(d);
+    if (changed.length)
+      return {
+        ok: false,
+        reason: "FILING_STALE",
+        filing: d.filing_id,
+        changed,
+        detail: `since the draft was prepared: ${changed.join("; ")} changed. Prepare it again.`
+      };
+    const body = text3 === void 0 || text3 === null ? d.text : text3;
+    if (typeof body === "string" && UNFILLED_RE.test(body))
+      return {
+        ok: false,
+        reason: "STILL_UNFILLED",
+        filing: d.filing_id,
+        unfilled: [...body.matchAll(/\[UNFILLED: ([^\]\n]*)\]/g)].map((m) => m[1]),
+        detail: "the text still holds a blank the record could not fill; a member writes it in first"
+      };
+    if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf8(body) > FILING_TEXT_MAX)
+      return {
+        ok: false,
+        reason: "TEXT_UNWRITABLE",
+        filing: d.filing_id,
+        max_bytes: FILING_TEXT_MAX,
+        detail: `the approved text must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`
+      };
+    const at14 = this.#when();
+    const sha = sha256HexSync(body);
+    this.sql.exec(
+      `INSERT INTO filing_approvals (filing_id, action_id, text, sha, approved_by, at) VALUES (?,?,?,?,?,?)`,
+      d.filing_id,
+      d.action_id,
+      body,
+      sha,
+      who2,
+      at14
+    );
+    return {
+      ok: true,
+      filing: d.filing_id,
+      action: d.action_id,
+      approved_by: who2,
+      at: at14,
+      sha,
+      edited: body !== d.text,
+      says: "approved by the member named: the text is theirs. The instance transmits nothing; a member files it by the venue's own means and records that it was sent"
+    };
+  }
+  /* ---------------------------------------------------------------- R7: filingRecordSent */
+  /** R7: records the sending as one `sent` correspondence entry on the action (actions R15, R16), linked to the draft
+   *  both ways. It moves no action state and writes no clock entry: `proposed` carries what a member may choose. */
+  filingRecordSent({
+    filing = null,
+    at: at14 = null,
+    medium = null,
+    artifactSha = null,
+    account = null,
+    author = null,
+    viewer = null
+  } = {}) {
+    const who2 = str9(author);
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_FILE",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: only a member files and records it` : "no member is named as the one who sent it"
+      };
+    const d = this.#draft(filing, viewer);
+    if (!d) return this.#noFiling(filing);
+    if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
+      return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before it is recorded as sent" };
+    const sent = this.#one(`SELECT ord, sent_on, recorded_by FROM filing_sendings WHERE filing_id=?`, d.filing_id);
+    if (sent) return {
+      ok: false,
+      reason: "ALREADY_SENT",
+      filing: d.filing_id,
+      ord: sent.ord,
+      at: sent.sent_on,
+      recorded_by: sent.recorded_by,
+      detail: "this draft is already recorded as sent"
+    };
+    if (!this.actions || typeof this.actions.actionCorrespond !== "function")
+      return this.#noAction(d.action_id);
+    const now = this.#when();
+    const out = this.record.transact(() => {
+      const c = this.actions.actionCorrespond({
+        target: d.action_id,
+        direction: "sent",
+        at: at14,
+        ...medium != null ? { medium } : {},
+        ...artifactSha != null ? { artifactSha } : {},
+        ...account != null ? { account } : {},
+        viewer,
+        author: who2
+      });
+      if (!c || c.ok === false) return c || this.#noAction(d.action_id);
+      const ord = Number.isInteger(Number(c.ord)) ? Number(c.ord) : null;
+      this.sql.exec(
+        `INSERT INTO filing_sendings (filing_id, action_id, ord, sent_on, medium, artifact_sha, account,
+                       recorded_by, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+        d.filing_id,
+        d.action_id,
+        ord,
+        String(at14 ?? ""),
+        medium,
+        artifactSha,
+        account,
+        who2,
+        now
+      );
+      return { ok: true, ord, entry: c };
+    });
+    if (!out || out.ok === false) return out;
+    return {
+      ok: true,
+      filing: d.filing_id,
+      action: d.action_id,
+      ord: out.ord,
+      recorded_by: who2,
+      at: now,
+      held_as: out.entry.held_as ?? (artifactSha ? "capture" : "testimony"),
+      proposed: this.#proposed(d, who2, viewer),
+      says: "recorded as sent by the member named. No action state moved and no clock entry was written: `proposed` is what a member may choose next"
+    };
+  }
+  /* R7: the next state a member may choose, and the clock entries actions offers for the kind's deadlines that start
+     at filing or receipt (its R32), each stored apart by actions, none written into the clock. */
+  #proposed(d, who2, viewer) {
+    const a = this.#action(d.action_id, viewer);
+    const state = a ? a.current_state : null;
+    const next = state === "planned" ? "active" : state === "active" ? "awaiting_response" : null;
+    const v = this.#view();
+    const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => a && r.applies_to === a.kind && (r.starts === "filed" || r.starts === "received")) : [];
+    const clocks = rules.map((r) => {
+      const p = this.actions && typeof this.actions.clockPropose === "function" ? this.#call(() => this.actions.clockPropose({ target: d.action_id, rule: r.rule, proposer: who2, viewer })) : null;
+      return {
+        rule: r.rule,
+        starts: r.starts,
+        citation: r.citation ?? null,
+        offered: p ?? { ok: false, reason: "UNAVAILABLE", detail: "no module offers a clock entry" }
+      };
+    });
+    return {
+      next_state: next ? { to: next, from: state, says: `a member may move the action from ${state} to ${next} (op=actionmove); nothing moved it` } : { to: null, from: state, says: "no next state follows from recording the sending; the action's state stays as a member left it" },
+      clocks,
+      clocks_says: clocks.length ? "clock entries offered for the kind's deadlines that start at filing or receipt; a member states one by a revision of the action" : "the profile gives this kind no deadline that starts at filing or receipt"
+    };
+  }
+  /* ---------------------------------------------------------------- R8–R12: the counsel packet */
+  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. */
+  #fact(f8, det) {
+    if (!isObj11(f8) || !str9(f8.id))
+      return { finding: null, withheld: "an object you may not see", source: det.id };
+    const source = `${f8.id}@${f8.case ?? "?"}/${f8.edition ?? "?"}`;
+    const text3 = f8.version_sha ? this.#call(() => this.record.textAtSha(f8.id, f8.version_sha)) : null;
+    const base = { finding: f8.id, case: f8.case ?? null, edition: f8.edition ?? null, version_sha: f8.version_sha ?? null, source };
+    if (typeof text3 !== "string")
+      return { ...base, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
+    let fm = null;
+    try {
+      fm = parseFrontmatter(text3).data;
+    } catch {
+      fm = null;
+    }
+    const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text3);
+    const conclusion = m && m[1].trim() ? m[1].trim() : null;
+    const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj11) : [];
+    return {
+      ...base,
+      claim: {
+        question: str9(fm && fm.title),
+        conclusion,
+        ...conclusion ? {} : { conclusion_why: "the published finding states no conclusion section" }
+      },
+      citations: legs.map((l) => ({
+        target: str9(l.target),
+        ...str9(l.content_id) ? { content_id: str9(l.content_id) } : {},
+        ...str9(l.role) ? { role: str9(l.role) } : {},
+        source
+      }))
+    };
+  }
+  /* R9's exhibits: each capture a fact or event cites, with its digest, locator, capture time and attestations. */
+  #exhibits(cites) {
+    const byCapture = /* @__PURE__ */ new Map();
+    for (const c of cites) {
+      let sha = str9(c.capture_sha);
+      if (!sha && str9(c.content_id)) {
+        const row2 = this.#call(() => this.content.contentRow(c.content_id));
+        sha = row2 ? str9(row2.capture_sha) : null;
+      }
+      if (!sha && str9(c.target)) sha = str9(this.#call(() => this.content.captureFor(c.target)));
+      if (!sha) continue;
+      if (!byCapture.has(sha)) byCapture.set(sha, []);
+      byCapture.get(sha).push(c.source);
+    }
+    return [...byCapture.entries()].sort(([a], [b]) => a < b ? -1 : 1).map(([sha, from]) => {
+      const reg = this.#one(`SELECT bundle_id, path, registered FROM register WHERE capture_sha=?`, sha);
+      const loc = this.#one(`SELECT address, retrieval_locator, first_retrieved FROM captured_locators WHERE capture_sha=?
+                              ORDER BY first_retrieved LIMIT 1`, sha);
+      const att = this.#call(() => this.provenance.attestationsOf(sha));
+      return {
+        sha256: sha,
+        cited_by: [...new Set(from)].sort(),
+        locator: loc ? loc.retrieval_locator || loc.address : reg ? `${reg.bundle_id}/${reg.path}` : null,
+        ...loc || reg ? {} : { locator_why: "the record holds no address or register row for this capture" },
+        captured_at: loc ? loc.first_retrieved : reg ? reg.registered : null,
+        home: reg ? reg.bundle_id : null,
+        attestations: att && att.ok ? { items: att.attestations, ...att.undetermined ? { undetermined: att.undetermined } : {}, note: att.note } : { items: [], undetermined: "the attestations could not be read" }
+      };
+    });
+  }
+  /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
+  #deadlines(v, a, det) {
+    const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => r.applies_to === "claim") : [];
+    const entries = a.correspondence.map((e, i) => ({ ...e, ord: Number.isInteger(e.ord) ? e.ord : i }));
+    const first = (dir) => entries.filter((e) => e.direction === dir && realDate(String(e.at ?? "").slice(0, 10))).sort((x, y) => String(x.at) < String(y.at) ? -1 : String(x.at) > String(y.at) ? 1 : x.ord - y.ord)[0] || null;
+    return rules.map((r) => {
+      let start;
+      const act = det ? det.act || {} : {};
+      if (r.starts === "act")
+        start = realDate(act.at) ? { event: "act", date: act.at, source: det.id } : { event: "act", state: "undetermined", why: det ? "the determination states the act over a period or not at all, so no single day starts the count" : "no live determination states the act" };
+      else if (r.starts === "received" || r.starts === "filed") {
+        const e = first(r.starts === "received" ? "received" : "sent");
+        start = e ? { event: r.starts, date: String(e.at).slice(0, 10), source: `${a.id}#${e.ord}` } : { event: r.starts, state: "undetermined", why: `the action's correspondence holds no ${r.starts === "received" ? "received" : "sent"} entry` };
+      } else start = {
+        event: r.starts ?? null,
+        state: "undetermined",
+        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds"
+      };
+      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, holidays: v.view.holidays });
+      return {
+        rule: r.rule,
+        days: r.days ?? null,
+        count: r.count ?? null,
+        starts: r.starts ?? null,
+        ...r.extension ? { extension: r.extension } : {},
+        citation: r.citation ?? null,
+        basis: r.basis ?? null,
+        profile: r.profile ?? null,
+        source: `profile:${r.profile}/deadlines/${r.rule}`,
+        start,
+        date: date.state === "determined" ? { ...date, start_source: start.source } : date
+      };
+    });
+  }
+  /* R9: the six sections and the consequences, each item naming its source. */
+  #assemble(a, det, viewer, marking) {
+    const v = this.#view();
+    const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
+    const facts = det.findings.map((f8) => this.#fact(f8, det));
+    const events = [], undated = [];
+    const act = det.act || {};
+    const actDay = realDate(act.at) || (isObj11(act.period) ? realDate(act.period.from) : null);
+    const push = (day, e) => day ? events.push({ day, ...e }) : undated.push({ ...e, why: "the record states no date for it" });
+    push(actDay, {
+      event: `the act: ${str9(act.description) || "undescribed"}`,
+      source: det.id,
+      ...isObj11(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
+    });
+    for (const f8 of facts) {
+      if (!f8.finding) continue;
+      const r = f8.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f8.case, Number(f8.edition)) : null;
+      push(
+        r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
+        { event: `${f8.finding} published in case ${f8.case} edition ${f8.edition}`, source: f8.source }
+      );
+    }
+    if (a.state_history === null)
+      undated.push({ event: "the action's state history", source: a.id, why: "the action's read does not answer its state history" });
+    for (const [i, h] of (a.state_history || []).entries())
+      push(realDate(String(h.at ?? "").slice(0, 10)), {
+        event: `the action entered ${h.state ?? h.to ?? "an undetermined state"}`,
+        ...h.by ? { by: h.by } : {},
+        source: `${a.id}/state_history[${i}]`
+      });
+    for (const [i, e] of a.correspondence.entries()) {
+      const ord = Number.isInteger(e.ord) ? e.ord : i;
+      push(realDate(String(e.at ?? "").slice(0, 10)), {
+        event: `correspondence ${e.direction ?? "undetermined"}${str9(e.party) ? ` (${e.party})` : ""}`,
+        source: `${a.id}#${ord}`
+      });
+    }
+    for (const [i, c] of a.clock.entries())
+      push(realDate(c.date), {
+        event: `clock: ${str9(c.text) || str9(c.description) || "a deadline"} (${c.status ?? "undetermined"})`,
+        basis: c.basis ?? null,
+        source: `${a.id}/clock[${i}]`
+      });
+    events.sort(byDayThenSource);
+    const cites = [];
+    for (const f8 of facts) for (const c of f8.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f8.source });
+    for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str9(cid), source: det.id });
+    for (const [i, e] of a.correspondence.entries())
+      if (str9(e.artifact_sha)) cites.push({ capture_sha: str9(e.artifact_sha), source: `${a.id}#${Number.isInteger(e.ord) ? e.ord : i}` });
+    const standards = det.standards.map((s) => {
+      const sid = str9(isObj11(s) ? s.id : s);
+      const r = sid ? this.#standard(sid, viewer) : null;
+      if (!r) return { standard: null, withheld: "an object you may not see", source: det.id };
+      return {
+        standard: sid,
+        cite: r.cite ?? null,
+        kind: r.kind ?? null,
+        issuer: r.issuer ?? null,
+        text: Array.isArray(r.text) ? r.text : [],
+        outcome: isObj11(s) ? s.outcome ?? null : null,
+        in_force: this.#inForce(sid, realDate(act.at)),
+        source: sid
+      };
+    });
+    const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
+      theory_id: t.theory_id,
+      candidate: true,
+      theory: t.theory,
+      remedy: t.remedy,
+      standards: parse2(t.standards) || [],
+      why: t.why,
+      label: proposalLabel(t.proposer, "theory"),
+      at: t.at,
+      source: t.theory_id
+    }));
+    const cons = this.consequences && typeof this.consequences.consequencesOf === "function" ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
+    return {
+      facts: section("Facts", facts),
+      chronology: section(
+        "Chronology",
+        events.map(({ day, ...e }) => ({ date: day, ...e })),
+        { undated, order: "by date; events on the same day by source id" }
+      ),
+      exhibits: section("Exhibits", this.#exhibits(cites)),
+      standards: section("Standards", standards),
+      theories: section(
+        "Candidate theories and remedies",
+        theories,
+        { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion" : "no candidate theory or remedy has been proposed for this action" }
+      ),
+      deadlines: section(
+        "Deadlines",
+        this.#deadlines(v, a, det),
+        { says: v.view ? `each date is computed only from a recorded start event (${COUNTED_FROM}), else undetermined with why` : `${v.why}, so no claim deadline is known` }
+      ),
+      consequences: section(
+        "Consequences of the breach",
+        cons && cons.ok !== false ? [{ recorded: cons, source: det.id }] : [],
+        { says: cons && cons.ok !== false ? "as recorded, each part in its own state; nothing summed across states" : "the consequences could not be read, so they are undetermined" }
+      )
+    };
+  }
+  /* R12: what a version drew on. */
+  #packetBasis(det) {
+    return {
+      determination: det.id,
+      project: det.project,
+      findings: det.findings.filter((f8) => isObj11(f8) && str9(f8.id)).map((f8) => ({ id: f8.id, case: f8.case ?? null, edition: f8.edition ?? null })),
+      standards: det.standards.map((s) => str9(isObj11(s) ? s.id : s)).filter(Boolean)
+    };
+  }
+  /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. */
+  #basisChanged(basis) {
+    const causes = [];
+    const d = this.#det(basis.determination, MACHINE_READER);
+    if (!d || !d.live) causes.push({
+      cause: "determination_superseded",
+      determination: basis.determination,
+      ...d && d.superseded_by ? { by: d.superseded_by } : {}
+    });
+    else if (d.basis_changed) causes.push({
+      cause: "determination_flagged",
+      determination: basis.determination,
+      causes: d.basis_changed.causes ?? []
+    });
+    for (const f8 of basis.findings || []) {
+      const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f8.id, project: basis.project || null }));
+      const later = e && e.ok ? e.items.filter((i) => i.case === f8.case && Number(i.edition) > Number(f8.edition)) : [];
+      if (later.length) causes.push({
+        cause: "finding_later_edition",
+        finding: f8.id,
+        case: f8.case,
+        edition: f8.edition,
+        later: Math.max(...later.map((i) => Number(i.edition)))
+      });
+    }
+    for (const s of basis.standards || []) {
+      const r = this.#standard(s, MACHINE_READER);
+      if (r && str9(r.superseded_by)) causes.push({ cause: "standard_superseded", standard: s, by: str9(r.superseded_by) });
+    }
+    return causes;
+  }
+  #counsel(c) {
+    if (!isObj11(c)) return null;
+    const ok = (v) => typeof v === "string" && v.trim() && v.trim().length <= COUNSEL_FIELD_MAX && !/[\n\r]/.test(v);
+    if (!ok(c.name) || !ok(c.organisation)) return null;
+    if (c.contact != null && !ok(c.contact)) return null;
+    return { name: c.name.trim(), organisation: c.organisation.trim(), ...c.contact != null ? { contact: c.contact.trim() } : {} };
+  }
+  /** R8–R10, R12: a counsel packet for the counsel a member names; assembling again makes a new version. */
+  counselPacket({ action = null, counsel = null, author = null, viewer = null } = {}) {
+    const who2 = str9(author);
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_NAME_COUNSEL",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: the group names its counsel` : "no member is named as the one naming counsel"
+      };
+    const a = this.#action(action, viewer);
+    if (!a) return this.#noAction(action);
+    const gov = this.governingTier(a);
+    if (gov.tier !== 3)
+      return {
+        ok: false,
+        reason: "NOT_TIER3",
+        action: a.id,
+        governing: gov,
+        detail: "a counsel packet is assembled only for a governing tier of 3"
+      };
+    const c = this.#counsel(counsel);
+    if (!c) return {
+      ok: false,
+      reason: "NO_COUNSEL",
+      max: COUNSEL_FIELD_MAX,
+      detail: `counsel is named by a name and an organisation (contact optional), each one line of at most ${COUNSEL_FIELD_MAX} characters`
+    };
+    const { det } = this.#restsOn(a, viewer);
+    if (!det) return {
+      ok: false,
+      reason: "NO_DETERMINATION",
+      action: a.id,
+      detail: this.conformance ? "the action rests on no live determination you may see, so there are no facts to assemble" : "no module answers determinations here, so no live determination can be read"
+    };
+    const marking = counselMarking(c);
+    const sections = this.#assemble(a, det, viewer, marking);
+    const basis = this.#packetBasis(det);
+    const at14 = this.#when();
+    return this.record.transact(() => {
+      const held = this.#one(`SELECT packet_id, MAX(version) AS v FROM counsel_packets WHERE action_id=? GROUP BY packet_id
+                               ORDER BY packet_id LIMIT 1`, a.id);
+      const id = held ? held.packet_id : this.record.allocId("CPK", at14.slice(0, 4)).id;
+      const version = held ? Number(held.v) + 1 : 1;
+      this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis)
+                     VALUES (?,?,?,?,?,?,?,?)`, id, version, a.id, json2(c), who2, at14, json2(sections), json2(basis));
+      return {
+        ok: true,
+        id,
+        version,
+        action: a.id,
+        head: this.#head(id, version, a.id, c, who2, at14, marking),
+        sections,
+        marking,
+        fileable: false,
+        basis_changed: null
+      };
+    });
+  }
+  #head(id, version, action, counsel, author, at14, marking) {
+    return {
+      packet: id,
+      version,
+      action,
+      counsel,
+      assembled_by: author,
+      at: at14,
+      marking,
+      fileable: false,
+      says: "prepared for counsel's review from the record; it is never published and is not in a form that can be filed"
+    };
+  }
+  /* A packet the viewer may see, through its action (R11, R19): its rows, or null. */
+  #packet(id, viewer) {
+    const p = str9(id);
+    const rows = p ? this.#rows(`SELECT * FROM counsel_packets WHERE packet_id=? ORDER BY version`, p) : [];
+    return rows.length && this.#action(rows[0].action_id, viewer) ? rows : null;
+  }
+  #version(r, rows) {
+    const counsel = parse2(r.counsel) || {};
+    const marking = counselMarking(counsel);
+    const causes = this.#basisChanged(parse2(r.basis) || {});
+    return {
+      ok: true,
+      id: r.packet_id,
+      version: Number(r.version),
+      action: r.action_id,
+      head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking),
+      sections: parse2(r.sections),
+      marking,
+      fileable: false,
+      basis_changed: causes.length ? { causes } : null,
+      versions: rows.map((x) => Number(x.version))
+    };
+  }
+  /** R11, R12: a packet's version (the latest unless one is named), read only by a member who may see the action. */
+  counselPacketRead({ id = null, version = null, viewer = null } = {}) {
+    const rows = this.#packet(id, viewer);
+    const r = rows ? version == null || version === "" ? rows[rows.length - 1] : rows.find((x) => Number(x.version) === Number(version)) : null;
+    if (!r) return this.#noPacket(id);
+    const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
+                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse2(e.counsel), sha: e.sha }));
+    return { ...this.#version(r, rows), exports };
+  }
+  /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
+  static render(v) {
+    const lines = [
+      `# Counsel packet ${v.id}, version ${v.version}`,
+      "",
+      v.marking,
+      "",
+      `Action: ${v.action}. Assembled by ${v.head.assembled_by} at ${v.head.at}.`,
+      ""
+    ];
+    const item = (x) => `- ${JSON.stringify(x)}`;
+    for (const s of Object.values(v.sections || {})) {
+      lines.push(`## ${s.title}`, "", s.marking, "");
+      if (s.says) lines.push(s.says, "");
+      for (const x of s.items || []) lines.push(item(x));
+      for (const x of s.undated || []) lines.push(item({ undated: true, ...x }));
+      lines.push("");
+    }
+    lines.push("## Manifest of exhibits", "", v.marking, "");
+    for (const e of v.sections && v.sections.exhibits ? v.sections.exhibits.items : []) lines.push(`- ${e.sha256}`);
+    lines.push("");
+    return lines.join("\n");
+  }
+  /** R11: hands a member the packet's bytes, and records who exported which version, when and for which counsel. */
+  counselPacketExport({ id = null, version = null, author = null, viewer = null } = {}) {
+    const who2 = str9(author);
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "MACHINE_CANNOT_EXPORT",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: only a member hands a packet to counsel` : "no member is named as the one exporting"
+      };
+    const read2 = this.counselPacketRead({ id, version, viewer });
+    if (!read2.ok) return read2;
+    const bytes2 = _Filings.render(read2);
+    const sha = sha256HexSync(bytes2);
+    const at14 = this.#when();
+    this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha)
+                   VALUES (?,?,?,?,?,?,?)`, read2.id, read2.version, read2.action, who2, at14, json2(read2.head.counsel), sha);
+    return {
+      ok: true,
+      id: read2.id,
+      version: read2.version,
+      action: read2.action,
+      format: "text/markdown",
+      bytes: bytes2,
+      sha,
+      counsel: read2.head.counsel,
+      exported_by: who2,
+      at: at14,
+      marking: read2.marking,
+      fileable: false
+    };
+  }
+  /* ---------------------------------------------------------------- R13: filingsFor */
+  /** R13: the action's drafts and counsel packets, in creation order; the read `escalation` uses. */
+  filingsFor({ action = null, viewer = null } = {}) {
+    const a = this.#action(action, viewer);
+    if (!a) return this.#noAction(action);
+    const drafts = this.#rows(
+      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, ap.approved_by, ap.at AS approved_at, ap.sha,
+              s.ord, s.sent_on, s.recorded_by, s.recorded_at
+         FROM filing_drafts d LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
+         LEFT JOIN filing_sendings s ON s.filing_id=d.filing_id
+        WHERE d.action_id=? ORDER BY d.prepared_at, d.filing_id LIMIT ?`,
+      a.id,
+      FILINGS_FOR_MAX + 1
+    );
+    const versions = this.#rows(
+      `SELECT * FROM counsel_packets WHERE action_id=? ORDER BY at, packet_id, version LIMIT ?`,
+      a.id,
+      FILINGS_FOR_MAX + 1
+    );
+    return {
+      ok: true,
+      action: a.id,
+      drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
+        filing: d.filing_id,
+        tier: d.tier,
+        label: proposalLabel(d.preparer, "filing_draft"),
+        at: d.prepared_at,
+        approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
+        sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at } : null
+      })),
+      drafts_truncated: drafts.length > FILINGS_FOR_MAX,
+      packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
+        const causes = this.#basisChanged(parse2(r.basis) || {});
+        return {
+          packet: r.packet_id,
+          version: Number(r.version),
+          counsel: parse2(r.counsel),
+          assembled_by: r.author,
+          at: r.at,
+          basis_changed: causes.length ? { causes } : null,
+          exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
+                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse2(e.counsel), sha: e.sha }))
+        };
+      }),
+      packets_truncated: versions.length > FILINGS_FOR_MAX
+    };
+  }
+  /* ---------------------------------------------------------------- R14: candidate theories */
+  /** R14: a candidate theory and remedy against named standards, stored apart and labelled; any credential may propose. */
+  theoryPropose({
+    packet = null,
+    action = null,
+    theory = null,
+    remedy = null,
+    standards = null,
+    why = null,
+    proposer = null,
+    viewer = null
+  } = {}) {
+    const who2 = str9(proposer);
+    if (!who2) return { ok: false, reason: "THEORY_NO_PROPOSER", detail: "no stamped proposer: a proposal names who made it" };
+    let actionId = str9(action), packetId = null;
+    if (str9(packet)) {
+      const rows = this.#packet(packet, viewer);
+      if (!rows) return this.#noPacket(packet);
+      packetId = rows[0].packet_id;
+      actionId = rows[0].action_id;
+    }
+    const a = this.#action(actionId, viewer);
+    if (!a) return this.#noAction(actionId);
+    const t = typeof theory === "string" ? theory.trim() : "";
+    const rem = remedy == null ? null : String(remedy).trim() || null;
+    if (!t || t.length > THEORY_TEXT_MAX || rem !== null && rem.length > THEORY_TEXT_MAX)
+      return {
+        ok: false,
+        reason: "NO_THEORY",
+        max: THEORY_TEXT_MAX,
+        detail: `state the candidate theory, and any remedy, each in at most ${THEORY_TEXT_MAX} characters`
+      };
+    const list2 = (Array.isArray(standards) ? standards : typeof standards === "string" ? standards.split(",") : []).map((s) => String(s ?? "").trim()).filter(Boolean);
+    if (!list2.length) return { ok: false, reason: "THEORY_NO_STANDARDS", detail: "a candidate theory names the standards it rests on" };
+    const reads = this.standards && typeof this.standards.standardRead === "function" ? list2.map((s) => this.#call(() => this.standards.standardRead({ id: s, viewer }))) : null;
+    if (!reads || reads.some((r) => !r))
+      return {
+        ok: false,
+        reason: "THEORY_STANDARD_UNREADABLE",
+        detail: "no module answers a standard's read here, so the standards named cannot be read"
+      };
+    const refused = reads.find((r) => r.ok === false);
+    if (refused) return refused;
+    const w = typeof why === "string" ? why.trim() : "";
+    if (!w || w.length > THEORY_WHY_MAX)
+      return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: `say why in at most ${THEORY_WHY_MAX} characters` };
+    const at14 = this.#when();
+    return this.record.transact(() => {
+      const { id } = this.record.allocId("THY", at14.slice(0, 4));
+      this.sql.exec(`INSERT INTO theory_proposals (theory_id, action_id, packet_id, theory, remedy, standards, why, proposer, at)
+                     VALUES (?,?,?,?,?,?,?,?,?)`, id, a.id, packetId, t, rem, json2([...new Set(list2)]), w, who2, at14);
+      return {
+        ok: true,
+        proposal: {
+          id,
+          action: a.id,
+          packet: packetId,
+          theory: t,
+          remedy: rem,
+          standards: [...new Set(list2)],
+          why: w,
+          label: proposalLabel(who2, "theory"),
+          at: at14
+        },
+        evidence: false,
+        says: "a candidate theory and remedy, stored apart: it is not the group's position, and it enters the next counsel packet version as a candidate"
+      };
+    });
+  }
+  /* ---------------------------------------------------------------- R15, R21: the available-actions block */
+  /** R15's block for these live determinations: the kinds of the view against each determination's offices, each with
+   *  its tier and words; for Tier 3 kinds the standards, the factual basis, the counsel sentence and the legal
+   *  organisations; the risk classification in the metadata. Never a template or packet content. */
+  #block(dets, v) {
+    const kinds = (v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds : []).map((k) => {
+      const tier = [1, 2, 3].includes(k.tier) ? k.tier : "undetermined";
+      const out = { kind: k.kind, label: k.label ?? null, tier, words: TIER_WORDS[tier], source: `profile:${k.profile}/action_kinds/${k.kind}` };
+      if (tier === 3) {
+        const orgs = (Array.isArray(v.view.legal_organisations) ? v.view.legal_organisations : []).filter((o) => Array.isArray(o.evaluates) && o.evaluates.includes(k.kind)).map((o) => ({ name: o.name, contacts: o.contacts, source: `profile:${o.profile}/legal_organisations` }));
+        out.counsel = COUNSEL_SENTENCE;
+        out.legal_organisations = orgs;
+        if (!orgs.length) out.legal_organisations_says = "the profile names no legal organisation equipped to evaluate this kind";
+      }
+      return out;
+    });
+    const offices = Array.isArray(v.view && v.view.counterparties) ? v.view.counterparties : [];
+    const tier3 = kinds.some((k) => k.tier === 3);
+    return {
+      kinds,
+      metadata: { risk_classification: Object.fromEntries(kinds.map((k) => [k.kind, k.tier])) },
+      determinations: dets.map((d) => {
+        const actor = isObj11(d.act && d.act.actor) ? d.act.actor : {};
+        const match = offices.find((o) => o.role === actor.role && o.body === actor.body) || null;
+        return {
+          determination: d.id,
+          office: {
+            role: actor.role ?? null,
+            body: actor.body ?? null,
+            in_profile: !!match,
+            ...match ? { level: match.level ?? null, elected: match.elected ?? null } : {},
+            says: match ? "an office of the active profile" : "not an office the active profile lists; the kinds are the profile's all the same"
+          },
+          ...tier3 ? { tier3: {
+            standards: d.standards.filter((s) => isObj11(s) && s.outcome === "noncompliant").map((s) => s.id),
+            factual_basis: d.findings.filter((f8) => isObj11(f8) && str9(f8.id)).map((f8) => ({ finding: f8.id, case: f8.case ?? null, edition: f8.edition ?? null })),
+            counsel: COUNSEL_SENTENCE
+          } } : {}
+        };
+      }),
+      says: !v.view ? `${v.why}, so no kind is listed` : dets.length ? "the kinds a group may pursue against these offices, from the jurisdiction profile; a Tier 3 kind requires competent counsel, and no template or legal strategy is part of this block" : "no live determination rests on this case's findings, so no action is listed against an office"
+    };
+  }
+  /** R21: R15's block for one determination, for `escalation` (its R8). */
+  availableActions({ determination = null, viewer = null } = {}) {
+    const raw = this.conformance && typeof this.conformance.determinationRead === "function" ? this.#call(() => this.conformance.determinationRead({ id: str9(determination), viewer })) : null;
+    if (!raw)
+      return {
+        ok: false,
+        reason: "DETERMINATION_UNREADABLE",
+        determination: str9(determination),
+        detail: "no module answers a determination's read here, so none is readable"
+      };
+    if (raw.ok === false) return raw;
+    const d = this.#det(determination, viewer);
+    return { ok: true, determination: d.id, live: d.live, ...this.#block([d], this.#view()) };
+  }
+  /** R15: the block `publication` carries beside a published case edition (its R36): the live determinations of the
+   *  case's own project resting on any of its findings, read by the plane. */
+  evidenceBlock({ caseId = null, edition = null, findings = [] } = {}) {
+    const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, String(caseId ?? ""));
+    const seen = /* @__PURE__ */ new Map();
+    if (this.conformance && typeof this.conformance.determinationsFor === "function")
+      for (const f8 of Array.isArray(findings) ? findings : []) {
+        const page = this.#call(() => this.conformance.determinationsFor({ finding: f8, live: true, viewer: MACHINE_READER }));
+        for (const it of page && page.ok !== false && Array.isArray(page.items) ? page.items : []) {
+          const id = str9(isObj11(it) ? it.id : it);
+          if (!id || seen.has(id)) continue;
+          const d = this.#det(id, MACHINE_READER);
+          if (!d || !d.live) continue;
+          if (owner && d.project && d.project !== owner.project_id) continue;
+          if (!d.findings.some((x) => isObj11(x) && x.case === caseId)) continue;
+          seen.set(id, d);
+        }
+      }
+    const dets = [...seen.values()].sort((a, b3) => a.id < b3.id ? -1 : 1);
+    const b = this.#block(dets, this.#view());
+    if (!this.conformance || typeof this.conformance.determinationsFor !== "function")
+      return {
+        case: caseId,
+        edition,
+        ...b,
+        determinations_read: false,
+        says: "no module answers determinations here, so whether one rests on this case is undetermined and no action is listed against an office"
+      };
+    return { case: caseId, edition, ...b, determinations_read: true };
+  }
+};
+var instances22 = /* @__PURE__ */ new WeakMap();
+function filingsOf(host, deps) {
+  let f8 = instances22.get(host);
+  if (!f8) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    f8 = new Filings({ ...d, host, storage, record });
+    instances22.set(host, f8);
+    f8.migrate();
+    record.declarePurge("filings", FILINGS_TABLES);
+    f8.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f8.evidenceBlock(arg));
+  }
+  return f8;
+}
+function filingsOps(f8, url, body) {
+  const q6 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  return {
+    filingprepare: () => f8.filingPrepare({ action: b.action ?? q6("action"), preparer: q6("author"), viewer: q6("viewer") }),
+    filingapprove: () => f8.filingApprove({ filing: b.filing ?? q6("filing"), text: b.text, author: q6("author"), viewer: q6("viewer") }),
+    filingsent: () => f8.filingRecordSent({
+      filing: b.filing ?? q6("filing"),
+      at: b.at ?? q6("at"),
+      medium: b.medium ?? null,
+      artifactSha: b.artifactSha ?? b.artifact_sha ?? null,
+      account: b.account ?? null,
+      author: q6("author"),
+      viewer: q6("viewer")
+    }),
+    counselpacket: () => f8.counselPacket({
+      action: b.action ?? q6("action"),
+      counsel: b.counsel ?? null,
+      author: q6("author"),
+      viewer: q6("viewer")
+    }),
+    counselpacketread: () => f8.counselPacketRead({ id: q6("id"), version: q6("version"), viewer: q6("viewer") }),
+    counselpacketexport: () => f8.counselPacketExport({
+      id: b.id ?? q6("id"),
+      version: b.version ?? q6("version"),
+      author: q6("author"),
+      viewer: q6("viewer")
+    }),
+    filingsfor: () => f8.filingsFor({ action: q6("action"), viewer: q6("viewer") }),
+    theorypropose: () => f8.theoryPropose({
+      packet: b.packet ?? null,
+      action: b.action ?? null,
+      theory: b.theory,
+      remedy: b.remedy,
+      standards: b.standards,
+      why: b.why,
+      proposer: q6("author"),
+      viewer: q6("viewer")
+    }),
+    availableactions: () => f8.availableActions({ determination: q6("determination"), viewer: q6("viewer") })
+  };
+}
+
+// src/escalation/doc.mjs
+var ESCALATION = "escalation";
+var LOG = "Escalation Log";
+var TOKEN2 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
+var q4 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
+var tok = (s) => TOKEN2.test(String(s)) ? String(s) : q4(s);
+var parseFm = (text3) => {
+  if (typeof text3 !== "string") return null;
+  const d = parseFrontmatter(text3).data;
+  return d && typeof d === "object" && !Array.isArray(d) ? d : null;
+};
+var escalationId = (allocated) => `${allocated}-escalation`;
+var CORE_TAIL2 = Object.freeze([
+  "produced_by:",
+  "  mode: human",
+  "  capability_tier: session",
+  "references: []",
+  "state_history: []",
+  "annotations_open: 0",
+  "reeval_pending:",
+  "  flag: false",
+  "  since: null",
+  "  source: null",
+  "visuals: []"
+]);
+function escalationDoc({ id, project, determination, act, standards, author, at: at14, entry }) {
+  return [
+    "---",
+    `id: ${id}`,
+    `object_type: ${ESCALATION}`,
+    `schema: ${ESCALATION}@1`,
+    `title: ${q4(`Escalation of ${determination}`)}`,
+    "current_state: open",
+    "prior_state: null",
+    `created: ${q4(at14)}`,
+    `last_updated: ${q4(at14)}`,
+    `project: ${tok(project)}`,
+    `determination: ${tok(determination)}`,
+    `act: ${act ? tok(act) : "null"}`,
+    "stage: 1",
+    `standards: [${standards.map(tok).join(", ")}]`,
+    `opened_by: ${tok(author)}`,
+    ...CORE_TAIL2,
+    "---",
+    "",
+    `## ${LOG}`,
+    "",
+    logText(1, entry),
+    "",
+    "## Session Log",
+    "",
+    `### Session ${at14} | Escalation opened | ${author}`,
+    "Changes: escalation opened at stage 1.",
+    ""
+  ].join("\n");
+}
+var logText = (seq, entry) => `### ${seq} | ${entry.kind} | ${entry.author} | ${entry.at}
+${JSON.stringify(entry)}`;
+function logOf(text3) {
+  if (typeof text3 !== "string") return [];
+  const marker = `
+## ${LOG}
+`;
+  const at14 = text3.indexOf(marker);
+  if (at14 === -1) return [];
+  const start = at14 + marker.length;
+  const nxt = text3.indexOf("\n## ", start - 1);
+  const body = text3.slice(start, nxt === -1 ? text3.length : nxt).trim();
+  if (!body) return [];
+  return body.split(/\n(?=### )/).map((part) => {
+    const m = /^### (\d+) \| [^\n]*\n([\s\S]*)$/.exec(part.trim());
+    if (!m) return { seq: null, unreadable: part.trim().slice(0, 200) };
+    try {
+      const e = JSON.parse(m[2].trim());
+      return e && typeof e === "object" && !Array.isArray(e) ? { ...e, seq: Number(m[1]) } : { seq: Number(m[1]), unreadable: m[2].trim().slice(0, 200) };
+    } catch {
+      return { seq: Number(m[1]), unreadable: m[2].trim().slice(0, 200) };
+    }
+  });
+}
+function logSection(text3) {
+  if (typeof text3 !== "string") return null;
+  const marker = `
+## ${LOG}
+`;
+  const at14 = text3.indexOf(marker);
+  if (at14 === -1) return null;
+  const start = at14 + marker.length;
+  const nxt = text3.indexOf("\n## ", start - 1);
+  return text3.slice(start, nxt === -1 ? text3.length : nxt).trim();
+}
+function fence(lines) {
+  if (lines[0] !== "---") return null;
+  const end2 = lines.indexOf("---", 1);
+  return end2 === -1 ? null : end2;
+}
+function setField(text3, key, value) {
+  const lines = text3.split("\n");
+  const end2 = fence(lines);
+  if (end2 === null) return text3;
+  for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
+    lines[i] = `${key}: ${value}`;
+    return lines.join("\n");
+  }
+  return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
+}
+function appendItem(text3, key, fields) {
+  const lines = text3.split("\n");
+  const end2 = fence(lines);
+  if (end2 === null) return null;
+  const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
+  const at14 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
+  if (at14 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
+  const rest = lines[at14].slice(key.length + 1).trim();
+  if (rest === "[]") return [...lines.slice(0, at14), `${key}:`, ...item, ...lines.slice(at14 + 1)].join("\n");
+  if (rest !== "") return null;
+  let last = at14;
+  for (let i = at14 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
+  return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
+}
+function appendToSection(text3, heading, entry) {
+  const marker = `
+## ${heading}
+`;
+  const at14 = text3.indexOf(marker);
+  if (at14 === -1) return `${text3.replace(/\n*$/, "\n")}
+## ${heading}
+
+${entry.trim()}
+`;
+  const start = at14 + marker.length;
+  const nxt = text3.indexOf("\n## ", start - 1);
+  const end2 = nxt === -1 ? text3.length : nxt;
+  const head = text3.slice(0, end2).replace(/\n*$/, "\n");
+  return `${head}
+${entry.trim()}
+${text3.slice(end2)}`;
+}
+function appendEntry(text3, { entry, seq, stage, state, fromState, blurb }) {
+  let t = appendToSection(text3, LOG, logText(seq, entry));
+  t = setField(t, "last_updated", q4(entry.at));
+  if (stage !== void 0) t = setField(t, "stage", String(stage));
+  if (state !== void 0 && state !== fromState) {
+    t = setField(t, "prior_state", fromState);
+    t = setField(t, "current_state", state);
+    t = appendItem(
+      t,
+      "state_history",
+      { timestamp: q4(entry.at), from_state: fromState, to_state: state, blurb: q4(blurb), author: tok(entry.author) }
+    );
+    if (t === null) return null;
+  }
+  return appendToSection(t, "Session Log", `### Session ${entry.at} | ${blurb} | ${entry.author}
+Changes: ${entry.kind}.`);
+}
+
+// src/escalation/schema.mjs
+var ESCALATION_SCHEMA = `
+-- One row per escalation: what it pursues and where it stands. Rewritten from the document at each promotion.
+CREATE TABLE IF NOT EXISTS escalations (
+  escalation_id    TEXT PRIMARY KEY,
+  project_id       TEXT NOT NULL,
+  determination_id TEXT NOT NULL,
+  act_id           TEXT,
+  standards_json   TEXT NOT NULL,
+  state            TEXT NOT NULL,
+  stage            INTEGER NOT NULL,
+  stage_since      TEXT NOT NULL,
+  state_since      TEXT NOT NULL,
+  opened_by        TEXT NOT NULL,
+  opened_at        TEXT NOT NULL,
+  log_len          INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS escalations_determination ON escalations(determination_id, state);
+CREATE INDEX IF NOT EXISTS escalations_state ON escalations(state, escalation_id);
+-- R13, R14, R15, R18: every stage move (open, advance), suspension, resumption and end, in order. Appended only.
+CREATE TABLE IF NOT EXISTS escalation_moves (
+  escalation_id  TEXT NOT NULL,
+  seq            INTEGER NOT NULL,
+  kind           TEXT NOT NULL,
+  from_stage     INTEGER,
+  to_stage       INTEGER,
+  reason         TEXT,
+  trigger_json   TEXT,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (escalation_id, seq)
+);
+-- R10: a member's reading of a response. Appended only; the latest is in force.
+CREATE TABLE IF NOT EXISTS escalation_evaluations (
+  escalation_id    TEXT NOT NULL,
+  seq              INTEGER NOT NULL,
+  reading          TEXT NOT NULL,
+  response_action  TEXT,
+  response_ord     INTEGER,
+  reason           TEXT NOT NULL,
+  author           TEXT NOT NULL,
+  at               TEXT NOT NULL,
+  PRIMARY KEY (escalation_id, seq)
+);
+-- R9, R12: an action attached to one escalation at one stage, with stage 7's purpose and standards.
+CREATE TABLE IF NOT EXISTS escalation_attachments (
+  action_id       TEXT PRIMARY KEY,
+  escalation_id   TEXT NOT NULL,
+  seq             INTEGER NOT NULL,
+  stage           INTEGER NOT NULL,
+  purpose         TEXT,
+  standards_json  TEXT,
+  author          TEXT NOT NULL,
+  at              TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS escalation_attachments_escalation ON escalation_attachments(escalation_id, seq);
+-- R13: a member's choice not to advance along a proposed edge now, with a reason. Appended only.
+CREATE TABLE IF NOT EXISTS escalation_declines (
+  escalation_id  TEXT NOT NULL,
+  seq            INTEGER NOT NULL,
+  from_stage     INTEGER NOT NULL,
+  to_stage       INTEGER NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (escalation_id, seq)
+);
+`;
+var ESCALATION_TABLES = Object.freeze([
+  { name: "escalations", keys: ["escalation_id"] },
+  { name: "escalation_moves", keys: ["escalation_id"] },
+  { name: "escalation_evaluations", keys: ["escalation_id"] },
+  { name: "escalation_attachments", keys: ["escalation_id", "action_id"] },
+  { name: "escalation_declines", keys: ["escalation_id"] }
+]);
+function migrateEscalation(sql) {
+  const bare2 = ESCALATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}
+
+// src/escalation/checks.mjs
+var at9 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
+var ESCALATION_CHECKS = Object.freeze({
+  MACHINE_CANNOT_OPEN: {
+    check: "C-116.1",
+    where: at9("escalationOpen", "is-open-member"),
+    translation: "Opening an escalation is a member's act. An assistant may point out a breach worth pursuing; it may not open one. Sign in as a member. Nothing was written."
+  },
+  ESCALATION_CARRIES_NO_JUDGMENT: {
+    check: "C-116.2",
+    where: at9("refuseJudgment", "is-no-judgment"),
+    translation: "An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach warrants action, and how urgently, is the members' judgment, made with the consequences in front of them. Send the act without it. Nothing was written."
+  },
+  NO_SUCH_DETERMINATION: {
+    check: "C-116.3",
+    where: at9("escalationOpen", "is-determination-seen"),
+    translation: "No determination answers to that here. One you may not see is answered exactly as one that does not exist. Nothing was written."
+  },
+  DETERMINATION_SUPERSEDED: {
+    check: "C-116.4",
+    where: at9("escalationOpen", "is-determination-live"),
+    translation: "That determination has been superseded by a later one. An escalation pursues the determination in force: open it on the later one. Nothing was written."
+  },
+  NOT_NONCOMPLIANT: {
+    check: "C-116.5",
+    where: at9("escalationOpen", "is-determination-noncompliant"),
+    translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
+  },
+  NOT_A_PARTICIPANT: {
+    check: "C-116.6",
+    where: at9("escalationOpen", "is-open-joined"),
+    translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
+  },
+  ALREADY_OPEN: {
+    check: "C-116.7",
+    where: at9("escalationOpen", "is-one-escalation"),
+    translation: "This determination already has an escalation that has not ended; there is one at a time. Work in that one. Nothing was written."
+  },
+  NO_SUCH_ESCALATION: {
+    check: "C-116.8",
+    where: at9("refuseNoSuchEscalation", "is-escalation-seen"),
+    translation: "No escalation answers to that here. One in a project you may not see is answered exactly as one that does not exist. Nothing was written."
+  },
+  MACHINE_CANNOT_ATTACH: {
+    check: "C-116.9",
+    where: at9("escalationAttach", "is-attach-member"),
+    translation: "Attaching an action to an escalation is a member's act. An assistant may prepare the action; it may not attach it. Nothing was written."
+  },
+  ESCALATION_ENDED: {
+    check: "C-116.10",
+    where: at9("refuseEnded", "is-escalation-ended"),
+    translation: "This escalation has ended: compliance was restored and the consequences addressed. An ended escalation is never reopened; a new breach is a new determination. Nothing was written."
+  },
+  NO_SUCH_ACTION: {
+    check: "C-116.11",
+    where: at9("escalationAttach", "is-action-seen"),
+    translation: "No action answers to that here. One you may not see is answered exactly as one that does not exist. Nothing was written."
+  },
+  NOT_A_BREACH_ACTION: {
+    check: "C-116.12",
+    where: at9("escalationAttach", "is-breach-action"),
+    translation: "An escalation's acts are actions recorded for the breach: the action states that it is one and rests on the escalation's determination. Record it so, then attach it. Nothing was written."
+  },
+  STAGE_TAKES_NO_ACTION: {
+    check: "C-116.13",
+    where: at9("escalationAttach", "is-attaching-stage"),
+    translation: "Actions are attached at notification, legal tools and political accountability. The escalation's stage now takes none. Nothing was written."
+  },
+  ALREADY_ATTACHED: {
+    check: "C-116.14",
+    where: at9("escalationAttach", "is-attached-once"),
+    translation: "That action is already attached to an escalation. An action belongs to one escalation, at one stage. Nothing was written."
+  },
+  NOT_ACCOUNTABILITY: {
+    check: "C-116.15",
+    where: at9("escalationAttach", "is-accountability-purpose"),
+    translation: "An act of political accountability states its purpose: asking an elected office to act on the breach, an oversight request, an audit request, testimony, or legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not among them. Nothing was written."
+  },
+  NOT_THE_BREACH: {
+    check: "C-116.16",
+    where: at9("escalationAttach", "is-pursued-standard"),
+    translation: "An act of political accountability names the requirement it seeks enforced, from the standards this escalation pursues, and no other. Nothing was written."
+  },
+  COUNTERPARTY_NOT_ELECTED: {
+    check: "C-116.17",
+    where: at9("escalationAttach", "is-elected-office"),
+    translation: "An official request asks an elected office to act. The jurisdiction profile marks the office this action is addressed to as not elected. Address it to an elected office. Nothing was written."
+  },
+  COUNTERPARTY_NOT_OVERSIGHT: {
+    check: "C-116.18",
+    where: at9("escalationAttach", "is-oversight-office"),
+    translation: "An oversight or audit request goes to an oversight or audit body. The jurisdiction profile marks the office this action is addressed to as not one. Nothing was written."
+  },
+  MACHINE_CANNOT_EVALUATE: {
+    check: "C-116.19",
+    where: at9("escalationEvaluate", "is-evaluate-member"),
+    translation: "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written."
+  },
+  NOT_IN_EVALUATION: {
+    check: "C-116.20",
+    where: at9("escalationEvaluate", "is-evaluation-stage"),
+    translation: "A response is evaluated at the response-evaluation stage, and this escalation is at another. Nothing was written."
+  },
+  READING_UNKNOWN: {
+    check: "C-116.21",
+    where: at9("escalationEvaluate", "is-reading-known"),
+    translation: "A reading of a response is one of: complied, partial, denied, or none (nothing came back in time). Nothing was written."
+  },
+  NO_SUCH_RESPONSE: {
+    check: "C-116.22",
+    where: at9("refuseNoSuchResponse", "is-named-response"),
+    translation: "The evaluation names the reply it reads: a received entry of an action attached to this escalation. Nothing was written."
+  },
+  RESPONSE_FOR_NONE: {
+    check: "C-116.23",
+    where: at9("escalationEvaluate", "is-none-unnamed"),
+    translation: "A reading of none says nothing came back in time, so it names no reply. Nothing was written."
+  },
+  NO_REASON: {
+    check: "C-116.24",
+    where: at9("refuseReason", "is-reason-given"),
+    translation: "This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written."
+  },
+  MACHINE_CANNOT_ADVANCE: {
+    check: "C-116.25",
+    where: at9("#edgeArgs", "is-edge-member"),
+    translation: "Moving an escalation to its next stage is a member's act. The protocol proposes a stage when its trigger is met; a member advances it. Nothing was written."
+  },
+  MACHINE_CANNOT_DECLINE: {
+    check: "C-116.26",
+    where: at9("#edgeArgs", "is-edge-member"),
+    translation: "Choosing not to move an escalation now is a member's act, with the member's reason. Nothing was written."
+  },
+  NOT_OPEN: {
+    check: "C-116.27",
+    where: at9("#edgeArgs", "is-edge-open"),
+    translation: "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written."
+  },
+  ILLEGAL_STAGE: {
+    check: "C-116.28",
+    where: at9("#edgeArgs", "is-edge-legal"),
+    translation: "The escalation cannot move from its stage to that one. The stages it can move to are listed. Nothing was written."
+  },
+  TRIGGER_NOT_MET: {
+    check: "C-116.29",
+    where: at9("escalationAdvance", "is-trigger-met"),
+    translation: "That stage's trigger is not met in the record yet; what is missing is named. When it is met the stage is proposed, and a member advances it. Nothing was written."
+  },
+  NOT_PROPOSED: {
+    check: "C-116.30",
+    where: at9("escalationDecline", "is-edge-proposed"),
+    translation: "That stage is not proposed, so there is nothing to decline. Nothing was written."
+  },
+  MACHINE_CANNOT_END: {
+    check: "C-116.31",
+    where: at9("escalationEnd", "is-end-member"),
+    translation: "Ending an escalation is a member's act, and only once compliance is restored and the consequences are addressed. Nothing was written."
+  },
+  ALREADY_ENDED: {
+    check: "C-116.32",
+    where: at9("escalationEnd", "is-end-once"),
+    translation: "This escalation has already ended. Nothing was written."
+  },
+  COMPLIANCE_NOT_RESTORED: {
+    check: "C-116.33",
+    where: at9("escalationEnd", "is-compliance-restored"),
+    translation: "An escalation ends only when compliance is restored: for every standard it pursues, a later determination of the same act finds the government compliant. The standards still lacking one are named. Nothing was written."
+  },
+  CONSEQUENCES_NOT_ADDRESSED: {
+    check: "C-116.34",
+    where: at9("escalationEnd", "is-consequences-addressed"),
+    translation: "An escalation ends only when the consequences of the breach are addressed, and a recorded consequence is not. Nothing was written."
+  },
+  CONSEQUENCES_UNDETERMINED: {
+    check: "C-116.35",
+    where: at9("escalationEnd", "is-consequences-determined"),
+    translation: "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written."
+  },
+  MACHINE_CANNOT_SUSPEND: {
+    check: "C-116.36",
+    where: at9("escalationSuspend", "is-suspend-member"),
+    translation: "Suspending an escalation is a member's act, with a reason. Nothing was written."
+  },
+  ALREADY_SUSPENDED: {
+    check: "C-116.37",
+    where: at9("escalationSuspend", "is-suspend-once"),
+    translation: "This escalation is already suspended. Nothing was written."
+  },
+  MACHINE_CANNOT_RESUME: {
+    check: "C-116.38",
+    where: at9("escalationResume", "is-resume-member"),
+    translation: "Resuming an escalation is a member's act. Nothing was written."
+  },
+  NOT_SUSPENDED: {
+    check: "C-116.39",
+    where: at9("escalationResume", "is-resume-suspended"),
+    translation: "This escalation is not suspended, so there is nothing to resume. Nothing was written."
+  },
+  MACHINE_CANNOT_WRITE_ESCALATION: {
+    check: "C-116.40",
+    where: at9("check", "is-escalation-member"),
+    translation: "An escalation's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
+  },
+  ESCALATION_BY_ACT_ONLY: {
+    check: "C-116.41",
+    where: at9("check", "is-escalation-act"),
+    translation: "An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its history and what is read from it never disagree. Nothing was written."
+  },
+  ESCALATION_HISTORY_REWRITTEN: {
+    check: "C-116.42",
+    where: at9("check", "is-escalation-append-only"),
+    translation: "An escalation's history is never edited; each act adds to it. Nothing was written."
+  },
+  UNSPLICEABLE_ESCALATION: {
+    check: "C-116.43",
+    where: at9("#append", "is-escalation-spliceable"),
+    translation: "The escalation's record cannot be extended in place. Nothing was written."
+  },
+  PROVIDER_UNAVAILABLE: {
+    check: "C-116.44",
+    where: at9("refuseProviderUnavailable", "is-provider-present"),
+    translation: "Part of the record this answer depends on cannot be read on this instance yet, so nothing is answered in its place. Nothing was written."
+  }
+});
+function refusal11(code, detail, extra) {
+  const row2 = ESCALATION_CHECKS[code];
+  return { ok: false, reason: code, detail, ...extra || {}, code, check: row2.check, translation: row2.translation };
+}
+
+// src/escalation/index.mjs
+var STAGES = Object.freeze({
+  1: "documentation",
+  2: "notification",
+  3: "clock",
+  4: "response_evaluation",
+  5: "legal_tools",
+  6: "sustained_attention",
+  7: "political_accountability"
+});
+var STAGE_TABLE = Object.freeze({ 1: [2], 2: [3], 3: [4], 4: [5, 7], 5: [6, 7], 6: [4], 7: [4] });
+var ATTACHING_STAGES = Object.freeze([2, 5, 7]);
+var READINGS2 = Object.freeze(["complied", "partial", "denied", "none"]);
+var ACCOUNTABILITY_PURPOSES = Object.freeze([
+  "official_request",
+  "oversight_request",
+  "audit_request",
+  "testimony",
+  "enforcing_legislation"
+]);
+var REASON_MAX4 = 2e3;
+var DUE_MAX = 500;
+var JUDGMENT_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "score", "rank"]);
+var PROPOSAL_SAYS3 = "proposed by the escalation protocol's derivation over the record at the time of reading; it is not an act. A member advances it or declines it, with a reason.";
+var DAY_MS = 864e5;
+var ACT = Symbol("escalation act");
+var COMPLETED_READINGS = /* @__PURE__ */ new Set(["denied", "partial", "none"]);
+var str10 = (v) => typeof v === "string" ? v.trim() : "";
+var isObj12 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var hex8 = () => {
+  const b = new Uint8Array(4);
+  crypto.getRandomValues(b);
+  return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+var isMachine = (who2) => str10(who2) === "" || isMachineIdentity(who2);
+var json3 = (v) => v === null || v === void 0 ? null : JSON.stringify(v);
+var unjson = (s, d = null) => {
+  try {
+    return s ? JSON.parse(s) : d;
+  } catch {
+    return d;
+  }
+};
+var instantMs = (v) => {
+  if (typeof v !== "string" || !v) return NaN;
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
+};
+var iso2 = (ms) => stampInstant("second", ms);
+var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj12(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
+var liveOf = (d) => d.live === true;
+var actOf = (d) => isObj12(d.act) ? d.act : {};
+var actIdOf = (d) => actOf(d).id ?? null;
+var projectOf = (d) => d.project ?? null;
+var recordedAtOf = (d) => d.at ?? null;
+function ledgerOf(block) {
+  const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
+  return raw.map((e, i) => isObj12(e) ? {
+    ord: Number.isInteger(e.ord) ? e.ord : i,
+    direction: e.direction ?? null,
+    at: e.at ?? null,
+    recorded_at: e.recorded_at ?? null
+  } : null).filter(Boolean);
+}
+var Escalation = class {
+  constructor(deps) {
+    this.record = deps.record;
+    this.membership = deps.membership;
+    this.promotion = deps.promotion;
+    this.sql = (deps.storage || {}).sql;
+    this.deps = deps;
+    this.now = deps.now || (() => stampInstant("second"));
+  }
+  /* The providers used beside this module in layer 9, reached when first needed. */
+  get conformance() {
+    return this.#dep("conformance");
+  }
+  get consequences() {
+    return this.#dep("consequences");
+  }
+  get actions() {
+    return this.#dep("actions");
+  }
+  get filings() {
+    return this.#dep("filings");
+  }
+  #dep(name) {
+    const d = this.deps[name];
+    const v = typeof d === "function" ? d() : d;
+    if (!v) throw new ProviderAbsent(name);
+    return v;
+  }
+  /** The module's tables (R20); run at creation, and safe to run again (each `CREATE ... IF NOT EXISTS`). */
+  migrate() {
+    migrateEscalation(this.sql);
+  }
+  #rows(q6, ...a) {
+    return this.sql.exec(q6, ...a);
+  }
+  #one(q6, ...a) {
+    return this.#rows(q6, ...a)[0] || null;
+  }
+  /* The active profiles' combined view (record-core R26, jurisdictions R12–R16), or null: undetermined wherever a
+     local fact is needed (jurisdictions R27). */
+  #view() {
+    if (this.deps.view !== void 0) return typeof this.deps.view === "function" ? this.deps.view() : this.deps.view;
+    const ids = this.record.getSetting("jurisdiction_profiles");
+    const c = combine(Array.isArray(ids) ? ids : []);
+    return c.ok ? c.view : null;
+  }
+  /* ===================================================================== *
+   * READING AN ESCALATION (R2, R20: absent and unseen are one answer)
+   * ===================================================================== */
+  #row(id, viewer) {
+    if (typeof id !== "string" || !id) return null;
+    const r = this.#one(`SELECT * FROM escalations WHERE escalation_id=?`, id);
+    if (!r) return null;
+    if (viewer !== null && viewer !== void 0 && !this.membership.inSight(r.project_id, viewer)) return null;
+    return {
+      id: r.escalation_id,
+      project: r.project_id,
+      determination: r.determination_id,
+      act: r.act_id,
+      standards: unjson(r.standards_json, []),
+      state: r.state,
+      stage: r.stage,
+      stageSince: r.stage_since,
+      stateSince: r.state_since,
+      openedBy: r.opened_by,
+      openedAt: r.opened_at
+    };
+  }
+  #attachments(id) {
+    return this.#rows(`SELECT * FROM escalation_attachments WHERE escalation_id=? ORDER BY seq`, id).map((a) => ({
+      action: a.action_id,
+      stage: a.stage,
+      purpose: a.purpose ?? null,
+      standards: unjson(a.standards_json, null),
+      author: a.author,
+      at: a.at,
+      seq: a.seq
+    }));
+  }
+  #evaluations(id) {
+    return this.#rows(`SELECT * FROM escalation_evaluations WHERE escalation_id=? ORDER BY seq`, id).map((v) => ({
+      seq: v.seq,
+      reading: v.reading,
+      response: v.response_action ? { action: v.response_action, ord: v.response_ord } : null,
+      reason: v.reason,
+      author: v.author,
+      at: v.at
+    }));
+  }
+  #declines(id) {
+    return this.#rows(`SELECT * FROM escalation_declines WHERE escalation_id=? ORDER BY seq`, id).map((d) => ({
+      seq: d.seq,
+      from: d.from_stage,
+      to: d.to_stage,
+      reason: d.reason,
+      author: d.author,
+      at: d.at
+    }));
+  }
+  #text(id) {
+    const f8 = this.record.readFile(id, "bundle.md");
+    return f8 && typeof f8.text === "string" ? f8.text : null;
+  }
+  /* An action's ledger as `actions` answers it to this viewer; null when it does not answer one. */
+  #ledger(action, viewer) {
+    const r = this.actions.actionRead({ id: action, viewer });
+    return r && r.ok !== false ? ledgerOf(r) : null;
+  }
+  /* ===================================================================== *
+   * THE TRIGGERS (R2, R4–R12): each edge out of the current stage, met or not, from the record at `nowMs`.
+   * An edge with alternatives is first met at its earliest alternative met; an alternative's instant is the latest
+   * date of the ids that meet it (a ledger date is its day's start; a clock's is the day after its date).
+   * ===================================================================== */
+  #met(alts) {
+    const ok = alts.filter((a) => Number.isFinite(a.ms));
+    if (!ok.length) return null;
+    return ok.reduce((m, a) => a.ms < m.ms ? a : m);
+  }
+  #triggers(e, nowMs, viewer) {
+    const edges = STAGE_TABLE[e.stage] || [];
+    const attached = this.#attachments(e.id);
+    const evaluations = this.#evaluations(e.id);
+    const notes = [];
+    const out = [];
+    const edge = (to, alts, missing, extra = {}) => {
+      const m = this.#met(alts);
+      out.push(m ? { from: e.stage, to, met: true, ids: m.ids, instant: iso2(m.ms), ...extra } : { from: e.stage, to, met: false, ids: [], missing, ...extra });
+    };
+    const stageActs = (s) => attached.filter((a) => a.stage === s);
+    const firstSent = (action) => {
+      const l = this.#ledger(action, viewer);
+      if (!l) return null;
+      const i = l.findIndex((x) => x.direction === "sent");
+      return i === -1 ? null : { ledger: l, index: i, entry: l[i] };
+    };
+    const latest = evaluations.at(-1) || null;
+    const byEvaluation = (ev, why) => ev && COMPLETED_READINGS.has(ev.reading) ? [{ ms: instantMs(ev.at), ids: [`${e.id}/evaluation/${ev.seq}`] }] : [];
+    const evalMissing = (ev, scope) => !ev ? `no evaluation ${scope}` : ev.reading === "complied" ? `the evaluation in force reads complied: it proposes no stage. Compliance is restored only by a live compliant determination of the same act for every standard pursued (escalationEnd)` : `no evaluation ${scope} reads denied, partial or none`;
+    if (e.stage === 1) {
+      const d = this.conformance.determinationRead({ id: e.determination, viewer });
+      let missing = null;
+      if (!d || d.ok === false) missing = "the determination does not answer to this reader";
+      else if (!liveOf(d)) missing = "the determination has been superseded";
+      else {
+        const actor = actOf(d).actor || {};
+        if (!str10(actor.role) || !str10(actor.body)) missing = "the act's actor names no office (role and body), so a notice has no addressee";
+      }
+      edge(2, missing ? [] : [{ ms: instantMs(recordedAtOf(d)), ids: [e.determination] }], missing);
+    } else if (e.stage === 2) {
+      const acts = stageActs(2);
+      const alts = [];
+      for (const a of acts) {
+        const s = firstSent(a.action);
+        if (s) alts.push({ ms: instantMs(s.entry.at), ids: [a.action, `${a.action}#${s.entry.ord}`] });
+      }
+      edge(3, alts, acts.length ? "no notification action attached at stage 2 has a sent entry in its ledger" : "no breach action is attached at stage 2");
+    } else if (e.stage === 3) {
+      const acts = stageActs(2);
+      const alts = [];
+      for (const a of acts) {
+        const s = firstSent(a.action);
+        if (s) {
+          const reply = s.ledger.slice(s.index + 1).find((x) => x.direction === "received" || x.direction === "no_response");
+          if (reply) alts.push({
+            ms: Math.max(instantMs(s.entry.at), instantMs(reply.at)),
+            ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`]
+          });
+        }
+        const facts = actionFacts(this.#text(a.action), nowMs) || {};
+        if (!facts.clock_next)
+          notes.push({ action: a.action, says: "this notification action has no pending clock entry, so stage 3 never triggers by time on it; a member states a clock entry, with its basis, on the action" });
+        else if (facts.clock_overdue)
+          alts.push({ ms: instantMs(facts.clock_next) + DAY_MS, ids: [a.action], clock: facts.clock_next });
+      }
+      edge(4, alts, acts.length ? "no reply or no-response entry follows the sent entry, and no clock entry is past" : "no notification action is attached at stage 2");
+    } else if (e.stage === 4) {
+      const since = evaluations.filter((v) => instantOrder(v.at, e.stageSince) >= 0).at(-1) || null;
+      const missing = evalMissing(since, "since the escalation entered stage 4");
+      edge(5, byEvaluation(since), missing);
+      edge(7, byEvaluation(since), missing);
+    } else if (e.stage === 5) {
+      const acts = stageActs(5);
+      const alts = [];
+      for (const a of acts) {
+        const s = firstSent(a.action);
+        if (s) alts.push({ ms: instantMs(s.entry.at), ids: [a.action, `${a.action}#${s.entry.ord}`] });
+      }
+      edge(6, alts, acts.length ? "no action attached at stage 5 has a sent entry in its ledger" : "no breach action is attached at stage 5");
+      edge(7, byEvaluation(latest), evalMissing(latest, "in force"));
+    } else if (e.stage === 6 || e.stage === 7) {
+      const alts = [];
+      for (const a of attached) {
+        const l = this.#ledger(a.action, viewer) || [];
+        for (const x of l) {
+          if (x.direction !== "received") continue;
+          if (latest && !(instantOrder(x.recorded_at, latest.at) > 0)) continue;
+          alts.push({ ms: instantMs(x.at), ids: [a.action, `${a.action}#${x.ord}`] });
+        }
+      }
+      edge(4, alts, latest ? "no received entry on an attached action was recorded after the latest evaluation" : "no received entry on an attached action");
+    }
+    for (const t of out) if (!edges.includes(t.to)) throw new Error("escalation: an edge outside the table");
+    return { triggers: out, notes };
+  }
+  /* R2, R13: the met edges, each with its instant, age and the declines made of it since its trigger was met. */
+  #proposed(e, triggers, nowMs) {
+    const declines = this.#declines(e.id);
+    return triggers.filter((t) => t.met).map((t) => {
+      const mine = declines.filter((d) => d.from === t.from && d.to === t.to && instantOrder(d.at, e.stageSince) >= 0);
+      const since = mine.filter((d) => instantOrder(d.at, t.instant) >= 0);
+      return {
+        from: t.from,
+        to: t.to,
+        stage: STAGES[t.to],
+        ids: t.ids,
+        instant: t.instant,
+        age_ms: Math.max(0, nowMs - instantMs(t.instant)),
+        declines: mine,
+        declined_since_met: since.length > 0,
+        by: "protocol",
+        says: PROPOSAL_SAYS3
+      };
+    });
+  }
+  /* R3, R14: the two exit conditions, answered apart and never composed. */
+  #exit(e, viewer) {
+    return {
+      compliance: this.#compliance(e, viewer),
+      consequences: this.#consequencesState(e, viewer),
+      says: "an escalation ends only when both hold: compliance restored for every standard it pursues, and the consequences addressed. Each is answered on its own."
+    };
+  }
+  #compliance(e, viewer) {
+    if (!e.act) return { state: "undetermined", ids: [], why: "the determination names no act id, so no later determination of the same act can be found" };
+    const per = [];
+    for (const standard of e.standards) {
+      const found = [];
+      let after = null;
+      for (let page = 0; page < 50; page++) {
+        const r = this.conformance.determinationsFor({ act: e.act, standard, outcome: "compliant", live: true, after, viewer });
+        if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the determinations of the act could not be read" };
+        for (const d of r.items || []) {
+          const o = outcomesOf(d).find((x) => x.standard === standard);
+          if (o && o.outcome === "compliant" && liveOf(d) && actIdOf(d) === e.act && instantOrder(recordedAtOf(d), e.openedAt) > 0) found.push(d.id);
+        }
+        if (!r.truncated) break;
+        after = r.cursor ?? (r.items || []).at(-1)?.id ?? null;
+        if (!after) break;
+      }
+      per.push({ standard, met: found.length > 0, ids: found });
+    }
+    const lacking = per.filter((p) => !p.met).map((p) => p.standard);
+    return {
+      state: lacking.length ? "not_met" : "met",
+      ids: per.flatMap((p) => p.ids),
+      standards: per,
+      why: lacking.length ? `no live compliant determination of the same act recorded after the escalation opened for: ${lacking.join(", ")}` : "every standard pursued has a live compliant determination of the same act recorded after the escalation opened"
+    };
+  }
+  #consequencesState(e, viewer) {
+    const r = this.consequences.addressed({ determination: e.determination, viewer });
+    if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the consequences could not be read" };
+    const parts = Array.isArray(r.parts) ? r.parts : [];
+    const ids = parts.map((p) => isObj12(p) ? p.id ?? p.part ?? null : p).filter((x) => typeof x === "string");
+    const state = r.state === "addressed" ? "met" : r.state === "not_addressed" ? "not_met" : "undetermined";
+    const why = state === "met" ? "every live consequence part is addressed" : state === "not_met" ? "a consequence part is not addressed, or was never assessed" : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
+    return { state, ids, parts, why };
+  }
+  /* The escalation's attached actions as the reader sees them, with stage 7's statements and R12's undetermined
+     election or oversight. */
+  #actionsOf(e, viewer) {
+    const view = this.#view();
+    return this.#attachments(e.id).map((a) => {
+      const visible = this.actions.actionRead({ id: a.action, viewer });
+      const item = { action: a.action, stage: a.stage, attached_by: a.author, at: a.at };
+      if (!visible || visible.ok === false) return { ...item, action: null, says: "an object you may not see" };
+      if (a.stage === 7) {
+        item.purpose = a.purpose;
+        item.standards = a.standards;
+        const office = this.#office(visible.counterparty, view);
+        if (a.purpose === "official_request" && office.elected === void 0)
+          item.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
+        if ((a.purpose === "oversight_request" || a.purpose === "audit_request") && office.oversight === void 0)
+          item.oversight = { state: "undetermined", says: "the active profiles do not say whether this office is an oversight or audit body" };
+      }
+      if (a.stage === 5) {
+        const f8 = this.filings.filingsFor({ action: a.action, viewer });
+        item.filings = f8 && f8.ok !== false ? { drafts: f8.drafts ?? [], packets: f8.packets ?? [] } : null;
+      }
+      return item;
+    });
+  }
+  /* R12: an action's counterparty office in the view, `{elected?, oversight?}`; undefined where the profile is silent. */
+  #office(cp, view) {
+    if (!isObj12(cp) || !str10(cp.role) || !str10(cp.body) || !view || !Array.isArray(view.counterparties)) return {};
+    const o = view.counterparties.find((c) => isObj12(c) && c.role === cp.role && c.body === cp.body);
+    if (!o) return {};
+    return {
+      elected: typeof o.elected === "boolean" ? o.elected : void 0,
+      oversight: typeof o.oversight === "boolean" ? o.oversight : void 0
+    };
+  }
+  /* The history: every act on the escalation, oldest first, from its document's log (R18). */
+  #history(id) {
+    return logOf(this.#text(id));
+  }
+  /** R2: the escalation as the record stands at `nowMs`. */
+  escalationRead({ id, nowMs, viewer } = {}) {
+    const e = this.#row(id, viewer);
+    if (!e) return refuseNoSuchEscalation();
+    const at14 = Number.isFinite(nowMs) ? nowMs : instantMs(this.now());
+    const { triggers, notes } = this.#triggers(e, at14, viewer);
+    const proposed = this.#proposed(e, triggers, at14);
+    const answer = {
+      ok: true,
+      id: e.id,
+      project: e.project,
+      determination: e.determination,
+      act: e.act,
+      state: e.state,
+      stage: e.stage,
+      stage_name: STAGES[e.stage],
+      stage_since: e.stageSince,
+      opened_by: e.openedBy,
+      opened_at: e.openedAt,
+      as_of: iso2(at14),
+      history: this.#history(e.id),
+      standards: e.standards,
+      actions: this.#actionsOf(e, viewer),
+      evaluations: this.#evaluations(e.id),
+      triggers,
+      notes,
+      proposed,
+      exit: this.#exit(e, viewer)
+    };
+    if (e.state === "suspended")
+      answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep running in the actions, and it is not ended" };
+    if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
+    if (e.stage === 5) {
+      const av = this.filings.availableActions({ determination: e.determination, viewer });
+      answer.available = av && av.ok !== false ? av : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
+    }
+    return answer;
+  }
+  /* ===================================================================== *
+   * THE WRITE (R18, R21): every act is one promotion of the escalation's document through `promotion`.
+   * ===================================================================== */
+  #snap() {
+    return `${this.now().replace(/[-:]/g, "").replace(/\.\d+/, "")}_${hex8()}`;
+  }
+  #append(e, entry, { stage, state, blurb }) {
+    const head = this.record.head(e.id);
+    const text3 = this.#text(e.id);
+    if (!head || text3 === null) return refuseNoSuchEscalation();
+    const seq = logOf(text3).length + 1;
+    const next = appendEntry(text3, { entry, seq, stage, state, fromState: head.currentState, blurb });
+    if (next === null) return refusal11("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
+    const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
+      const f8 = this.record.readFile(e.id, path);
+      return typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes };
+    });
+    const fm = parseFm(next) || {};
+    const r = this.promotion.promote({
+      bundleId: e.id,
+      base: head.bundleSha,
+      snapKey: this.#snap(),
+      author: entry.author,
+      files: [{ path: "bundle.md", text: next }, ...carried],
+      meta: {
+        object_type: ESCALATION,
+        title: fm.title,
+        current_state: fm.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: fm.last_updated
+      },
+      [ACT]: true
+    });
+    return r.ok ? { ok: true, seq } : r;
+  }
+  /* ---- the registered step (promotion R39) ---- */
+  /** R17, R18, R21: an escalation document changes only through this module's acts, never by a machine, and its log
+   *  only grows; a replay restores one as it was. */
+  check(c) {
+    const type = c.promotedType;
+    const headType = c.head ? c.head.type : null;
+    if (type !== ESCALATION && headType !== ESCALATION) return null;
+    if (c.replay) return null;
+    if (isMachine(c.author))
+      return refusal11("MACHINE_CANNOT_WRITE_ESCALATION", "an escalation is written only by a member's act; a machine prepares and never acts (Design Requirement 12). Nothing was written.");
+    if (!c.pkg || c.pkg[ACT] !== true)
+      return refusal11("ESCALATION_BY_ACT_ONLY", "an escalation changes only through its acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its log and its tables never disagree. Nothing was written.");
+    if (c.head) {
+      const held = logSection(this.#text(c.bundleId)) || "";
+      const now = logSection(c.bundleMd && c.bundleMd.text) || "";
+      if (!now.startsWith(held))
+        return refusal11("ESCALATION_HISTORY_REWRITTEN", "an escalation's log is append-only. Nothing was written.");
+    }
+    return null;
+  }
+  /** R21: the tables, projected from the promoted document in the promotion's transaction. */
+  project(c) {
+    if (c.promotedType !== ESCALATION || !c.bundleMd || typeof c.bundleMd.text !== "string") return null;
+    const id = c.bundleId, text3 = c.bundleMd.text;
+    const fm = parseFm(text3) || {};
+    const log = logOf(text3).filter((x) => !x.unreadable);
+    const held = this.#one(`SELECT log_len FROM escalations WHERE escalation_id=?`, id);
+    const from = held ? held.log_len : 0;
+    const open = log.find((x) => x.kind === "open") || {};
+    const stageAt = log.filter((x) => x.kind === "open" || x.kind === "advance").at(-1) || open;
+    const stateAt = log.filter((x) => ["open", "suspend", "resume", "end"].includes(x.kind)).at(-1) || open;
+    this.#rows(
+      `INSERT OR REPLACE INTO escalations (escalation_id, project_id, determination_id, act_id, standards_json,
+                state, stage, stage_since, state_since, opened_by, opened_at, log_len) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      id,
+      String(fm.project ?? open.project ?? ""),
+      String(fm.determination ?? open.determination ?? ""),
+      fm.act === null || fm.act === void 0 || fm.act === "null" ? null : String(fm.act),
+      JSON.stringify(Array.isArray(fm.standards) ? fm.standards.map(String) : open.standards || []),
+      String(fm.current_state ?? "open"),
+      Number(fm.stage ?? 1),
+      stageAt.at ?? "",
+      stateAt.at ?? "",
+      open.author ?? "",
+      open.at ?? "",
+      log.length
+    );
+    for (const x of log.filter((y) => y.seq > from)) {
+      if (["open", "advance", "suspend", "resume", "end"].includes(x.kind))
+        this.#rows(
+          `INSERT OR REPLACE INTO escalation_moves (escalation_id, seq, kind, from_stage, to_stage, reason,
+                    trigger_json, author, at) VALUES (?,?,?,?,?,?,?,?,?)`,
+          id,
+          x.seq,
+          x.kind,
+          x.from ?? null,
+          x.to ?? null,
+          x.reason ?? null,
+          json3(x.trigger),
+          x.author,
+          x.at
+        );
+      else if (x.kind === "evaluate")
+        this.#rows(
+          `INSERT OR REPLACE INTO escalation_evaluations (escalation_id, seq, reading, response_action,
+                    response_ord, reason, author, at) VALUES (?,?,?,?,?,?,?,?)`,
+          id,
+          x.seq,
+          x.reading,
+          x.response ? x.response.action : null,
+          x.response ? x.response.ord : null,
+          x.reason,
+          x.author,
+          x.at
+        );
+      else if (x.kind === "attach")
+        this.#rows(
+          `INSERT OR REPLACE INTO escalation_attachments (action_id, escalation_id, seq, stage, purpose,
+                    standards_json, author, at) VALUES (?,?,?,?,?,?,?,?)`,
+          x.action,
+          id,
+          x.seq,
+          x.stage,
+          x.purpose ?? null,
+          json3(x.standards),
+          x.author,
+          x.at
+        );
+      else if (x.kind === "decline")
+        this.#rows(`INSERT OR REPLACE INTO escalation_declines (escalation_id, seq, from_stage, to_stage, reason, author, at)
+                    VALUES (?,?,?,?,?,?,?)`, id, x.seq, x.from, x.to, x.reason, x.author, x.at);
+    }
+    return null;
+  }
+  /* ===================================================================== *
+   * THE ACTS
+   * ===================================================================== */
+  /** R1: open an escalation of a live noncompliant determination, at stage 1. */
+  escalationOpen(args = {}) {
+    const { determination, author, viewer } = args;
+    if (isMachine(author))
+      return refusal11("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
+    const judged = refuseJudgment(args);
+    if (judged) return judged;
+    const d = typeof determination === "string" && determination ? this.conformance.determinationRead({ id: determination, viewer }) : null;
+    if (!d || d.ok === false)
+      return refusal11("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.");
+    if (!liveOf(d))
+      return refusal11("DETERMINATION_SUPERSEDED", "that determination has been superseded; an escalation pursues a live determination. Nothing was written.", { superseded_by: d.superseded_by ?? null });
+    const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
+    if (!pursued.length)
+      return refusal11("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
+    const project = projectOf(d);
+    const fence3 = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
+    if (fence3)
+      return refusal11("NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence3.reason });
+    const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
+                            ORDER BY escalation_id LIMIT 1`, determination);
+    if (held)
+      return refusal11("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is one open or suspended escalation per determination. Nothing was written.`, { escalation: held.escalation_id });
+    const at14 = this.now();
+    const actId = actIdOf(d);
+    const r = this.record.transact(() => {
+      const id = escalationId(this.record.allocId("ESC", at14.slice(0, 4)).id);
+      const entry = { kind: "open", to: 1, determination, project, standards: pursued, author, at: at14 };
+      const text3 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at14, entry });
+      const fm = parseFm(text3) || {};
+      const p = this.promotion.promote({
+        bundleId: id,
+        base: null,
+        snapKey: this.#snap(),
+        author,
+        files: [{ path: "bundle.md", text: text3 }],
+        meta: {
+          object_type: ESCALATION,
+          title: fm.title,
+          current_state: fm.current_state,
+          created: fm.created,
+          last_updated: fm.last_updated
+        },
+        [ACT]: true
+      });
+      return p.ok ? { ok: true, id } : p;
+    });
+    if (!r.ok) return r;
+    const read2 = this.escalationRead({ id: r.id, viewer });
+    return {
+      ok: true,
+      id: r.id,
+      stage: 1,
+      stage_name: STAGES[1],
+      standards: pursued,
+      determination,
+      project,
+      opened_by: author,
+      at: at14,
+      proposed: read2.proposed
+    };
+  }
+  /** R9, R12: attach a breach action to the current stage (2, 5 or 7). */
+  escalationAttach(args = {}) {
+    const { id, action, purpose, standards, author, viewer } = args;
+    if (isMachine(author))
+      return refusal11("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
+    const judged = refuseJudgment(args);
+    if (judged) return judged;
+    const e = this.#row(id, viewer);
+    if (!e) return refuseNoSuchEscalation();
+    if (e.state === "ended") return refuseEnded();
+    const a = typeof action === "string" && action ? this.actions.actionRead({ id: action, viewer }) : null;
+    if (!a || a.ok === false)
+      return refusal11("NO_SUCH_ACTION", "no action answers to that id here; one you may not see is answered exactly as one that does not exist.");
+    const legs = Array.isArray(a.legs) ? a.legs : [];
+    if (a.breach !== true || !legs.some((l) => isObj12(l) && l.kind === "rests_on" && l.target === e.determination))
+      return refusal11("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
+    if (!ATTACHING_STAGES.includes(e.stage))
+      return refusal11("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages 2, 5 and 7 do. Nothing was written.`, { stage: e.stage });
+    const held = this.#one(`SELECT escalation_id, stage FROM escalation_attachments WHERE action_id=?`, action);
+    if (held)
+      return refusal11(
+        "ALREADY_ATTACHED",
+        "that action is already attached to an escalation, at one stage. Nothing was written.",
+        held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {}
+      );
+    const entry = { kind: "attach", action, stage: e.stage, author, at: this.now() };
+    if (e.stage === 7) {
+      if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
+        return refusal11(
+          "NOT_ACCOUNTABILITY",
+          `a stage-7 act states one accountability purpose: ${ACCOUNTABILITY_PURPOSES.join(", ")}. Policy advocacy and candidate support have none. Nothing was written.`,
+          { purposes: ACCOUNTABILITY_PURPOSES }
+        );
+      const named = Array.isArray(standards) ? standards.filter((s) => typeof s === "string" && s) : [];
+      const foreign = named.filter((s) => !e.standards.includes(s));
+      if (!named.length || foreign.length)
+        return refusal11(
+          "NOT_THE_BREACH",
+          "a stage-7 act names at least one of the escalation's noncompliant standards as the requirement it seeks enforced, and no other. Nothing was written.",
+          { pursued: e.standards, ...foreign.length ? { not_pursued: foreign } : {} }
+        );
+      const office = this.#office(a.counterparty, this.#view());
+      if (purpose === "official_request" && office.elected === false)
+        return refusal11("COUNTERPARTY_NOT_ELECTED", "an official request asks an elected office to act on the breach, and the active profiles mark this action's office not elected. Nothing was written.");
+      if ((purpose === "oversight_request" || purpose === "audit_request") && office.oversight === false)
+        return refusal11("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an oversight or audit body, and the active profiles mark this action's office not one. Nothing was written.");
+      Object.assign(entry, { purpose, standards: [...new Set(named)] });
+    }
+    const w = this.#append(e, entry, { blurb: "Action attached" });
+    if (!w.ok) return w;
+    return {
+      ok: true,
+      id: e.id,
+      action,
+      stage: e.stage,
+      ...e.stage === 7 ? { purpose, standards: entry.standards } : {},
+      author,
+      at: entry.at
+    };
+  }
+  /** R10: a member's reading of a response, at stage 4. */
+  escalationEvaluate(args = {}) {
+    const { id, response, reading, reason, author, viewer } = args;
+    if (isMachine(author))
+      return refusal11("MACHINE_CANNOT_EVALUATE", "a response is evaluated by a named member. Nothing was written.");
+    const judged = refuseJudgment(args);
+    if (judged) return judged;
+    const e = this.#row(id, viewer);
+    if (!e) return refuseNoSuchEscalation();
+    if (e.stage !== 4)
+      return refusal11("NOT_IN_EVALUATION", `the escalation stands at stage ${e.stage} (${STAGES[e.stage]}); a response is evaluated at stage 4. Nothing was written.`, { stage: e.stage });
+    if (e.state === "ended") return refuseEnded();
+    if (!READINGS2.includes(reading))
+      return refusal11("READING_UNKNOWN", `a reading is one of ${READINGS2.join(", ")}. Nothing was written.`, { readings: READINGS2 });
+    let named = null;
+    if (response !== void 0 && response !== null) {
+      const ok = isObj12(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
+      if (!ok)
+        return refuseNoSuchResponse("the response named is not a received entry of an action attached to this escalation.");
+      named = { action: response.action, ord: response.ord };
+    } else if (reading !== "none")
+      return refuseNoSuchResponse(`a ${reading} reading names the received entry it reads.`);
+    if (named && reading === "none")
+      return refusal11("RESPONSE_FOR_NONE", "a none reading says nothing came back by the clock, so it names no response. Nothing was written.");
+    const bad = refuseReason(reason);
+    if (bad) return bad;
+    const entry = { kind: "evaluate", reading, response: named, reason: str10(reason), author, at: this.now() };
+    const w = this.#append(e, entry, { blurb: "Response evaluated" });
+    if (!w.ok) return w;
+    return {
+      ok: true,
+      id: e.id,
+      reading,
+      response: named,
+      reason: entry.reason,
+      author,
+      at: entry.at,
+      ...reading === "complied" ? { says: "a complied reading proposes no stage. Compliance is restored only by a live compliant determination of the same act for every standard pursued (escalationEnd)." } : {},
+      ...reading === "partial" ? { says: "partial compliance is recorded; it does not stop the clock or end the escalation." } : {}
+    };
+  }
+  #edgeArgs(kind, { id, to, reason, author, viewer }, args) {
+    if (isMachine(author))
+      return { refused: refusal11(
+        kind === "advance" ? "MACHINE_CANNOT_ADVANCE" : "MACHINE_CANNOT_DECLINE",
+        `an escalation's stage is ${kind === "advance" ? "advanced" : "declined"} by a named member; a proposal is the protocol's derivation, never an act. Nothing was written.`
+      ) };
+    const judged = refuseJudgment(args);
+    if (judged) return { refused: judged };
+    const e = this.#row(id, viewer);
+    if (!e) return { refused: refuseNoSuchEscalation() };
+    if (e.state !== "open")
+      return { refused: refusal11(
+        "NOT_OPEN",
+        `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
+        { state: e.state }
+      ) };
+    const bad = refuseReason(reason);
+    if (bad) return { refused: bad };
+    const target = typeof to === "string" && /^\d$/.test(to) ? Number(to) : typeof to === "string" ? Number(Object.keys(STAGES).find((k) => STAGES[k] === to)) : to;
+    const legal = STAGE_TABLE[e.stage] || [];
+    if (!legal.includes(target))
+      return { refused: refusal11(
+        "ILLEGAL_STAGE",
+        `stage ${e.stage} (${STAGES[e.stage]}) moves to ${legal.join(" or ")} only. Nothing was written.`,
+        { from: e.stage, legal }
+      ) };
+    return { e, target };
+  }
+  /** R13: advance along a proposed edge. */
+  escalationAdvance(args = {}) {
+    const a = this.#edgeArgs("advance", args, args);
+    if (a.refused) return a.refused;
+    const { e, target } = a;
+    const nowMs = instantMs(this.now());
+    const { triggers } = this.#triggers(e, nowMs, args.viewer);
+    const t = triggers.find((x) => x.to === target);
+    if (!t || !t.met)
+      return refusal11(
+        "TRIGGER_NOT_MET",
+        `the trigger for stage ${target} (${STAGES[target]}) is not met: ${t ? t.missing : "no trigger"}. Nothing was written.`,
+        { from: e.stage, to: target, missing: t ? t.missing : null }
+      );
+    const entry = {
+      kind: "advance",
+      from: e.stage,
+      to: target,
+      reason: str10(args.reason),
+      author: args.author,
+      at: this.now(),
+      trigger: { ids: t.ids, instant: t.instant }
+    };
+    const w = this.#append(e, entry, { stage: target, blurb: `Advanced to stage ${target}` });
+    if (!w.ok) return w;
+    return {
+      ok: true,
+      id: e.id,
+      from: e.stage,
+      to: target,
+      stage_name: STAGES[target],
+      reason: entry.reason,
+      author: entry.author,
+      at: entry.at,
+      trigger: entry.trigger
+    };
+  }
+  /** R13: record that a member chose not to advance along a proposed edge now. */
+  escalationDecline(args = {}) {
+    const a = this.#edgeArgs("decline", args, args);
+    if (a.refused) return a.refused;
+    const { e, target } = a;
+    const { triggers } = this.#triggers(e, instantMs(this.now()), args.viewer);
+    const t = triggers.find((x) => x.to === target);
+    if (!t || !t.met)
+      return refusal11(
+        "NOT_PROPOSED",
+        `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
+        { from: e.stage, to: target }
+      );
+    const entry = { kind: "decline", from: e.stage, to: target, reason: str10(args.reason), author: args.author, at: this.now() };
+    const w = this.#append(e, entry, { blurb: `Declined stage ${target}` });
+    if (!w.ok) return w;
+    return {
+      ok: true,
+      id: e.id,
+      from: e.stage,
+      to: target,
+      reason: entry.reason,
+      author: entry.author,
+      at: entry.at,
+      says: "the proposal stays in the read, with its age and this decline"
+    };
+  }
+  /** R14: end an escalation, only when compliance is restored and the consequences are addressed. */
+  escalationEnd(args = {}) {
+    const { id, author, viewer } = args;
+    if (isMachine(author))
+      return refusal11("MACHINE_CANNOT_END", "an escalation is ended by a named member. Nothing was written.");
+    const judged = refuseJudgment(args);
+    if (judged) return judged;
+    const e = this.#row(id, viewer);
+    if (!e) return refuseNoSuchEscalation();
+    if (e.state === "ended") return refusal11("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened.");
+    const c = this.#compliance(e, viewer);
+    if (c.state !== "met")
+      return refusal11(
+        "COMPLIANCE_NOT_RESTORED",
+        `compliance is not restored: ${c.why}. Nothing was written.`,
+        { ids: c.ids, standards: c.standards ?? [] }
+      );
+    const q6 = this.#consequencesState(e, viewer);
+    if (q6.state === "not_met")
+      return refusal11("CONSEQUENCES_NOT_ADDRESSED", `the consequences are not addressed: ${q6.why}. Nothing was written.`, { ids: q6.ids });
+    if (q6.state !== "met")
+      return refusal11(
+        "CONSEQUENCES_UNDETERMINED",
+        `whether the consequences are addressed is undetermined: ${q6.why}. A group that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.`,
+        { ids: q6.ids }
+      );
+    const entry = { kind: "end", from: e.stage, author, at: this.now(), compliance: c.ids, consequences: q6.ids };
+    const w = this.#append(e, entry, { state: "ended", blurb: "Escalation ended" });
+    if (!w.ok) return w;
+    return { ok: true, id: e.id, state: "ended", ended_by: author, at: entry.at, compliance: c.ids, consequences: q6.ids };
+  }
+  /** R15: suspend an open escalation, with a reason. */
+  escalationSuspend(args = {}) {
+    const { id, reason, author, viewer } = args;
+    if (isMachine(author))
+      return refusal11("MACHINE_CANNOT_SUSPEND", "an escalation is suspended by a named member. Nothing was written.");
+    const judged = refuseJudgment(args);
+    if (judged) return judged;
+    const e = this.#row(id, viewer);
+    if (!e) return refuseNoSuchEscalation();
+    if (e.state === "ended") return refuseEnded();
+    if (e.state === "suspended") return refusal11("ALREADY_SUSPENDED", `suspended since ${e.stateSince}. Nothing was written.`);
+    const bad = refuseReason(reason);
+    if (bad) return bad;
+    const entry = { kind: "suspend", from: e.stage, reason: str10(reason), author, at: this.now() };
+    const w = this.#append(e, entry, { state: "suspended", blurb: "Escalation suspended" });
+    if (!w.ok) return w;
+    return {
+      ok: true,
+      id: e.id,
+      state: "suspended",
+      stage: e.stage,
+      reason: entry.reason,
+      author,
+      at: entry.at,
+      says: "suspended: not ended. Its proposals are not reported as due; its clocks keep running in the actions."
+    };
+  }
+  /** R15: resume a suspended escalation at the same stage. */
+  escalationResume(args = {}) {
+    const { id, reason, author, viewer } = args;
+    if (isMachine(author))
+      return refusal11("MACHINE_CANNOT_RESUME", "an escalation is resumed by a named member. Nothing was written.");
+    const judged = refuseJudgment(args);
+    if (judged) return judged;
+    const e = this.#row(id, viewer);
+    if (!e) return refuseNoSuchEscalation();
+    if (e.state === "ended") return refuseEnded();
+    if (e.state !== "suspended") return refusal11("NOT_SUSPENDED", "this escalation is open. Nothing was written.");
+    const entry = { kind: "resume", from: e.stage, reason: str10(reason) || null, author, at: this.now() };
+    const w = this.#append(e, entry, { state: "open", blurb: "Escalation resumed" });
+    if (!w.ok) return w;
+    return { ok: true, id: e.id, state: "open", stage: e.stage, author, at: entry.at };
+  }
+  /** R16: every open escalation with a proposed edge not advanced or declined since its trigger was met, oldest first. */
+  escalationsDue({ nowMs, limit, viewer } = {}) {
+    const at14 = Number.isFinite(nowMs) ? nowMs : instantMs(this.now());
+    const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
+    const items = [];
+    for (const r of this.#rows(`SELECT escalation_id FROM escalations WHERE state='open' ORDER BY escalation_id`)) {
+      const e = this.#row(r.escalation_id, viewer);
+      if (!e) continue;
+      const { triggers } = this.#triggers(e, at14, viewer);
+      for (const p of this.#proposed(e, triggers, at14))
+        if (!p.declined_since_met)
+          items.push({
+            id: e.id,
+            project: e.project,
+            from: p.from,
+            to: p.to,
+            stage: p.stage,
+            instant: p.instant,
+            age_ms: p.age_ms,
+            ids: p.ids,
+            by: "protocol"
+          });
+    }
+    items.sort((a, b) => instantOrder(a.instant, b.instant) || (a.id < b.id ? -1 : a.id > b.id ? 1 : a.to - b.to));
+    return { ok: true, as_of: iso2(at14), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+  }
+};
+function refuseNoSuchEscalation() {
+  return refusal11("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is answered exactly as one that does not exist.");
+}
+function refuseEnded() {
+  return refusal11("ESCALATION_ENDED", "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written.");
+}
+function refuseNoSuchResponse(why) {
+  return refusal11("NO_SUCH_RESPONSE", `${why} Nothing was written.`);
+}
+function refuseReason(reason) {
+  const r = str10(reason);
+  if (!r || r.length > REASON_MAX4)
+    return refusal11("NO_REASON", `a reason of 1 to ${REASON_MAX4} characters is required. Nothing was written.`);
+  return null;
+}
+function refuseJudgment(args) {
+  const found = isObj12(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
+  if (found.length)
+    return refusal11("ESCALATION_CARRIES_NO_JUDGMENT", "an escalation records no significance, severity, priority, urgency, rank or score: whether a breach warrants action, and how urgently, is a member's judgment, made with the consequences in front of them. Nothing was written.", { keys: found });
+  return null;
+}
+function refuseProviderUnavailable(provider) {
+  return refusal11("PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
+}
+var ProviderAbsent = class extends Error {
+  constructor(provider) {
+    super(`escalation: ${provider} was not given`);
+    this.provider = provider;
+  }
+};
+for (const name of [
+  "escalationOpen",
+  "escalationRead",
+  "escalationAttach",
+  "escalationEvaluate",
+  "escalationAdvance",
+  "escalationDecline",
+  "escalationEnd",
+  "escalationSuspend",
+  "escalationResume",
+  "escalationsDue"
+]) {
+  const f8 = Escalation.prototype[name];
+  Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function(...a) {
+    try {
+      return f8.apply(this, a);
+    } catch (e) {
+      if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider);
+      throw e;
+    }
+  } });
+}
+var instances23 = /* @__PURE__ */ new WeakMap();
+function escalationOf(host, deps) {
+  let i = instances23.get(host);
+  if (!i) {
+    const d = deps || {};
+    const storage = d.storage || host.storage;
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
+    const conformance = d.conformance || (() => conformanceOf(host, { record, membership, promotion }));
+    const actions = d.actions || (() => actionsOf(host, { record, membership, promotion }));
+    const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
+    const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
+    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
+    instances23.set(host, i);
+    i.migrate();
+    record.declarePurge("escalation", ESCALATION_TABLES);
+    promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
+  }
+  return i;
+}
+
 // src/citation/checks.mjs
 var CITE_CHECKS = {
   BAD_NOTE: {
@@ -80228,8 +84367,8 @@ function noSuchProject2(project) {
     detail: "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way."
   };
 }
-var rowOf5 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
-var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rowOf6 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
+var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var Citation = class {
   constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
     this.record = record;
@@ -80294,7 +84433,7 @@ var Citation = class {
     return this.promotion.promote({
       bundleId: project,
       base: head.bundleSha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand7(4)}`,
+      snapKey: `${when.replace(/[-:]/g, "")}_${rand8(4)}`,
       author: author || "member",
       files: [{ path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta: {
@@ -80374,7 +84513,7 @@ var Citation = class {
         return {
           ok: false,
           reason: "RETIRED_NOT_CITABLE",
-          ...rowOf5(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+          ...rowOf6(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
           project,
           handle,
           offenders: retiredMembers.sort(),
@@ -80539,7 +84678,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "BAD_NOTE",
-        ...rowOf5(CITE_CHECKS, "BAD_NOTE"),
+        ...rowOf6(CITE_CHECKS, "BAD_NOTE"),
         detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline"
       };
     if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function" || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
@@ -80558,7 +84697,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         return {
           ok: false,
           reason: "NO_ROLE",
-          ...rowOf5(CITE_CHECKS, "NO_ROLE"),
+          ...rowOf6(CITE_CHECKS, "NO_ROLE"),
           project,
           handle,
           roles: roles.slice(),
@@ -80569,7 +84708,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         return {
           ok: false,
           reason: "BAD_ROLE",
-          ...rowOf5(CITE_CHECKS, "BAD_ROLE"),
+          ...rowOf6(CITE_CHECKS, "BAD_ROLE"),
           project,
           handle,
           got: rl,
@@ -80581,7 +84720,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "ROLE_NOT_APPLICABLE",
-        ...rowOf5(CITE_CHECKS, "ROLE_NOT_APPLICABLE"),
+        ...rowOf6(CITE_CHECKS, "ROLE_NOT_APPLICABLE"),
         project,
         handle,
         got: rl,
@@ -80620,7 +84759,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "RETIRED_NOT_CITABLE",
-        ...rowOf5(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+        ...rowOf6(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
         project,
         handle,
         offenders: retiredMembers.sort(),
@@ -80647,7 +84786,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "SEVERED_EDGE",
-        ...rowOf5(CITE_CHECKS, "SEVERED_EDGE"),
+        ...rowOf6(CITE_CHECKS, "SEVERED_EDGE"),
         project,
         handle,
         offenders: severed.sort(),
@@ -80660,7 +84799,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "UNKNOWN_EXTENT_FIELD",
-        ...rowOf5(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
+        ...rowOf6(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
         project,
         handle,
         drift: sel.drift,
@@ -80673,7 +84812,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "EXTENT_NOT_APPLICABLE",
-        ...rowOf5(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
+        ...rowOf6(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
         project,
         handle,
         got: authored,
@@ -80684,7 +84823,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
       return {
         ok: false,
         reason: "EXTENT_ON_MANY",
-        ...rowOf5(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+        ...rowOf6(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
         project,
         handle,
         offenders: add.slice().sort(),
@@ -80698,7 +84837,7 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
         return {
           ok: false,
           reason: "BAD_EXTENT_VALUE",
-          ...rowOf5(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
+          ...rowOf6(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
           project,
           handle,
           field: k,
@@ -80902,12 +85041,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function inquiryServices(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances21.get(host);
+  let c = instances24.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -80917,7 +85056,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances21.set(host, c);
+    instances24.set(host, c);
   }
   return c;
 }
@@ -81295,14 +85434,14 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/ai-runs/skill-version.mjs
-function refusal11(key, detail) {
+function refusal12(key, detail) {
   const row2 = AI_RUN_CHECKS[key];
   return { ok: false, code: key, check: row2.check, translation: row2.translation, detail };
 }
 function checkSkillVersion(version) {
   const v = typeof version === "string" ? version.trim() : "";
   if (/^[^\s@]+@[^\s@]+$/.test(v)) return null;
-  return refusal11("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
+  return refusal12("AI_RUN_SKILL_VERSION_UNNAMED", !v ? "this run named no skill version. \xA711 records the conditions a run was formed under \u2014 the manifest in force, the standard pair, and the skill version it ran under \u2014 because a version is only interpretable against them" : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition cannot be read once a second pack exists \u2014 it looks like an answer and identifies nothing`);
 }
 
 // src/airun.mjs
@@ -81366,7 +85505,7 @@ var RUN_CONTEXTS = {
   inquiry: "a question the group is working on, which any project may draw on",
   project: "a body of work with its own members, its own bar and its own lens"
 };
-function refusal12(key, detail, extra = null) {
+function refusal13(key, detail, extra = null) {
   const row2 = AI_RUN_CHECKS2[key];
   return {
     ok: false,
@@ -81381,7 +85520,7 @@ function checkBound(bound) {
   const b = bound == null ? "" : String(bound);
   if (Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b)) return null;
   if (Object.prototype.hasOwnProperty.call(RUN_ENDINGS, b)) return null;
-  return refusal12(
+  return refusal13(
     "AI_RUN_BOUND_UNNAMED",
     `'${b || "(absent)"}' names no bound and no ending. Bounds: ${Object.keys(RUN_BOUNDS).join(", ")}; endings: ${Object.keys(RUN_ENDINGS).join(", ")} (\xA714b.6)`
   );
@@ -81392,14 +85531,14 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
   if (list2) {
     if (entries == null) return null;
     if (!Array.isArray(entries))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `\`bounds\` was ${typeof entries === "object" ? "a map" : `a ${typeof entries}`}: it is a list of { bound, allowed, unit }, one per bound the run is held to (\xA714b.6). Nothing was written`,
         { bound: null }
       );
     const bad = entries.findIndex((e) => !e || typeof e !== "object" || Array.isArray(e));
     if (bad >= 0)
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `\`bounds[${bad}]\` is ${(JSON.stringify(entries[bad]) ?? String(entries[bad])).slice(0, 60)}, not a { bound, allowed, unit } entry, so it names no bound (\xA714b.6). Nothing was written`,
         { bound: null }
@@ -81412,7 +85551,7 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
   if (map) {
     if (entries == null) return null;
     if (typeof entries !== "object" || Array.isArray(entries))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `\`consume\` was ${Array.isArray(entries) ? "an array" : `a ${typeof entries}`} (${(JSON.stringify(entries) ?? String(entries)).slice(0, 80)}): it is a map from a bound's name to the figure spent on it, e.g. { fetches: 1 }, and an array's keys are positions, which name no bound (\xA714b.6). Nothing was written`,
         { bound: null }
@@ -81422,33 +85561,33 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
   for (const [k, v] of Array.isArray(entries) ? entries : []) {
     const b = String(k);
     if (!Object.prototype.hasOwnProperty.call(RUN_BOUNDS, b))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_UNKNOWN",
         `'${b === "" ? "(absent)" : b.slice(0, 60)}' names no bound of a run. The bounds a caller spends are ` + Object.keys(RUN_BOUNDS).filter((x) => !PLANE_COUNTED_BOUNDS.includes(x) && !PLANE_DECIDED_BOUNDS.includes(x)).join(", ") + ` (\xA714b.6); a figure for a bound that does not exist counts nothing. Nothing was written`,
         { bound: b }
       );
     if (PLANE_DECIDED_BOUNDS.includes(b))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is decided by the plane \u2014 a run's lease lapses on the clock, read by the reaper, and nothing spends it (\xA714b.6) \u2014 so no figure for it, not even a zero, is the caller's to send or a member's to declare. Nothing was written`,
         { bound: b }
       );
     if (allowance && (v == null || v === 0))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_NO_ALLOWANCE",
         `'${b}' was declared with ${v == null ? "no `allowed`" : "`allowed: 0`"}: a declared bound states how much the run may spend, a whole number of one or more, and a bound the run is not held to is left out of \`bounds\` (\xA714b item 6). A zero allowance would be read as no ceiling at all. Nothing was written`,
         { bound: b }
       );
     if (seed && v == null) continue;
     if (!(typeof v === "number" && Number.isSafeInteger(v) && v >= 0))
-      return refusal12(
+      return refusal13(
         "AI_RUN_CONSUME_INVALID",
         `'${b}' was ${allowance ? "declared an allowance of" : "given"} ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)} \u2014 a bound's figure is a whole number of zero or more, ${allowance ? "allowed or spent" : "and a count never goes down"} (\xA714b.6). Nothing was written`,
         { bound: b }
       );
     if (allowance) continue;
     if (v !== 0 && PLANE_COUNTED_BOUNDS.includes(b))
-      return refusal12(
+      return refusal13(
         "AI_RUN_BOUND_PLANE_COUNTED",
         `'${b}' is counted by the plane as the run's work lands, never by the caller (\xA711 item 5 rule 2, SK-8), so a figure sent for it could only disagree with the count. Nothing was written`,
         { bound: b }
@@ -81519,7 +85658,7 @@ function projectGate({
       why: PROJECT_GATE_GROUNDS.PARTICIPANT,
       projects: all.length
     };
-  return refusal12(
+  return refusal13(
     "AI_RUN_NOT_PROJECT_MEMBER",
     `starting or continuing a run over ${label} is work inside that project, and this account has not joined it (DEC-63). This is not a capability: holding contribute would not change it, and an owner of that project inviting you would`
   );
@@ -81528,12 +85667,12 @@ function checkRunContextKind({ contextType = null, contextId = null, found = nul
   const said2 = String(contextType ?? "");
   const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
   if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said2))
-    return refusal12(
+    return refusal13(
       "AI_RUN_NO_SUCH_CONTEXT",
       `${JSON.stringify(said2.slice(0, 60))} is not a kind of run context: a run is over a question ("inquiry") or a project ("project"), and nothing else, so no run over ${id} was opened`
     );
   if (found !== null && found !== void 0 && found === said2) return null;
-  return refusal12(
+  return refusal13(
     "AI_RUN_NO_SUCH_CONTEXT",
     `no ${JSON.stringify(said2)} answers to ${id} here. A run's context must be the kind the run names; something you cannot see answers exactly as something that does not exist (Membership Architecture v2 \xA77.9)`
   );
@@ -81548,7 +85687,7 @@ function runPrincipalGate({ caller = null, principal = null, act = null } = {}) 
   const who2 = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who2 && owner && who2 === owner) return null;
   const doing = typeof act === "string" && act.trim() ? act.trim() : "ticking or closing a run";
-  return refusal12(
+  return refusal13(
     "AI_RUN_NOT_PRINCIPAL",
     `${doing} is its principal's act \u2014 the member who opened it, or a machine credential that member minted \u2014 and this account is not that principal (DEC-24: a run's work is attributed to its principal). A run nobody drives ends on its own lease and bounds`
   );
@@ -81887,7 +86026,7 @@ var safeJson13 = (s) => {
     return null;
   }
 };
-var HEX644 = /^[0-9a-f]{64}$/;
+var HEX645 = /^[0-9a-f]{64}$/;
 function posFields2(pos) {
   const { kind, ref, ...rest } = pos;
   return rest;
@@ -82221,7 +86360,7 @@ var RunProductions = class {
       const named = legsIn[i]?.extent_capture;
       const isDoc = normalizeType(row2.object_type) === "information";
       if (named !== void 0 && named !== null && named !== "") {
-        const held2 = isDoc && typeof named === "string" && HEX644.test(named) ? this.content.captureFor(t, named) : null;
+        const held2 = isDoc && typeof named === "string" && HEX645.test(named) ? this.content.captureFor(t, named) : null;
         if (!held2) {
           unreachable.push({ ord: i, target: t, why: "the capture it names is not one this record holds for it" });
           continue;
@@ -82734,9 +86873,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return { proposedReadings: c("proposed_readings", "bundle_id"), suggestRefusals: c("suggest_refusals", "target") };
   }
 };
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p = instances22.get(host);
+  let p = instances25.get(host);
   if (!p) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -82761,7 +86900,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances22.set(host, p);
+    instances25.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
@@ -82801,61 +86940,61 @@ var CREDENTIAL_KINDS2 = Object.freeze(["login", "user-agent", "other"]);
 var CREDENTIAL_SCOPES = Object.freeze(["member", "project", "group"]);
 var REVOCATION = "(revocation)";
 var CREDENTIALS_TABLE = "capture_credentials";
-var at7 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
+var at10 = (fn, region) => `src/capture-sources/credentials.mjs ${fn} > ${region}`;
 var CAPTURE_CREDENTIAL_CHECKS = Object.freeze({
   CAPTURE_CREDENTIAL_NOT_A_MEMBER: {
     check: "C-105.1",
-    where: at7("credentialSupply", "is-credential-supplier-member"),
+    where: at10("credentialSupply", "is-credential-supplier-member"),
     translation: "Only an active member may supply a credential."
   },
   CAPTURE_CREDENTIAL_BAD_KIND: {
     check: "C-105.2",
-    where: at7("credentialSupply", "is-credential-kind"),
+    where: at10("credentialSupply", "is-credential-kind"),
     translation: "A credential's kind is one of login, user-agent or other."
   },
   CAPTURE_CREDENTIAL_BAD_HOST: {
     check: "C-105.3",
-    where: at7("credentialSupply", "is-credential-host"),
+    where: at10("credentialSupply", "is-credential-host"),
     translation: "A credential is for one host, named as a bare host name: no scheme, path, port or user part."
   },
   CAPTURE_CREDENTIAL_BAD_SCOPE: {
     check: "C-105.4",
-    where: at7("credentialSupply", "is-credential-scope"),
+    where: at10("credentialSupply", "is-credential-scope"),
     translation: "A credential's scope is member, project or group, and only a project-scoped credential names a project."
   },
   CAPTURE_CREDENTIAL_NO_PROJECT: {
     check: "C-105.5",
-    where: at7("credentialSupply", "is-credential-project"),
+    where: at10("credentialSupply", "is-credential-project"),
     translation: "A project-scoped credential names a project the record holds."
   },
   CAPTURE_CREDENTIAL_NO_SECRET: {
     check: "C-105.6",
-    where: at7("credentialSupply", "is-credential-secret"),
+    where: at10("credentialSupply", "is-credential-secret"),
     translation: "A credential carries a non-empty secret: the login, setting or other value the site asked for."
   },
   CAPTURE_CREDENTIAL_NOT_PERMITTED: {
     check: "C-105.7",
-    where: at7("#r63Refusal", "is-credential-permitted"),
+    where: at10("#r63Refusal", "is-credential-permitted"),
     translation: "This member may not supply or withdraw a credential at that scope."
   },
   CAPTURE_CREDENTIAL_NO_KEY: {
     check: "C-105.8",
-    where: at7("credentialSupply", "is-credential-key-bound"),
+    where: at10("credentialSupply", "is-credential-key-bound"),
     translation: "No encryption key is bound to this instance, so no credential is stored or used."
   },
   CAPTURE_CREDENTIAL_NO_SUCH: {
     check: "C-105.9",
-    where: at7("credentialWithdraw", "is-credential-seen"),
+    where: at10("credentialWithdraw", "is-credential-seen"),
     translation: "No credential by that id is visible to you here. One that does not exist and one you may not see are answered alike, so this is not a hint either way."
   },
   CAPTURE_CREDENTIAL_SUPPLY_FAILED: {
     check: "C-105.10",
-    where: at7("credentialSupply", "is-credential-stored"),
+    where: at10("credentialSupply", "is-credential-stored"),
     translation: "The credential could not be encrypted and stored, so nothing was written. Nothing you entered is repeated here; try again, and if it keeps failing tell an administrator."
   },
   CAPTURE_CREDENTIAL_WITHDRAW_FAILED: {
     check: "C-105.11",
-    where: at7("credentialWithdraw", "is-credential-withdrawn"),
+    where: at10("credentialWithdraw", "is-credential-withdrawn"),
     translation: "The credential could not be read or withdrawn just now, so nothing was changed. Try again, and if it keeps failing tell an administrator."
   }
 });
@@ -82873,7 +87012,7 @@ var CAPTURE_CREDENTIALS_SCHEMA = `CREATE TABLE IF NOT EXISTS ${CREDENTIALS_TABLE
   withdrawn_at TEXT,
   withdrawn_by TEXT
 )`;
-function refusal13(code, detail) {
+function refusal14(code, detail) {
   const row2 = CAPTURE_CREDENTIAL_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
 }
@@ -82897,7 +87036,7 @@ var b642 = (bytes2) => {
   return btoa(s);
 };
 var unb642 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
-var utf8 = (s) => new TextEncoder().encode(s);
+var utf82 = (s) => new TextEncoder().encode(s);
 var stamp = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
 var OF4 = /* @__PURE__ */ new WeakMap();
 function credentialsOf(ctx, { key = null, record = null, membership = null, now = null } = {}) {
@@ -82949,9 +87088,9 @@ var CaptureCredentials = class _CaptureCredentials {
   async #aesKey() {
     if (!this.#secret) return null;
     if (!this.#key) {
-      const base = await crypto.subtle.importKey("raw", utf8(this.#secret), "HKDF", false, ["deriveKey"]);
+      const base = await crypto.subtle.importKey("raw", utf82(this.#secret), "HKDF", false, ["deriveKey"]);
       this.#key = await crypto.subtle.deriveKey(
-        { name: "HKDF", hash: "SHA-256", salt: utf8("civicos capture-sources"), info: utf8("capture credentials v1") },
+        { name: "HKDF", hash: "SHA-256", salt: utf82("civicos capture-sources"), info: utf82("capture credentials v1") },
         base,
         { name: "AES-GCM", length: 256 },
         false,
@@ -82961,7 +87100,7 @@ var CaptureCredentials = class _CaptureCredentials {
     return this.#key;
   }
   static #aad(id, scope, project) {
-    return utf8(JSON.stringify([id, scope, project ?? null]));
+    return utf82(JSON.stringify([id, scope, project ?? null]));
   }
   /* ---- who is who (membership) ---- */
   #active(memberId) {
@@ -82982,13 +87121,13 @@ var CaptureCredentials = class _CaptureCredentials {
   #r63Refusal(by, { scope, project, row: row2 = null }) {
     if (row2 === null) {
       if (scope === "project" && !this.#members.isProjectEditor(project, by))
-        return refusal13("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
+        return refusal14("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only an editor of the project may supply a credential for it");
       return null;
     }
     if (row2.supplied_by === by) return null;
     if (row2.scope === "project")
-      return this.#members.isProjectOwner(row2.project, by) ? null : refusal13("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
-    return this.#members.isAdministrator(by) ? null : refusal13("CAPTURE_CREDENTIAL_NOT_PERMITTED", `only its supplier or an administrator may withdraw a ${row2.scope} credential`);
+      return this.#members.isProjectOwner(row2.project, by) ? null : refusal14("CAPTURE_CREDENTIAL_NOT_PERMITTED", "only its supplier or an owner of its project may withdraw a project credential");
+    return this.#members.isAdministrator(by) ? null : refusal14("CAPTURE_CREDENTIAL_NOT_PERMITTED", `only its supplier or an administrator may withdraw a ${row2.scope} credential`);
   }
   /* ---- the listing entry (R58): never the secret, any part of it, its length or a digest ---- */
   static #entry(r) {
@@ -83038,30 +87177,30 @@ var CaptureCredentials = class _CaptureCredentials {
     const { kind, host, secret, scope, project, by } = args && typeof args === "object" ? args : {};
     try {
       if (!this.#active(by))
-        return refusal13("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
+        return refusal14("CAPTURE_CREDENTIAL_NOT_A_MEMBER", "the supplier named is not an active member of this instance");
       if (!CREDENTIAL_KINDS2.includes(kind))
-        return refusal13("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
+        return refusal14("CAPTURE_CREDENTIAL_BAD_KIND", `the kind given is not one of ${CREDENTIAL_KINDS2.join(", ")}`);
       const h = hostNameOf(host);
       if (!h)
-        return refusal13(
+        return refusal14(
           "CAPTURE_CREDENTIAL_BAD_HOST",
           "the host given is not a bare host name (a credential is for the one host the source that refused is served from)"
         );
       const given = project !== void 0 && project !== null;
       if (!CREDENTIAL_SCOPES.includes(scope) || given && scope !== "project")
-        return refusal13("CAPTURE_CREDENTIAL_BAD_SCOPE", given && CREDENTIAL_SCOPES.includes(scope) ? `a ${scope} credential names no project` : `the scope given is not one of ${CREDENTIAL_SCOPES.join(", ")}`);
+        return refusal14("CAPTURE_CREDENTIAL_BAD_SCOPE", given && CREDENTIAL_SCOPES.includes(scope) ? `a ${scope} credential names no project` : `the scope given is not one of ${CREDENTIAL_SCOPES.join(", ")}`);
       if (scope === "project") {
         const b = typeof project === "string" && project !== "" ? this.#core.bundleInfo(project) : null;
         if (!b || b.type !== "project")
-          return refusal13("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
+          return refusal14("CAPTURE_CREDENTIAL_NO_PROJECT", "the project named is not a project this record holds");
       }
       if (typeof secret !== "string" || secret === "")
-        return refusal13("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
+        return refusal14("CAPTURE_CREDENTIAL_NO_SECRET", "no secret was given");
       const denied = this.#r63Refusal(by, { scope, project });
       if (denied) return denied;
       const key = await this.#aesKey();
       if (!key)
-        return refusal13("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
+        return refusal14("CAPTURE_CREDENTIAL_NO_KEY", "no encryption key is bound to this instance, so nothing is stored in the clear");
       return await this.#store({ kind, h, secret, scope, project, by, key });
     } catch {
       return _CaptureCredentials.#supplyFailed();
@@ -83070,7 +87209,7 @@ var CaptureCredentials = class _CaptureCredentials {
   /* R55: the encryption and the write, once every check has passed. Any failure here is `SUPPLY_FAILED`'s one
      condition, and the transaction leaves nothing written. */
   static #supplyFailed() {
-    return refusal13("CAPTURE_CREDENTIAL_SUPPLY_FAILED", "the credential could not be encrypted and stored, so nothing was written");
+    return refusal14("CAPTURE_CREDENTIAL_SUPPLY_FAILED", "the credential could not be encrypted and stored, so nothing was written");
   }
   async #store({ kind, h, secret, scope, project, by, key }) {
     const id = `CRED-${b642(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, "").slice(0, 16)}`;
@@ -83079,7 +87218,7 @@ var CaptureCredentials = class _CaptureCredentials {
     const ct = new Uint8Array(await crypto.subtle.encrypt(
       { name: "AES-GCM", iv, additionalData: _CaptureCredentials.#aad(id, scope, proj) },
       key,
-      utf8(secret)
+      utf82(secret)
     ));
     const at14 = stamp(this.#now());
     this.#core.transact(() => {
@@ -83155,7 +87294,7 @@ var CaptureCredentials = class _CaptureCredentials {
     try {
       const found = typeof credential === "string" && credential !== "" ? this.#one(`SELECT * FROM ${CREDENTIALS_TABLE} WHERE credential_id=?`, credential) : null;
       if (!found || !this.#sees(by, found))
-        return refusal13("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
+        return refusal14("CAPTURE_CREDENTIAL_NO_SUCH", "no credential by that id is visible to this member");
       const [row2] = this.#sweep([found]);
       const denied = this.#r63Refusal(by, { row: row2 });
       if (denied) return denied;
@@ -83163,7 +87302,7 @@ var CaptureCredentials = class _CaptureCredentials {
       const at14 = this.#core.transact(() => this.#destroy(row2.credential_id, by));
       return { ok: true, already: false, withdrawn: _CaptureCredentials.#entry({ ...row2, withdrawn_at: at14, withdrawn_by: by }) };
     } catch {
-      return refusal13("CAPTURE_CREDENTIAL_WITHDRAW_FAILED", "the credential could not be read or withdrawn, so nothing was changed");
+      return refusal14("CAPTURE_CREDENTIAL_WITHDRAW_FAILED", "the credential could not be read or withdrawn, so nothing was changed");
     }
   }
   /* ================= R58: the listing ================= */
@@ -84362,10 +88501,10 @@ var CaptureRequests = class _CaptureRequests {
 function lookAuthority(q6) {
   return q6 && q6.run ? { authorityKind: "run", authority: String(q6.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q6 && q6.request ? String(q6.request) : null, actorClass: "plane" };
 }
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances23.get(storage);
+  let c = instances26.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -84381,7 +88520,7 @@ function captureRequestsOf(host, deps = {}) {
       credentials: deps.credentials === void 0 ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials
     };
     c = new CaptureRequests(storage, d);
-    instances23.set(storage, c);
+    instances26.set(storage, c);
     record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"] }]);
     d.observations.registerAuthority("sweep", (request) => {
       const b = c.bundlesOf(request);
@@ -84762,8 +88901,8 @@ var safeJson14 = (s) => {
     return null;
   }
 };
-var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var str8 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var str11 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var sha256Hex10 = (text3) => createSha256().update(enc2.encode(String(text3))).hex();
 function statementRows(bundleId, fm) {
   const stmts = fm && Array.isArray(fm.statements) ? fm.statements : [];
@@ -84903,9 +89042,9 @@ var Bias = class _Bias {
       this.#sql.exec(
         `UPDATE bias_adoptions SET bundle_sha=?, source_url=?, retrieved=?, source_sha256=? WHERE bundle_id=?`,
         c.bundleSha,
-        str8(fm.policy_source),
-        str8(fm.policy_retrieved),
-        str8(fm.policy_sha256) ? str8(fm.policy_sha256).toLowerCase() : null,
+        str11(fm.policy_source),
+        str11(fm.policy_retrieved),
+        str11(fm.policy_sha256) ? str11(fm.policy_sha256).toLowerCase() : null,
         bundleId
       );
     return null;
@@ -85022,9 +89161,9 @@ var Bias = class _Bias {
       h.bundleSha,
       who2,
       now,
-      str8(fm.policy_source),
-      str8(fm.policy_retrieved),
-      str8(fm.policy_sha256) ? str8(fm.policy_sha256).toLowerCase() : null
+      str11(fm.policy_source),
+      str11(fm.policy_retrieved),
+      str11(fm.policy_sha256) ? str11(fm.policy_sha256).toLowerCase() : null
     );
     this.#notify();
     return {
@@ -85037,9 +89176,9 @@ var Bias = class _Bias {
       at: now,
       pinned: {
         bundle_sha: h.bundleSha,
-        source_url: str8(fm.policy_source),
-        retrieved: str8(fm.policy_retrieved),
-        source_sha256: str8(fm.policy_sha256) ? str8(fm.policy_sha256).toLowerCase() : null
+        source_url: str11(fm.policy_source),
+        retrieved: str11(fm.policy_retrieved),
+        source_sha256: str11(fm.policy_sha256) ? str11(fm.policy_sha256).toLowerCase() : null
       },
       /* Stated rather than implied: the row exists, and the lens is in force only once the revision the pin
          names stands at `adopted`. */
@@ -85504,7 +89643,7 @@ var Bias = class _Bias {
     for (const { source, key } of batch) {
       out.read++;
       const wp = await source.read(key);
-      const lens = wp && isObj10(wp.lens) ? wp.lens : null;
+      const lens = wp && isObj13(wp.lens) ? wp.lens : null;
       const now = wp && lens ? this.#lensNow(wp.context) : { undetermined: true };
       const then = lens && typeof lens.statements_sha === "string" ? lens.statements_sha : null;
       const moved = !lens || now.undetermined || lens.basis !== "at_open" && (then === null || now.sha === null) ? null : then !== now.sha;
@@ -85964,17 +90103,17 @@ var CONTRADICTION_ABSENCE = Object.freeze({
 });
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances24.get(storage);
+  let c = instances27.get(storage);
   if (!c) {
     c = new Contradiction(storage, {
       ...opts,
       record: opts.record ?? recordOf(ctx),
       extraction: opts.extraction ?? (() => extractionOf(ctx))
     });
-    instances24.set(storage, c);
+    instances27.set(storage, c);
   }
   return c;
 }
@@ -89007,155 +93146,155 @@ function aiRunsOps(runs, url, body) {
 }
 
 // src/intent/checks.mjs
-var at8 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
+var at11 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 var INTENT_CHECKS = Object.freeze({
   NO_OBJECTIVE: {
     check: "C-2.9",
-    where: at8("#checkProject", "is-objective-stated"),
+    where: at11("#checkProject", "is-objective-stated"),
     translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
   },
   MACHINE_CANNOT_SET_OBJECTIVE: {
     check: "C-111.1",
-    where: at8("setCondition", "is-condition-member"),
+    where: at11("setCondition", "is-condition-member"),
     translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
   },
   NO_SUCH_PROJECT: {
     check: "C-111.2",
-    where: at8("refuseNoSuchProject", "is-project-seen"),
+    where: at11("refuseNoSuchProject", "is-project-seen"),
     translation: "No project answers to that id here. A project you cannot see is answered exactly as one that does not exist, so this is not a hint either way."
   },
   CONDITION_UNREADABLE: {
     check: "C-111.3",
-    where: at8("#conditionRefusal", "is-condition-shaped"),
+    where: at11("#conditionRefusal", "is-condition-shaped"),
     translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
     check: "C-111.4",
-    where: at8("refuseNoSuchProgression", "is-named-progression"),
+    where: at11("refuseNoSuchProgression", "is-named-progression"),
     translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
   },
   NO_SUCH_ENTITY: {
     check: "C-111.5",
-    where: at8("refuseNoSuchEntity", "is-named-entity"),
+    where: at11("refuseNoSuchEntity", "is-named-entity"),
     translation: "The measure names an entity the record does not hold. Register it first, or name one that exists. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-111.6",
-    where: at8("#conditionRefusal", "is-condition-stage"),
+    where: at11("#conditionRefusal", "is-condition-stage"),
     translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
   },
   CONDITION_BAD_GRADE: {
     check: "C-111.7",
-    where: at8("#conditionRefusal", "is-condition-grade"),
+    where: at11("#conditionRefusal", "is-condition-grade"),
     translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
   },
   BAD_SHARE: {
     check: "C-111.8",
-    where: at8("#conditionRefusal", "is-condition-share"),
+    where: at11("#conditionRefusal", "is-condition-share"),
     translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
     check: "C-111.9",
-    where: at8("goalMachineRefusal", "is-goal-member"),
+    where: at11("goalMachineRefusal", "is-goal-member"),
     translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
   },
   PURSUIT_UNSTATED: {
     check: "C-111.10",
-    where: at8("refusePursuitUnstated", "is-pursuit-stated"),
+    where: at11("refusePursuitUnstated", "is-pursuit-stated"),
     translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
   },
   NO_SUCH_GOAL: {
     check: "C-111.11",
-    where: at8("refuseNoSuchGoal", "is-goal-held"),
+    where: at11("refuseNoSuchGoal", "is-goal-held"),
     translation: "No goal answers to that id here. Nothing was written."
   },
   NO_SUCH_ASPIRATION: {
     check: "C-111.12",
-    where: at8("refuseNoSuchAspiration", "is-aspiration-held"),
+    where: at11("refuseNoSuchAspiration", "is-aspiration-held"),
     translation: "No aspiration answers to that id here. Nothing was written."
   },
   NO_REASON: {
     check: "C-111.13",
-    where: at8("refuseNoReason", "is-reason-stated"),
+    where: at11("refuseNoReason", "is-reason-stated"),
     translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
     check: "C-111.14",
-    where: at8("aspirationMachineRefusal", "is-aspiration-member"),
+    where: at11("aspirationMachineRefusal", "is-aspiration-member"),
     translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
   },
   NOT_YOURS: {
     check: "C-111.15",
-    where: at8("#aspirationAuthority", "is-aspiration-yours"),
+    where: at11("#aspirationAuthority", "is-aspiration-yours"),
     translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
   },
   GROUP_ASPIRATION_NOT_ADMIN: {
     check: "C-111.16",
-    where: at8("#aspirationAuthority", "is-group-aspiration-admin"),
+    where: at11("#aspirationAuthority", "is-group-aspiration-admin"),
     translation: "An aspiration the whole group holds is declared, revised and retired by an administrator, and the act carries their name and date. Ask an administrator. Nothing was written."
   },
   NO_LESSON: {
     check: "C-111.17",
-    where: at8("refuseNoLesson", "is-retirement-taught"),
+    where: at11("refuseNoLesson", "is-retirement-taught"),
     translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
   },
   MACHINE_CANNOT_TRIAGE: {
     check: "C-111.18",
-    where: at8("triage", "is-triage-member"),
+    where: at11("triage", "is-triage-member"),
     translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
   },
   MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
     check: "C-111.19",
-    where: at8("workObjective", "is-objective-member"),
+    where: at11("workObjective", "is-objective-member"),
     translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
   },
   PURSUIT_STATE_MOVE_UNDECLARED: {
     check: "C-111.20",
-    where: at8("#checkPursuit", "is-pursuit-state-move"),
+    where: at11("#checkPursuit", "is-pursuit-state-move"),
     translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
   },
   BAD_SCOPE: {
     check: "C-111.21",
-    where: at8("refuseBadScope", "is-aspiration-scoped"),
+    where: at11("refuseBadScope", "is-aspiration-scoped"),
     translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
   },
   NO_SUCH_PROPOSAL: {
     check: "C-111.22",
-    where: at8("triage", "is-proposal-open"),
+    where: at11("triage", "is-proposal-open"),
     translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
   },
   TRIAGE_ACT_UNKNOWN: {
     check: "C-111.23",
-    where: at8("triage", "is-triage-act"),
+    where: at11("triage", "is-triage-act"),
     translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
   },
   SOURCE_DECLARED: {
     check: "C-111.24",
-    where: at8("registerSource", "is-source-once"),
+    where: at11("registerSource", "is-source-once"),
     translation: "This source of proposals is already registered. A source registers once, when the plane starts."
   },
   SOURCE_MALFORMED: {
     check: "C-111.25",
-    where: at8("registerSource", "is-source-shaped"),
+    where: at11("registerSource", "is-source-shaped"),
     translation: "A source of proposals names its kind and gives a reader. This registration does not."
   },
   PURSUIT_ENDED: {
     check: "C-111.26",
-    where: at8("refusePursuitEnded", "is-pursuit-live"),
+    where: at11("refusePursuitEnded", "is-pursuit-live"),
     translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
   },
   ADOPTIONS_UNSPLICEABLE: {
     check: "C-111.28",
-    where: at8("triage", "is-adoptions-spliceable"),
+    where: at11("triage", "is-adoptions-spliceable"),
     translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
   },
   NO_NOTE: {
     check: "C-111.27",
-    where: at8("recordDeadEnd", "is-dead-end-noted"),
+    where: at11("recordDeadEnd", "is-dead-end-noted"),
     translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
   }
 });
-function refusal14(code, detail, extra) {
+function refusal15(code, detail, extra) {
   const row2 = INTENT_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
 }
@@ -89206,21 +93345,21 @@ var ASPIRATION = "aspiration";
 var GOAL = "goal";
 var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
 var GRADES = BASIS_GRADES;
-var TOKEN2 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
-var q3 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
-var parseFm = (text3) => {
+var TOKEN3 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
+var q5 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
+var parseFm2 = (text3) => {
   if (typeof text3 !== "string") return null;
   const d = parseFrontmatter(text3).data;
   return d && typeof d === "object" && !Array.isArray(d) ? d : null;
 };
-function fence(lines) {
+function fence2(lines) {
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   return end2 === -1 ? null : end2;
 }
-function setField(text3, key, value) {
+function setField2(text3, key, value) {
   const lines = text3.split("\n");
-  const end2 = fence(lines);
+  const end2 = fence2(lines);
   if (end2 === null) return text3;
   for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
     lines[i] = `${key}: ${value}`;
@@ -89230,7 +93369,7 @@ function setField(text3, key, value) {
 }
 function removeBlock2(text3, key) {
   const lines = text3.split("\n");
-  const end2 = fence(lines);
+  const end2 = fence2(lines);
   if (end2 === null) return text3;
   const at14 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
   if (at14 === -1) return text3;
@@ -89240,13 +93379,13 @@ function removeBlock2(text3, key) {
 }
 function setBlock(text3, key, childLines) {
   const lines = removeBlock2(text3, key).split("\n");
-  const end2 = fence(lines);
+  const end2 = fence2(lines);
   if (end2 === null) return text3;
   return [...lines.slice(0, end2), `${key}:`, ...childLines, ...lines.slice(end2)].join("\n");
 }
-function appendItem(text3, key, fields) {
+function appendItem2(text3, key, fields) {
   const lines = text3.split("\n");
-  const end2 = fence(lines);
+  const end2 = fence2(lines);
   if (end2 === null) return null;
   const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
   const at14 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
@@ -89259,10 +93398,10 @@ function appendItem(text3, key, fields) {
   return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
 }
 function appendHistory(text3, { at: at14, from, to, blurb, author }) {
-  return appendItem(
+  return appendItem2(
     text3,
     "state_history",
-    { timestamp: q3(at14), from_state: from, to_state: to, blurb: q3(blurb), author: TOKEN2.test(author) ? author : q3(author) }
+    { timestamp: q5(at14), from_state: from, to_state: to, blurb: q5(blurb), author: TOKEN3.test(author) ? author : q5(author) }
   );
 }
 function sectionSpan(text3, heading) {
@@ -89314,9 +93453,9 @@ function deadEndsOf(text3) {
   }
   return out;
 }
-var titleOf2 = (statement) => (deriveInquiryTitle(statement) || "untitled").replace(/["\\]/g, "'");
+var titleOf3 = (statement) => (deriveInquiryTitle(statement) || "untitled").replace(/["\\]/g, "'");
 var pursuitId = (allocated, type) => `${allocated}-${type}`;
-var CORE_TAIL2 = Object.freeze([
+var CORE_TAIL3 = Object.freeze([
   "produced_by:",
   "  mode: human",
   "  capability_tier: session",
@@ -89335,17 +93474,17 @@ function aspirationDoc({ id, scope, owner, statement, entities, progressions, au
     `id: ${id}`,
     `object_type: ${ASPIRATION}`,
     `schema: ${ASPIRATION}@1`,
-    `title: ${q3(titleOf2(statement))}`,
+    `title: ${q5(titleOf3(statement))}`,
     "current_state: held",
     "prior_state: null",
-    `created: ${q3(at14)}`,
-    `last_updated: ${q3(at14)}`,
+    `created: ${q5(at14)}`,
+    `last_updated: ${q5(at14)}`,
     `scope: ${scope}`,
     `owner: ${owner ?? "null"}`,
     `entities: [${entities.join(", ")}]`,
     `progressions: [${progressions.join(", ")}]`,
-    `author: ${TOKEN2.test(author) ? author : q3(author)}`,
-    ...CORE_TAIL2,
+    `author: ${TOKEN3.test(author) ? author : q5(author)}`,
+    ...CORE_TAIL3,
     "---",
     "",
     "## Statement",
@@ -89367,15 +93506,15 @@ function goalDoc({ id, statement, bounds, aspiration, author, at: at14 }) {
     `id: ${id}`,
     `object_type: ${GOAL}`,
     `schema: ${GOAL}@1`,
-    `title: ${q3(titleOf2(statement))}`,
+    `title: ${q5(titleOf3(statement))}`,
     "current_state: open",
     "prior_state: null",
-    `created: ${q3(at14)}`,
-    `last_updated: ${q3(at14)}`,
+    `created: ${q5(at14)}`,
+    `last_updated: ${q5(at14)}`,
     `aspiration: ${aspiration ?? "null"}`,
-    `author: ${TOKEN2.test(author) ? author : q3(author)}`,
+    `author: ${TOKEN3.test(author) ? author : q5(author)}`,
     "objectives: []",
-    ...CORE_TAIL2,
+    ...CORE_TAIL3,
     "---",
     "",
     "## Statement",
@@ -89401,8 +93540,8 @@ function conditionLines(c, by, at14) {
     `  required_grade: ${c.required.grade ?? "null"}`,
     `  required_stages: [${c.required.stages.join(", ")}]`,
     `  share: ${c.satisfied.share}`,
-    `  set_by: ${TOKEN2.test(by) ? by : q3(by)}`,
-    `  set_at: ${q3(at14)}`
+    `  set_by: ${TOKEN3.test(by) ? by : q5(by)}`,
+    `  set_at: ${q5(at14)}`
   );
   return lines;
 }
@@ -89440,11 +93579,11 @@ var GOALS_MAX = 200;
 var TRIAGED_MAX = 1e3;
 var SET_ASIDE_MAX = 200;
 var SERVES_MAX = 1e3;
-var str9 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var machine = (who2) => !str9(who2) || isMachineIdentity(str9(who2));
-var second = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
+var str12 = (v) => typeof v === "string" ? v.trim() : "";
+var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var machine2 = (who2) => !str12(who2) || isMachineIdentity(str12(who2));
+var second2 = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
 var bodyText2 = (s) => String(s).trim().replace(/^#/gm, " #");
 var Intent = class {
   #sources = /* @__PURE__ */ new Map();
@@ -89491,7 +93630,7 @@ var Intent = class {
     return this.#lazy(this.progressionsRef);
   }
   #when() {
-    return second(this.now());
+    return second2(this.now());
   }
   /** The module's tables (R24). */
   migrate() {
@@ -89507,7 +93646,7 @@ var Intent = class {
     if (!head) return null;
     const f8 = this.record.readFile(id, "bundle.md");
     const text3 = f8 && typeof f8.text === "string" ? f8.text : null;
-    return { id, head, text: text3, fm: parseFm(text3) || {}, type: normalizeType(head.type) };
+    return { id, head, text: text3, fm: parseFm2(text3) || {}, type: normalizeType(head.type) };
   }
   /* R23: a project the viewer may see, or the one answer an absent project gets. A viewer who sees the project at
      existence only is told so (membership R77, C-70.1), before the absent answer. */
@@ -89535,19 +93674,19 @@ var Intent = class {
   /* The member id behind an author (membership R76), null for a machine; the founder's session is `admin` (R9: an
      administrator's act, the founder included). */
   #memberOf(author) {
-    if (str9(author) === "admin") return "admin";
-    return this.membership.positionalMember(str9(author), str9(author));
+    if (str12(author) === "admin") return "admin";
+    return this.membership.positionalMember(str12(author), str12(author));
   }
   /* ===================================================================== *
    * THE WRITE (R2, R8–R11, R16, R26): every document intent writes goes through `promotion`, whose check runs this
    * module's own (below), so an act and a raw promotion meet one rule.
    * ===================================================================== */
   #create(id, type, text3, author, extra = {}) {
-    const fm = parseFm(text3) || {};
+    const fm = parseFm2(text3) || {};
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand9(4)}`,
       author,
       files: [{ path: "bundle.md", text: text3 }],
       meta: {
@@ -89561,7 +93700,7 @@ var Intent = class {
     });
   }
   #revise(d, text3, author, viewer, extra = {}) {
-    const fm = parseFm(text3) || {};
+    const fm = parseFm2(text3) || {};
     const carried = this.record.livePaths(d.id).filter((p) => p !== "bundle.md").map((path) => {
       const f8 = this.record.readFile(d.id, path);
       return typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes };
@@ -89570,7 +93709,7 @@ var Intent = class {
     return this.promotion.promote({
       bundleId: d.id,
       base: d.head.bundleSha,
-      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand9(4)}`,
       author,
       files: [{ path: "bundle.md", text: text3 }, ...carried],
       meta: {
@@ -89599,9 +93738,9 @@ var Intent = class {
   #checkProject(c) {
     const fm = c.docFm || {};
     if (typeof fm.objective !== "string" || fm.objective.trim() === "")
-      return refusal14("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
+      return refusal15("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
     const now = conditionOf(fm);
-    const held = c.head ? conditionOf(parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
+    const held = c.head ? conditionOf(parseFm2(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
     if (now && JSON.stringify(now.condition) !== JSON.stringify(held ? held.condition : null))
       return this.#conditionRefusal(now.condition);
     return null;
@@ -89616,7 +93755,7 @@ var Intent = class {
     const from = c.head ? c.head.currentState : null, to = c.promotedState;
     const legal = c.head ? to === from || from === first && to === last : to === first;
     if (!legal)
-      return refusal14(
+      return refusal15(
         "PURSUIT_STATE_MOVE_UNDECLARED",
         `a ${type} ${c.head ? `at '${from}' moves only to '${last}', once` : `is created '${first}'`}, and this promotion names '${String(to).slice(0, 40)}'. Nothing was written.`,
         { object_type: type, from, to: to ?? null }
@@ -89631,7 +93770,7 @@ var Intent = class {
     }
     if (to === "retired" && from !== "retired" && !readSection(text3, "Taught"))
       return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
-    const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
+    const heldFm = c.head ? parseFm2(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
     if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
       return refuseBadScope("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
     return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
@@ -89639,10 +93778,10 @@ var Intent = class {
   /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an administrator's. */
   #aspirationAuthority(scope, owner, author, viewer) {
     const who2 = this.#memberOf(author);
-    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str9(owner) || scope === "group" && owner != null)
+    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str12(owner) || scope === "group" && owner != null)
       return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (scope === "member" && str9(owner) !== who2)
-      return refusal14("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
+    if (scope === "member" && str12(owner) !== who2)
+      return refusal15("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
     if (scope === "project") {
       const p = this.#project(owner, viewer);
       if (p.refused) return p.refused;
@@ -89650,44 +93789,44 @@ var Intent = class {
       if (denied) return denied;
     }
     if (scope === "group" && !this.membership.isAdministrator(who2))
-      return refusal14("GROUP_ASPIRATION_NOT_ADMIN", "an aspiration the whole group holds is declared, revised and retired by an active administrator. Nothing was written.");
+      return refusal15("GROUP_ASPIRATION_NOT_ADMIN", "an aspiration the whole group holds is declared, revised and retired by an active administrator. Nothing was written.");
     return null;
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
   #conditionRefusal(c) {
-    const shaped = isObj11(c) && TOKEN2.test(str9(c.progression)) && TOKEN2.test(str9(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj11(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN2.test(String(v)))) && isObj11(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN2.test(String(s)))) && isObj11(c.satisfied);
+    const shaped = isObj14(c) && TOKEN3.test(str12(c.progression)) && TOKEN3.test(str12(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj14(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN3.test(String(v)))) && isObj14(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN3.test(String(s)))) && isObj14(c.satisfied);
     if (!shaped)
-      return refusal14("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
-    const def = this.progressions.readProgression({ progressionKey: str9(c.progression) });
+      return refusal15("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
+    const def = this.progressions.readProgression({ progressionKey: str12(c.progression) });
     if (!def || def.ok === false || !def.found)
       return refuseNoSuchProgression(
         "the condition names a flow the record has not declared. Nothing was written.",
-        { progression: str9(c.progression) }
+        { progression: str12(c.progression) }
       );
-    if (!this.entities.has(str9(c.entity)))
+    if (!this.entities.has(str12(c.entity)))
       return refuseNoSuchEntity(
         "the condition names an entity the record does not hold. Nothing was written.",
-        { entity: str9(c.entity) }
+        { entity: str12(c.entity) }
       );
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     if (bad.length)
-      return refusal14(
+      return refusal15(
         "BAD_STAGE",
-        `the flow '${str9(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
+        `the flow '${str12(c.progression)}' declares no stage ${bad.join(", ")}. Nothing was written.`,
         { stages: bad, declared: [...declared] }
       );
     if (c.required.grade != null && !GRADES.includes(c.required.grade))
-      return refusal14("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
+      return refusal15("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
     const share = c.satisfied.share;
     if (!Number.isInteger(share) || share < 1 || share > 100)
-      return refusal14("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
+      return refusal15("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
     return null;
   }
   /** record-core R59: C-2.9's objective arm in the audit, beside the catalogue, over the same image (R22). */
   auditCheck(image) {
     const md = image && image.files ? image.files.get("bundle.md") : null;
-    const fm = parseFm(typeof md === "string" ? md : null);
+    const fm = parseFm2(typeof md === "string" ? md : null);
     if (!fm || fm.object_type !== "project") return [];
     if (typeof fm.objective !== "string" || fm.objective.trim() === "")
       return [{
@@ -89704,15 +93843,15 @@ var Intent = class {
   /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
    *  project's document through `promotion`; the earlier revision stays in history. */
   setCondition({ project, condition, author, viewer = null } = {}) {
-    if (machine(author))
-      return refusal14("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
+    if (machine2(author))
+      return refusal15("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
     const p = this.#project(project, viewer);
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
     if (denied) return denied;
     const c = condition == null ? null : {
       ...condition,
-      required: isObj11(condition.required) ? {
+      required: isObj14(condition.required) ? {
         grade: condition.required.grade ?? null,
         stages: condition.required.stages ?? []
       } : condition.required,
@@ -89725,22 +93864,22 @@ var Intent = class {
     }
     const at14 = this.#when();
     let text3 = removeBlock2(p.doc.text, CONDITION_KEY);
-    if (c) text3 = setBlock(text3, CONDITION_KEY, conditionLines(c, str9(author), at14));
-    text3 = setField(text3, "last_updated", q3(at14));
+    if (c) text3 = setBlock(text3, CONDITION_KEY, conditionLines(c, str12(author), at14));
+    text3 = setField2(text3, "last_updated", q5(at14));
     text3 = logEntry(
       text3,
       at14,
       c ? "Objective condition set" : "Objective condition removed",
-      str9(author),
+      str12(author),
       c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
     );
-    const r = this.#revise(p.doc, text3, str9(author), viewer);
+    const r = this.#revise(p.doc, text3, str12(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, set_by: str9(author), at: at14, bundleSha: r.bundleSha };
+    return { ok: true, project, condition: c, set_by: str12(author), at: at14, bundleSha: r.bundleSha };
   }
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
   #measure(cond, viewer) {
-    const key = str9(cond.progression), anchor = str9(cond.entity);
+    const key = str12(cond.progression), anchor = str12(cond.entity);
     const related = /* @__PURE__ */ new Set([anchor]);
     if (cond.relation) {
       const e = this.entities.readEntity({ entityId: anchor });
@@ -90072,7 +94211,7 @@ var Intent = class {
   declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
     const byMachine = goalMachineRefusal(author);
     if (byMachine) return byMachine;
-    if (!str9(statement) || !str9(bounds))
+    if (!str12(statement) || !str12(bounds))
       return refusePursuitUnstated("a goal states what it pursues and what bounds it. Nothing was written.");
     if (aspiration != null && aspiration !== "") {
       const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
@@ -90088,11 +94227,11 @@ var Intent = class {
     const r = this.#create(
       id,
       GOAL,
-      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str9(author), at: at14 }),
-      str9(author)
+      goalDoc({ id, statement, bounds, aspiration: aspiration || null, author: str12(author), at: at14 }),
+      str12(author)
     );
     if (!r.ok) return r;
-    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str9(author), at: at14 };
+    return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str12(author), at: at14 };
   }
   /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
   linkObjective({ goal, project, author, viewer = null } = {}) {
@@ -90106,15 +94245,15 @@ var Intent = class {
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
     if (denied) return denied;
-    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj11(o) && o.project === project))
+    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj14(o) && o.project === project))
       return { ok: true, goal, project, already: true };
     const at14 = this.#when();
-    let text3 = appendItem(g.text, "objectives", { project, by: TOKEN2.test(str9(author)) ? str9(author) : q3(author), at: q3(at14) });
-    text3 = setField(text3, "last_updated", q3(at14));
-    text3 = logEntry(text3, at14, "Objective linked", str9(author), `${project}'s objective serves this goal.`);
-    const r = this.#revise(g, text3, str9(author), viewer);
+    let text3 = appendItem2(g.text, "objectives", { project, by: TOKEN3.test(str12(author)) ? str12(author) : q5(author), at: q5(at14) });
+    text3 = setField2(text3, "last_updated", q5(at14));
+    text3 = logEntry(text3, at14, "Objective linked", str12(author), `${project}'s objective serves this goal.`);
+    const r = this.#revise(g, text3, str12(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, goal, project, by: str9(author), at: at14 };
+    return { ok: true, goal, project, by: str12(author), at: at14 };
   }
   /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
   closeGoal({ goal, reason, author, viewer = null } = {}) {
@@ -90122,7 +94261,7 @@ var Intent = class {
     if (byMachine) return byMachine;
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
     if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
-    if (!str9(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
+    if (!str12(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
     if (g.head.currentState === "closed")
       return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
     const at14 = this.#when();
@@ -90131,14 +94270,14 @@ var Intent = class {
       from: "open",
       to: "closed",
       blurb: "closed; the reason is in its document",
-      author: str9(author)
+      author: str12(author)
     });
-    text3 = setField(setField(setField(text3, "prior_state", "open"), "current_state", "closed"), "last_updated", q3(at14));
+    text3 = setField2(setField2(setField2(text3, "prior_state", "open"), "current_state", "closed"), "last_updated", q5(at14));
     text3 = setSection2(text3, "Why It Closed", bodyText2(reason));
-    text3 = logEntry(text3, at14, "Closed", str9(author), "open to closed.");
-    const r = this.#revise(g, text3, str9(author), viewer);
+    text3 = logEntry(text3, at14, "Closed", str12(author), "open to closed.");
+    const r = this.#revise(g, text3, str12(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, goal, state: "closed", reason: str9(reason), author: str9(author), at: at14 };
+    return { ok: true, goal, state: "closed", reason: str12(reason), author: str12(author), at: at14 };
   }
   /** R8: a goal as the record holds it: its statement, bounds, aspiration, the objectives linked (each a project the
    *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
@@ -90148,7 +94287,7 @@ var Intent = class {
     return { ok: true, goal: this.#goalView(g, viewer) };
   }
   #goalView(g, viewer) {
-    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj11).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
+    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj14).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
     const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
     const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
     return {
@@ -90170,21 +94309,21 @@ var Intent = class {
   declareAspiration({ scope, owner = null, statement, entities = [], progressions = [], author, viewer = null } = {}) {
     const byMachine = aspirationMachineRefusal(author);
     if (byMachine) return byMachine;
-    const own2 = scope === "group" ? null : str9(owner) || null;
-    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own2 || scope === "group" && str9(owner))
+    const own2 = scope === "group" ? null : str12(owner) || null;
+    if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own2 || scope === "group" && str12(owner))
       return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (!str9(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
+    if (!str12(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
     const denied = this.#aspirationAuthority(scope, own2, author, viewer ?? author);
     if (denied) return denied;
-    const ents = (Array.isArray(entities) ? entities : []).map(str9).filter(Boolean);
-    const progs = (Array.isArray(progressions) ? progressions : []).map(str9).filter(Boolean);
-    const badEnt = ents.find((e) => !TOKEN2.test(e) || !this.entities.has(e));
+    const ents = (Array.isArray(entities) ? entities : []).map(str12).filter(Boolean);
+    const progs = (Array.isArray(progressions) ? progressions : []).map(str12).filter(Boolean);
+    const badEnt = ents.find((e) => !TOKEN3.test(e) || !this.entities.has(e));
     if (badEnt) return refuseNoSuchEntity(
       "the aspiration names an entity the record does not hold. Nothing was written.",
       { entity: badEnt }
     );
     const badProg = progs.find((k) => {
-      const d = TOKEN2.test(k) && this.progressions.readProgression({ progressionKey: k });
+      const d = TOKEN3.test(k) && this.progressions.readProgression({ progressionKey: k });
       return !d || d.ok === false || !d.found;
     });
     if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing was written.", { progression: badProg });
@@ -90200,14 +94339,14 @@ var Intent = class {
         statement,
         entities: ents,
         progressions: progs,
-        author: str9(author),
+        author: str12(author),
         at: at14
       }),
-      str9(author),
-      { actorViewer: viewer ?? str9(author) }
+      str12(author),
+      { actorViewer: viewer ?? str12(author) }
     );
     if (!r.ok) return r;
-    return { ok: true, aspiration: id, scope, owner: own2, state: "held", author: str9(author), at: at14 };
+    return { ok: true, aspiration: id, scope, owner: own2, state: "held", author: str12(author), at: at14 };
   }
   /** R10: a project records its departure from a held group aspiration, with a reason. */
   departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
@@ -90224,7 +94363,7 @@ var Intent = class {
       return refuseBadScope("a project departs only from an aspiration the whole group holds; a project's or a member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
       return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.", { aspiration });
-    if (!str9(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
+    if (!str12(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
     const at14 = this.#when();
@@ -90232,11 +94371,11 @@ var Intent = class {
       `INSERT INTO intent_departures (project_id, aspiration_id, reason, author, at) VALUES (?,?,?,?,?)`,
       project,
       aspiration,
-      str9(reason).slice(0, 4e3),
-      str9(author),
+      str12(reason).slice(0, 4e3),
+      str12(author),
       at14
     ));
-    return { ok: true, project, aspiration, reason: str9(reason), author: str9(author), at: at14, notable: true };
+    return { ok: true, project, aspiration, reason: str12(reason), author: str12(author), at: at14, notable: true };
   }
   /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
   recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
@@ -90247,22 +94386,22 @@ var Intent = class {
       "no aspiration answers to that id here. Nothing was written.",
       { aspiration: aspiration ?? null }
     );
-    if (!str9(note))
-      return refusal14("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
+    if (!str12(note))
+      return refusal15("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at14 = this.#when();
     let text3 = appendSection(
       a.text,
       "Dead Ends",
-      `### ${at14} | ${str9(author)}
+      `### ${at14} | ${str12(author)}
 ${bodyText2(note)}`
     );
-    text3 = setField(text3, "last_updated", q3(at14));
-    text3 = logEntry(text3, at14, "Dead end recorded", str9(author), "a dead end was appended to the pursuit record.");
-    const r = this.#revise(a, text3, str9(author), viewer);
+    text3 = setField2(text3, "last_updated", q5(at14));
+    text3 = logEntry(text3, at14, "Dead end recorded", str12(author), "a dead end was appended to the pursuit record.");
+    const r = this.#revise(a, text3, str12(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, aspiration, note: str9(note), author: str9(author), at: at14 };
+    return { ok: true, aspiration, note: str12(note), author: str12(author), at: at14 };
   }
   /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
   retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
@@ -90275,7 +94414,7 @@ ${bodyText2(note)}`
     );
     if (a.head.currentState === "retired")
       return refusePursuitEnded("this aspiration is already retired. Nothing was written.", { aspiration });
-    if (!str9(taught))
+    if (!str12(taught))
       return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
@@ -90285,14 +94424,14 @@ ${bodyText2(note)}`
       from: "held",
       to: "retired",
       blurb: "retired; what it taught is in its document",
-      author: str9(author)
+      author: str12(author)
     });
-    text3 = setField(setField(setField(text3, "prior_state", "held"), "current_state", "retired"), "last_updated", q3(at14));
+    text3 = setField2(setField2(setField2(text3, "prior_state", "held"), "current_state", "retired"), "last_updated", q5(at14));
     text3 = setSection2(text3, "Taught", bodyText2(taught));
-    text3 = logEntry(text3, at14, "Retired", str9(author), "held to retired.");
-    const r = this.#revise(a, text3, str9(author), viewer);
+    text3 = logEntry(text3, at14, "Retired", str12(author), "held to retired.");
+    const r = this.#revise(a, text3, str12(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, aspiration, state: "retired", taught: str9(taught), author: str9(author), at: at14 };
+    return { ok: true, aspiration, state: "retired", taught: str12(taught), author: str12(author), at: at14 };
   }
   /* Every aspiration document the viewer may see, as R12's terms read it. */
   #aspirations(viewer) {
@@ -90348,7 +94487,7 @@ ${bodyText2(note)}`
     const departed = dep.latest;
     const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
     const own2 = project ? held.filter((a) => a.scope === "project" && a.owner === project) : [];
-    const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str9(member)) : [];
+    const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str12(member)) : [];
     const departures = [...departed.values()].filter((d) => held.some((a) => a.id === d.aspiration));
     return {
       ok: true,
@@ -90465,10 +94604,10 @@ ${bodyText2(note)}`
   /** R15: a later module registers a proposal source once, at start (K31's pattern). `reader({project, viewer})`
    *  answers its proposals, `{key, kind, grade, basis, instances, surfaced_by}`. */
   registerSource(kind, reader) {
-    if (typeof kind !== "string" || !TOKEN2.test(kind) || typeof reader !== "function" || kind === "progressions" || kind === "intent")
-      return refusal14("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
+    if (typeof kind !== "string" || !TOKEN3.test(kind) || typeof reader !== "function" || kind === "progressions" || kind === "intent")
+      return refusal15("SOURCE_MALFORMED", "a source names its kind (a key, not 'progressions' or 'intent', which are read directly) and gives a reader function.", { kind: typeof kind === "string" ? kind : null });
     if (this.#sources.has(kind))
-      return refusal14("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
+      return refusal15("SOURCE_DECLARED", `the source '${kind}' is already registered.`, { kind });
     this.#sources.set(kind, reader);
     return { ok: true, kind };
   }
@@ -90502,7 +94641,7 @@ ${bodyText2(note)}`
         got = [];
       }
       for (const p of Array.isArray(got) ? got : [])
-        if (isObj11(p) && typeof p.key === "string" && p.key)
+        if (isObj14(p) && typeof p.key === "string" && p.key)
           out.push({
             key: `${kind}::${p.key}`,
             source: kind,
@@ -90613,14 +94752,14 @@ ${bodyText2(note)}`
     assistantPrincipal = null
   } = {}) {
     if (!TRIAGE_ACTS.includes(act))
-      return refusal14(
+      return refusal15(
         "TRIAGE_ACT_UNKNOWN",
         `a proposal is triaged by one of ${TRIAGE_ACTS.join(", ")}. Nothing was written.`,
         { acts: TRIAGE_ACTS }
       );
-    const isMachine2 = machine(author);
+    const isMachine2 = machine2(author);
     if (isMachine2 && act !== "question")
-      return refusal14("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
+      return refusal15("MACHINE_CANNOT_TRIAGE", "an assistant may open a question from a proposal and take no other act on it. Nothing was written.");
     let proj = null;
     if (project != null && project !== "") {
       const p = this.#project(project, viewer ?? (isMachine2 ? null : author));
@@ -90629,8 +94768,8 @@ ${bodyText2(note)}`
     }
     const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
     if (!found)
-      return refusal14("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
-    const why = str9(reason);
+      return refusal15("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
+    const why = str12(reason);
     if ((act === "defer" || act === "dismiss") && !why)
       return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act === "adopt" && !proj)
@@ -90642,20 +94781,20 @@ ${bodyText2(note)}`
     const at14 = this.#when();
     let inquiry = null, extra = {};
     if (act === "adopt") {
-      let text3 = appendItem(
+      let text3 = appendItem2(
         proj.text,
         "objective_adoptions",
         {
-          proposal: q3(found.key),
+          proposal: q5(found.key),
           source: found.source,
-          by: TOKEN2.test(str9(author)) ? str9(author) : q3(author),
-          at: q3(at14)
+          by: TOKEN3.test(str12(author)) ? str12(author) : q5(author),
+          at: q5(at14)
         }
       );
-      if (text3 === null) return refusal14("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
-      text3 = setField(text3, "last_updated", q3(at14));
-      text3 = logEntry(text3, at14, "Proposal adopted", str9(author), `the proposal ${found.key} is adopted into the objective.`);
-      const r = this.#revise(proj, text3, str9(author), viewer);
+      if (text3 === null) return refusal15("ADOPTIONS_UNSPLICEABLE", "the project's objective_adoptions block is not in a shape this grammar can extend. Nothing was written.");
+      text3 = setField2(text3, "last_updated", q5(at14));
+      text3 = logEntry(text3, at14, "Proposal adopted", str12(author), `the proposal ${found.key} is adopted into the objective.`);
+      const r = this.#revise(proj, text3, str12(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
       const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at14);
@@ -90668,7 +94807,7 @@ ${bodyText2(note)}`
         to: act === "defer" ? "deferred" : "dismissed",
         reason: why,
         definitionVersion: found.basis.definition_version,
-        decidedBy: str9(author)
+        decidedBy: str12(author)
       });
       if (!d || d.ok !== true) return d;
       extra = { progressions: { key: d.key, state: d.state, definition_version: d.definition_version } };
@@ -90685,7 +94824,7 @@ ${bodyText2(note)}`
       why || null,
       found.grade ?? null,
       JSON.stringify(found.basis ?? null),
-      str9(author) || PLANE_ACTOR,
+      str12(author) || PLANE_ACTOR,
       at14
     ));
     return {
@@ -90694,7 +94833,7 @@ ${bodyText2(note)}`
       act,
       project: proj ? proj.id : null,
       reason: why || null,
-      author: str9(author) || null,
+      author: str12(author) || null,
       at: at14,
       ...extra
     };
@@ -90704,19 +94843,19 @@ ${bodyText2(note)}`
   #openQuestion(found, author, viewer, run, assistantPrincipal, at14) {
     const id = `${this.record.allocId("INQ", at14.slice(0, 4)).id}-question`;
     const question = questionOf(found);
-    const who2 = str9(author) || PLANE_ACTOR;
+    const who2 = str12(author) || PLANE_ACTOR;
     const text3 = [
       "---",
       `id: ${id}`,
       "object_type: inquiry",
       "schema: inquiry@1",
-      `title: ${q3(question.slice(0, 120))}`,
+      `title: ${q5(question.slice(0, 120))}`,
       "current_state: surfaced",
       "prior_state: null",
-      `created: ${q3(at14)}`,
-      `last_updated: ${q3(at14)}`,
+      `created: ${q5(at14)}`,
+      `last_updated: ${q5(at14)}`,
       "produced_by:",
-      `  mode: ${machine(author) ? "agent" : "human"}`,
+      `  mode: ${machine2(author) ? "agent" : "human"}`,
       "  capability_tier: session",
       "references: []",
       "state_history: []",
@@ -90726,9 +94865,9 @@ ${bodyText2(note)}`
       "  since: null",
       "  source: null",
       "visuals: []",
-      `surfaced_by: ${machine(author) ? "agent" : "human"}`,
+      `surfaced_by: ${machine2(author) ? "agent" : "human"}`,
       'disposition_reason: ""',
-      `surfaced_from: ${q3(found.key)}`,
+      `surfaced_from: ${q5(found.key)}`,
       "---",
       "",
       "## Question",
@@ -90754,12 +94893,12 @@ ${bodyText2(note)}`
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${at14.replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${at14.replace(/[-:]/g, "")}_${rand9(4)}`,
       author: who2,
       files: [{ path: "bundle.md", text: text3 }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at14, last_updated: at14 },
       ...run ? { run } : {},
-      ...str9(assistantPrincipal) ? { assistantPrincipal: str9(assistantPrincipal) } : {},
+      ...str12(assistantPrincipal) ? { assistantPrincipal: str12(assistantPrincipal) } : {},
       actorViewer: viewer ?? null
     });
   }
@@ -90808,7 +94947,7 @@ ${bodyText2(note)}`
         const d = this.#doc(id);
         if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
         const entries = manifestOf(this.record.readImage(id));
-        if (!entries.length || entries.some((e) => !machine(e.author))) continue;
+        if (!entries.length || entries.some((e) => !machine2(e.author))) continue;
         const since = Date.parse(entries[entries.length - 1].created ?? d.fm.created);
         if (Number.isFinite(since)) out.push({ id, at: since + span });
       }
@@ -90854,8 +94993,8 @@ ${bodyText2(note)}`
    *  context, the objective and its current gaps as its instructions, its looks named under authority kind
    *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
   async workObjective({ project, author, viewer = null, run = {} } = {}) {
-    if (machine(author))
-      return refusal14("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
+    if (machine2(author))
+      return refusal15("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const g = this.gaps({ project, viewer: viewer ?? author });
@@ -90866,14 +95005,14 @@ ${bodyText2(note)}`
       authority: { kind: "objective", ref: project }
     };
     const opened = await this.#lazy(this.aiRunsRef).open({
-      ...isObj11(run) ? run : {},
+      ...isObj14(run) ? run : {},
       contextType: "project",
       contextId: project,
       state: { instructions },
       actor: this.#memberOf(author),
       viewer: viewer ?? author
     });
-    return { ...isObj11(opened) ? opened : {}, project, instructions };
+    return { ...isObj14(opened) ? opened : {}, project, instructions };
   }
 };
 function refuseNoSuchProject(detail, extra) {
@@ -90997,7 +95136,7 @@ function refusePursuitEnded(detail, extra) {
   };
 }
 function goalMachineRefusal(author, member = true) {
-  if (str9(author) && !isMachineIdentity(str9(author)) && member) return null;
+  if (str12(author) && !isMachineIdentity(str12(author)) && member) return null;
   const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_GOAL;
   return {
     ok: false,
@@ -91009,7 +95148,7 @@ function goalMachineRefusal(author, member = true) {
   };
 }
 function aspirationMachineRefusal(author, member = true) {
-  if (str9(author) && !isMachineIdentity(str9(author)) && member) return null;
+  if (str12(author) && !isMachineIdentity(str12(author)) && member) return null;
   const row2 = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_ASPIRATION;
   return {
     ok: false,
@@ -91021,7 +95160,7 @@ function aspirationMachineRefusal(author, member = true) {
   };
 }
 function captureRequestsNamed(basis) {
-  if (!isObj11(basis)) return [];
+  if (!isObj14(basis)) return [];
   const out = [];
   for (const k of ["capture_request", "capture_requests", "requests"]) {
     const v = basis[k];
@@ -91042,7 +95181,7 @@ function manifestOf(img) {
   return [...entries].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
 }
 function questionOf(p) {
-  const b = isObj11(p.basis) ? p.basis : {};
+  const b = isObj14(p.basis) ? p.basis : {};
   if (p.source === "progressions")
     return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
   if (p.kind === GAP_KIND)
@@ -91072,9 +95211,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances25.get(host);
+  let i = instances28.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -91094,4048 +95233,10 @@ function intentOf(host, deps) {
       retrieval: d.retrieval || (() => retrievalOf(host)),
       captureRequests: d.captureRequests || (() => captureRequestsOf(host))
     });
-    instances25.set(host, i);
+    instances28.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
-  }
-  return i;
-}
-
-// src/consequences/figures.mjs
-var OPS = Object.freeze(["sum", "difference", "count", "product", "ratio"]);
-var SCALES = Object.freeze({
-  thousand: 3,
-  k: 3,
-  million: 6,
-  m: 6,
-  mm: 6,
-  mn: 6,
-  billion: 9,
-  bn: 9,
-  b: 9,
-  trillion: 12,
-  tn: 12
-});
-var FIGURE = /^(-|\()?\s*([$€£¥])?\s*(-)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)\s*([a-z]+)?\s*(\))?$/i;
-var fold = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
-function parseFigure(figure2) {
-  if (typeof figure2 !== "string" || !fold(figure2)) return { ok: false, why: "no figure was stated as read" };
-  const m = FIGURE.exec(fold(figure2));
-  if (!m) return { ok: false, why: `"${fold(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
-  const [, lead, , minus, digits, word, close] = m;
-  if (lead === "(" !== (close === ")")) return { ok: false, why: "an opening parenthesis is not closed, or the reverse" };
-  if (lead === "-" && minus) return { ok: false, why: "the figure carries two minus signs" };
-  let exp = 0;
-  if (word) {
-    const w = word.toLowerCase();
-    if (!(w in SCALES)) return { ok: false, why: `"${word}" is not a scale word this module reads` };
-    exp = SCALES[w];
-  }
-  const plain = digits.replace(/,/g, "");
-  const decimals = Math.max(0, (plain.split(".")[1] || "").length - exp);
-  const number = Number(`${plain}e${exp}`) * (lead || minus ? -1 : 1);
-  if (!Number.isFinite(number)) return { ok: false, why: "the figure is not a finite number" };
-  return { ok: true, number: Object.is(number, -0) ? 0 : number, decimals };
-}
-function passageHolds(text3, figure2) {
-  if (typeof text3 !== "string" || typeof figure2 !== "string") return false;
-  const f8 = fold(figure2);
-  return f8 !== "" && fold(text3).includes(f8);
-}
-var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
-var toPrecision = (x) => Number(x.toPrecision(15));
-function compute(op, operands) {
-  const n = operands.length;
-  const need = { difference: 2, ratio: 2 }[op];
-  if (!OPS.includes(op)) return { ok: false, code: "op_unknown", why: `"${String(op)}" is not one of ${OPS.join(", ")}` };
-  if (n === 0 || need && n < need)
-    return { ok: false, code: "operand_missing", why: `a ${op} needs ${need ? `exactly ${need}` : "at least one"} operand${need ? "s" : ""}, and ${n} ${n === 1 ? "was" : "were"} given` };
-  if (need && n > need)
-    return { ok: false, code: "operands_extra", why: `a ${op} takes exactly ${need} operands, and ${n} were given` };
-  if (op === "count") return { ok: true, value: n };
-  const nums = operands.map((o) => o.number);
-  const dec = Math.max(0, ...operands.map((o) => o.decimals || 0));
-  if (op === "sum") return { ok: true, value: toDecimals(nums.reduce((a, b) => a + b, 0), dec) };
-  if (op === "difference") return { ok: true, value: toDecimals(nums[0] - nums[1], dec) };
-  if (op === "product") return { ok: true, value: toPrecision(nums.reduce((a, b) => a * b, 1)) };
-  if (nums[1] === 0) return { ok: false, code: "division_by_zero", why: "a ratio's second operand is zero" };
-  return { ok: true, value: toPrecision(nums[0] / nums[1]) };
-}
-function addMeasures(measures) {
-  if (!measures.length) return null;
-  let low = 0;
-  let high = 0;
-  let dec = 0;
-  let ranged = false;
-  for (const m of measures) {
-    const lo = m.range ? m.range.low : m.value;
-    const hi = m.range ? m.range.high : m.value;
-    if (m.range) ranged = true;
-    dec = Math.max(dec, decimalsOf(lo), decimalsOf(hi));
-    low += lo;
-    high += hi;
-  }
-  low = toDecimals(low, dec);
-  high = toDecimals(high, dec);
-  return ranged ? { range: { low, high } } : { value: low };
-}
-function decimalsOf(x) {
-  const s = String(x);
-  if (/e/i.test(s)) return 0;
-  return (s.split(".")[1] || "").length;
-}
-
-// src/consequences/schema.mjs
-var CONSEQUENCES_SCHEMA = `
--- R1\u2013R6, R14: ONE ROW PER PART, the part's bundle id its key. determination,
--- standard and project are the breach it is recorded against (the project is
--- the determination's, read when recorded, so every read gates on it, R13).
--- affected, measure and period are the canonical JSON of what was recorded;
--- state is computed, assessed or undetermined. value is the module's own
--- arithmetic for a computed part (JSON: {value} or {range}), grade its weakest
--- operand's capture letter (null when undetermined) and grade_why the named
--- weakest link; op the computation. rationale and rests_on are an assessment's;
--- undetermined_why an undetermined part's reason code and words. causation is
--- the inquiry named (or null) and causation_state what it was when recorded
--- (established or unproven), causation_why the words. machine is 1 for a
--- machine's computed part (R2). supersedes names the part this one revises
--- (R6), at most once (UNIQUE), with its reason.
-CREATE TABLE IF NOT EXISTS consequence_parts (
-  bundle_id         TEXT PRIMARY KEY,
-  determination     TEXT NOT NULL,
-  standard          TEXT NOT NULL,
-  project           TEXT,
-  affected          TEXT NOT NULL,
-  measure           TEXT,
-  period            TEXT NOT NULL,
-  state             TEXT NOT NULL,
-  op                TEXT,
-  value             TEXT,
-  grade             TEXT,
-  grade_why         TEXT,
-  rationale         TEXT,
-  rests_on          TEXT,
-  undetermined_code TEXT,
-  undetermined_why  TEXT,
-  causation         TEXT,
-  causation_state   TEXT NOT NULL,
-  causation_why     TEXT NOT NULL,
-  machine           INTEGER NOT NULL DEFAULT 0,
-  author            TEXT NOT NULL,
-  at                TEXT NOT NULL,
-  supersedes        TEXT UNIQUE,
-  reason            TEXT
-);
-CREATE INDEX IF NOT EXISTS consequence_parts_determination ON consequence_parts (determination, standard);
--- R2: A COMPUTED PART'S OPERANDS, in order: the content id, the figure as the
--- author read it, the number this module parsed from it, the capture the
--- passage is of, and that capture's grade (provenance.captureGrade) as it read
--- when recorded: grade (null when undetermined), route, determined, basis.
-CREATE TABLE IF NOT EXISTS consequence_operands (
-  part_id      TEXT NOT NULL,
-  ord          INTEGER NOT NULL,
-  content_id   TEXT NOT NULL,
-  figure       TEXT,
-  number       REAL,
-  capture_sha  TEXT,
-  grade        TEXT,
-  route        TEXT,
-  determined   INTEGER NOT NULL DEFAULT 0,
-  basis        TEXT,
-  PRIMARY KEY (part_id, ord)
-);
--- R9: A MEMBER'S ADDRESSED RECORD, one row per act, append-only; the latest by
--- seq is the part's state. evidence is the JSON list of content ids or
--- findings.
-CREATE TABLE IF NOT EXISTS consequence_addressed (
-  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
-  part_id    TEXT NOT NULL,
-  state      TEXT NOT NULL,
-  evidence   TEXT NOT NULL,
-  reason     TEXT NOT NULL,
-  author     TEXT NOT NULL,
-  at         TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS consequence_addressed_part ON consequence_addressed (part_id, seq);
-`;
-var CONSEQUENCES_TABLES = Object.freeze([
-  "consequence_parts",
-  Object.freeze({ name: "consequence_operands", keys: Object.freeze(["part_id"]) }),
-  Object.freeze({ name: "consequence_addressed", keys: Object.freeze(["part_id"]) })
-]);
-function migrateConsequences(sql) {
-  const bare2 = CONSEQUENCES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const stmt of bare2.split(";")) if (stmt.trim()) sql.exec(stmt.trim());
-}
-
-// src/consequences/checks.mjs
-var at9 = (fn) => `src/consequences/index.mjs ${fn}`;
-var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at9(fn), translation });
-var CONSEQUENCES_CHECKS = Object.freeze({
-  NO_SUCH_DETERMINATION: row(1, "#record", "A consequence is recorded against a determination you can see. One you may not see is answered exactly as one that does not exist."),
-  NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the live determination found noncompliant. A superseded determination's parts stay readable and are not carried forward."),
-  NOT_A_PARTICIPANT: row(3, "#record", "Recording a consequence is work inside the determination's project, done by a member who has joined it. A machine may prepare a computed part and answers no project's authority."),
-  AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", "Who or what is affected is a class, a fund, a program, a service, a body or other, with a description."),
-  AFFECTED_INDIVIDUAL: row(5, "checkAffected", "People are counted as a class or named in their official role, never singled out: no part names an individual."),
-  MEASURE_UNKNOWN_UNIT: row(6, "checkMeasure", "A measure counts money, benefits, services, time or a count."),
-  MEASURE_INVALID: row(7, "checkMeasure", "A measure's value, or its range's bounds, are finite numbers, the range in order, and a currency belongs only to money."),
-  PERIOD_INVALID: row(8, "checkPeriod", "A consequence runs over a period: two dates, the start not after the end."),
-  MACHINE_CANNOT_ASSESS: row(9, "#basis", "An assessment is a member's judgment. A machine may compute a part from the record's own figures and propose an assessment as text; it never records one."),
-  NO_RATIONALE: row(10, "#basis", "An assessed value says why."),
-  BAD_RATIONALE: row(11, "#basis", "A rationale is at most 2,000 characters."),
-  BASIS_UNREADABLE: row(12, "#computation", "A computation names its operation and its operands: each the content whose passage holds the figure, and the figure as read."),
-  NO_SUCH_EVIDENCE: row(13, "#resolvesEvidence", "Evidence, and what an assessment rests on, are content or findings this record holds and you may see."),
-  NO_SUCH_PART: row(14, "#part", "No consequence part answers to that id. One you may not see is answered exactly as one that does not exist."),
-  ALREADY_SUPERSEDED: row(15, "consequenceRevise", "A part that has been revised is read, not revised or addressed again: its successor carries the record forward."),
-  NO_REASON: row(16, "consequenceRevise", "A revision, and an addressed record, say why."),
-  BAD_REASON: row(17, "consequenceRevise", "A reason is at most 500 characters."),
-  MACHINE_CANNOT_ADDRESS: row(18, "addressedRecord", "Whether a consequence has been addressed is a member's judgment, with evidence. A machine never records it."),
-  ADDRESSED_UNKNOWN_STATE: row(19, "addressedRecord", "A part is recorded addressed or not_addressed."),
-  ADDRESSED_NO_EVIDENCE: row(20, "addressedRecord", "A consequence is recorded addressed with the evidence that it was. Partial redress does not end an escalation.")
-});
-
-// src/consequences/index.mjs
-var AFFECTED_KINDS = Object.freeze(["class", "fund", "program", "service", "body", "other"]);
-var UNITS = Object.freeze(["money", "benefits", "services", "time", "count"]);
-var PART_STATES = Object.freeze(["computed", "assessed", "undetermined"]);
-var ADDRESSED_STATES = Object.freeze(["addressed", "not_addressed"]);
-var UNDETERMINED_WHY = Object.freeze({
-  not_in_record: "the figure is not in the record",
-  form_not_read: "the record holds it in a form not read",
-  not_assessed: "nobody has assessed it",
-  not_computable: "the record holds the figures, and the computation named cannot be carried out over them"
-});
-var RATIONALE_MAX = 2e3;
-var REASON_MAX3 = 500;
-var PERSON_KINDS = /* @__PURE__ */ new Set([
-  "person",
-  "persons",
-  "individual",
-  "individuals",
-  "human",
-  "resident",
-  "citizen",
-  "member",
-  "employee",
-  "official",
-  "named_person",
-  "name"
-]);
-var PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"];
-var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
-var INTERNAL = `${MACHINE_CLASS_PREFIX}admin`;
-var str10 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var isObj12 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var q4 = (v) => JSON.stringify(v ?? null);
-var json = (v) => v == null ? null : JSON.stringify(v);
-var parse = (s) => {
-  if (s == null) return null;
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
-  }
-};
-var machine2 = (who2) => !str10(who2) || isMachineIdentity(str10(who2));
-var second2 = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
-var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var HEX645 = /^[0-9a-f]{64}$/;
-var DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
-function refuse4(code, detail, extra = {}) {
-  const row2 = CONSEQUENCES_CHECKS[code];
-  return {
-    ok: false,
-    reason: code,
-    code,
-    ...row2 ? { check: row2.check, translation: row2.translation } : {},
-    detail,
-    ...extra
-  };
-}
-function checkAffected(a) {
-  if (!isObj12(a)) return refuse4("AFFECTED_UNKNOWN_KIND", `an affected is {kind, description, role?}, kind one of ${AFFECTED_KINDS.join(", ")}. Nothing was written.`);
-  const kind = str10(a.kind) ? a.kind.trim().toLowerCase() : null;
-  const personKey = [a, isObj12(a.role) ? a.role : {}].flatMap((o) => PERSON_KEYS.filter((k) => o[k] != null && o[k] !== ""));
-  if (kind && PERSON_KINDS.has(kind) || personKey.length)
-    return refuse4("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}: record a class (kind "class") or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
-  if (!kind || !AFFECTED_KINDS.includes(kind) || !str10(a.description))
-    return refuse4("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `"${String(a.kind ?? "")}" is not a kind of affected` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
-  let role = null;
-  if (a.role != null) {
-    if (!isObj12(a.role) || !str10(a.role.role) || !str10(a.role.body))
-      return refuse4("AFFECTED_INDIVIDUAL", "a role is an office, {role, body}: the office and the body it belongs to, never a person. Nothing was written.", { kind });
-    role = { role: a.role.role.trim(), body: a.role.body.trim() };
-  }
-  return { ok: true, affected: { kind, description: a.description.trim(), ...role ? { role } : {} } };
-}
-function checkMeasure(m) {
-  if (m == null) return { ok: true, measure: null };
-  if (!isObj12(m) || !str10(m.unit) || !UNITS.includes(m.unit.trim()))
-    return refuse4(
-      "MEASURE_UNKNOWN_UNIT",
-      `a measure's unit is one of ${UNITS.join(", ")}. Nothing was written.`,
-      { unit: isObj12(m) ? m.unit ?? null : null }
-    );
-  const unit = m.unit.trim();
-  const bad = (why) => refuse4("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
-  if (m.currency != null && m.currency !== "") {
-    if (unit !== "money") return bad(`a currency belongs to a measure of money, and this one is of ${unit}`);
-    if (!str10(m.currency)) return bad("a currency is named by its code, such as USD");
-  }
-  const hasValue = m.value !== void 0 && m.value !== null;
-  const hasRange = m.range !== void 0 && m.range !== null;
-  if (hasValue && hasRange) return bad("a measure carries a value or a range, not both");
-  const out = { unit, ...str10(m.currency) ? { currency: m.currency.trim().toUpperCase() } : {} };
-  if (hasValue) {
-    if (typeof m.value !== "number" || !Number.isFinite(m.value)) return bad("the value is not a finite number");
-    out.value = m.value;
-  }
-  if (hasRange) {
-    const [low, high] = Array.isArray(m.range) ? m.range : isObj12(m.range) ? [m.range.low, m.range.high] : [];
-    if (typeof low !== "number" || !Number.isFinite(low) || typeof high !== "number" || !Number.isFinite(high))
-      return bad("a range's bounds are two finite numbers, {low, high}");
-    if (low > high) return bad("the range is reversed: its low bound is above its high bound");
-    out.range = { low, high };
-  }
-  return { ok: true, measure: out };
-}
-function checkPeriod(p) {
-  const bad = (why) => refuse4("PERIOD_INVALID", `${why}. Nothing was written.`);
-  if (!isObj12(p)) return bad("a period is {from, to}: the dates the consequence ran between");
-  const from = str10(p.from);
-  const to = str10(p.to);
-  if (!from || !to || !DATE.test(from) || !DATE.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)))
-    return bad("a period's from and to are dates, YYYY-MM-DD, or instants");
-  if (Date.parse(from) > Date.parse(to)) return bad("the period is reversed: it ends before it starts");
-  return { ok: true, period: { from, to } };
-}
-var Consequences = class {
-  #deps;
-  constructor({
-    storage,
-    record,
-    membership,
-    promotion,
-    host = null,
-    conformance = null,
-    content = null,
-    provenance = null,
-    inquiry = null,
-    strength = null,
-    passageText = null,
-    now = null
-  } = {}) {
-    this.sql = storage.sql;
-    this.record = record;
-    this.membership = membership;
-    this.promotion = promotion;
-    this.#deps = { host, conformance, content, provenance, inquiry, strength, passageText };
-    this.now = typeof now === "function" ? now : () => stampInstant("second");
-  }
-  /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
-  get content() {
-    return this.#deps.content ||= contentOf(this.#deps.host);
-  }
-  get provenance() {
-    return this.#deps.provenance ||= provenanceOf(this.#deps.host);
-  }
-  get inquiry() {
-    return this.#deps.inquiry ||= inquiryOf(this.#deps.host);
-  }
-  get strength() {
-    return this.#deps.strength ||= strengthOf(this.#deps.host);
-  }
-  get conformance() {
-    return this.#deps.conformance;
-  }
-  migrate() {
-    migrateConsequences(this.sql);
-  }
-  #rows(qs, ...a) {
-    return [...this.sql.exec(qs, ...a)];
-  }
-  #one(qs, ...a) {
-    for (const r of this.sql.exec(qs, ...a)) return r;
-    return null;
-  }
-  #when() {
-    const w = this.now();
-    return second2(typeof w === "string" && w ? w : stampInstant("second"));
-  }
-  /* R2: the text of the passage an operand names, or null when it is held in a form this module does not read. */
-  #passageText(contentId) {
-    try {
-      const fn = this.#deps.passageText || (typeof this.content.passageText === "function" ? (id) => this.content.passageText(id) : null);
-      const t = fn ? fn(contentId) : null;
-      return typeof t === "string" ? t : isObj12(t) && typeof t.text === "string" ? t.text : null;
-    } catch {
-      return null;
-    }
-  }
-  /* R13 (K171 (10)): whether the viewer sees a project's contents: sight first, FULL only. An internal caller (no
-     viewer) is not asked; a part outside any project is seen as its determination is. */
-  #seesProject(project, viewer) {
-    if (viewer === null || viewer === void 0 || !project) return true;
-    return this.membership.sight(project, viewer) === "full";
-  }
-  /* R1: the determination through conformance's read (its R9), as `{id, project, outcome(standard), live}`; null when
-     absent, invisible, or conformance is not here to answer (fail closed). Read through one adapter so the spelling of
-     conformance's answer lives in one place. */
-  #determination(id, viewer) {
-    const c = this.conformance;
-    if (!str10(id) || !c || typeof c.determinationRead !== "function") return null;
-    let d;
-    try {
-      d = c.determinationRead({ id, viewer: viewer ?? INTERNAL });
-    } catch {
-      return null;
-    }
-    if (!isObj12(d) || d.ok === false) return null;
-    const body = isObj12(d.determination) ? { ...d, ...d.determination } : d;
-    const outcomes = body.outcomes ?? body.outcome_per_standard ?? body.standards ?? null;
-    const outcome = (std) => {
-      if (Array.isArray(outcomes)) {
-        const o = outcomes.find((x) => isObj12(x) && (x.standard === std || x.id === std || isObj12(x.standard) && x.standard.id === std));
-        return o ? o.outcome ?? null : null;
-      }
-      if (isObj12(outcomes)) {
-        const v = outcomes[std];
-        return isObj12(v) ? v.outcome ?? null : v ?? null;
-      }
-      return null;
-    };
-    const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
-    const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
-    return { id, project: body.project ?? null, outcome, live };
-  }
-  /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
-  #part(id, viewer) {
-    if (!str10(id)) return null;
-    const r = this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id);
-    if (!r || !this.#seesProject(r.project, viewer)) return null;
-    return r;
-  }
-  #successor(id) {
-    return this.#one(`SELECT bundle_id FROM consequence_parts WHERE supersedes=?`, id)?.bundle_id ?? null;
-  }
-  /* R5: a named inquiry's causation, as it reads now: established when it is an inquiry the reader may see that has
-     concluded and is not superseded; unproven otherwise, with why. */
-  #causationNow(inquiryId, viewer) {
-    if (!str10(inquiryId))
-      return {
-        state: "unproven",
-        inquiry: null,
-        why: "no inquiry is named whose finding is that the harm follows from the act; sequence alone does not establish it (DEC-14), so the causation is unproven until one concludes"
-      };
-    const who2 = viewer ?? INTERNAL;
-    const info = this.record.bundleInfo(inquiryId);
-    if (!info || !this.membership.inSight(inquiryId, who2) || normalizeType(info.type) !== "inquiry")
-      return {
-        state: "unproven",
-        inquiry: inquiryId,
-        why: "the inquiry named is not one this record holds that you may see, so it establishes nothing here"
-      };
-    const head = this.record.head(inquiryId);
-    const st = head ? head.currentState : null;
-    const sup = this.#supersededBy(inquiryId);
-    if (sup.length)
-      return {
-        state: "unproven",
-        inquiry: inquiryId,
-        why: `the inquiry named has been superseded (by ${sup.join(", ")}), so its finding does not stand`
-      };
-    if (!CONCLUDED.has(st))
-      return {
-        state: "unproven",
-        inquiry: inquiryId,
-        why: `the inquiry named is ${st ?? "in no state"}, not concluded: until it concludes that the harm follows from the act, the causation is unproven`
-      };
-    return {
-      state: "established",
-      inquiry: inquiryId,
-      why: `the inquiry named has concluded; its finding is that the harm follows from the act`
-    };
-  }
-  #supersededBy(id) {
-    try {
-      const s = this.inquiry.supersededBy(id);
-      return Array.isArray(s) ? s : s ? [s] : [];
-    } catch {
-      return [];
-    }
-  }
-  /* R9, R3: an evidence or rests-on id resolves to a content row, or a finding (an inquiry), the author may see. */
-  #resolvesEvidence(id, who2) {
-    if (!str10(id)) return false;
-    if (HEX645.test(id)) {
-      const row2 = this.content.contentRow(id);
-      return !!row2 && this.membership.inSight(row2.bundle_id, who2);
-    }
-    const info = this.record.bundleInfo(id);
-    return !!info && normalizeType(info.type) === "inquiry" && this.membership.inSight(id, who2);
-  }
-  /* ===================================================================== *
-   * R1–R6: RECORDING A PART
-   * ===================================================================== */
-  /** R1–R5: record one part against one standard's noncompliant outcome of a live determination. */
-  consequenceRecord(args = {}) {
-    return this.#record(args, null);
-  }
-  /** R6: a part is never edited; a revision records a successor with R1's refusals, and the earlier part stays
-   *  readable with the link. The successor keeps the earlier part's determination and standard. */
-  consequenceRevise(args = {}) {
-    const { id = null, reason = null, author = null, viewer = null } = args;
-    const who2 = viewer ?? author;
-    const old = this.#part(id, who2);
-    if (!old) return refuse4("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { id });
-    const next = this.#successor(old.bundle_id);
-    if (next) return refuse4("ALREADY_SUPERSEDED", `${old.bundle_id} has already been revised by ${next}; revise that one. Nothing was written.`, { id: old.bundle_id, superseded_by: next });
-    if (!str10(reason)) return refuse4("NO_REASON", "a revision says why the part is revised. Nothing was written.");
-    if (reason.trim().length > REASON_MAX3)
-      return refuse4("BAD_REASON", `a revision's reason is at most ${REASON_MAX3} characters. Nothing was written.`);
-    const pick2 = (k, stored) => k in args ? args[k] : stored;
-    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse(old.rests_on) || [] } : { why: old.undetermined_code };
-    return this.#record({
-      determination: old.determination,
-      standard: old.standard,
-      affected: pick2("affected", parse(old.affected)),
-      measure: pick2("measure", parse(old.measure)),
-      period: pick2("period", parse(old.period)),
-      basis: pick2("basis", oldBasis),
-      causation: pick2("causation", old.causation),
-      author,
-      viewer
-    }, { supersedes: old.bundle_id, reason: reason.trim() });
-  }
-  #record({
-    determination = null,
-    standard = null,
-    affected = null,
-    measure = null,
-    period = null,
-    basis = null,
-    causation = null,
-    author = null,
-    viewer = null
-  } = {}, rev) {
-    const who2 = viewer ?? (str10(author) || null);
-    const byMachine = machine2(author);
-    const d = this.#determination(determination, who2);
-    if (!d || !this.#seesProject(d.project, who2))
-      return refuse4("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { determination });
-    if (!str10(standard) || d.outcome(standard) !== "noncompliant" || !d.live)
-      return refuse4(
-        "NOT_NONCOMPLIANT",
-        !d.live ? `${d.id} has been superseded: a consequence is recorded against a live determination, and the parts of the earlier one stay readable, not carried forward. Nothing was written.` : `${d.id}'s outcome for ${str10(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did. Nothing was written.`,
-        { determination: d.id, standard: standard ?? null }
-      );
-    if (!byMachine && d.project) {
-      const denied = this.membership.projectAuthority(d.project, str10(author), "joined", "consequenceRecord");
-      if (denied) return refuse4("NOT_A_PARTICIPANT", `recording a consequence is work inside ${d.project}, and ${str10(author)} has not joined it. Nothing was written.`, { project: d.project });
-    }
-    const a = checkAffected(affected);
-    if (!a.ok) return a;
-    const m = checkMeasure(measure);
-    if (!m.ok) return m;
-    const p = checkPeriod(period);
-    if (!p.ok) return p;
-    const b = this.#basis(basis, m.measure, who2, byMachine);
-    if (!b.ok) return b;
-    const cause = this.#causationNow(causation, who2);
-    const at14 = this.#when();
-    return this.record.transact(() => {
-      const id = `${this.record.allocId("CONS", at14.slice(0, 4)).id}-${a.affected.kind}`;
-      const part = {
-        determination: d.id,
-        standard,
-        project: d.project,
-        affected: a.affected,
-        measure: b.measure,
-        period: p.period,
-        state: b.state,
-        causation: cause,
-        author: str10(author) ?? "",
-        machine: byMachine,
-        at: at14,
-        supersedes: rev ? rev.supersedes : null,
-        reason: rev ? rev.reason : null,
-        ...b.doc
-      };
-      const done = this.promotion.promote({
-        bundleId: id,
-        base: null,
-        snapKey: `${at14.replace(/[-:]/g, "")}_${rand9(4)}`,
-        author: str10(author) ?? INTERNAL,
-        files: [{ path: "bundle.md", text: partDoc(id, part) }],
-        meta: { object_type: "consequence", title: titleOf3(part), current_state: "recorded", created: at14, last_updated: at14 }
-      });
-      if (done.ok === false) return done;
-      this.sql.exec(
-        `INSERT INTO consequence_parts (bundle_id, determination, standard, project, affected, measure,
-          period, state, op, value, grade, grade_why, rationale, rests_on, undetermined_code, undetermined_why,
-          causation, causation_state, causation_why, machine, author, at, supersedes, reason)
-          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id,
-        d.id,
-        standard,
-        d.project,
-        json(a.affected),
-        json(b.measure),
-        json(p.period),
-        b.state,
-        b.op ?? null,
-        json(b.value),
-        b.grade ?? null,
-        b.gradeWhy ?? null,
-        b.rationale ?? null,
-        json(b.restsOn),
-        b.undeterminedCode ?? null,
-        b.undeterminedWhy ?? null,
-        cause.inquiry,
-        cause.state,
-        cause.why,
-        byMachine ? 1 : 0,
-        str10(author) ?? "",
-        at14,
-        rev ? rev.supersedes : null,
-        rev ? rev.reason : null
-      );
-      (b.operands || []).forEach((o, i) => this.sql.exec(
-        `INSERT INTO consequence_operands (part_id, ord, content_id,
-          figure, number, capture_sha, grade, route, determined, basis) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        id,
-        i,
-        o.content,
-        o.figure ?? null,
-        o.number ?? null,
-        o.capture_sha ?? null,
-        o.grade ?? null,
-        o.route ?? null,
-        o.determined ? 1 : 0,
-        o.basis ?? null
-      ));
-      return { ok: true, id, part: this.#answer(this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id), who2) };
-    });
-  }
-  /* R2–R4: what the basis makes of the part: its state, measure and the fields that state carries, or a refusal. */
-  #basis(basis, measure, who2, byMachine) {
-    const computation = isObj12(basis) && ("op" in basis || "operands" in basis);
-    if (computation) return this.#computation(basis, measure, who2);
-    const hasFigure = measure && ("value" in measure || "range" in measure);
-    if (byMachine)
-      return refuse4("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
-    if (hasFigure) {
-      const rationale = isObj12(basis) ? str10(basis.rationale) : null;
-      if (!rationale) return refuse4("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
-      if (rationale.length > RATIONALE_MAX)
-        return refuse4("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
-      const rests = basis.rests_on ?? basis.restsOn ?? [];
-      if (!Array.isArray(rests)) return refuse4("BASIS_UNREADABLE", "what an assessment rests on is a list of content ids or findings, possibly empty. Nothing was written.");
-      const unknown = rests.filter((x) => !this.#resolvesEvidence(x, who2));
-      if (unknown.length) return refuse4("NO_SUCH_EVIDENCE", "an assessment rests on content or findings this record holds and you may see. Nothing was written.", { unknown: unknown.map((x) => typeof x === "string" ? x : null) });
-      return {
-        ok: true,
-        state: "assessed",
-        measure,
-        rationale,
-        restsOn: rests.map(String),
-        doc: { rationale, rests_on: rests.map(String) }
-      };
-    }
-    const code = isObj12(basis) && str10(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
-    return {
-      ok: true,
-      state: "undetermined",
-      measure,
-      undeterminedCode: code,
-      undeterminedWhy: UNDETERMINED_WHY[code],
-      doc: { undetermined: code }
-    };
-  }
-  /* R2, R4: a computation over the record. The value is this module's arithmetic over the figures the passages hold;
-     an operand not held, or a figure its passage does not hold, leaves the computation lacking it (undetermined). */
-  #computation(basis, measure, who2) {
-    const op = str10(basis.op);
-    if (!op || !OPS.includes(op))
-      return refuse4(
-        "BASIS_UNREADABLE",
-        `a computation names its op, one of ${OPS.join(", ")}. Nothing was written.`,
-        { op: basis.op ?? null }
-      );
-    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj12(o) || !str10(o.content)))
-      return refuse4("BASIS_UNREADABLE", "a computation's operands are a list of {content, figure}: the content id whose passage holds the figure, and the figure as read. Nothing was written.");
-    const operands = [];
-    let lacking = null;
-    for (const [i, raw] of basis.operands.entries()) {
-      const o = { content: raw.content.trim(), figure: typeof raw.figure === "string" ? raw.figure : raw.figure == null ? null : String(raw.figure) };
-      const row2 = this.content.contentRow(o.content);
-      if (!row2 || !this.membership.inSight(row2.bundle_id, who2 ?? INTERNAL)) {
-        lacking ||= { code: "not_in_record", why: `operand ${i} names content this record does not hold, or that you may not see` };
-        operands.push(o);
-        continue;
-      }
-      o.capture_sha = row2.capture_sha;
-      const g = this.provenance.captureGrade(row2.capture_sha) || {};
-      Object.assign(o, { grade: g.grade ?? null, route: g.route ?? null, determined: !!g.determined, basis: g.basis ?? null });
-      if (op !== "count") {
-        if (o.figure == null || !String(o.figure).trim()) {
-          lacking ||= { code: "not_in_record", why: `operand ${i} states no figure as read` };
-        } else {
-          const f8 = parseFigure(o.figure);
-          if (!f8.ok) return refuse4("BASIS_UNREADABLE", `operand ${i}: ${f8.why}. Nothing was written.`, { operand: i });
-          const text3 = this.#passageText(o.content);
-          if (text3 === null)
-            lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
-          else if (!passageHolds(text3, o.figure))
-            lacking ||= { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` };
-          else Object.assign(o, { number: f8.number, decimals: f8.decimals });
-        }
-      }
-      operands.push(o);
-    }
-    const stored = operands.map(({ decimals, ...o }) => o);
-    const docOps = stored.map((o) => ({ content: o.content, figure: o.figure }));
-    if (!lacking && !measure)
-      lacking = { code: "not_assessed", why: "no measure is stated, so the computation has no unit" };
-    let result = null;
-    if (!lacking) {
-      result = compute(op, operands);
-      if (!result.ok && result.code === "operands_extra")
-        return refuse4("BASIS_UNREADABLE", `${result.why}. Nothing was written.`);
-      if (!result.ok) lacking = { code: result.code === "operand_missing" ? "not_in_record" : "not_computable", why: result.why };
-    }
-    const unitOnly = measure ? { unit: measure.unit, ...measure.currency ? { currency: measure.currency } : {} } : null;
-    if (lacking)
-      return {
-        ok: true,
-        state: "undetermined",
-        op,
-        measure: unitOnly,
-        operands: stored,
-        undeterminedCode: lacking.code,
-        undeterminedWhy: `${UNDETERMINED_WHY[lacking.code]}: ${lacking.why}`,
-        doc: { op, operands: docOps, undetermined: lacking.code }
-      };
-    const rank5 = (g) => BASIS_GRADES.indexOf(g);
-    const open = stored.findIndex((o) => !o.grade);
-    let grade = null;
-    let gradeWhy;
-    if (open >= 0) {
-      gradeWhy = `operand ${open}'s capture grade is undetermined (${stored[open].basis ?? stored[open].route ?? "no route"}), so the weakest link is not known`;
-    } else {
-      const w = stored.reduce((acc, o, i) => rank5(o.grade) > rank5(stored[acc].grade) ? i : acc, 0);
-      grade = stored[w].grade;
-      gradeWhy = `the weakest operand is ${w} (content ${stored[w].content}), whose capture grade is ${grade} (${stored[w].route}); a computation is as strong as its weakest figure (DEC-21)`;
-    }
-    return {
-      ok: true,
-      state: "computed",
-      op,
-      measure: { ...unitOnly, value: result.value },
-      value: { value: result.value },
-      grade,
-      gradeWhy,
-      operands: stored,
-      doc: { op, operands: docOps, value: result.value, grade }
-    };
-  }
-  #operands(id) {
-    return this.#rows(`SELECT * FROM consequence_operands WHERE part_id=? ORDER BY ord`, id);
-  }
-  #addressedOf(id) {
-    return this.#one(`SELECT * FROM consequence_addressed WHERE part_id=? ORDER BY seq DESC LIMIT 1`, id);
-  }
-  /* ===================================================================== *
-   * THE ANSWER FOR ONE PART (R2–R5, R7, R8, R12)
-   * ===================================================================== */
-  #answer(r, viewer) {
-    const who2 = viewer ?? INTERNAL;
-    const out = {
-      id: r.bundle_id,
-      determination: r.determination,
-      standard: r.standard,
-      project: r.project,
-      affected: parse(r.affected),
-      measure: parse(r.measure),
-      period: parse(r.period),
-      state: r.state,
-      author: r.author || null,
-      at: r.at,
-      supersedes: r.supersedes,
-      reason: r.reason,
-      superseded_by: this.#successor(r.bundle_id)
-    };
-    if (r.state === "computed" || r.op) {
-      const ops = this.#operands(r.bundle_id).map((o) => {
-        const row2 = this.content.contentRow(o.content_id);
-        const seen = row2 && this.membership.inSight(row2.bundle_id, who2);
-        return seen ? {
-          content: o.content_id,
-          figure: o.figure,
-          number: o.number,
-          capture: o.capture_sha,
-          grade: o.grade,
-          route: o.route,
-          determined: !!o.determined
-        } : { content: null, says: "an object you may not see" };
-      });
-      out.computation = { op: r.op, operands: ops };
-    }
-    if (r.state === "computed") {
-      out.grade = { grade: r.grade, determined: r.grade !== null, why: r.grade_why };
-      out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
-    } else if (r.state === "assessed") {
-      out.assessment = {
-        by: r.author,
-        at: r.at,
-        rationale: r.rationale,
-        rests_on: parse(r.rests_on) || [],
-        says: (parse(r.rests_on) || []).length ? "a member's assessment, resting on the ids listed" : "a member's assessment, resting on nothing in the record (stated as none)"
-      };
-      out.label = { machine_work: false, says: "a member's assessment: never presented, summed or graded as computed" };
-    } else {
-      out.undetermined = {
-        code: r.undetermined_code,
-        why: r.undetermined_why,
-        says: "undetermined: not known, and never read as zero"
-      };
-    }
-    out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
-    if (r.causation_state === "established" && r.causation) {
-      let s = null;
-      try {
-        s = this.strength.inquiryStrength({ id: r.causation, viewer: who2 });
-      } catch {
-        s = null;
-      }
-      out.causation.strength = s && s.ok ? {
-        capture: s.capture ?? null,
-        connection: s.connection ?? null,
-        testimony: s.testimony ?? null,
-        says: "per axis, never composed (DEC-44)"
-      } : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
-      if (!this.membership.inSight(r.causation, who2)) {
-        out.causation.inquiry = null;
-        out.causation.why = "an object you may not see";
-      }
-    }
-    const a = this.#addressedOf(r.bundle_id);
-    out.addressed = a ? { state: a.state, evidence: parse(a.evidence) || [], reason: a.reason, by: a.author, at: a.at } : { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
-    const changed = this.#basisChanged(r, who2);
-    if (changed.length) out.basis_changed = changed;
-    return out;
-  }
-  /* R8: a notice, never a recomputation: an operand passage whose document has a newer capture that does not carry it,
-     or a causation inquiry reopened or superseded since the part was recorded. */
-  #basisChanged(r, who2) {
-    const causes = [];
-    if (r.op) {
-      for (const o of this.#operands(r.bundle_id)) {
-        let n = null;
-        try {
-          n = this.content.passageNotice({ contentId: o.content_id, viewer: who2 });
-        } catch {
-          n = null;
-        }
-        if (n && n.affects === "affected")
-          causes.push({ cause: "newer_capture", operand: o.ord, why: `a newer capture of operand ${o.ord}'s document does not carry its passage; nothing is recomputed until a member revises this part` });
-      }
-    }
-    if (r.causation) {
-      const sup = this.#supersededBy(r.causation);
-      if (sup.length) causes.push({ cause: "causation_superseded", why: "the causation inquiry has been superseded" });
-      else if (r.causation_state === "established") {
-        const head = this.record.head(r.causation);
-        let reopened = head && !CONCLUDED.has(head.currentState);
-        if (!reopened) {
-          let h = null;
-          try {
-            h = this.inquiry.stateHistory(r.causation);
-          } catch {
-            h = null;
-          }
-          reopened = !!(h && h.ok && h.transitions.some((t) => t.to === "open" && t.at && instantOrder(t.at, r.at) > 0));
-        }
-        if (reopened) causes.push({ cause: "causation_reopened", why: "the causation inquiry has been reopened since this part was recorded" });
-      }
-    }
-    return causes;
-  }
-  /* ===================================================================== *
-   * R6, R7: READS
-   * ===================================================================== */
-  /** R6, R13: one part, superseded or not, with its links; absent and unseen are one answer. */
-  consequenceRead({ id = null, viewer = null } = {}) {
-    const r = this.#part(id, viewer);
-    if (!r) return refuse4("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.", { id });
-    return { ok: true, part: this.#answer(r, viewer) };
-  }
-  /* The live parts of a determination (not revised by a successor), optionally of one standard, in id order. */
-  #liveParts(determination, standard = null) {
-    return this.#rows(
-      `SELECT p.* FROM consequence_parts p WHERE p.determination=? AND (? IS NULL OR p.standard=?)
-        AND NOT EXISTS (SELECT 1 FROM consequence_parts s WHERE s.supersedes = p.bundle_id) ORDER BY p.bundle_id`,
-      determination,
-      standard,
-      standard
-    );
-  }
-  /** R7: every live part of the determination, totals only within one state, unit and currency, and the parts that
-   *  are undetermined or unproven, in front of the member. */
-  consequencesOf({ determination = null, standard = null, viewer = null } = {}) {
-    const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer))
-      return refuse4("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.", { determination });
-    const rows = this.#liveParts(d.id, str10(standard)).filter((r) => this.#seesProject(r.project, viewer));
-    const parts = rows.map((r) => this.#answer(r, viewer));
-    const groups = /* @__PURE__ */ new Map();
-    for (const p of parts) {
-      if (p.state === "undetermined" || !p.measure) continue;
-      const key = `${p.state}\0${p.measure.unit}\0${p.measure.currency ?? ""}`;
-      if (!groups.has(key)) groups.set(key, { state: p.state, unit: p.measure.unit, currency: p.measure.currency ?? null, items: [] });
-      groups.get(key).items.push(p);
-    }
-    const totals = [...groups.values()].map((g) => ({
-      state: g.state,
-      unit: g.unit,
-      currency: g.currency,
-      ...addMeasures(g.items.map((p) => p.measure)),
-      parts: g.items.map((p) => p.id),
-      says: `${g.state} parts only, in ${g.unit}${g.currency ? ` (${g.currency})` : ""}: never added to parts in another state, unit or currency`
-    }));
-    return {
-      ok: true,
-      determination: d.id,
-      standard: str10(standard),
-      parts,
-      totals,
-      undetermined: parts.filter((p) => p.state === "undetermined").map((p) => p.id),
-      unproven: parts.filter((p) => p.causation.state === "unproven").map((p) => p.id),
-      says: parts.length ? "each part is what it is: computed, assessed or undetermined; nothing here is composed into one figure, and nothing ranks it" : "no consequence recorded"
-    };
-  }
-  /* ===================================================================== *
-   * R9: ADDRESSED
-   * ===================================================================== */
-  /** R9: a member records a part addressed or not, with evidence and a reason. */
-  addressedRecord({ id = null, state = null, evidence = null, reason = null, author = null, viewer = null } = {}) {
-    if (machine2(author))
-      return refuse4("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with evidence; a machine never records it. Nothing was written.");
-    const who2 = viewer ?? str10(author);
-    const r = this.#part(id, who2);
-    if (!r) return refuse4("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist. Nothing was written.", { id });
-    const next = this.#successor(r.bundle_id);
-    if (next) return refuse4("ALREADY_SUPERSEDED", `${r.bundle_id} has been revised by ${next}; record it on that one. Nothing was written.`, { id: r.bundle_id, superseded_by: next });
-    if (r.project) {
-      const denied = this.membership.projectAuthority(r.project, str10(author), "joined", "addressedRecord");
-      if (denied) return refuse4("NOT_A_PARTICIPANT", `recording whether a consequence is addressed is work inside ${r.project}, and ${str10(author)} has not joined it. Nothing was written.`, { project: r.project });
-    }
-    if (!ADDRESSED_STATES.includes(state))
-      return refuse4(
-        "ADDRESSED_UNKNOWN_STATE",
-        `a part is recorded ${ADDRESSED_STATES.join(" or ")}. Nothing was written.`,
-        { state: state ?? null }
-      );
-    if (!str10(reason)) return refuse4("NO_REASON", "the record says why. Nothing was written.");
-    if (reason.trim().length > REASON_MAX3)
-      return refuse4("BAD_REASON", `a reason is at most ${REASON_MAX3} characters. Nothing was written.`);
-    const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
-    if (state === "addressed" && !ev.length)
-      return refuse4("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content or findings in the record. Partial redress does not end an escalation. Nothing was written.");
-    const unknown = ev.filter((x) => !this.#resolvesEvidence(x, who2));
-    if (unknown.length) return refuse4("NO_SUCH_EVIDENCE", "evidence is content or findings this record holds and you may see. Nothing was written.", { unknown: unknown.map((x) => typeof x === "string" ? x : null) });
-    const at14 = this.#when();
-    this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at)
-      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str10(author), at14));
-    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str10(author), at: at14 };
-  }
-  /** R9: per part, and overall: `addressed` only when every live part is addressed; any undetermined part or unproven
-   *  causation makes it `undetermined` (what is not known cannot be addressed); otherwise any part not addressed, or
-   *  never assessed, makes it `not_addressed`. No live part is `undetermined`, "no consequence recorded" (K172). Read
-   *  for a superseded determination too (escalation R14). */
-  addressed({ determination = null, viewer = null } = {}) {
-    const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer))
-      return refuse4("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.", { determination });
-    const parts = this.#liveParts(d.id).filter((r) => this.#seesProject(r.project, viewer)).map((r) => {
-      const a = this.#addressedOf(r.bundle_id);
-      return {
-        id: r.bundle_id,
-        standard: r.standard,
-        part_state: r.state,
-        causation: r.causation_state,
-        addressed: a ? a.state : "never_assessed"
-      };
-    });
-    if (!parts.length)
-      return { ok: true, determination: d.id, state: "undetermined", parts, why: "no consequence recorded" };
-    const open = parts.filter((p) => p.part_state === "undetermined" || p.causation === "unproven");
-    if (open.length)
-      return {
-        ok: true,
-        determination: d.id,
-        state: "undetermined",
-        parts,
-        why: `${open.map((p) => p.id).join(", ")} ${open.length === 1 ? "is" : "are"} undetermined or unproven, so whether the consequences are addressed is not known`
-      };
-    const not = parts.filter((p) => p.addressed !== "addressed");
-    if (not.length)
-      return {
-        ok: true,
-        determination: d.id,
-        state: "not_addressed",
-        parts,
-        why: `${not.map((p) => p.id).join(", ")} ${not.length === 1 ? "is" : "are"} not addressed or never assessed; partial redress does not end an escalation`
-      };
-    return { ok: true, determination: d.id, state: "addressed", parts, why: "every live part is recorded addressed, with evidence" };
-  }
-};
-function titleOf3(p) {
-  return `${p.affected.kind}: ${p.affected.description}`.replace(/\s+/g, " ").slice(0, 110);
-}
-function partDoc(id, p) {
-  const { causation, ...rest } = p;
-  const body = { ...rest, causation: { state: causation.state, inquiry: causation.inquiry } };
-  return [
-    "---",
-    `id: ${id}`,
-    "object_type: consequence",
-    "schema: consequence@1",
-    `title: ${q4(titleOf3(p))}`,
-    "current_state: recorded",
-    "prior_state: null",
-    `created: ${q4(p.at)}`,
-    `last_updated: ${q4(p.at)}`,
-    `determination: ${q4(p.determination)}`,
-    `standard: ${q4(p.standard)}`,
-    `part_state: ${p.state}`,
-    `causation: ${q4(causation.inquiry)}`,
-    `supersedes: ${q4(p.supersedes)}`,
-    `author: ${q4(p.author)}`,
-    `machine_work: ${p.machine ? "true" : "false"}`,
-    "produced_by:",
-    `  mode: ${p.machine ? "agent" : "human"}`,
-    "  capability_tier: session",
-    "references: []",
-    "state_history: []",
-    "annotations_open: 0",
-    "reeval_pending:",
-    "  flag: false",
-    "  since: null",
-    "  source: null",
-    "visuals: []",
-    "---",
-    "",
-    "## Part",
-    "",
-    "```json",
-    JSON.stringify(body, null, 2),
-    "```",
-    "",
-    ...p.reason ? ["## Why It Was Revised", "", p.reason, ""] : [],
-    "## Session Log",
-    "",
-    `### Session ${p.at} | Recorded | ${p.author || "machine"}`,
-    `Changes: consequence part recorded${p.supersedes ? `, superseding ${p.supersedes}` : ""}.`,
-    ""
-  ].join("\n");
-}
-var instances26 = /* @__PURE__ */ new WeakMap();
-function consequencesModule(host, deps) {
-  let c = instances26.get(host);
-  if (!c) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    const membership = d.membership || membershipOf(host, { record });
-    const promotion = d.promotion || promotionOf(host, { record, membership });
-    c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances26.set(host, c);
-    c.migrate();
-    record.declarePurge("consequences", CONSEQUENCES_TABLES);
-  }
-  return c;
-}
-
-// src/filings/schema.mjs
-var FILINGS_SCHEMA = `
--- R5: A DRAFT, prepared from the record and stored apart from the action. One
--- row per preparation (preparing again is a new row). governing is the tier
--- answer as it read (the kind's, the action's, which governs); blanks and
--- unfilled the filled and unfilled blanks; basis what the draft read, so R6
--- can say what changed since (tier, counterparty, determination, laws).
-CREATE TABLE IF NOT EXISTS filing_drafts (
-  filing_id     TEXT PRIMARY KEY,
-  action_id     TEXT NOT NULL,
-  kind          TEXT NOT NULL,
-  tier          INTEGER NOT NULL,
-  governing     TEXT NOT NULL,
-  text          TEXT NOT NULL,
-  blanks        TEXT NOT NULL,
-  unfilled      TEXT NOT NULL,
-  advisory      TEXT,
-  venue         TEXT,
-  preparer      TEXT NOT NULL,
-  prepared_at   TEXT NOT NULL,
-  basis         TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS filing_drafts_action ON filing_drafts (action_id, filing_id);
--- R6: A MEMBER'S APPROVAL, at most one per draft (the key). text is the
--- approved text, the member's (the draft's or an edited one); sha its SHA-256.
-CREATE TABLE IF NOT EXISTS filing_approvals (
-  filing_id     TEXT PRIMARY KEY,
-  action_id     TEXT NOT NULL,
-  text          TEXT NOT NULL,
-  sha           TEXT NOT NULL,
-  approved_by   TEXT NOT NULL,
-  at            TEXT NOT NULL
-);
--- R7: THE SENDING A MEMBER RECORDED, at most one per draft: the action's
--- correspondence entry (ord) it is, so the entry and the draft name each other.
-CREATE TABLE IF NOT EXISTS filing_sendings (
-  filing_id     TEXT PRIMARY KEY,
-  action_id     TEXT NOT NULL,
-  ord           INTEGER,
-  sent_on       TEXT NOT NULL,
-  medium        TEXT,
-  artifact_sha  TEXT,
-  account       TEXT,
-  recorded_by   TEXT NOT NULL,
-  recorded_at   TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS filing_sendings_entry ON filing_sendings (action_id, ord);
--- R8\u2013R12: A COUNSEL PACKET, one id per action, one row per version. sections
--- holds the six sections as assembled; basis what they drew on (determination,
--- each finding's edition, each standard), so R12 can flag a later change
--- without changing the version.
-CREATE TABLE IF NOT EXISTS counsel_packets (
-  packet_id     TEXT NOT NULL,
-  version       INTEGER NOT NULL,
-  action_id     TEXT NOT NULL,
-  counsel       TEXT NOT NULL,
-  author        TEXT NOT NULL,
-  at            TEXT NOT NULL,
-  sections      TEXT NOT NULL,
-  basis         TEXT NOT NULL,
-  PRIMARY KEY (packet_id, version)
-);
-CREATE INDEX IF NOT EXISTS counsel_packets_action ON counsel_packets (action_id, packet_id, version);
--- R11: WHO EXPORTED WHICH VERSION, when, for which counsel, and the digest of
--- the bytes handed over.
-CREATE TABLE IF NOT EXISTS counsel_packet_exports (
-  export_id     INTEGER PRIMARY KEY AUTOINCREMENT,
-  packet_id     TEXT NOT NULL,
-  version       INTEGER NOT NULL,
-  action_id     TEXT NOT NULL,
-  author        TEXT NOT NULL,
-  at            TEXT NOT NULL,
-  counsel       TEXT NOT NULL,
-  sha           TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS counsel_packet_exports_packet ON counsel_packet_exports (packet_id, version);
--- R14: A CANDIDATE THEORY AND REMEDY, stored apart and labelled; never the
--- group's position.
-CREATE TABLE IF NOT EXISTS theory_proposals (
-  theory_id     TEXT PRIMARY KEY,
-  action_id     TEXT NOT NULL,
-  packet_id     TEXT,
-  theory        TEXT NOT NULL,
-  remedy        TEXT,
-  standards     TEXT NOT NULL,
-  why           TEXT NOT NULL,
-  proposer      TEXT NOT NULL,
-  at            TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS theory_proposals_action ON theory_proposals (action_id, theory_id);
-`;
-var FILINGS_TABLES = Object.freeze([
-  { name: "filing_drafts", keys: ["action_id"] },
-  { name: "filing_approvals", keys: ["action_id"] },
-  { name: "filing_sendings", keys: ["action_id"] },
-  { name: "counsel_packets", keys: ["action_id"] },
-  { name: "counsel_packet_exports", keys: ["action_id"] },
-  { name: "theory_proposals", keys: ["action_id"] }
-]);
-function migrateFilings(sql) {
-  const bare2 = FILINGS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-}
-
-// src/filings/checks.mjs
-var at10 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
-var FILINGS_CHECKS = Object.freeze({
-  FILING_NO_PREPARER: {
-    check: "C-115.1",
-    where: at10("filingPrepare", "is-filing-prepare"),
-    translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it."
-  },
-  NO_SUCH_ACTION: {
-    check: "C-115.2",
-    where: at10("#noAction", "is-no-such-action"),
-    translation: "There is no action by that id that you can read here. An action you may not see answers exactly as one that does not exist."
-  },
-  ACTION_CLOSED: {
-    check: "C-115.3",
-    where: at10("filingPrepare", "is-filing-prepare"),
-    translation: "The action is resolved or abandoned, so nothing is prepared for it."
-  },
-  FILING_TIER_UNDETERMINED: {
-    check: "C-115.4",
-    where: at10("filingPrepare", "is-filing-prepare"),
-    translation: "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first."
-  },
-  TIER3_COUNSEL_PACKET: {
-    check: "C-115.5",
-    where: at10("filingPrepare", "is-filing-prepare"),
-    translation: "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead."
-  },
-  KIND_NO_TEMPLATE: {
-    check: "C-115.6",
-    where: at10("filingPrepare", "is-filing-prepare"),
-    translation: "The jurisdiction profile holds no template for this kind of action (or its profiles disagree on one), so there is nothing to pre-fill."
-  },
-  MACHINE_CANNOT_APPROVE: {
-    check: "C-115.7",
-    where: at10("filingApprove", "is-filing-approve"),
-    translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them."
-  },
-  NO_SUCH_FILING: {
-    check: "C-115.8",
-    where: at10("#noFiling", "is-no-such-filing"),
-    translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist."
-  },
-  ALREADY_APPROVED: {
-    check: "C-115.9",
-    where: at10("filingApprove", "is-filing-approve"),
-    translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text."
-  },
-  FILING_STALE: {
-    check: "C-115.10",
-    where: at10("filingApprove", "is-filing-approve"),
-    translation: "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now."
-  },
-  STILL_UNFILLED: {
-    check: "C-115.11",
-    where: at10("filingApprove", "is-filing-approve"),
-    translation: "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved."
-  },
-  TEXT_UNWRITABLE: {
-    check: "C-115.12",
-    where: at10("filingApprove", "is-filing-approve"),
-    translation: "The text is empty, too long, or not readable as text, so it cannot be recorded as approved."
-  },
-  MACHINE_CANNOT_FILE: {
-    check: "C-115.13",
-    where: at10("filingRecordSent", "is-filing-sent"),
-    translation: "Only a named member can record that a filing was sent. The instance sends nothing itself."
-  },
-  NOT_APPROVED: {
-    check: "C-115.14",
-    where: at10("filingRecordSent", "is-filing-sent"),
-    translation: "A member approves the draft before it is recorded as sent."
-  },
-  ALREADY_SENT: {
-    check: "C-115.15",
-    where: at10("filingRecordSent", "is-filing-sent"),
-    translation: "This draft is already recorded as sent, and that record stands."
-  },
-  MACHINE_CANNOT_NAME_COUNSEL: {
-    check: "C-115.16",
-    where: at10("counselPacket", "is-counsel-packet"),
-    translation: "Only a named member can name the group's counsel and assemble a packet for them."
-  },
-  NOT_TIER3: {
-    check: "C-115.17",
-    where: at10("counselPacket", "is-counsel-packet"),
-    translation: "A counsel packet is assembled only for an action whose governing tier is 3. A Tier 1 or 2 action is prepared as a filing."
-  },
-  NO_COUNSEL: {
-    check: "C-115.18",
-    where: at10("counselPacket", "is-counsel-packet"),
-    translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional."
-  },
-  NO_DETERMINATION: {
-    check: "C-115.19",
-    where: at10("counselPacket", "is-counsel-packet"),
-    translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel."
-  },
-  NO_SUCH_PACKET: {
-    check: "C-115.20",
-    where: at10("#noPacket", "is-no-such-packet"),
-    translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist."
-  },
-  MACHINE_CANNOT_EXPORT: {
-    check: "C-115.21",
-    where: at10("counselPacketExport", "is-packet-export"),
-    translation: "Only a named member can hand a counsel packet to counsel."
-  },
-  NO_THEORY: {
-    check: "C-115.22",
-    where: at10("theoryPropose", "is-theory-propose"),
-    translation: "State the candidate theory, and any remedy, in words that are not too long."
-  },
-  THEORY_NO_STANDARDS: {
-    check: "C-115.23",
-    where: at10("theoryPropose", "is-theory-propose"),
-    translation: "A candidate theory names the standards it rests on."
-  },
-  THEORY_STANDARD_UNREADABLE: {
-    check: "C-115.24",
-    where: at10("theoryPropose", "is-theory-propose"),
-    translation: "The standards the theory names cannot be read here, so the proposal is not recorded."
-  },
-  THEORY_WHY_REFUSED: {
-    check: "C-115.25",
-    where: at10("theoryPropose", "is-theory-propose"),
-    translation: "Say why the theory is proposed, in at most 1,000 characters."
-  },
-  DETERMINATION_UNREADABLE: {
-    check: "C-115.26",
-    where: at10("availableActions", "is-available-actions"),
-    translation: "No determination can be read here, so the actions available against its offices cannot be listed."
-  },
-  THEORY_NO_PROPOSER: {
-    check: "C-115.27",
-    where: at10("theoryPropose", "is-theory-propose"),
-    translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
-  }
-});
-function rowOf6(code) {
-  return Object.prototype.hasOwnProperty.call(FILINGS_CHECKS, code) ? FILINGS_CHECKS[code] : null;
-}
-
-// src/filings/dates.mjs
-var DATE_RE5 = /^(\d{4})-(\d{2})-(\d{2})$/;
-var COUNTED_FROM = "counted from the day after the start event";
-function realDate(v) {
-  const m = DATE_RE5.exec(String(v ?? ""));
-  if (!m) return null;
-  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
-  return d.toISOString().slice(0, 10) === m[0] ? m[0] : null;
-}
-var addDays = (iso3, n) => new Date(Date.parse(`${iso3}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
-function deadlineDate({ start = null, days = null, count = null, holidays = null } = {}) {
-  const from = realDate(start);
-  if (!from) return { state: "undetermined", why: "no start event is recorded, so no date is computed from it" };
-  if (!Number.isInteger(days) || days < 0)
-    return { state: "undetermined", why: "the rule states no whole number of days (the profiles may disagree on it)" };
-  if (count === "calendar")
-    return { state: "determined", date: addDays(from, days), counted: `${days} calendar days, ${COUNTED_FROM}` };
-  if (count !== "business")
-    return { state: "undetermined", why: "the rule states no count (calendar or business days), so no date is computed" };
-  const years = /* @__PURE__ */ new Map();
-  for (const h of Array.isArray(holidays) ? holidays : [])
-    if (h && Number.isInteger(Number(h.year)))
-      years.set(Number(h.year), new Set((Array.isArray(h.days) ? h.days : []).map((d) => d && d.date)));
-  let day = from, n = 0;
-  for (let guard = 0; n < days; guard++) {
-    if (guard > 3700) return { state: "undetermined", why: "the count runs past ten years" };
-    day = addDays(day, 1);
-    const y = Number(day.slice(0, 4));
-    if (!years.has(y))
-      return {
-        state: "undetermined",
-        why: `the business-day count reaches into ${y}, a year the profile's holiday calendar does not list (or withholds, the active profiles disagreeing), so it is not counted`
-      };
-    const wd = (/* @__PURE__ */ new Date(`${day}T00:00:00Z`)).getUTCDay();
-    if (wd !== 0 && wd !== 6 && !years.get(y).has(day)) n++;
-  }
-  return {
-    state: "determined",
-    date: day,
-    counted: `${days} business days on the profile's holiday calendar, ${COUNTED_FROM}`
-  };
-}
-
-// src/filings/index.mjs
-var FILING_BLANKS = Object.freeze({
-  counterparty_role: "the official role of the office the action is addressed to (the action's counterparty)",
-  counterparty_body: "the body of that office",
-  act: "what the government did, as the action's determination states it",
-  act_date: "when it did it (a date, or a period from and to)",
-  standards: "the citations of the standards the determination names",
-  findings: "each finding the determination rests on, with its published case edition",
-  governing_laws: "the governing laws a member stated for the action",
-  law: "the law a records request is made under, as the action states it",
-  clock: "the action's clock entries, each with its basis",
-  venue: "where the kind is filed (the profile's venue name)",
-  venue_how: "by what means it is filed (the profile's venue means)",
-  group: "the producing group",
-  date: "the date the draft was prepared"
-});
-var unfilledMarker = (name) => `[UNFILLED: ${name}]`;
-var UNFILLED_RE = /\[UNFILLED: [^\]\n]*\]/;
-var BLANK_RE = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g;
-var FILING_TEXT_MAX = 65536;
-var THEORY_WHY_MAX = 1e3;
-var THEORY_TEXT_MAX = 2e3;
-var COUNSEL_FIELD_MAX = 200;
-var FILINGS_FOR_MAX = 200;
-var counselMarking = (counsel) => `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`;
-var COUNSEL_SENTENCE = "Such an action requires competent counsel: no template is offered for it, and the group names counsel to evaluate it.";
-var TIER_WORDS = Object.freeze({
-  1: "Tier 1: a member may prepare and file it from the record's template.",
-  2: "Tier 2: a member may prepare it from the record's template; legal review is recommended before filing.",
-  3: "Tier 3: requires competent counsel; no template is offered, and a counsel packet is prepared for counsel the group names.",
-  undetermined: "The risk tier is undetermined: neither the profile nor a member has stated it."
-});
-var CLOSED = Object.freeze(["resolved", "abandoned"]);
-var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
-var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
-var str11 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var json2 = (v) => JSON.stringify(v ?? null);
-var parse2 = (s) => {
-  try {
-    return JSON.parse(s);
-  } catch {
-    return null;
-  }
-};
-var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var utf82 = (s) => new TextEncoder().encode(s).length;
-var WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
-var withRow3 = (r) => {
-  const row2 = r && r.ok === false && !r.check ? rowOf6(r.reason) : null;
-  return row2 ? { ...r, code: r.reason, check: row2.check, translation: row2.translation } : r;
-};
-var SERVICES = Object.freeze([
-  "filingPrepare",
-  "filingApprove",
-  "filingRecordSent",
-  "counselPacket",
-  "counselPacketRead",
-  "counselPacketExport",
-  "filingsFor",
-  "theoryPropose",
-  "availableActions"
-]);
-var byDayThenSource = (a, b) => a.day < b.day ? -1 : a.day > b.day ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : 0;
-var Filings = class _Filings {
-  #deps;
-  constructor({
-    storage,
-    record,
-    host = null,
-    publication = null,
-    provenance = null,
-    content = null,
-    actions = null,
-    conformance = null,
-    standards = null,
-    consequences = null,
-    producingGroup = null,
-    profiles = null,
-    now = null
-  } = {}) {
-    this.sql = storage.sql;
-    this.record = record;
-    this.#deps = { host, publication, provenance, content, actions, conformance, standards, consequences };
-    this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
-    this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
-    this.now = typeof now === "function" ? now : () => stampInstant("second");
-    for (const m of SERVICES) {
-      const fn = this[m].bind(this);
-      this[m] = (...a) => withRow3(fn(...a));
-    }
-  }
-  /* The earlier modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
-  get publication() {
-    return this.#deps.publication ||= publicationOf(this.#deps.host);
-  }
-  get provenance() {
-    return this.#deps.provenance ||= provenanceOf(this.#deps.host);
-  }
-  get content() {
-    return this.#deps.content ||= contentOf(this.#deps.host);
-  }
-  /* The layer-9 modules, each its own factory on the same host unless given (K253); with no host, absent, and every
-     service that needs one refuses (K248). */
-  get standards() {
-    return this.#deps.standards ||= this.#deps.host ? standardsOf(this.#deps.host) : null;
-  }
-  get conformance() {
-    return this.#deps.conformance ||= this.#deps.host ? conformanceOf(this.#deps.host) : null;
-  }
-  get consequences() {
-    return this.#deps.consequences ||= this.#deps.host ? consequencesModule(this.#deps.host) : null;
-  }
-  get actions() {
-    return this.#deps.actions ||= this.#deps.host ? actionsOf(this.#deps.host) : null;
-  }
-  migrate() {
-    migrateFilings(this.sql);
-  }
-  #rows(q6, ...a) {
-    return [...this.sql.exec(q6, ...a)];
-  }
-  #one(q6, ...a) {
-    for (const r of this.sql.exec(q6, ...a)) return r;
-    return null;
-  }
-  #when() {
-    const w = this.now();
-    return typeof w === "string" && w ? w : stampInstant("second");
-  }
-  #call(fn) {
-    try {
-      return fn();
-    } catch {
-      return null;
-    }
-  }
-  /* ---------------------------------------------------------------- the reads of the modules it uses */
-  /* R20: the active profiles' combined view (record-core R26, jurisdictions R12–R16), or none, with why. */
-  #view() {
-    const ids = this.#call(() => this.profiles());
-    if (!Array.isArray(ids) || !ids.length)
-      return { view: null, conflicts: [], why: "no jurisdiction profile is active on this instance" };
-    const c = combine(ids);
-    if (!c || !c.ok) return { view: null, conflicts: [], why: "the active jurisdiction profiles do not combine" };
-    return { view: c.view, conflicts: c.conflicts || [], why: null };
-  }
-  /* An action the viewer may see, as actions' read answers it (its R29), or null: absent, invisible and not an action
-     are one answer (R1, R19). */
-  #action(id, viewer) {
-    const target = str11(id);
-    if (!target || !this.actions || typeof this.actions.actionRead !== "function") return null;
-    const a = this.#call(() => this.actions.actionRead({ id: target, viewer }));
-    if (!a || a.ok === false) return null;
-    const cp = isObj13(a.counterparty) ? a.counterparty : null;
-    return {
-      id: str11(a.id) || target,
-      kind: str11(a.kind),
-      risk_tier: [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined",
-      current_state: str11(a.current_state),
-      counterparty: cp,
-      clock: Array.isArray(a.clock) ? a.clock.filter(isObj13) : [],
-      legs: Array.isArray(a.legs) ? a.legs.filter(isObj13) : [],
-      correspondence: Array.isArray(a.correspondence) ? a.correspondence.filter(isObj13) : Array.isArray(a.ledger) ? a.ledger.filter(isObj13) : [],
-      state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj13) : null,
-      governing_laws: isObj13(a.governing_laws) ? a.governing_laws : null,
-      law: str11(a.law)
-    };
-  }
-  /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
-     module answers actions' read (K248: refused, never passed). */
-  #noAction(id) {
-    return {
-      ok: false,
-      reason: "NO_SUCH_ACTION",
-      action: str11(id),
-      detail: this.actions && typeof this.actions.actionRead === "function" ? "no action by that id is readable here; one you may not see answers the same" : "no module answers an action's read here, so no action is readable"
-    };
-  }
-  /* R6, R7, R19: the one answer for a draft that is absent or whose action the viewer may not see. */
-  #noFiling(id) {
-    return {
-      ok: false,
-      reason: "NO_SUCH_FILING",
-      filing: str11(id),
-      detail: "no draft by that id is readable here; one you may not see answers the same"
-    };
-  }
-  /* R11, R14, R19: the one answer for a packet (or version) that is absent or whose action the viewer may not see. */
-  #noPacket(id) {
-    return {
-      ok: false,
-      reason: "NO_SUCH_PACKET",
-      id: str11(id),
-      detail: "no counsel packet by that id and version is readable here; one you may not see answers the same"
-    };
-  }
-  /* A determination as conformance's read answers it (its R9), or null. */
-  #det(id, viewer) {
-    if (!str11(id) || !this.conformance || typeof this.conformance.determinationRead !== "function") return null;
-    const d = this.#call(() => this.conformance.determinationRead({ id: str11(id), viewer }));
-    if (!d || d.ok === false) return null;
-    return {
-      id: str11(d.id) || str11(id),
-      project: str11(d.project),
-      act: isObj13(d.act) ? d.act : {},
-      /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
-      findings: (Array.isArray(d.findings) ? d.findings : []).map((f8) => isObj13(f8) ? { ...f8, id: str11(f8.finding) || str11(f8.id) } : f8),
-      standards: (Array.isArray(d.standards) ? d.standards : []).map((x) => isObj13(x) ? { ...x, id: str11(x.standard) || str11(x.id) } : x),
-      live: d.live !== false && !str11(d.superseded_by),
-      superseded_by: str11(d.superseded_by),
-      basis_changed: isObj13(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
-    };
-  }
-  /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
-   *  exists that the viewer may not see. */
-  #restsOn(action, viewer) {
-    let hidden = false;
-    for (const l of action.legs) {
-      if (l.kind && l.kind !== "rests_on") continue;
-      const d = this.#det(l.target, viewer);
-      if (d) {
-        if (d.live) return { det: d, hidden: false };
-        continue;
-      }
-      const m = this.#det(l.target, MACHINE_READER);
-      if (m && m.live) hidden = true;
-    }
-    return { det: null, hidden };
-  }
-  #standard(id, viewer) {
-    if (!str11(id) || !this.standards || typeof this.standards.standardRead !== "function") return null;
-    const s = this.#call(() => this.standards.standardRead({ id: str11(id), viewer }));
-    return s && s.ok !== false ? s : null;
-  }
-  /* standards R7, read as `{state, why}` whatever its spelling. */
-  #inForce(id, date) {
-    if (!date) return { state: "undetermined", why: "the act's date is not a single day, so which standard was in force is not asked" };
-    if (!this.standards || typeof this.standards.inForce !== "function")
-      return { state: "undetermined", why: "no module answers whether a standard was in force" };
-    const r = this.#call(() => this.standards.inForce(id, date));
-    if (typeof r === "string") return { state: r, why: null };
-    if (isObj13(r) && str11(r.state)) return { state: r.state, why: r.why ?? null };
-    return { state: "undetermined", why: "whether the standard was in force could not be read" };
-  }
-  /** The governing tier (Terms, R2; K102): the stricter of the kind's tier in the profile and the action's own;
-   *  `undetermined` when the action's is; the action's alone when the profile gives the kind none, stated so. */
-  governingTier(action, v = this.#view()) {
-    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === action.kind) : null;
-    const kindTier = entry && [1, 2, 3].includes(entry.tier) ? entry.tier : null;
-    const withheld = v.conflicts.some((c) => c.at === `action_kinds[${action.kind}].tier`);
-    const base = { action_tier: action.risk_tier, kind_tier: kindTier };
-    if (action.risk_tier === "undetermined")
-      return {
-        tier: "undetermined",
-        ...base,
-        says: "the action's risk tier is undetermined, and it is never read as 1: a member states it first"
-      };
-    if (kindTier === null)
-      return {
-        tier: action.risk_tier,
-        ...base,
-        says: `${withheld ? "the active profiles disagree on this kind's tier, so none is given" : v.view ? "the profile gives this kind no tier" : v.why}; the action's own tier alone governs`
-      };
-    const tier = Math.max(kindTier, action.risk_tier);
-    return { tier, ...base, says: `the stricter of the kind's tier in the profile (${kindTier}) and the action's (${action.risk_tier}) governs` };
-  }
-  /* ---------------------------------------------------------------- R1–R5: filingPrepare */
-  /* R3: every blank's value and source, or why it has none. `det` the determination (null), `hidden` whether one the
-     viewer may not see exists. */
-  #values(action, det, hidden, entry, viewer, when) {
-    const out = {};
-    const none = (why) => ({ why });
-    const cp = action.counterparty;
-    const cpNamed = cp && cp.state === "named";
-    const role = cpNamed ? str11(cp.role) || str11(cp.name) : null;
-    const cpWhy = !cp ? "the action states no counterparty" : cp.state === "undetermined" ? "the action's counterparty is undetermined" : "the action's counterparty names no such part";
-    out.counterparty_role = role ? { value: role, source: action.id } : none(cpWhy);
-    out.counterparty_body = cpNamed && str11(cp.body) ? { value: str11(cp.body), source: action.id } : none(cpWhy);
-    const detWhy = hidden ? "the determination the action rests on is not one you may see" : !this.conformance ? "no module answers determinations here, so the record's value cannot be read" : "the action rests on no live determination, so the record holds no value for it";
-    if (det) {
-      const act = det.act || {};
-      out.act = str11(act.description) ? { value: str11(act.description), source: det.id } : none("the determination states no act");
-      const period = isObj13(act.period) ? act.period : null;
-      out.act_date = str11(act.at) ? { value: str11(act.at), source: det.id } : period && (str11(period.from) || str11(period.to)) ? { value: `${str11(period.from) || "undetermined"} to ${str11(period.to) || "undetermined"}`, source: det.id } : none("the determination states no date for the act, so it is undetermined");
-      const cites = [], srcs = [];
-      let withheld = false;
-      for (const s of det.standards) {
-        const sid = str11(isObj13(s) ? s.id : s);
-        const r = sid ? this.#standard(sid, viewer) : null;
-        if (!r || !str11(r.cite)) {
-          withheld = true;
-          continue;
-        }
-        cites.push(str11(r.cite));
-        srcs.push(sid);
-      }
-      out.standards = withheld ? none("a standard the determination names is not one you may see") : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
-      const fs = det.findings.filter((f8) => isObj13(f8) && str11(f8.id));
-      out.findings = fs.length !== det.findings.length ? none("a finding the determination rests on is not one you may see") : fs.length ? {
-        value: fs.map((f8) => `${f8.id} (case ${f8.case ?? "undetermined"}, edition ${f8.edition ?? "undetermined"})`).join("; "),
-        source: fs.map((f8) => `${f8.id}@${f8.case ?? "?"}/${f8.edition ?? "?"}`).join(", ")
-      } : none("the determination names no finding");
-    } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
-    const gl = action.governing_laws;
-    const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l) => str11(isObj13(l) ? l.citation : l)).filter(Boolean) : [];
-    out.governing_laws = laws.length ? { value: laws.join("; "), source: action.id } : none("no member has stated the action's governing laws, so they are undetermined");
-    out.law = action.law ? { value: action.law, source: action.id } : none("the action states no law it is made under, so it is undetermined");
-    const clock = action.clock.filter((c) => str11(c.date) && str11(c.basis));
-    out.clock = clock.length ? { value: clock.map((c) => `${c.date}: ${str11(c.text) || str11(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action.id } : none("the action holds no clock entry with a date and a basis");
-    const venue = entry && isObj13(entry.venue) ? entry.venue : null;
-    const vsrc = venue ? `profile:${venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` : null;
-    out.venue = venue && str11(venue.name) ? { value: str11(venue.name), source: vsrc } : none("the profile gives this kind no venue (or its profiles disagree), so it is undetermined");
-    out.venue_how = venue && str11(venue.how) ? { value: str11(venue.how), source: vsrc } : none("the profile gives no means of filing");
-    const g = str11(this.#call(() => this.producingGroup()));
-    out.group = g ? { value: g, source: "setting:producing_group" } : none("no producing group is recorded for this instance");
-    out.date = { value: when.slice(0, 10), source: `clock:${when}` };
-    return out;
-  }
-  /** R1–R5: a draft pre-filled from the record into the profile's template for the action's kind. */
-  filingPrepare({ action = null, preparer = null, viewer = null } = {}) {
-    const who2 = str11(preparer);
-    if (!who2) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
-    const a = this.#action(action, viewer);
-    if (!a) return this.#noAction(action);
-    if (CLOSED.includes(a.current_state))
-      return {
-        ok: false,
-        reason: "ACTION_CLOSED",
-        action: a.id,
-        state: a.current_state,
-        detail: `the action is ${a.current_state}; nothing is prepared for a closed action`
-      };
-    const v = this.#view();
-    const gov = this.governingTier(a, v);
-    if (gov.tier === "undetermined")
-      return {
-        ok: false,
-        reason: "FILING_TIER_UNDETERMINED",
-        action: a.id,
-        governing: gov,
-        detail: "the action's risk tier is undetermined and is never read as 1: a member states it first (op=actionrisktier)"
-      };
-    if (gov.tier === 3)
-      return {
-        ok: false,
-        reason: "TIER3_COUNSEL_PACKET",
-        action: a.id,
-        governing: gov,
-        detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet"
-      };
-    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) : null;
-    const conflicted = v.conflicts.some((c) => c.at === `action_kinds[${a.kind}].template`);
-    if (!entry || typeof entry.template !== "string" || !entry.template.trim())
-      return {
-        ok: false,
-        reason: "KIND_NO_TEMPLATE",
-        action: a.id,
-        kind: a.kind,
-        detail: conflicted ? "the active profiles give different templates for this kind, so none is given" : !v.view ? `${v.why}, so no template is held for this kind` : "the profile holds no template for this kind"
-      };
-    const when = this.#when();
-    const { det, hidden } = this.#restsOn(a, viewer);
-    const values = this.#values(a, det, hidden, entry, viewer, when);
-    const names = [...new Set([...entry.template.matchAll(BLANK_RE)].map((m) => m[1]))];
-    const blanks = [], unfilled = [];
-    for (const n of names) {
-      const val = Object.prototype.hasOwnProperty.call(FILING_BLANKS, n) ? values[n] : { why: "filings fills no blank by this name, so the record holds no value for it" };
-      if (val && "value" in val) blanks.push({ name: n, value: val.value, source: val.source });
-      else unfilled.push({ name: n, why: val.why });
-    }
-    const filled = new Map(blanks.map((b) => [b.name, b.value]));
-    let text3 = entry.template.replace(BLANK_RE, (_, n) => filled.has(n) ? filled.get(n) : unfilledMarker(n));
-    let advisory = null;
-    if (gov.tier === 2) {
-      advisory = str11(entry.advisory);
-      if (advisory) text3 = `${advisory}
-
-${text3}`;
-      else {
-        text3 = `${unfilledMarker("advisory")}
-
-${text3}`;
-        unfilled.unshift({ name: "advisory", why: "the profile gives no advisory note for this kind (or its profiles disagree), so it is undetermined; a member writes one in before the draft can be approved" });
-      }
-    }
-    const venue = isObj13(entry.venue) ? {
-      name: entry.venue.name ?? null,
-      how: entry.venue.how ?? null,
-      source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue`
-    } : { state: "undetermined", why: "the profile gives this kind no venue" };
-    const basis = this.#basisOf(a, det, gov);
-    const year = when.slice(0, 4);
-    return this.record.transact(() => {
-      const { id } = this.record.allocId("FIL", year);
-      this.sql.exec(
-        `INSERT INTO filing_drafts (filing_id, action_id, kind, tier, governing, text, blanks, unfilled,
-                       advisory, venue, preparer, prepared_at, basis) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id,
-        a.id,
-        a.kind,
-        gov.tier,
-        json2(gov),
-        text3,
-        json2(blanks),
-        json2(unfilled),
-        advisory,
-        json2(venue),
-        who2,
-        when,
-        json2(basis)
-      );
-      return {
-        ok: true,
-        id,
-        action: a.id,
-        tier: gov.tier,
-        governing: gov,
-        text: text3,
-        blanks,
-        unfilled,
-        ...gov.tier === 2 ? { advisory } : {},
-        venue,
-        label: proposalLabel(who2, "filing_draft"),
-        prepared_by: who2,
-        at: when,
-        evidence: false,
-        says: DRAFT_SAYS
-      };
-    });
-  }
-  /* R6: what a draft read, so its staleness is stated by name. */
-  #basisOf(a, det, gov) {
-    return {
-      tier: gov.tier,
-      counterparty: a.counterparty ?? null,
-      determination: det ? det.id : null,
-      governing_laws: a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null
-    };
-  }
-  /* R6: what changed since the draft, by name; [] when nothing did. Read as the plane reads it, so a change the
-     approving member cannot see is still named. */
-  #staleness(draft) {
-    const was = parse2(draft.basis) || {};
-    const a = this.#action(draft.action_id, MACHINE_READER);
-    if (!a) return ["the action is no longer held"];
-    const changed = [];
-    const gov = this.governingTier(a);
-    if (gov.tier !== was.tier) changed.push(`the governing tier (was ${was.tier}, now ${gov.tier})`);
-    if (json2(a.counterparty ?? null) !== json2(was.counterparty ?? null)) changed.push("the counterparty");
-    const then = was.determination ? this.#det(was.determination, MACHINE_READER) : null;
-    const now = this.#restsOn(a, MACHINE_READER).det;
-    if (was.determination && (!then || !then.live))
-      changed.push(`the determination ${was.determination} was superseded${then && then.superseded_by ? ` by ${then.superseded_by}` : ""}`);
-    else if ((now ? now.id : null) !== (was.determination ?? null)) changed.push("the determination the action rests on");
-    const laws = a.governing_laws && a.governing_laws.state === "stated" ? a.governing_laws.laws ?? [] : null;
-    if (json2(laws) !== json2(was.governing_laws ?? null)) changed.push("the governing laws");
-    return changed;
-  }
-  /* A draft the viewer may see (through its action), or null (R19). */
-  #draft(id, viewer) {
-    const f8 = str11(id);
-    const d = f8 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f8) : null;
-    return d && this.#action(d.action_id, viewer) ? d : null;
-  }
-  /* ---------------------------------------------------------------- R6: filingApprove */
-  /** R6: a member approves the draft's text or an edited text, at most once; the approved text is the member's. */
-  filingApprove({ filing = null, text: text3 = void 0, author = null, viewer = null } = {}) {
-    const who2 = str11(author);
-    if (!who2 || isMachineIdentity(who2))
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_APPROVE",
-        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: a machine prepares, and a member approves` : "no member is named as the one approving"
-      };
-    const d = this.#draft(filing, viewer);
-    if (!d) return this.#noFiling(filing);
-    const held = this.#one(`SELECT approved_by, at FROM filing_approvals WHERE filing_id=?`, d.filing_id);
-    if (held) return {
-      ok: false,
-      reason: "ALREADY_APPROVED",
-      filing: d.filing_id,
-      approved_by: held.approved_by,
-      at: held.at,
-      detail: "a draft is approved at most once; prepare a new draft to approve another text"
-    };
-    const changed = this.#staleness(d);
-    if (changed.length)
-      return {
-        ok: false,
-        reason: "FILING_STALE",
-        filing: d.filing_id,
-        changed,
-        detail: `since the draft was prepared: ${changed.join("; ")} changed. Prepare it again.`
-      };
-    const body = text3 === void 0 || text3 === null ? d.text : text3;
-    if (typeof body === "string" && UNFILLED_RE.test(body))
-      return {
-        ok: false,
-        reason: "STILL_UNFILLED",
-        filing: d.filing_id,
-        unfilled: [...body.matchAll(/\[UNFILLED: ([^\]\n]*)\]/g)].map((m) => m[1]),
-        detail: "the text still holds a blank the record could not fill; a member writes it in first"
-      };
-    if (typeof body !== "string" || !body.trim() || WELL_FORMED.test(body) || utf82(body) > FILING_TEXT_MAX)
-      return {
-        ok: false,
-        reason: "TEXT_UNWRITABLE",
-        filing: d.filing_id,
-        max_bytes: FILING_TEXT_MAX,
-        detail: `the approved text must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes`
-      };
-    const at14 = this.#when();
-    const sha = sha256HexSync(body);
-    this.sql.exec(
-      `INSERT INTO filing_approvals (filing_id, action_id, text, sha, approved_by, at) VALUES (?,?,?,?,?,?)`,
-      d.filing_id,
-      d.action_id,
-      body,
-      sha,
-      who2,
-      at14
-    );
-    return {
-      ok: true,
-      filing: d.filing_id,
-      action: d.action_id,
-      approved_by: who2,
-      at: at14,
-      sha,
-      edited: body !== d.text,
-      says: "approved by the member named: the text is theirs. The instance transmits nothing; a member files it by the venue's own means and records that it was sent"
-    };
-  }
-  /* ---------------------------------------------------------------- R7: filingRecordSent */
-  /** R7: records the sending as one `sent` correspondence entry on the action (actions R15, R16), linked to the draft
-   *  both ways. It moves no action state and writes no clock entry: `proposed` carries what a member may choose. */
-  filingRecordSent({
-    filing = null,
-    at: at14 = null,
-    medium = null,
-    artifactSha = null,
-    account = null,
-    author = null,
-    viewer = null
-  } = {}) {
-    const who2 = str11(author);
-    if (!who2 || isMachineIdentity(who2))
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_FILE",
-        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: only a member files and records it` : "no member is named as the one who sent it"
-      };
-    const d = this.#draft(filing, viewer);
-    if (!d) return this.#noFiling(filing);
-    if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
-      return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before it is recorded as sent" };
-    const sent = this.#one(`SELECT ord, sent_on, recorded_by FROM filing_sendings WHERE filing_id=?`, d.filing_id);
-    if (sent) return {
-      ok: false,
-      reason: "ALREADY_SENT",
-      filing: d.filing_id,
-      ord: sent.ord,
-      at: sent.sent_on,
-      recorded_by: sent.recorded_by,
-      detail: "this draft is already recorded as sent"
-    };
-    if (!this.actions || typeof this.actions.actionCorrespond !== "function")
-      return this.#noAction(d.action_id);
-    const now = this.#when();
-    const out = this.record.transact(() => {
-      const c = this.actions.actionCorrespond({
-        target: d.action_id,
-        direction: "sent",
-        at: at14,
-        ...medium != null ? { medium } : {},
-        ...artifactSha != null ? { artifactSha } : {},
-        ...account != null ? { account } : {},
-        viewer,
-        author: who2
-      });
-      if (!c || c.ok === false) return c || this.#noAction(d.action_id);
-      const ord = Number.isInteger(Number(c.ord)) ? Number(c.ord) : null;
-      this.sql.exec(
-        `INSERT INTO filing_sendings (filing_id, action_id, ord, sent_on, medium, artifact_sha, account,
-                       recorded_by, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)`,
-        d.filing_id,
-        d.action_id,
-        ord,
-        String(at14 ?? ""),
-        medium,
-        artifactSha,
-        account,
-        who2,
-        now
-      );
-      return { ok: true, ord, entry: c };
-    });
-    if (!out || out.ok === false) return out;
-    return {
-      ok: true,
-      filing: d.filing_id,
-      action: d.action_id,
-      ord: out.ord,
-      recorded_by: who2,
-      at: now,
-      held_as: out.entry.held_as ?? (artifactSha ? "capture" : "testimony"),
-      proposed: this.#proposed(d, who2, viewer),
-      says: "recorded as sent by the member named. No action state moved and no clock entry was written: `proposed` is what a member may choose next"
-    };
-  }
-  /* R7: the next state a member may choose, and the clock entries actions offers for the kind's deadlines that start
-     at filing or receipt (its R32), each stored apart by actions, none written into the clock. */
-  #proposed(d, who2, viewer) {
-    const a = this.#action(d.action_id, viewer);
-    const state = a ? a.current_state : null;
-    const next = state === "planned" ? "active" : state === "active" ? "awaiting_response" : null;
-    const v = this.#view();
-    const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => a && r.applies_to === a.kind && (r.starts === "filed" || r.starts === "received")) : [];
-    const clocks = rules.map((r) => {
-      const p = this.actions && typeof this.actions.clockPropose === "function" ? this.#call(() => this.actions.clockPropose({ target: d.action_id, rule: r.rule, proposer: who2, viewer })) : null;
-      return {
-        rule: r.rule,
-        starts: r.starts,
-        citation: r.citation ?? null,
-        offered: p ?? { ok: false, reason: "UNAVAILABLE", detail: "no module offers a clock entry" }
-      };
-    });
-    return {
-      next_state: next ? { to: next, from: state, says: `a member may move the action from ${state} to ${next} (op=actionmove); nothing moved it` } : { to: null, from: state, says: "no next state follows from recording the sending; the action's state stays as a member left it" },
-      clocks,
-      clocks_says: clocks.length ? "clock entries offered for the kind's deadlines that start at filing or receipt; a member states one by a revision of the action" : "the profile gives this kind no deadline that starts at filing or receipt"
-    };
-  }
-  /* ---------------------------------------------------------------- R8–R12: the counsel packet */
-  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. */
-  #fact(f8, det) {
-    if (!isObj13(f8) || !str11(f8.id))
-      return { finding: null, withheld: "an object you may not see", source: det.id };
-    const source = `${f8.id}@${f8.case ?? "?"}/${f8.edition ?? "?"}`;
-    const text3 = f8.version_sha ? this.#call(() => this.record.textAtSha(f8.id, f8.version_sha)) : null;
-    const base = { finding: f8.id, case: f8.case ?? null, edition: f8.edition ?? null, version_sha: f8.version_sha ?? null, source };
-    if (typeof text3 !== "string")
-      return { ...base, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
-    let fm = null;
-    try {
-      fm = parseFrontmatter(text3).data;
-    } catch {
-      fm = null;
-    }
-    const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text3);
-    const conclusion = m && m[1].trim() ? m[1].trim() : null;
-    const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj13) : [];
-    return {
-      ...base,
-      claim: {
-        question: str11(fm && fm.title),
-        conclusion,
-        ...conclusion ? {} : { conclusion_why: "the published finding states no conclusion section" }
-      },
-      citations: legs.map((l) => ({
-        target: str11(l.target),
-        ...str11(l.content_id) ? { content_id: str11(l.content_id) } : {},
-        ...str11(l.role) ? { role: str11(l.role) } : {},
-        source
-      }))
-    };
-  }
-  /* R9's exhibits: each capture a fact or event cites, with its digest, locator, capture time and attestations. */
-  #exhibits(cites) {
-    const byCapture = /* @__PURE__ */ new Map();
-    for (const c of cites) {
-      let sha = str11(c.capture_sha);
-      if (!sha && str11(c.content_id)) {
-        const row2 = this.#call(() => this.content.contentRow(c.content_id));
-        sha = row2 ? str11(row2.capture_sha) : null;
-      }
-      if (!sha && str11(c.target)) sha = str11(this.#call(() => this.content.captureFor(c.target)));
-      if (!sha) continue;
-      if (!byCapture.has(sha)) byCapture.set(sha, []);
-      byCapture.get(sha).push(c.source);
-    }
-    return [...byCapture.entries()].sort(([a], [b]) => a < b ? -1 : 1).map(([sha, from]) => {
-      const reg = this.#one(`SELECT bundle_id, path, registered FROM register WHERE capture_sha=?`, sha);
-      const loc = this.#one(`SELECT address, retrieval_locator, first_retrieved FROM captured_locators WHERE capture_sha=?
-                              ORDER BY first_retrieved LIMIT 1`, sha);
-      const att = this.#call(() => this.provenance.attestationsOf(sha));
-      return {
-        sha256: sha,
-        cited_by: [...new Set(from)].sort(),
-        locator: loc ? loc.retrieval_locator || loc.address : reg ? `${reg.bundle_id}/${reg.path}` : null,
-        ...loc || reg ? {} : { locator_why: "the record holds no address or register row for this capture" },
-        captured_at: loc ? loc.first_retrieved : reg ? reg.registered : null,
-        home: reg ? reg.bundle_id : null,
-        attestations: att && att.ok ? { items: att.attestations, ...att.undetermined ? { undetermined: att.undetermined } : {}, note: att.note } : { items: [], undetermined: "the attestations could not be read" }
-      };
-    });
-  }
-  /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
-  #deadlines(v, a, det) {
-    const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => r.applies_to === "claim") : [];
-    const entries = a.correspondence.map((e, i) => ({ ...e, ord: Number.isInteger(e.ord) ? e.ord : i }));
-    const first = (dir) => entries.filter((e) => e.direction === dir && realDate(String(e.at ?? "").slice(0, 10))).sort((x, y) => String(x.at) < String(y.at) ? -1 : String(x.at) > String(y.at) ? 1 : x.ord - y.ord)[0] || null;
-    return rules.map((r) => {
-      let start;
-      const act = det ? det.act || {} : {};
-      if (r.starts === "act")
-        start = realDate(act.at) ? { event: "act", date: act.at, source: det.id } : { event: "act", state: "undetermined", why: det ? "the determination states the act over a period or not at all, so no single day starts the count" : "no live determination states the act" };
-      else if (r.starts === "received" || r.starts === "filed") {
-        const e = first(r.starts === "received" ? "received" : "sent");
-        start = e ? { event: r.starts, date: String(e.at).slice(0, 10), source: `${a.id}#${e.ord}` } : { event: r.starts, state: "undetermined", why: `the action's correspondence holds no ${r.starts === "received" ? "received" : "sent"} entry` };
-      } else start = {
-        event: r.starts ?? null,
-        state: "undetermined",
-        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds"
-      };
-      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, holidays: v.view.holidays });
-      return {
-        rule: r.rule,
-        days: r.days ?? null,
-        count: r.count ?? null,
-        starts: r.starts ?? null,
-        ...r.extension ? { extension: r.extension } : {},
-        citation: r.citation ?? null,
-        basis: r.basis ?? null,
-        profile: r.profile ?? null,
-        source: `profile:${r.profile}/deadlines/${r.rule}`,
-        start,
-        date: date.state === "determined" ? { ...date, start_source: start.source } : date
-      };
-    });
-  }
-  /* R9: the six sections and the consequences, each item naming its source. */
-  #assemble(a, det, viewer, marking) {
-    const v = this.#view();
-    const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det.findings.map((f8) => this.#fact(f8, det));
-    const events = [], undated = [];
-    const act = det.act || {};
-    const actDay = realDate(act.at) || (isObj13(act.period) ? realDate(act.period.from) : null);
-    const push = (day, e) => day ? events.push({ day, ...e }) : undated.push({ ...e, why: "the record states no date for it" });
-    push(actDay, {
-      event: `the act: ${str11(act.description) || "undescribed"}`,
-      source: det.id,
-      ...isObj13(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
-    });
-    for (const f8 of facts) {
-      if (!f8.finding) continue;
-      const r = f8.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f8.case, Number(f8.edition)) : null;
-      push(
-        r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
-        { event: `${f8.finding} published in case ${f8.case} edition ${f8.edition}`, source: f8.source }
-      );
-    }
-    if (a.state_history === null)
-      undated.push({ event: "the action's state history", source: a.id, why: "the action's read does not answer its state history" });
-    for (const [i, h] of (a.state_history || []).entries())
-      push(realDate(String(h.at ?? "").slice(0, 10)), {
-        event: `the action entered ${h.state ?? h.to ?? "an undetermined state"}`,
-        ...h.by ? { by: h.by } : {},
-        source: `${a.id}/state_history[${i}]`
-      });
-    for (const [i, e] of a.correspondence.entries()) {
-      const ord = Number.isInteger(e.ord) ? e.ord : i;
-      push(realDate(String(e.at ?? "").slice(0, 10)), {
-        event: `correspondence ${e.direction ?? "undetermined"}${str11(e.party) ? ` (${e.party})` : ""}`,
-        source: `${a.id}#${ord}`
-      });
-    }
-    for (const [i, c] of a.clock.entries())
-      push(realDate(c.date), {
-        event: `clock: ${str11(c.text) || str11(c.description) || "a deadline"} (${c.status ?? "undetermined"})`,
-        basis: c.basis ?? null,
-        source: `${a.id}/clock[${i}]`
-      });
-    events.sort(byDayThenSource);
-    const cites = [];
-    for (const f8 of facts) for (const c of f8.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f8.source });
-    for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str11(cid), source: det.id });
-    for (const [i, e] of a.correspondence.entries())
-      if (str11(e.artifact_sha)) cites.push({ capture_sha: str11(e.artifact_sha), source: `${a.id}#${Number.isInteger(e.ord) ? e.ord : i}` });
-    const standards = det.standards.map((s) => {
-      const sid = str11(isObj13(s) ? s.id : s);
-      const r = sid ? this.#standard(sid, viewer) : null;
-      if (!r) return { standard: null, withheld: "an object you may not see", source: det.id };
-      return {
-        standard: sid,
-        cite: r.cite ?? null,
-        kind: r.kind ?? null,
-        issuer: r.issuer ?? null,
-        text: Array.isArray(r.text) ? r.text : [],
-        outcome: isObj13(s) ? s.outcome ?? null : null,
-        in_force: this.#inForce(sid, realDate(act.at)),
-        source: sid
-      };
-    });
-    const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
-      theory_id: t.theory_id,
-      candidate: true,
-      theory: t.theory,
-      remedy: t.remedy,
-      standards: parse2(t.standards) || [],
-      why: t.why,
-      label: proposalLabel(t.proposer, "theory"),
-      at: t.at,
-      source: t.theory_id
-    }));
-    const cons = this.consequences && typeof this.consequences.consequencesOf === "function" ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
-    return {
-      facts: section("Facts", facts),
-      chronology: section(
-        "Chronology",
-        events.map(({ day, ...e }) => ({ date: day, ...e })),
-        { undated, order: "by date; events on the same day by source id" }
-      ),
-      exhibits: section("Exhibits", this.#exhibits(cites)),
-      standards: section("Standards", standards),
-      theories: section(
-        "Candidate theories and remedies",
-        theories,
-        { says: theories.length ? "each is a candidate for counsel to weigh, never the group's position or a conclusion" : "no candidate theory or remedy has been proposed for this action" }
-      ),
-      deadlines: section(
-        "Deadlines",
-        this.#deadlines(v, a, det),
-        { says: v.view ? `each date is computed only from a recorded start event (${COUNTED_FROM}), else undetermined with why` : `${v.why}, so no claim deadline is known` }
-      ),
-      consequences: section(
-        "Consequences of the breach",
-        cons && cons.ok !== false ? [{ recorded: cons, source: det.id }] : [],
-        { says: cons && cons.ok !== false ? "as recorded, each part in its own state; nothing summed across states" : "the consequences could not be read, so they are undetermined" }
-      )
-    };
-  }
-  /* R12: what a version drew on. */
-  #packetBasis(det) {
-    return {
-      determination: det.id,
-      project: det.project,
-      findings: det.findings.filter((f8) => isObj13(f8) && str11(f8.id)).map((f8) => ({ id: f8.id, case: f8.case ?? null, edition: f8.edition ?? null })),
-      standards: det.standards.map((s) => str11(isObj13(s) ? s.id : s)).filter(Boolean)
-    };
-  }
-  /** R12: each cause a version's basis changed since it was assembled, read now; nothing in the version changes. */
-  #basisChanged(basis) {
-    const causes = [];
-    const d = this.#det(basis.determination, MACHINE_READER);
-    if (!d || !d.live) causes.push({
-      cause: "determination_superseded",
-      determination: basis.determination,
-      ...d && d.superseded_by ? { by: d.superseded_by } : {}
-    });
-    else if (d.basis_changed) causes.push({
-      cause: "determination_flagged",
-      determination: basis.determination,
-      causes: d.basis_changed.causes ?? []
-    });
-    for (const f8 of basis.findings || []) {
-      const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f8.id, project: basis.project || null }));
-      const later = e && e.ok ? e.items.filter((i) => i.case === f8.case && Number(i.edition) > Number(f8.edition)) : [];
-      if (later.length) causes.push({
-        cause: "finding_later_edition",
-        finding: f8.id,
-        case: f8.case,
-        edition: f8.edition,
-        later: Math.max(...later.map((i) => Number(i.edition)))
-      });
-    }
-    for (const s of basis.standards || []) {
-      const r = this.#standard(s, MACHINE_READER);
-      if (r && str11(r.superseded_by)) causes.push({ cause: "standard_superseded", standard: s, by: str11(r.superseded_by) });
-    }
-    return causes;
-  }
-  #counsel(c) {
-    if (!isObj13(c)) return null;
-    const ok = (v) => typeof v === "string" && v.trim() && v.trim().length <= COUNSEL_FIELD_MAX && !/[\n\r]/.test(v);
-    if (!ok(c.name) || !ok(c.organisation)) return null;
-    if (c.contact != null && !ok(c.contact)) return null;
-    return { name: c.name.trim(), organisation: c.organisation.trim(), ...c.contact != null ? { contact: c.contact.trim() } : {} };
-  }
-  /** R8–R10, R12: a counsel packet for the counsel a member names; assembling again makes a new version. */
-  counselPacket({ action = null, counsel = null, author = null, viewer = null } = {}) {
-    const who2 = str11(author);
-    if (!who2 || isMachineIdentity(who2))
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_NAME_COUNSEL",
-        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: the group names its counsel` : "no member is named as the one naming counsel"
-      };
-    const a = this.#action(action, viewer);
-    if (!a) return this.#noAction(action);
-    const gov = this.governingTier(a);
-    if (gov.tier !== 3)
-      return {
-        ok: false,
-        reason: "NOT_TIER3",
-        action: a.id,
-        governing: gov,
-        detail: "a counsel packet is assembled only for a governing tier of 3"
-      };
-    const c = this.#counsel(counsel);
-    if (!c) return {
-      ok: false,
-      reason: "NO_COUNSEL",
-      max: COUNSEL_FIELD_MAX,
-      detail: `counsel is named by a name and an organisation (contact optional), each one line of at most ${COUNSEL_FIELD_MAX} characters`
-    };
-    const { det } = this.#restsOn(a, viewer);
-    if (!det) return {
-      ok: false,
-      reason: "NO_DETERMINATION",
-      action: a.id,
-      detail: this.conformance ? "the action rests on no live determination you may see, so there are no facts to assemble" : "no module answers determinations here, so no live determination can be read"
-    };
-    const marking = counselMarking(c);
-    const sections = this.#assemble(a, det, viewer, marking);
-    const basis = this.#packetBasis(det);
-    const at14 = this.#when();
-    return this.record.transact(() => {
-      const held = this.#one(`SELECT packet_id, MAX(version) AS v FROM counsel_packets WHERE action_id=? GROUP BY packet_id
-                               ORDER BY packet_id LIMIT 1`, a.id);
-      const id = held ? held.packet_id : this.record.allocId("CPK", at14.slice(0, 4)).id;
-      const version = held ? Number(held.v) + 1 : 1;
-      this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis)
-                     VALUES (?,?,?,?,?,?,?,?)`, id, version, a.id, json2(c), who2, at14, json2(sections), json2(basis));
-      return {
-        ok: true,
-        id,
-        version,
-        action: a.id,
-        head: this.#head(id, version, a.id, c, who2, at14, marking),
-        sections,
-        marking,
-        fileable: false,
-        basis_changed: null
-      };
-    });
-  }
-  #head(id, version, action, counsel, author, at14, marking) {
-    return {
-      packet: id,
-      version,
-      action,
-      counsel,
-      assembled_by: author,
-      at: at14,
-      marking,
-      fileable: false,
-      says: "prepared for counsel's review from the record; it is never published and is not in a form that can be filed"
-    };
-  }
-  /* A packet the viewer may see, through its action (R11, R19): its rows, or null. */
-  #packet(id, viewer) {
-    const p = str11(id);
-    const rows = p ? this.#rows(`SELECT * FROM counsel_packets WHERE packet_id=? ORDER BY version`, p) : [];
-    return rows.length && this.#action(rows[0].action_id, viewer) ? rows : null;
-  }
-  #version(r, rows) {
-    const counsel = parse2(r.counsel) || {};
-    const marking = counselMarking(counsel);
-    const causes = this.#basisChanged(parse2(r.basis) || {});
-    return {
-      ok: true,
-      id: r.packet_id,
-      version: Number(r.version),
-      action: r.action_id,
-      head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking),
-      sections: parse2(r.sections),
-      marking,
-      fileable: false,
-      basis_changed: causes.length ? { causes } : null,
-      versions: rows.map((x) => Number(x.version))
-    };
-  }
-  /** R11, R12: a packet's version (the latest unless one is named), read only by a member who may see the action. */
-  counselPacketRead({ id = null, version = null, viewer = null } = {}) {
-    const rows = this.#packet(id, viewer);
-    const r = rows ? version == null || version === "" ? rows[rows.length - 1] : rows.find((x) => Number(x.version) === Number(version)) : null;
-    if (!r) return this.#noPacket(id);
-    const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse2(e.counsel), sha: e.sha }));
-    return { ...this.#version(r, rows), exports };
-  }
-  /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
-  static render(v) {
-    const lines = [
-      `# Counsel packet ${v.id}, version ${v.version}`,
-      "",
-      v.marking,
-      "",
-      `Action: ${v.action}. Assembled by ${v.head.assembled_by} at ${v.head.at}.`,
-      ""
-    ];
-    const item = (x) => `- ${JSON.stringify(x)}`;
-    for (const s of Object.values(v.sections || {})) {
-      lines.push(`## ${s.title}`, "", s.marking, "");
-      if (s.says) lines.push(s.says, "");
-      for (const x of s.items || []) lines.push(item(x));
-      for (const x of s.undated || []) lines.push(item({ undated: true, ...x }));
-      lines.push("");
-    }
-    lines.push("## Manifest of exhibits", "", v.marking, "");
-    for (const e of v.sections && v.sections.exhibits ? v.sections.exhibits.items : []) lines.push(`- ${e.sha256}`);
-    lines.push("");
-    return lines.join("\n");
-  }
-  /** R11: hands a member the packet's bytes, and records who exported which version, when and for which counsel. */
-  counselPacketExport({ id = null, version = null, author = null, viewer = null } = {}) {
-    const who2 = str11(author);
-    if (!who2 || isMachineIdentity(who2))
-      return {
-        ok: false,
-        reason: "MACHINE_CANNOT_EXPORT",
-        detail: who2 ? `'${who2.slice(0, 60)}' is a machine identity: only a member hands a packet to counsel` : "no member is named as the one exporting"
-      };
-    const read2 = this.counselPacketRead({ id, version, viewer });
-    if (!read2.ok) return read2;
-    const bytes2 = _Filings.render(read2);
-    const sha = sha256HexSync(bytes2);
-    const at14 = this.#when();
-    this.sql.exec(`INSERT INTO counsel_packet_exports (packet_id, version, action_id, author, at, counsel, sha)
-                   VALUES (?,?,?,?,?,?,?)`, read2.id, read2.version, read2.action, who2, at14, json2(read2.head.counsel), sha);
-    return {
-      ok: true,
-      id: read2.id,
-      version: read2.version,
-      action: read2.action,
-      format: "text/markdown",
-      bytes: bytes2,
-      sha,
-      counsel: read2.head.counsel,
-      exported_by: who2,
-      at: at14,
-      marking: read2.marking,
-      fileable: false
-    };
-  }
-  /* ---------------------------------------------------------------- R13: filingsFor */
-  /** R13: the action's drafts and counsel packets, in creation order; the read `escalation` uses. */
-  filingsFor({ action = null, viewer = null } = {}) {
-    const a = this.#action(action, viewer);
-    if (!a) return this.#noAction(action);
-    const drafts = this.#rows(
-      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, ap.approved_by, ap.at AS approved_at, ap.sha,
-              s.ord, s.sent_on, s.recorded_by, s.recorded_at
-         FROM filing_drafts d LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
-         LEFT JOIN filing_sendings s ON s.filing_id=d.filing_id
-        WHERE d.action_id=? ORDER BY d.prepared_at, d.filing_id LIMIT ?`,
-      a.id,
-      FILINGS_FOR_MAX + 1
-    );
-    const versions = this.#rows(
-      `SELECT * FROM counsel_packets WHERE action_id=? ORDER BY at, packet_id, version LIMIT ?`,
-      a.id,
-      FILINGS_FOR_MAX + 1
-    );
-    return {
-      ok: true,
-      action: a.id,
-      drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
-        filing: d.filing_id,
-        tier: d.tier,
-        label: proposalLabel(d.preparer, "filing_draft"),
-        at: d.prepared_at,
-        approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
-        sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at } : null
-      })),
-      drafts_truncated: drafts.length > FILINGS_FOR_MAX,
-      packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
-        const causes = this.#basisChanged(parse2(r.basis) || {});
-        return {
-          packet: r.packet_id,
-          version: Number(r.version),
-          counsel: parse2(r.counsel),
-          assembled_by: r.author,
-          at: r.at,
-          basis_changed: causes.length ? { causes } : null,
-          exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse2(e.counsel), sha: e.sha }))
-        };
-      }),
-      packets_truncated: versions.length > FILINGS_FOR_MAX
-    };
-  }
-  /* ---------------------------------------------------------------- R14: candidate theories */
-  /** R14: a candidate theory and remedy against named standards, stored apart and labelled; any credential may propose. */
-  theoryPropose({
-    packet = null,
-    action = null,
-    theory = null,
-    remedy = null,
-    standards = null,
-    why = null,
-    proposer = null,
-    viewer = null
-  } = {}) {
-    const who2 = str11(proposer);
-    if (!who2) return { ok: false, reason: "THEORY_NO_PROPOSER", detail: "no stamped proposer: a proposal names who made it" };
-    let actionId = str11(action), packetId = null;
-    if (str11(packet)) {
-      const rows = this.#packet(packet, viewer);
-      if (!rows) return this.#noPacket(packet);
-      packetId = rows[0].packet_id;
-      actionId = rows[0].action_id;
-    }
-    const a = this.#action(actionId, viewer);
-    if (!a) return this.#noAction(actionId);
-    const t = typeof theory === "string" ? theory.trim() : "";
-    const rem = remedy == null ? null : String(remedy).trim() || null;
-    if (!t || t.length > THEORY_TEXT_MAX || rem !== null && rem.length > THEORY_TEXT_MAX)
-      return {
-        ok: false,
-        reason: "NO_THEORY",
-        max: THEORY_TEXT_MAX,
-        detail: `state the candidate theory, and any remedy, each in at most ${THEORY_TEXT_MAX} characters`
-      };
-    const list2 = (Array.isArray(standards) ? standards : typeof standards === "string" ? standards.split(",") : []).map((s) => String(s ?? "").trim()).filter(Boolean);
-    if (!list2.length) return { ok: false, reason: "THEORY_NO_STANDARDS", detail: "a candidate theory names the standards it rests on" };
-    const reads = this.standards && typeof this.standards.standardRead === "function" ? list2.map((s) => this.#call(() => this.standards.standardRead({ id: s, viewer }))) : null;
-    if (!reads || reads.some((r) => !r))
-      return {
-        ok: false,
-        reason: "THEORY_STANDARD_UNREADABLE",
-        detail: "no module answers a standard's read here, so the standards named cannot be read"
-      };
-    const refused = reads.find((r) => r.ok === false);
-    if (refused) return refused;
-    const w = typeof why === "string" ? why.trim() : "";
-    if (!w || w.length > THEORY_WHY_MAX)
-      return { ok: false, reason: "THEORY_WHY_REFUSED", max: THEORY_WHY_MAX, detail: `say why in at most ${THEORY_WHY_MAX} characters` };
-    const at14 = this.#when();
-    return this.record.transact(() => {
-      const { id } = this.record.allocId("THY", at14.slice(0, 4));
-      this.sql.exec(`INSERT INTO theory_proposals (theory_id, action_id, packet_id, theory, remedy, standards, why, proposer, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, id, a.id, packetId, t, rem, json2([...new Set(list2)]), w, who2, at14);
-      return {
-        ok: true,
-        proposal: {
-          id,
-          action: a.id,
-          packet: packetId,
-          theory: t,
-          remedy: rem,
-          standards: [...new Set(list2)],
-          why: w,
-          label: proposalLabel(who2, "theory"),
-          at: at14
-        },
-        evidence: false,
-        says: "a candidate theory and remedy, stored apart: it is not the group's position, and it enters the next counsel packet version as a candidate"
-      };
-    });
-  }
-  /* ---------------------------------------------------------------- R15, R21: the available-actions block */
-  /** R15's block for these live determinations: the kinds of the view against each determination's offices, each with
-   *  its tier and words; for Tier 3 kinds the standards, the factual basis, the counsel sentence and the legal
-   *  organisations; the risk classification in the metadata. Never a template or packet content. */
-  #block(dets, v) {
-    const kinds = (v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds : []).map((k) => {
-      const tier = [1, 2, 3].includes(k.tier) ? k.tier : "undetermined";
-      const out = { kind: k.kind, label: k.label ?? null, tier, words: TIER_WORDS[tier], source: `profile:${k.profile}/action_kinds/${k.kind}` };
-      if (tier === 3) {
-        const orgs = (Array.isArray(v.view.legal_organisations) ? v.view.legal_organisations : []).filter((o) => Array.isArray(o.evaluates) && o.evaluates.includes(k.kind)).map((o) => ({ name: o.name, contacts: o.contacts, source: `profile:${o.profile}/legal_organisations` }));
-        out.counsel = COUNSEL_SENTENCE;
-        out.legal_organisations = orgs;
-        if (!orgs.length) out.legal_organisations_says = "the profile names no legal organisation equipped to evaluate this kind";
-      }
-      return out;
-    });
-    const offices = Array.isArray(v.view && v.view.counterparties) ? v.view.counterparties : [];
-    const tier3 = kinds.some((k) => k.tier === 3);
-    return {
-      kinds,
-      metadata: { risk_classification: Object.fromEntries(kinds.map((k) => [k.kind, k.tier])) },
-      determinations: dets.map((d) => {
-        const actor = isObj13(d.act && d.act.actor) ? d.act.actor : {};
-        const match = offices.find((o) => o.role === actor.role && o.body === actor.body) || null;
-        return {
-          determination: d.id,
-          office: {
-            role: actor.role ?? null,
-            body: actor.body ?? null,
-            in_profile: !!match,
-            ...match ? { level: match.level ?? null, elected: match.elected ?? null } : {},
-            says: match ? "an office of the active profile" : "not an office the active profile lists; the kinds are the profile's all the same"
-          },
-          ...tier3 ? { tier3: {
-            standards: d.standards.filter((s) => isObj13(s) && s.outcome === "noncompliant").map((s) => s.id),
-            factual_basis: d.findings.filter((f8) => isObj13(f8) && str11(f8.id)).map((f8) => ({ finding: f8.id, case: f8.case ?? null, edition: f8.edition ?? null })),
-            counsel: COUNSEL_SENTENCE
-          } } : {}
-        };
-      }),
-      says: !v.view ? `${v.why}, so no kind is listed` : dets.length ? "the kinds a group may pursue against these offices, from the jurisdiction profile; a Tier 3 kind requires competent counsel, and no template or legal strategy is part of this block" : "no live determination rests on this case's findings, so no action is listed against an office"
-    };
-  }
-  /** R21: R15's block for one determination, for `escalation` (its R8). */
-  availableActions({ determination = null, viewer = null } = {}) {
-    const raw = this.conformance && typeof this.conformance.determinationRead === "function" ? this.#call(() => this.conformance.determinationRead({ id: str11(determination), viewer })) : null;
-    if (!raw)
-      return {
-        ok: false,
-        reason: "DETERMINATION_UNREADABLE",
-        determination: str11(determination),
-        detail: "no module answers a determination's read here, so none is readable"
-      };
-    if (raw.ok === false) return raw;
-    const d = this.#det(determination, viewer);
-    return { ok: true, determination: d.id, live: d.live, ...this.#block([d], this.#view()) };
-  }
-  /** R15: the block `publication` carries beside a published case edition (its R36): the live determinations of the
-   *  case's own project resting on any of its findings, read by the plane. */
-  evidenceBlock({ caseId = null, edition = null, findings = [] } = {}) {
-    const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, String(caseId ?? ""));
-    const seen = /* @__PURE__ */ new Map();
-    if (this.conformance && typeof this.conformance.determinationsFor === "function")
-      for (const f8 of Array.isArray(findings) ? findings : []) {
-        const page = this.#call(() => this.conformance.determinationsFor({ finding: f8, live: true, viewer: MACHINE_READER }));
-        for (const it of page && page.ok !== false && Array.isArray(page.items) ? page.items : []) {
-          const id = str11(isObj13(it) ? it.id : it);
-          if (!id || seen.has(id)) continue;
-          const d = this.#det(id, MACHINE_READER);
-          if (!d || !d.live) continue;
-          if (owner && d.project && d.project !== owner.project_id) continue;
-          if (!d.findings.some((x) => isObj13(x) && x.case === caseId)) continue;
-          seen.set(id, d);
-        }
-      }
-    const dets = [...seen.values()].sort((a, b3) => a.id < b3.id ? -1 : 1);
-    const b = this.#block(dets, this.#view());
-    if (!this.conformance || typeof this.conformance.determinationsFor !== "function")
-      return {
-        case: caseId,
-        edition,
-        ...b,
-        determinations_read: false,
-        says: "no module answers determinations here, so whether one rests on this case is undetermined and no action is listed against an office"
-      };
-    return { case: caseId, edition, ...b, determinations_read: true };
-  }
-};
-var instances27 = /* @__PURE__ */ new WeakMap();
-function filingsOf(host, deps) {
-  let f8 = instances27.get(host);
-  if (!f8) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    f8 = new Filings({ ...d, host, storage, record });
-    instances27.set(host, f8);
-    f8.migrate();
-    record.declarePurge("filings", FILINGS_TABLES);
-    f8.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f8.evidenceBlock(arg));
-  }
-  return f8;
-}
-
-// src/escalation/doc.mjs
-var ESCALATION = "escalation";
-var LOG = "Escalation Log";
-var TOKEN3 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
-var q5 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
-var tok = (s) => TOKEN3.test(String(s)) ? String(s) : q5(s);
-var parseFm2 = (text3) => {
-  if (typeof text3 !== "string") return null;
-  const d = parseFrontmatter(text3).data;
-  return d && typeof d === "object" && !Array.isArray(d) ? d : null;
-};
-var escalationId = (allocated) => `${allocated}-escalation`;
-var CORE_TAIL3 = Object.freeze([
-  "produced_by:",
-  "  mode: human",
-  "  capability_tier: session",
-  "references: []",
-  "state_history: []",
-  "annotations_open: 0",
-  "reeval_pending:",
-  "  flag: false",
-  "  since: null",
-  "  source: null",
-  "visuals: []"
-]);
-function escalationDoc({ id, project, determination, act, standards, author, at: at14, entry }) {
-  return [
-    "---",
-    `id: ${id}`,
-    `object_type: ${ESCALATION}`,
-    `schema: ${ESCALATION}@1`,
-    `title: ${q5(`Escalation of ${determination}`)}`,
-    "current_state: open",
-    "prior_state: null",
-    `created: ${q5(at14)}`,
-    `last_updated: ${q5(at14)}`,
-    `project: ${tok(project)}`,
-    `determination: ${tok(determination)}`,
-    `act: ${act ? tok(act) : "null"}`,
-    "stage: 1",
-    `standards: [${standards.map(tok).join(", ")}]`,
-    `opened_by: ${tok(author)}`,
-    ...CORE_TAIL3,
-    "---",
-    "",
-    `## ${LOG}`,
-    "",
-    logText(1, entry),
-    "",
-    "## Session Log",
-    "",
-    `### Session ${at14} | Escalation opened | ${author}`,
-    "Changes: escalation opened at stage 1.",
-    ""
-  ].join("\n");
-}
-var logText = (seq, entry) => `### ${seq} | ${entry.kind} | ${entry.author} | ${entry.at}
-${JSON.stringify(entry)}`;
-function logOf(text3) {
-  if (typeof text3 !== "string") return [];
-  const marker = `
-## ${LOG}
-`;
-  const at14 = text3.indexOf(marker);
-  if (at14 === -1) return [];
-  const start = at14 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  const body = text3.slice(start, nxt === -1 ? text3.length : nxt).trim();
-  if (!body) return [];
-  return body.split(/\n(?=### )/).map((part) => {
-    const m = /^### (\d+) \| [^\n]*\n([\s\S]*)$/.exec(part.trim());
-    if (!m) return { seq: null, unreadable: part.trim().slice(0, 200) };
-    try {
-      const e = JSON.parse(m[2].trim());
-      return e && typeof e === "object" && !Array.isArray(e) ? { ...e, seq: Number(m[1]) } : { seq: Number(m[1]), unreadable: m[2].trim().slice(0, 200) };
-    } catch {
-      return { seq: Number(m[1]), unreadable: m[2].trim().slice(0, 200) };
-    }
-  });
-}
-function logSection(text3) {
-  if (typeof text3 !== "string") return null;
-  const marker = `
-## ${LOG}
-`;
-  const at14 = text3.indexOf(marker);
-  if (at14 === -1) return null;
-  const start = at14 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  return text3.slice(start, nxt === -1 ? text3.length : nxt).trim();
-}
-function fence2(lines) {
-  if (lines[0] !== "---") return null;
-  const end2 = lines.indexOf("---", 1);
-  return end2 === -1 ? null : end2;
-}
-function setField2(text3, key, value) {
-  const lines = text3.split("\n");
-  const end2 = fence2(lines);
-  if (end2 === null) return text3;
-  for (let i = 1; i < end2; i++) if (lines[i].startsWith(key + ":")) {
-    lines[i] = `${key}: ${value}`;
-    return lines.join("\n");
-  }
-  return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
-}
-function appendItem2(text3, key, fields) {
-  const lines = text3.split("\n");
-  const end2 = fence2(lines);
-  if (end2 === null) return null;
-  const item = Object.entries(fields).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${v}`);
-  const at14 = lines.findIndex((l, i) => i > 0 && i < end2 && l.startsWith(key + ":"));
-  if (at14 === -1) return [...lines.slice(0, end2), `${key}:`, ...item, ...lines.slice(end2)].join("\n");
-  const rest = lines[at14].slice(key.length + 1).trim();
-  if (rest === "[]") return [...lines.slice(0, at14), `${key}:`, ...item, ...lines.slice(at14 + 1)].join("\n");
-  if (rest !== "") return null;
-  let last = at14;
-  for (let i = at14 + 1; i < end2 && /^\s/.test(lines[i]); i++) last = i;
-  return [...lines.slice(0, last + 1), ...item, ...lines.slice(last + 1)].join("\n");
-}
-function appendToSection(text3, heading, entry) {
-  const marker = `
-## ${heading}
-`;
-  const at14 = text3.indexOf(marker);
-  if (at14 === -1) return `${text3.replace(/\n*$/, "\n")}
-## ${heading}
-
-${entry.trim()}
-`;
-  const start = at14 + marker.length;
-  const nxt = text3.indexOf("\n## ", start - 1);
-  const end2 = nxt === -1 ? text3.length : nxt;
-  const head = text3.slice(0, end2).replace(/\n*$/, "\n");
-  return `${head}
-${entry.trim()}
-${text3.slice(end2)}`;
-}
-function appendEntry(text3, { entry, seq, stage, state, fromState, blurb }) {
-  let t = appendToSection(text3, LOG, logText(seq, entry));
-  t = setField2(t, "last_updated", q5(entry.at));
-  if (stage !== void 0) t = setField2(t, "stage", String(stage));
-  if (state !== void 0 && state !== fromState) {
-    t = setField2(t, "prior_state", fromState);
-    t = setField2(t, "current_state", state);
-    t = appendItem2(
-      t,
-      "state_history",
-      { timestamp: q5(entry.at), from_state: fromState, to_state: state, blurb: q5(blurb), author: tok(entry.author) }
-    );
-    if (t === null) return null;
-  }
-  return appendToSection(t, "Session Log", `### Session ${entry.at} | ${blurb} | ${entry.author}
-Changes: ${entry.kind}.`);
-}
-
-// src/escalation/schema.mjs
-var ESCALATION_SCHEMA = `
--- One row per escalation: what it pursues and where it stands. Rewritten from the document at each promotion.
-CREATE TABLE IF NOT EXISTS escalations (
-  escalation_id    TEXT PRIMARY KEY,
-  project_id       TEXT NOT NULL,
-  determination_id TEXT NOT NULL,
-  act_id           TEXT,
-  standards_json   TEXT NOT NULL,
-  state            TEXT NOT NULL,
-  stage            INTEGER NOT NULL,
-  stage_since      TEXT NOT NULL,
-  state_since      TEXT NOT NULL,
-  opened_by        TEXT NOT NULL,
-  opened_at        TEXT NOT NULL,
-  log_len          INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS escalations_determination ON escalations(determination_id, state);
-CREATE INDEX IF NOT EXISTS escalations_state ON escalations(state, escalation_id);
--- R13, R14, R15, R18: every stage move (open, advance), suspension, resumption and end, in order. Appended only.
-CREATE TABLE IF NOT EXISTS escalation_moves (
-  escalation_id  TEXT NOT NULL,
-  seq            INTEGER NOT NULL,
-  kind           TEXT NOT NULL,
-  from_stage     INTEGER,
-  to_stage       INTEGER,
-  reason         TEXT,
-  trigger_json   TEXT,
-  author         TEXT NOT NULL,
-  at             TEXT NOT NULL,
-  PRIMARY KEY (escalation_id, seq)
-);
--- R10: a member's reading of a response. Appended only; the latest is in force.
-CREATE TABLE IF NOT EXISTS escalation_evaluations (
-  escalation_id    TEXT NOT NULL,
-  seq              INTEGER NOT NULL,
-  reading          TEXT NOT NULL,
-  response_action  TEXT,
-  response_ord     INTEGER,
-  reason           TEXT NOT NULL,
-  author           TEXT NOT NULL,
-  at               TEXT NOT NULL,
-  PRIMARY KEY (escalation_id, seq)
-);
--- R9, R12: an action attached to one escalation at one stage, with stage 7's purpose and standards.
-CREATE TABLE IF NOT EXISTS escalation_attachments (
-  action_id       TEXT PRIMARY KEY,
-  escalation_id   TEXT NOT NULL,
-  seq             INTEGER NOT NULL,
-  stage           INTEGER NOT NULL,
-  purpose         TEXT,
-  standards_json  TEXT,
-  author          TEXT NOT NULL,
-  at              TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS escalation_attachments_escalation ON escalation_attachments(escalation_id, seq);
--- R13: a member's choice not to advance along a proposed edge now, with a reason. Appended only.
-CREATE TABLE IF NOT EXISTS escalation_declines (
-  escalation_id  TEXT NOT NULL,
-  seq            INTEGER NOT NULL,
-  from_stage     INTEGER NOT NULL,
-  to_stage       INTEGER NOT NULL,
-  reason         TEXT NOT NULL,
-  author         TEXT NOT NULL,
-  at             TEXT NOT NULL,
-  PRIMARY KEY (escalation_id, seq)
-);
-`;
-var ESCALATION_TABLES = Object.freeze([
-  { name: "escalations", keys: ["escalation_id"] },
-  { name: "escalation_moves", keys: ["escalation_id"] },
-  { name: "escalation_evaluations", keys: ["escalation_id"] },
-  { name: "escalation_attachments", keys: ["escalation_id", "action_id"] },
-  { name: "escalation_declines", keys: ["escalation_id"] }
-]);
-function migrateEscalation(sql) {
-  const bare2 = ESCALATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-}
-
-// src/escalation/checks.mjs
-var at11 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
-var ESCALATION_CHECKS = Object.freeze({
-  MACHINE_CANNOT_OPEN: {
-    check: "C-116.1",
-    where: at11("escalationOpen", "is-open-member"),
-    translation: "Opening an escalation is a member's act. An assistant may point out a breach worth pursuing; it may not open one. Sign in as a member. Nothing was written."
-  },
-  ESCALATION_CARRIES_NO_JUDGMENT: {
-    check: "C-116.2",
-    where: at11("refuseJudgment", "is-no-judgment"),
-    translation: "An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach warrants action, and how urgently, is the members' judgment, made with the consequences in front of them. Send the act without it. Nothing was written."
-  },
-  NO_SUCH_DETERMINATION: {
-    check: "C-116.3",
-    where: at11("escalationOpen", "is-determination-seen"),
-    translation: "No determination answers to that here. One you may not see is answered exactly as one that does not exist. Nothing was written."
-  },
-  DETERMINATION_SUPERSEDED: {
-    check: "C-116.4",
-    where: at11("escalationOpen", "is-determination-live"),
-    translation: "That determination has been superseded by a later one. An escalation pursues the determination in force: open it on the later one. Nothing was written."
-  },
-  NOT_NONCOMPLIANT: {
-    check: "C-116.5",
-    where: at11("escalationOpen", "is-determination-noncompliant"),
-    translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
-  },
-  NOT_A_PARTICIPANT: {
-    check: "C-116.6",
-    where: at11("escalationOpen", "is-open-joined"),
-    translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
-  },
-  ALREADY_OPEN: {
-    check: "C-116.7",
-    where: at11("escalationOpen", "is-one-escalation"),
-    translation: "This determination already has an escalation that has not ended; there is one at a time. Work in that one. Nothing was written."
-  },
-  NO_SUCH_ESCALATION: {
-    check: "C-116.8",
-    where: at11("refuseNoSuchEscalation", "is-escalation-seen"),
-    translation: "No escalation answers to that here. One in a project you may not see is answered exactly as one that does not exist. Nothing was written."
-  },
-  MACHINE_CANNOT_ATTACH: {
-    check: "C-116.9",
-    where: at11("escalationAttach", "is-attach-member"),
-    translation: "Attaching an action to an escalation is a member's act. An assistant may prepare the action; it may not attach it. Nothing was written."
-  },
-  ESCALATION_ENDED: {
-    check: "C-116.10",
-    where: at11("refuseEnded", "is-escalation-ended"),
-    translation: "This escalation has ended: compliance was restored and the consequences addressed. An ended escalation is never reopened; a new breach is a new determination. Nothing was written."
-  },
-  NO_SUCH_ACTION: {
-    check: "C-116.11",
-    where: at11("escalationAttach", "is-action-seen"),
-    translation: "No action answers to that here. One you may not see is answered exactly as one that does not exist. Nothing was written."
-  },
-  NOT_A_BREACH_ACTION: {
-    check: "C-116.12",
-    where: at11("escalationAttach", "is-breach-action"),
-    translation: "An escalation's acts are actions recorded for the breach: the action states that it is one and rests on the escalation's determination. Record it so, then attach it. Nothing was written."
-  },
-  STAGE_TAKES_NO_ACTION: {
-    check: "C-116.13",
-    where: at11("escalationAttach", "is-attaching-stage"),
-    translation: "Actions are attached at notification, legal tools and political accountability. The escalation's stage now takes none. Nothing was written."
-  },
-  ALREADY_ATTACHED: {
-    check: "C-116.14",
-    where: at11("escalationAttach", "is-attached-once"),
-    translation: "That action is already attached to an escalation. An action belongs to one escalation, at one stage. Nothing was written."
-  },
-  NOT_ACCOUNTABILITY: {
-    check: "C-116.15",
-    where: at11("escalationAttach", "is-accountability-purpose"),
-    translation: "An act of political accountability states its purpose: asking an elected office to act on the breach, an oversight request, an audit request, testimony, or legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not among them. Nothing was written."
-  },
-  NOT_THE_BREACH: {
-    check: "C-116.16",
-    where: at11("escalationAttach", "is-pursued-standard"),
-    translation: "An act of political accountability names the requirement it seeks enforced, from the standards this escalation pursues, and no other. Nothing was written."
-  },
-  COUNTERPARTY_NOT_ELECTED: {
-    check: "C-116.17",
-    where: at11("escalationAttach", "is-elected-office"),
-    translation: "An official request asks an elected office to act. The jurisdiction profile marks the office this action is addressed to as not elected. Address it to an elected office. Nothing was written."
-  },
-  COUNTERPARTY_NOT_OVERSIGHT: {
-    check: "C-116.18",
-    where: at11("escalationAttach", "is-oversight-office"),
-    translation: "An oversight or audit request goes to an oversight or audit body. The jurisdiction profile marks the office this action is addressed to as not one. Nothing was written."
-  },
-  MACHINE_CANNOT_EVALUATE: {
-    check: "C-116.19",
-    where: at11("escalationEvaluate", "is-evaluate-member"),
-    translation: "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written."
-  },
-  NOT_IN_EVALUATION: {
-    check: "C-116.20",
-    where: at11("escalationEvaluate", "is-evaluation-stage"),
-    translation: "A response is evaluated at the response-evaluation stage, and this escalation is at another. Nothing was written."
-  },
-  READING_UNKNOWN: {
-    check: "C-116.21",
-    where: at11("escalationEvaluate", "is-reading-known"),
-    translation: "A reading of a response is one of: complied, partial, denied, or none (nothing came back in time). Nothing was written."
-  },
-  NO_SUCH_RESPONSE: {
-    check: "C-116.22",
-    where: at11("refuseNoSuchResponse", "is-named-response"),
-    translation: "The evaluation names the reply it reads: a received entry of an action attached to this escalation. Nothing was written."
-  },
-  RESPONSE_FOR_NONE: {
-    check: "C-116.23",
-    where: at11("escalationEvaluate", "is-none-unnamed"),
-    translation: "A reading of none says nothing came back in time, so it names no reply. Nothing was written."
-  },
-  NO_REASON: {
-    check: "C-116.24",
-    where: at11("refuseReason", "is-reason-given"),
-    translation: "This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written."
-  },
-  MACHINE_CANNOT_ADVANCE: {
-    check: "C-116.25",
-    where: at11("#edgeArgs", "is-edge-member"),
-    translation: "Moving an escalation to its next stage is a member's act. The protocol proposes a stage when its trigger is met; a member advances it. Nothing was written."
-  },
-  MACHINE_CANNOT_DECLINE: {
-    check: "C-116.26",
-    where: at11("#edgeArgs", "is-edge-member"),
-    translation: "Choosing not to move an escalation now is a member's act, with the member's reason. Nothing was written."
-  },
-  NOT_OPEN: {
-    check: "C-116.27",
-    where: at11("#edgeArgs", "is-edge-open"),
-    translation: "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written."
-  },
-  ILLEGAL_STAGE: {
-    check: "C-116.28",
-    where: at11("#edgeArgs", "is-edge-legal"),
-    translation: "The escalation cannot move from its stage to that one. The stages it can move to are listed. Nothing was written."
-  },
-  TRIGGER_NOT_MET: {
-    check: "C-116.29",
-    where: at11("escalationAdvance", "is-trigger-met"),
-    translation: "That stage's trigger is not met in the record yet; what is missing is named. When it is met the stage is proposed, and a member advances it. Nothing was written."
-  },
-  NOT_PROPOSED: {
-    check: "C-116.30",
-    where: at11("escalationDecline", "is-edge-proposed"),
-    translation: "That stage is not proposed, so there is nothing to decline. Nothing was written."
-  },
-  MACHINE_CANNOT_END: {
-    check: "C-116.31",
-    where: at11("escalationEnd", "is-end-member"),
-    translation: "Ending an escalation is a member's act, and only once compliance is restored and the consequences are addressed. Nothing was written."
-  },
-  ALREADY_ENDED: {
-    check: "C-116.32",
-    where: at11("escalationEnd", "is-end-once"),
-    translation: "This escalation has already ended. Nothing was written."
-  },
-  COMPLIANCE_NOT_RESTORED: {
-    check: "C-116.33",
-    where: at11("escalationEnd", "is-compliance-restored"),
-    translation: "An escalation ends only when compliance is restored: for every standard it pursues, a later determination of the same act finds the government compliant. The standards still lacking one are named. Nothing was written."
-  },
-  CONSEQUENCES_NOT_ADDRESSED: {
-    check: "C-116.34",
-    where: at11("escalationEnd", "is-consequences-addressed"),
-    translation: "An escalation ends only when the consequences of the breach are addressed, and a recorded consequence is not. Nothing was written."
-  },
-  CONSEQUENCES_UNDETERMINED: {
-    check: "C-116.35",
-    where: at11("escalationEnd", "is-consequences-determined"),
-    translation: "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written."
-  },
-  MACHINE_CANNOT_SUSPEND: {
-    check: "C-116.36",
-    where: at11("escalationSuspend", "is-suspend-member"),
-    translation: "Suspending an escalation is a member's act, with a reason. Nothing was written."
-  },
-  ALREADY_SUSPENDED: {
-    check: "C-116.37",
-    where: at11("escalationSuspend", "is-suspend-once"),
-    translation: "This escalation is already suspended. Nothing was written."
-  },
-  MACHINE_CANNOT_RESUME: {
-    check: "C-116.38",
-    where: at11("escalationResume", "is-resume-member"),
-    translation: "Resuming an escalation is a member's act. Nothing was written."
-  },
-  NOT_SUSPENDED: {
-    check: "C-116.39",
-    where: at11("escalationResume", "is-resume-suspended"),
-    translation: "This escalation is not suspended, so there is nothing to resume. Nothing was written."
-  },
-  MACHINE_CANNOT_WRITE_ESCALATION: {
-    check: "C-116.40",
-    where: at11("check", "is-escalation-member"),
-    translation: "An escalation's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
-  },
-  ESCALATION_BY_ACT_ONLY: {
-    check: "C-116.41",
-    where: at11("check", "is-escalation-act"),
-    translation: "An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its history and what is read from it never disagree. Nothing was written."
-  },
-  ESCALATION_HISTORY_REWRITTEN: {
-    check: "C-116.42",
-    where: at11("check", "is-escalation-append-only"),
-    translation: "An escalation's history is never edited; each act adds to it. Nothing was written."
-  },
-  UNSPLICEABLE_ESCALATION: {
-    check: "C-116.43",
-    where: at11("#append", "is-escalation-spliceable"),
-    translation: "The escalation's record cannot be extended in place. Nothing was written."
-  },
-  PROVIDER_UNAVAILABLE: {
-    check: "C-116.44",
-    where: at11("refuseProviderUnavailable", "is-provider-present"),
-    translation: "Part of the record this answer depends on cannot be read on this instance yet, so nothing is answered in its place. Nothing was written."
-  }
-});
-function refusal15(code, detail, extra) {
-  const row2 = ESCALATION_CHECKS[code];
-  return { ok: false, reason: code, detail, ...extra || {}, code, check: row2.check, translation: row2.translation };
-}
-
-// src/escalation/index.mjs
-var STAGES = Object.freeze({
-  1: "documentation",
-  2: "notification",
-  3: "clock",
-  4: "response_evaluation",
-  5: "legal_tools",
-  6: "sustained_attention",
-  7: "political_accountability"
-});
-var STAGE_TABLE = Object.freeze({ 1: [2], 2: [3], 3: [4], 4: [5, 7], 5: [6, 7], 6: [4], 7: [4] });
-var ATTACHING_STAGES = Object.freeze([2, 5, 7]);
-var READINGS2 = Object.freeze(["complied", "partial", "denied", "none"]);
-var ACCOUNTABILITY_PURPOSES = Object.freeze([
-  "official_request",
-  "oversight_request",
-  "audit_request",
-  "testimony",
-  "enforcing_legislation"
-]);
-var REASON_MAX4 = 2e3;
-var DUE_MAX = 500;
-var JUDGMENT_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "score", "rank"]);
-var PROPOSAL_SAYS3 = "proposed by the escalation protocol's derivation over the record at the time of reading; it is not an act. A member advances it or declines it, with a reason.";
-var DAY_MS = 864e5;
-var ACT = Symbol("escalation act");
-var COMPLETED_READINGS = /* @__PURE__ */ new Set(["denied", "partial", "none"]);
-var str12 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj14 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var hex8 = () => {
-  const b = new Uint8Array(4);
-  crypto.getRandomValues(b);
-  return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
-};
-var isMachine = (who2) => str12(who2) === "" || isMachineIdentity(who2);
-var json3 = (v) => v === null || v === void 0 ? null : JSON.stringify(v);
-var unjson = (s, d = null) => {
-  try {
-    return s ? JSON.parse(s) : d;
-  } catch {
-    return d;
-  }
-};
-var instantMs = (v) => {
-  if (typeof v !== "string" || !v) return NaN;
-  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
-};
-var iso2 = (ms) => stampInstant("second", ms);
-var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj14(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
-var liveOf = (d) => d.live === true;
-var actOf = (d) => isObj14(d.act) ? d.act : {};
-var actIdOf = (d) => actOf(d).id ?? null;
-var projectOf = (d) => d.project ?? null;
-var recordedAtOf = (d) => d.at ?? null;
-function ledgerOf(block) {
-  const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
-  return raw.map((e, i) => isObj14(e) ? {
-    ord: Number.isInteger(e.ord) ? e.ord : i,
-    direction: e.direction ?? null,
-    at: e.at ?? null,
-    recorded_at: e.recorded_at ?? null
-  } : null).filter(Boolean);
-}
-var Escalation = class {
-  constructor(deps) {
-    this.record = deps.record;
-    this.membership = deps.membership;
-    this.promotion = deps.promotion;
-    this.sql = (deps.storage || {}).sql;
-    this.deps = deps;
-    this.now = deps.now || (() => stampInstant("second"));
-  }
-  /* The providers used beside this module in layer 9, reached when first needed. */
-  get conformance() {
-    return this.#dep("conformance");
-  }
-  get consequences() {
-    return this.#dep("consequences");
-  }
-  get actions() {
-    return this.#dep("actions");
-  }
-  get filings() {
-    return this.#dep("filings");
-  }
-  #dep(name) {
-    const d = this.deps[name];
-    const v = typeof d === "function" ? d() : d;
-    if (!v) throw new ProviderAbsent(name);
-    return v;
-  }
-  /** The module's tables (R20); run at creation, and safe to run again (each `CREATE ... IF NOT EXISTS`). */
-  migrate() {
-    migrateEscalation(this.sql);
-  }
-  #rows(q6, ...a) {
-    return this.sql.exec(q6, ...a);
-  }
-  #one(q6, ...a) {
-    return this.#rows(q6, ...a)[0] || null;
-  }
-  /* The active profiles' combined view (record-core R26, jurisdictions R12–R16), or null: undetermined wherever a
-     local fact is needed (jurisdictions R27). */
-  #view() {
-    if (this.deps.view !== void 0) return typeof this.deps.view === "function" ? this.deps.view() : this.deps.view;
-    const ids = this.record.getSetting("jurisdiction_profiles");
-    const c = combine(Array.isArray(ids) ? ids : []);
-    return c.ok ? c.view : null;
-  }
-  /* ===================================================================== *
-   * READING AN ESCALATION (R2, R20: absent and unseen are one answer)
-   * ===================================================================== */
-  #row(id, viewer) {
-    if (typeof id !== "string" || !id) return null;
-    const r = this.#one(`SELECT * FROM escalations WHERE escalation_id=?`, id);
-    if (!r) return null;
-    if (viewer !== null && viewer !== void 0 && !this.membership.inSight(r.project_id, viewer)) return null;
-    return {
-      id: r.escalation_id,
-      project: r.project_id,
-      determination: r.determination_id,
-      act: r.act_id,
-      standards: unjson(r.standards_json, []),
-      state: r.state,
-      stage: r.stage,
-      stageSince: r.stage_since,
-      stateSince: r.state_since,
-      openedBy: r.opened_by,
-      openedAt: r.opened_at
-    };
-  }
-  #attachments(id) {
-    return this.#rows(`SELECT * FROM escalation_attachments WHERE escalation_id=? ORDER BY seq`, id).map((a) => ({
-      action: a.action_id,
-      stage: a.stage,
-      purpose: a.purpose ?? null,
-      standards: unjson(a.standards_json, null),
-      author: a.author,
-      at: a.at,
-      seq: a.seq
-    }));
-  }
-  #evaluations(id) {
-    return this.#rows(`SELECT * FROM escalation_evaluations WHERE escalation_id=? ORDER BY seq`, id).map((v) => ({
-      seq: v.seq,
-      reading: v.reading,
-      response: v.response_action ? { action: v.response_action, ord: v.response_ord } : null,
-      reason: v.reason,
-      author: v.author,
-      at: v.at
-    }));
-  }
-  #declines(id) {
-    return this.#rows(`SELECT * FROM escalation_declines WHERE escalation_id=? ORDER BY seq`, id).map((d) => ({
-      seq: d.seq,
-      from: d.from_stage,
-      to: d.to_stage,
-      reason: d.reason,
-      author: d.author,
-      at: d.at
-    }));
-  }
-  #text(id) {
-    const f8 = this.record.readFile(id, "bundle.md");
-    return f8 && typeof f8.text === "string" ? f8.text : null;
-  }
-  /* An action's ledger as `actions` answers it to this viewer; null when it does not answer one. */
-  #ledger(action, viewer) {
-    const r = this.actions.actionRead({ id: action, viewer });
-    return r && r.ok !== false ? ledgerOf(r) : null;
-  }
-  /* ===================================================================== *
-   * THE TRIGGERS (R2, R4–R12): each edge out of the current stage, met or not, from the record at `nowMs`.
-   * An edge with alternatives is first met at its earliest alternative met; an alternative's instant is the latest
-   * date of the ids that meet it (a ledger date is its day's start; a clock's is the day after its date).
-   * ===================================================================== */
-  #met(alts) {
-    const ok = alts.filter((a) => Number.isFinite(a.ms));
-    if (!ok.length) return null;
-    return ok.reduce((m, a) => a.ms < m.ms ? a : m);
-  }
-  #triggers(e, nowMs, viewer) {
-    const edges = STAGE_TABLE[e.stage] || [];
-    const attached = this.#attachments(e.id);
-    const evaluations = this.#evaluations(e.id);
-    const notes = [];
-    const out = [];
-    const edge = (to, alts, missing, extra = {}) => {
-      const m = this.#met(alts);
-      out.push(m ? { from: e.stage, to, met: true, ids: m.ids, instant: iso2(m.ms), ...extra } : { from: e.stage, to, met: false, ids: [], missing, ...extra });
-    };
-    const stageActs = (s) => attached.filter((a) => a.stage === s);
-    const firstSent = (action) => {
-      const l = this.#ledger(action, viewer);
-      if (!l) return null;
-      const i = l.findIndex((x) => x.direction === "sent");
-      return i === -1 ? null : { ledger: l, index: i, entry: l[i] };
-    };
-    const latest = evaluations.at(-1) || null;
-    const byEvaluation = (ev, why) => ev && COMPLETED_READINGS.has(ev.reading) ? [{ ms: instantMs(ev.at), ids: [`${e.id}/evaluation/${ev.seq}`] }] : [];
-    const evalMissing = (ev, scope) => !ev ? `no evaluation ${scope}` : ev.reading === "complied" ? `the evaluation in force reads complied: it proposes no stage. Compliance is restored only by a live compliant determination of the same act for every standard pursued (escalationEnd)` : `no evaluation ${scope} reads denied, partial or none`;
-    if (e.stage === 1) {
-      const d = this.conformance.determinationRead({ id: e.determination, viewer });
-      let missing = null;
-      if (!d || d.ok === false) missing = "the determination does not answer to this reader";
-      else if (!liveOf(d)) missing = "the determination has been superseded";
-      else {
-        const actor = actOf(d).actor || {};
-        if (!str12(actor.role) || !str12(actor.body)) missing = "the act's actor names no office (role and body), so a notice has no addressee";
-      }
-      edge(2, missing ? [] : [{ ms: instantMs(recordedAtOf(d)), ids: [e.determination] }], missing);
-    } else if (e.stage === 2) {
-      const acts = stageActs(2);
-      const alts = [];
-      for (const a of acts) {
-        const s = firstSent(a.action);
-        if (s) alts.push({ ms: instantMs(s.entry.at), ids: [a.action, `${a.action}#${s.entry.ord}`] });
-      }
-      edge(3, alts, acts.length ? "no notification action attached at stage 2 has a sent entry in its ledger" : "no breach action is attached at stage 2");
-    } else if (e.stage === 3) {
-      const acts = stageActs(2);
-      const alts = [];
-      for (const a of acts) {
-        const s = firstSent(a.action);
-        if (s) {
-          const reply = s.ledger.slice(s.index + 1).find((x) => x.direction === "received" || x.direction === "no_response");
-          if (reply) alts.push({
-            ms: Math.max(instantMs(s.entry.at), instantMs(reply.at)),
-            ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`]
-          });
-        }
-        const facts = actionFacts(this.#text(a.action), nowMs) || {};
-        if (!facts.clock_next)
-          notes.push({ action: a.action, says: "this notification action has no pending clock entry, so stage 3 never triggers by time on it; a member states a clock entry, with its basis, on the action" });
-        else if (facts.clock_overdue)
-          alts.push({ ms: instantMs(facts.clock_next) + DAY_MS, ids: [a.action], clock: facts.clock_next });
-      }
-      edge(4, alts, acts.length ? "no reply or no-response entry follows the sent entry, and no clock entry is past" : "no notification action is attached at stage 2");
-    } else if (e.stage === 4) {
-      const since = evaluations.filter((v) => instantOrder(v.at, e.stageSince) >= 0).at(-1) || null;
-      const missing = evalMissing(since, "since the escalation entered stage 4");
-      edge(5, byEvaluation(since), missing);
-      edge(7, byEvaluation(since), missing);
-    } else if (e.stage === 5) {
-      const acts = stageActs(5);
-      const alts = [];
-      for (const a of acts) {
-        const s = firstSent(a.action);
-        if (s) alts.push({ ms: instantMs(s.entry.at), ids: [a.action, `${a.action}#${s.entry.ord}`] });
-      }
-      edge(6, alts, acts.length ? "no action attached at stage 5 has a sent entry in its ledger" : "no breach action is attached at stage 5");
-      edge(7, byEvaluation(latest), evalMissing(latest, "in force"));
-    } else if (e.stage === 6 || e.stage === 7) {
-      const alts = [];
-      for (const a of attached) {
-        const l = this.#ledger(a.action, viewer) || [];
-        for (const x of l) {
-          if (x.direction !== "received") continue;
-          if (latest && !(instantOrder(x.recorded_at, latest.at) > 0)) continue;
-          alts.push({ ms: instantMs(x.at), ids: [a.action, `${a.action}#${x.ord}`] });
-        }
-      }
-      edge(4, alts, latest ? "no received entry on an attached action was recorded after the latest evaluation" : "no received entry on an attached action");
-    }
-    for (const t of out) if (!edges.includes(t.to)) throw new Error("escalation: an edge outside the table");
-    return { triggers: out, notes };
-  }
-  /* R2, R13: the met edges, each with its instant, age and the declines made of it since its trigger was met. */
-  #proposed(e, triggers, nowMs) {
-    const declines = this.#declines(e.id);
-    return triggers.filter((t) => t.met).map((t) => {
-      const mine = declines.filter((d) => d.from === t.from && d.to === t.to && instantOrder(d.at, e.stageSince) >= 0);
-      const since = mine.filter((d) => instantOrder(d.at, t.instant) >= 0);
-      return {
-        from: t.from,
-        to: t.to,
-        stage: STAGES[t.to],
-        ids: t.ids,
-        instant: t.instant,
-        age_ms: Math.max(0, nowMs - instantMs(t.instant)),
-        declines: mine,
-        declined_since_met: since.length > 0,
-        by: "protocol",
-        says: PROPOSAL_SAYS3
-      };
-    });
-  }
-  /* R3, R14: the two exit conditions, answered apart and never composed. */
-  #exit(e, viewer) {
-    return {
-      compliance: this.#compliance(e, viewer),
-      consequences: this.#consequencesState(e, viewer),
-      says: "an escalation ends only when both hold: compliance restored for every standard it pursues, and the consequences addressed. Each is answered on its own."
-    };
-  }
-  #compliance(e, viewer) {
-    if (!e.act) return { state: "undetermined", ids: [], why: "the determination names no act id, so no later determination of the same act can be found" };
-    const per = [];
-    for (const standard of e.standards) {
-      const found = [];
-      let after = null;
-      for (let page = 0; page < 50; page++) {
-        const r = this.conformance.determinationsFor({ act: e.act, standard, outcome: "compliant", live: true, after, viewer });
-        if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the determinations of the act could not be read" };
-        for (const d of r.items || []) {
-          const o = outcomesOf(d).find((x) => x.standard === standard);
-          if (o && o.outcome === "compliant" && liveOf(d) && actIdOf(d) === e.act && instantOrder(recordedAtOf(d), e.openedAt) > 0) found.push(d.id);
-        }
-        if (!r.truncated) break;
-        after = r.cursor ?? (r.items || []).at(-1)?.id ?? null;
-        if (!after) break;
-      }
-      per.push({ standard, met: found.length > 0, ids: found });
-    }
-    const lacking = per.filter((p) => !p.met).map((p) => p.standard);
-    return {
-      state: lacking.length ? "not_met" : "met",
-      ids: per.flatMap((p) => p.ids),
-      standards: per,
-      why: lacking.length ? `no live compliant determination of the same act recorded after the escalation opened for: ${lacking.join(", ")}` : "every standard pursued has a live compliant determination of the same act recorded after the escalation opened"
-    };
-  }
-  #consequencesState(e, viewer) {
-    const r = this.consequences.addressed({ determination: e.determination, viewer });
-    if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the consequences could not be read" };
-    const parts = Array.isArray(r.parts) ? r.parts : [];
-    const ids = parts.map((p) => isObj14(p) ? p.id ?? p.part ?? null : p).filter((x) => typeof x === "string");
-    const state = r.state === "addressed" ? "met" : r.state === "not_addressed" ? "not_met" : "undetermined";
-    const why = state === "met" ? "every live consequence part is addressed" : state === "not_met" ? "a consequence part is not addressed, or was never assessed" : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
-    return { state, ids, parts, why };
-  }
-  /* The escalation's attached actions as the reader sees them, with stage 7's statements and R12's undetermined
-     election or oversight. */
-  #actionsOf(e, viewer) {
-    const view = this.#view();
-    return this.#attachments(e.id).map((a) => {
-      const visible = this.actions.actionRead({ id: a.action, viewer });
-      const item = { action: a.action, stage: a.stage, attached_by: a.author, at: a.at };
-      if (!visible || visible.ok === false) return { ...item, action: null, says: "an object you may not see" };
-      if (a.stage === 7) {
-        item.purpose = a.purpose;
-        item.standards = a.standards;
-        const office = this.#office(visible.counterparty, view);
-        if (a.purpose === "official_request" && office.elected === void 0)
-          item.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
-        if ((a.purpose === "oversight_request" || a.purpose === "audit_request") && office.oversight === void 0)
-          item.oversight = { state: "undetermined", says: "the active profiles do not say whether this office is an oversight or audit body" };
-      }
-      if (a.stage === 5) {
-        const f8 = this.filings.filingsFor({ action: a.action, viewer });
-        item.filings = f8 && f8.ok !== false ? { drafts: f8.drafts ?? [], packets: f8.packets ?? [] } : null;
-      }
-      return item;
-    });
-  }
-  /* R12: an action's counterparty office in the view, `{elected?, oversight?}`; undefined where the profile is silent. */
-  #office(cp, view) {
-    if (!isObj14(cp) || !str12(cp.role) || !str12(cp.body) || !view || !Array.isArray(view.counterparties)) return {};
-    const o = view.counterparties.find((c) => isObj14(c) && c.role === cp.role && c.body === cp.body);
-    if (!o) return {};
-    return {
-      elected: typeof o.elected === "boolean" ? o.elected : void 0,
-      oversight: typeof o.oversight === "boolean" ? o.oversight : void 0
-    };
-  }
-  /* The history: every act on the escalation, oldest first, from its document's log (R18). */
-  #history(id) {
-    return logOf(this.#text(id));
-  }
-  /** R2: the escalation as the record stands at `nowMs`. */
-  escalationRead({ id, nowMs, viewer } = {}) {
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    const at14 = Number.isFinite(nowMs) ? nowMs : instantMs(this.now());
-    const { triggers, notes } = this.#triggers(e, at14, viewer);
-    const proposed = this.#proposed(e, triggers, at14);
-    const answer = {
-      ok: true,
-      id: e.id,
-      project: e.project,
-      determination: e.determination,
-      act: e.act,
-      state: e.state,
-      stage: e.stage,
-      stage_name: STAGES[e.stage],
-      stage_since: e.stageSince,
-      opened_by: e.openedBy,
-      opened_at: e.openedAt,
-      as_of: iso2(at14),
-      history: this.#history(e.id),
-      standards: e.standards,
-      actions: this.#actionsOf(e, viewer),
-      evaluations: this.#evaluations(e.id),
-      triggers,
-      notes,
-      proposed,
-      exit: this.#exit(e, viewer)
-    };
-    if (e.state === "suspended")
-      answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep running in the actions, and it is not ended" };
-    if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
-    if (e.stage === 5) {
-      const av = this.filings.availableActions({ determination: e.determination, viewer });
-      answer.available = av && av.ok !== false ? av : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
-    }
-    return answer;
-  }
-  /* ===================================================================== *
-   * THE WRITE (R18, R21): every act is one promotion of the escalation's document through `promotion`.
-   * ===================================================================== */
-  #snap() {
-    return `${this.now().replace(/[-:]/g, "").replace(/\.\d+/, "")}_${hex8()}`;
-  }
-  #append(e, entry, { stage, state, blurb }) {
-    const head = this.record.head(e.id);
-    const text3 = this.#text(e.id);
-    if (!head || text3 === null) return refuseNoSuchEscalation();
-    const seq = logOf(text3).length + 1;
-    const next = appendEntry(text3, { entry, seq, stage, state, fromState: head.currentState, blurb });
-    if (next === null) return refusal15("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
-    const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
-      const f8 = this.record.readFile(e.id, path);
-      return typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes };
-    });
-    const fm = parseFm2(next) || {};
-    const r = this.promotion.promote({
-      bundleId: e.id,
-      base: head.bundleSha,
-      snapKey: this.#snap(),
-      author: entry.author,
-      files: [{ path: "bundle.md", text: next }, ...carried],
-      meta: {
-        object_type: ESCALATION,
-        title: fm.title,
-        current_state: fm.current_state,
-        prior_state: fm.prior_state ?? null,
-        created: fm.created,
-        last_updated: fm.last_updated
-      },
-      [ACT]: true
-    });
-    return r.ok ? { ok: true, seq } : r;
-  }
-  /* ---- the registered step (promotion R39) ---- */
-  /** R17, R18, R21: an escalation document changes only through this module's acts, never by a machine, and its log
-   *  only grows; a replay restores one as it was. */
-  check(c) {
-    const type = c.promotedType;
-    const headType = c.head ? c.head.type : null;
-    if (type !== ESCALATION && headType !== ESCALATION) return null;
-    if (c.replay) return null;
-    if (isMachine(c.author))
-      return refusal15("MACHINE_CANNOT_WRITE_ESCALATION", "an escalation is written only by a member's act; a machine prepares and never acts (Design Requirement 12). Nothing was written.");
-    if (!c.pkg || c.pkg[ACT] !== true)
-      return refusal15("ESCALATION_BY_ACT_ONLY", "an escalation changes only through its acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its log and its tables never disagree. Nothing was written.");
-    if (c.head) {
-      const held = logSection(this.#text(c.bundleId)) || "";
-      const now = logSection(c.bundleMd && c.bundleMd.text) || "";
-      if (!now.startsWith(held))
-        return refusal15("ESCALATION_HISTORY_REWRITTEN", "an escalation's log is append-only. Nothing was written.");
-    }
-    return null;
-  }
-  /** R21: the tables, projected from the promoted document in the promotion's transaction. */
-  project(c) {
-    if (c.promotedType !== ESCALATION || !c.bundleMd || typeof c.bundleMd.text !== "string") return null;
-    const id = c.bundleId, text3 = c.bundleMd.text;
-    const fm = parseFm2(text3) || {};
-    const log = logOf(text3).filter((x) => !x.unreadable);
-    const held = this.#one(`SELECT log_len FROM escalations WHERE escalation_id=?`, id);
-    const from = held ? held.log_len : 0;
-    const open = log.find((x) => x.kind === "open") || {};
-    const stageAt = log.filter((x) => x.kind === "open" || x.kind === "advance").at(-1) || open;
-    const stateAt = log.filter((x) => ["open", "suspend", "resume", "end"].includes(x.kind)).at(-1) || open;
-    this.#rows(
-      `INSERT OR REPLACE INTO escalations (escalation_id, project_id, determination_id, act_id, standards_json,
-                state, stage, stage_since, state_since, opened_by, opened_at, log_len) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-      id,
-      String(fm.project ?? open.project ?? ""),
-      String(fm.determination ?? open.determination ?? ""),
-      fm.act === null || fm.act === void 0 || fm.act === "null" ? null : String(fm.act),
-      JSON.stringify(Array.isArray(fm.standards) ? fm.standards.map(String) : open.standards || []),
-      String(fm.current_state ?? "open"),
-      Number(fm.stage ?? 1),
-      stageAt.at ?? "",
-      stateAt.at ?? "",
-      open.author ?? "",
-      open.at ?? "",
-      log.length
-    );
-    for (const x of log.filter((y) => y.seq > from)) {
-      if (["open", "advance", "suspend", "resume", "end"].includes(x.kind))
-        this.#rows(
-          `INSERT OR REPLACE INTO escalation_moves (escalation_id, seq, kind, from_stage, to_stage, reason,
-                    trigger_json, author, at) VALUES (?,?,?,?,?,?,?,?,?)`,
-          id,
-          x.seq,
-          x.kind,
-          x.from ?? null,
-          x.to ?? null,
-          x.reason ?? null,
-          json3(x.trigger),
-          x.author,
-          x.at
-        );
-      else if (x.kind === "evaluate")
-        this.#rows(
-          `INSERT OR REPLACE INTO escalation_evaluations (escalation_id, seq, reading, response_action,
-                    response_ord, reason, author, at) VALUES (?,?,?,?,?,?,?,?)`,
-          id,
-          x.seq,
-          x.reading,
-          x.response ? x.response.action : null,
-          x.response ? x.response.ord : null,
-          x.reason,
-          x.author,
-          x.at
-        );
-      else if (x.kind === "attach")
-        this.#rows(
-          `INSERT OR REPLACE INTO escalation_attachments (action_id, escalation_id, seq, stage, purpose,
-                    standards_json, author, at) VALUES (?,?,?,?,?,?,?,?)`,
-          x.action,
-          id,
-          x.seq,
-          x.stage,
-          x.purpose ?? null,
-          json3(x.standards),
-          x.author,
-          x.at
-        );
-      else if (x.kind === "decline")
-        this.#rows(`INSERT OR REPLACE INTO escalation_declines (escalation_id, seq, from_stage, to_stage, reason, author, at)
-                    VALUES (?,?,?,?,?,?,?)`, id, x.seq, x.from, x.to, x.reason, x.author, x.at);
-    }
-    return null;
-  }
-  /* ===================================================================== *
-   * THE ACTS
-   * ===================================================================== */
-  /** R1: open an escalation of a live noncompliant determination, at stage 1. */
-  escalationOpen(args = {}) {
-    const { determination, author, viewer } = args;
-    if (isMachine(author))
-      return refusal15("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const d = typeof determination === "string" && determination ? this.conformance.determinationRead({ id: determination, viewer }) : null;
-    if (!d || d.ok === false)
-      return refusal15("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.");
-    if (!liveOf(d))
-      return refusal15("DETERMINATION_SUPERSEDED", "that determination has been superseded; an escalation pursues a live determination. Nothing was written.", { superseded_by: d.superseded_by ?? null });
-    const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
-    if (!pursued.length)
-      return refusal15("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
-    const project = projectOf(d);
-    const fence3 = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
-    if (fence3)
-      return refusal15("NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence3.reason });
-    const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
-                            ORDER BY escalation_id LIMIT 1`, determination);
-    if (held)
-      return refusal15("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is one open or suspended escalation per determination. Nothing was written.`, { escalation: held.escalation_id });
-    const at14 = this.now();
-    const actId = actIdOf(d);
-    const r = this.record.transact(() => {
-      const id = escalationId(this.record.allocId("ESC", at14.slice(0, 4)).id);
-      const entry = { kind: "open", to: 1, determination, project, standards: pursued, author, at: at14 };
-      const text3 = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at: at14, entry });
-      const fm = parseFm2(text3) || {};
-      const p = this.promotion.promote({
-        bundleId: id,
-        base: null,
-        snapKey: this.#snap(),
-        author,
-        files: [{ path: "bundle.md", text: text3 }],
-        meta: {
-          object_type: ESCALATION,
-          title: fm.title,
-          current_state: fm.current_state,
-          created: fm.created,
-          last_updated: fm.last_updated
-        },
-        [ACT]: true
-      });
-      return p.ok ? { ok: true, id } : p;
-    });
-    if (!r.ok) return r;
-    const read2 = this.escalationRead({ id: r.id, viewer });
-    return {
-      ok: true,
-      id: r.id,
-      stage: 1,
-      stage_name: STAGES[1],
-      standards: pursued,
-      determination,
-      project,
-      opened_by: author,
-      at: at14,
-      proposed: read2.proposed
-    };
-  }
-  /** R9, R12: attach a breach action to the current stage (2, 5 or 7). */
-  escalationAttach(args = {}) {
-    const { id, action, purpose, standards, author, viewer } = args;
-    if (isMachine(author))
-      return refusal15("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    if (e.state === "ended") return refuseEnded();
-    const a = typeof action === "string" && action ? this.actions.actionRead({ id: action, viewer }) : null;
-    if (!a || a.ok === false)
-      return refusal15("NO_SUCH_ACTION", "no action answers to that id here; one you may not see is answered exactly as one that does not exist.");
-    const legs = Array.isArray(a.legs) ? a.legs : [];
-    if (a.breach !== true || !legs.some((l) => isObj14(l) && l.kind === "rests_on" && l.target === e.determination))
-      return refusal15("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
-    if (!ATTACHING_STAGES.includes(e.stage))
-      return refusal15("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages 2, 5 and 7 do. Nothing was written.`, { stage: e.stage });
-    const held = this.#one(`SELECT escalation_id, stage FROM escalation_attachments WHERE action_id=?`, action);
-    if (held)
-      return refusal15(
-        "ALREADY_ATTACHED",
-        "that action is already attached to an escalation, at one stage. Nothing was written.",
-        held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {}
-      );
-    const entry = { kind: "attach", action, stage: e.stage, author, at: this.now() };
-    if (e.stage === 7) {
-      if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
-        return refusal15(
-          "NOT_ACCOUNTABILITY",
-          `a stage-7 act states one accountability purpose: ${ACCOUNTABILITY_PURPOSES.join(", ")}. Policy advocacy and candidate support have none. Nothing was written.`,
-          { purposes: ACCOUNTABILITY_PURPOSES }
-        );
-      const named = Array.isArray(standards) ? standards.filter((s) => typeof s === "string" && s) : [];
-      const foreign = named.filter((s) => !e.standards.includes(s));
-      if (!named.length || foreign.length)
-        return refusal15(
-          "NOT_THE_BREACH",
-          "a stage-7 act names at least one of the escalation's noncompliant standards as the requirement it seeks enforced, and no other. Nothing was written.",
-          { pursued: e.standards, ...foreign.length ? { not_pursued: foreign } : {} }
-        );
-      const office = this.#office(a.counterparty, this.#view());
-      if (purpose === "official_request" && office.elected === false)
-        return refusal15("COUNTERPARTY_NOT_ELECTED", "an official request asks an elected office to act on the breach, and the active profiles mark this action's office not elected. Nothing was written.");
-      if ((purpose === "oversight_request" || purpose === "audit_request") && office.oversight === false)
-        return refusal15("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an oversight or audit body, and the active profiles mark this action's office not one. Nothing was written.");
-      Object.assign(entry, { purpose, standards: [...new Set(named)] });
-    }
-    const w = this.#append(e, entry, { blurb: "Action attached" });
-    if (!w.ok) return w;
-    return {
-      ok: true,
-      id: e.id,
-      action,
-      stage: e.stage,
-      ...e.stage === 7 ? { purpose, standards: entry.standards } : {},
-      author,
-      at: entry.at
-    };
-  }
-  /** R10: a member's reading of a response, at stage 4. */
-  escalationEvaluate(args = {}) {
-    const { id, response, reading, reason, author, viewer } = args;
-    if (isMachine(author))
-      return refusal15("MACHINE_CANNOT_EVALUATE", "a response is evaluated by a named member. Nothing was written.");
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    if (e.stage !== 4)
-      return refusal15("NOT_IN_EVALUATION", `the escalation stands at stage ${e.stage} (${STAGES[e.stage]}); a response is evaluated at stage 4. Nothing was written.`, { stage: e.stage });
-    if (e.state === "ended") return refuseEnded();
-    if (!READINGS2.includes(reading))
-      return refusal15("READING_UNKNOWN", `a reading is one of ${READINGS2.join(", ")}. Nothing was written.`, { readings: READINGS2 });
-    let named = null;
-    if (response !== void 0 && response !== null) {
-      const ok = isObj14(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
-      if (!ok)
-        return refuseNoSuchResponse("the response named is not a received entry of an action attached to this escalation.");
-      named = { action: response.action, ord: response.ord };
-    } else if (reading !== "none")
-      return refuseNoSuchResponse(`a ${reading} reading names the received entry it reads.`);
-    if (named && reading === "none")
-      return refusal15("RESPONSE_FOR_NONE", "a none reading says nothing came back by the clock, so it names no response. Nothing was written.");
-    const bad = refuseReason(reason);
-    if (bad) return bad;
-    const entry = { kind: "evaluate", reading, response: named, reason: str12(reason), author, at: this.now() };
-    const w = this.#append(e, entry, { blurb: "Response evaluated" });
-    if (!w.ok) return w;
-    return {
-      ok: true,
-      id: e.id,
-      reading,
-      response: named,
-      reason: entry.reason,
-      author,
-      at: entry.at,
-      ...reading === "complied" ? { says: "a complied reading proposes no stage. Compliance is restored only by a live compliant determination of the same act for every standard pursued (escalationEnd)." } : {},
-      ...reading === "partial" ? { says: "partial compliance is recorded; it does not stop the clock or end the escalation." } : {}
-    };
-  }
-  #edgeArgs(kind, { id, to, reason, author, viewer }, args) {
-    if (isMachine(author))
-      return { refused: refusal15(
-        kind === "advance" ? "MACHINE_CANNOT_ADVANCE" : "MACHINE_CANNOT_DECLINE",
-        `an escalation's stage is ${kind === "advance" ? "advanced" : "declined"} by a named member; a proposal is the protocol's derivation, never an act. Nothing was written.`
-      ) };
-    const judged = refuseJudgment(args);
-    if (judged) return { refused: judged };
-    const e = this.#row(id, viewer);
-    if (!e) return { refused: refuseNoSuchEscalation() };
-    if (e.state !== "open")
-      return { refused: refusal15(
-        "NOT_OPEN",
-        `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
-        { state: e.state }
-      ) };
-    const bad = refuseReason(reason);
-    if (bad) return { refused: bad };
-    const target = typeof to === "string" && /^\d$/.test(to) ? Number(to) : typeof to === "string" ? Number(Object.keys(STAGES).find((k) => STAGES[k] === to)) : to;
-    const legal = STAGE_TABLE[e.stage] || [];
-    if (!legal.includes(target))
-      return { refused: refusal15(
-        "ILLEGAL_STAGE",
-        `stage ${e.stage} (${STAGES[e.stage]}) moves to ${legal.join(" or ")} only. Nothing was written.`,
-        { from: e.stage, legal }
-      ) };
-    return { e, target };
-  }
-  /** R13: advance along a proposed edge. */
-  escalationAdvance(args = {}) {
-    const a = this.#edgeArgs("advance", args, args);
-    if (a.refused) return a.refused;
-    const { e, target } = a;
-    const nowMs = instantMs(this.now());
-    const { triggers } = this.#triggers(e, nowMs, args.viewer);
-    const t = triggers.find((x) => x.to === target);
-    if (!t || !t.met)
-      return refusal15(
-        "TRIGGER_NOT_MET",
-        `the trigger for stage ${target} (${STAGES[target]}) is not met: ${t ? t.missing : "no trigger"}. Nothing was written.`,
-        { from: e.stage, to: target, missing: t ? t.missing : null }
-      );
-    const entry = {
-      kind: "advance",
-      from: e.stage,
-      to: target,
-      reason: str12(args.reason),
-      author: args.author,
-      at: this.now(),
-      trigger: { ids: t.ids, instant: t.instant }
-    };
-    const w = this.#append(e, entry, { stage: target, blurb: `Advanced to stage ${target}` });
-    if (!w.ok) return w;
-    return {
-      ok: true,
-      id: e.id,
-      from: e.stage,
-      to: target,
-      stage_name: STAGES[target],
-      reason: entry.reason,
-      author: entry.author,
-      at: entry.at,
-      trigger: entry.trigger
-    };
-  }
-  /** R13: record that a member chose not to advance along a proposed edge now. */
-  escalationDecline(args = {}) {
-    const a = this.#edgeArgs("decline", args, args);
-    if (a.refused) return a.refused;
-    const { e, target } = a;
-    const { triggers } = this.#triggers(e, instantMs(this.now()), args.viewer);
-    const t = triggers.find((x) => x.to === target);
-    if (!t || !t.met)
-      return refusal15(
-        "NOT_PROPOSED",
-        `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
-        { from: e.stage, to: target }
-      );
-    const entry = { kind: "decline", from: e.stage, to: target, reason: str12(args.reason), author: args.author, at: this.now() };
-    const w = this.#append(e, entry, { blurb: `Declined stage ${target}` });
-    if (!w.ok) return w;
-    return {
-      ok: true,
-      id: e.id,
-      from: e.stage,
-      to: target,
-      reason: entry.reason,
-      author: entry.author,
-      at: entry.at,
-      says: "the proposal stays in the read, with its age and this decline"
-    };
-  }
-  /** R14: end an escalation, only when compliance is restored and the consequences are addressed. */
-  escalationEnd(args = {}) {
-    const { id, author, viewer } = args;
-    if (isMachine(author))
-      return refusal15("MACHINE_CANNOT_END", "an escalation is ended by a named member. Nothing was written.");
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    if (e.state === "ended") return refusal15("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened.");
-    const c = this.#compliance(e, viewer);
-    if (c.state !== "met")
-      return refusal15(
-        "COMPLIANCE_NOT_RESTORED",
-        `compliance is not restored: ${c.why}. Nothing was written.`,
-        { ids: c.ids, standards: c.standards ?? [] }
-      );
-    const q6 = this.#consequencesState(e, viewer);
-    if (q6.state === "not_met")
-      return refusal15("CONSEQUENCES_NOT_ADDRESSED", `the consequences are not addressed: ${q6.why}. Nothing was written.`, { ids: q6.ids });
-    if (q6.state !== "met")
-      return refusal15(
-        "CONSEQUENCES_UNDETERMINED",
-        `whether the consequences are addressed is undetermined: ${q6.why}. A group that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.`,
-        { ids: q6.ids }
-      );
-    const entry = { kind: "end", from: e.stage, author, at: this.now(), compliance: c.ids, consequences: q6.ids };
-    const w = this.#append(e, entry, { state: "ended", blurb: "Escalation ended" });
-    if (!w.ok) return w;
-    return { ok: true, id: e.id, state: "ended", ended_by: author, at: entry.at, compliance: c.ids, consequences: q6.ids };
-  }
-  /** R15: suspend an open escalation, with a reason. */
-  escalationSuspend(args = {}) {
-    const { id, reason, author, viewer } = args;
-    if (isMachine(author))
-      return refusal15("MACHINE_CANNOT_SUSPEND", "an escalation is suspended by a named member. Nothing was written.");
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    if (e.state === "ended") return refuseEnded();
-    if (e.state === "suspended") return refusal15("ALREADY_SUSPENDED", `suspended since ${e.stateSince}. Nothing was written.`);
-    const bad = refuseReason(reason);
-    if (bad) return bad;
-    const entry = { kind: "suspend", from: e.stage, reason: str12(reason), author, at: this.now() };
-    const w = this.#append(e, entry, { state: "suspended", blurb: "Escalation suspended" });
-    if (!w.ok) return w;
-    return {
-      ok: true,
-      id: e.id,
-      state: "suspended",
-      stage: e.stage,
-      reason: entry.reason,
-      author,
-      at: entry.at,
-      says: "suspended: not ended. Its proposals are not reported as due; its clocks keep running in the actions."
-    };
-  }
-  /** R15: resume a suspended escalation at the same stage. */
-  escalationResume(args = {}) {
-    const { id, reason, author, viewer } = args;
-    if (isMachine(author))
-      return refusal15("MACHINE_CANNOT_RESUME", "an escalation is resumed by a named member. Nothing was written.");
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    if (e.state === "ended") return refuseEnded();
-    if (e.state !== "suspended") return refusal15("NOT_SUSPENDED", "this escalation is open. Nothing was written.");
-    const entry = { kind: "resume", from: e.stage, reason: str12(reason) || null, author, at: this.now() };
-    const w = this.#append(e, entry, { state: "open", blurb: "Escalation resumed" });
-    if (!w.ok) return w;
-    return { ok: true, id: e.id, state: "open", stage: e.stage, author, at: entry.at };
-  }
-  /** R16: every open escalation with a proposed edge not advanced or declined since its trigger was met, oldest first. */
-  escalationsDue({ nowMs, limit, viewer } = {}) {
-    const at14 = Number.isFinite(nowMs) ? nowMs : instantMs(this.now());
-    const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
-    const items = [];
-    for (const r of this.#rows(`SELECT escalation_id FROM escalations WHERE state='open' ORDER BY escalation_id`)) {
-      const e = this.#row(r.escalation_id, viewer);
-      if (!e) continue;
-      const { triggers } = this.#triggers(e, at14, viewer);
-      for (const p of this.#proposed(e, triggers, at14))
-        if (!p.declined_since_met)
-          items.push({
-            id: e.id,
-            project: e.project,
-            from: p.from,
-            to: p.to,
-            stage: p.stage,
-            instant: p.instant,
-            age_ms: p.age_ms,
-            ids: p.ids,
-            by: "protocol"
-          });
-    }
-    items.sort((a, b) => instantOrder(a.instant, b.instant) || (a.id < b.id ? -1 : a.id > b.id ? 1 : a.to - b.to));
-    return { ok: true, as_of: iso2(at14), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
-  }
-};
-function refuseNoSuchEscalation() {
-  return refusal15("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is answered exactly as one that does not exist.");
-}
-function refuseEnded() {
-  return refusal15("ESCALATION_ENDED", "this escalation has ended; nothing is added to it and it is never reopened. Nothing was written.");
-}
-function refuseNoSuchResponse(why) {
-  return refusal15("NO_SUCH_RESPONSE", `${why} Nothing was written.`);
-}
-function refuseReason(reason) {
-  const r = str12(reason);
-  if (!r || r.length > REASON_MAX4)
-    return refusal15("NO_REASON", `a reason of 1 to ${REASON_MAX4} characters is required. Nothing was written.`);
-  return null;
-}
-function refuseJudgment(args) {
-  const found = isObj14(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
-  if (found.length)
-    return refusal15("ESCALATION_CARRIES_NO_JUDGMENT", "an escalation records no significance, severity, priority, urgency, rank or score: whether a breach warrants action, and how urgently, is a member's judgment, made with the consequences in front of them. Nothing was written.", { keys: found });
-  return null;
-}
-function refuseProviderUnavailable(provider) {
-  return refusal15("PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
-}
-var ProviderAbsent = class extends Error {
-  constructor(provider) {
-    super(`escalation: ${provider} was not given`);
-    this.provider = provider;
-  }
-};
-for (const name of [
-  "escalationOpen",
-  "escalationRead",
-  "escalationAttach",
-  "escalationEvaluate",
-  "escalationAdvance",
-  "escalationDecline",
-  "escalationEnd",
-  "escalationSuspend",
-  "escalationResume",
-  "escalationsDue"
-]) {
-  const f8 = Escalation.prototype[name];
-  Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function(...a) {
-    try {
-      return f8.apply(this, a);
-    } catch (e) {
-      if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider);
-      throw e;
-    }
-  } });
-}
-var instances28 = /* @__PURE__ */ new WeakMap();
-function escalationOf(host, deps) {
-  let i = instances28.get(host);
-  if (!i) {
-    const d = deps || {};
-    const storage = d.storage || host.storage;
-    const record = d.record || recordOf(host);
-    const membership = d.membership || membershipOf(host, { record });
-    const promotion = d.promotion || promotionOf(host, { record, membership });
-    const conformance = d.conformance || (() => conformanceOf(host, { record, membership, promotion }));
-    const actions = d.actions || (() => actionsOf(host, { record, membership, promotion }));
-    const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
-    const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
-    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
-    instances28.set(host, i);
-    i.migrate();
-    record.declarePurge("escalation", ESCALATION_TABLES);
-    promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
   }
   return i;
 }
@@ -101245,6 +101346,7 @@ var Store = class _Store extends DurableObject {
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
     aiRunsOf(ctx, env);
+    reevaluationOf(ctx, { env });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("legacy-store", (legs) => {
       const cap = this.earnedBasisRegistry(null, [...new Set(legs.map((l) => l.target_id))])?.earned?.capture || {};
@@ -101261,7 +101363,6 @@ var Store = class _Store extends DurableObject {
     connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
     connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
-    reevaluationOf(ctx, { env });
     ratificationOf(ctx);
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
     strengthOf(ctx, {
@@ -101273,13 +101374,24 @@ var Store = class _Store extends DurableObject {
       },
       versions: basisVersionsOf(ctx)
     });
-    const bias = biasOf(ctx, { env });
+    biasOf(ctx, { env });
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env), interim: runProductionsInterim({
       aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer)
     }) });
     reviewOf(ctx);
     intentOf(ctx);
     caseAuthoringOf(ctx);
+    standardsOf(ctx).migrate();
+    const conformance = conformanceOf(ctx);
+    const consequences = consequencesModule(ctx, { conformance });
+    filingsOf(ctx, {
+      actions: actionsOf(ctx),
+      conformance,
+      standards: standardsOf(ctx),
+      consequences,
+      producingGroup: () => this.#producingGroup()
+    });
+    escalationOf(ctx);
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
     const capture = captureOf(ctx, { env });
@@ -105852,14 +105964,7 @@ ${lines.join("\n")}
         const existence = this.#existenceAct(proj, viewer);
         if (existence) return existence;
       }
-      if (!row2 || normalizeType(row2.object_type) !== "project")
-        return {
-          ok: false,
-          reason: "NO_SUCH_PROJECT",
-          project: proj,
-          finding: find,
-          detail: "the project a judgment-layer disposition is scoped to must be a PROJECT bundle this viewer can see. Absent and invisible answer identically here and that is deliberate (REC-25): a refusal that told them apart would disclose the existence of a project the caller was not invited to."
-        };
+      if (!row2 || normalizeType(row2.object_type) !== "project") return noSuchProject(proj, { finding: find });
       const denied = this.#projectAuthority(proj, identity, "joined", "proposedispose");
       if (denied) return denied;
       const atS = (/* @__PURE__ */ new Date()).toISOString();
@@ -105963,9 +106068,8 @@ ${lines.join("\n")}
    *  differ ON PURPOSE rather than by omission. `#counts` passes `viewer` straight through, so a
    *  direct INTERNAL call (`undefined`: the DO route passes the parameter only when present) stays
    *  WHOLE — purge's proof and the store-level suites, D-464's correction. `frontier()` defaults
-   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all —
-   *  `#frontierDocumentVisible`'s posture one method away (*a missing stamp is an outage and never a
-   *  leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
+   *  `viewer` to `null`, which compiles DENY, so an ABSENT control-plane stamp sees no run at all
+   *  (*a missing stamp is an outage and never a leak*), and `index.mjs` stamps `op=frontier` for exactly that reason. */
   #hiddenSets(viewer) {
     const gate = viewer === void 0 ? null : viewerPredicate(viewer);
     const hid = gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
@@ -106573,19 +106677,6 @@ ${lines.join("\n")}
       note: "every document this store writes from now on names this group. Documents already written are NOT rewritten: whatever group their bytes name is what they were signed under."
     };
   }
-  /* DECISION (c)'s refusal, ONE site however many acts need it, so its DEC-49 row can name one smallest span. */
-  #groupUndetermined(act, detail) {
-    const row2 = INSTANCE_GROUP_CHECKS.GROUP_UNDETERMINED;
-    return {
-      ok: false,
-      reason: "GROUP_UNDETERMINED",
-      code: "GROUP_UNDETERMINED",
-      check: row2.check,
-      translation: row2.translation,
-      act,
-      detail
-    };
-  }
   /* =====================================================================
    * REC-164 — THE PUBLISHING GROUP'S DISPLAY NAME AND ITS VERIFIED DOMAIN. `BIO_Publication_v0_1.md` §7 points 2
    * and 3 (BOB #24, 2026-09-21), resting on point 1's public slug (REC-163).
@@ -107018,7 +107109,15 @@ ${lines.join("\n")}
     projectparticipants: ["projectId"],
     /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
        C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
-    projectrequests: ["projectId"]
+    projectrequests: ["projectId"],
+    /* N193: a document's bundle id. N216's layer-9 reads naming a record object's bundle, or (`determinations`) a project. */
+    connectionsasserted: ["bundle"],
+    standard: ["id"],
+    standardinforce: ["id"],
+    determination: ["id"],
+    determinations: ["project"],
+    consequence: ["id"],
+    escalation: ["id"]
   });
   static PROJECT_NAMING_READS_NOT = Object.freeze({
     content: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
@@ -107049,7 +107148,15 @@ ${lines.join("\n")}
     verify: "`sha256` is a published artifact's digest",
     publishedcase: "`id` is a PUBLISHED case \u2014 the published record, served to anybody",
     publishededitions: "`id` is a PUBLISHED case \u2014 the published record, served to anybody",
-    caseflags: "`case` and `target` name a case and its member finding, every field already published"
+    caseflags: "`case` and `target` name a case and its member finding, every field already published",
+    /* N89, N193 (N112, K210): `pdfstructure` beside `reading`. */
+    archivelookup: "`address` is a source address",
+    pdfstructure: "`sha256` is a CAPTURE's digest",
+    contentcrop: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
+    filemembership: "`sha256` is a CAPTURE's digest",
+    /* N216's layer-9 reads whose id names a row inside a project, never a bundle. */
+    comparison: "`id` is a comparison PROPOSAL id \u2014 a thing inside a project, whose existence is contents",
+    counselpacketread: "`id` is a COUNSEL PACKET id \u2014 a thing inside a project, whose existence is contents"
   });
   #existenceRead(op, url, body) {
     const params = Object.prototype.hasOwnProperty.call(_Store.PROJECT_NAMING_READS, op) ? _Store.PROJECT_NAMING_READS[op] : null;
@@ -107097,7 +107204,7 @@ ${lines.join("\n")}
     return membershipOf(this.ctx).rosterInSight(...a);
   }
   /* `promote`'s not-found is the BUNDLE-level one (it revises any bundle, not only projects), so a
-     hidden project's revision answers with it rather than with `#noSuchProject` — the rule is
+     hidden project's revision answers with it rather than with membership's `noSuchProject` — the rule is
      "the same answer the absent id gets", and for this act that answer is ABSENT. */
   /* REC-190, D-476, D-530, D-556: the census of displaced homes and whether the register holds a capture:
      provenance's (R5, R10). */
@@ -107106,14 +107213,6 @@ ${lines.join("\n")}
   }
   registerHolds(...a) {
     return provenanceOf(this.ctx).registerHolds(...a);
-  }
-  static #noSuchProject(project) {
-    return {
-      ok: false,
-      reason: "NO_SUCH_PROJECT",
-      project: project ?? null,
-      detail: "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way."
-    };
   }
   #ownsAnyProject(...a) {
     return membershipOf(this.ctx).ownsAnyProject(...a);
@@ -108164,6 +108263,10 @@ ${lines.join("\n")}
   biasDebtRead(a) {
     return biasOf(this.ctx).biasDebt(a);
   }
+  static #numberParam(url, k) {
+    const v = url.searchParams.get(k);
+    return v === null || v === "" ? void 0 : Number(v);
+  }
   async fetch(req) {
     const url = new URL(req.url);
     const op = url.pathname.slice(1);
@@ -108447,6 +108550,63 @@ ${lines.join("\n")}
            selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
         ...retrievalRoutes(retrievalOf(this.ctx), url, body),
         ...actionsOps(actionsOf(this.ctx), url, body),
+        /* N216 (K250, K263): layer 9's ops. escalation publishes no op map, so its ten are named here (LEGACY-INDEX #5's
+           table, K262); `author` and `viewer` are the control plane's stamps, read from the query after the body, and
+           `now` and `limit` are numbers or absent. */
+        ...standardsOps(standardsOf(this.ctx), url, body),
+        ...conformanceOps(conformanceOf(this.ctx), url, body),
+        ...consequencesOps(consequencesModule(this.ctx), url, body),
+        ...filingsOps(filingsOf(this.ctx), url, body),
+        escalationopen: () => escalationOf(this.ctx).escalationOpen({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalation: () => escalationOf(this.ctx).escalationRead({
+          id: url.searchParams.get("id"),
+          nowMs: _Store.#numberParam(url, "now"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationattach: () => escalationOf(this.ctx).escalationAttach({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationevaluate: () => escalationOf(this.ctx).escalationEvaluate({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationadvance: () => escalationOf(this.ctx).escalationAdvance({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationdecline: () => escalationOf(this.ctx).escalationDecline({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationend: () => escalationOf(this.ctx).escalationEnd({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationsuspend: () => escalationOf(this.ctx).escalationSuspend({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationresume: () => escalationOf(this.ctx).escalationResume({
+          ...body || {},
+          author: url.searchParams.get("author"),
+          viewer: url.searchParams.get("viewer")
+        }),
+        escalationsdue: () => escalationOf(this.ctx).escalationsDue({
+          nowMs: _Store.#numberParam(url, "now"),
+          limit: _Store.#numberParam(url, "limit"),
+          viewer: url.searchParams.get("viewer")
+        }),
         ...monitoringOps(monitoringOf(this.ctx), url, body),
         /* REC-19: the facts behind op=affordances. The control plane derives
            the act list from these; this endpoint only reports what the store
