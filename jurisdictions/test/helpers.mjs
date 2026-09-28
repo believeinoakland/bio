@@ -75,7 +75,8 @@ export function walkFacts(p, fn) {
   each(p.systems, "systems"); each(p.mixed_hosts, "mixed_hosts"); each(p.crosswalks, "crosswalks");
   for (const [key, entries] of Object.entries(p.vocabulary || {})) each(entries, `vocabulary.${key}`);
   if (p.practice && p.practice.minutes_due_days) fn(p.practice.minutes_due_days, "practice.minutes_due_days");
-  for (const s of ["search_terms", "records_laws", "standard_sources", "counterparties", "deadlines"]) each(p[s], s);
+  if (p.locale) fn(p.locale, "locale");
+  for (const s of ["search_terms", "records_laws", "standard_sources", "counterparties", "deadlines", "legal_organisations", "holidays"]) each(p[s], s);
   (p.action_kinds || []).forEach((k, i) => {
     fn(k, `action_kinds[${i}]`);
     if (k.venue) fn(k.venue, `action_kinds[${i}].venue`);
@@ -236,10 +237,28 @@ function vocabularySamples() {
   return Object.fromEntries(Object.entries(lines).map(([k, ls]) => [k, ls.map((l) => [l, oracle[k].some((re) => re.test(l))])]));
 }
 
+/* REC-206's address shapes (`bio-plane/src/membership.mjs` on `land/worker/REC-206`, `MEMBERSHIP_SHAPES`),
+   tested there against a link's whole URL. */
+const MEMBERSHIP_SHAPES = [{
+  shape: "legistar-gateway",
+  item: /^https?:\/\/[a-z0-9-]+\.legistar\.com\/gateway\.aspx\?m=l&id=\/matter\.aspx\?key=\d+/i,
+  file: /^https?:\/\/[a-z0-9-]+\.legistar\.com\/gateway\.aspx\?m=f&id=[^&#]+/i,
+}];
+function linkSamples() {
+  const hosts = ["oakland.legistar.com", "oakland.legistar1.com", "OAKLAND.LEGISTAR.COM"];
+  const rest = ["/gateway.aspx?M=L&ID=/matter.aspx?key=12345", "/Gateway.aspx?m=l&id=/Matter.aspx?key=7&x=1",
+    "/gateway.aspx?M=L&ID=/matter.aspx?key=", "/gateway.aspx?M=L&ID=/meeting.aspx?key=1", "/gateway.aspx?M=F&ID=abc123.pdf",
+    "/gateway.aspx?M=F&ID=", "/gateway.aspx?M=F&ID=#x", "/gateway.aspx?M=X&ID=1", "/View.ashx?M=F&ID=1", "/x/gateway.aspx?M=F&ID=1",
+    "/LegislationDetail.aspx?ID=1", "/"];
+  const out = [];
+  for (const h of hosts) for (const r of rest) for (const scheme of ["https", "http"]) out.push(`${scheme}://${h}${r}`);
+  return out;
+}
+
 /* bio-plane/checks/bio-checks.mjs, docprofile/doctypes/meeting-calendar.mjs, bio-plane/src/store.mjs */
 const ACTION_KINDS = ["cpra_request", "grand_jury", "controller_referral", "public_comment", "media", "litigation_support", "request_for_comment", "other"];
 const MINUTES_DUE_DAYS = 21;
 const SEARCH_TERMS = ["oakland", "police"];
 
 export const legacy = Object.freeze({ ID_SPACES, CMS_FLOOR, ID_SYSTEMS, MIXED_HOSTS, recognise, systemOfAddress,
-  corpus, addresses, vocabularySamples, ACTION_KINDS, MINUTES_DUE_DAYS, SEARCH_TERMS });
+  corpus, addresses, vocabularySamples, ACTION_KINDS, MINUTES_DUE_DAYS, SEARCH_TERMS, MEMBERSHIP_SHAPES, linkSamples });

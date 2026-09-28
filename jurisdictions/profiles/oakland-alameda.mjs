@@ -11,7 +11,11 @@
  *   search_terms                   `readingNamePlan`'s default terms in `store.mjs`; no measurement found
  *   records_laws                   the law `cpra_request` names (D-149, `governingLawsOf`)
  *   action sections                `ACTION_KINDS` in `bio-checks.mjs`, tiers from Roadmap v5 §8 as D-182
- *                                  adopted it, the response period of State Rules v1.5 §4.4
+ *                                  adopted it, the response period of State Rules v1.5 §4.4; the Tier 2
+ *                                  and Tier 3 kinds and the advisory note that Design Requirement 8 and
+ *                                  Roadmap v5 §8 name (R36)
+ *   locale                         the render locale every capture has asked for (R37); unmeasured
+ *   systems[].links                REC-206's gateway shapes, measured on M-120's agenda (R38)
  *
  * Plain data: patterns are `{re, flags?}` with a JavaScript regular-expression source. */
 const R = String.raw;
@@ -79,8 +83,13 @@ export default {
     /* The shared API host serves every client city of the vendor, so only this path is this city's. */
     { origin: "oakland.legistar", name: "Legistar, the City of Oakland's legislative record",
       hosts: ["webapi.legistar.com"], path: { re: R`^\/v1\/oakland(\/|$)`, flags: "i" }, basis: "M-119 LEG" },
+    /* An agenda links each item to its matter page and each file to the file, through the gateway;
+       which links are items and which are files is read off these shapes (REC-206, M-120). */
     { origin: "oakland.legistar", name: "Legistar, the City of Oakland's legislative record",
-      hosts: ["oakland.legistar.com", "oakland.legistar1.com"], basis: "M-119 LEG" },
+      hosts: ["oakland.legistar.com", "oakland.legistar1.com"],
+      links: { item: { re: R`^\/gateway\.aspx\?m=l&id=\/matter\.aspx\?key=\d+`, flags: "i" },
+               file: { re: R`^\/gateway\.aspx\?m=f&id=[^&#]+`, flags: "i" } },
+      basis: "M-119 LEG, M-120" },
     { origin: "oakland.budget", name: "the City of Oakland's budget system (its Open Data line items)",
       hosts: ["data.oaklandca.gov"], path: { re: R`vmzx-e5fe`, flags: "i" }, basis: "M-119 ODP" },
     { origin: "alameda.assessor",
@@ -166,6 +175,7 @@ export default {
        not measured (its code says so). */
     minutes_due_days: { value: 21, basis: "UNMEASURED" },
   },
+  locale: { value: "en-US", basis: "UNMEASURED" },
   search_terms: [
     { term: "oakland", basis: "UNMEASURED" },
     { term: "police", basis: "UNMEASURED" },
@@ -178,17 +188,19 @@ export default {
   standard_sources: [
     { source: "Oakland Municipal Code", kind: "ordinance", issuer: "Oakland City Council",
       cite: { re: R`\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+[\d.]+[\w.]*`, flags: "i" },
-      code: "omc", basis: "M-24" },
+      level: "city", code: "omc", basis: "M-24" },
     { source: "Ordinances and resolutions of the Oakland City Council", kind: "ordinance", issuer: "Oakland City Council",
-      cite: { re: R`\b(?:Ordinance|Resolution)\s+No\.?\s*\d{3,6}(?:\s*C\.?\s?M\.?\s?S\.?)?`, flags: "i" }, basis: "M-24" },
-    { source: "California Government Code", kind: "statute", issuer: "California Legislature",
+      level: "city", cite: { re: R`\b(?:Ordinance|Resolution)\s+No\.?\s*\d{3,6}(?:\s*C\.?\s?M\.?\s?S\.?)?`, flags: "i" }, basis: "M-24" },
+    { source: "California Government Code", kind: "statute", issuer: "California Legislature", level: "state",
       cite: { re: R`\b(?:Cal(?:ifornia|\.)?\s+)?Gov(?:ernment|\.|t\.?)?\s+Code\s+(?:§+\s*|Section\s+)?\d+(?:\.\d+)?`, flags: "i" },
       basis: "UNMEASURED" },
   ],
   counterparties: [
     { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
     { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
-    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, basis: "UNMEASURED" },
+    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
+    /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
+    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true, basis: "UNMEASURED" },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" },
   ],
   action_kinds: [
@@ -202,10 +214,26 @@ export default {
     { kind: "litigation_support", label: "support for litigation", basis: "UNMEASURED" },
     { kind: "request_for_comment", label: "request for comment on specific claims", basis: "DEC-13" },
     { kind: "other", label: "other action", basis: "UNMEASURED" },
+    /* Design Requirement 8 and Roadmap v5 §8: Tier 2, with its advisory note, and Tier 3, which has no
+       template. The Roadmap names the court a records petition is filed in. */
+    { kind: "records_petition", label: "court petition to enforce a public records request", tier: 2,
+      laws: ["California Public Records Act"],
+      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED" },
+      advisory: "File with caution: a procedural error can have the petition dismissed, usually without "
+        + "prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
+      basis: "D-182" },
+    { kind: "assessment_challenge", label: "challenge to a tax, assessment or fee under Proposition 218", tier: 3, basis: "D-182" },
+    { kind: "taxpayer_action", label: "taxpayer action (Code of Civil Procedure § 526a)", tier: 3, basis: "D-182" },
+    { kind: "consent_decree_motion", label: "motion under a federal consent decree", tier: 3, basis: "D-182" },
+    { kind: "constitutional_claim", label: "claim involving constitutional interpretation or statutory construction", tier: 3, basis: "D-182" },
   ],
   deadlines: [
     { rule: "records_response", applies_to: "records_request", days: 10, count: "calendar", starts: "received",
       extension: { days: 14, count: "calendar", when: "unusual circumstances, by written notice to the requester" },
       citation: "Cal. Gov. Code § 7922.535", basis: "UNMEASURED" },
   ],
+  /* legal_organisations: absent. Which outside organisations the product names to residents is Bob's
+     to decide (K227); until then the first profile supplies none (R27). */
+  /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
+     counts calendar days; a business-day count here is undetermined (R27, R33). */
 };

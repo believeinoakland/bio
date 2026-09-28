@@ -11,25 +11,29 @@ import FIRST from "./profiles/oakland-alameda.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
-/* The profile's shape (R1–R7, R23–R26).                                                            */
+/* The profile's shape (R1–R7, R23–R26, R31–R33; `locale` and `systems[].links`, N77 and N96).        */
 
 export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces", "systems", "mixed_hosts",
   "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources",
-  "counterparties", "action_kinds", "deadlines"]);
+  "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays", "locale"]);
 export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
 export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles", "enactment_markers", "codes",
   "file_numbers", "report_titles", "report_sections", "recommendation_openers", "template_blanks"]);
-export const RECORDS_LAW_LEVELS = Object.freeze(["state", "county", "city"]);
+/* R31: the one vocabulary of a law's level, for records laws, standard sources and an action's governing
+   laws. An office's level (R24) is not a law's level and keeps its own. */
+export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 export const COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
 export const SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
 export const VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
 export const COUNTS = Object.freeze(["calendar", "business"]);
 export const STARTS = Object.freeze(["received", "filed", "act", "known"]);
 export const TIERS = Object.freeze([1, 2, 3]);
+export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 const KIND_RE = /^[a-z][a-z0-9_]*$/;
 const HEX64 = /^[0-9a-f]{64}$/i;
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 /* R2: a basis names a measurement (`M-157`, or a dated entry `2026-07-30`) or a ruling (`D-149`,
    `DEC-13`, `K4`); several are joined by ", " or "; ", each optionally followed by one word that
    says which part of it (`M-119 LEG`, `M-157 (4)`). `UNMEASURED` stands alone (K44). */
@@ -39,6 +43,22 @@ const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const isStr = (v) => typeof v === "string" && v.trim().length > 0;
 const isPosInt = (v) => Number.isInteger(v) && v > 0;
 const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+/** A four-digit year. */
+const isYear = (v) => Number.isInteger(v) && v >= 1000 && v <= 9999;
+/** A real calendar date written `YYYY-MM-DD` (R33). */
+function isDate(v) {
+  const m = typeof v === "string" && DATE_RE.exec(v);
+  if (!m) return false;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
+  return days !== undefined && d >= 1 && d <= days;
+}
+/** One well-formed BCP 47 language tag (N77). `Intl` reads no clock, store or network. */
+function isLocale(v) {
+  if (!isStr(v) || /\s|,/.test(v)) return false;
+  try { return Intl.getCanonicalLocales(v).length === 1; } catch { return false; }
+}
 
 /** Whether `b` is a basis a profile may carry. `TEST` only in a test profile (R2). */
 export function basisValid(b, test = false) {
@@ -93,9 +113,9 @@ function applyForm(form, raw, prefixes = []) {
 }
 
 /* ------------------------------------------------------------------------------------------------ */
-/* validate (R10, R11, R28).                                                                        */
+/* validate (R10, R11, R28, R35).                                                                   */
 
-/** Judge a profile against R1–R7 and R23–R26. `{ok, errors}`, every error found. Never throws. */
+/** Judge a profile against R1–R7, R23–R26 and R31–R33. `{ok, errors}`, every error found. Never throws. */
 export function validate(profile) {
   const errors = [];
   try { validateInto(profile, errors); }
@@ -136,7 +156,7 @@ function validateInto(p, errors) {
   if (own(p, "systems")) list("systems", p.systems).forEach((s, i) => {
     const at = `systems[${i}]`;
     if (!entry(at, s)) return;
-    fields(at, s, ["origin", "name", "hosts", "path", "republishes", "provenance_stated", "basis"]);
+    fields(at, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
     str(`${at}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
     str(`${at}.name`, s.name, "name");
@@ -144,6 +164,16 @@ function validateInto(p, errors) {
       err(`${at}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
     if (own(s, "path")) pattern(`${at}.path`, s.path);
     else if (Array.isArray(s.hosts)) for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at);
+    /* N96: the shapes of the system's item and file links, over an address's path and query. They are
+       part of the system entry, whose basis names their measurement. */
+    if (own(s, "links")) {
+      if (!isObj(s.links) || !own(s.links, "item") || !own(s.links, "file"))
+        err(`${at}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+      else {
+        fields(`${at}.links`, s.links, ["item", "file"]);
+        pattern(`${at}.links.item`, s.links.item); pattern(`${at}.links.file`, s.links.file);
+      }
+    }
     if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at}.republishes`, "VALUE_INVALID", "true or false");
     if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at}.provenance_stated`, "VALUE_INVALID", "true or false");
     basis(at, s);
@@ -301,22 +331,33 @@ function validateInto(p, errors) {
     const at = `records_laws[${i}]`;
     if (!entry(at, l)) return;
     fields(at, l, ["level", "name", "citation", "basis"]);
-    if (!RECORDS_LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${RECORDS_LAW_LEVELS.join(", ")}`);
+    if (!LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
     str(`${at}.name`, l.name, "name"); str(`${at}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
     basis(at, l);
   });
 
-  /* The action sections (R23–R26, R28). */
+  if (own(p, "locale")) {
+    const l = p.locale;
+    if (!isObj(l)) err("locale", "VALUE_INVALID", "locale is {value, basis}");
+    else {
+      fields("locale", l, ["value", "basis"]);
+      if (!isLocale(l.value)) err("locale.value", "VALUE_INVALID", "the value is one well-formed BCP 47 language tag");
+      basis("locale", l);
+    }
+  }
+
+  /* The action sections (R23–R26, R28, R31–R33, R35). */
   const codeKeys = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes)
     ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list("standard_sources", p.standard_sources).forEach((s, i) => {
     const at = `standard_sources[${i}]`;
     if (!entry(at, s)) return;
-    fields(at, s, ["source", "kind", "issuer", "cite", "code", "basis"]);
+    fields(at, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
     str(`${at}.source`, s.source, "source"); str(`${at}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
     if (!SOURCE_KINDS.includes(s.kind)) err(`${at}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+    if (!LAW_LEVELS.includes(s.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
     pattern(`${at}.cite`, s.cite);
     if (own(s, "code") && !codeKeys.has(s.code)) err(`${at}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
     basis(at, s);
@@ -324,20 +365,22 @@ function validateInto(p, errors) {
   if (own(p, "counterparties")) list("counterparties", p.counterparties).forEach((c, i) => {
     const at = `counterparties[${i}]`;
     if (!entry(at, c)) return;
-    fields(at, c, ["role", "body", "level", "elected", "basis"]);
+    fields(at, c, ["role", "body", "level", "elected", "oversight", "basis"]);
     str(`${at}.role`, c.role, "role"); str(`${at}.body`, c.body, "body");
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at, c);
   });
   const kinds = new Set();
+  const tier3 = new Set();
   if (own(p, "action_kinds")) list("action_kinds", p.action_kinds).forEach((k, i) => {
     const at = `action_kinds[${i}]`;
     if (!entry(at, k)) return;
-    fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "basis"]);
+    fields(at, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
     else if (kinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
-    else kinds.add(k.kind);
+    else { kinds.add(k.kind); if (k.tier === 3) tier3.add(k.kind); }
     str(`${at}.label`, k.label, "label");
     if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
     if (own(k, "laws")) list(`${at}.laws`, k.laws).forEach((l, j) => {
@@ -356,6 +399,10 @@ function validateInto(p, errors) {
     if (own(k, "template")) {
       if (!isStr(k.template)) err(`${at}.template`, "VALUE_INVALID", "a template is text");
       if (k.tier === 3) err(`${at}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+    }
+    if (own(k, "advisory")) {
+      if (!isStr(k.advisory)) err(`${at}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
     basis(at, k);
   });
@@ -382,6 +429,50 @@ function validateInto(p, errors) {
     str(`${at}.citation`, d.citation, "citation");
     basis(at, d);
   });
+
+  if (own(p, "legal_organisations")) list("legal_organisations", p.legal_organisations).forEach((o, i) => {
+    const at = `legal_organisations[${i}]`;
+    if (!entry(at, o)) return;
+    fields(at, o, ["name", "evaluates", "contacts", "basis"]);
+    str(`${at}.name`, o.name, "name");
+    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
+    else o.evaluates.forEach((k, j) => {
+      if (!tier3.has(k)) err(`${at}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+    });
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    else o.contacts.forEach((c, j) => {
+      const ca = `${at}.contacts[${j}]`;
+      if (!isObj(c)) { err(ca, "CONTACT_INVALID", "a contact is {how, value}"); return; }
+      fields(ca, c, ["how", "value"]);
+      if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
+      if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
+    });
+    basis(at, o);
+  });
+
+  if (own(p, "holidays")) {
+    const years = new Set();
+    list("holidays", p.holidays).forEach((h, i) => {
+      const at = `holidays[${i}]`;
+      if (!entry(at, h)) return;
+      fields(at, h, ["year", "days", "basis"]);
+      if (!isYear(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      else if (years.has(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
+      else years.add(h.year);
+      const dates = new Set();
+      list(`${at}.days`, h.days).forEach((d, j) => {
+        const da = `${at}.days[${j}]`;
+        if (!entry(da, d)) return;
+        fields(da, d, ["date", "name"]);
+        if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
+        else if (isYear(h.year) && Number(d.date.slice(0, 4)) !== h.year) err(`${da}.date`, "HOLIDAY_INVALID", `${d.date} is outside ${h.year}`);
+        else if (dates.has(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", `${d.date} is given twice`);
+        else dates.add(d.date);
+        str(`${da}.name`, d.name, "name");
+      });
+      basis(at, h);
+    });
+  }
 }
 
 /* ------------------------------------------------------------------------------------------------ */
@@ -404,7 +495,7 @@ export function get(id) {
 }
 
 /* ------------------------------------------------------------------------------------------------ */
-/* combine (R12–R16, R29).                                                                          */
+/* combine (R12–R16, R29, R34).                                                                     */
 
 /* A stable key for "equal in everything but its basis and profile". Object keys are sorted so the
    order a profile writes its fields in never makes two equal entries differ. */
@@ -598,8 +689,39 @@ function merge(profiles) {
         "the active profiles give different periods after which absent minutes raise a question, so none is given");
   }
 
-  for (const sec of ["search_terms", "records_laws", "standard_sources", "counterparties"])
+  /* locale: one value (N77), as practice's. */
+  if (has("locale")) {
+    const given = profiles.filter((p) => p.locale).map((p) => ({ profile: p.id, value: p.locale.value, basis: p.locale.basis }));
+    if (agree(given))
+      view.locale = { value: given[0].value, basis: given[0].basis, profile: given[0].profile,
+        bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
+    else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
+  }
+
+  for (const sec of ["search_terms", "records_laws", "standard_sources", "legal_organisations"])
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
+
+  /* counterparties are unioned; an office's oversight marker is one value per role and body (R29). */
+  if (has("counterparties")) {
+    const v = [];
+    const marks = new Map();
+    for (const p of profiles) for (const c of p.counterparties || []) {
+      const { oversight, ...rest } = c;
+      union(v, [rest], p.id);
+      if (own(c, "oversight")) {
+        const k = `${c.role}\u0000${c.body}`;
+        if (!marks.has(k)) marks.set(k, []);
+        marks.get(k).push({ profile: p.id, value: oversight, basis: c.basis });
+      }
+    }
+    for (const [k, given] of marks) {
+      const [role, body] = k.split("\u0000");
+      if (agree(given)) { for (const c of v) if (c.role === role && c.body === body) c.oversight = given[0].value; }
+      else conflict(`counterparties[${role}/${body}].oversight`, given,
+        `the active profiles disagree on whether ${role} (${body}) is an oversight or audit body, so it is undetermined`);
+    }
+    view.counterparties = strip(v);
+  }
 
   /* action kinds, keyed by kind: tier, venue and template are one value each (R29). */
   if (has("action_kinds")) {
@@ -613,12 +735,12 @@ function merge(profiles) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      for (const f of ["tier", "venue", "template"]) {
+      for (const f of ["tier", "venue", "template", "advisory"]) {
         const vals = given.filter((g) => own(g.k, f)).map((g) => ({ profile: g.profile, value: clone(g.k[f]), basis: g.k.basis }));
         if (!vals.length) continue;
         if (agree(vals)) e[f] = f !== "venue" ? vals[0].value
           : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
-        else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${f === "tier" ? "risk tiers" : `${f}s`} for ${kind}, so none is given`);
+        else conflict(`action_kinds[${kind}].${f}`, vals, `the active profiles give different ${f === "tier" ? "risk tiers" : f === "advisory" ? "advisory notes" : `${f}s`} for ${kind}, so none is given`);
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -650,6 +772,25 @@ function merge(profiles) {
       e.profile = given[0].profile;
       e.bases = given.map((g) => ({ profile: g.profile, basis: g.d.basis }));
       view.deadlines.push(e);
+    }
+  }
+
+  /* holidays: a year's days are one value (R34); the order a profile lists them in is no disagreement. */
+  if (has("holidays")) {
+    const byYear = new Map();
+    for (const p of profiles) for (const h of p.holidays || []) {
+      if (!byYear.has(h.year)) byYear.set(h.year, []);
+      byYear.get(h.year).push({ profile: p.id, value: h.days.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)), basis: h.basis });
+    }
+    view.holidays = [];
+    for (const [year, given] of byYear) {
+      if (!agree(given)) {
+        conflict(`holidays[${year}]`, given,
+          `the active profiles list different closure days for ${year}, so the year is withheld: a business-day count reaching into it is undetermined`);
+        continue;
+      }
+      view.holidays.push({ year, days: clone(given[0].value), basis: given[0].basis, profile: given[0].profile,
+        bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) });
     }
   }
 

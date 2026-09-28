@@ -2,7 +2,7 @@
  * interface: list, get, validate, combine, and the two held profiles. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { list, get, validate, combine } from "../index.mjs";
+import { list, get, validate, combine, LAW_LEVELS } from "../index.mjs";
 import { applyForm, recogniseIn, systemOf, walkFacts, legacy } from "./helpers.mjs";
 
 const FIRST = "oakland-alameda";
@@ -28,7 +28,8 @@ function sample() {
       parcel: { label: "lot", forms: [{ form: "l", pattern: { re: "^0*(\\d+)-(\\d+)?$" }, normal: [{ group: 1, unpad: true }, "-", { group: 2, default: "0" }], basis: "M-4" }] },
     },
     systems: [
-      { origin: "town.record", name: "the town record", hosts: ["record.sample.example"], basis: "M-5" },
+      { origin: "town.record", name: "the town record", hosts: ["record.sample.example"],
+        links: { item: { re: "^/item/\\d+$" }, file: { re: "^/file/", flags: "i" } }, basis: "M-5" },
       { origin: "town.record", name: "the town record via a shared host", hosts: ["api.shared.example"], path: { re: "^/town/" }, basis: "M-5" },
       { origin: "county.roll", name: "the county roll, republished", hosts: ["open.sample.example"], path: { re: "roll" }, republishes: true, provenance_stated: false, basis: "M-5" },
     ],
@@ -47,16 +48,23 @@ function sample() {
       template_blanks: [{ pattern: { re: "\\[BLANK\\]" }, basis: "M-7" }],
     },
     practice: { minutes_due_days: { value: 14, basis: "UNMEASURED" } },
+    locale: { value: "en-CA", basis: "M-10" },
     search_terms: [{ term: "sample", basis: "UNMEASURED" }],
     records_laws: [{ level: "state", name: "Records Law", citation: "RL § 1", basis: "D-1" }],
-    standard_sources: [{ source: "Sample Town Code", kind: "ordinance", issuer: "Council", cite: { re: "STC § \\d+" }, code: "stc", basis: "K1" }],
-    counterparties: [{ role: "Clerk", body: "Sample Town", level: "city", elected: false, basis: "DEC-1" }],
+    standard_sources: [{ source: "Sample Town Code", kind: "ordinance", issuer: "Council", level: "city", cite: { re: "STC § \\d+" }, code: "stc", basis: "K1" }],
+    counterparties: [{ role: "Clerk", body: "Sample Town", level: "city", elected: false, basis: "DEC-1" },
+      { role: "Auditor", body: "Sample Town", level: "city", elected: true, oversight: true, basis: "DEC-2" }],
     action_kinds: [
       { kind: "records_request", label: "records request", tier: 1, laws: ["Records Law"], venue: { name: "clerk", how: "email", basis: "M-8" }, template: "Please send {{records}}.", basis: "M-8" },
       { kind: "code_complaint", label: "complaint", tier: 3, laws: ["Sample Town Code"], venue: { name: "court", how: "court", basis: "M-8" }, basis: "M-8" },
+      { kind: "records_petition", label: "petition", tier: 2, laws: ["Records Law"], advisory: "Have it reviewed first.", basis: "M-8" },
     ],
     deadlines: [{ rule: "answer", applies_to: "records_request", days: 10, count: "calendar", starts: "received",
       extension: { days: 5, count: "business", when: "busy" }, citation: "RL § 2", basis: "M-9" }],
+    legal_organisations: [{ name: "Town Law Centre", evaluates: ["code_complaint"],
+      contacts: [{ how: "email", value: "help@law.sample.example" }, { how: "mail", value: "1 Main St" }], basis: "M-11" }],
+    holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year" }, { date: "2026-07-04", name: "Summer" }], basis: "M-12" },
+      { year: 2024, days: [{ date: "2024-02-29", name: "Leap" }], basis: "M-12" }],
   };
 }
 const breakIt = (fn) => { const p = sample(); fn(p); return validate(p); };
@@ -174,8 +182,9 @@ test("R7 practice, search_terms and records_laws", () => {
     assert.ok(hasError(breakIt((p) => { p.practice.minutes_due_days.value = bad; }), "VALUE_INVALID", "practice.minutes_due_days.value"), String(bad));
   assert.ok(hasError(breakIt((p) => { p.practice.agenda_due_days = { value: 3, basis: "M-1" }; }), "UNKNOWN_SECTION", "practice.agenda_due_days"));
   assert.ok(hasError(breakIt((p) => { p.search_terms[0].term = ""; }), "VALUE_INVALID", "search_terms[0].term"));
-  assert.ok(hasError(breakIt((p) => { p.records_laws[0].level = "federal"; }), "LEVEL_UNKNOWN", "records_laws[0].level"));
-  for (const level of ["state", "county", "city"]) assert.ok(breakIt((p) => { p.records_laws[0].level = level; }).ok);
+  for (const bad of ["local", "district", "State", "", null, undefined])
+    assert.ok(hasError(breakIt((p) => { p.records_laws[0].level = bad; }), "LEVEL_UNKNOWN", "records_laws[0].level"), String(bad));
+  for (const level of ["federal", "state", "county", "city"]) assert.ok(breakIt((p) => { p.records_laws[0].level = level; }).ok, level);
   assert.ok(hasError(breakIt((p) => { delete p.records_laws[0].citation; }), "VALUE_INVALID", "records_laws[0].citation"));
 });
 
@@ -263,19 +272,26 @@ test("R28 validate codes for the action sections", () => {
     CODE_UNKNOWN: [(p) => { p.standard_sources[0].code = "xyz"; }, "standard_sources[0].code"],
     LAW_UNKNOWN: [(p) => { p.action_kinds[0].laws = ["Unknown Act"]; }, "action_kinds[0].laws[0]"],
     DEADLINE_KIND_UNKNOWN: [(p) => { p.deadlines[0].applies_to = "appeal"; }, "deadlines[0].applies_to"],
-    DUPLICATE_KIND: [(p) => { p.action_kinds.push(clone(p.action_kinds[0])); }, "action_kinds[2].kind"],
+    DUPLICATE_KIND: [(p) => { p.action_kinds.push(clone(p.action_kinds[0])); }, "action_kinds[3].kind"],
   };
   for (const [code, [fn, path]] of Object.entries(cases)) assert.ok(hasError(breakIt(fn), code, path), code);
   for (const tier of [0, "1", 1.5, null]) assert.ok(hasError(breakIt((p) => { p.action_kinds[0].tier = tier; }), "TIER_INVALID"), String(tier));
   assert.ok(hasError(breakIt((p) => { p.deadlines[0].extension.count = "weeks"; }), "COUNT_UNKNOWN", "deadlines[0].extension.count"));
   assert.ok(hasError(breakIt((p) => { p.action_kinds[0].kind = "1st"; }), "KIND_INVALID"));
   assert.ok(breakIt((p) => { p.deadlines[0].applies_to = "claim"; }).ok, "claim binds a legal claim");
+  /* LEVEL_UNKNOWN covers a law level outside R31 and a standard source with no level */
+  assert.ok(hasError(breakIt((p) => { p.records_laws[0].level = "local"; }), "LEVEL_UNKNOWN", "records_laws[0].level"));
+  assert.ok(hasError(breakIt((p) => { delete p.standard_sources[0].level; }), "LEVEL_UNKNOWN", "standard_sources[0].level"));
 });
 
 /* ============================================================================================== */
 /* The action sections (R23–R27).                                                                  */
 
-test("R23 standard_sources: source, kind from the six, issuer, cite pattern, code naming a codes key", () => {
+test("R23 standard_sources: source, kind from the six, issuer, level from R31, cite pattern, code naming a codes key", () => {
+  for (const level of LAW_LEVELS) assert.ok(breakIt((p) => { p.standard_sources[0].level = level; }).ok, level);
+  for (const bad of ["local", "district", "", 1, null]) assert.ok(hasError(breakIt((p) => { p.standard_sources[0].level = bad; }), "LEVEL_UNKNOWN", "standard_sources[0].level"), String(bad));
+  assert.ok(hasError(breakIt((p) => { delete p.standard_sources[0].level; }), "LEVEL_UNKNOWN", "standard_sources[0].level"), "every source has a level");
+  for (const id of [FIRST, TEST]) for (const s of get(id).standard_sources) assert.ok(LAW_LEVELS.includes(s.level), `${id} ${s.source}`);
   for (const kind of ["statute", "regulation", "ordinance", "court", "policy", "commitment"])
     assert.ok(breakIt((p) => { p.standard_sources[0].kind = kind; }).ok, kind);
   assert.ok(hasError(breakIt((p) => { p.standard_sources[0].cite = { re: "(" }; }), "PATTERN_INVALID", "standard_sources[0].cite"));
@@ -284,14 +300,29 @@ test("R23 standard_sources: source, kind from the six, issuer, cite pattern, cod
   assert.ok(hasError(breakIt((p) => { delete p.vocabulary.codes; }), "CODE_UNKNOWN", "standard_sources[0].code"));
 });
 
-test("R24 counterparties: role and body, never a person; level; elected", () => {
+test("R24 counterparties: role and body, never a person; level; elected; oversight", () => {
+  assert.ok(breakIt((p) => { p.counterparties[1].oversight = false; }).ok);
+  assert.ok(breakIt((p) => { delete p.counterparties[1].oversight; }).ok, "oversight is optional");
+  for (const bad of ["yes", 1, null]) assert.ok(hasError(breakIt((p) => { p.counterparties[1].oversight = bad; }), "VALUE_INVALID", "counterparties[1].oversight"), String(bad));
+  /* absent, whether an office is an oversight body is undetermined: the view gives no marker */
+  const v = combine([sample()]).view;
+  assert.equal(v.counterparties.find((c) => c.role === "Clerk").oversight, undefined);
+  assert.equal(v.counterparties.find((c) => c.role === "Auditor").oversight, true);
+  /* an office's level keeps its own vocabulary: district, never federal */
+  assert.ok(hasError(breakIt((p) => { p.counterparties[0].level = "federal"; }), "LEVEL_UNKNOWN", "counterparties[0].level"));
   for (const level of ["state", "county", "city", "district"]) assert.ok(breakIt((p) => { p.counterparties[0].level = level; }).ok, level);
   assert.ok(hasError(breakIt((p) => { p.counterparties[0].elected = "no"; }), "VALUE_INVALID", "counterparties[0].elected"));
   assert.ok(hasError(breakIt((p) => { delete p.counterparties[0].role; }), "VALUE_INVALID", "counterparties[0].role"));
   assert.ok(hasError(breakIt((p) => { p.counterparties[0].person = "A. Name"; }), "UNKNOWN_SECTION", "counterparties[0].person"));
 });
 
-test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, basis}, template never on Tier 3", () => {
+test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, basis}, template never on Tier 3, advisory only on Tier 2", () => {
+  assert.ok(breakIt((p) => { delete p.action_kinds[2].advisory; }).ok, "advisory is optional");
+  for (const tier of [1, 3]) assert.ok(hasError(breakIt((p) => { p.action_kinds[2].tier = tier; }), "ADVISORY_NOT_TIER2", "action_kinds[2].advisory"), String(tier));
+  assert.ok(hasError(breakIt((p) => { delete p.action_kinds[2].tier; }), "ADVISORY_NOT_TIER2", "action_kinds[2].advisory"), "no tier, no advisory");
+  for (const bad of ["", 3, null]) assert.ok(hasError(breakIt((p) => { p.action_kinds[2].advisory = bad; }), "VALUE_INVALID", "action_kinds[2].advisory"), String(bad));
+  assert.equal(combine([sample()]).view.action_kinds.find((k) => k.kind === "records_petition").advisory, "Have it reviewed first.");
+  assert.equal(combine([sample()]).view.action_kinds.find((k) => k.kind === "records_request").advisory, undefined);
   for (const how of ["portal", "mail", "email", "in_person", "court"])
     assert.ok(breakIt((p) => { p.action_kinds[0].venue.how = how; }).ok, how);
   assert.ok(hasError(breakIt((p) => { p.action_kinds[0].venue.how = "fax"; }), "VALUE_INVALID", "action_kinds[0].venue.how"));
@@ -318,10 +349,11 @@ test("R26 deadlines: rule, applies_to, days, count, starts, extension, citation"
 
 test("R27 an absent action section supplies nothing: the view has none, never a default", () => {
   const p = sample();
-  for (const s of ["standard_sources", "counterparties", "action_kinds", "deadlines"]) delete p[s];
+  const SECTIONS = ["standard_sources", "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays"];
+  for (const s of SECTIONS) delete p[s];
   assert.equal(validate(p).ok, true);
   const c = combine([p]);
-  for (const s of ["standard_sources", "counterparties", "action_kinds", "deadlines"]) assert.equal(c.view[s], undefined, s);
+  for (const s of SECTIONS) assert.equal(c.view[s], undefined, s);
   /* a kind with no tier or venue gives none in the view */
   const q = sample(); delete q.action_kinds[0].tier; delete q.action_kinds[0].venue;
   const k = combine([q]).view.action_kinds.find((x) => x.kind === "records_request");
@@ -368,8 +400,9 @@ test("R13 the view has the profile shape, with profiles, covers (union), test, a
   });
   assert.ok(facts > 60);
   const single = combine([FIRST]).view;
-  for (const k of ["spaces", "systems", "mixed_hosts", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources", "counterparties", "action_kinds", "deadlines"])
+  for (const k of ["spaces", "systems", "mixed_hosts", "vocabulary", "practice", "locale", "search_terms", "records_laws", "standard_sources", "counterparties", "action_kinds", "deadlines"])
     assert.ok(k in single, k);
+  for (const k of ["legal_organisations", "holidays"]) assert.ok(k in combine([TEST]).view, k);
   /* a single profile's view recognises what the profile does */
   assert.equal(recogniseIn(single, "parcel", "APN 008-0649-012-00").normal, "8-649-12-0");
   assert.equal(systemOf(single, "https://oakland.legistar.com/x").origin, "oakland.legistar");
@@ -458,7 +491,7 @@ test("R16 an empty list gives ok and a view with no facts", () => {
   assert.equal(c.view.test, false);
   let facts = 0; walkFacts(c.view, () => facts++);
   assert.equal(facts, 0);
-  for (const k of ["spaces", "systems", "mixed_hosts", "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources", "counterparties", "action_kinds", "deadlines"])
+  for (const k of ["spaces", "systems", "mixed_hosts", "crosswalks", "vocabulary", "practice", "locale", "search_terms", "records_laws", "standard_sources", "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays"])
     assert.equal(c.view[k], undefined, k);
 });
 
@@ -631,18 +664,20 @@ test("R22 the test profile: test true, every basis TEST, every section and vocab
   for (const h of hosts(t)) assert.ok(!fh.has(h), h);
   for (const c of t.covers) assert.ok(!f.covers.includes(c));
   /* combining the two gives no conflict: they share nothing */
-  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && !c.at.startsWith("action_kinds[records_request]")), []);
+  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && c.at !== "locale" && !c.at.startsWith("action_kinds[records_request]")), []);
 });
 
 test("R30 the first profile's action sections: the snapshot's action kinds renamed, §8 tiers, the records law's period and citation, the offices", () => {
   const f = get(FIRST);
   const renamed = legacy.ACTION_KINDS.map((k) => (k === "cpra_request" ? "records_request" : k));
-  assert.deepEqual(f.action_kinds.map((k) => k.kind), renamed);
+  /* the snapshot's kinds, renamed, first and in order; Design Requirement 8's Tier 2 and 3 kinds follow (R36) */
+  assert.deepEqual(f.action_kinds.slice(0, renamed.length).map((k) => k.kind), renamed);
+  assert.ok(f.action_kinds.slice(renamed.length).every((k) => k.tier === 2 || k.tier === 3));
   for (const k of f.action_kinds) assert.match(k.kind, /^[a-z][a-z0-9_]*$/);
   /* Roadmap v5 §8 names Tier 1 for records requests, grand jury complaints, State Controller referrals and
      media outreach, and no tier for the others; D-182 adopted §8's words. */
   const tiers = Object.fromEntries(f.action_kinds.map((k) => [k.kind, k.tier]));
-  assert.deepEqual(tiers, { records_request: 1, grand_jury: 1, controller_referral: 1, public_comment: undefined,
+  assert.deepEqual(Object.fromEntries(Object.entries(tiers).filter(([k]) => renamed.includes(k))), { records_request: 1, grand_jury: 1, controller_referral: 1, public_comment: undefined,
     media: 1, litigation_support: undefined, request_for_comment: undefined, other: undefined });
   for (const k of f.action_kinds) if (k.tier !== undefined) assert.equal(k.basis, "D-182", k.kind);
   const rr = f.action_kinds.find((k) => k.kind === "records_request");
@@ -651,7 +686,7 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
   assert.deepEqual([d.days, d.count, d.starts, d.citation], [10, "calendar", "received", "Cal. Gov. Code § 7922.535"]);
   assert.equal(d.basis, "UNMEASURED");
   assert.ok(f.counterparties.length >= 3);
-  for (const c of f.counterparties) assert.ok(!/\b[A-Z][a-z]+ [A-Z][a-z]+\b/.test(c.role) || /Controller|Council|Grand Jury/.test(c.role), `role names an office: ${c.role}`);
+  for (const c of f.counterparties) assert.ok(!/\b[A-Z][a-z]+ [A-Z][a-z]+\b/.test(c.role) || /Controller|Council|Grand Jury|Auditor/.test(c.role), `role names an office: ${c.role}`);
   const bodies = f.counterparties.map((c) => c.body).join(" | ");
   for (const office of ["Grand Jury", "State Controller", "City Council", "Finance"]) assert.ok(bodies.includes(office), office);
   /* the test profile supplies every action section too */
@@ -720,4 +755,194 @@ test("R29 K44 labels and citations joined with '; ', laws unioned, an extension 
   assert.equal(e.view.action_kinds[0].label, "records request");
   assert.deepEqual(e.view.deadlines[0].extension, { days: 5, count: "business", when: "busy" });
   assert.equal(e.view.deadlines[0].citation, "RL § 2");
+});
+
+/* ============================================================================================== */
+/* K102 (N61, N65 (4)): law levels, oversight, advisory, legal organisations, holidays (R29, R31–R36). */
+
+const two = (fn) => { const b = sample(); b.id = "sample-two"; b.name = "Two"; b.covers = ["Two"]; fn(b); return b; };
+
+test("R31 LAW_LEVELS: federal, state, county, city in that order, the one vocabulary of records laws and standard sources", () => {
+  assert.deepEqual([...LAW_LEVELS], ["federal", "state", "county", "city"]);
+  assert.ok(Object.isFrozen(LAW_LEVELS));
+  /* exactly these, for both law sections; D-149's local is never a level a profile records */
+  const levels = ["federal", "state", "county", "city", "local", "district", "regional", "FEDERAL", ""];
+  for (const level of levels) {
+    const ok = LAW_LEVELS.includes(level);
+    assert.equal(breakIt((p) => { p.records_laws[0].level = level; }).ok, ok, `records_laws ${level}`);
+    assert.equal(breakIt((p) => { p.standard_sources[0].level = level; }).ok, ok, `standard_sources ${level}`);
+  }
+  /* an office's level keeps its own vocabulary */
+  for (const level of ["state", "county", "city", "district"]) assert.ok(breakIt((p) => { p.counterparties[0].level = level; }).ok, level);
+  assert.equal(breakIt((p) => { p.counterparties[0].level = "federal"; }).ok, false);
+  /* the combined view carries each law's level as given */
+  const v = combine([sample(), two((b) => { b.records_laws.push({ level: "federal", name: "Federal Act", citation: "F § 1", basis: "M-1" }); })]).view;
+  assert.deepEqual(v.records_laws.map((l) => [l.name, l.level]), [["Records Law", "state"], ["Federal Act", "federal"]]);
+});
+
+test("R32 legal_organisations: name, evaluates (Tier 3 kinds of the profile, non-empty), contacts {how, value}", () => {
+  assert.ok(validate(sample()).ok);
+  for (const how of ["web", "email", "phone", "mail"]) assert.ok(breakIt((p) => { p.legal_organisations[0].contacts[0].how = how; }).ok, how);
+  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = ["records_request"]; }), "ORG_KIND_UNKNOWN", "legal_organisations[0].evaluates[0]"), "Tier 1 kind");
+  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = ["records_petition"]; }), "ORG_KIND_UNKNOWN"), "Tier 2 kind");
+  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = ["code_complaint", "nowhere"]; }), "ORG_KIND_UNKNOWN", "legal_organisations[0].evaluates[1]"));
+  assert.ok(hasError(breakIt((p) => { delete p.action_kinds[1].tier; }), "ORG_KIND_UNKNOWN"), "a kind with no tier is not Tier 3");
+  for (const bad of [[], "code_complaint", null]) assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = bad; }), "VALUE_INVALID", "legal_organisations[0].evaluates"), JSON.stringify(bad));
+  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].name = ""; }), "VALUE_INVALID", "legal_organisations[0].name"));
+  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].contacts[0].extra = 1; }), "UNKNOWN_SECTION", "legal_organisations[0].contacts[0].extra"));
+  assert.ok(hasError(breakIt((p) => { delete p.legal_organisations[0].basis; }), "BASIS_MISSING", "legal_organisations[0].basis"));
+});
+
+test("R33 holidays: a four-digit year, its closure days {date, name} within it, each once; a listed year is complete", () => {
+  assert.ok(validate(sample()).ok, "2024-02-29 is a date");
+  for (const year of [26, 20260, "2026", 2026.5, null]) assert.ok(hasError(breakIt((p) => { p.holidays[0].year = year; }), "HOLIDAY_INVALID", "holidays[0].year"), String(year));
+  assert.ok(hasError(breakIt((p) => { p.holidays[1].year = 2026; p.holidays[1].days[0].date = "2026-02-28"; }), "HOLIDAY_INVALID", "holidays[1].year"), "a year twice");
+  for (const date of ["2026-02-29", "2026-13-01", "2026-04-31", "2026-1-01", "26-01-01", "2026/01/01", "", null])
+    assert.ok(hasError(breakIt((p) => { p.holidays[0].days[0].date = date; }), "HOLIDAY_INVALID", "holidays[0].days[0].date"), String(date));
+  assert.ok(hasError(breakIt((p) => { p.holidays[0].days[0].date = "2025-12-31"; }), "HOLIDAY_INVALID", "holidays[0].days[0].date"), "outside its year");
+  assert.ok(hasError(breakIt((p) => { p.holidays[0].days[1].date = "2026-01-01"; }), "HOLIDAY_INVALID", "holidays[0].days[1].date"), "a date twice");
+  assert.ok(hasError(breakIt((p) => { p.holidays[0].days[0].name = ""; }), "VALUE_INVALID", "holidays[0].days[0].name"));
+  assert.ok(breakIt((p) => { p.holidays[0].days = []; }).ok, "a year with no closure day is a complete listing");
+  /* the view gives each listed year's days and nothing for a year not listed: a count reaching there is undetermined */
+  const v = combine([TEST]).view;
+  assert.deepEqual(v.holidays.map((h) => h.year), get(TEST).holidays.map((h) => h.year));
+  assert.equal(v.holidays.find((h) => h.year === 2025), undefined);
+  assert.equal(combine([FIRST]).view.holidays, undefined, "the first profile lists no year");
+});
+
+test("R34 combine: legal organisations unioned; a year's holidays one value, withheld and reported when profiles disagree", () => {
+  const a = sample();
+  const same = two((b) => { b.holidays[0].days = b.holidays[0].days.slice().reverse(); b.holidays[0].basis = "M-40"; b.legal_organisations[0].basis = "M-41"; });
+  const e = combine([a, same]);
+  assert.deepEqual(e.conflicts, []);
+  assert.equal(e.view.legal_organisations.length, 1);
+  assert.deepEqual(e.view.legal_organisations[0].bases, [{ profile: "sample-town", basis: "M-11" }, { profile: "sample-two", basis: "M-41" }]);
+  const y = e.view.holidays.find((h) => h.year === 2026);
+  assert.deepEqual(y.days.map((d) => d.date), ["2026-01-01", "2026-07-04"], "order is no disagreement");
+  assert.deepEqual(y.bases, [{ profile: "sample-town", basis: "M-12" }, { profile: "sample-two", basis: "M-40" }]);
+  const b = two((x) => {
+    x.holidays[0].days.push({ date: "2026-11-26", name: "Harvest" });
+    x.holidays.push({ year: 2027, days: [], basis: "M-1" });
+    x.legal_organisations.push({ name: "Other Centre", evaluates: ["code_complaint"], contacts: [{ how: "web", value: "https://o.example" }], basis: "M-1" });
+  });
+  const c = combine([a, b]);
+  assert.deepEqual(c.conflicts.map((x) => x.at), ["holidays[2026]"]);
+  assert.ok(c.conflicts[0].values.length === 2 && c.conflicts[0].values.every((v) => Array.isArray(v.value)));
+  assert.deepEqual(c.view.holidays.map((h) => h.year), [2024, 2027], "2026 withheld; the years only one profile lists are kept");
+  assert.deepEqual(c.view.legal_organisations.map((o) => o.name), ["Town Law Centre", "Other Centre"]);
+});
+
+test("R35 validate codes for R31–R33, and the new sections are known", () => {
+  const cases = {
+    LEVEL_UNKNOWN: [(p) => { p.records_laws[0].level = "local"; }, "records_laws[0].level"],
+    ADVISORY_NOT_TIER2: [(p) => { p.action_kinds[0].advisory = "Review it."; }, "action_kinds[0].advisory"],
+    ORG_KIND_UNKNOWN: [(p) => { p.legal_organisations[0].evaluates = ["media"]; }, "legal_organisations[0].evaluates[0]"],
+    CONTACT_INVALID: [(p) => { p.legal_organisations[0].contacts = []; }, "legal_organisations[0].contacts"],
+    HOLIDAY_INVALID: [(p) => { p.holidays[0].year = 99; }, "holidays[0].year"],
+  };
+  for (const [code, [fn, path]] of Object.entries(cases)) assert.ok(hasError(breakIt(fn), code, path), code);
+  for (const [fn, path] of [[(p) => { p.legal_organisations[0].contacts[0].how = "fax"; }, "legal_organisations[0].contacts[0].how"],
+    [(p) => { p.legal_organisations[0].contacts[0].value = ""; }, "legal_organisations[0].contacts[0].value"],
+    [(p) => { p.legal_organisations[0].contacts[0] = "help@x"; }, "legal_organisations[0].contacts[0]"],
+    [(p) => { p.legal_organisations[0].contacts = null; }, "legal_organisations[0].contacts"]])
+    assert.ok(hasError(breakIt(fn), "CONTACT_INVALID", path), path);
+  const v = validate(sample());
+  assert.ok(!v.errors.some((e) => e.code === "UNKNOWN_SECTION"));
+  for (const sec of ["legal_organisations", "holidays"]) {
+    const p = sample();
+    assert.ok(!validate(p).errors.some((e) => e.path === sec), sec);
+  }
+});
+
+test("R29 K102 a kind's advisory and an office's oversight under one role and body are one value per key", () => {
+  const a = sample();
+  const b = two((x) => { x.action_kinds[2].advisory = "Consult counsel."; x.counterparties[1].oversight = false; x.counterparties[1].basis = "M-2"; });
+  const c = combine([a, b]);
+  assert.deepEqual(c.conflicts.map((x) => x.at).sort(), ["action_kinds[records_petition].advisory", "counterparties[Auditor/Sample Town].oversight"]);
+  assert.equal(c.view.action_kinds.find((k) => k.kind === "records_petition").advisory, undefined);
+  const aud = c.view.counterparties.filter((x) => x.role === "Auditor");
+  assert.equal(aud.length, 1, "the office is kept once; only its marker is withheld");
+  assert.equal(aud[0].oversight, undefined);
+  assert.deepEqual(aud[0].bases, [{ profile: "sample-town", basis: "DEC-2" }, { profile: "sample-two", basis: "M-2" }]);
+  /* agreement keeps them; a marker only one profile gives is kept */
+  const d = two((x) => { delete x.counterparties[1].oversight; });
+  const e = combine([a, d]);
+  assert.deepEqual(e.conflicts, []);
+  assert.equal(e.view.counterparties.find((x) => x.role === "Auditor").oversight, true);
+  assert.equal(e.view.action_kinds.find((k) => k.kind === "records_petition").advisory, "Have it reviewed first.");
+});
+
+test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, legal organisations and holidays; the first holds what is measured or named", () => {
+  const t = get(TEST);
+  assert.deepEqual([...new Set([...t.records_laws, ...t.standard_sources].map((x) => x.level))].sort(), ["city", "county", "federal", "state"]);
+  assert.ok(t.counterparties.some((c) => c.oversight === true));
+  assert.ok(t.action_kinds.some((k) => k.tier === 2 && typeof k.advisory === "string"));
+  assert.ok(t.legal_organisations.length && t.holidays.length);
+  const f = get(FIRST);
+  for (const x of [...f.records_laws, ...f.standard_sources]) assert.ok(LAW_LEVELS.includes(x.level), x.name || x.source);
+  /* which outside organisations are named to residents is Bob's (K227): none yet, so undetermined */
+  assert.equal(f.legal_organisations, undefined);
+  /* the Tier 3 kinds §8 names are held, for the organisations that will evaluate them */
+  assert.ok(f.action_kinds.filter((k) => k.tier === 3).length >= 3);
+  /* §8's Tier 2 kind carries the advisory note recommending legal review; Tier 3 kinds have no template */
+  const t2 = f.action_kinds.filter((k) => k.tier === 2);
+  assert.ok(t2.length >= 1 && t2.every((k) => /legal review/i.test(k.advisory)));
+  for (const k of f.action_kinds.filter((x) => x.tier === 3)) assert.equal(k.template, undefined, k.kind);
+  /* the oversight and audit bodies the profile names; the others stay undetermined */
+  assert.deepEqual(f.counterparties.filter((c) => c.oversight === true).map((c) => c.role).sort(), ["City Auditor", "Civil Grand Jury"]);
+  assert.ok(f.counterparties.filter((c) => c.oversight !== true).every((c) => c.oversight === undefined));
+  /* no measurement names the closure days: the section is absent, never guessed */
+  assert.equal(f.holidays, undefined);
+  for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "UNMEASURED", c.role);
+});
+
+/* ============================================================================================== */
+/* R37 (`locale`, N77, K119) and R38 (`systems[].links`, N96, K158), folded by K227.                 */
+
+test("R37 locale: {value, basis}, one well-formed BCP 47 tag; one value in combine", () => {
+  for (const v of ["en", "en-US", "fr-CA", "zh-Hant-TW", "es-419"]) assert.ok(breakIt((p) => { p.locale.value = v; }).ok, v);
+  for (const v of ["", "en_US", "en-US,fr", "en US", "e", "en--US", "toolonglanguage", 3, null]) assert.ok(hasError(breakIt((p) => { p.locale.value = v; }), "VALUE_INVALID", "locale.value"), String(v));
+  assert.ok(hasError(breakIt((p) => { p.locale = "en-US"; }), "VALUE_INVALID", "locale"));
+  assert.ok(hasError(breakIt((p) => { p.locale.region = "US"; }), "UNKNOWN_SECTION", "locale.region"));
+  assert.ok(hasError(breakIt((p) => { delete p.locale.basis; }), "BASIS_MISSING", "locale.basis"));
+  assert.ok(breakIt((p) => { delete p.locale; }).ok, "locale is optional");
+  assert.deepEqual(get(FIRST).locale, { value: "en-US", basis: "UNMEASURED" });
+  const one = combine([FIRST]).view.locale;
+  assert.deepEqual([one.value, one.profile], ["en-US", FIRST]);
+  const agree = combine([sample(), two((b) => { b.locale.basis = "M-2"; })]);
+  assert.deepEqual(agree.conflicts, []);
+  assert.equal(agree.view.locale.bases.length, 2);
+  const c = combine([FIRST, TEST]);
+  assert.equal(c.view.locale, undefined);
+  assert.deepEqual(c.conflicts.find((x) => x.at === "locale").values.map((v) => v.value), ["en-US", "en-GB"]);
+});
+
+test("R38 systems[].links: {item, file} patterns over path and query; the first profile states REC-206's gateway shapes", () => {
+  assert.ok(breakIt((p) => { delete p.systems[0].links; }).ok, "links are optional");
+  for (const bad of [null, "x", {}, { item: { re: "a" } }, { file: { re: "a" } }])
+    assert.ok(hasError(breakIt((p) => { p.systems[0].links = bad; }), "VALUE_INVALID", "systems[0].links"), JSON.stringify(bad));
+  assert.ok(hasError(breakIt((p) => { p.systems[0].links.item = { re: "(" }; }), "PATTERN_INVALID", "systems[0].links.item"));
+  assert.ok(hasError(breakIt((p) => { p.systems[0].links.file = { re: "a", flags: "g" }; }), "PATTERN_INVALID", "systems[0].links.file"));
+  assert.ok(hasError(breakIt((p) => { p.systems[0].links.meeting = { re: "a" }; }), "UNKNOWN_SECTION", "systems[0].links.meeting"));
+  /* the view carries them on their system */
+  const v = combine([FIRST]).view;
+  const sys = v.systems.filter((s) => s.links);
+  assert.equal(sys.length, 1);
+  assert.equal(sys[0].origin, "oakland.legistar");
+  /* the first profile's shapes, read as extraction R52 reads them (the host is one of the system's, the
+     path and query match), classify every sample link exactly as REC-206's measured shapes do */
+  const rx = (p) => new RegExp(p.re, p.flags || "");
+  /* REC-206 measured the gateway on the record's own host; the profile's other host is the same system
+     (M-119 LEG), so an address there answers as its twin on the measured host does. */
+  for (const url of legacy.linkSamples()) {
+    const u = new URL(url);
+    const twin = url.replace(/legistar1\.com/i, "legistar.com");
+    const onHost = sys[0].hosts.includes(u.hostname.toLowerCase());
+    for (const end of ["item", "file"]) {
+      const now = onHost && rx(sys[0].links[end]).test(u.pathname + u.search);
+      const was = legacy.MEMBERSHIP_SHAPES.some((s) => s[end].test(twin));
+      assert.equal(now, was, `${end} ${url}`);
+    }
+  }
+  assert.ok(get(TEST).systems.some((s) => s.links), "the test profile states shapes too");
 });
