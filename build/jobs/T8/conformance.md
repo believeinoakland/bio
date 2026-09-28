@@ -1,3 +1,22 @@
 # conformance (T8)
 
 **Status** · session_01F4NHaY2fe7KVfrhugvz5hD · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Ambiguities in `build/requirements/conformance.md`; I am building on each best reading below and will bring the work in line with your answer.
+
+1. **Refusal family.** R1's codes need catalogue rows (DEC-49; K107 (3), K171 (11)). Best reading: conformance mints family **C-113** (C-111 is intent's; I assume standards takes C-112 and consequences, filings, escalation C-114–C-116, so the six concurrent layer-9 jobs do not collide). Please confirm the number, or assign one.
+2. **R2's input and which edition is pinned.** `findings` is a list whose items are an id or `{finding, version?, case?, edition?}`. The finding must be in a ratified edition of `project` (`publishedEditionsOf({finding, version, project})`, narrowed by `case`/`edition` when named). When several editions remain, the pin is the latest edition of the last case in case-id order. A finding naming no remaining edition is `FINDING_NOT_PUBLISHED`.
+3. **R1's evidence.** An act's `evidence` is a list of content ids; one `content.contentRow` does not hold is `ACT_INCOMPLETE`, naming the part `evidence` and the ids. Dates are `YYYY-MM-DD`: `at`, or `period: {from, to}` with both ends; an unreadable one is `ACT_INCOMPLETE` naming it.
+4. **R3 over a period.** A standard read at each end of the period: `not_in_force` at either end is `STANDARD_NOT_IN_FORCE`; `undetermined` at either end is accepted and stated.
+5. **Outcomes (R4).** `determine` names no outcome parameter, so each `standards` item is `{standard, outcome}` (an id alone has no outcome and is `OUTCOME_UNKNOWN`).
+6. **A later determination naming an act (R7, R11).** `act: {id}` names an act minted by an earlier determination **in the same project**; its description, actor, date and evidence are those recorded at minting (other fields sent beside `id` are ignored, and the answer states the act as recorded). An id naming no act of this project is `ACT_INCOMPLETE`, naming the part `id`.
+7. **R7's codes.** With `supersedes`: a predecessor absent, invisible or of another project is `NO_SUCH_DETERMINATION`; a predecessor of another act (the `act` id differs) is a new code `SUPERSEDES_ANOTHER_ACT`; no reason or one over 500 is `BAD_REASON`; `ALREADY_SUPERSEDED`. These are asked after R1's list (R8's refusal last in R1, then R7's).
+8. **R6's questions.** A question entry that is malformed (no text) or names an inquiry that is absent, not an inquiry or not visible to the author is `UNCLEAR_NO_QUESTION`, naming the entry. Questions on a determination with no `unclear` outcome are accepted and stored. The new inquiry is "in `project`" by this module's record (`determination_questions.project`) and by a line in its Session Log; nothing in the inquiry's front matter names the project (no inquiry field for it exists).
+9. **Bounds.** A determination carries at most 50 findings, 50 standards, 200 rows, 20 questions and 50 evidence content ids; over any, a new code `DETERMINATION_TOO_LARGE` (naming the part and the cap), asked right after `NOT_A_PARTICIPANT`. Proposals (R12) the same caps.
+10. **R12's two missing parameters.** R12 says "a determination may name the proposal it drew on, and the proposal records that", but neither `determine` nor any read carries it. Best reading: `determine` takes `proposal?` (an id; absent, invisible or of another project is `NO_SUCH_PROPOSAL`, a new code), and a read `comparisonRead({id, viewer})` answers a proposal with its label and the determinations that drew on it. Please add both to Provides, or rule otherwise.
+11. **A project seen at existence (membership R44).** An act (`determine`, `comparisonPropose`) and `determinationsFor({project})` naming a project the viewer sees only at existence answer membership's `PROJECT_SEEN_NOT_A_PARTICIPANT` (its `existenceAct`); a project at none, or not a project, is `NO_SUCH_PROJECT`.
+12. **R8's scan.** Every key anywhere in the input (nested objects and lists included) named `significance`, `severity`, `priority`, `urgency`, `rank` or `score`, compared lower-cased, refuses. `comparisonPropose` is scanned the same way.
+
+**Also (not a question):** `standards` is built concurrently. I build against its Provides (`standardRead`, `inForce`) and test with a stand-in until it is merged; please merge it into `tranche/T8` early (§4) so my tests run against the real module before I complete.
