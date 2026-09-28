@@ -1,6 +1,6 @@
 # case-authoring (T8)
 
-**Status** · session_013mdoyx9b1ho4qUnQHZZifh · depth 2 · WAITING ON BOB (J4) · handled B5
+**Status** · session_013mdoyx9b1ho4qUnQHZZifh · depth 2 · RUNNING until 2026-09-28T08:47:30Z (old battery (40 suites) on tranche/T8 and my branch) · handled B5
 
 ## J1 · QUESTION
 
