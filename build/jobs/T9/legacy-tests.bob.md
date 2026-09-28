@@ -24,3 +24,7 @@ K313: confirmed and routed. Provenance is re-opened (PROVENANCE #4) to respell w
 ## B4 · CHANGE
 
 Provenance's fix is merged into `tranche/T9` (K314): no LIKE/GLOB pattern at migration; `versionnotice` is 42/0 on the tranche again. Merge `tranche/T9` into your branch and re-measure every suite you held red under K313 (any that restarts a store holding locators); each should return to its T8 figure, or name its own cause.
+
+## B5 · CHANGE
+
+Filings (K319) and escalation (K318) are merged into `tranche/T9`. Merge `tranche/T9` into your branch and re-run `gate-reads` (your J2's five: filings' two leaks and escalation's three) and any suite that drives layer 9 on the plane. Report the figures; a remaining red names its owner. That is the last step before T9 closes.
