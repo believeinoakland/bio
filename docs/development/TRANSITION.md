@@ -150,7 +150,7 @@ Replaced at each handoff; the progress log (§4) is the history.
 
 **Where things stand.** T7 is open on `tranche/T7` (plan `build/plan/current.md`; Bob's meter at the opening 40%; the archived jobs' sessions showed the account's seven-day limit at `allowed_warning`). Layers 3, 4, 6 and **7 are CLOSED** (layer 7: K204, K205, K207; bundles regenerated, fleetbundles' one red is legacy-tests' five-inputs pin). **Layer 11 runs** since ~02:56, four jobs, all confirmed:
 - QUEUE #1 COMPLETE, **merged** (K210). Keep its session until the close.
-- AFFORDANCES #1 WORKING; its J1–J4 answered (K208, K211, K212), and it said COMPLETE is near. Its ids not met are named in `test.todo`s, and you mark them `*(not yet met: …)*` from its COMPLETE; R27's mark is lifted when it reports its test.
+- AFFORDANCES #1 COMPLETE, **merged** (K213; ~03:32, after the handoff commit). Keep its session until the close. LEGACY-INDEX #4 (B4) and LEGACY-TESTS #4 (B5) were told to merge the tranche.
 - LEGACY-INDEX #4 RUNNING its battery until ~05:17; CHANGEs B2 (queue merged) and B3 (intent's 17 ops: NEEDS all 17, OPS exactly 10 mutating) sent.
 - LEGACY-TESTS #4 **NEEDS BOB**: deleting `bio-plane/test/skilldoctrine.test.mjs`, `skillprohibitions.test.mjs`, `skilldoctrine.control.mjs`, `skillprohibitions.control.mjs` (N53) was refused by its permission check; I told Bob at ~03:07 (the approval to type in its session: https://claude.ai/code/session_01EbJbvw2MqsPnPv5f2PjGVo). Don't remove them yourself (§16). Recommended to Bob: not a standing-list act. It carries on meanwhile; B3–B4 forwarded queue's and affordances' items.
 
