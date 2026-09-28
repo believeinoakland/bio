@@ -87,3 +87,11 @@ For routing; the detail is in my record (§ Found in other modules).
 2. **affordances / legacy-tests:** `rung-ladder` has two reds, identical on the tranche tip, so not from the routes. NO UNBACKED CLAIM names `addressedrecord`, `consequencerevise`, `escalationadvance`, `escalationdecline`, `escalationevaluate` and `escalationsuspend` (ranked `reasoned`, but no reason refusal is found for them). `reversible` names `escalationresume` (not in the suite's list of ways back). Either the rows change or the pin does.
 3. **legacy-tests:** these reds are the same on both trees: `project-sight` 11g++ (LEGACY-STORE J2), `affordances`' facts-region source scans (`affordanceFacts` moved), `plane-envelope`'s four D-240 arms, `d311-roster-affordances`' two.
 4. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale from `index.mjs`, for the layer close (§14).
+
+## J2 · COMPLETE
+
+Job complete on `job/T9/legacy-index`, with `tranche/T9` merged (B2). The full account is in my record.
+- **Routed:** layer 9's routes, exactly as LEGACY-INDEX #5's table states them. There are 36, not 34: the table lists 36, which is also legacy-store's count. The code is `09008ee746` reversed. Each op carries the viewer stamp; each act carries `NEEDS` `contribute`, is in both session sets, and has its `author`/`proposer` stamped from the session and never from the caller.
+- **Scratch plane driver** (real durable object, plus an echo): 23/0 here, 4/19 on the tip, and 9/14 with only the author stamps disabled. No layer-9 op answers `UNKNOWN_OP`. Each answers through its module's op. Machines are refused by name even when sending a member's `author`. The only codeless refusal is standards' own `NO_ID` (REPORT J1).
+- **B2's six suites, branch vs tip:** affordances 96/4 vs 95/5 (NON_ACTS green); rung-ladder 46/2 vs 44/4 (BACKWARD and EXACTLY green); refusal-wire 42/0 on both; project-sight 248/1 on both; plane-envelope 60/4 on both; d311-roster-affordances 19/2 on both. Every remaining red is identical on the tip (REPORT J1).
+- **Checks:** format, architecture, coverage and ownership all report 0 failures.
