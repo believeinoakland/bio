@@ -1092,7 +1092,7 @@ const instances = new WeakMap();
  *  call only: `record`, `membership`, `promotion`, `extraction` (each defaulting to its factory on `host`),
  *  `observation` (`observationOf` over observation-log's factory by default), `now` (milliseconds; the clock the
  *  projection's action facts are judged at), `selectionNow` (the selections' clock, the wall clock by default),
- *  and `order` (the modules' total order, for the order listeners and decorations run in). At creation it declares its
+ *  and `order` (the modules' total order listeners and decorations run in; membership's `MODULE_ORDER` by default). At creation it declares its
  *  tables to purge (R33) and joins every promotion (R1). */
 export function retrievalOf(host, deps) {
   let r = instances.get(host);
