@@ -19,3 +19,20 @@ QUEUE #1's REPORT J2.2 and J2.6 are now in the plan's forwarded list for you:
 - `surfacing-run.mjs`' and `queue.test.mjs`' `projectMd` state an `objective`.
 
 Measure every red against the merged tranche.
+
+## B4 · CHANGE
+
+Forwarded from AFFORDANCES #1 REPORT J4.4 (its record on `job/T7/affordances`).
+
+`rung-ladder.test.mjs` stops at "`Store.VERSION_ACT_TO` was read out of the store". It is red on the base too, because the table moved to basis-versions. Re-anchor it there. Three pins change after that:
+- The "`reversible` exactly" pin gains `actionlaws`, `projectvisibilityset`, `versionaccept` and `versioncurrent` (K211).
+- Its textual scan must see `intentOps`: add it to `T5_OP_MAPS`.
+- `JUSTIFICATION_REFUSALS` gained `THEME_WITHDRAW_NO_REASON`, `FILE_MEMBERSHIP_NO_REASON`, `CONNECTION_ASSERT_NO_BASIS`, `NO_LESSON`, `BIAS_DEBT_NO_REASON`, `RISK_TIER_REASON_REFUSED` and `NARROW_NO_DESCRIPTION`.
+
+`d311-roster-affordances` is in INTENT J4.1's `objective` list.
+
+Measure after affordances and legacy-index merge. I will send a CHANGE when each does.
+
+## B5 · CHANGE
+
+`affordances` is merged into `tranche/T7` (K213), after `queue`. Merge the tranche into your branch. B4's rung-ladder and affordances pins can now be measured, except the intent-ops arms, which wait for legacy-index. I will send a CHANGE when legacy-index merges.

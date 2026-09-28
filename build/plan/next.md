@@ -176,6 +176,8 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N173 · 2026-09-28 · **queue** (QUEUE #1 Q1, K209): at queue's extraction, requirement-named tests at the interface for R6–R40 (the feed in legacy-store until then).
 - N174 · 2026-09-28 · **observation-log** (QUEUE #1 REPORT J2.3): `src/observation-log/vocabulary.mjs` 8–9, 1346–1348 and the refusal at 1599 name `queuestate.mjs` as the vocabulary's home; since N114 it is observation-log's, re-exported by queue: name it.
 - N175 · 2026-09-28 · **process** (QUEUE #1 REPORT J2.5): `checks/ownership.mjs`' `usesOwn` does not see an imported name used through spread (`...name(…)`), because it excludes a name after `.`; allow `...` before it (with the C15 revision, P3).
+- N176 · 2026-09-28 · **affordances** (AFFORDANCES #1 REPORT J4.1–2, at its extraction of `affordanceFacts`): R14's `cites_in` passes counts `{confirmed, severed}`, not the citing bundles' ids (R16); R18's `roster.owner_floor_clear` counts committed owners only (membership R35), so `projectleave` is not offered to an owner whose co-owners are all leaving.
+- N177 · 2026-09-28 · **control-plane**, **legacy-index**, **legacy-tests** (AFFORDANCES #1 REPORT J4.5–6): the control plane's `decorateAct` (index.mjs) is replaced by affordances' `decorate(act, gate)` (R11), passing `{needs, mode}`; and its own test passes its op table to `unaccounted` (R12), retiring `affordances.test.mjs`' and `rung-ladder.test.mjs`' source scans of NEEDS/OPS.
 
 ## Before layer 9
 
