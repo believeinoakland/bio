@@ -221,8 +221,7 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
 import { SCHEMA as SCHEMA_TEXT } from "./schema.mjs";
 /* K31: the one write path, extracted to `promotion`; this store registers its share of every promotion there. */
 import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
-import { provenanceOf, routeFinding, testimonyBytes, observerRef, TESTIMONY_PATH, TESTIMONY_MAX_BYTES,
-         TESTIMONY_FORMAT, PROVENANCE_TABLES } from "./provenance/index.mjs";
+import { provenanceOf, routeFinding, observerRef, TESTIMONY_PATH, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps } from "./membership/index.mjs";
 import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
 import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
@@ -15813,9 +15812,6 @@ export class Store extends DurableObject {
   contentMint(...a) { return contentOf(this.ctx).contentMint(...a); }
 
   /* MK-1 / D-184 / IC-133 / IC-134: the authored bundle, its bytes and its observer reference: provenance's (R28). */
-  static TESTIMONY_MAX_BYTES = TESTIMONY_MAX_BYTES;
-  static TESTIMONY_FORMAT = TESTIMONY_FORMAT;
-  static testimonyBytes(...a) { return testimonyBytes(...a); }
   static observerRef(...a) { return observerRef(...a); }
 
   /** MK-1 (A) — WHAT WOULD CARRY A MEMBER'S AUTHORED OBSERVATION INTO THE
