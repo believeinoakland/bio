@@ -145,13 +145,43 @@ function stampGroup(files, slug) {
 const factUnavailable = (fact, detail) => ({ ok: false, reason: "FACT_UNAVAILABLE", code: "FACT_UNAVAILABLE",
   check: REGISTRATION_CHECKS.FACT_UNAVAILABLE.check, translation: REGISTRATION_CHECKS.FACT_UNAVAILABLE.translation, fact, detail });
 
-/* R39, R40, R47 (K231, N202): a second registration of what one registrant already holds (a step, a fact, the case
-   catalogue) is refused here, the one site that mints STEP_DECLARED; `held` names what was registered twice. */
-const stepDeclared = (held, detail) => ({ ok: false, reason: "STEP_DECLARED", ...held, detail });
+/* R39, R40, R47 (K231, N254): a second registration of what one registrant already holds (a step, a fact, the case
+   catalogue) is refused here, the one site that mints STEP_DECLARED (C-102.8); `held` names what was registered twice. */
+function stepDeclared(held, detail) {
+  const row = REGISTRATION_CHECKS.STEP_DECLARED;
+  return { ok: false, reason: "STEP_DECLARED", code: "STEP_DECLARED", check: row.check, translation: row.translation,
+           ...held, detail };
+}
 
-/* R45, R46, R47 (N202's share within promotion): a listener or catalogue registered without its module's name or a
-   function to call, refused here, the one site in this module that mints LISTENER_MALFORMED. */
-const listenerMalformed = (detail) => ({ ok: false, reason: "LISTENER_MALFORMED", detail });
+/** R49 (N202, K231): the one site that mints LISTENER_MALFORMED and LISTENER_DECLARED. Every registration of a listener
+ *  asks it before recording the registration, this module's (R45, R46, R47's malformed case) and every later module's.
+ *  `held` is what the caller already holds for the slot: a list of `{module}`, or, for a slot that takes one
+ *  registration whoever makes it, that one registration or null. Answers the refusal, with `extra` (the caller's own
+ *  fields) beside its own and never replacing them, else null. Writes nothing and never throws. */
+export function listenerRefusal(held, module, fn, extra) {
+  const refuse = (code, detail, fields) => {
+    const row = Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code) ? REGISTRATION_CHECKS[code] : null;
+    return { ...(isObj(extra) ? extra : {}), ok: false, reason: code, code, detail, ...fields,
+             ...(row ? { check: row.check, translation: row.translation } : {}) };
+  };
+  try {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return refuse("LISTENER_MALFORMED", "a listener names the module that registers it and its function", {});
+    if (Array.isArray(held)) {
+      if (held.some((h) => isObj(h) && h.module === module))
+        return refuse("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
+      return null;
+    }
+    if (isObj(held)) {
+      const holder = typeof held.module === "string" ? held.module : null;
+      return refuse("LISTENER_DECLARED", `this listener is already registered${holder ? ` by ${holder}` : ""}, and it `
+                    + `takes one registration`, { module: holder });
+    }
+    return null;
+  } catch (e) {
+    return refuse("LISTENER_MALFORMED", `the registration could not be read: ${cut(e && e.message ? e.message : e, 200)}`, {});
+  }
+}
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
   detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
@@ -197,10 +227,8 @@ class Promotion {
 
   /* R45, R46: a later module's listener joins `list` once, kept in the modules' total order. */
   #listen(list, module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return listenerMalformed("a listener names the module that registers it and its function");
-    if (list.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(list, module, fn);
+    if (refused) return refused;
     list.push({ module, fn, seq: list.length });
     list.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
@@ -287,8 +315,9 @@ class Promotion {
   /* R47: a later module (ratification) registers, once, the case-document catalogue `fn(fm, ctx) → findings` that R33
      runs in place of the catalogue's `checkCaseDocument`. Any second registration is refused, whoever makes it. */
   registerCaseCatalogue(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return listenerMalformed("a case-document catalogue names the module that registers it and its function");
+    /* R49 answers the malformed case; a second registration is R47's STEP_DECLARED, not a listener's. */
+    const malformed = listenerRefusal(null, module, fn);
+    if (malformed) return malformed;
     if (this.#caseCatalogue)
       return stepDeclared({ module: this.#caseCatalogue.module },
                           `the case-document catalogue is already registered by ${this.#caseCatalogue.module}`);

@@ -349,7 +349,9 @@ test("R39, R40, R47: STEP_DECLARED is one answer at every registration that alre
   const twice = [p.registerStep("later", {}), p.registerFact("citedBy", "later", () => []),
                  p.registerCaseCatalogue("later", () => [])];
   for (const r of twice) {
-    assert.deepEqual([r.ok, r.reason], [false, "STEP_DECLARED"]);
+    assert.deepEqual([r.ok, r.reason, r.code], [false, "STEP_DECLARED", "STEP_DECLARED"]);
+    /* One code, one site (N254): every STEP_DECLARED carries its row, C-102.8. */
+    assert.deepEqual([r.check, r.translation], [REGISTRATION_CHECKS.STEP_DECLARED.check, REGISTRATION_CHECKS.STEP_DECLARED.translation]);
     assert.equal(typeof r.detail, "string");
     assert.equal(typeof r.module, "string", "it names the module that holds the registration");
   }
@@ -363,3 +365,67 @@ test("R39, R40, R47: STEP_DECLARED is one answer at every registration that alre
   /* Nothing a refused registration named was registered. */
   assert.equal(p.fact("f").reason, "FACT_UNAVAILABLE");
 });
+
+test("R49: listenerRefusal is the one site of LISTENER_MALFORMED and LISTENER_DECLARED — malformed, declared in a list, declared in a one-registration slot naming its holder, else null; extra beside, never replacing; writes nothing, never throws", async () => {
+  const { listenerRefusal } = await import("../../../src/promotion/index.mjs");
+  const { REGISTRATION_CHECKS } = await import("../../../checks/bio-checks.mjs");
+  const fn = () => null;
+  /* Its row's check and translation, once legacy-checks holds the row (N202, N206); none is invented before. */
+  const rowOf = (code) => (Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code)
+    ? { check: REGISTRATION_CHECKS[code].check, translation: REGISTRATION_CHECKS[code].translation } : {});
+  const shape = (r, code) => {
+    assert.deepEqual([r.ok, r.reason, r.code], [false, code, code]);
+    assert.equal(typeof r.detail, "string");
+    const row = rowOf(code);
+    assert.deepEqual([r.check, r.translation], [row.check, row.translation]);
+  };
+  /* LISTENER_MALFORMED: a module that is not a non-empty string, or a fn that is not a function, whatever is held. */
+  for (const held of [[], [{ module: "a" }], null, undefined, { module: "a" }])
+    for (const [m, f] of [["", fn], [null, fn], [undefined, fn], [7, fn], [{}, fn], ["a", null], ["a", "fn"], ["a", {}], [undefined, undefined]]) {
+      const r = listenerRefusal(held, m, f);
+      shape(r, "LISTENER_MALFORMED");
+      assert.equal("module" in r, false);
+    }
+  /* LISTENER_DECLARED in a list: exactly when the list holds one by this module, naming it. */
+  const list = [{ module: "a", fn, seq: 0 }, { module: "b", fn, seq: 1 }];
+  const snapshot = JSON.stringify(list);
+  for (const m of ["a", "b"]) {
+    const r = listenerRefusal(list, m, fn);
+    shape(r, "LISTENER_DECLARED");
+    assert.equal(r.module, m);
+    assert.match(r.detail, new RegExp(m));
+  }
+  for (const [held, m] of [[list, "c"], [[], "a"], [[null, 3, "a", { module: "A" }], "a"]]) assert.equal(listenerRefusal(held, m, fn), null);
+  /* A one-registration slot: held by anyone, it is declared, naming its holder, whoever asks; empty, it answers null. */
+  for (const m of ["ratification", "publication"]) {
+    const r = listenerRefusal({ module: "ratification", fn }, m, fn);
+    shape(r, "LISTENER_DECLARED");
+    assert.equal(r.module, "ratification");
+  }
+  for (const held of [null, undefined]) assert.equal(listenerRefusal(held, "x", fn), null);
+  /* extra: the caller's own fields beside the refusal's, never replacing them. */
+  const extra = { event: "promoted", kind: "k", ok: true, reason: "MINE", code: "MINE", detail: "mine", module: "forged" };
+  const d = listenerRefusal(list, "a", fn, extra);
+  shape(d, "LISTENER_DECLARED");
+  assert.deepEqual([d.event, d.kind, d.module, d.detail === "mine"], ["promoted", "k", "a", false]);
+  const mal = listenerRefusal(list, "", fn, { event: "promoted" });
+  shape(mal, "LISTENER_MALFORMED");
+  assert.equal(mal.event, "promoted");
+  assert.equal(listenerRefusal(list, "c", fn, extra), null);
+  /* Writes nothing; never throws, even over a held value that throws when read. */
+  assert.equal(JSON.stringify(list), snapshot);
+  const hostile = [{ get module() { throw new Error("boom"); } }];
+  assert.doesNotThrow(() => listenerRefusal(hostile, "a", fn));
+  shape(listenerRefusal(hostile, "a", fn), "LISTENER_MALFORMED");
+  /* Every listener registration of this module asks it: onCommitted's and onReopened's answers are its answers, and
+     registerCaseCatalogue's malformed case is. */
+  const { p } = makePromotion();
+  for (const reg of ["onCommitted", "onReopened"]) {
+    assert.deepEqual(p[reg]("a", fn), { ok: true, module: "a" });
+    assert.deepEqual(p[reg]("a", fn), listenerRefusal([{ module: "a" }], "a", fn));
+    for (const [m, f] of [["", fn], ["b", null]]) assert.deepEqual(p[reg](m, f), listenerRefusal([], m, f));
+  }
+  for (const [m, f] of [["", fn], ["ratification", null]]) assert.deepEqual(p.registerCaseCatalogue(m, f), listenerRefusal(null, m, f));
+});
+
+test.todo("R49: LISTENER_MALFORMED and LISTENER_DECLARED carry their rows' check and translation — the rows wait on N202's convergence of every later module's registrations (legacy-checks, T10); the test above asserts the row is carried as soon as the catalogue holds it");
