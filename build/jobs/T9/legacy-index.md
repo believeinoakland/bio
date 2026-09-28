@@ -79,3 +79,11 @@ No `tests` path (legacy), so no test is committed.
 - `ownership: 2 files changed by legacy-index between tranche/T9 and HEAD; 0 failures`
 
 Size (session_015C5rwaRYuaTLYD3SanCUps): test runs 36, module lines 7,030
+
+## J1 · REPORT
+
+For routing; the detail is in my record (§ Found in other modules).
+1. **standards:** `op=standard` with no `id` answers `{ok:false, reason:"NO_ID"}` with no code, check or translation. It is a codeless refusal (D-495), the only one among the 36 ops, and it comes from the module's `standardRead`, not from the route.
+2. **affordances / legacy-tests:** `rung-ladder` has two reds, identical on the tranche tip, so not from the routes. NO UNBACKED CLAIM names `addressedrecord`, `consequencerevise`, `escalationadvance`, `escalationdecline`, `escalationevaluate` and `escalationsuspend` (ranked `reasoned`, but no reason refusal is found for them). `reversible` names `escalationresume` (not in the suite's list of ways back). Either the rows change or the pin does.
+3. **legacy-tests:** these reds are the same on both trees: `project-sight` 11g++ (LEGACY-STORE J2), `affordances`' facts-region source scans (`affordanceFacts` moved), `plane-envelope`'s four D-240 arms, `d311-roster-affordances`' two.
+4. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale from `index.mjs`, for the layer close (§14).
