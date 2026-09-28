@@ -1,4 +1,4 @@
-/* ai-runs — THE AI RUN (requirements: `build/requirements/ai-runs.md`, R1–R40). Extracted from `store.mjs` at T7
+/* ai-runs — THE AI RUN (requirements: `build/requirements/ai-runs.md`, R1–R44). Extracted from `store.mjs` at T7
  * (T6-6's entry; the map is `build/extraction/ai-runs.md`). The vocabulary and pure rules stay in `../airun.mjs`
  * (R1–R8, this module's path since before the extraction); this file is the mechanism: the one exit, open, tick,
  * close, the reaper and the wake, the reads, and the services later modules produce under a run through (R28, R29).
@@ -11,7 +11,7 @@
  * membership, connections, bias and observation-log through their factories on the same `ctx`. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
@@ -38,8 +38,53 @@ export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_N
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
+/** R19's SIGHT OF A RUN, as SQL over the run's context column (D-15's bundle gate, the store's `#bundleGate`, a copy of
+ *  the small helper, K57): the column must be qualified; a machine credential (membership's `member` scope) sees every
+ *  run; an absent or unrecognised viewer none (fail closed); a member a run whose context bundle it may see. The ONE
+ *  spelling of "may this viewer see this run": `read`, the tick and close, `runFor` and `hiddenRuns` all compile it. */
+function runSight(col, viewer) {
+  if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+    throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}).`);
+  const gate = viewerPredicate(viewer);
+  if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [], scope: gate.scope };
+  if (gate.scope === "DENY") return { sql: gate.sql, args: [], scope: gate.scope };
+  return {
+    sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
+            WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
+    args: gate.args, scope: gate.scope,
+  };
+}
+
+/** R42 (N191, N276, D-486): THE ONE PREDICATE FOR "RUNS THIS VIEWER CANNOT SEE", as a WHERE tail over a run id: a
+ *  run is kept only when it is one R19 answers `found: true` for, compiled from `runSight` itself, so the tallies and
+ *  the reads cannot disagree about a run. A machine credential gets the empty tail; an absent or unrecognised viewer
+ *  loses every run (fail closed), as R19 answers it nothing. This is the one place the subtraction is written.
+ *
+ *  Without `column` it is the tail over `observation_log` that retrieval takes (its R57): rows that are not a run's are
+ *  never touched (`authority` also holds sweep, lead and document ids, so the `authority_kind` conjunct is
+ *  load-bearing), and `COALESCE` keeps a NULL authority from deciding the answer by accident. With `column` (K333, for
+ *  legacy-store's `ai_run_bounds` count) it is the same predicate and args over that column naming a run id; the
+ *  column must be a plain identifier, and anything else is refused by the tail that keeps nothing, never
+ *  interpolated. Pure over its arguments; never throws (a failure is the fail-closed tail). */
+export function hiddenRuns(viewer, column = undefined) {
+  const byColumn = column !== undefined;
+  const closed = byColumn ? { sql: " AND 0=1", args: [] } : { sql: " AND COALESCE(authority_kind, '') <> 'run'", args: [] };
+  try {
+    if (byColumn && !(typeof column === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(column))) return closed;
+    const seen = runSight("r.context_id", viewer);
+    if (seen.scope === "member") return { sql: "", args: [] };
+    const inSight = `(SELECT r.run FROM ai_runs r WHERE ${seen.sql})`;
+    return byColumn
+      ? { sql: ` AND COALESCE(${column}, '') IN ${inSight}`, args: seen.args }
+      : { sql: ` AND NOT (authority_kind = 'run' AND COALESCE(authority, '') NOT IN ${inSight})`, args: seen.args };
+  } catch {
+    return closed;
+  }
+}
+
 export class AiRuns {
   #waitSource = null;
+  #runListeners = [];     // R43: {module, fn, seq}, in the modules' total order
   constructor(ctx, env = {}) {
     this.ctx = ctx;
     this.env = env || {};
@@ -49,10 +94,11 @@ export class AiRuns {
     recordOf(ctx).declarePurge("ai-runs", ["inquiry_run_surfacings",
       { name: "ai_run_bounds", keys: [] }, { name: "ai_runs", keys: [] }]);
     /* R36: observation-log's `run` resolver (a run's log rows are visible to whoever may read the run) and
-       retrieval's hidden-run tail and `surfaced_in` decoration; R30: the runs as bias's work products. */
+       retrieval's hidden-run tail (R42's `hiddenRuns`) and `surfaced_in` decoration; R30: the runs as bias's work
+       products. */
     observationLogOf(ctx).registerAuthority("run", (run, viewer) => !!this.runFor(run, viewer));
     const retrieval = retrievalOf(ctx);
-    retrieval.registerHiddenRunTail("ai-runs", (viewer) => this.hiddenRunTail(viewer));
+    retrieval.registerHiddenRunTail("ai-runs", hiddenRuns);
     retrieval.registerProjectionDecoration("ai-runs", (row, { viewer }) => (
       normalizeType(row.object_type) === "inquiry"
         ? this.surfacedIn(row.bundle_id, viewer).then((s) => ({ surfaced_in: s }))
@@ -107,20 +153,8 @@ export class AiRuns {
   #bias() { return biasOf(this.ctx); }
   #observations() { return observationLogOf(this.ctx); }
 
-  /** D-15's bundle gate over a run's context column (the store's `#bundleGate`, a copy of the small helper, K57):
-   *  the column must be qualified, a member-scope credential sees everything, an unrecognised viewer nothing. */
-  #bundleGate(col, viewer) {
-    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
-      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}).`);
-    const gate = viewerPredicate(viewer);
-    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
-    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
-    return {
-      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
-              WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
-      args: gate.args,
-    };
-  }
+  /** D-15's bundle gate over a run's context column: `runSight`, the one spelling. */
+  #bundleGate(col, viewer) { const { sql, args } = runSight(col, viewer); return { sql, args }; }
 
   /* ---- R16, R17: THE WAIT SOURCE `capture-requests` registers (K71, N39) ---------------------------------------
    * The wake reads the requests a run waits on through this, never `capture_requests` by name. `source` is
@@ -136,6 +170,19 @@ export class AiRuns {
     return { ok: true, module };
   }
   #wait() { return this.#waitSource ? this.#waitSource.source : null; }
+
+  /** R43 (N223, K259): a later module's post-write notice (`scheduler`'s R9), called after each successful `open`
+   *  commits with `{run, contextType, contextId, expires}`, once per listener, in the modules' total order
+   *  (membership's `MODULE_ORDER`, R83). A malformed registration, or a second by the same module, is refused by
+   *  membership's `listenerRefusal` (its R81), the one site of LISTENER_MALFORMED and LISTENER_DECLARED. */
+  onRunOpened(module, fn) {
+    const refused = listenerRefusal(this.#runListeners, module, fn);
+    if (refused) return refused;
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.#runListeners.push({ module, fn, seq: this.#runListeners.length });
+    this.#runListeners.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
   #captureRequestConfigured() {
     const w = this.#wait();
     return !!w && (typeof w.configured !== "function" || w.configured() === true);
@@ -872,6 +919,13 @@ export class AiRuns {
           b.unit == null ? null : String(b.unit));
       }
     });
+    /* R43: the post-write notice, after the run's transaction has committed, to every listener once in the modules'
+       order; one that throws or rejects changes neither the run nor this answer. */
+    const expires = AiRuns.#aiIso(nowMs + lease);
+    for (const l of this.#runListeners) {
+      try { await l.fn({ run, contextType: String(contextType), contextId: String(contextId), expires }); }
+      catch { /* isolated */ }
+    }
     /* PL-18: the gate's outcome travels on the SUCCESS answer too, and that is
        the half DEC-17 makes necessary. A run over a projectless inquiry is
        PERMITTED — *"an inquiry outside any project has no bar and inherits
@@ -879,7 +933,7 @@ export class AiRuns {
        that never ran. Stating it is the same obligation as stating which
        absence was found. */
     return { run, started: true, status: "running", ticks: 1, created: now,
-             expires: AiRuns.#aiIso(nowMs + lease),
+             expires,
              /* REC-207: the link, echoed, and ONLY when there is one. A caller that named a re-run should
                 be able to see that the record took it, because the discharge at this run's close rests on
                 it — and an echo that appeared as `null` on every other open would be a new key on an
@@ -1614,6 +1668,11 @@ export class AiRuns {
          segment continues its work list rather than restarting it; null when it cannot be read back. Never a
          transcript (DEC-61): it is the work list the run itself sent. */
       state: safeJson(row.state),
+      /* R19 (N190): the run this run re-runs (REC-207's `rerun_of`, judged at the open), published only when this
+         viewer can see that run too, through the same sight; else null — a run that re-runs nothing and one whose
+         earlier run is out of view answer alike, so the field never says a hidden run exists. */
+      rerun_of: row.rerun_of != null && String(row.rerun_of).trim() !== "" && this.#aiRunInSight(String(row.rerun_of), viewer)
+        ? String(row.rerun_of) : null,
     } };
   }
 
@@ -2365,19 +2424,8 @@ export class AiRuns {
     return { surfaced_in: { run, at, bound: { bound: "surfaces", allowed: left.allowed, consumed: left.consumed } } };
   }
 
-  /* ---- R36: HIDDEN RUNS, registered with retrieval and observation-log ------------------------------------------ */
-
-  /** D-486's run half (R36): the WHERE tail over `observation_log` that leaves out the rows of runs over projects
-   *  this viewer cannot see. A never-sent viewer (`undefined`) and a member-scope credential are left whole; an
-   *  unrecognised one is DENY, so every project-context run drops (fail closed). */
-  hiddenRunTail(viewer) {
-    const gate = viewer === undefined ? null : viewerPredicate(viewer);
-    if (!gate || gate.scope === "member") return { sql: "", args: [] };
-    const hid = `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`;
-    return { sql: ` AND NOT (authority_kind = 'run' AND COALESCE(authority, '') IN `
-                + `(SELECT run FROM ai_runs WHERE context_type = 'project' AND context_id IN ${hid}))`,
-             args: gate.args };
-  }
+  /* ---- R36: HIDDEN RUNS — `hiddenRuns` (R42, module level) is what retrieval holds; observation-log's resolver is
+     `runFor` (R28), the same sight. ------------------------------------------------------------------------------ */
 
   /** R27: which run a question was opened inside, and under what lens. The run's facts are `read`'s answer, taken
    *  whole under the same viewer. The migration-replay arm is inquiry's (map §5.8): a question with no surfacing

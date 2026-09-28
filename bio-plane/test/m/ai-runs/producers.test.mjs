@@ -8,6 +8,7 @@ import { AI_RUN_CHECKS } from "../../../src/airun.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
+import { hiddenRuns } from "../../../src/ai-runs/index.mjs";
 
 const HIDDEN = "PROJ-2026-0009";
 
@@ -82,7 +83,7 @@ test("R30: each run is registered with bias as a work product — its context, m
   assert.deepEqual([await wp.visible("RH", "member:ann"), await wp.visible("RH", "member:dan"), await wp.visible("R1", "member:dan")], [true, false, true]);
 });
 
-test("R36: the hidden-run predicate and the run resolver — retrieval's tail leaves out the log rows of runs over projects the viewer cannot see, and observation-log shows a run's rows to whoever may read the run", async () => {
+test("R36: the hidden-run predicate and the run resolver — retrieval's tail (R42's hiddenRuns, registered here) leaves out the log rows of runs over projects the viewer cannot see, and observation-log shows a run's rows to whoever may read the run", async () => {
   const w = await prodWorld();
   const look = { level: "document", subject: "https://example.org/x", state: "LOOKED_ABSENT", detail: "no" };
   await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, log: [look] });
@@ -91,13 +92,14 @@ test("R36: the hidden-run predicate and the run resolver — retrieval's tail le
   const tail = retrieval.registerHiddenRunTail("legacy-store", () => ({ sql: "", args: [] }));
   assert.deepEqual([tail.reason, tail.declaredBy], ["TAIL_DECLARED", "ai-runs"]);
   assert.equal(retrieval.registerProjectionDecoration("ai-runs", () => ({})).reason, "DECORATION_DECLARED");
-  const seen = (viewer) => { const t = w.runs.hiddenRunTail(viewer);
+  /* through retrieval's own door: the tail it answers is the one this module registered */
+  const seen = (viewer) => { const t = retrieval.hiddenRunTail(viewer);
+    assert.deepEqual(t, hiddenRuns(viewer));
     return w.rows(`SELECT authority FROM observation_log WHERE 1=1${t.sql} ORDER BY seq`, ...t.args).map((r) => r.authority); };
   assert.deepEqual(seen("member:dan"), ["R1"]);
   assert.deepEqual(seen("member:ann"), ["R1", "RH"]);
   assert.deepEqual(seen("admin"), ["R1", "RH"]);
-  assert.deepEqual(seen(undefined), ["R1", "RH"], "an internal caller is not asked");
-  assert.deepEqual(seen("who-knows"), ["R1"], "an unrecognised viewer drops every project run");
+  assert.deepEqual(seen("who-knows"), [], "an unrecognised viewer sees no run, as R19 answers it none");
   const obs = observationLogOf(w.ctx);
   const rowOf = (run) => w.row(`SELECT * FROM observation_log WHERE authority = ?`, run);
   assert.deepEqual([obs.rowVisible(rowOf("RH"), "member:ann"), obs.rowVisible(rowOf("RH"), "member:dan"), obs.rowVisible(rowOf("R1"), "member:dan")],
