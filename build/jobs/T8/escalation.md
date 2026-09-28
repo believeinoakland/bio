@@ -67,3 +67,7 @@ B9 applied; escalation COMPLETE: R1–R21 met over the real conformance, consequ
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 34 relative imports; 0 failures. coverage: 21 of 21 live ids; 0 failures. ownership: 5 files changed; 0 failures (no legacy file touched).
 
 Size (session_01Dj21W7K2W3BqsaQUEQKpDo): test runs 12, module lines 1428
+
+## J5 · COMPLETE
+
+B10 applied (K267): escalationOf migrates its tables at construction, so a purge after construction finds them. New R20 test: whole-store and bundle purge ok after escalationOf(host) with no migrate(). Escalation 28/28; monitoring 42/0 (10 todo); action-loop 81/0, actionquote 49/0, rec195-laws-proposal 40/0 on legacy-tests' files (79/2, 46/3, 38/2 without the fix); format, architecture, coverage, ownership 0 failures. Record § Completion (ESCALATION #2, B10).
