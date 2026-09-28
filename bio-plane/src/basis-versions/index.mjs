@@ -1296,7 +1296,8 @@ export class BasisVersions {
       const extRows = ext && Array.isArray(ext.rows) ? ext.rows : [];
       if (ext && ext.truncated) truncated = true;
       for (const r of extRows) {
-        const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
+        const pos = r.position && typeof r.position === "object" ? r.position
+          : readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
         if (!pos) continue;
         push({ source: "extract", ref: pos.ref, extent: { kind: pos.kind, ...posFields(pos) },
                reference: r.ref, label: r.label ?? null, run: r.run, mentions_subject: null,

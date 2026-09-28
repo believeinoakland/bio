@@ -144,4 +144,10 @@ test("R40: onCandidates registers one extract source, a second is LISTENER_DECLA
   assert.deepEqual(calls, [{ captureSha: cap, max: 50 }]);
   assert.deepEqual(r.candidates.map((c) => [c.source, c.run, c.extent.page]), [["extract", "RUN-9", 3]]);
   assert.equal(r.counts.extract, 1);
+  /* a source may hand the position already parsed, as run-productions' candidates do */
+  const w2 = setup().w;
+  w2.bv.onCandidates("run-productions", () => ({ rows: [{ run: "RUN-8", ref: "entity:y", label: null,
+    position: { kind: "pdf-page", page: 5, ref: "page 6" }, content_id: null, proposed_by: "class:ai" }], truncated: true }));
+  const r2 = w2.bv.narrowCandidates(narrowArgs());
+  assert.deepEqual([r2.candidates.map((c) => [c.source, c.extent.page]), r2.truncated], [[["extract", 5]], true]);
 });

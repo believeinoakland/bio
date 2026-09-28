@@ -1,6 +1,6 @@
 # skills (T7)
 
-**Status** · session_01LeLpLCKuivZWf56gFwdetG · depth 2 · COMPLETE · handled B4
+**Status** · session_01LeLpLCKuivZWf56gFwdetG · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
@@ -61,3 +61,16 @@ Size (session_01LeLpLCKuivZWf56gFwdetG): test runs 16, module lines 1700
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture skills`: 6 product files, 21 relative imports; 0 failures. `coverage skills`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership skills tranche/T7`: 7 files changed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01LeLpLCKuivZWf56gFwdetG): test runs 18, module lines 1701
+
+## J5 · COMPLETE
+
+**Completion again, after B5 (SKILLS #1).** Merged `tranche/T7` @ 727c18a7fb (run-productions, K192).
+
+**Applied:** `skilldoctrine.mjs` imports `SUGGEST_LEVELS` and `SUGGEST_CHECKS` from `./run-productions/index.mjs` (K182 (2)), no longer from the catalogue. My tests read them there too: R20 and R23 use run-productions' `SUGGEST_LEVELS`, and R15's keyed-number walk includes its `SUGGEST_CHECKS`. The merge exposed one fault in my own test: R1's child process mocked observation-log's public entry with its vocabulary only. Run-productions' import chain reads `missingCause` from that entry, so the child failed to load. The mock now carries the entry's own exports with only the levels (then states) emptied, and the arm still requires the "empty" error. Commit 4cd7abf84f.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/skills/`: tests 29, pass 29, fail 0.
+- Users: `agent-worker/test/wire-vocabulary.test.mjs` 83 passed, 0 failed.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture skills`: 6 product files, 23 relative imports; 0 failures. `coverage skills`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership skills tranche/T7`: 0 failures.
+
+Size (session_01LeLpLCKuivZWf56gFwdetG): test runs 21, module lines 1703
