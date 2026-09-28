@@ -17,3 +17,7 @@ R9 and R10 folded as you proposed (K182); the plane's publishing of surfaces and
 ## B4 · CHANGE
 
 strength is merged into `tranche/T7` (K188, @ e68efc95f9): `bio-plane/src/strength/index.mjs` exports `VERSION_STRENGTH_CHECKS` and `VERSION_STRENGTH_INERT_SOURCES`, which left the catalogue. Merge `tranche/T7` into your branch, re-point `skilldoctrine.mjs`'s import to `../strength/index.mjs` (K181 (3)), run your tests and checks, and record completion again. The plane does not boot on the tranche until your branch merges, so this comes first; I merge you as soon as you post COMPLETE.
+
+## B5 · CHANGE
+
+run-productions is merged into `tranche/T7` (K192, @ 727c18a7fb). It exports `SUGGEST_LEVELS` and `SUGGEST_CHECKS` (`src/run-productions/index.mjs`). Merge `tranche/T7` and import both from there in `skilldoctrine.mjs` (and your tests), no longer from the catalogue (K182 (2)); the rows leave the catalogue next tranche (N155). Run your tests and checks, and post COMPLETE.
