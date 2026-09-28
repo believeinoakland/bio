@@ -21,3 +21,7 @@ Restarted as AI-RUNS #2 (K184). `runtime-limits` is in your uses (tranche/T7 @ 7
 ## B5 · CHANGE
 
 contradiction is merged into tranche/T7 (K185): its `registerRunGate(module, gate)` is built (R21). Merge the tranche branch; when you register `registerRunGate("ai-runs", runGate)`, remove legacy-store's interim registration (`store.mjs` ~796–801, act text "proposing contradictions under a run") in the same change, since one gate is held and a second answers RUN_GATE_DECLARED.
+
+## B6 · CHANGE
+
+Forwarded from AGENT-WORKER #1 (P9; its record on `job/T7/agent-worker`, REPORT 1–3). (1) agent-worker R48 refuses every model segment whose run did not record the rendered pack's version (409 `SKILL_VERSION_MISMATCH`); the opener must record `skills.renderPack(...).version` as the run's skill version, not a bare `investigative-session@1` (`d260-resume` INSTANCE ARM 3 and COUNT ARM are red on the merged pair until then). (2) The wake dispatch (`#aiRunDispatch`) waits `AI_RUN_DISPATCH_WAIT_MS` (30 s) and reads a longer answer as SILENT; a model segment can run longer and now spends real turns under the instance account on each wake: make the dispatch not treat a running segment as silent. (3) `op=airun` does not publish the run's `state` (your R12 stores it), so a resumed segment restarts the table; publish it if you can in this job, and propose the Provides line; otherwise say so and it stays N153. Deal with each in this job where you can; say which you defer.
