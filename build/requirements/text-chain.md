@@ -274,9 +274,8 @@ contain the place a reference was read? The default is NO.
   - `slide-shape`: `extent.slide === position.slide`; when `extent.shape` is absent the whole slide
     counts, when present it must equal the position's `.shape`.
 - **R72** A `sheet-cell` position is contained in a `sheet-range` extent when its
-  `.sheet` is the range's sheet and its `.cell` falls within the range's bounds. Today R71's equal-kind rule
-  answers `false`. Design: `EXTRACTION-BREADTH-DESIGN.md` §3.2. The units this reads are emitted by
-  `office-readers` R9 (D-415, built but not merged).
+  `.sheet` is the range's sheet and its `.cell` falls within the range's bounds. Design: `EXTRACTION-BREADTH-DESIGN.md` §3.2. The units this reads are emitted by
+  `office-readers` R9 (D-415).
 - Errors: never throws.
 
 **`glyphCount(s) → integer`** (D-501/D-514) The number of non-whitespace Unicode CODE POINTS in `s`.
@@ -338,6 +337,12 @@ must add a service that:
 Every `TEXT_CHAIN_*`, `TEXT_CONFIDENCE_*`, `TEXT_ANCHOR_*` and `TEXT_ATTEST_*` code above is a key of
 `TEXT_CHAIN_CHECKS` (`legacy-checks`, family C-35.1–C-35.14). No other module may mint a C-35 code; a
 new refusal condition in this module mints the next one in the family and is added there.
+
+- **R87** (N98, D-670; K278) `RECT_USER_SPACE` (`"user"`) and `rectSpace(holder) → string | null`: a holder's `.space` absent or `null` reads as `"user"`; a non-empty string is that space; anything else is `null` (unreadable, comparable to nothing). `readingSource`'s `pdf-page` arm carries `space` (truncated to 40) beside a valid rect only when it is not user space, so an explicit `"user"` and the unstated spelling give the same bytes (R66, R67 unchanged for every position written before D-670); a rect with an unreadable space drops to `null`, as a malformed rect does (R62). `readingSourceJson`, `readingOccurrenceKey` and `readingSourceFromColumns` carry it through. *(not yet met: T9, N98)*
+- **R88** (N98) `extentCovers`: a `region` extent covers a target only when `rectSpace(extent.source)` equals `rectSpace(target)`, neither `null` (added to R54's conditions; the default stays no). *(not yet met: T9, N98)*
+- **R89** (N98) `readingPositionInExtent`, `pdf-page` with a rect on both sides: `false` unless both rects are in the same readable space (added to R71's `pdf-page` rule). *(not yet met: T9, N98)*
+- **R90** (N102, D-665, D-697) `mergeTier2Text`: when tier 2 wins a page, each of the base page's `image_unread` markers is carried onto the merged page after tier 2's own, unless tier 2 states one with the same `reason` and `rect`; it counts 0 undetermined characters, so no award moves (R77's family). *(not yet met: T9, N102)*
+- **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai"]`), which `query-language` re-exports. *(not yet met: T9, N104)*
 
 ## Private
 
