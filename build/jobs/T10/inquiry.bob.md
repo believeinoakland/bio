@@ -9,3 +9,7 @@ Depth 2. Your entries are the inquiry bullet of `build/plan/current.md`, layer 6
 ## B2 · ANSWER · re J2
 
 Your reading stands (K334). R44 and R36 are worded on the tranche branch as you propose: the control plane's `memberUserAgent` stamp (trimmed, at most 512 characters, never from a caller's body), recorded at creation in `inquiry_member_agents` (purge-declared, never overwritten, carried to a division's children), else the document's `member_user_agent`, else null. Merge `tranche/T10`. The control plane's one line is N290, built by LEGACY-INDEX in layer 11 of this tranche; test your side with the stamp present on the package as the control plane will pass it. Report nothing further on it.
+
+## B3 · ANSWER · re J3
+
+Your reading stands (K335): R18 is live again, with your text and N183 (2)'s bound, on the tranche branch; its retirement is withdrawn because publication calls it. Merge `tranche/T10` and test R18 as it now reads (your restored arm and the paging arm).
