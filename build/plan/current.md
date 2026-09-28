@@ -1,10 +1,12 @@
 # Plan: tranche T8
 
-**Status** · DRAFT (BOB #51; cut by BOB #52, K201), drafted by a worker 2026-09-28 during T7's layer 6 (P18); reviewed in part (K191). Opens as `next.md` once T7 closes, after re-reading for what T7's layers 6, 7 and 11 change. Settled by K191: N147's `CATALOG_VERSION` stamp is taken once, after layer 9 (layers 8–9 move rows too), not in layer 2; `bias/interim.mjs` goes with bias (N143, K182 (3)); `testimonyReach` is basis-versions' (review's Uses corrected); D-695, D-717 and D-688 go to actions, as its requirements place them. Open for the opening BOB: the size (45 jobs against T7's 25; consider splitting layers 1–6 from 8–10), the maps to re-check (below), N28 and N89, and the requirement marks the section "Contradictory" names.
+**Status** · OPEN · BOB #54 · session_01Dm9AiqFtuPRDAYimwzzp7X · depth 1
 
 **Size (K201).** T8 carries layers 8–10 and only the lower-layer entries they depend on (capture's N166 added by K206): legacy-checks (N129's record types, and its other entries, since its job runs anyway), jurisdictions (N130, which actions, filings and escalation read), runtime-limits (R26, which monitoring R23 reads), record-core (`textAtSha`, which publication and ratification read) and promotion (the case-document registration ratification fills). The other lower-layer entries (24 modules, small entries) are in `build/plan/draft-T9.md`. 21 jobs.
 
 **Jobs** · (none yet)
+
+Opened by BOB #54, 2026-09-28 ~05:30 UTC (PROCESS-MECHANICS §5), from `draft-T8.md` (drafted by BOB #51, cut by BOB #52, K201) with K223's changes; Bob's weekly meter at the opening: 58%. Branch `tranche/T8` starts at the commit that opened this plan (`main` @ 708cda1b02, T7 closed). Layers 1–3 were re-read for what T7's layer 11 changed (K219–K222): only N187 (capture) and N192 (legacy-checks) reach them, both folded below. The `index.mjs` re-cites in the layer 8–10 maps and the re-read of layers 7–11 are done during layers 1–3 (K223), before those layers open.
 
 Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.md`, `docs/development/transition/old-plan/index.csv` and `build/modules.json`. T8 carries layers 8 (publication), 9 (action) and 10 (operations), with N129 and N130 first as their text asks; every ready `next.md` entry against a module T7 does not carry, or carries only in part, each in its module's own layer; and the carried old-plan rows whose target is a T8 module. Eight layers, lowest first (P10): 1, 2, 3, 7, 8, 9, 10, 11 (K201, K206, K218). T6's and T7's rules hold. Each extraction is done by its target module's job (mechanics §12.2), following its map (`build/extraction/<module>.md`) and its requirements. A module with no `from` is built per its requirements; its map says nothing moves. Every job writes requirement-named tests for every live id (P7), applies every carried row its requirements mark *not yet met*, and judges built work on the snapshot against its requirements (§12.5). A user builds against its provider's Provides, and BOB merges a provider early (§4). An `N` entry's text is in `next.md`, and a job applies only the share this plan gives it. Each layer is re-read at its start for what T7's layers 6, 7 and 11 changed (K170's rule). The maps listed under "Maps to re-check" are checked before layer 8 opens.
 
@@ -17,7 +19,7 @@ Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.m
 
 ### Layer 1 (order: `legacy-checks`, `jurisdictions`, `runtime-limits`)
 
-- **legacy-checks** · N129 first, at the head of the tranche (K171 (1), (2): `STD-`, `CONF-`, `CONS-`, `ESC-` registered as `BIAS` was; `proposalLabel` over `lawProposalState`, with `lawProposalLabel` kept); N128 (catalogue rows for promotion's `FACT_MALFORMED`, `STEP_DECLARED`, `STEP_MODULE_UNNAMED`, `LISTENER_MALFORMED`; the `LISTENER_DECLARED` row only after BOB's structural ruling); N148 (reword `CONTENT_EXTENT_CHECKS`' prose header); N70 (its share, if LEGACY-CHECKS #2 left any: the `where` of `MACHINE_CANNOT_REOPEN`, rec-186, machinefences-dec49 arm D); N150 and N154 (the `where`s of the rows whose regions moved in T7's layer 6); N155 (`SUGGEST_LEVELS`, `SUGGEST_CHECKS` leave the catalogue, once skills imports them from run-productions); N159 (admit `aspiration` and `goal`, K198).
+- **legacy-checks** · N129 first, at the head of the tranche (K171 (1), (2): `STD-`, `CONF-`, `CONS-`, `ESC-` registered as `BIAS` was; `proposalLabel` over `lawProposalState`, with `lawProposalLabel` kept); N128 (catalogue rows for promotion's `FACT_MALFORMED`, `STEP_DECLARED`, `STEP_MODULE_UNNAMED`, `LISTENER_MALFORMED`; the `LISTENER_DECLARED` row only after BOB's structural ruling); N148 (reword `CONTENT_EXTENT_CHECKS`' prose header); N70 (its share, if LEGACY-CHECKS #2 left any: the `where` of `MACHINE_CANNOT_REOPEN`, rec-186, machinefences-dec49 arm D); N150 and N154 (the `where`s of the rows whose regions moved in T7's layer 6); N155 (`SUGGEST_LEVELS`, `SUGGEST_CHECKS` leave the catalogue, once skills imports them from run-productions); N159 (admit `aspiration` and `goal`, K198); N192 (K220: C-33.40's `where` and the other rows it names, with N150 and N154).
 - **jurisdictions** · N130 (R23 `level`, R24 `oversight`, R25 `advisory`, R31–R36, before actions R32); with N61 and N65 (4) (the profile sections, Bob's, K102), N77 (`locale`, which capture R41 reads), N96 (`systems[].links`, K158).
 - **runtime-limits** · N63 (its share: R26 `unattendedCredential(env)`, which capture-requests injects until built (K181 (6)) and monitoring R23 reads).
 
@@ -28,15 +30,16 @@ Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.m
 
 ### Layer 3 (order: `capture`)
 
-- **capture** · N166 (state `source_reachability` as a read contract in Provides, with its test; monitoring reads it, K206).
+- **capture** · N166 (state `source_reachability` as a read contract in Provides, with its test; monitoring reads it, K206); N187 (a test at capture's interface drives `op=navchanges`' `limit` cap, K220).
 
-### Layer 7 (order: `intent`) (K218)
+### Layer 7 (order: `intent`, `reevaluation`) (K218, K223)
 
 - **intent** · N199 first (hidden-project reads, R23; K222); N179 (progressions' configured clock on the plane: intent builds no progressions instance of its own, or builds it with the plane's `env`, so progressions R16 reads `env.BIO_NOW_MS` again; a test at intent's interface that progressions reached through a plane-built intent keeps the configured clock). N180 (its refusal family renumbered out of reevaluation's C-110, BOB assigning it; `NO_STATEMENT` its own code; its guard lines); N181 (its unbounded reads, `doc.mjs`'s `GRADES`, the unused `intent_triage_key` index).
+- **reevaluation** · N200 (Bob ruled 2026-09-28, K224: folded into R14; the notice withholds `newer_capture`, `grade` and `affects` unless the viewer sees the newer capture's project, as `op=versionnotice` does).
 
 ### Layer 8 (order: `publication`, `ratification`, `case-authoring`, `review`)
 
-- **publication** · N163 (reevaluation's owners, its edition call, `publishedRegistry`); Extract per map and requirements (K3, K31, K57, K78 (2), K83 (3), K94, K102, K171 (4)); D-246 (R30); built work on the snapshot judged: D-618, D-626, D-680, D-683, D-703, D-708, D-712, D-720, D-721, D-725, D-728, D-734; queued rows D-613 (`publishedbytes` zip duplicate path answers 413, not 409) and D-742 (re-key pre-D-720 acknowledgements on the live record, live data); N16 (its share: `exportManifest`, `exportLog`, `export_log`, R18–R19); N67 (inquiry's share, moved here by K181 (1): C-2.8 stops calling `checkPublishedExtension`); N69 (its share: R36's evidence-package registration, which filings R15 fills); R37 `publishedEditionsOf` (K171 (4)); N127 (as the next job extracting from legacy-store: page `auditPass`'s `sighted` SELECT); N152 (its share: `promotion.registerFact("publishedRegistry", …)` made by publication itself, replacing legacy-store's registration); N89 (classify `archivelookup` in `PROJECT_NAMING_READS` or `_NOT`; see "Could not place").
+- **publication** · N163 (reevaluation's owners, its edition call, `publishedRegistry`); Extract per map and requirements (K3, K31, K57, K78 (2), K83 (3), K94, K102, K171 (4)); D-246 (R30); built work on the snapshot judged: D-618, D-626, D-680, D-683, D-703, D-708, D-712, D-720, D-721, D-725, D-728, D-734; queued rows D-613 (`publishedbytes` zip duplicate path answers 413, not 409) and D-742 (re-key pre-D-720 acknowledgements on the live record, live data); N16 (its share: `exportManifest`, `exportLog`, `export_log`, R18–R19); N67 (inquiry's share, moved here by K181 (1): C-2.8 stops calling `checkPublishedExtension`); N69 (its share: R36's evidence-package registration, which filings R15 fills); R37 `publishedEditionsOf` (K171 (4)); N127 (as the next job extracting from legacy-store: page `auditPass`'s `sighted` SELECT); N152 (its share: `promotion.registerFact("publishedRegistry", …)` made by publication itself, replacing legacy-store's registration).
 - **ratification** · Extract per map and requirements (K3, K6, K31, K57, K61, K83 (3), K93 (3), K94, K102); no rows; R16; N67 and N69 (its share: fills promotion's case-document catalogue registration, C-41 moving; R9 registers `checkPublishedExtension`); N69 (legacy-checks' share: a test that `isCaseMemberBytes`' copy in the catalogue, C-3.1, agrees with ratification's; it goes in ratification's suite, since legacy-checks cannot import it); reads record-core's `textAtSha` (layer 2).
 - **case-authoring** · Extract per map and requirements (K3, K6, K57, K61, K82 (5), K94, K102); no rows; R12 (REC-15), R21's named-draft half; N138 (its share: takes `searchedSection`, `SEARCHED_LEVEL_OUTCOMES` and the `SEARCHED_SUBJECT_SOURCES` re-export from `airun.mjs`, re-pointing `store.mjs`' import (320) and call (6335), measured on `tranche/T7` @ `fd7e691a17`).
 - **review** · Extract per map and requirements (K102); no rows (D-656 dropped); N67 (its share: Uses name basis-versions R39, not provenance, for `testimonyReach`; review's requirements still say provenance, so BOB folds it first); N69 (its share: uses are publication and case-authoring, as `modules.json` already has).
@@ -62,7 +65,7 @@ Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.m
 - **installer** · N5 (R22: outward text names CivicOS and the installing group).
 - **legacy-tests** · re-anchor or retire what T8's layers break; N147 (its share: the census re-pinned after promotion's stamp); N139 (its share: `nc-d375`, `observation-content`); N31 (its share, only if T7's arm (j) did not land with bundler's text).
 
-**Size.** 22 jobs: layer 1 3, layer 2 2, layer 3 1, layer 8 4, layer 9 6, layer 10 2, layer 11 4 (K201). T7 has 25.
+**Size.** 23 jobs: layer 1 3, layer 2 2, layer 3 1, layer 7 2, layer 8 4, layer 9 6, layer 10 2, layer 11 4 (K201, K223). T7 had 25.
 
 ## Before T8 opens (K206)
 
@@ -117,10 +120,9 @@ These maps name code or modules that T7's layers 6–7 move:
   - The legacy-ui shares of N68, N70 and N144: `app.html`'s copy is the UI placeholder, and ruling 4 plans no new work there. The check itself (`check-semantics.mjs`) is legacy-tests'.
 - **Already applied, not re-listed:** N4, N35, N36, N39, N41, N42, N44, N46, N47, N50, N54, N55, N57, N59, N60, N62, N72, N78, N81, N82, N84, N87, N90, N92, N94, N97, N103, N105, N107–N109, N111, N112, N114, N115, N117, N119, N122, N124, and N63's, N64's and N67's shares already carried (T3–T7).
 
-## Could not place
+## Placed at the opening (K223)
 
-- N28 (legacy-store): "at the extraction of its reader". No module is named as the reader, and extraction took its share in T5.
-- N89: a legacy-store list entry. An extracting job may only remove from legacy-store (§12.2), so adding `archivelookup` to a list is an addition. It is placed with publication for now; BOB confirms, or gives it to whichever module owns `PROJECT_NAMING_READS` (control-plane's map).
+- N28, N89 and N193 (legacy-store): to T9, as a legacy-store job of its own. The owner may add to `store.mjs` (an extracting job may only remove, §12.2), and T8's layer 10 already has two jobs extracting from `store.mjs`.
 
 ## Contradictory
 

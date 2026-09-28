@@ -1,10 +1,10 @@
 # Plan: next tranche
 
-**Status** · Entries not carried by T7 (opened by BOB #50, 2026-09-27), nor by T6 before it, and those arising during it, awaiting the tranche they join (PROCESS-MECHANICS §5). An entry T6 cites (its text copied in `current.md`'s appendix) stays here for the shares T6 does not carry. The carried rows of the old plan are listed in `docs/development/transition/old-plan/index.csv` and join T8's first plan there. Grouped by module, modules by layer.
+**Status** · Entries not carried by T8 (opened by BOB #54, 2026-09-28), and those arising during it, awaiting the tranche they join (PROCESS-MECHANICS §5). An entry T8 carries only in part stays here for the shares T8 does not carry. Grouped by module, modules by layer. `draft-T9.md` drafts the next tranche from them.
 
-## Carried by T7
+## Carried by T8
 
-T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md`), with N90, N92 and N103. Their entries below stay here for the shares T7 does not carry.
+`build/plan/current.md` names the entries T8 carries and each one's share.
 
 ## Later layers
 
@@ -199,7 +199,7 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N195 · 2026-09-28 · **membership** (LEGACY-TESTS #4 REPORT J4): region `is-hosting-access-holders` (index.mjs 203–205) holds one line and is under the guard's floor. Widen it to the whole refusal (N126's pattern).
 - N196 · 2026-09-28 · **citation** (LEGACY-TESTS #4 REPORT J4; N70's class): `#document` (index.mjs 135; called at 247 and 446) is newly on meaning-bounds' unjudged D-240(b) list, twice (94/2). Judge it or bound it.
 - N199 · 2026-09-28 · **intent** (LEGACY-TESTS #4 REPORT J5.1–2, confirmed by BOB; R23, hidden projects): hidden-project material reaches a non-member (gate-reads, red): (1) `proposals()` serves a gap triaged `defer` with `project_id` NULL in `set_aside` to every viewer (`intent/index.mjs` 846), though its key names the hidden project: a triaged gap carries its project, or is gated on the project its key names; (2) `op=pursuit`, `op=aspirationcontacts` and `op=goal`'s pointer ask `inSight` of the aspiration's own id, never of its owning project, so a `scope: project` aspiration's owner and statement reach a non-member. R23 is met at every read and act. First in T8's layer 7 (K222).
-- N200 · 2026-09-28 · **reevaluation** (LEGACY-TESTS #4 REPORT J5.3; Bob's ruling asked, K222): `op=reevaluationnotices` serves a notice's `newer_capture`, `grade` and `affects` for a capture filed in a hidden project to any viewer who sees the holder, where `op=versionnotice` withholds that version. Recommended: the notice withholds those three fields (answers them as absent) unless the viewer sees the newer capture's project; R14 states it.
+- N200 · 2026-09-28 · **reevaluation** (LEGACY-TESTS #4 REPORT J5.3; Bob's ruling asked, K222): `op=reevaluationnotices` serves a notice's `newer_capture`, `grade` and `affects` for a capture filed in a hidden project to any viewer who sees the holder, where `op=versionnotice` withholds that version. Recommended: the notice withholds those three fields (answers them as absent) unless the viewer sees the newer capture's project; R14 states it. *(Bob ruled as recommended, 2026-09-28, K224; T8 carries it, layer 7.)*
 
 - N201 · 2026-09-28 · **run-productions**, **content** (LEGACY-TESTS #4 J6, K220's retired extract arms): run-productions' tests name the STRENGTHENS and NO_PROPOSALS sentences, the op's cap and the `reading_refs` write at its interface; content's a member's leg on a machine-minted content row. A run's `mints` budget is testable only once extract deploys (ai-runs, run-productions).
 

@@ -51,6 +51,10 @@
 - **skills** · N156 (unless SKILLS #1 did it in T7); N157 (its share: a render-only face).
 - **agent-worker** · N153 (its share: read `op=airun`'s `state` on resume); N157 (its share: its bundle carries what it runs).
 
+### Layer 10
+
+- **legacy-store** · N28, N89, N193 (K223): its own job; it may add to `store.mjs`, which an extracting job may not.
+
 ### Layer 11
 
 - **queue** · N171's rewire, N172, N173, with its extraction if the layer-11 extractions open here.
