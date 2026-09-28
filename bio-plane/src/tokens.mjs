@@ -143,3 +143,32 @@ export async function instanceAiCredential(env) {
   if (!(await liveToken(v))) return { token: null, reason: INSTANCE_AI_PUBLISHED };
   return { token: v, reason: null };
 }
+
+/* ---------------------------------------------------------------------------
+ * K90 (2) — THE CREDENTIAL THE INSTANCE'S UNATTENDED WORK SPENDS (N63; runtime-limits R26).
+ *
+ * `monitoring` and `capture-requests` fire the plane at itself with no member present, and both must spend the same
+ * credential, chosen the same way, so the choice lives here once. Two questions, kept apart on purpose:
+ * `bound` — is unattended work WIRED at all (presence only, synchronous, so a caller can decide whether to arm an
+ * alarm without awaiting) — and `token()` — which credential do I SPEND now, liveness-checked: `DAEMON_TOKEN` first,
+ * then `ADMIN_TOKEN`, a published value treated as NOT SET like every token here. The returned object holds no
+ * value, only a way to ask for one, so it may be logged or passed around without leaking a credential.
+ */
+const presentIn = (env, k) => { try { return !!(env && env[k]); } catch { return false; } };
+const readOf = (env, k) => { try { return env ? env[k] : undefined; } catch { return undefined; } };
+
+/** `{ bound, token }`: `bound` is true when `DAEMON_TOKEN` or `ADMIN_TOKEN` is present on `env`; `token()` resolves to
+ *  the first of the two that is a live token, or `null`. Never throws; `token()` never rejects. */
+export function unattendedCredential(env) {
+  const bound = presentIn(env, "DAEMON_TOKEN") || presentIn(env, "ADMIN_TOKEN");
+  return Object.freeze({
+    bound,
+    async token() {
+      for (const k of ["DAEMON_TOKEN", "ADMIN_TOKEN"]) {
+        const v = readOf(env, k);
+        if (await liveToken(v)) return v;
+      }
+      return null;
+    },
+  });
+}
