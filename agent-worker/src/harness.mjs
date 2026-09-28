@@ -333,7 +333,9 @@ export const CONTROL_FLOW = {
     does:   "§14b.7 — read this run's OWN log and continue from it rather than restarting",
     judged: null,
     logs:   true,
-    to:     ["plan", "close"],
+    /* R11, N153: a run whose last tick published its state continues at the step that state names, so every
+       row after the gate is an edge from here; a run with none starts its pass at `plan`. */
+    to:     ["plan", "fanout", "collect", "compose", "dedup", "submit", "adjust", "next-pass", "close"],
   },
   plan: {
     does:   "open a pass: the pass counter is the TABLE's and the search targets are the model's",
@@ -661,10 +663,17 @@ export function nextStep(state) {
 
   switch (at) {
     case "resume":
+      /* R11, N153: the published state names where the last segment stopped, and the table continues there. */
+      if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
+        return { step: s.resumeAt,
+                 why: `this run's last tick published its state at '${s.resumeAt}' with ${Number(s.pass) || 0} `
+                    + `pass(es) done, and its log carries ${Number(s.resumedFrom) || 0} observation(s); `
+                    + "continuing rather than restarting (§14b.7)" };
       return { step: "plan",
-               why: s.resumedFrom > 0
+               why: (s.resumedFrom > 0
                  ? `this run's log carries ${s.resumedFrom} observation(s); continuing rather than restarting (§14b.7)`
-                 : "this run's log is empty; starting the first pass" };
+                 : "this run's log is empty; starting the first pass")
+                  + (s.resumeBasis ? `. ${s.resumeBasis}` : "") };
 
     case "plan":
       return { step: "fanout", why: `pass ${Number(s.pass) + 1}: fan out across all ${LEVELS.length} levels` };
@@ -744,6 +753,71 @@ export function nextStep(state) {
        suite drives as its own arm. */
   }
   return { step: "close", why: `'${at}' has no transition`, bound: "completed" };
+}
+
+/** THE MOVE FROM ONE ROW TO THE NEXT, as the driver applies it. Pure. `adjust` alone carries the refusal and the
+ *  bytes that earned it; every other move clears them, so a stale refusal cannot route a later step into an adjust
+ *  it did not earn. The pass counter moves on ENTERING `next-pass`: a pass counts when it is done (R15). */
+export function advance(state, decision) {
+  const s = state || {};
+  const to = String((decision && decision.step) || "close");
+  if (to === "close") return { ...s, step: "close" };
+  const next = to === "adjust"
+    ? { ...s, step: "adjust", refusedSubmission: s.submission ?? null, adjusted: false }
+    : { ...s, step: to, refusal: null, adjusted: false, refusedSubmission: null };
+  /* The resume point is spent once `resume` has moved on from it. */
+  if (s.step === "resume") { next.resumeAt = null; next.resumeBasis = null; }
+  return to === "next-pass" ? { ...next, pass: (Number(next.pass) || 0) + 1 } : next;
+}
+
+/* ---------------------------------------------------- R11, N153: THE RESUMABLE STATE
+ *
+ * The run's `state` is its resumable scratch (ai-runs R12 stores what a tick hands it, R19 publishes it on
+ * `op=airun`). This member writes the TABLE's own part of it on every tick after `resume` — the step it moves to
+ * and the pass it is in, and what that step works from — so a later segment continues where this one stopped.
+ *
+ * WHAT IS NOT IN IT, AND WHY. The mode, the target, the pass limit and the budget are the RECORD's and are read
+ * from the run on every segment; a copy here would be a second answer that ages, and one a published state could
+ * then override. The model's transcript is not in it (DEC-61: never a transcript), nor are the spawn contracts,
+ * which each `fanout` composes afresh from the plane's payload. */
+export const RESUMABLE = ["step", "pass", "targets", "reports", "reportsRefused", "rereads", "holdings",
+                          "candidates", "queue", "submission", "refusal", "refusedSubmission", "adjusted"];
+
+/** The scratch a tick publishes: the table's own fields, nothing else. */
+export function resumableState(state) {
+  const s = state || {};
+  const out = {};
+  for (const k of RESUMABLE) out[k] = s[k] === undefined ? null : s[k];
+  return out;
+}
+
+const list = (v) => (Array.isArray(v) ? v : []);
+const record = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
+
+/** What a segment continues from: `{ at, state, basis }`. `at` is the step the published state names, when it is a
+ *  row `resume` may move to, with the state's table fields; otherwise `at` is null and `basis` says why the run
+ *  starts its pass at `plan`: no state published (null, or the empty scratch a run opens with), or one naming no
+ *  step this table continues at. */
+export function resumeFrom(published) {
+  const p = record(published);
+  if (!p || !Object.prototype.hasOwnProperty.call(p, "step") || p.step == null)
+    return { at: null, state: null,
+             basis: published == null
+               ? "The run publishes no state it can be read back from, so this segment starts from the resume row"
+               : "The run's published state names no step yet, so this segment starts from the resume row" };
+  const at = String(p.step);
+  const pass = Number(p.pass);
+  if (!CONTROL_FLOW.resume.to.includes(at) || !Number.isInteger(pass) || pass < 0)
+    return { at: null, state: null,
+             basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at).slice(0, 60)} at pass `
+                  + `${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so `
+                  + "this segment starts the pass over rather than guess where the last one stopped" };
+  return { at, basis: null, state: {
+    pass, targets: list(p.targets), reports: list(p.reports), reportsRefused: list(p.reportsRefused),
+    rereads: Number(p.rereads) > 0 ? Number(p.rereads) : 0, holdings: record(p.holdings),
+    candidates: list(p.candidates), queue: list(p.queue), submission: record(p.submission),
+    refusal: record(p.refusal), refusedSubmission: record(p.refusedSubmission), adjusted: p.adjusted === true,
+  } };
 }
 
 /* ------------------------------------------------------- WHAT A STEP LOGS

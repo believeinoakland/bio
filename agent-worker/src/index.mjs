@@ -122,6 +122,7 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
 import {
   CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS, MEANING_ARM,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
+  advance, resumableState, resumeFrom,
 } from "./harness.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
@@ -441,6 +442,13 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     refusal: null, adjusted: false, submission: null,
     level: null, observed: null, governed: false, condition: null,
   };
+  /* R11, N153 — A RESUMED RUN CONTINUES AT THE STATE ITS LAST TICK PUBLISHED (ai-runs R19's `state`), and starts from
+     the `resume` row when there is none. The gate still comes first: the published state names where the table goes
+     AFTER `resume`, and carries only the table's own fields (`resumeFrom`), never the mode, target, limit or budget. */
+  const resumed = resumeFrom(session.state ?? null);
+  state = resumed.at
+    ? { ...state, ...resumed.state, resumeAt: resumed.at, resumeBasis: null }
+    : { ...state, resumeAt: null, resumeBasis: resumed.basis };
 
   /* Judgements are consumed IN ORDER and matched to the step that asks for one.
      A judgement offered for a step the table does not judge is refused by
@@ -538,8 +546,12 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        ticks, for its spend and its lease, and sends no entry. */
     const entry = stepLog(state, decision);
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
+    /* R11, N153: the tick also publishes where the table goes next, so a later segment continues there. The gate's
+       tick publishes nothing: until `resume` has moved on, the resume point is the one the record already holds. */
+    const after = advance(state, decision);
     const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume });
+      { run: runId, log: entry ? [entry] : [], consume,
+        ...(CONTROL_FLOW.resume.to.includes(after.step) ? { state: resumableState(after) } : {}) });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
        an entry that landed. */
@@ -593,7 +605,8 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       }
     }
     /* A LOOK BELONGS TO THE STEP THAT MADE IT: it is not carried into the next step's entry. */
-    state = { ...state, level: null, observed: null, governed: false, condition: null };
+    const look = { level: null, observed: null, governed: false, condition: null };
+    state = { ...state, ...look };
 
     if (decision.step === "close") {
       /* THE ORDINARY EXIT, NAMING THE BOUND (C-22.5). The plane refuses a close
@@ -619,19 +632,16 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        ONE ROW. `adjust` needs both the refusal and the bytes that earned it, or
        `adjustedFrom` has nothing to compare and F10's precondition becomes a
        promise. Every other transition CLEARS them, so a stale refusal cannot
-       route a later step into an adjust it did not earn. */
-    state = decision.step === "adjust"
-      ? { ...state, step: "adjust", refusedSubmission: state.submission ?? null, adjusted: false }
-      : { ...state, step: decision.step, refusal: null, adjusted: false,
-          refusedSubmission: null };
-    /* THE PASS COUNTER MOVES WHEN A PASS IS **DONE**, NOT WHEN ONE STARTS, AND
+       route a later step into an adjust it did not earn.
+       THE PASS COUNTER MOVES WHEN A PASS IS **DONE**, NOT WHEN ONE STARTS, AND
        THE DIFFERENCE IS OFF-BY-ONE IN THE DIRECTION THAT MATTERS. Counting on
        entry to `plan` makes `maxPasses: 1` mean ZERO completed passes — the run
        fans out over nothing and closes reporting `completed`, which is an empty
        run wearing a finished run's answer, and this suite's own empty-run arm is
        what distinguishes those. `next-pass` is the row that means "a pass
-       finished", so it is the row that counts. */
-    if (decision.step === "next-pass") state = { ...state, pass: state.pass + 1 };
+       finished", so it is the row that counts. Both are `advance`, the move the
+       tick above published. */
+    state = { ...after, budget: state.budget, ...look };
   }
 
   return {
