@@ -55,7 +55,7 @@
 - `interim.mjs` holds the ai-runs arm (`runFor`, `boundOf`, `consumeBound`) and the basis-versions arm (`appendVersion`, `basisVersions`, `basisVersionsOf`, `asWritten`), built from what the legacy store hands over. Each provider's CHANGE deletes its arm; `asWritten` gives way to basis-versions' `versionAsWritten`.
 - `SUGGEST_LEVELS` stays in the catalogue for the same reason as the rows.
 
-**Found in other modules (REPORT J3):**
+**Found in other modules (REPORT J2):**
 1. **legacy-checks** needs an entry that re-points the `where`s of C-27.1–C-27.14, C-27.16–C-27.19 and C-104.1–C-104.12:
    - from `src/store.mjs suggestVersion > …` to `src/run-productions/index.mjs suggest > is-suggest-shape`, `is-suggest-checks` and `is-suggest-write` (the same split by region as today);
    - from `src/store.mjs extractPropose > …` and `extractProposals > …` to `src/run-productions/index.mjs extractPropose > …` and `extractProposals > is-extract-scope`.
