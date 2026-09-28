@@ -52,3 +52,11 @@ Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 12, module lines 1303
 ## J3 · COMPLETE
 
 filings built per requirements (R1–R21): 30/30 tests, 21/21 ids covered; format, architecture, coverage and ownership clean; no legacy file touched. Providers' shapes (J1 items 1–5) are my reading until their early merges; a CHANGE re-opens the adapters. Record: build/jobs/T8/filings.md, §Completion; REPORT J2.
+
+## Completion · B3 (K250)
+
+**Change applied.** `tranche/T8` merged (consequences merged early). consequences' J2 confirms J1 item 5: `consequencesOf({determination, viewer})` → `{ok, determination, standard, parts, totals, undetermined, unproven, says}`, which filings includes whole in R9's section. No source change beyond the header naming the factory `consequencesModule(host, deps)`. The test fixture now builds the real `consequencesModule` (reading the conformance stand-in, which also answers `outcomes: [{standard, outcome}]` as consequences reads it) instead of a stand-in, and the R9 test records an assessed and an undetermined part through `consequenceRecord` and checks the section is `consequencesOf`'s answer whole, totals within one state.
+
+**Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 30, pass 30, fail 0. format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 30 relative imports; 0 failures. coverage: 21 of 21 live requirement ids named by a test; 0 failures. ownership: see below.
+
+Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 14, module lines 1303

@@ -46,8 +46,13 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   const x = tier3({ correspondence: [
     { ord: 0, direction: "sent", at: "2026-03-10", account: "letter", author: V("bo") },
     { ord: 1, direction: "received", at: "2026-03-12", party: "the clerk", artifact_sha: sha(`the text of ${DOC}`), author: V("bo") }] });
-  x.consequences.held.set("CONF-2026-0001", [{ id: "CONS-1", state: "assessed", measure: { unit: "money", value: 1000 } },
-                                             { id: "CONS-2", state: "undetermined" }]);
+  const part = (over) => x.consequences.consequenceRecord({ determination: "CONF-2026-0001", standard: "STD-2026-0001",
+    affected: { kind: "fund", description: "the harbour works fund" }, period: { from: "2026-03-02", to: "2026-06-30" },
+    author: V("olive"), viewer: V("olive"), ...over });
+  const assessed = part({ measure: { unit: "money", currency: "USD", value: 1000 },
+                          basis: { rationale: "the order's own figure", rests_on: [] } });
+  const undetermined = part({ basis: { why: "not_in_record" } });
+  assert.deepEqual([assessed.ok, undetermined.ok], [true, true], JSON.stringify([assessed, undetermined]).slice(0, 400));
   const p = pack(x);
   const s = p.sections;
   assert.deepEqual(Object.keys(s), ["facts", "chronology", "exhibits", "standards", "theories", "deadlines", "consequences"]);
@@ -86,7 +91,11 @@ test("R9 the six sections, each item naming its record source: facts, chronology
                    [["claim_notice", 90, "calendar", "known", "Test Stat. § 9.20", "undetermined"]]);
   assert.match(s.deadlines.items[0].start.why, /no date on which the group knew/);
   /* consequences as recorded, states kept apart */
-  assert.deepEqual(s.consequences.items[0].recorded.parts.map((c) => [c.id, c.state]), [["CONS-1", "assessed"], ["CONS-2", "undetermined"]]);
+  const rec = s.consequences.items[0].recorded;
+  assert.deepEqual(rec, x.consequences.consequencesOf({ determination: "CONF-2026-0001", viewer: V("olive") }), "whole, as recorded");
+  assert.deepEqual(rec.parts.map((c) => [c.id, c.state]), [[assessed.id, "assessed"], [undetermined.id, "undetermined"]]);
+  assert.deepEqual(rec.undetermined, [undetermined.id]);
+  assert.ok(rec.totals.every((t) => t.state === "assessed"), "totals kept within one state");
 });
 
 test("R9 a claim deadline's date only from a recorded start event and its count: calendar, business on the holiday calendar, undetermined past the calendar's years", () => {

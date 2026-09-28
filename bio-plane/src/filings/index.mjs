@@ -19,7 +19,7 @@
  *   actions        `actionRead` (its R29), `actionCorrespond` (R15, R16), `clockPropose` (R32).
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11).
  *   standards      `standardRead` (its R5), `inForce` (R7).
- *   consequences   `consequencesOf` (its R7).
+ *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`).
  *   profiles       a function answering the active profiles (ids or profile objects) to combine; default record-core's
  *                  setting `jurisdiction_profiles` (its R26).

@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 import { world as publicationWorld, V, NOW } from "../publication/fixture.mjs";
 import { filingsOf, filingsOps } from "../../../src/filings/index.mjs";
+import { consequencesModule } from "../../../src/consequences/index.mjs";
 import { isMachineIdentity } from "../../../checks/bio-checks.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
@@ -62,7 +63,8 @@ export function conformanceStandIn() {
       const d = held.get(id);
       if (!d || !sees(d, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
       const { audience, ...rest } = structuredClone(d);
-      return { ok: true, live: !rest.superseded_by, ...rest };
+      return { ok: true, live: !rest.superseded_by, ...rest,
+               outcomes: rest.standards.map((s) => ({ standard: s.id, outcome: s.outcome })) };
     },
     determinationsFor({ finding, live, viewer }) {
       const items = [...held.values()].filter((d) => sees(d, viewer) && (!live || !d.superseded_by)
@@ -94,17 +96,6 @@ export function standardsStandIn() {
   };
 }
 
-/** consequences, as its R7 states. */
-export function consequencesStandIn() {
-  const held = new Map();
-  return {
-    held,
-    consequencesOf({ determination }) {
-      return { ok: true, parts: held.get(determination) || [], totals: [], undetermined: [], unproven: [] };
-    },
-  };
-}
-
 /** The world: a published case over F (resting on DOC), the test profile active, a named counsel and the stand-ins.
  *  `profiles` replaces the active profile list (ids or profile objects). */
 export function world({ profiles = undefined, group = "test-group" } = {}) {
@@ -123,8 +114,10 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const pub = w.signFinding(F, { edges: [{ to: DOC, kind: "cites", disclosure: "serve" }] });
   if (!pub.ok) throw new Error(`fixture publish refused: ${JSON.stringify(pub)}`);
   w.record.setSetting("jurisdiction_profiles", [PROFILE], V("olive"));
-  const actions = actionsStandIn(w), conformance = conformanceStandIn(), standards = standardsStandIn(),
-        consequences = consequencesStandIn();
+  const actions = actionsStandIn(w), conformance = conformanceStandIn(), standards = standardsStandIn();
+  /* consequences is the real module (merged early, K250), reading the conformance stand-in. */
+  const consequences = consequencesModule(w.host, { record: w.record, membership: w.membership, promotion: w.promotion,
+    conformance, content: w.content, provenance: w.prov, inquiry: w.k, now: () => w.clock.now });
   const groupRef = { value: group };
   const deps = { record: w.record, publication: w.p, provenance: w.prov, content: w.content, actions, conformance,
                  standards, consequences, producingGroup: () => groupRef.value, now: () => w.clock.now,
