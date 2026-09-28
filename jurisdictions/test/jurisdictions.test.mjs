@@ -880,10 +880,25 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   assert.ok(t.legal_organisations.length && t.holidays.length);
   const f = get(FIRST);
   for (const x of [...f.records_laws, ...f.standard_sources]) assert.ok(LAW_LEVELS.includes(x.level), x.name || x.source);
-  /* which outside organisations are named to residents is Bob's (K227): none yet, so undetermined */
-  assert.equal(f.legal_organisations, undefined);
-  /* the Tier 3 kinds §8 names are held, for the organisations that will evaluate them */
+  /* the Tier 3 kinds §8 names are held, for the organisations that evaluate them */
   assert.ok(f.action_kinds.filter((k) => k.tier === 3).length >= 3);
+  /* the legal organisations Bob named (K283 (2), K303): exactly these two, each taking up its Tier 3 kinds,
+     each reached by its public website, each unmeasured; none takes up consent_decree_motion */
+  assert.deepEqual(f.legal_organisations, [
+    { name: "Howard Jarvis Taxpayers Association", evaluates: ["assessment_challenge", "taxpayer_action"],
+      contacts: [{ how: "web", value: "https://www.hjta.org" }], basis: "UNMEASURED" },
+    { name: "First Amendment Coalition", evaluates: ["constitutional_claim"],
+      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }], basis: "UNMEASURED" },
+  ]);
+  const tier3 = new Set(f.action_kinds.filter((k) => k.tier === 3).map((k) => k.kind));
+  for (const o of f.legal_organisations) {
+    for (const k of o.evaluates) assert.ok(tier3.has(k), `${o.name} ${k} is a Tier 3 kind`);
+    for (const c of o.contacts) assert.equal(new URL(c.value).protocol, "https:", `${o.name} website`);
+  }
+  assert.ok(!f.legal_organisations.some((o) => o.evaluates.includes("consent_decree_motion")));
+  /* the combined view carries them, tagged with the first profile */
+  const lv = combine([FIRST]).view.legal_organisations;
+  assert.deepEqual(lv.map((o) => [o.name, o.profile, o.basis]), f.legal_organisations.map((o) => [o.name, FIRST, "UNMEASURED"]));
   /* §8's Tier 2 kind carries the advisory note recommending legal review; Tier 3 kinds have no template */
   const t2 = f.action_kinds.filter((k) => k.tier === 2);
   assert.ok(t2.length >= 1 && t2.every((k) => /legal review/i.test(k.advisory)));
