@@ -757,7 +757,7 @@ export class Actions {
                      + "no transition would leave prior_state pointing at a history the document does not "
                      + "carry (C-4.2)" };
     text = withHistory;
-    text = Actions.#setScalar(text, "prior_state", b.current_state);
+    text = Actions.#setOrAddScalar(text, "prior_state", b.current_state);   /* R14: set, or added where absent */
     text = Actions.#setScalar(text, "current_state", to);
     /* setOrAdd, not set: an action authored before this op existed carries no
        `resolution` key at all, and #setScalar alone would move the state and
