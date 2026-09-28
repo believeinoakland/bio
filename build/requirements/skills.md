@@ -29,8 +29,8 @@ Terms. **published** is the plane's own answer to `op=affordances` with no targe
 - **R8** Every act whose `mode` is a string other than `machine`, sorted by `id`; `label` and `prompt` `null` when absent; a non-list gives `[]`.
 
 **The recipes layer.**
-- **R9** Until R10 is met, `recipes` has `load_when` `"never, in this edition"`, `sourcing` `absent`, `body` `[]` and a non-empty `absent_because`: the absence is stated in the pack itself.
-- **R10** `recipes` carries multi-step paths as data, each step naming a surface id and an act; a recipe naming a surface or act the product does not publish fails the build. *(not yet met: SK-5; waits on a surface registry the plane publishes)*
+- **R9** Until `published.recipes` is a list, `recipes` has `load_when` `"never, in this edition"`, `sourcing` `absent`, `body` `[]` and a non-empty `absent_because`: the absence is stated in the pack itself. (**published** is the plane's own answer to `op=affordances` with no target, `{catalog, vocabularies, capture_acts}`, and, once the plane publishes them, `surfaces` `[{id, …}]` and `recipes` `[{id, steps: [{surface, act}, …], …}]`, passed in unchanged; K182.)
+- **R10** When `published.recipes` is a list, `recipes` has `sourcing` `driven`, a non-empty `load_when` and `body` the recipes unchanged; `renderPack` throws, naming the recipe, the step and the unknown name, and renders nothing, when a recipe has no steps, or a step names a surface not in `published.surfaces` or an act not among `published.catalog`'s ids, so a pack rendered at build fails the build. *(not yet met in the product: the plane publishes neither, SK-5, N144; K182)*
 
 **`packVersion(pack)`** → `"investigative-session@<edition>+<digest>"`, the digest 16 lowercase hex characters.
 - **R11** Computed over the pack without its `version` field, in canonical form (keys sorted at every depth). The same pack gives the same string; a change to any rendered word, including a published vocabulary word, gives a different digest. It is an identity digest: nothing gates on it.
