@@ -1,6 +1,6 @@
 # legacy-index (T10)
 
-**Status** · session_013Fr8m2QkVBUm76bvxapWas · depth 2 · COMPLETE · handled B1
+**Status** · session_013Fr8m2QkVBUm76bvxapWas · depth 2 · COMPLETE · handled B2
 
 **Job** · LEGACY-INDEX #7, session `session_013Fr8m2QkVBUm76bvxapWas`, branch `job/T10/legacy-index`, the legacy-index bullet of layer 11 (`build/plan/current.md`). A legacy module: no requirements file and no `tests` path. Its contract is the bullet, BOB's START (B1), N290 and N265's text in `next.md`, and inquiry R44 (the stamp's reader).
 
