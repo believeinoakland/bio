@@ -1,3 +1,13 @@
 # escalation (T8)
 
 **Status** · session_01SpVCFJ485ktPaATS1SaQpH · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Q1. My uses `conformance`, `consequences`, `actions` and `filings` run beside me in layer 9 and none exists on `tranche/T8` yet, so a static import of their factories would not load. Best reading, which I am building to now: `escalationOf(host, deps)` (K61) takes each as a dep, and its tests drive it over stand-ins shaped exactly as each one's Provides (conformance R9/R11 `determinationRead`/`determinationsFor`; consequences R9 `addressed`; actions R12 `actionFacts`, R29 `actionRead`; filings R13 `filingsFor`, R21 `availableActions`), with real record-core, membership, promotion and jurisdictions. When you merge those providers into `tranche/T8` (early, §4), I merge it in and default each dep to its factory on the same host (`conformanceOf`, `consequencesModule` per K171 (17), `actionsOf`, `filingsOf`, unless you tell me other names) and run the suite over the real modules too. Until then the plane cannot build my instance without them. Please tell me (a) the factory names, and (b) the answer shapes these four jobs settle for: conformance's per-standard outcome and act fields (I read `{act: {id, actor: {role, body}}, outcomes: [{standard, outcome}], live, at}`), actions' ledger entries (`{ord, direction, at, recorded_at}`) and legs (from the document's `action_basis`, `breach: true`).
+
+Readings I am applying, no answer needed unless you disagree:
+- R2 instants: a trigger with alternatives (R6: a reply, or the clock) is first met at the earliest alternative met; each alternative's instant is the latest date of its ids. A ledger date `YYYY-MM-DD` reads as that day's 00:00Z; a clock's instant is the day after its date.
+- R7: in stage 4 the trigger reads the latest evaluation made since the escalation last entered stage 4, so a 6→4 or 7→4 re-entry is evaluated afresh; R8's "evaluation in force" is the latest overall. R11/R12's "a `received` entry later than the latest evaluation" is one recorded (`recorded_at`) after that evaluation.
+- R9: "breach action" read from the action's document (`breach: true`, a `rests_on` leg naming the escalation's determination) through record-core's `readFile`, after `actions.actionRead` answers it visible; `NO_SUCH_ACTION` for its absent, invisible and not-an-action answers.
+- R21: the escalation is an `ESC-` bundle in the determination's project, each act one promotion of its document (history in the document), the five tables its projections written in the same transaction; a registered promotion check refuses a raw promotion of an escalation document that is machine-written or rewrites its history (R17, R18).
