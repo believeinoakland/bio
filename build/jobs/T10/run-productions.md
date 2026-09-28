@@ -34,3 +34,7 @@
 - `checks/ownership.mjs run-productions tranche/T10`: 7 files; legacy-store 2 added, 5 removed; legacy-checks 0/0; 0 failures.
 
 Size (session_01N19VtRvKJmmaLr694g6DFG): test runs 7, module lines 1040
+
+## J1 · COMPLETE
+
+N194, N201 (my share) and N165 (my share) are applied, with 35/35 tests and all four checks at 0 failures. The details are in my record's Completion section. For you: R9's T10 mark and R13's mark can be struck. The run-conditions W6 re-anchor is legacy-tests'. The plane bundle is stale. There are 2 added legacy-store lines (the import, and the creation call without the interim) for §12.2 review.
