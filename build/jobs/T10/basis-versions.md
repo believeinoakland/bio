@@ -31,3 +31,7 @@ Size (session_016q7pJH6bnNGAnXFMFWBYoL): test runs 10, module lines 1998
 ## J1 · COMPLETE
 
 Done: N186 (R17, imports inquiry's actNoBasis, own copy and is-act-no-basis region deleted), N99 (content's extentRelation), N185 (D-423 comment; legacy hygiene now passes), N204 (own FACT_UNAVAILABLE mint deleted; the factory always wires cyclePath; promotion's caseMember refusal relayed unchanged), N202 (R40 through membership's listenerRefusal). 44/44 module tests, users' suites green, four checks 0 failures. DEPENDS ON inquiry exporting actNoBasis (its N186 share): my branch does not load until inquiry merges; tested with the export in my working tree only. Reports for legacy-store (dead actNoBasis) and legacy-checks (C-33.40 where) are in my record.
+
+## J2 · COMPLETE · re B2
+
+B2 applied: merged tranche/T10 (inquiry's actNoBasis on it); N186 imports it, own copy and is-act-no-basis marker already deleted in J1. Re-run on the tranche's inquiry: basis-versions 44/0, inquiry 52/0, strength 40/0, contradiction 28/0, run-productions 33/0; format, architecture, coverage (40/40), ownership 0 failures. Record updated.
