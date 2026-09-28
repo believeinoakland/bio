@@ -99,12 +99,12 @@ import { STATES, ACTION_KINDS, SUBJECT_POSITIONS, BASIS_ROLES, ACTION_BASIS_KIND
  * inquiry state is entered by its own act with its own entry requirements
  * (REC-13/14/16 bring them), never by a bulk flip; the legacy machine's
  * `elevated` is not a state in the inquiry machine at all and the store
- * refuses it BAD_TARGET_STATE. UNIFIED by REC-11's folded chore: the write
- * path (dispose(), and the proposal-disposition arm) IMPORTS this array — it
- * held its own literal copy from the REC-19 wave's separate claims, pinned
- * identical by the affordances suite until the direction could be flipped.
- * This is now the ONE array. */
-export const DISPOSITIONS = ["deferred", "dismissed"];
+ * refuses it BAD_TARGET_STATE. It is ONE array (REC-11), and since T7 it is
+ * inquiry's, the module whose op=dispose refuses against it (INQUIRY #1 J2.3),
+ * re-exported unchanged so VOCABULARIES publishes the very object the refusal
+ * reads (R4, R6). */
+export { DISPOSITIONS } from "./inquiry/index.mjs";
+import { DISPOSITIONS } from "./inquiry/index.mjs";
 
 /* REC-31 x REC-14, decided at their merge: the states op=reopen picks a
  * question back up FROM. It is the disposition set PLUS `published`, and it is
@@ -150,8 +150,11 @@ export const DISPOSITIONS = ["deferred", "dismissed"];
  *
  * The array stays exported and stays the refusal's `reopenable:` payload,
  * because it is still the answer to "which states does reopening pick a question
- * up from" — the case relation is not a state and does not belong in it. */
-export const REOPENABLE_FROM = [...DISPOSITIONS];
+ * up from" — the case relation is not a state and does not belong in it.
+ *
+ * R6 (N52): the array is promotion's, whose `reopen` refuses against it (its R24), re-exported unchanged. */
+export { REOPENABLE_FROM } from "./promotion/index.mjs";
+import { REOPENABLE_FROM } from "./promotion/index.mjs";
 
 /* REC-35, UI-13's delegation: THE INTENT LAYER'S THREE CLOSED VOCABULARIES, and
  * they live HERE for the reason DISPOSITIONS does — one array, imported by the
@@ -184,29 +187,14 @@ export const REOPENABLE_FROM = [...DISPOSITIONS];
  * CORPUS-STANDARD.md §4.6 rules that a citation into a design document names
  * the SECTION. */
 
-/* The union kind vocabulary, reconciled across the two doctrines this one axis
- * serves (D-83): safeguard 4's four SUBJECT kinds, plus the framework's entity
- * kinds (framework §3). Closed and validated at createEntity(), so introducing
- * a kind outside it is a loud refusal rather than a silent new vocabulary —
- * the spirit of safeguard 4, where introducing a new SUBJECT is a reviewed
- * act. Ordered as the two doctrines contribute them, and the order is what a
- * surface renders: it is a grouping a member can read, not an alphabetisation. */
-export const ENTITY_KINDS = [
-  /* safeguard 4's SUBJECT kinds */ "source", "institution", "office", "movement",
-  /* the framework's entity kinds */ "person", "body", "ordinance", "parcel", "contract", "fund",
-];
-
-/* The three DECLARED-relation predicates safeguard 4 names, and only these. A
- * connection GRADE is not a relation kind and never appears here: a declared
- * relation is constitutive, not evidentiary, and carries no grade (D-83). */
-export const RELATION_KINDS = ["proxy_for", "member_of", "overlaps"];
-
-/* The closed vocabulary of stage requiredness (framework 8.2). `unless_exception`
- * is the crucial one — a lawful skip needs an exception document (FW-10), and
- * WHICH of these fire a missing-predecessor finding is a separate policy set
- * (`Store.#REQUIRED_FIRES`, DEC-9's) that deliberately does NOT live here: this
- * is what a member may DECLARE, not what the record then does about it. */
-export const STAGE_REQUIREDNESS = ["always", "usually", "sometimes", "never", "unless_exception"];
+/* R6 (N49): the entity registry's kinds and safeguard 4's three declared-relation predicates are `entities'`
+ * (its R2, R3), and a progression stage's closed requiredness vocabulary (framework 8.2) is `progressions'`, each
+ * the array its own write path refuses against, re-exported unchanged. The REC-35 paragraph above is history: the
+ * store no longer holds those refusals, and the arrays moved to the modules that do. */
+export { ENTITY_KINDS, RELATION_KINDS } from "./entities/index.mjs";
+export { STAGE_REQUIREDNESS } from "./progressions/index.mjs";
+import { ENTITY_KINDS, RELATION_KINDS } from "./entities/index.mjs";
+import { STAGE_REQUIREDNESS } from "./progressions/index.mjs";
 
 /* REC-16 / DEC-29(b): THE DIVIDE PROMPT'S WORDING, and it is an ACCEPTANCE
  * CLAUSE rather than copy.
@@ -496,6 +484,13 @@ export const IRREVERSIBLE_CORRECTION_PATH =
 export const JUSTIFICATION_REFUSALS = [
   "NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION",
   "NO_CONCLUSION", "NO_FALSIFIER", "NO_JUSTIFICATION",
+  /* N115 (T7): the same requirement in the words three connections acts use for it — a withdrawal from a theme
+     says why (C-81.11), a judgement of an inferred membership says why, and a member's own connection states its
+     basis, "why these two documents are connected". Each is the member saying why, never an object or evidence. */
+  "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON", "CONNECTION_ASSERT_NO_BASIS",
+  /* INTENT #1 J4.3 (T7): retiring an aspiration records what pursuing it taught (C-110.17) — the member's account
+     of why it ends, which is this family's requirement in intent's word for it. */
+  "NO_LESSON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -731,6 +726,17 @@ export const RUNGS = {
   projectownerremove: "reasoned",   // NO_REASON
   projectownerrescue: "reasoned",   // NO_REASON
   adminremove:        "reasoned",   // NO_REASON
+  /* N115 (T7), graded on R27's rule: each is corrected forward by a further act of its kind and refuses without an
+     authored reason, so each is `reasoned`. */
+  aliaswithdraw:      "reasoned",   // NO_REASON (entities R8: a withdrawal says why the name was wrong)
+  relationwithdraw:   "reasoned",   // NO_REASON (entities R8)
+  themewithdraw:      "reasoned",   // THEME_WITHDRAW_NO_REASON (C-81.11)
+  filemembershipjudge: "reasoned",  // FILE_MEMBERSHIP_NO_REASON (connections R57)
+  connectionassert:   "reasoned",   // CONNECTION_ASSERT_NO_BASIS (connections R31: the member's stated basis)
+  /* INTENT #1 J4.3 (T7), on R27's rule: each refuses without the member's authored account. */
+  goalclose:          "reasoned",   // NO_REASON (C-110.13: a goal is closed with the reason it closed)
+  aspirationdepart:   "reasoned",   // NO_REASON (a departure from the group's aspiration records why)
+  aspirationretire:   "reasoned",   // NO_LESSON (C-110.17: what pursuing it taught)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -816,6 +822,8 @@ export const RUNG_ABSENT = {
   calibrate:            { ground: "substrate", is: "records what a probe measured of a derivation ENGINE; it moves no claim and no grade (DEC-4)" },
   calibrationsubject:   { ground: "substrate", is: "declares which engine this instance can probe; registering is not measuring" },
   calibrationsignal:    { ground: "substrate", is: "records a vendor announcement; it may only SHORTEN the interval to the next probe and changes no grade" },
+  /* N115 (T7): `connect`'s ground — the plane stores what it inferred from where a file is printed; nobody chose it. */
+  filemembershipstore:  { ground: "substrate", is: "stores an agenda capture's inferred item-to-file containments as system-asserted connections; a member's judgement of each is a separate act" },
 
   /* ---- credential: who may act, not what the record says. */
   memberadd:            { ground: "credential", is: "roster governance" },
@@ -842,6 +850,11 @@ export const RUNG_ABSENT = {
   projectrequestanswer:   { ground: "credential", is: "an owner grants a request to join (an invitation: `invited`, never `joined`) or declines it" },
   projectremove:        { ground: "credential", is: "roster act on a project" },
   projectowneradd:      { ground: "credential", is: "roster act on a project" },
+  /* N84 (T7): membership's three roster-self acts (N43) — who administers, who hosts, and which cover a member's
+     handle is published under. Each changes who acts or how an actor is shown, never what the record asserts. */
+  adminresign:          { ground: "credential", is: "an administrator resigns their own standing" },
+  hostingaccessset:     { ground: "credential", is: "records who holds hosting access to the instance" },
+  memberpairingset:     { ground: "credential", is: "a member (or an administrator) chooses whether a cover-and-handle pairing is published" },
 
   /* ---- caller-owned: the caller's own state, never the record's. */
   select:               { ground: "caller-owned", is: "a server-side selection snapshot, owned by the credential that made it" },
@@ -1011,6 +1024,16 @@ export const RUNG_ABSENT = {
   themedeclare:         { ground: "undetermined", is: "a member declares a THEME in their own name — an idea and the TEST a document or a passage passes or fails; a lens for gathering material, visibly theirs, and never the basis of a claim (C-81.1)" },
   themeplace:           { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
   themepropose:         { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" },
+  /* INTENT #1 J4.3 (T7), on R27's rule: each is a member's act on the record, corrected forward by a further act of
+     its kind, that requires no authored reason and that no published act takes back. `triage` asks a reason only to
+     defer or dismiss, so adopting without one is accepted and the op is not `reasoned`. */
+  objectivecondition:   { ground: "undetermined", is: "sets, replaces or removes a project's satisfaction condition as a new revision of its document; the earlier revision stays in history (intent R2)" },
+  goaldeclare:          { ground: "undetermined", is: "a member declares a goal, bounded, optionally under an aspiration (intent R8)" },
+  goallink:             { ground: "undetermined", is: "the author's dated claim that a project's objective serves a goal (intent R8)" },
+  aspirationdeclare:    { ground: "undetermined", is: "a member declares an aspiration of the group, a project or a member (intent R9)" },
+  aspirationdeadend:    { ground: "undetermined", is: "a dead end appended to an aspiration's pursuit record, dated and authored, never removed (intent R11)" },
+  triage:               { ground: "undetermined", is: "a member adopts a proposal into a project's objective, opens a question from it, or defers or dismisses it with a reason (intent R16)" },
+  workobjective:        { ground: "undetermined", is: "a member sets an assistant to work a project's objective: a run through ai-runs with the project as its context (intent R18)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1146,6 +1169,12 @@ const edgesFrom = (f) =>
  * without promising that this caller's parameters will pass. WHICH reading is
  * the act's own parameter, and the store refuses one that cannot make the move
  * by name (C-25.25), naming the legal set it could have made. */
+/* A count fact read as a number (R14, R16: facts are counts). An array — the store's `cites_in` still carries ids
+ * today — reads as its length; anything else as null, which never narrows an act (R10): `retire`'s "no confirmed
+ * citation into it" is withheld only on a stated count above zero, and an act that needs at least one of something
+ * is offered only on a stated count. */
+const countOf = (v) => typeof v === "number" && Number.isFinite(v) ? v : Array.isArray(v) ? v.length : null;
+
 const anyVersionEdgeTo = (f, to) =>
   (f.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
 
@@ -1173,7 +1202,7 @@ export const ACTS = [
      is a recorded decision to stop relying, so it does not block. */
   { id: "retire", label: "Retire", weight: "refuse", types: ["information"],
     applies: (f, ty) => ty === "information" && edgesFrom(f).includes("retired")
-                     && f.cites_in.confirmed.length === 0 },
+                     && !(countOf(f.cites_in?.confirmed) > 0) },
   /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
      normalizeType, so all three spellings land on this arm) may be
      dispositioned while the state machine offers a disposition edge; the
@@ -1728,7 +1757,7 @@ export const ACTS = [
   { id: "sever", label: "Sever a citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.confirmed ?? 0) > 0)
-                     || (ty === "project" && f.cites_out.confirmed > 0 && f.project_participant !== false) },
+                     || (ty === "project" && countOf(f.cites_out?.confirmed) > 0 && f.project_participant !== false) },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
      refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
      is not.
@@ -1752,7 +1781,7 @@ export const ACTS = [
     types: ["information", "inquiry", "project"],
     applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0
                          && !(ty === "information" && f.current_state === "retired"))
-                     || (ty === "project" && (f.cites_out.severed_reinstatable ?? 0) > 0
+                     || (ty === "project" && countOf(f.cites_out?.severed_reinstatable) > 0
                          && f.project_participant !== false) },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -1945,6 +1974,8 @@ export const NON_ACTS = {
      about their OWN words in ONE case edition, and whether an edition reaches an observation is the case's, not the
      observation's. The surface that offers it is Program B's (MEMBER-KNOWLEDGE-DESIGN.md §8). */
   attribute: "author-directed: an observation's author chooses its attribution level for one prepared case edition, keyed by (case, edition, observation); writes an `observation_attributions` row and re-authors the unsigned case document",
+  /* N114 (T7), D-681 (observation-log R20). */
+  leadlist: "read: the leads this viewer may read, each once — `leadread`'s fence over a list; writes nothing",
   leadread: "read: one lead by id — its words, its author, and every look recorded against it; readable by its author, by the joined participants of a project it was shared to, and by a machine credential only within a member's minted scope",
   /* D-162 / IC-241. THE THEME is NOT an object-directed act: its subject is a member's IDEA, which
      no object's facts could say when to offer, and a placement names a document without acting on
@@ -1959,7 +1990,11 @@ export const NON_ACTS = {
      act would put "propose the governing laws" beside "state the governing laws" on one object, which is the
      record offering a member the machine's half of a ruling that exists to keep the two apart. */
   actionlawspropose: "action-directed: a machine (or a member) proposes the laws governing an action's request, keyed by (action, proposer); writes `action_law_proposals` rows labelled machine work and never the action's own list",
-  idmatch: "read: one identifier recognised in its space (C.M.S., project, fund, APN) — its form, its normalised value, a C.M.S. number's reach against Legistar's floor, an APN's standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
+  /* R25 (N6): no place is named here — the spaces, the systems and their floors are the active jurisdiction
+     profiles' data (layers.md, "No jurisdiction in the product"). */
+  idmatch: "read: one identifier recognised in one of the identifier spaces the active profiles declare — its form, its normalised value, its reach against its publishing system's coverage floor, its standing — or a PAIR judged under Framework §8.3: counts only in two independent systems read from each capture's own addresses, with the referent agreeing; writes nothing",
+  /* N115 (T7): connections R43. */
+  themewithdraw: "theme-directed: a member withdraws a placement or rejects a hunch in a theme with a reason, keyed by (theme id, target); the placement is kept, shown as withdrawn",
   themeread: "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase",
   /* SK-8 — THE EXTRACT RUN'S TWO OPS, and the reason they are NON_ACTS is a
      stronger version of `contentmint`'s directly above rather than a weaker one.
@@ -1981,6 +2016,15 @@ export const NON_ACTS = {
   entitycreate: "registry write, keyed by entity",
   entityalias: "registry write, keyed by entity",
   relationdeclare: "registry write, keyed by entity pair",
+  /* N115 (T7): the registry corrected without erasure (entities R8): each is keyed by what it withdraws. */
+  aliaswithdraw: "registry correction, keyed by (entity, alias): withdraws a mistaken alias with a reason and keeps it, shown as withdrawn",
+  relationwithdraw: "registry correction, keyed by relation id: withdraws a declared relation with a reason and keeps it, shown as withdrawn",
+  /* N115 (T7): connections' acts the derivation does not make (connections R31, R49, R57). Their subjects are a PAIR
+     of documents, a capture's inferred containments and one stored containment: no bundle in a state, and
+     `affordanceFacts` carries no connection, so an applies() over it would offer them on every document. */
+  connectionassert: "connection-directed: a member asserts a connection between two held documents with a stated basis, keyed by the document pair; writes an asserted-connection row, grade D, apart from derived ones",
+  filemembershipstore: "derivation: stores an agenda capture's inferred item-to-file containments as system-asserted connections, keyed by capture sha; asserts nothing of the caller's",
+  filemembershipjudge: "connection-directed: a member confirms or rejects one stored containment with a reason, keyed by connection id; the inference and every judgement are kept",
   resolve: "recogniser write, keyed by capture sha",
   resolvetestify: "recogniser testimony, keyed by capture sha",
   connect: "connection derivation, keyed by entity",
@@ -2123,6 +2167,10 @@ export const NON_ACTS = {
   membercaps: "roster governance — the subject is a member's capabilities, not a bundle (4.9)",
   adminendorse: "section 4.7 governance — the subject is a proposed administrator, not a bundle",
   adminremove: "section 4.7 governance — the subject is an administrator's standing, not a bundle",
+  /* N84 (T7): membership's roster-self acts (N43), on `adminremove`'s reason: the subject is a member, not a bundle. */
+  adminresign: "section 4.7 governance — an administrator resigns their own standing; the subject is a member, not a bundle",
+  hostingaccessset: "operator record of who holds hosting access — the subject is the instance's operators, not a bundle",
+  memberpairingset: "a member's published cover-and-handle pairing — the subject is how a member is shown, not a bundle",
   /* REC-164: session-reachable through `IDENTITY_ACTIONS`, so in `NEEDS`, so named here: the subject is the group's
      public identity (Publication §7 points 2 and 3), never a bundle. */
   groupnameset: "the group's public display name — the subject is the instance's identity, not a bundle",
@@ -2181,6 +2229,8 @@ export const NON_ACTS = {
      authored act on the INQUIRY. No surface renders a "content" button beside a
      bundle; UI-61 reads it to show a leg's `ref` and jump the viewer to the
      page. */
+  /* N115 (T7), D-419 (content R32). */
+  contentcrop: "read: the crop of a cited PDF image by content id — what a viewer shows for an image citation; writes nothing",
   content: "read: one content row by content_id — the extent a citation points at, its chain and cap, whether the transcription has moved, and the attestations covering it; the referent a leg resolves through, never an act on an object",
   /* REC-36. Keyed by ENTITY, like the registry writes above it: the question is
      "which captured documents name this subject", not "what may be done to this
@@ -2256,6 +2306,26 @@ export const NON_ACTS = {
   calibrate: "engine-directed: records what a probe measured of a derivation engine, keyed by (engine, version); moves no claim and no grade (CAL_CANNOT_REGRADE)",
   calibrationsubject: "engine-directed: registers an engine this instance can probe, keyed by engine; registering is not measuring",
   calibrationsignal: "engine-directed: records a vendor's announcement about an engine, keyed by engine; may only shorten the interval to the next probe",
+  /* INTENT #1 J4.3 (T7): intent's seventeen ops. Their subjects are a project's OBJECTIVE, a GOAL, an ASPIRATION or a
+     PROPOSAL — none a bundle in a state that `affordanceFacts` describes — so no applies() over it could say when to
+     offer them. The surfaces that offer them are the objective, goal and aspiration views and the triage list. */
+  objectivecondition: "objective-directed: sets, replaces or removes a project's satisfaction condition, keyed by project; a new revision of the project's document",
+  objectiveprogress: "read: a project's progress against its objective, computed against the record, keyed by project",
+  objectivegaps: "read: what a project's objective still lacks, keyed by project; the gaps queue renders",
+  goaldeclare: "goal-directed: a member declares a goal, keyed by the new goal; acts on no existing bundle's state",
+  goallink: "goal-directed: the author's dated claim that a project's objective serves a goal, keyed by (goal, project)",
+  goalclose: "goal-directed: a member closes a goal with its reason, keyed by goal id",
+  goal: "read: one goal by id, with its objectives and, once closed, its reason",
+  aspirationdeclare: "aspiration-directed: a member declares an aspiration of the group, a project or a member, keyed by its scope",
+  aspirationdepart: "aspiration-directed: a project records its departure from a held group aspiration with a reason, keyed by (project, aspiration)",
+  aspirationdeadend: "aspiration-directed: a dead end appended to an aspiration's pursuit record, keyed by aspiration id",
+  aspirationretire: "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id",
+  aspirations: "read: the aspirations of a project or a member, keyed by scope",
+  aspirationcontacts: "read: the contacts the viewer's aspirations name, keyed by viewer",
+  pursuit: "read: one aspiration's pursuit record by id",
+  intentproposals: "read: the open proposals for a project's objective, keyed by project",
+  triage: "proposal-directed: a member adopts, opens a question from, defers or dismisses one proposal, keyed by proposal key",
+  workobjective: "run-directed: opens an assistant's run on a project's objective, keyed by (run, project); the run is the subject and no bundle state offers it",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
@@ -2272,10 +2342,10 @@ export const NON_ACTS = {
  * — a proposal disposition is keyed on a derived proposal, a task act on a task and a resolution on a
  * capture sha, never on a bundle's state — so an `applies()` over `affordanceFacts` would have nothing to read. What a surface needs from
  * the plane is the WEIGHT (so it knows a selection is one call, not N) and the SET KEY; both are published
- * here, and `op=affordances` serves this table as `set_acts`. The bound, `PER_ITEM_MAX`, is defined HERE and
- * imported by the store (`Store.PER_ITEM_MAX`) and by the control plane, so the number a surface reads
- * is the one the act enforces. */
-export const PER_ITEM_MAX = 100;
+ * here, and `op=affordances` serves this table as `set_acts`. The bound, `PER_ITEM_MAX`, is record-core's (its
+ * R49, N91), whose `perItem` enforces it, re-exported here unchanged (R6), so the number a surface reads is the
+ * one the act enforces. */
+export { PER_ITEM_MAX } from "./record-core/index.mjs";
 export const PER_ITEM_ACTS = [
   /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
      `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
@@ -2308,4 +2378,41 @@ export function deriveActs(facts) {
      (no author stamp was sent) narrows nothing, D-310's three-valued shape. */
   const machine = facts.actor_is_machine === true;
   return ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));
+}
+
+/* R11: one act, decorated for a caller. `gate` is the control plane's, built from the tables that actually gate the
+ * call (`NEEDS`, `SESSION_OPS`): `{needs(op), mode(op)}`, `mode` one of `session`, `admin-session`, `machine`. Every
+ * key is present and a value the record does not hold is a STATED null, never an omitted key — so a queue item's
+ * option and an `op=affordances` act for the same subject are one shape from one function. `rung_absence` is the
+ * ground of a classified absence (FW-14): a null rung beside a stated ground is undetermined STATED (R24). */
+export function decorate(act, gate) {
+  const id = act.id;
+  return {
+    id, label: act.label, weight: act.weight ?? null,
+    needs: gate?.needs?.(id) ?? null,
+    mode: gate?.mode?.(id) ?? null,
+    rung: Object.hasOwn(RUNGS, id) ? RUNGS[id] : null,
+    rung_absence: Object.hasOwn(RUNG_ABSENT, id) ? RUNG_ABSENT[id].ground : null,
+    prompt: act.prompt ?? null,
+  };
+}
+
+/* R12: the totality DEC-8 and FW-14 require, as a service over the control plane's table of gated ops, each
+ * `{op, mutating}`, rather than a suite reading another module's source. `unpublished`: an op in none of the four
+ * registries. `unranked`: a mutating op with neither a rung nor a stated absence. `stale`: a key of `RUNGS` or
+ * `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` it does not carry at all. All three empty is
+ * the totality; each list is sorted, so an answer names the ops. */
+export function unaccounted(opTable) {
+  const rows = Array.isArray(opTable) ? opTable.filter((r) => r && typeof r.op === "string") : [];
+  const all = new Set(rows.map((r) => r.op));
+  const mutating = new Set(rows.filter((r) => r.mutating === true).map((r) => r.op));
+  const published = new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
+  const has = (o, k) => Object.hasOwn(o, k);
+  const unpublished = [...all].filter((op) => !published.has(op) && !has(NON_ACTS, op));
+  const unranked = [...mutating].filter((op) => !has(RUNGS, op) && !has(RUNG_ABSENT, op));
+  const stale = [...new Set([
+    ...[...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)].filter((op) => !mutating.has(op)),
+    ...Object.keys(NON_ACTS).filter((op) => !all.has(op)),
+  ])];
+  return { unpublished: unpublished.sort(), unranked: unranked.sort(), stale: stale.sort() };
 }
