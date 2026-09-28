@@ -29,10 +29,11 @@
 - **agent-worker** · N153 (its share).
 
 - **jurisdictions** (layer 1) · N258 (K303).
+- **membership** (layer 2) · N280.
 - **capture-sources** (layer 3) · N273.
 - **provenance** (layer 3) · N263. **content** (layer 4) · N264; N201 (its share: a member's leg on a machine-minted content row).
 - **legacy-store** (layer 10) · N265 (its share); N268; N270; N191 (reads ai-runs' predicate, R42).
 - **legacy-index** (layer 11) · N265 (its share).
 - **legacy-tests** (layer 11) · re-anchor or retire what T10's layers break; the reds T9 leaves, re-measured.
 
-**Size (K305, K317).** 23 jobs: layer 1 1, layer 3 2, layer 4 1, layer 5 7, layer 6 9, layer 10 1, layer 11 2. Layers 7–9, monitoring and scheduler, the layer-11 extractions, legacy-checks' convergence rows, and N157/N245 are `draft-T11.md`.
+**Size (K305, K317, K320).** 24 jobs: layer 1 1, layer 2 1, layer 3 2, layer 4 1, layer 5 7, layer 6 9, layer 10 1, layer 11 2. Layers 7–9, monitoring and scheduler, the layer-11 extractions, legacy-checks' convergence rows, and N157/N245 are `draft-T11.md`.
