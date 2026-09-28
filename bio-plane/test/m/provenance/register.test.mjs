@@ -328,6 +328,10 @@ test("R48: register.bytes is the registered capture's size as the entry that reg
   assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, 13);
 });
 
+test.todo("R50: a register entry whose bytes is absent, null, or not a whole number at least 0 is refused " +
+          "REGISTER_BYTES_UNSTATED (C-53.14) before anything is written; not yet met: T10, N263 (an absent bytes fails " +
+          "as PROMOTE_FAILED, -1 or 1.5 are stored as stated)");
+
 test("R48: captured_locators.via is the receipt's source and part of its key; last_retrieved its latest", () => {
   /* N227, K276: monitoring R26 reads `via`. */
   const w = world();
@@ -384,4 +388,52 @@ test("R48: first_retrieved and last_retrieved are spelled whole-second UTC on ev
   assert.equal(w.row(`SELECT first_retrieved FROM captured_locators WHERE address_norm = 'e.org/bad'`).first_retrieved, "garbage");
   assert.deepEqual({ ...w.row(`SELECT first_retrieved, last_retrieved FROM captured_locators WHERE capture_sha = ? AND address_norm = 'e.org/t'`, s1) },
                    { ...one }, "a row already whole-second is untouched");
+});
+
+/* workerd refuses a LIKE or GLOB pattern longer than 50 bytes ("LIKE or GLOB pattern too complex", measured in
+   Miniflare: 50 works, 55 fails); node:sqlite has no such cap. This wraps a record's `sql.exec` to refuse as workerd
+   does, for a pattern written in the statement or bound to it, so a migration that would fail at a deployed boot
+   fails here. */
+const WORKERD_PATTERN_CAP = 50;
+function capPatterns(w) {
+  const exec = w.st.sql.exec.bind(w.st.sql);
+  const refused = [];
+  w.st.sql.exec = (q, ...args) => {
+    const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+    const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+    const long = [...literal, ...bound].find((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP);
+    if (long !== undefined) { refused.push(long); throw new Error("LIKE or GLOB pattern too complex"); }
+    return exec(q, ...args);
+  };
+  return refused;
+}
+
+test("R48: the whole-second respelling runs at every boot under workerd's 50-byte LIKE/GLOB cap, idempotent", () => {
+  const w = world({ now: "2026-09-27T09:08:07.654Z" });
+  const s = sha("held");
+  w.prov.recordReceipt({ addressNorm: "e.org/new", captureSha: s, retrieved: "2026-09-27T05:00:00Z" });
+  const insert = (addr, first, last) => w.st.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha,
+    via, first_retrieved, last_retrieved) VALUES (?, ?, ?, 'direct', ?, ?)`, addr, addr, s, first, last);
+  insert("e.org/frac", "2026-01-02T03:04:05.678Z", "2026-01-03T00:00:00.001Z");
+  insert("e.org/offset", "2026-01-02T05:04:05+02:00", "2026-01-02 03:04:06");
+  insert("e.org/bad", "garbage", "2026-01-02T03:04:05Z");
+  const refused = capPatterns(w);
+  /* A boot over a record holding receipts, twice. */
+  assert.deepEqual(w.prov.migrate(), { ok: true });
+  assert.deepEqual(w.prov.migrate(), { ok: true });
+  assert.deepEqual(refused, [], "no LIKE or GLOB pattern over 50 bytes");
+  const at = (addr) => ({ ...w.row(`SELECT first_retrieved, last_retrieved FROM captured_locators WHERE address_norm = ?`, addr) });
+  assert.deepEqual(at("e.org/new"), { first_retrieved: "2026-09-27T05:00:00Z", last_retrieved: "2026-09-27T05:00:00Z" },
+                   "a row already whole-second is untouched");
+  assert.deepEqual(at("e.org/frac"), { first_retrieved: "2026-01-02T03:04:05Z", last_retrieved: "2026-01-03T00:00:00Z" });
+  assert.deepEqual(at("e.org/offset"), { first_retrieved: "2026-01-02T03:04:05Z", last_retrieved: "2026-01-02T03:04:06Z" });
+  assert.deepEqual(at("e.org/bad"), { first_retrieved: "garbage", last_retrieved: "2026-01-02T03:04:05Z" },
+                   "a value naming no instant is left as it is");
+  /* The receipt services run under the same cap. */
+  w.prov.recordReceipt({ addressNorm: "e.org/new", captureSha: s, retrieved: "2026-09-27T06:00:00.5Z" });
+  w.prov.receipts({ addressNorm: "e.org/new" });
+  w.prov.versionChain({ addressNorm: "e.org/new", viewer: V("x") });
+  w.prov.registerHolds({ sha: s });
+  assert.deepEqual(refused, []);
+  assert.equal(at("e.org/new").last_retrieved, "2026-09-27T06:00:00Z");
 });
