@@ -48785,8 +48785,8 @@ CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
 -- member's testimony, never the machine's. established is derived from the grade at the write (1 for A and B), so
 -- a C can never be read back as established. Keyed (capture_sha, ref, entity_id): a stronger re-resolution RAISES
 -- in place (raised_from), never a second row and never a downgrade (R10). Keyed to its bundle, so the per-bundle
--- purge clears it too (R30). A stated read contract (the Suggestions): capture_sha, bundle_id, ref, entity_id,
--- grade, established.
+-- purge clears it too (R30). A stated read contract (R35, N135): capture_sha, bundle_id, ref, entity_id, grade,
+-- established (1 exactly when isEstablished holds of grade, R34); so are entities' entity_id and at (N110).
 CREATE TABLE IF NOT EXISTS resolutions (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -48841,6 +48841,13 @@ function idspaceRefusal(code, fields) {
     throw new Error(`idspaceRefusal: ${code} has no C-91 row with a canned translation (DEC-49)`);
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, ...fields };
 }
+var ENTITY_CHECKS = Object.freeze({
+  NO_SUCH_ENTITY: Object.freeze({
+    check: "C-91.4",
+    where: "src/entities/index.mjs noSuchEntity > is-entity-registered",
+    translation: "No subject with that id is registered in the record, so nothing can be said about it or attached to it. Register the subject first, or name one that is registered. Nothing was written."
+  })
+});
 
 // src/entities/index.mjs
 var ENTITY_KINDS = Object.freeze([
@@ -48867,9 +48874,30 @@ var WITHDRAW_REASON_MAX = 2e3;
 var ENTITIES_TABLES = Object.freeze(["resolutions", "entity_relations", "entity_aliases", "entities"]);
 var RESOLVE_ITEM_KEYS = [["captureSha"], ["captureSha", "ref"]];
 var RESOLVE_SHARED_KEYS = ["ref"];
-var LISTENER_DECLARED = "LISTENER_DECLARED";
+var NO_SUCH_ENTITY_DETAIL = "no entity with that id is registered in the subject registry; an entity is registered with op=entitycreate before anything can name it";
+var NO_SUCH_ENTITY_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "entity_id", "detail"]);
+function noSuchEntity(entityId, extra = null) {
+  let own2 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own2 = Object.entries(extra).filter(([k]) => !NO_SUCH_ENTITY_FIXED.has(k));
+  } catch {
+    own2 = [];
+  }
+  const row2 = ENTITY_CHECKS.NO_SUCH_ENTITY;
+  return {
+    ok: false,
+    reason: "NO_SUCH_ENTITY",
+    code: "NO_SUCH_ENTITY",
+    check: row2.check,
+    translation: row2.translation,
+    entity_id: entityId ?? null,
+    ...Object.fromEntries(own2),
+    detail: NO_SUCH_ENTITY_DETAIL
+  };
+}
 var cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
-function actShape(code, detail, extra = {}) {
+function actShapeRefusal(code, detail, extra = {}) {
   const row2 = ACT_SHAPE_CHECKS[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
     throw new Error(`entities: ${code} has no ACT_SHAPE_CHECKS row with a canned translation (DEC-49)`);
@@ -49057,8 +49085,8 @@ var Entities = class _Entities {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
     const norm = normAlias(alias);
-    if (!norm) return actShape("NO_ALIAS", "an alias needs a name");
-    if (!this.has(entityId)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    if (!norm) return actShapeRefusal("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written.");
+    if (!this.has(entityId)) return noSuchEntity(entityId);
     const dup = this.#one(`SELECT alias, withdrawn_at FROM entity_aliases WHERE entity_id=? AND alias_norm=?`, entityId, norm);
     if (dup) return {
       ok: false,
@@ -49103,9 +49131,9 @@ var Entities = class _Entities {
       reason: "NO_JUSTIFICATION",
       detail: "a declared relation carries a justification, like a pattern statement (safeguard 4)"
     };
-    if (!cite) return actShape("NO_CITATION", "a declared relation carries a citation, like a pattern statement (safeguard 4)");
-    if (!this.has(fromEntity)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: fromEntity, end: "from" };
-    if (!this.has(toEntity)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: toEntity, end: "to" };
+    if (!cite) return actShapeRefusal("NO_CITATION", "a declared relation carries a citation, like a pattern statement (safeguard 4)");
+    if (!this.has(fromEntity)) return noSuchEntity(fromEntity, { end: "from" });
+    if (!this.has(toEntity)) return noSuchEntity(toEntity, { end: "to" });
     const at14 = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
     return this.#record.transact(() => {
@@ -49458,7 +49486,7 @@ var Entities = class _Entities {
     if (typeof entityId !== "string" || !entityId)
       return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
     const b = typeof basis === "string" ? basis.trim() : "";
-    if (!b) return actShape("NO_BASIS", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
+    if (!b) return actShapeRefusal("NO_BASIS", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
     if (!rr) return {
       ok: false,
@@ -49467,7 +49495,7 @@ var Entities = class _Entities {
       ref,
       detail: "this captured document's reading carries no such reference to testify about"
     };
-    if (!this.has(entityId)) return { ok: false, reason: "NO_SUCH_ENTITY", entity_id: entityId };
+    if (!this.has(entityId)) return noSuchEntity(entityId);
     const method = `testimony -- asserted by ${resolvedBy || "a member"} on the member's stated basis, with no captured document (framework 8.1 grade D)`;
     const m = this.#record.transact(() => this.#upsert({
       captureSha,
@@ -49489,12 +49517,18 @@ var Entities = class _Entities {
   onResolveAttempt(module, fn) {
     return this.#listen(this.#onAttempt, module, fn);
   }
+  /* N202: a malformed or repeated registration is refused by membership's `listenerRefusal` (its R81), the one site
+     of LISTENER_MALFORMED and LISTENER_DECLARED; the listeners run in the modules' total order (`MODULE_ORDER`, its
+     R83; a module not in it last, in the order it registered), whatever order they registered in. */
   #listen(list2, module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener is a module name and a function" };
-    if (list2.some((l) => l.module === module))
-      return { ok: false, reason: LISTENER_DECLARED, module, detail: "a module registers once" };
-    list2.push({ module, fn });
+    const refused = listenerRefusal(list2, module, fn);
+    if (refused) return refused;
+    list2.push({ module, fn, seq: list2.length });
+    const rank5 = (m) => {
+      const i = MODULE_ORDER.indexOf(m);
+      return i === -1 ? Infinity : i;
+    };
+    list2.sort((a, b) => rank5(a.module) - rank5(b.module) || a.seq - b.seq);
     return { ok: true };
   }
   /* ===================================================================== *
@@ -49632,12 +49666,7 @@ var Entities = class _Entities {
         detail: "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates."
       };
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
-    if (!ent) return {
-      ok: false,
-      reason: "NO_SUCH_ENTITY",
-      entity_id: entityId,
-      detail: "no such entity is registered, so it has no names to look documents up by"
-    };
+    if (!ent) return noSuchEntity(entityId);
     const aliases = this.#rows(`SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? AND withdrawn_at IS NULL
                                  ORDER BY canonical DESC, alias_norm`, entityId);
     const cap = Math.max(1, Math.min(Number(limit) || NAMING_LIMIT_DEFAULT, NAMING_LIMIT_MAX));
@@ -50347,28 +50376,9 @@ function checkConnectionMentionUnchosen({
 // src/connections/themes.mjs
 var THEME_READ_LIMIT_DEFAULT = 200;
 var THEME_READ_LIMIT_MAX = 2e3;
-var THEME_WITHDRAW_CHECKS = Object.freeze({
-  THEME_WITHDRAW_NOT_A_MEMBER: {
-    check: "C-81.11",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw",
-    translation: "Taking a document or a passage out of a theme, or turning down a proposal, is a member's own judgement, done in their name. A machine may propose a placement; it cannot take one back."
-  },
-  THEME_WITHDRAW_NO_REASON: {
-    check: "C-81.12",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "Say why. A placement taken back or a proposal turned down keeps its reason beside it, so the next reader of the theme can see what was judged and on what ground."
-  },
-  THEME_WITHDRAW_NOTHING_STANDING: {
-    check: "C-81.13",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "Nothing stands in this theme at that document or passage: it was never placed or proposed there, or it has already been taken back. There is nothing to withdraw."
-  },
-  THEME_WITHDRAW_NOT_THE_PLACER: {
-    check: "C-81.14",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it."
-  }
-});
+var THEME_WITHDRAW_CHECKS = Object.freeze(Object.fromEntries(
+  Object.entries(THEME_CHECKS).filter(([code]) => code.startsWith("THEME_WITHDRAW_"))
+));
 var bytes = (s) => new TextEncoder().encode(s).length;
 var randHex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var Themes = class _Themes {
@@ -50384,7 +50394,7 @@ var Themes = class _Themes {
     return null;
   }
   static #refusal(code, detail, extra) {
-    const row2 = THEME_CHECKS[code] || THEME_WITHDRAW_CHECKS[code];
+    const row2 = THEME_CHECKS[code];
     return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
   }
   /** R45: a person on a theme reading, projected for THIS reader: `<prefix>_handle` for everyone; `<prefix>` (the
@@ -50809,7 +50819,7 @@ function entityOf(entities, id) {
 }
 var Connections = class _Connections {
   #listeners = [];
-  // R3: {module, fn}
+  // R3: {module, fn, seq}, in the modules' total order
   #derivationProvider = null;
   // R5: {module, fn}
   constructor({ storage, record, membership, promotion, content, extraction, capture, entities, env = null, now } = {}) {
@@ -50870,13 +50880,18 @@ var Connections = class _Connections {
     };
   }
   /* ================================================================ derivation (R1–R3) */
-  /** R3: a later module registers once (`observation-log` records each derivation). */
+  /** R3 (N202): a later module registers once (`observation-log` records each derivation). A malformed or second
+   *  registration is refused by membership's one site for it (its R81); the listeners run in the modules' total order
+   *  (its R83's `MODULE_ORDER`; an unknown module last, in the order it registered). */
   onDerived(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
-    this.#listeners.push({ module, fn });
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
+    this.#listeners.push({ module, fn, seq: this.#listeners.length });
+    const at14 = (m) => {
+      const i = MODULE_ORDER.indexOf(m);
+      return i === -1 ? Infinity : i;
+    };
+    this.#listeners.sort((x, y) => at14(x.module) - at14(y.module) || x.seq - y.seq);
     return { ok: true, module };
   }
   /** R5: the provider of an entity's derivation statement (`observation-log`, which reads its own log), once; it is
@@ -52521,7 +52536,8 @@ var OBSERVATION_CHECK_KEYS = Object.freeze([
   "AI_RUN_CONDITION_UNKNOWN",
   "AI_LOG_NOT_A_BUNDLE",
   "OBS_AUTHORITY_UNNAMED",
-  "OBS_PRESENT_NO_REFERENT"
+  "OBS_PRESENT_NO_REFERENT",
+  "AI_LOG_NEVER_LOOKED_STORED"
 ]);
 var OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
 var LEAD_CHECKS2 = {
@@ -52638,7 +52654,7 @@ CREATE TABLE IF NOT EXISTS observation_log (
   subject        TEXT,              -- the normalised address, the capture_sha, the canonical extent, the entity id, or a member words. See the nullability note above
   state          TEXT NOT NULL,     -- LOOKED_ABSENT | LOOKED_INDETERMINATE | partial | PRESENT. NEVER_LOOKED is the ABSENCE of a row
   governed       INTEGER NOT NULL DEFAULT 0,
-  condition      TEXT,              -- queuestate.mjs vocabulary, and no new words
+  condition      TEXT,              -- CONDITION_KINDS (vocabulary.mjs), and no new words
   bound          TEXT,              -- which bound stopped it, if one did
   terminal       INTEGER NOT NULL DEFAULT 0,
   result_kind    TEXT,              -- capture | content | entity | reading | observation (a rollup, REC-100). What the look produced, if anything
@@ -52787,7 +52803,7 @@ var OBSERVATION_SUBJECT_KINDS = {
 var CONTENT_AXIS_STATES = {
   indexed_full: "every unit of this capture's text is indexed under its current chain",
   indexed_partial: "part of this capture's text is indexed: it ran over the per-capture bound, or only some of its pages could be read",
-  indexed_none: "none of this capture's text is indexed, and the record says WHY \u2014 there was no text to extract, or this container has no unit arm",
+  indexed_none: "none of this capture's text is indexed, and the record says WHY \u2014 there was no text to extract, or this record cannot address a passage of this kind of document",
   not_extracted: "nobody has tried to extract this capture's text. This is the ABSENCE of an observation and not a finding about the document (D-129's NEVER_LOOKED at the content level)"
 };
 var CONTENT_AXIS_UNDETERMINED = "undetermined";
@@ -52874,7 +52890,27 @@ function contentObservationsFor(reading, captureSha, tiersOf) {
   const { tiers, unclassified } = tiersOf(chain2);
   const terminal = chain2 && chain2.length ? chain2[chain2.length - 1].step : null;
   const shortfall = reading.tier3_candidate === true;
-  if (reading.read_from_text !== true) {
+  if (reading.text_chars === 0 && !shortfall) {
+    const last = tiers.length ? tiers[tiers.length - 1] : null;
+    return {
+      rows: [{
+        tier: last ? last.tier : null,
+        state: "LOOKED_ABSENT",
+        condition: null,
+        resultKind: null,
+        resultRef: null,
+        detail: detailFor(
+          last,
+          terminal,
+          reading,
+          "no text: the text this document was read to holds no character"
+        )
+      }],
+      unclassified,
+      why: null
+    };
+  }
+  if (reading.read_from_text !== true || reading.text_chars === 0) {
     return {
       rows: [{
         tier: tiers.length ? tiers[tiers.length - 1].tier : null,
@@ -52974,6 +53010,10 @@ var CONTENT_EVIDENCE_IS_ONE_SIDED = {
   capture: false
   /* `readings` holds a row whether or not text was produced */
 };
+var DOCUMENT_EVIDENCE_IS_ONE_SIDED = {
+  address: true
+  /* `captured_locators` holds a row only where the fetch CAPTURED something */
+};
 var INTERNET_EVIDENCE_IS_ONE_SIDED = {
   description: false
   /* no pre-log window: a lead and its looks are born after the log and purged with it */
@@ -52986,7 +53026,8 @@ var INTERNET_FRONTIER_EMPTY_CAUSES = {
 var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
 function causesNotRuledOut(missingCause2, { evidenceOneSided = void 0 } = {}) {
   if (missingCause2 === "pre_log") return ["pre_log"];
-  if (missingCause2 === "never_looked") return ["never_looked"];
+  if (missingCause2 === "never_looked")
+    return evidenceOneSided === false ? ["never_looked"] : [...ALL_MISSING_ROW_CAUSES];
   if (missingCause2 !== "purged" && missingCause2 !== WATERMARK_BAND_CAUSE)
     return [...ALL_MISSING_ROW_CAUSES];
   if (evidenceOneSided === false) return ["purged", "never_looked"];
@@ -53245,7 +53286,7 @@ function checkObservation(entry, conditionKinds = CONDITION_KINDS, referent = nu
     );
   if (state === "NEVER_LOOKED" && !(e.terminal === true && authorityKind === "run"))
     return refusal7(
-      "AI_LOG_STATE_UNKNOWN",
+      "AI_LOG_NEVER_LOOKED_STORED",
       `NEVER_LOOKED is never stored: it is what the record says of a subject with no row at all (OBSERVATION-LOG-DESIGN.md section 3). A look that happened found one of ${LEAD_LOOK_OUTCOMES.join(", ")}`
     );
   if (e.governed === true && DEFINITIVE_STATES.has(state))
@@ -53283,13 +53324,13 @@ function checkCondition(condition, conditionKinds = CONDITION_KINDS) {
   if (!Object.prototype.hasOwnProperty.call(conditionKinds || {}, String(condition)))
     return refusal7(
       "AI_RUN_CONDITION_UNKNOWN",
-      `'${String(condition)}' is not in the record's condition vocabulary (queuestate.mjs)`
+      `'${String(condition)}' is not in the record's condition vocabulary (observation-log's CONDITION_KINDS)`
     );
   return null;
 }
 
 // src/observation-log/index.mjs
-var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]));
+var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
 var LEAD_READ_LIMIT_DEFAULT = 200;
 var LEAD_READ_LIMIT_MAX = 2e3;
 var LEAD_LIST_LIMIT_DEFAULT = 200;
@@ -53297,7 +53338,7 @@ var LEAD_LIST_LIMIT_MAX = 2e3;
 var LEAD_LIST_EMPTY = "there is no lead here you may read. A lead is readable by its author and by the joined participants of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
 var LEAD_LIST_NOTE = "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it (NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are listed. A lead is never evidence";
 var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
-var LISTENER_DECLARED2 = "LISTENER_DECLARED";
+var AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs" });
 var OBSERVATION_LOG_MODULE = "observation-log";
 function actorOf(author) {
   const mint = contentMintState(author);
@@ -53470,7 +53511,7 @@ var ObservationLog = class _ObservationLog {
       author: e.author,
       hadText: e.reading.read_from_text === true,
       unitArm: armed,
-      armReason: armed ? null : container2 ? `a ${container2} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a cell is not a passage, and the \`sheet-range\` extent arm exists (FW-19) but nothing yet writes a workbook's sheet-range units into the index; HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
+      armReason: armed ? null : container2 ? `a ${container2} has no indexing unit arm in this build (CONTENT-SEARCH-DESIGN.md section 4.1: a passage is a page, a paragraph, a slide or a sheet's used range, and HTML has no \`dom\` producer)` : "this record does not hold which container this capture is, so it has no unit arm to name"
     });
     const ex = this.observeExtraction(e.bundleId, e.captureSha, e.reading, { author: e.author });
     this.observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
@@ -53782,16 +53823,21 @@ var ObservationLog = class _ObservationLog {
   /** R13 (N39, K71): a later module answers which bundles a `sweep` or `run` authority names. `resolve(authority,
    *  viewer)` answers an array of bundle ids (the row is visible only when every one is), `true` or `false` (the
    *  module's own decision for this viewer), or null (it holds no such authority: the row falls back to a bundle of
-   *  that id). One resolver per kind; any other kind is fixed by this module and is refused. */
+   *  that id). Any other kind is fixed by this module and is refused `AUTHORITY_NOT_RESOLVABLE`. Each kind takes one
+   *  resolver, held under the module that holds that authority; a second registration, or one with no function, is
+   *  refused by membership's `listenerRefusal` (its R81, N202), the one site that mints those codes, with `{kind}`. */
   registerAuthority(kind, resolve) {
-    if (!RESOLVED_AUTHORITY_KINDS.includes(kind) || typeof resolve !== "function")
+    if (!RESOLVED_AUTHORITY_KINDS.includes(kind))
       return {
         ok: false,
         reason: "AUTHORITY_NOT_RESOLVABLE",
-        detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}, with its function`
+        code: "AUTHORITY_NOT_RESOLVABLE",
+        kind: kind ?? null,
+        detail: `a resolver is registered for one of ${RESOLVED_AUTHORITY_KINDS.join(", ")}; every other authority kind's bundles are fixed by the observation log`
       };
-    if (this.resolvers.has(kind))
-      return { ok: false, reason: LISTENER_DECLARED2, kind, detail: `the ${kind} authority already has its resolver` };
+    const holder = AUTHORITY_HOLDERS[kind];
+    const refused = listenerRefusal(this.resolvers.has(kind) ? { module: holder } : null, holder, resolve, { kind });
+    if (refused) return refused;
     this.resolvers.set(kind, resolve);
     return { ok: true, kind };
   }
@@ -54319,21 +54365,21 @@ var FIELDS = {
   updated: { col: "last_updated", type: "time" },
   criticality: { col: "criticality", type: "text", lower: true },
   sha: { col: "bundle_sha", type: "text", lower: true },
-  schema: { col: "schema_id", type: "text", lower: true },
-  mode: { col: "produced_mode", type: "text", lower: true },
-  tier: { col: "capability_tier", type: "text", lower: true },
-  locator: { col: "source_locator", type: "text", fts: "locator" },
-  authority: { col: "source_authority", type: "text", fts: "authority" },
-  retrieved: { col: "source_retrieved", type: "time" },
-  status: { col: "source_status", type: "text", lower: true },
-  hash: { col: "content_hash", type: "text", lower: true },
-  monitored: { col: "monitor_enabled", type: "bool" },
-  frequency: { col: "monitor_frequency", type: "text", lower: true },
-  checked: { col: "monitor_last_checked", type: "time" },
-  annotations: { col: "annotations_open", type: "number" },
-  reeval: { col: "reeval_flag", type: "bool" },
-  since: { col: "reeval_since", type: "time" },
-  reevalsource: { col: "reeval_source", type: "text", lower: true },
+  schema: { col: "schema_id", type: "text", lower: true, proj: true },
+  mode: { col: "produced_mode", type: "text", lower: true, proj: true },
+  tier: { col: "capability_tier", type: "text", lower: true, proj: true },
+  locator: { col: "source_locator", type: "text", fts: "locator", proj: true },
+  authority: { col: "source_authority", type: "text", fts: "authority", proj: true },
+  retrieved: { col: "source_retrieved", type: "time", proj: true },
+  status: { col: "source_status", type: "text", lower: true, proj: true },
+  hash: { col: "content_hash", type: "text", lower: true, proj: true },
+  monitored: { col: "monitor_enabled", type: "bool", proj: true },
+  frequency: { col: "monitor_frequency", type: "text", lower: true, proj: true },
+  checked: { col: "monitor_last_checked", type: "time", proj: true },
+  annotations: { col: "annotations_open", type: "number", proj: true },
+  reeval: { col: "reeval_flag", type: "bool", proj: true },
+  since: { col: "reeval_since", type: "time", proj: true },
+  reevalsource: { col: "reeval_source", type: "text", lower: true, proj: true },
   /* REC-12: the derived strength PAIR, filterable per axis over the projection
        CACHE (store.mjs #writeStrengthProjection). TWO fields and never one — a
        single `strength:` selector would be the composed scalar DEC-21 forbids,
@@ -54377,12 +54423,12 @@ var FIELDS = {
      same relationship REC-12's cached strength has with strengthOf(). A filter
      that is a little behind is a filter; an ANSWER that is behind is a record
      saying nothing is late when something is. */
-  actionkind: { col: "action_kind", type: "text", lower: true },
-  risk: { col: "action_risk_tier", type: "number" },
-  addressee: { col: "action_counterparty_state", type: "text", lower: true },
-  resolution: { col: "action_resolution", type: "text", lower: true },
-  due: { col: "action_clock_next", type: "time" },
-  overdue: { col: "action_clock_overdue", type: "bool" }
+  actionkind: { col: "action_kind", type: "text", lower: true, proj: true },
+  risk: { col: "action_risk_tier", type: "number", proj: true },
+  addressee: { col: "action_counterparty_state", type: "text", lower: true, proj: true },
+  resolution: { col: "action_resolution", type: "text", lower: true, proj: true },
+  due: { col: "action_clock_next", type: "time", proj: true },
+  overdue: { col: "action_clock_overdue", type: "bool", proj: true }
 };
 var CACHED_FIELDS = Object.fromEntries(
   Object.entries(FIELDS).filter(([, f8]) => f8.asOf).map(([name, f8]) => [f8.col, { field: name, asOf: f8.asOf, authority: f8.authority, why: f8.why }])
@@ -54445,7 +54491,6 @@ var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.c
 var CONTENT_CITED_AS_BYTES = contentCitedAs2({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
 var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
-var MACHINE_READ_KINDS2 = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -54773,8 +54818,8 @@ var MEANING = {
         col: "chain_kind",
         case: "lower",
         vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
-        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS2.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
-        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS2.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
+        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
@@ -55533,9 +55578,9 @@ function rankAtomList(atoms) {
 }
 var RANK_ATOMS_MAX = 8;
 var K1 = 1.2;
-function visibleBm25({ terms, gate }) {
+function visibleBm25({ terms, gate, rel }) {
   const parts = [], args = [];
-  parts.push(`vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
+  parts.push(rel ? `vis(fid) AS MATERIALIZED (SELECT bp.fts_id FROM bundles b JOIN ${rel.table} bp ON bp.${rel.key} = b.bundle_id WHERE (${gate.sql}) AND bp.fts_id IS NOT NULL)` : `vis(fid) AS MATERIALIZED (SELECT b.fts_id FROM bundles b WHERE (${gate.sql}) AND b.fts_id IS NOT NULL)`);
   args.push(...gate.args);
   parts.push(`nvis(n) AS (SELECT count(*) FROM vis)`);
   const marks = (h) => `(length(${h}) - length(replace(${h}, char(1), '')))`;
@@ -55552,31 +55597,44 @@ function visibleBm25({ terms, gate }) {
   return { parts, args };
 }
 var ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
+var PROJ_COLS = new Set(Object.values(FIELDS).filter((f8) => f8.proj).map((f8) => f8.col));
+var allOf = (rel) => rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL` : ALL;
+function keysWhere(rel, where, fromProj) {
+  if (!rel) return `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${where}`;
+  return fromProj ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${where}` : `SELECT bp.fts_id AS fid FROM bundles b JOIN ${rel.table} bp ON bp.${rel.key} = b.bundle_id WHERE bp.fts_id IS NOT NULL AND ${where}`;
+}
+var IDENT2 = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
+function relationOf(second3, warnings) {
+  const pr = second3 && typeof second3 === "object" ? second3.projection : null;
+  if (pr === null || pr === void 0) return null;
+  if (pr && typeof pr === "object" && typeof pr.table === "string" && typeof pr.key === "string" && IDENT2.test(pr.table) && IDENT2.test(pr.key))
+    return { table: pr.table, key: pr.key };
+  warnings.push("projection: not a table and a key; the projection is read from bundles");
+  return null;
+}
 var MAX_COMPOUND = 4;
-function chain(op, parts) {
-  if (!parts.length) return { sql: ALL, args: [], compound: false };
+function chain(op, parts, rel) {
+  if (!parts.length) return { sql: allOf(rel), args: [], compound: false };
   if (parts.length === 1) return { sql: parts[0].sql, args: parts[0].args, compound: !!parts[0].compound };
   if (parts.length <= MAX_COMPOUND)
     return { sql: parts.map((p) => p.sql).join(` ${op} `), args: parts.flatMap((p) => p.args), compound: true };
   const groups = [];
   for (let i = 0; i < parts.length; i += MAX_COMPOUND) groups.push(parts.slice(i, i + MAX_COMPOUND));
   return chain(op, groups.map((g) => {
-    const c = chain(op, g);
+    const c = chain(op, g, rel);
     return { sql: c.compound ? `SELECT fid FROM (${c.sql})` : c.sql, args: c.args, compound: false };
-  }));
+  }), rel);
 }
-function metaSql(node) {
-  const lhs = node.json ? `json_extract(fm_json, ?)` : node.col;
+function metaSql(node, rel) {
+  const fromProj = !!(node.json || PROJ_COLS.has(node.col));
+  const lhs = node.json ? `json_extract(fm_json, ?)` : rel && !fromProj ? `b.${node.col}` : node.col;
   const args = node.json ? [node.json] : [];
   if (node.cmp === "present")
     return {
-      sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${lhs} IS NOT NULL AND ${lhs} <> ''`,
+      sql: keysWhere(rel, `${lhs} IS NOT NULL AND ${lhs} <> ''`, fromProj),
       args: node.json ? [node.json, node.json] : []
     };
-  return {
-    sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${lhs} ${node.cmp} ?`,
-    args: [...args, node.value]
-  };
+  return { sql: keysWhere(rel, `${lhs} ${node.cmp} ?`, fromProj), args: [...args, node.value] };
 }
 function meaningWhere(node) {
   const m = MEANING[node.arm];
@@ -55594,44 +55652,44 @@ function meaningWhere(node) {
     return node.col ? { sql: `${node.col} IS NOT NULL AND ${node.col} <> ''`, args: [] } : { sql: null, args: [] };
   return { sql: `${node.col} ${node.cmp} ?`, args: [node.value] };
 }
-function meaningSql(node) {
+function meaningSql(node, rel) {
   const m = MEANING[node.arm];
   const w = meaningWhere(node);
   const inner = w.sql === null ? `SELECT ${m.key} FROM ${m.table}` : `SELECT ${m.key} FROM ${m.table} WHERE ${w.sql}`;
   return {
-    sql: `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner})`,
+    sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${rel.key} IN (${inner})` : `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner})`,
     args: w.args,
     compound: false
   };
 }
-function setSql(node) {
-  if (!node) return { sql: ALL, args: [], compound: false };
+function setSql(node, rel = null) {
+  if (!node) return { sql: allOf(rel), args: [], compound: false };
   const fe = ftsExpr(node);
   if (fe !== null)
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [fe], compound: false };
-  if (node.op === "meta") return { ...metaSql(node), compound: false };
-  if (node.op === "meaning") return meaningSql(node);
+  if (node.op === "meta") return { ...metaSql(node, rel), compound: false };
+  if (node.op === "meaning") return meaningSql(node, rel);
   if (node.op === "text")
     return { sql: `SELECT rowid AS fid FROM bundles_fts WHERE bundles_fts MATCH ?`, args: [ftsAtom(node)], compound: false };
   if (node.op === "not") {
-    const inner = operand(setSql(node.kid));
-    return { sql: `${ALL} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
+    const inner = operand(setSql(node.kid, rel));
+    return { sql: `${allOf(rel)} EXCEPT ${inner.sql}`, args: inner.args, compound: true };
   }
   if (node.op === "or")
-    return chain("UNION", node.kids.map((k) => operand(setSql(k))));
+    return chain("UNION", node.kids.map((k) => operand(setSql(k, rel))), rel);
   if (node.op === "and") {
     const pos = node.kids.filter((k) => k.op !== "not");
     const neg = node.kids.filter((k) => k.op === "not").map((k) => k.kid);
-    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k))));
+    const posChain = chain("INTERSECT", (pos.length ? pos : [null]).map((k) => operand(setSql(k, rel))), rel);
     if (!neg.length) return posChain;
     const head = {
       sql: posChain.compound ? `SELECT fid FROM (${posChain.sql})` : posChain.sql,
       args: posChain.args,
       compound: false
     };
-    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n)))]);
+    return chain("EXCEPT", [head, ...neg.map((n) => operand(setSql(n, rel)))], rel);
   }
-  return { sql: ALL, args: [], compound: false };
+  return { sql: allOf(rel), args: [], compound: false };
 }
 var operand = (s) => s.compound ? { sql: `SELECT fid FROM (${s.sql})`, args: s.args } : { sql: s.sql, args: s.args };
 var PROVENANCE_COLS = [
@@ -55680,8 +55738,11 @@ function compile4({
   rows = null,
   rowLimit = MEANING_LIMIT_DEFAULT2,
   rowOffset = 0
-} = {}) {
+} = {}, relation = null) {
   const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [] };
+  const rel = relationOf(relation, ctx.warnings);
+  const rowJoin = rel ? `JOIN ${rel.table} bp ON bp.fts_id = s.fid JOIN bundles b ON b.bundle_id = bp.${rel.key}` : `JOIN bundles b ON b.fts_id = s.fid`;
+  const ref = (col) => rel && PROJ_COLS.has(col) ? `bp.${col}` : `b.${col}`;
   const ast = parseTokens(tokenize(q6), implicitOp === "or" ? "or" : "and", ctx);
   if (sort && sort in SORTABLE) ctx.sort = { field: sort, dir: /^d/i.test(dir || "") ? "DESC" : dir ? "ASC" : sort === "relevance" ? "ASC" : "DESC" };
   const gate = viewerPredicate(viewer);
@@ -55701,7 +55762,7 @@ function compile4({
     ctx.warnings.push(`relevance weighs these ${allTerms.length} terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`);
   const passageMatch = positive.passage.length ? [...new Set(positive.passage)].join(" OR ") : null;
   const passageOn = (armName) => !!(armName && MEANING[armName] && MEANING[armName].ftsTable && passageMatch);
-  const set = setSql(ast);
+  const set = setSql(ast, rel);
   const stripMeaningArm = (node, arm) => {
     if (!node) return null;
     if (node.op === "meaning") return node.arm === arm ? null : node;
@@ -55716,7 +55777,7 @@ function compile4({
     }
     return node;
   };
-  const armSet = (arm) => setSql(stripMeaningArm(ast, arm));
+  const armSet = (arm) => setSql(stripMeaningArm(ast, arm), rel);
   const widenable = implicitOp !== "or" && ast?.op === "and" && !ast.explicit && Array.isArray(ast.kids) && ast.kids.length > 1;
   const lim = Math.max(1, Math.min(LIMIT_MAX, Math.floor(Number(limit) || LIMIT_DEFAULT)));
   const snipN = Number(snippetChars);
@@ -55726,7 +55787,7 @@ function compile4({
   const mLim = Math.max(1, Math.min(MEANING_LIMIT_MAX2, Math.floor(Number(rowLimit) || MEANING_LIMIT_DEFAULT2)));
   const mOff = Math.max(0, Math.floor(Number(rowOffset) || 0));
   const cte = (withRanked, overrideSet = null) => {
-    const idArm = Array.isArray(ids) && ids.length ? { sql: `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids } : null;
+    const idArm = Array.isArray(ids) && ids.length ? { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE ${rel.key} IN (${ids.map(() => "?").join(",")})` : `SELECT fts_id AS fid FROM bundles WHERE bundle_id IN (${ids.map(() => "?").join(",")})`, args: ids } : null;
     const use = overrideSet || set;
     const parts = [`hits(fid) AS (${use.sql})`];
     if (idArm) {
@@ -55737,7 +55798,7 @@ function compile4({
     }
     const args = [...use.args, ...idArm ? idArm.args : []];
     if (withRanked && rank5) {
-      const r = visibleBm25({ terms: rankTerms, gate });
+      const r = visibleBm25({ terms: rankTerms, gate, rel });
       parts.push(...r.parts);
       args.push(...r.args);
     }
@@ -55749,23 +55810,23 @@ function compile4({
   if (sortField === "relevance" && rank5) order = `COALESCE(r.score, 0) ${sortDir}, b.bundle_id ASC`;
   else if (sortField === "relevance") order = `b.last_updated DESC, b.bundle_id ASC`;
   else {
-    const col = `b.${SORTABLE[sortField]}`;
+    const col = ref(SORTABLE[sortField]);
     order = `(${col} IS NULL) ASC, ${col} ${sortDir}, b.bundle_id ASC`;
   }
-  const cols = PROVENANCE_COLS.map((c) => `b.${c}`).join(", ");
+  const cols = PROVENANCE_COLS.map(ref).join(", ");
   const joinRanked = rank5 ? ` LEFT JOIN ranked r ON r.fid = s.fid` : "";
   const page = () => {
     const c = cte(true);
     if (!rank5)
       return { sql: `${c.sql}
-SELECT ${cols}, NULL AS snippet FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+SELECT ${cols}, NULL AS snippet FROM scope s ${rowJoin}${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ? OFFSET ?`, args: [...c.args, ...gate.args, lim, off] };
     const pcols = PROVENANCE_COLS.map((c2) => `p.${c2}`).join(", ");
     return {
       sql: `${c.sql}
 SELECT ${pcols}, (SELECT snippet(bundles_fts, -1, '[', ']', '\u2026', ?) FROM bundles_fts WHERE bundles_fts MATCH ? AND rowid = p._fid) AS snippet
-FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+FROM (SELECT ${cols}, s.fid AS _fid, ROW_NUMBER() OVER (ORDER BY ${order}) AS _pos FROM scope s ${rowJoin}${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ? OFFSET ?) p
 ORDER BY p._pos`,
@@ -55776,21 +55837,21 @@ ORDER BY p._pos`,
     const c = cte(false);
     return {
       sql: `${c.sql}
-SELECT count(*) AS n FROM scope s JOIN bundles b ON b.fts_id = s.fid WHERE ${gate.sql}`,
+SELECT count(*) AS n FROM scope s ${rowJoin} WHERE ${gate.sql}`,
       args: [...c.args, ...gate.args]
     };
   };
   const idsStmt = () => {
     const c = cte(true);
     return { sql: `${c.sql}
-SELECT b.bundle_id FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+SELECT b.bundle_id FROM scope s ${rowJoin}${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
   const snapshot = () => {
     const c = cte(true);
     return { sql: `${c.sql}
-SELECT b.bundle_id, b.bundle_sha FROM scope s JOIN bundles b ON b.fts_id = s.fid${joinRanked}
+SELECT b.bundle_id, b.bundle_sha FROM scope s ${rowJoin}${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
@@ -55803,9 +55864,9 @@ ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
       const c = cte(false);
       const arms = group.map((name) => {
         const f8 = FIELDS[name];
-        return `SELECT '${name}' AS field, b.${f8.col} AS value, count(*) AS n
-  FROM scope s JOIN bundles b ON b.fts_id = s.fid
-  WHERE ${gate.sql} AND b.${f8.col} IS NOT NULL GROUP BY b.${f8.col}`;
+        return `SELECT '${name}' AS field, ${ref(f8.col)} AS value, count(*) AS n
+  FROM scope s ${rowJoin}
+  WHERE ${gate.sql} AND ${ref(f8.col)} IS NOT NULL GROUP BY ${ref(f8.col)}`;
       });
       out.push({
         sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}
@@ -55836,7 +55897,7 @@ ORDER BY field ASC, n DESC, value ASC`,
         sql: `${lc.sql}
 SELECT count(*) AS documents,
        sum(CASE WHEN EXISTS (SELECT 1 FROM ${m.table} mx WHERE mx.${m.key} = b.bundle_id) THEN 1 ELSE 0 END) AS documents_with_rows
-FROM scope s JOIN bundles b ON b.fts_id = s.fid
+FROM scope s ${rowJoin}
 WHERE ${gate.sql}`,
         args: [...lc.args, ...gate.args]
       };
@@ -55851,7 +55912,7 @@ SELECT r.capture_sha AS capture_sha, r.registered AS registered,
        ix.state AS index_state, ix.bound AS index_bound,
        ix.detail AS index_detail,
        EXISTS (SELECT 1 FROM readings rd WHERE rd.capture_sha = r.capture_sha) AS has_reading
-FROM scope s JOIN bundles b ON b.fts_id = s.fid
+FROM scope s ${rowJoin}
  JOIN register r ON r.bundle_id = b.bundle_id
  LEFT JOIN observation_log ex ON ex.seq = (SELECT MAX(seq) FROM observation_log
       WHERE level = 'content' AND subject_kind = 'capture'
@@ -55871,7 +55932,7 @@ ORDER BY r.capture_sha ASC LIMIT ?`,
  JOIN ${fts.name} ON ${fts.name}.rowid = m.rowid` : "";
     const ftsWhere = fts ? ` AND ${fts.name} MATCH ?` : "";
     const ftsArgs = fts ? [fts.expr] : [];
-    const from = `FROM scope s JOIN bundles b ON b.fts_id = s.fid
+    const from = `FROM scope s ${rowJoin}
  JOIN ${m.table} m ON m.${m.key} = b.bundle_id${ftsJoin}${joined}
 WHERE ${gate.sql}${refSql}${ftsWhere}`;
     if (mode === "count") return {
@@ -55899,10 +55960,10 @@ ORDER BY ${order2} LIMIT ? OFFSET ?`,
   const facetScan = () => {
     if (!facetList.length) return null;
     const c = cte(false);
-    const sel = facetList.map((n) => `b.${FIELDS[n].col}`).join(", ");
+    const sel = facetList.map((n) => ref(FIELDS[n].col)).join(", ");
     return {
       sql: `${c.sql}
-SELECT ${sel} FROM scope s JOIN bundles b ON b.fts_id = s.fid
+SELECT ${sel} FROM scope s ${rowJoin}
 WHERE ${gate.sql}`,
       args: [...c.args, ...gate.args]
     };
@@ -56344,9 +56405,9 @@ var Frontier = class {
    *  rule (R11). The subject kind is passed in and never guessed; an undeclared kind publishes `evidence_one_sided:
    *  true`, the weaker statement, and `causesNotRuledOut` then names every cause (REC-107). */
   #causeSet(sidedness, subjectKind, missingCause2) {
-    const oneSided = sidedness && Object.prototype.hasOwnProperty.call(sidedness, subjectKind) ? sidedness[subjectKind] : void 0;
+    const oneSided = !(sidedness && Object.prototype.hasOwnProperty.call(sidedness, subjectKind) && sidedness[subjectKind] === false);
     return {
-      evidence_one_sided: oneSided !== false,
+      evidence_one_sided: oneSided,
       not_ruled_out: this.obs.causesNotRuledOut(missingCause2, { evidenceOneSided: oneSided })
     };
   }
@@ -56913,6 +56974,7 @@ var FACET_MODE_DEFAULT = "scan";
 var SEARCH_ORPHAN_MAX = 100;
 var CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
 var CAPTURE_TEXT_SKIPPED_SAYS = "not indexed: over the bound";
+var hiddenSet = (gate) => gate && gate.scope !== "member" ? { sql: `(SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql}))`, args: gate.args } : null;
 var safeJson7 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -56929,7 +56991,14 @@ function digestOf(ids) {
   return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
 }
 var rand3 = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var answerChanged = (drift, moved) => moved || drift?.digestChanged === true;
+function answerChanged(drift, moved) {
+  if (moved === true) return true;
+  try {
+    return !!drift && typeof drift === "object" && drift.digestChanged === true;
+  } catch {
+    return false;
+  }
+}
 var Retrieval = class {
   #storage;
   #sql;
@@ -56967,7 +57036,7 @@ var Retrieval = class {
     this.observation = observation;
     this.#now = typeof now === "function" ? now : () => Date.now();
     this.#selectionNow = typeof selectionNow === "function" ? selectionNow : () => Date.now();
-    this.#order = Array.isArray(order) ? order : [];
+    this.#order = Array.isArray(order) ? order : MODULE_ORDER;
     this.frontierReader = new Frontier(this);
   }
   #rows(q6, ...a) {
@@ -57099,12 +57168,12 @@ var Retrieval = class {
     if (viewer !== void 0 && viewerPredicate(viewer).scope === "member") return { sql: "", args: [] };
     return { sql: ` AND authority_kind <> 'run'`, args: [] };
   }
-  /** R52: a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`. */
+  /** R52 (N202): a later module's listener, called after each successful `selectionCreate` with `{handle, expires}`, in
+   *  the modules' total order. A malformed registration, or a second by the same module, is refused by membership's
+   *  `listenerRefusal` (its R81), the one site of LISTENER_MALFORMED and LISTENER_DECLARED. */
   onSelectionCreated(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#selectionListeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(this.#selectionListeners, module, fn);
+    if (refused) return refused;
     this.#selectionListeners.push({ module, fn, seq: this.#selectionListeners.length });
     this.#selectionListeners.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
@@ -57608,12 +57677,7 @@ var Retrieval = class {
       orphans,
       counts: {
         bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
-        indexed: this.#one(
-          `SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
-                                      (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN
-                                        (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${gate.sql})))`,
-          ...gate.args
-        ).c,
+        indexed: this.#indexedCount(hiddenSet(gate)),
         keyed: this.#one(
           `SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
           ...gate.args
@@ -57624,6 +57688,36 @@ var Retrieval = class {
       orphans_limit: SEARCH_ORPHAN_MAX,
       orphans_truncated: orphans.length >= SEARCH_ORPHAN_MAX,
       ok: findings.length === 0 && orphans.length === 0
+    };
+  }
+  /* R17, R60: the text index's rows less those a hidden bundle claims through its key (R1); an orphan (a row no bundle
+     claims) names nothing and stays, so a reader's parity still sees it. The one spelling of R17's rule. */
+  #indexedCount(hid) {
+    if (!hid) return this.#one(`SELECT count(*) c FROM bundles_fts`).c;
+    return this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
+                        (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c;
+  }
+  /** R60 (N171, K209; for `queue`): `{indexed, selections, selectionItems}`, the text index's rows, the held selections
+   *  and their items. `hid` (`{sql, args}`, a parenthesised set of the bundle ids the caller may not see, as
+   *  run-productions' `counts`) leaves out the index rows a hidden bundle claims (R17's `indexed` rule), the items
+   *  naming a hidden bundle, and a selection holding such an item (R29: no count includes what the caller may not see,
+   *  and a selection's existence is a fact about the bundles in it). With no `hid`, every row counts. Synchronous,
+   *  writes nothing, never throws: a figure it cannot read is null, never a zero. */
+  counts(hid = null) {
+    const h = hid && typeof hid === "object" && typeof hid.sql === "string" ? { sql: hid.sql, args: Array.isArray(hid.args) ? hid.args : [] } : null;
+    const read2 = (f8) => {
+      try {
+        const n = Number(f8());
+        return Number.isFinite(n) ? n : null;
+      } catch {
+        return null;
+      }
+    };
+    return {
+      indexed: read2(() => this.#indexedCount(h)),
+      selections: read2(() => h ? this.#one(`SELECT count(*) c FROM selections WHERE handle NOT IN
+                       (SELECT handle FROM selection_items WHERE bundle_id IN ${h.sql})`, ...h.args).c : this.#one(`SELECT count(*) c FROM selections`).c),
+      selectionItems: read2(() => h ? this.#one(`SELECT count(*) c FROM selection_items WHERE COALESCE(bundle_id, '') NOT IN ${h.sql}`, ...h.args).c : this.#one(`SELECT count(*) c FROM selection_items`).c)
     };
   }
   /* ---- selections (R18–R22, R51, R52) ---- */
@@ -57840,12 +57934,8 @@ var Retrieval = class {
       ),
       caps: { maxItems: SELECTION_MAX_ITEMS, maxPerOwner: SELECTION_MAX_PER_OWNER },
       bytes: (() => {
-        const g = viewer === void 0 ? null : viewerPredicate(viewer);
-        const hide = g && g.scope !== "member";
-        return this.#one(
-          `SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items` + (hide ? ` WHERE bundle_id NOT IN (SELECT bundle_id FROM bundles EXCEPT SELECT b.bundle_id FROM bundles b WHERE (${g.sql}))` : ""),
-          ...hide ? g.args : []
-        ).b;
+        const hid = viewer === void 0 ? null : hiddenSet(viewerPredicate(viewer));
+        return this.#one(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items` + (hid ? ` WHERE bundle_id NOT IN ${hid.sql}` : ""), ...hid ? hid.args : []).b;
       })()
     };
   }
@@ -58008,7 +58098,8 @@ function observationOf(o, sql) {
       MEANING_EVIDENCE_IS_ONE_SIDED,
       INTERNET_EVIDENCE_IS_ONE_SIDED,
       INTERNET_FRONTIER_EMPTY_CAUSES,
-      LEAD_VOCABULARY
+      LEAD_VOCABULARY,
+      DOCUMENT_EVIDENCE_IS_ONE_SIDED
     },
     contentAxisFor,
     observationCoverage,
@@ -78328,11 +78419,6 @@ function migrateProgressions(sql) {
 // src/progressions/checks.mjs
 var at6 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 var PROGRESSION_CHECKS = Object.freeze({
-  NO_KEY: {
-    check: "C-100.1",
-    where: at6("defineProgression|readProgression|threadInstance|readInstance|dischargeStage|readExceptions|disposeProposal", "is-progression-keyed"),
-    translation: "A declared flow is named by a short key, and this request names none, so the record cannot tell which flow is meant. Name the flow by its key and try again. Nothing was written."
-  },
   NO_LABEL: {
     check: "C-100.2",
     where: at6("defineProgression", "is-progression-labelled"),
@@ -78375,7 +78461,7 @@ var PROGRESSION_CHECKS = Object.freeze({
   },
   NO_ENTITY: {
     check: "C-100.9",
-    where: at6("threadInstance|readInstance|dischargeStage|readExceptions", "is-instance-entity"),
+    where: at6("#entityNamed", "is-instance-entity"),
     translation: "An instance of a flow is followed through one registered subject, and this request names none. Name the subject by its id. Nothing was written."
   },
   NO_PLACEMENTS: {
@@ -78385,27 +78471,22 @@ var PROGRESSION_CHECKS = Object.freeze({
   },
   NO_SUCH_PROGRESSION: {
     check: "C-100.11",
-    where: at6("threadInstance|dischargeStage|disposeProposal", "is-progression-declared"),
+    where: at6("#declared", "is-progression-declared"),
     translation: "No flow of that key has been declared, so there is nothing to place documents in or to decide about. Declare the flow first. Nothing was written."
-  },
-  NO_SUCH_ENTITY: {
-    check: "C-100.12",
-    where: at6("threadInstance|dischargeStage", "is-entity-registered"),
-    translation: "The subject named here is not registered, so no document can be shown to concern it. Register the subject first. Nothing was written."
   },
   NO_STAGE: {
     check: "C-100.13",
-    where: at6("threadInstance|dischargeStage|disposeProposal", "is-stage-named"),
+    where: at6("#stageNamed", "is-stage-named"),
     translation: "This request does not say which step of the flow it is about. Name the step. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-100.14",
-    where: at6("threadInstance|dischargeStage|disposeProposal", "is-stage-of-progression"),
+    where: at6("#stageOf", "is-stage-of-progression"),
     translation: "The step named here is not a step of this flow as it is declared now. Name one of its steps. Nothing was written."
   },
   NO_CAPTURE: {
     check: "C-100.15",
-    where: at6("threadInstance|dischargeStage", "is-document-named"),
+    where: at6("#documentNamed", "is-document-named"),
     translation: "A step is filled by a captured document, named by its fingerprint, and this request names none. Name the document. Nothing was written."
   },
   DUPLICATE_PLACEMENT: {
@@ -78415,12 +78496,12 @@ var PROGRESSION_CHECKS = Object.freeze({
   },
   NOT_CONCERNED: {
     check: "C-100.17",
-    where: at6("threadInstance|dischargeStage", "is-document-concerned"),
+    where: at6("#concerned", "is-document-concerned"),
     translation: "The record does not show this document concerning the subject this instance follows, so it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, or use it in the instance of the subject it does concern. Nothing was written."
   },
   NO_REASON: {
     check: "C-100.18",
-    where: at6("dischargeStage|disposeProposal", "is-reason-stated"),
+    where: at6("#reasonStated", "is-reason-stated"),
     translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
   },
   NO_SHA: {
@@ -78452,18 +78533,18 @@ var PROGRESSION_CHECKS = Object.freeze({
     check: "C-33.43",
     where: at6("disposeProposal", "is-dispose-version-current"),
     translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
-  },
-  LISTENER_DECLARED: {
-    check: "C-100.23",
-    where: at6("onThreaded", "is-listener-once"),
-    translation: "This module has already asked to be told of every threading; one registration is enough."
   }
 });
+var GENERIC_CODES = Object.freeze(["NO_KEY"]);
 function refusal10(code, detail, extra = {}) {
   const row2 = PROGRESSION_CHECKS[code] || (code === "NO_BASIS" || code === "NO_CITATION" ? ACT_SHAPE_CHECKS[code] : null);
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
     throw new Error(`progressions: ${code} has no row with a translation (DEC-49)`);
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, ...extra, detail };
+}
+function generic(code, detail, extra = {}) {
+  if (!GENERIC_CODES.includes(code)) throw new Error(`progressions: ${code} is not a generic code; it answers with its row`);
+  return { ok: false, reason: code, code, ...extra, detail };
 }
 
 // src/progressions/index.mjs
@@ -78597,6 +78678,80 @@ var Progressions = class {
     };
   }
   /* ===================================================================== *
+   * THE REFUSALS SEVERAL ACTS ANSWER (R6, R14, R21; K231, N242): each code is minted in its one helper, which
+   * answers the refusal or null; every act that asks the question calls it with its own sentence and fields.
+   * ===================================================================== */
+  /* C-100.11: no definition of this key has been declared. */
+  #declared(key, detail) {
+    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
+      return refusal10(
+        "NO_SUCH_PROGRESSION",
+        detail,
+        { progression_key: key }
+      );
+    return null;
+  }
+  /* C-100.9: the request names no entity (`entityId` as the caller sent it). */
+  #entityNamed(entityId, detail) {
+    if (!str7(entityId))
+      return refusal10(
+        "NO_ENTITY",
+        detail,
+        {}
+      );
+    return null;
+  }
+  /* C-100.13: the request names no stage. */
+  #stageNamed(stageKey, detail, extra = {}) {
+    if (!stageKey)
+      return refusal10(
+        "NO_STAGE",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.14: the stage named is not a stage of the definition as it is declared now. */
+  #stageOf(key, stageKey, detail, extra = {}) {
+    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, stageKey))
+      return refusal10(
+        "BAD_STAGE",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.15: the request names no captured document. */
+  #documentNamed(captureSha, detail, extra = {}) {
+    if (!captureSha)
+      return refusal10(
+        "NO_CAPTURE",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.17: the document does not resolve to the entity (`resolution` is its strongest resolution, or absent). */
+  #concerned(resolution, detail, extra = {}) {
+    if (!resolution)
+      return refusal10(
+        "NOT_CONCERNED",
+        detail,
+        extra
+      );
+    return null;
+  }
+  /* C-100.18: the act carries no reason (`reason` already trimmed by the act, each by its own rule). */
+  #reasonStated(reason, detail) {
+    if (!reason)
+      return refusal10(
+        "NO_REASON",
+        detail,
+        {}
+      );
+    return null;
+  }
+  /* ===================================================================== *
    * THE DECLARED FLOW (R1–R5; FW-8, D-128).
    * ===================================================================== */
   /* The CURRENT version of a definition, the one every instance and finding is derived against. A definition with no
@@ -78666,24 +78821,50 @@ var Progressions = class {
    *  writes nothing. The declarer is the control plane's stamp (R26). */
   defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (!str7(progressionKey))
-      return refusal10("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
+      return generic("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
     const key = str7(progressionKey);
-    if (!str7(label)) return refusal10("NO_LABEL", "a progression definition carries a human label");
+    if (!str7(label))
+      return refusal10(
+        "NO_LABEL",
+        "a progression definition carries a human label, the name a member reads it by beside its key"
+      );
     if (!Array.isArray(stages) || stages.length === 0)
-      return refusal10("NO_STAGES", "a progression is its ordered stages; name at least one");
+      return refusal10(
+        "NO_STAGES",
+        "a progression is its ordered stages, each a key with how many documents it holds and how firmly it is expected; name at least one"
+      );
     const norm = [];
     const seen = /* @__PURE__ */ new Set();
     for (let i = 0; i < stages.length; i++) {
       const s = stages[i] || {};
       const sk = str7(s.key) || str7(s.stageKey);
-      if (!sk) return refusal10("NO_STAGE_KEY", `stage ${i + 1} has no key`, { stage: i + 1 });
-      if (seen.has(sk)) return refusal10("DUPLICATE_STAGE", `stage key '${sk}' appears twice`, { stage_key: sk });
+      if (!sk)
+        return refusal10(
+          "NO_STAGE_KEY",
+          `stage ${i + 1} has no key, so nothing could later be placed at it or found missing from it`,
+          { stage: i + 1 }
+        );
+      if (seen.has(sk))
+        return refusal10(
+          "DUPLICATE_STAGE",
+          `stage key '${sk}' appears twice, so a document placed at it could belong to either stage`,
+          { stage_key: sk }
+        );
       seen.add(sk);
       const card = str7(s.cardinality);
-      if (!card) return refusal10("NO_CARDINALITY", `stage '${sk}' needs a cardinality (1, 0..1, 0..n)`, { stage_key: sk });
+      if (!card)
+        return refusal10(
+          "NO_CARDINALITY",
+          `stage '${sk}' needs a cardinality (1, 0..1, 0..n): how many documents it may hold`,
+          { stage_key: sk }
+        );
       const req = str7(s.required);
       if (!STAGE_REQUIREDNESS.includes(req))
-        return refusal10("BAD_REQUIRED", `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "), { stage_key: sk });
+        return refusal10(
+          "BAD_REQUIRED",
+          `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "),
+          { stage_key: sk }
+        );
       norm.push({
         stage_key: sk,
         stage_no: i + 1,
@@ -78784,7 +78965,7 @@ var Progressions = class {
   /** R5 (`op=progression`): a definition, the current version by default or any held one, with every version held. */
   readProgression({ progressionKey, version = null } = {}) {
     if (!str7(progressionKey))
-      return refusal10("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
+      return generic("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
     const key = str7(progressionKey);
     const cur = this.#current(key);
     if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
@@ -79107,44 +79288,45 @@ var Progressions = class {
    *  only if it resolves to the entity, at the grade the record holds (R7). The thread is a new dated version (R8); then
    *  every listener registered with `onThreaded` is told (R33). */
   async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
-    if (!str7(progressionKey)) return refusal10("NO_KEY", "a progression instance names its definition by key (op=thread)");
+    if (!str7(progressionKey)) return generic("NO_KEY", "a progression instance names its definition by key (op=thread)");
     const key = str7(progressionKey);
-    if (!str7(entityId)) return refusal10("NO_ENTITY", "a progression instance is threaded by an entity, named by its id");
+    const nameless = this.#entityNamed(entityId, "a progression instance is threaded by an entity, named by its id");
+    if (nameless) return nameless;
     const eid = str7(entityId);
     if (!Array.isArray(placements) || placements.length === 0)
-      return refusal10("NO_PLACEMENTS", "name at least one {stage, captureSha} placement to thread");
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
       return refusal10(
-        "NO_SUCH_PROGRESSION",
-        "define the progression first (op=progressiondefine), then thread documents through it",
-        { progression_key: key }
+        "NO_PLACEMENTS",
+        "name at least one {stage, captureSha} placement to thread: the step, and the captured document that fills it"
       );
-    if (!this.entities.has(eid))
-      return refusal10("NO_SUCH_ENTITY", "the threading entity must be registered (op=entitycreate)", { entity_id: eid });
-    const stageKeys = new Set(this.#rows(`SELECT stage_key FROM progression_stages WHERE progression_key=?`, key).map((r) => r.stage_key));
+    const undeclared = this.#declared(key, "define the progression first (op=progressiondefine), then thread documents through it");
+    if (undeclared) return undeclared;
+    if (!this.entities.has(eid)) return noSuchEntity(eid);
     const concerning = this.entities.strongestByCapture(eid);
     const norm = [];
     const seen = /* @__PURE__ */ new Set();
     for (let i = 0; i < placements.length; i++) {
       const p = placements[i] || {};
       const sk = str7(p.stage) || str7(p.stageKey);
-      if (!sk) return refusal10("NO_STAGE", `placement ${i + 1} names no stage`, { placement: i + 1 });
-      if (!stageKeys.has(sk)) return refusal10("BAD_STAGE", `'${sk}' is not a stage of progression '${key}'`, { stage_key: sk });
+      const refused = this.#stageNamed(sk, `placement ${i + 1} names no stage`, { placement: i + 1 }) || this.#stageOf(key, sk, `'${sk}' is not a stage of progression '${key}'`, { stage_key: sk });
+      if (refused) return refused;
       const cs = str7(p.captureSha) || str7(p.capture_sha);
-      if (!cs) return refusal10("NO_CAPTURE", `placement for '${sk}' names no capture sha`, { stage_key: sk });
+      const unnamed = this.#documentNamed(cs, `placement for '${sk}' names no capture sha`, { stage_key: sk });
+      if (unnamed) return unnamed;
       const dup = sk + "\0" + cs;
-      if (seen.has(dup)) return refusal10(
-        "DUPLICATE_PLACEMENT",
-        `the same document is placed at '${sk}' twice`,
-        { stage_key: sk, capture_sha: cs }
-      );
+      if (seen.has(dup))
+        return refusal10(
+          "DUPLICATE_PLACEMENT",
+          `the same document is placed at '${sk}' twice in this request; place it once`,
+          { stage_key: sk, capture_sha: cs }
+        );
       seen.add(dup);
       const res = concerning.get(cs);
-      if (!res) return refusal10(
-        "NOT_CONCERNED",
+      const unconcerned = this.#concerned(
+        res,
         "this document does not resolve to the threading entity, so it cannot be threaded on it (resolve it first with op=resolve, or thread it on the entity it actually concerns)",
         { stage_key: sk, capture_sha: cs, entity_id: eid }
       );
+      if (unconcerned) return unconcerned;
       norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
     }
     const at14 = this.now();
@@ -79214,19 +79396,24 @@ var Progressions = class {
         p.grade
       );
   }
-  /** R33: a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). */
+  /** R33 (N202): a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). A
+   *  malformed registration, or a second by the same module, is membership's one answer (its R81); the listeners are
+   *  kept in the modules' total order (its R83), a module outside that list after every one in it, in registration
+   *  order. */
   onThreaded(module, fn) {
-    if (typeof fn !== "function") throw new TypeError("onThreaded: fn must be a function");
-    if (this.threadListeners.some((l) => l.module === module))
-      return refusal10("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
-    this.threadListeners.push({ module, fn });
+    const refused = listenerRefusal(this.threadListeners, module, fn);
+    if (refused) return refused;
+    const i = MODULE_ORDER.indexOf(module);
+    this.threadListeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.threadListeners.length });
+    this.threadListeners.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
     return { ok: true, module };
   }
   /** R9–R13 (`op=instance`). */
   readInstance({ progressionKey, entityId, viewer = null } = {}) {
     const how = "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)";
-    if (!str7(progressionKey)) return refusal10("NO_KEY", how);
-    if (!str7(entityId)) return refusal10("NO_ENTITY", how);
+    if (!str7(progressionKey)) return generic("NO_KEY", how);
+    const nameless = this.#entityNamed(entityId, how);
+    if (nameless) return nameless;
     return this.#answer(str7(progressionKey), str7(entityId), viewer);
   }
   /* ===================================================================== *
@@ -79237,38 +79424,29 @@ var Progressions = class {
    *  same stage again writes a new dated version; the current one applies and every earlier one reads back (R15).
    *  Whether it discharges anything is derived on read (R11). */
   dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
-    if (!str7(progressionKey)) return refusal10("NO_KEY", "an exception document names its progression by key (op=discharge)");
+    if (!str7(progressionKey)) return generic("NO_KEY", "an exception document names its progression by key (op=discharge)");
     const key = str7(progressionKey);
-    if (!str7(entityId)) return refusal10("NO_ENTITY", "an exception document discharges a skip in one entity's instance, named by id");
+    const nameless = this.#entityNamed(entityId, "an exception document discharges a skip in one entity's instance, named by id");
+    if (nameless) return nameless;
     const eid = str7(entityId);
     const sk = str7(stageKey) || str7(stage);
-    if (!sk) return refusal10("NO_STAGE", "an exception document NAMES the stage it discharges");
     const cs = str7(captureSha) || str7(capture_sha);
-    if (!cs) return refusal10("NO_CAPTURE", "an exception document IS a captured document, named by its capture sha");
     const rsn = str7(reason);
-    if (!rsn) return refusal10("NO_REASON", "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)");
     const cite = str7(citation);
-    if (!cite) return refusal10("NO_CITATION", "an exception document carries a citation -- where the justification for the skip is published");
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
-      return refusal10(
-        "NO_SUCH_PROGRESSION",
-        "define the progression first (op=progressiondefine), then discharge a skip in one of its instances",
-        { progression_key: key }
-      );
-    if (!this.entities.has(eid))
-      return refusal10("NO_SUCH_ENTITY", "the threading entity must be registered (op=entitycreate)", { entity_id: eid });
-    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, sk))
-      return refusal10(
-        "BAD_STAGE",
-        `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge`,
-        { stage_key: sk }
-      );
+    const refused = this.#stageNamed(sk, "an exception document NAMES the stage it discharges") || this.#documentNamed(cs, "an exception document IS a captured document, named by its capture sha") || this.#reasonStated(rsn, "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)") || (!cite ? refusal10("NO_CITATION", "an exception document carries a citation -- where the justification for the skip is published") : null) || this.#declared(key, "define the progression first (op=progressiondefine), then discharge a skip in one of its instances") || (!this.entities.has(eid) ? noSuchEntity(eid) : null) || this.#stageOf(
+      key,
+      sk,
+      `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge`,
+      { stage_key: sk }
+    );
+    if (refused) return refused;
     const res = this.entities.strongestByCapture(eid).get(cs);
-    if (!res) return refusal10(
-      "NOT_CONCERNED",
+    const unconcerned = this.#concerned(
+      res,
       "this document does not resolve to the threading entity, so it cannot discharge that entity's skip (resolve it first with op=resolve, or discharge the skip in the instance it actually concerns)",
       { stage_key: sk, capture_sha: cs, entity_id: eid }
     );
+    if (unconcerned) return unconcerned;
     const at14 = this.now();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     const r = rsn.slice(0, REASON_MAX2), c = cite.slice(0, CITATION_MAX2);
@@ -79347,8 +79525,9 @@ var Progressions = class {
    *  each with every version recorded (oldest first; the current one is the exception's own fields). */
   readExceptions({ progressionKey, entityId, viewer = null } = {}) {
     const how = "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)";
-    if (!str7(progressionKey)) return refusal10("NO_KEY", how);
-    if (!str7(entityId)) return refusal10("NO_ENTITY", how);
+    if (!str7(progressionKey)) return generic("NO_KEY", how);
+    const nameless = this.#entityNamed(entityId, how);
+    if (nameless) return nameless;
     const key = str7(progressionKey), eid = str7(entityId);
     const keep = this.#redactor(viewer);
     const versions = /* @__PURE__ */ new Map();
@@ -79604,7 +79783,10 @@ var Progressions = class {
    *  and its decision, and the instance's `open_finding_count`. */
   captureProgressions({ captureSha, nowMs } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return refusal10("NO_SHA", "progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)");
+      return refusal10(
+        "NO_SHA",
+        "progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)"
+      );
     const now = this.nowMs(nowMs);
     const rows = this.#rows(
       `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
@@ -79673,29 +79855,27 @@ var Progressions = class {
       if (!pk) pk = key.slice(0, i).trim();
       if (!sk) sk = key.slice(i + 2).trim();
     }
-    if (!pk) return refusal10("NO_KEY", "a proposal disposition names its progression (progressionKey, or key='progression::stage')");
-    if (!sk) return refusal10("NO_STAGE", "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
+    if (!pk) return generic("NO_KEY", "a proposal disposition names its progression (progressionKey, or key='progression::stage')");
+    const unstaged = this.#stageNamed(sk, "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
+    if (unstaged) return unstaged;
     const st = str7(to) || str7(state);
     if (!DISPOSITIONS2.includes(st))
       return refusal10("NOT_A_DISPOSITION", "a proposal is deferred (parked) or dismissed (declined); adopting one authors a focus (op=promote) and is not a disposition", { to: st || null, dispositions: DISPOSITIONS2 });
     const why = String(reason ?? "").trim();
-    if (!why) return refusal10("NO_REASON", "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
+    const unreasoned = this.#reasonStated(why, "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
+    if (unreasoned) return unreasoned;
     if (why.length > DISPOSITION_REASON_MAX || /["\\\r\n]/.test(why))
       return refusal10("BAD_REASON", `a reason is at most ${DISPOSITION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
     const by = decidedBy == null ? "" : String(decidedBy).trim();
-    if (!by) return refusal10("NO_DECIDER", "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.");
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, pk))
-      return refusal10(
-        "NO_SUCH_PROGRESSION",
-        "define the progression first (op=progressiondefine); a proposal exists only for a defined one",
-        { progression_key: pk }
-      );
-    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, pk, sk))
-      return refusal10(
-        "BAD_STAGE",
-        `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`,
-        { progression_key: pk, stage_key: sk }
-      );
+    if (!by)
+      return refusal10("NO_DECIDER", "a disposition is recorded under the deciding member, stamped from the session. An unnamed decider cannot age the record's question.");
+    const absent = this.#declared(pk, "define the progression first (op=progressiondefine); a proposal exists only for a defined one") || this.#stageOf(
+      pk,
+      sk,
+      `'${sk}' is not a stage of progression '${pk}' \u2014 a disposition must name a real stage`,
+      { progression_key: pk, stage_key: sk }
+    );
+    if (absent) return absent;
     const currentVersion = this.definitionVersionOf(pk).version;
     const seen = typeof definitionVersion === "number" || typeof definitionVersion === "string" && definitionVersion.trim() !== "" ? Number(definitionVersion) : NaN;
     if (!Number.isInteger(seen) || seen < 1)
@@ -89131,7 +89311,7 @@ var BIAS_CHECKS2 = {
      file. */
   BIAS_REFUSED: {
     check: "C-26.11",
-    where: "src/bias/index.mjs #promotionCheck > bias-set-refusal, reached from op=promote",
+    where: "src/bias/index.mjs promotionCheck > bias-set-refusal, reached from op=promote",
     translation: "That bias set was not written. One or more of its statements is not something the record can honour, and each one is named below with what is wrong with it. Nothing was saved, so nothing needs undoing \u2014 correct the statements and write it again."
   },
   /* C-26.12, BIAS_ILLEGAL_TRANSITION, is promotion's (its R15, `bias-state-edge`) and its row stays in the catalogue,
@@ -89214,6 +89394,8 @@ var BIAS_DEBT_BATCH = 50;
 var BIAS_DEBT_OWNERS_MAX = 50;
 var BIAS_DEBT_REASON_MAX = 4e3;
 var BIAS_DEBT_SETTLEMENTS_MAX = 50;
+var BIAS_DEBT_UNCLEARED_DEFAULT = 200;
+var BIAS_DEBT_UNCLEARED_MAX = 1e3;
 var BIAS_DEBT_VIEWER = "admin";
 var SETTLED_BY_AN_ACT = /* @__PURE__ */ new Set(["rerun", "resolved"]);
 var ISO_INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
@@ -89249,6 +89431,13 @@ function statementRows(bundleId, fm) {
     });
   }
   return out;
+}
+var BIAS_ROW_BY_CHECK = new Map(Object.entries(BIAS_CHECKS2).map(([code, row2]) => [row2.check, { code, row: row2 }]));
+function refusalFindings(errs) {
+  return errs.map((x) => {
+    const hit = BIAS_ROW_BY_CHECK.get(x.check);
+    return { check: x.check, detail: x.message, code: hit ? hit.code : null, translation: hit ? hit.row.translation : null };
+  });
 }
 var bundleMdText = (files) => {
   const md = Array.isArray(files) ? files.find((x) => x && x.path === "bundle.md") : null;
@@ -89287,24 +89476,18 @@ var Bias = class _Bias {
      machine credential or the founder's viewer passes everything, an unrecognised viewer nothing, a member what the
      predicate admits. The column must be qualified, or it binds to `bundles` inside the subquery and passes all. */
   static #gate(col, viewer) {
-    const gate = viewerPredicate(viewer);
+    return _Bias.#gateOver(col, viewerPredicate(viewer));
+  }
+  /* The same gate from a predicate already compiled (`viewerPredicate`'s answer, R43's `gate`). A predicate that is
+     not `{sql, args}` admits nothing (fail closed). */
+  static #gateOver(col, gate) {
+    if (!isObj13(gate) || typeof gate.sql !== "string" || !Array.isArray(gate.args)) return { sql: `${GATE_MARK} 0=1`, args: [] };
     if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
-    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+    if (gate.scope === "DENY") return { sql: `${GATE_MARK} 0=1`, args: [] };
     return {
       sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
       args: gate.args
     };
-  }
-  /* One revision's bundle.md, by its digest: the live file when it is that revision, else the snapshot in history
-     that holds it (record-core R13, R15). Null when the record cannot produce it. */
-  #textAtSha(bundleId, sha) {
-    if (!bundleId || !sha) return null;
-    const live = this.#record.readFile(bundleId, "bundle.md");
-    if (live && typeof live.text === "string" && live.sha256 === sha) return live.text;
-    const img = this.#record.readImage(bundleId) || {};
-    for (const [path, v] of Object.entries(img))
-      if (/^_history\/bundle_.*\.md$/.test(path) && typeof v === "string" && sha256Hex10(v) === sha) return v;
-    return null;
   }
   /* ---------------------------------------------------------------- R8–R10: this module's share of a promotion */
   /** R9 (PL-12 / D-84, REC-176): A MALFORMED BIAS SET NEVER LANDS. Refused before any write, by the set's own
@@ -89319,23 +89502,11 @@ var Bias = class _Bias {
     const fm = parseFrontmatter(text3).data;
     const errs = checkBiasSet(fm, /* @__PURE__ */ new Map([["bundle.md", text3]])).filter((x) => x.severity === "error");
     if (!errs.length) return null;
-    const byNumber = new Map(Object.entries(BIAS_CHECKS2).map(([code, row2]) => [row2.check, { code, row: row2 }]));
-    const refusal18 = this.#refuse(
+    return this.#refuse(
       "BIAS_REFUSED",
-      "the bias set's statements were judged before anything was written, and at least one is not something the record can honour. Nothing was written."
+      "the bias set's statements were judged before anything was written, and at least one is not something the record can honour. Nothing was written.",
+      { findings: refusalFindings(errs) }
     );
-    return {
-      ...refusal18,
-      findings: errs.map((x) => {
-        const hit = byNumber.get(x.check);
-        return {
-          check: x.check,
-          detail: x.message,
-          code: hit ? hit.code : null,
-          translation: hit ? hit.row.translation : null
-        };
-      })
-    };
   }
   /** R10: in the promotion's transaction, the bundle's statement rows are replaced by the promoted document's — the
    *  delete for every type, so a document that changes type leaves no projection standing, the insert only for
@@ -89389,16 +89560,20 @@ var Bias = class _Bias {
   /** R23: a later module's notice that a lens may have moved, once per successful adoption and per promotion that
    *  moves a bias set's head, after the write. A second registration by one module is refused. */
   onLensChange(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#lensListeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
+    const refused = listenerRefusal(this.#lensListeners, module, fn);
+    if (refused) return refused;
     this.#lensListeners.push({ module, fn });
     return { ok: true, module };
   }
-  /* Each listener once; one that throws or rejects changes nothing the act wrote and no other listener's notice. */
+  /* Each listener once, in the modules' total order (membership R83; a module not in it after, by name); one that
+     throws or rejects changes nothing the act wrote and no other listener's notice. */
   #notify() {
-    const runs = this.#lensListeners.map((l) => {
+    const at14 = (m) => {
+      const i = MODULE_ORDER.indexOf(m);
+      return i === -1 ? MODULE_ORDER.length : i;
+    };
+    const ordered = [...this.#lensListeners].sort((x, y) => at14(x.module) - at14(y.module) || (x.module < y.module ? -1 : x.module > y.module ? 1 : 0));
+    const runs = ordered.map((l) => {
       try {
         return Promise.resolve(l.fn()).catch(() => null);
       } catch {
@@ -89557,7 +89732,7 @@ var Bias = class _Bias {
         ...seen.args
       );
       for (const a of rows) {
-        const text3 = this.#textAtSha(a.bundle_id, a.bundle_sha);
+        const text3 = this.#record.textAtSha(a.bundle_id, a.bundle_sha);
         if (text3 === null) {
           unresolved.push({ bundle_id: a.bundle_id, revision: a.bundle_sha, scope: a.scope_type });
           continue;
@@ -89945,8 +90120,12 @@ var Bias = class _Bias {
    *  work products per tick (50 by default), resuming from a cursor, restarted from the top when the lens moves
    *  again. For each: moved raises a debt or restates a changed one; a debt settled by an authored act over the
    *  same lens delta stays settled (REC-207); not moved settles an open debt as `lens_returned`; undetermined raises
-   *  and clears nothing. Idempotent by the work product's key. Nothing is refused anywhere (R28). */
-  async biasDebtSweep(nowMs) {
+   *  and clears nothing. Idempotent by the work product's key. Nothing is refused anywhere (R28).
+   *  `rank` (N224) is the scheduler's (its R10, `rank(items, now)` answering the items reordered): the batch is read,
+   *  each work product offered as `{kind: "bundle", id: its context id, waitingSince: when it was registered}`, and
+   *  compared in the rank's order. Without it, or when it fails, the order is the cursor's. The cursor, the batch
+   *  size and what each comparison raises or settles do not depend on the order. */
+  async biasDebtSweep(nowMs, rank5 = null) {
     const at14 = stampInstant("second", Number(nowMs));
     const cap = this.#batch();
     const fp = this.lensFingerprint();
@@ -89965,9 +90144,10 @@ var Bias = class _Bias {
       complete: items.length <= cap,
       batch: cap
     };
-    for (const { source, key } of batch) {
+    const read2 = [];
+    for (const item of batch) read2.push({ ...item, wp: await item.source.read(item.key) });
+    for (const { source, key, wp } of _Bias.#ranked(read2, rank5, Number(nowMs))) {
       out.read++;
-      const wp = await source.read(key);
       const lens = wp && isObj13(wp.lens) ? wp.lens : null;
       const now = wp && lens ? this.#lensNow(wp.context) : { undetermined: true };
       const then = lens && typeof lens.statements_sha === "string" ? lens.statements_sha : null;
@@ -90030,6 +90210,39 @@ var Bias = class _Bias {
       at14
     );
     return out;
+  }
+  /* N224: the batch in the rank's order. Each item carries its place under a symbol, which the rank's copies keep
+     (`{...x}`) and its shape does not show; an item the rank drops or cannot place follows in the cursor's order. */
+  static #ranked(read2, rank5, now) {
+    if (typeof rank5 !== "function" || read2.length < 2) return read2;
+    const PLACE = Symbol("place");
+    const items = read2.map((r, i) => ({ kind: "bundle", id: r.wp && r.wp.context && r.wp.context.id != null ? String(r.wp.context.id) : null, waitingSince: _Bias.#instantMs(r.wp && r.wp.registered), [PLACE]: i }));
+    let answer;
+    try {
+      answer = rank5(items, now);
+    } catch {
+      return read2;
+    }
+    if (!Array.isArray(answer)) return read2;
+    const order = [], taken = /* @__PURE__ */ new Set();
+    for (const x of answer) {
+      const i = x && typeof x === "object" ? x[PLACE] : void 0;
+      if (Number.isInteger(i) && !taken.has(i)) {
+        taken.add(i);
+        order.push(read2[i]);
+      }
+    }
+    for (let i = 0; i < read2.length; i++) if (!taken.has(i)) order.push(read2[i]);
+    return order;
+  }
+  /* An instant as ms since the epoch: a finite number, or a parseable date string; else null. */
+  static #instantMs(v) {
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    if (typeof v === "string" && v.trim()) {
+      const t = Date.parse(v);
+      return Number.isFinite(t) ? t : null;
+    }
+    return null;
   }
   /* R37: THE ONE WRITER OF A SETTLEMENT. Every act that settles a debt appends its row here and stamps the debt from
      the same values, so the append-only record and the debt's state cannot disagree about which act closed it. */
@@ -90181,6 +90394,68 @@ var Bias = class _Bias {
       truncated: s.truncated,
       stated: "bias debt is DISCLOSED and blocks nothing (DEC-20). Three acts settle it and each is on record here: the lens moving back, a re-run under the lens now in force, and a member's resolve with a stated reason (BOB #32, 2026-09-23)"
     };
+  }
+  /* ---------------------------------------------------------------- R42, R43: the counts and the open debts (N171) */
+  /** R42: the bias statements and the adoptions held. `hid` (`{sql, args}`, the bundles the caller may not see, as
+   *  run-productions' `counts`) leaves out a row naming such a bundle: a statement by its bundle, an adoption by its
+   *  bundle or its project. Synchronous; writes nothing; never throws (a count that cannot be read answers null). */
+  counts(hid = null) {
+    const h = isObj13(hid) && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
+    const c = (t, ...keys) => {
+      try {
+        const conds = h ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${h.sql}`) : [];
+        const args = h ? keys.flatMap(() => h.args) : [];
+        return Number(this.#one(
+          `SELECT count(*) AS c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+          ...args
+        ).c);
+      } catch {
+        return null;
+      }
+    };
+    return { biasStatements: c("bias_statements", "bundle_id"), biasAdoptions: c("bias_adoptions", "bundle_id", "scope_id") };
+  }
+  /** R43: the debts not yet cleared whose context `gate` admits (`gate` membership's predicate, `viewerPredicate`'s
+   *  answer over the alias `b`; a machine or founder scope admits every debt; a malformed gate admits none), newest
+   *  raised first, ties by run, at most `limit` (1–1,000, default 200), `truncated` measured by reading one more.
+   *  Writes nothing; never throws (a read that fails answers none, and says so). */
+  uncleared({ gate = null, limit = null } = {}) {
+    const n = Math.floor(Number(limit));
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(n, BIAS_DEBT_UNCLEARED_MAX) : BIAS_DEBT_UNCLEARED_DEFAULT;
+    try {
+      const seen = _Bias.#gateOver("bd.context_id", gate);
+      const rows = this.#rows(
+        `SELECT bd.run, bd.context_type, bd.context_id, bd.moved_basis, bd.lens_then, bd.lens_now, bd.observed,
+                bd.raised, bd.recipients
+           FROM bias_debts bd WHERE bd.cleared_at IS NULL AND (${seen.sql})
+          ORDER BY bd.raised DESC, bd.run LIMIT ?`,
+        ...seen.args,
+        cap + 1
+      );
+      const debts = rows.slice(0, cap).map((r) => {
+        const named = safeJson14(r.recipients);
+        return {
+          run: r.run,
+          context_type: r.context_type,
+          context_id: r.context_id,
+          moved_basis: r.moved_basis ?? null,
+          lens_then: r.lens_then ?? null,
+          lens_now: r.lens_now ?? null,
+          observed: r.observed,
+          raised: r.raised,
+          recipients: Array.isArray(named) ? named.filter((x) => typeof x === "string") : []
+        };
+      });
+      return { debts, limit: cap, truncated: rows.length > cap };
+    } catch {
+      return {
+        debts: [],
+        limit: cap,
+        truncated: false,
+        undetermined: true,
+        stated: "the open bias debts could not be read, so none is listed"
+      };
+    }
   }
   /** R38 — told of a work product's close. When it re-made another (`rerunOf`), the debt of the one re-made is
    *  discharged only when the lens the new one ran under equals the lens now in force; two absences are not
@@ -106194,15 +106469,13 @@ ${lines.join("\n")}
       return this.#one(`SELECT count(*) c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`, ...args).c;
     };
     const n = (t, ...keys) => nx(t, null, keys);
-    const indexed = hid ? this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
-                     (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c : n("bundles_fts");
     return {
       bundles: n("bundles", "bundle_id"),
       files: n("files", "bundle_id"),
       history: n("history", "bundle_id"),
       refs: n("refs", "bundle_id", "target_id"),
       register: n("register", "bundle_id"),
-      indexed,
+      indexed: retrievalOf(this.ctx).counts(hid).indexed,
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
          reason every other row on this list is -- so a purge can PROVE it took
          the rows rather than assert it.
@@ -106236,16 +106509,8 @@ ${lines.join("\n")}
           return false;
         }
       })(),
-      /* A selection holding a bundle the caller cannot see is a count over a row they cannot read (BOB #15), so the
-         whole handle leaves `selections`; `selectionItems` drops only the hidden rows, which name the bundle. */
-      selections: hid ? nx(
-        "selections",
-        `handle NOT IN (SELECT handle FROM selection_items WHERE bundle_id IN ${hid.sql})`,
-        [],
-        [],
-        hid.args
-      ) : n("selections"),
-      selectionItems: n("selection_items", "bundle_id"),
+      selections: retrievalOf(this.ctx).counts(hid).selections,
+      selectionItems: retrievalOf(this.ctx).counts(hid).selectionItems,
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
       tasks: n("tasks", "refers_to"),

@@ -23436,7 +23436,8 @@ var OBSERVATION_CHECK_KEYS = Object.freeze([
   "AI_RUN_CONDITION_UNKNOWN",
   "AI_LOG_NOT_A_BUNDLE",
   "OBS_AUTHORITY_UNNAMED",
-  "OBS_PRESENT_NO_REFERENT"
+  "OBS_PRESENT_NO_REFERENT",
+  "AI_LOG_NEVER_LOOKED_STORED"
 ]);
 var OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
 
@@ -23532,8 +23533,9 @@ var CONDITION_KINDS = Object.freeze({
 });
 
 // ../bio-plane/src/observation-log/index.mjs
-var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp"]));
+var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
 var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
+var AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs" });
 
 // ../bio-plane/src/ai-runs/checks.mjs
 var AI_RUN_OWN_CHECKS = {
@@ -25097,6 +25099,13 @@ var IDSPACE_CHECKS = Object.freeze({
     translation: "Each value in a pair has to be named with the captured document it was read in, one the record holds and you can see: which system published a document is read from the record, never taken from the request. One of the two names no such document. Nothing was judged."
   })
 });
+var ENTITY_CHECKS = Object.freeze({
+  NO_SUCH_ENTITY: Object.freeze({
+    check: "C-91.4",
+    where: "src/entities/index.mjs noSuchEntity > is-entity-registered",
+    translation: "No subject with that id is registered in the record, so nothing can be said about it or attached to it. Register the subject first, or name one that is registered. Nothing was written."
+  })
+});
 
 // ../bio-plane/src/entities/index.mjs
 var ENTITY_KINDS = Object.freeze([
@@ -25139,28 +25148,9 @@ var CONNECTIONS_TABLES = Object.freeze([
 var CONNECTIONS_TABLE_NAMES = Object.freeze(CONNECTIONS_TABLES.map((t) => typeof t === "string" ? t : t.name));
 
 // ../bio-plane/src/connections/themes.mjs
-var THEME_WITHDRAW_CHECKS = Object.freeze({
-  THEME_WITHDRAW_NOT_A_MEMBER: {
-    check: "C-81.11",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw",
-    translation: "Taking a document or a passage out of a theme, or turning down a proposal, is a member's own judgement, done in their name. A machine may propose a placement; it cannot take one back."
-  },
-  THEME_WITHDRAW_NO_REASON: {
-    check: "C-81.12",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "Say why. A placement taken back or a proposal turned down keeps its reason beside it, so the next reader of the theme can see what was judged and on what ground."
-  },
-  THEME_WITHDRAW_NOTHING_STANDING: {
-    check: "C-81.13",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "Nothing stands in this theme at that document or passage: it was never placed or proposed there, or it has already been taken back. There is nothing to withdraw."
-  },
-  THEME_WITHDRAW_NOT_THE_PLACER: {
-    check: "C-81.14",
-    where: "src/connections/themes.mjs withdraw > is-theme-withdraw-standing",
-    translation: "A membership is taken back by the member who placed it, or by an administrator. Any member may turn down a proposal, but another member's placement stands on their judgement until they withdraw it."
-  }
-});
+var THEME_WITHDRAW_CHECKS = Object.freeze(Object.fromEntries(
+  Object.entries(THEME_CHECKS).filter(([code]) => code.startsWith("THEME_WITHDRAW_"))
+));
 
 // ../bio-plane/src/connections/index.mjs
 var SYSTEM_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
@@ -25177,21 +25167,21 @@ var FIELDS = {
   updated: { col: "last_updated", type: "time" },
   criticality: { col: "criticality", type: "text", lower: true },
   sha: { col: "bundle_sha", type: "text", lower: true },
-  schema: { col: "schema_id", type: "text", lower: true },
-  mode: { col: "produced_mode", type: "text", lower: true },
-  tier: { col: "capability_tier", type: "text", lower: true },
-  locator: { col: "source_locator", type: "text", fts: "locator" },
-  authority: { col: "source_authority", type: "text", fts: "authority" },
-  retrieved: { col: "source_retrieved", type: "time" },
-  status: { col: "source_status", type: "text", lower: true },
-  hash: { col: "content_hash", type: "text", lower: true },
-  monitored: { col: "monitor_enabled", type: "bool" },
-  frequency: { col: "monitor_frequency", type: "text", lower: true },
-  checked: { col: "monitor_last_checked", type: "time" },
-  annotations: { col: "annotations_open", type: "number" },
-  reeval: { col: "reeval_flag", type: "bool" },
-  since: { col: "reeval_since", type: "time" },
-  reevalsource: { col: "reeval_source", type: "text", lower: true },
+  schema: { col: "schema_id", type: "text", lower: true, proj: true },
+  mode: { col: "produced_mode", type: "text", lower: true, proj: true },
+  tier: { col: "capability_tier", type: "text", lower: true, proj: true },
+  locator: { col: "source_locator", type: "text", fts: "locator", proj: true },
+  authority: { col: "source_authority", type: "text", fts: "authority", proj: true },
+  retrieved: { col: "source_retrieved", type: "time", proj: true },
+  status: { col: "source_status", type: "text", lower: true, proj: true },
+  hash: { col: "content_hash", type: "text", lower: true, proj: true },
+  monitored: { col: "monitor_enabled", type: "bool", proj: true },
+  frequency: { col: "monitor_frequency", type: "text", lower: true, proj: true },
+  checked: { col: "monitor_last_checked", type: "time", proj: true },
+  annotations: { col: "annotations_open", type: "number", proj: true },
+  reeval: { col: "reeval_flag", type: "bool", proj: true },
+  since: { col: "reeval_since", type: "time", proj: true },
+  reevalsource: { col: "reeval_source", type: "text", lower: true, proj: true },
   /* REC-12: the derived strength PAIR, filterable per axis over the projection
        CACHE (store.mjs #writeStrengthProjection). TWO fields and never one — a
        single `strength:` selector would be the composed scalar DEC-21 forbids,
@@ -25235,12 +25225,12 @@ var FIELDS = {
      same relationship REC-12's cached strength has with strengthOf(). A filter
      that is a little behind is a filter; an ANSWER that is behind is a record
      saying nothing is late when something is. */
-  actionkind: { col: "action_kind", type: "text", lower: true },
-  risk: { col: "action_risk_tier", type: "number" },
-  addressee: { col: "action_counterparty_state", type: "text", lower: true },
-  resolution: { col: "action_resolution", type: "text", lower: true },
-  due: { col: "action_clock_next", type: "time" },
-  overdue: { col: "action_clock_overdue", type: "bool" }
+  actionkind: { col: "action_kind", type: "text", lower: true, proj: true },
+  risk: { col: "action_risk_tier", type: "number", proj: true },
+  addressee: { col: "action_counterparty_state", type: "text", lower: true, proj: true },
+  resolution: { col: "action_resolution", type: "text", lower: true, proj: true },
+  due: { col: "action_clock_next", type: "time", proj: true },
+  overdue: { col: "action_clock_overdue", type: "bool", proj: true }
 };
 var CACHED_FIELDS = Object.fromEntries(
   Object.entries(FIELDS).filter(([, f2]) => f2.asOf).map(([name, f2]) => [f2.col, { field: name, asOf: f2.asOf, authority: f2.authority, why: f2.why }])
@@ -25270,7 +25260,6 @@ var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.c
 var CONTENT_CITED_AS_BYTES = contentCitedAs2({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
 var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
-var MACHINE_READ_KINDS2 = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -25598,8 +25587,8 @@ var MEANING = {
         col: "chain_kind",
         case: "lower",
         vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
-        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS2.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
-        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS2.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
+        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
@@ -25782,6 +25771,7 @@ var SORTABLE = { relevance: null, ...Object.fromEntries(
   Object.entries(FIELDS).map(([k, f2]) => [k, f2.col])
 ) };
 var TEXT_CAP = 128 * 1024;
+var PROJ_COLS = new Set(Object.values(FIELDS).filter((f2) => f2.proj).map((f2) => f2.col));
 
 // ../bio-plane/src/retrieval/projection.mjs
 var PROJECTION_COLS = Object.freeze([
