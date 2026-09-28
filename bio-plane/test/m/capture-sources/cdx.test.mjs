@@ -104,6 +104,11 @@ test("R33: cdxQuery asks for the newest rows of the address, with the named fiel
   assert.equal(new URL(cdxQuery("http://x.example/", { limit: 5 })).searchParams.get("limit"), "-5");
   assert.equal(new URL(cdxQuery("x.example/", { limit: -7 })).searchParams.get("limit"), "-7");
   assert.equal(new URL(cdxQuery("http://x.example/")).searchParams.get("url"), "x.example/");
+  /* The default stands for any limit that is not a whole non-zero number. */
+  for (const limit of [undefined, null, NaN, "x", 0, Infinity])
+    assert.equal(new URL(cdxQuery("x.example/", { limit })).searchParams.get("limit"), "-40", String(limit));
+  assert.equal(new URL(cdxQuery("x.example/", { limit: "12" })).searchParams.get("limit"), "-12");
+  assert.equal(new URL(cdxQuery("x.example/", { limit: 7.9 })).searchParams.get("limit"), "-7");
 });
 
 const chosen = () => selectCapture([row("20260303120000")]).chosen;
