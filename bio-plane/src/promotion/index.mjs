@@ -12,7 +12,7 @@
  *   membership  membership, `membershipOf(host)` unless a test passes its own (K61).
  *   now         the module's clock, an ISO instant (default: the wall clock).
  *   order       the modules' total order (ids), which registered steps and listeners run in (R39, R45, R46);
- *               `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
+ *               membership's `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
  */
 
 import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SETS,
@@ -21,7 +21,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA } from "../record-core/index.mjs";
-import { membershipOf, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, noSuchProject, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
@@ -30,6 +30,9 @@ import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
 export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
+/* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
+   modules, which call either spelling of the one function. */
+export { listenerRefusal } from "../membership/index.mjs";
 
 /** The instance's inline bound (R6, R48): a file held as text is at most 1 MiB of UTF-8. A later module that bounds
  *  what it hands to a promotion reads this constant rather than its own. */
@@ -54,26 +57,8 @@ const sameInstant = (a, b) => {
 };
 const cut = (v, n) => String(v).slice(0, n);
 
-/* R39's "the modules' total order": the layer order of `build/modules.json`, its ids by layer and then by their place in
-   the file (K270). Product code cannot read `build/` at run time, so it is held here; the R39 test holds it equal to the
-   file, so a change there fails this module's suite until the list follows it. */
-const MODULE_ORDER = Object.freeze([
-  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
-          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
-          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
-  /* 2 */ "record-core", "membership", "promotion",
-  /* 3 */ "host-governor", "provenance", "capture-sources", "capture",
-  /* 4 */ "calibration", "extraction", "content",
-  /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
-  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "ai-runs", "run-productions",
-          "capture-requests", "skills", "agent-worker",
-  /* 7 */ "intent", "reevaluation",
-  /* 8 */ "publication", "ratification", "case-authoring", "review",
-  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
-  /* 10 */ "monitoring", "scheduler", "legacy-store",
-  /* 11 */ "affordances", "queue", "instance-setup", "control-plane", "legacy-index", "legacy-ui", "installer",
-           "legacy-tests",
-]);
+/* R39's "the modules' total order" is membership's `MODULE_ORDER` (one list, one site), held equal to
+   `build/modules.json` by membership's R79 test and this module's R39 test. */
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
 /* The families whose rows this module's refusals carry (Uses; K93 (2)), and promotion's own rows last. A code is held
@@ -151,36 +136,6 @@ function stepDeclared(held, detail) {
   const row = REGISTRATION_CHECKS.STEP_DECLARED;
   return { ok: false, reason: "STEP_DECLARED", code: "STEP_DECLARED", check: row.check, translation: row.translation,
            ...held, detail };
-}
-
-/** R49 (N202, K231): the one site that mints LISTENER_MALFORMED and LISTENER_DECLARED. Every registration of a listener
- *  asks it before recording the registration, this module's (R45, R46, R47's malformed case) and every later module's.
- *  `held` is what the caller already holds for the slot: a list of `{module}`, or, for a slot that takes one
- *  registration whoever makes it, that one registration or null. Answers the refusal, with `extra` (the caller's own
- *  fields) beside its own and never replacing them, else null. Writes nothing and never throws. */
-export function listenerRefusal(held, module, fn, extra) {
-  const refuse = (code, detail, fields) => {
-    const row = Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code) ? REGISTRATION_CHECKS[code] : null;
-    return { ...(isObj(extra) ? extra : {}), ok: false, reason: code, code, detail, ...fields,
-             ...(row ? { check: row.check, translation: row.translation } : {}) };
-  };
-  try {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return refuse("LISTENER_MALFORMED", "a listener names the module that registers it and its function", {});
-    if (Array.isArray(held)) {
-      if (held.some((h) => isObj(h) && h.module === module))
-        return refuse("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
-      return null;
-    }
-    if (isObj(held)) {
-      const holder = typeof held.module === "string" ? held.module : null;
-      return refuse("LISTENER_DECLARED", `this listener is already registered${holder ? ` by ${holder}` : ""}, and it `
-                    + `takes one registration`, { module: holder });
-    }
-    return null;
-  } catch (e) {
-    return refuse("LISTENER_MALFORMED", `the registration could not be read: ${cut(e && e.message ? e.message : e, 200)}`, {});
-  }
 }
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
@@ -315,7 +270,7 @@ class Promotion {
   /* R47: a later module (ratification) registers, once, the case-document catalogue `fn(fm, ctx) → findings` that R33
      runs in place of the catalogue's `checkCaseDocument`. Any second registration is refused, whoever makes it. */
   registerCaseCatalogue(module, fn) {
-    /* R49 answers the malformed case; a second registration is R47's STEP_DECLARED, not a listener's. */
+    /* R49: membership's listenerRefusal answers the malformed case; a second registration is R47's STEP_DECLARED. */
     const malformed = listenerRefusal(null, module, fn);
     if (malformed) return malformed;
     if (this.#caseCatalogue)
