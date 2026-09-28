@@ -48,6 +48,8 @@ export const BASIS_VERSION_LEGS_MAX = 500;
 export const NARROW_CANDIDATES_MAX = 50;
 /** R37: projects named per inquiry. */
 export const PROJECTS_DRAWING_MAX = 32;
+/** R37: candidate citers examined at most, per read. */
+export const PROJECTS_DRAWING_EXAMINED = 256;
 /** R38: roots and rows of the testimony walk, and its depth guard. */
 export const TESTIMONY_REACH_MAX = 200;
 export const TESTIMONY_REACH_DEPTH = 64;
@@ -489,21 +491,29 @@ export class BasisVersions {
       const inq = String(inquiryId ?? "").trim();
       if (!inq) return out;
       const gate = this.#gate("bx.bundle_id", viewer);
-      const seen = this.#rows(
-        `SELECT DISTINCT rf.bundle_id AS pid, bx.title AS title FROM refs rf
-          JOIN bundles bx ON bx.bundle_id = rf.bundle_id
-          WHERE rf.target_id=? AND rf.kind='cites' AND bx.object_type='project' AND (${gate.sql})
-          ORDER BY rf.bundle_id LIMIT ?`, inq, ...gate.args, PROJECTS_DRAWING_MAX + 1);
-      out.truncated = seen.length > PROJECTS_DRAWING_MAX;
-      for (const r of seen.slice(0, PROJECTS_DRAWING_MAX)) {
-        const text = this.#doc(r.pid);
-        if (text === null) continue;
-        const fm = parseFrontmatter(text).data || {};
-        const refs = Array.isArray(fm.references) ? fm.references : [];
-        const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed"
-                                    && String(x.target ?? "").trim() === inq);
-        if (!draws) continue;
-        out.push({ id: r.pid, title: r.title ?? null, current: this.currentOf(r.pid, inq, viewer) });
+      /* Candidates are read in pages until one past the bound DRAWS on the question (a severed citer takes no slot),
+         and at most PROJECTS_DRAWING_EXAMINED candidates are examined; reaching that cap with more left is truncation. */
+      let after = "", examined = 0;
+      for (;;) {
+        const page = this.#rows(
+          `SELECT DISTINCT rf.bundle_id AS pid, bx.title AS title FROM refs rf
+            JOIN bundles bx ON bx.bundle_id = rf.bundle_id
+            WHERE rf.target_id=? AND rf.kind='cites' AND bx.object_type='project' AND rf.bundle_id > ? AND (${gate.sql})
+            ORDER BY rf.bundle_id LIMIT ?`, inq, after, ...gate.args, PROJECTS_DRAWING_MAX + 1);
+        for (const r of page) {
+          after = r.pid;
+          if (examined++ >= PROJECTS_DRAWING_EXAMINED) { out.truncated = true; return out; }
+          const text = this.#doc(r.pid);
+          if (text === null) continue;
+          const fm = parseFrontmatter(text).data || {};
+          const refs = Array.isArray(fm.references) ? fm.references : [];
+          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed"
+                                      && String(x.target ?? "").trim() === inq);
+          if (!draws) continue;
+          if (out.length === PROJECTS_DRAWING_MAX) { out.truncated = true; return out; }
+          out.push({ id: r.pid, title: r.title ?? null, current: this.currentOf(r.pid, inq, viewer) });
+        }
+        if (page.length <= PROJECTS_DRAWING_MAX) break;
       }
     } catch { /* never throws: what was read so far stands */ }
     return out;
