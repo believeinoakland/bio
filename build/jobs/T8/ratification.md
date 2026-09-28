@@ -159,3 +159,63 @@ What ratification tests now:
 
 Also found in publication, red on `tranche/T8` without ratification:
 - `test/publish.test.mjs` §9 ("an EXISTING store migrates: every ratified row survives as edition 1") fails with `NOT NULL constraint failed: published_bundles.edition` when migrating an old-shape store.
+
+## J6 · COMPLETE
+
+**Completion record (RATIFICATION #1 and #2).** The branch is `job/T8/ratification`, merged with `tranche/T8` after B4 (publication).
+
+**Entries applied (layer 8, the ratification bullet):**
+- **Extracted per the map and the requirements** (K3, K6, K31, K57, K61, K83 (3), K93 (3), K94, K102):
+  - `src/ratification/index.mjs` is the store half: R1, R2's `casegate` (K233), R3, R5 and R7, plus the registrations.
+  - `src/ratification/ops.mjs` is the Worker half: R2, R4 and R6.
+  - `src/ratification/checks.mjs` holds R8, R9, R14 and the rows.
+  - Legacy code was changed only by removal and rewiring (ownership check: 0 failures).
+- **Reconciled with publication as built (B4):**
+  - `commitCaseEdition` now gets `completeness` and `bar` as objects and answers `state`.
+  - The group is read by publication; this module no longer reads `textAtSha`.
+  - The case-document formats come from publication (R20).
+  - Nine `store.mjs` delegates to publication are removed; only the moved ceremonies called them.
+- **R16:** tested through publication R35. Its end-to-end arm is a `test.todo`: publication's `publishEdges` drops a reference to unpublished evidence (J5).
+- **N67 and N69 (its share):**
+  - This module registers promotion's case-document catalogue, and C-41 moved here.
+  - R9 registers `checkPublishedExtension` as a promotion step and an audit check. It also runs at `op=ratify`'s gate.
+  - The C-2.8 call at `bio-checks.mjs` 2535 is removed.
+- **N69 (legacy-checks' share):** the suite asserts that legacy-checks' copies agree with this module's: `isCaseMemberBytes`, `caseEditionClaimed`, and `checkCaseDocument` with its vocabularies.
+- **`op=caseratify`'s gate** runs on the promotion instance (`casegate`, K233).
+
+**Deferred:** R16's end-to-end arm (and R5's "`name` otherwise" edge arm), until publication records such an edge (J5).
+
+**Found in other modules:**
+- **publication:**
+  - `publishEdges` drops a reference to unpublished evidence instead of recording it `name` (its R22), so R35 has nothing to turn. This needs Bob's ruling on publishing an unpublished id (J5).
+  - `test/publish.test.mjs` §9 fails its old-store migration on `tranche/T8` too.
+- **legacy-tests re-anchors** (source-text or row imports that moved; none is a behaviour change):
+  - `casesign` 76/1: CASE_UNSIGNED is named in `store.mjs`.
+  - `caseratify-conclusion`: imports `CASE_CONCLUSION_CHECKS` from `bio-checks.mjs`.
+  - `ratify-authority` 29/3: `RATIFY_SCOPE_CHECKS` from `bio-checks.mjs`, and the region `src/index.mjs fetch > is-ratify-project-bundle`.
+  - `case-opened` 13/18: `store.mjs` regions `publish`, `publishedCase` and `#caseEditionState`, the last two publication's.
+  - `publishedcase`: `PUBLISHED_READ_CHECKS` from `bio-checks.mjs`, publication's.
+  - `d470-catalog-census` 11/2: the census pin for the moved rows, and A5's 1.36.0 against 1.37.0.
+- **Stale generated bundles** (mechanics §14): `bio-plane/dist` (plane), agent-worker (it reads `bio-checks.mjs`), newgroup `release.mjs`.
+- **legacy-checks:** `CASE_MEMBER_REFUSED` (R9's step refusal) has no catalogue row. Next plan.
+- **connections:** `gateFacts`' `dangling` list reads `refs` in this module's SQL, and connections states no read contract for it.
+- **basis-versions:** `d484-refusal-translation` 29/1 fails on NO_BASIS's `where`. It is not ratification's.
+
+**Tests and checks run on the merged branch:**
+- `node --test bio-plane/test/m/ratification/`: pass 65, fail 0, todo 1.
+- `node --test bio-plane/test/m/publication/`: pass 41, fail 0.
+- `node --test bio-plane/test/m/promotion/`: pass 64, fail 0.
+- Legacy suites that drive this module's behaviour, all 0 fail:
+  - ratify 43 pass
+  - case-authority 26 pass
+  - case-project-conclusion 25 pass
+  - case-edition-conclusion 36 pass
+  - reuse-ratify 36 pass
+  - d278-codeless-refusals 19 pass
+- `format`: 69 modules, 64 requirements files; 0 failures.
+- `architecture` ratification: 11 product files, 44 relative imports; 0 failures.
+- `coverage` ratification: 16 of 16 live requirement ids named by a test; 0 failures.
+- `ownership` ratification tranche/T8: 0 failures. legacy-store +8/−1212, legacy-checks +0/−258, legacy-index +3/−975.
+
+Size (session_018gC7F7HKgtN9WEz93FAf9j): see its archive; it restarted on context (J3).
+Size (session_015JFVQbsYTrseJ3goPTfSAj): test runs 38, module lines 3031
