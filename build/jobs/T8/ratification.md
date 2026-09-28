@@ -138,3 +138,24 @@ RATIFICATION #2 has restarted from J3 and done everything that does not need pub
 - Stale generated bundles: the plane, agent-worker, and newgroup `release.mjs`.
 - `CASE_MEMBER_REFUSED` has no catalogue row (legacy-checks, next plan).
 - `gateFacts`' `dangling` list reads connections' `refs`, which states no read contract.
+
+## J5 · REPORT
+
+**Publication: a reference to evidence that is not yet published is dropped, not recorded as `name`, so ratification R16 cannot hold end to end.**
+
+- `publication.publishEdges` (index.mjs 2268) gets `publishedGraphEdges`' `references` as `serve`-class edges.
+  - When the target is not yet published, it drops the edge (`dropped++`) and writes no row.
+- R35 (`#promoteNamedEdges`) later turns a `name` edge into `serve` when its target is published. But no `name` row exists for such a reference.
+  - So a finding ratified before its evidence never gains the edge, and the evidence's publication links nothing.
+- Against the requirements:
+  - publication R22: edges are "`serve` only to a published target, `name` otherwise".
+  - ratification R5 says the same, and R16 depends on it ("a case's evidence published after its finding is linked, not only named").
+  - The drop is REC-22's older rule ("dropped for pointing at unpublished material").
+- **Needs your ruling (policy):** a `name` edge to unpublished material publishes that material's id in the published graph. Is that intended, or should R22/R5/R16 read differently?
+
+What ratification tests now:
+- R16's mechanism, through the real publication: a `name` edge from a published finding turns `serve` when its target is published, a division edge never turns, and nothing else changes.
+- The end-to-end arm is a `test.todo` naming this cause.
+
+Also found in publication, red on `tranche/T8` without ratification:
+- `test/publish.test.mjs` §9 ("an EXISTING store migrates: every ratified row survives as edition 1") fails with `NOT NULL constraint failed: published_bundles.edition` when migrating an old-shape store.
