@@ -32,7 +32,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -40,7 +40,10 @@ import { join } from "node:path";
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.REC169_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { AI_RUN_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+/* LEGACY-TESTS #4 (T7): C-22.12–.14 (AI_RUN_NOT_PRINCIPAL, AI_RUN_CONSUME_INVALID, AI_RUN_BOUND_PLANE_COUNTED) left the
+   catalogue for ai-runs (R35, AI-RUNS #2 REPORT J6.1); read from the module that now holds them, through the same
+   SRC_DIR the control arms. */
+const { AI_RUNS_CHECKS: AI_RUN_CHECKS } = await import(join(SRC_DIR, "ai-runs", "index.mjs"));
 const AIRUN = await import(join(SRC_DIR, "airun.mjs"));
 
 let pass = 0, fail = 0;
@@ -302,9 +305,20 @@ console.log("\n--- ARM S · THE OPEN'S SEED is the same writer, and it is held t
 
 console.log("\n--- ARM C · THE PLANE-COUNTED SET IS THE STORE'S OWN, read off its source ---");
 {
-  const store = readFileSync(join(SRC_DIR, "store.mjs"), "latin1");
-  const written = [...store.matchAll(/INSERT INTO ai_run_bounds \([^)]*\) VALUES \(\?, '([a-z_]+)'/g)].map((m) => m[1]);
-  t("ARM C1 (REACH): the census finds the store's literal-named bound writers", written.length >= 2, true);
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the store no longer writes a bound by a literal
+     name. The run's mechanism moved to `src/ai-runs/index.mjs`, whose one plane-side writer is R29's `consumeBound`;
+     the `surfaces` spend is its surfacing step's `this.consumeBound(run, "surfaces", 1)` and the `mints` spend is
+     run-productions' `this.aiRuns.consumeBound(runId, "mints", minted)`. So the census walks every source under
+     `src/` (the control's copy included) for both spellings of a literal-named write: the old SQL literal, which
+     nothing carries now, and a `consumeBound(<run>, "<bound>"` call. */
+  const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(join(d, e.name)) : e.name.endsWith(".mjs") ? [join(d, e.name)] : []);
+  const written = walk(SRC_DIR).flatMap((f) => {
+    const src = readFileSync(f, "latin1");
+    return [...src.matchAll(/INSERT INTO ai_run_bounds \([^)]*\) VALUES \(\?, '([a-z_]+)'/g),
+            ...src.matchAll(/consumeBound\([^,()]+,\s*"([a-z_]+)"/g)].map((m) => m[1]);
+  });
+  t("ARM C1 (REACH): the census finds the plane's literal-named bound writers", written.length >= 2, true);
   t("ARM C2: the bounds the store writes BY NAME are exactly the set the door refuses (a new plane-counted bound "
     + "fails here until the door refuses it)", [...new Set(written)].sort(),
     [...(AIRUN.PLANE_COUNTED_BOUNDS ?? [])].sort());

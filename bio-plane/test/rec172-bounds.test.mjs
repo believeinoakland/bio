@@ -43,7 +43,9 @@ import { join } from "node:path";
 const SRC_DIR = process.env.REC172_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const VF4 = process.env.REC172_VF4 || fileURLToPath(new URL("./vf4-live-scratch.mjs", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { AI_RUN_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+/* LEGACY-TESTS #4 (T7): C-22.12–.15 (AI_RUN_NOT_PRINCIPAL, AI_RUN_CONSUME_INVALID, AI_RUN_BOUND_PLANE_COUNTED, AI_RUN_BOUND_UNKNOWN) left the catalogue for ai-runs (R35, AI-RUNS #2 REPORT J6.1);
+   read from the module that now holds them, through the same SRC_DIR the control arms. */
+const { AI_RUNS_CHECKS: AI_RUN_CHECKS } = await import(join(SRC_DIR, "ai-runs", "index.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

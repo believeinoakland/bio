@@ -41,7 +41,10 @@ import { join } from "node:path";
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.REC165_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { AI_RUN_CHECKS, SUGGEST_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+const { SUGGEST_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+/* LEGACY-TESTS #4 (T7): C-22.12 (AI_RUN_NOT_PRINCIPAL) left the catalogue for ai-runs (R35, AI-RUNS #2 REPORT J6.1);
+   read from the module that now holds it, through the same SRC_DIR the control arms. */
+const { AI_RUNS_CHECKS: AI_RUN_CHECKS } = await import(join(SRC_DIR, "ai-runs", "index.mjs"));
 const { EXTRACT_RUN_MODE } = await import(join(SRC_DIR, "extractrun.mjs"));
 
 let pass = 0, fail = 0;
@@ -119,7 +122,8 @@ const infoMd = (id) => ["---",
   "---", "", "## Summary", "", "A captured document.", "",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 /* A project's id is MINTED by the plane (REC-141): the creation names no bundleId and its bytes no id. */
-const projectMd = () => ["---", "object_type: project",
+/* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
+const projectMd = () => ["---", "object_type: project", 'objective: "Find out whether it did."',
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "references: []",
   "---", "", "## Summary", "", "A case.", "", "## Session Log", ""].join("\n");
@@ -314,10 +318,14 @@ console.log("\n--- ARM U · A CALLER WHO CANNOT SEE THE RUN'S CONTEXT IS ANSWERE
     norm(sU, PRUN.run), norm(sN, NEVER));
   const eU = await propose(PIA, PXRUN.run, "", { refs: [{ ref: "contract:C-1", refKind: "contract", refKey: "C-1" }] });
   const eN = await propose(PIA, NEVER, "", { refs: [{ ref: "contract:C-1", refKind: "contract", refKey: "C-1" }] });
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests; LEGACY-CHECKS #2 REPORT 10): the absent-run answer now carries its code,
+     NO_SUCH_RUN (C-104.3), where it carried none — run-productions R13's intended effect, a code a surface can key on.
+     The arm's claim is unchanged: the hidden run's answer is the never-minted run's, byte for byte, and the code it
+     carries is the ABSENT one, never the positional AI_RUN_NOT_PRINCIPAL that would tell pia the run exists. */
   t("ARM U2 (EXTRACTPROPOSE): and her proposal under alice's extract run over the project is BYTE-IDENTICAL to "
-    + "one under a never-minted run — NO_SUCH_RUN, no code",
+    + "one under a never-minted run — NO_SUCH_RUN, the absent run's own code",
     [norm(eU, PXRUN.run), parse(eU)?.reason, parse(eU)?.code ?? null],
-    [norm(eN, NEVER), "NO_SUCH_RUN", null]);
+    [norm(eN, NEVER), "NO_SUCH_RUN", "NO_SUCH_RUN"]);
 }
 
 console.log("\n--- ARM F · THE FORGED PRINCIPAL: a caller who SENDS alice's id is still refused, on both ops ---");

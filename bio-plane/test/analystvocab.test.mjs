@@ -172,6 +172,16 @@ function section(name, fn) {
 }
 
 const storeSrc = readFileSync(STORE, "utf8");
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; STRENGTH #1 (1bee8b81d4) and INQUIRY #1): the derivation this suite lifts
+   left `store.mjs`. `Store.#axisResult`, `#groundResult`, `#namedMember`, `#weakestOf`, `#GRADE_RANK` and
+   `QUEUE_ANCESTOR_DEPTH` (as the walk's bound) are strength's pure `src/strength/arithmetic.mjs` — plain functions
+   `axisResult`, `groundResult`, `namedMember`, `weakestOf` and the constants `GRADE_RANK`, `DEPTH_BOUND`;
+   `#strengthWalk(bundleId, depth, bound, …)` is strength's `#walk(bundleId, depth, bound, …)` in
+   `src/strength/index.mjs`; and `Store.#capturedAt` is now a one-line delegate to inquiry's `legCapped(stated,
+   earned, targetId)` (`src/inquiry/index.mjs`). The spans are lifted from those files, under the same keys. */
+const arithSrc = readFileSync(ROOT + "src/strength/arithmetic.mjs", "utf8");
+const strengthSrc = readFileSync(ROOT + "src/strength/index.mjs", "utf8");
+const inquirySrc = readFileSync(ROOT + "src/inquiry/index.mjs", "utf8");
 const appSrc = readFileSync(APP, "utf8");
 
 /* ==================================================================== *
@@ -233,10 +243,10 @@ function liftField(src, anchor, end = ";") {
 }
 
 const SPANS = {
-  axisResult:   liftMethod(storeSrc, "static #axisResult(axis, members, exhausted)"),
-  groundResult: liftMethod(storeSrc, "static #groundResult(ground, members, exhausted)"),
-  namedMember:  liftMethod(storeSrc, "static #namedMember(m)"),
-  weakestOf:    liftMethod(storeSrc, "static #weakestOf(members)"),
+  axisResult:   liftMethod(arithSrc, "export function axisResult(axis, members, exhausted"),
+  groundResult: liftMethod(arithSrc, "function groundResult(ground, members, exhausted)"),
+  namedMember:  liftMethod(arithSrc, "export function namedMember(m)"),
+  weakestOf:    liftMethod(arithSrc, "function weakestOf(members)"),
   /* CORRECTED 2026-09-15 by REC-105, NEVER EXEMPTED, and the old anchor was
      WRONG rather than merely stale: it spelled `#strengthWalk`'s signature
      PARAMETER FOR PARAMETER, so adding a fifth parameter made `liftMethod`
@@ -248,7 +258,8 @@ const SPANS = {
      still unique in the file (the method name plus its first parameter), so a
      later parameter cannot hide the method again; ARM S's runaway-span check
      below is what keeps a shorter anchor honest. */
-  strengthWalk: liftMethod(storeSrc, "#strengthWalk(bundleId, depth, bound,"),
+  /* T7: strength's `#walk`, anchored at its definition's indent so `this.#walk(` call sites cannot match. */
+  strengthWalk: liftMethod(strengthSrc, "  #walk(bundleId, depth, bound,"),
   /* ADDED 2026-09-15 by REC-105, AND IT IS NOT AN EXTENSION FOR ITS OWN SAKE.
      That item composes a member-facing `why` for a capture leg the record can
      support no more than a weaker letter for, and it composes it HERE rather
@@ -256,9 +267,9 @@ const SPANS = {
      all five of D-269's channels would sit outside the one instrument that
      classifies them. A sentence the sweep cannot see is the defect this file
      exists to catch, arriving through the sweep's own blind spot. */
-  capturedAt:   liftMethod(storeSrc, "static #capturedAt(stated, earned, targetId)"),
-  gradeRank:    liftField(storeSrc, "static #GRADE_RANK = Object.fromEntries("),
-  depthBound:   liftField(storeSrc, "static QUEUE_ANCESTOR_DEPTH ="),
+  capturedAt:   liftMethod(inquirySrc, "export function legCapped(stated, earned, targetId)"),
+  gradeRank:    liftField(arithSrc, "export const GRADE_RANK = Object.freeze(Object.fromEntries("),
+  depthBound:   liftField(arithSrc, "export const DEPTH_BOUND ="),
 };
 
 /* ---- ARM S · THE INSTRUMENT IS THE MOST LIKELY THING TO BE WRONG ---- */
@@ -287,8 +298,10 @@ section("ARM S", () => {
      scanner's comment). A span that swallowed a NEIGHBOURING anchor is wrong
      however plausible its bytes look, and this is the cheap check that sees it
      where a length floor cannot. */
-  const ANCHORS = ["static #axisResult(", "static #groundResult(", "static #namedMember(",
-                   "static #weakestOf(", "#strengthWalk(bundleId", "static #capturedAt("];
+  /* T7: the moved functions' own heads, as each span begins (an exported head's `export ` included, so a span's own
+     head is at 0 and never reads as swallowed). */
+  const ANCHORS = ["export function axisResult(", "function groundResult(", "export function namedMember(",
+                   "function weakestOf(", "  #walk(bundleId", "export function legCapped("];
   for (const [k, span] of Object.entries(SPANS)) {
     if (typeof span !== "string") continue;
     const swallowed = ANCHORS.filter((a) => span.indexOf(a) > 0);
@@ -308,19 +321,19 @@ section("ARM S", () => {
 /* Rewrite the lifted spans into a runnable module. `Store.#x` -> `S_x`, and
    the static declarations into plain functions/consts. Nothing is re-typed:
    every byte of every BODY is the product's. */
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests): the lifted spans are plain module-level declarations now (strength's
+   arithmetic), so the rewrite drops each head's `export ` and nothing else; the bodies are the product's bytes. */
 function runnable() {
-  const rw = (s) => String(s)
-    .replace(/Store\.#/g, "S_")
-    .replace(/Store\./g, "S_");
+  const rw = (s) => String(s).replace(/^export /, "");
   const src =
     `const BASIS_GRADES = ${JSON.stringify(["A", "B", "C", "D"])};\n` +
-    rw(SPANS.gradeRank).replace(/^static #GRADE_RANK =/, "const S_GRADE_RANK =") + "\n" +
-    rw(SPANS.depthBound).replace(/^static QUEUE_ANCESTOR_DEPTH =/, "const S_QUEUE_ANCESTOR_DEPTH =") + "\n" +
-    rw(SPANS.weakestOf).replace(/^static #weakestOf/, "function S_weakestOf") + "\n" +
-    rw(SPANS.namedMember).replace(/^static #namedMember/, "function S_namedMember") + "\n" +
-    rw(SPANS.groundResult).replace(/^static #groundResult/, "function S_groundResult") + "\n" +
-    rw(SPANS.axisResult).replace(/^static #axisResult/, "function S_axisResult") + "\n" +
-    `export { S_axisResult as axisResult };\n`;
+    rw(SPANS.gradeRank) + "\n" +
+    rw(SPANS.depthBound) + "\n" +
+    rw(SPANS.weakestOf) + "\n" +
+    rw(SPANS.namedMember) + "\n" +
+    rw(SPANS.groundResult) + "\n" +
+    rw(SPANS.axisResult) + "\n" +
+    `export { axisResult };\n`;
   return src;
 }
 
@@ -341,7 +354,7 @@ try {
   fail++; fails.push("§1 the lifted derivation would not load");
   console.log(`  FAIL  §1 the lifted derivation would not load: ${e && e.stack ? e.stack : e}`);
 }
-ok("§1: the lifted `#axisResult` is a callable function built from store.mjs's own bytes",
+ok("§1: the lifted `axisResult` is a callable function built from the product's own bytes (strength's arithmetic, T7)",
    typeof axisResult === "function");
 ok("§1: and the grade ladder came from the catalog, not from this file",
    Array.isArray(BASIS_GRADES) && BASIS_GRADES.length >= 4);
@@ -464,6 +477,13 @@ const ADJUDICATED = new Map([
      than its rule that this item's control ARM 6 exists to refuse, and it
      would have broken a consumer for nothing. */
   ["within", "ordinary English, and D-269's correction moved only the nouns DEC-32 bans"],
+  /* ADJUDICATED 2026-09-28 AT T7 (legacy-tests), and named as such for `strongest`'s reason. `apply` is ordinary
+     English, in the testimony leg's `why` ("… so it does not apply here", MK-2), a sentence UNCHANGED since it landed
+     and clean on `tranche/T6`. It became machine-side only because STRENGTH #1 moved `#strengthWalk` to strength's
+     `#walk` and shortened its comment to "capture does not apply to a member's own words", which the lexicon now reads
+     (on T6 the longer comment sat inside a span the string-strip removed). A comment rewrite is not a new word shown to
+     a member, and `apply` names no analyst construct (it is no ground, set, branch or connective). */
+  ["apply", "ordinary English in the testimony leg's unchanged why (MK-2); machine-side only by STRENGTH #1's comment rewrite"],
   ["strength", "the surface's own heading"],
   ["conclusion", "the member's own noun for what they wrote"],
   ["record", "the product's name for itself"],

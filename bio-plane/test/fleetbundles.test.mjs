@@ -162,9 +162,60 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      input class this manifest exists to hash (pdf-worker's three plane inputs,
      one section down). The old assertion going red on the first post-FL-6
      build is this guard working, not an obstacle. */
-  t("agent-worker's five inputs are all recorded — four modules and the plane's own denylist, the member's first cross-tree input",
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests; BOB, the legacy-tests job's CHANGE; AGENT-WORKER #1 REPORT 4 said ten, BOB's
+     figure supersedes it): the member's roster is now 132 inputs, pinned to exactly what the committed manifest
+     (`agent-worker/dist/agent-worker.bundle.json`, regenerated at layer 7's close) records. The five that were pinned are
+     all still here; AGENT-WORKER #1 added `src/model.mjs` and, for R48's pack check, `skillpack.mjs`, `skilldoctrine.mjs`,
+     `airun.mjs` and the catalogue, whose own imports carry the plane's extracted modules, docprofile, jurisdictions and
+     pdf-worker's decoders into the member's build. N157 narrows it later; the pin moves with it then, as it did at FL-6. */
+  t("agent-worker's 132 inputs are all recorded — its five own modules, the plane's denylist, and R48's pack check with everything it imports",
     (agent?.inputs || []).map((i) => i.path).sort(),
-    ["../bio-plane/src/tokens.mjs", "src/cascade.mjs", "src/harness.mjs", "src/index.mjs", "src/subsession.mjs"]);
+    [
+     "../bio-plane/checks/bio-checks.mjs", "../bio-plane/src/ai-runs/checks.mjs", "../bio-plane/src/ai-runs/skill-version.mjs",
+     "../bio-plane/src/airun.mjs", "../bio-plane/src/basis-versions/grammar.mjs", "../bio-plane/src/basis-versions/index.mjs",
+     "../bio-plane/src/basis-versions/schema.mjs", "../bio-plane/src/basis-versions/text.mjs", "../bio-plane/src/browserrender.mjs",
+     "../bio-plane/src/calibration.mjs", "../bio-plane/src/calibration/checks.mjs", "../bio-plane/src/calibration/index.mjs",
+     "../bio-plane/src/calibration/schema.mjs", "../bio-plane/src/capture/acquire.mjs", "../bio-plane/src/capture/doorbell.mjs",
+     "../bio-plane/src/capture/index.mjs", "../bio-plane/src/capture/schema.mjs", "../bio-plane/src/cdx.mjs",
+     "../bio-plane/src/citation/checks.mjs", "../bio-plane/src/citation/index.mjs", "../bio-plane/src/citation/splice.mjs",
+     "../bio-plane/src/connections/index.mjs", "../bio-plane/src/connections/pair.mjs", "../bio-plane/src/connections/schema.mjs",
+     "../bio-plane/src/connections/themes.mjs", "../bio-plane/src/content/extent.mjs", "../bio-plane/src/content/index.mjs",
+     "../bio-plane/src/content/notice.mjs", "../bio-plane/src/content/schema.mjs", "../bio-plane/src/cpu.mjs",
+     "../bio-plane/src/csv.mjs", "../bio-plane/src/docx.mjs", "../bio-plane/src/drive.mjs",
+     "../bio-plane/src/entities/checks.mjs", "../bio-plane/src/entities/index.mjs", "../bio-plane/src/entities/schema.mjs",
+     "../bio-plane/src/extraction/checks.mjs", "../bio-plane/src/extraction/drift.mjs", "../bio-plane/src/extraction/filemembership.mjs",
+     "../bio-plane/src/extraction/index.mjs", "../bio-plane/src/extraction/pipeline.mjs", "../bio-plane/src/extraction/schema.mjs",
+     "../bio-plane/src/extractrun.mjs", "../bio-plane/src/formats-xlsx.mjs", "../bio-plane/src/formats.mjs",
+     "../bio-plane/src/gate.mjs", "../bio-plane/src/host-governor/index.mjs", "../bio-plane/src/host-governor/schema.mjs",
+     "../bio-plane/src/idspaces.mjs", "../bio-plane/src/inquiry/grammar.mjs", "../bio-plane/src/inquiry/index.mjs",
+     "../bio-plane/src/inquiry/schema.mjs", "../bio-plane/src/inquiry/text.mjs", "../bio-plane/src/membership/index.mjs",
+     "../bio-plane/src/membership/schema.mjs", "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/index.mjs",
+     "../bio-plane/src/observation-log/schema.mjs", "../bio-plane/src/observation-log/vocabulary.mjs", "../bio-plane/src/odf.mjs",
+     "../bio-plane/src/ooxml.mjs", "../bio-plane/src/pdfstructure.mjs", "../bio-plane/src/pptx.mjs",
+     "../bio-plane/src/promotion/checks.mjs", "../bio-plane/src/promotion/history.mjs", "../bio-plane/src/promotion/index.mjs",
+     "../bio-plane/src/promotion/record-checks.mjs", "../bio-plane/src/promotion/release.mjs", "../bio-plane/src/promotion/text.mjs",
+     "../bio-plane/src/provenance/index.mjs", "../bio-plane/src/provenance/register-checks.mjs", "../bio-plane/src/provenance/schema.mjs",
+     "../bio-plane/src/query.mjs", "../bio-plane/src/readingprov.mjs", "../bio-plane/src/record-core/index.mjs",
+     "../bio-plane/src/record-core/schema.mjs", "../bio-plane/src/render.mjs", "../bio-plane/src/retrieval/checks.mjs",
+     "../bio-plane/src/retrieval/frontier.mjs", "../bio-plane/src/retrieval/index.mjs", "../bio-plane/src/retrieval/levels.mjs",
+     "../bio-plane/src/retrieval/projection.mjs", "../bio-plane/src/retrieval/schema.mjs", "../bio-plane/src/run-productions/checks.mjs",
+     "../bio-plane/src/run-productions/index.mjs", "../bio-plane/src/run-productions/interim.mjs", "../bio-plane/src/run-productions/schema.mjs",
+     "../bio-plane/src/skilldoctrine.mjs", "../bio-plane/src/skillpack.mjs", "../bio-plane/src/sshsig.mjs",
+     "../bio-plane/src/strength/arithmetic.mjs", "../bio-plane/src/strength/checks.mjs", "../bio-plane/src/strength/index.mjs",
+     "../bio-plane/src/strength/schema.mjs", "../bio-plane/src/subresources.mjs", "../bio-plane/src/textchain.mjs",
+     "../bio-plane/src/tokens.mjs", "../bio-plane/src/tsa.mjs", "../docprofile/doctypes/generic.mjs",
+     "../docprofile/doctypes/index.mjs", "../docprofile/doctypes/meeting-agenda.mjs", "../docprofile/doctypes/meeting-calendar.mjs",
+     "../docprofile/doctypes/meeting-minutes.mjs", "../docprofile/doctypes/registry.mjs", "../docprofile/doctypes/regulation.mjs",
+     "../docprofile/doctypes/staff-directory.mjs", "../docprofile/doctypes/staff-report.mjs", "../docprofile/events.mjs",
+     "../docprofile/handlers/aspnet-webforms.mjs", "../docprofile/handlers/client-rendered.mjs", "../docprofile/handlers/conservative.mjs",
+     "../docprofile/handlers/wordpress.mjs", "../docprofile/index.mjs", "../docprofile/pipeline.mjs",
+     "../docprofile/readtext.mjs", "../docprofile/recogniser.mjs", "../docprofile/registry.mjs",
+     "../jurisdictions/index.mjs", "../jurisdictions/profiles/oakland-alameda.mjs", "../jurisdictions/profiles/test-port-ellery.mjs",
+     "../pdf-worker/src/ccittdecode.mjs", "../pdf-worker/src/dctdecode.mjs", "../pdf-worker/src/imagecrop.mjs",
+     "../pdf-worker/src/jbig2decode.mjs", "../pdf-worker/src/jpxdecode.mjs", "../pdf-worker/src/mq.mjs",
+     "../pdf-worker/src/pagepixels.mjs", "src/cascade.mjs", "src/harness.mjs",
+     "src/index.mjs", "src/model.mjs", "src/subsession.mjs",
+    ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);
   t("every recorded input carries a hash — a null sha256 would be an input nothing checks",
