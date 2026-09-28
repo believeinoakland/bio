@@ -222,7 +222,7 @@ export const SOURCING = {
   absence:        "imported",   /* observation-log OBSERVATION_STATES */
   fences:         "imported",   /* checks/bio-checks.mjs, the MACHINE_CANNOT_ rows */
   bounds:         "imported",   /* airun.mjs RUN_BOUNDS + RUN_ENDINGS */
-  refusals:       "imported",   /* checks/bio-checks.mjs AI_RUN_CHECKS */
+  refusals:       "imported",   /* airun.mjs AI_RUN_CHECKS (ai-runs) */
   vocabularies:   "driven",     /* op=affordances .vocabularies */
   acts:           "driven",     /* op=affordances .catalog */
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
@@ -500,73 +500,12 @@ export function packVersion(pack) {
 
 /* ------------------------------------------------------------------ refusal
 
-   ONE code, C-22.7, and it is THIS MODULE'S row (R25, K81): `SKILL_CHECKS`,
-   named by key in `skilldoctrine.mjs` and selected from the catalogue, never
-   copied (see there); the C-number, the wire code
-   and the canned translation stay one row (DEC-49). The helper is named
-   `refusal` and the code is a STRING LITERAL at its site: a code in a variable
-   is invisible to the DEC-49 guard, and one shipped `translation: undefined` to
-   a member exactly that way. */
-
-function refusal(key, detail) {
-  const row = SKILL_CHECKS[key];
-  return { ok: false, code: key, check: row.check, translation: row.translation, detail };
-}
-
-/** C-22.7 — A RUN MAY NOT OPEN WITHOUT NAMING THE SKILL VERSION IT RUNS UNDER.
- *
- *  §11 lists the skill version among THE CONDITIONS THE RUN WAS FORMED UNDER,
- *  beside the bias manifest and the standard pair, for Bob's stated reason:
- *  *"everything can change at the drop of a hat"*, so a version is only
- *  interpretable against them. SK-1's row makes the recording a REQUIREMENT
- *  rather than an analogy — and a condition that may be omitted is not recorded,
- *  it is recorded by the runs that felt like it.
- *
- *  SO IT IS REFUSED AT THE OPEN, where the principals already are: `aiRunOpen`
- *  refuses a run that cannot say which plane credential acts and which level of
- *  the Claude cascade pays, and this is the third condition of the same kind.
- *  Refusing later would mean a run had already searched under instructions
- *  nobody can name.
- *
- *  TWO WAYS TO FAIL AND ONE CODE, because they are one fact — the run object
- *  cannot say what it ran under. Absent is the ordinary case. **Present but
- *  naming no pack is the worse one**: `3` reads as an answer, and the moment a
- *  second pack exists nobody can tell which `3` it was. That is the blank-
- *  principal shape PL-4 measured one field over (a run that names nobody while
- *  looking like it names somebody), applied to a condition rather than an
- *  identity.
- *
- *  DELIBERATELY NOT CHECKED HERE: whether the version is one this instance
- *  CURRENTLY renders. A rerun under vN+1 must be able to record vN+1 while the
- *  record still holds runs under vN, and pinning the open to the current pack
- *  would make the two indistinguishable by making the older one impossible —
- *  which is the property SK-1 is judged on, removed by its own guard. Any pack's
- *  well-formed version is accepted, including a pack this repository never
- *  wrote. */
-export function checkSkillVersion(version) {
-  const v = typeof version === "string" ? version.trim() : "";
-  if (!v)
-    return refusal("AI_RUN_SKILL_VERSION_UNNAMED",
-      "this run named no skill version. §11 records the conditions a run was formed under — the "
-      + "manifest in force, the standard pair, and the skill version it ran under — because a "
-      + "version is only interpretable against them");
-  if (!/^[^\s@]+@[^\s@]+$/.test(v))
-    return refusal("AI_RUN_SKILL_VERSION_UNNAMED",
-      `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition `
-      + "cannot be read once a second pack exists — it looks like an answer and identifies nothing");
-  return null;
-}
-
-/** The pack id and edition a recorded version names, or null if it names none.
- *  Exported so a reader RESOLVES a version it received rather than parsing one
- *  it computed — DEC-8's direction, one field over. */
-export function parseSkillVersion(version) {
-  const v = typeof version === "string" ? version.trim() : "";
-  if (checkSkillVersion(v)) return null;
-  const at = v.indexOf("@");
-  const rest = v.slice(at + 1);
-  const plus = rest.indexOf("+");
-  return { pack: v.slice(0, at),
-           edition: plus < 0 ? rest : rest.slice(0, plus),
-           digest: plus < 0 ? null : rest.slice(plus + 1) };
-}
+   ONE code, C-22.7, and its predicate is `ai-runs`' (its R8; K82 (4), K194):
+   `checkSkillVersion` is held there, where the run's open calls it, and
+   re-exported here with `parseSkillVersion` (R12, R13; N156), so no copy of
+   either is held in this module. The row is named here by key
+   (`SKILL_CHECKS`, from `skilldoctrine.mjs`) and never copied (R25). What the
+   predicate refuses and why is stated at its site: a blank version, or one
+   that is not `<pack>@<edition>`, and never a well-formed version this module
+   did not render, so a rerun under a newer pack can record it. */
+export { checkSkillVersion, parseSkillVersion } from "./airun.mjs";

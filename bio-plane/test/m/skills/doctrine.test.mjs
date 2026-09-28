@@ -6,6 +6,8 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "../..
 import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
 import * as strength from "../../../src/strength/index.mjs";
 import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
+import * as deployment from "../../../src/ai-runs/deployment.mjs";
+import { AI_RUN_OPEN_CHECKS } from "../../../src/ai-runs/checks.mjs";
 import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
 
@@ -115,11 +117,17 @@ test("R17 five prohibitions, each text and because verbatim in its source, named
   assert.equal(layer.permitted_auto_composition, PERMITTED_AUTO_COMPOSITION);
 });
 
-test("R18 the deployment sequence is check, investigate, extract, check first, unverified, and holds no flag, predicate or decision: the gate is agent-worker's", () => {
+test("R18 the deployment sequence is ai-runs' own, re-exported unchanged: check, investigate, extract, check first, unverified, enforced by the plane's C-109.1, holding no flag, predicate or decision; the gate is agent-worker's", () => {
+  for (const k of ["DEPLOYMENT_SEQUENCE", "GATE_ADDRESS", "SEQUENCING_SOURCE", "SEQUENCING_ALSO_NAMED_IN"])
+    assert.equal(doctrine[k], deployment[k], `${k} is ai-runs' own export, not a copy`);
   assert.deepEqual(DEPLOYMENT_SEQUENCE.order, ["check", "investigate", "extract"]);
   assert.equal(DEPLOYMENT_SEQUENCE.first_deployed_mode, DEPLOYMENT_SEQUENCE.order[0]);
   assert.equal(DEPLOYMENT_SEQUENCE.verification_recorded, null);
-  assert.deepEqual(DEPLOYMENT_SEQUENCE.enforced_by, []);
+  assert.deepEqual(DEPLOYMENT_SEQUENCE.enforced_by, [AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check]);
+  assert.deepEqual(DEPLOYMENT_SEQUENCE.enforced_by, ["C-109.1"]);
+  const layer = judgementLayers().deployment_sequence.body;
+  assert.equal(layer.sequence, DEPLOYMENT_SEQUENCE, "the rendered layer carries ai-runs' object");
+  assert.equal(layer.gate, GATE_ADDRESS);
   const walk = (v, path) => {
     assert.notEqual(typeof v, "function", `${path} is a function`);
     assert.notEqual(typeof v, "boolean", `${path} is a flag`);
