@@ -14,3 +14,9 @@ Q2. Your reading is adopted: build `aspiration` and `goal` as your step enforces
 Q3. `retrieval` is in your uses; use `selectionCreate` directly (no injected dependency), one enumerated selection per aged question, owner `plane:intent`, disposed `deferred` under the plane actor. Your Uses list names it.
 Q4. Adopted and folded into R4: a flat map, `entity_kind` the one key the record evaluates, anything else kept and undetermined with why, never excluded.
 Your decisions without asking all stand (recorded in K198).
+
+## B3 · ANSWER · re J2
+
+J2 answered (K200, @ b58ff0128b). Merge `tranche/T7` again (modules.json and your requirements changed).
+Q5. Your reading is adopted, as wording (the requirement's intent is that the record never claims what it cannot tell; a missing required stage it can tell): an instance missing a required stage is short, naming the stages missing, whatever its grade; one with every required stage placed and an undetermined grade, when the condition requires a grade, is undetermined with why; a condition with no required grade never asks the grade. Folded into R4.
+Q6. `capture-requests` is in your uses; read a request's outcome through `captureRequests` (its read, reached through `captureRequestsOf(ctx)`), no injected dependency. Folded into your Uses.
