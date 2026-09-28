@@ -23,19 +23,14 @@ import { normalizeType } from "../../checks/bio-checks.mjs";
 import { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 import { meaningLevels } from "./levels.mjs";
-import { PROJECTION_COLUMNS, PROJECTION_INDEXED, PROJECTION_RELATION, PROJECTION_SCHEMA, FTS_SCHEMA, SELECTION_SCHEMA,
-         RETRIEVAL_PURGE, SELECTION_ID_CHUNK } from "./schema.mjs";
+import { PROJECTION_COLUMNS, PROJECTION_INDEXED, FTS_SCHEMA, SELECTION_SCHEMA, RETRIEVAL_PURGE,
+         SELECTION_ID_CHUNK } from "./schema.mjs";
 import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "./frontier.mjs";
 
 export { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 export { meaningLevels } from "./levels.mjs";
-export { SELECTION_ID_CHUNK, PROJECTION_RELATION } from "./schema.mjs";
-/* R61: the projection's table, as every statement here names it. */
-const P = PROJECTION_RELATION.table;
-/* R61 (N106): every statement `query-language` compiles for this module reads the projection through the relation this
-   module names (its R25), never as columns of `bundles`. */
-const OVER = Object.freeze({ projection: PROJECTION_RELATION });
+export { SELECTION_ID_CHUNK } from "./schema.mjs";
 /* R33: the names of the tables this module declares to purge. */
 export const RETRIEVAL_TABLES = Object.freeze(RETRIEVAL_PURGE.map((t) => t.name));
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
@@ -134,25 +129,14 @@ export class Retrieval {
 
   /* ---- storage (K4) ---- */
 
-  /** R58, R61: this module's storage at every start, idempotent: the projection's own table and its indexes, with any
-   *  projection held on `bundles` moved into it once; the text index (R33's keyed form, rebuilt in place from an older
-   *  store's table); the selections; and the bounded backfill (R3). */
+  /** R58: this module's storage at every start, idempotent: the projection columns and their indexes, the text index (R33's
+   *  keyed form, rebuilt in place from an older store's table), the selections, and the bounded backfill (R3). */
   migrate() {
-    for (const s of PROJECTION_SCHEMA) this.#sql.exec(s);
     const have = this.#rows(`PRAGMA table_info(bundles)`).map((r) => r.name);
     if (have.length) {
-      /* N106, phase A (the mirror, `#mirror` below): the columns stay on `bundles` until their readers there move. */
       for (const [c, decl] of PROJECTION_COLUMNS) if (!have.includes(c)) this.#sql.exec(`ALTER TABLE bundles ADD COLUMN ${c} ${decl}`);
       for (const c of PROJECTION_INDEXED) this.#sql.exec(`CREATE INDEX IF NOT EXISTS bundles_${c} ON bundles(${c})`);
       this.#sql.exec(`CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles(fts_id)`);
-      /* R58: a projection an older store holds on `bundles` is moved into the table once: every bundle that carries
-         one there and has no row here. Copied, never re-derived, so search keeps working through this start. */
-      const cols = PROJECTION_COLUMNS.map(([c]) => c);
-      this.#sql.exec(
-        `INSERT INTO ${P} (bundle_id, ${cols.join(", ")})
-         SELECT b.bundle_id, ${cols.map((c) => `b.${c}`).join(", ")} FROM bundles b
-          WHERE (b.fm_json IS NOT NULL OR b.fts_id IS NOT NULL)
-            AND NOT EXISTS (SELECT 1 FROM ${P} p WHERE p.bundle_id = b.bundle_id)`);
     }
     const fts = this.#rows(`PRAGMA table_info(bundles_fts)`).map((r) => r.name);
     if (fts.length && !fts.includes("bundle_id")) {
@@ -162,8 +146,8 @@ export class Retrieval {
       this.record.transact(() => {
         this.#sql.exec(FTS_SCHEMA.replace("IF NOT EXISTS bundles_fts", "bundles_fts_keyed"));
         this.#sql.exec(`INSERT INTO bundles_fts_keyed (rowid, ${FTS_COLUMNS.join(", ")}, bundle_id)
-                        SELECT f.rowid, ${FTS_COLUMNS.map((c) => `f.${c}`).join(", ")}, p.bundle_id
-                          FROM bundles_fts f LEFT JOIN ${P} p ON p.fts_id = f.rowid`);
+                        SELECT f.rowid, ${FTS_COLUMNS.map((c) => `f.${c}`).join(", ")}, b.bundle_id
+                          FROM bundles_fts f LEFT JOIN bundles b ON b.fts_id = f.rowid`);
         this.#sql.exec(`DROP TABLE bundles_fts`);
         this.#sql.exec(`ALTER TABLE bundles_fts_keyed RENAME TO bundles_fts`);
       });
@@ -289,35 +273,19 @@ export class Retrieval {
      behind the document. */
   #writeProjection(bundleId, bundleMdText) {
     const p = this.projectionOf(bundleMdText, this.nowMs());
-    this.#sql.exec(
-      `INSERT INTO ${P} (bundle_id, ${PROJECTION_COLS.join(", ")}) VALUES (?, ${PROJECTION_COLS.map(() => "?").join(", ")})
-       ON CONFLICT(bundle_id) DO UPDATE SET ${PROJECTION_COLS.map((c) => `${c}=excluded.${c}`).join(", ")}`,
-      bundleId, ...PROJECTION_COLS.map((c) => p[c]));
-    this.#mirror(bundleId);
+    this.#sql.exec(`UPDATE bundles SET ${PROJECTION_COLS.map((c) => `${c}=?`).join(", ")} WHERE bundle_id=?`,
+      ...PROJECTION_COLS.map((c) => p[c]), bundleId);
     return p;
-  }
-
-  /* N106, phase A: until query-language reads the projection through `PROJECTION_RELATION` (its R25), its compiled
-     statements read these columns as `b.<column>` of `bundles`, and later modules read some of them there too (J1 in
-     this job's record). So `bundles` keeps a MIRROR of the bundle's row here, copied after every write and never read
-     by this module: the table is the one place the projection is stated. Phase B removes the mirror and the columns. */
-  #mirror(bundleId = null) {
-    const cols = PROJECTION_COLUMNS.map(([c]) => c);
-    this.#sql.exec(
-      `UPDATE bundles SET ${cols.map((c) => `${c}=(SELECT p.${c} FROM ${P} p WHERE p.bundle_id=bundles.bundle_id)`).join(", ")}
-        ${bundleId ? "WHERE bundle_id=?" : ""}`, ...(bundleId ? [bundleId] : []));
   }
 
   /* The integer the text index is keyed on. Allocated once per bundle and never reassigned while the bundle exists, so
      a revision replaces its own index row rather than orphaning one. MAX+1 rather than a sequence because it is
      allocated inside promote's transaction, and a Durable Object runs one transaction at a time. */
   #ftsIdFor(bundleId) {
-    const cur = this.#one(`SELECT fts_id FROM ${P} WHERE bundle_id=?`, bundleId);
+    const cur = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
     if (cur && cur.fts_id !== null && cur.fts_id !== undefined) return cur.fts_id;
-    const next = (this.#one(`SELECT COALESCE(MAX(fts_id), 0) AS m FROM ${P}`).m || 0) + 1;
-    this.#sql.exec(`INSERT INTO ${P} (bundle_id, fts_id) VALUES (?, ?)
-                    ON CONFLICT(bundle_id) DO UPDATE SET fts_id=excluded.fts_id`, bundleId, next);
-    this.#mirror(bundleId);
+    const next = (this.#one(`SELECT COALESCE(MAX(fts_id), 0) AS m FROM bundles`).m || 0) + 1;
+    this.#sql.exec(`UPDATE bundles SET fts_id=? WHERE bundle_id=?`, next, bundleId);
     return next;
   }
 
@@ -346,10 +314,9 @@ export class Retrieval {
    *  again". */
   reproject({ limit = 500 } = {}) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || 500), 5000));
-    const STALE = `FROM bundles b LEFT JOIN ${P} p ON p.bundle_id = b.bundle_id WHERE p.fm_json IS NULL OR p.fts_id IS NULL`;
     const stale = this.#rows(
-      `SELECT b.bundle_id AS bundle_id, p.fm_json IS NULL AS need_proj, p.fts_id IS NULL AS need_text
-         ${STALE} ORDER BY b.bundle_id LIMIT ?`, cap);
+      `SELECT bundle_id, fm_json IS NULL AS need_proj, fts_id IS NULL AS need_text
+         FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL ORDER BY bundle_id LIMIT ?`, cap);
     let n = 0, t = 0;
     for (const r of stale) {
       const files = this.#filesOf(r.bundle_id);
@@ -358,7 +325,8 @@ export class Retrieval {
       if (r.need_proj) { this.#writeProjection(r.bundle_id, md.text); n++; }
       if (r.need_text) { this.#writeText(r.bundle_id, files); t++; }
     }
-    return { reprojected: n, reindexed: t, limit: cap, remaining: this.#one(`SELECT count(*) c ${STALE}`).c };
+    return { reprojected: n, reindexed: t, limit: cap,
+             remaining: this.#one(`SELECT count(*) c FROM bundles WHERE fm_json IS NULL OR fts_id IS NULL`).c };
   }
 
   /** R4: EXPLAIN QUERY PLAN for representative filters, so a test can assert the index is USED rather than trusting
@@ -366,7 +334,7 @@ export class Retrieval {
   projectionPlan() {
     const out = {};
     for (const c of ["source_status", "produced_mode", "schema_id", "reeval_flag"])
-      out[c] = this.#rows(`EXPLAIN QUERY PLAN SELECT bundle_id FROM ${P} WHERE ${c} = ?`, "x").map((r) => r.detail);
+      out[c] = this.#rows(`EXPLAIN QUERY PLAN SELECT bundle_id FROM bundles WHERE ${c} = ?`, "x").map((r) => r.detail);
     return out;
   }
 
@@ -374,19 +342,18 @@ export class Retrieval {
    *  so the backfill path can be exercised against a row that looks like it predates the columns. A test seam. */
   projectionClear({ bundleId = null, text = true } = {}) {
     const set = PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
-    if (bundleId) this.#sql.exec(`UPDATE ${P} SET ${set} WHERE bundle_id=?`, bundleId);
-    else this.#sql.exec(`UPDATE ${P} SET ${set}`);
+    if (bundleId) this.#sql.exec(`UPDATE bundles SET ${set} WHERE bundle_id=?`, bundleId);
+    else this.#sql.exec(`UPDATE bundles SET ${set}`);
     if (text) {
       if (bundleId) {
-        const r = this.#one(`SELECT fts_id FROM ${P} WHERE bundle_id=?`, bundleId);
+        const r = this.#one(`SELECT fts_id FROM bundles WHERE bundle_id=?`, bundleId);
         if (r && r.fts_id != null) this.#sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, r.fts_id);
-        this.#sql.exec(`UPDATE ${P} SET fts_id=NULL WHERE bundle_id=?`, bundleId);
+        this.#sql.exec(`UPDATE bundles SET fts_id=NULL WHERE bundle_id=?`, bundleId);
       } else {
         this.#sql.exec(`DELETE FROM bundles_fts`);
-        this.#sql.exec(`UPDATE ${P} SET fts_id=NULL`);
+        this.#sql.exec(`UPDATE bundles SET fts_id=NULL`);
       }
     }
-    this.#mirror(bundleId);
     return { ok: true, scope: bundleId || "ALL", text };
   }
 
@@ -402,12 +369,10 @@ export class Retrieval {
                viewer = null, nowMs = null } = {}) {
     const cols = ["b.bundle_id", "b.object_type", "b.group_id", "b.title", "b.current_state",
                   "b.prior_state", "b.created", "b.last_updated", "b.criticality",
-                  "b.bundle_sha", ...PROJECTION_COLS.map((c) => "p." + c)].join(", ");
-    /* R61: the projection is this module's own table, joined on the bundle; a bundle not yet projected reads nulls. */
-    const FROM = `bundles b LEFT JOIN ${P} p ON p.bundle_id = b.bundle_id`;
+                  "b.bundle_sha", ...PROJECTION_COLS.map((c) => "b." + c)].join(", ");
     const gate = viewerPredicate(viewer);
     if (bundleId) {
-      const row = this.#one(`SELECT ${cols} FROM ${FROM} WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
+      const row = this.#one(`SELECT ${cols} FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, bundleId, ...gate.args);
       if (!row || !this.#decorations.length) return row;
       const parts = [];
       for (const d of this.#decorations) {
@@ -428,18 +393,18 @@ export class Retrieval {
     /* ONE predicate, built once and reused for the page and the count. The CURSOR is deliberately NOT in the count:
        `total` answers "how many are there", not "how many are left". */
     const base = [`(${gate.sql})`], baseArgs = [...gate.args];
-    if (filtered) { base.unshift(`json_extract(p.fm_json, ?) = ?`); baseArgs.unshift(jsonPath, jsonEquals); }
+    if (filtered) { base.unshift(`json_extract(b.fm_json, ?) = ?`); baseArgs.unshift(jsonPath, jsonEquals); }
     const pageWhere = after ? [...base, `b.bundle_id > ?`] : base;
     const pageArgs = after ? [...baseArgs, after] : baseArgs;
     const bundles = this.#rows(
-      `SELECT ${cols} FROM ${FROM} WHERE ${pageWhere.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`, ...pageArgs, cap);
+      `SELECT ${cols} FROM bundles b WHERE ${pageWhere.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`, ...pageArgs, cap);
     return {
       bundles,
       limit: cap,          // the bound ACTUALLY APPLIED after clamping (REC-57)
       cursor: bundles.length === cap ? bundles[bundles.length - 1].bundle_id : null,
       /* COUNTS WHAT THIS VIEWER MAY SEE, through the same gate predicate: a total over rows the caller cannot read
          would say "something is hidden", which is half the leak (D-15). */
-      total: this.#one(`SELECT COUNT(*) AS n FROM ${FROM} WHERE ${base.join(" AND ")}`, ...baseArgs).n,
+      total: this.#one(`SELECT COUNT(*) AS n FROM bundles b WHERE ${base.join(" AND ")}`, ...baseArgs).n,
     };
   }
 
@@ -458,7 +423,7 @@ export class Retrieval {
   /** R6–R9: `op=search`. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
-    const plan = compile(input, OVER);
+    const plan = compile(input);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -487,7 +452,7 @@ export class Retrieval {
        is offered. It costs one extra query only in the case that already returned nothing. */
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
-      const or = compile({ ...input, implicitOp: "or" }, OVER);
+      const or = compile({ ...input, implicitOp: "or" });
       const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
                                detail: "no bundle matches all of these terms; this many match any of them" };
@@ -553,7 +518,7 @@ export class Retrieval {
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
-    }, OVER);
+    });
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -713,8 +678,7 @@ export class Retrieval {
     const cap = Math.max(1, Math.min(1000, Math.floor(Number(limit) || 200)));
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(
-      `SELECT b.bundle_id AS bundle_id, p.fts_id AS fts_id FROM bundles b LEFT JOIN ${P} p ON p.bundle_id = b.bundle_id
-        WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
+      `SELECT b.bundle_id, b.fts_id FROM bundles b WHERE b.bundle_id > ? AND (${gate.sql}) ORDER BY b.bundle_id LIMIT ?`,
       after ?? "", ...gate.args, cap);
     const findings = [];
     for (const r of rows) {
@@ -736,17 +700,15 @@ export class Retrieval {
     /* Orphans: an index row no bundle claims. It matters because fts_id is allocated as MAX+1, so an orphan can be
        inherited by a later bundle and hand it a deleted document's text. */
     const orphans = this.#rows(
-      `SELECT rowid AS fts_id FROM bundles_fts
-        WHERE rowid NOT IN (SELECT p.fts_id FROM ${P} p JOIN bundles b ON b.bundle_id = p.bundle_id WHERE p.fts_id IS NOT NULL)
-        LIMIT ?`,
+      `SELECT rowid AS fts_id FROM bundles_fts WHERE rowid NOT IN (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL) LIMIT ?`,
       SEARCH_ORPHAN_MAX).map((r) => r.fts_id);
     const last = rows.length ? rows[rows.length - 1].bundle_id : null;
     return {
       checked: rows.length, findings, orphans,
       counts: { bundles: this.#one(`SELECT count(*) c FROM bundles b WHERE (${gate.sql})`, ...gate.args).c,
                 indexed: this.#indexedCount(hiddenSet(gate)),
-                keyed: this.#one(`SELECT count(*) c FROM bundles b JOIN ${P} p ON p.bundle_id = b.bundle_id
-                                   WHERE p.fts_id IS NOT NULL AND (${gate.sql})`, ...gate.args).c },
+                keyed: this.#one(`SELECT count(*) c FROM bundles b WHERE b.fts_id IS NOT NULL AND (${gate.sql})`,
+                                 ...gate.args).c },
       limit: cap,
       cursor: rows.length === cap ? last : null,
       orphans_limit: SEARCH_ORPHAN_MAX,
@@ -755,12 +717,12 @@ export class Retrieval {
     };
   }
 
-  /* R17, R60: the text index's rows less those a hidden bundle claims (through its key, R1); an orphan (a row no
-     bundle claims) names nothing and stays, so a reader's parity still sees it. The one spelling of R17's rule. */
+  /* R17, R60: the text index's rows less those a hidden bundle claims through its key (R1); an orphan (a row no bundle
+     claims) names nothing and stays, so a reader's parity still sees it. The one spelling of R17's rule. */
   #indexedCount(hid) {
     if (!hid) return this.#one(`SELECT count(*) c FROM bundles_fts`).c;
     return this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN
-                        (SELECT fts_id FROM ${P} WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c;
+                        (SELECT fts_id FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN ${hid.sql})`, ...hid.args).c;
   }
 
   /** R60 (N171, K209; for `queue`): `{indexed, selections, selectionItems}`, the text index's rows, the held selections
@@ -827,11 +789,11 @@ export class Retrieval {
       /* Chunked, because SQLite bounds how many variables one statement binds. Every chunk still goes through compile()
          and therefore through the viewer gate: an id the viewer may not see never enters the selection. */
       for (let i = 0; i < list.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) }, OVER);
+        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) });
         members.push(...this.runQuery(plan.statements.snapshot(), tally));
       }
     } else {
-      const plan = compile({ q, viewer, sort, dir }, OVER);
+      const plan = compile({ q, viewer, sort, dir });
       members = this.runQuery(plan.statements.snapshot(), tally);
     }
     const handle = "sel-" + rand(12);
@@ -906,7 +868,7 @@ export class Retrieval {
       const visible = new Map();
       const idList = stored.map((r) => r.bundle_id);
       for (let i = 0; i < idList.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir, ids: idList.slice(i, i + SELECTION_ID_CHUNK) }, OVER);
+        const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir, ids: idList.slice(i, i + SELECTION_ID_CHUNK) });
         for (const r of this.runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
       }
       members = [];
@@ -924,7 +886,7 @@ export class Retrieval {
       drift.removed = drift.purged.length + drift.hidden.length;
       /* Never added: the operator picked items, not a criterion. */
     } else {
-      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, OVER);
+      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir });
       members = this.runQuery(plan.statements.snapshot(), tally);
       const digest = digestOf(members.map((m) => m.bundle_id));
       if (digest !== sel.digest) {

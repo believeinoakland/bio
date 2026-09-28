@@ -1,6 +1,6 @@
-/* retrieval — its storage (K4): the projection, in a table of its own keyed by bundle (R61, N106, K144), the text index
- * `bundles_fts` (R1, R17), and the selections (R18–R22). Every statement here is idempotent: `migrate()` runs them at
- * every start. */
+/* retrieval — its storage (K4): the projection columns it adds to record-core's `bundles` (R1, R2; where they live is
+ * BOB's Q1, recorded in the job record), the text index `bundles_fts` (R1, R17), and the selections (R18–R22).
+ * Every statement here is idempotent: `migrate()` runs them at every start. */
 import { FTS_COLUMNS } from "../query.mjs";
 
 /* S-10 step 1: the metadata projection the retrieval surface filters and sorts on. Probe 2
@@ -40,20 +40,6 @@ export const PROJECTION_COLUMNS = Object.freeze([
 export const PROJECTION_INDEXED = Object.freeze(["schema_id", "produced_mode", "source_authority", "source_status",
   "monitor_enabled", "monitor_frequency", "reeval_flag", "annotations_open",
   "action_kind", "action_resolution", "action_clock_overdue"]);
-
-/* R61 (N106, K75 (3), K144): the projection's own table. One row per bundle, keyed by `bundle_id` (record-core's key,
-   its R37 read contract) and declared to its purge by that key (R33), so a bundle's purge takes its projection with it.
-   `fts_id` is UNIQUE: the text index's key is allocated once per bundle and never shared (R1). This module is its only
-   writer; `query-language` reads it through the relation below (its R25), which is the only name a reader needs. */
-export const PROJECTION_RELATION = Object.freeze({ table: "bundle_projection", key: "bundle_id" });
-export const PROJECTION_SCHEMA = [
-  `CREATE TABLE IF NOT EXISTS bundle_projection (
-         bundle_id TEXT PRIMARY KEY,
-         ${PROJECTION_COLUMNS.map(([c, t]) => `${c} ${t}`).join(",\n         ")}
-       )`,
-  ...PROJECTION_INDEXED.map((c) => `CREATE INDEX IF NOT EXISTS bundle_projection_${c} ON bundle_projection(${c})`),
-  `CREATE UNIQUE INDEX IF NOT EXISTS bundle_projection_fts_id ON bundle_projection(fts_id)`,
-];
 
 /* S-10 step 2: the text index, inside the Durable Object, which is what probe 1 measured and chose. Five columns rather
    than one blob, so a member can scope a term to the part of the document they mean; `meta` carries the flattened
@@ -118,7 +104,6 @@ export const SELECTION_ID_CHUNK = 64;
    leaves an enumerated item in place, so the next resolve reports it as `drift.purged` (R19) rather than the item
    silently leaving the set. */
 export const RETRIEVAL_PURGE = Object.freeze([
-  { name: "bundle_projection", keys: ["bundle_id"] },
   { name: "bundles_fts", keys: ["bundle_id"] },
   { name: "selection_items", keys: [] },
   { name: "selections", keys: [] },

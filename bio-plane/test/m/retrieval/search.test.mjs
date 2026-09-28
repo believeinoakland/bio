@@ -145,12 +145,11 @@ test("R17: searchIndexCheck finds NO_FTS_ID, NO_INDEX_ROW and DIVERGED over visi
   assert.deepEqual(clean.counts, { bundles: 5, indexed: 5, keyed: 5 });
   assert.deepEqual([clean.orphans_limit, clean.orphans_truncated], [100, false]);
   /* Break it three ways. */
-  const key = (id) => w.row(`SELECT fts_id FROM bundle_projection WHERE bundle_id=?`, id).fts_id;
-  const k1 = key("INFO-1");
-  w.st.sql.exec(`UPDATE bundle_projection SET fts_id=NULL WHERE bundle_id='INFO-1'`);   /* its index row is now an orphan */
-  const k2 = key("INFO-2");
+  const k1 = w.row(`SELECT fts_id FROM bundles WHERE bundle_id='INFO-1'`).fts_id;
+  w.st.sql.exec(`UPDATE bundles SET fts_id=NULL WHERE bundle_id='INFO-1'`);   /* its index row is now an orphan */
+  const k2 = w.row(`SELECT fts_id FROM bundles WHERE bundle_id='INFO-2'`).fts_id;
   w.st.sql.exec(`DELETE FROM bundles_fts WHERE rowid=?`, k2);
-  const k3 = key("INFO-3");
+  const k3 = w.row(`SELECT fts_id FROM bundles WHERE bundle_id='INFO-3'`).fts_id;
   w.st.sql.exec(`UPDATE bundles_fts SET body='tampered' WHERE rowid=?`, k3);
   w.st.sql.exec(`INSERT INTO bundles_fts (rowid, title, body, meta, locator, authority) VALUES (999, 't', 'b', 'm', 'l', 'a')`);
   const bad = w.retrieval.searchIndexCheck({ viewer: V("vera") });
