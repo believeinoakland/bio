@@ -10,7 +10,7 @@
 - `bio-plane/public/newgroup/index.html` (115, the invitation page).
 - Its bundle `newgroup/dist/newgroup.bundled.mjs`, a generated artifact.
 
-There is no `from`. Not yet met: R13 (MULTI-INSTANCE-ISOLATION row 6), R20 (DIST-15), R21 (N10), R22 (N5), R23, R24 (MULTI-INSTANCE-ISOLATION), R32, R33 (K102). Carried old-plan row: DIST-15.
+There is no `from`. Not yet met: R13 (MULTI-INSTANCE-ISOLATION row 6), R20 (DIST-15), R21 (N10), R24 (MULTI-INSTANCE-ISOLATION), R30 (instance-setup is not extracted: the grammar is legacy-store's static, the binding names legacy-index's), R32, R33 (K102). Carried old-plan row: DIST-15.
 
 **Size (P6).** About 1,770 lines of source (about 1,220 without comment-only and blank lines), and a 1,632-line test battery (`newgroup/test/`). Well under 4,000.
 
@@ -52,8 +52,8 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R19** The Cloudflare access token, and every credential generated or supplied, never appears in any page, log or error text, except R16's panel. Text from the management API is HTML-escaped.
 - **R20** The plane's limits are carried from the signed release. A release that states none is refused by name, and an older installer still verifies the fleet signature of a release that carries them. *(not yet met: DIST-15; `PLANE_LIMITS` is a constant pinned to the plane's config)*
 - **R21** The install offers the jurisdiction profiles held (`jurisdictions.list`, test profiles excluded), each by name and coverage, with none preselected. The chosen ids, in order, are bound as `JURISDICTION_PROFILES` for the copy to record at its first boot (instance-setup R13). Choosing none is allowed, and the page says what that means. An update never changes them. *(not yet met: N10)*
-- **R22** Every page names CivicOS and the installing group. Believe in Oakland appears only as the publisher and signer of the release. The installer's own address stays where it runs, and the pages say it is run by the publisher of CivicOS releases (K102). The example name is not a place. *(not yet met: N5; the pages brand themselves "Believe in Oakland", and the example is `oakland-sewer-watch`)*
-- **R23** The pages state the prerequisites the install enforces: Workers Paid, and a payment method on the account. *(not yet met: the install and invitation pages say that no card is needed and that storage is optional, while R6 and R7 refuse without them)*
+- **R22** Every page names CivicOS and the installing group. Believe in Oakland appears only as the publisher and signer of the release. The installer's own address stays where it runs, and the pages say it is run by the publisher of CivicOS releases (K102). The example name is not a place.
+- **R23** The pages state the prerequisites the install enforces: Workers Paid, and a payment method on the account.
 - **R24** An install never shares another copy's buckets and never overwrites its fleet workers in the same account. *(not yet met: MULTI-INSTANCE-ISOLATION; K102)*
 - **R32** Until installs are isolated (R24), an install into an account that already holds a copy (either evidence bucket, or a fleet worker, present) is refused before anything is created, saying that one copy per account is supported for now. *(not yet met: K102)*
 - **R33** The install and the update read back the uploaded script's content and compare its hash with the release; a mismatch is named on the page and no success is claimed (Distribution §5, "byte-verified on read-back"). *(not yet met: K102)*
@@ -76,7 +76,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R27** The installer Worker declares no binding of any kind. Its statelessness is structural: there is nowhere to write a token.
 - **R28** Its configuration pins the project's Cloudflare account.
 - **R29** There is one verifier: every signature check goes through `signatures`, and there is no second implementation.
-- **R30** The slug grammar and the member binding names are `instance-setup`'s, imported, never copied.
+- **R30** The slug grammar and the member binding names are `instance-setup`'s, imported, never copied. *(not yet met: instance-setup is not extracted; the installer holds copies equal to legacy-store's `GROUP_SLUG_RE` and legacy-index's `FLEET_BINDINGS`, N234)*
 - **R31** No place is named in this module's behaviour.
 
 ### Satisfies
