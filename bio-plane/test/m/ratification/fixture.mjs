@@ -66,7 +66,7 @@ export async function newKey() {
 }
 
 export async function sign(key, message, namespace = NS_RATIFY) {
-  const h = new Uint8Array(await webcrypto.subtle.digest("SHA-512", enc(message)));
+  const h = new Uint8Array(await webcrypto.subtle.digest("SHA-512", typeof message === "string" ? enc(message) : message));
   const signed = u8(enc("SSHSIG"), sstr(namespace), sstr(new Uint8Array(0)), sstr("sha512"), sstr(h));
   const sig = new Uint8Array(await webcrypto.subtle.sign("Ed25519", key.priv, signed));
   return armor(u8(enc("SSHSIG"), u32(1), sstr(u8(sstr("ssh-ed25519"), sstr(key.raw))), sstr(namespace),
@@ -154,6 +154,7 @@ export function world() {
   let n = 0;
   const w = {
     st, host, record, membership, promotion, r, bv, key, registers, pub, publication, calls,
+    ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     sha: (id) => record.head(id)?.bundleSha ?? null,
@@ -235,4 +236,110 @@ export function caseMd({ caseId, edition, project, members, conclusions = [], ex
                                               `    version_sha: ${m.pin}`, `    edition: 1`]),
     ...(conclusions.length ? ["case_conclusions:", ...conclusions.flatMap(([m, c]) => rowLines(m, c))] : []),
     ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", ""].join("\n");
+}
+
+/** A frontmatter document from an object, in the catalogue's restricted grammar (scalars, lists of scalars, maps of
+ *  scalars, lists of maps of scalars), `raw` lines appended to the frontmatter, and `body`. */
+export function fmText(obj, { raw = [], body = "" } = {}) {
+  const sc = (v) => (v === null || v === undefined ? "null" : typeof v === "string" ? JSON.stringify(v) : String(v));
+  const lines = ["---"];
+  for (const [k, v] of Object.entries(obj)) {
+    if (Array.isArray(v)) {
+      if (!v.length) { lines.push(`${k}: []`); continue; }
+      lines.push(`${k}:`);
+      for (const x of v) {
+        if (x && typeof x === "object") Object.entries(x).forEach(([kk, vv], i) => lines.push(`${i ? "    " : "  - "}${kk}: ${sc(vv)}`));
+        else lines.push(`  - ${sc(x)}`);
+      }
+    } else if (v && typeof v === "object") {
+      lines.push(`${k}:`);
+      for (const [kk, vv] of Object.entries(v)) lines.push(`  ${kk}: ${sc(vv)}`);
+    } else lines.push(`${k}: ${sc(v)}`);
+  }
+  return [...lines, ...raw, "---", "", body].join("\n");
+}
+
+/** A catalogue-clean information bundle.md (the gate draws no finding over it alone). */
+export function cleanInfoMd(id) {
+  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "A report"`,
+    "current_state: collected", "prior_state: null", `created: "2026-07-01T00:00:00Z"`, `last_updated: "2026-07-01T00:00:00Z"`,
+    "group: test-group", "produced_by:", "  mode: human", "  capability_tier: none", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending: false", "visuals: []", "criticality: supporting", "source_status: unchanged",
+    "source:", "  locator: https://example.org/a", "  authority: the publisher", `  retrieved: "2026-07-01T00:00:00Z"`,
+    "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", "A document.", "",
+    "## Provenance Notes", "", "None.", "", "## Review Notes", "", "## Session Log", ""].join("\n");
+}
+
+/** A catalogue-clean bio-case-document/4 as an object (`checkCaseDocument` draws no finding over it). */
+export function cleanCase({ caseId, edition, project, members }) {
+  return {
+    format: "bio-case-document/4", case_id: caseId, case_edition: edition, case_project: project,
+    case_scope: "whether the permits were issued as the minutes say", bias_acknowledgement: "we expected them late",
+    case_findings: members.map((m) => m.id),
+    case_roles: members.map((m, i) => ({ target: m.id, role: i ? "supporting" : "load_bearing", version_sha: m.pin, edition: 1 })),
+    completeness: { statement: "the 2019 permits are not covered", author: "alice", at: "2026-09-28T00:00:00Z",
+                    subject_position: "not_sought", subject_justification: "the office is closed", acknowledged: 0,
+                    statement_by: "alice" },
+    completeness_acknowledgements: [], completeness_excluded: [],
+    searched: { subject_source: "case_basis", subjects: 1 }, searched_levels: [],
+    required_strength: { declared: false },
+    bias_manifest: { in_force: false, stated: "no manifest was in force", pins_proposed: 0,
+                     pins_proposed_stated: "no adoption pinned a proposed revision" },
+    bias_manifest_bundles: [], bias_manifest_pins_proposed: [], case_citations: [],
+    case_strength: members.flatMap((m) => [{ target: m.id, axis: "capture", state: "unrated", grade: null },
+                                           { target: m.id, axis: "connection", state: "unrated", grade: null }]),
+    case_strength_grounds: [],
+  };
+}
+export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n";
+
+/* ---------------------------------------------------------------- the Worker half's control plane */
+
+export const SILENT = Symbol("silent");
+
+/** What the control plane hands `caseRatifyOp` / `ratifyOp`: a Durable Object stub routing to this world's store half
+ *  (and to stand-ins for the other modules' ops, `w.ops`), in-memory buckets, and its helpers. A stand-in answering
+ *  `SILENT` is a store that did not answer. */
+export function plane(w, { session = { role: "member:alice" }, viaSession = true, aiCred = null, cls = "session",
+                           viewer = V("alice") } = {}) {
+  const captures = new Map(), published = new Map(), assembled = [], fetched = [];
+  const stub = {
+    async fetch(u, init) {
+      const req = u instanceof Request ? u : new Request(u, init);
+      const url = new URL(req.url);
+      const op = url.pathname.slice(1);
+      const body = req.method === "POST" ? await req.json() : null;
+      fetched.push(op);
+      if (w.ops[op]) return w.ops[op](url, body);
+      const q = (k) => url.searchParams.get(k);
+      if (op === "casedocfacts") return w.publication.caseDocumentFacts(q("case"), q("edition"), q("viewer"));
+      if (op === "image") { const img = w.record.readImage(q("id")); return img || {}; }
+      if (op === "list") return w.st.sql.exec(`SELECT bundle_id FROM bundles`);
+      if (op === "reusedparts") return { parts: [] };
+      if (op === "capturelimit") return { observed: null };
+      if (op === "recordreuseverdicts") return { ok: true };
+      if (op === "registerholds") return { parts: null, acquired: false };
+      const mine = ratificationOps(w.r, url, body)[op];
+      if (mine) return mine();
+      throw new Error(`no op ${op}`);
+    },
+  };
+  const bucket = (m) => ({
+    head: async (k) => (m.has(k) ? { size: m.get(k).length } : null),
+    get: async (k) => (m.has(k) ? { body: m.get(k) } : null),
+    put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
+  });
+  const json = (body, status = 200) => ({ status, body });
+  const ctx = {
+    env: { CAPTURES: bucket(captures), PUBLISHED: bucket(published) }, json, storeName: "s",
+    doAnswer: async (p) => { const v = await p; return v === SILENT ? { answered: false } : { answered: true, result: v }; },
+    storeSilent: (op) => json({ ok: false, reason: "STORE_SILENT", op }, 502),
+    assembleCaseContainer: async (a) => { assembled.push(a); return { manifest_sha: "m".repeat(64), zip: "z" }; },
+    cls, aiCred, viaSession, sessViewer: viewer, sessRights: session,
+    captureKey: (store, s) => `${store}/captures/${s}`, withBiasChecks: (image, gate) => gate,
+    STORE_SILENT_REASON: "STORE_SILENT", STORE_SILENT_DETAIL: "the store did not answer",
+  };
+  const request = (body) => new Request("http://plane/op", { method: "POST",
+    body: typeof body === "string" ? body : JSON.stringify(body) });
+  return { stub, ctx, request, captures, published, assembled, fetched };
 }
