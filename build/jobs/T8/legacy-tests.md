@@ -128,3 +128,50 @@ Also for next plan (the rest at COMPLETE): intent's row limits `MEASURE_MAX`, `D
 BEHAVIOUR CHANGE (product red, not re-pinned), owners **promotion** (R39, step order) and **legacy-store**'s construction (K252's chain): promotion is built with no `order`, so steps run in registration order, and the chain `actionsOf` → `void a.conformance` → reevaluation → `inquiryOf` now registers inquiry's step before connections'. Inquiry's projection then reads `refs` before connections writes them, so the superseded-by index is never written for a new superseder and supersession obligations vanish. Red: reevaluation 69/5, rec114-leg-earned 33/3, rec118-reeval-earned 10/19, frontier-chunk D443-6. Confirmed on a scratch copy: registering connections' step first makes all four green (74/0, 36/0, 29/0, 16/0). Fix: an explicit `order` (connections before inquiry), or construction order.
 
 Also: **reevaluation** `src/reevaluation/index.mjs` 909 spells a whole-second stamp by hand (`.replace(/\.\d+Z$/,"Z")`, T8 commit b6d4308734), D-543 (d543-instant-precision 11/1). The rest at COMPLETE; the whole battery re-runs now.
+
+## J5 · COMPLETE
+
+**Entries applied** (layer 11's legacy-tests bullet, B1–B3; the Progress notes above give every suite's figures and edits): T8's layers 1–11 re-anchored or retired, suite by suite, per every forwarded record (LEGACY-CHECKS #3 J3.6–7; PROMOTION #6 J2.3, #7 J4.1; INTENT #2 J2; REEVALUATION #2 J2.1–4; PUBLICATION #1 J4.6, J6; RATIFICATION #2; CASE-AUTHORING #1 J5; REVIEW #1 J4; ACTIONS #1 J2.4; FILINGS #1 J2.4; STANDARDS #1; CONFORMANCE #1; MONITORING #1 J3.1; SCHEDULER #1 J2; INSTALLER #1 J2.3; AFFORDANCES #2 J4.2; LEGACY-INDEX #5 J1.2); N147's share (d470's 1.37.0 and 1.38.0 rows from the suite's print, A5, A1's floors); N177's share (the `decorateAct` and `CAPTURE_ACTS.map(decorate)` scans retired, each naming affordances' covering test); the reds of the earlier layers re-measured after their fixes (gate-reads 135/0 with N199, N200 and B2's `monitoring`; overdue-successor 22/0, N179; refusal-wire 41/1, N180; airuns 54/0 and hygiene C, N181; bounds, N182 (3), N187; meaning-bounds' reevaluation arm, N182 (4); the guard, N192); the DEC-49 guard harvests every module's `checks.mjs` families (146 → 126 failures, each another module's); `publish` §9; the hunch-debt fixtures re-graded with earned grades (caseobject, frontier-chunk, machine-fences, shadowed-refusals), reevaluation's inquiry leg made ungraded (see the notes: BOB may reverse).
+
+**The old battery** (369 suites, on this branch after merging tranche/T8 @ B2): **87 red at the job's start (J1), 24 red now**, each owned below. `contradiction-overstrict` read 50/1 under the four-way run ("the run ends", timing) and 51/0 twice alone; the other 23:
+- promotion step order (J4, K270, re-opened): reevaluation 69/5, rec114-leg-earned 33/3, rec118-reeval-earned 10/19, frontier-chunk 15/1.
+- scheduler 47/4: FL-4, capture-requests' clock (N188), as ruled.
+- d470-catalog-census 11/2: monitoring moved C-18.5's emission site out of the catalogue with `CATALOG_VERSION` still 1.38.0 (HEAD prints 394, digest 7bb13138…, source eaaf9b18…): promotion's next MINOR stamp.
+- d543-instant-precision 11/1: reevaluation's hand stamp (N239).
+- bounds 210/3: strength's own `VERSION_LEGS_MAX` ×2 (N184 (2)); intent's `MEASURE_MAX`, `DEPARTURES_MAX`, `SET_ASIDE_MAX` driven by no test, its own included (intent).
+- derivation-bounds 69/4: unbounded reads, actions `pendingClocks`, `project`; publication `#promoteNamedEdges`; standing from T7: inquiry (N183), capture-requests `waitSource` (N188 (1)), capture-sources `credentialList`, `credentialsForFetch`.
+- meaning-bounds 92/4: `caseratify`'s RETURN-DELEGATE and FLOOR cannot see publication's `commitCaseEdition` through the held service (the reader wants redesign, publication); D-240(b) `pdfStructure` ×7, citation `#document` ×2 and the OPAQUE residual (N70).
+- hygiene 1346/1: basis-versions `schema.mjs` 52 `grade_axis` comment (N185).
+- project-sight 248/1: five read routes unclassified in legacy-store's `PROJECT_NAMING_READS(_NOT)`.
+- run-conditions 56/3: run-productions `interim.mjs` W6; ai-runs `rerun_of` P1/P6.
+- observation-log 130/1, observation-content 74/1: ai-runs' `hiddenRunTail` writes the D-486 subtraction a second time.
+- skillsequencing 26/1: skills' `DEPLOYMENT_SEQUENCE` copy.
+- strengthpair 90/1: strength `#walk` (N184 (1)).
+- d311-roster-affordances 20/1: N45 (affordances).
+- machine-fences 91/1: actions' `NO_RULE` (`clockPropose`) shadows and is pinned by no suite (actions' `test/m/actions`).
+- machinefences-dec49 88/1: the doctrine pack renders `machineFences(CATALOGUE)` only, so fences whose rows moved to modules are missing (skills/agent-worker).
+- refusal-wire 41/1: `MACHINE_CANNOT_PUBLISH`'s `where` names `src/store.mjs`, minted in case-authoring (legacy-checks, case-authoring; N212).
+- plane-envelope 60/4: with `op=monitor` in the DO, the Worker holds no computed-verdict success site (D-240 (b), (c)); `monitoringOp` spreads a DO result unclassified (e); `capture/doorbell.mjs` and `monitoring/index.mjs` open DO envelopes outside `doAnswer` (DETECTOR C): monitoring, capture, legacy-index.
+- m025-arm-anchor-witness 25/1: seven dead anchors in controls not re-derived (case-project-conclusion 3, casesearched 1, conclude-project 2, d526 1), with N57.
+
+**Deferred, and why:** N57's remainder: controls outside the families were not run (each patches the tree; days of CPU); `civicos-ui/test/refusal-codes.control.mjs` (its precondition, a green guard, cannot hold); `several-cases-choice.control`'s BEFORE arm (restores pre-module files whole: wants re-deriving); operator-attest's control reads NOT AS DECLARED on four arms (a later guard now stops the case: re-derive its declaration); caseobject control arms c–e no longer bite. N31 arm (j) waits on N14.
+
+**REPORT: found in other modules** (beyond J2–J4):
+- **legacy-ui** (ruling 4 plans no work): `app.html` lacks the six new types (standard, goal, escalation, determination, consequence, aspiration) in SEMANTICS.types, TYPE_LABEL, FIRST_STATE and the headings: `check-semantics.mjs` 60 FAIL lines plus N68's docprofile, civicos-ui bias-vocabulary 75/6, add-surface stops at its first new type. Either legacy-ui gains an entry, or these arms wait on the UI's replacement; BOB's call.
+- **the guard's 126, by owner:** progressions (C-100 regions unmarked, conscripted calls); case-authoring (`publishCase`/`#publishCase` `where`s; NO_STATEMENT, MACHINE_CANNOT_PUBLISH naming `src/store.mjs`); inquiry (`dispose`/`#dispose`); conformance (`is-outcome-stated`; 3-line regions, also escalation and review; NO_SUCH_PROJECT's translation identical to intent's); bias (`#promotionCheck`); strength (`#refusePairComposed`); monitoring (orphaned `is-drive-tick` rows; REFUSED untranslated, reachGap 33); observation-log (AI_LOG_NEVER_LOOKED_STORED no mint site); basis-versions (FACT_UNAVAILABLE; `is-act-no-basis`, N186); consequences (codes minted outside their rows' regions); capture-sources (CAPTURE_CREDENTIAL rows); connections/legacy-checks (THEME_CHECKS duplicates C-81.11–.14); publication (`plane().json(` hides `noPublishedPart` from the verdict reader); escalation, reevaluation (7 unclassified outcomes); inherited verdicts 7 against 4; arm G multi-site codes (N208, N217, K238, NO_SUCH_ENTITY).
+- **legacy-checks, ratification:** two live `checkCaseDocument` copies (the catalogue's, for `src/gate.mjs`, and `ratification/checks.mjs`) and the catalogue's `checkPublishedExtension` copy; C-33.40's `where` names inquiry's `actNoBasis` while basis-versions keeps a second site (N186).
+- **actions:** BAD_LAW_LEVEL C-73.3's translation says "federal, state or local"; the levels are federal, state, county, city.
+- **instance-setup:** `setup.mjs` `mdFor` writes `{state: named, name}`, which actions R9 refuses (J2).
+- **conformance:** `determination_questions.opened` shares its name with the case field (case-opened sets it aside by line and shape).
+- **case-authoring:** R7's re-preparation replaces an unsigned preparation in place (live now; dead on T7): caseratify-conclusion re-anchored on it.
+- **Generated artifacts:** none made stale (tests only).
+
+**Tests and checks** (this branch after merging tranche/T8 @ B2):
+- Old battery, 369 suites: 345 green, 24 red (one timing, 23 owned above). civicos-ui: `refusal-codes.test.mjs` 167 green; the guard 126 failures, all other modules'; `check-semantics.mjs` legacy-ui's; several-cases-choice 15/0, case-frozen-pair 24/0, bias-vocabulary 75/6, add-surface stops (legacy-ui).
+- Layer tests: none named in `build/manifest.md`.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio legacy-tests` → architecture: 869 product files, 2294 relative imports (65 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio legacy-tests` → coverage: 0 modules, 0 of 0 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T8` → ownership: 120 files changed by legacy-tests between tranche/T8 and HEAD; 0 failures
+
+Size (session_01CbeAzHStemFoTD8gQHPzK6): test runs 2 whole batteries plus about 400 single-suite runs by the four family agents, module lines 4547
