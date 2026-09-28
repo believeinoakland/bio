@@ -4377,30 +4377,9 @@ var AI_RUN_CHECKS = {
     where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
     translation: "The observation log is not part of any published document and cannot be filed into one."
   },
-  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
-       bias manifest in force, the launching project's standard pair, and THE
-       SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
-       a hat" and a version is only interpretable against them. SK-1's row makes
-       the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
-       disclosure standard), and a condition that may be omitted is not recorded:
-       it is recorded by the runs that felt like it.
-  
-       REFUSED AT THE OPEN, beside the two principals, for the same reason those
-       are: refusing later would mean a run had already searched under
-       instructions nobody can name. Two ways to fail and ONE code, because they
-       are one fact — the run object cannot say what it ran under. The worse of
-       the two is a version that names no pack: `3` reads as an answer and
-       identifies nothing, which is the blank-principal shape PL-4 measured one
-       field over, arriving on a condition instead of an identity.
-  
-       A WHOLE-FUNCTION `where`, and it is the case the convention above blesses:
-       `checkSkillVersion` is small, single-purpose, and the only refusal it makes
-       is this one — `src/airun.mjs`'s three check functions are the named model. */
-  AI_RUN_SKILL_VERSION_UNNAMED: {
-    check: "C-22.7",
-    where: "src/skillpack.mjs checkSkillVersion, called from store.mjs aiRunOpen",
-    translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
-  },
+  /* C-22.7 (AI_RUN_SKILL_VERSION_UNNAMED, SK-1) stood here until T11 (legacy-checks, N289). It left for
+     ai-runs' own row table, beside its one minting site `checkSkillVersion` (`src/ai-runs/skill-version.mjs`,
+     ai-runs R8 and R35 as K343 words it); skills names it by key through ai-runs (skills R25, K333). */
   /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
        `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
        the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
@@ -4496,8 +4475,8 @@ var AI_RUN_CHECKS = {
      absence of a row, never a row; its one exception is a run's terminal rollup, K148) under C-22.1's code, and
      C-22.1's sentence ("does not say which kind of absence it found") is false for it: that look named a kind, the
      one kind a look cannot be. DEC-49 is one code, one condition, so it takes a code of its own rather than C-22.1
-     reworded to cover both. observation-log mints it at its next job (N118's observation-log share); until then the
-     region below is unmarked and C-22.1 is still what that site answers. */
+     reworded to cover both. Since T10 observation-log mints it: the region `is-never-looked-stored` is marked in
+     `checkObservation` (`src/observation-log/vocabulary.mjs`), and C-22.17 is what that site answers (N286). */
   AI_LOG_NEVER_LOOKED_STORED: {
     check: "C-22.17",
     where: "src/observation-log/vocabulary.mjs checkObservation > is-never-looked-stored",
