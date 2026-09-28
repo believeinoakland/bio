@@ -111,3 +111,26 @@ Branch `job/T7/ai-runs` @ 58a32f8b1f, pushed; `tranche/T7` merged in (K194, @ 2a
 - `node checks/ownership.mjs /home/user/bio ai-runs tranche/T7`: ownership: 18 files changed by ai-runs between tranche/T7 and HEAD; legacy-store: 26 line(s) added, 2435 removed; legacy-checks: 8 line(s) added, 417 removed; 10 failures (the lines listed above).
 
 Size (session_01WypBtD6YhawXPvfZkGWd5r): test runs 38, module lines 4289
+
+## J7 · COMPLETE
+
+B9 done. Branch `job/T7/ai-runs` @ 64e2001b5a, pushed; `tranche/T7` merged in (K195, @ fd703fbf0a). Every module's removals are kept: the store's conflicting hunks were basis-versions' and ai-runs' own removals on each side.
+
+**The candidates source is run-productions', not mine.** `proposed_readings` is run-productions' table (its R14), and my map gives ai-runs no source over it. The tranche's store no longer carries `onCandidates("legacy-store", …)`: run-productions registers its own at construction. I left that registration alone. The store still hands run-productions `aiRuns: aiRunsOf(ctx, env)`, and the store comment above that line now says so (it had called ai-runs not yet extracted).
+
+**Tests** (here vs `tranche/T7`):
+- ai-runs: 41/0 (no base suite).
+- run-productions: 33/0 = 33/0.
+- basis-versions: 42/0 = 42/0.
+- capture-requests: 53/0 = 53/0.
+- contradiction 28/0, skills 29/0, inquiry 50/0, citation 49/0, strength 40/0.
+
+**Checks:**
+- format: 0 failures.
+- architecture: 0 failures.
+- coverage: 41 of 41 live ids named, 0 failures.
+- ownership: legacy-store 29 lines added, 2,438 removed; legacy-checks 8 added, 417 removed; 10 failures. These are the same lines K196 accepted, re-numbered: `store.mjs` 718–719, 759 and 1205–1206, and the catalogue `where`s.
+
+**One new report, legacy-ui.** The DEC-49 guard now reads 124 failures here against 123 on the base. The difference is one FLOOR SLACK line: `regions` measures 247 against a floor of 246. That is the region `is-airun-open-mode` (C-109.1, R40) this job added. `FLOOR.regions` in `civicos-ui/check-refusal-codes.mjs` should move 246 → 247, with its growth named as ai-runs' C-109.1 region; that file is not mine to edit. Every other guard failure line is identical to the base's.
+
+Size (session_01WypBtD6YhawXPvfZkGWd5r): test runs 42, module lines 4289
