@@ -130,6 +130,8 @@ test("R17 a question surfaced by a machine that no member acted on within the ag
   assert.equal(fm.disposition_reason, "surfaced by an assistant; no member acted within 30 days");
   assert.equal(fm.state_history.at(-1).author, "plane:intent");
   assert.deepEqual(w.calls.selections.map((s) => [s.ids, s.owner, s.kind]), [[["INQ-2026-0001"], "plane:intent", "enumerated"]]);
+  assert.deepEqual(w.calls.dispose.map((d) => [d.handle, d.to, d.reason, d.owner, d.author]),
+                   [["sel-1", "deferred", "surfaced by an assistant; no member acted within 30 days", "plane:intent", "plane:intent"]]);
   for (const id of ["INQ-2026-0002", "INQ-2026-0003", "INQ-2026-0004"]) assert.equal(w.fm(id).current_state, "surfaced", id);
   for (let n = 1; n <= 5; n++) assert.ok(w.record.head(`INQ-2026-000${n}`), "nothing is deleted");
   /* the interval is an instance setting */
