@@ -33,6 +33,7 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 - **ai-runs** · N284 (R30 `registered`); N289 (R35 holds C-22.7); N293 (R45, the `state` ceiling, C-22.18).
 - **capture-requests** · N295 (R14 reads inquiry R44).
 - **agent-worker** · N293 (its share: R49, its published state stays under ai-runs R45).
+- **skills** · N289 (its share, K349: R25's test reads C-22.7's row through ai-runs, never the catalogue; P10's provided-service exception).
 
 ### Layer 7
 
