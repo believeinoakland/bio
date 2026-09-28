@@ -17,3 +17,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the filings bulle
 ## B4 · CHANGE
 
 (K251) Standards is merged into `tranche/T8` early. Its exact shapes are in `build/jobs/T8/standards.md` J2. `standardRead({id, viewer})` → `{ok, id, cite, kind, issuer, text, period: {from, to}, source, declared_by, declared_at, supersedes, superseded_by, proposal, texts, says}`, and `inForce(id, date)` → `{ok, id, date, state, why}`. The factory is `standardsOf(host, deps)`. Merge `tranche/T8`, default your dep to it, and reconcile.
+
+## B5 · CHANGE
+
+(K252) Conformance's settled `determinationRead({id, viewer})` shape, from `build/jobs/T8/conformance.md` J2: `{ok, id, project, act: {id, description, actor: {role, body}, at, period, evidence}, outcomes: [{standard, outcome}], standards: [{standard, outcome, in_force, in_force_why, rows, disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions, author, at, supersedes, reason, superseded_by, live, proposal, basis_changed: null | {causes, says}}`. `findings[].finding` and `standards[].standard` (not `.id`). `at` is when it was recorded; the act's date is `act.at`/`act.period`. Absent or unseen: `NO_SUCH_DETERMINATION`. `determinationsFor` items are a strict subset. Conformance merges once it is green on the real standards; I will send a CHANGE. Reconcile your reader now.
