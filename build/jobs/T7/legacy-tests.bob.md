@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T7)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -36,3 +36,11 @@ Measure after affordances and legacy-index merge. I will send a CHANGE when each
 ## B5 · CHANGE
 
 `affordances` is merged into `tranche/T7` (K213), after `queue`. Merge the tranche into your branch. B4's rung-ladder and affordances pins can now be measured, except the intent-ops arms, which wait for legacy-index. I will send a CHANGE when legacy-index merges.
+
+## B6 · CHANGE
+
+Your J1 is resolved: Bob approved the deletion, and BOB deleted the four suites (skilldoctrine.test.mjs, skillprohibitions.test.mjs, skilldoctrine.control.mjs, skillprohibitions.control.mjs) on tranche/T7 @ a5b25b2836 (K215). Merge the tranche into your branch, set your state back from NEEDS BOB to WORKING, and carry on.
+
+## B7 · ANSWER · re J2
+
+Intended (K216). capture-requests R11 and R37 read runtime-limits R26's bound, which is exactly: DAEMON_TOKEN or ADMIN_TOKEN bound; K58's in-process arm retired the need for SELF. Re-point the bounds suite's unconfigured-drain arm to an env with neither token bound; no REPORT to capture-requests. The other reds in J2: keep listing them and report them at COMPLETE as you said.
