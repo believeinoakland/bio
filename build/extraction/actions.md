@@ -1,6 +1,6 @@
 # actions — extraction map
 
-**Status** · Measured 2026-09-26 on `tranche/T3` @ `edbd39b` (`bio-plane/` as at `f324df9`: `store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682) by a drafting worker for BOB #43 (P18). The contract is `drafts/actions.md` (R1–R39); K3, K4, K6, K23, K31, K57, K61, K64, K75 (2), K79 apply. The module exports `actionsOf(ctx)` (K61). `from` should read `["legacy-store", "legacy-checks"]` (the checks move with it, as K64). Nothing moves from `index.mjs`. **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), from `build/extraction/T8-recheck.md` re-measured after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732): every `store.mjs`, `schema.mjs`, `bio-checks.mjs`, `affordances.mjs` and `setup.mjs` line below is current there; `index.mjs` cites are pending T7's close and marked so. The contract is now `build/requirements/actions.md`.
+**Status** · Measured 2026-09-26 on `tranche/T3` @ `edbd39b` (`bio-plane/` as at `f324df9`: `store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682) by a drafting worker for BOB #43 (P18). The contract is `drafts/actions.md` (R1–R39); K3, K4, K6, K23, K31, K57, K61, K64, K75 (2), K79 apply. The module exports `actionsOf(ctx)` (K61). `from` should read `["legacy-store", "legacy-checks"]` (the checks move with it, as K64). Nothing moves from `index.mjs`. **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), from `build/extraction/T8-recheck.md` re-measured after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732): every `store.mjs`, `schema.mjs`, `bio-checks.mjs`, `affordances.mjs` and `setup.mjs` line below is current there; `index.mjs` cites were re-cited at T8's opening, on `tranche/T8` @ 12e2067a5f (K226). The contract is now `build/requirements/actions.md`.
 
 ## 1. What moves to `actions`
 
@@ -23,7 +23,7 @@
 | `RFC_RESPONSE_WINDOW_PRECEDENT`, `COUNTERPARTY_STATES`, `ENTITY_ID_RE`, `COUNTERPARTY_PLACEHOLDER` | bio-checks | 847–910 | R1, R9; `bias` has a private `ENTITY_ID_RE` of its own (`bias/checks.mjs` 10) |
 | `respondsToEdgeFindings` | bio-checks | 2050–2063 | R1 (C-6.1's `responds_to` arm); its call in the edge checks (1991; the store calls it too, 9454) stays in `checkBundle`, importing from here through the audit wrapper (R37) |
 | `checkCounterparty`, `actionBasisFindings`, `correspondenceFindings`, `QUOTE_KEYS`, `isQuoteEntry`, `quoteValue`, `quoteFindings`, `CORRESPONDENCE_STAGES`, `CORRESPONDENCE_OUTCOMES`, `DECISION_STAGES`, `LIFECYCLE_KEYS`, `lifecycleFindings`, `DUE_UNDETERMINED_SAYS`, `requestLifecycleOf`, `consequenceState`, `checkActionExtension` (C-2.10, C-11.1) | bio-checks | 4089–4704 (`checkActionExtension` 4662–4704, called at 5364) | R1, R3, R7, R9, R15–R17, R20–R22, R25, R26, R37 |
-| rows C-32.3, C-32.19, C-32.4 | bio-checks | 7928, 7942, 7951 (contiguous 7926–7958) | in `MACHINE_FENCE_CHECKS` (7910–8113): split out whole, as strength took C-32.9 into `strength/checks.mjs` 226–227 leaving no row behind (K181 (3)); the key references to fix are store 3105, 3280, 3560, 3719, `affordances.mjs` 1859–1868 and index 476–493 (index.mjs: re-cite at T7's close) |
+| rows C-32.3, C-32.19, C-32.4 | bio-checks | 7928, 7942, 7951 (contiguous 7926–7958) | in `MACHINE_FENCE_CHECKS` (7910–8113): split out whole, as strength took C-32.9 into `strength/checks.mjs` 226–227 leaving no row behind (K181 (3)); the key references to fix are store 3105, 3280, 3560, 3719, `affordances.mjs` 1859–1868 and index 476–493 |
 | row C-32.18 | bio-checks | 8106 | the same |
 | `GOVERNING_LAW_CHECKS` (C-73.1–C-73.5) | bio-checks | 8133–8168 | R2, R18 |
 | rows C-33.3–C-33.9 | bio-checks | 8303–8345 | in `ACT_SHAPE_CHECKS` (8201–8544), split the same way |
@@ -45,7 +45,7 @@
 | `OBJECT_TYPES`' `ACTN` prefix, `normalizeType`, `BUNDLE_ID_RE`, `leadLegFindings`, `isMachineIdentity` | bio-checks | `legacy-checks` | shared by every type |
 | `themeLegFindings` | bio-checks 12657–12687 (called at 4213); public face `connections` R46 (`connections/index.mjs` 55) | `connections` (K79) | this module imports it from connections R46 (R1) |
 | C-6.1's relation vocabulary with `responds_to` | bio-checks 1524–1535 (`REL_VOCAB` 1535) | `connections` | the relation list belongs with `refs` |
-| `ACTION_ACTIONS`, the op classes, the author/viewer/proposer stamps | index.mjs 707–721, 884, 1735–1751, 2154–2228, 2465–2471, 11970, 12155–12184, 12441–12445, 12559 (index.mjs: re-cite at T7's close) | `control-plane` | routing, authentication and stamps (K3) |
+| `ACTION_ACTIONS`, the op classes, the author/viewer/proposer stamps | index.mjs 485–499, 680, 1602–1618, 2051–2133, 2381–2387, 7646, 7849–7883, 8154–8158, 8272 | `control-plane` | routing, authentication and stamps (K3) |
 | `VOCABULARIES`' action entries | affordances.mjs 70–71, 540–681 | `affordances` | layer 11 imports this module's arrays |
 | the setup page's action intake (`RISK_TIERS`, `riskTierState`) | setup.mjs 19–36, 1004–1006 | `instance-setup` | layer 11 imports them from here |
 

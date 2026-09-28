@@ -1,7 +1,7 @@
 <!-- The ratification survey, split three ways from the publication map for BOB #43 on 2026-09-26 on tranche/T3 (K94); superseded where it disagrees with build/requirements/ratification.md. -->
 # ratification — extraction map
 
-**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b` (`bio-plane/` unchanged at `03e2481`) by a drafting worker for BOB #43 (P18), split from the publication map's [R] rows (K94). **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), as `build/extraction/publication.md` states: `store.mjs`, `bio-checks.mjs` and module-file lines are current there; `index.mjs` cites are pending T7's close and marked so. Ranges and "code" as `build/extraction/publication.md` states them; the extraction job confirms each. The contract is `build/requirements/ratification.md` (R1–R15); K3, K6, K31, K57, K61, K83 (3), K93 (3) and K94 apply. The module exports `ratificationOf(ctx)` (K61) and a Worker-side file for the two ceremonies. **`from`: `["legacy-store", "legacy-checks", "legacy-index"]`.** It uses `publication`; `case-authoring` uses it. It owns no table.
+**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b` (`bio-plane/` unchanged at `03e2481`) by a drafting worker for BOB #43 (P18), split from the publication map's [R] rows (K94). **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), as `build/extraction/publication.md` states: `store.mjs`, `bio-checks.mjs` and module-file lines are current there; `index.mjs` cites were re-cited at T8's opening, on `tranche/T8` @ 12e2067a5f (K226). Ranges and "code" as `build/extraction/publication.md` states them; the extraction job confirms each. The contract is `build/requirements/ratification.md` (R1–R15); K3, K6, K31, K57, K61, K83 (3), K93 (3) and K94 apply. The module exports `ratificationOf(ctx)` (K61) and a Worker-side file for the two ceremonies. **`from`: `["legacy-store", "legacy-checks", "legacy-index"]`.** It uses `publication`; `case-authoring` uses it. It owns no table.
 
 ## 1. What moves
 
@@ -20,12 +20,12 @@ Store: 1,118 lines (455 code) plus the dispatch.
 
 | what | lines | code | requirement |
 | --- | --- | --- | --- |
-| `testimonyFenceRow`, `ratifyScopeRow` | 4131–4148 (index.mjs: re-cite at T7's close) | 12 | R2, R4 (C-53.10–.12, C-58); `machineFenceRow` (4149–) stays with the dispatcher's other fences |
-| `attributionRow` | 4166–4172 (index.mjs: re-cite at T7's close) | 6 | R2, R4 (C-92.10–.12); not in the parent map |
-| `op=caseratify` block | 10918–11138 (index.mjs: re-cite at T7's close) | 120 | R2 |
-| `op=ratify` block | 11140–11858 (index.mjs: re-cite at T7's close) | 311 | R4–R6 |
+| `testimonyFenceRow`, `ratifyScopeRow` | 3827–3844 | 12 | R2, R4 (C-53.10–.12, C-58); `machineFenceRow` (3845–) stays with the dispatcher's other fences |
+| `attributionRow` | 3862–3868 | 6 | R2, R4 (C-92.10–.12); not in the parent map |
+| `op=caseratify` block | 6592–6811 | 120 | R2 |
+| `op=ratify` block | 6813–7533 | 311 | R4–R6 |
 
-Index: 965 lines (449 code).
+Index: 966 lines (449 code).
 
 ### bio-checks.mjs
 
@@ -53,20 +53,20 @@ Checks: 1,136 lines (530 code).
 | `#conclusionOf`, `#conclusionRecordOf`, `#noProjectConclusionOf` | `basis-versions` (R22, R23); store delegates 2819–2821 | `basis-versions` | moved; R1 reads them through basis-versions R22 and R23 |
 | `#memberTextAtSha` | store 6425–6432 | `record-core` (`textAtSha`, R60, K203) | called by R3 (K94); built in T8's layer 2 |
 | `recordReuseVerdicts`, `reusedParts`, `captureLimit` | `capture/index.mjs` 1009, 992, 1084; store delegates 16559–16563 | `capture` (R26, R25, R23) | moved; `op=ratify` (R6) reads them through capture R23, R25, R26 |
-| `partsHeld` | `provenance/index.mjs` 508, imported by index | `provenance` (R7) | moved; R6 reads it through provenance R7 (index.mjs: re-cite at T7's close) |
+| `partsHeld` | `provenance/index.mjs` 508, imported by index (151) | `provenance` (R7) | moved; R6 reads it through provenance R7 |
 | `#caseAuthority`, `#inSight`, `#existenceAct` | store 14165, 14167, 14173 (delegates) | `membership` | already delegating |
 | the published reads, `#publishEdges`, `#dischargeCaseFlags`, `assembleCaseContainer`, the formats | store, index, bio-checks | `publication` | called (its R5, R15, R20–R22) |
-| `classify`, admission, the stamps, `machineFenceRow` | index (index.mjs: re-cite at T7's close) | `control-plane` | K3; the handler receives the class |
+| `classify`, admission, the stamps, `machineFenceRow` | index | `control-plane` | K3; the handler receives the class |
 | the C-3.1 heading rule's `isCaseMemberBytes` call | bio-checks 1226 | `legacy-checks` (its copy) | a layer-1 check cannot call layer 8 (K57) |
 
 ## 3. Callers to rewire
 
 - `#caseConclusionFor`, `#editionsRecordingConclusion`: `publishCase` (4549, 4644; `case-authoring`), `ratifyCaseDocument` (8303, 8304), `#editionWarrantedForJoinedProjectOf` (14153, 14157; `affordances`).
-- `checkCaseDocument`: `promotion`'s `runCaseGate` (`gate.mjs` 35, 336), through promotion R47 `registerCaseCatalogue` (K202), which R8 fills (Decided 1); the ratify handler through `completenessFields` (index 7028, 7033; index.mjs: re-cite at T7's close).
+- `checkCaseDocument`: `promotion`'s `runCaseGate` (`gate.mjs` 35, 336), through promotion R47 `registerCaseCatalogue` (K202), which R8 fills (Decided 1); the ratify handler through `completenessFields` (index 7132, 7137).
 - `checkPublishedExtension`: legacy-checks' `checkInquiryExtension` (its call at bio-checks 2432, inside `checkInquiryExtension` 2300–2499, which `checkBundle` calls at 5356; kept in legacy-checks by K181 (1)), replaced by the registration (Decided 2). The call is inside this module's `from`, so the job removes it.
-- `completenessFields`, `SUBJECT_POSITIONS`: `publishCase` (5177, 4409; `case-authoring`); `completenessFields` also `ratifyCaseDocument` (8389) and the ratify handler (index 7033; index.mjs: re-cite at T7's close). `SUBJECT_POSITIONS`: `affordances.mjs` (70, 551).
+- `completenessFields`, `SUBJECT_POSITIONS`: `publishCase` (5177, 4409; `case-authoring`); `completenessFields` also `ratifyCaseDocument` (8389) and the ratify handler (index 7137). `SUBJECT_POSITIONS`: `affordances.mjs` (70, 551).
 - `SEARCHED_SUBJECT_SOURCES`: `airun.mjs` (import 92, re-export 205, uses 248, 251), imported into the store at 320, moving to `case-authoring`.
-- `isCaseMemberBytes`: the store's import (423) and the ratify handler (index 65, 7028; index.mjs: re-cite at T7's close).
+- `isCaseMemberBytes`: the store's import (423) and the ratify handler (index 65, 7132).
 - `gateFacts`, `caseRatify`, `publish`: only their dispatch entries and the Worker handlers.
 
 ## 4. Old-battery tests
