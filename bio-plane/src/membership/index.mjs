@@ -13,7 +13,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS, MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS,
          CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS,
-         CASE_AUTHORITY_CHECKS } from "../../checks/bio-checks.mjs";
+         CASE_AUTHORITY_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
@@ -74,6 +74,73 @@ export function noSuchProject(projectId, extra = null) {
   /* END DEC-49 REGION is-project-seen */
 }
 
+/* R79's "the modules' total order": the layer order of `build/modules.json`, its ids by layer and then by their place in
+   the file (K270). Product code cannot read `build/` at run time, so it is held here, as promotion holds its copy for
+   R39; this module's R79 test holds it equal to the file, so a change there fails the suite until the list follows. */
+export const MODULE_ORDER = Object.freeze([
+  /* 1 */ "legacy-checks", "jurisdictions", "test-support", "bundler", "runtime-limits", "signatures", "id-spaces",
+          "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain",
+          "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 2 */ "record-core", "membership", "promotion",
+  /* 3 */ "host-governor", "provenance", "capture-sources", "capture",
+  /* 4 */ "calibration", "extraction", "content",
+  /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
+  /* 6 */ "inquiry", "citation", "basis-versions", "strength", "contradiction", "ai-runs", "run-productions",
+          "capture-requests", "skills", "agent-worker",
+  /* 7 */ "intent", "reevaluation",
+  /* 8 */ "publication", "ratification", "case-authoring", "review",
+  /* 9 */ "standards", "conformance", "consequences", "actions", "filings", "escalation",
+  /* 10 */ "monitoring", "scheduler", "legacy-store",
+  /* 11 */ "affordances", "queue", "instance-setup", "control-plane", "legacy-index", "legacy-ui", "installer",
+           "legacy-tests",
+]);
+
+const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+const LISTENER_REFUSAL_FIELDS = new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
+
+/** R81 (N202, K231, K285; moved from promotion's R49, membership being the earliest module that registers listeners,
+ *  K275): the one site that mints LISTENER_MALFORMED and LISTENER_DECLARED. Every registration of a listener asks it
+ *  before recording the registration: this module's (R79), promotion's (through its R49) and every later module's.
+ *  `held` is what the caller already holds for the slot: a list of `{module}`, or, for a slot that takes one
+ *  registration whoever makes it, that one registration or null. Answers the refusal, with `extra` (the caller's own
+ *  fields) beside its own and never replacing them, and its row's `check` and `translation` once legacy-checks holds
+ *  the row (N206); else null. Writes nothing and never throws. (Promotion's built text, moved as it was, K285.) */
+export function listenerRefusal(held, module, fn, extra) {
+  const refuse = (code, detail, fields) => {
+    let row = null;
+    try { row = Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code) ? REGISTRATION_CHECKS[code] : null; }
+    catch { row = null; }
+    /* The refusal's own fields are never the caller's, `check` and `translation` included while no row is held: a
+       caller's copy would claim a catalogue row that does not exist. */
+    let own = {};
+    try {
+      if (isObj(extra)) own = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
+    } catch { own = {}; }
+    return { ...own, ok: false, reason: code, code, detail, ...fields,
+             ...(row ? { check: row.check, translation: row.translation } : {}) };
+  };
+  /* DEC-49 REGION is-listener-registration */
+  try {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return refuse("LISTENER_MALFORMED", "a listener names the module that registers it and its function", {});
+    if (Array.isArray(held)) {
+      if (held.some((h) => isObj(h) && h.module === module))
+        return refuse("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
+      return null;
+    }
+    if (isObj(held)) {
+      const holder = typeof held.module === "string" ? held.module : null;
+      return refuse("LISTENER_DECLARED", `this listener is already registered${holder ? ` by ${holder}` : ""}, and it `
+                    + `takes one registration`, { module: holder });
+    }
+    return null;
+  } catch (e) {
+    return refuse("LISTENER_MALFORMED",
+      `the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`, {});
+  }
+  /* END DEC-49 REGION is-listener-registration */
+}
+
 /* A whole-second instant, the record's `…:00Z` spelling (the legacy store's the whole-second spelling). */
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 
@@ -130,39 +197,25 @@ export class Membership {
   }
   #declared = false;
 
-  /* ===== N123 — THE REVOCATION NOTICE (K31's pattern, K159) =====
+  /* ===== R79 (N123, K159, K285) — THE REVOCATION NOTICE (K31's pattern) =====
    *
    * A later module that holds something a member's standing grants (capture-sources' `member` credentials, its R63)
    * registers once at start, and is told the moment a member is revoked, inside the revoking act: R8's carried
    * removal and R20's revocation. The notice is `{memberId, by, at}`, the act's own actor and time. It is called after
-   * the act's writes, in the caller's transaction, once per listener in the order they registered (each module
-   * registers at its start, so that is the modules' order). A listener's answer is not read, and one that throws
-   * changes neither the revocation, its answer, nor another listener's notice: the listener's module still meets the
-   * revoked status at its own next read (capture-sources R63), so a failure here is never a credential kept.
-   * A write that leaves a revoked member revoked notifies nobody. */
-  #revokedListeners = [];
+   * the act's writes, in the caller's transaction, once per listener in the modules' total order (`MODULE_ORDER`; an
+   * unknown module last, in the order it registered). A listener's answer is not read, and one that throws changes
+   * neither the revocation, its answer, nor another listener's notice: the listener's module still meets the revoked
+   * status at its own next read (capture-sources R63), so a failure here is never a credential kept. A write that
+   * leaves a revoked member revoked notifies nobody. Registration's refusals are R81's. */
+  #revokedListeners = [];   // {module, fn, seq}
 
   onRevoked(module, fn) {
-    const refused = Membership.#listenerRefusal(module, fn, this.#revokedListeners);
+    const refused = listenerRefusal(this.#revokedListeners, module, fn);
     if (refused) return refused;
-    this.#revokedListeners.push({ module, fn });
+    this.#revokedListeners.push({ module, fn, seq: this.#revokedListeners.length });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.#revokedListeners.sort((a, b) => (rank(a.module) - rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
-  }
-
-  /* LISTENER_MALFORMED and LISTENER_DECLARED in promotion R49's shape (`{ok, reason, code, detail, module?}`), minted
-     here because membership is before promotion in the order and cannot ask its `listenerRefusal` (P4); which module
-     holds the one site is BOB's (MEMBERSHIP #3 J2, Q1). Their rows are legacy-checks' to add (N206). */
-  static #listenerRefusal(module, fn, held) {
-    /* DEC-49 REGION is-revocation-listener */
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", code: "LISTENER_MALFORMED",
-               detail: "a listener names the module that registers it and its function. Nothing was registered." };
-    if (held.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", code: "LISTENER_DECLARED", module,
-               detail: `${module} has already registered its listener for a member's revocation. Nothing was `
-                     + `registered.` };
-    /* END DEC-49 REGION is-revocation-listener */
-    return null;
   }
 
   #announceRevoked(memberId, by, at) {

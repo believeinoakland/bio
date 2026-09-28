@@ -1,15 +1,18 @@
-/* T9's share beyond R78: N123 (the revocation notice, under R8 and R20), N142 (`inSight`, R43–R44's FULL as a named
-   service) and N70 (bounds on R11's history, R19's pairings, and the votes behind R39's and R40's deciders). */
+/* T9's share beyond R78 (K285): R79 the revocation notice (N123), R80 `inSight` (N142), R81 `listenerRefusal` (N202,
+   moved from promotion), R82 the bounds on R11's history, R19's pairings and the votes behind R39's and R40's deciders
+   (N70). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { Membership } from "../../../src/membership/index.mjs";
+import { Membership, listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
+import { REGISTRATION_CHECKS } from "../../../checks/bio-checks.mjs";
+import { readFile } from "node:fs/promises";
 import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
 
 const snapshot = (w) => JSON.stringify(w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)
   .map(({ name }) => [name, w.rows(`SELECT * FROM "${name}"`)]));
 
-test("R20 R8 (N123) onRevoked: registered once per module; malformed and second registrations refused, nothing registered", async () => {
+test("R79 R81 onRevoked: registered once per module; malformed and second registrations refused by R81, nothing registered", async () => {
   const w = world();
   for (const [module, fn] of [[null, () => {}], ["", () => {}], [7, () => {}], ["capture-sources", null],
                               ["capture-sources", "fn"], [undefined, undefined]]) {
@@ -17,14 +20,17 @@ test("R20 R8 (N123) onRevoked: registered once per module; malformed and second 
     assert.deepEqual([r.ok, r.reason, r.code], [false, "LISTENER_MALFORMED", "LISTENER_MALFORMED"], JSON.stringify(module));
     assert.equal(typeof r.detail, "string");
   }
+  for (const [module, fn] of [[null, () => {}], ["capture-sources", null]])
+    assert.deepEqual(w.m.onRevoked(module, fn), listenerRefusal([], module, fn), "R81's answer");
   assert.deepEqual(w.m.onRevoked("capture-sources", () => {}), { ok: true, module: "capture-sources" });
+  assert.deepEqual(w.m.onRevoked("capture-sources", () => {}), listenerRefusal([{ module: "capture-sources" }], "capture-sources", () => {}));
   const again = w.m.onRevoked("capture-sources", () => {});
   assert.deepEqual([again.ok, again.reason, again.code, again.module], [false, "LISTENER_DECLARED", "LISTENER_DECLARED",
     "capture-sources"]);
   assert.deepEqual(w.m.onRevoked("another", () => {}).ok, true);
 });
 
-test("R20 R8 (N123) a revocation notifies every listener once, inside the act, after its writes; nothing else notifies", async () => {
+test("R79 a revocation (R20) notifies every listener once, inside the act, after its writes; nothing else notifies", async () => {
   const w = await world().group("ann", "bob");
   const heard = [];
   const seen = [];
@@ -57,7 +63,7 @@ test("R20 R8 (N123) a revocation notifies every listener once, inside the act, a
   assert.deepEqual(heard.map(([, n]) => [n.memberId, n.by]), [["bob", null], ["bob", null]]);
 });
 
-test("R8 (N123) a carried administrator removal notifies with the completing voter; a vote short of it does not", async () => {
+test("R79 a carried administrator removal (R8) notifies with the completing voter; a vote short of it does not", async () => {
   const w = await world().group();
   const p = await w.m.memberAdd({ memberId: "third", cover: "c3", role: "admin", by: "admin" });
   assert.equal(p.reason, "CONSENSUS_REQUIRED");
@@ -71,7 +77,7 @@ test("R8 (N123) a carried administrator removal notifies with the completing vot
   assert.deepEqual(heard.map((n) => [n.memberId, n.by]), [["third", "second"]]);
 });
 
-test("R20 R8 (N123) a listener that throws or rejects changes neither the revocation, its answer, nor another's notice", async () => {
+test("R79 a listener that throws or rejects changes neither the revocation, its answer, nor another's notice", async () => {
   const plain = await world().group("ann");
   const want = plain.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
   const w = await world().group("ann");
@@ -87,7 +93,7 @@ test("R20 R8 (N123) a listener that throws or rejects changes neither the revoca
   await new Promise((r) => setTimeout(r, 10));   // a rejected promise is caught, never an unhandled rejection
 });
 
-test("R43 R44 (N142) inSight: true exactly for a held bundle R43 admits the viewer to (FULL); total, and writes nothing", async () => {
+test("R80 inSight: true exactly for a held bundle R43 admits the viewer to (FULL); total, and writes nothing", async () => {
   const w = await world().group("ann", "bob", "cal");
   w.bundle("INFO-I");
   w.project("PROJ-H", "Hidden H");
@@ -117,7 +123,7 @@ test("R43 R44 (N142) inSight: true exactly for a held bundle R43 admits the view
   assert.equal(snapshot(w), before, "writes nothing");
 });
 
-test("R11 (N70) hostingAccess is bounded and says so: limit lowered never raised, truncated measured, current the latest", async () => {
+test("R82 hostingAccess (R11) is bounded and says so: limit lowered never raised, truncated measured, current the latest", async () => {
   const w = await world().group();
   const empty = w.m.hostingAccess();
   assert.deepEqual([empty.recorded, empty.current, empty.history, empty.limit, empty.truncated],
@@ -136,7 +142,7 @@ test("R11 (N70) hostingAccess is bounded and says so: limit lowered never raised
   assert.deepEqual(w.ops("limit=3").hostingaccess().history.length, 3, "the op passes limit");
 });
 
-test("R19 (N70) memberPairings is bounded and says so: the first limit by handle, truncated measured, never raised", async () => {
+test("R82 memberPairings (R19) is bounded and says so: the first limit by handle, truncated measured, never raised", async () => {
   const w = await world().group("ann", "bob", "cal");
   for (const id of ["ann", "bob", "cal"]) w.m.memberPairingSet({ memberId: id, published: true, by: id });
   const all = w.m.memberPairings();
@@ -153,7 +159,7 @@ test("R19 (N70) memberPairings is bounded and says so: the first limit by handle
   assert.deepEqual([op.pairings.length, op.truncated], [1, true]);
 });
 
-test("R39 R40 (N70) the votes behind the deciders are the current owners' only, read bounded by the owner count", async () => {
+test("R82 the votes behind R39's and R40's deciders: behind the deciders are the current owners' only, read bounded by the owner count", async () => {
   const w = await world().group("ann", "bob", "cal", "dee", "eve");
   w.project("PROJ-P");
   w.m.projectClaimOwner({ projectId: "PROJ-P", memberId: "ann" });
@@ -179,3 +185,76 @@ test("R39 R40 (N70) the votes behind the deciders are the current owners' only, 
   const kept = w.m.projectParticipants({ projectId: "PROJ-P", by: "eve" }).ownership.at(-1);
   assert.deepEqual([kept.kind, kept.deciders, kept.reasons], ["remove", ["ann", "bob"], ["a", "b"]]);
 });
+
+test("R79 listeners are told in the modules' total order (build/modules.json's layer order), an unknown module last", async () => {
+  const { modules } = JSON.parse(await readFile(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
+  const byLayer = [...modules].map((m, i) => ({ id: m.id, layer: m.layer, i })).sort((a, b) => (a.layer - b.layer) || (a.i - b.i));
+  assert.deepEqual([...MODULE_ORDER], byLayer.map((m) => m.id), "MODULE_ORDER is modules.json's order");
+  const w = await world().group("ann");
+  const heard = [];
+  for (const m of ["unknown-b", "queue", "capture-sources", "unknown-a", "promotion", "legacy-store"])
+    assert.equal(w.m.onRevoked(m, () => heard.push(m)).ok, true);
+  w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
+  assert.deepEqual(heard, ["promotion", "capture-sources", "legacy-store", "queue", "unknown-b", "unknown-a"]);
+});
+
+test("R81 listenerRefusal is the one site of LISTENER_MALFORMED and LISTENER_DECLARED: malformed, declared in a list, declared in a one-registration slot naming its holder, else null; extra beside, never replacing; writes nothing, never throws", () => {
+  const fn = () => null;
+  /* Its row's check and translation, once legacy-checks holds the row (N202, N206); none is invented before. */
+  const rowOf = (code) => (Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code)
+    ? { check: REGISTRATION_CHECKS[code].check, translation: REGISTRATION_CHECKS[code].translation } : {});
+  const shape = (r, code) => {
+    assert.deepEqual([r.ok, r.reason, r.code], [false, code, code]);
+    assert.equal(typeof r.detail, "string");
+    const row = rowOf(code);
+    assert.deepEqual([r.check, r.translation], [row.check, row.translation]);
+  };
+  /* LISTENER_MALFORMED: a module that is not a non-empty string, or a fn that is not a function, whatever is held. */
+  for (const held of [[], [{ module: "a" }], null, undefined, { module: "a" }])
+    for (const [m, f] of [["", fn], [null, fn], [undefined, fn], [7, fn], [{}, fn], ["a", null], ["a", "fn"], ["a", {}], [undefined, undefined]]) {
+      const r = listenerRefusal(held, m, f);
+      shape(r, "LISTENER_MALFORMED");
+      assert.equal("module" in r, false);
+    }
+  /* LISTENER_DECLARED in a list: exactly when the list holds one by this module, naming it. */
+  const list = [{ module: "a", fn, seq: 0 }, { module: "b", fn, seq: 1 }];
+  const snapshot = JSON.stringify(list);
+  for (const m of ["a", "b"]) {
+    const r = listenerRefusal(list, m, fn);
+    shape(r, "LISTENER_DECLARED");
+    assert.equal(r.module, m);
+    assert.match(r.detail, new RegExp(m));
+  }
+  for (const [held, m] of [[list, "c"], [[], "a"], [[null, 3, "a", { module: "A" }], "a"]]) assert.equal(listenerRefusal(held, m, fn), null);
+  /* A one-registration slot: held by anyone, it is declared, naming its holder, whoever asks; empty, it answers null. */
+  for (const m of ["ratification", "publication"]) {
+    const r = listenerRefusal({ module: "ratification", fn }, m, fn);
+    shape(r, "LISTENER_DECLARED");
+    assert.equal(r.module, "ratification");
+  }
+  const anon = listenerRefusal({ fn }, "x", fn);
+  shape(anon, "LISTENER_DECLARED");
+  assert.equal(anon.module, null, "a holder that names no module is named as none");
+  for (const held of [null, undefined]) assert.equal(listenerRefusal(held, "x", fn), null);
+  /* extra: the caller's own fields beside the refusal's, never replacing them. */
+  const extra = { event: "promoted", kind: "k", ok: true, reason: "MINE", code: "MINE", detail: "mine", module: "forged",
+                  check: "C-0", translation: "forged" };
+  const d = listenerRefusal(list, "a", fn, extra);
+  shape(d, "LISTENER_DECLARED");
+  assert.deepEqual([d.event, d.kind, d.module, d.detail === "mine"], ["promoted", "k", "a", false]);
+  const mal = listenerRefusal(list, "", fn, { event: "promoted" });
+  shape(mal, "LISTENER_MALFORMED");
+  assert.equal(mal.event, "promoted");
+  for (const odd of [null, 7, "s", [1]]) assert.deepEqual(listenerRefusal(list, "a", fn, odd), listenerRefusal(list, "a", fn));
+  assert.equal(listenerRefusal(list, "c", fn, extra), null);
+  /* Writes nothing; never throws, even over a held value or an extra that throws when read. */
+  assert.equal(JSON.stringify(list), snapshot);
+  const hostile = [{ get module() { throw new Error("boom"); } }];
+  assert.doesNotThrow(() => listenerRefusal(hostile, "a", fn));
+  shape(listenerRefusal(hostile, "a", fn), "LISTENER_MALFORMED");
+  const trap = {}; Object.defineProperty(trap, "x", { enumerable: true, get() { throw new Error("extra"); } });
+  assert.doesNotThrow(() => listenerRefusal(list, "a", fn, trap));
+  shape(listenerRefusal(list, "a", fn, trap), "LISTENER_DECLARED");
+});
+
+test.todo("R81: LISTENER_MALFORMED and LISTENER_DECLARED carry their rows' check and translation — legacy-checks holds no row for either yet (N202's convergence, N206, T10); the test above asserts the row is carried as soon as the catalogue holds it");
