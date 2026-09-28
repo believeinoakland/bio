@@ -41,16 +41,14 @@ function refusal(key, detail) {
  *  wrote. */
 export function checkSkillVersion(version) {
   const v = typeof version === "string" ? version.trim() : "";
-  if (!v)
-    return refusal("AI_RUN_SKILL_VERSION_UNNAMED",
-      "this run named no skill version. §11 records the conditions a run was formed under — the "
+  if (/^[^\s@]+@[^\s@]+$/.test(v)) return null;
+  /* ONE site mints the code (DEC-49: one code, one condition); the two ways to fail differ only in the detail. */
+  return refusal("AI_RUN_SKILL_VERSION_UNNAMED", !v
+    ? "this run named no skill version. §11 records the conditions a run was formed under — the "
       + "manifest in force, the standard pair, and the skill version it ran under — because a "
-      + "version is only interpretable against them");
-  if (!/^[^\s@]+@[^\s@]+$/.test(v))
-    return refusal("AI_RUN_SKILL_VERSION_UNNAMED",
-      `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition `
+      + "version is only interpretable against them"
+    : `'${v.slice(0, 60)}' names no pack. A skill version is <pack>@<edition>, and a bare edition `
       + "cannot be read once a second pack exists — it looks like an answer and identifies nothing");
-  return null;
 }
 
 /** The pack id and edition a recorded version names, or null if it names none.

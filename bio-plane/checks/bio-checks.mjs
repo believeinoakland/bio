@@ -5575,7 +5575,7 @@ export const AI_RUN_CHECKS = {
      weaker statement of absence; it is an ungoverned one. */
   AI_LOG_STATE_UNKNOWN: {
     check: 'C-22.1',
-    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'That observation does not say which kind of absence it found. '
       + 'The record distinguishes never having looked, having looked and found nothing, '
       + 'having looked and being unable to tell, having found it, and having found part of it.',
@@ -5587,7 +5587,7 @@ export const AI_RUN_CHECKS = {
      only be LOOKED_INDETERMINATE, and either definitive claim is refused. */
   AI_LOG_GOVERNED_ABSENCE: {
     check: 'C-22.2',
-    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'That observation was stopped by our own pacing of the source, not by the source. '
       + 'It can only record that we could not tell — recording an absence there would be a claim '
       + 'about the world made from a fact about us.',
@@ -5598,7 +5598,7 @@ export const AI_RUN_CHECKS = {
      as coverage is the defect the whole absence vocabulary exists to prevent. */
   AI_LOG_SHELL_PRESENT: {
     check: 'C-22.3',
-    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'That capture is a page shell with nothing evidential in it, so it cannot be '
       + 'recorded as having found the material. It records that we could not tell.',
   },
@@ -5610,7 +5610,7 @@ export const AI_RUN_CHECKS = {
      the same fence one surface over. */
   AI_RUN_CONDITION_UNKNOWN: {
     check: 'C-22.4',
-    where: 'src/airun.mjs checkCondition, called from store.mjs #aiRunTerminate',
+    where: 'src/observation-log/vocabulary.mjs checkCondition, called from src/ai-runs/index.mjs #aiRunTerminate',
     translation: 'The run tried to end on a condition the record has no name for. '
       + 'A condition nobody can read is not an explanation.',
   },
@@ -5623,7 +5623,7 @@ export const AI_RUN_CHECKS = {
      than asserted about every reader. */
   AI_LOG_NOT_A_BUNDLE: {
     check: 'C-22.6',
-    where: 'src/airun.mjs checkObservation, called from store.mjs #aiRunAppend',
+    where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'The observation log is not part of any published document and cannot be filed into one.',
   },
   /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
@@ -5652,7 +5652,7 @@ export const AI_RUN_CHECKS = {
      the provisional exists to keep out. */
   OBS_AUTHORITY_UNNAMED: {
     check: 'C-22.9',
-    where: 'src/airun.mjs checkObservation, called from store.mjs #observe',
+    where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'That observation does not say why the look was made. '
       + 'The record keeps what it looked for only when something can be named as the reason — '
       + 'an investigation, a monitoring sweep, a link in a document, a ratification, or a '
@@ -5716,7 +5716,7 @@ export const AI_RUN_CHECKS = {
      Section K of `test/observation-log.test.mjs` drives all of it. */
   OBS_PRESENT_NO_REFERENT: {
     check: 'C-22.10',
-    where: 'src/airun.mjs checkObservation, called from store.mjs #observe',
+    where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'That observation says the thing is there without saying what was found. '
       + 'A record that something is present has to point at what it found — the captured '
       + 'document, the passage, the entity — or nobody can check it later, and a claim of '
