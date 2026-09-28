@@ -28,3 +28,7 @@ BASIS-VERSIONS #2 (the first session of this job; #1 left no record on this bran
 - `format`: 0 failures. `architecture basis-versions`: 11 product files, 0 failures. `coverage basis-versions`: 40 of 40 live ids named, 0 failures. `ownership basis-versions tranche/T10`: 7 files, legacy-store and legacy-checks 0 added, 0 failures.
 
 Size (session_016q7pJH6bnNGAnXFMFWBYoL): test runs 9, module lines 1998
+
+## J1 · COMPLETE
+
+Done: N186 (R17, imports inquiry's actNoBasis, own copy and is-act-no-basis region deleted), N99 (content's extentRelation), N185 (D-423 comment; legacy hygiene now passes), N204 (own FACT_UNAVAILABLE mint deleted; the factory always wires cyclePath; promotion's caseMember refusal relayed unchanged), N202 (R40 through membership's listenerRefusal). 44/44 module tests, users' suites green, four checks 0 failures. DEPENDS ON inquiry exporting actNoBasis (its N186 share): my branch does not load until inquiry merges; tested with the export in my working tree only. Reports for legacy-store (dead actNoBasis) and legacy-checks (C-33.40 where) are in my record.
