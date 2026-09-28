@@ -1,6 +1,6 @@
 # case-authoring (T8)
 
-**Status** · session_013mdoyx9b1ho4qUnQHZZifh · depth 2 · WORKING · handled B2
+**Status** · session_013mdoyx9b1ho4qUnQHZZifh · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ## J1 · QUESTION
 
