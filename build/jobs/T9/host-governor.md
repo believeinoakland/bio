@@ -18,7 +18,7 @@
 - Users of this module: `m/capture` 59 pass 0 fail; `m/capture-requests` 53 pass 0 fail; `m/monitoring` 43 pass 0 fail 10 todo (its own); `m/queue` 10 pass 0 fail; instance-setup has no test directory.
 - `format`: 0 failures · `architecture`: 0 failures · `coverage`: 26 of 26 live ids named by a test, 0 failures · `ownership` against `tranche/T9`: 0 failures, legacy-store/legacy-index 0 lines.
 
-Size (session_01YFNNHMErCvvjFpwV1NB6Kt): test runs 12, module lines 367
+Size (session_01YFNNHMErCvvjFpwV1NB6Kt): test runs 12, module lines 392
 
 ## J1 · QUESTION
 
