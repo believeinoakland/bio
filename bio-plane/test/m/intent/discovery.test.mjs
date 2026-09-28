@@ -174,3 +174,45 @@ test("R20 an assistant proposes at any point and adopts at none: every act that 
   /* and it may propose: a machine's question lands */
   assert.equal(w.i.triage({ proposal: "progressions::proc::award", act: "question", author: MACHINE }).ok, true);
 });
+
+test("R27 ageDue answers the earliest ageing instant of any ageable question, past or not, and ageWake the earliest later than now; each null with none; a question R17 could not move stays due and is never woken for; both write nothing and never throw", async () => {
+  const w = seeded();
+  const T = Date.parse("2026-09-28T00:00:00Z");
+  const at = (days) => new Date(T - days * DAY).toISOString().replace(/\.\d+Z$/, "Z");
+  assert.equal(w.i.ageDue(T), null, "no question: nothing due");
+  assert.equal(w.i.ageWake(T), null);
+  w.inquiry("INQ-2026-0001-question", { created: at(40) });                       // ageing instant T - 10 days
+  w.inquiry("INQ-2026-0002-question", { created: at(10) });                       // T + 20 days
+  w.inquiry("INQ-2026-0003-question", { created: at(5) });                        // T + 25 days
+  w.inquiry("INQ-2026-0004-question", { created: at(50), surfacedBy: "human", author: V("bob") });   // not ageable
+  w.inquiry("INQ-2026-0005-question", { created: at(60) });                       // a member acted: not ageable
+  w.revise("INQ-2026-0005-question", w.text("INQ-2026-0005-question").replace("## Question", "## Question\n\nNarrowed."), V("bob"));
+  w.inquiry("INQ-2026-0006-question", { created: at(70), state: "open" });        // no longer surfaced
+  const snap = w.snapshot();
+  assert.equal(w.i.ageDue(T), T - 10 * DAY, "the earliest, past or not");
+  assert.equal(w.i.ageWake(T), T + 20 * DAY, "the earliest later than now");
+  assert.equal(w.i.ageWake(new Date(T + 20 * DAY).toISOString()), T + 25 * DAY, "ISO text reads as the same instant; strictly later");
+  assert.equal(w.i.ageWake(T + 25 * DAY), null, "none later");
+  assert.deepEqual(w.snapshot(), snap, "the reads write nothing");
+  /* the interval is the instance's setting, as R17's */
+  w.record.setSetting("intent_ageing_days", 5, V("alice"));
+  assert.equal(w.i.ageDue(T), T - 35 * DAY);
+  assert.equal(w.i.ageWake(T), null, "every ageable question is past its instant at 5 days");
+  w.record.setSetting("intent_ageing_days", 30, V("alice"));
+  /* a question R17 tried and could not move stays due, tried again at a later firing, and is never woken for */
+  const dispose = w.stand.inquiry.dispose;
+  w.stand.inquiry.dispose = () => ({ ok: false, reason: "HELD_ELSEWHERE" });
+  const r = await w.i.ageSurfaced(T);
+  assert.deepEqual(r.aged, []);
+  assert.deepEqual(r.refused.map((x) => x.id), ["INQ-2026-0001-question"]);
+  assert.equal(w.i.ageDue(T), T - 10 * DAY, "still due");
+  assert.equal(w.i.ageWake(T), T + 20 * DAY, "not woken for");
+  w.stand.inquiry.dispose = dispose;
+  assert.deepEqual((await w.i.ageSurfaced(T)).aged, ["INQ-2026-0001-question"], "tried again, and moved");
+  assert.equal(w.i.ageDue(T), T + 20 * DAY, "a moved question is no longer ageable");
+  /* never throws: a record that fails under it answers null */
+  const broken = seeded();
+  broken.record.listByType = () => { throw new Error("down"); };
+  assert.equal(broken.i.ageDue(T), null);
+  assert.equal(broken.i.ageWake(T), null);
+});

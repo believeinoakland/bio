@@ -40,7 +40,10 @@ export const MACHINE = "class:ai";
 export const NOW = "2026-09-28T01:00:00Z";
 export const DAY = 86400000;
 
-export function world({ now = NOW } = {}) {
+/** `plane`: build as the plane does (N179): intent first, reaching progressions through the host, and progressions
+ *  after it with the plane's `env` (legacy-store builds `intentOf(ctx)` before `progressionsOf(ctx, {env})`), each
+ *  capture's reading dated `plane.readingAt`. */
+export function world({ now = NOW, plane = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -54,9 +57,14 @@ export function world({ now = NOW } = {}) {
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
   const entities = entitiesOf(host, { record, membership, provenance: {}, now: () => clock.now });
   entities.migrate();
-  const progressions = progressionsOf(host, { record, entities, extraction: { readingOf: () => null },
-                                              provenance: { homeOf: () => null }, now: () => clock.now });
-  progressions.migrate();
+  const buildProgressions = () => {
+    const p = progressionsOf(host, { record, entities, provenance: { homeOf: () => null }, now: () => clock.now,
+      extraction: { readingOf: () => (plane && plane.readingAt ? { reading: { at: plane.readingAt } } : null) },
+      ...(plane ? { env: plane.env } : {}) });
+    p.migrate();
+    return p;
+  };
+  let progressions = plane ? null : buildProgressions();
   const calls = { selections: [], dispose: [], open: [], requests: [] };
   const selections = new Map();
   const retrieval = {
@@ -98,12 +106,15 @@ export function world({ now = NOW } = {}) {
   /* capture-requests' read (its R23): the rows the viewer may see, oldest first, bounded */
   const requests = [];
   const captureRequests = { captureRequests: (a) => { calls.requests.push(a); return { count: requests.length, limit: a.limit, truncated: false, requests: [...requests] }; } };
-  const i = intentOf(host, { record, membership, promotion, entities, progressions, inquiry, retrieval, aiRuns,
-                             captureRequests, now: () => clock.now });
+  const i = intentOf(host, { record, membership, promotion, entities, ...(plane ? {} : { progressions }), inquiry, retrieval,
+                             aiRuns, captureRequests, now: () => clock.now });
   i.migrate();
+  if (plane) progressions = buildProgressions();
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, entities, progressions, inquiry, i, clock, calls, requests,
+    st, host, record, membership, promotion, entities, progressions, i, clock, calls, requests,
+    /** The four stand-ins intent was built with, so a test can make one answer otherwise. */
+    stand: { inquiry, retrieval, aiRuns, captureRequests },
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,

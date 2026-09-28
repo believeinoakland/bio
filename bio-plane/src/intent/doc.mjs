@@ -6,11 +6,12 @@
  * body section, where any text is kept as written. Each edit rewrites one field or one section and leaves every other
  * byte alone. */
 
-import { parseFrontmatter, deriveInquiryTitle } from "../../checks/bio-checks.mjs";
+import { parseFrontmatter, deriveInquiryTitle, BASIS_GRADES } from "../../checks/bio-checks.mjs";
 
 export const ASPIRATION = "aspiration", GOAL = "goal";
 export const ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
-export const GRADES = Object.freeze(["A", "B", "C", "D"]);
+/** The grades a condition may require: the catalogue's, never a copy of them (N181 (3)). */
+export const GRADES = BASIS_GRADES;
 
 /** A token the grammar holds bare: an id, a key, a grade, a kind. */
 export const TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
@@ -135,13 +136,24 @@ export function deadEndsOf(text) {
 /** The title a pursuit document carries: its statement's first line, cut as a question's title is (R10 of inquiry). */
 export const titleOf = (statement) => (deriveInquiryTitle(statement) || "untitled").replace(/["\\]/g, "'");
 
+/** R26 (K171, K229): a pursuit document's id, `record-core`'s allocated number and a fixed word for its type, so the
+ *  catalogue's id grammar (C-1.2) holds and the id says what kind of thing it names and nothing of what it says. */
+export const pursuitId = (allocated, type) => `${allocated}-${type}`;
+
+/* R26 (K229): the core fields C-2.2 asks of every record document that the act itself states: a member's act
+   (`produced_by`), nothing pending, nothing drawn. `group` is stamped by `promotion` from the instance's producing
+   group (its R13), so it is not written here. */
+const CORE_TAIL = Object.freeze(["produced_by:", "  mode: human", "  capability_tier: session", "references: []",
+  "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
+  "visuals: []"]);
+
 /** R26: a new aspiration's document, `held`. */
 export function aspirationDoc({ id, scope, owner, statement, entities, progressions, author, at }) {
   return ["---", `id: ${id}`, `object_type: ${ASPIRATION}`, `schema: ${ASPIRATION}@1`, `title: ${q(titleOf(statement))}`,
     "current_state: held", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`,
     `scope: ${scope}`, `owner: ${owner ?? "null"}`, `entities: [${entities.join(", ")}]`,
     `progressions: [${progressions.join(", ")}]`, `author: ${TOKEN.test(author) ? author : q(author)}`,
-    "references: []", "state_history: []", "---", "", "## Statement", "", statement.trim(), "", "## Dead Ends", "",
+    ...CORE_TAIL, "---", "", "## Statement", "", statement.trim(), "", "## Dead Ends", "",
     "## Session Log", "", `### Session ${at} | Declared | ${author}`, `Changes: ${scope} aspiration declared.`, ""].join("\n");
 }
 
@@ -150,7 +162,7 @@ export function goalDoc({ id, statement, bounds, aspiration, author, at }) {
   return ["---", `id: ${id}`, `object_type: ${GOAL}`, `schema: ${GOAL}@1`, `title: ${q(titleOf(statement))}`,
     "current_state: open", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`,
     `aspiration: ${aspiration ?? "null"}`, `author: ${TOKEN.test(author) ? author : q(author)}`, "objectives: []",
-    "references: []", "state_history: []", "---", "", "## Statement", "", statement.trim(), "", "## Bounds", "",
+    ...CORE_TAIL, "---", "", "## Statement", "", statement.trim(), "", "## Bounds", "",
     bounds.trim(), "", "## Session Log", "", `### Session ${at} | Declared | ${author}`, "Changes: goal declared.", ""]
     .join("\n");
 }
