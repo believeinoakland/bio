@@ -42,3 +42,17 @@ Progress, and what I am waiting on (no question).
   - format, architecture and coverage are clean (25/25 at the time; R26 now covered).
 - **B2 and B3 applied.** R15 reads case-authoring's `withheld_stated` from the list. R26 is tested.
 - **Waiting on:** your CHANGE merging publication (`publicationOf`, `registerReviewProvider`, R39 `attributionInForce`) and case-authoring (`caseAuthoringOf`, `publishCase`, the list). Until then the plane's `op=reviewcopy` has no case-authoring to run its dry run against, so the old battery's review suites are red on this branch. Compared with base `tranche/T8`: reviewcopy 98/0 → 55/43, rec213 20/0 → 6/14, d573 12/0 → 4/8, d150 64/0 → 53/11, and others. I will re-measure and REPORT per suite once the providers are merged; I will not rewire interim adapters into the store.
+
+## J3 · QUESTION
+
+B4 is merged into `job/T8/review` and pushed. review now fills publication R23 itself (`registerReviewProvider("review", …)` in `reviewOf`), and legacy-store's fill is removed (K206). **One conflict stops publication from loading on my branch.**
+
+publication (`src/publication/index.mjs` 42, 87) imports `REVIEW_COPY_CHECKS` from `bio-checks.mjs`. It uses C-87.1's `check` and `translation` in its no-provider fallback (`NO_REVIEW_PROVIDER.deadAnswer`). My R23 moves C-87.1–.11 (and C-32.16) out of the catalogue into `src/review/checks.mjs`. publication is earlier than review in the order, so it cannot import them from there.
+
+I verified my side: with that one row temporarily restored in the catalogue, my suite gives 26 pass, 1 fail. The one failure is R23's "moved, not copied" assertion, as expected. The restore is not committed.
+
+**Recommendation.** Publication's fallback stops reading C-87.1. It answers only while no module has registered the provider, which never holds once review is at start. My reading: publication makes it its own refusal, e.g. `REVIEW_PROVIDER_ABSENT`, or a bare `NO_REVIEW_COPY` with no row. That is a one-line change in publication's code, so it is publication's to make (I do not change another module).
+
+The alternative is to keep a copy of C-87.1 in the catalogue. That breaks R23 (K6: each check moves, never copied), so I do not recommend it.
+
+Until this is decided my branch's tests cannot load publication, so I am blocked (cause: needs BOB's ruling). Everything else is done; case-authoring's merge is still ahead.
