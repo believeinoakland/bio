@@ -207,36 +207,75 @@ function pickSrcsetCandidate(cands) {
   return { pick: sorted[0], rest: sorted.slice(1) };
 }
 
+/** The region stack both walkers share (R8), so a reference and a link found in
+ *  the same place are classified by ONE rule. A stack, not a flag, and body WINS
+ *  OVER furniture anywhere on it. <footer> inside <article> is the article's
+ *  byline, not the site's footer: HTML scopes <footer> to its nearest sectioning
+ *  ancestor, so once inside <article> or <main> everything is the document's.
+ *  Erring toward inclusion is also the safe direction, since the cost of keeping
+ *  a logo is bytes and the cost of dropping a figure is evidence.
+ *  An entry opened by role= on a generic element (<div role="navigation">)
+ *  closes on that element's own end tag, so same-name elements opened inside it
+ *  are counted (`nest`) and the entry is not closed by the first </div>. */
+function regionStack() {
+  const region = [];
+  return {
+    here() {
+      const body = region.find((r) => r.region === "body");
+      if (body) return body;
+      const furn = region[region.length - 1];
+      return furn || { region: "body", basis: "default" };
+    },
+    close(tag) {
+      for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag) {
+          if (region[i].nest > 0) region[i].nest--;
+          else region.splice(i, 1);
+          break;
+        }
+    },
+    open(tag, as, selfClosing) {
+      if (VOID_ELEMENTS.has(tag) || selfClosing) return;
+      const role = (attr(as, "role") || "").toLowerCase().trim().split(/\s+/)[0];
+      let entry = null;
+      if (FURNITURE_ROLES.has(role)) entry = { tag, region: "furniture", basis: `role=${role}` };
+      else if (role === "main" || role === "article") entry = { tag, region: "body", basis: `role=${role}` };
+      else if (FURNITURE_TAGS.has(tag)) entry = { tag, region: "furniture", basis: `<${tag}>` };
+      else if (BODY_TAGS.has(tag)) entry = { tag, region: "body", basis: `<${tag}>` };
+      if (entry) region.push({ ...entry, nest: 0 });
+      else for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag) { region[i].nest++; break; }
+    },
+  };
+}
+
 /** Every reference an HTML document makes to something it needs in order to
  *  look like itself, in document order, each carrying what kind of thing it is
  *  and where in the source it was found. Comments are stripped first: a
  *  commented-out stylesheet was not served to the reader and fetching it would
  *  be inventing a request the browser never made. */
 export function parseHtmlRefs(html) {
+  return scanHtml(html).refs;
+}
+
+/** One walk over the page, giving its references (`refs`) and, for N79, the
+ *  containment of its links (`linkChrome`): each <a>/<area> href, as written and
+ *  trimmed, that sits in a FURNITURE region anywhere on the page, mapped to the
+ *  basis of the first such region met (`<nav>`, `role=navigation`, ...). An href
+ *  the site's navigation carried is contained even when the body links it too:
+ *  that is the fact capture's R28 counts across pages. A classification, never a
+ *  filter: the link is recorded either way. */
+function scanHtml(html) {
   const src = String(html).replace(COMMENT_RE, "");
   const refs = [];
-  /* A stack, not a flag, and body WINS OVER furniture anywhere on it.
-     <footer> inside <article> is the article's byline, not the site's footer:
-     HTML scopes <footer> to its nearest sectioning ancestor, so once inside
-     <article> or <main> everything is the document's. Erring toward inclusion
-     is also the safe direction, since the cost of keeping a logo is bytes and
-     the cost of dropping a figure is evidence.
-     An entry opened by role= on a generic element (<div role="navigation">)
-     closes on that element's own end tag, so same-name elements opened inside
-     it are counted (`nest`) and the entry is not closed by the first </div>. */
-  const region = [];
-  const here = () => {
-    const body = region.find((r) => r.region === "body");
-    if (body) return body;
-    const furn = region[region.length - 1];
-    return furn || { region: "body", basis: "default" };
-  };
+  const linkChrome = new Map();
+  const region = regionStack();
   const add = (ref, kind, where, extra) => {
     if (!ref || !ref.trim()) return;
     /* A bare #fragment names a part of this same document (an SVG <use>, a
        url(#gradient)), not a resource: resolving it would re-fetch the page. */
     if (ref.trim().startsWith("#")) return;
-    const r = here();
+    const r = region.here();
     refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...(extra || {}) });
   };
   const addFamily = (cands, kind, where) => {
@@ -260,26 +299,13 @@ export function parseHtmlRefs(html) {
     const raw = m[1];
     const closing = raw.startsWith("/");
     const tag = (closing ? raw.slice(1) : raw).toLowerCase();
-    if (closing) {
-      for (let i = region.length - 1; i >= 0; i--)
-        if (region[i].tag === tag) {
-          if (region[i].nest > 0) region[i].nest--;
-          else region.splice(i, 1);
-          break;
-        }
-      continue;
-    }
+    if (closing) { region.close(tag); continue; }
     const as = attrsOf(m[2] || "");
-    if (!VOID_ELEMENTS.has(tag) && m[3] !== "/") {
-      const role = (attr(as, "role") || "").toLowerCase().trim().split(/\s+/)[0];
-      let entry = null;
-      if (FURNITURE_ROLES.has(role)) entry = { tag, region: "furniture", basis: `role=${role}` };
-      else if (role === "main" || role === "article") entry = { tag, region: "body", basis: `role=${role}` };
-      else if (FURNITURE_TAGS.has(tag)) entry = { tag, region: "furniture", basis: `<${tag}>` };
-      else if (BODY_TAGS.has(tag)) entry = { tag, region: "body", basis: `<${tag}>` };
-      if (entry) region.push({ ...entry, nest: 0 });
-      else for (let i = region.length - 1; i >= 0; i--)
-        if (region[i].tag === tag) { region[i].nest++; break; }
+    region.open(tag, as, m[3] === "/");
+    if (tag === "a" || tag === "area") {
+      const href = (attr(as, "href") || "").trim();
+      const r = region.here();
+      if (href && r.region === "furniture" && !linkChrome.has(href)) linkChrome.set(href, r.basis);
     }
     const inlineStyle = attr(as, "style");
     if (inlineStyle) for (const c of cssRefList(inlineStyle)) add(c.url, c.kind, `${tag}[style]`);
@@ -346,7 +372,7 @@ export function parseHtmlRefs(html) {
     }
   }
 
-  return refs;
+  return { refs, linkChrome };
 }
 
 /** Resolve a reference against the page's address and decide whether this
@@ -893,6 +919,12 @@ export async function captureSubresources({
   let baseHost = null;
   try { baseHost = new URL(base).hostname; } catch { baseHost = null; }
   let queue;
+  /* N79: which link hrefs sat in furniture, from the same walk that finds the
+     references. A resumed tick restores its queue rather than re-walking for it,
+     but a link can change partition between ticks (deferred, then intra once its
+     bytes are held), and that new entry needs its containment, so the walk is
+     made again there for the links alone. */
+  let linkChrome;
   if (resume) {
     /* cssOwner is a live reference into `records`, so it travels as an INDEX
        and is reattached here. Serialising the object itself would duplicate the
@@ -903,6 +935,7 @@ export async function captureSubresources({
       if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
     }
     for (const l of resume.links || []) links.push(l);
+    linkChrome = meter.sync("link_containment", () => scanHtml(html).linkChrome, html.length);
     for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
     for (const o of resume.siteObservations || []) siteObservations.push(o);
     discovered = resume.discovered || records.length;
@@ -920,7 +953,9 @@ export async function captureSubresources({
         discovered--;
       }
   } else {
-    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+    const scan = meter.sync("parse_html", () => scanHtml(html), html.length);
+    linkChrome = scan.linkChrome;
+    queue = scan.refs.map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
   }
 
   /* Every path out of the loop lands here, so a reference is recorded once and
@@ -1200,17 +1235,34 @@ export async function captureSubresources({
   /* Seeded from whatever a previous tick already recorded, using the same key
      note() builds, so a resumed capture does not re-append every link each time
      it rebuilds the companion. */
-  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.citation || l.address || l.ref}`, true]));
+  const seenLink = new Map(links.map((l) => [`${l.type}\u0000${l.citation || l.address || l.ref}`, l]));
+  /* N79: every link says whether it sat in a chrome region, with that region's
+     basis, and says so explicitly when it did not, so the field is never read as
+     absent. Whether it IS the site's chrome (it recurs across the host's pages)
+     is capture's to decide (its R28), never this page's. */
+  const contain = (l, basis) => {
+    if (basis) { if (l.chrome !== true) { l.chrome = true; l.chrome_basis = basis; } }
+    else if (l.chrome !== true) { l.chrome = false; l.chrome_basis = null; }
+  };
+  /* A link restored from an earlier tick that predates the field. */
+  for (const l of links) contain(l, linkChrome.get(String(l.ref || "").trim()) || null);
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
+    const basis = linkChrome.get(raw) || null;
     const note = (type, address, extra = {}) => {
       /* Keyed on the CITATION, so a link to #findings and a link to
          #methodology in the same report are two records rather than one. */
       const key = `${type}\u0000${extra.citation || address || raw}`;
       if (!seenLink.has(key)) {
-        seenLink.set(key, true);
-        links.push({ ref: raw, type, address: address || null, as_of: when0,
-                     ...(address ? originOf(address, baseHost) : {}), ...extra });
+        const l = { ref: raw, type, address: address || null, as_of: when0,
+                    ...(address ? originOf(address, baseHost) : {}), ...extra };
+        contain(l, basis);
+        seenLink.set(key, l);
+        links.push(l);
+      } else {
+        /* The same citation written a second way ("/x" in the body, the absolute
+           address in the nav) is still one link, and the nav carried it. */
+        contain(seenLink.get(key), basis);
       }
       return { type, address, ...extra };
     };
