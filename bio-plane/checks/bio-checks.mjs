@@ -20,8 +20,13 @@
    which is the literal sense of D-84's "a bias bundle cannot be written at
    all". Both regexes move together: an annotation on a bias bundle is an
    annotation like any other. */
-export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-export const ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+/* K171 (1) (T8, N129) adds the Action layer's four record types the same way and for the same reason: STD- (a
+   standard), CONF- (a conformance determination), CONS- (a consequence part) and ESC- (an escalation) are each
+   a record object promoted through `promotion`, and an id the pattern does not know is refused before any rule
+   of the type can run. K198 (2) (T8, N159) adds intent's ASP- (an aspiration) and GOAL- (a goal), which intent's
+   own step governs from T7 and which `intent`, later in the order, cannot register here itself. */
+export const BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+export const ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const FILENAME_RE = /^[A-Za-z0-9._-]+$/;
 export const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
@@ -37,7 +42,11 @@ export const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
    has no legacy spelling and never will — it is born under the collapse rather
    than before it — so it appears exactly once here and needs no entry in
    LEGACY_TYPE_ALIASES. */
-export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inquiry', INQ: 'inquiry', PROJ: 'project', ACTN: 'action', BIAS: 'bias' };
+/* K171 (1) and K198 (2) (T8): six more canonical types, one prefix each and no legacy spelling, on `bias`'s terms.
+   The Action layer's four are its modules' record objects (standards R15, conformance R17, consequences R14,
+   escalation R21); `aspiration` and `goal` are intent's (its R26). */
+export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inquiry', INQ: 'inquiry', PROJ: 'project', ACTN: 'action', BIAS: 'bias',
+  STD: 'standard', CONF: 'determination', CONS: 'consequence', ESC: 'escalation', ASP: 'aspiration', GOAL: 'goal' };
 export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
 export const normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
 
@@ -503,6 +512,45 @@ export const STATES = {
       adopted: ['retired'],
       retired: []
     }
+  },
+  /* K171 (1) (T8, N129): THE ACTION LAYER'S RECORD OBJECTS. A standard, a determination and a consequence part
+     are each RECORDED once and never move: a correction is a new object that supersedes the old one (standards
+     R4 and R6, conformance R7, consequences R6), so each machine is one state and no edge, and a promotion that
+     names any other state is refused by `promote` (promotion R15). */
+  standard: {
+    legal: ['recorded'],
+    edges: { recorded: [] }
+  },
+  determination: {
+    legal: ['recorded'],
+    edges: { recorded: [] }
+  },
+  consequence: {
+    legal: ['recorded'],
+    edges: { recorded: [] }
+  },
+  /* An escalation (escalation R21) is `open` while its stages run and `suspended` while a member has set it
+     aside; `escalationResume` restores it at the same stage (R15). It is `ended` only by `escalationEnd`, once
+     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`. */
+  escalation: {
+    legal: ['open', 'suspended', 'ended'],
+    edges: {
+      open: ['suspended', 'ended'],
+      suspended: ['open', 'ended'],
+      ended: []
+    }
+  },
+  /* K198 (2) (T8, N159): intent's two pursuit documents (intent R26). An aspiration is held until it is retired;
+     a goal is open until it is closed. Neither returns: intent's step refuses any other move
+     (PURSUIT_STATE_MOVE_UNDECLARED), and this table states the same machine so the audit and the gate read the
+     states as legal. */
+  aspiration: {
+    legal: ['held', 'retired'],
+    edges: { held: ['retired'], retired: [] }
+  },
+  goal: {
+    legal: ['open', 'closed'],
+    edges: { open: ['closed'], closed: [] }
   }
 };
 /* One machine, two spellings: the legacy alias points at the SAME object, so
@@ -785,14 +833,69 @@ export function lawProposalState(proposedBy) {
   return isMachineIdentity(s) ? 'machine_proposed' : 'member_proposed';
 }
 
+/* K171 (2) (T8, N129): THE SAME LABEL FOR EVERY PROPOSAL THE ACTION LAYER STORES APART. A standard proposed by
+ * the Legal/Policy Lookup skill or a member (standards R9), a comparison against standards (conformance R12), a
+ * filing's draft (filings R5) and a candidate theory and remedy (filings R14) are each machine work or a member's
+ * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
+ * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
+ * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
+ * not hold is a caller's defect and throws, rather than answering a sentence written for something else. */
+export const PROPOSAL_STATES = Object.freeze({
+  governing_laws: LAW_PROPOSAL_STATES,
+  standard: Object.freeze({
+    machine_proposed: 'a machine credential proposed this standard. That is machine work, labelled as machine work: '
+      + 'it can set a standard beside the record for members to consider and it can never enter one. Nothing here '
+      + 'is a standard this record holds, and nothing becomes one until a member records it themselves',
+    member_proposed: 'a member proposed this standard to whoever records the group\'s standards. It is a proposal '
+      + 'and not a standard: only recording a standard enters one, and the record holds who made the proposal',
+    unstated: 'the record does not say who proposed this standard',
+  }),
+  comparison: Object.freeze({
+    machine_proposed: 'a machine credential prepared this comparison of a government act against standards. That is '
+      + 'machine work, labelled as machine work: it can set out rows and questions for members and it can never '
+      + 'determine whether the act complied. Nothing here is a determination, and nothing becomes one until a member '
+      + 'records it themselves',
+    member_proposed: 'a member suggested this comparison of a government act against standards. It is a comparison '
+      + 'and not a determination: only a determination records whether the act complied, and the record holds who '
+      + 'made the comparison',
+    unstated: 'the record does not say who prepared this comparison',
+  }),
+  filing_draft: Object.freeze({
+    machine_proposed: 'a machine credential prepared this draft. That is machine work, labelled as machine work: it '
+      + 'can prepare the words of a filing and it can never approve or send one. Nobody has approved or sent this '
+      + 'draft, and nothing is filed until members decide to file it and send it themselves',
+    member_proposed: 'a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, '
+      + 'and the record holds who prepared it',
+    unstated: 'the record does not say who prepared this draft, and nobody has approved or sent it',
+  }),
+  theory: Object.freeze({
+    machine_proposed: 'a machine credential proposed this candidate theory and remedy. That is machine work, '
+      + 'labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it '
+      + 'can never state the group\'s position. Nothing here is the group\'s position',
+    member_proposed: 'a member proposed this candidate theory and remedy. It is a candidate for members and counsel '
+      + 'to weigh and not the group\'s position, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed this candidate theory and remedy',
+  }),
+});
+
 /** The whole label block a reader is shown beside a proposal: who, which state,
  *  whether it is machine work, and the published sentence. ONE composer, so the
  *  store's read and any later surface cannot compose two answers to one
- *  question (REC-46's eleven-copies finding, arriving at a label). */
-export function lawProposalLabel(proposedBy) {
+ *  question (REC-46's eleven-copies finding, arriving at a label). `subject` is
+ *  one of `PROPOSAL_STATES`' keys (K171 (2)). */
+export function proposalLabel(proposedBy, subject) {
+  const table = typeof subject === 'string' && Object.prototype.hasOwnProperty.call(PROPOSAL_STATES, subject)
+    ? PROPOSAL_STATES[subject] : null;
+  if (!table)
+    throw new RangeError(`proposalLabel: '${String(subject).slice(0, 40)}' is not a proposal subject; `
+      + `one of ${Object.keys(PROPOSAL_STATES).join(', ')}`);
   const state = lawProposalState(proposedBy);
-  return { by: proposedBy ?? null, state, machine_work: state === 'machine_proposed',
-           says: LAW_PROPOSAL_STATES[state] };
+  return { by: proposedBy ?? null, state, machine_work: state === 'machine_proposed', says: table[state] };
+}
+
+/** REC-195's label, kept by name for its readers (`actions`, the old battery): the `governing_laws` case. */
+export function lawProposalLabel(proposedBy) {
+  return proposalLabel(proposedBy, 'governing_laws');
 }
 
 /* The longest `why` a proposal may carry against one citation, in characters. A why says what the proposer
@@ -5288,7 +5391,9 @@ export async function checkBundle(input, opts = {}) {
     /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
        know is refused by C-2.5 before any type-specific check runs, so the
        stamp has to be admitted in the same turn as the type. */
-    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'inquiry@1', 'focus@1', 'problem@1', 'project@1', 'action@1', 'bias@1'],
+    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason. */
+    knownSchemas: opts.knownSchemas ?? ['information@1', 'information@2', 'inquiry@1', 'focus@1', 'problem@1', 'project@1', 'action@1', 'bias@1',
+      'standard@1', 'determination@1', 'consequence@1', 'escalation@1', 'aspiration@1', 'goal@1'],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a
@@ -5442,7 +5547,10 @@ export async function checkBundle(input, opts = {}) {
  *     moved without its markers, the `where` names the region in its new file,
  *     and marking it is the owning module's work. T6 did the same for the code
  *     layers 2–5 moved (capture, provenance, record-core, content, connections,
- *     entities). ONE EXCEPTION, stated where it is used: a row for a refusal
+ *     entities), and T8 for the code layer 6 moved in T7 (inquiry,
+ *     basis-versions, capture-requests, run-productions; N150, N154, N192) and
+ *     the reads that still named legacy-store's one-line delegates
+ *     (`basisVersions`, `versionChain`). ONE EXCEPTION, stated where it is used: a row for a refusal
  *     whose code is not written yet names the site its owning module will write
  *     in the same tranche (C-28.18), because there is no file it lives in now.
  *
@@ -5738,7 +5846,7 @@ export const VERSION_CHAIN_CHECKS = {
      "versions". */
   VERSION_CHAIN_NO_ADDRESS: {
     check: 'C-24.1',
-    where: 'src/store.mjs versionChain, reached from op=versionchain',
+    where: 'src/provenance/index.mjs versionChain, reached from op=versionchain',
     translation: 'That request did not say which document address to read the versions of. '
       + 'Versions are versions OF something, so it asks rather than answering '
       + 'for a document you did not name.',
@@ -5750,7 +5858,7 @@ export const VERSION_CHAIN_CHECKS = {
      answer here, as they are on every gated read in this plane. */
   VERSION_CHAIN_NO_SUCH_VERSION: {
     check: 'C-24.2',
-    where: 'src/store.mjs versionChain, reached from op=versionchain with at=<capture sha>',
+    where: 'src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>',
     translation: 'The record holds no version of that document with those bytes. '
       + 'Rather than pick the closest-looking one and call it the version before this, '
       + 'it says so — naming the wrong predecessor is the defect this read was built to end.',
@@ -5762,7 +5870,7 @@ export const VERSION_CHAIN_CHECKS = {
      absence, which is the distinction CLAUDE.md requires be stated. */
   VERSION_CHAIN_BAD_ANCHOR: {
     check: 'C-24.3',
-    where: 'src/store.mjs versionChain, reached from op=versionchain with at=<capture sha>',
+    where: 'src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>',
     translation: 'That is not the shape a capture identity has, so nothing was looked up. '
       + 'A capture is named by the sha256 of its bytes; this says the request was malformed '
       + 'rather than letting it read as a document the record does not hold.',
@@ -5928,7 +6036,7 @@ export const BASIS_VERSION_CHECKS = {
        freeze arm)` said exactly this before REC-71 and no instrument could read
        it, so the guard widened the claim to the whole function and conscripted 32
        unrelated refusals. The span is now DECLARED at the site. */
-    where: 'src/store.mjs #promoteChecks > basis-version-freeze, reached from op=promote, NOT reachable from a pure document check',
+    where: 'src/basis-versions/index.mjs check > basis-version-freeze, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check',
     translation: 'That version already exists and has been changed in place. '
       + 'A version is frozen once written, because two people comparing it must be comparing the same thing — '
       + 'so an edit becomes a NEW version derived from this one, and the original stays exactly as it was.',
@@ -5986,7 +6094,7 @@ export const BASIS_VERSION_CHECKS = {
     check: 'C-25.16',
     /* A REGION `where` — see VERSION_FROZEN above and the "WHAT A `where` MEANS"
        block at the head of this file. */
-    where: 'src/store.mjs #promoteChecks > basis-version-resolve, reached from op=promote, NOT reachable from a pure document check',
+    where: 'src/basis-versions/index.mjs check > basis-version-resolve, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check',
     translation: 'One part of that version rests on something this record does not hold. '
       + 'A reading of the evidence that points at a document nobody can open is a reading nobody can check.',
   },
@@ -5996,7 +6104,7 @@ export const BASIS_VERSION_CHECKS = {
      unrelated compositions wearing the word "versions". */
   BASIS_VERSIONS_NO_INQUIRY: {
     check: 'C-25.17',
-    where: 'src/store.mjs basisVersions, reached from op=basisversions',
+    where: 'src/basis-versions/index.mjs basisVersions, reached from op=basisversions',
     translation: 'That request did not say which question to read the versions of. '
       + 'A version is one reading of the evidence for one question, so it asks '
       + 'rather than answering for a question you did not name.',
@@ -6007,7 +6115,7 @@ export const BASIS_VERSION_CHECKS = {
      most misleading form a wrong answer takes. */
   BASIS_VERSIONS_NOT_AN_INQUIRY: {
     check: 'C-25.18',
-    where: 'src/store.mjs basisVersions, reached from op=basisversions',
+    where: 'src/basis-versions/index.mjs basisVersions, reached from op=basisversions',
     translation: 'Only a question carries versions of its evidence, and that is not a question. '
       + 'Answering with an empty list would say this thing has no readings of its evidence, '
       + 'when the truth is that it could not have any.',
@@ -6124,26 +6232,26 @@ export const versionNeedsReason = (to) => VERSION_REASON_REQUIRED.includes(to);
 export const VERSION_ACT_CHECKS = {
   VERSION_ACT_NO_INQUIRY: {
     check: 'C-25.20',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'That request did not say which question the reading belongs to. '
       + 'A reading of the evidence always belongs to one question, so it asks rather than guessing.',
   },
   VERSION_ACT_NOT_AN_INQUIRY: {
     check: 'C-25.21',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'Only a question carries readings of its evidence, and that is not a question. '
       + 'There is nothing here to accept, set aside or turn down.',
   },
   VERSION_ACT_NO_VERSION: {
     check: 'C-25.22',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'That request did not name which reading to act on. '
       + 'A question can hold several readings of its evidence, and acting on the wrong one is '
       + 'worse than being asked which you meant.',
   },
   VERSION_ACT_NO_SUCH_VERSION: {
     check: 'C-25.23',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'This question holds no reading by that name. '
       + 'Readings are named so a member can ask for one by name, and a name nobody wrote is '
       + 'refused rather than matched to whatever is nearest.',
@@ -6154,21 +6262,21 @@ export const VERSION_ACT_CHECKS = {
      the refusal that says so for all six. */
   MACHINE_CANNOT_MOVE_VERSION: {
     check: 'C-25.24',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'Deciding what to do with a reading of the evidence is a named member\'s call, '
       + 'and this request came from an automated credential. A machine may put a reading forward '
       + 'and may never settle it. Sign in as a member.',
   },
   VERSION_ILLEGAL_TRANSITION: {
     check: 'C-25.25',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'That is not a move this reading can make from where it stands. '
       + 'A reading a member has already accepted is corrected by turning it down or by putting it '
       + 'back under consideration, never by returning it to something nobody had acted on.',
   },
   VERSION_NO_REASON: {
     check: 'C-25.26',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'Setting a reading aside or turning it down carries the reason in the member\'s own '
       + 'words. The record of what was turned down is the instrument that makes a pattern of '
       + 'turning things down visible at all, and it is worth nothing without the reason.',
@@ -6203,7 +6311,7 @@ export const VERSION_ACT_CHECKS = {
      across the whole tree before it was taken). */
   VERSION_REASON_MALFORMED: {
     check: 'C-25.32',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'That reason was given but could not be stored as written: it is either longer than '
       + 'the record allows or it contains a character the record has no way to escape, such as a '
       + 'double quote. Nothing was changed. Shorten it, or say it without the quotation marks, and '
@@ -6217,34 +6325,34 @@ export const VERSION_ACT_CHECKS = {
      `#basisCyclePath`, the walk `promote` already runs — never a second one. */
   VERSION_BASIS_CYCLE: {
     check: 'C-25.27',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'Accepting this reading would make the question rest, through a chain of other '
       + 'questions, on itself. The answer would then be its own support, which is a circle rather '
       + 'than a case, and the chain that closes it is named above.',
   },
   VERSION_NOT_ACCEPTED: {
     check: 'C-25.28',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'A project can only stand on a reading its members have accepted, and this one has '
       + 'not been accepted. Exploring an unsettled reading is done by calculating over it, which '
       + 'moves nobody\'s stance.',
   },
   VERSION_CURRENT_NO_PROJECT: {
     check: 'C-25.29',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'Standing on a reading is something a PROJECT does, so this request has to name '
       + 'which project. A question can be shared by several teams, and one team\'s decision must '
       + 'never quietly move another team\'s.',
   },
   VERSION_CURRENT_UNRELATED: {
     check: 'C-25.30',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'That project does not draw on this question, so it has no stance here to move. '
       + 'Add the question to the project first, and then choose what the project stands on.',
   },
   VERSION_ACT_UNWRITABLE: {
     check: 'C-25.31',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'This question\'s own file could not be rewritten in place, so nothing was changed. '
       + 'Acting on a reading edits the record the reading lives in, and a half-written record is '
       + 'worse than an unchanged one.',
@@ -6271,7 +6379,7 @@ export const VERSION_ACT_CHECKS = {
      saying the same thing differently is the drift D-226 is about. */
   VERSION_AFFIRMATION_INCOMPLETE: {
     check: 'C-25.33',
-    where: 'src/store.mjs #moveVersionState, reached from the six version acts',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the six version acts',
     translation: 'Accepting this reading claims that each of the parts it rests on would carry the '
       + 'answer on its own. That is a claim only a named member can make, and it is made part by '
       + 'part rather than assumed from silence, so every part has to be named before this reading '
@@ -6294,7 +6402,7 @@ export const VERSION_ACT_CHECKS = {
      exactly this. D-226 governs the wording — no "compose", no "derive". */
   PUBLISHED_CANNOT_MOVE_VERSION: {
     check: 'C-25.34',
-    where: 'src/store.mjs #moveVersionState, reached from the four acts that move a state',
+    where: 'src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a state',
     translation: 'This question has been published, and the case it went out in froze it as it '
       + 'stood. Changing which reading of the evidence it stands on now would leave the published '
       + 'version saying something the question no longer says. Pick it back up first, make the '
@@ -6804,26 +6912,26 @@ export const SUGGEST_CHECKS = {
   /* ---- the shape of the request. Refused before anything is composed. ---- */
   SUGGEST_NO_TARGET: {
     check: 'C-27.1',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'That request did not say which question the suggestion is about. '
       + 'A reading of the evidence always belongs to one question, so it asks rather than guessing.',
   },
   SUGGEST_NOT_AN_INQUIRY: {
     check: 'C-27.2',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'Only a question carries readings of its evidence, and the thing named here is not a '
       + 'question. There is nothing under it for a suggestion to be a reading of.',
   },
   SUGGEST_UNKNOWN_KIND: {
     check: 'C-27.3',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'A suggestion is one of five kinds and this one names none of them. The kinds are a '
       + 'closed set so that a run reporting an empty search is told apart from a run that reported '
       + 'nothing at all, which no other field can distinguish.',
   },
   SUGGEST_NO_RUN: {
     check: 'C-27.4',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'Every suggestion names the piece of work that produced it, and this one named none '
       + 'that can be read here. What was searched, under which declared conditions, and where it '
       + 'stopped is what lets anyone else check a reading rather than take it on trust.',
@@ -6835,7 +6943,7 @@ export const SUGGEST_CHECKS = {
      C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
   SUGGEST_RUN_NOT_RUNNING: {
     check: 'C-27.18',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'The investigation this suggestion names has ended. A suggestion is read against the '
       + 'conditions of the investigation that produced it, and those stopped being current when it '
       + 'stopped, so going on means starting a new one.',
@@ -6845,21 +6953,21 @@ export const SUGGEST_CHECKS = {
      after sight and position, so a run the caller cannot see still answers as absent. C-27.19, the same family. */
   SUGGEST_OUTSIDE_RUN_CONTEXT: {
     check: 'C-27.19',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'This suggestion is about a question the investigation was not working on. An investigation '
       + 'is read against its own question, or the questions its project draws on, so work on a different '
       + 'question starts an investigation of that question.',
   },
   SUGGEST_NAME_TAKEN: {
     check: 'C-27.5',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'This question already holds a reading by that name. Names are unique within one '
       + 'question so a member can ask for a reading by name, and a second one wearing the same name '
       + 'would make every later reference ambiguous.',
   },
   SUGGEST_EMPTY_LEVEL_UNSTATED: {
     check: 'C-27.6',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'Reporting that a level of the search is empty means saying WHICH level was searched '
       + 'and where the log of that search can be read. Absence at one level is not absence at the '
       + 'next, and an unattributed empty answer is the one shape nobody can check.',
@@ -6875,14 +6983,14 @@ export const SUGGEST_CHECKS = {
      place", which is a fact about the bytes and is only knowable at the write. */
   SUGGEST_NO_DOCUMENT: {
     check: 'C-27.17',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'This question has no readable file behind it, so there is nothing for a reading of its '
       + 'evidence to be added to. That is a fact about the question rather than about the reading, and '
       + 'nothing was composed.',
   },
   SUGGEST_TOO_MANY_LEGS: {
     check: 'C-27.7',
-    where: 'src/store.mjs suggestVersion > is-suggest-shape',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-shape',
     translation: 'This suggestion rests on more pieces of evidence than one reading may carry. The '
       + 'limit is published in the refusal so a caller can split the reading rather than guess at '
       + 'what would have fitted.',
@@ -6899,7 +7007,7 @@ export const SUGGEST_CHECKS = {
      reading to every later reader as live support. */
   SUGGEST_LEG_UNREACHABLE: {
     check: 'C-27.8',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'One of the pieces of evidence this reading rests on cannot be reached where it says '
       + 'it is: it is not in the record, it cannot be read from here, or the record has retired it. '
       + 'A reading resting on something retired reads to a later member as live support for the answer.',
@@ -6909,7 +7017,7 @@ export const SUGGEST_CHECKS = {
      compute is two answers and never one. */
   SUGGEST_PAIR_DOES_NOT_COMPUTE: {
     check: 'C-27.9',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'The strength of this reading does not work out over the structure it declares, on '
       + 'one or both of the two things strength is measured on. A reading whose arithmetic cannot be '
       + 'run is a reading nobody can check, and it is not put forward.',
@@ -6920,7 +7028,7 @@ export const SUGGEST_CHECKS = {
      bytes the freeze compares — so "the same reading" means one thing here. */
   SUGGEST_NOT_DIFFERENT: {
     check: 'C-27.10',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'This reading of the evidence is the same in substance as one this question already '
       + 'holds, so it is not put forward a second time. The reading it matches is named, and adding a '
       + 'duplicate would grow the review pile without adding anything to review.',
@@ -6932,7 +7040,7 @@ export const SUGGEST_CHECKS = {
      that is not there. Content-addressed provenance lets the plane DERIVE it. */
   SUGGEST_BRANCHES_NOT_INDEPENDENT: {
     check: 'C-27.11',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'Two parts of this reading are offered as separate routes to the same answer, and the '
       + 'record can show they trace back to the same original material. Treating them as separate '
       + 'makes the answer look better supported than it is, so a machine may not put it forward that '
@@ -6941,7 +7049,7 @@ export const SUGGEST_CHECKS = {
   /* CHECK 5. The placeholder defect at machine scale. */
   SUGGEST_BOILERPLATE: {
     check: 'C-27.12',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'A field this reading has to fill in carries filler text rather than an account of '
       + 'anything. A required field filled to get past a check is worse than an empty one, because it '
       + 'reads to the next member as something somebody wrote.',
@@ -6952,7 +7060,7 @@ export const SUGGEST_CHECKS = {
      what a project stands on is refused rather than ignored. */
   SUGGEST_UNWRITABLE_STATE: {
     check: 'C-27.13',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'This suggestion tries to arrive already decided — settled, set aside, hidden, or '
       + 'signed by somebody. A suggestion may only ever arrive as something put forward; deciding '
       + 'what to do with it is a named member\'s act and no automated caller can reach it.',
@@ -6969,7 +7077,7 @@ export const SUGGEST_CHECKS = {
      a silent pass on the safe-looking side. */
   SUGGEST_COMPARISON_INCOMPLETE: {
     check: 'C-27.16',
-    where: 'src/store.mjs suggestVersion > is-suggest-checks',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-checks',
     translation: 'The record holds more material behind this question than could be checked in one '
       + 'pass, so whether this reading is genuinely new, or genuinely made of separate parts, was not '
       + 'settled either way. Not finishing the check is a different fact from passing it, and this '
@@ -6980,7 +7088,7 @@ export const SUGGEST_CHECKS = {
      the STATE the caller asked for, this one is about the DOCUMENT. ---- */
   SUGGEST_UNWRITABLE_DOCUMENT: {
     check: 'C-27.14',
-    where: 'src/store.mjs suggestVersion > is-suggest-write',
+    where: 'src/run-productions/index.mjs suggest > is-suggest-write',
     translation: 'This question\'s own file could not be extended in place, so nothing was written. '
       + 'Adding a reading edits the record the reading lives in, and a half-written record is worse '
       + 'than an unchanged one.',
@@ -7026,67 +7134,67 @@ export const SUGGEST_CHECKS = {
 export const EXTRACT_PROPOSE_CHECKS = {
   NO_PROPOSER: {
     check: 'C-104.1',
-    where: 'src/store.mjs extractPropose > is-extract-run',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-run',
     translation: 'This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot '
       + 'attribute. Nothing was proposed and no passage was marked citable.',
   },
   NO_RUN: {
     check: 'C-104.2',
-    where: 'src/store.mjs extractPropose > is-extract-run',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-run',
     translation: 'A machine proposes readings only as part of an investigation a member opened, and this named none. '
       + 'Nothing was proposed.',
   },
   NO_SUCH_RUN: {
     check: 'C-104.3',
-    where: 'src/store.mjs extractPropose > is-extract-run',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-run',
     translation: 'No investigation you can see is open under that name, so nothing was proposed. A member opens an '
       + 'investigation; the assistant may suggest one, and may not start it.',
   },
   RUN_NOT_RUNNING: {
     check: 'C-104.4',
-    where: 'src/store.mjs extractPropose > is-extract-door',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
     translation: 'The investigation this names has ended, and an ended investigation takes no new proposals: its work is '
       + 'read against the conditions it ran under, and those stopped when it stopped. Nothing was proposed.',
   },
   NOT_AN_EXTRACT_RUN: {
     check: 'C-104.5',
-    where: 'src/store.mjs extractPropose > is-extract-door',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
     translation: 'This investigation was not opened to read documents for what they name, so it cannot propose readings. '
       + 'What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed.',
   },
   NO_MINTS_BOUND: {
     check: 'C-104.6',
-    where: 'src/store.mjs extractPropose > is-extract-door',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
     translation: 'This investigation was opened with no limit on how many passages it may mark citable, and without a '
       + 'limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed.',
   },
   MINTS_BOUND_REACHED: {
     check: 'C-104.7',
-    where: 'src/store.mjs extractPropose > is-extract-door',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
     translation: 'This investigation has already marked as many passages citable as it was allowed to, so it proposes '
       + 'nothing more and ends. Nothing was proposed.',
   },
   NO_PROPOSALS: {
     check: 'C-104.8',
-    where: 'src/store.mjs extractPropose > is-extract-door',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
     translation: 'This named no readings to propose. A look that found nothing is recorded in the investigation\'s log of '
       + 'what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed.',
   },
   NOT_A_DOCUMENT: {
     check: 'C-104.9',
-    where: 'src/store.mjs extractPropose > is-extract-document',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-document',
     translation: 'That is not a captured document. A question, a project or an action has no pages or text of its own, '
       + 'so there is nothing in it to read or to point into. Nothing was changed.',
   },
   NO_BYTES_HELD: {
     check: 'C-104.10',
-    where: 'src/store.mjs extractPropose > is-extract-document',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-document',
     translation: 'The record holds no captured copy of that document, so there is no text in it to read or to point '
       + 'into. That is a fact about what has been captured, never about what the document says. Nothing was changed.',
   },
   MINTS_BOUND_WOULD_EXCEED: {
     check: 'C-104.11',
-    where: 'src/store.mjs extractPropose > is-extract-whole-batch',
+    where: 'src/run-productions/index.mjs extractPropose > is-extract-whole-batch',
     translation: 'This batch would mark more passages citable than the investigation has left of its limit, so the whole '
       + 'batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes '
       + 'were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation.',
@@ -7096,7 +7204,7 @@ export const EXTRACT_PROPOSE_CHECKS = {
      nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
   EXTRACT_NO_SCOPE: {
     check: 'C-104.12',
-    where: 'src/store.mjs extractProposals > is-extract-scope',
+    where: 'src/run-productions/index.mjs extractProposals > is-extract-scope',
     translation: 'This list of proposed readings names neither an investigation nor a document, so nothing was '
       + 'listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean.',
   },
@@ -7241,21 +7349,21 @@ export const CAPTURE_REQUEST_CHECKS = {
      SHAPE rules and NOT conduct: conduct is enforced once, at the drain. ---- */
   CAPTURE_REQUEST_NO_RUN: {
     check: 'C-28.1',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'This request did not name the piece of work asking for it, or named one that is not '
       + 'running here. Every fetch this instance makes on its own is traceable to a session somebody '
       + 'opened, because that opening is what authorises it.',
   },
   CAPTURE_REQUEST_NOT_PUBLIC: {
     check: 'C-28.2',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'What was asked for is not a public web address. What an investigation session may '
       + 'reach is what anybody could reach by typing it into a browser, so an address that is not '
       + 'public on its face is not asked for at all.',
   },
   CAPTURE_REQUEST_NOT_AN_INQUIRY: {
     check: 'C-28.3',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'A capture is requested under a question, and the thing named here is not one. '
       + 'The question is what the request is accountable to, and a fetch belonging to nothing is a '
       + 'fetch nobody can later account for.',
@@ -7269,7 +7377,7 @@ export const CAPTURE_REQUEST_CHECKS = {
      quietly dropped: a caller told nothing learns nothing. */
   CAPTURE_REQUEST_CARRIES_A_CAPTURE: {
     check: 'C-28.4',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'A request asks for a document; it never brings one. The fetch is performed by this '
       + 'instance itself so that where the bytes came from is something the record established rather '
       + 'than something it was told, and a provenance chain anybody could hand us is one anybody could '
@@ -7291,7 +7399,7 @@ export const CAPTURE_REQUEST_CHECKS = {
   /* CONDUCT 1: legibility. */
   CAPTURE_CONDUCT_UA_ILLEGIBLE: {
     check: 'C-28.6',
-    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
     translation: 'This instance will not fetch without saying who is asking and how to reach whoever '
       + 'is running it. Being refused honestly is a fact that can be recorded; being admitted by '
       + 'disguise is a claim that could not be defended later.',
@@ -7302,7 +7410,7 @@ export const CAPTURE_REQUEST_CHECKS = {
      unrecorded member agent is refused rather than substituted. */
   CAPTURE_CONDUCT_UA_UNRECORDED: {
     check: 'C-28.7',
-    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
     translation: 'This request asked to fetch as the member\'s own browser, and the record does not '
       + 'hold what that browser is. Presenting an agent nobody actually used would be inventing a '
       + 'client rather than speaking as one, so it asks rather than guessing.',
@@ -7310,7 +7418,7 @@ export const CAPTURE_REQUEST_CHECKS = {
   /* CONDUCT 2: the purpose token. */
   CAPTURE_CONDUCT_NO_PURPOSE: {
     check: 'C-28.8',
-    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
     translation: 'Every request this instance makes says what it is for, so a source can tell a first '
       + 'capture from a routine re-check and throttle one without blocking the other. This one names '
       + 'a purpose that is not one of the things it could truthfully be doing.',
@@ -7318,14 +7426,14 @@ export const CAPTURE_REQUEST_CHECKS = {
   /* CONDUCT 3: rate. */
   CAPTURE_CONDUCT_HOST_HELD: {
     check: 'C-28.9',
-    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
     translation: 'The site this would fetch from has asked us to slow down, or has refused us recently, '
       + 'and we are waiting the interval it named. The request is still queued and will be made when '
       + 'the wait is over — nothing has been lost and nothing needs re-asking.',
   },
   CAPTURE_CONDUCT_TICK_SPENT: {
     check: 'C-28.10',
-    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
     translation: 'This round of fetching has already been to that site once. Requests are spread out '
       + 'rather than sent in a burst, so this one waits for the next round. It is still queued.',
   },
@@ -7340,7 +7448,7 @@ export const CAPTURE_REQUEST_CHECKS = {
      is performed on a request it cannot account for. */
   CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: {
     check: 'C-28.11',
-    where: 'src/store.mjs #captureRequestConduct > is-capture-conduct',
+    where: 'src/capture-requests/index.mjs #conduct > is-capture-conduct',
     translation: 'This capture could not be recorded as belonging to anybody in particular, so it was '
       + 'not made. An act that names one party where two acted reads as though a person did something '
       + 'a machine did, or the other way round, and that is worse than a missing document.',
@@ -7388,14 +7496,14 @@ export const CAPTURE_REQUEST_CHECKS = {
      for. Nothing downstream re-checks it, so neither code is shadowed. */
   CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: {
     check: 'C-28.14',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'This says the document bears on another question, but what it names is not a '
       + 'question. The whole point of noting a lead is that somebody working that question will be '
       + 'told about it, and there is nobody to tell if it does not name one.',
   },
   CAPTURE_REQUEST_LEAD_IS_THE_TARGET: {
     check: 'C-28.15',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'This names the same question twice — the one being worked, and the one the '
       + 'document supposedly bears on. Evidence for the question you are already working is just '
       + 'evidence for it, and flagging it as belonging somewhere else would put a note in front of '
@@ -7418,7 +7526,7 @@ export const CAPTURE_REQUEST_CHECKS = {
      number this file records as deleted would make its own history unreadable. */
   CAPTURE_REQUEST_RENDER_MALFORMED: {
     check: 'C-28.16',
-    where: 'src/store.mjs captureRequest > is-capture-request',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
     translation: 'This asked for the page as a visitor would see it in a form this instance does not '
       + 'recognise. It reads render: true, or nothing at all for the document as the site serves it, so a '
       + 'request for the rendered page is never quietly turned into a request for the page\'s empty frame. '
@@ -7430,11 +7538,12 @@ export const CAPTURE_REQUEST_CHECKS = {
      governed, and answers the row in `held`. The code was written to the row and catalogued nowhere, so
      `#renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
      this family's (R19: every code the module writes to a row is in C-28 or C-83). The `where` names a
-     region `captureRequestDrain` does not mark yet: the drain's other outcomes are other families' codes
-     read from rows, and a whole-function `where` would conscript them; marking it is capture-requests'. */
+     region, not the drain whole: the drain's other outcomes are other families' codes read from rows, and a
+     whole-function `where` would conscript them. capture-requests marks it in its `drain` (T6; re-pointed T8,
+     N154). */
   CAPTURE_FETCH_FAILED: {
     check: 'C-28.17',
-    where: 'src/store.mjs captureRequestDrain > is-capture-fetch-failed',
+    where: 'src/capture-requests/index.mjs drain > is-capture-fetch-failed',
     translation: 'This instance tried to fetch the document and the fetch did not land, so nothing was '
       + 'captured. That says nothing about the document or the site beyond this one attempt, and it is '
       + 'recorded as a look that could not tell. The request is still queued and is tried again on a later '
@@ -7918,7 +8027,7 @@ export const MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_CONCLUDE: {
     check: 'C-32.2',
-    where: 'src/store.mjs conclude > is-machine-conclude',
+    where: 'src/basis-versions/index.mjs conclude > is-machine-conclude',
     translation: 'A conclusion is a person saying what they think the record shows, and it carries '
       + 'their name for as long as the record lasts. The credential that asked here is an automated '
       + 'one: it may raise the question, gather what bears on it and draft the answer, and it may '
@@ -7973,7 +8082,7 @@ export const MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_DIVIDE: {
     check: 'C-32.7',
-    where: 'src/store.mjs divide > is-machine-divide',
+    where: 'src/inquiry/index.mjs #divide > is-machine-divide',
     translation: 'Dividing a question says the group asked one thing when it was really asking '
       + 'two, and that is a judgement about the group\'s own work. The credential that asked here '
       + 'is an automated one: it may raise questions and gather what they rest on, and may not '
@@ -7981,7 +8090,7 @@ export const MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_GROUND: {
     check: 'C-32.8',
-    where: 'src/store.mjs groundInquiry > is-machine-ground',
+    where: 'src/inquiry/index.mjs #ground > is-machine-ground',
     translation: 'Grounding says some of the reasons behind an answer are strong enough to carry '
       + 'it on their own, and it is the one act here that makes a finding stronger rather than '
       + 'weaker. That decision needs a person behind it, and the credential that asked is an '
@@ -8221,7 +8330,7 @@ export const ACT_SHAPE_CHECKS = {
   },
   NO_CONCLUSION: {
     check: 'C-33.1',
-    where: 'src/store.mjs conclude > is-conclude-answer',
+    where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
     translation: 'Concluding records what was concluded, and this one says nothing. If the honest '
       + 'answer is that the group could not settle it, write that down — an answer of undetermined '
       + 'is a real answer here and is stated rather than left blank.',
@@ -8233,7 +8342,7 @@ export const ACT_SHAPE_CHECKS = {
      honestly be given has been offered the honest way through. */
   NO_FALSIFIER: {
     check: 'C-33.2',
-    where: 'src/store.mjs conclude > is-conclude-answer',
+    where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
     translation: 'A conclusion has to say what would overturn it. Without that nobody can check the '
       + 'finding, including the person who wrote it, and a finding that cannot be checked claims '
       + 'more than the evidence behind it can carry. If no falsifier can honestly be named, say so '
@@ -8246,7 +8355,7 @@ export const ACT_SHAPE_CHECKS = {
      turns on did not exist. */
   FALSIFIER_AND_NONE_STATED: {
     check: 'C-33.33',
-    where: 'src/store.mjs conclude > is-conclude-answer',
+    where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
     translation: 'You have written a falsifier and also asked to record that none could be stated. '
       + 'Those are two different things to say about this finding, and choosing between them is not '
       + 'something the record should do on your behalf. Keep the falsifier, or clear it and record '
@@ -8262,7 +8371,7 @@ export const ACT_SHAPE_CHECKS = {
      translation was project-only and now covers both relationships. */
   NO_CLAIM: {
     check: 'C-33.34',
-    where: 'src/store.mjs conclude > is-conclude-claim',
+    where: 'src/basis-versions/index.mjs conclude > is-conclude-claim',
     translation: 'Concluding adopts the claim of an accepted reading, and that claim is what the group '
       + 'concluded. There is no claim to adopt here. For a project, the reading is the one the project '
       + 'stands on; with no project, name the reading. State the claim on a reading first — a claim '
@@ -8273,7 +8382,7 @@ export const ACT_SHAPE_CHECKS = {
      words quietly relabelled as commentary. */
   CONCLUSION_IS_THE_CLAIM: {
     check: 'C-33.35',
-    where: 'src/store.mjs conclude > is-conclude-answer',
+    where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
     translation: 'When a project concludes, the claim it adopts is the conclusion, so a separate '
       + 'conclusion text is not accepted — it could say something no claim said. Anything you want to '
       + 'add beyond the claim can be sent as commentary: it is recorded in your name and is never '
@@ -8287,14 +8396,14 @@ export const ACT_SHAPE_CHECKS = {
      an entry that records nothing. */
   NOTHING_TO_WITHDRAW: {
     check: 'C-33.37',
-    where: 'src/store.mjs #withdrawConclusion > is-withdraw-stance',
+    where: 'src/basis-versions/index.mjs withdrawConclusion > is-withdraw-stance',
     translation: 'There is no conclusion here to withdraw: this project has not concluded this question, or '
       + 'has already withdrawn its latest conclusion. Everything it concluded and withdrew before stays in '
       + 'the record.',
   },
   UNSPLICEABLE_CONCLUSIONS: {
     check: 'C-33.36',
-    where: 'src/store.mjs #setProjectConclusion > is-conclusion-row',
+    where: 'src/basis-versions/index.mjs #setProjectConclusion > is-conclusion-row',
     translation: 'The project\'s own record is laid out in a way this act cannot add a conclusion to '
       + 'without rewriting parts of it nobody asked to change, so nothing was recorded. The project\'s '
       + 'file needs its list of conclusions tidied before it can conclude.',
@@ -8371,7 +8480,7 @@ export const ACT_SHAPE_CHECKS = {
   },
   NOT_INQUIRIES: {
     check: 'C-33.13',
-    where: 'src/store.mjs dispose > is-dispose-inquiries',
+    where: 'src/inquiry/index.mjs #dispose > is-dispose-inquiries',
     translation: 'This act moves a question along, and the selection carries things that are not '
       + 'questions. The whole set is refused rather than quietly narrowed to the part that fits, '
       + 'because a set that acted on less than you selected is a set you were not shown.',
@@ -8421,13 +8530,13 @@ export const ACT_SHAPE_CHECKS = {
   },
   SELF_BASIS: {
     check: 'C-33.22',
-    where: 'src/store.mjs #promoteChecks > is-basis-acyclic, reached from op=promote through the step legacy-store registers with promotion (K31)',
+    where: 'src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)',
     translation: 'A question cannot be the evidence for its own answer. This write would have it '
       + 'rest on itself, which reads as support and adds nothing anybody outside could check.',
   },
   BASIS_CYCLE: {
     check: 'C-33.23',
-    where: 'src/store.mjs #promoteChecks > is-basis-acyclic, reached from op=promote through the step legacy-store registers with promotion (K31)',
+    where: 'src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)',
     translation: 'This write would close a loop: the chain it would join already rests, somewhere '
       + 'further along, on the thing being written. The path is named so the loop can be seen '
       + 'rather than re-derived, and support that circles back is support that rests on nothing.',
@@ -8506,7 +8615,7 @@ export const ACT_SHAPE_CHECKS = {
      --------------------------------------------------------------------------- */
   NO_BASIS: {
     check: 'C-33.40',
-    where: 'src/store.mjs actNoBasis > is-act-no-basis',
+    where: 'src/inquiry/index.mjs actNoBasis > is-act-no-basis',
     translation: 'This asks the record to stand behind something without saying what it rests on. '
       + 'Say what that is first — what the question is grounded in, what you personally observed, or '
       + 'why a settled thing is being changed — and the record carries it beside the claim, in your '
@@ -10343,10 +10452,15 @@ export function checkCaseDocument(fm, ctx = {}) {
  * file is the layer both already import, which is where C-35's own constant
  * ended up for exactly the same reason (see EARNED_CAPTURE_CEILING above).
  *
- * THE FAMILY IS TEN CONDITIONS AND THEY ARE TEN DIFFERENT FACTS, which is
- * why they are ten codes and not one "bad extent" (SIX until REC-97 widened
+ * C-45 IS TWELVE CONDITIONS AND THEY ARE TWELVE DIFFERENT FACTS, which is
+ * why they are twelve codes and not one "bad extent" (SIX until REC-97 widened
  * `op=cite`; the four it added are the ways the ACT can be handed an extent it
- * must not write, and each carries its own repair):
+ * must not write, and each carries its own repair; D-440 and D-420 added
+ * C-45.11 and C-45.12). THIS FAMILY HOLDS EIGHT OF THEM: C-45.1–C-45.6,
+ * C-45.11 and C-45.12. The act's four, C-45.7–C-45.10, left it with `op=cite`
+ * and are citation's `CITE_EXTENT_CHECKS` (`src/citation/checks.mjs`), their
+ * numbers unchanged; they are listed below because the numbering is one
+ * family's, not because their rows are here:
  *
  *   C-45.1  the extent names a page the capture does not have — a citation
  *           into a document that cannot contain it
@@ -10367,6 +10481,9 @@ export function checkCaseDocument(fm, ctx = {}) {
  *           part of a document is a part of ONE document
  *   C-45.10 an extent VALUE the restricted frontmatter grammar cannot carry
  *           (BAD_NOTE's rule, one field down)
+ *   C-45.11 an image `{part}` in a document that embeds no files (D-440)
+ *   C-45.12 an image cited by page and rectangle where the page paints no
+ *           image (D-420)
  *
  * REC-84 ADDED THE LAST TWO AND MINTED NO NEW FAMILY, on SK-1's measured rule
  * that a `*_CHECKS` family is a FLOOR in `civicos-ui/check-refusal-codes.mjs`
@@ -11062,48 +11179,48 @@ export function extentRelation(outer, inner) {
 export const NARROW_CHECKS = {
   NARROW_NO_INQUIRY: {
     check: 'C-50.1',
-    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
     translation: 'That request does not name a question this record holds and you can read. Making '
       + 'a citation more specific happens on a question\'s reading of its evidence, so it needs the '
       + 'question first.',
   },
   NARROW_NO_SUCH_VERSION: {
     check: 'C-50.2',
-    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
     translation: 'That question has no reading of its evidence by that name. A citation is made more '
       + 'specific in a NEW reading taken from an existing one, so the reading it starts from has to '
       + 'be named exactly as the question holds it.',
   },
   NARROW_NO_SUCH_LEG: {
     check: 'C-50.3',
-    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
     translation: 'That reading has no piece of evidence at the position named. Pieces are counted '
       + 'from zero, in the order the reading lists them.',
   },
   NARROW_NO_PART: {
     check: 'C-50.4',
-    where: 'src/store.mjs #narrowSource > is-narrow-source',
+    where: 'src/basis-versions/index.mjs #narrowSource > is-narrow-source',
     translation: 'That piece of evidence has no part to point at more precisely. It either rests on '
       + 'another question, which has no pages or passages, or on a document this record holds no '
       + 'copy of — and a part of something nobody captured cannot be named.',
   },
   NARROW_NOT_A_MEMBER: {
     check: 'C-50.5',
-    where: 'src/store.mjs narrow > is-narrow-extent',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
     translation: 'Making a citation more specific is a member\'s own act, done in their name. A '
       + 'machine may PROPOSE passages that look relevant, and they are listed for you to choose from, '
       + 'but choosing which passage is on point is a judgment a person signs for.',
   },
   NARROW_NO_EXTENT: {
     check: 'C-50.6',
-    where: 'src/store.mjs narrow > is-narrow-extent',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
     translation: 'That request does not say which part of the document the citation should point at. '
       + 'Name the part — a page, a region of a page, a cell, a paragraph or a slide — or choose one of '
       + 'the proposed passages by its content id.',
   },
   NARROW_BAD_EXTENT: {
     check: 'C-50.7',
-    where: 'src/store.mjs narrow > is-narrow-extent',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
     translation: 'The part named cannot be recorded as sent: it names a field this act does not take, '
       + 'a value that cannot be written into the record, a content id this record does not hold, or '
       + 'both a content id and a description of the same part. It is refused rather than guessed at, '
@@ -11111,14 +11228,14 @@ export const NARROW_CHECKS = {
   },
   NARROW_OTHER_CAPTURE: {
     check: 'C-50.8',
-    where: 'src/store.mjs narrow > is-narrow-extent',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-extent',
     translation: 'The part named is not in the copy of the document this citation rests on. Pointing '
       + 'the citation at a different document, or at a later copy of the same one, is not making it '
       + 'more specific — it is moving it, and a citation is never moved except by its own separate act.',
   },
   NARROW_NOT_NARROWER: {
     check: 'C-50.9',
-    where: 'src/store.mjs narrow > is-narrow-claim',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-claim',
     translation: 'The part named is not inside what the citation already points at — it is the same '
       + 'part, a wider one, or a different place in the document. Making a citation more specific '
       + 'can only ever point it at LESS of the document than before; anything else would claim a '
@@ -11126,14 +11243,14 @@ export const NARROW_CHECKS = {
   },
   NARROW_NAME: {
     check: 'C-50.10',
-    where: 'src/store.mjs narrow > is-narrow-claim',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-claim',
     translation: 'The new reading needs a name of its own, one the question does not already use. The '
       + 'reading it starts from keeps its name and stays exactly as it was: changing an existing '
       + 'reading in place would move a citation somebody else may be relying on.',
   },
   NARROW_NO_DESCRIPTION: {
     check: 'C-50.11',
-    where: 'src/store.mjs narrow > is-narrow-claim',
+    where: 'src/basis-versions/index.mjs narrow > is-narrow-claim',
     translation: 'The new reading needs a short account of what changed and why — which citation now '
       + 'points at less of its document, and what makes that part the one that matters. That account '
       + 'is what a later reader has to go on.',
@@ -12223,7 +12340,7 @@ export const VERSION_NOTICE_CHECKS = {
 export const INSTANCE_GROUP_CHECKS = {
   GROUP_UNDETERMINED: {
     check: 'C-64.1',
-    where: 'src/store.mjs #groupUndetermined > is-group-undetermined',
+    where: 'src/inquiry/index.mjs #groupUndetermined > is-group-undetermined',
     translation: 'This copy has not recorded which group it belongs to, and nothing in this request says, so the '
       + 'record cannot write a document that must name the group that produced it. A copy records its group once: '
       + 'when it is first installed, or by one act of whoever holds its administrator token in the hosting account. '
@@ -13315,9 +13432,14 @@ export const PER_ITEM_CHECKS = {
  * its two rows; `auditPass` mints one code, AUDIT_CHECK_FAILED, as a finding on the bundle whose check threw
  * (counted as an error, never as clean); `fact` answers exactly FACT_UNAVAILABLE and FACT_FAILED.
  * FACT_UNAVAILABLE is also answered, in the same condition, by promotion's private `#fact`, which refuses the
- * act that needed it; its sentence is true at both. Not here, and reported: promotion's FACT_MALFORMED and
- * STEP_DECLARED (`registerFact` mints both; STEP_DECLARED is minted by every registration), and the
- * registrations' LISTENER_DECLARED/LISTENER_MALFORMED, which progressions' C-100 rows claim.
+ * act that needed it; its sentence is true at both.
+ *
+ * T8 (N128, PROMOTION #5's REPORT) adds promotion's own malformed registrations, C-102.6 and C-102.7. Each
+ * `where` names a REGION promotion marks, not the whole function, because `registerFact` and `registerStep` also
+ * refuse STEP_DECLARED. Not here, on the REC-64 rule (ACT_SHAPE_CHECKS' header: a row cannot claim one of many
+ * sites): STEP_DECLARED, which promotion's R40 and R47 mint at three registrations for one condition, and
+ * LISTENER_DECLARED and LISTENER_MALFORMED, each minted for one condition by about a dozen modules' listener
+ * registrations. Their shape (one shared code, or one per site) waits on BOB's ruling (N128).
  * ========================================================================= */
 export const REGISTRATION_CHECKS = {
   AUDIT_CHECK_DECLARED: {
@@ -13353,6 +13475,20 @@ export const REGISTRATION_CHECKS = {
     translation: 'The part of this instance that answers that question stopped with an error instead of '
       + 'answering, so there is no answer here, which is not the same as the answer being no. Nothing was '
       + 'written.',
+  },
+  FACT_MALFORMED: {
+    check: 'C-102.6',
+    where: 'src/promotion/index.mjs registerFact > is-fact-named',
+    translation: 'A part of this instance tried to offer an answer to a question without naming the question, '
+      + 'itself, or how to answer it, so nothing was registered. This is a fault in how the instance was built, '
+      + 'not in the record, and nothing in the record changed.',
+  },
+  STEP_MODULE_UNNAMED: {
+    check: 'C-102.7',
+    where: 'src/promotion/index.mjs registerStep > is-step-named',
+    translation: 'A part of this instance tried to add its own check to every promotion without naming itself, '
+      + 'so nothing was registered. This is a fault in how the instance was built, not in the record, and '
+      + 'nothing in the record changed.',
   },
 };
 
