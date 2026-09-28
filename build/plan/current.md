@@ -4,7 +4,7 @@
 
 Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB #57, K305; arising entries BOB #58 and #59) at once after T10 closed (K346; K340: no pacing). Branch `tranche/T11` starts at `main` @ 8cf1ffb937. Cut to 28 jobs (K347): the N285 shared-code cluster and the queue, instance-setup and control-plane extractions go to `draft-T12.md`. Every provider side this plan needs was worded on T10's tranche before it closed (K338, K343, K344) and re-read against T10's close (K170): layers 1–6 and 10–11 of T10 changed nothing they word. Bob's weekly meter at the opening: asked.
 
-**Jobs** · legacy-checks: LEGACY-CHECKS #5 session_01EwVH7Frcm6uLT9v54Y4Xi3; record-core: RECORD-CORE #6 session_01F4Zw6fHHxLm7fXnQfo4nc5
+**Jobs** · legacy-checks: LEGACY-CHECKS #5 session_01EwVH7Frcm6uLT9v54Y4Xi3; record-core: RECORD-CORE #6 session_01F4Zw6fHHxLm7fXnQfo4nc5; promotion: PROMOTION #11 session_01ASTMYa8KNLdKEKcGwkyoBG
 
 **Rules at the opening.** T6's to T10's rules hold: the registration rule (K206), one code one site (K231, K275), a user builds against its provider's Provides and BOB merges a provider early (§4), each job writes requirement-named tests for every live id (P7) and applies only the share this plan gives it; an `N` entry's text is in `next.md`. SQL a module runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes, tested under a workerd-like cap (K313), over a cursor-returning fixture (K316). A job strikes each `not yet met` mark its work meets. Each layer is re-read at its start for what the layers below it changed (K170).
 
