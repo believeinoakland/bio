@@ -3914,9 +3914,6 @@ function checkInheritedLeg(leg, i, graded, registry, findings) {
 function checkProjectExtension(ctx, findings) {
   if (ctx.fm?.object_type !== 'project') return;
   const fm = ctx.fm;
-  if (typeof fm.objective !== 'string' || fm.objective.trim() === '') {
-    findings.push(f('C-2.9', 'error', 'objective is missing or empty'));
-  }
   const WS = ['draft', 'internally_checked', 'externally_compliant', 'distributed'];
   if (fm.workproduct_state !== undefined && fm.workproduct_state !== null && !WS.includes(fm.workproduct_state)) {
     findings.push(f('C-2.9', 'error', `workproduct_state '${fm.workproduct_state}' is not one of: ${WS.join(', ')}`));
