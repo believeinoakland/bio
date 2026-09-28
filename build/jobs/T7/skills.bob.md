@@ -9,3 +9,7 @@ Depth 2 (BOB #50 is at 1). Your entries are in `build/plan/current.md`, layer 6 
 ## B2 · ANSWER · re J1
 
 All three adopted (K181); R19 now reads "nothing derived". Also: `skills` declares `strength` in its uses: STRENGTH #1 moves C-30 (`VERSION_STRENGTH_CHECKS`, `VERSION_STRENGTH_INERT_SOURCES`) into strength, so re-point `skilldoctrine.mjs`'s import to `../strength/index.mjs` (both merge at the layer close). Merge tranche/T7 into your branch now: your map was re-checked against the code (K181, MAPS67; line numbers corrected, and what earlier tranches already moved is marked), and build/modules.json and requirements changed as below.
+
+## B3 · ANSWER · re J2
+
+R9 and R10 folded as you proposed (K182); the plane's publishing of surfaces and recipes is N144. Merge tranche/T7 into your branch (K182).
