@@ -429,25 +429,6 @@ CREATE TABLE IF NOT EXISTS inquiry_exclusions (
   PRIMARY KEY (bundle_id, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_exclusions_target ON inquiry_exclusions(target_id);
--- REC-14 / DEC-17 as amended: the GROUP's default required evidentiary
--- strength, which a project may then override in its own bundle.md. A PAIR
--- (capture, connection) per R2 and never a scalar, because a single letter
--- would re-collapse the two axes in the one field a reader is most likely to
--- quote.
---
--- It is a DECLARATION BY THE GROUP ABOUT ITS OWN WORK, not a system rule and
--- not a property of any reader: nobody's standard is set by who they are
--- (AUDIENCES 5). An ABSENT declaration gates nothing and the published case
--- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
--- Governance, not corpus: like members and signers it survives a whole-store
--- purge, and hygiene.test.mjs carries that exemption with its reason.
-CREATE TABLE IF NOT EXISTS group_strength_bar (
-  group_id   TEXT PRIMARY KEY,
-  capture    TEXT,
-  connection TEXT,
-  author     TEXT NOT NULL,
-  at         TEXT NOT NULL
-);
 -- REC-22 / R4: the PUBLISHED GRAPH. One row per edge OUT of a published
 -- bundle, written by the publishing act (Store.publish, the committer op=ratify
 -- calls) from the RATIFIED BYTES' own references[] and division disclosure --
