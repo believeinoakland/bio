@@ -13,3 +13,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the filings bulle
 ## B3 · CHANGE
 
 (K250) Consequences is merged into `tranche/T8` early. Its exact answer shapes are in its record, `build/jobs/T8/consequences.md`, J2: `consequencesOf({determination, standard?, viewer})` → `{ok, determination, standard, parts, totals: [{state, unit, currency, value | range, parts, says}], undetermined, unproven, says}`; `addressed({determination, viewer})` → `{ok, determination, state: addressed | not_addressed | undetermined, parts: [...], why}`. The factory is `consequencesModule(host, deps)`. Merge `tranche/T8` and reconcile with it. The plane's construction of the layer-9 modules is N216, legacy-store's, next plan; test through your deps.
+
+## B4 · CHANGE
+
+(K251) Standards is merged into `tranche/T8` early. Its exact shapes are in `build/jobs/T8/standards.md` J2. `standardRead({id, viewer})` → `{ok, id, cite, kind, issuer, text, period: {from, to}, source, declared_by, declared_at, supersedes, superseded_by, proposal, texts, says}`, and `inForce(id, date)` → `{ok, id, date, state, why}`. The factory is `standardsOf(host, deps)`. Merge `tranche/T8`, default your dep to it, and reconcile.
