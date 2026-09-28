@@ -1,6 +1,6 @@
 # conformance (T8)
 
-**Status** · session_01F4NHaY2fe7KVfrhugvz5hD · depth 2 · WAITING ON BOB (J2) · handled B4
+**Status** · session_01F4NHaY2fe7KVfrhugvz5hD · depth 2 · WORKING · handled B4
 
 ## J1 · QUESTION
 
