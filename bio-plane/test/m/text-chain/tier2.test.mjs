@@ -106,3 +106,34 @@ test("R80: otherwise a sentence of pages recovered and kept, plus the per-page c
   const m = mergeTier2Text(doc([pg(0, "a", [miss(0, 1)]), pg(1, "bbbb")]), doc([pg(0, "aaaa"), pg(1, "b")]));
   assert.match(tier2Note(m), /^1 page\(s\) .*other 1 page\(s\)/);
 });
+
+test("R90: a page tier 2 wins keeps each of the base page's image_unread markers, after tier 2's own, unless tier 2 states the same one", () => {
+  const unread = (page, rect) => ({ page, reason: "image_unread", font: null, codes: "", count: 0, rect, area_share: 0.5 });
+  const A = unread(0, [0, 0, 100, 100]), B = unread(0, [0, 200, 100, 300]);
+  const b = pg(0, "7", [miss(0, 3), A, B]);
+  /* Both carried, in the base's order, after tier 2's own markers. */
+  const r = mergeTier2Text(doc([b]), doc([pg(0, "seven words", [miss(0, 1)])]));
+  assert.deepEqual(r.replaced, [0]);
+  assert.deepEqual(r.text.pages[0].undetermined, [miss(0, 1), A, B]);
+  assert.deepEqual(r.text.undetermined, [miss(0, 1), A, B]);
+  assert.equal(r.text.counts.undetermined, 3);
+  /* One tier 2 already states (same reason and rect) is not duplicated; another rect is still carried. */
+  const r2 = mergeTier2Text(doc([b]), doc([pg(0, "seven words", [{ ...A, font: "x" }])]));
+  assert.deepEqual(r2.text.pages[0].undetermined, [{ ...A, font: "x" }, B]);
+  /* A rectless marker matches only a rectless one. */
+  const C = unread(0, undefined);
+  const r3 = mergeTier2Text(doc([pg(0, "7", [miss(0, 3), C])]), doc([pg(0, "seven words", [unread(0, [1, 1, 2, 2])])]));
+  assert.deepEqual(r3.text.pages[0].undetermined, [unread(0, [1, 1, 2, 2]), C]);
+  assert.deepEqual(mergeTier2Text(doc([pg(0, "7", [miss(0, 3), C])]), doc([pg(0, "seven words", [unread(0, null)])])).text.pages[0].undetermined,
+    [unread(0, null)]);
+  /* Carried beside image_content_* markers, each by its own rule, in the base's order. */
+  const r4 = mergeTier2Text(doc([pg(0, "7", [A, miss(0, 3), img(0)])]), doc([pg(0, "seven words")]));
+  assert.deepEqual(r4.text.pages[0].undetermined, [A, img(0)]);
+  /* It counts 0 undetermined characters: a base whose only markers are image_unread never loses the page. */
+  assert.deepEqual(mergeTier2Text(doc([pg(0, "ab", [A, B])]), doc([pg(0, "abcdef")])).kept, [0]);
+  /* A page tier 1 keeps is unchanged, markers and all; other reasons are never carried. */
+  const kept = pg(1, "abcdef", [A]);
+  assert.deepEqual(mergeTier2Text(doc([kept]), doc([pg(1, "a")])).text.pages[0], { ...kept, tier: 1 });
+  const other = mergeTier2Text(doc([pg(0, "7", [miss(0, 3), { ...A, reason: "image_unreadable" }])]), doc([pg(0, "seven words")]));
+  assert.deepEqual(other.text.pages[0].undetermined, []);
+});

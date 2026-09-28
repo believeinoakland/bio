@@ -138,10 +138,10 @@ export const STEP_KINDS = {
   pixels:   { role: "derivation", label: "the page as pixels", tier: 3 },
   /* An OCR engine over those pixels. Names engine and version, because that
      pair is what a calibration is of and what a re-run would need. */
-  ocr:      { role: "derivation", label: "optical character recognition", tier: 3 },
+  ocr:      { role: "derivation", label: "optical character recognition", tier: 3, machine: true },
   /* A model that rewrote the text — cleaning, joining, correcting. THE STEP
      THIS WHOLE MODULE IS MOST AFRAID OF, and rule 2 is pointed at it. */
-  ai:       { role: "derivation", label: "a model rewrote the text", tier: null },
+  ai:       { role: "derivation", label: "a model rewrote the text", tier: null, machine: true },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
   attested: { role: "verification", label: "a member checked it against the image", tier: null },
@@ -231,6 +231,13 @@ export const STEP_KINDS = {
   typed:    { role: "derivation", label: "a member typed the text",
               tier: null, names: ["member"], unmeasured: "undetermined", letter: "never" },
 };
+
+/** N104 (K143) — THE MACHINE READINGS: the kinds whose step is an ENGINE reading or rewriting the text
+ *  (`machine: true` in `STEP_KINDS`), which a reader labelling machine-read text treats `mixed` as
+ *  containing (content R14, DEC-4). Derived from the declaration, never a list of spellings, so a kind
+ *  added with `machine: true` joins it without an edit here; `query-language` re-exports it. */
+export const MACHINE_READ_KINDS = Object.freeze(
+  Object.keys(STEP_KINDS).filter((k) => STEP_KINDS[k].machine === true));
 
 /** The BASES a per-region confidence number may have, and this enum IS the
  *  pseudo-confidence fence. `engine` means a classic decoder computed it from
@@ -1055,6 +1062,10 @@ export function extentCovers(extent, target) {
   const src = extent.source;
   if (!src || src.page !== target.page) return false;
   if (!Array.isArray(target.rect) || target.rect.length !== 4) return false;
+  /* D-670: A RECT IS FOUR NUMBERS IN A SPACE. An OCR anchor is in the pixels of the frame that was
+     read (`space: "image-px"`) and a leg's rect in PDF user space; across two spaces "inside" is a
+     numeric accident, so the answer is the default one — no. */
+  if (!sameSpace(src, target)) return false;
   const [ax0, ay0, ax1, ay1] = normRect(src.rect);
   const [bx0, by0, bx1, by1] = normRect(target.rect);
   return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
@@ -1069,6 +1080,20 @@ function normRect(r) {
   const [x0, y0, x1, y1] = r;
   return [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)];
 }
+
+/** D-670 — the coordinate space a rect is stated in, and the one every rect written before D-670 was:
+ *  PDF default user space (IC-203). `content`'s extent grammar addresses only this space. */
+export const RECT_USER_SPACE = "user";
+
+/** The space of the rect on `holder` (`.space`): absent or `null` reads as `RECT_USER_SPACE`, a
+ *  non-empty string is that space, and anything else is `null` — a space nobody can read, which is
+ *  comparable to nothing, never read as user space. */
+export function rectSpace(holder) {
+  const v = holder && typeof holder === "object" ? holder.space : undefined;
+  if (v === undefined || v === null) return RECT_USER_SPACE;
+  return typeof v === "string" && v.trim() ? v : null;
+}
+const sameSpace = (a, b) => { const x = rectSpace(a); return x !== null && x === rectSpace(b); };
 
 /** What a leg citing `target` may claim on the TRANSCRIPTION axis.
  *
@@ -1178,10 +1203,18 @@ export function readingSource(source) {
        per-page string with no geometry, so the page is the honest maximum a
        reading can carry. A malformed rect drops to null rather than refusing
        the whole position — the page is still true. */
-    const rect = Array.isArray(source.rect) && source.rect.length === 4
+    /* D-670: THE RECT'S SPACE TRAVELS WITH IT. A rebuild that dropped `space` handed an OCR anchor's
+       PIXEL rect on as PDF user space. It is carried only beside a rect (a page index has no space)
+       and only when it is not user space, so every position written before D-670 keeps its bytes
+       and an explicit `space: "user"` is the unstated spelling. A space nobody can read drops the
+       rect, as a malformed rect does: the page is still true, the rect is not placeable. */
+    const space = rectSpace(source);
+    const rect = space !== null && Array.isArray(source.rect) && source.rect.length === 4
       && source.rect.every((n) => typeof n === "number" && Number.isFinite(n))
       ? source.rect.map(Number) : null;
-    return { kind, ref, page: source.page, rect };
+    return rect && space !== RECT_USER_SPACE
+      ? { kind, ref, page: source.page, rect, space: space.slice(0, 40) }
+      : { kind, ref, page: source.page, rect };
   }
   if (kind === "doc-para") {
     if (!isIndex(source.para)) return null;
@@ -1279,6 +1312,8 @@ export function readingPositionInExtent(position, extentKind, extent) {
     /* A rect on the extent and none on the reading: NOT established to be
        inside it. The honest no. */
     if (!Array.isArray(p.rect) || p.rect.length !== 4) return false;
+    /* D-670: two rects in two spaces are not comparable — `extentCovers`' rule. */
+    if (!sameSpace(p, e)) return false;
     const [ax0, ay0, ax1, ay1] = normRect(e.rect);
     const [bx0, by0, bx1, by1] = normRect(p.rect);
     return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
@@ -1607,9 +1642,17 @@ export function mergeTier2Text(base, t2) {
          unless tier 2 already states one; they count 0 undetermined characters, so no award moves.
          A field so named on the page itself is carried too. */
       const own = Array.isArray(cand.undetermined) ? cand.undetermined : [];
+      const had = Array.isArray(b.undetermined) ? b.undetermined : [];
       const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
-      const images = own.some(isImage) ? []
-        : (Array.isArray(b.undetermined) ? b.undetermined : []).filter(isImage);
+      /* D-665 / D-697 (N102) — AND WHAT IT SAID ABOUT EACH IMAGE IT COULD NOT READ. `image_unread`
+         (one marker per painted image, `pdf-reader`) is as true after tier 2 as before, since tier 2
+         reads no image. Each is carried after tier 2's own markers unless tier 2 states the same
+         one (same reason and rect); it counts 0 undetermined characters, so no award moves. */
+      const sameMark = (x, y) => x && y && x.reason === y.reason
+        && JSON.stringify(x.rect ?? null) === JSON.stringify(y.rect ?? null);
+      const tier2Images = own.some(isImage);
+      const images = had.filter((u) => (isImage(u) && !tier2Images)
+        || (u && u.reason === "image_unread" && !own.some((o) => sameMark(o, u))));
       const fields = Object.fromEntries(Object.entries(b).filter(([k]) => k.startsWith("image_content_")));
       pages.push({ ...fields, page: b.page,
                    text: typeof cand.text === "string" ? cand.text : "",

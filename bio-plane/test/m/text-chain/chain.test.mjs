@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {
   STEP_KINDS, checkChain, appendStep, layerChain, convertedChain, mergedChain, calibrationsOf,
   derivationCap, isTranscribed, terminalStep, tiersEvidenced, describeChain, chainKindFor, CHAIN_KIND_MIXED,
+  MACHINE_READ_KINDS,
 } from "../../../src/textchain.mjs";
 import { TEXT_CHAIN_CHECKS, BASIS_GRADES } from "../../../checks/bio-checks.mjs";
 
@@ -433,4 +434,15 @@ test("R81: chainKindFor answers the one kind covering a page, mixed when parts o
   for (const c of ["ocr", [], null, [{ step: "ocr" }]]) assert.equal(chainKindFor(c, { page: 0 }), null);
   /* terminalStep is unchanged and document-level. */
   assert.equal(terminalStep(mergedChain([{ chain: [L(null)], pages: [0] }, { chain: [ok.pixels, O("C")], pages: [0] }])), "ocr");
+});
+
+test("R91: the machine readings are the kinds declaring machine: true, ocr and ai only, and MACHINE_READ_KINDS lists them in STEP_KINDS order", () => {
+  const kinds = Object.keys(STEP_KINDS);
+  for (const k of kinds) assert.ok([true, undefined].includes(STEP_KINDS[k].machine), k);
+  assert.deepEqual(kinds.filter((k) => STEP_KINDS[k].machine === true), ["ocr", "ai"]);
+  assert.deepEqual(MACHINE_READ_KINDS, ["ocr", "ai"]);
+  assert.ok(Object.isFrozen(MACHINE_READ_KINDS));
+  assert.throws(() => { "use strict"; MACHINE_READ_KINDS.push("layer"); });
+  /* Every one is a derivation: an engine read or rewrote the text. */
+  for (const k of MACHINE_READ_KINDS) assert.equal(STEP_KINDS[k].role, "derivation");
 });
