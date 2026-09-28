@@ -23,3 +23,13 @@
 - **legacy-tests** · re-anchor or retire what T11's layers break; N279.
 
 - **skills**, **agent-worker** · N157, N245, once a provider of the composed catalogue is designed (with N211/N221).
+
+### Arising in T10 (BOB #58; to cut into the layers above when T11 opens, K170)
+
+- **promotion** (layer 2) · N281 (C-53.14's re-stamp).
+- **legacy-checks** · N282 (C-53's header); N286 (C-22.17's comment); N289 (C-22.7's `where` and row, with ai-runs).
+- **record-core** (layer 1) · N287 (R37 states `group_id`, `prior_state`). **connections** (layer 5) · N288 (`entity_id` read contract).
+- **ai-runs** (layer 6) · N284 (a work product's `registered`); N289 (its share); N293 (a byte ceiling on `state`).
+- **progressions**, **inquiry**, **entities**, **intent**, and the modules minting the shared generic codes · N285 (K275 per code, each keeping its translation).
+- **intent** (layer 7) · N291 (`requestById`); N285 (its `NO_SUCH_ENTITY` site). **reevaluation** (layer 7) · N292 (`listeners_failed`).
+- **extraction**, **observation-log**, **provenance**, **legacy-store** · N294 (the testimony index as a provided service).
