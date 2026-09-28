@@ -1,6 +1,6 @@
 # membership (T9)
 
-**Status** · session_01LbMiZGKaADvtuykNWkWcTu · depth 2 · RUNNING until 2026-09-28T15:30:45Z (old-battery suites touching membership, mine vs tranche/T9) · handled B3
+**Status** · session_01LbMiZGKaADvtuykNWkWcTu · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
