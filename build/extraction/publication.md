@@ -1,7 +1,7 @@
 <!-- The publication survey, split three ways from the publication map for BOB #43 on 2026-09-26 on tranche/T3 (K94); superseded where it disagrees with build/requirements/publication.md. -->
 # publication — extraction map
 
-**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b` (`bio-plane/` unchanged at `03e2481`; `store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682, `index.mjs` 13,438) by a drafting worker for BOB #43 (P18), split from the publication map's [P] rows (K94). **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), from `build/extraction/T8-recheck.md` re-measured after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732, `airun.mjs` 1,096): every `store.mjs`, `schema.mjs` and `bio-checks.mjs` line below is current there; `index.mjs` cites are pending T7's close (legacy-index is still changing it) and are marked so; the "code" counts are T3's. A method's range runs from the comment block above it to its closing brace; the extraction job confirms each. "Code" counts lines left after removing comment-only and blank lines (dispatch entries counted whole). The contract is `build/requirements/publication.md` (R1–R34); K3, K4, K6, K23, K31, K57, K61, K78 (2), K83 (3), K94 and N16 apply. The module exports `publicationOf(ctx)` (K61); `legacy-store` delegates to it. **`from`: `["legacy-store", "legacy-checks", "legacy-index"]`.** It is first of the three; `ratification` and `case-authoring` use it, and it uses neither.
+**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b` (`bio-plane/` unchanged at `03e2481`; `store.mjs` 49,817 lines, `schema.mjs` 3,964, `checks/bio-checks.mjs` 15,682, `index.mjs` 13,438) by a drafting worker for BOB #43 (P18), split from the publication map's [P] rows (K94). **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), from `build/extraction/T8-recheck.md` re-measured after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732, `airun.mjs` 1,096): every `store.mjs`, `schema.mjs` and `bio-checks.mjs` line below is current there; `index.mjs` cites were re-cited at T8's opening, on `tranche/T8` @ 12e2067a5f (K226); the "code" counts are T3's. A method's range runs from the comment block above it to its closing brace; the extraction job confirms each. "Code" counts lines left after removing comment-only and blank lines (dispatch entries counted whole). The contract is `build/requirements/publication.md` (R1–R34); K3, K4, K6, K23, K31, K57, K61, K78 (2), K83 (3), K94 and N16 apply. The module exports `publicationOf(ctx)` (K61); `legacy-store` delegates to it. **`from`: `["legacy-store", "legacy-checks", "legacy-index"]`.** It is first of the three; `ratification` and `case-authoring` use it, and it uses neither.
 
 ## 1. What moves
 
@@ -28,9 +28,9 @@ Store: 2,366 lines in ranges (1,043 code) plus about 160 of dispatch and migrati
 
 | what | lines | code | requirement |
 | --- | --- | --- | --- |
-| `publishedStoreAbsent`, `publishedReadRow`, `noPublishedPart`, `publishedObjectMissing` | 4474–4530 (index.mjs: re-cite at T7's close) | 22 | R13 (C-68.5, C-98.1, C-98.2) |
-| `assembleCaseContainer` | 5805–6071 (index.mjs: re-cite at T7's close) | 96 | R15 |
-| `op=publishedcase` / `op=publishedbytes` block | 6447–6743 (index.mjs: re-cite at T7's close) | 158 | R10, R13 |
+| `publishedStoreAbsent`, `publishedReadRow`, `noPublishedPart`, `publishedObjectMissing` | 4174–4230 | 22 | R13 (C-68.5, C-98.1, C-98.2) |
+| `assembleCaseContainer` | 4294–4560 | 96 | R15 |
+| `op=publishedcase` / `op=publishedbytes` block | 4936–5232 | 158 | R10, R13 |
 
 Index: 621 lines (276 code).
 
@@ -76,7 +76,7 @@ Schema: 530 lines (about 117 of DDL); the cites are each table's first line. The
 | `gateFacts`, `publish`, `ratifyCaseDocument`, the conclusion comparison, the ratify handlers, C-41, C-58, C-65, C-92.10–.12 | store, index, bio-checks | `ratification` | K94 |
 | `publishCase`, the document text, citations, searched section, acknowledgements, C-44.1/.3–.5, C-82 | store, airun, bio-checks | `case-authoring` | K94 |
 | review's draft, grant and dead-answer helpers (`#draftForMember` … `#noReviewCopy`) | store 6587–7362 | `review` | reach this module through R23's provider |
-| `reviewAnswer`, admission, stamps, the export credential gate (`ROOT_OF_TRUST_REQUIRED`), `caseReader`, the routes of `verify`, `publishedmanifest`, `caseflags`, `casedocument` | index (index.mjs: re-cite at T7's close) | `control-plane` | K3 |
+| `reviewAnswer`, admission, stamps, the export credential gate (`ROOT_OF_TRUST_REQUIRED`), `caseReader`, the routes of `verify`, `publishedmanifest`, `caseflags`, `casedocument` | index | `control-plane` | K3 |
 | `#caseAuthority`, `#isProjectOwner`, `#isJoinedParticipant`, `#existenceAct`, `#inSight`, `viewerPredicate` | store 14070–14173 (delegates) | `membership` | already delegating |
 
 ## 3. Callers to rewire
@@ -88,7 +88,7 @@ Schema: 530 lines (about 117 of DDL); the cites are each table's first line. The
 - `#hasCaseStanding`: `acknowledgeStatement` (7465), `excludedBy` (16425). `#noCaseDocument`: `caseDocumentFacts` (6360, 6394). `#projectCaseExclusions`: `publishCase` (5464), inside R21.
 - `#pinnedCaseEditionsOf`, `#soleCase`, `#caseDocMemberFrozen`, `#publishEdges`, `#caseEditionState`, `#ratifiedFindingsRestingOn`, `#frozenFromPinningDocuments`: `publish` and `ratifyCaseDocument` (`ratification`), through exported reads and R22.
 - `EXPORT_LOG_LIMIT_DEFAULT`: `#findingsExportPerformed` (11681; `queue`) → `exportLog`.
-- index.mjs (index.mjs: re-cite at T7's close): `inbandQuartet` (`reviewAnswer`, 3696), `assembleCaseContainer` (11115, 11676; `ratification`), `delivererOf`, `deliveringPrincipal` (`ratification`'s handlers).
+- index.mjs: `inbandQuartet` (`reviewAnswer`, 3487), `assembleCaseContainer` (6788, 7351; `ratification`), `delivererOf`, `deliveringPrincipal` (`ratification`'s handlers).
 
 ## 4. Old-battery tests
 

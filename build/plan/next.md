@@ -211,3 +211,4 @@
 ## Left from T6's preparation
 
 N110, N113 (Bob's, K158: with observation-log's next job), N116 (with monitoring's extraction, layer 10), N118's progressions, observation-log and bias shares (layer 5), N96 (K158: with jurisdictions' next job), N71, N123.
+- N202 · 2026-09-28 · **promotion**, and each module that registers listeners (LEGACY-CHECKS #3 J1.2, K229): `LISTENER_DECLARED` and `LISTENER_MALFORMED` are minted for one condition at about twelve sites (promotion `#listen`, extraction, bias, content, retrieval, connections, inquiry, entities, calibration, basis-versions, provenance, capture). The registrations converge on one provided helper, so each code has one site; then legacy-checks adds their two catalogue rows and `STEP_DECLARED`'s (N128's remainder; promotion converges its own three `STEP_DECLARED` sites in T8, K231). One code is minted at one site (K231).
