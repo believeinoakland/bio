@@ -150,7 +150,7 @@ export function world({ group = "test-group" } = {}) {
     fm: (id) => { const t = w.text(id); return t ? parseFrontmatter(t).data : null; },
     /** A member's firsthand observation, through provenance's `testify`. */
     observe(author, words = `I saw it, ${author}.`) {
-      const r = prov.testify({ words, observedAt: "2026-09-27", title: `Observation by ${author}`, author: V(author) });
+      const r = prov.testify({ words, observedAt: "2026-09-27", title: `Observation by ${author}`, author });
       if (!r.ok) throw new Error(`fixture testify refused: ${JSON.stringify(r).slice(0, 400)}`);
       return r.bundle_id;
     },
