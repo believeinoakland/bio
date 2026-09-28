@@ -30,3 +30,30 @@ Found while extracting `inquiry`; none is mine to change.
 4. **provenance / extraction** (read contracts): the earned registry reads `register.authored` (now in provenance R48, K182) and `reading_text_source.chain` (extraction's), and `readings.bundle_id`/`capture_sha` (extraction R58). `reading_text_source` is not in extraction R58's contract; it should be, or the registry should read the chain through an extraction service.
 5. **legacy-store** (for the job that next extracts from it): the store's `#reevalRaisedBy` (reevaluation's), `strengthOf` (strength's) and `publishedRegistryFor` (publication's) now answer through three registrations legacy-store makes in its constructor: `inquiry.onRaised("reevaluation", …)`, `inquiry.onGrounded("strength", …)`, `promotion.registerFact("publishedRegistry", …)`. Each owner replaces its registration when extracted.
 6. **strength**: the earned registry is mine (K182 (4)) and reads provenance's `captureGrade` (N82 done here); strength reads it through `earned`/`earnedForDoc`/`legCapped` and `subjectEntityOf`.
+
+## J3 · COMPLETE
+
+**Applied** (T7, layer 6): T6-1, `inquiry` extracted from `legacy-store` per its map and requirements, as J1's readings adopted in K181.
+- `bio-plane/src/inquiry/`: `index.mjs` (`inquiryOf(ctx)`, the promotion check R11 and projection R12, the earned registry R13–R15, the reads R16–R19, `dispose` R20–R22 and R39, `divide` R23–R26, `ground` R27–R28, the `onStale` listener, `inquiryOps` for `basis`, `restson`, `earnedbasis`, `dispose`, `inquirydivide`, `inquiryground`), `grammar.mjs` (the catalogue's grammar and rows, its public face, K138's pattern), `schema.mjs` (the three tables, moved out of `schema.mjs`, with the `ground`/`content_id` migrations), `text.mjs` (the splices, K57's copy).
+- `store.mjs`: the moved code removed (2,834 lines) and rewired to one-line delegates; the purge declaration, the two ALTERs and the superseded-by boot pass are inquiry's; legacy-store registers `publishedRegistry` with promotion and `onRaised`/`onGrounded` with inquiry until reevaluation, strength and publication are extracted. N112: `#frontierLatest`, `#frontierVerification`, `#frontierDocumentVisible` removed.
+- R22 and R26, formerly not yet met, are met: the set's (the parent's and children's) promotions run in one `record-core.transact`, a later refusal rolling back the earlier ones, no partial answer. R39 is met: `DRAWN_ON_BY_SEVERAL_PROJECTS`, row C-106.1 (`INQUIRY_DISPOSE_CHECKS`). R19 is met: `stateHistory(id)`. Every refusal with a catalogue row now carries its `check` and `translation`.
+- N82 (B3, K182): the earned registry's byte grade is provenance's `captureGrade` per capture (direct B, archive C `CAPTURE_BOUNDED_BY_ROUTE`, an unrecorded route keeps the ceiling as R26 says, an unruled via undetermined `CAPTURE_GRADE_VIA_UNRULED`).
+- REC-202, D-572: re-targeted by K83 (4), nothing here. MK-5 (R31): deferred (K181), named in a test comment only. N67's share: deferred to publication (K181).
+
+**Proposed Provides text** (B2):
+- **R41** `staled(notice)`, registered once on content's `onStale` (content R41): for each re-read that stales rows, the legs resting on each affected or undetermined row, and on the capture's stale rows past the notice's bound (`ungraded_after`), are found, and each citing inquiry is told once per re-read through `onRaised` (R42) with cause `restaled` and the act's instant as `since`; with nothing registered it answers the legs and writes nothing. Nothing moves by itself; it never throws into content's transaction.
+- **R42** `onRaised(module, fn)`, `onGrounded(module, fn)`: a later module registers once (a second `LISTENER_DECLARED`, a malformed one `LISTENER_MALFORMED`). `onRaised`'s `fn({target, cause, since, viewer})` answers the dependents a deferral (R21), a division (R25) or a re-read (R41) raised, carried as `reevaluation: {source: cause, since, raised}`; `onGrounded`'s `fn(inquiryId)` answers the strength pair R28 carries before and after. With none registered the act answers without the field and says so (`reevaluation_absent`, `strength_absent`).
+- **R43** `subjectEntityOf(id)`: the inquiry's recorded subject entity (R12, R40's column), or null. Never throws. (strength reads it.)
+- **R44** `memberUserAgent(id)`: the member-browser agent the inquiry's document records (`member_user_agent`, trimmed), or null when none is recorded, never a default. Never throws. (capture-requests R3, R14.) Recording it at creation (SOURCE-ACCESS's amendment) is not built: propose it as *not yet met*.
+- `checkInquiryEntry` (R2, R3) is `checkInquiryEntry(bundleMd, opts) → Promise<findings>`: the catalogue's entry arm is reachable only through `checkBundle` (K181 (1)), so R2/R3's signature should read so.
+
+**Deferred**, with why: R31 (K181, no opinion element exists); N67's inquiry share (K181, with publication); R36's column move (N136). The DEC-49 `where`s and the old-battery pins (J2) are legacy-checks' and legacy-tests'.
+
+**Found in other modules**: J2 (REPORT).
+
+**Tests and checks**
+- `node --test bio-plane/test/m/inquiry/`: 49 tests, 49 pass, 0 fail (grammar, promotion, earned, reads, dispose, divide, ground, stale). No layer tests are named in the manifest. Behaviour suites of the old battery, as J2 lists them.
+- `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs … inquiry`: 0 failures. `node checks/coverage.mjs … inquiry`: 40 of 40 live ids named, 0 failures.
+- `node checks/ownership.mjs … inquiry tranche/T7`: legacy-store 43 added, 2,834 removed; 2 failures, both K140's case (a line changed only by removing text): `store.mjs` 13926 `this.#writeStrengthProjection(bundleId, isInquiry);` (the subject argument dropped, since inquiry writes the column) and 19645 (the same method's UPDATE losing `inquiry_basis_count`/`inquiry_subject_entity`). Every other added line imports or calls `inquiry`, or is a one-line comment naming it; three registrations in the constructor call `inquiryOf` or `promotion.registerFact` (for BOB's review).
+
+Size (session_01YYR9hsb5M6F1ofjMmxnVQj): test runs 52, module lines 2998
