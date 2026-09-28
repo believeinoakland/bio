@@ -32,3 +32,7 @@ Forwarded from AFFORDANCES #1 REPORT J4.4 (its record on `job/T7/affordances`).
 `d311-roster-affordances` is in INTENT J4.1's `objective` list.
 
 Measure after affordances and legacy-index merge. I will send a CHANGE when each does.
+
+## B5 · CHANGE
+
+`affordances` is merged into `tranche/T7` (K213), after `queue`. Merge the tranche into your branch. B4's rung-ladder and affordances pins can now be measured, except the intent-ops arms, which wait for legacy-index. I will send a CHANGE when legacy-index merges.
