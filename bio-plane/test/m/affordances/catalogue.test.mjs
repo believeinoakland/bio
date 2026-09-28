@@ -53,7 +53,7 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
   ]);
 });
 
-/* R2 as folded (K211), with K219's four: `triage` and `reevaluationrecord` reasoned. */
+/* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung. */
 test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   const want = {
