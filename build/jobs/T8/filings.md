@@ -64,3 +64,14 @@ Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 14, module lines 1303
 ## J4 · COMPLETE
 
 B3 (K250) applied: tranche/T8 merged; consequences' shapes confirm J1 item 5, no source change beyond naming consequencesModule; the fixture uses the real consequencesModule. 30/30 tests, 21/21 ids; format, architecture, coverage, ownership clean. Record §Completion · B3.
+
+## Completion · B4, B5 (K251, K252)
+
+**Changes applied.** `tranche/T8` merged (standards merged early).
+- B4: the `standards` dep defaults to `standardsOf(host)` (a lazy getter, as the earlier modules'); standards' J2 confirms J1 item 4 (`inForce`'s `{ok, id, date, state, why}` is read by its `state` and `why`). The fixture now builds the real `standardsOf` (migrated there, since its factory does not migrate) and declares two standards through `standardDeclare`; R12's supersession is a real `supersedes`.
+- B5: `#det` reads conformance's settled shape, `findings[].finding` and `standards[].standard` (each read under `id` inside filings, the old spelling still read); the conformance stand-in answers the settled shape (`finding`, `standard`, `outcomes`).
+- DEC-49 guard (`civicos-ui/check-refusal-codes.mjs`), run on this branch: my first family collided (arm G) and mis-sited codes. Now each C-115 code has one mint site: `NO_SUCH_ACTION`, `NO_SUCH_FILING`, `NO_SUCH_PACKET` through one helper each (`#noAction`, `#noFiling`, `#noPacket`, each its own region); `NO_THEORY` one condition. Codes owned by others pass through as they came: standards' `NO_SUCH_STANDARD` (C-112.10, naming `id`) in R14, conformance's `NO_SUCH_DETERMINATION` in R21. R1's and R14's `NO_AUTHOR` is the catalogue's generic code, minted elsewhere, so the acts mint `FILING_NO_PREPARER` (C-115.1) and `THEORY_NO_PROPOSER` (C-115.27), as standards did for its R1 (K251); a provider absent is `THEORY_STANDARD_UNREADABLE` (C-115.24) and `DETERMINATION_UNREADABLE` (C-115.26). The guard now names no filings site; its 121 remaining FAIL lines are other modules' and the legacy floors'.
+
+**Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 30, pass 30, fail 0. format: 0 failures. architecture: 10 product files, 32 relative imports; 0 failures. coverage: 21 of 21; 0 failures. ownership: 11 files; 0 failures.
+
+Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 19, module lines 1336
