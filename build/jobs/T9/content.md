@@ -32,3 +32,7 @@ My best reading, which I build on: `passageNotice` = the sight gate + C-80.3 + `
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … content`: 0 failures. `checks/coverage.mjs … content`: 47 of 47 live ids named, 0 failures. `checks/ownership.mjs … content tranche/T9`: 0 failures (legacy-store 0/0, legacy-checks 0/0).
 
 Size (session_01PUL34UEysoG7a95WQqDU7t): test runs 7, module lines 2231
+
+## J2 · COMPLETE
+
+content T9 complete on job/T9/content (tranche/T9 merged, K292). Applied N215 (R46 passageText, through one held-text rule shared with R31's grade), N161 (R47 noticeForRow as K292 words it), N202 (onStale through listenerRefusal, listeners in MODULE_ORDER), N252 (rectSpace replaces extentSpace; a non-string space such as ["user"] is now refused C-45.13, before it was read as user space). R46's and R47's 'not yet met' can go. Tests 54/54; users and content's legacy tests 615 with the same 4 pre-existing failures before and after (connections factory R24, citation invariants R5, legacy derivation-bounds and fleetbundles); format, architecture, coverage (47/47) and ownership all 0 failures. Reports: bio-plane.bundled.mjs is stale (content/extent.mjs); for your judgement, R46 on a stale row answers the new reading's text at that extent, which may not be the text cited. Details in my record's Completion.
