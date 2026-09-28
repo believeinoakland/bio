@@ -1,6 +1,6 @@
 # legacy-store (T9)
 
-**Status** · session_013A1X4NYhkV6rFR5qtbriVB · depth 2 · WORKING · handled B1
+**Status** · session_013A1X4NYhkV6rFR5qtbriVB · depth 2 · RUNNING until 2026-09-28T17:30:24Z (old battery on tranche/T9 and on this branch) · handled B1
 
 ## J1 · QUESTION
 
