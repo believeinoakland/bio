@@ -1758,16 +1758,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
        `standardRead`, `#readable`, `standardsIn`; src/conformance/index.mjs `determinationRead`, `#seen`,
        `determinationsFor`, `#projectRefusal`, `comparisonRead`; src/consequences/index.mjs `consequenceRead`, `#part`,
        `#seesProject`, `#determination`, `consequencesOf`, `addressed`; src/filings/index.mjs `availableActions`) and each
-       hidden-project arm DRIVEN in this suite's T9 section above, with its owner arm live. FOUR ARE LEFT UNCLASSIFIED,
-       and red, deliberately:
-       `counselpacketread` and `filingsfor` LEAK (filings R11, R13, R19 key sight on the ACTION, which is not a project's
-       bundle, so every member sees it): driven, dave received the hidden project's id, its determination's id, the act's
-       words, the consequence part's id and what it affected from the packet, and both determinations' ids from the
-       list's `basis_changed` (read by a machine reader) once carol superseded the first.
-       `escalation` and `escalationsdue` withhold from dave, and from the OWNER too: `#row` asks `inSight` of the
-       escalation's project, but escalation's `#one` indexes the workerd cursor its `#rows` returns unspread, so it is
-       always null in the plane and neither read answers anybody (the two owner arms above are red). A gate that is never
-       reached is not driven; each is classified once those arms are green. */
+       hidden-project arm DRIVEN in this suite's T9 section above, with its owner arm live. Four were left unclassified at
+       first (LEGACY-TESTS #6 J2): `counselpacketread` and `filingsfor` LEAKED (filings keyed sight on the ACTION alone),
+       and `escalation`/`escalationsdue` answered nobody (escalation's `#one` indexed an unspread workerd cursor).
+       CLASSIFIED 2026-09-28 (legacy-tests T9, B5) once filings' K316 re-open (6f549554bd, K319) and escalation's
+       (1d74e724e4, K318) merged and those arms, unchanged, went green: every leak arm and owner arm below is the same
+       assertion that was red. */
     standard: "standards R5, R15: one standard by id — its citation, kind, issuer, period, source, declarer and each text "
       + "passage with its standing and newer-version notice. A standard is a record object OUTSIDE every project (R15), "
       + "and its text is passages of DOCUMENTS, so viewerPredicate — which filters PROJECT bundles and nothing else — "
@@ -1825,6 +1821,32 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "block is composed; the block names the profile's kinds and the determination's own office, standards and "
       + "findings, read under the same viewer. DRIVEN in the T9 section above: dave is answered carol's hidden project's "
       + "determination exactly as an absent one, the id aside. Stamped fail-closed with FILINGS_READS. It writes nothing.",
+    counselpacketread: "filings R11, R12, R19 (K316): one counsel packet's version. GATED on its ACTION and on the PROJECT "
+      + "it draws on: `#packet` answers only when the viewer may see the action, and then only the versions whose basis "
+      + "`#sees` (membership `inSight` of the project stored on the basis, else of its determination's), failing closed; "
+      + "a packet with no version the viewer may see answers NO_SUCH_PACKET as an absent one; `#basisChanged` names a "
+      + "superseding standard only when the viewer sees it. DRIVEN in the T9 section above: carol reads her packet, and "
+      + "dave's answer names nothing of the hidden project, its determination, the act, or its consequence part and what "
+      + "it affected (the arm that caught the leak, J2). Stamped fail-closed with FILINGS_READS. It writes nothing.",
+    filingsfor: "filings R13, R19 (K316): an action's drafts and counsel packet versions. GATED as op=counselpacketread: "
+      + "the action through `#action`, then each draft and version only when the viewer `#sees` the project its basis "
+      + "draws on, read a page at a time (`#seenRows`) so the ones it may not see are read past, never named or counted; "
+      + "`basis_changed` is computed only for what is shown, under the same viewer. DRIVEN in the T9 section above after "
+      + "carol superseded her determination: her list carries the flagged packet, and dave's names neither determination "
+      + "(the arm that caught the leak, J2). Stamped fail-closed with FILINGS_READS. It writes nothing.",
+    escalation: "escalation R2, R16: one escalation, its stages and edges. GATED on its PROJECT: `#row` answers the row "
+      + "only when membership's `inSight` of the escalation's project holds under the stamped viewer, else "
+      + "NO_SUCH_ESCALATION, one answer for absent and unseen. Reachable in the plane since K318 spread `#rows`' cursor. "
+      + "DRIVEN in the T9 section above: carol reads her escalation, and dave is answered it byte-identically to one "
+      + "that does not exist, the id aside. Stamped fail-closed with ESCALATION_READS in index.mjs, and THE STAMP IS "
+      + "LOAD-BEARING: `#row` treats a viewer never sent as a direct internal call and does not ask sight "
+      + "(`Store#rosterInSight`'s precedent), so the Worker's stamp is what closes it. It writes nothing.",
+    escalationsdue: "escalation R4, R16: the escalations whose next edge is proposed now, with the edge. GATED per row "
+      + "exactly as op=escalation (`inSight` of each escalation's project under the stamped viewer), so a hidden "
+      + "project's escalation is absent from the list and nothing counts it. DRIVEN in the T9 section above: carol is "
+      + "told her escalation's proposed edge 1 -> 2, and dave's answer names neither the escalation, its project nor its "
+      + "determination. Stamped fail-closed with ESCALATION_READS; the same load-bearing stamp as op=escalation. "
+      + "It writes nothing.",
   };
 
   /* DELIBERATELY UNGATED, each with the reason it is not a leak. */
