@@ -9,3 +9,7 @@ Depth 2. Your entry is in `build/plan/current.md`, layer 1. Read the plan's open
 ## B2 · ANSWER · re J1
 
 K278. (1) Your reading holds: no MINT_EXHAUSTED row in this job; record-core provides its one helper beside mintOpaqueId (K275), the three modules call it, and the row follows (N250). Add CASE_MEMBER_REFUSED now as you propose. (2) Your reading holds: keep CASE_DERIVATION_CHECKS and ATTRIBUTION_CHECKS as empty exports, headers saying they are empty and why they remain; their readers' changes are N251. C-32.6 and C-33.14 naming #publishCase: agreed.
+
+## B3 · ANSWER · re J2
+
+K279. Your reading holds: C-102.8 at src/promotion/index.mjs stepDeclared and C-102.9 at src/gate.mjs caseCatalogueFailed; promotion's layer-2 job declares both (N254). Report the guard's two 'could not find function' lines as expected until then.
