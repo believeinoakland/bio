@@ -250,7 +250,20 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    C-48.8 and C-48.9 (N226), which name where a refusal is minted and change no check's condition, code or translation.
    MINOR, rule 17 moving the stamp for arrivals and a departure. Census 395 -> 397, sha256 e1c688c5…, behaviour source
    9927c1ad…: the d470 suite's own print on this tree, whose re-pin (A3, A5, A9) is legacy-tests'. */
-export const CATALOG_VERSION = "1.39.0";
+/* 1.40.0 (PROMOTION #10, T9 after layer 4, 2026-09-28; K233's pattern, K288): TWO ARRIVALS, NO DEPARTURES, TWO CHANGED,
+   all in a module's own row table (R34, R47: rows are counted wherever they live). After 1.39.0 was minted (85493f73b5),
+   capture-sources' job (CAPTURE-SOURCES #3, N189, K288) added C-105.10 CAPTURE_CREDENTIAL_SUPPLY_FAILED and C-105.11
+   CAPTURE_CREDENTIAL_WITHDRAW_FAILED to `CAPTURE_CREDENTIAL_CHECKS`, taking from C-105.8 (NO_KEY) the failed encryption
+   or store and from C-105.9 (NO_SUCH) the failed read or withdrawal they also answered: C-105.8 and C-105.9 now refuse
+   one condition each, so they changed. Wording only, what is refused or admitted unmoved: C-105.1–C-105.11 gained their
+   `where`s, C-105.6's and C-105.9's translations were lengthened, and C-105.7 is minted at one helper. Layers 3 and 4
+   moved no other row: capture's, content's, extraction's, calibration's and provenance's listener registrations now
+   refuse through membership's `listenerRefusal` (codes with no row yet, N202), content reads a rect's space through
+   text-chain's `rectSpace` with C-45.13 refusing the same spaces, and `bio-checks.mjs` did not change. MINOR, rule 17
+   moving the stamp for arrivals and changed checks. The d470 census, of the catalogue file only, is unmoved: 397,
+   sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree), so its 1.40.0 row, legacy-tests', names
+   `changed: ["C-105.8", "C-105.9"]` to stand apart from 1.39.0's (A4). */
+export const CATALOG_VERSION = "1.40.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
