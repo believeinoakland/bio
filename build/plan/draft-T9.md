@@ -27,6 +27,7 @@
 
 ### Layer 4
 
+- **content** · N161 (`noticeForRow` in Provides).
 - **extraction** · N100 (its share: R13/R30 carry `page_boxes` under `page_count`'s three-state rule); N139 (its share: D-375's reading character count, built on `land/worker/D-375` @ 9a5df6e6); N151 (its share: `reading_text_source.chain` joins R58's read contract, or a service).
 
 ### Layer 5
@@ -42,9 +43,10 @@
 ### Layer 6
 
 - **inquiry** · only if T7 leaves them: N142 (its share: `subjectEntityOf`, `onRaised`, `member_user_agent`'s read, which INQUIRY #1 proposes in T7); N99 (its share, if the narrow act has an inquiry side); N149 (R44's `member_user_agent` at creation); N151 (its share); N160 (R42's `listeners_failed` through `dispose` and `divide`).
-- **citation** · N146 (its share: adopt membership's no-such-project service and delete its byte-identical copy).
+- **citation** · N165 (its share); N146 (its share: adopt membership's no-such-project service and delete its byte-identical copy).
 - **basis-versions** · N99 (the narrow act reads content's `extentRelation`, not the catalogue's).
 - **strength** · N152 (its share: `inquiry.onGrounded("strength", …)` made by strength itself, replacing legacy-store's registration).
+- **run-productions** · N165 (its share: a run's suggested legs).
 - **capture-requests** · N141 (R38's promotion at `collected`: an `information` bundle through `promotion.promote` under `token:daemon`, deferred from T7).
 - **skills** · N156 (unless SKILLS #1 did it in T7); N157 (its share: a render-only face).
 - **agent-worker** · N153 (its share: read `op=airun`'s `state` on resume); N157 (its share: its bundle carries what it runs).
