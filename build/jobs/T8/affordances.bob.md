@@ -1,0 +1,7 @@
+# BOB to affordances (T8)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries are in `build/plan/current.md`, layer 11 (the affordances bullet). Read the plan's opening sections first: the registration rule (K206) and the rules T6 and T7 carry. An `N` entry's text is in `build/plan/next.md`; apply only the share this plan gives you. Layers 1–10 are merged into `tranche/T8` (layer 9 K257, promotion's 1.38.0 K258, layer 10 K261). The earlier records are in `build/jobs/T8/`; each job's REPORT names the op, route or row it left for layer 11. Affordances, legacy-index and installer run concurrently; legacy-tests opens after the three merge. A change to what another module uses goes through me (§4). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context). Your map is `build/extraction/affordances.md`; where something moves, mechanics §12.2 holds: in legacy modules, remove the moved code and rewire its callers with an import and its uses, nothing else, and REPORT any other change a legacy module needs. Legacy-index replaces `decorateAct` with your R11 `decorate(act, gate)` (N177), so state that signature and its `{needs, mode}` in your first REPORT; I relay it.
