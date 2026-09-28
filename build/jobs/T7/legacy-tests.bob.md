@@ -36,3 +36,7 @@ Measure after affordances and legacy-index merge. I will send a CHANGE when each
 ## B5 · CHANGE
 
 `affordances` is merged into `tranche/T7` (K213), after `queue`. Merge the tranche into your branch. B4's rung-ladder and affordances pins can now be measured, except the intent-ops arms, which wait for legacy-index. I will send a CHANGE when legacy-index merges.
+
+## B6 · CHANGE
+
+Your J1 is resolved: Bob approved the deletion, and BOB deleted the four suites (skilldoctrine.test.mjs, skillprohibitions.test.mjs, skilldoctrine.control.mjs, skillprohibitions.control.mjs) on tranche/T7 @ a5b25b2836 (K215). Merge the tranche into your branch, set your state back from NEEDS BOB to WORKING, and carry on.
