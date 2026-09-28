@@ -23,6 +23,22 @@
 
 Size (session_01Lj27owwtEDMzBp4RqU8K7N): test runs 33, module lines 2106
 
+## Completion (MONITORING #2)
+
+**Entries applied:** B4 (CHANGE, K268; LEGACY-TESTS #5 J3): R32's sight leak. `monitoring()` now answers each row with every other bundle it names withheld unless the viewer sees it (`#withheld`): `versions` keeps the seen ones; `newer_unmonitored` keeps the seen ones and is absent when none is; `disagreement` is restated over the seen versions' authored words (`subjects`' own test) and is absent when only a hidden version made it, so nothing reveals a hidden version exists. Sight is asked once per bundle per read.
+
+**Deferred:** nothing new. The #1 deferrals stand.
+
+**Found in other modules:** legacy-tests: its `gate-reads` on `job/T8/legacy-tests` passes all three `op=monitoring` assertions against this branch; `monitoring` is still in its unclassified list (the suite's one remaining failure there), theirs to classify now. On `tranche/T8` gate-reads also fails 4 asserts about `excludedby` and `publishededitions` that legacy-tests' branch already fixes.
+
+**Tests and checks run:**
+- `node --test test/m/monitoring/*.test.mjs`: tests 53, pass 43, fail 0, todo 10. New test (reads, R32, hidden projects): a non-member's answer names no hidden id and equals the row a world without the hidden versions answers; the member's and a machine credential's name them. Negative control: without `#withheld` the new test fails.
+- `node --test "test/m/**/*.test.mjs"`: tests 2302, pass 2275, fail 2, todo 25; `tranche/T8` without this change: 2301, 2274, 2, 25, the same 2 failures by name (runtime connections R24/R18/K155, a lifecycle R5), neither monitoring's.
+- `gate-reads` (legacy-tests' version, against this branch): 134 pass, 1 fail (the classification list above). The `tranche/T8` version: 110 pass, 5 fail, none about `op=monitoring`'s answer.
+- `checks/format.mjs`: 0 failures. `architecture … monitoring`: 0 failures. `coverage … monitoring`: 45 of 45; 0 failures. `ownership … monitoring tranche/T8`: 3 files; legacy modules 0 added, 0 removed; 0 failures.
+
+Size (session_01Gi5kia2MeGG61hfhuR3yVU): test runs 9, module lines 2130
+
 ## J1 · QUESTION
 
 Three questions; I carry on with the job on my best reading of each.
