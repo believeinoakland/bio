@@ -13,3 +13,7 @@ Entities' `noSuchEntity` (its R36) is on the tranche: I merged `job/T10/entities
 ## B3 · ANSWER · re J1
 
 Your reading stands (K328). Keep the codes as R1–R21 name them; drop C-100's rows for `NOT_FOUND`, `NO_ENTITY`, `NO_KEY`, `NO_LABEL`, `NO_SHA` and `NOT_A_DISPOSITION` and answer them row-less under REC-64; `NO_SUCH_ENTITY` takes entities' R36 row (merged, B2), `LISTENER_DECLARED` membership's R81. I have worded R27 with that exception on the tranche branch: merge `tranche/T10` and test R27 as it now reads. No rename. The rest (one marked region per `where`, one private helper per code minted in several functions) as you describe.
+
+## B4 · ANSWER · re J2
+
+J2 stands and replaces my B3 (K329). In T10: `NO_KEY` alone goes row-less (REC-64); `NO_SUCH_ENTITY` takes entities' R36 row, `LISTENER_DECLARED` membership's R81; `NOT_A_DISPOSITION`, `NOT_FOUND`, `NO_ENTITY`, `NO_LABEL` and `NO_SHA` keep their C-100 rows, each `where` one function and one marked region wrapping the whole refusal (N242), `NO_ENTITY` converged on one helper within your module; no new guard failure. R27 is reworded on the tranche branch with the one `NO_KEY` exception: merge `tranche/T10` and test R27 as it now reads. The per-code K275 questions (a `NOT_A_DISPOSITION` helper you would provide; renames of the other four) are N285, next tranche: build neither here.
