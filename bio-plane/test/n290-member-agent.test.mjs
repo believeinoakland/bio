@@ -1,4 +1,16 @@
 /* N290 (K334; inquiry R44): op=promote stamps memberUserAgent from a member session's own User-Agent on a creation only; every caller's body copy is deleted. Written by LEGACY-INDEX #7 (T10), committed by legacy-tests. */
+/* CONFORMED 2026-09-28 (legacy-tests T10, B2/K342): committed verbatim from LEGACY-INDEX #7's record, then brought to the
+   battery's conventions by the job that owns it, which hygiene checks of every suite: the two side-effect imports below,
+   and the one walk (of this suite's own mkdtemp persist root, for the Durable Object's SQLite) NAMED in hygiene's list and
+   made exact: exactly ONE store file holds `inquiry_member_agents`, so a phantom file can only turn it red. */
+/* NEGATIVE CONTROL: RUN 2026-09-28 (legacy-tests T10) in a scratch worktree @ cd5e39d98d, each arm ALONE in
+   `src/index.mjs`'s op=promote stamp, restored by `git checkout` after each; baseline 7 pass, 0 fail.
+   (a) drop `delete b.memberUserAgent;` -> 5 pass, 2 FAIL: the member deploy token's and the admin token's creations
+       carry the body's forged "Forged/1.0".
+   (b) drop `viaSession &&` from the stamp's condition -> 5 pass, 2 FAIL: the same two carry the header's agent.
+   (c) drop `.slice(0, 512)` -> 6 pass, 1 FAIL: "at most 512 characters". */
+import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
+import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
 import { readFileSync, mkdtempSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -55,7 +67,9 @@ await promote(ALICE, F, "   ");                                           // bla
 console.log(JSON.stringify(rows));
 await mf.dispose();
 const files = []; const walk = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); statSync(p).isDirectory() ? walk(p) : files.push(p); } }; walk(DIR);
-const db = files.filter((f) => f.endsWith(".sqlite")).map((f) => new DatabaseSync(f)).find((d) => { try { d.prepare("SELECT 1 FROM inquiry_member_agents").all(); return true; } catch { return false; } });
+const dbs = files.filter((f) => f.endsWith(".sqlite")).map((f) => new DatabaseSync(f)).filter((d) => { try { d.prepare("SELECT 1 FROM inquiry_member_agents").all(); return true; } catch { return false; } });
+t("exactly one store file in this suite's own persist root holds inquiry_member_agents", dbs.length, 1);
+const db = dbs[0];
 const got = Object.fromEntries(db.prepare("SELECT bundle_id, user_agent FROM inquiry_member_agents").all().map((r) => [r.bundle_id, r.user_agent]));
 t("N290 a member session's creation carries its own User-Agent, trimmed; the body's is deleted", got[A], UA.trim());
 t("N290 a member deploy token's creation carries none (the body's deleted)", got[B], undefined);
