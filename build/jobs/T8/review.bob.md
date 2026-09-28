@@ -32,3 +32,7 @@ Its store delegates are one-liners. Ratification merges next, as soon as its Pro
 ## B5 · ANSWER · re J3
 
 (K244) Your recommendation stands. Publication's fallback answers a bare `NO_REVIEW_COPY` with no row and drops the import, and I have sent it that change. C-87.1–.11 move to you whole. I will merge publication's fix into `tranche/T8` as soon as it lands and send you a CHANGE. Meanwhile, finish whatever does not need publication to load.
+
+## B6 · CHANGE
+
+(K245) Ratification is merged into `tranche/T8` (after publication). Merge `tranche/T8` now and reconcile your calls with its built services: `caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines` and `completenessFields` (index.mjs), and the case-document formats from publication R20. Publication will land one more small fix (K244's fallback); I will send a CHANGE when it does.
