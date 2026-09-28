@@ -4871,9 +4871,10 @@ export async function checkBundle(input, opts = {}) {
  * ===========================================================================
  *
  * C-22 — THE INVESTIGATIVE RUN'S REFUSALS (IS-6, INVESTIGATIVE-SESSION.md §11
- * and §14b.6). WHAT THIS TABLE HOLDS NOW (T11, legacy-checks, N289): observation-log's eight rows, the ones
- * below, until that module takes them. The run's rows are ai-runs' own (`src/ai-runs/checks.mjs`, its R35),
- * C-22.7 among them since N289; `src/airun.mjs` exports `AI_RUN_CHECKS` as both. The history below counts the
+ * and §14b.6). WHAT THIS TABLE HOLDS NOW (T11, legacy-checks, N289, K350): observation-log's eight rows, the
+ * ones below, until that module takes them, and C-22.7, ai-runs' row, until ai-runs holds it in its own table
+ * (its R35) and this copy leaves in T12 (N299). The run's other rows are ai-runs' own (`src/ai-runs/checks.mjs`);
+ * `src/airun.mjs` exports `AI_RUN_CHECKS` as both. The history below counts the
  * family's allocations, not this table's rows. SEVENTEEN C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE (SIXTEEN until 2026-09-27, when T6's
  * legacy-checks job added C-22.17 — a look that states NEVER_LOOKED, split from C-22.1 (N118, K148);
  * FIFTEEN until 2026-09-23, when REC-177 added
@@ -4994,9 +4995,33 @@ export const AI_RUN_CHECKS = {
     where: 'src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe',
     translation: 'The observation log is not part of any published document and cannot be filed into one.',
   },
-  /* C-22.7 (AI_RUN_SKILL_VERSION_UNNAMED, SK-1) stood here until T11 (legacy-checks, N289). It left for
-     ai-runs' own row table, beside its one minting site `checkSkillVersion` (`src/ai-runs/skill-version.mjs`,
-     ai-runs R8 and R35 as K343 words it); skills names it by key through ai-runs (skills R25, K333). */
+  // C-22.7 is ai-runs' row: ai-runs takes it into its own table (ai-runs R35); this copy leaves in T12 (N299).
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+     bias manifest in force, the launching project's standard pair, and THE
+     SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+     a hat" and a version is only interpretable against them. SK-1's row makes
+     the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+     disclosure standard), and a condition that may be omitted is not recorded:
+     it is recorded by the runs that felt like it.
+
+     REFUSED AT THE OPEN, beside the two principals, for the same reason those
+     are: refusing later would mean a run had already searched under
+     instructions nobody can name. Two ways to fail and ONE code, because they
+     are one fact — the run object cannot say what it ran under. The worse of
+     the two is a version that names no pack: `3` reads as an answer and
+     identifies nothing, which is the blank-principal shape PL-4 measured one
+     field over, arriving on a condition instead of an identity.
+
+     A WHOLE-FUNCTION `where`, and it is the case the convention above blesses:
+     `checkSkillVersion` is small, single-purpose, and the only refusal it makes
+     is this one — `src/airun.mjs`'s three check functions are the named model. */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: 'C-22.7',
+    where: 'src/skillpack.mjs checkSkillVersion, called from store.mjs aiRunOpen',
+    translation: 'This run did not say which version of its instructions it was working under. '
+      + 'What a run found can only be read against the instructions it was given, so the record '
+      + 'asks for that version before the run starts rather than guessing at it afterwards.',
+  },
   /* REC-93, 2026-09-14 — THE COLUMN THAT MAY NEVER BE ABSENT.
      `OBSERVATION-LOG-DESIGN.md` §3: *"`authority_kind` is never NULL — a look
      the record cannot say WHY it made is not recorded."* `STORE-AS-CACHE.md`
