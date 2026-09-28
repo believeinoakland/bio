@@ -131,3 +131,21 @@ What this job found in other modules, or made stale there. Each item is describe
 - `ownership publication tranche/T8`: 1 failure, the N127 lines. legacy-store: 36 lines added, 3,071 removed. legacy-checks: 0 added, 172 removed. legacy-index: 6 added, 632 removed.
 
 Size (session_019xHaikQ3bX9KRMWSzbkdBb): test runs 24, module lines 5145
+
+## J6 · COMPLETE
+
+**B5 and B6 applied.** Pushed on `job/T8/publication`, which has `tranche/T8` (with ratification) merged in.
+
+- **B5 (K244).** With no provider, `NO_REVIEW_PROVIDER.deadAnswer()` now answers a bare `{ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY"}`. The `REVIEW_COPY_CHECKS` import is gone, and publication reads nothing of C-87.
+- **B6.1 (K245).** `CASE_DOCUMENT_UNSERVABLE` is C-98.9 in `PUBLISHED_READ_CHECKS`. Its site is the region `is-case-document-unservable` in `publication/worker.mjs publishedRoutes`, and the refusal now carries its code, check and translation.
+- **B6.2.** My migration does fill `edition`. A new test at the interface (R24, `invariants.test.mjs`) builds a real old-shape, edition-less `published_bundles` with a row and runs `migratePublication` twice. The row survives as edition 1, with its signature, attestor and gate version, and nothing is invented.
+
+  `test/publish.test.mjs` §9 fails for a different reason. It builds its "old" store by splicing an old `CREATE TABLE published_bundles` into the store's `SCHEMA` text (env `SCHEMA`). That text no longer holds the table: `SCHEMA.indexOf(...)` is −1, so the splice cuts the schema wrongly. Meanwhile `publication`'s own migration has already created the new shape, so the suite's raw edition-less INSERT hits `NOT NULL edition`. The fixture is a pin on the moved schema, and legacy-tests re-anchors it: create the old-shape table directly (or through `PUBLICATION_SCHEMA`) before the plane boots, then reload. With that change the migration is the one my test drives.
+
+**Tests and checks after the merge:**
+- `node --test bio-plane/test/m/publication/`: 55 tests, 53 pass, 0 fail, 2 todo (R30, R32).
+- `format`: 0 failures. `architecture publication`: 0 failures. `coverage publication`: 40 of 40.
+- `ownership publication tranche/T8`: 0 failures; the store and index lines are already merged into the tranche.
+- The R33 test drops its C-92.10–.12 arm, since ratification took those rows out of the catalogue.
+
+Size (session_019xHaikQ3bX9KRMWSzbkdBb): test runs 29, module lines 5165
