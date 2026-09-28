@@ -49,10 +49,10 @@ test("R1 renderPack throws naming the missing source, and renders nothing, for e
 
 test("R1 the imported levels or absence states empty: renderPack throws and renders nothing", () => {
   /* observation-log's vocabulary cannot be emptied from inside this process, so a child replaces its public
-     entry with one whose levels (then states) are empty and drives the same renderPack. */
+     entry with its own exports but the levels (then states) empty, and drives the same renderPack. */
   const script = (which) => `
     import { mock } from "node:test";
-    const real = await import(${JSON.stringify(join(ROOT, "bio-plane/src/observation-log/vocabulary.mjs"))});
+    const real = { ...(await import(${JSON.stringify(join(ROOT, "bio-plane/src/observation-log/index.mjs") + "?real")})) };
     mock.module(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/observation-log/index.mjs"))}, {
       namedExports: { ...real, ${which}: {} } });
     const { renderPack } = await import(${JSON.stringify("file://" + join(ROOT, "bio-plane/src/skillpack.mjs"))});
