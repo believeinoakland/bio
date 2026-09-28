@@ -26,3 +26,19 @@ Also, lower-level choices I am making (for your rulings file, reported as done):
 **What I read from conformance (for CONFORMANCE #1's REPORT to confirm):** `determinationRead({id, viewer})` → `{ok, project, outcomes: [{standard, outcome}], superseded_by}` (the adapter also takes `live: false`); I make it one spelling when you send conformance's.
 
 **Legacy wiring needed (not mine to add, extraction map §4):** nothing constructs `consequencesModule` or routes its ops yet. `consequencesOps(c, url, body)` gives `consequencerecord`, `consequencerevise`, `consequence`, `consequencesof`, `addressedrecord`, `addressed` (stamps `author`, `viewer` from the query, after the body), for legacy-store's op map / legacy-index (layer 11, as K248 has for `filingsOps`). No generated artifact includes this module.
+
+## J3 · COMPLETE
+
+**Entries applied** (plan, layer 9, consequences): built per requirements (map: nothing moves); R2's grade through `provenance.captureGrade` (K171 (8)); a machine's computed part answers no project authority (K171 (9)); factory `consequencesModule` (K171 (17)); K172's empty case; the `CONS-` type, registered by legacy-checks, is used as a one-state record object promoted through `promotion` (R14). B2 (K248): refusal family C-114 on every refusal; early-merge REPORT J2 with the exact shapes. B3 (K249): `passageText` dependency, null giving `undetermined`; the lower-level choices as recorded in K249.
+
+**Files:** `bio-plane/src/consequences/` (`index.mjs` the module, `figures.mjs` the figure parser and arithmetic, `schema.mjs` the three append-only tables declared to purge, `checks.mjs` C-114); tests `bio-plane/test/m/consequences/` (fixture over the real record-core, membership, promotion, provenance, content, inquiry and strength; conformance and passage text are stand-ins until conformance merges and content provides N215).
+
+**Every requirement R1–R14 is met and tested** except as the two open items below qualify: R9 is built literally (an unproven part makes `addressed` undetermined), tested so, pending Bob's ruling on K249 (3); R1 reads conformance through an adapter pending conformance's exact field names (K248 (3)). Requirement marks *(not yet met: new module)* in `build/requirements/consequences.md` are BOB's to lift.
+
+**Deferred, and why:** (1) the adapter's second spelling goes when conformance's shapes arrive; (2) R2's operands compute only when a passage's text can be read: until content provides `passageText` (N215), every computation lands `undetermined` ("form not read") in production, by design (K249 (2)).
+
+**Found in other modules:** (a) legacy-store / legacy-index: nothing constructs `consequencesModule` or routes `consequencesOps` (map §4's ~20 lines); (b) content: no read of a passage's text (N215); (c) the requirements' R9 with K172 (J1 (3)). No generated artifact made stale.
+
+**Tests and checks:** `node --test bio-plane/test/m/consequences/`: tests 22, pass 22, fail 0, todo 0. Layer tests: none (manifest). `format`: 69 modules, 64 requirements files; 0 failures. `architecture`: 10 product files, 31 relative imports; 0 failures. `coverage`: 14 of 14 live requirement ids named by a test; 0 failures. `ownership`: 11 files changed by consequences between tranche/T8 and HEAD; 0 failures.
+
+Size (session_011yhNE6j88pmjeN8wq7pUjm): test runs 12, module lines 985
