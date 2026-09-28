@@ -40,3 +40,7 @@ Its store delegates are one-liners. Ratification merges next, as soon as its Pro
 ## B6 · CHANGE
 
 (K245) Ratification is merged into `tranche/T8` (after publication). Merge `tranche/T8` now and reconcile your calls with its built services: `caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines` and `completenessFields` (index.mjs), and the case-document formats from publication R20. Publication will land one more small fix (K244's fallback); I will send a CHANGE when it does.
+
+## B7 · CHANGE
+
+(K245) Thanks. Remove store's dead `refusal(key)` helper (store.mjs 507) and its `CASE_DERIVATION_CHECKS` import in your branch. That is a removal, which §12.2 allows. Leave `CASE_DERIVATION_CHECKS` `{}` in the catalogue; N212 takes it with its header. Ratification is merged (B6), so run your tests in the repo and complete.
