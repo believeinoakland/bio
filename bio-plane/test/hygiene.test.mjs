@@ -103,6 +103,14 @@ import { extractionOwns } from "../src/extraction/index.mjs";
 import { observationLogOwns } from "../src/observation-log/index.mjs";
 import { connectionsOwns } from "../src/connections/index.mjs";
 import { RETRIEVAL_TABLES } from "../src/retrieval/index.mjs";
+/* T7 (legacy-tests): layers 3-7's owners' purge declarations (the census below), and the two claims the store's
+   run-time filter added (`inquiryOwns`, `runProductionsOwns`), imported from where the store imports them. */
+import { inquiryOwns } from "../src/inquiry/index.mjs";
+import { INQUIRY_TABLES } from "../src/inquiry/schema.mjs";
+import { RUN_PRODUCTIONS_TABLES, runProductionsOwns } from "../src/run-productions/schema.mjs";
+import { BASIS_VERSIONS_TABLES } from "../src/basis-versions/schema.mjs";
+import { INTENT_TABLES } from "../src/intent/schema.mjs";
+import { REEVALUATION_TABLES } from "../src/reevaluation/schema.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -550,10 +558,14 @@ console.log("\n--- the schema template is intact ---");
      Written as a CONTAINMENT test in both directions rather than a string
      equality, so the comment may keep its prose and its DEC reference while
      still being unable to omit a member or invent one. */
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; inquiry #1 J2.2/J3): `inquiry_basis` moved out of schema.mjs into
+     `src/inquiry/schema.mjs` (the three tables are inquiry's), so the column is looked for where its table now lives.
+     The claim is unchanged: that column's comment, and only it, is driven against GRADE_SOURCES. */
   {
-    const lines = src.split("\n");
+    const lines = readFileSync(join(DIR, "..", "src", "inquiry", "schema.mjs"), "utf8").split("\n");
     const at = lines.findIndex((l) => /^\s*grade_source\s+TEXT/.test(l));
-    t("the grade_source column is still where this arm looks for it", at > -1, true);
+    t("the grade_source column is still where this arm looks for it (inquiry_basis, in src/inquiry/schema.mjs)",
+      at > -1 && lines.slice(0, at).some((l) => /CREATE TABLE IF NOT EXISTS inquiry_basis \(/.test(l)), true);
     /* The block is the column's own line plus the CONTINUATION comment lines
        under it — lines that are nothing but an SQL comment. It stops at the
        next column, which is what keeps a neighbour's vocabulary out of it. */
@@ -599,11 +611,17 @@ console.log("\n--- the schema template is intact ---");
        other   any other mention. It may not name an axis word on its own line,
                so an enumeration in a shape this arm does not parse is reported
                as UNCLASSIFIED rather than scored as clean. */
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; inquiry #1 J3, basis-versions J3): the three sites D-423 named moved
+     with their tables — `inquiry_basis` (the column and its prose) into `src/inquiry/schema.mjs`, the two version
+     tables into `src/basis-versions/schema.mjs`. D-137's lesson (a class closed by parsing one file is closed only
+     for that file): the arm reads schema.mjs AND both module schemas, each site named by its file. */
+  const axisCorpus = ["schema.mjs", "inquiry/schema.mjs", "basis-versions/schema.mjs"]
+    .map((file) => ({ file, lines: readFileSync(join(DIR, "..", "src", file), "utf8").split("\n") }));
   {
-    const lines = src.split("\n");
     const isComment = (l) => /^\s*--/.test(l) || /\s--\s/.test(l);
     const axisWords = (text) => GRADE_AXES.filter((a) => new RegExp(`\\b${a}\\b`).test(text));
     const sites = [], unclassified = [];
+    for (const { file, lines } of axisCorpus)
     for (let n = 0; n < lines.length; n++) {
       const l = lines[n];
       if (!/grade_axis/.test(l)) continue;
@@ -611,7 +629,7 @@ console.log("\n--- the schema template is intact ---");
         const block = [l];
         for (let k = n + 1; k < lines.length && /^\s*--/.test(lines[k]); k++) block.push(lines[k]);
         const text = block.join("\n");
-        sites.push({ at: n + 1, shape: "column", text, named: [...text.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]) });
+        sites.push({ file, at: n + 1, shape: "column", text, named: [...text.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]) });
         continue;
       }
       if (!isComment(l)) continue;
@@ -631,12 +649,12 @@ console.log("\n--- the schema template is intact ---");
           text += "\n"; k++; i = 0;
           if (k < lines.length && !/^\s*--/.test(lines[k])) break;
         }
-        sites.push({ at: n + 1, shape: "prose", text, named: axisWords(text) });
+        sites.push({ file, at: n + 1, shape: "prose", text, named: axisWords(text) });
         continue;
       }
-      if (axisWords(l).length) unclassified.push(`schema.mjs:${n + 1}: ${l.trim()}`);
+      if (axisWords(l).length) unclassified.push(`${file}:${n + 1}: ${l.trim()}`);
     }
-    console.log(`    grade_axis comment sites: ${sites.map((x) => `${x.shape}@${x.at} ${JSON.stringify(x.named)}`).join(", ")}`);
+    console.log(`    grade_axis comment sites: ${sites.map((x) => `${x.shape}@${x.file}:${x.at} ${JSON.stringify(x.named)}`).join(", ")}`);
     /* REACH: the two leg tables and the inquiry_basis prose are the corpus as of
        D-423. A floor, not an equality, so a fourth documented site is welcome,
        and a matcher that finds nothing cannot pass over an empty list. */
@@ -644,13 +662,13 @@ console.log("\n--- the schema template is intact ---");
       sites.filter((x) => x.shape === "column").length >= 2 && sites.filter((x) => x.shape === "prose").length >= 1, true);
     t(`every grade_axis comment names every axis the catalogue carries (${JSON.stringify(GRADE_AXES)})`,
       sites.filter((x) => GRADE_AXES.some((a) => !x.named.includes(a)))
-           .map((x) => `schema.mjs:${x.at} (${x.shape}) lacks ${JSON.stringify(GRADE_AXES.filter((a) => !x.named.includes(a)))}`), []);
+           .map((x) => `${x.file}:${x.at} (${x.shape}) lacks ${JSON.stringify(GRADE_AXES.filter((a) => !x.named.includes(a)))}`), []);
     t("and no grade_axis column comment names an axis the catalogue does not",
       sites.filter((x) => x.shape === "column" && x.named.some((a) => !GRADE_AXES.includes(a)))
-           .map((x) => `schema.mjs:${x.at} invents ${JSON.stringify(x.named.filter((a) => !GRADE_AXES.includes(a)))}`), []);
+           .map((x) => `${x.file}:${x.at} invents ${JSON.stringify(x.named.filter((a) => !GRADE_AXES.includes(a)))}`), []);
     t("and no grade_axis mention names an axis in a shape the arm cannot classify", unclassified, []);
     t("and no semicolon hides in a grade_axis column comment",
-      sites.filter((x) => x.shape === "column" && x.text.includes(";")).map((x) => `schema.mjs:${x.at}`), []);
+      sites.filter((x) => x.shape === "column" && x.text.includes(";")).map((x) => `${x.file}:${x.at}`), []);
   }
 }
 
@@ -803,11 +821,15 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
      record-core themselves. Capture's lists are its exported CAPTURE_PURGED_TABLES / CAPTURE_EXEMPT_TABLES, the ones
      its `migrate()` passes to `declarePurge`; provenance declares inside `provenanceOf`, so its declaration is read by
      calling `provenanceOf` over a record that only records what it is told (no store, no SQL). */
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; provenance #2 REPORT J3, N92): `provenanceOf` now also registers its
+     audit check with record-core (`record.registerAuditCheck("provenance", …)`), so the recording stub answers that
+     call too — as bias's stub below already does. The declaration read is unchanged. */
   const provDecl = { tables: [], exempt: [] };
   provenanceOf({ storage: { sql: null } }, {
     record: { declarePurge: (m, tables = [], { exempt = [] } = {}) => {
       provDecl.tables.push(...tables.map((x) => (typeof x === "string" ? x : x.name))); provDecl.exempt.push(...exempt);
-      return { ok: true }; } },
+      return { ok: true }; },
+              registerAuditCheck: () => ({ ok: true }) },
     membership: {}, promotion: { registerStep: () => ({ ok: true }) } });
   t("provenance's purge declaration is read at its interface and names tables", provDecl.tables.length >= 3, true);
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; K23, record-core R21/R46): layers 4 and 5 moved nine more owners out
@@ -832,8 +854,36 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
                   ...CONNECTIONS_TABLES, ...PROGRESSIONS_TABLES, ...OBSERVATION_LOG_TABLES, ...RETRIEVAL_PURGE,
                   ...biasDecl.tables].map(named);
   const exemptT5 = [...CALIBRATION_TABLES, ...biasDecl.exempt];
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests): layers 3-7 moved eight more owners out of the store (inquiry,
+     run-productions, basis-versions, intent, reevaluation, ai-runs, contradiction, capture-requests), and each declares
+     its own tables to record-core. Five pass an exported list, read here as imported (INQUIRY_TABLES,
+     RUN_PRODUCTIONS_TABLES, BASIS_VERSIONS_TABLES, INTENT_TABLES, REEVALUATION_TABLES). Three write the list inline
+     where they construct (ai-runs' constructor over `recordOf(ctx)`, contradiction's and capture-requests' `migrate`
+     over a live store), so no recording stub reaches them; their list is read as TEXT out of the one declaration each
+     makes, as legacy-store's is above, and each read must find a table (a reader that found none would read as a
+     module declaring nothing). */
+  const inlineDecl = (file, head) => {
+    const text = readFileSync(join(srcRoot, file), "utf8");
+    const at = text.indexOf(head);
+    if (at < 0) return [];
+    const open = text.indexOf("[", at);
+    let end = open, d = 0;
+    for (let k = open; k < text.length; k++) {
+      if (text[k] === "[") d++;
+      else if (text[k] === "]" && --d === 0) { end = k; break; }
+    }
+    return [...text.slice(open + 1, end).replace(/keys:\s*\[[^\]]*\]/g, "").replace(/whole:\s*"[^"]*"/g, "")
+      .matchAll(/"(\w+)"/g)].map((m) => m[1]);
+  };
+  const inlineT7 = { "ai-runs": inlineDecl("ai-runs/index.mjs", 'declarePurge("ai-runs",'),
+                     contradiction: inlineDecl("contradiction/index.mjs", 'declarePurge("contradiction",'),
+                     "capture-requests": inlineDecl("capture-requests/index.mjs", "declarePurge(CAPTURE_REQUESTS_MODULE,") };
+  t(`the inline T7 purge declarations are locatable and name tables (${JSON.stringify(inlineT7)})`,
+    Object.values(inlineT7).every((l) => l.length >= 1), true);
+  const fromT7 = [...INQUIRY_TABLES, ...RUN_PRODUCTIONS_TABLES, ...BASIS_VERSIONS_TABLES, ...INTENT_TABLES,
+                  ...REEVALUATION_TABLES, ...Object.values(inlineT7).flat()].map(named);
   const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables,
-                       ...fromT5];
+                       ...fromT5, ...fromT7];
   const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES, ...CAPTURE_EXEMPT_TABLES,
                         ...provDecl.exempt, ...exemptT5];
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
@@ -850,7 +900,10 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
      `connectionsOwns`), so a claimed table is covered only by its owner's own declaration. */
   const storeDrops = (n) => captureOwns(n) || extractionOwns(n) || PROVENANCE_TABLES.includes(n)
     || PROGRESSIONS_TABLES.some((x) => named(x) === n) || CONTENT_TABLES.includes(n) || BIAS_TABLES.includes(n)
-    || ENTITIES_TABLES.includes(n) || RETRIEVAL_TABLES.includes(n) || observationLogOwns(n) || connectionsOwns(n);
+    || ENTITIES_TABLES.includes(n) || RETRIEVAL_TABLES.includes(n) || observationLogOwns(n) || connectionsOwns(n)
+    /* T7: the store's filter now also drops run-productions' and inquiry's claims (store.mjs, `.filter(…)` after
+       `declarePurge("legacy-store", …)`), so they are subtracted here as the store subtracts them. */
+    || runProductionsOwns(n) || inquiryOwns(n);
   const legacyOwn = fromLegacy.filter((n) => !storeDrops(n) && !fromModules.includes(n) && !moduleExempt.includes(n));
   const purged = new Set([...legacyOwn, ...fromModules, ...fromDeletes]);
   t("purge clears a non-trivial set of tables", purged.size >= 10, true);
@@ -1221,8 +1274,10 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
      had swallowed them the sweep would be silent for the worst possible reason. */
   t("the strip leaves op=acquire's note in affordances.mjs standing",
     uncomment(raw.get("affordances.mjs")).includes("bytes as fetched, hashed at receipt"), true);
-  t("the strip leaves op=earnedbasis's ceiling sentence in store.mjs standing",
-    uncomment(raw.get("store.mjs")).includes("is not reachable on the capture axis at all"), true);
+  /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; inquiry #1 J3): op=earnedbasis moved with the earned registry into
+     `src/inquiry/index.mjs`, and its ceiling sentence with it; the arm asks the strip where the sentence now is. */
+  t("the strip leaves op=earnedbasis's ceiling sentence in inquiry/index.mjs standing",
+    uncomment(raw.get("inquiry/index.mjs") ?? "").includes("is not reachable on the capture axis at all"), true);
 
   /* REACH 5: the rule's own two letters are readable and distinct, so detector
      (B) is narrowed to something real. A `null` unreachable grade would make (B)
@@ -1353,7 +1408,10 @@ console.log("\n--- no surface spells a capture grade letter (REC-48) ---");
     vocabLiterals(uncomment(raw.get(f))).map((h) => ({ f, ...h })));
   const offendersC = hitsC.map((h) => `${h.f} ${h.what}`);
   t(`(C) the only grade-vocabulary literal left in src/ is the machine-mintable subset, OPEN BY DECISION and not by oversight — a sixth would fail here (found: ${JSON.stringify(hitsC.map((h) => `${h.f}:${h.line} ${h.what}`))})`,
-    offendersC, ['store.mjs ["A", "B", "C"]']);
+    /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; inquiry #1 J3): the one stated limit, the earned-connection walk's
+       machine-mintable subset, moved with the earned registry from store.mjs into `src/inquiry/index.mjs`, its
+       comment moved with it (re-read: still the walk's `["A", "B", "C"].includes(c.grade)`, still the subset). */
+    offendersC, ['inquiry/index.mjs ["A", "B", "C"]']);
 
   /* THE STATED LIMIT, HELD RATHER THAN EXEMPTED (REC-50's pattern). The subset
      is read OUT OF the source above and never typed here, then pinned to a

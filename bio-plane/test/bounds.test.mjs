@@ -117,7 +117,7 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { inlinedStore } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store with its extracted modules re-inlined */
 import { reinlineLayer3 } from "./t4-extracted.mjs";      /* T4 (legacy-tests): and layer 3's delegations re-inlined */
-import { reinlineLayer5 } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes */
+import { reinlineLayer5, T7_MODULES } from "./t5-extracted.mjs";      /* T5 (legacy-tests): and layers 4-5's delegations and routes; T7: and layers 6-7's */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, extname, relative } from "node:path";
@@ -154,7 +154,15 @@ const t = (label, got, want) => {
    one-line delegations and spreads of their routes (`...entitiesOps(...)`, `...retrievalRoutes(...)`), and the walk
    printed 28 against 47. The corpus is T4's with those delegations and routes re-inlined too (`reinlineLayer5`,
    `t5-extracted.mjs`, which states each substitution). */
-const SRC_STORE = reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text;
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; layers 6 and 7 of T7): eleven more modules (inquiry, basis-versions,
+   contradiction, reevaluation, run-productions, ai-runs, capture-requests, capture-sources, citation, intent, strength)
+   left the store behind delegations and spreads of their routes, and the walk printed 41 against the T7 opening's 53:
+   `op=airunlog`, `op=airuns`, `op=basisversions`, `op=capturerequests` and the rest of T7's capped reads left the roster
+   while still capped and still driven (the second PIN arm named all twelve). The corpus is T5's with a second pass of
+   the same re-inliner over T7's modules (`{ modules: T7_MODULES }`, `t5-extracted.mjs`); the roster is diffed BY NAME
+   against the T7 opening's (f986aec704) print at the pin below. */
+const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -241,7 +249,35 @@ const cappedMethods = (code) => {
        the T5 opening, at the pin below). */
     if ((/\bthis\.#[A-Za-z_$][\w$]*\(\s*limit\s*[,)]/.test(body) && /\bLIMIT\s+\?/.test(body))
         || /\blimit:\s*[A-Z][A-Z0-9_]*_LIMIT\b/.test(body)) why.push("helper-cap");
+    /* TWO MORE SPELLINGS OF THE SAME CLAMP, added 2026-09-28 by legacy-tests (T7), PL-9's rule a third time: widen the
+       detector, never reword the source. (a) The caller's `limit` clamped between two NAMED constants by a clamp
+       FUNCTION (`clamp(limit, CHANGED_FROM_AUDIT_LIMIT_DEFAULT, CHANGED_FROM_AUDIT_LIMIT_MAX)`, reevaluation's and
+       capture-requests' one rule, where the store wrote `Math.min`); (b) `Math.min` over an ALIAS of the caller's
+       `limit` (`const asked = Number(limit); … Math.min(500, Math.floor(asked))`, membership's `aiCredentials`, which
+       `clamp` above reads only when `limit` itself is inside the call). Both are the property the `clamp` shape was
+       written for, in a spelling it did not anticipate. */
+    const alias = /\b(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*Number\(\s*limit\s*\)/.exec(body);
+    if (/\bclamp\(\s*limit\s*,\s*[A-Z][A-Z0-9_]*\s*,\s*[A-Z][A-Z0-9_]*\s*\)/.test(body)
+        || (alias && new RegExp(`Math\\.min\\([^;]*\\b${alias[1]}\\b`).test(body))) why.push("clamp-spelled");
     if (why.length) out.set(name, why);
+  }
+  /* AN EIGHTH SHAPE, and the only one that reads past a method's own segment, added 2026-09-28 by legacy-tests (T7):
+     T7's modules moved the bound of several reads into ONE private helper of the module — capture-requests' `#bounded`
+     (every request read's clamp and `LIMIT ?`), strength's `#versionLegs` (`LIMIT ?` at VERSION_LEGS_MAX, the bound
+     versionstrength and partitionindependence read legs under) — which the T7 re-inliner appends under the module's
+     spelling (`#bounded$captureRequestsOf`). A method that calls such a helper carries the helper's cap WHEN THE BOUND
+     IS ITS OWN: it hands the helper its caller's `limit`, or it publishes a bound or a completeness signal itself
+     (`limit:`, `truncated`, `legs_complete`). A method that merely CONSULTS a capped list for its own logic (basis-
+     versions' `narrow` act, matching one candidate) publishes no bound and is not a capped op; measured: without this
+     condition `narrow` joins, with it nothing but the reads that carry the helper's bound. It follows ONE hop and only
+     into a MODULE's private helper (a `$`-spelled name the re-inliner appended), never into the store's own privates,
+     so the store's roster is read exactly as before. */
+  for (const [name, body] of segments(code)) {
+    if (out.has(name)) continue;
+    const calls = [...body.matchAll(/this\.(#[A-Za-z_$][\w$]*\$[A-Za-z_$][\w$]*)\s*\(([^;]*)/g)]
+      .filter((m) => out.has(m[1]) && !out.get(m[1]).includes("module-helper-cap"));
+    const ownBound = /\blimit\s*:|\btruncated\b|\blegs_complete\b/.test(body);
+    if (calls.some((m) => /\blimit\b/.test(m[2])) || (calls.length && ownBound)) out.set(name, ["module-helper-cap"]);
   }
   return out;
 };
@@ -686,7 +722,22 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      at cap + 1, `limit`/`truncated` published, and read as uncapped; its segment now runs into the store's statics
      block, which T5's removals left beside it, so the named-cap shape sees it: the classification is right, the
      route to it is the segmenter's known next-signature bound). */
-  OPS.size, 51);
+  /* MOVED 51 -> 58 on 2026-09-28 by legacy-tests (T7), from THIS ARM'S OWN OUTPUT on `tranche/T7` with layers 6-7
+     re-inlined, never by adding; the roster DIFFED BY NAME against the T7 opening's print (f986aec704: 53, already red
+     here against 51). NO DEPARTURE: every op of the opening's 53 is on it (four under the module's method name:
+     airunlog -> log, airuns -> listInContext, capturerequestdrain -> drain, suggest -> suggest). Five of them —
+     aicredentials, capturerequests, changedfromaudit, versionstrength, partitionindependence — had left while still
+     capped when their bound moved into a clamp function or a module helper, and are read again by the two widenings at
+     `cappedMethods` (`clamp-spelled`, `module-helper-cap`). SEVEN ARRIVALS against 51, each read:
+       - op=connectionsasserted, op=filemembership (CONNECTIONS #2, K155, T5: `LIMIT cap + 1`, `limit` and `truncated`
+         published) — the opening's two, on its roster and never driven here, which is what kept this arm red;
+       - op=navchanges, op=derivesitechrome (CAPTURE: `clamp(limit, …)` over named constants, `limit`/`truncated`/
+         `next` published) — the T7 arrivals the `clamp-spelled` shape reads;
+       - op=narrowcandidates (BASIS-VERSIONS: NARROW_CANDIDATES_MAX per source, `limit` and `truncated` published, the
+         cap in the private `#narrowCandidateList`) — read through its module helper by `module-helper-cap`;
+       - op=reevaluationraise, op=reevaluationnotices (REEVALUATION #1, new: `LIMIT ?` at a clamped cap, `limit`,
+         `truncated`, `cursor`) — new capped reads. */
+  OPS.size, 58);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1603,7 +1654,25 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      of a member's own requests, and three over a project's), `limit` read back as
                                      the clamped cap, `truncated` both ways and an over-ask answered AT the ceiling are
                                      driven in `test/project-join-request.test.mjs` §8, in this loop's shape. */
-                                  "projectrequests"]);
+                                  "projectrequests",
+                                  /* ADDED 2026-09-28 by legacy-tests (T7): five of the seven arrivals the roster pin names,
+                                     each bound driven at the module's interface in this loop's shape (a bite with
+                                     `truncated` true, the whole with it false), and each envelope in `answersByOp` below:
+                                     op=connectionsasserted and op=filemembership in `test/m/connections/asserted.test.mjs`
+                                     ("R54, R33: asserted reads at most limit + 1 rows …" — three visible rows at a limit
+                                     of three read whole, two cut; and fileMembership's `stored_truncated`/
+                                     `pending_truncated`/`truncated` false at a limit of two and true at one);
+                                     op=derivesitechrome in `test/m/capture/services.test.mjs` (a limit of two over three
+                                     captures cut with `next`, the rest read whole with `truncated` false);
+                                     op=narrowcandidates in `test/m/basis-versions/narrow.test.mjs` ("R25: … at most 50
+                                     each" — `truncated` false, then NARROW_CANDIDATES_MAX + 5 readings cut at 50, true);
+                                     op=reevaluationraise in `test/m/reevaluation/pushed.test.mjs` ("… the sweep pages":
+                                     a limit of one cut with a cursor, paged to the end).
+                                     NOT ADDED, and the PIN names them: op=navchanges and op=reevaluationnotices publish
+                                     `limit`/`truncated` but no suite drives their bite (REPORTED to capture and to
+                                     reevaluation). */
+                                  "connectionsasserted", "filemembership", "derivesitechrome", "narrowcandidates",
+                                  "reevaluationraise"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1683,9 +1752,14 @@ const DRAIN1 = await POST("op=capturerequestdrain&token=adm-r57", { limit: 1 });
 t("op=capturerequestdrain: an unconfigured instance SAYS it drains nothing rather than reporting an "
 + "empty tick — a stated absence, never a silent no-op",
   [DRAIN1.configured, DRAIN1.drained, typeof DRAIN1.detail === "string"], [false, 0, true]);
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; CAPTURE-REQUESTS #1 REPORT J2.5): the drain moved into capture-requests
+   (`drain`, reached through `captureRequestsOps`, re-inlined above), and its batch is that module's exported constant.
+   The claim is unchanged — the bound is a named CONSTANT, and the drain the walk reads applies it. */
+const CR_SRC = readFileSync(new URL("../src/capture-requests/index.mjs", import.meta.url), "utf8");
 t("op=capturerequestdrain: and the bound it would apply is a CONSTANT this walk can see, so a tick "
 + "that grows its appetite fails the roster pin until somebody drives it",
-  /CAPTURE_REQUEST_TICK_BATCH = \d+/.test(SRC_STORE), true);
+  /export const CAPTURE_REQUEST_TICK_BATCH = \d+;/.test(CR_SRC)
+    && /\bCAPTURE_REQUEST_TICK_BATCH\b/.test(segments(CODE).get(OPS.get("capturerequestdrain") || "") || ""), true);
 
 /* ----------------------------------------------- PL-14 / IS-7's TWO ARMS.
    Driven against the SAME PL-1 fixture inquiry every version arm above uses, so
@@ -1697,10 +1771,16 @@ const VS = await GET(`op=versionstrength&token=mem-r57&id=${PL1_INQ}`
 t("op=versionstrength: publishes how many legs the pair was derived from AND whether that is the WHOLE "
 + "reading — a strength over a reading read short is a wrong number, not a short list",
   [VS.ok, VS.legs_read, VS.legs_complete], [true, 1, true]);
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; BASIS-VERSIONS #1, STRENGTH #1): the two reads left the store — the
+   version tables and their bound to basis-versions (`export const BASIS_VERSION_LEGS_MAX`), op=versionstrength and
+   op=partitionindependence to strength. The claim is unchanged and is asked where the code now is: basis-versions
+   declares the ONE constant, and strength's legs read takes THAT constant rather than a second figure. */
+const BV_SRC = readFileSync(new URL("../src/basis-versions/index.mjs", import.meta.url), "utf8");
+const STRENGTH_SRC = decomment(readFileSync(new URL("../src/strength/index.mjs", import.meta.url), "utf8"));
+const LEGS_SHARED = /\bBASIS_VERSION_LEGS_MAX\b/.test(STRENGTH_SRC) && !/export const VERSION_LEGS_MAX\s*=/.test(STRENGTH_SRC);
 t("op=versionstrength: and the bound it applies is a CONSTANT this walk can see, shared with "
 + "op=basisversions rather than a second figure that could drift from it",
-  [/BASIS_VERSION_LEGS_MAX = \d+/.test(SRC_STORE),
-   (SRC_STORE.match(/Store\.BASIS_VERSION_LEGS_MAX/g) || []).length >= 2], [true, true]);
+  [/export const BASIS_VERSION_LEGS_MAX = \d+;/.test(BV_SRC), LEGS_SHARED], [true, true]);
 /* ----------------------------------------------- REC-161's ARM (§12 clause (c)).
    The proposed-partition read's bound REFUSES and PUBLISHES itself, against the SAME PL-1 fixture
    inquiry, so this adds no corpus. More groups than a written reading may hold is refused by name. */
@@ -1708,7 +1788,8 @@ const PI_OVER = await GET(`op=partitionindependence&token=mem-r57&id=${PL1_INQ}`
   + `&partition=${encodeURIComponent(JSON.stringify(Array.from({ length: 501 }, (_, k) => [k])))}`);
 t("op=partitionindependence: a partition OVER the bound is REFUSED and the refusal PUBLISHES the bound, "
 + "shared with op=versionstrength's legs constant rather than a second figure that could drift",
-  [PI_OVER.ok, PI_OVER.code, PI_OVER.limit, /BASIS_VERSION_LEGS_MAX = 500\b/.test(SRC_STORE)],
+  /* T7: the fourth element asked of basis-versions' constant and strength's use of it (see `LEGS_SHARED` above). */
+  [PI_OVER.ok, PI_OVER.code, PI_OVER.limit, /export const BASIS_VERSION_LEGS_MAX = 500\b/.test(BV_SRC) && LEGS_SHARED],
   [false, "PARTITION_INDEPENDENCE_TOO_MANY_LEGS", 500, true]);
 /* ----------------------------------------------- D-148's ARMS (c18-batch7fix, 2026-09-23).
    op=actionquotes joined this roster at the c17-batch7 union: its read carries `LIMIT ?` against the named
@@ -2076,6 +2157,18 @@ const answersByOp = new Map([
      its bound, never an array. It needs a member SESSION (C-95.1), so D-479's outside member asks. The bite is driven
      in `test/project-join-request.test.mjs` §8 (DRIVEN_ELSEWHERE). */
   ["projectrequests", await GET(`op=projectrequests&token=${D479_TOK}&limit=1`)],
+  /* ADDED 2026-09-28 by legacy-tests (T7): the seven arrivals' ENVELOPES, for CPDF-10's reason (the bite is driven
+     where DRIVEN_ELSEWHERE says, or not at all where the PIN names it). The two capture reads and the two reevaluation
+     reads have no control-plane row, so they are asked at the Durable Object, `reindexnames`' precedent. The raise is a
+     sweep that may write notices, so it is asked LAST, after every arm above has measured what it measures. */
+  ["connectionsasserted", await GET("op=connectionsasserted&token=mem-r57&bundle=INFO-2026-0001-r57&limit=1")],
+  ["filemembership", await GET(`op=filemembership&token=mem-r57&sha256=${CAPS[0]}&limit=1`)],
+  ["narrowcandidates", await GET(`op=narrowcandidates&token=mem-r57&target=${PL1_INQ}`
+                                 + `&version=${encodeURIComponent("first reading")}&ord=0`)],
+  ["navchanges", await DO("navchanges?host=example.gov&limit=1")],
+  ["derivesitechrome", await DO("derivesitechrome?host=example.gov&limit=1")],
+  ["reevaluationnotices", await DO("reevaluationnotices?limit=1&viewer=adm-r57")],
+  ["reevaluationraise", await DO("reevaluationraise?limit=1")],
 ]);
 const ARRAY_SHAPED = new Set([...answersByOp].filter(([, a]) => Array.isArray(a)).map(([op]) => op));
 t("PIN: op=projection's capped corpus arm is NO LONGER a bare array — IC-24 landed, and this is measured "
