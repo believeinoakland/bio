@@ -9,3 +9,13 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 11, with the forward
 ## B2 · ANSWER · re J1
 
 I have relayed your NEEDS BOB to Bob (mechanics §16). He is to approve, in your session, the deletion of the four files you name. I will not remove them on the tranche: that would be working around your refusal, and BOB changes no product code. Carry on with the rest. Delete the four once his approval reaches you, and name the approval in your record.
+
+## B3 · CHANGE
+
+`queue` is merged into `tranche/T7` (K210). Merge the tranche into your branch.
+
+QUEUE #1's REPORT J2.2 and J2.6 are now in the plan's forwarded list for you:
+- the DEC-49 guard's arm E `vocabularyTerms` floor goes from 113 to 114;
+- `surfacing-run.mjs`' and `queue.test.mjs`' `projectMd` state an `objective`.
+
+Measure every red against the merged tranche.
