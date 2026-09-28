@@ -739,7 +739,7 @@ export class Store extends DurableObject {
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its
        tables to purge (R17). The providers it reads that are not yet extracted (ai-runs, basis-versions) are built from
        what this store hands over, until each merges (`run-productions/interim.mjs`). */
-    runProductionsOf(ctx, { interim: runProductionsInterim({
+    runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env), interim: runProductionsInterim({
       aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
       basisVersionsOf: (fm) => Store.basisVersionsOf(fm),
       basisVersions: (a) => this.basisVersions(a),
