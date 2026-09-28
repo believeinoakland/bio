@@ -62,3 +62,16 @@ Best reading: R2's `reasoned` list gains those eight. My R2 test states the list
 - Note: `versionaccept`, `versioncurrent` and `actionlaws` are also in `MACHINE_REFUSALS`, which is unaffected.
 
 Rule on Q6 and I apply it: I move the rows, extend the family, and turn the R27 `test.todo` into a test.
+
+## J3 · QUESTION
+
+Two more questions. After these, the architecture check and one `test.todo` are all that stand between me and COMPLETE.
+
+**Q7. `jurisdictions` in affordances' Uses.** My R25 test reads the place names from the jurisdiction profiles themselves (`list()`/`get()`: each profile's `covers`, and the names of its spaces and systems), so it checks "no place named" against data rather than against a list typed into the test. The architecture check fails on that import: `jurisdictions` is not in my `uses`. R26 already makes affordances read `jurisdictions.combine` (for `action_kind`), so the use is real, and layer 1 comes before layer 11. Best reading: add `jurisdictions` to affordances' `uses` in `modules.json` (and to its Uses list). The alternative is a typed list of place names in the test, which the next profile would outgrow.
+
+**Q8. `inquiryground` is `reasoned` in R2, but it does not refuse a first grouping.** Inquiry's `#ground` accepts a FIRST grouping of a question with no standing structure without a reason ("A FIRST grouping needs no reason: there is no earlier structure for it to be a revision of"). Only a restructure refuses `NO_REASON`. I drove both cases in the plane: the first grouping without a reason answers `ok`, and a restructure without one answers `NO_REASON`. So R19 ("every `reasoned` op, called without its authored reason, is refused") does not hold for this op, and R2 grades it `reasoned`. By R27's rule, an op that asks a reason only sometimes is not `reasoned` (compare `triage`, K211). Options:
+- (a) regrade `inquiryground` to `undetermined` (R2 changes);
+- (b) keep `reasoned` and have R19 say "a reason where the act revises what stands";
+- (c) inquiry requires a reason on a first grouping too (inquiry's R-change, not mine).
+
+My test marks it `test.todo` until you rule. I lean to (b): the ladder grades what undoing costs, and a first grouping replaces nothing.
