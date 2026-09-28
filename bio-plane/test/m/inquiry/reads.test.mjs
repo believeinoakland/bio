@@ -1,5 +1,6 @@
 /* The reads over the projection: the basis and who rests on a target (R16), the live legs (R17), an inquiry's state
-   history (R19), each gated as R33 says; the recorded subject and member agent (R43, R44). R18 is retired (N183). */
+   history (R19), the exclusions naming a target (R18), each gated as R33 says; the recorded subject and member agent
+   (R43, R44). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
@@ -33,6 +34,39 @@ test("R17 restsOnLive: a divided citer skipped, a severed one severed, a case me
   assert.deepEqual(r.severed.map((l) => l.bundle_id), ["INQ-2026-0002-r"]);
   assert.deepEqual(r.frozen.map((l) => l.bundle_id), ["INQ-2026-0003-s"]);
   assert.deepEqual(r.all.map((l) => l.bundle_id), ["INQ-2026-0001-q", "INQ-2026-0003-s"]);
+});
+
+test("R18 R33 exclusionsNaming answers the exclusions a viewer may see, each with its inquiry, edition, description, reason, author and date", () => {
+  const w = world(); w.member("alice"); w.member("bob"); w.doc(A);
+  const excl = ["completeness:", '  statement: "s"', "  author: member:alice", '  at: "2026-09-27T00:00:00Z"',
+                "completeness_excluded:", `  - target: ${A}`, '    description: "the memo"', '    reason: "out of scope"'];
+  w.inquiry("INQ-2026-0001-q", { extra: [...excl, "edition: 2"] });
+  const rows = w.k.exclusionsNaming(A, V("bob"));
+  assert.deepEqual(rows.map((r) => [r.bundle_id, r.edition, r.description, r.reason, r.author, r.at]),
+    [["INQ-2026-0001-q", 2, "the memo", "out of scope", "member:alice", "2026-09-27T00:00:00Z"]]);
+  assert.deepEqual(w.k.exclusionsNaming(A, null), [], "an absent viewer fails closed");
+  /* an inquiry inside a project the viewer is not in is withheld */
+  const P = w.project("Closed", "alice");
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id='INQ-2026-0001-q'`, P);
+  w.st.sql.exec(`UPDATE bundles SET object_type='project' WHERE bundle_id='INQ-2026-0001-q'`);
+  assert.deepEqual(w.k.exclusionsNaming(A, V("bob")), [], "what the viewer may not see answers as nothing");
+});
+
+test("R18 every exclusion naming the target is answered, read a page at a time, at most 500 rows per statement", () => {
+  const w = world(); w.doc(A);
+  const excl = ["completeness:", '  statement: "s"', "  author: member:alice", '  at: "2026-09-27T00:00:00Z"',
+                "completeness_excluded:", ...Array.from({ length: 600 }, (_, i) => [`  - target: ${A}`, `    description: "d${i}"`, '    reason: "r"']).flat()];
+  w.inquiry("INQ-2026-0001-q", { extra: excl });
+  w.inquiry("INQ-2026-0002-r", { extra: excl.slice(0, 5 + 3 * 450) });
+  const seen = [];
+  const sql = w.st.sql, exec = sql.exec;
+  sql.exec = (q, ...a) => { const r = exec.call(sql, q, ...a); if (/FROM inquiry_exclusions x/.test(q)) seen.push(r.length); return r; };
+  const rows = w.k.exclusionsNaming(A, "admin");
+  sql.exec = exec;
+  assert.equal(rows.length, 1050);
+  assert.ok(seen.length >= 3 && seen.every((n) => n <= 500), `pages ${seen}`);
+  assert.deepEqual(rows.slice(598, 602).map((r) => [r.bundle_id, r.ord]),
+    [["INQ-2026-0001-q", 598], ["INQ-2026-0001-q", 599], ["INQ-2026-0002-r", 0], ["INQ-2026-0002-r", 1]]);
 });
 
 test("R19 stateHistory answers each transition with who took it and when, so a reopened finding can say who reopened it", async () => {

@@ -56,7 +56,7 @@ const ID_CHUNK = 64;
 /** R39 (N183): the projects drawing on one member a refusal names, at most, the first by id (basis-versions R37's
  *  bound); deciding "more than one" is never cut by it. */
 export const PROJECTS_DRAWING_MAX = 32;
-/** R41 (N183): the most legs, and the most stale rows past a notice's bound, one statement reads. */
+/** R41, R18 (N183): the most legs, stale rows past a notice's bound, or exclusions one statement reads. */
 export const STALE_PAGE = 500;
 /** R44 (N149): the longest member-browser agent recorded; a longer or unprintable stamp is not an agent to present. */
 export const MEMBER_AGENT_MAX = 512;
@@ -511,6 +511,25 @@ export class Inquiry {
   /** R16: the ids that supersede `id`, from the index. */
   supersededBy(id) {
     return supersededByOf(this.#one(`SELECT inquiry_superseded_by FROM bundles WHERE bundle_id=?`, id));
+  }
+
+  /** R18 (publication R12 reads it): the exclusions naming `targetId` the viewer may see, each with its inquiry, edition,
+   *  description, reason, author and date, in (inquiry, ord) order. Every one is answered; they are read a page at a
+   *  time, at most `STALE_PAGE` rows per statement (N183). An absent viewer fails closed. */
+  exclusionsNaming(targetId, viewer = null) {
+    if (!targetId) return [];
+    const gate = viewerPredicate(viewer);
+    const out = [];
+    for (let bid = "", ord = -1; ;) {
+      const page = this.#rows(
+        `SELECT x.bundle_id, x.ord, x.edition, x.description, x.reason, x.author, x.at, b.current_state, b.title
+           FROM inquiry_exclusions x JOIN bundles b ON b.bundle_id = x.bundle_id
+          WHERE x.target_id=? AND (${gate.sql}) AND (x.bundle_id > ? OR (x.bundle_id = ? AND x.ord > ?))
+          ORDER BY x.bundle_id, x.ord LIMIT ?`, targetId, ...gate.args, bid, bid, ord, STALE_PAGE);
+      out.push(...page);
+      if (page.length < STALE_PAGE) return out;
+      ({ bundle_id: bid, ord } = page[page.length - 1]);
+    }
   }
 
   /** R19 (D-592): the inquiry's state transitions from its own `state_history`, each with who took it and when (a
