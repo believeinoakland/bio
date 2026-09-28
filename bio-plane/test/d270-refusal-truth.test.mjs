@@ -14,7 +14,8 @@
        REC-155 ruled all seven by §4.10, so the omission is the unruled fixture op `rec155unruled`). This is the arm the row's accepts-when demands, and it
        is the arm that proves this suite grades the DISTINCTION rather than the presence of a code.
    (c) THE DECLARATION EMPTIED — `UNATTENDED_BY_DECISION` set to `{}`. MUST FAIL naming `purge`,
-       `cpuprobe`, `capturerequestdrain` and `taskdrain` (and since REC-155 `livefire` and `reproject`),
+       `cpuprobe`, `capturerequestdrain` and `taskdrain` (and since REC-155 `livefire` and `reproject`;
+       since K199, 2026-09-28, `reevaluationraise` — declared, NOT yet run with it),
        which would then be told an omission. This
        is the arm for BOB #17's rule itself: the plane may say "not for a person" ONLY where a
        decision is recorded, so emptying the record must change what the plane says.
@@ -392,11 +393,18 @@ t("and every declared op is one no session reaches — a declaration over an op 
 /* CORRECTED 2026-09-25 BY REC-155, the line working again: BOB #19 RECORDED two more decisions
    (`BIO_Membership_Architecture_v2.md` §4.10) — `livefire` and `reproject` are unattended BY DECISION, each
    cited to the artifact §4.10 quotes. Still a literal naming every op. */
-t("the RECORDED-DECISION arm is exactly the seven ops a decision is RECORDED for, pinned as a literal "
+/* RE-PINNED 2026-09-28 (T7, LEGACY-TESTS #4 under K219/K220), the line working again: K199 (BOB #51)
+   RECORDED an eighth decision — `reevaluationraise`, reevaluation R14's bounded notice sweep
+   `raiseNotices({limit, after})`, is "admin and daemon": `scheduler`/`monitoring` drive it unattended, so
+   no session reaches it, and LEGACY-INDEX #4 (J1) entered it in `UNATTENDED_BY_DECISION` citing K199
+   (build/rulings.md). It is the ONLY op that moved: the seven above are unchanged, none left. Still a
+   literal naming every op. */
+t("the RECORDED-DECISION arm is exactly the eight ops a decision is RECORDED for (K199 added "
++ "reevaluationraise), pinned as a literal "
 + "— because the map that grades it reads the same declaration it grades against, and so cannot "
 + "see the record being emptied or invented into",
-  UNATTENDED, ["capturerequestdrain", "cpuprobe", "instancegroupseed", "livefire", "purge", "reproject",
-               "taskdrain"]);
+  UNATTENDED, ["capturerequestdrain", "cpuprobe", "instancegroupseed", "livefire", "purge", "reevaluationraise",
+               "reproject", "taskdrain"]);
 
 /* ====================================================================== 4
  * THE SESSIONS. A MEMBER'S AND A REAL ADMINISTRATOR'S.

@@ -1,3 +1,4 @@
+/* NEGATIVE CONTROL: DECLARED HERE, RUN 2026-09-28 BY `test/d419-content-crop.control.mjs` (T7, LEGACY-TESTS #4 under K219/K220; patches COPIES of `bio-plane/src`, `bio-plane/checks`, `pdf-worker/src`, `docprofile` and `jurisdictions` in a temporary directory and points this suite at them through `D419_TREE`, so the battery never discovers it and the real sources are verified untouched by sha256 AND content; each anchor asserted to occur exactly once; re-run from `bio-plane/`: `node test/d419-content-crop.control.mjs [arm]`). Baseline 16/0. (1) stamp-dropped — op=contentcrop removed from the plane's viewer-stamp list in src/index.mjs -> every served crop fails closed: the grey crop, its dimensions, bytes and `says`, the JPEG passthrough, the no-rectangle and whole-document refusals (answered NO_SUCH_CONTENT), the forged-viewer arm and the store control fail BY NAME, 7/9. (2) fail-open — `cropOf`'s visibility test skipped when no viewer is given (src/content/index.mjs) -> the store-with-no-viewer arm and its byte-for-byte arm fail, 14/2. (3) rect-dropped — `cropOf` hands pdf-pixels no rectangle -> the grey crop, its dimensions, bytes and `says`, the JPEG passthrough, the forged-viewer arm and the store control fail, 9/7, the no-rectangle refusal green. (4) refusal-collapsed — CROP_NOT_A_PAGE_IMAGE answered as NO_SUCH_CONTENT -> the whole-document arm fails alone, 15/1. (5) detail-respelled — over-strictness, the refusal's `detail` reworded -> nothing fails, 16/0. Every arm AS DECLARED, no unexpected failure; real src/index.mjs and src/content/index.mjs untouched (sha256 AND content). */
 /* d419-content-crop.test.mjs — D-419 / content R32. THE CROP OF A CITED PDF IMAGE, ASKED FOR THROUGH THE PLANE.
  *
  * REWRITTEN 2026-09-27 (T5-12, legacy-tests) from `land/worker/D-419` @ 914bb380fe, not landed as that branch wrote
@@ -33,10 +34,14 @@ import "./sandbox.mjs";               /* D-186 */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { registerFile } from "./register-doc.mjs";
 
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+/* D419_TREE: the negative-control driver (`test/d419-content-crop.control.mjs`) points the plane at a PATCHED COPY
+   of the repository's sources; unset, the plane is this checkout's own `src/index.mjs`. */
+const SRC = process.env.D419_TREE ? join(process.env.D419_TREE, "bio-plane", "src", "index.mjs")
+  : fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
