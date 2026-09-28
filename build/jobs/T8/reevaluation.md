@@ -31,3 +31,13 @@ Also for R25's binding: the instance's `env` reaches reevaluation only through l
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 40 relative imports; 0 failures. coverage: 25 of 25 live requirement ids named by a test; 0 failures. ownership: 7 files changed; legacy-store 2 added, 3 removed (726 the comment folded to one line, 727 `reevaluationOf(ctx, { env })`); legacy-checks 0/0; 0 failures.
 
 Size (session_01NGonW6u7AxdGRxu9HsKZwZ): test runs 16, module lines 2736
+
+## J2 · REPORT
+
+1. legacy-tests: `derivation-bounds` 69/4 → 68/5 on this branch. The census falls 209 → 207 (`reevaluation/index:#records` and `raiseNotices` now bounded, N182 (2)), and `reevaluation/index:raiseNotices` leaves the SET 2 / CENSUS-BLIND by-name pin (15 → 14). Both are departures by fix, for legacy-tests to re-pin from the print.
+2. legacy-tests: `bounds` 203/3 unchanged; its PIN still wants `reevaluationnotices` driven in that suite. The interface test N182 (3) asks for is `test/m/reevaluation/sweep.test.mjs` (default 200, clamp 1–1,000, truncated, cursor).
+3. legacy-tests / affordances: `gate-reads` 114/1 unchanged: `reevaluationnotices` is unclassified there (with intent's `aspirationcontacts`, `pursuit`, `intentproposals`).
+4. `meaning-bounds` 94/2 unchanged in count; `adoptVersion[silent]` has left the LOST BY WIDENING list (N182 (4)).
+5. Stale generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` (not_product), by `src/reevaluation/` and `store.mjs` 726–727.
+6. scheduler (layer 10): R25's services are on the one instance, `reevaluationOf(ctx)`; `noticeSweep(now)` is synchronous and answers `raiseNotices`' answer or `{pending: false}`; `REEVAL_NOTICE_DELAY_MS` is exported.
+7. The store rewire: the check does not count a rewritten comment line as a removal, so I folded the two-line comment at 726–727 into one line (inquiry's note and strength R28's, reevaluation's stale clause dropped) rather than editing its second line; net legacy change 2 added, 3 removed.
