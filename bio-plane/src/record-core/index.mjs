@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R59).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R60).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -395,6 +395,24 @@ export class RecordCore {
     const r = this.#one(`SELECT content, blob_sha, bytes, sha256 FROM files WHERE bundle_id=? AND path=?`, bundleId, path);
     if (!r) return null;
     return r.content !== null ? { text: r.content, sha256: r.sha256 } : { blobSha: r.blob_sha, bytes: r.bytes, sha256: r.sha256 };
+  }
+
+  /** R60, D-442: THE PINNED BYTES OF A BUNDLE'S `bundle.md` — the text whose SHA-256 is `sha`, from the live file or
+   *  any historical snapshot of it, read from this module's own tables alone. A row is a candidate by its stored
+   *  digest (compared lower-cased) and is answered only when its text hashes to `sha` by R58's one digest, so a row
+   *  whose stored digest disagrees with its content (R56) never passes its text off as the pinned bytes. A blob-backed
+   *  row holds no text and is passed over, never ending the search. Null when either argument is absent, nothing
+   *  matches, or the read fails; never throws. `publication` R2 and `ratification` R3 read it. */
+  textAtSha(bundleId, sha) {
+    if (typeof bundleId !== "string" || !bundleId || typeof sha !== "string" || !sha) return null;
+    const want = sha.toLowerCase();
+    try {
+      for (const table of ["files", "history"])
+        for (const r of this.#sql.exec(`SELECT content FROM ${table} WHERE bundle_id=? AND path='bundle.md'
+                                          AND content IS NOT NULL AND lower(sha256)=?`, bundleId, want))
+          if (typeof r.content === "string" && fileDigestOf({ text: r.content }) === want) return r.content;
+    } catch { /* R60 never throws */ }
+    return null;
   }
 
   /** R15's fixed derivation: the key goes in the FILENAME, not a directory — `bundle.md` archived under
