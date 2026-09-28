@@ -22,3 +22,9 @@ Also: R38 `pinnedCaseEditionsOf` and `ratifiedFindingsRestingOn` (ratification R
 (K240) Both stand.
 1. Yes, and it matches B2. Build R21 and R22 with tests. In the store, turn only the private helpers that move to you into one-line `publicationOf(this.ctx).<name>(…)` delegates. Leave the movers' bodies alone. `#reauthorAttributions` is yours.
 2. Yes. Re-export R20 from `bio-checks.mjs` for now, and every caller outside the catalogue imports it from you. The definition moves in physically once C-41 leaves with ratification (N211's pattern).
+
+## B4 · CHANGE
+
+(K241) Merge `tranche/T8`: R38 now also names `caseClaimsOf(id)`, the cases a finding is pinned or prepared into. RATIFICATION #1 calls R22 with these shapes; build to them.
+- `commitCaseEdition({case, edition, project, scope, completeness, biasAcknowledgement, bar, roster: [{bundle_id, role, version_sha}], sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy, at})`, inside the caller's transaction. It answers `existed` or `CASE_EDITION_ALREADY_RATIFIED` as R22 says, plus `awaiting` (roster members not yet published at their pins) and the case edition's state (today's `#caseEditionState`). Ratification computes `completeness` and calls `dischargeCaseFlags` itself.
+- `commitEdition({bundleId, bundleSha, edition?, title, completeness, strength, memberCarriesBlocks, group, edges, shas, attestorKey, attestorMember, gateVersion, sigArmored, deliveredBy, at})`, inside the caller's transaction. It covers everything in today's `publish` after the authority and scope arms: the rule-12 frozen pair, `EDITION_EXISTS`, `EDITION_NOT_INCREMENTED`, `CASE_ASSERTION_DIVERGED`, the per-case discharge, the bar projection, `published_bundles`, `published_shas` and the edges (R35). It answers `edition`, `existed`, `ratifiedAt`, `edges`, `caseCount`, `barUndetermined`, `frozenFrom`, `strengthUndetermined`, `caseId`/`caseEdition`/`case` and `containerCases`.
