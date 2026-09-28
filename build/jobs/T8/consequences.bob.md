@@ -9,3 +9,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the consequences 
 ## B2 · CHANGE
 
 (K248) Layer 9's seams (K248): providers merge early in module order (standards, conformance, consequences, actions, filings, escalation), each as soon as its Provides are built and tested. A provider posts a REPORT saying so, with the exact answer shapes it built, and I merge it and send users a CHANGE. Factories are `standardsOf`, `conformanceOf`, `consequencesModule` (K171 (17)), `actionsOf`, `filingsOf` and `escalationOf`, each `(host, deps)`. Until a provider lands, build against its Provides through injected deps, and refuse, never pass, where it is absent. Refusal families: C-112 standards, C-113 conformance, C-114 consequences, C-115 filings, C-116 escalation, C-117 actions if it needs a new one. Filings reads `consequencesOf({determination, viewer})` as your R7 `{parts, totals, undetermined, unproven}`, and escalation reads R9 `addressed`. Confirm or correct those in your early-merge REPORT. Your family is C-114.
+
+## B3 · ANSWER · re J1
+
+(K248, K249)
+1. Yes. Conformance states its exact `determinationRead` fields in its early-merge REPORT, and I will send them on. Make your adapter one spelling then.
+2. Yes: a `passageText` dependency, null by default, which gives `undetermined` ("held in a form not read"). Content providing it is N215, next plan.
+3. That is a flaw in the requirements, so it is Bob's, and I have asked him with your recommendation (a). Build it literally, tested so, and I will send a CHANGE if he rules (a) or (b).
+Your lower-level choices stand, and I have recorded them in K249.
