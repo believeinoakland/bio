@@ -49,7 +49,7 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   assert.equal(pass.tallyDetail["C-2.9/NO_OBJECTIVE"], 1);
   /* every refusal code intent.md names has its row here, with a check id and a translation */
   const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "NO_SUCH_PROJECT", "CONDITION_UNREADABLE", "NO_SUCH_PROGRESSION",
-    "NO_SUCH_ENTITY", "BAD_STAGE", "BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "NO_STATEMENT", "NO_SUCH_GOAL",
+    "NO_SUCH_ENTITY", "BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
     "NO_SUCH_ASPIRATION", "NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS", "GROUP_ASPIRATION_NOT_ADMIN",
     "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION"];
   for (const code of named) {
@@ -59,6 +59,15 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   }
   const ids = Object.values(INTENT_CHECKS).map((r) => r.check);
   assert.equal(new Set(ids).size, ids.length, "one row per check id");
+  /* N180: every row but the moved C-2.9 is in intent's own family, C-111 (C-110 is reevaluation's), and each names the
+     one function holding its region, in the `<file> <fn> > <region>` spelling */
+  for (const [code, row] of Object.entries(INTENT_CHECKS)) {
+    if (code === "NO_OBJECTIVE") { assert.equal(row.check, "C-2.9"); continue; }
+    assert.match(row.check, /^C-111\.\d+$/, code);
+    assert.match(row.where, /^src\/intent\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, `${code}: ${row.where}`);
+  }
+  /* N180: no code another module mints for its own condition is borrowed: NO_STATEMENT is the catalogue's, BAD_GRADE strength's */
+  for (const borrowed of ["NO_STATEMENT", "BAD_GRADE"]) assert.equal(INTENT_CHECKS[borrowed], undefined, borrowed);
 });
 
 test("R2 setCondition's refusals, in order: machine, absent or unseen project (one answer), not joined, unreadable, no progression, no entity, bad stage, bad grade, bad share", async () => {
@@ -81,7 +90,7 @@ test("R2 setCondition's refusals, in order: machine, absent or unseen project (o
   assert.equal(set({ ...COND, progression: "nope", required: { grade: "E" } }).reason, "NO_SUCH_PROGRESSION", "asked before the grade");
   assert.equal(set({ ...COND, entity: "ENT-9", required: { grade: "E" } }).reason, "NO_SUCH_ENTITY");
   assert.equal(set({ ...COND, required: { grade: "E", stages: ["need", "signoff"] } }).reason, "BAD_STAGE");
-  assert.equal(set({ ...COND, required: { grade: "E", stages: ["need"] } }).reason, "BAD_GRADE");
+  assert.equal(set({ ...COND, required: { grade: "E", stages: ["need"] } }).reason, "CONDITION_BAD_GRADE");
   for (const share of [0, 101, 50.5, "50", null, -1]) assert.equal(set({ ...COND, satisfied: { share } }).reason, "BAD_SHARE", String(share));
   for (const r of [set(COND, MACHINE), absent, set(COND, V("carol")), set({}), set({ ...COND, satisfied: { share: 0 } })]) {
     assert.ok(r.check && r.translation, `${r.reason} carries its row`);
@@ -277,11 +286,28 @@ test("R6 one gap per short instance: a missing stage names the progression, enti
 test("R7 watchSet answers what the condition reads: its entity and related entities, its progression, the captures placed in matched instances; empty with no condition", async () => {
   const w = await measured();
   const P = w.P;
-  assert.deepEqual(w.i.watchSet({ project: P }), { entities: [], progressions: [], captures: [] });
+  const none = w.i.watchSet({ project: P });
+  assert.deepEqual([none.entities, none.progressions, none.captures, none.truncated], [[], [], [], false]);
   assert.equal(w.i.setCondition({ project: P, condition: condOf(25), author: V("bob"), viewer: V("bob") }).ok, true);
   const s = w.i.watchSet({ project: P });
   assert.deepEqual(s.entities, ["ENT-1", "ENT-2", "ENT-4", "ENT-5"]);
   assert.deepEqual(s.progressions, ["proc"]);
-  assert.deepEqual(s.captures.sort(), ["ent-1-award", "ent-1-need", "ent-2-award", "ent-2-need", "ent-4-need", "ent-5-award"]);
+  const all = ["ent-1-award", "ent-1-need", "ent-2-award", "ent-2-need", "ent-4-need", "ent-5-award"];
+  assert.deepEqual(s.captures, all);
+  assert.equal(s.truncated, false);
+  assert.equal(s.cursor, null);
   assert.ok(!s.captures.some((c) => c.startsWith("ent-3")), "an unmatched instance's captures are not watched");
+  /* N181: the captures come a page at a time under a published bound, and the cursor follows the whole set exactly */
+  const pages = [];
+  let after = null;
+  for (let n = 0; n < 10; n++) {
+    const page = w.i.watchSet({ project: P, after, limit: 4 });
+    assert.equal(page.limit, 4);
+    assert.ok(page.captures.length <= 4);
+    pages.push(...page.captures);
+    if (!page.truncated) { assert.equal(page.cursor, null); break; }
+    after = page.cursor;
+  }
+  assert.deepEqual(pages, all, "every capture once, in order, across the pages");
+  assert.equal(w.i.watchSet({ project: P, limit: 100000 }).limit, 1000, "the bound is clamped to its ceiling");
 });

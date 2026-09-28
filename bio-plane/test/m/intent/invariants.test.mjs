@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { INTENT_CHECKS, INTENT_TABLES } from "../../../src/intent/index.mjs";
-import { seeded, V, MACHINE, COND } from "./fixture.mjs";
+import { world, seeded, V, MACHINE, COND } from "./fixture.mjs";
 
 const strip = (r) => { const { detail, project, goal, aspiration, ...rest } = r; return rest; };
 const dropClock = (r) => JSON.parse(JSON.stringify(r, (k, v) => (k === "computed_at" ? undefined : v)));
@@ -118,6 +118,37 @@ test("R23 every read and act naming a project, goal or aspiration the viewer may
   assert.deepEqual(strip(w.i.linkObjective({ goal: g, project: w.P, author: V("bob"), viewer: nobody })),
                    strip(w.i.linkObjective({ goal: "GOAL-2026-0099", project: w.P, author: V("bob"), viewer: nobody })));
   assert.equal(w.i.aspirationsFor({ viewer: nobody }).aspirations.length, 0);
+  /* N199 (1): a gap of a project the viewer may not see, set aside without naming its project, is still that project's:
+     it is listed in `set_aside` to those who see the project and to no one else */
+  assert.equal(w.i.setCondition({ project: hidden, condition: { ...COND, relation: "member_of" }, author: V("carol"),
+                                   viewer: V("carol") }).ok, true);
+  const gap = w.i.gaps({ project: hidden, viewer: V("carol") }).gaps[0];
+  assert.ok(gap, "the hidden project has a gap");
+  assert.equal(w.i.triage({ proposal: gap.key, act: "defer", reason: "Later.", author: V("carol"), viewer: V("carol") }).ok, true);
+  assert.ok(w.i.proposals({ viewer: V("carol") }).set_aside.some((s) => s.key === gap.key), "its project's member sees it");
+  for (const who of ["bob", "dave"]) {
+    const r = w.i.proposals({ viewer: V(who) });
+    assert.ok(!r.set_aside.some((s) => s.key === gap.key), `${who} does not`);
+    assert.doesNotMatch(JSON.stringify(r), new RegExp(hidden), `${who} reads nothing naming the hidden project`);
+  }
+  /* N199 (2): a project's aspiration answers as an absent one to a viewer who may not see its project, in every read
+     that names it: its pursuit record, the contacts, the aspirations in force, and a goal's pointer to it */
+  const pa = w.i.declareAspiration({ scope: "project", owner: hidden, statement: "Only the sealed files", entities: ["ENT-1"],
+                                     author: V("carol") }).aspiration;
+  w.i.declareAspiration({ scope: "group", statement: "Every contract public", entities: ["ENT-1"], author: V("alice") });
+  const pg = w.i.declareGoal({ statement: "The files", bounds: "this cycle", aspiration: pa, author: V("carol") }).goal;
+  assert.deepEqual(strip(w.i.pursuitOf({ aspiration: pa, viewer: V("dave") })),
+                   strip(w.i.pursuitOf({ aspiration: "ASP-2026-0099-aspiration", viewer: V("dave") })));
+  assert.equal(w.i.pursuitOf({ aspiration: pa, viewer: V("carol") }).ok, true);
+  assert.equal(w.i.readGoal({ goal: pg, viewer: V("dave") }).goal.aspiration, null, "the pointer reads as none");
+  assert.equal(w.i.readGoal({ goal: pg, viewer: V("carol") }).goal.aspiration, pa);
+  assert.ok(!w.i.contacts({ viewer: V("dave") }).contacts.some((c) => c.a === pa || c.b === pa));
+  assert.ok(w.i.contacts({ viewer: V("carol") }).contacts.some((c) => c.a === pa || c.b === pa));
+  assert.ok(!w.i.aspirationsFor({ member: "dave", viewer: V("dave") }).aspirations.some((a) => a.id === pa));
+  assert.equal(w.i.declareGoal({ statement: "s", bounds: "b", aspiration: pa, author: V("dave") }).reason, "NO_SUCH_ASPIRATION");
+  for (const r of [w.i.pursuitOf({ aspiration: pa, viewer: V("dave") }), w.i.readGoal({ goal: pg, viewer: V("dave") }),
+                   w.i.contacts({ viewer: V("dave") }), w.i.aspirationsFor({ viewer: V("dave") })])
+    assert.doesNotMatch(JSON.stringify(r), /sealed/i, "nothing of the hidden aspiration reaches dave");
   /* a project the viewer sees at existence only is told so (membership R77), never more */
   const disc = w.project("Discoverable", "carol", { visibility: "discoverable" });
   const e = w.i.progress({ project: disc, viewer: V("dave") });
@@ -164,4 +195,23 @@ test("R25 no place is named in this module's behaviour or outward text: its rows
   ];
   for (const r of answers) assert.doesNotMatch(JSON.stringify(r), PLACES);
   for (const id of [w.P, a.aspiration, g.goal]) assert.doesNotMatch(w.text(id).replace(/title: .*/, ""), PLACES);
+});
+
+test("R15 R16 (N179) built as the plane builds it, intent first and progressions after it with the plane's env, intent reads progressions' configured clock: an overdue finding is judged at BIO_NOW_MS, not the wall clock", async () => {
+  /* a flow whose award is due within 10 days of a need dated 2026-01-01: due 2026-01-11 */
+  const at = async (nowIso) => {
+    const w = world({ plane: { env: { BIO_NOW_MS: String(Date.parse(nowIso)) }, readingAt: "2026-01-01T00:00:00Z" } });
+    w.member("alice", { role: "admin" });
+    w.member("bob");
+    w.entity("ENT-1");
+    assert.equal(w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", declaredBy: V("alice"), stages: [
+      { key: "need", cardinality: "1", required: "always" },
+      { key: "award", after: "need", cardinality: "1", required: "always", within: "10 days" }] }).ok, true);
+    await w.thread("ENT-1", { need: "A" });
+    return w.i.proposals({ viewer: V("bob") }).proposals.find((p) => p.key === "progressions::proc::award");
+  };
+  const before = await at("2026-01-05T00:00:00Z");
+  assert.ok(before, "the missing award is proposed");
+  assert.equal(before.basis.overdue, false, "at the configured 2026-01-05 it is not yet due, though the wall clock is past it");
+  assert.equal((await at("2026-01-20T00:00:00Z")).basis.overdue, true, "at the configured 2026-01-20 it is overdue");
 });
