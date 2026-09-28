@@ -16,3 +16,9 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 8 (the publication b
 5. Yes.
 6. Yes. I will read those lines at the close.
 Also: R38 `pinnedCaseEditionsOf` and `ratifiedFindingsRestingOn` (ratification R5), R39 `attributionInForce(caseId, edition, observation)` (review R16), and R40, a read contract on your five tables. R23's registration is `registerReviewProvider({draftForMember, draftIdentity, caseIdentitySentence, statedEdition, liveGrant, grantAdmitsCaseEdition, deadAnswer})`. With none registered, `reviewProvider()` answers an object whose doors refuse and whose `deadAnswer()` is C-87.1's bytes.
+
+## B3 · ANSWER · re J2
+
+(K240) Both stand.
+1. Yes, and it matches B2. Build R21 and R22 with tests. In the store, turn only the private helpers that move to you into one-line `publicationOf(this.ctx).<name>(…)` delegates. Leave the movers' bodies alone. `#reauthorAttributions` is yours.
+2. Yes. Re-export R20 from `bio-checks.mjs` for now, and every caller outside the catalogue imports it from you. The definition moves in physically once C-41 leaves with ratification (N211's pattern).
