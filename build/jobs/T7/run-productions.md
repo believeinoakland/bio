@@ -119,3 +119,15 @@ Q1. Seven points where the approved text leaves the build open. Each has my best
 7. **R9 (D-595).** A suggested leg carries `extent_capture`: the capture the leg names, if the run named one held for that document, and otherwise `content.captureFor(target)`. An inquiry leg carries none. A named capture not held for its document is C-27.8. The version legs' composition (basis-versions R5) gains a conditional `leg_capture` line so the freeze sees the pin, which is BOB #34's ruling ("through C-25.11's composition"). That is basis-versions' change, not mine. Until it lands the pin is written to the document and is outside the composition.
 
 Also found: in `suggestVersion`, the independence-incomplete refusal uses `OMAX`, which is undefined there, so that path throws a ReferenceError instead of refusing C-27.16. It is fixed in my module (the limit comes from strength's answer).
+
+## J2 · REPORT
+
+Found in other modules. The full text is in my record's "Found in other modules" section; in short:
+1. **legacy-checks**: an entry that re-points the `where`s of C-27 (all but .15) and C-104 to `src/run-productions/index.mjs` (`suggest > is-suggest-shape|checks|write`, `extractPropose > is-extract-*`, `extractProposals > is-extract-scope`). Until then the DEC-49 guard reads 106 against 103 on the base.
+2. **skills**: import `SUGGEST_LEVELS` and `SUGGEST_CHECKS` from `run-productions`, so the rows can leave the catalogue (K182 (2)).
+3. **basis-versions**: I call `appendVersion` as R28 states. `author` and `at` are top-level (the interim writes them after `run`). Legs carry `extent_kind` and `extent_capture`. I register `onCandidates` when it is offered. Awaiting `versionAsWritten` and `leg_capture`. The store's narrow extract arm is to leave for R25 and R40.
+4. **ai-runs**: `runFor`, `boundOf` and `consumeBound` are awaited; the interim covers them until then.
+5. **legacy-tests**: the old-battery arms that read the moved source. `suggest` has 6 (all its behaviour arms pass); `extractrun` has 1 (`EXTRACT_NO_SCOPE`, K163); there is one each in dec65-single-part (2), dec65-strength-reach, run-conditions, affordances, inquirystrength, rec114, rec119, project-sight and derivation-bounds; and the controls listed in map §4.
+6. **queue** (N112): `#counts` now reads `runProductionsOf(ctx).counts(hid)`.
+7. **connections**: `m/connections/factory.test.mjs` R24/K155 is red on the base too (capture R58's refusal of a second `env`).
+8. **Generated artifact**: `bio-plane/dist/bio-plane.bundled.mjs` is stale.
