@@ -1,6 +1,8 @@
 # Plan: tranche T10
 
-**Status** · DRAFT (BOB #56, K274; cut by BOB #57, K305). Layers 5–6 cut from `draft-T9.md`, the T8 entries against layers 5–11, and the layer-11 extractions (instance-setup, control-plane, queue). Opens after T9 closes, re-read for what T9 changes (K170's rule); it may be cut again to a proven size. T6's to T9's rules hold.
+**Status** · OPEN · BOB #57 · session_017vk5HNzmfWdF5xTZ9QoQE2 · depth 1
+
+Opened by BOB #57, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T10.md` (BOB #56, K274; cut by BOB #57, K305, K317, K320) at once after T9 closed (K282: no pacing). Branch `tranche/T10` starts at `main` @ ac699662aa (T9 closed, K320). The provider sides were worded on T9's tranche before it closed (K304, K306, K303) and re-read against T9's close: layers 1–4 and 10–11 changed nothing they word. Bob's weekly meter at the opening: asked.
 
 **Jobs** · (none yet)
 
