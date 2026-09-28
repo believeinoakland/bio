@@ -38,3 +38,7 @@ The snapshot's `odsRangeAddressUnit`/`odsRangeUnits` exports would become privat
 - `ownership odf-reader tranche/T9`: 3 files changed; 0 failures.
 
 Size (session_01WS5qsgXgxGzNszdSSHz4o2): test runs 7, module lines 2122
+
+## J2 · COMPLETE
+
+N27 applied as R44 (K278): odsEntry.text() carries rangeUnits/rangeUnitsSkipped; 48/48 module tests, all four checks 0 failures. Stale for your layer-close regeneration: bio-plane and agent-worker bundles (odf.mjs changed). Details in my record's Completion section.
