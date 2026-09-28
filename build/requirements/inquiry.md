@@ -38,7 +38,7 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 **Reads: basisFor(id), restingOn(targetId), restsOnLive(id), supersededBy(id), cyclePath(id, targets), stateHistory(id)**
 - **R16** `basisFor(id, {limit?})` answers the projected legs in order; with a positive integer `limit`, at most that many, the first by ord, bounded in the read, with `limit` and `truncated`; without it, the whole basis. `restingOn` answers every leg naming the target, each `confirmed` or `severed` by the citer's own record (`connections.edgeSevered`). Neither is gated; both are for in-process callers only (Suggestions).
 - **R17** `restsOnLive` answers the live legs resting on an id: a divided citer is skipped, a severed one is `severed`, a case member's (the registered fact `caseMember`) is `frozen`, the rest `confirmed`.
-- **R18** *(retired: T10, N183 — `exclusionsNaming` had no caller and duplicated `legacy-store`'s `excludedBy`)*
+- **R18** `exclusionsNaming(targetId, viewer)` answers every exclusion (`inquiry_exclusions`) naming the target that the viewer may see, each with its inquiry, edition, description, reason, author and date, in (inquiry, ord) order, read at most 500 rows per statement; an empty id answers an empty list and an absent viewer fails closed (R33). For `publication` (its R12). (Its T10 retirement is withdrawn: `publication` calls it; K335.)
 - **R19** `stateHistory(id)` answers the inquiry's state transitions, each with who took it and when, so a reopened finding can say who reopened it.
 
 **Acts on an inquiry**
