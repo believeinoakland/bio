@@ -46,3 +46,55 @@ What intent's job found in other modules, and what it leaves for them. Each is a
 8. **Generated artifact:** the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is stale: `src/intent/` and `store.mjs` changed. It is regenerated at the layer close (manifest).
 9. **Requirements text:** R4 as folded (K200) ends a sentence with "…never asks the grade (K200) or short." The words "or short" belong earlier: "counted in `undetermined` with why, never as meeting or short".
 10. **Refusal family:** intent holds C-110.1–C-110.28 (and C-2.9's objective arm).
+
+## J5 · COMPLETE
+
+**Entries applied** (plan: T6-11, extract per map and requirements; R2–R18 and R26 new, R19–R25 binding the new code; K102, K198, K200, K204)
+
+- **Module** `bio-plane/src/intent/`:
+  - `index.mjs` holds the factory `intentOf(ctx)` (K61), which registers intent's promotion check (R39), its audit check (record-core R59) and its purge tables (R24).
+  - The class `Intent` provides:
+    - objective: `setCondition` (R2), `progress` (R3–R5), `gaps` (R6), `watchSet` (R7);
+    - goals: `declareGoal`, `linkObjective`, `closeGoal`, `readGoal` (R8);
+    - aspirations: `declareAspiration`, `departFrom`, `recordDeadEnd`, `retireAspiration`, `aspirationsFor`, `contacts`, `pursuitOf` (R9–R14);
+    - discovery loop: `registerSource`, `proposals`, `triage` (R15, R16) and `ageSurfaced` (R17);
+    - `workObjective` (R18).
+  - `intentOps` (17 ops) is also in `index.mjs`.
+  - `checks.mjs`: the C-2.9 objective row (`NO_OBJECTIVE`) and the family C-110.1–C-110.28. Each code is minted at one site, inside its DEC-49 region.
+  - `schema.mjs`: `intent_departures` and `intent_triage`, append-only.
+  - `doc.mjs`: the aspiration (`ASP-`) and goal (`GOAL-`) documents, and the project's `objective_condition` and `objective_adoptions` blocks.
+- **R1/R22.** C-2.9's objective arm is removed from `checkBundle` (3 lines of `bio-checks.mjs`). It is enforced at the write by intent's registered check, which is new behaviour; before, only the audit enforced it. The audit keeps it through intent's audit check (same id; `tallyDetail` `C-2.9/NO_OBJECTIVE`).
+- **R26.** Aspirations and goals are bundles of the types `aspiration` and `goal`, written through `promotion`. Intent's check allows only `held → retired` and `open → closed`, keeps each document's scope and owner, and refuses a machine author. **C-2.5 reports both types as unknown in the audit and the gate until N159** admits them to the catalogue (K198 Q2).
+- **Readings adopted:** Q1–Q4 (K198), Q5–Q6 (K200), Q7 (K204); my decisions without asking are in J1.
+- **Legacy side.** Ownership check: legacy-checks 0 lines added, 3 removed; legacy-store 4 lines added, 0 removed. **The check fails on the net-removal rule by design (K204):** a module that is new in all but three lines needs more wiring than it moves. The four added lines, each an import from intent or a use of one:
+  - `store.mjs:395` `import { intentOf, intentOps } from "./intent/index.mjs";`
+  - `store.mjs:746` `intentOf(ctx);` (before legacy-store's `registerStep`)
+  - `store.mjs:1002` `intentOf(this.ctx).migrate();`
+  - `store.mjs:18280` `...intentOps(intentOf(this.ctx), url, body),`
+
+**Improvements made in this module:** one minting site per refusal code (DEC-49). `ADOPTIONS_UNSPLICEABLE` is its own row rather than a borrowed CONDITION_UNREADABLE. The founder (`admin`) counts as an administrator for group aspirations (R9).
+
+**Deferred:** nothing of intent's own. R17's scheduler call is not wired: that is scheduler's or legacy-store's (J4.5).
+
+**Other modules:** see J4. It covers:
+- legacy-tests: 84 suites whose fixtures create projects with no objective;
+- legacy-index: the 17 ops' OPS rows and stamps;
+- affordances: the acts, N115;
+- legacy-checks: N159;
+- scheduler: the `ageSurfaced` caller;
+- queue and monitoring;
+- capture-requests: a by-id read;
+- the stale plane bundle;
+- R4's displaced "or short".
+
+**Tests and checks** (on `job/T7/intent` after merging `tranche/T7` @ B5, 3ea54ba023):
+- Module: `node --test bio-plane/test/m/intent/` → tests 30, pass 30, fail 0. The files: objective (R1–R7, R22), pursuits (R8–R14, R26), discovery (R15–R17, R20), invariants (R18, R19, R21, R23–R25).
+- `node --test bio-plane/test/m/` → tests 1745, pass 1741, fail 1: the known connections factory red, N131.
+- Layer tests: none named in `build/manifest.md`. I provide no service an existing module uses yet.
+- Legacy battery, every `test/*.test.mjs`: base (merged tranche) 274 pass / 97 fail; head 190 pass / 181 fail. The difference is exactly the 84 suites listed in J4.1, all pass → fail on `NO_OBJECTIVE` in their fixtures.
+- `node checks/format.mjs .` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs . intent` → architecture: 9 product files, 31 relative imports (0 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs . intent` → coverage: 1 modules, 26 of 26 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs . intent tranche/T7` → ownership: 12 files changed by intent between tranche/T7 and HEAD; legacy-checks: 0 line(s) added, 3 removed; legacy-store: 4 line(s) added, 0 removed; 1 failure (net removal, accepted K204)
+
+Size (session_01GQGyDoacLdEkcPzHjpqTBg): test runs 24, module lines 1553
