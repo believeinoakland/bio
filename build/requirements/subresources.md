@@ -57,6 +57,8 @@ Finds every reference an HTML page needs to render as itself, fetches or reuses 
 **`SUBRESOURCE_CAP` (400), `SUBRESOURCE_MAX` (8 \* 1024 \* 1024 bytes), `SUBRESOURCE_BUDGET` (64 \* 1024 \* 1024 bytes)**
 - **R27** This instance's own appetite ceilings — the default fanout cap, the per-subresource byte ceiling, and the total per-capture byte ceiling — for a capture path to reuse so it spends against the same numbers `captureSubresources` does. Never the platform's own outbound-request limit, which is discovered, not declared (see R10's `platformCeiling`/`observed_ceiling`).
 
+- **R34** (N79, D-340; K278) Every `links[]` entry (R15) carries its containment: `chrome: true` with `chrome_basis` naming the furniture region its href sat in (`<nav>`, `<footer>`, `<header>`, `<aside>`, or `role=navigation|banner|contentinfo|complementary|search`), when that href (as written, trimmed) appears in a furniture region anywhere on the page by R8's rule (body wins anywhere on the open-element stack; a declared `role=` outranks the element name; a commented-out region opens nothing); otherwise `chrome: false` and `chrome_basis: null`, so the field is total. The first furniture basis met in document order is named. One link written two ways (a relative href in the body, the absolute one in the nav) is one entry, contained. Containment classifies and never filters: every link is recorded as without it, and whether a link is the site's chrome (recurrence across pages) is capture R28's, not decided here. A link restored from `resume` keeps its containment. *(not yet met: T9, N79)*
+
 ## Private
 
 ### Uses
