@@ -1066,6 +1066,7 @@ __export(bio_checks_exports, {
   PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
   PROJECT_VISIBILITY_CHECKS: () => PROJECT_VISIBILITY_CHECKS,
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
+  PROPOSAL_STATES: () => PROPOSAL_STATES,
   PROVENANCE_ACT_CHECKS: () => PROVENANCE_ACT_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
@@ -1164,6 +1165,7 @@ __export(bio_checks_exports, {
   normalizeType: () => normalizeType,
   parseFrontmatter: () => parseFrontmatter,
   projectNameKey: () => projectNameKey,
+  proposalLabel: () => proposalLabel,
   quoteFindings: () => quoteFindings,
   quoteValue: () => quoteValue,
   rangeCorners: () => rangeCorners,
@@ -1181,11 +1183,25 @@ __export(bio_checks_exports, {
   vocabFor: () => vocabFor,
   withProducingGroup: () => withProducingGroup
 });
-var BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
-var ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
+var BUNDLE_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+var ANN_ID_RE = /^(INFO|PROB|FOCUS|INQ|PROJ|ACTN|BIAS|STD|CONF|CONS|ESC|ASP|GOAL)-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*\.ann-\d{8}T\d{6}Z-[a-z0-9]+(-[a-z0-9]+)*$/;
 var FILENAME_RE = /^[A-Za-z0-9._-]+$/;
 var ISO_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-var OBJECT_TYPES = { INFO: "information", PROB: "inquiry", FOCUS: "inquiry", INQ: "inquiry", PROJ: "project", ACTN: "action", BIAS: "bias" };
+var OBJECT_TYPES = {
+  INFO: "information",
+  PROB: "inquiry",
+  FOCUS: "inquiry",
+  INQ: "inquiry",
+  PROJ: "project",
+  ACTN: "action",
+  BIAS: "bias",
+  STD: "standard",
+  CONF: "determination",
+  CONS: "consequence",
+  ESC: "escalation",
+  ASP: "aspiration",
+  GOAL: "goal"
+};
 var LEGACY_TYPE_ALIASES = { problem: "inquiry", focus: "inquiry" };
 var normalizeType = (t) => LEGACY_TYPE_ALIASES[t] || t;
 var INQUIRY_TITLE_MAX = 120;
@@ -1509,6 +1525,45 @@ var STATES = {
       adopted: ["retired"],
       retired: []
     }
+  },
+  /* K171 (1) (T8, N129): THE ACTION LAYER'S RECORD OBJECTS. A standard, a determination and a consequence part
+     are each RECORDED once and never move: a correction is a new object that supersedes the old one (standards
+     R4 and R6, conformance R7, consequences R6), so each machine is one state and no edge, and a promotion that
+     names any other state is refused by `promote` (promotion R15). */
+  standard: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
+  },
+  determination: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
+  },
+  consequence: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
+  },
+  /* An escalation (escalation R21) is `open` while its stages run and `suspended` while a member has set it
+     aside; `escalationResume` restores it at the same stage (R15). It is `ended` only by `escalationEnd`, once
+     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`. */
+  escalation: {
+    legal: ["open", "suspended", "ended"],
+    edges: {
+      open: ["suspended", "ended"],
+      suspended: ["open", "ended"],
+      ended: []
+    }
+  },
+  /* K198 (2) (T8, N159): intent's two pursuit documents (intent R26). An aspiration is held until it is retired;
+     a goal is open until it is closed. Neither returns: intent's step refuses any other move
+     (PURSUIT_STATE_MOVE_UNDECLARED), and this table states the same machine so the audit and the gate read the
+     states as legal. */
+  aspiration: {
+    legal: ["held", "retired"],
+    edges: { held: ["retired"], retired: [] }
+  },
+  goal: {
+    legal: ["open", "closed"],
+    edges: { open: ["closed"], closed: [] }
   }
 };
 STATES.problem = STATES.focus;
@@ -1674,14 +1729,38 @@ function lawProposalState(proposedBy) {
   if (s.length === 0) return "unstated";
   return isMachineIdentity(s) ? "machine_proposed" : "member_proposed";
 }
-function lawProposalLabel(proposedBy) {
+var PROPOSAL_STATES = Object.freeze({
+  governing_laws: LAW_PROPOSAL_STATES,
+  standard: Object.freeze({
+    machine_proposed: "a machine credential proposed this standard. That is machine work, labelled as machine work: it can set a standard beside the record for members to consider and it can never enter one. Nothing here is a standard this record holds, and nothing becomes one until a member records it themselves",
+    member_proposed: "a member proposed this standard to whoever records the group's standards. It is a proposal and not a standard: only recording a standard enters one, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed this standard"
+  }),
+  comparison: Object.freeze({
+    machine_proposed: "a machine credential prepared this comparison of a government act against standards. That is machine work, labelled as machine work: it can set out rows and questions for members and it can never determine whether the act complied. Nothing here is a determination, and nothing becomes one until a member records it themselves",
+    member_proposed: "a member suggested this comparison of a government act against standards. It is a comparison and not a determination: only a determination records whether the act complied, and the record holds who made the comparison",
+    unstated: "the record does not say who prepared this comparison"
+  }),
+  filing_draft: Object.freeze({
+    machine_proposed: "a machine credential prepared this draft. That is machine work, labelled as machine work: it can prepare the words of a filing and it can never approve or send one. Nobody has approved or sent this draft, and nothing is filed until members decide to file it and send it themselves",
+    member_proposed: "a member prepared this draft. It is a draft and not a filing: nobody has approved or sent it, and the record holds who prepared it",
+    unstated: "the record does not say who prepared this draft, and nobody has approved or sent it"
+  }),
+  theory: Object.freeze({
+    machine_proposed: "a machine credential proposed this candidate theory and remedy. That is machine work, labelled as machine work: it can set a theory beside the standards for members and counsel to weigh and it can never state the group's position. Nothing here is the group's position",
+    member_proposed: "a member proposed this candidate theory and remedy. It is a candidate for members and counsel to weigh and not the group's position, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this candidate theory and remedy"
+  })
+});
+function proposalLabel(proposedBy, subject) {
+  const table = typeof subject === "string" && Object.prototype.hasOwnProperty.call(PROPOSAL_STATES, subject) ? PROPOSAL_STATES[subject] : null;
+  if (!table)
+    throw new RangeError(`proposalLabel: '${String(subject).slice(0, 40)}' is not a proposal subject; one of ${Object.keys(PROPOSAL_STATES).join(", ")}`);
   const state = lawProposalState(proposedBy);
-  return {
-    by: proposedBy ?? null,
-    state,
-    machine_work: state === "machine_proposed",
-    says: LAW_PROPOSAL_STATES[state]
-  };
+  return { by: proposedBy ?? null, state, machine_work: state === "machine_proposed", says: table[state] };
+}
+function lawProposalLabel(proposedBy) {
+  return proposalLabel(proposedBy, "governing_laws");
 }
 var LAW_PROPOSAL_WHY_MAX = 240;
 var ACTION_BASIS_KINDS = ["rests_on", "advances"];
@@ -4604,7 +4683,23 @@ async function checkBundle(input, opts = {}) {
     /* PL-12 / D-84: `bias@1`. A type whose schema stamp the catalog does not
        know is refused by C-2.5 before any type-specific check runs, so the
        stamp has to be admitted in the same turn as the type. */
-    knownSchemas: opts.knownSchemas ?? ["information@1", "information@2", "inquiry@1", "focus@1", "problem@1", "project@1", "action@1", "bias@1"],
+    /* K171 (1) and K198 (2) (T8): the six types admitted above, each at schema 1, on `bias@1`'s reason. */
+    knownSchemas: opts.knownSchemas ?? [
+      "information@1",
+      "information@2",
+      "inquiry@1",
+      "focus@1",
+      "problem@1",
+      "project@1",
+      "action@1",
+      "bias@1",
+      "standard@1",
+      "determination@1",
+      "consequence@1",
+      "escalation@1",
+      "aspiration@1",
+      "goal@1"
+    ],
     resolveTarget: input.resolveTarget,
     // D2.3: the key registry, injected exactly like resolveTarget. Absent
     // is legal and means pre-migration behavior; absent WITH a
@@ -4865,7 +4960,7 @@ var VERSION_CHAIN_CHECKS = {
      "versions". */
   VERSION_CHAIN_NO_ADDRESS: {
     check: "C-24.1",
-    where: "src/store.mjs versionChain, reached from op=versionchain",
+    where: "src/provenance/index.mjs versionChain, reached from op=versionchain",
     translation: "That request did not say which document address to read the versions of. Versions are versions OF something, so it asks rather than answering for a document you did not name."
   },
   /* An anchor was given and it is not a version at this address. Refused rather
@@ -4875,7 +4970,7 @@ var VERSION_CHAIN_CHECKS = {
      answer here, as they are on every gated read in this plane. */
   VERSION_CHAIN_NO_SUCH_VERSION: {
     check: "C-24.2",
-    where: "src/store.mjs versionChain, reached from op=versionchain with at=<capture sha>",
+    where: "src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>",
     translation: "The record holds no version of that document with those bytes. Rather than pick the closest-looking one and call it the version before this, it says so \u2014 naming the wrong predecessor is the defect this read was built to end."
   },
   /* The anchor is not the shape a capture identity has. A separate refusal from
@@ -4885,7 +4980,7 @@ var VERSION_CHAIN_CHECKS = {
      absence, which is the distinction CLAUDE.md requires be stated. */
   VERSION_CHAIN_BAD_ANCHOR: {
     check: "C-24.3",
-    where: "src/store.mjs versionChain, reached from op=versionchain with at=<capture sha>",
+    where: "src/provenance/index.mjs versionChain, reached from op=versionchain with at=<capture sha>",
     translation: "That is not the shape a capture identity has, so nothing was looked up. A capture is named by the sha256 of its bytes; this says the request was malformed rather than letting it read as a document the record does not hold."
   }
 };
@@ -4988,7 +5083,7 @@ var BASIS_VERSION_CHECKS = {
        freeze arm)` said exactly this before REC-71 and no instrument could read
        it, so the guard widened the claim to the whole function and conscripted 32
        unrelated refusals. The span is now DECLARED at the site. */
-    where: "src/store.mjs #promoteChecks > basis-version-freeze, reached from op=promote, NOT reachable from a pure document check",
+    where: "src/basis-versions/index.mjs check > basis-version-freeze, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check",
     translation: "That version already exists and has been changed in place. A version is frozen once written, because two people comparing it must be comparing the same thing \u2014 so an edit becomes a NEW version derived from this one, and the original stays exactly as it was."
   },
   /* §6 rule 4's vocabulary. This is the SIXTH state machine and IS-2 owns its
@@ -5039,7 +5134,7 @@ var BASIS_VERSION_CHECKS = {
     check: "C-25.16",
     /* A REGION `where` — see VERSION_FROZEN above and the "WHAT A `where` MEANS"
        block at the head of this file. */
-    where: "src/store.mjs #promoteChecks > basis-version-resolve, reached from op=promote, NOT reachable from a pure document check",
+    where: "src/basis-versions/index.mjs check > basis-version-resolve, reached from op=promote through the step basis-versions registers with promotion (K31), NOT reachable from a pure document check",
     translation: "One part of that version rests on something this record does not hold. A reading of the evidence that points at a document nobody can open is a reading nobody can check."
   },
   /* THE READ'S TWO REFUSALS. Versions are versions OF an inquiry, so there is no
@@ -5048,7 +5143,7 @@ var BASIS_VERSION_CHECKS = {
      unrelated compositions wearing the word "versions". */
   BASIS_VERSIONS_NO_INQUIRY: {
     check: "C-25.17",
-    where: "src/store.mjs basisVersions, reached from op=basisversions",
+    where: "src/basis-versions/index.mjs basisVersions, reached from op=basisversions",
     translation: "That request did not say which question to read the versions of. A version is one reading of the evidence for one question, so it asks rather than answering for a question you did not name."
   },
   /* And an id of the wrong CLASS is refused rather than answered with an empty
@@ -5057,7 +5152,7 @@ var BASIS_VERSION_CHECKS = {
      most misleading form a wrong answer takes. */
   BASIS_VERSIONS_NOT_AN_INQUIRY: {
     check: "C-25.18",
-    where: "src/store.mjs basisVersions, reached from op=basisversions",
+    where: "src/basis-versions/index.mjs basisVersions, reached from op=basisversions",
     translation: "Only a question carries versions of its evidence, and that is not a question. Answering with an empty list would say this thing has no readings of its evidence, when the truth is that it could not have any."
   },
   /* PL-2 / IS-2 — THE SECOND ENFORCEMENT LAYER of §6 rule 4's reason rule, and
@@ -5094,22 +5189,22 @@ var versionNeedsReason = (to) => VERSION_REASON_REQUIRED.includes(to);
 var VERSION_ACT_CHECKS = {
   VERSION_ACT_NO_INQUIRY: {
     check: "C-25.20",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "That request did not say which question the reading belongs to. A reading of the evidence always belongs to one question, so it asks rather than guessing."
   },
   VERSION_ACT_NOT_AN_INQUIRY: {
     check: "C-25.21",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "Only a question carries readings of its evidence, and that is not a question. There is nothing here to accept, set aside or turn down."
   },
   VERSION_ACT_NO_VERSION: {
     check: "C-25.22",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "That request did not name which reading to act on. A question can hold several readings of its evidence, and acting on the wrong one is worse than being asked which you meant."
   },
   VERSION_ACT_NO_SUCH_VERSION: {
     check: "C-25.23",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "This question holds no reading by that name. Readings are named so a member can ask for one by name, and a name nobody wrote is refused rather than matched to whatever is nearest."
   },
   /* REC-46's ONE predicate, at the ONE transition site. §4: THE AI HOLDS NO OP
@@ -5118,17 +5213,17 @@ var VERSION_ACT_CHECKS = {
      the refusal that says so for all six. */
   MACHINE_CANNOT_MOVE_VERSION: {
     check: "C-25.24",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "Deciding what to do with a reading of the evidence is a named member's call, and this request came from an automated credential. A machine may put a reading forward and may never settle it. Sign in as a member."
   },
   VERSION_ILLEGAL_TRANSITION: {
     check: "C-25.25",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "That is not a move this reading can make from where it stands. A reading a member has already accepted is corrected by turning it down or by putting it back under consideration, never by returning it to something nobody had acted on."
   },
   VERSION_NO_REASON: {
     check: "C-25.26",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "Setting a reading aside or turning it down carries the reason in the member's own words. The record of what was turned down is the instrument that makes a pattern of turning things down visible at all, and it is worth nothing without the reason."
   },
   /* A REASON THAT IS PRESENT AND UNWRITABLE IS NOT A MISSING REASON, and until
@@ -5161,7 +5256,7 @@ var VERSION_ACT_CHECKS = {
      across the whole tree before it was taken). */
   VERSION_REASON_MALFORMED: {
     check: "C-25.32",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "That reason was given but could not be stored as written: it is either longer than the record allows or it contains a character the record has no way to escape, such as a double quote. Nothing was changed. Shorten it, or say it without the quotation marks, and the words stay yours."
   },
   /* THE CHECK PL-1 RECORDED RATHER THAN HALF-BUILT. A version leg naming THIS
@@ -5172,27 +5267,27 @@ var VERSION_ACT_CHECKS = {
      `#basisCyclePath`, the walk `promote` already runs — never a second one. */
   VERSION_BASIS_CYCLE: {
     check: "C-25.27",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "Accepting this reading would make the question rest, through a chain of other questions, on itself. The answer would then be its own support, which is a circle rather than a case, and the chain that closes it is named above."
   },
   VERSION_NOT_ACCEPTED: {
     check: "C-25.28",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "A project can only stand on a reading its members have accepted, and this one has not been accepted. Exploring an unsettled reading is done by calculating over it, which moves nobody's stance."
   },
   VERSION_CURRENT_NO_PROJECT: {
     check: "C-25.29",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "Standing on a reading is something a PROJECT does, so this request has to name which project. A question can be shared by several teams, and one team's decision must never quietly move another team's."
   },
   VERSION_CURRENT_UNRELATED: {
     check: "C-25.30",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "That project does not draw on this question, so it has no stance here to move. Add the question to the project first, and then choose what the project stands on."
   },
   VERSION_ACT_UNWRITABLE: {
     check: "C-25.31",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "This question's own file could not be rewritten in place, so nothing was changed. Acting on a reading edits the record the reading lives in, and a half-written record is worse than an unchanged one."
   },
   /* D-271 — DEC-32 RULE 4's ANTI-GAMING KEYSTONE, ENACTED AT THE ONE ACT THAT
@@ -5217,7 +5312,7 @@ var VERSION_ACT_CHECKS = {
      saying the same thing differently is the drift D-226 is about. */
   VERSION_AFFIRMATION_INCOMPLETE: {
     check: "C-25.33",
-    where: "src/store.mjs #moveVersionState, reached from the six version acts",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the six version acts",
     translation: "Accepting this reading claims that each of the parts it rests on would carry the answer on its own. That is a claim only a named member can make, and it is made part by part rather than assumed from silence, so every part has to be named before this reading becomes what the record stands on."
   },
   /* CASE-3 — DEC-72 CLAUSE 3 AT THE READING DOOR. Bob: "Once published, the act
@@ -5237,7 +5332,7 @@ var VERSION_ACT_CHECKS = {
      exactly this. D-226 governs the wording — no "compose", no "derive". */
   PUBLISHED_CANNOT_MOVE_VERSION: {
     check: "C-25.34",
-    where: "src/store.mjs #moveVersionState, reached from the four acts that move a state",
+    where: "src/basis-versions/index.mjs #moveVersionState, reached from the four acts that move a state",
     translation: "This question has been published, and the case it went out in froze it as it stood. Changing which reading of the evidence it stands on now would leave the published version saying something the question no longer says. Pick it back up first, make the change, and publish that as a new edition \u2014 the published one keeps its own signature and goes on answering."
   }
 };
@@ -5564,22 +5659,22 @@ var SUGGEST_CHECKS = {
   /* ---- the shape of the request. Refused before anything is composed. ---- */
   SUGGEST_NO_TARGET: {
     check: "C-27.1",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "That request did not say which question the suggestion is about. A reading of the evidence always belongs to one question, so it asks rather than guessing."
   },
   SUGGEST_NOT_AN_INQUIRY: {
     check: "C-27.2",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "Only a question carries readings of its evidence, and the thing named here is not a question. There is nothing under it for a suggestion to be a reading of."
   },
   SUGGEST_UNKNOWN_KIND: {
     check: "C-27.3",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "A suggestion is one of five kinds and this one names none of them. The kinds are a closed set so that a run reporting an empty search is told apart from a run that reported nothing at all, which no other field can distinguish."
   },
   SUGGEST_NO_RUN: {
     check: "C-27.4",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "Every suggestion names the piece of work that produced it, and this one named none that can be read here. What was searched, under which declared conditions, and where it stopped is what lets anyone else check a reading rather than take it on trust."
   },
   /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): A VERSION IS FORMED UNDER A LIVE RUN. The
@@ -5589,7 +5684,7 @@ var SUGGEST_CHECKS = {
      C-27.18 is a dotted member of PL-3's family, the family owner's to allocate (`tools/mintid.mjs` C). */
   SUGGEST_RUN_NOT_RUNNING: {
     check: "C-27.18",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "The investigation this suggestion names has ended. A suggestion is read against the conditions of the investigation that produced it, and those stopped being current when it stopped, so going on means starting a new one."
   },
   /* REC-165, BOB #28 (2026-09-22, §11 item 5, "Rule 1's target"): A SUGGESTION LANDS ONLY INSIDE ITS RUN'S
@@ -5597,17 +5692,17 @@ var SUGGEST_CHECKS = {
      after sight and position, so a run the caller cannot see still answers as absent. C-27.19, the same family. */
   SUGGEST_OUTSIDE_RUN_CONTEXT: {
     check: "C-27.19",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "This suggestion is about a question the investigation was not working on. An investigation is read against its own question, or the questions its project draws on, so work on a different question starts an investigation of that question."
   },
   SUGGEST_NAME_TAKEN: {
     check: "C-27.5",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "This question already holds a reading by that name. Names are unique within one question so a member can ask for a reading by name, and a second one wearing the same name would make every later reference ambiguous."
   },
   SUGGEST_EMPTY_LEVEL_UNSTATED: {
     check: "C-27.6",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "Reporting that a level of the search is empty means saying WHICH level was searched and where the log of that search can be read. Absence at one level is not absence at the next, and an unattributed empty answer is the one shape nobody can check."
   },
   /* SEPARATE FROM SUGGEST_UNWRITABLE_DOCUMENT, and the DEC-49 GUARD IS WHAT
@@ -5621,12 +5716,12 @@ var SUGGEST_CHECKS = {
      place", which is a fact about the bytes and is only knowable at the write. */
   SUGGEST_NO_DOCUMENT: {
     check: "C-27.17",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "This question has no readable file behind it, so there is nothing for a reading of its evidence to be added to. That is a fact about the question rather than about the reading, and nothing was composed."
   },
   SUGGEST_TOO_MANY_LEGS: {
     check: "C-27.7",
-    where: "src/store.mjs suggestVersion > is-suggest-shape",
+    where: "src/run-productions/index.mjs suggest > is-suggest-shape",
     translation: "This suggestion rests on more pieces of evidence than one reading may carry. The limit is published in the refusal so a caller can split the reading rather than guess at what would have fitted."
   },
   /* ---- THE SIX PRE-WRITE CHECKS (section 14b.5). Each is its own C-number and
@@ -5639,7 +5734,7 @@ var SUGGEST_CHECKS = {
      reading to every later reader as live support. */
   SUGGEST_LEG_UNREACHABLE: {
     check: "C-27.8",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "One of the pieces of evidence this reading rests on cannot be reached where it says it is: it is not in the record, it cannot be read from here, or the record has retired it. A reading resting on something retired reads to a later member as live support for the answer."
   },
   /* CHECK 2. The pair, PER AXIS, over the version's own declared structure —
@@ -5647,7 +5742,7 @@ var SUGGEST_CHECKS = {
      compute is two answers and never one. */
   SUGGEST_PAIR_DOES_NOT_COMPUTE: {
     check: "C-27.9",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "The strength of this reading does not work out over the structure it declares, on one or both of the two things strength is measured on. A reading whose arithmetic cannot be run is a reading nobody can check, and it is not put forward."
   },
   /* CHECK 3. Section 6 rule 8, Bob's own words: a background run adds its output
@@ -5656,7 +5751,7 @@ var SUGGEST_CHECKS = {
      bytes the freeze compares — so "the same reading" means one thing here. */
   SUGGEST_NOT_DIFFERENT: {
     check: "C-27.10",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "This reading of the evidence is the same in substance as one this question already holds, so it is not put forward a second time. The reading it matches is named, and adding a duplicate would grow the review pile without adding anything to review."
   },
   /* CHECK 4. D-195, and *"the Judith Miller error with arithmetic behind it"* is
@@ -5666,13 +5761,13 @@ var SUGGEST_CHECKS = {
      that is not there. Content-addressed provenance lets the plane DERIVE it. */
   SUGGEST_BRANCHES_NOT_INDEPENDENT: {
     check: "C-27.11",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "Two parts of this reading are offered as separate routes to the same answer, and the record can show they trace back to the same original material. Treating them as separate makes the answer look better supported than it is, so a machine may not put it forward that way; a member may still say they are genuinely separate, and that is their call to sign for."
   },
   /* CHECK 5. The placeholder defect at machine scale. */
   SUGGEST_BOILERPLATE: {
     check: "C-27.12",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "A field this reading has to fill in carries filler text rather than an account of anything. A required field filled to get past a check is worse than an empty one, because it reads to the next member as something somebody wrote."
   },
   /* CHECK 6. Section 4: THE AI HOLDS NO OP THAT ACCEPTS. The sole possible
@@ -5681,7 +5776,7 @@ var SUGGEST_CHECKS = {
      what a project stands on is refused rather than ignored. */
   SUGGEST_UNWRITABLE_STATE: {
     check: "C-27.13",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "This suggestion tries to arrive already decided \u2014 settled, set aside, hidden, or signed by somebody. A suggestion may only ever arrive as something put forward; deciding what to do with it is a named member's act and no automated caller can reach it."
   },
   /* THE CHECK THAT DID NOT FINISH, and it is its own condition rather than a
@@ -5695,14 +5790,14 @@ var SUGGEST_CHECKS = {
      a silent pass on the safe-looking side. */
   SUGGEST_COMPARISON_INCOMPLETE: {
     check: "C-27.16",
-    where: "src/store.mjs suggestVersion > is-suggest-checks",
+    where: "src/run-productions/index.mjs suggest > is-suggest-checks",
     translation: "The record holds more material behind this question than could be checked in one pass, so whether this reading is genuinely new, or genuinely made of separate parts, was not settled either way. Not finishing the check is a different fact from passing it, and this record does not let the two read the same."
   },
   /* ---- the write itself. Separate from check 6 on purpose: that one is about
      the STATE the caller asked for, this one is about the DOCUMENT. ---- */
   SUGGEST_UNWRITABLE_DOCUMENT: {
     check: "C-27.14",
-    where: "src/store.mjs suggestVersion > is-suggest-write",
+    where: "src/run-productions/index.mjs suggest > is-suggest-write",
     translation: "This question's own file could not be extended in place, so nothing was written. Adding a reading edits the record the reading lives in, and a half-written record is worse than an unchanged one."
   },
   /* ---- the catalog's own row, fired from `basisVersionFindings` above at both
@@ -5719,57 +5814,57 @@ var SUGGEST_CHECKS = {
 var EXTRACT_PROPOSE_CHECKS = {
   NO_PROPOSER: {
     check: "C-104.1",
-    where: "src/store.mjs extractPropose > is-extract-run",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
     translation: "This proposed reading arrived without saying who proposed it, and the record keeps nothing it cannot attribute. Nothing was proposed and no passage was marked citable."
   },
   NO_RUN: {
     check: "C-104.2",
-    where: "src/store.mjs extractPropose > is-extract-run",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
     translation: "A machine proposes readings only as part of an investigation a member opened, and this named none. Nothing was proposed."
   },
   NO_SUCH_RUN: {
     check: "C-104.3",
-    where: "src/store.mjs extractPropose > is-extract-run",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-run",
     translation: "No investigation you can see is open under that name, so nothing was proposed. A member opens an investigation; the assistant may suggest one, and may not start it."
   },
   RUN_NOT_RUNNING: {
     check: "C-104.4",
-    where: "src/store.mjs extractPropose > is-extract-door",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
     translation: "The investigation this names has ended, and an ended investigation takes no new proposals: its work is read against the conditions it ran under, and those stopped when it stopped. Nothing was proposed."
   },
   NOT_AN_EXTRACT_RUN: {
     check: "C-104.5",
-    where: "src/store.mjs extractPropose > is-extract-door",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
     translation: "This investigation was not opened to read documents for what they name, so it cannot propose readings. What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed."
   },
   NO_MINTS_BOUND: {
     check: "C-104.6",
-    where: "src/store.mjs extractPropose > is-extract-door",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
     translation: "This investigation was opened with no limit on how many passages it may mark citable, and without a limit it may mark none. The member who opens an investigation sets that limit. Nothing was proposed."
   },
   MINTS_BOUND_REACHED: {
     check: "C-104.7",
-    where: "src/store.mjs extractPropose > is-extract-door",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
     translation: "This investigation has already marked as many passages citable as it was allowed to, so it proposes nothing more and ends. Nothing was proposed."
   },
   NO_PROPOSALS: {
     check: "C-104.8",
-    where: "src/store.mjs extractPropose > is-extract-door",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-door",
     translation: "This named no readings to propose. A look that found nothing is recorded in the investigation's log of what was looked at, where it says which kind of absence it was, and not here. Nothing was proposed."
   },
   NOT_A_DOCUMENT: {
     check: "C-104.9",
-    where: "src/store.mjs extractPropose > is-extract-document",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-document",
     translation: "That is not a captured document. A question, a project or an action has no pages or text of its own, so there is nothing in it to read or to point into. Nothing was changed."
   },
   NO_BYTES_HELD: {
     check: "C-104.10",
-    where: "src/store.mjs extractPropose > is-extract-document",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-document",
     translation: "The record holds no captured copy of that document, so there is no text in it to read or to point into. That is a fact about what has been captured, never about what the document says. Nothing was changed."
   },
   MINTS_BOUND_WOULD_EXCEED: {
     check: "C-104.11",
-    where: "src/store.mjs extractPropose > is-extract-whole-batch",
+    where: "src/run-productions/index.mjs extractPropose > is-extract-whole-batch",
     translation: "This batch would mark more passages citable than the investigation has left of its limit, so the whole batch was refused rather than cut to fit: a trimmed batch would drop proposals the sender believes were filed. Nothing was proposed. Send fewer, or ask the member who opened the investigation."
   },
   /* K163 (T6): op=extractproposals' unscoped read. run-productions mints this code of its own in place of the
@@ -5777,7 +5872,7 @@ var EXTRACT_PROPOSE_CHECKS = {
      nowhere yet: run-productions writes it when it moves `extractProposals` (T6-7) and marks the region. */
   EXTRACT_NO_SCOPE: {
     check: "C-104.12",
-    where: "src/store.mjs extractProposals > is-extract-scope",
+    where: "src/run-productions/index.mjs extractProposals > is-extract-scope",
     translation: "This list of proposed readings names neither an investigation nor a document, so nothing was listed. A list of every proposal in the record would be a scan nobody can act on; name the one you mean."
   }
 };
@@ -5832,17 +5927,17 @@ var CAPTURE_REQUEST_CHECKS = {
      SHAPE rules and NOT conduct: conduct is enforced once, at the drain. ---- */
   CAPTURE_REQUEST_NO_RUN: {
     check: "C-28.1",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "This request did not name the piece of work asking for it, or named one that is not running here. Every fetch this instance makes on its own is traceable to a session somebody opened, because that opening is what authorises it."
   },
   CAPTURE_REQUEST_NOT_PUBLIC: {
     check: "C-28.2",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "What was asked for is not a public web address. What an investigation session may reach is what anybody could reach by typing it into a browser, so an address that is not public on its face is not asked for at all."
   },
   CAPTURE_REQUEST_NOT_AN_INQUIRY: {
     check: "C-28.3",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "A capture is requested under a question, and the thing named here is not one. The question is what the request is accountable to, and a fetch belonging to nothing is a fetch nobody can later account for."
   },
   /* THE SPINE, AT THE DOOR. Section 4: *"capturing a document (with provenance
@@ -5854,7 +5949,7 @@ var CAPTURE_REQUEST_CHECKS = {
      quietly dropped: a caller told nothing learns nothing. */
   CAPTURE_REQUEST_CARRIES_A_CAPTURE: {
     check: "C-28.4",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "A request asks for a document; it never brings one. The fetch is performed by this instance itself so that where the bytes came from is something the record established rather than something it was told, and a provenance chain anybody could hand us is one anybody could invent."
   },
   /* WHAT IS NOT HERE, AND WHY IT WAS REMOVED RATHER THAN KEPT FOR SYMMETRY.
@@ -5871,7 +5966,7 @@ var CAPTURE_REQUEST_CHECKS = {
   /* CONDUCT 1: legibility. */
   CAPTURE_CONDUCT_UA_ILLEGIBLE: {
     check: "C-28.6",
-    where: "src/store.mjs #captureRequestConduct > is-capture-conduct",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
     translation: "This instance will not fetch without saying who is asking and how to reach whoever is running it. Being refused honestly is a fact that can be recorded; being admitted by disguise is a claim that could not be defended later."
   },
   /* CONDUCT 1b: the member-browser form, which is DELEGATION and not disguise —
@@ -5880,24 +5975,24 @@ var CAPTURE_REQUEST_CHECKS = {
      unrecorded member agent is refused rather than substituted. */
   CAPTURE_CONDUCT_UA_UNRECORDED: {
     check: "C-28.7",
-    where: "src/store.mjs #captureRequestConduct > is-capture-conduct",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
     translation: "This request asked to fetch as the member's own browser, and the record does not hold what that browser is. Presenting an agent nobody actually used would be inventing a client rather than speaking as one, so it asks rather than guessing."
   },
   /* CONDUCT 2: the purpose token. */
   CAPTURE_CONDUCT_NO_PURPOSE: {
     check: "C-28.8",
-    where: "src/store.mjs #captureRequestConduct > is-capture-conduct",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
     translation: "Every request this instance makes says what it is for, so a source can tell a first capture from a routine re-check and throttle one without blocking the other. This one names a purpose that is not one of the things it could truthfully be doing."
   },
   /* CONDUCT 3: rate. */
   CAPTURE_CONDUCT_HOST_HELD: {
     check: "C-28.9",
-    where: "src/store.mjs #captureRequestConduct > is-capture-conduct",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
     translation: "The site this would fetch from has asked us to slow down, or has refused us recently, and we are waiting the interval it named. The request is still queued and will be made when the wait is over \u2014 nothing has been lost and nothing needs re-asking."
   },
   CAPTURE_CONDUCT_TICK_SPENT: {
     check: "C-28.10",
-    where: "src/store.mjs #captureRequestConduct > is-capture-conduct",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
     translation: "This round of fetching has already been to that site once. Requests are spread out rather than sent in a burst, so this one waits for the next round. It is still queued."
   },
   /* ---- THE ATTRIBUTION, composed at the drain, and its own two refusals. ---- */
@@ -5910,7 +6005,7 @@ var CAPTURE_REQUEST_CHECKS = {
      is performed on a request it cannot account for. */
   CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: {
     check: "C-28.11",
-    where: "src/store.mjs #captureRequestConduct > is-capture-conduct",
+    where: "src/capture-requests/index.mjs #conduct > is-capture-conduct",
     translation: "This capture could not be recorded as belonging to anybody in particular, so it was not made. An act that names one party where two acted reads as though a person did something a machine did, or the other way round, and that is worse than a missing document."
   },
   /* THE ACT IS VISIBLY THE MACHINE'S BY CONSTRUCTION AND HAS NO CODE, which is
@@ -5954,12 +6049,12 @@ var CAPTURE_REQUEST_CHECKS = {
        for. Nothing downstream re-checks it, so neither code is shadowed. */
   CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: {
     check: "C-28.14",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "This says the document bears on another question, but what it names is not a question. The whole point of noting a lead is that somebody working that question will be told about it, and there is nobody to tell if it does not name one."
   },
   CAPTURE_REQUEST_LEAD_IS_THE_TARGET: {
     check: "C-28.15",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "This names the same question twice \u2014 the one being worked, and the one the document supposedly bears on. Evidence for the question you are already working is just evidence for it, and flagging it as belonging somewhere else would put a note in front of you saying a document you just asked for is about something other than what you asked."
   },
   /* D-491 / IC-276 — THE RENDER FLAG AT THE DOOR, AND IT IS C-83.1's ARGUMENT
@@ -5979,7 +6074,7 @@ var CAPTURE_REQUEST_CHECKS = {
        number this file records as deleted would make its own history unreadable. */
   CAPTURE_REQUEST_RENDER_MALFORMED: {
     check: "C-28.16",
-    where: "src/store.mjs captureRequest > is-capture-request",
+    where: "src/capture-requests/index.mjs captureRequest > is-capture-request",
     translation: "This asked for the page as a visitor would see it in a form this instance does not recognise. It reads render: true, or nothing at all for the document as the site serves it, so a request for the rendered page is never quietly turned into a request for the page's empty frame. Nothing was queued."
   },
   /* D-584 (capture-requests R19; T6, legacy-checks) — THE DRAIN'S OWN HOLD WHEN A FETCH DOES NOT LAND.
@@ -5988,11 +6083,12 @@ var CAPTURE_REQUEST_CHECKS = {
      governed, and answers the row in `held`. The code was written to the row and catalogued nowhere, so
      `#renderHoldReason` answered it with no check and no sentence (it reads this family, so the row reaches the held row at once). It is the drain's condition, so it is
      this family's (R19: every code the module writes to a row is in C-28 or C-83). The `where` names a
-     region `captureRequestDrain` does not mark yet: the drain's other outcomes are other families' codes
-     read from rows, and a whole-function `where` would conscript them; marking it is capture-requests'. */
+     region, not the drain whole: the drain's other outcomes are other families' codes read from rows, and a
+     whole-function `where` would conscript them. capture-requests marks it in its `drain` (T6; re-pointed T8,
+     N154). */
   CAPTURE_FETCH_FAILED: {
     check: "C-28.17",
-    where: "src/store.mjs captureRequestDrain > is-capture-fetch-failed",
+    where: "src/capture-requests/index.mjs drain > is-capture-fetch-failed",
     translation: "This instance tried to fetch the document and the fetch did not land, so nothing was captured. That says nothing about the document or the site beyond this one attempt, and it is recorded as a look that could not tell. The request is still queued and is tried again on a later round, until it expires."
   },
   /* K109 (3), capture-requests R42 (T6, legacy-checks) — THE RETRY'S ONE REFUSAL. `captureRequestRetry`
@@ -6199,7 +6295,7 @@ var MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_CONCLUDE: {
     check: "C-32.2",
-    where: "src/store.mjs conclude > is-machine-conclude",
+    where: "src/basis-versions/index.mjs conclude > is-machine-conclude",
     translation: "A conclusion is a person saying what they think the record shows, and it carries their name for as long as the record lasts. The credential that asked here is an automated one: it may raise the question, gather what bears on it and draft the answer, and it may never be the one who answers. Sign in to conclude."
   },
   MACHINE_CANNOT_MOVE_ACTION: {
@@ -6235,12 +6331,12 @@ var MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_DIVIDE: {
     check: "C-32.7",
-    where: "src/store.mjs divide > is-machine-divide",
+    where: "src/inquiry/index.mjs #divide > is-machine-divide",
     translation: "Dividing a question says the group asked one thing when it was really asking two, and that is a judgement about the group's own work. The credential that asked here is an automated one: it may raise questions and gather what they rest on, and may not restructure them. Sign in to divide it."
   },
   MACHINE_CANNOT_GROUND: {
     check: "C-32.8",
-    where: "src/store.mjs groundInquiry > is-machine-ground",
+    where: "src/inquiry/index.mjs #ground > is-machine-ground",
     translation: "Grounding says some of the reasons behind an answer are strong enough to carry it on their own, and it is the one act here that makes a finding stronger rather than weaker. That decision needs a person behind it, and the credential that asked is an automated one. Sign in to ground it."
   },
   MACHINE_CANNOT_FORWARD: {
@@ -6384,7 +6480,7 @@ var ACT_SHAPE_CHECKS = {
   },
   NO_CONCLUSION: {
     check: "C-33.1",
-    where: "src/store.mjs conclude > is-conclude-answer",
+    where: "src/basis-versions/index.mjs conclude > is-conclude-answer",
     translation: "Concluding records what was concluded, and this one says nothing. If the honest answer is that the group could not settle it, write that down \u2014 an answer of undetermined is a real answer here and is stated rather than left blank."
   },
   /* REC-117 / BOB 2026-09-17: the translation now NAMES THE DOOR, and that is
@@ -6394,7 +6490,7 @@ var ACT_SHAPE_CHECKS = {
      honestly be given has been offered the honest way through. */
   NO_FALSIFIER: {
     check: "C-33.2",
-    where: "src/store.mjs conclude > is-conclude-answer",
+    where: "src/basis-versions/index.mjs conclude > is-conclude-answer",
     translation: "A conclusion has to say what would overturn it. Without that nobody can check the finding, including the person who wrote it, and a finding that cannot be checked claims more than the evidence behind it can carry. If no falsifier can honestly be named, say so rather than inventing one: the record will carry that no falsifier was stated, in your name and with the date, wherever this finding appears."
   },
   /* REC-117. The one refusal the override ADDS, and it exists because the
@@ -6403,7 +6499,7 @@ var ACT_SHAPE_CHECKS = {
      turns on did not exist. */
   FALSIFIER_AND_NONE_STATED: {
     check: "C-33.33",
-    where: "src/store.mjs conclude > is-conclude-answer",
+    where: "src/basis-versions/index.mjs conclude > is-conclude-answer",
     translation: "You have written a falsifier and also asked to record that none could be stated. Those are two different things to say about this finding, and choosing between them is not something the record should do on your behalf. Keep the falsifier, or clear it and record the absence."
   },
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 (BOB #15, 2026-09-18): a conclusion
@@ -6416,7 +6512,7 @@ var ACT_SHAPE_CHECKS = {
      translation was project-only and now covers both relationships. */
   NO_CLAIM: {
     check: "C-33.34",
-    where: "src/store.mjs conclude > is-conclude-claim",
+    where: "src/basis-versions/index.mjs conclude > is-conclude-claim",
     translation: "Concluding adopts the claim of an accepted reading, and that claim is what the group concluded. There is no claim to adopt here. For a project, the reading is the one the project stands on; with no project, name the reading. State the claim on a reading first \u2014 a claim nothing supports yet is allowed \u2014 and conclude again."
   },
   /* REC-124 / §7.1 item 2. A free conclusion text beside a project could say
@@ -6424,7 +6520,7 @@ var ACT_SHAPE_CHECKS = {
      words quietly relabelled as commentary. */
   CONCLUSION_IS_THE_CLAIM: {
     check: "C-33.35",
-    where: "src/store.mjs conclude > is-conclude-answer",
+    where: "src/basis-versions/index.mjs conclude > is-conclude-answer",
     translation: "When a project concludes, the claim it adopts is the conclusion, so a separate conclusion text is not accepted \u2014 it could say something no claim said. Anything you want to add beyond the claim can be sent as commentary: it is recorded in your name and is never treated as evidence."
   },
   /* REC-124. The project's own frontmatter could not take the conclusion row
@@ -6435,12 +6531,12 @@ var ACT_SHAPE_CHECKS = {
      an entry that records nothing. */
   NOTHING_TO_WITHDRAW: {
     check: "C-33.37",
-    where: "src/store.mjs #withdrawConclusion > is-withdraw-stance",
+    where: "src/basis-versions/index.mjs withdrawConclusion > is-withdraw-stance",
     translation: "There is no conclusion here to withdraw: this project has not concluded this question, or has already withdrawn its latest conclusion. Everything it concluded and withdrew before stays in the record."
   },
   UNSPLICEABLE_CONCLUSIONS: {
     check: "C-33.36",
-    where: "src/store.mjs #setProjectConclusion > is-conclusion-row",
+    where: "src/basis-versions/index.mjs #setProjectConclusion > is-conclusion-row",
     translation: "The project's own record is laid out in a way this act cannot add a conclusion to without rewriting parts of it nobody asked to change, so nothing was recorded. The project's file needs its list of conclusions tidied before it can conclude."
   },
   NO_RESOLUTION: {
@@ -6495,7 +6591,7 @@ var ACT_SHAPE_CHECKS = {
   },
   NOT_INQUIRIES: {
     check: "C-33.13",
-    where: "src/store.mjs dispose > is-dispose-inquiries",
+    where: "src/inquiry/index.mjs #dispose > is-dispose-inquiries",
     translation: "This act moves a question along, and the selection carries things that are not questions. The whole set is refused rather than quietly narrowed to the part that fits, because a set that acted on less than you selected is a set you were not shown."
   },
   NO_STATEMENT: {
@@ -6535,12 +6631,12 @@ var ACT_SHAPE_CHECKS = {
   },
   SELF_BASIS: {
     check: "C-33.22",
-    where: "src/store.mjs #promoteChecks > is-basis-acyclic, reached from op=promote through the step legacy-store registers with promotion (K31)",
+    where: "src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)",
     translation: "A question cannot be the evidence for its own answer. This write would have it rest on itself, which reads as support and adds nothing anybody outside could check."
   },
   BASIS_CYCLE: {
     check: "C-33.23",
-    where: "src/store.mjs #promoteChecks > is-basis-acyclic, reached from op=promote through the step legacy-store registers with promotion (K31)",
+    where: "src/inquiry/index.mjs check > is-basis-acyclic, reached from op=promote through the step inquiry registers with promotion (K31)",
     translation: "This write would close a loop: the chain it would join already rests, somewhere further along, on the thing being written. The path is named so the loop can be seen rather than re-derived, and support that circles back is support that rests on nothing."
   },
   FILES_DROPPED: {
@@ -6606,7 +6702,7 @@ var ACT_SHAPE_CHECKS = {
        --------------------------------------------------------------------------- */
   NO_BASIS: {
     check: "C-33.40",
-    where: "src/store.mjs actNoBasis > is-act-no-basis",
+    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis",
     translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
   },
   NO_CITATION: {
@@ -8032,57 +8128,57 @@ function extentRelation(outer, inner) {
 var NARROW_CHECKS = {
   NARROW_NO_INQUIRY: {
     check: "C-50.1",
-    where: "src/store.mjs #narrowSource > is-narrow-source",
+    where: "src/basis-versions/index.mjs #narrowSource > is-narrow-source",
     translation: "That request does not name a question this record holds and you can read. Making a citation more specific happens on a question's reading of its evidence, so it needs the question first."
   },
   NARROW_NO_SUCH_VERSION: {
     check: "C-50.2",
-    where: "src/store.mjs #narrowSource > is-narrow-source",
+    where: "src/basis-versions/index.mjs #narrowSource > is-narrow-source",
     translation: "That question has no reading of its evidence by that name. A citation is made more specific in a NEW reading taken from an existing one, so the reading it starts from has to be named exactly as the question holds it."
   },
   NARROW_NO_SUCH_LEG: {
     check: "C-50.3",
-    where: "src/store.mjs #narrowSource > is-narrow-source",
+    where: "src/basis-versions/index.mjs #narrowSource > is-narrow-source",
     translation: "That reading has no piece of evidence at the position named. Pieces are counted from zero, in the order the reading lists them."
   },
   NARROW_NO_PART: {
     check: "C-50.4",
-    where: "src/store.mjs #narrowSource > is-narrow-source",
+    where: "src/basis-versions/index.mjs #narrowSource > is-narrow-source",
     translation: "That piece of evidence has no part to point at more precisely. It either rests on another question, which has no pages or passages, or on a document this record holds no copy of \u2014 and a part of something nobody captured cannot be named."
   },
   NARROW_NOT_A_MEMBER: {
     check: "C-50.5",
-    where: "src/store.mjs narrow > is-narrow-extent",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-extent",
     translation: "Making a citation more specific is a member's own act, done in their name. A machine may PROPOSE passages that look relevant, and they are listed for you to choose from, but choosing which passage is on point is a judgment a person signs for."
   },
   NARROW_NO_EXTENT: {
     check: "C-50.6",
-    where: "src/store.mjs narrow > is-narrow-extent",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-extent",
     translation: "That request does not say which part of the document the citation should point at. Name the part \u2014 a page, a region of a page, a cell, a paragraph or a slide \u2014 or choose one of the proposed passages by its content id."
   },
   NARROW_BAD_EXTENT: {
     check: "C-50.7",
-    where: "src/store.mjs narrow > is-narrow-extent",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-extent",
     translation: "The part named cannot be recorded as sent: it names a field this act does not take, a value that cannot be written into the record, a content id this record does not hold, or both a content id and a description of the same part. It is refused rather than guessed at, because a citation quietly re-read would not be the one you made."
   },
   NARROW_OTHER_CAPTURE: {
     check: "C-50.8",
-    where: "src/store.mjs narrow > is-narrow-extent",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-extent",
     translation: "The part named is not in the copy of the document this citation rests on. Pointing the citation at a different document, or at a later copy of the same one, is not making it more specific \u2014 it is moving it, and a citation is never moved except by its own separate act."
   },
   NARROW_NOT_NARROWER: {
     check: "C-50.9",
-    where: "src/store.mjs narrow > is-narrow-claim",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-claim",
     translation: "The part named is not inside what the citation already points at \u2014 it is the same part, a wider one, or a different place in the document. Making a citation more specific can only ever point it at LESS of the document than before; anything else would claim a precision nobody established."
   },
   NARROW_NAME: {
     check: "C-50.10",
-    where: "src/store.mjs narrow > is-narrow-claim",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-claim",
     translation: "The new reading needs a name of its own, one the question does not already use. The reading it starts from keeps its name and stays exactly as it was: changing an existing reading in place would move a citation somebody else may be relying on."
   },
   NARROW_NO_DESCRIPTION: {
     check: "C-50.11",
-    where: "src/store.mjs narrow > is-narrow-claim",
+    where: "src/basis-versions/index.mjs narrow > is-narrow-claim",
     translation: "The new reading needs a short account of what changed and why \u2014 which citation now points at less of its document, and what makes that part the one that matters. That account is what a later reader has to go on."
   }
 };
@@ -8712,7 +8808,7 @@ var VERSION_NOTICE_CHECKS = {
 var INSTANCE_GROUP_CHECKS = {
   GROUP_UNDETERMINED: {
     check: "C-64.1",
-    where: "src/store.mjs #groupUndetermined > is-group-undetermined",
+    where: "src/inquiry/index.mjs #groupUndetermined > is-group-undetermined",
     translation: "This copy has not recorded which group it belongs to, and nothing in this request says, so the record cannot write a document that must name the group that produced it. A copy records its group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written."
   },
   GROUP_SLUG_MALFORMED: {
@@ -9340,6 +9436,16 @@ var REGISTRATION_CHECKS = {
     check: "C-102.5",
     where: "src/promotion/index.mjs fact",
     translation: "The part of this instance that answers that question stopped with an error instead of answering, so there is no answer here, which is not the same as the answer being no. Nothing was written."
+  },
+  FACT_MALFORMED: {
+    check: "C-102.6",
+    where: "src/promotion/index.mjs registerFact > is-fact-named",
+    translation: "A part of this instance tried to offer an answer to a question without naming the question, itself, or how to answer it, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  STEP_MODULE_UNNAMED: {
+    check: "C-102.7",
+    where: "src/promotion/index.mjs registerStep > is-step-named",
+    translation: "A part of this instance tried to add its own check to every promotion without naming itself, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
   }
 };
 var CONNECTION_PAIR_CHECKS = {
@@ -14058,11 +14164,17 @@ var oakland_alameda_default = {
       path: { re: R`^\/v1\/oakland(\/|$)`, flags: "i" },
       basis: "M-119 LEG"
     },
+    /* An agenda links each item to its matter page and each file to the file, through the gateway;
+       which links are items and which are files is read off these shapes (REC-206, M-120). */
     {
       origin: "oakland.legistar",
       name: "Legistar, the City of Oakland's legislative record",
       hosts: ["oakland.legistar.com", "oakland.legistar1.com"],
-      basis: "M-119 LEG"
+      links: {
+        item: { re: R`^\/gateway\.aspx\?m=l&id=\/matter\.aspx\?key=\d+`, flags: "i" },
+        file: { re: R`^\/gateway\.aspx\?m=f&id=[^&#]+`, flags: "i" }
+      },
+      basis: "M-119 LEG, M-120"
     },
     {
       origin: "oakland.budget",
@@ -14176,6 +14288,7 @@ var oakland_alameda_default = {
        not measured (its code says so). */
     minutes_due_days: { value: 21, basis: "UNMEASURED" }
   },
+  locale: { value: "en-US", basis: "UNMEASURED" },
   search_terms: [
     { term: "oakland", basis: "UNMEASURED" },
     { term: "police", basis: "UNMEASURED" }
@@ -14194,6 +14307,7 @@ var oakland_alameda_default = {
       kind: "ordinance",
       issuer: "Oakland City Council",
       cite: { re: R`\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+[\d.]+[\w.]*`, flags: "i" },
+      level: "city",
       code: "omc",
       basis: "M-24"
     },
@@ -14201,6 +14315,7 @@ var oakland_alameda_default = {
       source: "Ordinances and resolutions of the Oakland City Council",
       kind: "ordinance",
       issuer: "Oakland City Council",
+      level: "city",
       cite: { re: R`\b(?:Ordinance|Resolution)\s+No\.?\s*\d{3,6}(?:\s*C\.?\s?M\.?\s?S\.?)?`, flags: "i" },
       basis: "M-24"
     },
@@ -14208,6 +14323,7 @@ var oakland_alameda_default = {
       source: "California Government Code",
       kind: "statute",
       issuer: "California Legislature",
+      level: "state",
       cite: { re: R`\b(?:Cal(?:ifornia|\.)?\s+)?Gov(?:ernment|\.|t\.?)?\s+Code\s+(?:§+\s*|Section\s+)?\d+(?:\.\d+)?`, flags: "i" },
       basis: "UNMEASURED"
     }
@@ -14215,7 +14331,9 @@ var oakland_alameda_default = {
   counterparties: [
     { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
     { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
-    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, basis: "UNMEASURED" },
+    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
+    /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
+    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true, basis: "UNMEASURED" },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" }
   ],
   action_kinds: [
@@ -14233,7 +14351,22 @@ var oakland_alameda_default = {
     { kind: "media", label: "media outreach", tier: 1, basis: "D-182" },
     { kind: "litigation_support", label: "support for litigation", basis: "UNMEASURED" },
     { kind: "request_for_comment", label: "request for comment on specific claims", basis: "DEC-13" },
-    { kind: "other", label: "other action", basis: "UNMEASURED" }
+    { kind: "other", label: "other action", basis: "UNMEASURED" },
+    /* Design Requirement 8 and Roadmap v5 §8: Tier 2, with its advisory note, and Tier 3, which has no
+       template. The Roadmap names the court a records petition is filed in. */
+    {
+      kind: "records_petition",
+      label: "court petition to enforce a public records request",
+      tier: 2,
+      laws: ["California Public Records Act"],
+      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED" },
+      advisory: "File with caution: a procedural error can have the petition dismissed, usually without prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
+      basis: "D-182"
+    },
+    { kind: "assessment_challenge", label: "challenge to a tax, assessment or fee under Proposition 218", tier: 3, basis: "D-182" },
+    { kind: "taxpayer_action", label: "taxpayer action (Code of Civil Procedure \xA7 526a)", tier: 3, basis: "D-182" },
+    { kind: "consent_decree_motion", label: "motion under a federal consent decree", tier: 3, basis: "D-182" },
+    { kind: "constitutional_claim", label: "claim involving constitutional interpretation or statutory construction", tier: 3, basis: "D-182" }
   ],
   deadlines: [
     {
@@ -14247,6 +14380,10 @@ var oakland_alameda_default = {
       basis: "UNMEASURED"
     }
   ]
+  /* legal_organisations: absent. Which outside organisations the product names to residents is Bob's
+     to decide (K227); until then the first profile supplies none (R27). */
+  /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
+     counts calendar days; a business-day count here is undetermined (R27, R33). */
 };
 
 // ../jurisdictions/profiles/test-port-ellery.mjs
@@ -14332,6 +14469,7 @@ var test_port_ellery_default = {
       origin: "ellery.minutes",
       name: "the Port Ellery clerk's minute book",
       hosts: ["minutes.port-ellery.example"],
+      links: { item: { re: R2`^\/entry\/\d+$` }, file: { re: R2`^\/papers\/[a-z0-9-]+\.pdf$`, flags: "i" } },
       basis: "TEST"
     },
     {
@@ -14413,16 +14551,19 @@ var test_port_ellery_default = {
     ]
   },
   practice: { minutes_due_days: { value: 30, basis: "TEST" } },
+  locale: { value: "en-GB", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
     { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. \xA7 1.100", basis: "TEST" },
-    { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. \xA7 4", basis: "TEST" }
+    { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. \xA7 4", basis: "TEST" },
+    { level: "federal", name: "National Records Access Act (test)", citation: "Test U.S.C. \xA7 552", basis: "TEST" }
   ],
   standard_sources: [
     {
       source: "Port Ellery Bylaws",
       kind: "ordinance",
       issuer: "Port Ellery Selectboard",
+      level: "city",
       cite: { re: R2`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" },
       code: "pebl",
       basis: "TEST"
@@ -14431,6 +14572,7 @@ var test_port_ellery_default = {
       source: "Marlow County Budget Commitments",
       kind: "commitment",
       issuer: "Marlow County Commission",
+      level: "county",
       cite: { re: R2`\bMCBC\s+\d{4}-\d+` },
       basis: "TEST"
     }
@@ -14438,7 +14580,8 @@ var test_port_ellery_default = {
   counterparties: [
     { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false, basis: "TEST" },
     { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
-    { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, basis: "TEST" }
+    { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
+    { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" }
   ],
   action_kinds: [
     {
@@ -14448,6 +14591,7 @@ var test_port_ellery_default = {
       laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
       venue: { name: "the Town Clerk's office", how: "email", basis: "TEST" },
       template: "To the Town Clerk: under {{law}}, please provide {{records}}.",
+      advisory: "A test advisory: have a solicitor read the request before it is sent.",
       basis: "TEST"
     },
     {
@@ -14487,6 +14631,35 @@ var test_port_ellery_default = {
       citation: "Test Stat. \xA7 9.20",
       basis: "TEST"
     }
+  ],
+  legal_organisations: [
+    {
+      name: "Marlow Commons Legal Society (test)",
+      evaluates: ["commitment_claim"],
+      contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
+      basis: "TEST"
+    }
+  ],
+  holidays: [
+    {
+      year: 2026,
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-03-17", name: "Harbour Day" },
+        { date: "2026-07-03", name: "Founders' Day (observed)" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      basis: "TEST"
+    },
+    {
+      year: 2027,
+      days: [
+        { date: "2027-01-01", name: "New Year's Day" },
+        { date: "2027-03-17", name: "Harbour Day" },
+        { date: "2027-12-24", name: "Christmas Day (observed)" }
+      ],
+      basis: "TEST"
+    }
   ]
 };
 
@@ -14507,7 +14680,10 @@ var SECTIONS = Object.freeze([
   "standard_sources",
   "counterparties",
   "action_kinds",
-  "deadlines"
+  "deadlines",
+  "legal_organisations",
+  "holidays",
+  "locale"
 ]);
 var SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
 var VOCABULARY = Object.freeze([
@@ -14522,21 +14698,40 @@ var VOCABULARY = Object.freeze([
   "recommendation_openers",
   "template_blanks"
 ]);
-var RECORDS_LAW_LEVELS = Object.freeze(["state", "county", "city"]);
+var LAW_LEVELS2 = Object.freeze(["federal", "state", "county", "city"]);
 var COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
 var SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
 var VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
 var COUNTS = Object.freeze(["calendar", "business"]);
 var STARTS = Object.freeze(["received", "filed", "act", "known"]);
 var TIERS = Object.freeze([1, 2, 3]);
+var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 var ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 var KIND_RE = /^[a-z][a-z0-9_]*$/;
 var HEX64 = /^[0-9a-f]{64}$/i;
+var DATE_RE2 = /^(\d{4})-(\d{2})-(\d{2})$/;
 var BASIS_REF = /^(?:M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)(?: [^\s,;]+)?$/;
 var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var isStr = (v) => typeof v === "string" && v.trim().length > 0;
 var isPosInt = (v) => Number.isInteger(v) && v > 0;
 var own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+var isYear = (v) => Number.isInteger(v) && v >= 1e3 && v <= 9999;
+function isDate(v) {
+  const m = typeof v === "string" && DATE_RE2.exec(v);
+  if (!m) return false;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const leap = y % 4 === 0 && y % 100 !== 0 || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
+  return days !== void 0 && d >= 1 && d <= days;
+}
+function isLocale(v) {
+  if (!isStr(v) || /\s|,/.test(v)) return false;
+  try {
+    return Intl.getCanonicalLocales(v).length === 1;
+  } catch {
+    return false;
+  }
+}
 function basisValid(b, test = false) {
   if (typeof b !== "string") return false;
   if (b === "UNMEASURED") return true;
@@ -14645,7 +14840,7 @@ function validateInto(p, errors) {
   if (own(p, "systems")) list2("systems", p.systems).forEach((s, i) => {
     const at2 = `systems[${i}]`;
     if (!entry(at2, s)) return;
-    fields(at2, s, ["origin", "name", "hosts", "path", "republishes", "provenance_stated", "basis"]);
+    fields(at2, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
     str(`${at2}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
     str(`${at2}.name`, s.name, "name");
@@ -14654,6 +14849,15 @@ function validateInto(p, errors) {
     if (own(s, "path")) pattern(`${at2}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
       for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at2);
+    }
+    if (own(s, "links")) {
+      if (!isObj(s.links) || !own(s.links, "item") || !own(s.links, "file"))
+        err(`${at2}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+      else {
+        fields(`${at2}.links`, s.links, ["item", "file"]);
+        pattern(`${at2}.links.item`, s.links.item);
+        pattern(`${at2}.links.file`, s.links.file);
+      }
     }
     if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at2}.republishes`, "VALUE_INVALID", "true or false");
     if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at2}.provenance_stated`, "VALUE_INVALID", "true or false");
@@ -14813,21 +15017,31 @@ function validateInto(p, errors) {
     const at2 = `records_laws[${i}]`;
     if (!entry(at2, l)) return;
     fields(at2, l, ["level", "name", "citation", "basis"]);
-    if (!RECORDS_LAW_LEVELS.includes(l.level)) err(`${at2}.level`, "LEVEL_UNKNOWN", `level is one of ${RECORDS_LAW_LEVELS.join(", ")}`);
+    if (!LAW_LEVELS2.includes(l.level)) err(`${at2}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS2.join(", ")}`);
     str(`${at2}.name`, l.name, "name");
     str(`${at2}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
     basis(at2, l);
   });
+  if (own(p, "locale")) {
+    const l = p.locale;
+    if (!isObj(l)) err("locale", "VALUE_INVALID", "locale is {value, basis}");
+    else {
+      fields("locale", l, ["value", "basis"]);
+      if (!isLocale(l.value)) err("locale.value", "VALUE_INVALID", "the value is one well-formed BCP 47 language tag");
+      basis("locale", l);
+    }
+  }
   const codeKeys = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list2("standard_sources", p.standard_sources).forEach((s, i) => {
     const at2 = `standard_sources[${i}]`;
     if (!entry(at2, s)) return;
-    fields(at2, s, ["source", "kind", "issuer", "cite", "code", "basis"]);
+    fields(at2, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
     str(`${at2}.source`, s.source, "source");
     str(`${at2}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
     if (!SOURCE_KINDS.includes(s.kind)) err(`${at2}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+    if (!LAW_LEVELS2.includes(s.level)) err(`${at2}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS2.join(", ")}`);
     pattern(`${at2}.cite`, s.cite);
     if (own(s, "code") && !codeKeys.has(s.code)) err(`${at2}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
     basis(at2, s);
@@ -14835,21 +15049,26 @@ function validateInto(p, errors) {
   if (own(p, "counterparties")) list2("counterparties", p.counterparties).forEach((c, i) => {
     const at2 = `counterparties[${i}]`;
     if (!entry(at2, c)) return;
-    fields(at2, c, ["role", "body", "level", "elected", "basis"]);
+    fields(at2, c, ["role", "body", "level", "elected", "oversight", "basis"]);
     str(`${at2}.role`, c.role, "role");
     str(`${at2}.body`, c.body, "body");
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at2}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at2}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at2}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at2, c);
   });
   const kinds = /* @__PURE__ */ new Set();
+  const tier3 = /* @__PURE__ */ new Set();
   if (own(p, "action_kinds")) list2("action_kinds", p.action_kinds).forEach((k, i) => {
     const at2 = `action_kinds[${i}]`;
     if (!entry(at2, k)) return;
-    fields(at2, k, ["kind", "label", "tier", "laws", "venue", "template", "basis"]);
+    fields(at2, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at2}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
     else if (kinds.has(k.kind)) err(`${at2}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
-    else kinds.add(k.kind);
+    else {
+      kinds.add(k.kind);
+      if (k.tier === 3) tier3.add(k.kind);
+    }
     str(`${at2}.label`, k.label, "label");
     if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at2}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
     if (own(k, "laws")) list2(`${at2}.laws`, k.laws).forEach((l, j) => {
@@ -14868,6 +15087,10 @@ function validateInto(p, errors) {
     if (own(k, "template")) {
       if (!isStr(k.template)) err(`${at2}.template`, "VALUE_INVALID", "a template is text");
       if (k.tier === 3) err(`${at2}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+    }
+    if (own(k, "advisory")) {
+      if (!isStr(k.advisory)) err(`${at2}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at2}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
     basis(at2, k);
   });
@@ -14894,6 +15117,51 @@ function validateInto(p, errors) {
     str(`${at2}.citation`, d.citation, "citation");
     basis(at2, d);
   });
+  if (own(p, "legal_organisations")) list2("legal_organisations", p.legal_organisations).forEach((o, i) => {
+    const at2 = `legal_organisations[${i}]`;
+    if (!entry(at2, o)) return;
+    fields(at2, o, ["name", "evaluates", "contacts", "basis"]);
+    str(`${at2}.name`, o.name, "name");
+    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at2}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
+    else o.evaluates.forEach((k, j) => {
+      if (!tier3.has(k)) err(`${at2}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+    });
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at2}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    else o.contacts.forEach((c, j) => {
+      const ca = `${at2}.contacts[${j}]`;
+      if (!isObj(c)) {
+        err(ca, "CONTACT_INVALID", "a contact is {how, value}");
+        return;
+      }
+      fields(ca, c, ["how", "value"]);
+      if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
+      if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
+    });
+    basis(at2, o);
+  });
+  if (own(p, "holidays")) {
+    const years = /* @__PURE__ */ new Set();
+    list2("holidays", p.holidays).forEach((h, i) => {
+      const at2 = `holidays[${i}]`;
+      if (!entry(at2, h)) return;
+      fields(at2, h, ["year", "days", "basis"]);
+      if (!isYear(h.year)) err(`${at2}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      else if (years.has(h.year)) err(`${at2}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
+      else years.add(h.year);
+      const dates = /* @__PURE__ */ new Set();
+      list2(`${at2}.days`, h.days).forEach((d, j) => {
+        const da = `${at2}.days[${j}]`;
+        if (!entry(da, d)) return;
+        fields(da, d, ["date", "name"]);
+        if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
+        else if (isYear(h.year) && Number(d.date.slice(0, 4)) !== h.year) err(`${da}.date`, "HOLIDAY_INVALID", `${d.date} is outside ${h.year}`);
+        else if (dates.has(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", `${d.date} is given twice`);
+        else dates.add(d.date);
+        str(`${da}.name`, d.name, "name");
+      });
+      basis(at2, h);
+    });
+  }
 }
 var deepFreeze2 = (o) => {
   if (o && typeof o === "object") {
@@ -15114,12 +15382,47 @@ function merge(profiles) {
         "the active profiles give different periods after which absent minutes raise a question, so none is given"
       );
   }
-  for (const sec of ["search_terms", "records_laws", "standard_sources", "counterparties"])
+  if (has("locale")) {
+    const given = profiles.filter((p) => p.locale).map((p) => ({ profile: p.id, value: p.locale.value, basis: p.locale.basis }));
+    if (agree(given))
+      view.locale = {
+        value: given[0].value,
+        basis: given[0].basis,
+        profile: given[0].profile,
+        bases: given.map((g) => ({ profile: g.profile, basis: g.basis }))
+      };
+    else conflict("locale", given, "the active profiles name different locales, so none is given: a render asks for its fallback");
+  }
+  for (const sec of ["search_terms", "records_laws", "standard_sources", "legal_organisations"])
     if (has(sec)) {
       const v = [];
       for (const p of profiles) union(v, p[sec], p.id);
       view[sec] = strip(v);
     }
+  if (has("counterparties")) {
+    const v = [];
+    const marks = /* @__PURE__ */ new Map();
+    for (const p of profiles) for (const c of p.counterparties || []) {
+      const { oversight, ...rest } = c;
+      union(v, [rest], p.id);
+      if (own(c, "oversight")) {
+        const k = `${c.role}\0${c.body}`;
+        if (!marks.has(k)) marks.set(k, []);
+        marks.get(k).push({ profile: p.id, value: oversight, basis: c.basis });
+      }
+    }
+    for (const [k, given] of marks) {
+      const [role, body] = k.split("\0");
+      if (agree(given)) {
+        for (const c of v) if (c.role === role && c.body === body) c.oversight = given[0].value;
+      } else conflict(
+        `counterparties[${role}/${body}].oversight`,
+        given,
+        `the active profiles disagree on whether ${role} (${body}) is an oversight or audit body, so it is undetermined`
+      );
+    }
+    view.counterparties = strip(v);
+  }
   if (has("action_kinds")) {
     const byKind = /* @__PURE__ */ new Map();
     for (const p of profiles) for (const k of p.action_kinds || []) {
@@ -15131,11 +15434,11 @@ function merge(profiles) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      for (const f2 of ["tier", "venue", "template"]) {
+      for (const f2 of ["tier", "venue", "template", "advisory"]) {
         const vals = given.filter((g) => own(g.k, f2)).map((g) => ({ profile: g.profile, value: clone(g.k[f2]), basis: g.k.basis }));
         if (!vals.length) continue;
         if (agree(vals)) e[f2] = f2 !== "venue" ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
-        else conflict(`action_kinds[${kind}].${f2}`, vals, `the active profiles give different ${f2 === "tier" ? "risk tiers" : `${f2}s`} for ${kind}, so none is given`);
+        else conflict(`action_kinds[${kind}].${f2}`, vals, `the active profiles give different ${f2 === "tier" ? "risk tiers" : f2 === "advisory" ? "advisory notes" : `${f2}s`} for ${kind}, so none is given`);
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -15165,6 +15468,31 @@ function merge(profiles) {
       e.profile = given[0].profile;
       e.bases = given.map((g) => ({ profile: g.profile, basis: g.d.basis }));
       view.deadlines.push(e);
+    }
+  }
+  if (has("holidays")) {
+    const byYear = /* @__PURE__ */ new Map();
+    for (const p of profiles) for (const h of p.holidays || []) {
+      if (!byYear.has(h.year)) byYear.set(h.year, []);
+      byYear.get(h.year).push({ profile: p.id, value: h.days.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0), basis: h.basis });
+    }
+    view.holidays = [];
+    for (const [year, given] of byYear) {
+      if (!agree(given)) {
+        conflict(
+          `holidays[${year}]`,
+          given,
+          `the active profiles list different closure days for ${year}, so the year is withheld: a business-day count reaching into it is undetermined`
+        );
+        continue;
+      }
+      view.holidays.push({
+        year,
+        days: clone(given[0].value),
+        basis: given[0].basis,
+        profile: given[0].profile,
+        bases: given.map((g) => ({ profile: g.profile, basis: g.basis }))
+      });
     }
   }
   return { view, conflicts };
