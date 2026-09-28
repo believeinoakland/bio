@@ -34,6 +34,7 @@ import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER
 import { promotionOf } from "../promotion/index.mjs";
 import { migrateProvenance } from "./schema.mjs";
 import { registerChecks } from "./register-checks.mjs";
+import { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
 
 export { PROVENANCE_SCHEMA } from "./schema.mjs";
 
@@ -41,6 +42,7 @@ export { PROVENANCE_SCHEMA } from "./schema.mjs";
 export const PROVENANCE_TABLES = ["register", "captured_locators", "provenance_route_marks", "origin_declarations",
                                   "signed_receipts", "receipt_keys"];
 export { registerChecks } from "./register-checks.mjs";
+export { REGISTER_ENTRY_CHECKS } from "./checks.mjs";
 
 const te = new TextEncoder();
 const hexOf = (bytes) => createSha256().update(bytes).hex();
@@ -794,15 +796,46 @@ class Provenance {
    * R1–R3, R42–R46: THE REGISTER, WRITTEN INSIDE A PROMOTION (promotion R39, K31).
    * ===================================================================== */
 
-  /* The check, before anything is written: the testimony fence (R3) and one capture, one home (R2), then the C-18
-     register arms (R42–R46). A refusal refuses the whole promotion (promotion R2). */
+  /* The check, before anything is written: each entry's stated size (R50), the testimony fence (R3) and one capture,
+     one home (R2), then the C-18 register arms (R42–R46). A refusal refuses the whole promotion (promotion R2). */
   #check(c) {
     const { pkg, bundleId, files, register, head, promotedType, replay } = c;
+    const unstated = this.#registerEntries(bundleId, register);
+    if (unstated) return unstated;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
     const fenced = this.#testimonyFence(bundleId, files, register, testimony,
       { identity: pkg ? pkg.actorIdentity ?? null : null, viewer: pkg ? pkg.actorViewer ?? null : null });
     if (fenced) return fenced;
     return this.#registerArms({ bundleId, files, head, promotedType, replay, docFm: c.docFm });
+  }
+
+  /* R50 · N263: every entry of the promotion's `register` list states its size, a whole number of bytes at least 0,
+     which R1 stores exactly as stated. Asked first, of every entry and on a replay too: an entry that states no size is
+     malformed before anything is judged about it, and without this the NOT NULL column refused an absent size as a
+     bare PROMOTE_FAILED while `-1` or `1.5` were stored. A safe integer, so the stored value is the stated one. The
+     stated size is not compared with the stored object's here (R7 and R8 read that). */
+  #registerEntries(bundleId, register) {
+    const refusal = rowRefusal(REGISTER_ENTRY_CHECKS);
+    const list = Array.isArray(register) ? register : [];
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      const bytes = isObj(e) ? e.bytes : undefined;
+      if (Number.isSafeInteger(bytes) && bytes >= 0) continue;
+      const sha256 = isObj(e) && typeof e.sha256 === "string" ? e.sha256 : null;
+      const path = isObj(e) && typeof e.path === "string" ? e.path : null;
+      const shown = typeof bytes === "string" ? JSON.stringify(bytes).slice(0, 40)
+                  : bytes !== null && typeof bytes === "object" ? (Array.isArray(bytes) ? "a list" : "an object")
+                  : String(bytes);
+      const said = bytes === undefined ? "states no bytes" : `states bytes ${shown}`;
+      /* DEC-49 REGION is-register-bytes */
+      return refusal("REGISTER_BYTES_UNSTATED",
+        `register[${i}] (${sha256 ? `capture ${sha256.slice(0, 16)}…` : "no capture named"}, `
+        + `${path ? `path ${path.slice(0, 120)}` : "no path"}) ${said}: an entry states its size as a whole number `
+        + `of bytes at least 0. Nothing was written`,
+        { bundleId, index: i, sha256, path });
+      /* END DEC-49 REGION is-register-bytes */
+    }
+    return null;
   }
 
   /* R42–R46 at the write (K72 (4)): the C-18 arms over the promoted package, for an information bundle whose register
