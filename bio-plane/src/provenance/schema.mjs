@@ -243,10 +243,12 @@ export function migrateProvenance(sql) {
    row, so a later module compares them as text. Receipts written before the spelling was stated may carry a fraction
    of a second (or another readable ISO spelling); each is re-spelled to its whole second, the fraction dropped, and
    nothing else about the row moves. A stored value that names no instant is left as it is: it is not this module's
-   to invent one. Idempotent: a row already spelled whole-second is not touched. */
-const WHOLE_SECOND_GLOB = "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]Z";
+   to invent one. Idempotent: a row already spelled whole-second (its value is its own whole-second spelling) is not
+   touched. No LIKE or GLOB pattern: workerd refuses one longer than 50 bytes, and this runs at every boot. */
+const WHOLE_SECOND = "strftime('%Y-%m-%dT%H:%M:%SZ', ?)";
 function respellReceiptInstants(sql) {
-  for (const col of ["first_retrieved", "last_retrieved"])
-    sql.exec(`UPDATE captured_locators SET ${col} = strftime('%Y-%m-%dT%H:%M:%SZ', ${col})
-               WHERE ${col} NOT GLOB '${WHOLE_SECOND_GLOB}' AND strftime('%Y-%m-%dT%H:%M:%SZ', ${col}) IS NOT NULL`);
+  for (const col of ["first_retrieved", "last_retrieved"]) {
+    const spelled = WHOLE_SECOND.replace("?", col);
+    sql.exec(`UPDATE captured_locators SET ${col} = ${spelled} WHERE ${spelled} IS NOT NULL AND ${spelled} <> ${col}`);
+  }
 }
