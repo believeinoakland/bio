@@ -16308,10 +16308,7 @@ export class Store extends DurableObject {
         ORDER BY m.case_id, m.bundle_id`, bundleId);
     const out = [];
     for (const p of pins) {
-      const at = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md' AND sha256=?`,
-                           p.bundle_id, p.version_sha)
-              || this.#one(`SELECT content FROM history WHERE bundle_id=? AND path='bundle.md' AND sha256=? LIMIT 1`,
-                           p.bundle_id, p.version_sha);
+      const at = { content: recordOf(this.ctx).textAtSha(p.bundle_id, p.version_sha) };
       if (!at || typeof at.content !== "string") continue;
       const fm = parseFrontmatter(at.content).data || {};
       if (Store.publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === bundleId))
