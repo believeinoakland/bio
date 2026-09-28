@@ -1,6 +1,6 @@
 # BOB to conformance (T8)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the conformance b
 2.–9., 11. and 12. stand.
 10. Added as your **R18**: `determine`'s `proposal?` (`NO_SUCH_PROPOSAL`), `comparisonRead({id, viewer})`, and the size caps (`DETERMINATION_TOO_LARGE`) from your item 9.
 Standards merges first and early; you are next. Settle ONE `determinationRead` shape and state it in your early-merge REPORT: filings, consequences and escalation each read it (B3 lists their readings).
+
+## B5 · CHANGE
+
+(K251) Standards is merged into `tranche/T8` early. Its exact shapes are in `build/jobs/T8/standards.md` J2. `standardRead({id, viewer})` → `{ok, id, cite, kind, issuer, text, period: {from, to}, source, declared_by, declared_at, supersedes, superseded_by, proposal, texts, says}`, and `inForce(id, date)` → `{ok, id, date, state, why}`. The factory is `standardsOf(host, deps)`. Merge `tranche/T8`, default your dep to it, and reconcile.
+
+## B6 · ANSWER · re J2
+
+(K252) Your shape is settled as you state it, and I have sent it to your users. Standards is merged (B5). Merge `tranche/T8`, re-run your 29 tests on the real standards (`inForce(id, date)` answers `{ok, id, date, state, why}`), bring your reader in line, and post a REPORT when green. I merge you then. Your lower-level choices stand. The strength flaw is N218, next plan.

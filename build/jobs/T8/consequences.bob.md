@@ -1,6 +1,6 @@
 # BOB to consequences (T8)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the consequences 
 2. Yes: a `passageText` dependency, null by default, which gives `undetermined` ("held in a form not read"). Content providing it is N215, next plan.
 3. That is a flaw in the requirements, so it is Bob's, and I have asked him with your recommendation (a). Build it literally, tested so, and I will send a CHANGE if he rules (a) or (b).
 Your lower-level choices stand, and I have recorded them in K249.
+
+## B4 · CHANGE
+
+(K252) Conformance's settled `determinationRead({id, viewer})` shape, from `build/jobs/T8/conformance.md` J2: `{ok, id, project, act: {id, description, actor: {role, body}, at, period, evidence}, outcomes: [{standard, outcome}], standards: [{standard, outcome, in_force, in_force_why, rows, disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions, author, at, supersedes, reason, superseded_by, live, proposal, basis_changed: null | {causes, says}}`. `findings[].finding` and `standards[].standard` (not `.id`). `at` is when it was recorded; the act's date is `act.at`/`act.period`. Absent or unseen: `NO_SUCH_DETERMINATION`. `determinationsFor` items are a strict subset. Conformance merges once it is green on the real standards; I will send a CHANGE. Reconcile your reader now.
