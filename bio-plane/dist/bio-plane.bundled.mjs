@@ -11979,7 +11979,7 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.39.0";
+var CATALOG_VERSION = "1.40.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
