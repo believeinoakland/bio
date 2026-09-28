@@ -31,3 +31,7 @@ Found outside my module, not mine to change (on `job/T8/installer` @ a97ab03bbb)
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 16 product files, 21 relative imports; 0 failures. coverage: 33 of 33 live requirement ids named by a test; 0 failures. ownership: 10 files changed by installer between tranche/T8 and HEAD; 0 failures.
 
 Size (session_013r4jzfdoLCUCoffM5F7wgv): test runs 21, module lines 1811
+
+## J3 · COMPLETE
+
+Complete, on job/T8/installer @ 4675e13794 (pushed): N5 (R22) per K262 and R23 on every page; R19, R11, R2 tightened; R1–R33 named at the interface, 26 pass, 7 todo; bundle regenerated and fresh; format, architecture, coverage (33/33), ownership 0 failures. Record's Completion section has the detail; J2 lists what I found elsewhere (R30 unmarked).
