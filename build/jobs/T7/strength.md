@@ -19,3 +19,14 @@ Decided myself (P17, recorded in my record): `STRENGTH_STATES` stays in the cata
 ## J3 · REPORT
 
 N82 ("the earned registry reads provenance's `captureGrade`") names code that is not strength's. The earned registry (`earnedBasisRegistry`, `#capturedAt`) goes to `inquiry` (map §2, K83 (3); inquiry R13–R14), and INQUIRY #1 is extracting it now. Strength reads capture ceilings only through `inquiry.earned` and `inquiry.legCapped`, so this job has no share of N82 to apply. I suggest the inquiry job take it, or it goes back to next.md against `inquiry`. Nothing for you to answer unless you want strength to do something here.
+
+## J4 · QUESTION
+
+R5 has one reading I should confirm. The case is a hunch leg whose target is another inquiry.
+
+- **My reading, built:** the leg "contributes nothing". It is inert on its own axis, and it also does not carry up the target inquiry's pair (R2). A question connected to the evidence below only by a hunch does not count that evidence.
+- **The other reading:** the leg is inert "as R3's ungraded member". An ungraded inquiry leg still inherits the target's pair (R2), so the hunch would lose only its own letter and keep the inherited one. The legacy version path behaved this way: `#versionLegsAsMembers` nulled the grade and the walk still recursed.
+
+Both readings make the live pair and the pair over a version agree, and switching between them is a one-line change. Unless you answer otherwise, I complete on my reading.
+
+For your layer close: in the old battery, the fixtures that author connection grades as hunches now read differently by R5 (K102). These are `strength`, `inquirystrength`, `dec65-strength-reach` and `caseproduction`. The rest of the red there is source-text pins on the moved code (`strengthpair`, `independence`, `partitionindependence`, `d280-strengthbar`, `machinefences-dec49`'s row census). I will list them in my record for legacy-tests.
