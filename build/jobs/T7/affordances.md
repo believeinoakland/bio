@@ -144,3 +144,18 @@ Found in other modules and in generated artifacts. None of it was changed by me.
 - `node checks/ownership.mjs /home/user/bio affordances tranche/T7` → ownership: 7 files changed by affordances between tranche/T7 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures
 
 Size (session_01Uzmu9LYFCjcYb7iowFaKQZ): test runs 34, module lines 2410
+
+## J6 · QUESTION
+
+B7 is applied. Both legacy suites now pass on the merged tree: `affordances` 99 arms green, `rung-ladder` 49 green. My tests pass: 68 in total, 65 pass, 0 fail, 3 todo. Two items for you before COMPLETE.
+
+**Q9. `triage` regraded `reasoned`, which changes the K211 Q4 absence.** The re-anchored `rung-ladder` NO UNDER-CLAIM arm now reads intent's source, and it finds `triage` refusing `NO_REASON`. That refusal fires for defer and dismiss. Under your K212 reading of R19 ("refused where the act revises what stands"), triage has `inquiryground`'s shape: setting a proposal down asks a reason, and adopting one asks none. Best reading, applied: `triage` is `reasoned` (R2's `reasoned` list gains it). The alternative, keeping it `undetermined`, leaves the legacy arm red.
+
+The other five, graded on R27 as K208/K211 rule:
+- `reevaluationrecord`: `reasoned`. It refuses `REEVALUATION_NOTE_MALFORMED` when the note is absent ("what was looked at and what was decided"). The code joins `JUSTIFICATION_REFUSALS`, as `RISK_TIER_REASON_REFUSED` did.
+- `versionadopt` and `versionkeep`: `undetermined`. They ask no reason (KEEP's why is optional), and no published act takes them back.
+- `reevaluationraise` and `capturerequestretry`: `substrate` (a sweep, and a re-queued request, on `capturerequestdrain`'s and `capturerequest`'s ground).
+- `capturerequestretry`, `versionadopt`, `versionkeep` and `reevaluationrecord` also have `NON_ACTS` rows.
+- R2's `reasoned` list therefore gains `reevaluationrecord` and `triage`.
+
+**Q10. `intent` in affordances' Uses.** R19's backing for `triage` needs an open proposal. The plane can reach one only through readings and resolutions, which is a large fixture. Intent's own fixture has one, so `backing.test.mjs` drives `triage` there, as it drives `narrow` through basis-versions' fixture. The architecture check fails on that import, because `intent` is not in my `uses`. Intent is layer 7, before 11, and affordances grades intent's acts (INTENT J4.3), so the use is real. Best reading: add `intent` to `uses`. Until then the architecture check reports that one import, and the rest passes: format, coverage 27/27, ownership 0/0.
