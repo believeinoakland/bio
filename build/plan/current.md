@@ -1,6 +1,6 @@
 # Plan: tranche T10
 
-**Status** · OPEN · BOB #57 · session_017vk5HNzmfWdF5xTZ9QoQE2 · depth 1
+**Status** · OPEN · BOB #58 · session_01PDr5BqtdMLRym3JZR8m44n · depth 1
 
 Opened by BOB #57, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T10.md` (BOB #56, K274; cut by BOB #57, K305, K317, K320) at once after T9 closed (K282: no pacing). Branch `tranche/T10` starts at `main` @ ac699662aa (T9 closed, K320). The provider sides were worded on T9's tranche before it closed (K304, K306, K303) and re-read against T9's close: layers 1–4 and 10–11 changed nothing they word. Bob's weekly meter at the opening: asked.
 
