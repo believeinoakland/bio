@@ -1,5 +1,5 @@
-/* extraction: the read contract later modules join in their own SQL (R53) and the term fold its name terms are made
-   by (R54), N108. Checked at the interface: what `writeReading` and `indexUnits` leave in the named columns, and what
+/* extraction: the read contract later modules join in their own SQL (R58) and the term fold its name terms are made
+   by (R59), N108. Checked at the interface: what `writeReading` and `indexUnits` leave in the named columns, and what
    the two exported folds answer. Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -25,7 +25,7 @@ const CONTRACT = {
                          "last_extent", "last_ref", "side"],
 };
 
-test("R53: the four tables carry every column the contract names", () => {
+test("R58: the four tables carry every column the contract names", () => {
   const w = fresh();
   for (const [t, cols] of Object.entries(CONTRACT)) {
     const have = w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
@@ -33,7 +33,7 @@ test("R53: the four tables carry every column the contract names", () => {
   }
 });
 
-test("R53 R45: readings: one row per capture read, a failed reading included; bundle_id the last writer's bundle; content_type the reader's key or null", () => {
+test("R58 R45: readings: one row per capture read, a failed reading included; bundle_id the last writer's bundle; content_type the reader's key or null", () => {
   const w = fresh();
   bundle(w.s, "B-1"); bundle(w.s, "B-2");
   w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([E("m", "1")]) });
@@ -45,7 +45,7 @@ test("R53 R45: readings: one row per capture read, a failed reading included; bu
   assert.equal(w.rows(`SELECT * FROM readings WHERE capture_sha=?`, S1).length, 1);
 });
 
-test("R53 R46: reading_refs: ref raw kind:key; kind, key and label as emitted or null; the position all three or none; occurrence pos_kind:pos, empty for the one unplaced row; seq 0 the first read", () => {
+test("R58 R46: reading_refs: ref raw kind:key; kind, key and label as emitted or null; the position all three or none; occurrence pos_kind:pos, empty for the one unplaced row; seq 0 the first read", () => {
   const w = fresh();
   bundle(w.s, "B-1");
   w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([
@@ -66,7 +66,7 @@ test("R53 R46: reading_refs: ref raw kind:key; kind, key and label as emitted or
   assert.ok(every.every((r) => (r.pos_kind === null) === (r.pos === null) && (r.pos === null) === (r.pos_ref === null)));
 });
 
-test("R53 R54: reading_ref_terms: src is ref, key (only when the key folds to other than the reference) or label; each term is labelTerms of its source; a name is matched within one (capture_sha, ref, src) group, never across sources", () => {
+test("R58 R59: reading_ref_terms: src is ref, key (only when the key folds to other than the reference) or label; each term is labelTerms of its source; a name is matched within one (capture_sha, ref, src) group, never across sources", () => {
   const w = fresh();
   bundle(w.s, "B-1");
   w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([
@@ -91,7 +91,7 @@ test("R53 R54: reading_ref_terms: src is ref, key (only when the key folds to ot
   assert.deepEqual(q(labelTerms("beta report")).map((r) => r.src), ["label"]);
 });
 
-test("R53 R22: capture_text_skipped: one row per run of consecutive skipped units, first and last named by extent, reference and seq, counted, with the side that skipped it", () => {
+test("R58 R22: capture_text_skipped: one row per run of consecutive skipped units, first and last named by extent, reference and seq, counted, with the side that skipped it", () => {
   const w = fresh();
   bundle(w.s, "B-1");
   const u = (p) => ({ extent: { kind: "pdf-page", page: p, rect: null }, text: `t${p}`, seq: p });
@@ -109,7 +109,7 @@ test("R53 R22: capture_text_skipped: one row per run of consecutive skipped unit
   assert.deepEqual(st, [{ first_seq: 4096, last_seq: 4099, units: 4, side: "store" }]);
 });
 
-test("R54: normAlias trims, collapses whitespace, lower-cases and cuts to 200 characters, diacritics kept; labelTerms is its distinct terms split on non-letter non-digit runs, in order, at most 24", () => {
+test("R59: normAlias trims, collapses whitespace, lower-cases and cuts to 200 characters, diacritics kept; labelTerms is its distinct terms split on non-letter non-digit runs, in order, at most 24", () => {
   assert.equal(normAlias("  José \t  DE   la\nCruz "), "josé de la cruz");
   assert.equal(normAlias(null), "");
   assert.equal(normAlias("A".repeat(250)).length, 200);

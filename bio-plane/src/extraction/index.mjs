@@ -61,10 +61,10 @@ const ADDITIVE_COLUMNS = [
   ["readings", "justification", "TEXT"],
 ];
 
-/* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R54, N108): `reading_ref_terms.term` is exactly
+/* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
    `labelTerms` of its source string, so a module matching a name against it folds with these two. ---- */
 
-/* R53 (N108): the read contract. `readings` (capture_sha, bundle_id, content_type), `reading_refs` (capture_sha,
+/* R58 (N108): the read contract. `readings` (capture_sha, bundle_id, content_type), `reading_refs` (capture_sha,
    bundle_id, ref, ref_kind, ref_key, label, pos_kind, pos, pos_ref, occurrence, seq), `reading_ref_terms`
    (capture_sha, bundle_id, ref, src, term) and `capture_text_skipped` (capture_sha, bundle_id, first_seq, last_seq,
    units, first_extent, first_ref, last_extent, last_ref, side) may be joined by a later module in its own SQL; their
