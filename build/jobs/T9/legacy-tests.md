@@ -1,6 +1,6 @@
 # legacy-tests (T9)
 
-**Status** · session_01NtbuUmjDKeKm6364QwnWp2 · depth 2 · COMPLETE · handled B5
+**Status** · session_01NtbuUmjDKeKm6364QwnWp2 · depth 2 · WORKING · handled B5
 
 ## Progress (working notes; the COMPLETE entry supersedes)
 
