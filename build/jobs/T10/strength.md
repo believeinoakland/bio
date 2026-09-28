@@ -25,3 +25,7 @@
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture strength`: 9 product files, 34 relative imports; 0 failures. `coverage strength`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership strength tranche/T10`: 7 files; legacy-store 1 added, 4 removed; legacy-checks 0/0; 0 failures.
 
 Size (session_01TQhFSmtZmNQAvKiWVVjB19): test runs 12, module lines 1418
+
+## J1 · COMPLETE
+
+STRENGTH #2 complete on job/T10/strength. Applied N218 (factory reaches inquiryOf/basisVersionsOf lazily), N152 (strength registers inquiry.onGrounded itself; legacy-store's registration and adapter removed, 1 line added at store.mjs:617 for your review), N184 (1)-(3) (arithmetic's own reason; VERSION_LEGS_MAX is a re-export of basis-versions' BASIS_VERSION_LEGS_MAX; C-30.7/.8 where = refusePairComposed), N208 (strengthBarOf answers membership.noSuchProject; BAD_GRADE its own row C-107.2). Strength 44/0; all users 0 fail; checks format/architecture/coverage (27/27)/ownership 0 failures. REPORT for legacy-tests: strengthpair's two asserts pinning '#refusePairComposed' need re-anchoring (89/2, was 90/1; N184 (1)'s red is green); bounds' two strength reds are green. bio-plane dist bundle is stale. Details in my record.
