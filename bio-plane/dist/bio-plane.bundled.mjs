@@ -53674,8 +53674,8 @@ var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
 var LISTENER_DECLARED3 = "LISTENER_DECLARED";
 var OBSERVATION_LOG_MODULE = "observation-log";
 function actorOf(author) {
-  const mint2 = contentMintState(author);
-  const actorClass = mint2 === "member_marked" ? "member" : mint2 === "machine_marked" ? "machine" : "plane";
+  const mint = contentMintState(author);
+  const actorClass = mint === "member_marked" ? "member" : mint === "machine_marked" ? "machine" : "plane";
   return { actorClass, actor: actorClass === "plane" ? null : String(author) };
 }
 function missingCause({ hasArtifact = false, registeredAt = null, firstRowAt = null } = {}) {
@@ -59220,7 +59220,7 @@ var Inquiry = class {
               rowId = held;
               carriedRow = true;
             } else if (cp.captureSha) {
-              const mint2 = this.content.mint({
+              const mint = this.content.mint({
                 bundleId: leg.target,
                 captureSha: cp.captureSha,
                 extent: ext,
@@ -59228,10 +59228,10 @@ var Inquiry = class {
                 at: meta && meta.last_updated || null,
                 ctx: cp.ctx
               });
-              if (mint2.ok) {
-                rowId = mint2.content_id;
-                minted = mint2.minted;
-                undetermined = mint2.undetermined || null;
+              if (mint.ok) {
+                rowId = mint.content_id;
+                minted = mint.minted;
+                undetermined = mint.undetermined || null;
               }
             }
           }
@@ -77247,146 +77247,146 @@ var at3 = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 var INTENT_CHECKS = Object.freeze({
   NO_OBJECTIVE: {
     check: "C-2.9",
-    where: at3("check", "is-objective-stated"),
+    where: at3("#checkProject", "is-objective-stated"),
     translation: "A project states what it is trying to achieve, and this one states nothing. Write its objective and send it again. Nothing was written."
   },
   MACHINE_CANNOT_SET_OBJECTIVE: {
-    check: "C-110.1",
+    check: "C-111.1",
     where: at3("setCondition", "is-condition-member"),
     translation: "What a project is aiming at is a member's decision. An assistant may point out gaps; it may not set or change the measure. Sign in as a member. Nothing was written."
   },
   NO_SUCH_PROJECT: {
-    check: "C-110.2",
-    where: at3("mint.NO_SUCH_PROJECT", "is-project-seen"),
+    check: "C-111.2",
+    where: at3("refuseNoSuchProject", "is-project-seen"),
     translation: "No project answers to that id here. A project you cannot see is answered exactly as one that does not exist, so this is not a hint either way."
   },
   CONDITION_UNREADABLE: {
-    check: "C-110.3",
-    where: at3("setCondition|check", "is-condition-shaped"),
+    check: "C-111.3",
+    where: at3("#conditionRefusal", "is-condition-shaped"),
     translation: "The measure sent for this objective is not in the shape the record reads: a progression, an entity, what each matching instance must reach, and the share of them that must reach it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
-    check: "C-110.4",
-    where: at3("mint.NO_SUCH_PROGRESSION", "is-named-progression"),
+    check: "C-111.4",
+    where: at3("refuseNoSuchProgression", "is-named-progression"),
     translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
   },
   NO_SUCH_ENTITY: {
-    check: "C-110.5",
-    where: at3("mint.NO_SUCH_ENTITY", "is-named-entity"),
+    check: "C-111.5",
+    where: at3("refuseNoSuchEntity", "is-named-entity"),
     translation: "The measure names an entity the record does not hold. Register it first, or name one that exists. Nothing was written."
   },
   BAD_STAGE: {
-    check: "C-110.6",
-    where: at3("setCondition|check", "is-condition-stage"),
+    check: "C-111.6",
+    where: at3("#conditionRefusal", "is-condition-stage"),
     translation: "The measure requires a step the declared flow does not have. Name steps the flow declares. Nothing was written."
   },
-  BAD_GRADE: {
-    check: "C-110.7",
-    where: at3("setCondition|check", "is-condition-grade"),
+  CONDITION_BAD_GRADE: {
+    check: "C-111.7",
+    where: at3("#conditionRefusal", "is-condition-grade"),
     translation: "The grade the measure requires is not one of the four the record uses, A (strongest) to D. Nothing was written."
   },
   BAD_SHARE: {
-    check: "C-110.8",
-    where: at3("setCondition|check", "is-condition-share"),
+    check: "C-111.8",
+    where: at3("#conditionRefusal", "is-condition-share"),
     translation: "The share of instances that must meet the measure is a whole number from 1 to 100. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_GOAL: {
-    check: "C-110.9",
-    where: at3("mint.MACHINE_CANNOT_DECLARE_GOAL", "is-goal-member"),
+    check: "C-111.9",
+    where: at3("goalMachineRefusal", "is-goal-member"),
     translation: "Declaring a goal, tying a project to it and closing it are members' decisions. An assistant may propose; it may not decide what the group pursues. Sign in as a member. Nothing was written."
   },
-  NO_STATEMENT: {
-    check: "C-110.10",
-    where: at3("mint.NO_STATEMENT", "is-pursuit-stated"),
+  PURSUIT_UNSTATED: {
+    check: "C-111.10",
+    where: at3("refusePursuitUnstated", "is-pursuit-stated"),
     translation: "A goal says what it pursues and what bounds it, and an aspiration says what it holds to. Something here is empty. Write it and send it again. Nothing was written."
   },
   NO_SUCH_GOAL: {
-    check: "C-110.11",
-    where: at3("mint.NO_SUCH_GOAL", "is-goal-held"),
+    check: "C-111.11",
+    where: at3("refuseNoSuchGoal", "is-goal-held"),
     translation: "No goal answers to that id here. Nothing was written."
   },
   NO_SUCH_ASPIRATION: {
-    check: "C-110.12",
-    where: at3("mint.NO_SUCH_ASPIRATION", "is-aspiration-held"),
+    check: "C-111.12",
+    where: at3("refuseNoSuchAspiration", "is-aspiration-held"),
     translation: "No aspiration answers to that id here. Nothing was written."
   },
   NO_REASON: {
-    check: "C-110.13",
-    where: at3("mint.NO_REASON", "is-reason-stated"),
+    check: "C-111.13",
+    where: at3("refuseNoReason", "is-reason-stated"),
     translation: "This act is recorded with a reason in your own words, and none was given. The record keeps why, so the next reader is not left guessing. Nothing was written."
   },
   MACHINE_CANNOT_DECLARE_ASPIRATION: {
-    check: "C-110.14",
-    where: at3("mint.MACHINE_CANNOT_DECLARE_ASPIRATION", "is-aspiration-member"),
+    check: "C-111.14",
+    where: at3("aspirationMachineRefusal", "is-aspiration-member"),
     translation: "What the group holds to is its members' decision, and so is setting one aside. An assistant may propose; it may not declare, depart from or retire an aspiration. Sign in as a member. Nothing was written."
   },
   NOT_YOURS: {
-    check: "C-110.15",
-    where: at3("declareAspiration|recordDeadEnd|retireAspiration|check", "is-aspiration-yours"),
+    check: "C-111.15",
+    where: at3("#aspirationAuthority", "is-aspiration-yours"),
     translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
   },
   GROUP_ASPIRATION_NOT_ADMIN: {
-    check: "C-110.16",
-    where: at3("declareAspiration|recordDeadEnd|retireAspiration|check", "is-group-aspiration-admin"),
+    check: "C-111.16",
+    where: at3("#aspirationAuthority", "is-group-aspiration-admin"),
     translation: "An aspiration the whole group holds is declared, revised and retired by an administrator, and the act carries their name and date. Ask an administrator. Nothing was written."
   },
   NO_LESSON: {
-    check: "C-110.17",
-    where: at3("mint.NO_LESSON", "is-retirement-taught"),
+    check: "C-111.17",
+    where: at3("refuseNoLesson", "is-retirement-taught"),
     translation: "Retiring an aspiration records what pursuing it taught the group, and nothing was written there. Say what was learned. Nothing was retired."
   },
   MACHINE_CANNOT_TRIAGE: {
-    check: "C-110.18",
+    check: "C-111.18",
     where: at3("triage", "is-triage-member"),
     translation: "An assistant may turn a finding into an open question, and nothing more. Adopting it, deferring it or dismissing it is a member's decision. Sign in as a member. Nothing was written."
   },
   MACHINE_CANNOT_CHOOSE_THE_QUESTION: {
-    check: "C-110.19",
+    check: "C-111.19",
     where: at3("workObjective", "is-objective-member"),
     translation: "Setting an assistant to work on a project's objective is a member's act: the objective is the group's, and so is the choice to pursue it. Sign in as a member. No run was opened."
   },
   PURSUIT_STATE_MOVE_UNDECLARED: {
-    check: "C-110.20",
-    where: at3("check", "is-pursuit-state-move"),
+    check: "C-111.20",
+    where: at3("#checkPursuit", "is-pursuit-state-move"),
     translation: "An aspiration is held until it is retired, and a goal is open until it is closed. No other move is accepted, and neither comes back. Nothing was written."
   },
   BAD_SCOPE: {
-    check: "C-110.21",
-    where: at3("mint.BAD_SCOPE", "is-aspiration-scoped"),
+    check: "C-111.21",
+    where: at3("refuseBadScope", "is-aspiration-scoped"),
     translation: "An aspiration belongs to the group, to one project, or to one member, and a project's or a member's names which one. This one does not. Nothing was written."
   },
   NO_SUCH_PROPOSAL: {
-    check: "C-110.22",
+    check: "C-111.22",
     where: at3("triage", "is-proposal-open"),
     translation: "No open proposal answers to that key. It may already have been decided; the decision stays readable with its reason. Nothing was written."
   },
   TRIAGE_ACT_UNKNOWN: {
-    check: "C-110.23",
+    check: "C-111.23",
     where: at3("triage", "is-triage-act"),
     translation: "A proposal is adopted into a project's objective, turned into an open question, deferred or dismissed. This act is none of those. Nothing was written."
   },
   SOURCE_DECLARED: {
-    check: "C-110.24",
+    check: "C-111.24",
     where: at3("registerSource", "is-source-once"),
     translation: "This source of proposals is already registered. A source registers once, when the plane starts."
   },
   SOURCE_MALFORMED: {
-    check: "C-110.25",
+    check: "C-111.25",
     where: at3("registerSource", "is-source-shaped"),
     translation: "A source of proposals names its kind and gives a reader. This registration does not."
   },
   PURSUIT_ENDED: {
-    check: "C-110.26",
-    where: at3("mint.PURSUIT_ENDED", "is-pursuit-live"),
+    check: "C-111.26",
+    where: at3("refusePursuitEnded", "is-pursuit-live"),
     translation: "This goal is closed, or this aspiration is retired. It stays readable with everything recorded under it, and it does not reopen. Nothing was written."
   },
   ADOPTIONS_UNSPLICEABLE: {
-    check: "C-110.28",
+    check: "C-111.28",
     where: at3("triage", "is-adoptions-spliceable"),
     translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
   },
   NO_NOTE: {
-    check: "C-110.27",
+    check: "C-111.27",
     where: at3("recordDeadEnd", "is-dead-end-noted"),
     translation: "A dead end is recorded with what was tried and why it went nowhere, and nothing was written. Nothing was recorded."
   }
@@ -77441,7 +77441,7 @@ function migrateIntent(sql) {
 var ASPIRATION = "aspiration";
 var GOAL = "goal";
 var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
-var GRADES = Object.freeze(["A", "B", "C", "D"]);
+var GRADES = BASIS_GRADES;
 var TOKEN = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
 var q = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 var parseFm = (text2) => {
@@ -77551,6 +77551,20 @@ function deadEndsOf(text2) {
   return out;
 }
 var titleOf = (statement) => (deriveInquiryTitle(statement) || "untitled").replace(/["\\]/g, "'");
+var pursuitId = (allocated, type) => `${allocated}-${type}`;
+var CORE_TAIL = Object.freeze([
+  "produced_by:",
+  "  mode: human",
+  "  capability_tier: session",
+  "references: []",
+  "state_history: []",
+  "annotations_open: 0",
+  "reeval_pending:",
+  "  flag: false",
+  "  since: null",
+  "  source: null",
+  "visuals: []"
+]);
 function aspirationDoc({ id, scope, owner, statement, entities, progressions, author, at: at5 }) {
   return [
     "---",
@@ -77567,8 +77581,7 @@ function aspirationDoc({ id, scope, owner, statement, entities, progressions, au
     `entities: [${entities.join(", ")}]`,
     `progressions: [${progressions.join(", ")}]`,
     `author: ${TOKEN.test(author) ? author : q(author)}`,
-    "references: []",
-    "state_history: []",
+    ...CORE_TAIL,
     "---",
     "",
     "## Statement",
@@ -77598,8 +77611,7 @@ function goalDoc({ id, statement, bounds, aspiration, author, at: at5 }) {
     `aspiration: ${aspiration ?? "null"}`,
     `author: ${TOKEN.test(author) ? author : q(author)}`,
     "objectives: []",
-    "references: []",
-    "state_history: []",
+    ...CORE_TAIL,
     "---",
     "",
     "## Statement",
@@ -77657,6 +77669,13 @@ var AGEING_DEFAULT_DAYS = 30;
 var PLANE_ACTOR = "plane:intent";
 var PLANE_VIEWER = "class:daemon";
 var GAP_KIND = "objective-gap";
+var MEASURE_MAX = 1e3;
+var WATCH_LIMIT_MAX = 1e3;
+var DEPARTURES_MAX = 1e3;
+var GOALS_MAX = 200;
+var TRIAGED_MAX = 1e3;
+var SET_ASIDE_MAX = 200;
+var SERVES_MAX = 1e3;
 var str5 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj8 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand6 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -77685,7 +77704,7 @@ var Intent = class {
     this.membership = membership;
     this.promotion = promotion;
     this.entities = entities;
-    this.progressions = progressions;
+    this.progressionsRef = progressions;
     this.inquiryRef = inquiry;
     this.aiRunsRef = aiRuns;
     this.retrievalRef = retrieval;
@@ -77701,6 +77720,11 @@ var Intent = class {
   }
   #lazy(ref) {
     return typeof ref === "function" ? ref() : ref;
+  }
+  /* N179: progressions as the host holds it, reached on first use, so the instance the plane builds with its `env`
+     (progressions R16's configured clock) is the one read here, whichever module reached the host first. */
+  get progressions() {
+    return this.#lazy(this.progressionsRef);
   }
   #when() {
     return second(this.now());
@@ -77730,14 +77754,18 @@ var Intent = class {
       if (seen) return { refused: seen };
     }
     if (!d || d.type !== "project" || viewer !== null && viewer !== void 0 && !this.membership.inSight(projectId, viewer))
-      return { refused: mint.NO_SUCH_PROJECT("no project answers to that id here; one you cannot see is answered exactly as one that does not exist.", { project: typeof projectId === "string" ? projectId : null }) };
+      return { refused: refuseNoSuchProject("no project answers to that id here; one you cannot see is answered exactly as one that does not exist.", { project: typeof projectId === "string" ? projectId : null }) };
     return { doc: d };
   }
-  /* An aspiration or goal the viewer may see (R8: absent and unseen are one answer). */
+  /* An aspiration or goal the viewer may see (R8: absent and unseen are one answer). A project's aspiration is that
+     project's material: it is seen only by a viewer who sees the project it names (R23, N199), whatever the
+     aspiration's own bundle answers; the group's and a member's are seen by every member (R9). */
   #pursuit(id, type, viewer) {
     const d = this.#doc(id);
     const who2 = viewer ?? null;
     if (!d || d.type !== type || who2 !== null && !this.membership.inSight(id, who2)) return null;
+    if (who2 !== null && type === ASPIRATION && d.fm.scope === "project" && this.#project(d.fm.owner, who2).refused)
+      return null;
     return d;
   }
   /* The member id behind an author (membership R76), null for a machine; the founder's session is `admin` (R9: an
@@ -77818,8 +77846,8 @@ var Intent = class {
     const fm = c.docFm || {};
     const author = c.author;
     const who2 = this.#memberOf(author);
-    if (machine(author) || !who2)
-      return type === GOAL ? this.#goalMachine() : this.#aspirationMachine();
+    const notMember = type === GOAL ? goalMachineRefusal(author, !!who2) : aspirationMachineRefusal(author, !!who2);
+    if (notMember) return notMember;
     const [first, last] = type === GOAL ? ["open", "closed"] : ["held", "retired"];
     const from = c.head ? c.head.currentState : null, to = c.promotedState;
     const legal = c.head ? to === from || from === first && to === last : to === first;
@@ -77831,24 +77859,24 @@ var Intent = class {
       );
     const text2 = typeof c.bundleMd?.text === "string" ? c.bundleMd.text : "";
     if (!readSection(text2, "Statement") || type === GOAL && !readSection(text2, "Bounds"))
-      return mint.NO_STATEMENT(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, in its Statement section. Nothing was written.`);
+      return refusePursuitUnstated(`a ${type} states ${type === GOAL ? "what it pursues and its bounds" : "what it holds to"}, in its Statement section. Nothing was written.`);
     if (type === GOAL) {
       if (to === "closed" && from !== "closed" && !readSection(text2, "Why It Closed"))
-        return mint.NO_REASON("a goal is closed with the reason it closed. Nothing was written.");
+        return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
       return null;
     }
     if (to === "retired" && from !== "retired" && !readSection(text2, "Taught"))
-      return mint.NO_LESSON("retiring an aspiration records what pursuing it taught. Nothing was written.");
+      return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : fm;
     if (c.head && (fm.scope !== heldFm.scope || String(fm.owner ?? null) !== String(heldFm.owner ?? null)))
-      return mint.BAD_SCOPE("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
+      return refuseBadScope("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
     return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
   }
   /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an administrator's. */
   #aspirationAuthority(scope, owner, author, viewer) {
     const who2 = this.#memberOf(author);
     if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str5(owner) || scope === "group" && owner != null)
-      return mint.BAD_SCOPE("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
+      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
     if (scope === "member" && str5(owner) !== who2)
       return refusal12("NOT_YOURS", "a member's aspiration is declared, revised and retired by that member alone. Nothing was written.", { owner });
     if (scope === "project") {
@@ -77868,12 +77896,12 @@ var Intent = class {
       return refusal12("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
     const def = this.progressions.readProgression({ progressionKey: str5(c.progression) });
     if (!def || def.ok === false || !def.found)
-      return mint.NO_SUCH_PROGRESSION(
+      return refuseNoSuchProgression(
         "the condition names a flow the record has not declared. Nothing was written.",
         { progression: str5(c.progression) }
       );
     if (!this.entities.has(str5(c.entity)))
-      return mint.NO_SUCH_ENTITY(
+      return refuseNoSuchEntity(
         "the condition names an entity the record does not hold. Nothing was written.",
         { entity: str5(c.entity) }
       );
@@ -77886,7 +77914,7 @@ var Intent = class {
         { stages: bad, declared: [...declared] }
       );
     if (c.required.grade != null && !GRADES.includes(c.required.grade))
-      return refusal12("BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
+      return refusal12("CONDITION_BAD_GRADE", "a required grade is one of A, B, C, D. Nothing was written.", { grades: GRADES });
     const share = c.satisfied.share;
     if (!Number.isInteger(share) || share < 1 || share > 100)
       return refusal12("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
@@ -77958,7 +77986,15 @@ var Intent = class {
         else if (cond.relation === "overlaps" && r.from_entity === anchor && r.to_entity) related.add(r.to_entity);
       }
     }
-    const threaded = this.#rows(`SELECT DISTINCT entity_id FROM progression_instances WHERE progression_key=? ORDER BY entity_id`, key).map((r) => r.entity_id).filter((id) => related.has(id));
+    const rows = this.#rows(
+      `SELECT DISTINCT entity_id FROM progression_instances WHERE progression_key=?
+                               AND entity_id IN (SELECT value FROM json_each(?)) ORDER BY entity_id LIMIT ?`,
+      key,
+      JSON.stringify([...related]),
+      MEASURE_MAX + 1
+    );
+    const truncated3 = rows.length > MEASURE_MAX;
+    const threaded = rows.slice(0, MEASURE_MAX).map((r) => r.entity_id);
     const need = cond.required || {};
     const stages = (need.stages || []).map(String);
     const matched = [], meeting = [], short = [], undetermined = [];
@@ -78009,7 +78045,7 @@ var Intent = class {
         documents: this.#documents(inst)
       });
     }
-    return { key, related: [...related].sort(), matched, meeting, short, undetermined };
+    return { key, related: [...related].sort(), matched, meeting, short, undetermined, truncated: truncated3 };
   }
   /* R5: the documents placed at each stage, with bundle ids the viewer may not see withheld (progressions R13). */
   #documents(inst) {
@@ -78059,7 +78095,8 @@ var Intent = class {
       };
     const m = this.#measure(held.condition, viewer);
     const n = m.matched.length, k = m.meeting.length, u = m.undetermined.length, share = held.condition.satisfied.share;
-    const satisfied = n === 0 ? null : k * 100 >= share * n ? true : (k + u) * 100 < share * n ? false : null;
+    const satisfied = n === 0 || m.truncated ? null : k * 100 >= share * n ? true : (k + u) * 100 < share * n ? false : null;
+    const why = n === 0 ? "no instance matches the condition, so no share of them can be taken" : m.truncated ? `more than ${MEASURE_MAX} instances match the condition and one read measures that many, so no share of them is taken` : null;
     return {
       ok: true,
       project,
@@ -78073,7 +78110,9 @@ var Intent = class {
       short: m.short,
       undetermined: m.undetermined,
       satisfied,
-      ...n === 0 ? { satisfied_why: "no instance matches the condition, so no share of them can be taken" } : {},
+      ...why ? { satisfied_why: why } : {},
+      limit: MEASURE_MAX,
+      truncated: m.truncated,
       instances: { meeting: m.meeting },
       computed_at
     };
@@ -78083,7 +78122,14 @@ var Intent = class {
     const pr = this.progress({ project, viewer });
     if (pr.ok === false) return pr;
     if (!pr.computable) return { ok: true, project, condition: pr.condition, gaps: [], why: pr.why };
-    return { ok: true, project, condition: pr.condition, gaps: pr.short.map((s) => this.#gap(project, pr.condition, s)) };
+    return {
+      ok: true,
+      project,
+      condition: pr.condition,
+      gaps: pr.short.map((s) => this.#gap(project, pr.condition, s)),
+      limit: pr.limit,
+      truncated: pr.truncated
+    };
   }
   #gap(project, cond, s) {
     const key = `${project}::${cond.progression}::${s.entity_id}`;
@@ -78112,36 +78158,169 @@ var Intent = class {
       surfaced_by: "machine"
     };
   }
-  /** R7: what the condition reads, so `monitoring` watches exactly those. */
-  watchSet({ project } = {}) {
+  /** R7: what the condition reads, so `monitoring` watches exactly those. The captures come a page at a time (N181):
+   *  at most `limit` (default and ceiling WATCH_LIMIT_MAX), those after `after` in capture order, with `cursor` the
+   *  last one answered and `truncated` whether more follow, so a watcher follows the whole set with the cursor. */
+  watchSet({ project, after = null, limit = null } = {}) {
+    const cap = Number.isInteger(limit) && limit >= 1 && limit <= WATCH_LIMIT_MAX ? limit : WATCH_LIMIT_MAX;
+    const none = { entities: [], progressions: [], captures: [], limit: cap, truncated: false, cursor: null };
     const d = this.#doc(project);
     const held = d && d.type === "project" ? conditionOf(d.fm) : null;
-    if (!held || this.#conditionRefusal(held.condition)) return { entities: [], progressions: [], captures: [] };
+    if (!held || this.#conditionRefusal(held.condition)) return none;
     const m = this.#measure(held.condition, null);
-    const inst = new Set(m.matched.map((r) => r.entity_id));
-    const captures = this.#rows(`SELECT DISTINCT entity_id, capture_sha FROM progression_instances WHERE progression_key=?
-                                  ORDER BY capture_sha`, m.key).filter((r) => inst.has(r.entity_id)).map((r) => r.capture_sha);
-    return { entities: m.related, progressions: [m.key], captures: [...new Set(captures)] };
+    const rows = this.#rows(
+      `SELECT DISTINCT capture_sha FROM progression_instances WHERE progression_key=?
+                               AND entity_id IN (SELECT value FROM json_each(?)) AND capture_sha > ?
+                             ORDER BY capture_sha LIMIT ?`,
+      m.key,
+      JSON.stringify(m.matched.map((r) => r.entity_id)),
+      typeof after === "string" ? after : "",
+      cap + 1
+    );
+    const truncated3 = rows.length > cap;
+    const captures = rows.slice(0, cap).map((r) => r.capture_sha);
+    return {
+      entities: m.related,
+      progressions: [m.key],
+      captures,
+      limit: cap,
+      truncated: truncated3,
+      cursor: truncated3 ? captures[captures.length - 1] : null,
+      measure_truncated: m.truncated
+    };
+  }
+  /* ===================================================================== *
+   * WHAT A SUBJECT SERVES (R28), for `scheduler`'s rank (its R10): read as the plane, orders work only, never shown.
+   * ===================================================================== */
+  /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
+   *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
+   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. Writes
+   *  nothing; never throws. */
+  servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
+    const named = [];
+    for (const [kind, list2] of [["address", addresses], ["bundle", bundles], ["request", requests]])
+      for (const id of Array.isArray(list2) ? list2 : []) named.push({ kind, id: typeof id === "string" ? id : null });
+    const truncated3 = named.length > SERVES_MAX;
+    const subjects = named.slice(0, SERVES_MAX);
+    const empty = (x) => ({ kind: x.kind, id: x.id, gaps: [], aspirations: [] });
+    let ctx;
+    try {
+      ctx = this.#servesContext();
+    } catch {
+      return { ok: true, serves: subjects.map(empty), truncated: truncated3 };
+    }
+    const serves = subjects.map((x) => {
+      try {
+        if (!x.id) return empty(x);
+        const held = x.kind === "bundle" ? [x.id] : x.kind === "address" ? this.#bundlesAt(x.id) : ctx.requestBundles(x.id);
+        const gaps = /* @__PURE__ */ new Set(), aspirations = /* @__PURE__ */ new Set();
+        for (const b of held) {
+          for (const g of ctx.gapsOf(b)) gaps.add(g);
+          for (const a of ctx.aspirationsOf(b)) aspirations.add(a);
+        }
+        return { kind: x.kind, id: x.id, gaps: [...gaps].sort(), aspirations: [...aspirations].sort() };
+      } catch {
+        return empty(x);
+      }
+    });
+    return { ok: true, serves, truncated: truncated3 };
+  }
+  /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
+     the bundles documenting their short instances, and each held group or project aspiration with what it names. */
+  #servesContext() {
+    const gapsByBundle = /* @__PURE__ */ new Map();
+    const all = [];
+    for (const pid of this.#conditioned(PLANE_VIEWER)) {
+      const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
+      if (g.ok) all.push(...g.gaps);
+    }
+    const decided = this.#decidedAmong(all.map((g) => g.key));
+    for (const g of all) {
+      if (decided.has(g.key)) continue;
+      for (const inst of g.instances || [])
+        for (const stage of inst.documents || [])
+          for (const d of stage.documents || [])
+            if (d.bundle_id) {
+              if (!gapsByBundle.has(d.bundle_id)) gapsByBundle.set(d.bundle_id, /* @__PURE__ */ new Set());
+              gapsByBundle.get(d.bundle_id).add(g.key);
+            }
+    }
+    const held = this.#aspirations(PLANE_VIEWER).filter((a) => a.state === "held" && (a.scope === "group" || a.scope === "project"));
+    const departures = /* @__PURE__ */ new Map(), concerned = /* @__PURE__ */ new Map(), requestsRead = { rows: null };
+    const departed = (project) => {
+      if (!departures.has(project)) departures.set(project, this.#departures(project).latest);
+      return departures.get(project);
+    };
+    const concerns = (entityId) => {
+      if (!concerned.has(entityId)) {
+        const r = this.entities.concerns({ entityId, limit: 5e3, viewer: PLANE_VIEWER });
+        concerned.set(entityId, new Set((r && r.documents || []).map((d) => d.bundle_id).filter(Boolean)));
+      }
+      return concerned.get(entityId);
+    };
+    const placedIn = (bundleId, keys) => keys.length > 0 && !!this.#one(
+      `SELECT 1 AS x FROM progression_instances WHERE bundle_id=? AND progression_key IN (SELECT value FROM json_each(?))
+       LIMIT 1`,
+      bundleId,
+      JSON.stringify(keys)
+    );
+    return {
+      gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
+      /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
+         no project is under the group's alone */
+      aspirationsOf: (bundleId) => {
+        const project = this.record.bundleInfo(bundleId)?.project ?? null;
+        const gone = project ? departed(project) : /* @__PURE__ */ new Map();
+        return held.filter((a) => a.scope === "group" ? !gone.has(a.id) : project !== null && a.owner === project).filter((a) => placedIn(bundleId, a.progressions) || a.entities.some((e) => concerns(e).has(bundleId))).map((a) => a.id);
+      },
+      /* a request serves what its address and its target question serve (capture-requests R23, R28) */
+      requestBundles: (request) => {
+        if (requestsRead.rows === null) {
+          const read2 = this.#lazy(this.captureRequests).captureRequests({
+            viewer: PLANE_VIEWER,
+            state: "requested",
+            limit: 1e3
+          });
+          requestsRead.rows = new Map((read2 && read2.requests || []).map((r) => [r.request, r]));
+        }
+        const row = requestsRead.rows.get(request);
+        const b = this.#lazy(this.captureRequests).bundlesOf?.(request) ?? null;
+        const target = b && b.target || row && row.target || null;
+        return [...row && row.address ? this.#bundlesAt(row.address) : [], ...target ? [target] : []];
+      }
+    };
+  }
+  /* R28: the bundles the captures taken from an address are filed in (provenance R48's read contract), at most
+     SERVES_MAX of them. */
+  #bundlesAt(address) {
+    return this.#rows(
+      `SELECT DISTINCT r.bundle_id FROM captured_locators c JOIN register r ON r.capture_sha = c.capture_sha
+                        WHERE c.address_norm = ? OR c.address = ? ORDER BY r.bundle_id LIMIT ?`,
+      address,
+      address,
+      SERVES_MAX
+    ).map((r) => r.bundle_id).filter(Boolean);
   }
   /* ===================================================================== *
    * GOALS (R8, R26)
    * ===================================================================== */
   /** R8: declare a goal, bounded, optionally under an aspiration. */
   declareGoal({ statement, bounds, aspiration = null, author, viewer = null } = {}) {
-    if (machine(author)) return this.#goalMachine();
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
     if (!str5(statement) || !str5(bounds))
-      return mint.NO_STATEMENT("a goal states what it pursues and what bounds it. Nothing was written.");
+      return refusePursuitUnstated("a goal states what it pursues and what bounds it. Nothing was written.");
     if (aspiration != null && aspiration !== "") {
       const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-      if (!a) return mint.NO_SUCH_ASPIRATION(
+      if (!a) return refuseNoSuchAspiration(
         "no aspiration answers to that id here. Nothing was written.",
         { aspiration }
       );
       if (a.head.currentState === "retired")
-        return mint.PURSUIT_ENDED("a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
+        return refusePursuitEnded("a goal is not opened under a retired aspiration. Nothing was written.", { aspiration });
     }
     const at5 = this.#when();
-    const id = this.record.allocId("GOAL", at5.slice(0, 4)).id;
+    const id = pursuitId(this.record.allocId("GOAL", at5.slice(0, 4)).id, GOAL);
     const r = this.#create(
       id,
       GOAL,
@@ -78151,16 +78330,14 @@ var Intent = class {
     if (!r.ok) return r;
     return { ok: true, goal: id, state: "open", aspiration: aspiration || null, author: str5(author), at: at5 };
   }
-  #goalMachine() {
-    return mint.MACHINE_CANNOT_DECLARE_GOAL("declaring, linking and closing a goal are a named member's acts. Nothing was written.");
-  }
   /** R8: record that a project's objective serves a goal, as the author's dated claim; the author has joined it. */
   linkObjective({ goal, project, author, viewer = null } = {}) {
-    if (machine(author)) return this.#goalMachine();
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
-    if (!g) return mint.NO_SUCH_GOAL("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
+    if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
     if (g.head.currentState === "closed")
-      return mint.PURSUIT_ENDED("a closed goal takes no new objective. Nothing was written.", { goal });
+      return refusePursuitEnded("a closed goal takes no new objective. Nothing was written.", { goal });
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
@@ -78177,12 +78354,13 @@ var Intent = class {
   }
   /** R8: close a goal with its reason; it stays readable with its objectives and reason. */
   closeGoal({ goal, reason, author, viewer = null } = {}) {
-    if (machine(author)) return this.#goalMachine();
+    const byMachine = goalMachineRefusal(author);
+    if (byMachine) return byMachine;
     const g = this.#pursuit(goal, GOAL, viewer ?? author);
-    if (!g) return mint.NO_SUCH_GOAL("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
-    if (!str5(reason)) return mint.NO_REASON("a goal is closed with the reason it closed. Nothing was written.");
+    if (!g) return refuseNoSuchGoal("no goal answers to that id here. Nothing was written.", { goal: goal ?? null });
+    if (!str5(reason)) return refuseNoReason("a goal is closed with the reason it closed. Nothing was written.");
     if (g.head.currentState === "closed")
-      return mint.PURSUIT_ENDED("this goal is already closed. Nothing was written.", { goal });
+      return refusePursuitEnded("this goal is already closed. Nothing was written.", { goal });
     const at5 = this.#when();
     let text2 = appendHistory(g.text, {
       at: at5,
@@ -78202,16 +78380,18 @@ var Intent = class {
    *  viewer may see), its state and, once closed, its reason. No progress figure: its objectives carry theirs. */
   readGoal({ goal, viewer = null } = {}) {
     const g = this.#pursuit(goal, GOAL, viewer);
-    if (!g) return mint.NO_SUCH_GOAL("no goal answers to that id here.", { goal: goal ?? null });
+    if (!g) return refuseNoSuchGoal("no goal answers to that id here.", { goal: goal ?? null });
     return { ok: true, goal: this.#goalView(g, viewer) };
   }
   #goalView(g, viewer) {
     const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj8).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
+    const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
+    const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
     return {
       id: g.id,
       statement: readSection(g.text, "Statement"),
       bounds: readSection(g.text, "Bounds"),
-      aspiration: g.fm.aspiration ?? null,
+      aspiration,
       objectives,
       state: g.head.currentState,
       closed_reason: g.head.currentState === "closed" ? readSection(g.text, "Why It Closed") : null,
@@ -78222,22 +78402,20 @@ var Intent = class {
   /* ===================================================================== *
    * ASPIRATIONS (R9–R14, R26)
    * ===================================================================== */
-  #aspirationMachine() {
-    return mint.MACHINE_CANNOT_DECLARE_ASPIRATION("declaring, departing from, revising and retiring an aspiration are a named member's acts. Nothing was written.");
-  }
   /** R9: declare an aspiration of the group, a project or a member. */
   declareAspiration({ scope, owner = null, statement, entities = [], progressions = [], author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const own2 = scope === "group" ? null : str5(owner) || null;
     if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !own2 || scope === "group" && str5(owner))
-      return mint.BAD_SCOPE("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
-    if (!str5(statement)) return mint.NO_STATEMENT("an aspiration states what it holds to. Nothing was written.");
+      return refuseBadScope("an aspiration is the group's (naming no owner), a project's or a member's (naming which). Nothing was written.", { scope: scope ?? null, scopes: ASPIRATION_SCOPES });
+    if (!str5(statement)) return refusePursuitUnstated("an aspiration states what it holds to. Nothing was written.");
     const denied = this.#aspirationAuthority(scope, own2, author, viewer ?? author);
     if (denied) return denied;
     const ents = (Array.isArray(entities) ? entities : []).map(str5).filter(Boolean);
     const progs = (Array.isArray(progressions) ? progressions : []).map(str5).filter(Boolean);
     const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
-    if (badEnt) return mint.NO_SUCH_ENTITY(
+    if (badEnt) return refuseNoSuchEntity(
       "the aspiration names an entity the record does not hold. Nothing was written.",
       { entity: badEnt }
     );
@@ -78245,9 +78423,9 @@ var Intent = class {
       const d = TOKEN.test(k) && this.progressions.readProgression({ progressionKey: k });
       return !d || d.ok === false || !d.found;
     });
-    if (badProg) return mint.NO_SUCH_PROGRESSION("the aspiration names a flow the record has not declared. Nothing was written.", { progression: badProg });
+    if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing was written.", { progression: badProg });
     const at5 = this.#when();
-    const id = this.record.allocId("ASP", at5.slice(0, 4)).id;
+    const id = pursuitId(this.record.allocId("ASP", at5.slice(0, 4)).id, ASPIRATION);
     const r = this.#create(
       id,
       ASPIRATION,
@@ -78269,19 +78447,20 @@ var Intent = class {
   }
   /** R10: a project records its departure from a held group aspiration, with a reason. */
   departFrom({ project, aspiration, reason, author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return mint.NO_SUCH_ASPIRATION(
+    if (!a) return refuseNoSuchAspiration(
       "no aspiration answers to that id here. Nothing was written.",
       { aspiration: aspiration ?? null }
     );
     if (a.fm.scope !== "group")
-      return mint.BAD_SCOPE("a project departs only from an aspiration the whole group holds; a project's or a member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
+      return refuseBadScope("a project departs only from an aspiration the whole group holds; a project's or a member's own is not held by other projects. Nothing was written.", { scope: a.fm.scope ?? null });
     if (a.head.currentState === "retired")
-      return mint.PURSUIT_ENDED("a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.", { aspiration });
-    if (!str5(reason)) return mint.NO_REASON("a departure from the group's aspiration records why. Nothing was written.");
+      return refusePursuitEnded("a retired aspiration is held by no project, so there is nothing to depart from. Nothing was written.", { aspiration });
+    if (!str5(reason)) return refuseNoReason("a departure from the group's aspiration records why. Nothing was written.");
     const denied = this.membership.projectAuthority(project, author, "joined", "departFrom");
     if (denied) return denied;
     const at5 = this.#when();
@@ -78297,13 +78476,15 @@ var Intent = class {
   }
   /** R11: a dead end, appended to the aspiration's pursuit record, dated and authored, never removed. */
   recordDeadEnd({ aspiration, note, author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return mint.NO_SUCH_ASPIRATION(
+    if (!a) return refuseNoSuchAspiration(
       "no aspiration answers to that id here. Nothing was written.",
       { aspiration: aspiration ?? null }
     );
-    if (!str5(note)) return refusal12("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
+    if (!str5(note))
+      return refusal12("NO_NOTE", "a dead end records what was tried and why it went nowhere. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at5 = this.#when();
@@ -78321,16 +78502,17 @@ ${bodyText(note)}`
   }
   /** R11: retire an aspiration with what pursuing it taught; it and its pursuit record stay readable. */
   retireAspiration({ aspiration, taught, author, viewer = null } = {}) {
-    if (machine(author)) return this.#aspirationMachine();
+    const byMachine = aspirationMachineRefusal(author);
+    if (byMachine) return byMachine;
     const a = this.#pursuit(aspiration, ASPIRATION, viewer ?? author);
-    if (!a) return mint.NO_SUCH_ASPIRATION(
+    if (!a) return refuseNoSuchAspiration(
       "no aspiration answers to that id here. Nothing was written.",
       { aspiration: aspiration ?? null }
     );
     if (a.head.currentState === "retired")
-      return mint.PURSUIT_ENDED("this aspiration is already retired. Nothing was written.", { aspiration });
+      return refusePursuitEnded("this aspiration is already retired. Nothing was written.", { aspiration });
     if (!str5(taught))
-      return mint.NO_LESSON("retiring an aspiration records what pursuing it taught. Nothing was written.");
+      return refuseNoLesson("retiring an aspiration records what pursuing it taught. Nothing was written.");
     const denied = this.#aspirationAuthority(a.fm.scope, a.fm.owner ?? null, author, viewer ?? author);
     if (denied) return denied;
     const at5 = this.#when();
@@ -78377,12 +78559,18 @@ ${bodyText(note)}`
       at: a.fm.created ?? null
     };
   }
-  /* R10: the departure in force for each (project, aspiration): the latest recorded. */
+  /* R10: the departure in force for each (project, aspiration): the latest recorded, at most DEPARTURES_MAX of them
+     (N181), read one past so a cut says so. */
   #departures(project) {
+    const rows = this.#rows(`SELECT d.aspiration_id, d.reason, d.author, d.at FROM intent_departures d
+                              WHERE d.project_id=? AND d.seq = (SELECT MAX(x.seq) FROM intent_departures x
+                                                                  WHERE x.project_id=d.project_id
+                                                                    AND x.aspiration_id=d.aspiration_id)
+                              ORDER BY d.seq LIMIT ?`, project, DEPARTURES_MAX + 1);
     const latest = /* @__PURE__ */ new Map();
-    for (const r of this.#rows(`SELECT aspiration_id, reason, author, at FROM intent_departures WHERE project_id=? ORDER BY seq`, project))
+    for (const r of rows.slice(0, DEPARTURES_MAX))
       latest.set(r.aspiration_id, { aspiration: r.aspiration_id, reason: r.reason, author: r.author, at: r.at, notable: true });
-    return latest;
+    return { latest, truncated: rows.length > DEPARTURES_MAX };
   }
   /** R12: the aspirations in force for a project, a member, or (neither named) the group, each with its scope. The
    *  group's less any departure, each departure listed with its reason; no precedence is stated or implied. */
@@ -78392,7 +78580,8 @@ ${bodyText(note)}`
       if (p.refused) return p.refused;
     }
     const held = this.#aspirations(viewer).filter((a) => a.state === "held");
-    const departed = project ? this.#departures(project) : /* @__PURE__ */ new Map();
+    const dep = project ? this.#departures(project) : { latest: /* @__PURE__ */ new Map(), truncated: false };
+    const departed = dep.latest;
     const group = held.filter((a) => a.scope === "group" && !departed.has(a.id));
     const own2 = project ? held.filter((a) => a.scope === "project" && a.owner === project) : [];
     const mine = member ? held.filter((a) => a.scope === "member" && a.owner === str5(member)) : [];
@@ -78403,6 +78592,8 @@ ${bodyText(note)}`
       member: member || null,
       aspirations: [...group, ...own2, ...mine],
       departures,
+      departures_limit: DEPARTURES_MAX,
+      departures_truncated: dep.truncated,
       precedence: null,
       says: "these are held side by side; the record states no order among them and resolves nothing between them"
     };
@@ -78430,21 +78621,32 @@ ${bodyText(note)}`
    *  them with each act and reason, the capture requests named in them with their outcome, and the dead ends. */
   pursuitOf({ aspiration, viewer = null } = {}) {
     const a = this.#pursuit(aspiration, ASPIRATION, viewer);
-    if (!a) return mint.NO_SUCH_ASPIRATION("no aspiration answers to that id here.", { aspiration: aspiration ?? null });
+    if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here.", { aspiration: aspiration ?? null });
     const goals = [];
-    let after = "";
+    let after = "", goalsSeen = 0;
     for (; ; ) {
       const page = this.record.listByType({ type: GOAL, after, limit: 200 });
       for (const id of page.ids) {
         const g = this.#pursuit(id, GOAL, viewer);
-        if (g && g.fm.aspiration === aspiration) goals.push(this.#goalView(g, viewer));
+        if (g && g.fm.aspiration === aspiration) {
+          goalsSeen += 1;
+          if (goals.length < GOALS_MAX) goals.push(this.#goalView(g, viewer));
+        }
+        if (goalsSeen > GOALS_MAX) break;
       }
-      if (page.ids.length < 200 || !page.cursor) break;
+      if (goalsSeen > GOALS_MAX || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
     }
+    const goals_truncated = goalsSeen > GOALS_MAX;
     const projects = [...new Set(goals.flatMap((g) => g.objectives.map((o) => o.project)))];
-    const triaged = projects.length ? this.#rows(`SELECT proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at
-                      FROM intent_triage WHERE project_id IN (${projects.map(() => "?").join(",")}) ORDER BY seq`, ...projects).map((r) => ({
+    const acts = projects.length ? this.#rows(
+      `SELECT proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at
+                      FROM intent_triage WHERE project_id IN (SELECT value FROM json_each(?)) ORDER BY seq LIMIT ?`,
+      JSON.stringify(projects),
+      TRIAGED_MAX + 1
+    ) : [];
+    const triaged_truncated = acts.length > TRIAGED_MAX;
+    const triaged = acts.slice(0, TRIAGED_MAX).map((r) => ({
       proposal: r.proposal_key,
       source: r.source,
       kind: r.kind,
@@ -78456,20 +78658,21 @@ ${bodyText(note)}`
       basis: safeJson13(r.basis_json),
       author: r.author,
       at: r.at
-    })) : [];
+    }));
     const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
-    let held = /* @__PURE__ */ new Map(), truncated3 = false;
+    let held = /* @__PURE__ */ new Map(), readCut = false;
     if (named.length) {
       const read2 = this.#lazy(this.captureRequests).captureRequests({ viewer, limit: 1e3 });
-      held = new Map((read2 && read2.requests || []).map((r) => [r.request, r]));
-      truncated3 = !!(read2 && read2.truncated);
+      const rows = read2 && Array.isArray(read2.requests) ? read2.requests : [];
+      held = new Map(rows.map((r) => [r.request, r]));
+      readCut = read2 ? read2.truncated === true : false;
     }
     const capture_requests = named.map((id) => {
       const r = held.get(id);
       if (!r) return {
         request: id,
         outcome: null,
-        why: truncated3 ? "not among the requests the read answered (it was cut at its bound)" : "no such request is held, or it is one you may not see"
+        why: readCut ? "not among the requests the read answered (it was cut at its bound)" : "no such request is held, or it is one you may not see"
       };
       return { request: id, outcome: {
         state: r.state,
@@ -78482,7 +78685,11 @@ ${bodyText(note)}`
       ok: true,
       aspiration: this.#aspirationView(a),
       goals,
+      goals_limit: GOALS_MAX,
+      goals_truncated,
       triaged,
+      triaged_limit: TRIAGED_MAX,
+      triaged_truncated,
       capture_requests,
       dead_ends: deadEndsOf(a.text),
       taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null
@@ -78566,20 +78773,47 @@ ${bodyText(note)}`
     }
     return out;
   }
-  /* The latest triage act recorded for each proposal key. */
-  #triaged() {
-    const m = /* @__PURE__ */ new Map();
-    for (const r of this.#rows(`SELECT proposal_key, act, project_id, inquiry_id, reason, author, at FROM intent_triage ORDER BY seq`))
-      m.set(r.proposal_key, {
-        key: r.proposal_key,
-        act: r.act,
-        project: r.project_id,
-        inquiry: r.inquiry_id,
-        reason: r.reason,
-        author: r.author,
-        at: r.at
-      });
-    return m;
+  /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
+     the key's index (N181 (4)). */
+  #isDecided(key) {
+    return !!this.#one(`SELECT 1 AS x FROM intent_triage WHERE proposal_key=? LIMIT 1`, typeof key === "string" ? key : "");
+  }
+  /* R15: which of these keys have a triage act recorded, read through the key's index, as many rows as keys. */
+  #decidedAmong(keys) {
+    if (!keys.length) return /* @__PURE__ */ new Set();
+    return new Set(this.#rows(
+      `SELECT DISTINCT proposal_key FROM intent_triage
+                                WHERE proposal_key IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      JSON.stringify(keys),
+      keys.length
+    ).map((r) => r.proposal_key));
+  }
+  /* R16, R23 (N199): the project a triage act concerns: the one named with it, else the project a gap's key names
+     (`intent::<project>::…`), so a gap set aside without naming its project is still that project's material. */
+  #projectOfAct(r) {
+    if (r.project) return r.project;
+    const m = /^intent::([^:]+)::/.exec(r.key || "");
+    return m ? m[1] : null;
+  }
+  /* R16: the proposals set aside (deferred or dismissed), newest first, at most SET_ASIDE_MAX, read one past so a cut
+     says so (N181); an act concerning a project the viewer may not see is not listed to them (R23, N199). */
+  #setAside(viewer) {
+    const rows = this.#rows(`SELECT proposal_key, act, project_id, inquiry_id, reason, author, at FROM intent_triage
+                              WHERE act IN ('defer', 'dismiss') ORDER BY seq DESC LIMIT ?`, SET_ASIDE_MAX + 1);
+    const truncated3 = rows.length > SET_ASIDE_MAX;
+    const list2 = rows.slice(0, SET_ASIDE_MAX).map((r) => ({
+      key: r.proposal_key,
+      act: r.act,
+      project: r.project_id,
+      inquiry: r.inquiry_id,
+      reason: r.reason,
+      author: r.author,
+      at: r.at
+    })).filter((d) => {
+      const pid = this.#projectOfAct(d);
+      return !pid || viewer == null || !this.#project(pid, viewer).refused;
+    });
+    return { list: list2, truncated: truncated3 };
   }
   /** R15, R16: every open proposal from every source, each with its grade and basis; beside them, every proposal set
    *  aside (deferred or dismissed) with its reason, so a decision ages a proposal without hiding it. */
@@ -78588,11 +78822,19 @@ ${bodyText(note)}`
       const p = this.#project(project, viewer);
       if (p.refused) return p.refused;
     }
-    const decided = this.#triaged();
     const all = this.#allProposals(project || null, viewer);
+    const decided = this.#decidedAmong(all.map((p) => p.key));
     const open = all.filter((p) => !decided.has(p.key));
-    const set_aside = [...decided.values()].filter((d) => d.act === "defer" || d.act === "dismiss").filter((d) => !d.project || viewer == null || this.membership.inSight(d.project, viewer));
-    return { ok: true, project: project || null, proposals: open, count: open.length, set_aside };
+    const aside = this.#setAside(viewer);
+    return {
+      ok: true,
+      project: project || null,
+      proposals: open,
+      count: open.length,
+      set_aside: aside.list,
+      set_aside_limit: SET_ASIDE_MAX,
+      set_aside_truncated: aside.truncated
+    };
   }
   /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
    *  do only this), or defer or dismiss it with a reason. */
@@ -78621,15 +78863,14 @@ ${bodyText(note)}`
       if (p.refused) return p.refused;
       proj = p.doc;
     }
-    const decided = this.#triaged();
-    const found = decided.has(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
+    const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
     if (!found)
       return refusal12("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
     const why = str5(reason);
     if ((act === "defer" || act === "dismiss") && !why)
-      return mint.NO_REASON("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
+      return refuseNoReason("a proposal is deferred or dismissed with a reason in your own words. Nothing was written.");
     if (act === "adopt" && !proj)
-      return mint.NO_SUCH_PROJECT("a proposal is adopted into a named project's objective; name the project. Nothing was written.", { project: null });
+      return refuseNoSuchProject("a proposal is adopted into a named project's objective; name the project. Nothing was written.", { project: null });
     if (proj && !isMachine) {
       const denied = this.membership.projectAuthority(proj.id, author, "joined", `triage:${act}`);
       if (denied) return denied;
@@ -78675,7 +78916,7 @@ ${bodyText(note)}`
       found.source,
       found.kind ?? null,
       act,
-      proj ? proj.id : null,
+      proj ? proj.id : this.#projectOfAct({ key: found.key }),
       inquiry,
       why || null,
       found.grade ?? null,
@@ -78697,7 +78938,7 @@ ${bodyText(note)}`
   /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
      its R25, run inside it), the proposal as its basis. */
   #openQuestion(found, author, viewer, run, assistantPrincipal, at5) {
-    const id = this.record.allocId("INQ", at5.slice(0, 4)).id;
+    const id = `${this.record.allocId("INQ", at5.slice(0, 4)).id}-question`;
     const question = questionOf(found);
     const who2 = str5(author) || PLANE_ACTOR;
     const text2 = [
@@ -78710,8 +78951,17 @@ ${bodyText(note)}`
       "prior_state: null",
       `created: ${q(at5)}`,
       `last_updated: ${q(at5)}`,
+      "produced_by:",
+      `  mode: ${machine(author) ? "agent" : "human"}`,
+      "  capability_tier: session",
       "references: []",
       "state_history: []",
+      "annotations_open: 0",
+      "reeval_pending:",
+      "  flag: false",
+      "  since: null",
+      "  source: null",
+      "visuals: []",
       `surfaced_by: ${machine(author) ? "agent" : "human"}`,
       'disposition_reason: ""',
       `surfaced_from: ${q(found.key)}`,
@@ -78753,26 +79003,11 @@ ${bodyText(note)}`
    *  ageing interval moves to `deferred`, with its reason, through inquiry's dispose act under the plane's actor.
    *  Nothing is deleted. */
   async ageSurfaced(now) {
-    const nowMs = now == null || now === "" ? Date.parse(this.now()) : Number.isFinite(Number(now)) ? Number(now) : Date.parse(now);
+    const nowMs = this.#instantMs(now);
     const days = this.ageingDays();
-    const cutoff = nowMs - days * 864e5;
     const reason = `surfaced by an assistant; no member acted within ${days} days`;
     const aged = [], refused = [];
-    const due = [];
-    let after = "";
-    for (; ; ) {
-      const page = this.record.listByType({ type: "inquiry", after, limit: 200 });
-      for (const id of page.ids) {
-        const d = this.#doc(id);
-        if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
-        const entries = manifestOf(this.record.readImage(id));
-        if (!entries.length || entries.some((e) => !machine(e.author))) continue;
-        const since = Date.parse(entries[entries.length - 1].created ?? d.fm.created);
-        if (Number.isFinite(since) && since <= cutoff) due.push(id);
-      }
-      if (page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
+    const due = this.#ageable().filter((x) => x.at <= nowMs).map((x) => x.id);
     const inquiry = this.#lazy(this.inquiryRef), retrieval = this.#lazy(this.retrievalRef);
     for (const id of due) {
       const sel = await retrieval.selectionCreate({ ids: [id], kind: "enumerated", owner: PLANE_ACTOR, viewer: PLANE_VIEWER });
@@ -78792,6 +79027,56 @@ ${bodyText(note)}`
       else refused.push({ id, reason: r ? r.reason : "DISPOSE_FAILED" });
     }
     return { ok: true, aged, refused, interval_days: days, reason };
+  }
+  /* R17, R27: an instant given as milliseconds or ISO text; none given is the module's clock. */
+  #instantMs(now) {
+    return now == null || now === "" ? Date.parse(this.now()) : Number.isFinite(Number(now)) ? Number(now) : Date.parse(now);
+  }
+  /* R27: every ageable question (R17 would move it: at `surfaced`, surfaced by a machine, no member's entry in its
+     history) with its ageing instant, its last entry's time plus the ageing interval, in milliseconds. */
+  #ageable() {
+    const span = this.ageingDays() * 864e5;
+    const out = [];
+    let after = "";
+    for (; ; ) {
+      const page = this.record.listByType({ type: "inquiry", after, limit: 200 });
+      for (const id of page.ids) {
+        const d = this.#doc(id);
+        if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
+        const entries = manifestOf(this.record.readImage(id));
+        if (!entries.length || entries.some((e) => !machine(e.author))) continue;
+        const since = Date.parse(entries[entries.length - 1].created ?? d.fm.created);
+        if (Number.isFinite(since)) out.push({ id, at: since + span });
+      }
+      if (page.ids.length < 200 || !page.cursor) break;
+      after = page.cursor;
+    }
+    return out;
+  }
+  /** R27 (for `scheduler`, beside R17 as its tick): the earliest ageing instant of any ageable question, past or not,
+   *  in milliseconds; null when there is none. A question R17 tried and could not move is still ageable, so it stays
+   *  due and is tried again at a later firing. Writes nothing; never throws. */
+  ageDue(now) {
+    try {
+      let best = null;
+      for (const x of this.#ageable()) if (best === null || x.at < best) best = x.at;
+      return best;
+    } catch {
+      return null;
+    }
+  }
+  /** R27: the earliest ageing instant later than `now` (milliseconds or ISO; none given is the module's clock), in
+   *  milliseconds; null when there is none. One already due is never woken for. Writes nothing; never throws. */
+  ageWake(now) {
+    try {
+      const nowMs = this.#instantMs(now);
+      if (!Number.isFinite(nowMs)) return null;
+      let best = null;
+      for (const x of this.#ageable()) if (x.at > nowMs && (best === null || x.at < best)) best = x.at;
+      return best;
+    } catch {
+      return null;
+    }
   }
   /** R17: the instance's ageing interval in days, a record-core setting (default 30). */
   ageingDays() {
@@ -78827,44 +79112,150 @@ ${bodyText(note)}`
     return { ...isObj8(opened) ? opened : {}, project, instructions };
   }
 };
-var mint = {
-  NO_SUCH_PROJECT: (detail, extra) => {
-    return refusal12("NO_SUCH_PROJECT", detail, extra);
-  },
-  NO_SUCH_GOAL: (detail, extra) => {
-    return refusal12("NO_SUCH_GOAL", detail, extra);
-  },
-  NO_SUCH_ASPIRATION: (detail, extra) => {
-    return refusal12("NO_SUCH_ASPIRATION", detail, extra);
-  },
-  NO_SUCH_PROGRESSION: (detail, extra) => {
-    return refusal12("NO_SUCH_PROGRESSION", detail, extra);
-  },
-  NO_SUCH_ENTITY: (detail, extra) => {
-    return refusal12("NO_SUCH_ENTITY", detail, extra);
-  },
-  NO_REASON: (detail, extra) => {
-    return refusal12("NO_REASON", detail, extra);
-  },
-  NO_STATEMENT: (detail, extra) => {
-    return refusal12("NO_STATEMENT", detail, extra);
-  },
-  NO_LESSON: (detail, extra) => {
-    return refusal12("NO_LESSON", detail, extra);
-  },
-  BAD_SCOPE: (detail, extra) => {
-    return refusal12("BAD_SCOPE", detail, extra);
-  },
-  PURSUIT_ENDED: (detail, extra) => {
-    return refusal12("PURSUIT_ENDED", detail, extra);
-  },
-  MACHINE_CANNOT_DECLARE_GOAL: (detail, extra) => {
-    return refusal12("MACHINE_CANNOT_DECLARE_GOAL", detail, extra);
-  },
-  MACHINE_CANNOT_DECLARE_ASPIRATION: (detail, extra) => {
-    return refusal12("MACHINE_CANNOT_DECLARE_ASPIRATION", detail, extra);
-  }
-};
+function refuseNoSuchProject(detail, extra) {
+  const row = INTENT_CHECKS.NO_SUCH_PROJECT;
+  return {
+    ok: false,
+    reason: "NO_SUCH_PROJECT",
+    code: "NO_SUCH_PROJECT",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoSuchGoal(detail, extra) {
+  const row = INTENT_CHECKS.NO_SUCH_GOAL;
+  return {
+    ok: false,
+    reason: "NO_SUCH_GOAL",
+    code: "NO_SUCH_GOAL",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoSuchAspiration(detail, extra) {
+  const row = INTENT_CHECKS.NO_SUCH_ASPIRATION;
+  return {
+    ok: false,
+    reason: "NO_SUCH_ASPIRATION",
+    code: "NO_SUCH_ASPIRATION",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoSuchProgression(detail, extra) {
+  const row = INTENT_CHECKS.NO_SUCH_PROGRESSION;
+  return {
+    ok: false,
+    reason: "NO_SUCH_PROGRESSION",
+    code: "NO_SUCH_PROGRESSION",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoSuchEntity(detail, extra) {
+  const row = INTENT_CHECKS.NO_SUCH_ENTITY;
+  return {
+    ok: false,
+    reason: "NO_SUCH_ENTITY",
+    code: "NO_SUCH_ENTITY",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoReason(detail, extra) {
+  const row = INTENT_CHECKS.NO_REASON;
+  return {
+    ok: false,
+    reason: "NO_REASON",
+    code: "NO_REASON",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refusePursuitUnstated(detail, extra) {
+  const row = INTENT_CHECKS.PURSUIT_UNSTATED;
+  return {
+    ok: false,
+    reason: "PURSUIT_UNSTATED",
+    code: "PURSUIT_UNSTATED",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseNoLesson(detail, extra) {
+  const row = INTENT_CHECKS.NO_LESSON;
+  return {
+    ok: false,
+    reason: "NO_LESSON",
+    code: "NO_LESSON",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refuseBadScope(detail, extra) {
+  const row = INTENT_CHECKS.BAD_SCOPE;
+  return {
+    ok: false,
+    reason: "BAD_SCOPE",
+    code: "BAD_SCOPE",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function refusePursuitEnded(detail, extra) {
+  const row = INTENT_CHECKS.PURSUIT_ENDED;
+  return {
+    ok: false,
+    reason: "PURSUIT_ENDED",
+    code: "PURSUIT_ENDED",
+    check: row.check,
+    translation: row.translation,
+    detail,
+    ...extra || {}
+  };
+}
+function goalMachineRefusal(author, member = true) {
+  if (str5(author) && !isMachineIdentity(str5(author)) && member) return null;
+  const row = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_GOAL;
+  return {
+    ok: false,
+    reason: "MACHINE_CANNOT_DECLARE_GOAL",
+    code: "MACHINE_CANNOT_DECLARE_GOAL",
+    check: row.check,
+    translation: row.translation,
+    detail: "declaring, linking and closing a goal are a named member's acts. Nothing was written."
+  };
+}
+function aspirationMachineRefusal(author, member = true) {
+  if (str5(author) && !isMachineIdentity(str5(author)) && member) return null;
+  const row = INTENT_CHECKS.MACHINE_CANNOT_DECLARE_ASPIRATION;
+  return {
+    ok: false,
+    reason: "MACHINE_CANNOT_DECLARE_ASPIRATION",
+    code: "MACHINE_CANNOT_DECLARE_ASPIRATION",
+    check: row.check,
+    translation: row.translation,
+    detail: "declaring, departing from, revising and retiring an aspiration are a named member's acts. Nothing was written."
+  };
+}
 function captureRequestsNamed(basis) {
   if (!isObj8(basis)) return [];
   const out = [];
@@ -78933,7 +79324,7 @@ function intentOf(host, deps) {
       membership,
       promotion,
       entities: d.entities || entitiesOf(host, { record, membership }),
-      progressions: d.progressions || progressionsOf(host, { record }),
+      progressions: d.progressions || (() => progressionsOf(host, { record })),
       inquiry: d.inquiry || (() => inquiryOf(host)),
       aiRuns: d.aiRuns || (() => aiRunsOf(host)),
       retrieval: d.retrieval || (() => retrievalOf(host)),
@@ -79028,27 +79419,27 @@ var VERSION_NOTICE_SUBJECT_CHECKS = Object.freeze({
 var REEVALUATION_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_ADOPT_VERSION: {
     check: "C-110.1",
-    where: at4("adoptVersion", "is-version-choice"),
+    where: at4("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can move a reference to a newer version of a document. The assistant and the plane's own credentials may say a newer version exists; they never choose which one a finding rests on."
   },
   MACHINE_CANNOT_KEEP_VERSION: {
     check: "C-110.2",
-    where: at4("keepVersion", "is-version-choice"),
+    where: at4("#choiceSubject", "is-version-choice"),
     translation: "Only a named member can record that a reference stays on the earlier version. That is a judgement about the evidence, and a machine credential holds no judgement the record would stand behind."
   },
   VERSION_NOTICE_NOT_FOUND: {
     check: "C-110.3",
-    where: at4("adoptVersion", "is-version-choice"),
+    where: at4("#choiceSubject", "is-version-choice"),
     translation: "There is no notice by that id that you can read here. A notice about a question you may not see answers exactly as one that does not exist."
   },
   VERSION_NOTICE_CLOSED: {
     check: "C-110.4",
-    where: at4("adoptVersion", "is-version-choice"),
+    where: at4("#choiceSubject", "is-version-choice"),
     translation: "That notice has already been answered: the reference was either moved to the newer version or kept on the earlier one, and the answer stands as recorded. A yet newer version raises a notice of its own."
   },
   VERSION_CHOICE_WHY_MALFORMED: {
     check: "C-110.5",
-    where: at4("keepVersion", "is-version-choice"),
+    where: at4("#choiceSubject", "is-version-choice"),
     translation: "The reason is too long, or holds a quotation mark, a backslash or a line break, which the record cannot store. Shorten it or leave those characters out."
   },
   MACHINE_CANNOT_RECORD_REEVALUATION: {
@@ -79068,7 +79459,7 @@ var REEVALUATION_ACT_CHECKS = Object.freeze({
   },
   VERSION_ADOPT_UNWRITABLE: {
     check: "C-110.9",
-    where: at4("adoptVersion", "is-version-choice"),
+    where: at4("adoptVersion", "is-version-adoptable"),
     translation: "The reference could not be moved: the question's document no longer holds the leg this notice was about, or the newer version could not be written into it. Nothing was written, and the notice stays open."
   }
 });
@@ -79126,10 +79517,29 @@ CREATE TABLE IF NOT EXISTS reevaluation_records (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_records_dependent ON reevaluation_records (dependent, target, source);
+-- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
+-- of the pass part-way (after the last leg a batch read), when that pass began
+-- and when the last complete one began, and the receipt mark: receipt_seq is
+-- counted up by each receipt (provenance's onReceipt), and each pass keeps the
+-- count it began at, so "a receipt since the last complete pass began" is one
+-- comparison of two integers, never two instants in the same second. No
+-- receipt's content is stored. Absent (never written, or purged whole) reads as
+-- no pass yet complete and no receipt counted.
+CREATE TABLE IF NOT EXISTS reevaluation_sweep (
+  id               INTEGER PRIMARY KEY CHECK (id = 1),
+  cursor           TEXT,
+  pass_began       TEXT,
+  pass_seq         INTEGER,
+  complete_began   TEXT,
+  complete_seq     INTEGER,
+  receipt_seq      INTEGER NOT NULL DEFAULT 0
+);
 `;
 var REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_notices", keys: ["holder"] },
-  { name: "reevaluation_records", keys: ["dependent"] }
+  { name: "reevaluation_records", keys: ["dependent"] },
+  /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
+  { name: "reevaluation_sweep", keys: [] }
 ]);
 function migrateReevaluation(sql) {
   const bare = REEVALUATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -79146,6 +79556,7 @@ var NOTICE_SWEEP_DEFAULT = 200;
 var NOTICE_SWEEP_MAX = 1e3;
 var NOTICES_LIMIT_DEFAULT = 200;
 var NOTICES_LIMIT_MAX = 1e3;
+var REEVAL_NOTICE_DELAY_MS = 1e3;
 var NOTE_MAX3 = 500;
 var CAUSE_SOURCES = Object.freeze([
   "supersession",
@@ -79188,7 +79599,8 @@ var Reevaluation = class {
     provenance = null,
     strength = null,
     basisVersions = null,
-    now = null
+    now = null,
+    env = null
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
@@ -79196,6 +79608,7 @@ var Reevaluation = class {
     this.promotion = promotion;
     this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
+    this.env = env && typeof env === "object" ? env : {};
   }
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get inquiry() {
@@ -79408,17 +79821,24 @@ var Reevaluation = class {
       ...supersededBy ? { superseded_by: supersededBy } : {}
     };
   }
-  /* R16: every recorded re-evaluation, keyed (dependent, target, source), the latest `since` recorded for each. */
-  #records() {
-    const rows = this.#rows(`SELECT dependent, target, source, since, note, author, at FROM reevaluation_records
-                               ORDER BY record_id`);
-    const by = /* @__PURE__ */ new Map();
-    for (const r of rows) {
-      const k = `${r.dependent}\0${r.target}\0${r.source}`;
-      const held = by.get(k);
-      if (!held || !notLater(r.since, held.since) || r.since === held.since) by.set(k, r);
-    }
-    return by;
+  /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
+     source): the LATEST record of each key, which is the one with the latest `since`, because a record is only written
+     for a cause still owed, whose `since` is later than every earlier record's (`recordReevaluation`). So the read is
+     one row per key, at most one per cause source per pair, and its `LIMIT` says so (N182 (2)). */
+  #records(pairs) {
+    const keys = [...new Map(pairs.map(([d, t]) => [`${d}\0${t}`, { d, t }])).values()];
+    if (!keys.length) return /* @__PURE__ */ new Map();
+    const rows = this.#rows(
+      `SELECT dependent, target, source, since, note, author, at FROM reevaluation_records
+        WHERE record_id IN (
+          SELECT MAX(r.record_id) FROM reevaluation_records r
+            JOIN json_each(?) k ON r.dependent = json_extract(k.value, '$.d') AND r.target = json_extract(k.value, '$.t')
+           GROUP BY r.dependent, r.target, r.source)
+        ORDER BY record_id LIMIT ?`,
+      JSON.stringify(keys),
+      keys.length * CAUSE_SOURCES.length
+    );
+    return new Map(rows.map((r) => [`${r.dependent}\0${r.target}\0${r.source}`, r]));
   }
   /* R16: split one obligation's causes into those still owed and those a member's recorded re-evaluation closed. */
   #split(dependent, target, causes, records) {
@@ -79480,17 +79900,9 @@ var Reevaluation = class {
     const dependents = t0 ? [t0] : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
     const visible = this.#redactor(viewer);
     const reg = this.#registry([...targets, ...dependents]);
-    const records = this.#records();
     const obligations = [], closedOnly = [];
-    const place = (o, open, closed) => {
-      if (open.length) obligations.push({
-        ...o,
-        reeval: { flag: true, since: open[0].since, source: open[0].source },
-        causes: open,
-        closed
-      });
-      else if (closed.length) closedOnly.push({ bundle_id: o.bundle_id, target: o.target, causes: closed });
-    };
+    const found = [];
+    const place = (o, causes) => found.push({ o, causes });
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg);
       if (!moved) continue;
@@ -79524,7 +79936,6 @@ var Reevaluation = class {
           }
         }
         if (!causes.length) continue;
-        const { open, closed } = this.#split(bundleId, t, causes, records);
         place({
           bundle_id: bundleId,
           title: dep?.title ?? null,
@@ -79544,7 +79955,7 @@ var Reevaluation = class {
           stored: this.#storedTriple(fm),
           strength: this.#strengthOf(bundleId),
           ...moved.superseded_by ? { superseded_by: moved.superseded_by } : {}
-        }, open, closed);
+        }, causes);
       }
     }
     for (const d of dependents) {
@@ -79553,22 +79964,28 @@ var Reevaluation = class {
       if (!w) continue;
       const dep = this.#one(`SELECT title, object_type, current_state FROM bundles WHERE bundle_id=?`, d);
       if (!dep) continue;
-      const { open, closed } = this.#split(d, d, [w], records);
-      place(
-        {
-          bundle_id: d,
-          title: dep.title ?? null,
-          object_type: dep.object_type ?? null,
-          current_state: dep.current_state ?? null,
-          target: d,
-          target_state: dep.current_state ?? null,
-          legs: [],
-          stored: this.#storedTriple(this.#frontmatterOf(d)),
-          strength: this.#strengthOf(d)
-        },
-        open,
+      place({
+        bundle_id: d,
+        title: dep.title ?? null,
+        object_type: dep.object_type ?? null,
+        current_state: dep.current_state ?? null,
+        target: d,
+        target_state: dep.current_state ?? null,
+        legs: [],
+        stored: this.#storedTriple(this.#frontmatterOf(d)),
+        strength: this.#strengthOf(d)
+      }, [w]);
+    }
+    const records = this.#records(found.map(({ o }) => [o.bundle_id, o.target]));
+    for (const { o, causes } of found) {
+      const { open, closed } = this.#split(o.bundle_id, o.target, causes, records);
+      if (open.length) obligations.push({
+        ...o,
+        reeval: { flag: true, since: open[0].since, source: open[0].source },
+        causes: open,
         closed
-      );
+      });
+      else if (closed.length) closedOnly.push({ bundle_id: o.bundle_id, target: o.target, causes: closed });
     }
     const order = (a, b) => a.bundle_id < b.bundle_id ? -1 : a.bundle_id > b.bundle_id ? 1 : a.target < b.target ? -1 : a.target > b.target ? 1 : 0;
     obligations.sort(order);
@@ -79920,7 +80337,7 @@ var Reevaluation = class {
     const legs = page.slice(0, cap);
     const holders = [...new Set(legs.map((l) => l.holder))];
     const divided = new Set(holders.length ? this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))
-                     AND current_state = 'divided'`, JSON.stringify(holders)).map((r) => r.bundle_id) : []);
+                     AND current_state = 'divided' LIMIT ?`, JSON.stringify(holders), holders.length).map((r) => r.bundle_id) : []);
     const ids = [...new Set(legs.map((l) => l.content_id))];
     const rows = new Map((ids.length ? this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length) : []).map((r) => [r.content_id, r]));
@@ -80030,9 +80447,26 @@ var Reevaluation = class {
       adopted_version: r.adopted_version
     };
   }
+  /* R14 (N200): whether the viewer sees a capture, by the gate `versionChain` reads it through (provenance R17): some
+     bundle registering it is one the viewer may see. Memoised for the one answer it serves. */
+  #captureSeer(viewer) {
+    const g = viewerPredicate(viewer);
+    if (g.scope === "member") return () => true;
+    if (g.scope === "DENY") return () => false;
+    const memo = /* @__PURE__ */ new Map();
+    return (sha) => {
+      if (!sha) return false;
+      if (!memo.has(sha))
+        memo.set(sha, !!this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+                                    WHERE r.capture_sha=? AND (${g.sql}) LIMIT 1`, sha, ...g.args));
+      return memo.get(sha);
+    };
+  }
   /** R14: the notices raised, for the queue that renders them: by holder or all, open unless `state` names another,
    *  in holder then id order after `after`, at most `limit` (default 200, most 1,000), `truncated`. A notice whose holder
-   *  the viewer may not see is withheld and not counted; its newer bundle, if unseen, is null. */
+   *  the viewer may not see is withheld and not counted; its newer bundle, if unseen, is null. A viewer who does not
+   *  see the newer capture's project is given its `newer_capture`, `grade` and `affects` as absent, as
+   *  `op=versionnotice` withholds that version (N200, K224). */
   notices({ holder = null, state = "open", after = null, limit = null, viewer = null } = {}) {
     const cap = clamp3(limit, NOTICES_LIMIT_DEFAULT, NOTICES_LIMIT_MAX);
     const h = str6(holder);
@@ -80051,7 +80485,12 @@ var Reevaluation = class {
       cap + 1
     );
     const visible = this.#redactor(viewer);
-    const list2 = rows.slice(0, cap).map((r) => ({ ...this.#noticeView(r), newer_bundle: visible(r.newer_bundle) }));
+    const seesCapture = this.#captureSeer(viewer);
+    const list2 = rows.slice(0, cap).map((r) => ({
+      ...this.#noticeView(r),
+      newer_bundle: visible(r.newer_bundle),
+      ...seesCapture(r.newer_capture) ? {} : { newer_capture: null, grade: null, affects: null }
+    }));
     return {
       ok: true,
       notices: list2,
@@ -80061,6 +80500,84 @@ var Reevaluation = class {
       cursor: rows.length > cap ? list2[list2.length - 1].notice : null,
       state: st
     };
+  }
+  /* ---------------------------------------------------------------- R25: the notice sweep's due, wake and tick */
+  /* R25: where the pass stands (`reevaluation_sweep`); an absent row is no pass yet complete and no receipt counted. */
+  #sweepRow() {
+    return this.#one(`SELECT cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq
+                        FROM reevaluation_sweep WHERE id = 1 LIMIT 1`) || { cursor: null, pass_began: null, pass_seq: null, complete_began: null, complete_seq: null, receipt_seq: 0 };
+  }
+  #sweepWrite(row) {
+    this.sql.exec(
+      `INSERT INTO reevaluation_sweep (id, cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq)
+                   VALUES (1,?,?,?,?,?,?)
+                   ON CONFLICT(id) DO UPDATE SET cursor=excluded.cursor, pass_began=excluded.pass_began,
+                     pass_seq=excluded.pass_seq, complete_began=excluded.complete_began,
+                     complete_seq=excluded.complete_seq, receipt_seq=excluded.receipt_seq`,
+      row.cursor,
+      row.pass_began,
+      row.pass_seq,
+      row.complete_began,
+      row.complete_seq,
+      row.receipt_seq
+    );
+  }
+  /* R25: a receipt was written: the count moves. Not a service: it is the listener the factory registers with
+     provenance's `onReceipt`, run inside the receipt's own transaction. */
+  receiptSeen() {
+    this.sql.exec(`INSERT INTO reevaluation_sweep (id, receipt_seq) VALUES (1, 1)
+                   ON CONFLICT(id) DO UPDATE SET receipt_seq = receipt_seq + 1`);
+  }
+  /* R25: pending while a pass is part-way, when a receipt was counted since the last complete pass began, or, with no
+     pass yet complete, when any basis leg rests on a passage. */
+  #sweepPending(row = this.#sweepRow()) {
+    if (row.pass_began !== null) return true;
+    if (row.complete_began !== null) return Number(row.receipt_seq) > Number(row.complete_seq ?? 0);
+    return !!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE content_id IS NOT NULL AND content_id <> '' LIMIT 1`);
+  }
+  /* R25: the sweep delay, the instance binding `REEVAL_NOTICE_DELAY_MS` when it reads as a number >= 0. */
+  #sweepDelayMs() {
+    const raw = this.env.REEVAL_NOTICE_DELAY_MS;
+    const v = raw === null || raw === void 0 || String(raw).trim() === "" ? NaN : Number(raw);
+    return Number.isFinite(v) && v >= 0 ? v : REEVAL_NOTICE_DELAY_MS;
+  }
+  /** R25: `now` while the sweep is pending, else null. Synchronous; writes nothing; never throws. */
+  noticeSweepDue(now) {
+    try {
+      return this.#sweepPending() ? now : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R25: `now` plus the sweep delay while the sweep is pending, else null. Synchronous; writes nothing; never throws. */
+  noticeSweepWake(now) {
+    try {
+      return this.#sweepPending() ? Number(now) + this.#sweepDelayMs() : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R25: one batch of R14's sweep at the default limit, where the pass stands (a pass begins when none is part-way),
+   *  answered as that batch's `raiseNotices` answer; a batch whose `cursor` is null completes the pass. Not pending, it
+   *  runs nothing and answers `{pending: false}`. `now` (ms) stamps when a pass began. */
+  noticeSweep(now) {
+    const row = this.#sweepRow();
+    if (!this.#sweepPending(row)) return { pending: false };
+    const ms = Number(now);
+    const began = row.pass_began !== null ? row.pass_began : Number.isFinite(ms) ? new Date(ms).toISOString().replace(/\.\d+Z$/, "Z") : this.#when();
+    const pass = row.pass_began !== null ? { began, seq: row.pass_seq ?? 0, after: row.cursor } : { began, seq: Number(row.receipt_seq) || 0, after: null };
+    const batch = this.raiseNotices({ after: pass.after });
+    const seq = this.#sweepRow().receipt_seq;
+    this.#sweepWrite(batch.cursor ? { ...row, receipt_seq: seq, cursor: batch.cursor, pass_began: pass.began, pass_seq: pass.seq } : {
+      ...row,
+      receipt_seq: seq,
+      cursor: null,
+      pass_began: null,
+      pass_seq: null,
+      complete_began: pass.began,
+      complete_seq: pass.seq
+    });
+    return batch;
   }
   /* ---------------------------------------------------------------- R15: the member's choice (REC-223) */
   /* C-110's refusal with its row. */
@@ -80204,7 +80721,8 @@ Trigger: adoptVersion on ${r.notice_id}
 Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to capture ${r.newer_capture}; the live basis is unchanged.
 `
       });
-      if (!w || !w.ok) return { ...w || { ok: false, reason: "VERSION_ADOPT_UNWRITABLE" }, notice: r.notice_id };
+      if (w && !w.ok) return { ...w, ok: false, notice: r.notice_id };
+      if (!w) return this.#refuse("VERSION_ADOPT_UNWRITABLE", `the newer version of ${r.holder} could not be written. Nothing was written.`, { notice: r.notice_id });
       this.sql.exec(`UPDATE reevaluation_notices SET state='adopted', closed_by=?, closed_at=?, adopted_version=?
                       WHERE notice_id=? AND state='open'`, who2, when, name, r.notice_id);
       return { ok: true, bundleSha: w.bundleSha ?? null };
@@ -80370,6 +80888,7 @@ function reevaluationOf(host, deps) {
     promotion.onReopened("reevaluation", ({ target, at: at5, viewer }) => r.raise({ target, source: "reopened", since: at5, viewer }));
     promotion.registerStep("reevaluation", { check: (c) => r.check(c) });
     record.registerAuditCheck("reevaluation", (image) => r.audit(image));
+    r.provenance.onReceipt("reevaluation", () => r.receiptSeen());
   }
   return r;
 }
@@ -80897,7 +81416,7 @@ var Store = class _Store extends DurableObject {
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     promotion.registerFact("caseMember", "legacy-store", (id) => !!this.#caseRelationOf(id).member);
     promotion.registerFact("publishedRegistry", "legacy-store", (id, targets) => this.publishedRegistryFor(id, targets));
-    reevaluationOf(ctx);
+    reevaluationOf(ctx, { env });
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(_Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
     strengthOf(ctx, {
       inquiry: {
