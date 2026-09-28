@@ -32,7 +32,7 @@ import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId } from "../content/index.mjs";
 import { basisVersionFindings, BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_MACHINE, versionNeedsReason,
-         VERSION_NAME_RE, NARROW_CHECKS, versionsIn, compositionDiff } from "./grammar.mjs";
+         VERSION_NAME_RE, NARROW_CHECKS, versionsIn, compositionDiff, sameComposition } from "./grammar.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
          appendConclusionEntry } from "./text.mjs";
 import { BASIS_VERSIONS_TABLES, migrateBasisVersions } from "./schema.mjs";
@@ -209,7 +209,7 @@ export class BasisVersions {
        this module computed at the earlier write, so a caller cannot supply the value it is checked against. */
     for (const v of offered) {
       const prior = this.#one(`SELECT composition FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
-      if (!prior || prior.composition === v.composition) continue;
+      if (!prior || sameComposition(prior.composition, v.composition)) continue;
       const changed = compositionDiff(prior.composition, v.composition);
       return { ok: false, reason: "VERSION_FROZEN", version: v.name, changed,
                findings: [{ check: BASIS_VERSION_CHECKS.VERSION_FROZEN.check, code: "VERSION_FROZEN",

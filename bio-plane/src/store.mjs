@@ -3832,7 +3832,7 @@ export class Store extends DurableObject {
       ...(rel && Array.isArray(rel.pinned) ? rel.pinned : [])
         .map((p) => ({ case_id: p.case_id, edition: Number(p.edition), state: "ratified" })),
       ...(rel && rel.prepared
-        ? [] : []),
+        ? [{ case_id: rel.prepared.case_id, edition: Number(rel.prepared.edition), state: "prepared" }] : []),
     ];
     const want = Store.#conclusionRowParsed(bundleId, conc);
     const pinned = [];

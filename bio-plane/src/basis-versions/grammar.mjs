@@ -7,7 +7,9 @@
  * their one public face here, and it holds what moved from `store.mjs`: `#canon`, `basisVersionsOf` (now `versionsIn`,
  * distinct from the module's factory) and `#compositionDiff`. Pure; nothing here throws. */
 
-import { normalizeType, OBJECT_TYPES, legExtent, canonicalExtent } from "../../checks/bio-checks.mjs";
+import { normalizeType, OBJECT_TYPES, legExtent, canonicalExtent, isMachineIdentity, SUFFICIENCY_UNCLAIMED }
+  from "../../checks/bio-checks.mjs";
+import { fmSafe } from "./text.mjs";
 import { legContentId } from "../content/index.mjs";
 
 export { basisVersionFindings, VERSION_MACHINE, versionNeedsReason, VERSION_NAME_RE, VERSION_STATES,
@@ -62,6 +64,8 @@ export function versionsIn(fm) {
         /* the document's own authored date, never the server's clock */
         at: l.date != null ? String(l.date) : null,
         ground: str(l.ground) ?? "",
+        /* D-595 (BOB #34, K182): the capture a leg is pinned to, inside the composition so the freeze sees the pin */
+        capture: str(l.extent_capture),
       });
     }
     const grounds = groundRows
@@ -83,6 +87,8 @@ export function versionsIn(fm) {
                           + `${c(l.grade_axis)}\t${c(l.grade_source)}\t${c(l.note)}\t${c(l.at)}\t${c(l.ground)}`),
       /* after the leg lines, so a composition with no referent is byte-identical to one frozen before referents */
       ...legs.flatMap((l, k) => (l.referent === null ? [] : [`leg_referent\t${k}\t${c(l.referent)}`])),
+      /* and the pin, after the referents and only when a leg carries one, for the same byte-identity reason */
+      ...legs.flatMap((l, k) => (l.capture === null ? [] : [`leg_capture\t${k}\t${c(l.capture)}`])),
     ].join("\n");
     out.push({
       name, ord: i,
@@ -106,6 +112,46 @@ export function versionsIn(fm) {
     });
   }
   return out;
+}
+
+/** R6: whether a held composition and an offered one are the same version. A composition stored before the
+ *  `leg_capture` line existed (K182) is compared with the offered one's `leg_capture` lines left out: that stored form
+ *  never froze the pin, so its first re-projection adds the line instead of freezing the version shut. */
+export function sameComposition(held, offered) {
+  if (held === offered) return true;
+  const h = String(held ?? "");
+  if (/(^|\n)leg_capture\t/.test(h)) return false;
+  return String(offered ?? "").split("\n").filter((x) => !x.startsWith("leg_capture\t")).join("\n") === h;
+}
+
+/** R5 (K182): what a submitted version becomes in the document, the one normaliser a writer and a comparison both read
+ *  (moved from `#suggestionPersisted`, so `run-productions` compares C-27.5 and C-27.10 against the written form without
+ *  a copy). Every value is frontmatter-safe (`fmSafe`, idempotent); a field the write would omit is null (an omitted line
+ *  and a blank one are different documents); a ground with no label is dropped; a ground is asserted by the author, or
+ *  by the explicit no-claim value when the author is a machine (PL-19 / DEC-65: a machine's stamp never stands where a
+ *  member's has to); a leg cites the whole document (`extent_kind: document`) and carries its pinned capture when it
+ *  names one (D-595). It normalises no further than the document does. */
+export function versionAsWritten({ kind, name, description, claim, relationship, derived_from, run, author, at, level,
+                                   observed_at, grounds, legs } = {}) {
+  const fs = (x) => fmSafe(x);
+  const blank = (x) => !(typeof x === "string" && x.trim() !== "");
+  const opt = (x) => (blank(x) ? null : fs(x));
+  return {
+    version: {
+      name: fs(name), kind: fs(kind), description: fs(description), claim: opt(claim),
+      relationship: fs(String(relationship ?? "and").trim().toLowerCase()),
+      derived_from: opt(derived_from), run: fs(run), author: blank(author) ? null : fs(author), at: fs(at),
+      level: opt(level), observed_at: opt(observed_at),
+    },
+    grounds: (grounds || []).filter((g) => g && !blank(g.ground)).map((g) => ({
+      ground: fs(g.ground), asserted_by: isMachineIdentity(author) ? SUFFICIENCY_UNCLAIMED : fs(author ?? ""),
+      at: fs(at), statement: opt(g?.statement) })),
+    legs: (legs || []).map((l) => ({
+      target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
+      ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
+      grade_source: opt(l?.grade_source), note: opt(l?.note), date: opt(l?.date),
+      extent_kind: "document", ...(blank(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) }) })),
+  };
 }
 
 /** R6: which FIELD moved, for the freeze's refusal — a member told "this changed" without being told what is left to
