@@ -61,7 +61,9 @@ const ARMS = {
                "a caller's own viewer= is overwritten", "(the control: the same store call"],
   },
   "fail-open": {
-    patches: [[CONTENT, SEES, SEES.replace("!this.sees(r.bundle_id, viewer)", "(viewer != null && !this.sees(r.bundle_id, viewer))")]],
+    /* The replacement is spelled whole, not derived by a `.replace(…)` of the anchor: m025's A5 reads every
+       `.replace(` first argument as an anchor into the subject, and the inner phrase occurs three times there. */
+    patches: [[CONTENT, SEES, "    if (!r || (viewer != null && !this.sees(r.bundle_id, viewer)))\n      return { ok: false, reason: \"NO_SUCH_CONTENT\", target: id || null,\n"]],
     mustFail: ["the store route with NO viewer fails closed", "byte for byte as an id nothing cites"],
   },
   "rect-dropped": {
@@ -69,7 +71,7 @@ const ARMS = {
     mustFail: [...SERVED, "a caller's own viewer= is overwritten", "(the control: the same store call"],
   },
   "refusal-collapsed": {
-    patches: [[CONTENT, NOT_PAGE, NOT_PAGE.replace("CROP_NOT_A_PAGE_IMAGE", "NO_SUCH_CONTENT")]],
+    patches: [[CONTENT, NOT_PAGE, "return { ok: false, reason: \"NO_SUCH_CONTENT\", content_id: r.content_id,"]],
     mustFail: ["a WHOLE-DOCUMENT row"],
   },
   "detail-respelled": {
