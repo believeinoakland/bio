@@ -62,7 +62,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - **R47** A later module (`ratification`, its R8) registers once at start the case-document catalogue `fn(fm, ctx) → findings` that R33 runs, in place of `legacy-checks`' `checkCaseDocument`. A second registration, by that module or any other, is refused `STEP_DECLARED`; a `fn` that is not a function is refused `LISTENER_MALFORMED`. The registration changes no answer's shape and no `GATE_VERSION` of its own: the catalogue's rows are counted by `CATALOG_VERSION` (R34) wherever they live (K94, N67, N69; K202).
 
 **listenerRefusal(held, module, fn, extra?) → refusal or null** (N202, K231; a module-level function)
-- **R49** (K285) Promotion's listener registrations (R45, R46, R47's malformed case) refuse through `membership`'s `listenerRefusal` (its R81), the one site that mints `LISTENER_MALFORMED` and `LISTENER_DECLARED`, and this module re-exports it for later modules, which call either spelling of the one function. *(not yet met: T9, N202)*
+- **R49** (K285) Promotion's listener registrations (R45, R46, R47's malformed case) refuse through `membership`'s `listenerRefusal` (its R81), the one site that mints `LISTENER_MALFORMED` and `LISTENER_DECLARED`, and this module re-exports it for later modules, which call either spelling of the one function.
 - **R48** `INLINE_MAX` is 1,048,576: the most bytes one file of a promotion may carry inline. A promotion holding a larger inline file is refused `OVERSIZE_INLINE`, naming the file's `path` and `bytes`. A later module that bounds what it will hand to a promotion (`citation`'s `CITATION_TOO_LARGE`) reads this constant rather than its own. *(N142; K230)*
 
 **`CATALOG_VERSION`, `GATE_VERSION` → strings**
