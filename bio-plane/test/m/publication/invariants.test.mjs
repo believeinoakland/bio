@@ -65,8 +65,7 @@ test("R33 each check moved here with its id, code and translation, is held nowhe
         assert.ok(!Object.values(rows).some((r) => r && r.check === row.check), `${row.check} is not also in ${family}`);
       }
   }
-  /* the families the catalogue keeps keep the rest: C-44.1, C-68.1–.4 */
-  assert.equal(CATALOGUE.CASE_DERIVATION_CHECKS.CASE_IDENTITY_AMBIGUOUS.check, "C-44.1");
+  /* the family the catalogue keeps keeps the rest: C-68.1–.4 */
   assert.equal(CATALOGUE.INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED.check, "C-68.1");
   /* negative control: a code with no row is a defect, and says so loudly rather than shipping no sentence */
   assert.throws(() => rowOf("NOT_A_CODE"), /no row with a canned translation/);
