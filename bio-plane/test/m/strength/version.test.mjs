@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, MACHINE } from "./fixture.mjs";
 import { STRENGTH_AXES, VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS, VERSION_LEGS_MAX, ORIGIN_LIMIT,
          refusePairComposed } from "../../../src/strength/index.mjs";
+import { BASIS_VERSION_LEGS_MAX } from "../../../src/basis-versions/index.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-a", C = "INFO-2026-0003-a";
@@ -85,6 +86,9 @@ test("R8, R20: states default to accepted; any other set is a what-if and says s
 
 test("R8: the project's CURRENT is measured when no version is named; at most 500 legs, legs_complete saying so", () => {
   const w = versioned();
+  /* N184: the bound is basis-versions' own (its R9), not a copy of it. */
+  assert.equal(VERSION_LEGS_MAX, BASIS_VERSION_LEGS_MAX);
+  assert.equal(VERSION_LEGS_MAX, 500);
   w.project("PROJ-2026-0042-abc");
   w.currents.set(`PROJ-2026-0042-abc|${INQ}`, "main");
   const r = vs(w, { project: "PROJ-2026-0042-abc" });
@@ -122,6 +126,15 @@ test("R9: each leg's grade comes from the record; inert legs are named in ungrad
   assert.equal(g[4].grade, "B");
   assert.match(g[4].why, /authored at A and is reported at B/);
   assert.deepEqual(r.ungraded.map((x) => x.ord).sort(), [1, 5, 6]);
+  /* N184 (K220): the arithmetic names an inert version leg with its own reason; the record's reason is published in
+     `ungraded`, beside it and never in its place. */
+  for (const axis of STRENGTH_AXES)
+    for (const ord of [1, 5]) {
+      const m = r.pair[axis].not_load_bearing.find((x) => x.via === "leg" && x.ord === ord);
+      assert.equal(m.why, "the leg carries no grade", `${axis} ${ord}`);
+    }
+  assert.match(r.ungraded.find((x) => x.ord === 1).why, /has earned nothing connecting/);
+  assert.match(r.ungraded.find((x) => x.ord === 5).why, /holds no captured bytes/);
   assert.deepEqual(r.hunches.map((x) => x.ord), [7]);
   assert.equal(r.grades_from, "earnedBasisRegistry");
   assert.equal(r.subject_entity, "ENT-1");
@@ -153,6 +166,9 @@ test("R10, R24: C-30.7 refuses a composed figure (each forbidden key, a pair of 
   assert.equal(nf.reason, "VERSION_STRENGTH_UNFILTERED");
   assert.equal(nf.check, "C-30.8");
   assert.equal(refusePairComposed({ ...good, state_set: [] }).check, "C-30.8");
+  /* N184 (3): both rows name the function that mints them, the module function `refusePairComposed`. */
+  for (const code of ["VERSION_STRENGTH_COMPOSED", "VERSION_STRENGTH_UNFILTERED"])
+    assert.equal(VERSION_STRENGTH_CHECKS[code].where, "src/strength/index.mjs refusePairComposed > is-pair-composed");
   assert.ok(VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_UNFILTERED.translation.length > 20);
 });
 

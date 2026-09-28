@@ -4,7 +4,7 @@
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R24): C-30 (the pair over a
  * version, with its default state set and the hunch roster), C-71 (independence over a partition) and C-32.9
  * (`MACHINE_CANNOT_DECLARE`, from `MACHINE_FENCE_CHECKS`). R15's new refusal, `STRENGTH_BAR_NOT_ADMIN`, is this
- * module's own family, C-107, allocated at the extraction (K107 (3), K181). */
+ * module's own family, C-107, allocated at the extraction (K107 (3), K181), and so is R15's `BAD_GRADE` (N208, K275). */
 
 import { VERSION_STATES } from "../../checks/bio-checks.mjs";
 
@@ -95,7 +95,7 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
      number is the record claiming something neither population supports. */
   VERSION_STRENGTH_COMPOSED: {
     check: 'C-30.7',
-    where: at('#refusePairComposed', 'is-pair-composed'),
+    where: at('refusePairComposed', 'is-pair-composed'),
     translation: 'This answer tried to report one overall figure for a question, and there is no such '
       + 'figure. How well the documents were captured and how firmly they connect to the subject are '
       + 'two separate measurements over two separate things, and averaging them or picking one would '
@@ -110,7 +110,7 @@ export const VERSION_STRENGTH_CHECKS = Object.freeze({
      the record's own. */
   VERSION_STRENGTH_UNFILTERED: {
     check: 'C-30.8',
-    where: at('#refusePairComposed', 'is-pair-composed'),
+    where: at('refusePairComposed', 'is-pair-composed'),
     translation: 'This answer did not say which readings it counted, and a strength separated from '
       + 'that is a misreading waiting to happen. Every answer here says on its face whether it is '
       + 'the record\'s own or a view somebody constructed.',
@@ -237,5 +237,13 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
     translation: 'The standard of evidence a new project starts from is set for the whole group, so only '
       + 'an administrator can change it. A project can still declare its own standard in its own document. '
       + 'Nothing was changed.',
+  },
+  /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
+     refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
+  BAD_GRADE: {
+    check: 'C-107.2',
+    where: at('strengthBarSet', 'is-strength-bar-grade'),
+    translation: 'A standard of evidence is stated in the grades the record uses, A to D, one for how the documents '
+      + 'were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed.',
   },
 });

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, MACHINE, ADMIN, MEMBER } from "./fixture.mjs";
 import { strengthOps, STRENGTH_BAR_CHECKS, STRENGTH_AXES, barAxisWords } from "../../../src/strength/index.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const INQ = "INQ-2026-0001-a";
 const PROJ = "PROJ-2026-0042-abc";
@@ -117,7 +118,20 @@ test("R15, R24: a machine is refused C-32.9; a member who is not an active admin
 test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer says it seeds new projects and gates nothing", () => {
   const w = projected();
   w.member(ADMIN, "admin");
-  assert.equal(w.s.strengthBarSet({ capture: "E", author: ADMIN }).reason, "BAD_GRADE");
+  /* N208: BAD_GRADE is strength's own condition with its own row in C-107, for either axis, and writes nothing. */
+  for (const [bar, axis] of [[{ capture: "E" }, "capture"], [{ capture: "B", connection: "AA" }, "connection"],
+                             [{ connection: 3 }, "connection"]]) {
+    const bad = w.s.strengthBarSet({ ...bar, author: ADMIN });
+    assert.equal(bad.ok, false);
+    assert.equal(bad.reason, "BAD_GRADE");
+    assert.equal(bad.code, "BAD_GRADE");
+    assert.equal(bad.axis, axis);
+    assert.equal(bad.check, "C-107.2");
+    assert.equal(bad.check, STRENGTH_BAR_CHECKS.BAD_GRADE.check);
+    assert.equal(bad.translation, STRENGTH_BAR_CHECKS.BAD_GRADE.translation);
+    assert.match(bad.detail, /must be one of A, B, C, D, or null/);
+  }
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM group_strength_bar`)[0].n, 0, "a refused grade writes nothing");
   assert.equal(w.s.strengthBarSet({ author: ADMIN }).reason, "NO_BAR");
   const r = w.s.strengthBarSet({ capture: "B", author: ADMIN });
   assert.equal(r.group, "grp-one");
@@ -141,10 +155,15 @@ test("R16: target= is refused by name; an unseen project is NO_SUCH_PROJECT; NOT
   const w = projected();
   w.member(ADMIN, "admin");
   assert.equal(w.s.strengthBarOf({ target: "INFO-2026-0001-a", viewer: MACHINE }).reason, "BAR_IS_A_PROJECT_PROPERTY");
+  /* N208: an unseen and an absent project are both membership's one answer (its R78), minted there. */
   const unseen = w.s.strengthBarOf({ project: PROJ, viewer: "member:carol" });
   const absent = w.s.strengthBarOf({ project: "PROJ-2026-0044-zzz", viewer: "member:carol" });
+  assert.deepEqual(unseen, noSuchProject(PROJ));
+  assert.deepEqual(absent, noSuchProject("PROJ-2026-0044-zzz"));
   assert.equal(unseen.reason, "NO_SUCH_PROJECT");
-  assert.equal(unseen.detail.replace(PROJ, "X"), absent.detail.replace("PROJ-2026-0044-zzz", "X"));
+  assert.ok(unseen.check && unseen.translation);
+  assert.equal(unseen.detail, absent.detail, "one fixed sentence, whatever the id");
+  assert.deepEqual(w.s.strengthBarOf({ project: ` ${PROJ} `, viewer: "nobody" }), noSuchProject(PROJ));
   assert.equal(w.s.strengthBarOf({ project: INQ, viewer: MACHINE }).reason, "NOT_A_PROJECT");
   const seen = w.s.strengthBarOf({ project: PROJ, viewer: "member:alice" });
   assert.equal(seen.ok, true);
