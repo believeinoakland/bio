@@ -1,6 +1,6 @@
 # BOB to legacy-checks (T9)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
