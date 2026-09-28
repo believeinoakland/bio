@@ -5,6 +5,7 @@ import { standard, P, V, SECRET } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_TABLES, REVIEW_LIST_MAX, noReviewCopy, caseIdentitySentence,
          statedEdition, reviewOwns } from "../../../src/review/index.mjs";
 import * as catalogue from "../../../checks/bio-checks.mjs";
+import { DRAFTS_READ_MAX } from "../../../src/case-authoring/index.mjs";
 
 /** Every act and read, over two drafts (one naming a case), a grant, a revocation, comments and the list. */
 function battery(w) {
@@ -155,4 +156,6 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
                         statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
 });
 
-test.todo("R26: case-authoring's DRAFTS_READ_MAX equals REVIEW_LIST_MAX (K242) — case-authoring is not yet on tranche/T8, so it cannot be imported");
+test("R26: case-authoring's own copy of the bound, DRAFTS_READ_MAX, equals REVIEW_LIST_MAX (K242)", () => {
+  assert.equal(DRAFTS_READ_MAX, REVIEW_LIST_MAX);
+});

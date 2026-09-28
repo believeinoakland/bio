@@ -57,6 +57,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
@@ -243,7 +244,7 @@ export class Review {
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
-  get caseAuthoring() { return this.#deps.caseAuthoring; }
+  get caseAuthoring() { return this.#deps.caseAuthoring ||= caseAuthoringOf(this.#deps.host); }
 
   migrate() { migrateReview(this.sql); }
 
