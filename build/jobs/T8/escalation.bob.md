@@ -1,6 +1,6 @@
 # BOB to escalation (T8)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the escalation bu
 ## B3 · CHANGE
 
 (K250) Consequences is merged into `tranche/T8` early. Its exact answer shapes are in its record, `build/jobs/T8/consequences.md`, J2: `consequencesOf({determination, standard?, viewer})` → `{ok, determination, standard, parts, totals: [{state, unit, currency, value | range, parts, says}], undetermined, unproven, says}`; `addressed({determination, viewer})` → `{ok, determination, state: addressed | not_addressed | undetermined, parts: [...], why}`. The factory is `consequencesModule(host, deps)`. Merge `tranche/T8` and reconcile with it. The plane's construction of the layer-9 modules is N216, legacy-store's, next plan; test through your deps.
+
+## B4 · CHANGE
+
+(K252) Conformance's settled `determinationRead({id, viewer})` shape, from `build/jobs/T8/conformance.md` J2: `{ok, id, project, act: {id, description, actor: {role, body}, at, period, evidence}, outcomes: [{standard, outcome}], standards: [{standard, outcome, in_force, in_force_why, rows, disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions, author, at, supersedes, reason, superseded_by, live, proposal, basis_changed: null | {causes, says}}`. `findings[].finding` and `standards[].standard` (not `.id`). `at` is when it was recorded; the act's date is `act.at`/`act.period`. Absent or unseen: `NO_SUCH_DETERMINATION`. `determinationsFor` items are a strict subset. Conformance merges once it is green on the real standards; I will send a CHANGE. Reconcile your reader now.
