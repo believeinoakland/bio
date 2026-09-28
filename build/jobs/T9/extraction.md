@@ -1,6 +1,6 @@
 # extraction (T9)
 
-**Status** · session_01CqUWiaFQX9UhsvtQ1DT23r · depth 2 · WORKING · handled B1
+**Status** · session_01CqUWiaFQX9UhsvtQ1DT23r · depth 2 · RUNNING until 2026-09-28T16:26:44Z (legacy suites that read readings, base vs job) · handled B1
 
 ## J1 · QUESTION
 
