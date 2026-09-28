@@ -551,6 +551,63 @@ test("R33: every record not fetched names a reason from the closed set, never th
   assert.equal(out.subresources.filter((r) => r.reason === "SOURCE_REFUSED").length, 1);
 });
 
+test("R34: every link carries its containment: chrome with the furniture region's basis by R8's rule, else explicitly none", async () => {
+  const html = `<body>
+<nav><a href="/n">n</a><a href="#top">t</a><a href="javascript:x()">j</a><a href="/held.png">h</a></nav>
+<header><a href="/h">h</a></header><aside><a href="/as">a</a></aside>
+<div role="navigation"><div><a href="/rn1">1</a></div><a href="/rn2">2</a></div><a href="/after-div">x</a>
+<div role="banner"><a href="/ban">b</a></div><div role="contentinfo"><a href="/ci">c</a></div>
+<div role="complementary"><a href="/comp">c</a></div><div role="search"><area href="/srch"></div>
+<article><footer><a href="/byline">b</a></footer></article>
+<article role="navigation"><a href="/role-over-name">r</a></article>
+<nav><div role="main"><a href="/main-in-nav">m</a></div></nav>
+<!-- <nav><a href="/commented">c</a></nav> --><a href="/commented">c</a>
+<main><img src="/held.png"><a href="/both">b</a><a href="/rel">r</a><a href="/twice">t</a></main>
+<nav><a href="/both">b</a><a href="https://example.org/rel">r</a></nav>
+<footer><a href="/twice">t</a></footer><nav><a href="/twice">t</a></nav>
+<a href="/loose">l</a>
+</body>`;
+  const { out } = await run(html);
+  const link = (ref) => {
+    const hits = out.links.filter((l) => l.ref === ref);
+    assert.equal(hits.length, 1, ref);
+    return hits[0];
+  };
+  for (const l of out.links) {
+    assert.equal(typeof l.chrome, "boolean", l.ref);
+    assert.equal(l.chrome_basis === null, !l.chrome, `${l.ref}: a basis exactly when contained`);
+  }
+  const contained = { "/n": "<nav>", "#top": "<nav>", "javascript:x()": "<nav>", "/held.png": "<nav>", "/h": "<header>",
+    "/as": "<aside>", "/rn1": "role=navigation", "/rn2": "role=navigation", "/ban": "role=banner", "/ci": "role=contentinfo",
+    "/comp": "role=complementary", "/srch": "role=search", "/role-over-name": "role=navigation",
+    "/both": "<nav>", "/rel": "<nav>", "/twice": "<footer>" };
+  for (const [ref, basis] of Object.entries(contained))
+    assert.deepEqual([link(ref).chrome, link(ref).chrome_basis], [true, basis], ref);
+  for (const ref of ["/after-div", "/byline", "/main-in-nav", "/commented", "/loose"])
+    assert.deepEqual([link(ref).chrome, link(ref).chrome_basis], [false, null], ref);
+  assert.deepEqual(["#top", "javascript:x()", "/held.png", "/n"].map((r) => link(r).type), ["anchor", "refused", "intra", "deferred"],
+    "every partition carries it");
+  assert.equal(out.links.filter((l) => l.citation === ORIGIN + "/rel").length, 1, "one citation written two ways is one link");
+
+  /* A classification, never a filter: the same page with no furniture records the same links, uncontained. */
+  const flat = await run(html.replace(/<(\/?)(nav|header|aside|footer)\b/g, "<$1div").replace(/ role="[a-z]+"/g, ""));
+  const strip = (ls) => ls.map(({ chrome, chrome_basis, ...l }) => l);
+  assert.deepEqual(strip(flat.out.links), strip(out.links));
+  assert.ok(flat.out.links.every((l) => l.chrome === false && l.chrome_basis === null));
+
+  /* Resumed: restored links keep their containment, and a link that changes partition between ticks carries it. */
+  const page = `<nav><a href="/n5.png">5</a></nav><main>` + Array.from({ length: 6 }, (_, i) => `<img src="/n${i}.png">`).join("") + "</main>";
+  const first = await run(page, { platformCeiling: 9 });
+  assert.deepEqual(first.out.links.map((l) => [l.type, l.chrome, l.chrome_basis]), [["deferred", true, "<nav>"]]);
+  const second = await run(page, { resume: first.out.resumeState });
+  assert.deepEqual(second.out.links.map((l) => [l.type, l.chrome, l.chrome_basis]),
+    [["deferred", true, "<nav>"], ["intra", true, "<nav>"]]);
+  const older = { ...first.out.resumeState, links: first.out.resumeState.links.map(({ chrome, chrome_basis, ...l }) => l) };
+  const third = await run(page, { resume: older });
+  assert.deepEqual(third.out.links.map((l) => [l.type, l.chrome, l.chrome_basis]),
+    [["deferred", true, "<nav>"], ["intra", true, "<nav>"]], "a restored link that predates the field is given it");
+});
+
 test("Errors: a missing callback is a TypeError; nothing about a reference or the source ever throws", async () => {
   const base = { html: "<p>no refs</p>", base: BASE, primarySha: "p".repeat(64), primaryFile: "f",
     fetchOne: async () => ({ ok: true }), put: async () => ({}), sha256: async (b) => hex(b), isPublic };
