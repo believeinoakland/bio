@@ -361,3 +361,36 @@ test("R51 R48: capturesReadFor answers the captures the bundle's stored readings
   w.s.db.exec(`ALTER TABLE readings RENAME TO readings_gone`);
   assert.deepEqual([...w.x.capturesReadFor("B-1")], [], "a store that cannot be read answers empty, never a throw");
 });
+
+test("R24 (N202): registration refuses through membership's listenerRefusal, the one site of LISTENER_MALFORMED and LISTENER_DECLARED; listeners run in MODULE_ORDER whatever order they registered in", async () => {
+  const { listenerRefusal, MODULE_ORDER } = await import("../../../src/membership/index.mjs");
+  const w = fresh();
+  bundle(w.s, "B-1");
+  const ran = [];
+  const f = (m) => () => { ran.push(m); return null; };
+  assert.equal(w.x.onReading("retrieval", f("retrieval")).ok, true);
+  assert.equal(w.x.onReading("observation-log", f("observation-log")).ok, true);
+  assert.equal(w.x.onReading("content", f("content")).ok, true);
+  assert.equal(w.x.onReading("zz-unlisted", f("zz-unlisted")).ok, true);
+  for (const [m, fn] of [["", f("x")], ["content", null], [7, f("x")]])
+    assert.deepEqual(w.x.onReading(m, fn), listenerRefusal([], m, fn), "malformed: membership's own answer");
+  const again = w.x.onReading("content", f("again"));
+  assert.deepEqual(again, listenerRefusal([{ module: "content" }], "content", f("again")));
+  assert.deepEqual([again.reason, again.code, again.module], ["LISTENER_DECLARED", "LISTENER_DECLARED", "content"]);
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: await reading([]) });
+  const known = ["content", "observation-log", "retrieval"].sort((a, b) => MODULE_ORDER.indexOf(a) - MODULE_ORDER.indexOf(b));
+  assert.deepEqual(ran, [...known, "zz-unlisted"]);
+});
+
+test("R30 R45 (N100): readingOf answers pageBoxes as the reading stored them: absent when never stored, null when stored null, else the boxes", async () => {
+  const w = fresh();
+  bundle(w.s, "B-1");
+  const pb = { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0, null] };
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: await reading([], { page_count: 2, page_boxes: pb }) });
+  w.x.writeReading({ bundleId: "B-1", captureSha: S2, reading: await reading([], { page_count: null, page_boxes: null }) });
+  w.x.writeReading({ bundleId: "B-1", captureSha: S3, reading: await reading([]) });
+  assert.deepEqual(w.x.readingOf(S1).pageBoxes, pb);
+  assert.equal(w.x.readingOf(S2).pageBoxes, null);
+  assert.equal("pageBoxes" in w.x.readingOf(S2), true);
+  assert.equal("pageBoxes" in w.x.readingOf(S3), false);
+});

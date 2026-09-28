@@ -492,3 +492,97 @@ test("R18 R50: every recogniser runs over the instance's jurisdiction view, the 
   const oakland = /oakland|alameda/i;
   for (const said of [r.basis, e.basis]) assert.doesNotMatch(said, oakland);
 });
+
+test("R4 R12 (N253): image_unread markers count no undecoded character: a photo page whose only residue is its unread images does not escalate to tier 2, and its text reads determined", async () => {
+  const w = fresh();
+  const images = Array.from({ length: 20 }, (_, i) => unreadImage(0, [0, i * 10, 100, i * 10 + 9]));
+  const t1 = i2([{ page: 0, text: "Photo caption", undetermined: images }]);
+  assert.ok(t1.counts.undetermined > "Photocaption".length, "the markers outnumber the glyphs");
+  const pdf = member(() => { throw new Error("tier 2 must not be asked for a photo page"); });
+  const out = await readPdf(w, t1, { env: { PDF_WORKER: pdf } });
+  assert.equal(pdf.calls.length, 0);
+  assert.equal(out.reading.text_tier, 1);
+  assert.equal(out.reading.read_from_text, true, "readText is handed the decode view");
+  assert.doesNotMatch(out.reading.basis, /tier 1 read essentially nothing/);
+  /* control: the same page with undecoded glyph markers in their place escalates */
+  const garbled = i2([{ page: 0, text: "Photo caption", undetermined: images.map(() => ({ page: 0, reason: "no_tounicode", count: 1 })) }]);
+  const asked = member(() => ({ ok: true, text: i2([{ page: 0, text: "" }]) }));
+  await readPdf(w, garbled, { env: { PDF_WORKER: asked } });
+  assert.equal(asked.calls.length, 1);
+});
+
+test("R9 (N253): a page tier 2 wins keeps its image_unread markers once, through text-chain's merge, the reading's marker list stating each", async () => {
+  const w = fresh();
+  const bad = { page: 0, reason: "no_tounicode", count: 1 };
+  const img = unreadImage(0, [1, 2, 3, 4]);
+  const t1 = i2([{ page: 0, text: "", undetermined: [bad, bad, bad, img] }]);
+  /* tier 2 states the same image itself: carried once, never twice */
+  for (const t2own of [[], [img]]) {
+    const pdf = member(() => ({ ok: true, text: i2([{ page: 0, text: "decoded well by tier two", undetermined: t2own }]) }));
+    const out = await readPdf(w, t1, { env: { PDF_WORKER: pdf } });
+    assert.equal(out.reading.text_tier, 2);
+    assert.equal(out.reading.provenance.pages[0].tier, 2);
+    const u = out.text_units[0];
+    assert.equal(u.text, "decoded well by tier two");
+  }
+  const { mergeTier2Text } = await import("../../../src/textchain.mjs");
+  const m = mergeTier2Text(t1, i2([{ page: 0, text: "decoded well by tier two" }]));
+  assert.deepEqual(m.text.pages[0].undetermined.filter((x) => x.reason === "image_unread"), [img]);
+});
+
+test("R13 R45 (N100): page_boxes follows page_count's rule: pdf-reader's boxes as it answered them, null when the structure answered none or one this wire cannot read whole, null for an entry with no structure, absent where no entry answered", async () => {
+  const w = fresh();
+  const pageBoxes = { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }, { media_box: [10, 10, 400, 300], w: 390, h: 290, rotate: 90 }],
+                      of_page: [0, 1, null, 0] };
+  const withBoxes = (text, pb) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: 4, notes: [], pageBoxes: pb }) });
+  const readWith = async (pb) => { const d = await hold(w.evidence, "%PDF boxes " + Math.random());
+    return (await withEntry(withBoxes(i2([{ page: 0, text: "a" }]), pb), () => w.x.read(doc({ digest: d, format: "pdf", ct: "application/pdf" })))).reading; };
+  assert.deepEqual((await readWith(pageBoxes)).page_boxes, pageBoxes);
+  assert.equal((await readWith(undefined)).page_boxes, null, "no boxes answered");
+  assert.equal((await readWith({ boxes: [{ media_box: [0, 0, 0, 10] }], of_page: [0] })).page_boxes, null, "a box with no area: none, never a partial list");
+  assert.equal((await readWith({ boxes: [{ media_box: [0, 0, 10, 10] }], of_page: [0, 3] })).page_boxes, null, "an index to no box");
+  const office = await withEntry({ format: "t13b", text: async () => ({ ok: true, document: "a", paragraphs: [{ para: 0, text: "a" }], counts: { chars: 1, undetermined: 0 }, undetermined: [] }) },
+    async () => { const d = await hold(w.evidence, "t13b bytes"); return (await w.x.read(doc({ digest: d, format: "t13b" }))).reading; });
+  assert.equal(office.page_boxes, null);
+  assert.equal(office.page_count, null);
+  const html = (await readHtml(w, "<html><body>x</body></html>", { headers: [] })).reading;
+  assert.equal("page_boxes" in html, false, "absent where page_count is absent");
+  assert.equal("page_count" in html, false);
+  const failedEarly = (await fresh({ evidence: null }).x.read(doc({ digest: "a".repeat(64) }))).reading;
+  assert.equal("page_boxes" in failedEarly, false);
+});
+
+test("R60 R45 (N139): a reading whose text was classified carries text_chars, text_glyphs and text_undetermined over exactly the text the reader was handed, image_unread not counted; a bare string gives null residue; no text, no keys", async () => {
+  const w = fresh();
+  const t = i2([{ page: 0, text: "  ab c  " }, { page: 1, text: "", undetermined: [noText(1), unreadImage(1)] }]);
+  const r = (await readPdf(w, t)).reading;
+  assert.deepEqual([r.text_chars, r.text_glyphs, r.text_undetermined], [t.counts.chars, 3, 1]);
+  /* a scan read to nothing: zero glyphs, a residue */
+  const scan = (await readPdf(w, i2([{ page: 0, text: "", undetermined: [noText(0)] }]))).reading;
+  assert.deepEqual([scan.text_chars, scan.text_glyphs, scan.text_undetermined], [0, 0, 1]);
+  /* a text that states no figure: null, never a zero */
+  const bare = await withEntry({ format: "t60", text: async () => ({ ok: true, paragraphs: [{ para: 0, text: "x" }], undetermined: [] }) },
+    async () => { const d = await hold(w.evidence, "t60"); return (await w.x.read(doc({ digest: d, format: "t60" }))).reading; });
+  assert.deepEqual([bare.text_chars, bare.text_glyphs, bare.text_undetermined], [null, null, null]);
+  /* text read at intake: a bare string */
+  const html = CAL(ROW("2101", "City Council", "7/15/2026"));
+  const h = (await readHtml(w, html)).reading;
+  assert.deepEqual([h.text_chars, h.text_undetermined], [html.length, null]);
+  assert.ok(Number.isInteger(h.text_glyphs) && h.text_glyphs > 0);
+  /* no text: none of the three keys */
+  const none = (await fresh({ evidence: null }).x.read(doc({ digest: "a".repeat(64) }))).reading;
+  for (const k of ["text_chars", "text_glyphs", "text_undetermined"]) assert.equal(k in none, false, k);
+  const threw = await withEntry({ format: "t60b", text: async () => { throw new Error("x"); } },
+    async () => { const d = await hold(w.evidence, "t60b"); return (await w.x.read(doc({ digest: d, format: "t60b" }))).reading; });
+  assert.equal("text_chars" in threw, false);
+});
+
+test("R4 (N253): a scan marker is any of no_text_layer, image_content_unread, image_content_undetermined: a document whose remaining markers are all scan markers does not escalate", async () => {
+  const w = fresh();
+  for (const reason of ["no_text_layer", "image_content_unread", "image_content_undetermined"]) {
+    const marks = [0, 1, 2].map(() => ({ page: 0, reason, font: null, codes: null, count: 1 }));
+    const pdf = member(() => { throw new Error(`tier 2 asked for ${reason}`); });
+    await readPdf(w, i2([{ page: 0, text: "", undetermined: [...marks, unreadImage(0)] }]), { env: { PDF_WORKER: pdf } });
+    assert.equal(pdf.calls.length, 0, reason);
+  }
+});
