@@ -101,11 +101,13 @@ export function supersededByOf(row) {
   return v ? v.split(",").filter((x) => x !== "") : [];
 }
 
-/* D-484 / C-33.40: the one site at which the plane says a thing the record would stand behind rests on nothing. */
-function actNoBasis(detail, extra = {}) {
+/** R45 (D-484 / C-33.40, N186): the one site at which the plane says a thing the record would stand behind rests on
+ *  nothing; `basis-versions` answers through it too. `extra` adds the caller's fields and never replaces these. */
+export function actNoBasis(detail, extra = {}) {
   /* DEC-49 REGION is-act-no-basis */
   const row = ACT_SHAPE_CHECKS.NO_BASIS;
-  return { ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail, ...extra };
+  return { ...(extra && typeof extra === "object" ? extra : {}),
+           ok: false, reason: "NO_BASIS", code: "NO_BASIS", check: row.check, translation: row.translation, detail };
   /* END DEC-49 REGION is-act-no-basis */
 }
 
