@@ -11,6 +11,7 @@ import * as tokens from "../../../src/tokens.mjs";
 const { makeMeter, burn, cpuProbe } = cpu;
 const {
   sha256hex, liveToken, PUBLISHED_TOKEN_HASHES, instanceClaudeStatus, instanceClaudeToken, instanceAiCredential,
+  unattendedCredential,
   INSTANCE_CLAUDE_BINDING, INSTANCE_AI_BINDING, CASCADE_UNSET, CASCADE_PUBLISHED, INSTANCE_AI_UNSET, INSTANCE_AI_PUBLISHED,
 } = tokens;
 
@@ -385,6 +386,65 @@ test("R20: instanceAiCredential on any other non-empty string returns it with re
     assert.deepEqual(await instanceAiCredential({ INSTANCE_AI_TOKEN: v }), { token: v, reason: null });
 });
 
+/* ------------------------------------------------------------------ unattendedCredential */
+
+test("R26: unattendedCredential: bound is synchronous presence of DAEMON_TOKEN or ADMIN_TOKEN; token() is the first live of the two, else null; no value on the object; never throws or rejects", async () => {
+  const d = fresh(), a = fresh();
+  // Every combination of each binding's states: missing, empty, live, published.
+  const states = { missing: undefined, empty: "", live: null, published: null };
+  const valueOf = (st, live) => (st === "live" || st === "published" ? live : states[st]);
+  const withPublished = async (vals, fn) => {
+    const hs = await Promise.all(vals.map(sha256hex));
+    hs.forEach((h) => PUBLISHED_TOKEN_HASHES.add(h));
+    try { return await fn(); } finally { hs.forEach((h) => PUBLISHED_TOKEN_HASHES.delete(h)); }
+  };
+  for (const ds of Object.keys(states)) for (const as of Object.keys(states)) {
+    const env = {};
+    const dv = valueOf(ds, d), av = valueOf(as, a);
+    if (ds !== "missing") env.DAEMON_TOKEN = dv;
+    if (as !== "missing") env.ADMIN_TOKEN = av;
+    const published = [ds === "published" && d, as === "published" && a].filter(Boolean);
+    await withPublished(published, async () => {
+      const u = unattendedCredential(env);
+      const label = `DAEMON ${ds}, ADMIN ${as}`;
+      assert.deepEqual(Object.keys(u).sort(), ["bound", "token"], label);
+      assert.equal(typeof u.bound, "boolean", label);
+      // Presence only: a published value still binds.
+      assert.equal(u.bound, (ds === "live" || ds === "published") || (as === "live" || as === "published"), label);
+      assert.equal(typeof u.token, "function", label);
+      const p = u.token();
+      assert.ok(p instanceof Promise, label);
+      const expect = ds === "live" ? d : as === "live" ? a : null;
+      assert.equal(await p, expect, label);
+      // The object never carries a credential's value.
+      assert.ok(!JSON.stringify(u).includes(d) && !JSON.stringify(u).includes(a), label);
+      assert.ok(!Object.values(u).includes(d) && !Object.values(u).includes(a), label);
+    });
+  }
+  // bound is computed synchronously, when the object is made, without awaiting anything.
+  const env = { DAEMON_TOKEN: d };
+  const u = unattendedCredential(env);
+  assert.equal(u.bound, true);
+  // Unrelated bindings are neither bound nor spent.
+  for (const env2 of [undefined, null, {}, { INSTANCE_CLAUDE_TOKEN: d, INSTANCE_AI_TOKEN: a, MEMBER_TOKEN: d, PROBE_TOKEN: a },
+    { daemon_token: d, admin_token: a }]) {
+    const x = unattendedCredential(env2);
+    assert.equal(x.bound, false);
+    assert.equal(await x.token(), null);
+  }
+  // A non-string value is never spent.
+  for (const bad of [5, true, {}, ["x"], new String("abc")]) {
+    assert.equal(await unattendedCredential({ DAEMON_TOKEN: bad, ADMIN_TOKEN: bad }).token(), null);
+    assert.equal(await unattendedCredential({ DAEMON_TOKEN: bad, ADMIN_TOKEN: a }).token(), a);
+  }
+  // Never throws, and token() never rejects, even on an env whose reads throw.
+  const hostile = new Proxy({}, { get() { throw new Error("read"); }, has() { throw new Error("has"); } });
+  let h;
+  assert.doesNotThrow(() => { h = unattendedCredential(hostile); });
+  assert.equal(h.bound, false);
+  assert.equal(await h.token(), null);
+});
+
 /* ------------------------------------------------------------------ reason constants */
 
 test("R21: the four reason constants have their stated values and are the only non-null reasons any service gives", async () => {
@@ -431,6 +491,7 @@ test("R22: pure — no fetch, no clock outside cpuProbe's now, and the same answ
         await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v }), await instanceClaudeStatus({}),
         await instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: v }), await instanceAiCredential({ INSTANCE_AI_TOKEN: v }),
         await instanceAiCredential({}), [...PUBLISHED_TOKEN_HASHES],
+        unattendedCredential({ DAEMON_TOKEN: v }).bound, await unattendedCredential({ DAEMON_TOKEN: v }).token(),
       ]);
     };
     const a = await run();
@@ -444,14 +505,17 @@ test("R23: nothing exported accepts or sets a credential; the env passed in is o
   // The whole export surface: services that read, the two binding names, the reasons and the denylist.
   assert.deepEqual(Object.keys(tokens).sort(), ["CASCADE_PUBLISHED", "CASCADE_UNSET", "INSTANCE_AI_BINDING",
     "INSTANCE_AI_PUBLISHED", "INSTANCE_AI_UNSET", "INSTANCE_CLAUDE_BINDING", "PUBLISHED_TOKEN_HASHES",
-    "instanceAiCredential", "instanceClaudeStatus", "instanceClaudeToken", "liveToken", "sha256hex"]);
+    "instanceAiCredential", "instanceClaudeStatus", "instanceClaudeToken", "liveToken", "sha256hex",
+    "unattendedCredential"]);
   assert.deepEqual(Object.keys(cpu).sort(), ["burn", "cpuProbe", "makeMeter"]);
   // Every service called with a frozen env, in every state, leaves it untouched and writes nothing onto it.
   const v = fresh();
-  const envs = [{}, { INSTANCE_CLAUDE_TOKEN: v, INSTANCE_AI_TOKEN: v }, { INSTANCE_CLAUDE_TOKEN: "", INSTANCE_AI_TOKEN: "" }];
+  const envs = [{}, { INSTANCE_CLAUDE_TOKEN: v, INSTANCE_AI_TOKEN: v, DAEMON_TOKEN: v, ADMIN_TOKEN: v },
+    { INSTANCE_CLAUDE_TOKEN: "", INSTANCE_AI_TOKEN: "", DAEMON_TOKEN: "", ADMIN_TOKEN: "" }];
   const all = async (env) => {
     await instanceClaudeStatus(env); await instanceClaudeToken(env); await instanceAiCredential(env);
     await liveToken(env.INSTANCE_CLAUDE_TOKEN);
+    await unattendedCredential(env).token();
   };
   for (const env of envs) {
     const before = JSON.stringify(env);
