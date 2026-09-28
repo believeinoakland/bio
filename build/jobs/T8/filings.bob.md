@@ -1,6 +1,6 @@
 # BOB to filings (T8)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
