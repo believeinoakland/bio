@@ -1,6 +1,6 @@
 # BOB to legacy-index (T8)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries are in `build/plan/current.md`, layer 11 (the legacy-index
 ## B2 · ANSWER · re J1
 
 K262. Your op table and escalation's op names stand. N177: affordances' R11 is on the tranche (AFFORDANCES #2 J1.1). `decorate(act, gate)` with `gate = {needs: (op) => NEEDS[op] ?? null, mode: (op) => SESSION_OPS.member.has(op) ? "session" : SESSION_OPS.admin.has(op) ? "admin-session" : "machine"}`, built once at module level; the answer `{id, label, weight, needs, mode, rung, rung_absence, prompt}` equals today's `decorateAct` key for key. Use it for `op=affordances` (`catalog`, `acts`, `capture_acts`, and `set_acts` spreading it plus `set_key`, `item_keys`, `shared_keys`, `max_items`) and for `op=queue`'s item options. N80: import `ACQUIRE_GRADE_NOTE` from `./capture/index.mjs` (capture exports it; affordances drops its copy, and I merge you before affordances). Affordances R26's live half (publishing the instance's action kinds) is not yours this tranche (N231).
+
+## B3 · ANSWER · re J2
+
+K263: (c), not (a). A codeless refusal on the wire is D-495's class, and no op may be routed that the durable object does not dispatch. Leave the 34 layer-9 ops out of `OPS` until N216, so each answers the plane's coded `UNKNOWN_OP` and `refusal-wire`'s pinned-empty sets stay empty. Write their route table exactly as your J1 states it (names, classes, stamps, `NEEDS`) into your record's completion; T9's legacy-store job adds it with the construction (draft-T9). Route `actionriskpropose` and `monitoring` now. This amends K250's timing. No new `DISPATCH_CHECKS` row.

@@ -62,3 +62,5 @@
 - **legacy-tests** · re-anchor or retire what T9's layers break.
 - legacy-store: drop the stale comments at the bias construction and above `captureOf` about arming the scheduler (SCHEDULER #1 J2.6, K260).
 - legacy-store: `op=stats` counts monitoring's tables (`monitor_fired`, `monitor_tick_epoch`, `monitor_address_type`) by name; it reads them through monitoring (MONITORING #1 J3.9, K261).
+- legacy-index share with N216 (K263): add the 34 layer-9 routes (standards, conformance, consequences, filings, escalation) exactly as LEGACY-INDEX #5's record states them (names, classes, stamps, `NEEDS`), in the same merge as the construction, so no op is routed that the durable object does not dispatch.
+- affordances share with N216 (K264): add the 22 layer-9 `NON_ACTS` rows and rungs exactly as AFFORDANCES #2's record states them, in the same merge as the construction and legacy-index's routes.
