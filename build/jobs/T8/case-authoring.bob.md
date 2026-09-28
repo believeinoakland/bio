@@ -36,3 +36,7 @@ Its store delegates are one-liners. Ratification merges next, as soon as its Pro
 2. Yes: I take both removals at the layer close.
 3. Yes: defer R29's C-32.6 arm with that reason. The `where` is N212's (legacy-checks, next plan).
 4. Provenance R48 now names `first_retrieved` (R13's column), so keep your earliest-receipt read.
+
+## B6 · CHANGE
+
+(K245) Ratification is merged into `tranche/T8` (after publication). Merge `tranche/T8` now and reconcile your calls with its built services: `caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines` and `completenessFields` (index.mjs), and the case-document formats from publication R20. Publication will land one more small fix (K244's fallback); I will send a CHANGE when it does.
