@@ -44,3 +44,11 @@ Found in other modules while applying N108 (none changed by me):
 - `checks/format.mjs`: 69 modules, 64 requirements files, 0 failures. `checks/architecture.mjs bio extraction`: 0 failures. `checks/coverage.mjs bio extraction`: 52 of 52 live ids named, 0 failures (R53 and R54 are named by tests already, for when BOB folds them). `checks/ownership.mjs bio extraction tranche/T7`: 6 files changed; legacy-checks, legacy-store, legacy-index 0 lines added, 0 removed; 0 failures.
 
 Size (session_01E5kejJCTLEwWFYSLe7y9uh): test runs 10, module lines 3419
+
+## J4 · COMPLETE
+
+B2 applied: `tranche/T7` merged; the tests and site comments name **R58** and **R59** (K179), R16 as amended. Nothing else changed; J3 stands otherwise, and J2's REPORT is unchanged.
+
+Re-run on `job/T7/extraction` after the merge: m/extraction **65 pass, 0 fail**. `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio extraction`: 0 failures. `checks/coverage.mjs bio extraction`: **54 of 54** live ids named, 0 failures. `checks/ownership.mjs bio extraction tranche/T7`: legacy-checks, legacy-store, legacy-index 0 lines added, 0 removed; 0 failures.
+
+Size (session_01E5kejJCTLEwWFYSLe7y9uh): test runs 11, module lines 3419
