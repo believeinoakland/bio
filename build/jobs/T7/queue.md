@@ -72,3 +72,7 @@ Size (session_01XoUuJXLYkVnbwhHrHRxBqE): test runs 60, module lines 459
 4. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale. Its inputs `src/store.mjs` and `src/queuestate.mjs` changed, and it gains `src/queue/proposals.mjs`. The agent-worker bundle does not include `queuestate.mjs` and is unaffected.
 5. **Process tool** (`checks/ownership.mjs`): a legacy line that uses an imported name only through spread (`items.push(...proposalFindingItems(…))`) is not seen as a use. The `usesOwn` pattern excludes a name preceded by `.`, which is meant for property access, so a hunk rewired that way fails. I bound the result to a local instead. The pattern could allow `...` before the name.
 6. **legacy-tests:** `surfacing-run.mjs`'s `projectMd` (the REC-171 fixture project) and `queue.test.mjs`'s `projectMd` need `objective:` (INTENT #1 J4.1). With both added, `queue` passes 36/0 and `d125-findingmute` 42/0, on base and head alike.
+
+## J3 · COMPLETE
+
+Complete; the record's Completion section. N107 built and tested (K209's R1 and R9); N112: the unused import removed, the two reads left for N171; N114 met (R5). Q4 and Q5 not built (N172); coverage 10 of 40, the rest owed by queue's extraction (N173, B4). Ownership: 9 legacy-store lines added, 61 removed, 0 failures; the added lines are listed in the record. REPORT J2 has six items.
