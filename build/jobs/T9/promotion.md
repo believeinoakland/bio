@@ -13,7 +13,7 @@ Read whole: `roles/JOB.md`; `build/requirements/promotion.md`; the public parts 
 
 **N208 (B2).** Applied (b9b8632dc2): forkProject's NO_SUCH_PROJECT site (R42) answers membership's `noSuchProject(projectId)` (its R78, C-70.5), and R42's test holds the answer to it byte for byte, for an unseen project and an absent id.
 
-**Pending: R49 as K285 rewrote it (B2).** The one listener-refusal site is now membership's `listenerRefusal` (its R81). When membership merges and exports it: `index.mjs` imports it and re-exports it, `#listen` and `registerCaseCatalogue` refuse through it, and this module's own `listenerRefusal` (8926590d63) is removed; R49's test then asserts promotion's export is membership's function and that `onCommitted`, `onReopened` and `registerCaseCatalogue`'s malformed case answer exactly as it does. Until then promotion's own copy stands; its behaviour is R81's text word for word (it was R49's), and its test in `registry.test.mjs` may serve membership as a model.
+**R49 as K285 rewrote it (B2, B3).** Applied (8e19c8644a), after membership's R81 merged: `index.mjs` imports membership's `listenerRefusal` and re-exports it; `#listen` (R45, R46) and `registerCaseCatalogue`'s malformed case (R47) refuse through it; this module's own copy (8926590d63) is gone, and with it the R49 row-arm `test.todo` (the row arm is R81's now). R49's test holds the re-export identical to membership's function and every refusal of the three registrations byte for byte to its answer. Also (B3): R39's order is membership's exported `MODULE_ORDER`; promotion's copy is gone, `deps.order` still overrides it for a test, and R39's test still holds the default equal to `build/modules.json`.
 
 **Stale generated artifact (mechanics §14):** `bio-plane/dist/bio-plane.bundled.mjs` (and `.bundle.json`), whose inputs include `src/gate.mjs` and `src/promotion/index.mjs`. Not rebuilt; BOB's at layer close.
 
@@ -23,16 +23,12 @@ Read whole: `roles/JOB.md`; `build/requirements/promotion.md`; the public parts 
 
 **R34 note.** "One version names one catalogue" is proven by legacy-tests' d470 census, not by a test under this module's path; the module's R34 test covers the version's shape and both gates reporting it.
 
-**Tests and checks run** (on 8926590d63):
-- `node --test bio-plane/test/m/promotion/`: tests 68, pass 67, fail 0, todo 1 (R49's row arm, waiting on N202's rows).
-- `node --test bio-plane/test/m/` (every module using promotion's services): tests 2336, pass 2308, fail 2, todo 26; the two failures are the citation and connections tests above, identical on the base.
-- `node --test bio-plane/test/d470-catalog-census.test.mjs`: A3 and A9 red, as they must be until legacy-tests re-pins to 1.39.0 (they were red under 1.38.0 too).
-- `format`: 69 modules, 64 requirements files; 0 failures. `architecture`: 16 product files, 55 relative imports; 0 failures. `coverage`: 49 of 49 live requirement ids named by a test; 0 failures. `ownership`: re-run after the N208 commit.
+**Tests and checks run** (final, on 8e19c8644a, `tranche/T9` merged at 28ec988c2a):
+- `node --test bio-plane/test/m/promotion/`: tests 67, pass 67, fail 0.
+- `node --test bio-plane/test/m/` (every module using promotion's services): tests 2354, pass 2326, fail 2, todo 26; the two failures are citation's and connections' above, red without this job's change.
+- `node --test bio-plane/test/d470-catalog-census.test.mjs` (at 8926590d63): A3 and A9 red until legacy-tests re-pins to 1.39.0.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture`: 16 product files, 57 relative imports; 0 failures. `coverage`: 49 of 49 live requirement ids named by a test; 0 failures. `ownership`: 5 files changed by promotion between tranche/T9 and HEAD; legacy-checks and legacy-store 0 lines added, 0 removed; 0 failures.
 
-## J1 · REPORT
+**Deferred:** nothing.
 
-N240, N254 and N202's share are applied and pushed (8926590d63): CATALOG_VERSION 1.39.0 (count 397, digest e1c688c5…, source 9927c1ad…, from the d470 print), stepDeclared and caseCatalogueFailed declared (C-102.8 carried), listenerRefusal (R49) with my own registrations converged on it. Module tests 67 pass, 0 fail, 1 todo; the four checks pass. N208 is the one entry left: membership has not merged into tranche/T9 and does not yet export noSuchProject, so importing it would break promotion's load. Please send a CHANGE when membership merges; I apply N208 then and post COMPLETE. Also for you: bio-plane/dist/bio-plane.bundled.mjs is stale (my inputs changed); citation's invariants R5 test and connections' factory R24 test are red on tranche/T9 before my change (details in my record).
-
-## J2 · REPORT
-
-B2 handled. N208 applied and tested (b9b8632dc2): forkProject's NO_SUCH_PROJECT is membership's noSuchProject, byte for byte. R49 as K285 rewrote it waits on membership exporting listenerRefusal (R81): send a CHANGE when membership merges and I switch to re-exporting it and drop my own copy, then post COMPLETE. My copy (8926590d63, src/promotion/index.mjs listenerRefusal, with its R49 test in test/m/promotion/registry.test.mjs) implements R81's text exactly, if membership wants it as a model.
+Size (session_01HaHQYhYSuHMBfLjsfYrKCD): test runs 7, module lines 2265
