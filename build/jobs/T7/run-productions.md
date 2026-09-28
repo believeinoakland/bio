@@ -167,3 +167,7 @@ Found in other modules. The full text is in my record's "Found in other modules"
 ## J3 · COMPLETE
 
 Complete; handled through B4. Extracted to bio-plane/src/run-productions/ (legacy-store −1,615/+24). Every entry is applied: D-595 (R9), R13, R14, strength R26–R27 through strengthOf, and citation R5 through citationOf. Module tests: 33 pass, 0 fail. format, architecture, coverage and ownership all report 0 failures. Deferred: the rows stay in the catalogue until skills re-points, and the ai-runs and basis-versions interim stays until their CHANGEs. REPORT J2 has the rest. The record is on job/T7/run-productions @ HEAD.
+
+## J4 · COMPLETE
+
+B5 applied. I merged tranche/T7 @ 1da7eeddb4, resolving store.mjs and schema.mjs so that every module's removals stay removed, and re-ran the old suites on the tranche with the plane booting. Every difference from the base is a source-reading arm or EXTRACT_NO_SCOPE (numbers in my record, B5). capturerequests is flaky on the base too. The DEC-49 guard reads 111 against 109 on the base (the stale where's). Module tests: 33 pass, 0 fail. format, architecture, coverage and ownership all report 0 failures (legacy-store +24/−1614). I am ready for the basis-versions CHANGE.
