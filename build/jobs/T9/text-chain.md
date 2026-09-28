@@ -33,3 +33,14 @@ Q1 · the requirement ids for my three entries. `build/requirements/text-chain.m
 Also, wording only: R72 still says "Today R71's equal-kind rule answers false" and "built but not merged", but it is met and tested (T2); the Status line says the same.
 
 `rectSpace` duplicates content's `extentSpace` (content/extent.mjs), except that a non-string space is unreadable here rather than `String(v)`; content uses text-chain, so it could read mine (a report, not my change).
+
+## J2 · REPORT
+
+Found in other modules while applying N98, N102, N104:
+
+1. **content** (one reader of one fact): `extentSpace`/`EXTENT_USER_SPACE` in `src/content/extent.mjs` state the rule text-chain now provides as `rectSpace`/`RECT_USER_SPACE` (R87). Content uses text-chain, so it can read mine. One difference to settle: content reads any non-null `space` through `String(v)`, text-chain reads a non-string or empty space as unreadable (comparable to nothing).
+2. **extraction** (efficiency): `carryImageUnread` in `src/extraction/pipeline.mjs` (D-697, its R9) is now a no-op on `mergeTier2Text`'s output, which carries `image_unread` itself (R90) with the same reason-and-rect dedupe. Extraction can drop it and read R90; its suite is green either way (65/0).
+3. **query-language** (N104's other share): `MACHINE_READ_KINDS` in `src/query.mjs` can re-export text-chain's (same value, `["ocr", "ai"]`, frozen).
+4. **connections / capture** (red on the baseline, not text-chain's): `test/m/connections/factory.test.mjs` "R24, R18, K155 …" fails with capture's R58 refusal from `captureOf` (a second `env` for one storage). Same result with text-chain before this job.
+5. **Generated artifacts stale** (manifest §14): `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` include `src/textchain.mjs`. Not rebuilt; for the layer close.
+6. **text-chain requirements** (wording): R72 still reads as not met ("Today R71's equal-kind rule answers false", "built but not merged"); it is met and tested.
