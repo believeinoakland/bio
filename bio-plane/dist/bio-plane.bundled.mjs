@@ -76824,6 +76824,1175 @@ function ratificationOps(r, url, body) {
   };
 }
 
+// src/citation/checks.mjs
+var CITE_CHECKS = {
+  BAD_NOTE: {
+    check: "C-33.15",
+    where: "src/citation/index.mjs cite > is-cite-note",
+    translation: "A note here is at most two hundred characters and cannot contain a quotation mark, a backslash or a line break. Those characters would silently reshape the document rather than appear in it, so the note is declined instead of mangled."
+  },
+  NO_ROLE: {
+    check: "C-33.16",
+    where: "src/citation/index.mjs cite > is-cite-role",
+    translation: "A leg of a question's basis has to say what the material DOES for the answer, and this one does not say. It is never assumed: material that cuts against the case is first-class here, and guessing would put a claim about your reasoning in the record that you did not make."
+  },
+  BAD_ROLE: {
+    check: "C-33.17",
+    where: "src/citation/index.mjs cite > is-cite-role",
+    translation: "That is not one of the parts a piece of basis can play. The set is closed and is published beside the act itself, so the choices can be read rather than remembered."
+  },
+  ROLE_NOT_APPLICABLE: {
+    check: "C-33.18",
+    where: "src/citation/index.mjs cite > is-cite-role",
+    translation: "What material does for an answer is a property of a question's basis, and the thing citing here is a case. A case's citation carries no such part, so this one would be dropped rather than recorded \u2014 and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart."
+  },
+  SEVERED_EDGE: {
+    check: "C-33.19",
+    where: "src/citation/index.mjs cite > is-cite-severed",
+    translation: "Somebody already recorded a decision to cut this dependency, which is different from there never having been one. Citing it again would neither reverse that decision nor step around it, so putting the link back is a separate act that records its own reason."
+  },
+  /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT CITABLE". The translation NAMES THE DOOR,
+     the REC-117 rule: cite what superseded it, or re-collect the source. Minted at two sites, `cite`'s region and
+     `reinstate`'s refusal (R4), both through R5's one predicate; the row holds the region's `where`. */
+  RETIRED_NOT_CITABLE: {
+    check: "C-33.39",
+    where: "src/citation/index.mjs cite > is-cite-retired",
+    translation: "The group has retired this material, recording that it is superseded or no longer stands, so a citation made now would read to everyone after you as live support nobody will look at again. Cite whatever superseded it, or collect the source again as a new item and cite that. A document its publisher withdrew or changed is a different thing and can still be cited."
+  }
+};
+var CITE_EXTENT_CHECKS = {
+  UNKNOWN_EXTENT_FIELD: {
+    check: "C-45.7",
+    where: "src/citation/index.mjs cite > is-cite-extent",
+    translation: "Part of what was sent with this citation names a field this act does not carry, so the record cannot tell what part of the document you meant. It is refused rather than ignored: a field that is accepted and quietly dropped leaves you with a citation that looks like the one you made and is not. The fields this act does take are listed beside the refusal."
+  },
+  EXTENT_NOT_APPLICABLE: {
+    check: "C-45.8",
+    where: "src/citation/index.mjs cite > is-cite-extent",
+    translation: "Which part of a document a citation rests on is something a QUESTION's basis records, and the thing citing here is a case. A case's citation names the document and has nowhere to put a page or a passage, so this one would be dropped rather than recorded \u2014 and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart."
+  },
+  EXTENT_ON_MANY: {
+    check: "C-45.9",
+    where: "src/citation/index.mjs cite > is-cite-extent",
+    translation: "A part of a document is a part of ONE document, and this citation would write a leg for several. Writing the same page or passage onto each of them would put claims in the record you never made \u2014 you named one part once. Cite the one document you mean this part of, and cite the rest separately."
+  },
+  BAD_EXTENT_VALUE: {
+    check: "C-45.10",
+    where: "src/citation/index.mjs cite > is-cite-extent",
+    translation: "One of the values describing which part of the document you mean cannot be written into the record as it stands \u2014 it is empty, too long, or contains a quotation mark, a backslash, a line break or a comment mark, and those characters would silently reshape the document rather than appear in it. It is declined instead of mangled."
+  }
+};
+
+// src/citation/splice.mjs
+function spliceEdgeStatus(text3, changes) {
+  const lines = text3.split("\n");
+  if (lines[0] !== "---") return null;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return null;
+  let ref = -1;
+  for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
+    ref = i;
+    break;
+  }
+  if (ref === -1) return null;
+  const starts = [];
+  for (let i = ref + 1; i < end2; i++) {
+    if (/^ {2}- /.test(lines[i])) starts.push(i);
+    else if (!/^\s/.test(lines[i]) && lines[i].trim() !== "") break;
+  }
+  if (!starts.length) return null;
+  const blockEnd = (() => {
+    let last = ref;
+    for (let i = ref + 1; i < end2; i++) {
+      if (lines[i].trim() === "") continue;
+      if (/^\s/.test(lines[i])) {
+        last = i;
+        continue;
+      }
+      break;
+    }
+    return last;
+  })();
+  const out = lines.slice();
+  let applied = 0;
+  for (let s = 0; s < starts.length; s++) {
+    const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : blockEnd + 1) - 1;
+    let target = null;
+    for (let i = from; i <= to; i++) {
+      const m = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
+      if (m) {
+        target = m[1].replace(/^["']|["']$/g, "");
+        break;
+      }
+    }
+    if (!target || !changes.has(target)) continue;
+    const ch = changes.get(target);
+    let sawNote = false, statusLine = -1;
+    for (let i = from; i <= to; i++) {
+      if (/^\s*(?:- )?status:/.test(lines[i])) {
+        out[i] = "    status: " + ch.status;
+        statusLine = i;
+      }
+      if (/^\s*(?:- )?note:/.test(lines[i])) {
+        out[i] = `    note: "${ch.note}"`;
+        sawNote = true;
+      }
+    }
+    if (statusLine === -1) return null;
+    if (!sawNote) out[statusLine] = out[statusLine] + `
+    note: "${ch.note}"`;
+    applied++;
+  }
+  return applied === changes.size ? out.join("\n") : null;
+}
+function spliceReferences3(text3, additions) {
+  const lines = text3.split("\n");
+  if (lines[0] !== "---") return null;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return null;
+  const block = additions.map((a) => `  - rel: ${a.rel}
+    target: ${a.target}
+    status: ${a.status}
+    note: "${a.note ?? ""}"` + (typeof a.extent_capture === "string" ? `
+    extent_capture: ${a.extent_capture}` : ""));
+  let ref = -1;
+  for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
+    ref = i;
+    break;
+  }
+  if (ref === -1)
+    return [...lines.slice(0, end2), "references:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[ref].slice("references:".length).trim();
+  if (rest === "[]")
+    return [...lines.slice(0, ref), "references:", ...block, ...lines.slice(ref + 1)].join("\n");
+  if (rest !== "") return null;
+  let last = ref;
+  for (let i = ref + 1; i < end2; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) {
+      last = i;
+      continue;
+    }
+    break;
+  }
+  return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+}
+function legExtentLines(l) {
+  const keys = Object.keys(l).filter((k) => k.startsWith("extent_") || k === "content_id");
+  if (!keys.length) return [];
+  const order = (k) => k === "extent_kind" ? 0 : k === "content_id" ? 2 : 1;
+  keys.sort((a, b) => order(a) - order(b) || (a < b ? -1 : a > b ? 1 : 0));
+  const out = [];
+  for (const k of keys) {
+    const v = l[k];
+    if (v === void 0 || v === null || v === "") continue;
+    if (typeof v === "number") out.push(`    ${k}: ${v}`);
+    else if (Array.isArray(v)) out.push(`    ${k}: [${v.join(", ")}]`);
+    else out.push(`    ${k}: "${String(v)}"`);
+  }
+  return out;
+}
+function spliceBasis(text3, legs) {
+  if (!legs.length) return text3;
+  const lines = text3.split("\n");
+  if (lines[0] !== "---") return null;
+  const end2 = lines.indexOf("---", 1);
+  if (end2 === -1) return null;
+  const block = legs.map((l) => [
+    `  - target: ${l.target}`,
+    `    role: ${l.role}`,
+    ...l.grade ? [`    grade: ${l.grade}`] : [],
+    ...l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : [],
+    ...l.grade_source ? [`    grade_source: ${l.grade_source}`] : [],
+    ...l.note ? [`    note: "${l.note}"`] : [],
+    ...legExtentLines(l)
+  ].join("\n"));
+  let bi = -1;
+  for (let i = 1; i < end2; i++) if (/^basis:/.test(lines[i])) {
+    bi = i;
+    break;
+  }
+  if (bi === -1)
+    return [...lines.slice(0, end2), "basis:", ...block, ...lines.slice(end2)].join("\n");
+  const rest = lines[bi].slice("basis:".length).trim();
+  if (rest === "[]")
+    return [...lines.slice(0, bi), "basis:", ...block, ...lines.slice(bi + 1)].join("\n");
+  if (rest !== "") return null;
+  let last = bi;
+  for (let i = bi + 1; i < end2; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) {
+      last = i;
+      continue;
+    }
+    break;
+  }
+  return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
+}
+function setScalar4(text3, key, value) {
+  const lines = text3.split("\n");
+  const end2 = lines.indexOf("---", 1);
+  for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
+    if (lines[i].startsWith(key + ":")) {
+      lines[i] = `${key}: ${value}`;
+      return lines.join("\n");
+    }
+  }
+  return text3;
+}
+function appendSessionLog3(text3, entry) {
+  const at14 = text3.indexOf("## Session Log");
+  if (at14 < 0) return text3 + "\n## Session Log\n\n" + entry;
+  const nxt = text3.indexOf("\n## ", at14 + 1);
+  const cut3 = nxt === -1 ? text3.length : nxt + 1;
+  return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
+}
+
+// src/citation/index.mjs
+var CITE_EDGE_BYTES = 83;
+var CITE_PIN_BYTES = 85;
+var CITE_LOG_SAMPLE = 20;
+var NOTE_MAX3 = 200;
+var EXTENT_VALUE_MAX = 200;
+var EDGE_REASON_MAX3 = 160;
+var EDGE_NOTE_MAX = 480;
+var EXTENT_PARAMS = Object.freeze({
+  extent_kind: "text",
+  extent_ref: "text",
+  extent_page: "int",
+  extent_rect: "nums",
+  extent_sheet: "text",
+  extent_cell: "text",
+  extent_slide: "int",
+  extent_shape: "int",
+  extent_para: "int",
+  extent_run: "int",
+  extent_range: "text",
+  extent_table: "int",
+  extent_part: "text",
+  extent_cited_as: "text",
+  content_id: "text"
+});
+function noSuchProject2(project) {
+  return {
+    ok: false,
+    reason: "NO_SUCH_PROJECT",
+    project: project ?? null,
+    detail: "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way."
+  };
+}
+var rowOf5 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
+var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var Citation = class {
+  constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
+    this.record = record;
+    this.membership = membership;
+    this.promotion = promotion;
+    this.content = content;
+    this.retrieval = retrieval;
+    this.inquiry = inquiry;
+    this.now = typeof now === "function" ? now : () => Date.now();
+  }
+  /* ---- R5 ---- */
+  /** R5 (D-444, D-553): THE ONE RETIRED-TARGET PREDICATE, "may this be cited now". True exactly when the bundle's
+   *  current state is `retired`, whatever its type: the rule follows the STATE, so any object in a `retired` state is
+   *  not citable, by any door and for every caller. An id with no row answers false (an absent target is refused by
+   *  another door and this one claims nothing about it). `source_status` is not read: a removed or modified source
+   *  stays citable, `retired` is the other axis. NEVER viewer-gated: whether a viewer can see the target decides only
+   *  a refusal's WORDING, never citability. Asked by `cite` (R1), `reinstate` (R4), and the later modules that offer
+   *  or suggest a citation, so an offer and a refusal cannot answer differently. Never throws. */
+  retiredNotCitable(id) {
+    try {
+      if (typeof id !== "string" || !id) return false;
+      const h = this.record.head(id);
+      return !!h && String(h.currentState ?? "").trim() === "retired";
+    } catch {
+      return false;
+    }
+  }
+  /* ---- the citing object, R1 and R4's shared opening ---- */
+  /* The citing object, answered through sight BEFORE position (REC-138 / D-426, R9): an existence-only sight is
+     `membership`'s C-70.1 (REC-149), and an absent id and one this viewer cannot see give the same answer. */
+  #citingObject(project, viewer) {
+    const h = typeof project === "string" && project ? this.record.head(project) : null;
+    if (h) {
+      const existence = this.membership.existenceAct(project, viewer);
+      if (existence) return { refusal: existence };
+    }
+    if (!h || !this.membership.inSight(project, viewer)) return { refusal: noSuchProject2(project) };
+    return { head: h };
+  }
+  /* The live `bundle.md`, parsed, or its readability refusal. */
+  #document(project, detail) {
+    const f8 = this.record.readFile(project, "bundle.md");
+    if (!f8 || typeof f8.text !== "string") return { refusal: { ok: false, reason: "NO_BUNDLE_MD", project } };
+    const parsed = parseFrontmatter(f8.text);
+    if (!parsed.data)
+      return { refusal: { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project, ...detail ? { detail } : {} } };
+    return { text: f8.text, data: parsed.data };
+  }
+  /* Promote the rewritten `bundle.md` over the head, every OTHER live file carried forward untouched: promote writes a
+     whole image, so a writer that mentions one file deletes the rest (the default that once destroyed a provenance
+     register). Hand-authored, not mechanical: a member citing evidence is authorship, so no writer and no operation
+     are claimed. */
+  #write(project, head, text3, when, author, fm, objectType) {
+    const carried = [];
+    for (const path of this.record.livePaths(project) || []) {
+      if (path === "bundle.md") continue;
+      const f8 = this.record.readFile(project, path);
+      if (!f8) continue;
+      carried.push(typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+    }
+    const bytes2 = new TextEncoder().encode(text3);
+    return this.promotion.promote({
+      bundleId: project,
+      base: head.bundleSha,
+      snapKey: `${when.replace(/[-:]/g, "")}_${rand7(4)}`,
+      author: author || "member",
+      files: [{ path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
+      meta: {
+        object_type: objectType,
+        title: fm.title,
+        current_state: fm.current_state,
+        prior_state: fm.prior_state ?? null,
+        created: fm.created,
+        last_updated: when,
+        criticality: fm.criticality ?? null
+      }
+    });
+  }
+  /* ---- sever, reinstate (R4) ---- */
+  /** R4: SEVERING and REINSTATING a case's `cites` edges, both at weight `refuse` (R7). SEVERING IS NOT DELETION: the
+   *  edge stays, with its target and rel intact, and only its status moves, so a reader can see that the group once
+   *  relied on something and stopped, and why. A REASON IS REQUIRED by both: the catalogue's own remedy for a bad edge
+   *  is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method for both
+   *  directions, because they are the same operation over the same grammar. */
+  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null }) {
+    const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
+    if (!sel.ok) return sel;
+    const obj = this.#citingObject(project, viewer);
+    if (obj.refusal) return obj.refusal;
+    const p = obj.head;
+    if (p.type !== "project")
+      return {
+        ok: false,
+        reason: "NOT_A_PROJECT",
+        project,
+        got: p.type,
+        detail: "cites lives on the citing object and this action edits a Project's edges"
+      };
+    const denied = this.membership.projectAuthority(project, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
+    if (denied) return denied;
+    const why = String(reason ?? "").trim();
+    if (!why)
+      return {
+        ok: false,
+        reason: "NO_REASON",
+        detail: `${verb} an edge records WHY. The catalog's own remediation for a bad reference is "sever with reason", and an edge moved with no reason is an unexplained change wearing a status field.`
+      };
+    if (why.length > EDGE_REASON_MAX3 || /["\\\r\n]/.test(why))
+      return {
+        ok: false,
+        reason: "BAD_REASON",
+        detail: `a reason is at most ${EDGE_REASON_MAX3} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it`
+      };
+    if (!sel.members.length)
+      return {
+        ok: false,
+        reason: "EMPTY_SELECTION",
+        project,
+        handle,
+        drift: sel.drift,
+        detail: "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made."
+      };
+    const offenders = [];
+    for (const id of sel.members) {
+      const b = this.record.head(id);
+      const ty = b ? normalizeType(b.type) : null;
+      if (!(ty === "information" || ty === "inquiry")) offenders.push(id);
+    }
+    if (offenders.length)
+      return {
+        ok: false,
+        reason: "NOT_INFORMATION",
+        project,
+        handle,
+        offenders: offenders.sort(),
+        citable: ["information", "inquiry"],
+        detail: "a case's citation edges point at material or at a question, and these members of the selection are neither, so they carry no citation edge to move. The whole call is refused rather than narrowed."
+      };
+    if (to === "confirmed") {
+      const retiredMembers = sel.members.filter((id) => this.retiredNotCitable(id));
+      if (retiredMembers.length)
+        return {
+          ok: false,
+          reason: "RETIRED_NOT_CITABLE",
+          ...rowOf5(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+          project,
+          handle,
+          offenders: retiredMembers.sort(),
+          drift: sel.drift,
+          detail: "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
+        };
+    }
+    const doc = this.#document(project, null);
+    if (doc.refusal) return doc.refusal;
+    const current = /* @__PURE__ */ new Map();
+    for (const r of Array.isArray(doc.data.references) ? doc.data.references : [])
+      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
+        current.set(r.target, r);
+    const wrong = [];
+    for (const id of sel.members) {
+      const e = current.get(id);
+      if (!e || !from.includes(e.status)) wrong.push(id);
+    }
+    if (wrong.length)
+      return {
+        ok: false,
+        reason: from.includes("severed") ? "NOT_SEVERED" : "NOT_CITED",
+        project,
+        handle,
+        offenders: wrong.sort(),
+        drift: sel.drift,
+        detail: `${verb} requires an edge currently in ${from.map((s) => `'${s}'`).join(" or ")}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.`
+      };
+    const when = stampInstant("second", this.now());
+    const changes = /* @__PURE__ */ new Map();
+    for (const id of sel.members) {
+      const prev = String(current.get(id).note ?? "");
+      let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
+      if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
+      changes.set(id, { status: to, note });
+    }
+    const spliced = spliceEdgeStatus(doc.text, changes);
+    if (!spliced)
+      return {
+        ok: false,
+        reason: "UNSPLICEABLE_REFERENCES",
+        project,
+        detail: "the references block is not in a shape this grammar can edit in place"
+      };
+    let text3 = setScalar4(spliced, "last_updated", `"${when}"`);
+    const ids = [...sel.members].sort();
+    const shown2 = ids.slice(0, CITE_LOG_SAMPLE);
+    const listed = shown2.join(", ") + (ids.length > shown2.length ? `, and ${ids.length - shown2.length} more` : "");
+    text3 = appendSessionLog3(
+      text3,
+      `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
+Trigger: selection ${handle}
+Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
+`
+    );
+    const bytes2 = new TextEncoder().encode(text3);
+    if (bytes2.length > INLINE_MAX)
+      return {
+        ok: false,
+        reason: "CITATION_TOO_LARGE",
+        project,
+        bytes: bytes2.length,
+        limit: INLINE_MAX,
+        detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit"
+      };
+    const promoted = this.#write(project, p, text3, when, author, doc.data, "project");
+    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
+    return {
+      ok: true,
+      project,
+      handle,
+      weight: "refuse",
+      moved: sel.moved,
+      drift: sel.drift,
+      /* `why` and NOT `reason`: every refusal returns a REASON CODE under that name, and returning the member's
+         prose under the same key would make a success indistinguishable from a refusal to a caller checking
+         `reason`. */
+      [resultKey]: ids,
+      why,
+      from,
+      to,
+      bundleSha: promoted.bundleSha,
+      rowVersion: promoted.rowVersion,
+      gate: sel.gate
+    };
+  }
+  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
+    return this.#edgeTransition({
+      project,
+      handle,
+      viewer,
+      owner,
+      reason,
+      author,
+      identity,
+      from: ["confirmed", "proposed"],
+      to: "severed",
+      verb: "Severed",
+      resultKey: "severed"
+    });
+  }
+  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
+    return this.#edgeTransition({
+      project,
+      handle,
+      viewer,
+      owner,
+      reason,
+      author,
+      identity,
+      from: ["severed"],
+      to: "confirmed",
+      verb: "Reinstated",
+      resultKey: "reinstated"
+    });
+  }
+  /* ---- cite (R1–R3) ---- */
+  /** R1–R3: CITING, at weight `report` (R7): material, or a question, becomes part of what a case or a question rests
+   *  on. ONE ACT (REC-37): where the record keeps it differs (a case's `references[]`, a question's `basis[]`) and
+   *  what the member did does not, so one op serves both arms and `project` names the citing object either way.
+   *
+   *  WHAT THE INQUIRY ARM DOES NOT DO, and each absence is a decision:
+   *   - IT DOES NOT GRADE (R8). A leg's connection grade is FILLED from `inquiry.earned`, the same registry the read
+   *     answers from and the write enforces with; a target the record earns nothing for lands with NO grade, axis or
+   *     source: undetermined, stated by the absence, inert (DEC-18). There is no grade control and no default letter.
+   *   - IT DOES NOT CHECK FOR A CYCLE. `SELF_BASIS` and `BASIS_CYCLE` are the write's (inquiry R11), reached because
+   *     the leg lands THROUGH THE DOCUMENT; a second rule here would be a second answer waiting to disagree.
+   *   - IT DOES NOT VALIDATE A LEG beyond routing its part through `inquiry.checkLegExtentGrammar`, the same function
+   *     that judges it again at the write.
+   *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS: whether the group RETIRED it (R5). */
+  cite({
+    project = null,
+    handle = null,
+    viewer = null,
+    owner = null,
+    note = "",
+    author = null,
+    role = null,
+    extent = null,
+    identity = null
+  } = {}) {
+    const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "report" });
+    if (!sel.ok) return sel;
+    const obj = this.#citingObject(project, viewer);
+    if (obj.refusal) return obj.refusal;
+    const p = obj.head;
+    const ontoInquiry = normalizeType(p.type) === "inquiry";
+    if (p.type !== "project" && !ontoInquiry)
+      return {
+        ok: false,
+        reason: "NOT_A_PROJECT",
+        project,
+        got: p.type,
+        detail: "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either."
+      };
+    if (!ontoInquiry) {
+      const denied = this.membership.projectAuthority(project, identity, "joined", "cite");
+      if (denied) return denied;
+    }
+    const nt = String(note ?? "");
+    if (nt.length > NOTE_MAX3 || /["\\\r\n]/.test(nt))
+      return {
+        ok: false,
+        reason: "BAD_NOTE",
+        ...rowOf5(CITE_CHECKS, "BAD_NOTE"),
+        detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline"
+      };
+    if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function" || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
+      return {
+        ok: false,
+        reason: "INQUIRY_UNAVAILABLE",
+        project,
+        handle,
+        drift: sel.drift,
+        detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and this instance was created without them, so nothing was written."
+      };
+    const rl = role === null || role === void 0 || String(role) === "" ? null : String(role);
+    if (ontoInquiry) {
+      const roles = this.inquiry.BASIS_ROLES;
+      if (rl === null)
+        return {
+          ok: false,
+          reason: "NO_ROLE",
+          ...rowOf5(CITE_CHECKS, "NO_ROLE"),
+          project,
+          handle,
+          roles: roles.slice(),
+          drift: sel.drift,
+          detail: `a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: ${roles.join(", ")}.`
+        };
+      if (!roles.includes(rl))
+        return {
+          ok: false,
+          reason: "BAD_ROLE",
+          ...rowOf5(CITE_CHECKS, "BAD_ROLE"),
+          project,
+          handle,
+          got: rl,
+          roles: roles.slice(),
+          drift: sel.drift,
+          detail: `'${rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: ${roles.join(", ")}.`
+        };
+    } else if (rl !== null) {
+      return {
+        ok: false,
+        reason: "ROLE_NOT_APPLICABLE",
+        ...rowOf5(CITE_CHECKS, "ROLE_NOT_APPLICABLE"),
+        project,
+        handle,
+        got: rl,
+        drift: sel.drift,
+        detail: "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded \u2014 refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart."
+      };
+    }
+    const offenders = [];
+    for (const id of sel.members) {
+      const b = this.record.head(id);
+      const ty = b ? normalizeType(b.type) : null;
+      if (!(ty === "information" || ty === "inquiry")) offenders.push(id);
+    }
+    if (offenders.length)
+      return ontoInquiry ? {
+        ok: false,
+        reason: "NOT_CITABLE",
+        project,
+        handle,
+        offenders: offenders.sort(),
+        drift: sel.drift,
+        citable: ["information", "inquiry"],
+        detail: "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
+      } : {
+        ok: false,
+        reason: "NOT_INFORMATION",
+        project,
+        handle,
+        offenders: offenders.sort(),
+        drift: sel.drift,
+        citable: ["information", "inquiry"],
+        detail: "a case rests on material, or on a question the group is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
+      };
+    const retiredMembers = sel.members.filter((id) => this.retiredNotCitable(id));
+    if (retiredMembers.length)
+      return {
+        ok: false,
+        reason: "RETIRED_NOT_CITABLE",
+        ...rowOf5(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
+        project,
+        handle,
+        offenders: retiredMembers.sort(),
+        drift: sel.drift,
+        detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
+      };
+    const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
+    if (doc.refusal) return doc.refusal;
+    const existing = Array.isArray(doc.data.references) ? doc.data.references : [];
+    const byTarget = /* @__PURE__ */ new Map();
+    for (const r of existing)
+      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
+        byTarget.set(r.target, r.status);
+    const referenced = new Set(existing.filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
+    const legged = new Set(ontoInquiry && Array.isArray(doc.data.basis) ? doc.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string").map((l) => l.target) : []);
+    const severed = [], already = [], add = [];
+    for (const id of sel.members) {
+      const st = byTarget.get(id);
+      if (st === "severed") severed.push(id);
+      else if (ontoInquiry ? legged.has(id) : st !== void 0) already.push(id);
+      else add.push(id);
+    }
+    if (severed.length)
+      return {
+        ok: false,
+        reason: "SEVERED_EDGE",
+        ...rowOf5(CITE_CHECKS, "SEVERED_EDGE"),
+        project,
+        handle,
+        offenders: severed.sort(),
+        drift: sel.drift,
+        detail: "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason."
+      };
+    const bag = extent && typeof extent === "object" ? extent : {};
+    const unknownFields = Object.keys(bag).filter((k) => !(k in EXTENT_PARAMS)).sort();
+    if (unknownFields.length)
+      return {
+        ok: false,
+        reason: "UNKNOWN_EXTENT_FIELD",
+        ...rowOf5(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
+        project,
+        handle,
+        drift: sel.drift,
+        got: unknownFields,
+        fields: Object.keys(EXTENT_PARAMS),
+        detail: `this call names ${unknownFields.map((k) => `'${k}'`).join(", ")}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: ${Object.keys(EXTENT_PARAMS).join(", ")}.`
+      };
+    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? "").trim() !== "").sort();
+    if (authored.length && !ontoInquiry)
+      return {
+        ok: false,
+        reason: "EXTENT_NOT_APPLICABLE",
+        ...rowOf5(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
+        project,
+        handle,
+        got: authored,
+        drift: sel.drift,
+        detail: "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded \u2014 refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart."
+      };
+    if (authored.length && add.length > 1)
+      return {
+        ok: false,
+        reason: "EXTENT_ON_MANY",
+        ...rowOf5(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
+        project,
+        handle,
+        offenders: add.slice().sort(),
+        drift: sel.drift,
+        detail: `a part of a document is a part of ONE document, and this call would write ${add.length} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made \u2014 the extent was named once. Cite the one document this part belongs to, and cite the rest separately.`
+      };
+    const legFields = {};
+    for (const k of authored) {
+      const raw = String(bag[k]).trim();
+      if (raw.length > EXTENT_VALUE_MAX || /["\\\r\n#]/.test(raw))
+        return {
+          ok: false,
+          reason: "BAD_EXTENT_VALUE",
+          ...rowOf5(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
+          project,
+          handle,
+          field: k,
+          drift: sel.drift,
+          detail: `'${k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.`
+        };
+      const t = EXTENT_PARAMS[k];
+      if (t === "int" && /^\d+$/.test(raw)) legFields[k] = parseInt(raw, 10);
+      else if (t === "nums") {
+        const parts = raw.replace(/^\[|\]$/g, "").split(",").map((s) => s.trim());
+        const nums = parts.map((s) => /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN);
+        legFields[k] = nums.every((n) => Number.isFinite(n)) ? nums : raw;
+      } else legFields[k] = raw;
+    }
+    if (authored.length) {
+      const ef = [];
+      this.inquiry.checkLegExtentGrammar(legFields, "the part of the document this citation names", "C-2.8", ef);
+      const exErrs = ef.filter((x) => x.severity === "error");
+      if (exErrs.length)
+        return {
+          ok: false,
+          reason: "BASIS_REFUSED",
+          project,
+          handle,
+          drift: sel.drift,
+          findings: exErrs.map((x) => ({
+            check: x.check,
+            code: x.code ?? null,
+            detail: x.message,
+            repairs: x.repairs ?? []
+          })),
+          detail: "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite."
+        };
+    }
+    const when = stampInstant("second", this.now());
+    if (!sel.members.length)
+      return {
+        ok: false,
+        reason: "EMPTY_SELECTION",
+        project,
+        handle,
+        drift: sel.drift,
+        detail: "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made."
+      };
+    if (!add.length)
+      return {
+        ok: true,
+        project,
+        handle,
+        weight: "report",
+        moved: sel.moved,
+        drift: sel.drift,
+        cited: [],
+        alreadyCited: already.sort(),
+        severed: [],
+        bundleSha: p.bundleSha,
+        rowVersion: null,
+        detail: "every member of the selection was already cited; nothing was written" + (authored.length ? ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan." : "")
+      };
+    let spliced = null, filled = [];
+    const edgePins = /* @__PURE__ */ new Map();
+    if (!ontoInquiry) {
+      for (const target of add)
+        if (normalizeType(OBJECT_TYPES[String(target).split("-")[0]]) === "information") {
+          const pin = this.content.captureFor(target);
+          if (pin) edgePins.set(target, pin);
+        }
+    }
+    if (!ontoInquiry) {
+      spliced = spliceReferences3(
+        doc.text,
+        add.map((target) => ({
+          rel: "cites",
+          target,
+          status: "confirmed",
+          note: nt,
+          ...edgePins.has(target) ? { extent_capture: edgePins.get(target) } : {}
+        }))
+      );
+      if (!spliced)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_REFERENCES",
+          project,
+          detail: "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document."
+        };
+    } else {
+      const subject = typeof doc.data.subject_entity === "string" && doc.data.subject_entity.trim() !== "" ? doc.data.subject_entity.trim() : null;
+      const reg = this.inquiry.earned(subject, add);
+      const pinOf = (target) => {
+        if (typeof legFields.content_id === "string" && legFields.content_id.trim()) return null;
+        if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information") return null;
+        return this.content.captureFor(target);
+      };
+      filled = add.map((target) => {
+        const earned = reg && reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
+        const pin = pinOf(target);
+        const pinned = pin ? { extent_capture: pin } : {};
+        return earned && earned.grade ? {
+          target,
+          role: rl,
+          grade: earned.grade,
+          grade_axis: "connection",
+          grade_source: "resolution",
+          note: nt,
+          why: earned.why,
+          ...legFields,
+          ...pinned
+        } : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
+      });
+      const newRefs = add.filter((t) => !referenced.has(t)).map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }));
+      const withRefs = newRefs.length ? spliceReferences3(doc.text, newRefs) : doc.text;
+      if (!withRefs)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_REFERENCES",
+          project,
+          detail: "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document."
+        };
+      spliced = spliceBasis(withRefs, filled);
+      if (!spliced)
+        return {
+          ok: false,
+          reason: "UNSPLICEABLE_BASIS",
+          project,
+          detail: "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document."
+        };
+    }
+    let text3 = setScalar4(spliced, "last_updated", `"${when}"`);
+    const shown2 = add.slice(0, CITE_LOG_SAMPLE);
+    const listed = shown2.join(", ") + (add.length > shown2.length ? `, and ${add.length - shown2.length} more` : "");
+    const ungraded = filled.filter((l) => !l.grade).length;
+    const graded = filled.length - ungraded;
+    const setMovedNote = answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
+    text3 = appendSessionLog3(text3, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
+Trigger: selection ${handle}${setMovedNote}
+Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
+` : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
+Trigger: selection ${handle}${setMovedNote}
+Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
+`);
+    const bytes2 = new TextEncoder().encode(text3);
+    if (bytes2.length > INLINE_MAX) {
+      const perEdge = CITE_EDGE_BYTES + (edgePins.size ? CITE_PIN_BYTES : 0);
+      const overhead = bytes2.length - add.length * perEdge;
+      return {
+        ok: false,
+        reason: "CITATION_TOO_LARGE",
+        project,
+        handle,
+        drift: sel.drift,
+        requested: add.length,
+        bytes: bytes2.length,
+        limit: INLINE_MAX,
+        roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / perEdge)),
+        detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.`
+      };
+    }
+    const fm = doc.data;
+    const promoted = this.#write(project, p, text3, when, author, fm, fm.object_type ?? p.type);
+    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
+    return {
+      ok: true,
+      project,
+      handle,
+      weight: "report",
+      moved: sel.moved,
+      drift: sel.drift,
+      cited: add.slice().sort(),
+      alreadyCited: already.sort(),
+      severed: [],
+      ...ontoInquiry ? {} : { pinned_captures: Object.fromEntries(
+        add.slice().sort().map((t) => [t, edgePins.get(t) ?? null])
+      ) },
+      bundleSha: promoted.bundleSha,
+      rowVersion: promoted.rowVersion,
+      gate: sel.gate,
+      expires: sel.expires,
+      /* R3: what the act landed on the question, per leg, from the leg it composed (never an echo of the
+         request): the role, the grade the RECORD earned with the registry's `why` or an explicit null, the
+         capture it pinned, and the part as written, ABSENT for every leg that names none. */
+      ...ontoInquiry ? {
+        citingObjectType: "inquiry",
+        role: rl,
+        legs: filled.map((l) => ({
+          target: l.target,
+          role: l.role,
+          grade: l.grade ?? null,
+          grade_axis: l.grade_axis ?? null,
+          grade_source: l.grade_source ?? null,
+          why: l.why ?? null,
+          pinned_capture: l.extent_capture ?? null,
+          ...Object.keys(legFields).length ? {
+            extent: citationExtent(l),
+            ...l.content_id ? { content_id: l.content_id } : {}
+          } : {}
+        })),
+        gradesFilled: filled.filter((l) => l.grade).length,
+        gradesUndetermined: filled.filter((l) => !l.grade).length
+      } : {}
+    };
+  }
+};
+var instances20 = /* @__PURE__ */ new WeakMap();
+function inquiryServices(k) {
+  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
+}
+function citationOf(host, deps) {
+  let c = instances20.get(host);
+  if (!c) {
+    const d = deps || {};
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host, { record, membership });
+    const content = d.content || contentOf(host, { record, membership });
+    const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
+    const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
+    c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
+    instances20.set(host, c);
+  }
+  return c;
+}
+function citationOps(c, url) {
+  const q6 = (key) => url.searchParams.get(key);
+  return {
+    cite: () => c.cite({
+      project: q6("project"),
+      handle: q6("handle"),
+      viewer: q6("viewer"),
+      owner: q6("owner"),
+      note: q6("note") ?? "",
+      author: q6("author"),
+      identity: q6("identity"),
+      /* REC-37: the leg's ROLE, read only on the inquiry arm and REFUSED rather than dropped on the other. */
+      role: q6("role"),
+      /* REC-97 / IC-90: every parameter the leg-part grammar could own arrives WHOLE and the act decides, by name,
+         which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
+         bag, which is `document`. */
+      extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_")))
+    }),
+    sever: () => c.sever({
+      project: q6("project"),
+      handle: q6("handle"),
+      viewer: q6("viewer"),
+      owner: q6("owner"),
+      reason: q6("reason") ?? "",
+      author: q6("author"),
+      identity: q6("identity")
+    }),
+    reinstate: () => c.reinstate({
+      project: q6("project"),
+      handle: q6("handle"),
+      viewer: q6("viewer"),
+      owner: q6("owner"),
+      reason: q6("reason") ?? "",
+      author: q6("author"),
+      identity: q6("identity")
+    })
+  };
+}
+
+// src/affordances/facts.mjs
+var AffordanceFacts = class {
+  constructor(host, deps) {
+    this.host = host;
+    const d = deps || {};
+    const of = (name, make) => () => d[name] || make(host);
+    this.record = of("record", recordOf);
+    this.membership = of("membership", membershipOf);
+    this.connections = of("connections", connectionsOf);
+    this.citation = of("citation", citationOf);
+    this.inquiry = of("inquiry", inquiryOf);
+    this.publication = of("publication", publicationOf);
+    this.basisVersions = of("basisVersions", basisVersionsOf);
+    this.ratification = of("ratification", ratificationOf);
+    const storage = host && host.storage ? host.storage : host;
+    this.sql = d.sql || storage && storage.sql;
+  }
+  /* One row of record-core's `bundles` read contract (its R37: `bundle_id`, `object_type`, `current_state`,
+     `criticality`). */
+  #bundle(id) {
+    const rows = [...this.sql.exec(
+      `SELECT bundle_id, object_type, current_state, criticality FROM bundles WHERE bundle_id=?`,
+      id
+    )];
+    return rows.length ? rows[0] : null;
+  }
+  #isProject(id) {
+    const b = this.#bundle(id);
+    return !!b && normalizeType(b.object_type) === "project";
+  }
+  /* The projects that LIVE-cite `inquiryId`, that `viewer` can see and that `memberId` has joined: the three
+     conditions `conclude()` runs on the project it is named (the one live-cites predicate — a SEVERED edge is a project
+     that no longer draws on the question — the project gate, and C-56's joined rule). A question also writes
+     `rel: cites` into its references (REC-37), and a citing question is no project, so the type goes through
+     `normalizeType`. R23: asked only for the caller's own member id, over projects the viewer can see. */
+  #joinedCitingProjects(inquiryId, viewer, memberId) {
+    const m = this.membership();
+    return this.connections().citesInto(inquiryId).confirmed.filter((pid) => this.#isProject(pid) && m.inSight(pid, viewer) && m.isJoinedParticipant(pid, memberId));
+  }
+  /* R14, R15 (REC-142 / INVESTIGATIVE-SESSION.md §7.1 item 8): MAY THIS MEMBER CONCLUDE THIS QUESTION FOR SOME PROJECT?
+     "Some project", D-310's `ownsAnyProject` shape: the project is `conclude`'s PARAMETER, so the pre-flight narrows
+     the act to exactly the class for which NO `project=` could succeed. */
+  #concludesForProject(inquiryId, viewer, memberId) {
+    return this.#joinedCitingProjects(inquiryId, viewer, memberId).length > 0;
+  }
+  /* R14, R15 (REC-135 / §7.1 item 4): DOES A PROJECT THIS CALLER HAS JOINED STAND ON A CONCLUSION OF THIS QUESTION?
+     Asked through `basis-versions.conclusionOf`, the reader `publishCase()`'s own gate runs. A FACT and never a rule: it
+     says SOME joined project concluded here, not that this caller may publish for THAT project (D-311's per-pair
+     question), and the act still refuses on its own terms. */
+  #concludedForProject(inquiryId, viewer, memberId) {
+    const bv = this.basisVersions();
+    return this.#joinedCitingProjects(inquiryId, viewer, memberId).some((pid) => !!bv.conclusionOf(pid, inquiryId, viewer));
+  }
+  /* R14, R15 (REC-157 / §7.1 item 9): COULD A PROJECT THIS CALLER HAS JOINED PUBLISH A NEW EDITION OF A FINDING A CASE
+     ALREADY PINS — its conclusion having moved since every edition pinning these bytes? The two questions
+     `publishCase()` asks of the project a caller names, through the SAME two readers (ratification R1): the
+     relationship is CONCLUDED, and no edition pinning these bytes already records that conclusion. Only a case member is
+     walked: a finding no case pins is offered `publish` by `!case_member` already. */
+  #editionWarrantedForProject(inquiryId, viewer, memberId, currentState) {
+    const rel = this.publication().caseRelation(inquiryId);
+    if (!rel.member) return false;
+    const r = this.ratification();
+    return this.#joinedCitingProjects(inquiryId, viewer, memberId).some((pid) => {
+      const conc = r.caseConclusionFor(pid, inquiryId, viewer, currentState);
+      return conc.state === "concluded" && !r.editionsRecordingConclusion(inquiryId, rel, conc).same.length;
+    });
+  }
+  /* R14, R15, R18 (D-311, N45): THE CALLER'S ROSTER POSITION IN THIS PROJECT — the PAIR (this target, this caller),
+     asked of `by`, the string the roster acts themselves receive (`class:<cls>` for every bearer, which holds no row),
+     so the pre-flight asks the question of the same caller the act will. Each field is read through the predicate its
+     act's refusal runs:
+       owner                  `isProjectOwner` (invite, remove, owner-add, owner-remove: NOT_THE_OWNER)
+       state                  `participation` (join's NOT_INVITED, leave's NOT_A_PARTICIPANT / NOT_JOINED)
+       owner_floor_clear      owner-remove's floor for EVERY target: `ownerMath` over the owners (LAST_OWNER, R40),
+                              and at least one owner committed — with every owner leaving, removing any of them leaves
+                              only leaving owners, which R40 refuses (LAST_COMMITTED_OWNER)
+       other_owner_committed  leave's floor (membership R35, REC-224): some owner other than `by` has not asked to leave;
+                              an owner who is the last committed one is refused LAST_COMMITTED_OWNER
+       rescue_open            `rescueRefusal` is null (the rescue's three caller-and-project conditions, R75)
+     "Committed" is R35's: an owner whose participation is not `leaving` (R65's owners, R74's state). Null on a target
+     that is not a project and when no `by` was sent (a DO-internal call). */
+  #roster(projectId, by) {
+    const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+    if (actor === null) return null;
+    const m = this.membership();
+    const p = m.participation(projectId, actor);
+    const owners = m.projectOwners(projectId);
+    const committed = owners.filter((o) => m.participation(projectId, o)?.state !== "leaving");
+    return {
+      owner: m.isProjectOwner(projectId, actor),
+      state: p ? p.state : null,
+      owner_floor_clear: Membership.ownerMath(owners.length).possible && committed.length > 0,
+      other_owner_committed: committed.some((o) => o !== actor),
+      rescue_open: m.rescueRefusal(projectId, actor) === null
+    };
+  }
+  /** R13–R16: the facts for one target as the caller stands. `viewer` is what the caller may see, `identity` who it
+   *  is (a session's member; an `ai` credential's member principal), `author` the stamp an act would be signed with,
+   *  `by` the roster stamp. */
+  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {
+    if (!target) return {
+      ok: false,
+      reason: "NO_TARGET",
+      detail: "affordances are asked of an object: pass target=<bundle id>"
+    };
+    const m = this.membership();
+    const b = m.inSight(target, viewer) ? this.#bundle(target) : null;
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    const type = normalizeType(b.object_type);
+    const id = b.bundle_id;
+    const citesIn = this.connections().citesInto(id);
+    const citedByCase = {
+      confirmed: citesIn.confirmed.filter((c) => this.#isProject(c)).length,
+      severed: citesIn.severed.filter((c) => this.#isProject(c)).length
+    };
+    const md = this.record().readFile(id, "bundle.md");
+    const docFm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data || {} : {};
+    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
+    if (type === "project") {
+      const citation = this.citation();
+      for (const r of Array.isArray(docFm.references) ? docFm.references : [])
+        if (r && typeof r === "object" && r.rel === "cites") {
+          if (r.status !== "severed") {
+            citesOut.confirmed++;
+            continue;
+          }
+          citesOut.severed++;
+          if (typeof r.target === "string" && !citation.retiredNotCitable(r.target)) citesOut.severed_reinstatable++;
+        }
+    }
+    const rested = type === "inquiry" ? this.inquiry().restsOnLive(id) : { confirmed: [], frozen: [], severed: [] };
+    const who2 = m.positionalMember(viewer, identity);
+    const versions = Array.isArray(docFm.basis_versions) ? docFm.basis_versions : [];
+    return {
+      ok: true,
+      target: id,
+      object_type: b.object_type,
+      declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
+      current_state: b.current_state,
+      criticality: b.criticality ?? null,
+      /* CASE-4 / DEC-72: the case relation, through the one predicate the refusals run. */
+      case_member: type === "inquiry" ? !!this.publication().caseRelation(id).member : false,
+      /* D-310 / DEC-72 clause 5: owner of SOME project (the project is a PARAMETER of op=publish). */
+      project_owner: who2 === null ? null : m.ownsAnyProject(who2),
+      /* REC-149: the PAIR — does the caller own THIS project (`projectVisibilitySet`'s refusal). */
+      project_target_owner: type !== "project" || who2 === null ? null : m.isProjectOwner(id, who2),
+      /* REC-134 / C-56: has the caller JOINED this project (cite, sever, reinstate's refusal). */
+      project_participant: type !== "project" || who2 === null ? null : m.isJoinedParticipant(id, who2),
+      roster: type === "project" ? this.#roster(id, by) : null,
+      /* D-311: would the act be signed by a machine — `!who || isMachineIdentity(who)` on the author stamp,
+         REC-46's one predicate, which the machine fences run. Null when no `author` was sent. */
+      actor_is_machine: author === null ? null : (() => {
+        const a = String(author).trim();
+        return !a || isMachineIdentity(a);
+      })(),
+      concludes_for_project: type !== "inquiry" || who2 === null ? null : this.#concludesForProject(id, viewer, who2),
+      concluded_for_project: type !== "inquiry" || who2 === null ? null : this.#concludedForProject(id, viewer, who2),
+      edition_warranted_for_project: type !== "inquiry" || who2 === null ? null : this.#editionWarrantedForProject(id, viewer, who2, b.current_state),
+      /* REC-16: how many legs this question rests on, read from the document (inquiry_basis projects it). */
+      basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
+      rested_on: { working: rested.confirmed.length, frozen: rested.frozen.length, severed: rested.severed.length },
+      /* PL-2 / IS-2: which states this question's readings are in, from the document. */
+      basis_version_states: versions.filter((v) => v && typeof v === "object" && typeof v.state === "string").map((v) => v.state.trim()),
+      basis_versions: versions.filter((v) => v && typeof v === "object").length,
+      cites_in: { confirmed: citesIn.confirmed.length, severed: citesIn.severed.length },
+      cites_out: citesOut,
+      cited_by_case: citedByCase
+    };
+  }
+};
+var instances21 = /* @__PURE__ */ new WeakMap();
+function affordancesOf(host, deps) {
+  let a = instances21.get(host);
+  if (!a) {
+    a = new AffordanceFacts(host, deps);
+    instances21.set(host, a);
+  }
+  return a;
+}
+
 // src/progressions/schema.mjs
 var PROGRESSIONS_SCHEMA = `
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
@@ -77249,7 +78418,7 @@ function refusal10(code, detail, extra = {}) {
 var STAGE_REQUIREDNESS = Object.freeze(["always", "usually", "sometimes", "never", "unless_exception"]);
 var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
 var DISPOSITION_REASON_MAX = 160;
-var NOTE_MAX3 = 1e3;
+var NOTE_MAX4 = 1e3;
 var BASIS_MAX = 4e3;
 var CITATION_MAX2 = 2e3;
 var REASON_MAX2 = 4e3;
@@ -77481,7 +78650,7 @@ var Progressions = class {
           { stage_key: s.stage_key, after: s.after_stage }
         );
     const lbl = label.trim();
-    const nt = note == null ? null : String(note).slice(0, NOTE_MAX3);
+    const nt = note == null ? null : String(note).slice(0, NOTE_MAX4);
     const stmt = str7(basis) ? str7(basis).slice(0, BASIS_MAX) : null;
     const cite = str7(citation) ? str7(citation).slice(0, CITATION_MAX2) : null;
     const cur = this.#current(key);
@@ -78280,7 +79449,7 @@ var Progressions = class {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances33 = [];
+    const instances34 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p of this.#pairs()) {
       const inst = this.#assemble(p.progression_key, p.entity_id);
@@ -78292,7 +79461,7 @@ var Progressions = class {
       const findings = [...missing, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances33.push({
+      instances34.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -78370,10 +79539,10 @@ var Progressions = class {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances33,
+      instances: instances34,
       proposals,
       dispositions,
-      instance_count: instances33.length,
+      instance_count: instances34.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -78396,7 +79565,7 @@ var Progressions = class {
       established: f8.grade_determined === true && isEstablished(f8.grade),
       needs_confirmation: f8.grade === "C"
     });
-    const instances33 = [];
+    const instances34 = [];
     for (const r of rows) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -78415,7 +79584,7 @@ var Progressions = class {
       const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
       const others = inst.findings.filter((f8) => f8.kind !== "missing_predecessor");
       const findings = [...missing, ...a.overdue, ...others].map(project).map((f8) => ({ ...f8, disposition: a.decided.get(f8.stage_key) ?? null }));
-      instances33.push({
+      instances34.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -78428,7 +79597,7 @@ var Progressions = class {
         open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances33.length, instances: instances33 };
+    return { ok: true, capture_sha: captureSha, count: instances34.length, instances: instances34 };
   }
   /* ===================================================================== *
    * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
@@ -78538,9 +79707,9 @@ function progressionOps(p, url, body) {
     captureprogressions: () => p.captureProgressions({ captureSha: q6("sha256"), nowMs: q6("now") })
   };
 }
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function progressionsOf(host, deps) {
-  let p = instances20.get(host);
+  let p = instances22.get(host);
   if (!p) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -78554,7 +79723,7 @@ function progressionsOf(host, deps) {
       entities: d.entities || entitiesOf(host, { record }),
       connections: d.connections || { weakerGrade }
     });
-    instances20.set(host, p);
+    instances22.set(host, p);
     record.declarePurge("progressions", PROGRESSIONS_TABLES);
   }
   return p;
@@ -78818,6 +79987,19 @@ var RUNGS = {
   // NO_REASON (intent R16: a proposal is deferred or dismissed with a reason)
   reevaluationrecord: "reasoned",
   // REEVALUATION_NOTE_MALFORMED (reevaluation R16: the note is the account)
+  /* Layer 9's acts that refuse without the member's authored reason, on R27's rule (K208 (2), K264; with N216). */
+  consequencerevise: "reasoned",
+  // NO_REASON (consequences R6: a part is revised with its reason)
+  addressedrecord: "reasoned",
+  // NO_REASON (consequences R9: addressed or not, with a reason)
+  escalationevaluate: "reasoned",
+  // NO_REASON (escalation R10: a response is read with a reason)
+  escalationadvance: "reasoned",
+  // NO_REASON (escalation R13: an edge is taken with a reason)
+  escalationdecline: "reasoned",
+  // NO_REASON (escalation R13: a proposed stage is declined with a reason)
+  escalationsuspend: "reasoned",
+  // NO_REASON (escalation R15; escalationresume takes it back, and the higher rung is stated)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -78862,8 +80044,12 @@ var RUNGS = {
   // a further versioncurrent stands the project on another reading
   actionlaws: "reversible",
   // a further actionlaws restates the list
-  projectvisibilityset: "reversible"
+  projectvisibilityset: "reversible",
   // the owner sets it again
+  /* T8 layer 11: resuming asks no reason (escalation R15: an optional one is kept), and a further suspension takes it
+     back. */
+  escalationresume: "reversible"
+  // escalationsuspend takes it back
 };
 var RUNG_ABSENT = {
   /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
@@ -79099,10 +80285,30 @@ var RUNG_ABSENT = {
   /* K219 (T7): `capturerequestdrain`'s and `capturerequest`'s ground — the machinery a decided act rides on. */
   reevaluationraise: { ground: "substrate", is: "reevaluation's bounded sweep raising the version notices; the unattended path, stamping nothing (reevaluation R14)" },
   capturerequestretry: { ground: "substrate", is: "re-queues a capture request the source refused, once a member supplied what it asked; the capture is the act (capture-requests R42)" },
-  /* T8 layer 11 (K208 (2)): actions R28's proposal, on `actionlawspropose`'s ground — a proposal stored apart that asks
-     its basis as a proposal's why and that nothing published takes back. Layer 9's other acts are held until the
-     durable object dispatches them (N216, T9; K263, K264). */
-  actionriskpropose: { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" }
+  /* Layer 9's acts (K208 (2); held through T8 by K264 and restored in T9 with N216, now the durable object dispatches
+     them), keyed to layer 9's op maps (legacy-index's names for escalation's services), on R27's rule:
+     each is a member's act on the record, or a proposal stored apart that settles nothing, corrected forward, that asks
+     no authored reason, or asks one only as a proposal's why (`actionlawspropose` and `contradictionpropose`'s
+     precedent), and that no published act takes back. `determine` asks a reason only where it supersedes, under a
+     code (`BAD_REASON`) outside JUSTIFICATION_REFUSALS, so it is stated `undetermined` here (K264 (2); N233).
+     actions R28's proposal beside them, on `actionlawspropose`'s ground. */
+  standarddeclare: { ground: "undetermined", is: "a member records a standard the record holds \u2014 citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
+  standardpropose: { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
+  standardadopt: { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
+  determine: { ground: "undetermined", is: "a member determines a government act compliant, noncompliant or unclear against named standards, resting on published findings; never edited, superseded once by a later determination with its reason (conformance R1, R7)" },
+  comparisonpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled; never a determination (conformance R12)" },
+  consequencerecord: { ground: "undetermined", is: "a member records what a breach did and to whom \u2014 a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1\u2013R6)" },
+  filingprepare: { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1\u2013R5)" },
+  filingapprove: { ground: "undetermined", is: "a member approves a filing draft's text, or their edit of it, at most once; the approved text is theirs (filings R6)" },
+  filingsent: { ground: "undetermined", is: "a member records that an approved filing was sent, as one `sent` correspondence entry on the action linked both ways, `actioncorrespond`'s ground (filings R7)" },
+  counselpacket: { ground: "undetermined", is: "a member names counsel and assembles a counsel packet from the record for a Tier 3 action, marked for counsel's review and never fileable; assembling again makes a new version (filings R8\u2013R12)" },
+  theorypropose: { ground: "undetermined", is: "a member or a machine PROPOSES a candidate legal theory and remedy against named standards with its why, stored apart and labelled; never the group's position (filings R14)" },
+  escalationopen: { ground: "undetermined", is: "a member opens an escalation of a live noncompliant determination at stage 1; one open or suspended escalation per determination (escalation R1)" },
+  escalationattach: { ground: "undetermined", is: "a member attaches a breach action to an escalation's current stage, 2, 5 or 7, a stage-7 act stating its accountability purpose; never detached (escalation R9, R12)" },
+  escalationend: { ground: "undetermined", is: "a member ends an escalation, only when compliance is restored for every standard pursued and the consequences are addressed; never reopened (escalation R14)" },
+  actionriskpropose: { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" },
+  /* `export`'s ground: the bytes are already the record's; this hands them over and logs who took them. */
+  counselpacketexport: { ground: "substrate", is: "hands a member a counsel packet version's bytes and records who exported it, when and for which counsel (filings R11)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -79830,12 +81036,13 @@ var ACTS = [
        projectinvite      NOT_THE_OWNER            (`projectInvite`)   -> owner of THIS project
        projectjoin        NOT_INVITED              (`projectJoin`)     -> a participation row, not
                           `joined` (REC-186: a joined caller's join changes nothing)
-       projectleave       NOT_A_PARTICIPANT/NOT_JOINED, LAST_OWNER_CANNOT_LEAVE (`projectLeave`)
-                          -> state `joined`, and not the only owner (REC-186)
+       projectleave       NOT_A_PARTICIPANT/NOT_JOINED, LAST_COMMITTED_OWNER (`projectLeave`)
+                          -> state `joined`, and an owner only while another owner is committed (R35)
        projectremove      NOT_THE_OWNER            (`projectRemove`)   -> owner of THIS project
        projectowneradd    NOT_THE_OWNER            (`projectOwnerAdd`) -> owner of THIS project
-       projectownerremove NOT_THE_OWNER, LAST_OWNER (`projectOwnerRemove`) -> owner, and the
-                          one-owner floor clear (a one-owner project refuses EVERY parameter)
+       projectownerremove NOT_THE_OWNER, LAST_OWNER, LAST_COMMITTED_OWNER (`projectOwnerRemove`) ->
+                          owner, the one-owner floor clear and some owner committed (a one-owner
+                          project, or one whose owners have all asked to leave, refuses EVERY parameter)
        projectownerrescue ADMIN_ONLY, NO_OWNERS, OWNERS_ARE_ACTIVE (`#rescueRefusal`) -> open
      `projectremove` IS AN OWNER'S, NOT AN ADMINISTRATOR'S: Membership Architecture v2 §7.7
      REVERSED v1.4, and the store has refused a non-owner since. D-311's own row and D-310's
@@ -79846,9 +81053,9 @@ var ACTS = [
      read "offered to every participant, joined ones included … withholding it there would be a fence
      tighter than its rule". `projectJoin` stays idempotent and a joined caller's join still SUCCEEDS,
      but it changes nothing, and an offer that does nothing is an overclaim (DEC-8) — the store is not
-     narrowed, only the offer. `projectleave` likewise is not offered to the project's ONLY owner:
-     `projectLeave` refuses LAST_OWNER_CANNOT_LEAVE through `Store.ownerMath` over `#owners`, the same
-     arithmetic `f.roster.owner_floor_clear` already states, so the offer reads that fact.
+     narrowed, only the offer. `projectleave` likewise is not offered to an owner who is the last
+     COMMITTED one: `projectLeave` refuses LAST_COMMITTED_OWNER unless another owner has not asked to
+     leave (membership R35, REC-224), which `f.roster.other_owner_committed` states (N45).
      WHAT THESE DO NOT SAY is what turns on a PARAMETER — the handle named, its status, the reason,
      the 7.10 votes still owed (CONSENSUS_REQUIRED, VOTES_SHORT) — the release precedent: the
      record permits the move, not that this caller's parameters will pass.
@@ -79871,12 +81078,15 @@ var ACTS = [
     types: ["project"],
     applies: (f8, ty) => ty === "project" && typeof f8.roster?.state === "string" && f8.roster.state !== "joined"
   },
+  /* N45 (R18): an owner is offered leave only while ANOTHER owner stays committed (has not asked to leave), which is
+     when membership R35 accepts it (LAST_COMMITTED_OWNER otherwise). The owner floor alone counted leaving owners too,
+     so two owners could each be offered leave and the second refused. */
   {
     id: "projectleave",
     label: "Ask to leave this project",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.state === "joined" && (f8.roster?.owner !== true || f8.roster?.owner_floor_clear === true)
+    applies: (f8, ty) => ty === "project" && f8.roster?.state === "joined" && (f8.roster?.owner !== true || f8.roster?.other_owner_committed === true)
   },
   {
     id: "projectremove",
@@ -80250,7 +81460,7 @@ var parse = (s) => {
 };
 var machine = (who2) => !str8(who2) || isMachineIdentity(str8(who2));
 var second = (iso3) => String(iso3).replace(/\.\d+Z$/, "Z");
-var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var HEX644 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
 function refuse4(code, detail, extra = {}) {
@@ -80576,7 +81786,7 @@ var Consequences = class {
       const done = this.promotion.promote({
         bundleId: id,
         base: null,
-        snapKey: `${at14.replace(/[-:]/g, "")}_${rand7(4)}`,
+        snapKey: `${at14.replace(/[-:]/g, "")}_${rand8(4)}`,
         author: str8(author) ?? INTERNAL,
         files: [{ path: "bundle.md", text: partDoc(id, part) }],
         meta: { object_type: "consequence", title: titleOf2(part), current_state: "recorded", created: at14, last_updated: at14 }
@@ -81052,9 +82262,9 @@ function partDoc(id, p) {
     ""
   ].join("\n");
 }
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances21.get(host);
+  let c = instances23.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -81062,7 +82272,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances21.set(host, c);
+    instances23.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -81329,7 +82539,7 @@ var FILINGS_CHECKS = Object.freeze({
     translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
   }
 });
-function rowOf5(code) {
+function rowOf6(code) {
   return Object.prototype.hasOwnProperty.call(FILINGS_CHECKS, code) ? FILINGS_CHECKS[code] : null;
 }
 
@@ -81424,7 +82634,7 @@ var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var utf8 = (s) => new TextEncoder().encode(s).length;
 var WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var withRow3 = (r) => {
-  const row2 = r && r.ok === false && !r.check ? rowOf5(r.reason) : null;
+  const row2 = r && r.ok === false && !r.check ? rowOf6(r.reason) : null;
   return row2 ? { ...r, code: r.reason, check: row2.check, translation: row2.translation } : r;
 };
 var SERVICES = Object.freeze([
@@ -82617,15 +83827,15 @@ ${text3}`;
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f8 = instances22.get(host);
+  let f8 = instances24.get(host);
   if (!f8) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f8 = new Filings({ ...d, host, storage, record });
-    instances22.set(host, f8);
+    instances24.set(host, f8);
     f8.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f8.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f8.evidenceBlock(arg));
@@ -84088,9 +85298,9 @@ for (const name of [
     }
   } });
 }
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances23.get(host);
+  let i = instances25.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -84102,1001 +85312,12 @@ function escalationOf(host, deps) {
     const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
     const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
-    instances23.set(host, i);
+    instances25.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
   }
   return i;
-}
-
-// src/citation/checks.mjs
-var CITE_CHECKS = {
-  BAD_NOTE: {
-    check: "C-33.15",
-    where: "src/citation/index.mjs cite > is-cite-note",
-    translation: "A note here is at most two hundred characters and cannot contain a quotation mark, a backslash or a line break. Those characters would silently reshape the document rather than appear in it, so the note is declined instead of mangled."
-  },
-  NO_ROLE: {
-    check: "C-33.16",
-    where: "src/citation/index.mjs cite > is-cite-role",
-    translation: "A leg of a question's basis has to say what the material DOES for the answer, and this one does not say. It is never assumed: material that cuts against the case is first-class here, and guessing would put a claim about your reasoning in the record that you did not make."
-  },
-  BAD_ROLE: {
-    check: "C-33.17",
-    where: "src/citation/index.mjs cite > is-cite-role",
-    translation: "That is not one of the parts a piece of basis can play. The set is closed and is published beside the act itself, so the choices can be read rather than remembered."
-  },
-  ROLE_NOT_APPLICABLE: {
-    check: "C-33.18",
-    where: "src/citation/index.mjs cite > is-cite-role",
-    translation: "What material does for an answer is a property of a question's basis, and the thing citing here is a case. A case's citation carries no such part, so this one would be dropped rather than recorded \u2014 and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart."
-  },
-  SEVERED_EDGE: {
-    check: "C-33.19",
-    where: "src/citation/index.mjs cite > is-cite-severed",
-    translation: "Somebody already recorded a decision to cut this dependency, which is different from there never having been one. Citing it again would neither reverse that decision nor step around it, so putting the link back is a separate act that records its own reason."
-  },
-  /* D-168 / BOB #30, 2026-09-23 — State Rules §4.1, "A RETIRED ITEM IS NOT CITABLE". The translation NAMES THE DOOR,
-     the REC-117 rule: cite what superseded it, or re-collect the source. Minted at two sites, `cite`'s region and
-     `reinstate`'s refusal (R4), both through R5's one predicate; the row holds the region's `where`. */
-  RETIRED_NOT_CITABLE: {
-    check: "C-33.39",
-    where: "src/citation/index.mjs cite > is-cite-retired",
-    translation: "The group has retired this material, recording that it is superseded or no longer stands, so a citation made now would read to everyone after you as live support nobody will look at again. Cite whatever superseded it, or collect the source again as a new item and cite that. A document its publisher withdrew or changed is a different thing and can still be cited."
-  }
-};
-var CITE_EXTENT_CHECKS = {
-  UNKNOWN_EXTENT_FIELD: {
-    check: "C-45.7",
-    where: "src/citation/index.mjs cite > is-cite-extent",
-    translation: "Part of what was sent with this citation names a field this act does not carry, so the record cannot tell what part of the document you meant. It is refused rather than ignored: a field that is accepted and quietly dropped leaves you with a citation that looks like the one you made and is not. The fields this act does take are listed beside the refusal."
-  },
-  EXTENT_NOT_APPLICABLE: {
-    check: "C-45.8",
-    where: "src/citation/index.mjs cite > is-cite-extent",
-    translation: "Which part of a document a citation rests on is something a QUESTION's basis records, and the thing citing here is a case. A case's citation names the document and has nowhere to put a page or a passage, so this one would be dropped rather than recorded \u2014 and a field stated in one place and honoured nowhere is how a record and the pages built from it drift apart."
-  },
-  EXTENT_ON_MANY: {
-    check: "C-45.9",
-    where: "src/citation/index.mjs cite > is-cite-extent",
-    translation: "A part of a document is a part of ONE document, and this citation would write a leg for several. Writing the same page or passage onto each of them would put claims in the record you never made \u2014 you named one part once. Cite the one document you mean this part of, and cite the rest separately."
-  },
-  BAD_EXTENT_VALUE: {
-    check: "C-45.10",
-    where: "src/citation/index.mjs cite > is-cite-extent",
-    translation: "One of the values describing which part of the document you mean cannot be written into the record as it stands \u2014 it is empty, too long, or contains a quotation mark, a backslash, a line break or a comment mark, and those characters would silently reshape the document rather than appear in it. It is declined instead of mangled."
-  }
-};
-
-// src/citation/splice.mjs
-function spliceEdgeStatus(text3, changes) {
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return null;
-  const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return null;
-  let ref = -1;
-  for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
-    ref = i;
-    break;
-  }
-  if (ref === -1) return null;
-  const starts = [];
-  for (let i = ref + 1; i < end2; i++) {
-    if (/^ {2}- /.test(lines[i])) starts.push(i);
-    else if (!/^\s/.test(lines[i]) && lines[i].trim() !== "") break;
-  }
-  if (!starts.length) return null;
-  const blockEnd = (() => {
-    let last = ref;
-    for (let i = ref + 1; i < end2; i++) {
-      if (lines[i].trim() === "") continue;
-      if (/^\s/.test(lines[i])) {
-        last = i;
-        continue;
-      }
-      break;
-    }
-    return last;
-  })();
-  const out = lines.slice();
-  let applied = 0;
-  for (let s = 0; s < starts.length; s++) {
-    const from = starts[s], to = (s + 1 < starts.length ? starts[s + 1] : blockEnd + 1) - 1;
-    let target = null;
-    for (let i = from; i <= to; i++) {
-      const m = /^\s*(?:- )?target:\s*(.+?)\s*$/.exec(lines[i]);
-      if (m) {
-        target = m[1].replace(/^["']|["']$/g, "");
-        break;
-      }
-    }
-    if (!target || !changes.has(target)) continue;
-    const ch = changes.get(target);
-    let sawNote = false, statusLine = -1;
-    for (let i = from; i <= to; i++) {
-      if (/^\s*(?:- )?status:/.test(lines[i])) {
-        out[i] = "    status: " + ch.status;
-        statusLine = i;
-      }
-      if (/^\s*(?:- )?note:/.test(lines[i])) {
-        out[i] = `    note: "${ch.note}"`;
-        sawNote = true;
-      }
-    }
-    if (statusLine === -1) return null;
-    if (!sawNote) out[statusLine] = out[statusLine] + `
-    note: "${ch.note}"`;
-    applied++;
-  }
-  return applied === changes.size ? out.join("\n") : null;
-}
-function spliceReferences3(text3, additions) {
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return null;
-  const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return null;
-  const block = additions.map((a) => `  - rel: ${a.rel}
-    target: ${a.target}
-    status: ${a.status}
-    note: "${a.note ?? ""}"` + (typeof a.extent_capture === "string" ? `
-    extent_capture: ${a.extent_capture}` : ""));
-  let ref = -1;
-  for (let i = 1; i < end2; i++) if (/^references:/.test(lines[i])) {
-    ref = i;
-    break;
-  }
-  if (ref === -1)
-    return [...lines.slice(0, end2), "references:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[ref].slice("references:".length).trim();
-  if (rest === "[]")
-    return [...lines.slice(0, ref), "references:", ...block, ...lines.slice(ref + 1)].join("\n");
-  if (rest !== "") return null;
-  let last = ref;
-  for (let i = ref + 1; i < end2; i++) {
-    if (lines[i].trim() === "") continue;
-    if (/^\s/.test(lines[i])) {
-      last = i;
-      continue;
-    }
-    break;
-  }
-  return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
-}
-function legExtentLines(l) {
-  const keys = Object.keys(l).filter((k) => k.startsWith("extent_") || k === "content_id");
-  if (!keys.length) return [];
-  const order = (k) => k === "extent_kind" ? 0 : k === "content_id" ? 2 : 1;
-  keys.sort((a, b) => order(a) - order(b) || (a < b ? -1 : a > b ? 1 : 0));
-  const out = [];
-  for (const k of keys) {
-    const v = l[k];
-    if (v === void 0 || v === null || v === "") continue;
-    if (typeof v === "number") out.push(`    ${k}: ${v}`);
-    else if (Array.isArray(v)) out.push(`    ${k}: [${v.join(", ")}]`);
-    else out.push(`    ${k}: "${String(v)}"`);
-  }
-  return out;
-}
-function spliceBasis(text3, legs) {
-  if (!legs.length) return text3;
-  const lines = text3.split("\n");
-  if (lines[0] !== "---") return null;
-  const end2 = lines.indexOf("---", 1);
-  if (end2 === -1) return null;
-  const block = legs.map((l) => [
-    `  - target: ${l.target}`,
-    `    role: ${l.role}`,
-    ...l.grade ? [`    grade: ${l.grade}`] : [],
-    ...l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : [],
-    ...l.grade_source ? [`    grade_source: ${l.grade_source}`] : [],
-    ...l.note ? [`    note: "${l.note}"`] : [],
-    ...legExtentLines(l)
-  ].join("\n"));
-  let bi = -1;
-  for (let i = 1; i < end2; i++) if (/^basis:/.test(lines[i])) {
-    bi = i;
-    break;
-  }
-  if (bi === -1)
-    return [...lines.slice(0, end2), "basis:", ...block, ...lines.slice(end2)].join("\n");
-  const rest = lines[bi].slice("basis:".length).trim();
-  if (rest === "[]")
-    return [...lines.slice(0, bi), "basis:", ...block, ...lines.slice(bi + 1)].join("\n");
-  if (rest !== "") return null;
-  let last = bi;
-  for (let i = bi + 1; i < end2; i++) {
-    if (lines[i].trim() === "") continue;
-    if (/^\s/.test(lines[i])) {
-      last = i;
-      continue;
-    }
-    break;
-  }
-  return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
-}
-function setScalar4(text3, key, value) {
-  const lines = text3.split("\n");
-  const end2 = lines.indexOf("---", 1);
-  for (let i = 1; i < (end2 === -1 ? lines.length : end2); i++) {
-    if (lines[i].startsWith(key + ":")) {
-      lines[i] = `${key}: ${value}`;
-      return lines.join("\n");
-    }
-  }
-  return text3;
-}
-function appendSessionLog3(text3, entry) {
-  const at14 = text3.indexOf("## Session Log");
-  if (at14 < 0) return text3 + "\n## Session Log\n\n" + entry;
-  const nxt = text3.indexOf("\n## ", at14 + 1);
-  const cut3 = nxt === -1 ? text3.length : nxt + 1;
-  return text3.slice(0, cut3) + entry + "\n" + text3.slice(cut3);
-}
-
-// src/citation/index.mjs
-var CITE_EDGE_BYTES = 83;
-var CITE_PIN_BYTES = 85;
-var CITE_LOG_SAMPLE = 20;
-var NOTE_MAX4 = 200;
-var EXTENT_VALUE_MAX = 200;
-var EDGE_REASON_MAX3 = 160;
-var EDGE_NOTE_MAX = 480;
-var EXTENT_PARAMS = Object.freeze({
-  extent_kind: "text",
-  extent_ref: "text",
-  extent_page: "int",
-  extent_rect: "nums",
-  extent_sheet: "text",
-  extent_cell: "text",
-  extent_slide: "int",
-  extent_shape: "int",
-  extent_para: "int",
-  extent_run: "int",
-  extent_range: "text",
-  extent_table: "int",
-  extent_part: "text",
-  extent_cited_as: "text",
-  content_id: "text"
-});
-function noSuchProject2(project) {
-  return {
-    ok: false,
-    reason: "NO_SUCH_PROJECT",
-    project: project ?? null,
-    detail: "no project answers to that id here. A project you cannot see is answered exactly as one that does not exist (Membership Architecture v2 \xA77.9), so this is not a hint either way."
-  };
-}
-var rowOf6 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
-var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var Citation = class {
-  constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
-    this.record = record;
-    this.membership = membership;
-    this.promotion = promotion;
-    this.content = content;
-    this.retrieval = retrieval;
-    this.inquiry = inquiry;
-    this.now = typeof now === "function" ? now : () => Date.now();
-  }
-  /* ---- R5 ---- */
-  /** R5 (D-444, D-553): THE ONE RETIRED-TARGET PREDICATE, "may this be cited now". True exactly when the bundle's
-   *  current state is `retired`, whatever its type: the rule follows the STATE, so any object in a `retired` state is
-   *  not citable, by any door and for every caller. An id with no row answers false (an absent target is refused by
-   *  another door and this one claims nothing about it). `source_status` is not read: a removed or modified source
-   *  stays citable, `retired` is the other axis. NEVER viewer-gated: whether a viewer can see the target decides only
-   *  a refusal's WORDING, never citability. Asked by `cite` (R1), `reinstate` (R4), and the later modules that offer
-   *  or suggest a citation, so an offer and a refusal cannot answer differently. Never throws. */
-  retiredNotCitable(id) {
-    try {
-      if (typeof id !== "string" || !id) return false;
-      const h = this.record.head(id);
-      return !!h && String(h.currentState ?? "").trim() === "retired";
-    } catch {
-      return false;
-    }
-  }
-  /* ---- the citing object, R1 and R4's shared opening ---- */
-  /* The citing object, answered through sight BEFORE position (REC-138 / D-426, R9): an existence-only sight is
-     `membership`'s C-70.1 (REC-149), and an absent id and one this viewer cannot see give the same answer. */
-  #citingObject(project, viewer) {
-    const h = typeof project === "string" && project ? this.record.head(project) : null;
-    if (h) {
-      const existence = this.membership.existenceAct(project, viewer);
-      if (existence) return { refusal: existence };
-    }
-    if (!h || !this.membership.inSight(project, viewer)) return { refusal: noSuchProject2(project) };
-    return { head: h };
-  }
-  /* The live `bundle.md`, parsed, or its readability refusal. */
-  #document(project, detail) {
-    const f8 = this.record.readFile(project, "bundle.md");
-    if (!f8 || typeof f8.text !== "string") return { refusal: { ok: false, reason: "NO_BUNDLE_MD", project } };
-    const parsed = parseFrontmatter(f8.text);
-    if (!parsed.data)
-      return { refusal: { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project, ...detail ? { detail } : {} } };
-    return { text: f8.text, data: parsed.data };
-  }
-  /* Promote the rewritten `bundle.md` over the head, every OTHER live file carried forward untouched: promote writes a
-     whole image, so a writer that mentions one file deletes the rest (the default that once destroyed a provenance
-     register). Hand-authored, not mechanical: a member citing evidence is authorship, so no writer and no operation
-     are claimed. */
-  #write(project, head, text3, when, author, fm, objectType) {
-    const carried = [];
-    for (const path of this.record.livePaths(project) || []) {
-      if (path === "bundle.md") continue;
-      const f8 = this.record.readFile(project, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
-    }
-    const bytes2 = new TextEncoder().encode(text3);
-    return this.promotion.promote({
-      bundleId: project,
-      base: head.bundleSha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand8(4)}`,
-      author: author || "member",
-      files: [{ path: "bundle.md", text: text3, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
-      meta: {
-        object_type: objectType,
-        title: fm.title,
-        current_state: fm.current_state,
-        prior_state: fm.prior_state ?? null,
-        created: fm.created,
-        last_updated: when,
-        criticality: fm.criticality ?? null
-      }
-    });
-  }
-  /* ---- sever, reinstate (R4) ---- */
-  /** R4: SEVERING and REINSTATING a case's `cites` edges, both at weight `refuse` (R7). SEVERING IS NOT DELETION: the
-   *  edge stays, with its target and rel intact, and only its status moves, so a reader can see that the group once
-   *  relied on something and stopped, and why. A REASON IS REQUIRED by both: the catalogue's own remedy for a bad edge
-   *  is "sever with reason" (C-6.1), and State Rules §5.1 has a human confirming or severing. One method for both
-   *  directions, because they are the same operation over the same grammar. */
-  #edgeTransition({ project, handle, viewer, owner, reason, author, from, to, verb, resultKey, identity = null }) {
-    const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
-    if (!sel.ok) return sel;
-    const obj = this.#citingObject(project, viewer);
-    if (obj.refusal) return obj.refusal;
-    const p = obj.head;
-    if (p.type !== "project")
-      return {
-        ok: false,
-        reason: "NOT_A_PROJECT",
-        project,
-        got: p.type,
-        detail: "cites lives on the citing object and this action edits a Project's edges"
-      };
-    const denied = this.membership.projectAuthority(project, identity, "joined", resultKey === "severed" ? "sever" : "reinstate");
-    if (denied) return denied;
-    const why = String(reason ?? "").trim();
-    if (!why)
-      return {
-        ok: false,
-        reason: "NO_REASON",
-        detail: `${verb} an edge records WHY. The catalog's own remediation for a bad reference is "sever with reason", and an edge moved with no reason is an unexplained change wearing a status field.`
-      };
-    if (why.length > EDGE_REASON_MAX3 || /["\\\r\n]/.test(why))
-      return {
-        ok: false,
-        reason: "BAD_REASON",
-        detail: `a reason is at most ${EDGE_REASON_MAX3} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it`
-      };
-    if (!sel.members.length)
-      return {
-        ok: false,
-        reason: "EMPTY_SELECTION",
-        project,
-        handle,
-        drift: sel.drift,
-        detail: "this selection resolves to no members, so there is nothing to move. It may have named ids that do not exist, or its members may have been purged or hidden since it was made."
-      };
-    const offenders = [];
-    for (const id of sel.members) {
-      const b = this.record.head(id);
-      const ty = b ? normalizeType(b.type) : null;
-      if (!(ty === "information" || ty === "inquiry")) offenders.push(id);
-    }
-    if (offenders.length)
-      return {
-        ok: false,
-        reason: "NOT_INFORMATION",
-        project,
-        handle,
-        offenders: offenders.sort(),
-        citable: ["information", "inquiry"],
-        detail: "a case's citation edges point at material or at a question, and these members of the selection are neither, so they carry no citation edge to move. The whole call is refused rather than narrowed."
-      };
-    if (to === "confirmed") {
-      const retiredMembers = sel.members.filter((id) => this.retiredNotCitable(id));
-      if (retiredMembers.length)
-        return {
-          ok: false,
-          reason: "RETIRED_NOT_CITABLE",
-          ...rowOf6(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
-          project,
-          handle,
-          offenders: retiredMembers.sort(),
-          drift: sel.drift,
-          detail: "the group has RETIRED these since the edge was severed, recording that they are superseded or no longer stand, and reinstating the edge would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
-        };
-    }
-    const doc = this.#document(project, null);
-    if (doc.refusal) return doc.refusal;
-    const current = /* @__PURE__ */ new Map();
-    for (const r of Array.isArray(doc.data.references) ? doc.data.references : [])
-      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
-        current.set(r.target, r);
-    const wrong = [];
-    for (const id of sel.members) {
-      const e = current.get(id);
-      if (!e || !from.includes(e.status)) wrong.push(id);
-    }
-    if (wrong.length)
-      return {
-        ok: false,
-        reason: from.includes("severed") ? "NOT_SEVERED" : "NOT_CITED",
-        project,
-        handle,
-        offenders: wrong.sort(),
-        drift: sel.drift,
-        detail: `${verb} requires an edge currently in ${from.map((s) => `'${s}'`).join(" or ")}. These targets are not, so the whole call is refused: a batch that moved only the eligible members would be a state change the operator did not ask for.`
-      };
-    const when = stampInstant("second", this.now());
-    const changes = /* @__PURE__ */ new Map();
-    for (const id of sel.members) {
-      const prev = String(current.get(id).note ?? "");
-      let note = (prev ? prev + " | " : "") + `${verb} ${when}: ${why}`;
-      if (note.length > EDGE_NOTE_MAX) note = note.slice(note.length - EDGE_NOTE_MAX);
-      changes.set(id, { status: to, note });
-    }
-    const spliced = spliceEdgeStatus(doc.text, changes);
-    if (!spliced)
-      return {
-        ok: false,
-        reason: "UNSPLICEABLE_REFERENCES",
-        project,
-        detail: "the references block is not in a shape this grammar can edit in place"
-      };
-    let text3 = setScalar4(spliced, "last_updated", `"${when}"`);
-    const ids = [...sel.members].sort();
-    const shown2 = ids.slice(0, CITE_LOG_SAMPLE);
-    const listed = shown2.join(", ") + (ids.length > shown2.length ? `, and ${ids.length - shown2.length} more` : "");
-    text3 = appendSessionLog3(
-      text3,
-      `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
-Trigger: selection ${handle}
-Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
-`
-    );
-    const bytes2 = new TextEncoder().encode(text3);
-    if (bytes2.length > INLINE_MAX)
-      return {
-        ok: false,
-        reason: "CITATION_TOO_LARGE",
-        project,
-        bytes: bytes2.length,
-        limit: INLINE_MAX,
-        detail: "the reasons appended to these edges would push bundle.md past the 1MB inline limit"
-      };
-    const promoted = this.#write(project, p, text3, when, author, doc.data, "project");
-    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
-    return {
-      ok: true,
-      project,
-      handle,
-      weight: "refuse",
-      moved: sel.moved,
-      drift: sel.drift,
-      /* `why` and NOT `reason`: every refusal returns a REASON CODE under that name, and returning the member's
-         prose under the same key would make a success indistinguishable from a refusal to a caller checking
-         `reason`. */
-      [resultKey]: ids,
-      why,
-      from,
-      to,
-      bundleSha: promoted.bundleSha,
-      rowVersion: promoted.rowVersion,
-      gate: sel.gate
-    };
-  }
-  sever({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
-    return this.#edgeTransition({
-      project,
-      handle,
-      viewer,
-      owner,
-      reason,
-      author,
-      identity,
-      from: ["confirmed", "proposed"],
-      to: "severed",
-      verb: "Severed",
-      resultKey: "severed"
-    });
-  }
-  reinstate({ project, handle, viewer = null, owner = null, reason = "", author = null, identity = null } = {}) {
-    return this.#edgeTransition({
-      project,
-      handle,
-      viewer,
-      owner,
-      reason,
-      author,
-      identity,
-      from: ["severed"],
-      to: "confirmed",
-      verb: "Reinstated",
-      resultKey: "reinstated"
-    });
-  }
-  /* ---- cite (R1–R3) ---- */
-  /** R1–R3: CITING, at weight `report` (R7): material, or a question, becomes part of what a case or a question rests
-   *  on. ONE ACT (REC-37): where the record keeps it differs (a case's `references[]`, a question's `basis[]`) and
-   *  what the member did does not, so one op serves both arms and `project` names the citing object either way.
-   *
-   *  WHAT THE INQUIRY ARM DOES NOT DO, and each absence is a decision:
-   *   - IT DOES NOT GRADE (R8). A leg's connection grade is FILLED from `inquiry.earned`, the same registry the read
-   *     answers from and the write enforces with; a target the record earns nothing for lands with NO grade, axis or
-   *     source: undetermined, stated by the absence, inert (DEC-18). There is no grade control and no default letter.
-   *   - IT DOES NOT CHECK FOR A CYCLE. `SELF_BASIS` and `BASIS_CYCLE` are the write's (inquiry R11), reached because
-   *     the leg lands THROUGH THE DOCUMENT; a second rule here would be a second answer waiting to disagree.
-   *   - IT DOES NOT VALIDATE A LEG beyond routing its part through `inquiry.checkLegExtentGrammar`, the same function
-   *     that judges it again at the write.
-   *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS: whether the group RETIRED it (R5). */
-  cite({
-    project = null,
-    handle = null,
-    viewer = null,
-    owner = null,
-    note = "",
-    author = null,
-    role = null,
-    extent = null,
-    identity = null
-  } = {}) {
-    const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "report" });
-    if (!sel.ok) return sel;
-    const obj = this.#citingObject(project, viewer);
-    if (obj.refusal) return obj.refusal;
-    const p = obj.head;
-    const ontoInquiry = normalizeType(p.type) === "inquiry";
-    if (p.type !== "project" && !ontoInquiry)
-      return {
-        ok: false,
-        reason: "NOT_A_PROJECT",
-        project,
-        got: p.type,
-        detail: "citations live on the CITING object, and this is neither a case nor a question. A case keeps them in its references; a question keeps them in the basis its answer rests on (State Rules 5.2). Nothing else in the record holds either."
-      };
-    if (!ontoInquiry) {
-      const denied = this.membership.projectAuthority(project, identity, "joined", "cite");
-      if (denied) return denied;
-    }
-    const nt = String(note ?? "");
-    if (nt.length > NOTE_MAX4 || /["\\\r\n]/.test(nt))
-      return {
-        ok: false,
-        reason: "BAD_NOTE",
-        ...rowOf6(CITE_CHECKS, "BAD_NOTE"),
-        detail: "a note is at most 200 characters and cannot contain a quote, a backslash, or a newline"
-      };
-    if (ontoInquiry && (!this.inquiry || typeof this.inquiry.earned !== "function" || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
-      return {
-        ok: false,
-        reason: "INQUIRY_UNAVAILABLE",
-        project,
-        handle,
-        drift: sel.drift,
-        detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned registry, and this instance was created without them, so nothing was written."
-      };
-    const rl = role === null || role === void 0 || String(role) === "" ? null : String(role);
-    if (ontoInquiry) {
-      const roles = this.inquiry.BASIS_ROLES;
-      if (rl === null)
-        return {
-          ok: false,
-          reason: "NO_ROLE",
-          ...rowOf6(CITE_CHECKS, "NO_ROLE"),
-          project,
-          handle,
-          roles: roles.slice(),
-          drift: sel.drift,
-          detail: `a leg of a question's basis says what the material DOES for the answer, and this call does not say. It is never assumed: a leg that cuts against the case is first-class here, and guessing would put a claim about your own reasoning in the record that you did not make. State role as one of: ${roles.join(", ")}.`
-        };
-      if (!roles.includes(rl))
-        return {
-          ok: false,
-          reason: "BAD_ROLE",
-          ...rowOf6(CITE_CHECKS, "BAD_ROLE"),
-          project,
-          handle,
-          got: rl,
-          roles: roles.slice(),
-          drift: sel.drift,
-          detail: `'${rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: ${roles.join(", ")}.`
-        };
-    } else if (rl !== null) {
-      return {
-        ok: false,
-        reason: "ROLE_NOT_APPLICABLE",
-        ...rowOf6(CITE_CHECKS, "ROLE_NOT_APPLICABLE"),
-        project,
-        handle,
-        got: rl,
-        drift: sel.drift,
-        detail: "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded \u2014 refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart."
-      };
-    }
-    const offenders = [];
-    for (const id of sel.members) {
-      const b = this.record.head(id);
-      const ty = b ? normalizeType(b.type) : null;
-      if (!(ty === "information" || ty === "inquiry")) offenders.push(id);
-    }
-    if (offenders.length)
-      return ontoInquiry ? {
-        ok: false,
-        reason: "NOT_CITABLE",
-        project,
-        handle,
-        offenders: offenders.sort(),
-        drift: sel.drift,
-        citable: ["information", "inquiry"],
-        detail: "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
-      } : {
-        ok: false,
-        reason: "NOT_INFORMATION",
-        project,
-        handle,
-        offenders: offenders.sort(),
-        drift: sel.drift,
-        citable: ["information", "inquiry"],
-        detail: "a case rests on material, or on a question the group is asking. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are."
-      };
-    const retiredMembers = sel.members.filter((id) => this.retiredNotCitable(id));
-    if (retiredMembers.length)
-      return {
-        ok: false,
-        reason: "RETIRED_NOT_CITABLE",
-        ...rowOf6(CITE_CHECKS, "RETIRED_NOT_CITABLE"),
-        project,
-        handle,
-        offenders: retiredMembers.sort(),
-        drift: sel.drift,
-        detail: "the group has RETIRED these, recording that they are superseded or no longer stand, and a citation made now would read to every later member as live support. Cite what superseded them, or re-collect the source as a new bundle and cite that. The whole call is refused rather than narrowed to the members that are not retired."
-      };
-    const doc = this.#document(project, "the project's own bundle.md does not parse under the restricted grammar");
-    if (doc.refusal) return doc.refusal;
-    const existing = Array.isArray(doc.data.references) ? doc.data.references : [];
-    const byTarget = /* @__PURE__ */ new Map();
-    for (const r of existing)
-      if (r && typeof r === "object" && r.rel === "cites" && typeof r.target === "string")
-        byTarget.set(r.target, r.status);
-    const referenced = new Set(existing.filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => r.target));
-    const legged = new Set(ontoInquiry && Array.isArray(doc.data.basis) ? doc.data.basis.filter((l) => l && typeof l === "object" && typeof l.target === "string").map((l) => l.target) : []);
-    const severed = [], already = [], add = [];
-    for (const id of sel.members) {
-      const st = byTarget.get(id);
-      if (st === "severed") severed.push(id);
-      else if (ontoInquiry ? legged.has(id) : st !== void 0) already.push(id);
-      else add.push(id);
-    }
-    if (severed.length)
-      return {
-        ok: false,
-        reason: "SEVERED_EDGE",
-        ...rowOf6(CITE_CHECKS, "SEVERED_EDGE"),
-        project,
-        handle,
-        offenders: severed.sort(),
-        drift: sel.drift,
-        detail: "these targets already carry a SEVERED cites edge, which is a recorded decision to cut the dependency, not the absence of one. Citing neither reverses it silently nor skips past it. Reinstating a severance is a separate action that records its own reason."
-      };
-    const bag = extent && typeof extent === "object" ? extent : {};
-    const unknownFields = Object.keys(bag).filter((k) => !(k in EXTENT_PARAMS)).sort();
-    if (unknownFields.length)
-      return {
-        ok: false,
-        reason: "UNKNOWN_EXTENT_FIELD",
-        ...rowOf6(CITE_EXTENT_CHECKS, "UNKNOWN_EXTENT_FIELD"),
-        project,
-        handle,
-        drift: sel.drift,
-        got: unknownFields,
-        fields: Object.keys(EXTENT_PARAMS),
-        detail: `this call names ${unknownFields.map((k) => `'${k}'`).join(", ")}, which this act does not carry, so the record cannot tell what part of the document was meant. It is REFUSED rather than ignored: a field accepted and quietly dropped leaves a citation that looks like the one you made and is not. The fields this act takes are: ${Object.keys(EXTENT_PARAMS).join(", ")}.`
-      };
-    const authored = Object.keys(bag).filter((k) => String(bag[k] ?? "").trim() !== "").sort();
-    if (authored.length && !ontoInquiry)
-      return {
-        ok: false,
-        reason: "EXTENT_NOT_APPLICABLE",
-        ...rowOf6(CITE_EXTENT_CHECKS, "EXTENT_NOT_APPLICABLE"),
-        project,
-        handle,
-        got: authored,
-        drift: sel.drift,
-        detail: "which part of a document a citation rests on is recorded on a leg of a QUESTION's basis, and this citing object is a case. A case's citation edge names the document and has no slot for a page or a passage, so this extent would be dropped rather than recorded \u2014 refused instead, for the reason a role is refused here: a field stated in one place and honoured nowhere is how the record and its projections drift apart."
-      };
-    if (authored.length && add.length > 1)
-      return {
-        ok: false,
-        reason: "EXTENT_ON_MANY",
-        ...rowOf6(CITE_EXTENT_CHECKS, "EXTENT_ON_MANY"),
-        project,
-        handle,
-        offenders: add.slice().sort(),
-        drift: sel.drift,
-        detail: `a part of a document is a part of ONE document, and this call would write ${add.length} legs. Writing the same page or passage onto each of them would put claims in the record that nobody made \u2014 the extent was named once. Cite the one document this part belongs to, and cite the rest separately.`
-      };
-    const legFields = {};
-    for (const k of authored) {
-      const raw = String(bag[k]).trim();
-      if (raw.length > EXTENT_VALUE_MAX || /["\\\r\n#]/.test(raw))
-        return {
-          ok: false,
-          reason: "BAD_EXTENT_VALUE",
-          ...rowOf6(CITE_EXTENT_CHECKS, "BAD_EXTENT_VALUE"),
-          project,
-          handle,
-          field: k,
-          drift: sel.drift,
-          detail: `'${k}' cannot be written into the record as it stands: a value describing which part of a document is at most 200 characters and cannot contain a quotation mark, a backslash, a line break or a comment mark. Those characters would reshape the document rather than appear in it.`
-        };
-      const t = EXTENT_PARAMS[k];
-      if (t === "int" && /^\d+$/.test(raw)) legFields[k] = parseInt(raw, 10);
-      else if (t === "nums") {
-        const parts = raw.replace(/^\[|\]$/g, "").split(",").map((s) => s.trim());
-        const nums = parts.map((s) => /^-?\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN);
-        legFields[k] = nums.every((n) => Number.isFinite(n)) ? nums : raw;
-      } else legFields[k] = raw;
-    }
-    if (authored.length) {
-      const ef = [];
-      this.inquiry.checkLegExtentGrammar(legFields, "the part of the document this citation names", "C-2.8", ef);
-      const exErrs = ef.filter((x) => x.severity === "error");
-      if (exErrs.length)
-        return {
-          ok: false,
-          reason: "BASIS_REFUSED",
-          project,
-          handle,
-          drift: sel.drift,
-          findings: exErrs.map((x) => ({
-            check: x.check,
-            code: x.code ?? null,
-            detail: x.message,
-            repairs: x.repairs ?? []
-          })),
-          detail: "the part of the document this citation names is refused by the SAME catalog function op=promote runs at the write, so nothing was written. A citation that names no part means the whole document, which is always a legal thing to cite."
-        };
-    }
-    const when = stampInstant("second", this.now());
-    if (!sel.members.length)
-      return {
-        ok: false,
-        reason: "EMPTY_SELECTION",
-        project,
-        handle,
-        drift: sel.drift,
-        detail: "this selection resolves to no members, so there is nothing to cite. It may have named ids that do not exist, or its members may have been purged or hidden since it was made."
-      };
-    if (!add.length)
-      return {
-        ok: true,
-        project,
-        handle,
-        weight: "report",
-        moved: sel.moved,
-        drift: sel.drift,
-        cited: [],
-        alreadyCited: already.sort(),
-        severed: [],
-        bundleSha: p.bundleSha,
-        rowVersion: null,
-        detail: "every member of the selection was already cited; nothing was written" + (authored.length ? ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan." : "")
-      };
-    let spliced = null, filled = [];
-    const edgePins = /* @__PURE__ */ new Map();
-    if (!ontoInquiry) {
-      for (const target of add)
-        if (normalizeType(OBJECT_TYPES[String(target).split("-")[0]]) === "information") {
-          const pin = this.content.captureFor(target);
-          if (pin) edgePins.set(target, pin);
-        }
-    }
-    if (!ontoInquiry) {
-      spliced = spliceReferences3(
-        doc.text,
-        add.map((target) => ({
-          rel: "cites",
-          target,
-          status: "confirmed",
-          note: nt,
-          ...edgePins.has(target) ? { extent_capture: edgePins.get(target) } : {}
-        }))
-      );
-      if (!spliced)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_REFERENCES",
-          project,
-          detail: "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document."
-        };
-    } else {
-      const subject = typeof doc.data.subject_entity === "string" && doc.data.subject_entity.trim() !== "" ? doc.data.subject_entity.trim() : null;
-      const reg = this.inquiry.earned(subject, add);
-      const pinOf = (target) => {
-        if (typeof legFields.content_id === "string" && legFields.content_id.trim()) return null;
-        if (normalizeType(OBJECT_TYPES[target.split("-")[0]]) !== "information") return null;
-        return this.content.captureFor(target);
-      };
-      filled = add.map((target) => {
-        const earned = reg && reg.earned && reg.earned.connection ? reg.earned.connection[target] : null;
-        const pin = pinOf(target);
-        const pinned = pin ? { extent_capture: pin } : {};
-        return earned && earned.grade ? {
-          target,
-          role: rl,
-          grade: earned.grade,
-          grade_axis: "connection",
-          grade_source: "resolution",
-          note: nt,
-          why: earned.why,
-          ...legFields,
-          ...pinned
-        } : { target, role: rl, note: nt, why: null, ...legFields, ...pinned };
-      });
-      const newRefs = add.filter((t) => !referenced.has(t)).map((target) => ({ rel: "cites", target, status: "confirmed", note: nt }));
-      const withRefs = newRefs.length ? spliceReferences3(doc.text, newRefs) : doc.text;
-      if (!withRefs)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_REFERENCES",
-          project,
-          detail: "the question's references block is not in a shape this grammar can extend in place. Citing edits only that block and the basis block, and never rewrites the rest of the document."
-        };
-      spliced = spliceBasis(withRefs, filled);
-      if (!spliced)
-        return {
-          ok: false,
-          reason: "UNSPLICEABLE_BASIS",
-          project,
-          detail: "the question's basis block is not in a shape this grammar can extend in place. Citing appends legs to that block and never rewrites the rest of the document."
-        };
-    }
-    let text3 = setScalar4(spliced, "last_updated", `"${when}"`);
-    const shown2 = add.slice(0, CITE_LOG_SAMPLE);
-    const listed = shown2.join(", ") + (add.length > shown2.length ? `, and ${add.length - shown2.length} more` : "");
-    const ungraded = filled.filter((l) => !l.grade).length;
-    const graded = filled.length - ungraded;
-    const setMovedNote = answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
-    text3 = appendSessionLog3(text3, ontoInquiry ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
-Trigger: selection ${handle}${setMovedNote}
-Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
-` : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"} | ${author || "member"}
-Trigger: selection ${handle}${setMovedNote}
-Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
-`);
-    const bytes2 = new TextEncoder().encode(text3);
-    if (bytes2.length > INLINE_MAX) {
-      const perEdge = CITE_EDGE_BYTES + (edgePins.size ? CITE_PIN_BYTES : 0);
-      const overhead = bytes2.length - add.length * perEdge;
-      return {
-        ok: false,
-        reason: "CITATION_TOO_LARGE",
-        project,
-        handle,
-        drift: sel.drift,
-        requested: add.length,
-        bytes: bytes2.length,
-        limit: INLINE_MAX,
-        roomFor: Math.max(0, Math.floor((INLINE_MAX - overhead) / perEdge)),
-        detail: `citing this many records at once would push this ${ontoInquiry ? "question" : "case"}'s bundle.md past the 1MB inline limit. Every edge is written into the document, so the ceiling is on edges in ONE object, not on the size of a selection. Cite in smaller batches; nothing has been written.`
-      };
-    }
-    const fm = doc.data;
-    const promoted = this.#write(project, p, text3, when, author, fm, fm.object_type ?? p.type);
-    if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
-    return {
-      ok: true,
-      project,
-      handle,
-      weight: "report",
-      moved: sel.moved,
-      drift: sel.drift,
-      cited: add.slice().sort(),
-      alreadyCited: already.sort(),
-      severed: [],
-      ...ontoInquiry ? {} : { pinned_captures: Object.fromEntries(
-        add.slice().sort().map((t) => [t, edgePins.get(t) ?? null])
-      ) },
-      bundleSha: promoted.bundleSha,
-      rowVersion: promoted.rowVersion,
-      gate: sel.gate,
-      expires: sel.expires,
-      /* R3: what the act landed on the question, per leg, from the leg it composed (never an echo of the
-         request): the role, the grade the RECORD earned with the registry's `why` or an explicit null, the
-         capture it pinned, and the part as written, ABSENT for every leg that names none. */
-      ...ontoInquiry ? {
-        citingObjectType: "inquiry",
-        role: rl,
-        legs: filled.map((l) => ({
-          target: l.target,
-          role: l.role,
-          grade: l.grade ?? null,
-          grade_axis: l.grade_axis ?? null,
-          grade_source: l.grade_source ?? null,
-          why: l.why ?? null,
-          pinned_capture: l.extent_capture ?? null,
-          ...Object.keys(legFields).length ? {
-            extent: citationExtent(l),
-            ...l.content_id ? { content_id: l.content_id } : {}
-          } : {}
-        })),
-        gradesFilled: filled.filter((l) => l.grade).length,
-        gradesUndetermined: filled.filter((l) => !l.grade).length
-      } : {}
-    };
-  }
-};
-var instances24 = /* @__PURE__ */ new WeakMap();
-function inquiryServices(k) {
-  return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
-}
-function citationOf(host, deps) {
-  let c = instances24.get(host);
-  if (!c) {
-    const d = deps || {};
-    const record = d.record || recordOf(host);
-    const membership = d.membership || membershipOf(host, { record });
-    const promotion = d.promotion || promotionOf(host, { record, membership });
-    const content = d.content || contentOf(host, { record, membership });
-    const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
-    const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
-    c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances24.set(host, c);
-  }
-  return c;
-}
-function citationOps(c, url) {
-  const q6 = (key) => url.searchParams.get(key);
-  return {
-    cite: () => c.cite({
-      project: q6("project"),
-      handle: q6("handle"),
-      viewer: q6("viewer"),
-      owner: q6("owner"),
-      note: q6("note") ?? "",
-      author: q6("author"),
-      identity: q6("identity"),
-      /* REC-37: the leg's ROLE, read only on the inquiry arm and REFUSED rather than dropped on the other. */
-      role: q6("role"),
-      /* REC-97 / IC-90: every parameter the leg-part grammar could own arrives WHOLE and the act decides, by name,
-         which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
-         bag, which is `document`. */
-      extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_")))
-    }),
-    sever: () => c.sever({
-      project: q6("project"),
-      handle: q6("handle"),
-      viewer: q6("viewer"),
-      owner: q6("owner"),
-      reason: q6("reason") ?? "",
-      author: q6("author"),
-      identity: q6("identity")
-    }),
-    reinstate: () => c.reinstate({
-      project: q6("project"),
-      handle: q6("handle"),
-      viewer: q6("viewer"),
-      owner: q6("owner"),
-      reason: q6("reason") ?? "",
-      author: q6("author"),
-      identity: q6("identity")
-    })
-  };
 }
 
 // src/ai-runs/checks.mjs
@@ -86873,9 +87094,9 @@ Changes: reading '${name}' proposed as ${kind}, in state suggested, carrying run
     return { proposedReadings: c("proposed_readings", "bundle_id"), suggestRefusals: c("suggest_refusals", "target") };
   }
 };
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p = instances25.get(host);
+  let p = instances26.get(host);
   if (!p) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -86900,7 +87121,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances25.set(host, p);
+    instances26.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
@@ -88501,10 +88722,10 @@ var CaptureRequests = class _CaptureRequests {
 function lookAuthority(q6) {
   return q6 && q6.run ? { authorityKind: "run", authority: String(q6.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q6 && q6.request ? String(q6.request) : null, actorClass: "plane" };
 }
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances26.get(storage);
+  let c = instances27.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -88520,7 +88741,7 @@ function captureRequestsOf(host, deps = {}) {
       credentials: deps.credentials === void 0 ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials
     };
     c = new CaptureRequests(storage, d);
-    instances26.set(storage, c);
+    instances27.set(storage, c);
     record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"] }]);
     d.observations.registerAuthority("sweep", (request) => {
       const b = c.bundlesOf(request);
@@ -90103,17 +90324,17 @@ var CONTRADICTION_ABSENCE = Object.freeze({
 });
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances27.get(storage);
+  let c = instances28.get(storage);
   if (!c) {
     c = new Contradiction(storage, {
       ...opts,
       record: opts.record ?? recordOf(ctx),
       extraction: opts.extraction ?? (() => extractionOf(ctx))
     });
-    instances27.set(storage, c);
+    instances28.set(storage, c);
   }
   return c;
 }
@@ -95211,9 +95432,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances28.get(host);
+  let i = instances29.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -95233,7 +95454,7 @@ function intentOf(host, deps) {
       retrieval: d.retrieval || (() => retrievalOf(host)),
       captureRequests: d.captureRequests || (() => captureRequestsOf(host))
     });
-    instances28.set(host, i);
+    instances29.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -97261,17 +97482,17 @@ var Monitoring = class {
     }
   }
 };
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances29.get(storage);
+  let m = instances30.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances29.set(storage, m);
+    instances30.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
@@ -97525,8 +97746,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances33, into = []) => {
-    for (const inst of instances33)
+  const subjectsFor = (instances34, into = []) => {
+    for (const inst of instances34)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -98028,9 +98249,9 @@ var Scheduler = class {
     return out;
   }
 };
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances30.get(ctx);
+  let s = instances31.get(ctx);
   if (!s) {
     const e = env || {};
     const owners = deps.owners || {
@@ -98046,7 +98267,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
       reevaluation: () => reevaluationOf(ctx)
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
-    instances30.set(ctx, s);
+    instances31.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -99975,16 +100196,16 @@ case_project: ${project}
     };
   }
 };
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances31.get(host);
+  let c = instances32.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances31.set(host, c);
+    instances32.set(host, c);
     c.migrate();
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
@@ -100868,16 +101089,16 @@ var Review = class {
     };
   }
 };
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances32.get(host);
+  let r = instances33.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances32.set(host, r);
+    instances33.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -101617,242 +101838,6 @@ var Store = class _Store extends DurableObject {
       lens: null,
       migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at }
     } : null;
-  }
-  /** The FACTS behind op=affordances (REC-19), and only the facts: what this
-   *  object is, where its state machine stands, and which citation edges touch
-   *  it — read with the SAME predicate retire's CITED guard runs (#citesInto),
-   *  so the publication and the refusal cannot disagree. The DERIVATION (which
-   *  acts those facts admit) happens at the control plane, where NEEDS and
-   *  SESSION_OPS live; this method holds no copy of any act rule. */
-  affordanceFacts({ target, viewer = null, identity = null, author = null, by = null } = {}) {
-    if (!target) return {
-      ok: false,
-      reason: "NO_TARGET",
-      detail: "affordances are asked of an object: pass target=<bundle id>"
-    };
-    const gate = viewerPredicate(viewer);
-    const b = this.#one(
-      `SELECT b.bundle_id, b.object_type, b.current_state, b.criticality FROM bundles b
-       WHERE b.bundle_id=? AND (${gate.sql})`,
-      target,
-      ...gate.args
-    );
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    const citesIn = this.#citesInto(target);
-    const citedByCase = { confirmed: 0, severed: 0 };
-    for (const [key, ids] of [["confirmed", citesIn.confirmed], ["severed", citesIn.severed]])
-      for (const id of ids) {
-        const c = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id);
-        if (c && normalizeType(c.object_type) === "project") citedByCase[key]++;
-      }
-    const citesOut = { confirmed: 0, severed: 0, severed_reinstatable: 0 };
-    const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
-    const docFm = md && md.content !== null ? parseFrontmatter(md.content).data || {} : {};
-    if (normalizeType(b.object_type) === "project") {
-      const refs = docFm.references;
-      for (const r of Array.isArray(refs) ? refs : [])
-        if (r && typeof r === "object" && r.rel === "cites") {
-          if (r.status !== "severed") {
-            citesOut.confirmed++;
-            continue;
-          }
-          citesOut.severed++;
-          if (typeof r.target === "string" && !citationOf(this.ctx).retiredNotCitable(r.target))
-            citesOut.severed_reinstatable++;
-        }
-    }
-    const rested = normalizeType(b.object_type) === "inquiry" ? this.#restsOnLive(target) : { confirmed: [], frozen: [], severed: [] };
-    return {
-      ok: true,
-      target: b.bundle_id,
-      object_type: b.object_type,
-      declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
-      current_state: b.current_state,
-      criticality: b.criticality ?? null,
-      /* CASE-4 / DEC-72: THE CASE RELATION AS A FACT, and it is a FACT
-         and never a rule — `basis_legs` and `rested_on` beside it are the
-         precedent, and this method still holds no copy of any act rule.
-         It has to be here because `published` has left the state machine:
-         two acts used to derive themselves from `current_state`, and a
-         document that is a member of a signed case now wears no word that
-         says so. The rules that consume it are the act catalogue's, which
-         is where they were before. Asked through the ONE predicate the
-         refusals run, so a published act and the refusal it fronts cannot
-         disagree — DEC-8, which is the whole reason this file exists. */
-      case_member: normalizeType(b.object_type) === "inquiry" ? this.#caseRelationOf(target).member : false,
-      /* D-310 / DEC-72 clause 5: THE VIEWER'S POSITION AS A FACT, and it
-         is a FACT and never a rule — `case_member` one line up is the
-         pattern it follows exactly, and this method still holds no copy
-         of any act rule.
-         WHY IT HAS TO EXIST. `publishCase()` refuses a caller who is not
-         an OWNER of the named project BY NAME (the CASE-2 fence, DEC-72
-         clause 5: *"Only a project OWNER publishes"*), while the `publish`
-         act was derived with NO condition on who is asking. So a member
-         who owns no project at all was told, on every concluded finding,
-         that publication is an act available here — and would be refused
-         at the act. That is the DEC-8 disagreement this file's own header
-         calls the one thing affordances exists to prevent, sitting on the
-         heaviest act in the system, and it is what D-310 closes.
-         THE OWNER RULE IS CONSUMED AND NEVER RESTATED. The row set comes
-         from the member's own participations (the `pp_member` index), and
-         the RULE over each row is `#isProjectOwner` — the SAME predicate
-         `publishCase()` runs. That is the `#citesInto` discipline exactly:
-         ONE predicate behind the published act and the refusal it fronts,
-         so the two cannot disagree. A second implementation of the owner
-         rule is this repository's most-repeated defect class and has
-         already absorbed a control at publishCase()'s own fence.
-         IT ANSWERS "OWNER OF SOME PROJECT", AND THAT IS THE WHOLE SHAPE.
-         The project is a PARAMETER of `op=publish`, not its target: this
-         method is asked about an INQUIRY and cannot know which project a
-         caller will name. Owner-of-THIS-project is a different question
-         needing a different, per-pair fact (D-311), and the store already
-         refuses on the PAIR — `caseproduction.test.mjs` §3 measures a
-         member who owns one project being refused as she publishes for
-         another. So this narrows the act to exactly the class for which NO
-         parameter could make it succeed, and leaves "this caller's
-         parameters may still not pass" where every other act leaves it.
-         THREE-VALUED, AND THE null IS STATED RATHER THAN DEFAULTED.
-         A machine-class credential holds no roster position — participation
-         is keyed on a member id and a class credential has none — so
-         `false` would assert that the question was asked of it and came
-         back empty, which is not what this store knows. It answers null,
-         the act catalogue does not narrow on a null, and a machine
-         credential's published act set is therefore BYTE-UNCHANGED by this
-         fact. A machine is refused publication by a DIFFERENT rule at a
-         different level (MACHINE_CANNOT_PUBLISH, DEC-49's fence, which
-         fires first in publishCase()); folding the two into one gate here
-         would make this fence tighter than its rule, which is an
-         undeclared interface change wearing the costume of caution. */
-      /* REC-132 / D-422: a POSITIONAL fact, so it is asked of WHO the caller is
-         (`identity`, the control plane's stamp) and never of what it may SEE. The
-         founder's session sees as an administrator (the bare `admin` viewer, which
-         carries no member) and still owns exactly the projects it owns — read
-         through the visibility half, this would answer null and the act catalogue
-         would offer the founder `publish` while it owns nothing. */
-      project_owner: (() => {
-        const who2 = this.#positionalMember(viewer, identity);
-        return who2 === null ? null : this.#ownsAnyProject(who2);
-      })(),
-      /* REC-134 / C-56: WHETHER THE CALLER HAS JOINED THIS PROJECT — a POSITIONAL fact on a
-         PROJECT target, asked of `identity` through the SAME predicate the acts' refusal
-         runs (`#isJoinedParticipant`, via `#projectAuthority`), so a published act and the
-         refusal it fronts cannot disagree (DEC-8). It exists because an administrator SEES
-         every project, so `cite`/`sever`/`reinstate` on a project it never joined would be
-         offered and then refused. THREE-VALUED, `project_owner`'s shape exactly: null on
-         any target that is not a project and for a caller with no roster position (a
-         `class:*` credential), whose act set is therefore byte-unchanged. */
-      /* REC-149 / Membership v2 §7.14: WHETHER THE CALLER OWNS THIS PROJECT — the PAIR fact D-311 names,
-         asked of `identity` through `#isProjectOwner`, the predicate `projectVisibilitySet` refuses on, so
-         the published act and its refusal cannot disagree (DEC-8). THREE-VALUED, `project_participant`'s
-         shape: null on a target that is not a project and for a caller with no roster position. Its one
-         consumer is `projectvisibilityset`, which is offered on `=== true` only. */
-      project_target_owner: (() => {
-        if (normalizeType(b.object_type) !== "project") return null;
-        const who2 = this.#positionalMember(viewer, identity);
-        return who2 === null ? null : this.#isProjectOwner(b.bundle_id, who2);
-      })(),
-      project_participant: (() => {
-        if (normalizeType(b.object_type) !== "project") return null;
-        const who2 = this.#positionalMember(viewer, identity);
-        return who2 === null ? null : this.#isJoinedParticipant(b.bundle_id, who2);
-      })(),
-      /* D-311: THE CALLER'S ROSTER POSITION IN THIS PROJECT — THE PAIR (this target, this
-         caller), never D-310's "owner of SOME project". Here the project IS the target of the
-         seven roster acts, so a member who owns project A and merely joined B is not an owner
-         of B, and the store refuses her invite on B NOT_THE_OWNER; a fact reusing
-         `#ownsAnyProject` would offer it (the negative control swaps exactly that in).
-         ASKED OF `by`, the control plane's roster stamp, and NOT of `identity`: `by` is the
-         string the roster acts themselves receive (`class:<cls>` for EVERY bearer, the `ai`
-         class included, whose `identity` is its member principal), so the pre-flight asks
-         the question of the same caller the act will. Each field is read through the
-         predicate its act's refusal runs — `#isProjectOwner` (invite, remove, owner-add,
-         owner-remove), `#participation` (join's NOT_INVITED, leave's NOT_JOINED),
-         `Store.ownerMath` over `#owners` (owner-remove's LAST_OWNER floor, which refuses
-         every parameter on a one-owner project) and `#rescueRefusal` (the rescue's three
-         caller-and-project conditions) — so a published act and the refusal it fronts
-         cannot disagree (DEC-8). A FACT and never a rule: the rules are the act
-         catalogue's. THREE-VALUED: null on a target that is not a project and when no
-         `by` was sent (a DO-internal call), and the catalogue offers a roster act only on
-         `=== true`, so an undetermined position never publishes an addition. */
-      roster: (() => {
-        if (normalizeType(b.object_type) !== "project") return null;
-        const actor = typeof by === "string" && by.trim() ? by.trim() : null;
-        if (actor === null) return null;
-        const p = this.#participation(b.bundle_id, actor);
-        return {
-          owner: this.#isProjectOwner(b.bundle_id, actor),
-          state: p ? p.state : null,
-          owner_floor_clear: _Store.ownerMath(this.#owners(b.bundle_id).length).possible,
-          rescue_open: this.#rescueRefusal(b.bundle_id, actor) === null
-        };
-      })(),
-      /* D-311: WHETHER THE ACT WOULD BE SIGNED BY A MACHINE — asked of `author`, the stamp
-         every object-directed act receives (`token:<cls>` for a bearer, the member for a
-         session), through the SAME expression the machine fences run
-         (`!who || isMachineIdentity(who)`, REC-46's one predicate). The act catalogue
-         withholds from a machine every act whose store method refuses its class BY NAME
-         (`MACHINE_REFUSALS` in affordances.mjs, each code driven through its op by
-         `d311-roster-affordances.test.mjs`). THREE-VALUED: null when no `author` was sent,
-         and a null never narrows. */
-      actor_is_machine: author === null ? null : (() => {
-        const who2 = String(author).trim();
-        return !who2 || isMachineIdentity(who2);
-      })(),
-      /* REC-142 / §7.1 item 8: WHETHER THE CALLER CAN CONCLUDE THIS QUESTION FOR SOME PROJECT —
-         a POSITIONAL fact on an INQUIRY target, `project_owner`'s shape exactly: asked of
-         `identity`, through `#joinedCitingProjectOf` (every condition in it is one
-         `conclude()` runs), and THREE-VALUED — null on a target that is not an inquiry and for
-         a caller with no roster position (a `class:*` credential), whose act set is therefore
-         byte-unchanged. The rule that consumes it is `conclude`'s entry in the act catalogue. */
-      concludes_for_project: (() => {
-        if (normalizeType(b.object_type) !== "inquiry") return null;
-        const who2 = this.#positionalMember(viewer, identity);
-        return who2 === null ? null : this.#joinedCitingProjectOf(b.bundle_id, viewer, who2);
-      })(),
-      /* REC-135 / §7.1 item 4: WHETHER A PROJECT THIS CALLER HAS JOINED STANDS ON A
-         CONCLUSION OF THIS QUESTION — `concludes_for_project`'s shape exactly, one line
-         up, and THREE-VALUED for its reason: null on a target that is not an inquiry and
-         for a caller with no roster position, whose published act set is therefore
-         byte-unchanged. The rule that consumes it is `publish`'s entry in the act
-         catalogue, which widens on `=== true` and never narrows on a null. */
-      concluded_for_project: (() => {
-        if (normalizeType(b.object_type) !== "inquiry") return null;
-        const who2 = this.#positionalMember(viewer, identity);
-        return who2 === null ? null : this.#concludedForJoinedProjectOf(b.bundle_id, viewer, who2);
-      })(),
-      /* REC-157 / §7.1 item 9: WHETHER A PROJECT THIS CALLER HAS JOINED COULD PUBLISH A NEW
-         EDITION OF A FINDING A CASE ALREADY PINS — its conclusion having moved since every
-         edition pinning these bytes. `concluded_for_project`'s shape exactly, one line up,
-         and THREE-VALUED for its reason: null on a target that is not an inquiry and for a
-         caller with no roster position, whose published act set is therefore byte-unchanged.
-         The rule that consumes it is `publish`'s entry in the act catalogue, which widens on
-         `=== true` and never narrows on a null. */
-      edition_warranted_for_project: (() => {
-        if (normalizeType(b.object_type) !== "inquiry") return null;
-        const who2 = this.#positionalMember(viewer, identity);
-        return who2 === null ? null : this.#editionWarrantedForJoinedProjectOf(b.bundle_id, viewer, who2, b.current_state);
-      })(),
-      basis_legs: Array.isArray(docFm.basis) ? docFm.basis.filter((l) => l && typeof l === "object").length : 0,
-      rested_on: {
-        working: rested.confirmed.length,
-        frozen: rested.frozen.length,
-        severed: rested.severed.length
-      },
-      /* PL-2 / IS-2: WHICH STATES THIS QUESTION'S READINGS ARE IN, read
-         from the DOCUMENT like every other fact in this method — a FACT
-         and never a rule, exactly as `basis_legs` is. The rule that
-         consumes it is the act catalogue's, which is why the six version
-         acts are derived there over this and not decided here.
-         It is what stops the six acts being published on a question that
-         holds no reading at all: an act offered where the op would refuse
-         NO_SUCH_VERSION is a pre-flight disagreeing with the refusal it
-         fronts, which is DEC-8's headline failure. */
-      basis_version_states: (Array.isArray(docFm.basis_versions) ? docFm.basis_versions : []).filter((v) => v && typeof v === "object" && typeof v.state === "string").map((v) => v.state.trim()),
-      basis_versions: (Array.isArray(docFm.basis_versions) ? docFm.basis_versions : []).filter((v) => v && typeof v === "object").length,
-      cites_in: citesIn,
-      cites_out: citesOut,
-      cited_by_case: citedByCase
-    };
   }
   /* D-109. The task queue drains on the SAME Durable Object alarm the selection
      sweep uses: armed on enqueue, re-armed by the alarm while the queue is
@@ -103634,7 +103619,7 @@ ${lines.join("\n")}
     const member = this.#positionalMember(viewer, identity);
     const actor = member !== null ? member : isMachineIdentity(viewer) ? String(viewer).trim() : null;
     for (const id of (subjectIds || []).slice(0, _Store.QUEUE_OPTION_SUBJECTS_MAX)) {
-      const facts = this.affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
+      const facts = affordancesOf(this.ctx).affordanceFacts({ target: id, viewer, identity, author: actor, by: actor });
       if (!facts || facts.ok !== true) continue;
       for (const a of deriveActs(facts))
         if (!byId.has(a.id)) byId.set(a.id, { id: a.id, label: a.label, weight: a.weight });
@@ -106955,90 +106940,6 @@ ${lines.join("\n")}
   #isJoinedParticipant(...a) {
     return membershipOf(this.ctx).isJoinedParticipant(...a);
   }
-  /* REC-142 / INVESTIGATIVE-SESSION.md §7.1 item 8 — MAY THIS MEMBER CONCLUDE THIS QUESTION FOR
-   * SOME PROJECT: has it JOINED a project it can SEE that LIVE-cites the question? `op=affordances`
-   * asks it before offering `conclude` on a question whose own state is already `concluded` (the
-   * no-project relationship's), where only a PROJECT's conclusion can land (REC-124).
-   *
-   * IT ANSWERS "SOME PROJECT", D-310's `#ownsAnyProject` shape: the project is `conclude`'s
-   * PARAMETER, not its target, so the pre-flight cannot know which one a caller will name. It
-   * narrows the act to exactly the class for which NO `project=` could succeed, and leaves "this
-   * caller's parameters may still not pass" (no reading stood on, no claim) where the release
-   * precedent leaves it — a refusal the store words at the act.
-   *
-   * EVERY CONDITION IS ONE `conclude()` ITSELF RUNS, CONSUMED AND NEVER RESTATED: the citing set
-   * is `#citesInto` (the one live-cites predicate — a SEVERED edge is a project that no longer
-   * draws on the question, which conclude refuses NO_CLAIM), sight is `#inSight` (the project gate
-   * conclude takes, `viewerPredicate`), and position is `#isJoinedParticipant` (C-56's rule, the
-   * one `#projectAuthority(…, "joined", "conclude")` asks). Membership in the project TYPE goes
-   * through `normalizeType`, because a question also writes `rel: cites` into its references
-   * (REC-37) and a citing question is no project to conclude in. */
-  #joinedCitingProjectOf(inquiryId, viewer, memberId) {
-    for (const pid of this.#citesInto(inquiryId).confirmed) {
-      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
-      if (!p || normalizeType(p.object_type) !== "project") continue;
-      if (this.#inSight(pid, viewer) && this.#isJoinedParticipant(pid, memberId)) return true;
-    }
-    return false;
-  }
-  /* REC-135 / §7.1 item 4 — DOES A PROJECT THIS CALLER HAS JOINED STAND ON A
-   * CONCLUSION OF THIS QUESTION? `#joinedCitingProjectOf`'s walk with the one
-   * extra question, asked through `#conclusionOf` — the SAME reader
-   * `publishCase()`'s own gate runs, so the act this fact fronts and the refusal
-   * cannot disagree about what a project concluded (DEC-8, the whole reason
-   * affordances.mjs exists).
-   *
-   * IT IS A FACT AND NEVER A RULE. It says only that SOME joined project has a
-   * standing conclusion here; whether THIS caller may publish for THAT project is
-   * the per-pair question D-311 names, and the act still refuses on its own terms
-   * (`NOT_THE_PROJECT_OWNER`, `NOT_CONCLUDED` for the project actually named).
-   * That is every act's posture in this file: the record permits the move, not
-   * that this caller's parameters will pass.
-   *
-   * WHY IT HAD TO ARRIVE WITH THE REFUSAL. `publish` was derived from
-   * `current_state === 'concluded'` alone, and its own comment says that
-   * expression is the affordance-layer half of publishCase()'s NOT_CONCLUDED
-   * sentence and the two MUST agree. Moving the refusal to the project's
-   * relationship without this fact would have left the surface silent for exactly
-   * the member §7.1 item 4 exists for — the one whose team concluded a shared
-   * question through op=conclude&project=, which never moves that word. */
-  #concludedForJoinedProjectOf(inquiryId, viewer, memberId) {
-    for (const pid of this.#citesInto(inquiryId).confirmed) {
-      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
-      if (!p || normalizeType(p.object_type) !== "project") continue;
-      if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
-      if (this.#conclusionOf(pid, inquiryId, viewer)) return true;
-    }
-    return false;
-  }
-  /* REC-157 / §7.1 item 9 — COULD A PROJECT THIS CALLER HAS JOINED PUBLISH A NEW EDITION OF A
-   * FINDING A CASE ALREADY PINS? `#concludedForJoinedProjectOf`'s walk, asked the two questions
-   * `publishCase()` asks of the project a caller names, through the SAME two readers: the
-   * relationship must be CONCLUDED (`#caseConclusionFor`, the NOT_CONCLUDED gate's one reader),
-   * and no edition pinning these bytes may already record that conclusion
-   * (`#editionsRecordingConclusion`, the ALREADY_A_CASE_MEMBER comparison). One reader per
-   * question, so the act this fact fronts and the refusal cannot disagree (DEC-8).
-   *
-   * ONLY A CASE MEMBER IS WALKED. A finding no case pins at its current version is offered
-   * `publish` by `!case_member` already, so the walk would add cost and nothing else; it answers
-   * false there, and the predicate never reads it because its first disjunct holds.
-   *
-   * IT IS A FACT AND NEVER A RULE, `concluded_for_project`'s posture exactly: it says SOME joined
-   * project could publish a new edition, not that THIS caller may publish for THAT project
-   * (D-311's per-pair question), and the act still refuses on its own terms. */
-  #editionWarrantedForJoinedProjectOf(inquiryId, viewer, memberId, currentState) {
-    const rel = this.#caseRelationOf(inquiryId);
-    if (!rel.member) return false;
-    for (const pid of this.#citesInto(inquiryId).confirmed) {
-      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
-      if (!p || normalizeType(p.object_type) !== "project") continue;
-      if (!this.#inSight(pid, viewer) || !this.#isJoinedParticipant(pid, memberId)) continue;
-      const conc = ratificationOf(this.ctx).caseConclusionFor(pid, inquiryId, viewer, currentState);
-      if (conc.state === "concluded" && !ratificationOf(this.ctx).editionsRecordingConclusion(inquiryId, rel, conc).same.length)
-        return true;
-    }
-    return false;
-  }
   #projectAuthority(...a) {
     return membershipOf(this.ctx).projectAuthority(...a);
   }
@@ -108611,7 +108512,7 @@ ${lines.join("\n")}
         /* REC-19: the facts behind op=affordances. The control plane derives
            the act list from these; this endpoint only reports what the store
            holds about the object. */
-        affordancefacts: () => this.affordanceFacts({
+        affordancefacts: () => affordancesOf(this.ctx).affordanceFacts({
           target: url.searchParams.get("target"),
           viewer: url.searchParams.get("viewer"),
           identity: url.searchParams.get("identity"),
