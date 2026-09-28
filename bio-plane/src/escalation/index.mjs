@@ -89,21 +89,15 @@ const iso = (ms) => stampInstant("second", ms);
 
 /* ---- the providers' answers, read in one place each (their Provides) ---- */
 
-/** conformance R9: a determination's per-standard outcomes, `[{standard, outcome}]`. */
-function outcomesOf(d) {
-  const raw = Array.isArray(d.outcomes) ? d.outcomes
-    : isObj(d.outcomes) ? Object.entries(d.outcomes).map(([standard, outcome]) => ({ standard, outcome }))
-    : Array.isArray(d.standards) ? d.standards.filter((s) => isObj(s) && "outcome" in s) : [];
-  return raw.filter(isObj).map((s) => ({
-    standard: isObj(s.standard) ? s.standard.id : (s.standard ?? s.id ?? null),
-    outcome: isObj(s.outcome) ? s.outcome.outcome : s.outcome ?? null,
-  })).filter((s) => typeof s.standard === "string");
-}
-const liveOf = (d) => (d.live === undefined ? !d.superseded_by : !!d.live);
+/** conformance R9/R11 (K252): a determination's per-standard outcomes `[{standard, outcome}]`, whether it is live,
+ *  its act (`{id, actor: {role, body}, ...}`), its project and when it was recorded (`at`; the act's date is `act.at`). */
+const outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : [])
+  .filter((o) => isObj(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
+const liveOf = (d) => d.live === true;
 const actOf = (d) => (isObj(d.act) ? d.act : {});
-const actIdOf = (d) => actOf(d).id ?? d.act_id ?? null;
-const projectOf = (d) => d.project ?? d.project_id ?? null;
-const recordedAtOf = (d) => d.at ?? d.recorded_at ?? d.created ?? null;
+const actIdOf = (d) => actOf(d).id ?? null;
+const projectOf = (d) => d.project ?? null;
+const recordedAtOf = (d) => d.at ?? null;
 
 /** actions R25/R29: an action's correspondence ledger, in order, `[{ord, direction, at, recorded_at}]`. */
 function ledgerOf(block) {
