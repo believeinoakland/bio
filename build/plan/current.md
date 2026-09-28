@@ -1,6 +1,6 @@
 # Plan: tranche T9
 
-**Status** · OPEN · BOB #56 · session_01VU9rtJrxixUgABcg5fucAq · depth 1
+**Status** · OPEN · BOB #57 · session_017vk5HNzmfWdF5xTZ9QoQE2 · depth 1
 
 **Jobs** · legacy-checks: LEGACY-CHECKS #4 session_01362JGtE3gn5X3QqZps3xue; subresources: SUBRESOURCES #2 session_01PwqLa1NvQSNYxStbJ9R5ds; office-readers: OFFICE-READERS #2 session_01US5MKSyeetAVCERbaBowrE; odf-reader: ODF-READER #2 session_01WS5qsgXgxGzNszdSSHz4o2; pdf-reader: PDF-READER #2 session_01LKbhRJ9uya72jg3WhQgDJV; text-chain: TEXT-CHAIN #2 session_01LkjS5fE3osSrYaAkNn6uqe; image-codecs: IMAGE-CODECS #2 session_01NmWHzjUgZb4RbiiKmG4HyX; pdf-pixels: PDF-PIXELS #2 session_01XVGk5mMCA4CFxRzihSLoPk; record-core: RECORD-CORE #5 session_01PP6FLcFpU5dGkNser12SaQ; membership: MEMBERSHIP #3 session_01LbMiZGKaADvtuykNWkWcTu; promotion: PROMOTION #9 session_01HaHQYhYSuHMBfLjsfYrKCD; host-governor: HOST-GOVERNOR #2 session_01YFNNHMErCvvjFpwV1NB6Kt; provenance: PROVENANCE #3 session_017KrztZChBMPxWJ41xnLD4i; capture-sources: CAPTURE-SOURCES #3 session_019czpcPFyCtgasvVAZPH4Xs; capture: CAPTURE #5 session_01LMAH1easrQsx33uAH8zDHb; calibration: CALIBRATION #2 session_014rdgsa7CsV4uZBTdm9Rh2U; extraction: EXTRACTION #3 session_01CqUWiaFQX9UhsvtQ1DT23r; content: CONTENT #3 session_01PUL34UEysoG7a95WQqDU7t
 
