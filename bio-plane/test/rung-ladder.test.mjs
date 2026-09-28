@@ -174,9 +174,7 @@ console.log("\n--- 4. every rung is BACKED by what the plane enforces ---");
 const irreversible = Object.entries(RUNGS).filter(([, r]) => r === "irreversible").map(([o]) => o);
 t("exactly ONE op carries `irreversible` (DEC-19: publishing is the one "
 + "irreversible act)", irreversible.length, 1);
-t("and it is the op that ROUTES to the publishing path — derived through the "
-+ "dispatch table, so a rename or a re-route fails this rather than drifting",
-  routeOf(irreversible[0], table), { doPath: "publishcase", method: "publishCase" });
+/* The ROUTES arm is asserted in section 4 below, once the modules' op maps are read (T8: the route runs through one). */
 
 /* ---- terminal: the target state has no outgoing edge, read from the IMPORTED
    state machine. If an edge out of `retired` is ever added, this fails rather
@@ -293,8 +291,30 @@ const MEMBERSHIP_ROUTES = new Map([...(methodBody(MODULE_SRC.membershipOf.replac
   .map((x) => [x[1], x[2]]));
 t("`membershipOps` was read out of membership's source — the ops the store's dispatch map now takes from it",
   ["adminremove", "projectownerremove", "projectownerrescue"].every((o) => MEMBERSHIP_ROUTES.has(o)), true);
-const refusesIn = (b) => { const h = jre.test(b); jre.lastIndex = 0; return h; };
+const refusesInRaw = (b) => { const h = jre.test(b); jre.lastIndex = 0; return h; };
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; AFFORDANCES #2 J3's finding, intent T8's "one governed helper per shared
+   code"): a module may mint its justification refusal through a MODULE-LEVEL function (intent's
+   `function refuseNoReason(detail, extra) { … reason: "NO_REASON" … }`, escalation's `refuseReason`), which a method
+   calls by name. Such a helper is the refusal's one minting site (DEC-49), so a body calling it refuses for want of an
+   account exactly as a body spelling the code does. The helpers are found in the source being read — a top-level
+   `function name(` whose own body mints a code of the family — and nothing else is followed. */
+const HELPERS = new Map();
+function justifyingHelpers(src) {
+  if (HELPERS.has(src)) return HELPERS.get(src);
+  const out = [];
+  for (const m of src.matchAll(/^function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) {
+    const body = methodBody(src.replace(new RegExp(`^function\\s+${m[1].replace(/\$/g, "\\$")}\\s*\\(`, "m"),
+      `  ${m[1]}(`), m[1]);
+    if (body != null && refusesInRaw(body)) out.push(m[1]);
+  }
+  HELPERS.set(src, out);
+  return out;
+}
+let helperSrc = "";   /* the source the current op is read in, whose module-level helpers count */
+const refusesIn = (b) => refusesInRaw(b)
+  || justifyingHelpers(helperSrc).some((h) => new RegExp(`(?<![\\w$.#])${h.replace(/\$/g, "\\$")}\\(`).test(b));
 function demandsInBody(body, src, depth = 0) {
+  if (depth === 0) helperSrc = src;
   if (refusesIn(body)) return true;
   /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4): a module method whose WHOLE body hands the act to a part of the same
      module (connections' `withdrawFromTheme(a) { return this.themes.withdraw(a); }`, into src/connections/themes.mjs)
@@ -331,7 +351,15 @@ const T5_OP_MAPS = [["entities", "entitiesOps"], ["progressions", "progressionOp
      and the strength, run-productions, contradiction, reevaluation, capture-requests and ai-runs ops their modules'. */
   ["citation", "citationOps"], ["inquiry", "inquiryOps"], ["basis-versions", "basisVersionsOps"],
   ["strength", "strengthOps"], ["run-productions", "runProductionsOps"], ["contradiction", "contradictionOps"],
-  ["reevaluation", "reevaluationOps"], ["capture-requests", "captureRequestsOps"], ["ai-runs", "aiRunsOps"]];
+  ["reevaluation", "reevaluationOps"], ["capture-requests", "captureRequestsOps"], ["ai-runs", "aiRunsOps"],
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; AFFORDANCES #2 J3): T8's layers 3, 8 and 9 moved more acts out of the
+     store, each spread into its dispatch map the same way — capture's (`captureOps`), case-authoring's
+     (`caseAuthoringOps`: `publishcase` among them), ratification's, publication's, review's, actions'
+     (`actionsOps`: `actionmove`, `actionrisktier`, …) and monitoring's. Layer 9's other modules (standards,
+     conformance, consequences, filings, escalation) are not routed in T8 (K263, K264), so they are not read. */
+  ["capture", "captureOps"], ["case-authoring", "caseAuthoringOps"], ["ratification", "ratificationOps"],
+  ["publication", "publicationOps"], ["review", "reviewOps"], ["actions", "actionsOps"],
+  ["monitoring", "monitoringOps"]];
 const T5_ROUTES = new Map();
 for (const [mod, fn] of T5_OP_MAPS) {
   const src = moduleSources(mod);
@@ -343,6 +371,15 @@ for (const [mod, fn] of T5_OP_MAPS) {
 t("the T5 modules' op maps were read — relationdeclare and discharge route to entities and progressions",
   [T5_ROUTES.get("relationdeclare")?.method, T5_ROUTES.get("discharge")?.method],
   ["declareRelation", "dischargeStage"]);
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1): the store's map no longer names the method — it spreads
+   `caseAuthoringOps(…)`, whose `publishcase` routes to case-authoring's `publishCase` — so the route is followed into
+   the op map exactly as section 4's backing scan follows it (`T5_ROUTES`, just above). Still derived, never spelled. */
+const pubRoute = routeOf(irreversible[0], table);
+const pubVia = pubRoute.method ? null : T5_ROUTES.get(pubRoute.doPath);
+t("and it is the op that ROUTES to the publishing path — derived through the "
++ "dispatch table, so a rename or a re-route fails this rather than drifting",
+  { doPath: pubRoute.doPath, method: pubRoute.method ?? pubVia?.method ?? null },
+  { doPath: "publishcase", method: "publishCase" });
 const demandsAccount = new Set();
 const bodiesRead = [];
 for (const op of MUTATING) {
@@ -444,11 +481,17 @@ t("and every ground's own text explains itself at length rather than naming itse
    rather than driven, because `affordances.test.mjs` owns the wire. */
 console.log("\n--- 6. the absence reaches a caller ---");
 const indexSrc = readFileSync(join(PLANE, "src/index.mjs"), "utf8");
-t("`decorateAct` publishes the absence GROUND beside the rung, so `rung: null` "
-+ "is legible as a stated absence rather than as nobody having looked",
-  /rung_absence:\s*RUNG_ABSENT\[a\.id\]\?\.ground\s*\?\?\s*null/.test(indexSrc), true);
-t("and index.mjs imports RUNG_ABSENT from the one place it is defined",
-  /import \{[^}]*\bRUNG_ABSENT\b[^}]*\} from "\.\/affordances\.mjs"/s.test(indexSrc), true);
+/* RETIRED 2026-09-28 (T8, legacy-tests; N177, legacy-index's share landed): the two `decorateAct` source scans ("…
+   publishes the absence GROUND beside the rung" and "index.mjs imports RUNG_ABSENT from the one place it is
+   defined"). The decoration is affordances' `decorate(act, gate)` (its R11), which index.mjs calls, so the ground is
+   published by the module that defines RUNG_ABSENT and index.mjs no longer names it. Proven by
+   `test/m/affordances/services.test.mjs`, test "R11: needs and mode are the gate's answer for the act, rung RUNGS',
+   rung_absence RUNG_ABSENT's ground, and …", and over the wire by `test/m/affordances/plane.test.mjs`, test "R24: no
+   act in any answer carries a null rung without a stated absence". What stays readable here: index.mjs decorates
+   through that function and holds no decoration of its own. */
+t("index.mjs decorates through affordances' `decorate` and composes no `rung_absence` of its own",
+  [/import \{[^}]*\bdecorate\b[^}]*\} from "\.\/affordances\.mjs"/s.test(indexSrc),
+   /rung_absence\s*:/.test(indexSrc.replace(/\/\*[\s\S]*?\*\//g, ""))], [true, false]);
 
 /* ---------------------------------------------------------------- the foot */
 /* THE FOOT IS ASSERTED TO HAVE BEEN REACHED. A TypeError inside an assertion

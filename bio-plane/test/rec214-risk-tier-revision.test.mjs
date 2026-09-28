@@ -43,8 +43,12 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, parseFrontmatter, MACHINE_FENCE_CHECKS, RISK_TIER_REVISION_CHECKS, RISK_TIERS,
-         riskTierHistoryOf } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the tier history's reader, its rows (C-90) and the
+   tier fence (C-32.19, now in `ACTION_FENCE_CHECKS`) moved to `actions` (`src/actions/checks.mjs`), which re-exports
+   `RISK_TIERS` (R40). `checkBundle` no longer runs the action arm; `errorsOf` runs actions' audit arm (R37) beside it. */
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { ACTION_FENCE_CHECKS, RISK_TIER_REVISION_CHECKS, RISK_TIERS, riskTierHistoryOf,
+         checkActionExtension } from "../src/actions/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const NOW = "2026-07-01T00:00:00Z";
@@ -83,6 +87,7 @@ const errorsOf = async (id, text) => {
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64), nowMs: PINNED_MS,
     resolveTarget: () => true });
+  checkActionExtension({ fm: fmOf(text), nowMs: PINNED_MS }, findings);   /* the audit's action arm (actions R37) */
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
 const tierErrors = (errs) => errs.filter((e) => /risk_tier/.test(e));
@@ -98,7 +103,7 @@ const actionMd = (id, { tier = "3", history = null, plan = "Ask for the transfer
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
   "action_kind: other", `risk_tier: ${tier}`,
-  "counterparty:", "  state: named", "  name: City Clerk",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",   /* R9: an office (T8) */
   ...(history === null ? [] : ["risk_tier_history:", ...history.flatMap((e) => [
     `  - tier: ${e.tier}`, `    prior: ${e.prior}`, `    by: "${e.by}"`, `    at: "${e.at}"`, `    reason: "${e.reason}"`])]),
   "---", "",
@@ -207,7 +212,7 @@ console.log("\n--- 3. append-only: a second member revises 1 -> 2 ---");
 console.log("\n--- 4. the machine is refused by name, first ---");
 {
   const before = await headOf(ACT);
-  const row = MACHINE_FENCE_CHECKS.MACHINE_CANNOT_SET_RISK_TIER;
+  const row = ACTION_FENCE_CHECKS.MACHINE_CANNOT_SET_RISK_TIER;
   const m = await actionrisktier(MACHINE, ACT, { tier: 3, reason: "a machine thinks it is risky" });
   t("a machine credential's complete, well-formed revision is refused MACHINE_CANNOT_SET_RISK_TIER — code, "
   + "C-number and canned translation on the wire", wire(m), ["MACHINE_CANNOT_SET_RISK_TIER", row.check, row.translation]);

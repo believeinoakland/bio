@@ -116,7 +116,10 @@ import { MONITOR_FREQ } from "../checks/bio-checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const SOURCE = readFileSync(SRC, "utf8");
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3 item 1): the cadence (`MONITOR_CADENCE_MS`,
+   `monitorIntervalMs`, the plan, wake and tick) left the store for `src/monitoring/index.mjs`, where the table is an
+   exported frozen object. Block 2 reads it there; the behavioural blocks drive the same plane. */
+const MONITORING_SRC = readFileSync(fileURLToPath(new URL("../src/monitoring/index.mjs", import.meta.url)), "utf8");
 const WRANGLER = readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.meta.url)), "utf8");
 
 let pass = 0, fail = 0;
@@ -163,15 +166,15 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
  * ------------------------------------------------------------------ */
 {
   console.log("\n--- the cadence table is held against the CATALOG's vocabulary ---");
-  const lit = /static MONITOR_CADENCE_MS = \{([\s\S]*?)\n  \};/.exec(STORE_SRC);
-  t("the cadence table is locatable in store.mjs", !!lit, true);
-  const keys = [...lit[1].matchAll(/^\s{4}(\w+):/gm)].map((m) => m[1]);
+  const lit = /export const MONITOR_CADENCE_MS = Object\.freeze\(\{([\s\S]*?)\n\}\);/.exec(MONITORING_SRC);
+  t("the cadence table is locatable in src/monitoring/index.mjs", !!lit, true);
+  const keys = lit ? [...lit[1].matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]) : [];
   t("every frequency the catalog knows has an explicit entry",
     MONITOR_FREQ.filter((f) => !keys.includes(f)), []);
   t("and the table invents no frequency the catalog does not know",
     keys.filter((k) => !MONITOR_FREQ.includes(k)), []);
   t("the two that are not clocks are explicitly null, never approximated",
-    /per_meeting:\s*null/.test(lit[1]) && /none:\s*null/.test(lit[1]), true);
+    !!lit && /per_meeting:\s*null/.test(lit[1]) && /none:\s*null/.test(lit[1]), true);
 }
 
 /* ------------------------------------------------------------------ *

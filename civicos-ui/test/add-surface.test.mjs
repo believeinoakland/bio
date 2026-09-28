@@ -168,7 +168,11 @@ import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../bio-pla
    for UI-54's §3a: the note under test has to be provably a function of the
    enforced ceiling, and the only way to say that without typing the sentence out
    is to recompose it here from the two exported letters and compare. */
-import { ATTEST_FENCE, ACQUIRE_GRADE_NOTE, acquireGradeNote } from "../../bio-plane/src/affordances.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; N80, AFFORDANCES #2 J4): op=acquire's note and its composer are capture's
+   (`bio-plane/src/capture/acquire.mjs`, re-exported by `src/capture/index.mjs`); affordances dropped its copy. The attest
+   fence stays affordances'. */
+import { ATTEST_FENCE } from "../../bio-plane/src/affordances.mjs";
+import { ACQUIRE_GRADE_NOTE, acquireGradeNote } from "../../bio-plane/src/capture/index.mjs";
 import { fileURLToPath } from "url";
 /* D-257 — the doctrine sweep at the foot of this file walks the working tree and
    FLOORS on what it found. The one provenance mechanism is imported rather than

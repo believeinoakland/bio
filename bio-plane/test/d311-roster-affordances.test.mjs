@@ -272,7 +272,9 @@ const actnMd = (id) => ["---", `id: ${id}`, "object_type: action", "schema: acti
   "current_state: planned", "prior_state: null", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: human", "  capability_tier: member", "group: believe-in-oakland", "references: []",
   "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null",
-  "visuals: []", "action_kind: cpra_request", "target_body:", "  name: City Clerk", "---", "", "## Request", "",
+  /* RE-GRADED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): a kind actions offers (R10); `cpra_request` is
+     refused ACTION_KIND_UNKNOWN on a creation. No counterparty block: a draft may leave it out (actions R7). */
+  "visuals: []", "action_kind: records_request", "target_body:", "  name: City Clerk", "---", "", "## Request", "",
   "Records.", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 const promote = async (id, text, type, state) => must(`promote ${id}`, await POST(`op=promote&token=${ADM}`, {
   bundleId: id, base: null, snapKey: `d311-${++snapSeq}-${sha(id).slice(0, 6)}`,

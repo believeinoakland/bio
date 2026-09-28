@@ -46,7 +46,11 @@ import { createHash } from "node:crypto";
    way instead of typing the sentence. Both modules are pure — neither imports
    `cloudflare:workers` — so they load in the node harness, which is the
    precedent REC-43 set for the attest fence. */
-import { acquireGradeNote, ACQUIRE_GRADE_NOTE, ATTEST_FENCE } from "../src/affordances.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; N80, AFFORDANCES #2 J4): the note's composer and its constant are
+   capture's (`src/capture/acquire.mjs`, re-exported by `src/capture/index.mjs`); affordances dropped its copy. The
+   attest fence stays affordances'. */
+import { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../src/capture/index.mjs";
+import { ATTEST_FENCE } from "../src/affordances.mjs";
 /* REC-50: `BASIS_GRADES` joins them — the array `checkEarnedLeg` compares
    against, so the ordering this suite pins between the two stamped letters is
    the record's own ranking rather than a second statement of it. */

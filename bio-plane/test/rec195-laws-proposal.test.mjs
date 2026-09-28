@@ -80,8 +80,11 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { LAW_LEVELS, GOVERNING_LAWS_MAX, GOVERNING_LAW_CHECKS, LAW_PROPOSAL_STATES,
-         lawProposalLabel } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the governing-laws bound, rows (C-73) and the
+   proposal label moved to (or are re-exported by) `actions` (`src/actions/checks.mjs`, R40), `LAW_LEVELS` from
+   `jurisdictions` (R31); the proposal sentences stay in `legacy-checks`, which `lawProposalLabel` reads. */
+import { LAW_PROPOSAL_STATES } from "../checks/bio-checks.mjs";
+import { LAW_LEVELS, GOVERNING_LAWS_MAX, GOVERNING_LAW_CHECKS, lawProposalLabel } from "../src/actions/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const NOW = "2026-07-01T00:00:00Z";
@@ -131,7 +134,7 @@ const actionMd = (id, { kind = "other", title = "Records request" } = {}) => ["-
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
   `action_kind: ${kind}`, "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",   /* R9: an office (T8) */
   "---", "",
   "## Plan", "", "Ask for the transfer ledger.", "",
   "## Status", "", "## Correspondence", "",
@@ -186,7 +189,9 @@ const INQ = "INQ-2026-1497-not-an-action";
    sunshine ordinance — NOT by federal FOIA, which governs federal agencies only. */
 const OAKLAND = [
   { level: "state", citation: "Cal. Gov. Code § 7920.000 et seq. (California Public Records Act)" },
-  { level: "local", citation: "Oakland Municipal Code ch. 2.20 (Sunshine Ordinance)" },
+  /* RE-GRADED 2026-09-28 (T8): the profile's levels (`jurisdictions` R31, actions N61); D-149's `local` reads as
+     written and is not stated anew. Oakland's ordinance is the city's. */
+  { level: "city", citation: "Oakland Municipal Code ch. 2.20 (Sunshine Ordinance)" },
 ];
 const FEDERAL = [{ level: "federal", citation: "5 U.S.C. § 552 (FOIA)" }];
 
@@ -292,11 +297,11 @@ console.log("\n--- 4. the shape, judged by the SAME grammar the member's act is 
   const cases = [
     ["NO_LAWS", [], "C-73.2"],
     ["BAD_LAW_LEVEL", [{ level: "municipal", citation: "Oakland Municipal Code ch. 2.20" }], "C-73.3"],
-    ["BAD_CITATION", [{ level: "local", citation: "" }], "C-73.4"],
-    ["BAD_CITATION", [{ level: "local", citation: `He said "no"` }], "C-73.4"],
+    ["BAD_CITATION", [{ level: "city", citation: "" }], "C-73.4"],
+    ["BAD_CITATION", [{ level: "city", citation: `He said "no"` }], "C-73.4"],
     ["BAD_CITATION", [OAKLAND[0], OAKLAND[0]], "C-73.4"],
     ["TOO_MANY_LAWS", Array.from({ length: GOVERNING_LAWS_MAX + 1 },
-      (_, i) => ({ level: "local", citation: `Ordinance ${i}` })), "C-73.5"],
+      (_, i) => ({ level: "city", citation: `Ordinance ${i}` })), "C-73.5"],
   ];
   for (const [code, laws, check] of cases) {
     const r = await propose("mem-r195", ACT, laws);
@@ -306,8 +311,9 @@ console.log("\n--- 4. the shape, judged by the SAME grammar the member's act is 
   }
   t("a refused proposal wrote nothing: the standing proposal is still the one that landed",
     (await actionOf(NADIA, ACT))?.governing_laws_proposals?.proposals?.[0]?.laws, OAKLAND);
-  t("the three levels are the catalogue's own, and a proposal is judged against the same array the act is",
-    LAW_LEVELS, ["federal", "state", "local"]);
+  /* RE-ANCHORED 2026-09-28 (T8): the profile's four levels (`jurisdictions` R31, K102, N61). */
+  t("the four levels are the profile's own, and a proposal is judged against the same array the act is",
+    LAW_LEVELS, ["federal", "state", "county", "city"]);
   const noTarget = rP(await POST(`op=actionlawspropose&token=mem-r195`, { laws: OAKLAND }));
   t("no target is refused NO_TARGET", [noTarget?.ok, noTarget?.reason], [false, "NO_TARGET"]);
   const ghost = await propose("mem-r195", "ACTN-2026-9999-nowhere", OAKLAND);
@@ -369,8 +375,14 @@ console.log("\n--- 7. the whole-store purge takes the proposals with the actions
   const pg = rP(await POST("op=purge&token=adm-r195&confirm=bio", {}));
   /* The counter is the purge's proof and counts ROWS, one per proposed citation — three standing proposals
      across two actions: the machine's two on ACT, the machine's one and the member's two on BARE. */
-  t("op=purge ALL reports the governing-law proposal rows it took — three standing proposals, five citations",
-    [pg?.ok, pg?.removed?.actionLawProposals], [true, 5]);
+  /* RETIRED 2026-09-28 (T8, legacy-tests), the COUNT half of this arm (`removed.actionLawProposals` === 5):
+     `action_law_proposals` moved to `actions`, which declares it to record-core's purge (actions R36), and its count
+     left `op=purge`'s report (ACTIONS #1 J2 item 4). The requirement is proven, with proposals there to clear and
+     counted to zero, by `test/m/actions/read.test.mjs`, test "R37 R36 the audit reports C-2.10 and C-11.1 over an
+     action, a missing counterparty and a past pending entry; tables purge with the action", and for the whole-store
+     form by `test/m/record-core/record-core.test.mjs`, test "R22 R23 R24 R46: the whole-store purge clears every
+     declared, non-exempt table and never seq, minted_ids, settings or an exempt table". */
+  t("op=purge ALL succeeds with three standing proposals, five citations, there to take", pg?.ok, true);
   t("and nothing is left to read: the action is gone with its proposals",
     await actionOf(NADIA, ACT), null);
 }

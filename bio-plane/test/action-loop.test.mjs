@@ -46,13 +46,18 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
-import { checkBundle, parseFrontmatter, ACTION_KINDS, ACTION_BASIS_KINDS,
-         CORRESPONDENCE_DIRECTIONS, RFC_RESPONSE_WINDOW_PRECEDENT,
-         consequenceState } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the action's arms, vocabularies and
+   `consequenceState` moved from `legacy-checks` to `actions` (`src/actions/checks.mjs`), and the action's store code
+   and tables to `src/actions/index.mjs` and `src/actions/schema.mjs`. `checkBundle` no longer runs the action arm:
+   actions registers it with record-core's audit (R37), as `respondsToEdgeFindings` + `checkActionExtension`, which
+   `errorsOf` below runs beside `checkBundle` exactly as the audit composes them. */
+import { checkBundle, parseFrontmatter, RFC_RESPONSE_WINDOW_PRECEDENT } from "../checks/bio-checks.mjs";
+import { actionKinds, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, consequenceState,
+         respondsToEdgeFindings, checkActionExtension } from "../src/actions/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
-const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/schema.mjs", import.meta.url)), "utf8");
+const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/actions/index.mjs", import.meta.url)), "utf8");
+const SCHEMA_SRC = readFileSync(fileURLToPath(new URL("../src/actions/schema.mjs", import.meta.url)), "utf8");
 
 /* ===========================================================================
  * THE CLOCK, PINNED — M0-22, 2026-09-10, and the constants are declared HERE,
@@ -178,6 +183,10 @@ const errorsOf = async (id, text, nowMs = BEFORE_MS) => {
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
     nowMs,
     resolveTarget: () => true });
+  /* The audit's action arm (actions R37, registered with record-core R59), over the same bytes at the same instant. */
+  const fm = fmOf(text);
+  respondsToEdgeFindings(fm, findings);
+  checkActionExtension({ fm, nowMs }, findings);
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
 
@@ -237,8 +246,13 @@ const infoMd = (id, { title = "A captured document", refs = [] } = {}) => ["---"
 
 /* The action. Every field the intake surfaces write plus REC-24's three new
    blocks, so a finding can only be about the subject. */
-const actionMd = (id, { kind = "cpra_request", state = "planned", title = "Records request",
-                        counterparty = ["counterparty:", "  state: named", "  name: City Clerk"],
+/* RE-GRADED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): a creation states a kind actions offers (R10:
+   `records_request`, `request_for_comment`, `other`; `cpra_request` reads as written but is refused on a creation,
+   ACTION_KIND_UNKNOWN) and a named counterparty as an office, `{role, body}` (R9; `{state: named, name}` reads as
+   written but is refused on a creation). */
+const actionMd = (id, { kind = "records_request", state = "planned", title = "Records request",
+                        counterparty = ["counterparty:", "  state: named", "  role: City Clerk",
+                                        "  body: City of Oakland"],
                         basis = [], clock = [], consequence = null, refs = [],
                         correspondence = [], resolution = null } = {}) => ["---",
   `id: ${id}`, "object_type: action", "schema: action@1",
@@ -364,7 +378,7 @@ let actSha = null;
     /CREATE INDEX IF NOT EXISTS action_basis_target ON action_basis\(target_id\);/.test(SCHEMA_SRC), true);
   t("the projection columns carry the action's own facts (e)",
     [a.action_kind, a.action_risk_tier, a.action_counterparty_state, a.action_clock_next],
-    ["cpra_request", 1, "named", DUE]);
+    ["records_request", 1, "named", DUE]);
   /* A leg pointing at another ACTION is refused: our own work cited as the
      reason for our own work is the circularity DEC-14 spends its ruling on. */
   const selfish = actionMd("ACTN-2026-2401-selfish", {
@@ -658,8 +672,10 @@ console.log("\n--- 7. resolving, with a resolution the catalog accepts (c) ---")
    ===================================================================== */
 console.log("\n--- 8. DEC-13: a request_for_comment names the SPECIFIC inquiries it disclosed ---");
 {
+  /* RE-ANCHORED 2026-09-28 (T8): the array C-2.10 enforces on a creation is actions' `actionKinds(view)` (R10, R40);
+     with no profile it is the product's own kinds. */
   t("request_for_comment is in the published suite, and the suite is the array C-2.10 enforces",
-    ACTION_KINDS.includes("request_for_comment"), true);
+    actionKinds(null).includes("request_for_comment"), true);
   const RFC0 = "ACTN-2026-2403-rfc-vague";
   const vague = actionMd(RFC0, { kind: "request_for_comment", title: "Request for comment",
     clock: RESPONSE_WINDOW });
@@ -716,7 +732,9 @@ console.log("\n--- 9. DEC-14: an OUTCOME by default, an IMPACT claim held to the
   t("an outcome draws no findings: a dated first-party fact about the body, at full strength",
     await errorsOf(OUT, outcome), []);
   t("it promotes", (await promote(NADIA, OUT, outcome, "action", "planned")).ok, true);
-  const o = (await actionOf(NADIA, OUT, AFTER_MS)).action.consequence;
+  /* RE-ANCHORED 2026-09-28 (T8): the action's own outcome is answered as `own_outcome` (actions R26: under a name that
+     is not `consequence`, which is the breach's, `consequences`). */
+  const o = (await actionOf(NADIA, OUT, AFTER_MS)).action.own_outcome;
   t("and it is RECORDED, determined, with no grade anywhere near it",
     [o.claim, o.state, o.determined, o.grade], ["outcome", "recorded", true, null]);
 
@@ -728,7 +746,7 @@ console.log("\n--- 9. DEC-14: an OUTCOME by default, an IMPACT claim held to the
       description: "Our request caused the Council to convene the hearing." } });
   t("an impact claim resting on nothing outside us still LANDS: unproven is a state, not a refusal",
     (await promote(NADIA, IMP, bare, "action", "planned")).ok, true);
-  const u = (await actionOf(NADIA, IMP, AFTER_MS)).action.consequence;
+  const u = (await actionOf(NADIA, IMP, AFTER_MS)).action.own_outcome;
   t("and it is recorded UNPROVEN, on the R1 shape: no computed strength, and it names why",
     [u.claim, u.state, u.determined, u.grade, u.evidence], ["impact", "unproven", false, null, []]);
   t("it is RENDERED AS STATED, not graded: the detail says what we have not established",
@@ -763,7 +781,7 @@ console.log("\n--- 9. DEC-14: an OUTCOME by default, an IMPACT claim held to the
       description: "The staff memo names our report as the reason for the change." } });
   t("an impact claim resting on a document that is not our own action is ESTABLISHED",
     (await promote(NADIA, PROVEN, proven, "action", "planned")).ok, true);
-  const p = (await actionOf(NADIA, PROVEN, AFTER_MS)).action.consequence;
+  const p = (await actionOf(NADIA, PROVEN, AFTER_MS)).action.own_outcome;
   t("...determined, naming the evidence, and STILL carrying no grade (never a fifth grade)",
     [p.state, p.determined, p.evidence, p.grade], ["established", true, [MEMO], null]);
 }
@@ -776,30 +794,25 @@ console.log("\n--- 10. the vocabularies, and the D-113 floor ---");
   t("the basis kinds are the closed pair", ACTION_BASIS_KINDS, ["rests_on", "advances"]);
   t("the directions include the one that is easy to leave out (DEC-13)",
     CORRESPONDENCE_DIRECTIONS, ["sent", "received", "no_response"]);
-  const st = rP(await GET(`op=stats&token=adm-rec24`));
-  t("and both are COUNTED in stats, so a purge can PROVE it took them rather than assert it",
-    [typeof st.actionBasis, typeof st.correspondence, st.actionBasis > 0, st.correspondence > 0],
-    ["number", "number", true, true]);
+  /* RETIRED 2026-09-28 (T8, legacy-tests), the COUNT arms ("both are COUNTED in stats", "...and the counts FALL" and
+     the whole-store arm's zeros): `actionBasis` and `correspondence` left `op=stats` and `op=purge`'s report when the
+     tables moved to `actions`, which declares them to record-core's purge (ACTIONS #1 J2 item 4; actions R36), and
+     no wire answer counts them any more. The requirement is proven, with rows there to clear and counted to zero, by
+     `test/m/actions/read.test.mjs`, test "R37 R36 the audit reports C-2.10 and C-11.1 over an action, a missing
+     counterparty and a past pending entry; tables purge with the action" (per-bundle), and
+     `test/m/record-core/record-core.test.mjs`, test "R22 R23 R24 R46: the whole-store purge clears every declared,
+     non-exempt table and never seq, minted_ids, settings or an exempt table" (whole-store). The earlier T3 re-anchor
+     (purge's `const TABLES = [` list, moved to record-core R21) is subsumed by the same two tests. What the wire still
+     answers — both purges succeed with legs and a ledger there to take — is asserted below. */
   const purged = rP(await GET(
     `op=purge&token=adm-rec24&confirm=bio&bundleId=${encodeURIComponent(ACT)}`));
   t("a per-bundle purge of the action takes its legs and its ledger with it", purged.ok, true);
-  const after = rP(await GET(`op=stats&token=adm-rec24`));
-  t("...and the counts FALL, measured rather than asserted (D-113)",
-    [after.correspondence < st.correspondence, after.actionBasis < st.actionBasis], [true, true]);
-  /* RE-ANCHORED 2026-09-26 (T3, legacy-tests): this arm read purge's `const TABLES = [` list out of store.mjs, and
-     purge moved to `record-core`, where each module declares its tables (record-core R21). The same claim, "a
-     whole-store purge cannot report ALL and leave rows", is now MEASURED: a seeded action puts rows in both tables,
-     and a whole-store purge takes both tables to zero. */
   const SEED = "ACTN-2026-2499-purge-seed";   /* one more action with a leg and a letter, so both tables hold rows */
   const seedR = (await promote(NADIA, SEED, actionMd(SEED, { refs: [INQ], basis: [{ target: INQ, kind: "advances" }],
       correspondence: [{ direction: "sent", at: "2026-08-11", artifact_sha: SENT_SHA }] }), "action", "planned"));
   t("(a seed action with a basis leg and a correspondence entry lands, so both tables hold rows to clear)", seedR.ok, true);
-  const seeded = rP(await GET(`op=stats&token=adm-rec24`));
   const whole = rP(await GET(`op=purge&token=adm-rec24&confirm=bio`));
-  const empty = rP(await GET(`op=stats&token=adm-rec24`));
-  t("both new tables are cleared by a whole-store purge, so it cannot report ALL and leave rows (rows were there to clear)",
-    [seeded.actionBasis > 0 && seeded.correspondence > 0, whole.ok, empty.actionBasis, empty.correspondence],
-    [true, true, 0, 0]);
+  t("a whole-store purge with rows in both tables succeeds", whole.ok, true);
 }
 
 console.log(`\naction-loop: ${pass} pass, ${fail} fail`);

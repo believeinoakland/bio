@@ -49,8 +49,11 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
    wait source (`waitSource()`'s `holds` and `woken`, and `markWoken`, in `src/capture-requests/index.mjs`, R29,
    CAPTURE-REQUESTS #1). Each arm makes the same edit at the same condition there; arm (8) still arms the store's
    `onAlarm`. Arm (9)'s completion states now include `expired` (D-583), so its re-spelling carries three. */
+/* RE-ANCHORED 2026-09-28 (T8, legacy-tests; SCHEDULER #1 J2 item 1): the registry, `onAlarm` and the one reconcile
+   left the store for `src/scheduler/index.mjs`, so arm (8) arms the scheduler module's `ai-run-wake` entry, and the
+   suite's labels these arms name follow block 4's re-anchor (fifteen consumers; the scheduler's `#reconcile`). */
 const F = {
-  store: ROOT + "src/store.mjs",
+  sched: ROOT + "src/scheduler/index.mjs",
   airuns: ROOT + "src/ai-runs/index.mjs",
   cr: ROOT + "src/capture-requests/index.mjs",
   wrangler: ROOT + "wrangler.jsonc",
@@ -62,7 +65,7 @@ const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) =>
    truncated snapshot passes for free — measured twice in this repository, once
    caught only because a digest read `e3b0c442…`, the sha256 of the empty
    string. */
-const FLOOR = { store: 400000, airuns: 100000, cr: 40000, wrangler: 1000 };
+const FLOOR = { sched: 15000, airuns: 100000, cr: 40000, wrangler: 1000 };
 for (const [k, v] of Object.entries(ORIGINAL)) {
   console.log(`  pristine ${k}: ${v.length} bytes · ${ORIGINAL_SHA[k].slice(0, 12)}…`);
   if (v.length < FLOOR[k]) throw new Error(`PRISTINE COPY BELOW FLOOR: ${k} read ${v.length} bytes`);
@@ -154,7 +157,7 @@ arm("(1)", "THE WAKE. Make the wake loop iterate nothing, holds left live. The d
    "the run's log carries exactly one wake entry",
    "the completed request is stamped with WHEN the run was told"],
   ["the drain captured one and held the other",
-   "the registry is exactly the ten real consumers, in order"]);
+   "the registry is exactly the fifteen real consumers, in order"]);
 
 arm("(2)", "THE HOLD. Make the hold loop iterate nothing, the wake left live. A run waiting on OUR "
   + "OWN daemon stops being held, its five-second lease lapses, and the reaper takes it — writing "
@@ -182,7 +185,7 @@ arm("(3)", "THE STAMP. Remove the `run_woken_at` write. Every alarm re-delivers 
     `      void r;`]],
   ["a second alarm delivers NOTHING new",
    "the completed request is stamped with WHEN the run was told"],
-  ["the registry is exactly the ten real consumers, in order"]);
+  ["the registry is exactly the fifteen real consumers, in order"]);
 
 arm("(4)", "THE BOUND. Remove the request's own expiry from the hold's predicate. A request nothing "
   + "can ever satisfy then holds its run open for ever: the hold stops being a way to survive a wait "
@@ -216,8 +219,8 @@ arm("(6)", "THE PLAN ROW'S OWN CONTROL, ARMED: *add the run's own alarm*. Give t
   + "carried the declaration and no assertion that could fail on it.",
   [["airuns", "  async wake(now) {\n    const iso = AiRuns.#aiIso(now);",
     "  async wake(now) {\n    this.ctx.storage.setAlarm(now + 1000);\n    const iso = AiRuns.#aiIso(now);"]],
-  ["EVERY setAlarm in the plane is inside #reconcileAlarm"],
-  ["the registry is exactly the ten real consumers, in order",
+  ["EVERY setAlarm in the plane is inside the scheduler's #reconcile"],
+  ["the registry is exactly the fifteen real consumers, in order",
    "and NO cron: wrangler.jsonc declares no triggers block"]);
 
 arm("(7)", "THE OTHER HALF OF THE SAME DECISION: *or cron*. Add a cron trigger to wrangler.jsonc. A "
@@ -227,14 +230,16 @@ arm("(7)", "THE OTHER HALF OF THE SAME DECISION: *or cron*. Add a cron trigger t
   [["wrangler", `  "observability": { "enabled": true }`,
     `  "triggers": { "crons": ["*/1 * * * *"] },\n  "observability": { "enabled": true }`]],
   ["and NO cron: wrangler.jsonc declares no triggers block"],
-  ["EVERY setAlarm in the plane is inside #reconcileAlarm",
+  ["EVERY setAlarm in the plane is inside the scheduler's #reconcile",
    "ONE run was woken, for ONE completion"]);
 
-arm("(8)", "THE NAMING. Remove the consumer's `else if` in onAlarm and it falls through to `probes` — "
+arm("(8)", "THE NAMING. Make the consumer's tick answer nothing under its key (the store's `else if` in onAlarm, before "
+  + "T8) and the scheduler's answer stops carrying it — "
   + "reported as a TEST PROBE. The wake still happens; the alarm's own account of itself stops saying "
   + "so, which is how a real clock disappears from the record of what ran. Four consumers before this "
   + "one are named for exactly this reason and none of them had an arm proving it.",
-  [["store", `      else if (c.name === "ai-run-wake") airunwake = r && r.airunwake;\n`, ""]],
+  [["sched", `        tick: async (now) => ({ airunwake: await o("aiRuns").wake(now) }) };`,
+    `        tick: async (now) => { await o("aiRuns").wake(now); return null; } };`]],
   ["the alarm's own answer NAMES the wake",
    "ONE run was woken, for ONE completion"],
   ["the drain captured one and held the other"]);

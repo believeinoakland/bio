@@ -56,7 +56,15 @@ const SRC = (f) => join(DIR, "..", "src", f);
    `src/basis-versions/`, dividing and grounding (MACHINE_CANNOT_DIVIDE, MACHINE_CANNOT_GROUND) to `src/inquiry/`, and
    declaring the bar (MACHINE_CANNOT_DECLARE) to `src/strength/`; the corpus is the store's as it stood before those
    extractions too. (intent and reevaluation mint fences of their own that never were the store's; not widened to.) */
-const STORE_SRC = storeCorpus(["membership", "promotion", "basis-versions", "inquiry", "strength"]);
+/* WIDENED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4, CASE-AUTHORING #1, REVIEW #1 J4): T8 moved the store's
+   remaining MACHINE_CANNOT_* sites — the action acts' and the promote action arm's fences (MACHINE_CANNOT_MOVE_ACTION,
+   _CORRESPOND, _SET_LAWS, _SET_RISK_TIER) to `src/actions/`, publishing a case (MACHINE_CANNOT_PUBLISH) to
+   `src/case-authoring/`, and authoring the review copy (MACHINE_CANNOT_REVIEW) to `src/review/` — so the corpus is the
+   store's as it stood before those extractions too. Actions brought one new fence of the same family with it
+   (MACHINE_CANNOT_STATE_RECORDS_LAW, C-32.20, actions R5), which block 8 drives. (Layer 9's other modules mint
+   fences that never were the store's and are not routed in T8, K263/K264; not widened to.) */
+const STORE_SRC = storeCorpus(["membership", "promotion", "basis-versions", "inquiry", "strength", "actions",
+                               "case-authoring", "review"]);
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 /* The ai_credentials DDL moved with membership's tables (R57–R59) into `src/membership/schema.mjs`. */
@@ -594,12 +602,13 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      passes the gate. What is being measured here is the IDENTITY layer, with the
      credential layer deliberately held open. PL-2 ran the three-layer version of
      this one item over; this is the two-layer version of the same discipline. */
-  const riskTierCreation = (id) => {
+  const actionCreation = (id, lines) => {
     const text = ["---", `id: ${id}`, "object_type: action", "schema: action@1", `title: "Action ${id}"`,
       "current_state: planned", "prior_state: null", 'created: "2026-07-01T00:00:00Z"',
       'last_updated: "2026-07-01T00:00:00Z"', "produced_by:", "  mode: assisted", "  capability_tier: session",
-      "group: believe-in-oakland", "references: []", "state_history: []", "action_kind: cpra_request",
-      "risk_tier: 2", "counterparty:", "  state: named", "  name: City Clerk", "---", "", "## Plan", "", "P.",
+      /* RE-GRADED 2026-09-28 (T8): a kind actions offers (R10) and the counterparty as an office (R9). */
+      "group: believe-in-oakland", "references: []", "state_history: []", "action_kind: records_request",
+      ...lines, "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland", "---", "", "## Plan", "", "P.",
       "", "## Status", "", "## Correspondence", "", "## Session Log", "", "## Review Notes", ""].join("\n");
     return { bundleId: id, base: null, snapKey: `${id}-000001`, register: [],
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
@@ -628,7 +637,13 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
     /* REC-189 / C-32.19 (minted C-32.18, renumbered at c19-batch10: D-149 holds C-32.18): NOT an act — the fence stands inside `promote`'s action block and asks whether a
        machine CHANGES an action's risk tier, so the thinnest payload that reaches it is a whole action
        stating one. A creation replaces no version, so any stated tier is a change. */
-    MACHINE_CANNOT_SET_RISK_TIER: ["promote", riskTierCreation("ACTN-2026-5100-risk-tier")],
+    MACHINE_CANNOT_SET_RISK_TIER: ["promote", actionCreation("ACTN-2026-5100-risk-tier", ["risk_tier: 2"])],
+    /* D-689 / C-32.20 (actions R5), ADDED 2026-09-28 (T8) when the corpus widened to `src/actions/`: stating the law a
+       records request is made under is a member's statement, and like C-32.19 the fence stands inside the promotion
+       step, so the thinnest payload that reaches it is a records request stating a `law` (no tier stated, so C-32.19
+       is not what answers). */
+    MACHINE_CANNOT_STATE_RECORDS_LAW: ["promote", actionCreation("ACTN-2026-5101-records-law",
+      ["risk_tier: undetermined", 'law: "Cal. Gov. Code 7920.000"'])],
   };
   const broad = await mint({ tokenId: "held-open", taskScope: "the negative control's own",
     writes: [...new Set(Object.values(ACTS).map(([op]) => op))] });

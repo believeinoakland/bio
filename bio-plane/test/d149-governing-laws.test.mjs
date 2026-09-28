@@ -35,8 +35,13 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, parseFrontmatter, LAW_LEVELS, MACHINE_FENCE_CHECKS, GOVERNING_LAW_CHECKS,
-         governingLawsOf } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the governing-laws reader, its rows (C-73) and the
+   laws fence (C-32.18, now in `ACTION_FENCE_CHECKS`) moved to `actions` (`src/actions/checks.mjs`), with `LAW_LEVELS`
+   re-exported from `jurisdictions` (R31, N61). `checkBundle` no longer runs the action arm; `errorsOf` runs actions'
+   audit arm (R37) beside it. */
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { LAW_LEVELS, ACTION_FENCE_CHECKS, GOVERNING_LAW_CHECKS, governingLawsOf,
+         checkActionExtension } from "../src/actions/checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -76,6 +81,7 @@ const errorsOf = async (id, text) => {
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64), nowMs: PINNED_MS,
     resolveTarget: () => true });
+  checkActionExtension({ fm: fmOf(text), nowMs: PINNED_MS }, findings);   /* the audit's action arm (actions R37) */
   return findings.filter((x) => x.severity === "error").map((x) => `${x.check}: ${x.message}`);
 };
 const lawErrors = (errs) => errs.filter((e) => /governing_laws/.test(e));
@@ -91,7 +97,7 @@ const actionMd = (id, { kind = "other", title = "Records request", laws = null, 
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
   `action_kind: ${kind}`, "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",   /* R9: an office */
   ...(laws === null ? [] : laws.length
     ? ["governing_laws:", ...laws.flatMap((l) => [`  - level: ${l.level}`, `    citation: "${l.citation}"`])]
     : ["governing_laws: []"]),
@@ -129,20 +135,25 @@ const promote = async (tok, id, text, base = null) =>
 const headOf = async (id) => rP(await GET(`op=projection&token=${NADIA}&id=${encodeURIComponent(id)}`))?.bundle_sha;
 
 const ACT = "ACTN-2026-1490-oakland-request";
-const CPRA = "ACTN-2026-1491-cpra-request";
+/* RE-GRADED 2026-09-28 (T8): `cpra_request` is refused on a creation (actions R10); the product's records request is
+   `records_request`, and an action written before as `cpra_request` reads as written (R4, R41), asked of the reader
+   over its bytes in section 1. */
+const CPRA = "ACTN-2026-1491-records-request";
 const LIAR = "ACTN-2026-1492-filled-at-creation";
 /* Oakland's layers, as the design's correction states them: a city agency is governed by the CPRA and the city's
    own sunshine ordinance — NOT by federal FOIA, which governs federal agencies only. */
 const OAKLAND = [
   { level: "state", citation: "Cal. Gov. Code § 7920.000 et seq. (California Public Records Act)" },
-  { level: "local", citation: "Oakland Municipal Code ch. 2.20 (Sunshine Ordinance)" },
+  /* RE-GRADED 2026-09-28 (T8): the levels are the profile's (`jurisdictions` R31, actions N61: federal, state, county,
+     city); D-149's `local` reads as written and is not stated anew. Oakland's ordinance is the city's. */
+  { level: "city", citation: "Oakland Municipal Code ch. 2.20 (Sunshine Ordinance)" },
 ];
 
 /* ===================================================================== */
 console.log("--- 1. an action nobody stated laws for reads UNDETERMINED, in its bytes ---");
 {
   const made = await promote(NADIA, ACT, actionMd(ACT));
-  const madeC = await promote(NADIA, CPRA, actionMd(CPRA, { kind: "cpra_request" }));
+  const madeC = await promote(NADIA, CPRA, actionMd(CPRA, { kind: "records_request" }));
   t("both fixture actions land through op=promote (the corpus is non-empty before anything is asked of it)",
     [made?.ok, madeC?.ok], [true, true]);
   const bytes = await textOf(NADIA, ACT);
@@ -155,9 +166,11 @@ console.log("--- 1. an action nobody stated laws for reads UNDETERMINED, in its 
   const r = await lawsRead(PILAR, ACT);
   t("the action's read says UNDETERMINED, with an empty list and nobody named",
     [r?.state, r?.laws, r?.by, r?.at], ["undetermined", [], null, null]);
+  /* RE-ANCHORED 2026-09-28 (T8; actions R41): no outward text of the module names a law, so the sentence no longer
+     names the federal law it does not assume; it says the record assumes NONE, and names no level. */
   t("and it SAYS SO IN WORDS, naming what it does not assume — never federal by default",
     [/^UNDETERMINED: no member has stated which laws govern this action/.test(r?.stated ?? ""),
-     /not federal law/.test(r?.stated ?? "")], [true, true]);
+     /The record assumes none\./.test(r?.stated ?? ""), /federal/i.test(r?.stated ?? "")], [true, true, false]);
   t("no level is asserted anywhere in the undetermined answer",
     JSON.stringify(r).match(/"level"/g), null);
   t("the catalog finds nothing to refuse in an honest undetermined (absent is not a defect)",
@@ -165,12 +178,22 @@ console.log("--- 1. an action nobody stated laws for reads UNDETERMINED, in its 
 
   const c = await lawsRead(PILAR, CPRA);
   const cBytesBefore = await textOf(NADIA, CPRA);
-  t("cpra_request READS UNCHANGED: kind still cpra_request, list still undetermined — nothing is inferred from the kind",
+  t("a records_request READS UNCHANGED: kind still records_request, list still undetermined — nothing is inferred from the kind",
     [rP(await GET(`op=projection&token=${PILAR}&id=${CPRA}`))?.action?.kind, c?.state, c?.laws],
-    ["cpra_request", "undetermined", []]);
-  t("and its sentence names the one law the KIND states, and only as the member's statement",
-    /kind, cpra_request, is its member's statement that the California Public Records Act governs it; nothing else is inferred/.test(c?.stated ?? ""),
-    true);
+    ["records_request", "undetermined", []]);
+  /* RE-ANCHORED 2026-09-28 (T8; actions R4, R41): an action written as `cpra_request` can no longer be created, so it
+     is asked of the ONE reader over its bytes (the read's own function): it reads as written, its list undetermined,
+     and its sentence says the kind named the records law it was made under and names no law itself. The wire half
+     (an old kind reads byte-identically) is `test/m/actions/write.test.mjs`, test "R4 law rides a records_request
+     only, a citation; an old kind reads as written; R6 at the write (C-73.6)", and `test/m/actions/read.test.mjs`,
+     test "R39 R41 no place is named in outward text; an old records-law kind names no law; tests run on the test
+     profile". */
+  const old = governingLawsOf(fmOf(actionMd("ACTN-2026-1496-written-before", { kind: "cpra_request" })));
+  t("an action written as cpra_request reads undetermined, and its sentence says its kind named the records law "
+    + "and names no law itself — only as what its member wrote",
+    [old.state, old.laws, /kind, as written, named the records law it was made under; the record names no law from it, and nothing else is inferred from the kind/.test(old.stated),
+     /California|Public Records Act|CPRA/.test(old.stated)],
+    ["undetermined", [], true, false]);
   t("reading it wrote nothing: the bytes (a real document) are identical after the read",
     [cBytesBefore.length > 600, sha(await textOf(NADIA, CPRA))], [true, sha(cBytesBefore)]);
 }
@@ -221,7 +244,7 @@ console.log("\n--- 4. a machine credential's list is refused by name ---");
   const m = await actionlaws("mem-d149", ACT, [{ level: "federal", citation: "5 U.S.C. § 552" }]);
   t("a machine credential REACHES the op and is refused BY NAME, row and translation on the wire",
     [m?.ok, m?.reason, m?.check, m?.translation],
-    [false, "MACHINE_CANNOT_SET_LAWS", "C-32.18", MACHINE_FENCE_CHECKS.MACHINE_CANNOT_SET_LAWS.translation]);
+    [false, "MACHINE_CANNOT_SET_LAWS", "C-32.18", ACTION_FENCE_CHECKS.MACHINE_CANNOT_SET_LAWS.translation]);
   t("...and nothing moved: same head, same list", [await headOf(ACT), (await lawsRead(NADIA, ACT))?.laws],
     [before, OAKLAND]);
   const p = await actionlaws("prb-d149", ACT, OAKLAND);
@@ -235,11 +258,12 @@ console.log("\n--- 5. the shape, refused at the act and judged by the catalog --
   const cases = [
     ["no list", undefined, "NO_LAWS", "C-73.2"],
     ["an empty list", [], "NO_LAWS", "C-73.2"],
-    ["a level outside the three", [{ level: "county", citation: "Alameda County Ordinance" }], "BAD_LAW_LEVEL", "C-73.3"],
+    /* RE-GRADED 2026-09-28 (T8): `county` is now a level (R31); the level outside the profile's four is `municipal`. */
+    ["a level outside the four", [{ level: "municipal", citation: "Alameda County Ordinance" }], "BAD_LAW_LEVEL", "C-73.3"],
     ["an empty citation", [{ level: "state", citation: "  " }], "BAD_CITATION", "C-73.4"],
     ["a citation holding a quotation mark", [{ level: "state", citation: 'the "CPRA"' }], "BAD_CITATION", "C-73.4"],
     ["a repeated entry", [OAKLAND[0], { ...OAKLAND[0], citation: OAKLAND[0].citation.toUpperCase() }], "BAD_CITATION", "C-73.4"],
-    ["thirteen entries", Array.from({ length: 13 }, (_, i) => ({ level: "local", citation: `Ord. ${i}` })), "TOO_MANY_LAWS", "C-73.5"],
+    ["thirteen entries", Array.from({ length: 13 }, (_, i) => ({ level: "city", citation: `Ord. ${i}` })), "TOO_MANY_LAWS", "C-73.5"],
   ];
   /* Each case names its check id as a LITERAL (c18-batch7fix, 2026-09-23): the row's number was read from the
      catalog at run time, so the assertion held whatever number the catalog said and `coverage.mjs`, which reads
@@ -261,9 +285,9 @@ console.log("\n--- 5. the shape, refused at the act and judged by the catalog --
   t("C-2.10: a list whose governing_laws_by is a machine identity is an error",
     lawErrors(await errorsOf(ACT, actionMd(ACT, { laws: one, lawsBy: "token:member", lawsAt: at })))
       .some((e) => /machine identity/.test(e)), true);
-  t("C-2.10: a level outside the three is an error",
-    lawErrors(await errorsOf(ACT, actionMd(ACT, { laws: [{ level: "county", citation: "x" }], lawsBy: "nadia", lawsAt: at })))
-      .some((e) => /level 'county'/.test(e)), true);
+  t("C-2.10: a level outside the four is an error",
+    lawErrors(await errorsOf(ACT, actionMd(ACT, { laws: [{ level: "municipal", citation: "x" }], lawsBy: "nadia", lawsAt: at })))
+      .some((e) => /level 'municipal'/.test(e)), true);
   t("C-2.10: an attribution with no list asserts an act that set nothing",
     lawErrors(await errorsOf(ACT, actionMd(ACT, { laws: [], lawsBy: "nadia", lawsAt: at }))).length > 0, true);
   t("C-2.10 OVER-STRICTNESS: a complete, member-attributed list is clean",
@@ -300,14 +324,15 @@ console.log("\n--- 6. carried forward, restated, and never edited around the act
   const r = await lawsRead(PILAR, ACT);
   t("the read now carries the restated set and its new author", [r?.laws, r?.by], [three, "nadia"]);
   t("the Session Log keeps the replaced list and who had stated it",
-    /Replaced: state Cal\. Gov\. Code .*; local Oakland Municipal Code ch\. 2\.20 \(Sunshine Ordinance\) \(stated by pilar\)/
+    /Replaced: state Cal\. Gov\. Code .*; city Oakland Municipal Code ch\. 2\.20 \(Sunshine Ordinance\) \(stated by pilar\)/
       .test(await textOf(NADIA, ACT)), true);
 }
 
 /* ===================================================================== */
 console.log("\n--- 7. one vocabulary, one reader ---");
 {
-  t("the three levels", LAW_LEVELS, ["federal", "state", "local"]);
+  /* RE-ANCHORED 2026-09-28 (T8): the profile's four levels (`jurisdictions` R31, K102, N61), replacing D-149's three. */
+  t("the four levels", LAW_LEVELS, ["federal", "state", "county", "city"]);
   t("published by op=affordances' VOCABULARIES as the SAME array, not a copy", VOCABULARIES.law_levels === LAW_LEVELS, true);
   const aff = rP(await GET(`op=affordances&token=${NADIA}&id=${ACT}`));
   const vocab = aff?.vocabularies?.law_levels ?? null;

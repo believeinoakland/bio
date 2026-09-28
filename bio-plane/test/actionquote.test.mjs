@@ -26,10 +26,13 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, parseFrontmatter, quoteFindings, QUOTE_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the quote grammar's rows (`QUOTE_CHECKS`) and the
+   action's arms moved to `actions` (`src/actions/checks.mjs`); `checkBundle` no longer runs the action arm, which
+   actions registers with record-core's audit (R37) and section 3 runs beside it. */
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { quoteFindings, QUOTE_CHECKS, checkActionExtension } from "../src/actions/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 
 /* The store's ambient clock is PINNED (M0-22's lesson in action-loop.test.mjs):
    nothing in this suite reads the wall. */
@@ -65,10 +68,13 @@ const correspond = async (tok, p) => rP(await GET(`op=actioncorrespond&token=${t
 const quotes = async (tok, p) => rP(await GET(`op=actionquotes&token=${tok}${qs(p)}`));
 const projection = async (tok, id) =>
   rP(await GET(`op=projection&token=${tok}&id=${encodeURIComponent(id)}&now=${AS_OF}`));
-const stats = async () => rP(await GET(`op=stats&token=adm-d148`));
 const bytesOf = async (tok, id) => rP(await GET(`op=file&token=${tok}&id=${encodeURIComponent(id)}&path=bundle.md`));
 
-const actionMd = (id, { counterparty = ["counterparty:", "  state: named", "  name: City Clerk"],
+/* RE-GRADED 2026-09-28 (T8): a creation states a kind actions offers (R10: `records_request`; `cpra_request` is
+   refused ACTION_KIND_UNKNOWN on a creation) and a named counterparty as an office, `{role, body}` (R9). A quote's
+   counterparty is then matched by "role, body" (actions R3, R27: `counterpartyName`), which `CLERK` names. */
+const CLERK = "City Clerk, City of Oakland";
+const actionMd = (id, { counterparty = ["counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland"],
                         correspondence = [] } = {}) => ["---",
   `id: ${id}`, "object_type: action", "schema: action@1",
   `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
@@ -78,7 +84,7 @@ const actionMd = (id, { counterparty = ["counterparty:", "  state: named", "  na
   "annotations_open: 0",
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
-  "action_kind: cpra_request", "risk_tier: 1",
+  "action_kind: records_request", "risk_tier: 1",
   ...counterparty,
   ...(correspondence.length ? ["correspondence:", ...correspondence.flatMap((e) =>
     [`  - direction: ${e.direction}`, ...Object.entries(e).filter(([k]) => k !== "direction")
@@ -170,9 +176,9 @@ console.log("\n--- 1. a quote projects and reads back ---");
       byReq.quotes[0].basis, byReq.quotes[0].answers, byReq.quotes[0].counterparty,
       byReq.quotes[0].held_as, byReq.quotes[0].author]],
     [true, "request", 1, [ACT1, 1, "2026-07-15", "1,083.00", 1083, "USD",
-      "12 hours of staff time at 90.25 per hour", { ord: 0, at: "2026-07-03" }, "City Clerk",
+      "12 hours of staff time at 90.25 per hour", { ord: 0, at: "2026-07-03" }, CLERK,
       "testimony", "nadia"]]);
-  const byCp = await quotes(NADIA, { counterparty: "City Clerk" });
+  const byCp = await quotes(NADIA, { counterparty: CLERK });
   t("BY COUNTERPARTY: both actions' quotes, side by side",
     [byCp.ok, byCp.by, (byCp.quotes || []).map((q) => [q.action, q.ord, q.amount])],
     [true, "counterparty", [[ACT1, 1, "1,083.00"], [ACT2, 1, "250"]]]);
@@ -259,6 +265,7 @@ console.log("\n--- 3. refused by name ---");
   const { findings } = await checkBundle({ folderName: "ACTN-2026-1484-bad-bytes",
     files: new Map([["bundle.md", bad]]), sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
     nowMs: AS_OF, resolveTarget: () => true });
+  checkActionExtension({ fm: parseFrontmatter(bad).data, nowMs: AS_OF }, findings);   /* the audit's action arm (R37) */
   t("the CATALOG refuses both at C-2.10, each carrying its C-72 code",
     findings.filter((x) => x.check === "C-2.10" && x.code).map((x) => x.code),
     ["QUOTE_AMOUNT_NOT_A_NUMBER", "QUOTE_ANSWERS_NO_SENT"]);
@@ -278,7 +285,7 @@ console.log("\n--- 3. refused by name ---");
   t("...and a malformed separator is still not a number",
     ok({ quote_amount: "10,83", quote_currency: "USD" }), ["QUOTE_AMOUNT_NOT_A_NUMBER"]);
   const unasked = await quotes(NADIA, {});
-  const both = await quotes(NADIA, { request: ACT1, counterparty: "City Clerk" });
+  const both = await quotes(NADIA, { request: ACT1, counterparty: CLERK });
   t("the read refuses a question with no axis, and with both, BY NAME",
     [unasked.reason, unasked.code, both.reason, both.code],
     ["QUOTE_READ_UNASKED", "QUOTE_READ_UNASKED", "QUOTE_READ_UNASKED", "QUOTE_READ_UNASKED"]);
@@ -320,17 +327,21 @@ console.log("\n--- 4. an action with no quote reads byte-identical ---");
    ===================================================================== */
 console.log("\n--- 5. purge clears action_quotes in both arms ---");
 {
-  const st = await stats();
-  t("the projection is COUNTED in stats", [typeof st.actionQuotes, st.actionQuotes], ["number", 4]);
+  /* RETIRED 2026-09-28 (T8, legacy-tests), the three COUNT arms ("the projection is COUNTED in stats", "PER-BUNDLE
+     ARM: ACT1's two quotes are gone from the table" and "WHOLE-STORE ARM: the table is empty"): `actionQuotes` left
+     `op=stats` and `op=purge`'s report when `action_quotes` moved to `actions`, which declares it to record-core's
+     purge (ACTIONS #1 J2 item 4; actions R36), and no wire answer counts the table any more. The requirement is
+     proven, with rows there to clear and counted to zero, by `test/m/actions/read.test.mjs`, test "R37 R36 the audit
+     reports C-2.10 and C-11.1 over an action, a missing counterparty and a past pending entry; tables purge with the
+     action" (the per-bundle arm), and `test/m/record-core/record-core.test.mjs`, test "R22 R23 R24 R46: the
+     whole-store purge clears every declared, non-exempt table and never seq, minted_ids, settings or an exempt table"
+     (the whole-store arm). What the wire still answers is asserted below. */
   const purged = rP(await GET(`op=purge&token=adm-d148&confirm=bio&bundleId=${encodeURIComponent(ACT1)}`));
   t("a per-bundle purge of ACT1 succeeds", purged.ok, true);
-  t("PER-BUNDLE ARM: ACT1's two quotes are gone from the table, the others stay",
-    (await stats()).actionQuotes, 2);
   t("...and by counterparty only ACT2's quote remains",
-    (await quotes(NADIA, { counterparty: "City Clerk" })).quotes?.map((q) => q.action), [ACT2]);
+    (await quotes(NADIA, { counterparty: CLERK })).quotes?.map((q) => q.action), [ACT2]);
   const all = rP(await GET(`op=purge&token=adm-d148&confirm=bio`));
   t("a whole-store purge succeeds", all.ok, true);
-  t("WHOLE-STORE ARM: the table is empty", (await stats()).actionQuotes, 0);
   /* RETIRED 2026-09-26 (T3, legacy-tests): "the projection is named in purge's TABLES list" read the `const TABLES = [`
      list from store.mjs, which moved to record-core, where each module declares its own tables (record-core R21).
      What it stood for is measured just above, in both arms, with rows there to clear: the per-bundle purge takes

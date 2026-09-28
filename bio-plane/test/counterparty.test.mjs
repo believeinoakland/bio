@@ -47,7 +47,12 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash, webcrypto } from "node:crypto";
-import { checkBundle, withProducingGroup } from "../checks/bio-checks.mjs";
+import { checkBundle, withProducingGroup, parseFrontmatter } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the counterparty arm (C-2.10) moved to `actions`
+   (`src/actions/checks.mjs`, `counterpartyFindings` inside `checkActionExtension`); `checkBundle` no longer runs the
+   action arm, which actions registers with record-core's audit (R37). `findingsFor` runs it beside `checkBundle`,
+   as the audit composes them. */
+import { checkActionExtension } from "../src/actions/checks.mjs";
 
 const shaHex = async (v) => createHash("sha256")
   .update(typeof v === "string" ? Buffer.from(v, "utf8") : Buffer.from(v)).digest("hex");
@@ -75,7 +80,8 @@ const actionMd = (id, cpLines) => [
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null",
   "  source: null", "visuals: []",
-  "action_kind: cpra_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
+  /* RE-GRADED 2026-09-28 (T8): a kind actions offers (R10); `cpra_request` is refused on a creation. */
+  "action_kind: records_request", /* CORRECTED 2026-09-24 by REC-189, never exempted: `risk_tier: 1` ("file freely") was a tier this
      fixture states through a DEPLOY token — a machine identity — and C-32.19 now refuses a machine
      setting 1, 2 or 3 (D-182: only a member's authored act does). The tier is not this suite's subject,
      so the fixture states what an unassessed action honestly is. */
@@ -92,6 +98,7 @@ const findingsFor = async (cpLines, id = ID) => {
     folderName: id, files: new Map([["bundle.md", actionMd(id, cpLines)]]),
     sha256: shaHex, sha512: sha512Hex, resolveTarget: (x) => x === id,
   });
+  checkActionExtension({ fm: parseFrontmatter(actionMd(id, cpLines)).data }, findings);
   return findings.filter((f) => f.severity === "error");
 };
 /* Every case is judged on C-2.10 ALONE. A case that broke some OTHER check
@@ -107,10 +114,16 @@ const CASES = {
     "  basis: The city has three departments that could hold this; the clerk's index will say which."],
   undeterminedNoBasis: ["counterparty:", "  state: undetermined"],
   undeterminedEmptyBasis: ["counterparty:", "  state: undetermined", '  basis: ""'],
-  named: ["counterparty:", "  state: named", "  name: City Clerk"],
-  namedWithEntity: ["counterparty:", "  state: named", "  name: City Clerk", "  entity_id: ENT-2026-0007"],
+  /* RE-SHAPED 2026-09-28 (T8, legacy-tests; actions R9, `jurisdictions` R24): a named counterparty is an OFFICE,
+     `{state: named, role, body, level?, entity_id?}`, never a person. The earlier `{state: named, name}` reads as
+     written (`namedLegacy`) and is refused only on a write that states it. */
+  named: ["counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland"],
+  namedWithEntity: ["counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
+    "  entity_id: ENT-2026-0007"],
+  namedLegacy: ["counterparty:", "  state: named", "  name: City Clerk"],
   namedNoName: ["counterparty:", "  state: named"],
   namedEmptyName: ["counterparty:", "  state: named", '  name: ""'],
+  namedNoBody: ["counterparty:", "  state: named", "  role: City Clerk"],
   placeholderFlat: ["counterparty: to be named"],
   placeholderInName: ["counterparty:", "  state: named", "  name: to be named"],
   placeholderInBasis: ["counterparty:", "  state: undetermined", "  basis: To Be Named"],
@@ -134,8 +147,8 @@ console.log("--- the restricted grammar carries this block, and it is source's s
      second top-level key the way `completeness`/`completeness_excluded` and
      `division`/`division_apportionment` did (REC-14, REC-16). */
   t("counterparty parses as a MAP, not a string", typeof data.counterparty, "object");
-  t("with the four scalars the shape declares",
-    Object.keys(data.counterparty).sort(), ["entity_id", "name", "state"].sort());
+  t("with the scalars the shape declares (R9: role and body name the office)",
+    Object.keys(data.counterparty).sort(), ["body", "entity_id", "role", "state"].sort());
   t("and source, the shape it copies, parses the same way", typeof parseFrontmatter(
     ["---", "id: INFO-2026-0001-x", "source:", "  locator: in hand", "  authority: member-entered",
      `  retrieved: ${NOW}`, "---", ""].join(NL)).data.source, "object");
@@ -147,7 +160,9 @@ t("undetermined WITH an authored basis draws no C-2.10 finding",
   await c210(CASES.undeterminedWithBasis), []);
 t("and no finding of ANY family, so the pass is about the counterparty and nothing else",
   (await findingsFor(CASES.undeterminedWithBasis)).map((f) => f.check), []);
-t("a named counterparty with a name passes", await c210(CASES.named), []);
+t("a named counterparty naming its office passes", await c210(CASES.named), []);
+t("an earlier `{state: named, name}` reads as written: the audit does not flag it (R9)",
+  await c210(CASES.namedLegacy), []);
 t("a named counterparty may ALSO point into the subject registry (entity_id is optional)",
   await c210(CASES.namedWithEntity), []);
 t("and the optional field is genuinely optional: omitting it changes nothing",
@@ -165,8 +180,11 @@ console.log("\n--- what is REFUSED, each by name ---");
 
   const noName = await c210(CASES.namedNoName);
   t("named with NO name is refused", noName.length, 1);
-  t("and the refusal names the name", names(noName, /counterparty\.name is empty/), true);
+  /* RE-ANCHORED 2026-09-28 (T8): the refusal now names the OFFICE (R9), which is what a named counterparty states. */
+  t("and the refusal names what is missing: the office, by role and body",
+    names(noName, /counterparty\.state is named and the office is not/), true);
   t("an empty name string is the same refusal", await c210(CASES.namedEmptyName), noName);
+  t("a role with no body is the same refusal: an office is named by both (R9)", await c210(CASES.namedNoBody), noName);
 }
 {
   /* The item's third accepts-when, and the reason this suite exists: the exact
@@ -194,10 +212,11 @@ console.log("\n--- what is REFUSED, each by name ---");
 }
 {
   /* The coherence rule: the state and the content must say the same thing. */
+  /* RE-ANCHORED 2026-09-28 (T8): one finding now names every field the undetermined block carries (R9). */
   t("undetermined carrying a NAME is refused — it asserts and denies in one breath",
-    names(await c210(CASES.undeterminedButNamed), /undetermined and counterparty\.name is/), true);
+    names(await c210(CASES.undeterminedButNamed), /undetermined and it carries name: .*asserts a counterparty and denies/), true);
   t("undetermined carrying an entity_id is refused — pointing at a registry subject IS a determination",
-    names(await c210(CASES.undeterminedWithEntity), /undetermined and counterparty\.entity_id is/), true);
+    names(await c210(CASES.undeterminedWithEntity), /undetermined and it carries entity_id: /), true);
 }
 
 /* ------------------------------------------------------- through a real op */
@@ -213,43 +232,53 @@ console.log("\n--- and a caller reaches the refusal: op=audit, the store's own c
   const post = async (op, body) => (await mf.dispatchFetch("http://x/api/?op=" + op + "&token=mem-cp",
     { method: "POST", body: JSON.stringify(body) })).json();
   const get = async (qs) => (await mf.dispatchFetch("http://x/api/?token=mem-cp&" + qs)).json();
+  const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 
+  /* CORRECTED 2026-09-28 (T8, legacy-tests): `post` answers the wire's `{result}` envelope, so `r.ok === false` never
+     held and a refused promote passed silently as a landed one; the promote's answer is now unwrapped and returned. */
   const promoteAction = async (n, cpLines) => {
     const id = `ACTN-2026-${String(n).padStart(4, "0")}-records-request`;
     const text = actionMd(id, cpLines);
-    const r = await post("promote", {
+    const r = rP(await post("promote", {
       bundleId: id, base: null, snapKey: "20260724T010000Z_aaaa1111", author: "seed",
       meta: { object_type: "action", group: "believe-in-oakland", title: "Records request",
               current_state: "planned", created: NOW, last_updated: NOW },
       files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
       register: [],
-    });
-    if (r.ok === false) throw new Error(`promote ${id}: ${JSON.stringify(r)}`);
-    return id;
+    }));
+    return { id, r };
   };
 
-  /* Promotion is NOT the gate and deliberately does not become one here: a
-     draft may be written and corrected. What must be true is that the store's
-     own conformance pass NAMES the placeholder, which is the answer op=audit
-     gives an operator asking "is the record clean". */
+  /* RE-ANCHORED 2026-09-28 (T8; actions R7, D-717 / C-101): the dishonest shapes no longer reach the audit, because
+     the WRITE refuses them — a placeholder and an incoherent block are refused COUNTERPARTY_REFUSED (C-101.3), and
+     nothing is written. A MISSING block still lands while the action is a draft (R7) and is what the store's own
+     conformance pass must NAME, so it is the audit's offender now. Both routes are a caller's. */
   const honest = await promoteAction(1, CASES.undeterminedWithBasis);
   const placeholder = await promoteAction(2, CASES.placeholderFlat);
   const noBasis = await promoteAction(3, CASES.undeterminedNoBasis);
+  const missing = await promoteAction(4, CASES.missing);
+  t("the honest undetermined lands", honest.r.ok, true);
+  t("the placeholder is refused AT THE WRITE, by name (C-101.3), and nothing is written",
+    [placeholder.r.ok, placeholder.r.reason, placeholder.r.check], [false, "COUNTERPARTY_REFUSED", "C-101.3"]);
+  t("...and the refusal carries the placeholder finding verbatim",
+    /placeholder 'to be named'/.test(JSON.stringify(placeholder.r.findings || placeholder.r)), true);
+  t("undetermined with no basis is refused at the write the same way",
+    [noBasis.r.ok, noBasis.r.reason], [false, "COUNTERPARTY_REFUSED"]);
+  t("a MISSING block lands: the draft may leave it out (R7)", missing.r.ok, true);
 
   const audit = (await get("op=audit&limit=1000")).result;
-  t("the pass sees all three actions", audit.checked, 3);
+  t("the pass sees the two actions that landed", audit.checked, 2);
   t("exactly one is clean, and it is the honest undetermined", audit.clean, 1);
-  t("two carry errors", audit.withErrors, 2);
-  t("and the check that caught them is C-2.10", Object.keys(audit.tally).sort(), ["C-2.10"]);
-  t("C-2.10 fired twice, once per offending action", audit.tally["C-2.10"], 2);
+  t("one carries errors", audit.withErrors, 1);
+  t("and the check that caught it is C-2.10", Object.keys(audit.tally).sort(), ["C-2.10"]);
+  t("C-2.10 fired once, on the offending action", audit.tally["C-2.10"], 1);
   const offenders = audit.offenders.map((o) => o.bundleId).sort();
-  t("the offenders are named, and the honest action is not among them",
-    offenders, [placeholder, noBasis].sort());
-  t("the placeholder action is reported with the placeholder refusal verbatim",
-    /placeholder 'to be named'/.test(
-      audit.offenders.find((o) => o.bundleId === placeholder).errors.map((e) => e.detail).join(" ")), true);
+  t("the offender is named, and the honest action is not among them", offenders, [missing.id]);
+  t("the missing block is reported with its refusal verbatim",
+    /counterparty block is missing/.test(
+      (audit.offenders.find((o) => o.bundleId === missing.id)?.errors || []).map((e) => e.detail).join(" ")), true);
   t("and the honest one is genuinely in the store, not merely absent from the tally",
-    (await get(`op=image&id=${encodeURIComponent(honest)}`)).result["bundle.md"].includes("state: undetermined"), true);
+    (await get(`op=image&id=${encodeURIComponent(honest.id)}`)).result["bundle.md"].includes("state: undetermined"), true);
 
   await mf.dispose();
 }
@@ -297,6 +326,7 @@ console.log("\n--- the placeholder is not written anywhere any more ---");
     /^group:/m.test(own), false);
   const { findings } = await checkBundle({ folderName: id, files: new Map([["bundle.md", text]]),
     sha256: shaHex, sha512: sha512Hex, resolveTarget: () => true });
+  checkActionExtension({ fm: parseFrontmatter(text).data }, findings);   /* the audit's action arm (actions R37) */
   const errs = findings.filter((f) => f.severity === "error");
   t("the intake surface writes NO counterparty at all", /counterparty/.test(text), false);
   t("so its action draws exactly one finding", errs.length, 1);

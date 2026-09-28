@@ -445,7 +445,13 @@ section("NC3 · a SIXTH type added to the plane", () => {
   const states6 = { ...STATES, lens: { legal: ["draft", "retired"], edges: { draft: ["retired"], retired: [] } } };
   const heads6 = { ...HEADINGS, lens: ["## Statements", "## Session Log", "## Review Notes"] };
   const canon = [...new Set(Object.values(sixth))].sort();
-  ok(`NC3a: the injected catalogue really does carry a sixth type (${canon.length})`, canon.length === 6 && canon.includes("lens"));
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; LEGACY-CHECKS #3 J3.7): "a SIXTH type" was the count of the catalogue
+     when this was written (five). T8's layer 9 added six more canonical types (standard, determination, consequence,
+     escalation, aspiration, goal), so the injected type is the catalogue's count plus one, derived from the plane
+     rather than typed. The claim is unchanged: the injection really does add ONE type the plane does not have. */
+  const realCount = new Set(Object.values(OBJECT_TYPES)).size;
+  ok(`NC3a: the injected catalogue really does carry one more type than the plane (${canon.length} = ${realCount} + 1)`,
+     canon.length === realCount + 1 && canon.includes("lens") && !Object.values(OBJECT_TYPES).includes("lens"));
   const v = sourcingVerdict(REAL, "lens", { objectTypes: sixth, states: states6, headings: heads6 });
   ok("NC3b: the harness FAILS for the new type, NAMING it, so a sixth type cannot arrive silently",
      v.length > 0 && v.every((l) => l.includes("lens")));

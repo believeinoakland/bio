@@ -255,18 +255,25 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
   const decomment = (src) => src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
     .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
-  const bare = decomment(script);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; SCHEDULER #1 J2 item 1): the registry, `onAlarm`, the reconcile and
+     `arm` left store.mjs for `src/scheduler/index.mjs` (`schedulerOf`, K61). The registry's order is its R5
+     `SCHEDULER_ORDER` — the module's own consumers and the ones a later module registers (legacy-store's `task-drain`,
+     `queue-renotify`, `group-domain-recheck`, R8) each take their slot from it — so the order is read from that
+     declaration, and the ONE reconcile is the module's `#reconcile`. The same arms, where the code now lives. */
+  const bare = decomment(readFileSync(join(DIR, "..", "src", "scheduler", "index.mjs"), "utf8"));
 
-  const at = bare.indexOf("#schedConsumers(probe) {");
-  const end = bare.indexOf("for (const name of Object.keys(probe", at);
+  const at = bare.indexOf("export const SCHEDULER_ORDER = Object.freeze([");
+  const end = bare.indexOf("]);", at);
   const registry = at >= 0 && end > at ? bare.slice(at, end) : "";
-  const names = [...registry.matchAll(/name:\s*"([a-z-]+)"/g)].map((m) => m[1]);
+  const names = [...registry.matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
 
-  console.log("\n--- FL-4 + CPDF-13 + REC-164 + D-86: thirteen consumers, ONE alarm, and the order is the mechanism ---");
+  console.log("\n--- FL-4 + CPDF-13 + REC-164 + D-86 + N178: fifteen consumers, ONE alarm, and the order is the mechanism ---");
   /* THE CORPUS IS PRINTED AND FLOORED. A totality assertion over an empty slice
      passes for free, which this repository has measured three times. */
   console.log(`    registry span: ${registry.length} chars · consumers: ${names.join(", ")}`);
-  t("the registry span was found and is not empty", registry.length > 400, true);
+  /* RE-PINNED 2026-09-28 (T8) from this suite's print: the declaration is one array literal, not the store's
+     construction of thirteen entries, so its span prints 324 characters; the floor stays well above an empty slice. */
+  t("the registry span was found and is not empty", registry.length > 300, true);
   /* CORRECTED 2026-09-10 by CPDF-13 (D-183), never exempted: the ELEVENTH
      consumer, `calibration-reprobe`, is appended and this list says so. The old
      assertion was right for a registry that no longer exists — which is exactly
@@ -278,10 +285,13 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
   /* CORRECTED 2026-09-23 by CONDUCT #18 at D-86's merge onto c17-batch7, never exempted: THIRTEEN. REC-164 appended
      `group-domain-recheck` and D-86 appended `bias-debt`, each as "the twelfth" on its own base; the union carries
      both, REC-164's first (it landed on the batch first) and D-86's last. Each side's list was right on its own tree. */
-  t("the registry is exactly the thirteen real consumers, in order", names, [
+  /* CORRECTED 2026-09-28 (T8, legacy-tests; SCHEDULER #1, N164/N167/N178), never exempted: FIFTEEN — `intent-age`
+     (intent R17, R27) and `notice-sweep` (reevaluation R25) appended after `bias-debt`, so no earlier position moves. */
+  t("the registry is exactly the fifteen real consumers, in order", names, [
     "selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "ai-run-reap",
-    "capture-request-drain", "ai-run-wake", "calibration-reprobe", "group-domain-recheck", "bias-debt"]);
+    "capture-request-drain", "ai-run-wake", "calibration-reprobe", "group-domain-recheck", "bias-debt",
+    "intent-age", "notice-sweep"]);
   /* CPDF-13: the re-probe is appended LAST and that is deliberate rather than
      incidental. It is a pure clock over engines and shares no subject with any
      consumer before it, so nothing it does can change what they see and nothing
@@ -294,8 +304,12 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
   t("the calibration re-probe is appended after every consumer it shares no subject with",
     names.indexOf("calibration-reprobe"), names.indexOf("ai-run-wake") + 1);
   t("the group-domain re-check follows the re-probe", names.indexOf("group-domain-recheck"), names.indexOf("calibration-reprobe") + 1);
-  t("and D-86's bias-debt sweep is the last append, after the group-domain re-check",
-    names.indexOf("bias-debt"), names.length - 1);
+  /* CORRECTED 2026-09-28 (T8; N164, N178): bias-debt is no longer the LAST append — intent's age sweep and
+     reevaluation's notice sweep follow it, in that order, and they are the last two. */
+  t("and D-86's bias-debt sweep follows the group-domain re-check, with N164's intent-age and N178's notice-sweep "
+    + "appended after it, last",
+    [names.indexOf("bias-debt"), names.indexOf("intent-age"), names.indexOf("notice-sweep")],
+    [names.indexOf("group-domain-recheck") + 1, names.length - 2, names.length - 1]);
   /* THE ORDER ARM, asserted as a RELATION rather than as an index, so it still
      means what it says after the eleventh consumer is appended. */
   t("the wake is registered AFTER the drain, so a completion is delivered on the alarm that made it",
@@ -315,20 +329,20 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
   })(join(DIR, "..", "src")).join("\n");
   const setSites = (PLANE_BARE.match(/storage\.setAlarm\(/g) || []).length;
   const delSites = (PLANE_BARE.match(/storage\.deleteAlarm\(/g) || []).length;
-  const reconcileAt = bare.indexOf("async #reconcileAlarm(now, reg, exact = false) {");
+  const reconcileAt = bare.indexOf("async #reconcile(now, reg, exact, errors = null) {");
   /* THE END ANCHOR IS CODE AND NOT A COMMENT, and the first draft of this arm
      got it wrong: `decomment` blanks comments before the walk, so an anchor
      inside one is not there to be found and the span read ZERO characters —
      over which BOTH totality assertions below would have passed for free had
      they not been floored. The floor caught it, which is what a floor is for. */
-  const reconcileEnd = bare.indexOf("\n  async #armScheduler(", reconcileAt);
+  const reconcileEnd = bare.indexOf("\n  async arm(", reconcileAt);
   const reconcile = reconcileAt >= 0 && reconcileEnd > reconcileAt
     ? bare.slice(reconcileAt, reconcileEnd) : "";
-  console.log(`    setAlarm sites: ${setSites} · deleteAlarm sites: ${delSites} · #reconcileAlarm span: ${reconcile.length} chars`);
-  t("#reconcileAlarm was found and is not empty", reconcile.length > 200, true);
-  t("EVERY setAlarm in the plane is inside #reconcileAlarm — there is ONE alarm and one place that arms it",
+  console.log(`    setAlarm sites: ${setSites} · deleteAlarm sites: ${delSites} · scheduler #reconcile span: ${reconcile.length} chars`);
+  t("the scheduler's #reconcile was found and is not empty", reconcile.length > 200, true);
+  t("EVERY setAlarm in the plane is inside the scheduler's #reconcile — there is ONE alarm and one place that arms it",
     [setSites, (reconcile.match(/storage\.setAlarm\(/g) || []).length], [2, 2]);
-  t("EVERY deleteAlarm is inside #reconcileAlarm too — one place deletes it",
+  t("EVERY deleteAlarm is inside the scheduler's #reconcile too — one place deletes it",
     [delSites, (reconcile.match(/storage\.deleteAlarm\(/g) || []).length], [1, 1]);
 
   const wrangler = readFileSync(join(DIR, "..", "wrangler.jsonc"), "utf8");

@@ -46,7 +46,7 @@ import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy t
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 /* RE-POINTED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): C-22.5, .8 and .11–.16 left the catalogue for
@@ -345,12 +345,20 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
   /* The registry is PARSED out of store.mjs rather than described, and REACH is
      asserted as a DELTA with the corpus printed: a parse that matched nothing
      would otherwise report an empty registry as a clean answer. */
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; SCHEDULER #1 J2 item 1): the registry, `onAlarm`, the reconcile and
+     `arm` moved out of store.mjs into `src/scheduler/index.mjs`, whose registry order is R5's `SCHEDULER_ORDER` — the
+     consumers the module builds itself and the ones a later module registers (`task-drain`, `queue-renotify`,
+     `group-domain-recheck`, legacy-store's, R8) take their R5 slot from it. So the order is PARSED out of that
+     declaration, with the same delta and the corpus printed; the ai-run reaper's entry is the module's
+     `c["ai-run-reap"]`. */
+  const SCHED_SRC = readFileSync(fileURLToPath(new URL("../src/scheduler/index.mjs", import.meta.url)), "utf8");
+  const orderBody = (/export const SCHEDULER_ORDER = Object\.freeze\(\[([\s\S]*?)\]\);/.exec(SCHED_SRC) || [, ""])[1];
   const regBody = (() => {
-    const i = STORE_SRC.indexOf("#schedConsumers(probe) {");
-    const j = STORE_SRC.indexOf("\n    for (const name of Object.keys(probe", i);
-    return i > -1 && j > i ? STORE_SRC.slice(i, j) : "";
+    const i = SCHED_SRC.indexOf('c["ai-run-reap"] = {');
+    const j = SCHED_SRC.indexOf('c["ai-run-wake"] = {', i);
+    return i > -1 && j > i ? SCHED_SRC.slice(i, j) : "";
   })();
-  const names = [...regBody.matchAll(/\{ name: "([a-z-]+)"/g)].map((m) => m[1]);
+  const names = [...orderBody.matchAll(/"([a-z-]+)"/g)].map((m) => m[1]);
   console.log(`  corpus: ${names.length} consumers on the one alarm — ${names.join(", ")}`);
   /* CORRECTED 2026-08-08 BY PL-4, NOT EXEMPTED. The delta was 8-was-7 when IS-6
      landed the reaper; PL-4 appended `capture-request-drain` as the NINTH, so
@@ -375,9 +383,12 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
   /* CORRECTED 2026-09-23 by CONDUCT #18 at D-86's merge onto c17-batch7, never loosened: the corpus is 13 —
      REC-164 appended `group-domain-recheck` and D-86 `bias-debt`, each as the twelfth on its own base, so the union
      carries both. Still a delta, for the reason above: 13 now, 12 before the last append. */
-  t("ARM S1 (REACH, as a delta): the registry parse reaches 13 consumers, was 12 before D-86 "
-    + "appended the bias-debt sweep after REC-164's group-domain re-check",
-    [names.length, names.length - 1], [13, 12]);
+  /* RE-PINNED 2026-09-28 (T8, legacy-tests) from this suite's own printed corpus, never loosened: 15 — N164/N167/N178
+     appended `intent-age` and `notice-sweep` after `bias-debt` (SCHEDULER #1, R5), the same shape again. Still a
+     delta, for the reason above: 15 now, 14 before the last append. */
+  t("ARM S1 (REACH, as a delta): the registry parse reaches 15 consumers, was 14 before N178 "
+    + "appended reevaluation's notice sweep after intent's age sweep",
+    [names.length, names.length - 1], [15, 14]);
   t("ARM S2: the investigative run joined as ONE appended entry",
     names.filter((n) => n === "ai-run-reap").length, 1);
   t("ARM S2b (PL-4): and the capture-request drain joined as ONE appended entry too — no second "
@@ -403,16 +414,25 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
      which is the failure mode a re-derivation would have "confirmed". The pin
      that actually states SCHEDULER.md's rule is not a count at all: it is that
      every arming site in the plane lies inside the ONE reconcile. */
-  const recFrom = STORE_SRC.indexOf("async #reconcileAlarm(");
-  const recTo = STORE_SRC.indexOf("\n  async #probeState(", recFrom);
-  const armSites = [...STORE_SRC.matchAll(/storage\.setAlarm\(/g)].map((m) => m.index);
-  console.log(`  corpus: ${armSites.length} arming sites in store.mjs, reconcile spans `
-    + `${recFrom}..${recTo}`);
+  /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; SCHEDULER #1 J2 item 1): the ONE reconcile is the scheduler module's
+     `#reconcile` (src/scheduler/index.mjs). The census is WIDENED to every source file of the plane (`src/*.mjs` and
+     `src/<module>/*.mjs`), because after the extraction a second alarm could be armed from any module: each arming
+     site is placed by file and offset, and must lie inside that one span. */
+  const SRC_ROOT = fileURLToPath(new URL("../src/", import.meta.url));
+  const planeFiles = readdirSync(SRC_ROOT, { withFileTypes: true }).flatMap((d) => d.isDirectory()
+    ? readdirSync(SRC_ROOT + d.name).filter((f) => f.endsWith(".mjs")).map((f) => `${d.name}/${f}`)
+    : d.name.endsWith(".mjs") ? [d.name] : []);
+  const recFrom = SCHED_SRC.indexOf("async #reconcile(");
+  const recTo = SCHED_SRC.indexOf("\n  /* ---- R4, R11 ---- */", recFrom);
+  const armSites = planeFiles.flatMap((f) => [...readFileSync(SRC_ROOT + f, "utf8").matchAll(/storage\.setAlarm\(/g)]
+    .map((m) => ({ f, i: m.index })));
+  console.log(`  corpus: ${armSites.length} arming sites in ${planeFiles.length} plane files, reconcile spans `
+    + `scheduler/index.mjs ${recFrom}..${recTo}`);
   t("ARM S4a: the reconcile is locatable and there ARE arming sites to place — an unlocatable "
     + "reconcile would make the pin below vacuous", recFrom > -1 && recTo > recFrom && armSites.length > 0, true);
   t("ARM S4: EVERY place the plane arms the alarm is inside the ONE reconcile — a second alarm "
     + "armed anywhere else fails here by position (SCHEDULER.md's one-mechanism rule)",
-    armSites.filter((i) => i < recFrom || i > recTo), []);
+    armSites.filter(({ f, i }) => f !== "scheduler/index.mjs" || i < recFrom || i > recTo).map(({ f, i }) => `${f}@${i}`), []);
   /* NO CRON. A cron line in wrangler.jsonc would be a SECOND scheduler beside
      the alarm, which is the sprawl REC-1 decided against. */
   const wrangler = readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.meta.url)), "utf8");
@@ -423,7 +443,10 @@ console.log("\n--- ARM S · SCHEDULER.md's one mechanism ---");
      a null wake with no run in flight. */
   t("ARM S6: the reaper is an INTERVAL consumer — due only when a lease has actually lapsed, so it "
     + "fires at its own moment and no other's",
-    [/name: "ai-run-reap",[\s\S]{0,200}?due:\s*\(now\)\s*=>\s*aiRunsOf\(this\.ctx, this\.env\)\.reapDue\(now\)\s*>\s*0/.test(regBody),
+    /* RE-ANCHORED 2026-09-28 (T8): the entry is the scheduler module's `c["ai-run-reap"]`, due when
+       `due(o("aiRuns").reapDue(now))`, with `due = (n) => n > 0` — the same claim, a LAPSED lease counted. */
+    [/due:\s*\(now\)\s*=>\s*\(due\(o\("aiRuns"\)\.reapDue\(now\)\)\s*\?\s*now\s*:\s*null\)/.test(regBody)
+       && /\n    const due = \(n\) => n > 0;/.test(SCHED_SRC),
      /\n  reapDue\(now\)\s*\{[\s\S]{0,200}?status = 'running' AND expires < \?/.test(RUNS_SRC)], [true, true]);
   t("ARM S7: and it SELF-TERMINATES — its wake is null when no run is in flight",
     /\n  reapWake\(now\)\s*\{[\s\S]{0,240}?return null;/.test(RUNS_SRC), true);

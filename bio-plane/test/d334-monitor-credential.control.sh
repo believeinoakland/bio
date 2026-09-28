@@ -3,14 +3,18 @@
 # Restore verified by sha256 AND cmp against a UNIQUELY-NAMED per-arm pristine copy.
 set -u
 cd "$(dirname "$0")/.." || exit 9
-STORE=src/store.mjs
+# RE-ANCHORED 2026-09-28 (T8, legacy-tests; MONITORING #1 J3 item 1, N63): the credential selection left the store's
+# `#monitorToken()` for `runtime-limits.unattendedCredential(env)`, served by `src/tokens.mjs` (R26), which monitoring's
+# two fires call. Arms 1 and 2 patch its `token()` there; `$STORE` names that file (the variable kept so the arm
+# helpers are unchanged). Arm 3 still patches `src/index.mjs`'s selftest.
+STORE=src/tokens.mjs
 SUITE=test/d334-monitor-credential.test.mjs
 
 arm_setup() {  # $1 = arm name
   PRISTINE="/tmp/d334-pristine-$1.mjs"
   cp "$STORE" "$PRISTINE" || exit 9
   BYTES=$(wc -c < "$PRISTINE")
-  if [ "$BYTES" -lt 500000 ]; then echo "ABORT arm $1: pristine copy only $BYTES bytes"; exit 9; fi
+  if [ "$BYTES" -lt 8000 ]; then echo "ABORT arm $1: pristine copy only $BYTES bytes"; exit 9; fi
   SHA_BEFORE=$(shasum -a 256 < "$PRISTINE" | cut -d' ' -f1)
   echo "=== ARM $1 === pristine $PRISTINE  bytes=$BYTES  sha256=$SHA_BEFORE"
 }
@@ -30,7 +34,7 @@ arm_restore() {  # $1 = arm name
 # DECLARED: arm C MUST NOT fail either (a live daemon is selected either way).
 # ---------------------------------------------------------------------------
 arm_setup 1
-perl -0pi -e 's{  async \#monitorToken\(\) \{\n    const env = this\.env;\n    if \(!env\) return null;\n    if \(typeof env\.DAEMON_TOKEN === "string" && env\.DAEMON_TOKEN\.length > 0\n        && await liveToken\(env\.DAEMON_TOKEN\)\) return env\.DAEMON_TOKEN;\n    if \(typeof env\.ADMIN_TOKEN === "string" && env\.ADMIN_TOKEN\.length > 0\n        && await liveToken\(env\.ADMIN_TOKEN\)\) return env\.ADMIN_TOKEN;\n    return null;\n  \}}{  async \#monitorToken\(\) \{\n    return \(this.env && \(this.env.DAEMON_TOKEN \|\| this.env.ADMIN_TOKEN\)\) \|\| null;\n  \}}s' "$STORE"
+perl -0pi -e 's{    async token\(\) \{\n      for \(const k of \["DAEMON_TOKEN", "ADMIN_TOKEN"\]\) \{\n        const v = readOf\(env, k\);\n        if \(await liveToken\(v\)\) return v;\n      \}\n      return null;\n    \},}{    async token\(\) \{\n      return \(env && \(env.DAEMON_TOKEN \|\| env.ADMIN_TOKEN\)\) \|\| null;\n    \},}s' "$STORE"
 if cmp -s "$PRISTINE" "$STORE"; then echo "ARM 1 DID NOT ARM (patch matched zero times) — THIS IS A FINDING"; else echo "ARM 1 armed (file differs from pristine)"; fi
 node "$SUITE" > /tmp/d334-arm1.log 2>&1
 echo "ARM 1 suite exit=$?"
@@ -48,7 +52,7 @@ node "$SUITE" > /tmp/d334-arm1-after.log 2>&1; echo "ARM 1 post-restore suite ex
 # reported half is untouched and arm A's fallback still works.
 # ---------------------------------------------------------------------------
 arm_setup 2
-perl -0pi -e 's{    if \(typeof env\.DAEMON_TOKEN === "string" && env\.DAEMON_TOKEN\.length > 0\n        && await liveToken\(env\.DAEMON_TOKEN\)\) return env\.DAEMON_TOKEN;\n}{}s' "$STORE"
+perl -0pi -e 's{      for \(const k of \["DAEMON_TOKEN", "ADMIN_TOKEN"\]\) \{}{      for \(const k of \["ADMIN_TOKEN"\]\) \{}s' "$STORE"
 if cmp -s "$PRISTINE" "$STORE"; then echo "ARM 2 DID NOT ARM (patch matched zero times) — THIS IS A FINDING"; else echo "ARM 2 armed (file differs from pristine)"; fi
 node "$SUITE" > /tmp/d334-arm2.log 2>&1
 echo "ARM 2 suite exit=$?"

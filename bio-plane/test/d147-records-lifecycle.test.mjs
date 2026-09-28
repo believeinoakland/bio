@@ -28,8 +28,12 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { checkBundle, parseFrontmatter, lifecycleFindings, requestLifecycleOf, LIFECYCLE_CHECKS,
-         CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DUE_UNDETERMINED_SAYS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the lifecycle's reader, its rows and sentence moved
+   to `actions` (`src/actions/checks.mjs`), which re-exports the grammar and the two closed sets as the SAME objects
+   (R40). `checkBundle` no longer runs the action arm; section 4 runs actions' audit arm (R37) beside it. */
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
+import { lifecycleFindings, requestLifecycleOf, LIFECYCLE_CHECKS, CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES,
+         DUE_UNDETERMINED_SAYS, checkActionExtension } from "../src/actions/checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -74,7 +78,10 @@ const bytesOf = async (tok, id) => {
 };
 const lifecycle = async (id) => (await projection(NADIA, id))?.action?.lifecycle;
 
-const actionMd = (id, { kind = "cpra_request", correspondence = [] } = {}) => ["---",
+/* RE-GRADED 2026-09-28 (T8): a creation states a kind actions offers (R10) — the records request is now the product's
+   `records_request` (`cpra_request` is refused ACTION_KIND_UNKNOWN on a creation), still the kind a liar would compute
+   a clock from — and a named counterparty as an office (R9). The twin's kind is `other`, which R10 offers. */
+const actionMd = (id, { kind = "records_request", correspondence = [] } = {}) => ["---",
   `id: ${id}`, "object_type: action", "schema: action@1",
   `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -84,7 +91,7 @@ const actionMd = (id, { kind = "cpra_request", correspondence = [] } = {}) => ["
   "reeval_pending:", "  flag: false", "  since: null", "  source: null",
   "visuals: []",
   `action_kind: ${kind}`, "risk_tier: 1",
-  "counterparty:", "  state: named", "  name: City Clerk",
+  "counterparty:", "  state: named", "  role: City Clerk", "  body: City of Oakland",
   ...(correspondence.length ? ["correspondence:", ...correspondence.flatMap((e) =>
     [`  - direction: ${e.direction}`, ...Object.entries(e).filter(([k]) => k !== "direction")
       .map(([k, v]) => `    ${k}: ${typeof v === "string" && !["at", "author", "stage", "outcome"].includes(k) ? `"${v}"` : v}`)])] : []),
@@ -123,7 +130,7 @@ const promote = async (tok, id, text, base = null) =>
 
 const CPRA = "Cal. Gov. Code § 7922.535";
 const SUNSHINE = "Oakland Mun. Code ch. 2.20";
-const ACT = "ACTN-2026-1470-overtime-ledger";       // the chain, a cpra_request
+const ACT = "ACTN-2026-1470-overtime-ledger";       // the chain, a records_request
 const TWIN = "ACTN-2026-1471-overtime-twin";        // the same chain, another kind
 const OLD = "ACTN-2026-1472-pre-lifecycle";         // entries with no lifecycle key at all
 
@@ -132,13 +139,15 @@ const OLD = "ACTN-2026-1472-pre-lifecycle";         // entries with no lifecycle
    ===================================================================== */
 console.log("--- 0. the ground ---");
 {
-  t(`${ACT} lands (cpra_request)`, (await promote(NADIA, ACT, actionMd(ACT))).ok, true);
+  t(`${ACT} lands (records_request)`, (await promote(NADIA, ACT, actionMd(ACT))).ok, true);
   t(`${TWIN} lands (another kind, the same everything else)`,
-    (await promote(NADIA, TWIN, actionMd(TWIN, { kind: "letter" }))).ok, true);
+    (await promote(NADIA, TWIN, actionMd(TWIN, { kind: "other" }))).ok, true);
   t(`${OLD} lands`, (await promote(NADIA, OLD, actionMd(OLD))).ok, true);
   for (const id of [ACT, TWIN])
-    t(`${id}: a member states its governing laws (state and local)`,
-      (await setLaws(NADIA, id, [{ level: "state", citation: CPRA }, { level: "local", citation: SUNSHINE }])).ok, true);
+    /* RE-GRADED 2026-09-28 (T8): a level is one of `LAW_LEVELS` (jurisdictions R31, actions N61: federal, state,
+       county, city; an earlier `local` reads as written but is not stated anew). The Oakland code is the city's. */
+    t(`${id}: a member states its governing laws (state and city)`,
+      (await setLaws(NADIA, id, [{ level: "state", citation: CPRA }, { level: "city", citation: SUNSHINE }])).ok, true);
 }
 
 /* =====================================================================
@@ -206,7 +215,7 @@ console.log("\n--- 2. an entry with no stated due date reads UNDETERMINED ---");
 {
   const lc = await lifecycle(ACT);
   const undetermined = (lc?.entries || []).filter((e) => e.due?.state === "undetermined").map((e) => e.ord);
-  t("UNDETERMINED ARM: on a cpra_request action, every entry with no stated due date reads undetermined — none computed",
+  t("UNDETERMINED ARM: on a records_request action, every entry with no stated due date reads undetermined — none computed",
     undetermined, [1, 2, 3, 4]);
   t("...each with the plane's own sentence and no date at all",
     (lc?.entries || []).filter((e) => e.due?.state === "undetermined").map((e) => [Object.keys(e.due), e.due.says]),
@@ -220,7 +229,7 @@ console.log("\n--- 2. an entry with no stated due date reads UNDETERMINED ---");
 console.log("\n--- 3. no law is encoded ---");
 {
   const a = await lifecycle(ACT), b = await lifecycle(TWIN);
-  t("two actions differing ONLY in kind (cpra_request, letter) read the SAME chain, due dates included",
+  t("two actions differing ONLY in kind (records_request, other) read the SAME chain, due dates included",
     JSON.stringify(a?.entries), JSON.stringify(b?.entries));
   t("the floor: the compared chain is not empty", (a?.entries || []).length, 6);
   const fm = parseFrontmatter(actionMd(ACT, { correspondence: [
@@ -265,6 +274,10 @@ console.log("\n--- 4. refused by name ---");
       follows: "0", due_by: "2026-08-30", due_cite: "5 U.S.C. § 552" }, "DUE_CITE_NOT_GOVERNING"],
     ["exemptions the grammar cannot hold", { direction: "received", stage: "denial", follows: "0", outcome: "denied",
       exemptions: "the \"deliberative\" exemption" }, "LIFECYCLE_TEXT_UNWRITABLE"],
+    /* ADDED 2026-09-28 (T8, legacy-tests): the family grew by C-94.12 (actions R22, D-688: the token case of C-94.11
+       split out), so "every code of the family was driven" drives it too. */
+    ["a stage that is not a lower-case token", { direction: "received", stage: "Fee Estimate", follows: "0" },
+     "LIFECYCLE_TOKEN_MALFORMED"],
   ];
   const before = (await lifecycle(ACT))?.entries?.length;
   const seen = {};
@@ -278,7 +291,7 @@ console.log("\n--- 4. refused by name ---");
     STAGE_NOT_OF_DIRECTION: "C-94.1", FOLLOWS_NO_ENTRY: "C-94.2", APPEAL_NAMES_NO_DECISION: "C-94.3",
     OUTCOME_NOT_ON_RECEIVED: "C-94.4", OUTCOME_NOT_IN_VOCABULARY: "C-94.5", DECISION_WITHOUT_OUTCOME: "C-94.6",
     FEE_ESTIMATE_WITHOUT_QUOTE: "C-94.7", DUE_HALF_STATED: "C-94.8", DUE_NOT_A_DATE: "C-94.9",
-    DUE_CITE_NOT_GOVERNING: "C-94.10", LIFECYCLE_TEXT_UNWRITABLE: "C-94.11" });
+    DUE_CITE_NOT_GOVERNING: "C-94.10", LIFECYCLE_TEXT_UNWRITABLE: "C-94.11", LIFECYCLE_TOKEN_MALFORMED: "C-94.12" });
   t("every code of the family was driven", Object.keys(seen).sort(), Object.keys(LIFECYCLE_CHECKS).sort());
   t("nothing was written by any refusal", (await lifecycle(ACT))?.entries?.length, before);
   const noLaws = await correspond(NADIA, { target: OLD, direction: "sent", at: "2026-08-01", account: "Request.",
@@ -299,6 +312,7 @@ console.log("\n--- 4. refused by name ---");
   const { findings } = await checkBundle({ folderName: BAD,
     files: new Map([["bundle.md", bad]]), sha256: async (v) => sha(v), sha512: async () => new Uint8Array(64),
     nowMs: AS_OF, resolveTarget: () => true });
+  checkActionExtension({ fm: parseFrontmatter(bad).data, nowMs: AS_OF }, findings);   /* the audit's action arm (R37) */
   t("the CATALOG refuses both at C-2.10, each carrying its C-94 code",
     findings.filter((x) => x.check === "C-2.10" && x.code).map((x) => x.code),
     ["DECISION_WITHOUT_OUTCOME", "FOLLOWS_NO_ENTRY"]);
