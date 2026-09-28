@@ -25031,6 +25031,7 @@ var acquireGradeNote = (ceiling, unreachable) => {
 var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
 var ODF_DIGEST_MAX = 8 * 1024 * 1024;
+var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 
 // ../bio-plane/src/capture/index.mjs
 var te5 = new TextEncoder();
