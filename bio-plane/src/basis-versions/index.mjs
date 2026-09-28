@@ -18,8 +18,7 @@
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own.
  *   inquiry      `{earned(subject, targetIds), legCapped(stated, earned, targetId), cyclePath(id, targetIds)}`, inquiry's
- *                R13, R14 and cycle read. `inquiry` is extracted in the same layer; until its merge `legacy-store` passes
- *                an adapter over its own registry and cycle walk (K134's pattern).
+ *                R13, R14 and cycle read, through `inquiryOf(host)` unless a test passes its own.
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, OBJECT_TYPES, STATES, vocabFor, isBoilerplate,
@@ -30,6 +29,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
+import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId } from "../content/index.mjs";
 import { basisVersionFindings, BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_MACHINE, versionNeedsReason,
          VERSION_NAME_RE, NARROW_CHECKS, versionsIn, compositionDiff, sameComposition } from "./grammar.mjs";
@@ -1547,7 +1547,11 @@ export function basisVersionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
-    bv = new BasisVersions({ ...d, storage: d.storage || host.storage, record, membership, promotion, content });
+    const inquiry = d.inquiry || (() => {
+      const i = inquiryOf(host, { record, membership, promotion, content });
+      return { earned: (s, t) => i.earned(s, t), legCapped, cyclePath: (id, t) => i.cyclePath(id, t) };
+    })();
+    bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
