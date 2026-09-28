@@ -35,3 +35,28 @@ Found while building layer 7's intent entries; none changed by me.
 **Arm G, other modules' codes:** `NO_SUCH_PROJECT` waits on N208, as you ruled. `NO_SUCH_ENTITY` is the same case: intent mints it for a condition or aspiration naming an unknown entity, and progressions holds its row (arm G: 8 sites across entities, progressions and intent). It wants N208's treatment, with entities holding the one helper.
 
 **Generated artifact:** intent's source is in `bio-plane/dist/bio-plane.bundled.mjs`, so this landing stales it. It is `not_product`'s and regenerated at the layer close.
+
+## J3 · COMPLETE
+
+**Entries applied** (layer 7's intent bullet, B1; J1 answered by B2, K238):
+- **N199 (R23), first.** (1) A triage act on a gap records the gap's project, and `proposals`' `set_aside` is gated on the project an act concerns, including one derived from a gap's key (`intent::<project>::…`). (2) A `project` aspiration is seen only by a viewer who sees its project: `pursuitOf`, `contacts`, `aspirationsFor` and `declareGoal` all enforce this. A goal's `aspiration` pointer reads null to anyone else.
+- **N179.** Intent reaches progressions lazily through the host, so the plane's `env`-built instance is the one it reads. The interface test builds in the plane's order and judges an overdue finding at `BIO_NOW_MS`. It fails on the old eager build.
+- **N180 (K238).** Family C-111.1–.28, with C-2.9 kept. `PURSUIT_UNSTATED` and `CONDITION_BAD_GRADE` are intent's own codes. Every `where` reads `src/intent/index.mjs <fn> > <region>`. Each shared code is one governed helper (D-484's shape), and the two machine refusals carry their guard inside their region. `is-dead-end-noted` is widened.
+- **N181.** Every intent `#rows(` read carries a `LIMIT` with a published cap, read one past so a cut says so: `#departures`, `#measure` (1,000; a cut measure decides no `satisfied`), `#triaged` (now `#isDecided`, `#decidedAmong` and `#setAside`), `pursuitOf` (goals 200, triage acts 1,000) and `watchSet` (paged, with a cursor). `op=pursuit` publishes only bounded collections. `GRADES` is the catalogue's `BASIS_GRADES`. `intent_triage_key` is read by triage's lookup.
+- **N178 (K228).** R27: `ageDue` and `ageWake`, in milliseconds, share R17's ageable scan. A question R17 could not move stays due. R28: `servesOf`, for scheduler's rank. It is read as the plane, writes nothing and never throws. It is no op.
+- **K171/K229.** Aspiration and goal ids are `ASP-<y>-<n>-aspiration` and `GOAL-<y>-<n>-goal`, a question opened from a proposal is `INQ-<y>-<n>-question`, and each carries C-2.2's core fields (`group` is stamped by promotion). The catalogue's C-1.2 and C-2.2 hold on both new types (tested).
+- **R26's test** asserts the refusal and that nothing is written, not a code.
+
+**Deferred, and why:** `#aspirations` walks every aspiration document through record-core's paged `listByType`, and `contacts` pairs them. No requirement bounds either, and a cap would change R12's and R13's answers. It wants a published bound worded in R12 and R13 first (yours).
+
+**Found in other modules:** in J2 (REPORT).
+
+**Tests and checks** (on `job/T8/intent`, `tranche/T8` merged at B2):
+- `node --test bio-plane/test/m/intent/`: 35 tests, 35 pass, 0 fail. New: R27, three R28 tests, the N179 plane build, and N199's arms in R23. Both the N179 and N199 tests were run red against the pre-job source.
+- Layer tests: none in `build/manifest.md`. Legacy suites run for the entries: listed in J2. refusal-wire 42/0, overdue-successor 22/0, airuns 54/0, hygiene 1334/1 (basis-versions'), gate-reads 114/1, bounds 201/5, derivation-bounds 66/7, rung-ladder 48/1 (unchanged), affordances 99/0.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio intent` → architecture: 10 product files, 35 relative imports (0 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio intent` → coverage: 1 modules, 28 of 28 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio intent tranche/T8` → ownership: 10 files changed by intent between tranche/T8 and HEAD; legacy-checks: 0 line(s) added, 0 removed; legacy-store: 0 line(s) added, 0 removed; 0 failures
+
+Size (session_01498Aa1KS9kWphfbKsDZgkv): test runs 32, module lines 1833
