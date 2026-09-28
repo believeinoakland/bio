@@ -20,7 +20,7 @@ Also for R25's binding: the instance's `env` reaches reevaluation only through l
 
 **Deferred.** Nothing.
 
-**Found in other modules / stale artifacts** (REPORT J3).
+**Found in other modules / stale artifacts** (REPORT J2).
 - legacy-tests: `derivation-bounds` 69/4 → 68/5: the census falls 209 → 207 (`#records`, `raiseNotices` bounded) and `reevaluation/index:raiseNotices` leaves the SET 2 / CENSUS-BLIND pin (15 → 14): departures by fix, to re-pin. `bounds` 203/3 unchanged: its PIN still wants `reevaluationnotices` driven in that suite (my interface test now exists). `gate-reads` 114/1 unchanged: `reevaluationnotices` is unclassified there (with intent's `aspirationcontacts`, `pursuit`, `intentproposals`). `meaning-bounds` 94/2 unchanged in count; `adoptVersion[silent]` left its LOST list.
 - `bio-plane/dist/bio-plane.bundled.mjs` (not_product) is stale by `src/reevaluation/` and `store.mjs` 726–727; BOB regenerates at the close.
 - scheduler (layer 10): R25's services are on the instance (`reevaluationOf(ctx)`); `noticeSweep` is synchronous and returns `raiseNotices`' answer or `{pending: false}`.
