@@ -53,15 +53,48 @@ export const SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
 /* R23: a ceiling only ever learned downward would leave an upgraded account at the old caps forever. */
 const PROBE_EVERY = 25;
 
+/* N90: the one bound this module's reads publish (R24–R28, R32). CHOSEN, not measured: a page a member reads in one
+   answer, never a size the record grows to. Every read over-fetches one row so `truncated` is a fact, not a guess. */
+export const READ_LIMIT = Object.freeze({ default: 200, max: 1000 });
+const limitOf = (asked) => {
+  const n = Math.floor(Number(asked));
+  return asked != null && asked !== "" && Number.isFinite(n) && n > 0 ? Math.min(READ_LIMIT.max, n) : READ_LIMIT.default;
+};
+/* A paged read's `next`: the ordering key of the last row listed, opaque to the caller (base64url of its JSON), read
+   back by `keyOf`, which answers null for a cursor this module did not write (the read then refuses BAD_CURSOR). */
+const cursorOf = (parts) => btoa(String.fromCharCode(...te.encode(JSON.stringify(parts))))
+  .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const keyOf = (cursor, n) => {
+  try {
+    const bytes = Uint8Array.from(atob(String(cursor).replace(/-/g, "+").replace(/_/g, "/")), (ch) => ch.charCodeAt(0));
+    const k = JSON.parse(new TextDecoder().decode(bytes));
+    return Array.isArray(k) && k.length === n && k.every((x) => typeof x === "string") ? k : null;
+  } catch { return null; }
+};
+const badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is not a cursor this read answered as `next`" });
+
 /* The events a later module may listen to (R44, R55), and the observation a reuse verdict maps to (the
    observation log's, its Suggestion). */
 export const CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
 
 const instances = new WeakMap();
+/* R58 (N122, K155): for each instance, which of its options a caller supplied, so a later caller's option is judged
+   against the right thing: one taken by default is adopted, one a caller gave must be the same. */
+const supplied = new WeakMap();
 
-/** K61: the one Capture for this object's storage. `opts` is read on the first call only: `env` (the object's
- *  bindings: the evidence bucket for the inbox, the renderer, the instance's name), `governor` (host-governor's,
- *  `governorOf(ctx)` by default) and `provenance` (`provenanceOf(ctx)` by default). A test may pass its own. */
+/* Two `env`s are the same when they carry the same bindings, each the same value: the object a module was handed
+   need not be the object another was handed for the one Durable Object. */
+const sameEnv = (a, b) => {
+  const ka = Object.keys(a || {}), kb = Object.keys(b || {});
+  return ka.length === kb.length && ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && a[k] === b[k]);
+};
+
+/** K61, R58: the one Capture for this object's storage. `opts`: `env` (the object's bindings: the evidence bucket
+ *  for the inbox, the renderer, the instance's name), `governor` (host-governor's, `governorOf(ctx)` by default),
+ *  `record` (`recordOf(ctx)`) and `provenance` (`provenanceOf(ctx)`). A later call's option is never silently
+ *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
+ *  `governor` the instance took by default is adopted from the first later caller that supplies it, and one that
+ *  differs from what an earlier caller supplied throws, naming the option. A test may pass its own. */
 export function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
@@ -70,7 +103,21 @@ export function captureOf(ctx, opts = {}) {
                                governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
                                provenance: opts.provenance ?? provenanceOf(ctx) });
     instances.set(storage, c);
+    supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
+    return c;
   }
+  const given = supplied.get(c);
+  const refuse = (name) => {
+    throw new Error(`captureOf: a caller supplied a different \`${name}\` for a storage whose capture already holds `
+                  + `another one a caller gave; capture refuses it rather than run against either silently (R58)`);
+  };
+  /* Every option judged before any is adopted, so a refused call changes nothing. */
+  if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse("env");
+  if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse("governor");
+  for (const [name, held] of [["record", c.core], ["provenance", c.provenance]])
+    if (opts[name] != null && opts[name] !== held) refuse(name);
+  if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
+  if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
   return c;
 }
 
@@ -297,11 +344,18 @@ export class Capture {
     return answer;
   }
 
-  /** R32: only a signed-in member reaches these (the op's fence). */
-  inboxList(status) {
-    return { inbox: this.#rows(
-      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by
-       FROM inbox ${status ? "WHERE status=?" : ""} ORDER BY received DESC`, ...(status ? [status] : [])) };
+  /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, newest first, paged by
+   *  `after`: a doorbell anyone may ring must not answer a member with everything it was ever handed. */
+  inboxList(status, { limit = null, after = null } = {}) {
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 2) : null;
+    if (after && !from) return badCursor();
+    const found = this.#rows(
+      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by FROM inbox
+        WHERE ${status ? "status = ?" : "1=1"} AND ${from ? "(received, knock_id) < (?, ?)" : "1=1"}
+        ORDER BY received DESC, knock_id DESC LIMIT ?`, ...(status ? [status] : []), ...(from || []), cap + 1);
+    const inbox = found.slice(0, cap), truncated = found.length > cap, last = inbox[inbox.length - 1];
+    return { inbox, limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
   }
 
   inboxGet(knockId) {
@@ -394,39 +448,61 @@ export class Capture {
   /** R27. File the links a captured document made. Replaces this capture's rows rather than appending: a
    *  capture's own links are a property of its bytes. A link carries `chrome: true` with its `chrome_basis` when
    *  it sat in a chrome region (containment, D-340); whether it IS the site's chrome is decided by recurrence
-   *  (R28), re-derived here for this capture in the same write. */
+   *  (R28), re-derived here for this capture in the same write. A row filed again keeps the instant it was FIRST
+   *  filed (R57: `first_seen` is a read contract, and a continuation re-files every link of its page). */
   recordLinks({ sourceCapture, sourceBundle = null, capturedAt, links = [] } = {}) {
     if (!sourceCapture) return { recorded: 0 };
     const now = stampSecond();
-    this.#sql.exec(`DELETE FROM links WHERE source_capture = ?`, sourceCapture);
+    /* Filed in place: a row this capture already holds is updated and keeps `first_seen`, a new one takes now, and
+       the rows the new set no longer names are removed after. The first of two links with one key is the one kept. */
+    const kept = new Set();
     let n = 0;
     for (const l of links) {
       /* address_norm is required; citation_norm falls back to it for a link that names no element. */
       if (!l || !l.address_norm) continue;
+      n++;
+      const ref = String(l.ref || l.address), citation = l.citation_norm || l.address_norm;
+      const key = JSON.stringify([ref, citation]);
+      if (kept.has(key)) continue;
+      kept.add(key);
       this.#sql.exec(
         `INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm,
            citation_norm, fragment, partition, origin, chrome, chrome_basis, captured_at, first_seen)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(source_capture, link_ref, citation_norm) DO NOTHING`,
-        sourceBundle, sourceCapture, String(l.ref || l.address), l.address || l.address_norm,
-        l.address_norm, l.citation_norm || l.address_norm, l.fragment || null,
+         ON CONFLICT(source_capture, link_ref, citation_norm) DO UPDATE SET source_bundle = excluded.source_bundle,
+           address = excluded.address, address_norm = excluded.address_norm, fragment = excluded.fragment,
+           partition = excluded.partition, origin = excluded.origin, chrome = excluded.chrome,
+           chrome_basis = excluded.chrome_basis, captured_at = excluded.captured_at`,
+        sourceBundle, sourceCapture, ref, l.address || l.address_norm,
+        l.address_norm, citation, l.fragment || null,
         l.type || "deferred", l.origin || null, l.chrome ? 1 : 0,
         l.chrome ? (String(l.chrome_basis || "") || null) : null, capturedAt || now, now);
-      n++;
     }
+    this.#sql.exec(
+      `DELETE FROM links WHERE source_capture = ? AND NOT EXISTS (SELECT 1 FROM json_each(?) k
+         WHERE json_extract(k.value, '$[0]') = links.link_ref AND json_extract(k.value, '$[1]') = links.citation_norm)`,
+      sourceCapture, `[${[...kept].join(",")}]`);
     const chrome = this.#chromeDeriveCapture(sourceCapture, now);
     return { recorded: n, source_capture: sourceCapture, site_chrome: chrome };
   }
 
-  /** R27, D-701. Everything that points AT an address, matched on the RESOURCE key so the citations of its
-   *  sections are found too. Only sources the viewer may see; `count` and `elements` from what passed. */
-  linksTo({ address_norm, viewer = undefined } = {}) {
+  /** R27, D-701, N90. Everything that points AT an address, matched on the RESOURCE key so the citations of its
+   *  sections are found too. Only sources the viewer may see, at most `limit` in (source, citation) order, paged by
+   *  `after`; `count` and `elements` are of the rows listed. */
+  linksTo({ address_norm, viewer = undefined, limit = null, after = null } = {}) {
     const seen = this.#captureGate("l.source_capture", viewer);
-    const rows = this.#rows(
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 3) : ["", "", ""];
+    if (!from) return badCursor();
+    const found = this.#rows(
       `SELECT l.source_capture, l.source_bundle, l.link_ref, l.partition, l.fragment, l.citation_norm, l.captured_at
-         FROM links l WHERE l.address_norm = ? AND (${seen.sql})`, address_norm, ...seen.args);
+         FROM links l WHERE l.address_norm = ? AND (l.source_capture, l.citation_norm, l.link_ref) > (?, ?, ?) AND (${seen.sql})
+        ORDER BY l.source_capture, l.citation_norm, l.link_ref LIMIT ?`, address_norm, ...from, ...seen.args, cap + 1);
+    const rows = found.slice(0, cap), last = rows[rows.length - 1];
+    const truncated = found.length > cap;
     return { address_norm, count: rows.length, sources: rows,
-             elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))] };
+             elements: [...new Set(rows.map((r) => r.fragment).filter(Boolean))], limit: cap, truncated,
+             next: truncated ? cursorOf([last.source_capture, last.citation_norm, last.link_ref]) : null };
   }
 
   /** R27. Resolve a capture's links against the record, with a contemporaneity verdict for each that resolves:
@@ -435,11 +511,24 @@ export class Capture {
    *  unanswerable case into one bucket or the other. The strongest evidence is two captures of the target
    *  BRACKETING the source's retrieval whose bytes hash equal. D-96: the bracket reads DIRECT receipts only.
    *  D-701: a source the viewer may not see answers as a capture the record does not hold, and a target capture
-   *  the viewer may not see is filtered out BEFORE the bracket. */
-  resolveLinks({ sourceCapture, at = null, viewer = undefined } = {}) {
+   *  the viewer may not see is filtered out BEFORE the bracket. N90: through the op, at most `limit` links in
+   *  (citation, ref) order, paged by `after`, the tally and verdicts being of the links listed; an in-process caller
+   *  that passes no `limit` (connections' projection, which must see every link) is answered whole, `limit: null`. */
+  resolveLinks({ sourceCapture, at = null, viewer = undefined, limit = null, after = null } = {}) {
     const src = this.#captureGate("l.source_capture", viewer);
-    const rows = this.#rows(`SELECT l.* FROM links l WHERE l.source_capture = ? AND (${src.sql})`, sourceCapture, ...src.args);
-    if (!rows.length) return { sourceCapture, resolved: 0, links: [] };
+    const cap = limit == null ? null : limitOf(limit);
+    /* In process with no `limit`, every link: a bound of Infinity, which SQLite spells `LIMIT -1`. */
+    const bound = cap ?? Infinity;
+    const window = Number.isFinite(bound) ? bound + 1 : -1;
+    const from = after ? keyOf(after, 2) : ["", ""];
+    if (!from) return badCursor();
+    const found = this.#rows(
+      `SELECT l.* FROM links l WHERE l.source_capture = ? AND (l.citation_norm, l.link_ref) > (?, ?) AND (${src.sql})
+        ORDER BY l.citation_norm, l.link_ref LIMIT ?`, sourceCapture, ...from, ...src.args, window);
+    const truncated = found.length > bound;
+    const rows = found.slice(0, bound);
+    const next = truncated ? cursorOf([rows[rows.length - 1].citation_norm, rows[rows.length - 1].link_ref]) : null;
+    if (!rows.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated, next };
     const T = Date.parse(rows[0].captured_at) || Date.parse(at || "") || Date.now();
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
@@ -519,21 +608,29 @@ export class Capture {
                  target_captures: caps.length });
     }
     return { sourceCapture, resolved: out.length, at: rows[0].captured_at, tally, verdicts, links: out,
+      limit: cap, truncated, next,
       note: "undetermined is the resting state and the expected common case, not a failure: it means "
           + "nothing established which version the source pointed at, which is different from the "
           + "record holding nothing and different again from holding a later version" };
   }
 
-  /** R27. Append a verdict, never an update: a verdict that changed is a fact about the record. */
-  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null, at = null } = {}) {
+  /** R27. Append a verdict, never an update: a verdict that changed is a fact about the record. N90: the history
+   *  answered is the newest `limit` verdicts, oldest first, with the `total` and whether it was cut. */
+  recordLinkVerdict({ sourceCapture, addressNorm, verdict, basis, targetBundle = null, targetCapture = null, detail = null,
+                      at = null, limit = null } = {}) {
     const now = at || stampSecond();
     this.#sql.exec(
       `INSERT INTO link_verdicts (source_capture, address_norm, verdict, basis, target_bundle, target_capture, at, detail)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING`,
       sourceCapture, addressNorm, verdict, basis, targetBundle, targetCapture, now, detail);
-    const all = this.#rows(`SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at`,
-                           sourceCapture, addressNorm);
-    return { current: all[all.length - 1] || null, history: all, changed: all.length > 1 };
+    const cap = limitOf(limit);
+    const total = Number(this.#one(`SELECT COUNT(*) AS n FROM link_verdicts WHERE source_capture = ? AND address_norm = ?`,
+                                   sourceCapture, addressNorm).n);
+    const found = this.#rows(`SELECT * FROM link_verdicts WHERE source_capture = ? AND address_norm = ? ORDER BY at DESC LIMIT ?`,
+                             sourceCapture, addressNorm, cap + 1);
+    const history = found.slice(0, cap).reverse();
+    return { current: history[history.length - 1] || null, history, changed: total > 1, total, limit: cap,
+             truncated: found.length > cap };
   }
 
   /* ---- R28, R29: the host's chrome, derived per HOST ---- */
@@ -630,10 +727,17 @@ export class Capture {
     }
   }
 
-  /** R28. The standing classification of a host's contained links, with basis and date. */
-  chromeOf({ host } = {}) {
+  /** R28, N90. The standing classification of a host's contained links, with basis and date: at most `limit` in
+   *  address order, paged by `after`. */
+  chromeOf({ host, limit = null, after = null } = {}) {
     const h = String(host || "").trim().toLowerCase();
-    return { host: h, links: this.#rows(`SELECT address_norm, state, pages, basis, at FROM link_chrome WHERE host = ? ORDER BY address_norm`, h) };
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 1) : [""];
+    if (!from) return badCursor();
+    const found = this.#rows(`SELECT address_norm, state, pages, basis, at FROM link_chrome WHERE host = ? AND address_norm > ?
+                                ORDER BY address_norm LIMIT ?`, h, from[0], cap + 1);
+    const links = found.slice(0, cap), truncated = found.length > cap;
+    return { host: h, links, limit: cap, truncated, next: truncated ? cursorOf([links[links.length - 1].address_norm]) : null };
   }
 
   /** R29. Regenerate a host's chrome by SCAN, which is what makes it derived: everything recomputed from `links`
@@ -777,33 +881,54 @@ export class Capture {
   /** R24. Assets this host has served, by normalised address. `documents` counts distinct PAGES, a page being the
    *  primary's DOCUMENT ADDRESS in the receipts (CAP-13): a primary sha is a content hash, so one page whose bytes
    *  changed would otherwise read as two documents. A primary with NO receipt cannot say which page it was: it is
-   *  counted apart as `documents_undetermined`, never guessed into `documents`. */
-  siteAssets({ host, addresses = [] } = {}) {
+   *  counted apart as `documents_undetermined`, never guessed into `documents`. N90: `limit` (the op always passes
+   *  one) answers at most that many in address order, paged by `after`, unless `addresses` names the assets asked;
+   *  the in-process walk (R19) passes none and reads the host whole. */
+  siteAssets({ host, addresses = [], limit = null, after = null } = {}) {
     if (!host) return { host: null, assets: {} };
     const out = {};
-    const want = addresses && addresses.length ? new Set(addresses) : null;
+    const want = addresses && addresses.length ? [...new Set(addresses.map(String))] : null;
+    const cap = limit == null || want ? null : limitOf(limit);
+    /* Asked addresses: at most as many as asked. The in-process walk: no bound (Infinity, SQLite's `LIMIT -1`). */
+    const bound = cap ?? Infinity;
+    const window = want ? want.length : Number.isFinite(bound) ? bound + 1 : -1;
+    const from = after && cap !== null ? keyOf(after, 1) : [""];
+    if (!from) return badCursor();
+    /* The assets asked, or the page of the host's assets: the counts are then read for exactly those addresses. */
+    let found;
+    if (want) found = this.#rows(`SELECT * FROM site_assets WHERE host = ? AND address_norm IN (SELECT value FROM json_each(?))
+                                  ORDER BY address_norm LIMIT ?`, host, JSON.stringify(want), window);
+    else found = this.#rows(`SELECT * FROM site_assets WHERE host = ? AND address_norm > ? ORDER BY address_norm LIMIT ?`,
+                            host, from[0], window);
+    const page = found.slice(0, bound);
     const counts = new Map();
-    for (const c of this.#rows(
-      `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
-              COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
-         FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`, host)) counts.set(c.address_norm, c);
-    for (const r of this.#rows(`SELECT * FROM site_assets WHERE host = ?`, host)) {
-      if (want && !want.has(r.address_norm)) continue;
+    if (page.length)
+      for (const c of this.#rows(
+        `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
+                COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
+           FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
+          WHERE r.host = ? AND r.address_norm IN (SELECT value FROM json_each(?)) GROUP BY r.address_norm LIMIT ?`,
+        host, JSON.stringify(page.map((r) => r.address_norm)), page.length)) counts.set(c.address_norm, c);
+    for (const r of page) {
       const c = counts.get(r.address_norm);
       out[r.address_norm] = { ...r, documents: (c && c.pages) || 0, documents_undetermined: (c && c.unlocated) || 0 };
     }
-    return { host, assets: out, count: Object.keys(out).length };
+    return { host, assets: out, count: page.length, limit: cap, truncated: found.length > bound,
+             next: found.length > bound ? cursorOf([page[page.length - 1].address_norm]) : null };
   }
 
   /** R25. File what a capture saw of a host. When an address comes back with different bytes, that is a dated fact
    *  about the site AND it puts every document that REUSED the old bytes into question: the asset moves, the
    *  change is counted, and a dated `posthoc` `changed` verdict is appended for each (CAP-4 item 6a, zero request
    *  cost). A fetched asset's `last_fetched_by` names the capture whose fetch it was; a reuse never moves it
-   *  (CAP-14), and a reused part's source is the reusing capture's own record. */
-  recordSiteAssets({ host, primarySha, observations = [], at = null } = {}) {
+   *  (CAP-14), and a reused part's source is the reusing capture's own record. N90: every change is counted and
+   *  every posthoc verdict appended, but the answer lists at most `limit` changes, each naming at most `limit`
+   *  reusers, and says when either was cut. */
+  recordSiteAssets({ host, primarySha, observations = [], at = null, limit = null } = {}) {
     if (!host || !primarySha) return { host: null, recorded: 0 };
     const now = at || stampSecond();
+    const cap = limitOf(limit);
+    let truncated = false;
     let added = 0, changedCount = 0;
     const changed = [];
     const fromObs = (o) => (typeof o.reused_from === "string" && HEX64.test(o.reused_from)) ? o.reused_from : null;
@@ -819,23 +944,31 @@ export class Capture {
           o.bytes || 0, o.kind || null, now, now, now, now, o.reused ? fromObs(o) : primarySha);
         added++;
       } else if (!o.reused && cur.sha256 !== o.sha256) {
-        const affected = this.#rows(`SELECT primary_sha, at FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
-                                    host, o.address_norm);
+        /* INSERT OR IGNORE: the key carries the second, so two changes within one second fold into the first. Every
+           reuser's verdict is appended in the one statement, whatever the answer below lists. */
+        this.#sql.exec(
+          `INSERT OR IGNORE INTO reuse_verdicts
+             (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
+           SELECT primary_sha, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?
+             FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+          host, o.address_norm, cur.sha256, o.sha256,
+          "a later direct capture of this host fetched different bytes for this address; "
+            + "this earlier capture reused the old ones, which are now unverified against the source", now,
+          host, o.address_norm);
         this.#sql.exec(
           `UPDATE site_assets SET sha256 = ?, content_type = ?, bytes = ?, last_seen = ?, last_fetched = ?,
              last_fetched_by = ?, stable_since = ?, changes = changes + 1 WHERE host = ? AND address_norm = ?`,
           o.sha256, o.content_type || cur.content_type, o.bytes || 0, now, now, primarySha, now, host, o.address_norm);
         changedCount++;
-        changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256, reused_by: affected.map((a) => a.primary_sha) });
-        /* INSERT OR IGNORE: the key carries the second, so two changes within one second fold into the first. */
-        for (const a of affected)
-          this.#sql.exec(
-            `INSERT OR IGNORE INTO reuse_verdicts
-               (source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at)
-             VALUES (?, NULL, ?, ?, 'posthoc', 'changed', ?, ?, ?, ?)`,
-            a.primary_sha, host, o.address_norm, cur.sha256, o.sha256,
-            "a later direct capture of this host fetched different bytes for this address; "
-              + "this earlier capture reused the old ones, which are now unverified against the source", now);
+        if (changed.length < cap) {
+          const reusedBy = this.#rows(`SELECT primary_sha FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1
+                                        ORDER BY primary_sha LIMIT ?`, host, o.address_norm, cap + 1);
+          const count = Number(this.#one(`SELECT COUNT(*) AS n FROM site_asset_refs WHERE host = ? AND address_norm = ? AND reused = 1`,
+                                         host, o.address_norm).n);
+          if (reusedBy.length > cap) truncated = true;
+          changed.push({ address_norm: o.address_norm, was: cur.sha256, now: o.sha256,
+                         reused_by: reusedBy.slice(0, cap).map((a) => a.primary_sha), reused_by_count: count });
+        } else truncated = true;
       } else if (!o.reused) {
         this.#sql.exec(`UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
                        now, now, primarySha, host, o.address_norm);
@@ -850,7 +983,7 @@ export class Capture {
            reused = excluded.reused, sha256 = excluded.sha256, reused_from = excluded.reused_from`,
         host, o.address_norm, primarySha, now, o.reused ? 1 : 0, o.sha256, o.reused ? fromObs(o) : null);
     }
-    return { host, recorded: observations.length, added, changed: changedCount, changes: changed };
+    return { host, recorded: observations.length, added, changed: changedCount, changes: changed, limit: cap, truncated };
   }
 
   /** CAP-4: the reused subresource PARTS of a bundle, so ratification can re-fetch each. Scoped to THIS bundle by
@@ -901,36 +1034,41 @@ export class Capture {
     return { ok: true, bundleId, recorded, at: now, observation_refusals: refusals.filter(Boolean) };
   }
 
-  /** R26. The reuse verdicts, newest first, by bundle (ratify) or by source capture (which also surfaces the free
-   *  posthoc verdicts). */
-  reuseVerdicts({ bundleId = null, sourceCapture = null } = {}) {
+  /** R26, N90. The reuse verdicts, newest first, by bundle (ratify) or by source capture (which also surfaces the free
+   *  posthoc verdicts), at most `limit`. */
+  reuseVerdicts({ bundleId = null, sourceCapture = null, limit = null } = {}) {
     const cols = "source_capture, bundle_id, host, address_norm, phase, verdict, reused_sha, observed_sha, basis, at";
-    if (bundleId) return { bundleId, verdicts: this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE bundle_id = ? ORDER BY at DESC, address_norm`, bundleId) };
-    if (sourceCapture) return { sourceCapture, verdicts: this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE source_capture = ? ORDER BY at DESC, address_norm`, sourceCapture) };
-    return { verdicts: [] };
+    const cap = limitOf(limit);
+    const [key, value] = bundleId ? ["bundle_id", bundleId] : ["source_capture", sourceCapture];
+    if (!value) return { verdicts: [] };
+    const found = this.#rows(`SELECT ${cols} FROM reuse_verdicts WHERE ${key} = ? ORDER BY at DESC, address_norm LIMIT ?`, value, cap + 1);
+    return { ...(bundleId ? { bundleId } : { sourceCapture }), verdicts: found.slice(0, cap), limit: cap, truncated: found.length > cap };
   }
 
-  /** Asset chrome by RECURRENCE across a host's pages (CAP-13: a page is its document address), a ratio, not a
-   *  boolean: the threshold is the caller's. Primaries with no page on record enter neither side. */
-  siteChrome({ host, threshold = 0.6 } = {}) {
+  /** R24. Asset chrome by RECURRENCE across a host's pages (CAP-13: a page is its document address), a ratio, not a
+   *  boolean: the threshold is the caller's. Primaries with no page on record enter neither side. N90: at most
+   *  `limit` assets, most-recurring first, with the host's `total`; `documents` are the host's, never the page's. */
+  siteChrome({ host, threshold = 0.6, limit = null } = {}) {
     if (!host) return { host: null, documents: 0, documents_undetermined: 0, assets: [] };
+    const cap = limitOf(limit);
     const d = this.#one(
       `SELECT COUNT(DISTINCT cl.address_norm) AS pages, COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
          FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha WHERE r.host = ?`, host);
     const documents = (d && d.pages) || 0;
     const undetermined = (d && d.unlocated) || 0;
-    const assets = [];
-    for (const r of this.#rows(
+    const total = Number(this.#one(`SELECT COUNT(DISTINCT address_norm) AS n FROM site_asset_refs WHERE host = ?`, host).n);
+    /* Most-recurring first: `share` is `pages / documents` over one host, so ordering by pages IS ordering by share. */
+    const found = this.#rows(
       `SELECT r.address_norm AS address_norm, COUNT(DISTINCT cl.address_norm) AS pages,
               COUNT(DISTINCT CASE WHEN cl.capture_sha IS NULL THEN r.primary_sha END) AS unlocated
          FROM site_asset_refs r LEFT JOIN captured_locators cl ON cl.capture_sha = r.primary_sha
-        WHERE r.host = ? GROUP BY r.address_norm`, host)) {
+        WHERE r.host = ? GROUP BY r.address_norm ORDER BY pages DESC, r.address_norm LIMIT ?`, host, cap + 1);
+    const assets = found.slice(0, cap).map((r) => {
       const share = documents ? r.pages / documents : 0;
-      assets.push({ address_norm: r.address_norm, documents: r.pages, documents_undetermined: r.unlocated || 0, share,
-                    chrome: documents >= 3 && share >= threshold });
-    }
-    assets.sort((a, b) => b.share - a.share);
-    return { host, documents, documents_undetermined: undetermined, threshold, assets,
+      return { address_norm: r.address_norm, documents: r.pages, documents_undetermined: r.unlocated || 0, share,
+               chrome: documents >= 3 && share >= threshold };
+    });
+    return { host, documents, documents_undetermined: undetermined, threshold, assets, total, limit: cap, truncated: found.length > cap,
              note: (documents < 3 ? "fewer than three documents captured from this host: recurrence says nothing yet"
                                   : "chrome here means the address recurs across at least this share of the host's captured documents")
                + (undetermined ? `; ${undetermined} further capture${undetermined === 1 ? "" : "s"} of this host name no page on record, `
@@ -1130,36 +1268,38 @@ export function captureOwns(t) {
 }
 
 /* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
-   them in). `url` carries the control plane's stamps; `body` the parsed body. */
+   them in). `url` carries the control plane's stamps; `body` the parsed body. N90: every read a route answers is
+   bounded here, whatever the caller omits (`limit` defaults to READ_LIMIT's), and pages by `after`. */
 export function captureOps(c, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   const viewerOf = () => (url.searchParams.has("viewer") ? q("viewer") : undefined);
+  const page = { limit: q("limit") || READ_LIMIT.default, after: q("after") || null };
   return {
     capturelimit: () => c.captureLimit(q("runtime") || "subrequests"),
-    siteassets: () => c.siteAssets(body || { host: q("host") }),
+    siteassets: () => { const a = body || { host: q("host") }; return c.siteAssets({ after: page.after, ...a, limit: a.limit ?? page.limit }); },
     recordsiteassets: () => c.recordSiteAssets(body || {}),
     reusedparts: () => c.reusedParts(q("id")),
     recordreuseverdicts: () => c.recordReuseVerdicts(body || {}),
-    reuseverdicts: () => c.reuseVerdicts({ bundleId: q("bundle"), sourceCapture: q("capture") }),
+    reuseverdicts: () => c.reuseVerdicts({ bundleId: q("bundle"), sourceCapture: q("capture"), limit: page.limit }),
     renderadmit: () => c.renderAdmit(body || {}),
     renderspend: () => c.renderSpend(body || {}),
     recordlinks: () => c.recordLinks(body || {}),
-    resolvelinks: () => c.resolveLinks({ sourceCapture: q("capture"), viewer: viewerOf() }),
-    linksto: () => c.linksTo({ address_norm: q("address"), viewer: viewerOf() }),
+    resolvelinks: () => c.resolveLinks({ sourceCapture: q("capture"), viewer: viewerOf(), ...page }),
+    linksto: () => c.linksTo({ address_norm: q("address"), viewer: viewerOf(), ...page }),
     recordlinkverdict: () => c.recordLinkVerdict(body || {}),
     navchanges: () => c.navChanges({ host: q("host"), limit: q("limit"), viewer: viewerOf() }),
     derivesitechrome: () => c.deriveSiteChrome({ host: q("host"), limit: q("limit"), after: q("after") }),
-    chromeof: () => c.chromeOf({ host: q("host") }),
+    chromeof: () => c.chromeOf({ host: q("host"), ...page }),
     recordsourceoutcome: () => c.recordSourceOutcome(body || {}),
     sourcereach: () => c.sourceReachability({ addressNorm: q("address"), now: q("now") }),
     taskenqueue: () => c.taskEnqueue(body || {}),
     savecapturesession: () => c.saveCaptureSession(body || {}),
     loadcapturesession: () => c.loadCaptureSession({ session: q("session") }),
     dropcapturesession: () => c.dropCaptureSession({ session: q("session") }),
-    sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6 }),
+    sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6, limit: page.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
     knock: () => c.knock({ ...(body || {}), sourceAddress: q("source") }),
-    inboxlist: () => c.inboxList(q("status") || null),
+    inboxlist: () => c.inboxList(q("status") || null, page),
     inboxget: () => c.inboxGet(q("id")),
     inboxresolve: () => c.inboxResolve(body || {}),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */

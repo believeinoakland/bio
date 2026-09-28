@@ -3,7 +3,6 @@
  * `storageAbsent` and `requiredArgument` are passed in, with the stamps it decided (the caller class, the viewer, the
  * member). `store` is the Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
-import { readingInputs } from "./acquire.mjs";
 
 /* `{answered, result}` from a Durable Object answer: a body that is not the store's `{ok: true, result}` is not an
    answer, and a silence is never read as an empty result (REC-52). */
@@ -18,13 +17,15 @@ async function ask(store, path, init) {
  *  verdicts; `host=` how a host's navigation changed between captures (R29's per-host read). Every row passes the
  *  caller's viewer before it is counted. */
 export async function linksOp(url, store, { json, storeSilent, viewer }) {
-  const v = `viewer=${encodeURIComponent(viewer ?? "")}`;
+  /* N90: the caller's page, forwarded; the route bounds a read the caller did not. */
+  const v = `viewer=${encodeURIComponent(viewer ?? "")}`
+    + ["limit", "after"].map((k) => (url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "")).join("");
   const address = url.searchParams.get("address");
   const capture = url.searchParams.get("capture");
   const host = url.searchParams.get("host");
   let r;
   if (address) r = await ask(store, `http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`);
-  else if (host) r = await ask(store, `http://x/navchanges?host=${encodeURIComponent(host)}&limit=${encodeURIComponent(url.searchParams.get("limit") || "")}&${v}`);
+  else if (host) r = await ask(store, `http://x/navchanges?host=${encodeURIComponent(host)}&${v}`);
   else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await ask(store, `http://x/resolvelinks?capture=${capture}&${v}`);
   else return json({ ok: false, reason: "NEED_CAPTURE_OR_ADDRESS",
     detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, "
@@ -77,8 +78,8 @@ export async function archiveLookupOp(req, url, store, { json, storeSilent }) {
 }
 
 /** R1–R20, K72 (11): op=acquire, forwarded to the service with the control plane's stamps. Answers `{response}`
- *  (a refusal, a silence) or `{answer, inputs}`: the filed capture's answer and what the op's reading block needs
- *  to read it (K72 (8)); the op composes the reading onto the answer. */
+ *  (a refusal, a silence) or `{answer}`, the filed capture's answer, which `extraction` reads from the stored primary
+ *  itself (R42, K49; N103: no second read of the primary here). */
 export async function acquireOp(req, env, store, { json, storeSilent, storageAbsent, cls, member, sessMember, storeName }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
@@ -90,7 +91,7 @@ export async function acquireOp(req, env, store, { json, storeSilent, storageAbs
   if (!r.answered) return { response: storeSilent("acquire") };
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json(answer, status) };
-  return { answer, inputs: await readingInputs(env, storeName, answer) };
+  return { answer };
 }
 
 /** K72 (8): the op's answer, the reading block's findings placed on the document beside the profile, as the answer

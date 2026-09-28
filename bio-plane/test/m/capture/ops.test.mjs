@@ -1,5 +1,5 @@
 /* capture: the op handlers at the module's interface (ops.mjs): op=capture (R21), op=links (R27, R29, with the
-   control plane's viewer stamp) and op=acquire's forward and reading seam (R42, K72 (8)). The control plane's
+   control plane's viewer stamp) and op=acquire's forward (R42, K72 (8), N103). The control plane's
    envelope helpers are stand-ins; the Durable Object stub answers through the module's own routes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -73,25 +73,32 @@ test("R27 R29: op=links answers what points at an address, a capture's links, an
   assert.equal(sil.status, 502);
 });
 
-test("R42: op=acquire forwards to the service with the control plane's stamps and hands the reading its inputs; the service's answer carries no reading, the op's does", async () => {
+test("R42 N103: op=acquire forwards to the service with the control plane's stamps and answers the filed capture alone: no reading, no reading inputs, no second read of the primary", async () => {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "i" } });
   const st = stubOf(f.c);
   const env = { CAPTURES: b };
-  const net = network({ "https://a.example/t.txt": () => new Response("plain text body", { headers: { "content-type": "text/plain" } }) });
+  const net = network({ "https://a.example/t.txt": () => new Response("plain text body", { headers: { "content-type": "text/plain" } }),
+                        "https://a.example/u.txt": () => new Response("other text body", { headers: { "content-type": "text/plain" } }) });
   try {
     const h = { json, storeSilent, storageAbsent, cls: "member", member: true, sessMember: "m1", storeName: "bio" };
     const get = await acquireOp(new Request("https://p/?op=acquire"), env, st, h);
     assert.equal(get.response.status, 405);
     const none = await acquireOp(new Request("https://p/", { method: "POST", body: "{}" }), {}, st, h);
     assert.equal(none.response.status, 503);
+    const reads = () => b.calls.filter((c) => c[0] === "get").length;
+    const r0 = reads();
     const out = await acquireOp(new Request("https://p/", { method: "POST", body: JSON.stringify({ locator: "https://a.example/t.txt" }) }), env, st, h);
+    const byOp = reads() - r0;
+    assert.deepEqual(Object.keys(out), ["answer"], "the op answers the filed capture and nothing for a reader");
     assert.equal(out.answer.ok, true);
     assert.equal("reading" in out.answer.document, false, "the service does not read");
     assert.equal(out.answer.document.capture.actor_class, "member", "the stamps reached the service");
-    assert.equal(out.inputs.profileText, "plain text body", "the reader is handed the stored primary");
-    assert.equal(out.inputs.sha, sha("plain text body"));
-    assert.equal(out.inputs.docType.type.key, out.answer.document.profile.content_type, "the same content type acquire recorded");
+    assert.equal(out.answer.document.capture.sha256, sha("plain text body"));
+    /* the service alone, over a capture of the same shape, reads the store exactly as often: the op adds no read */
+    const r1 = reads();
+    await st.fetch(new Request("http://x/acquire?cls=member&member=1&sessMember=m1&store=bio", { method: "POST", body: JSON.stringify({ locator: "https://a.example/u.txt" }) }));
+    assert.equal(byOp, reads() - r1, "no second read of the primary by the op");
     const composed = withReading(out.answer, { reading: { found: false }, textUnits: [{ u: 1 }], textUnitsOverBound: 0 });
     assert.deepEqual(Object.keys(composed.document).slice(0, 6), ["file", "locator", "retrieved", "profile", "reading", "text_units"]);
     const refused = await acquireOp(new Request("https://p/", { method: "POST", body: JSON.stringify({ locator: "http://x" }) }), env, st, h);
