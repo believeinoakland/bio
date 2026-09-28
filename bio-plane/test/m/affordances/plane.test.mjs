@@ -418,7 +418,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
     "discharge", "proposedispose", "themewithdraw", "goalclose", "aspirationdepart", "aspirationretire",
-    "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage" /* narrow, triage: backing.test.mjs */];
+    "biasdebtresolve", "actionrisktier", "reevaluationrecord", "narrow", "triage",
+    "consequencerevise", "addressedrecord", "escalationevaluate", "escalationadvance", "escalationdecline",
+    "escalationsuspend" /* narrow, triage and layer 9's six: backing.test.mjs */];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 
