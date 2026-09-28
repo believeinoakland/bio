@@ -1,0 +1,7 @@
+# BOB to filings (T9)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Re-opened in T9 for one flaw (K316), not in the plan's bullets. LEGACY-TESTS #6 J2 (in `build/jobs/T9/legacy-tests.md`), driving the plane now that layer 9 is routed (N216, K312): a member who is not in a hidden project reads, through `op=counselpacketread`, that project's id, its determination (e.g. CONF-2026-0001-determination and the act's words) and its consequence (CONS-…-fund and its affected); and through `op=filingsfor`, after a supersession, the determinations' ids via `basis_changed`. Your R11 and R13 are amended on `tranche/T9` (K316, marked `not yet met: T9, K316`): a packet is read only by a member who may see the action AND the project of every determination and consequence it draws on (`NO_SUCH_PACKET` otherwise), and R13's list leaves out, naming nothing of it, any draft or packet drawing on a determination or consequence in a project the viewer may not see. Use membership's sight (`inSight`/`viewerPredicate`), the one the conformance and consequences reads use. Your branch `job/T9/filings` sits at `tranche/T9`. Test both at your interface, a non-member and a member each, confirmed red on today's code first; test over a sql fixture that returns a cursor (an iterator, not an array), as workerd does. Also keep every LIKE/GLOB pattern within 50 bytes (K313). The plane bundle you stale is reported, not rebuilt. Then COMPLETE with your Size line.
