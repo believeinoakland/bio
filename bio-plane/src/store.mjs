@@ -352,6 +352,7 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
    rather than restated, because a rule restated at its call site is a rule that
    can come to disagree with itself. */
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
+import { schedulerOf } from "./scheduler/index.mjs";
 import { progressionsOf, progressionOps, PROGRESSIONS_TABLES } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES, barAxisWords } from "./strength/index.mjs";
@@ -623,7 +624,6 @@ export class Store extends DurableObject {
       const migrated = type === "inquiry" ? this.#surfacedIn(row.bundle_id) : null;
       return migrated ? { ...one, surfaced_in: migrated } : one;
     });
-    retrieval.onSelectionCreated("legacy-store", () => this.#armSweep());
     /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
        (R19, R23), and it marks its own dirt on entities' notice (R17). legacy-store registers observation-log's row per
        derivation (its R8) and its derivation statement with connections (R3, R5) until observation-log does. */
@@ -640,7 +640,6 @@ export class Store extends DurableObject {
     /* bias (K61): joins every promotion before legacy-store (R8–R10); the store registers the AI runs as the bias debt's
        work products (R33) and arms the scheduler on a lens change (R23) until ai-runs and scheduler are extracted. */
     const bias = biasOf(ctx, { env });
-    bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its
        tables to purge (R17) and registers its candidates with basis-versions (R14). ai-runs is handed over
        as its own module (its R28–R29). */
@@ -651,11 +650,6 @@ export class Store extends DurableObject {
     intentOf(ctx);   /* intent (K61, K198): its check (R1, R2, R26) joins every promotion before legacy-store's; its audit check keeps C-2.9 (R22) */
     caseAuthoringOf(ctx);
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
-    /* promotion R45: REC-26's and D-86's producer arms, for every committed promotion (a monitored bundle, a lens moved). */
-    promotionOf(ctx).onCommitted("legacy-store", async ({ bundleId }) => {
-      const monitored = this.#monitorConfigured() && this.#one(`SELECT monitor_enabled FROM bundles WHERE bundle_id=?`, bundleId)?.monitor_enabled === 1;
-      if (monitored || biasOf(ctx).biasDebtDue(Date.now()) !== null) await this.#armScheduler();
-    });
     /* capture R44, R55 (K72 (9), K99): legacy-store registers the scheduler's arming, the observation log's rows and the
        runtime measurement with capture until scheduler, observation-log and instance-setup are extracted. */
     const capture = captureOf(ctx, { env });
@@ -664,11 +658,27 @@ export class Store extends DurableObject {
     captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("task", "legacy-store", async () => ({ armedAt: await this.#armDrain() }));
-    capture.on("source-outcome", "legacy-store", async (o) => (o.counted && o.outcome !== "success" && this.#monitorConfigured() ? this.#armScheduler() : null));
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
     capture.on("compute", "legacy-store", (m) => this.recordRuntimeObservation({ metric: m.metric, ms: m.value, detail: m.detail }));
-    progressionsOf(ctx, { env }).onThreaded("legacy-store", () => this.#armScheduler());   /* R33: arms the overdue scan until scheduler is extracted */
+    const scheduler = schedulerOf(ctx, env);
+    scheduler.register("legacy-store", { name: "task-drain", key: "drain",
+        due:  (now) => now,
+        wake: (now) => this.#one(`SELECT count(*) c FROM task_queue`).c > 0
+                         ? now + (this.#lastDrainProgress ? this.#drainDelayMs() : Store.TASK_DRAIN_BACKSTOP_MS)
+                         : null,
+        tick: ()    => { const d = this.taskDrain({ limit: Store.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
+                         this.#lastDrainProgress = d.drained > 0; return { drain: d }; } });
+    scheduler.register("legacy-store", { name: "queue-renotify", key: "queuerenotify",
+        due:  (now) => this.#queueRenotifyExpired(now) > 0 ? now : null,
+        wake: (now) => this.#queueRenotifyWake(now),
+        tick: (now) => ({ queuerenotify: { expired: this.#queueRenotifyExpired(now),
+                                           next: this.#queueRenotifyWake(now) } }) });
+    scheduler.register("legacy-store", { name: "group-domain-recheck", key: "groupdomain",
+        due:  ()    => this.#groupDomainWake(),
+        wake: ()    => this.#groupDomainWake(),
+        tick: ()    => this.#groupDomainTick() });
     ctx.blockConcurrencyWhile(async () => this.#migrate());
+    ctx.blockConcurrencyWhile(async () => scheduler.start());
   }
 
   #migrate() {
@@ -1254,574 +1264,14 @@ export class Store extends DurableObject {
   async #armConnectionDerive() { return await this.#armScheduler(); }
   static SELECTION_ID_CHUNK = SELECTION_ID_CHUNK;   /* retrieval's bound on an id list one statement binds */
 
-
-  /* ===========================================================   *  THE SCHEDULER (REC-1, milestone M1, RECORD).
-   *
-   *  DECISION — recorded in full in docs/development/SCHEDULER.md and
-   *  summarised here because the second and third periodic consumers inherit
-   *  it. The plane's periodic work runs on ONE reconciling Durable Object
-   *  alarm, NOT on a Worker cron trigger. Three properties decided it, and a
-   *  cron loses all three:
-   *
-   *    1. GRANULARITY. A cron trigger's floor is one minute; the task drain
-   *       already coalesces at one SECOND (TASK_DRAIN_DELAY_MS). A cron could
-   *       not serve that consumer, so it would be a SECOND scheduler beside the
-   *       alarm rather than a replacement — the exact per-consumer sprawl REC-1
-   *       exists to end. One mechanism serves both sub-second and multi-hour
-   *       cadences; two mechanisms is the thing to avoid.
-   *    2. SELF-TERMINATION. The alarm is deleted when nothing is pending, so an
-   *       idle instance carries no timer and costs nothing. A cron fires the
-   *       Worker every minute forever, awake or not — a standing cost on every
-   *       sovereign instance, most of them on the Free tier the installer
-   *       targets, where invocations are budgeted (D-118 / CPDF-7).
-   *    3. LOCALITY. Every consumer — the sweep and drain here, and the
-   *       monitoring, archive-fallback eligibility, per-document cadence and M4
-   *       ageing clocks still to come — reconciles against the DO's own SQLite.
-   *       A cron at the Worker would have to hop into the DO anyway; the
-   *       periodic actor belongs next to its state, where the reconciling alarm
-   *       already lives.
-   *
-   *  MECHANISM. A registry (#schedConsumers) of consumers, each a small
-   *  { name, due, wake, tick }:
-   *    - onAlarm runs tick() for every consumer DUE at the firing instant, then
-   *      reconciles the single alarm to the EARLIEST wake() any consumer still
-   *      wants, deleting it when none does (self-terminating).
-   *    - a producer that created work arms via #armScheduler, reconciling the
-   *      same way but only ever pulling the alarm EARLIER, so a sooner wake set
-   *      by another consumer is never lost.
-   *  The reconcile keeps EVERY active consumer's wake, not just the one that
-   *  just ran — that is what stops a fast consumer from starving a slow one:
-   *  when the fast consumer idles, the slow one's wake is still in the set and
-   *  still re-arms the alarm. Reconcile over only the consumers that just ticked
-   *  and the slow one is dropped the instant the fast one idles; that is the
-   *  negative control in test/scheduler.test.mjs, and it names the victim.
-   *
-   *  Two REAL consumers are MOVED onto the mechanism as proof — RECORD's
-   *  selection sweep and CAP-2's D-109 task drain — but their bodies
-   *  (#sweepSelections, taskDrain) are UNCHANGED: they only register a tick and
-   *  a wake. New consumers register the same way and inherit reconciliation and
-   *  self-termination for free, which is the whole reason to decide this once.
-   * ================================================================== */
-  static SCHED_GRACE_MS = 250;   // an alarm may fire a hair early; run a consumer due within this window
   #lastDrainProgress = true;     // did the last drain tick make progress — decides DELAY vs BACKSTOP on re-arm
-
-  /* The consumer registry. The two REAL consumers are ALWAYS due when the alarm
-     fires (`due: () => now`): they are cheap and a no-op on an empty subject, so
-     running them on any wake costs a bounded count and preserves the exact
-     pre-REC-1 behaviour the task-drain and selection suites pin. An INTERVAL
-     consumer (the env-gated test probes, and the future clocks) is due only at
-     its own anchored `next`, so it fires at its OWN cadence and no other's —
-     which is the property the reconcile has to protect. */
-  #schedConsumers(probe) {
-    const reg = [
-      { name: "selection-sweep",
-        due:  (now) => now,
-        wake: (now) => retrievalOf(this.ctx).sweepWake(now),                        /* retrieval R51 */
-        tick: ()    => ({ swept: retrievalOf(this.ctx).sweepSelections() }) },      /* retrieval R22 */
-      { name: "task-drain",
-        due:  (now) => now,
-        wake: (now) => this.#one(`SELECT count(*) c FROM task_queue`).c > 0
-                         ? now + (this.#lastDrainProgress ? this.#drainDelayMs() : Store.TASK_DRAIN_BACKSTOP_MS)
-                         : null,
-        tick: ()    => { const d = this.taskDrain({ limit: Store.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
-                         this.#lastDrainProgress = d.drained > 0; return { drain: d }; } },
-      /* CAP-3 (CAPTURE, appended here under CONDUCT's authorisation while RECORD
-         is dormant). The archive-fallback MONITORING consumer: it fires the
-         built-but-idle fallback for documents that have become fallback_eligible.
-         It is a pure clock gated on pending work — `wake` is null unless
-         monitoring is configured AND a failing document could still reach the
-         threshold, so an unconfigured or idle instance holds no alarm exactly as
-         before. Its `tick` is ASYNC (it does a governed archive fetch through
-         op=acquire); onAlarm awaits it. Bodies and rationale live beside the
-         reachability code, this is only its registration. */
-      { name: "archive-monitor",
-        due:  (now) => now,
-        wake: (now) => this.#monitorPending() ? now + this.#monitorTickMs() : null,
-        tick: (now) => this.#monitorTick(now) },
-      /* REC-5 / D-122: the CONNECTION-DERIVE sweep. Closes the gap where op=connect
-         was a manual mutation nothing called, so the entity axis stayed empty. It
-         is due on any wake (cheap, and a no-op on an empty dirty-set, exactly like
-         the two originals), and its WAKE is null unless the dirty-set has pending
-         entities — so an instance with nothing to derive holds no alarm and the
-         consumer self-terminates. Each tick derives a BOUNDED batch and clears it;
-         while more remain the count stays > 0 and the wake re-arms for the next
-         tick, so the sweep drains progressively rather than re-deriving the whole
-         store at once. The derivation stamps asserted_by 'system' (deriveConnections'
-         default): a scheduled derivation is a MACHINE act, never a member's. */
-      { name: "connection-derive",
-        due:  (now) => now,
-        wake: (now) => connectionsOf(this.ctx).wake(now),
-        tick: ()    => ({ connderive: connectionsOf(this.ctx).sweep() }) },
-      /* REC-8 (CONSTRUCTS Step 7, AGEING): the OVERDUE-SUCCESSOR scan — the SECOND framework
-         consumer on this alarm. It is the record's PROACTIVE noticing of a temporal expectation
-         coming due (FW-8 gave each stage a `within_interval`; nothing checked it). It writes
-         NOTHING — the overdue findings are DERIVED ON READ in op=proposals (an overdue flag goes
-         stale against the clock, so there is no overdue table). This consumer is the PUSH SIGNAL:
-         its WAKE is the EARLIEST FUTURE deadline across all instances, so the alarm fires exactly
-         when the next required successor tips past its deadline, and SELF-TERMINATES (wake null)
-         when no future deadline remains — an instance with no dated predecessor, no parseable
-         interval, or nothing threaded holds no alarm. It does NOT mint a task/focus per overdue
-         instance (D-79 don't-drown; escalation is DEC-10, Bob's). Uses the firing instant `now`,
-         the virtual clock a suite drives onAlarm(now) with, exactly as the other consumers do.
-         D-86, the other half: bias-debt is the SAME shape (an obligation with a clock, attached to an
-         object, settleable in batches) and rides THIS alarm with a different producer — the `bias-debt`
-         consumer at the foot of this registry, which inherits the reconcile. REC-8 built only the
-         temporal half.
-         CORRECTED 2026-09-23 (D-86, per DEC-20 / D-188): this read that bias debt is "blocking a state
-         transition". It is not and never was under DEC-20 — ordinary bias debt is DISCLOSED and travels
-         with the work; only an uncleared HUNCH refuses publication. The temporal half blocks; the bias
-         half surfaces. The sentence stood here after `queuestate.mjs`, `NOTIFICATIONS.md` and framework
-         §13 had all been corrected on 2026-08-05, which is the copy-that-agreed-once hazard exactly. */
-      { name: "overdue-scan",
-        due:  (now) => now,
-        wake: (now) => progressionsOf(this.ctx).overdueScan(now).next_deadline,
-        tick: (now) => ({ overduescan: progressionsOf(this.ctx).overdueScan(now) }) },
-      /* REC-21 / P-87: the QUEUE RE-NOTIFY consumer, and it is here rather than
-         anywhere else because P-87 is a rule about WHERE the interval comes
-         from. "Re-notify at the stage's OWN declared interval, never a global
-         one" is satisfied structurally: this consumer holds NO constant. Its
-         wake is the earliest instant a member's own snooze expires, read from
-         queue_state; the interval of a FINDING that keeps coming due is the
-         overdue-scan consumer's business and is read from the STAGE's declared
-         `within_interval` there. Two consumers, each on its own cadence,
-         reconciled by the one alarm — which is precisely the property REC-1's
-         registry exists to protect and the reason a global re-notify timer was
-         forbidden.
-         It WRITES NOTHING (the overdue-scan precedent): the queue is derived on
-         read, so a snooze expiring changes nothing in the store — it changes
-         only when the alarm next fires, which is what a push signal is. And it
-         SELF-TERMINATES: no future snooze, no wake, no alarm. */
-      { name: "queue-renotify",
-        /* DUE only when a snooze has actually EXPIRED, not on every wake. The
-           two original consumers are always-due because they are cheap no-ops on
-           an empty subject; this one has a real subject and a real answer, so it
-           fires at its own moment and no other's — the INTERVAL-consumer shape
-           the reconcile exists to protect. */
-        due:  (now) => this.#queueRenotifyExpired(now) > 0 ? now : null,
-        wake: (now) => this.#queueRenotifyWake(now),
-        tick: (now) => ({ queuerenotify: { expired: this.#queueRenotifyExpired(now),
-                                           next: this.#queueRenotifyWake(now) } }) },
-      /* REC-26 / P-84 / M1: the MONITOR-CADENCE consumer — op=monitor's caller.
-         M1's clause "a changed source produces a monitor-tick" had NO producer:
-         op=monitor is mutating and caller-driven and nothing anywhere called it.
-         This is that caller, and it is the SEVENTH consumer on the one alarm,
-         registered exactly as SCHEDULER.md says a new consumer joins.
-
-         Its cadence is PER DOCUMENT and comes from `bundles.monitor_frequency` —
-         the column that has existed since the first projection and that nothing
-         has ever read (P-84). It holds NO global interval, and that is structural
-         rather than stylistic: one interval over a whole corpus is both wrong at
-         the top (a delisting is time-sensitive) and ruinous at the bottom (a 2010
-         ordinance re-fetched daily), and MACHINE-PROCESSES.md §5c measures the
-         difference as ~17,000 documents per host against ~200,000. Removing the
-         cadence read is negative control (b).
-
-         INTERVAL-consumer shape, like queue-renotify: due only when a document is
-         actually past its own next check, so it fires at its own moment and no
-         other's. Its wake is the earliest next-check across the monitored set, so
-         it SELF-TERMINATES — an instance with no SELF binding, no monitored
-         document, or only documents whose cadence this plane cannot compute holds
-         no alarm at all, which is the property REC-1 prized and the one the Free
-         tier the installer targets is paid for. */
-      { name: "monitor-cadence",
-        due:  (now) => this.#monitorCadencePlan(now).due.length > 0 ? now : null,
-        wake: (now) => this.#monitorCadenceWake(now),
-        tick: (now) => this.#monitorCadenceTick(now) },
-      /* IS-6 / INVESTIGATIVE-SESSION.md §14b.3: the INVESTIGATIVE RUN REAPER —
-         the EIGHTH consumer on the one alarm, and ONE APPENDED ENTRY exactly as
-         SCHEDULER.md instructs: *"append an entry to #schedConsumers… Do NOT add
-         a second alarm or a cron; that is the decision this file records."* No
-         cron line is added to wrangler.jsonc and no second alarm exists; this
-         run inherits earliest-wake reconciliation and idle self-termination for
-         free, which is the whole reason REC-1 decided the shape once.
-
-         WHAT IT IS FOR, AND IT IS THE ITEM'S ACCEPTANCE RATHER THAN HOUSEKEEPING.
-         §14b.6 requires the observation log to be written WHETHER OR NOT THE RUN
-         SUCCEEDS, naming the bound that stopped it. A run that is KILLED
-         MID-FLIGHT runs no exit path of its own — that is what killed means — so
-         a log written by the run on its way out is a log about the runs that did
-         not need one. This consumer is the third party that observes the death:
-         a live run heartbeats by ticking, which extends its lease; a dead one
-         stops, its lease lapses, and this tick terminates it through
-         #aiRunTerminate — the SAME and ONLY exit from `running`, which appends
-         the terminal entry in the same transaction as the status change. The
-         guarantee is therefore structural: there is no state in which a run is
-         over and its log is silent.
-
-         INTERVAL-consumer shape, like queue-renotify and monitor-cadence: due
-         only when a lease has ACTUALLY lapsed, so it fires at its own moment and
-         no other's. Its wake is the earliest lease expiry across live runs, so
-         an instance with no run in flight holds no alarm at all. */
-      { name: "ai-run-reap",
-        due:  (now) => aiRunsOf(this.ctx, this.env).reapDue(now) > 0 ? now : null,
-        wake: (now) => aiRunsOf(this.ctx, this.env).reapWake(now),
-        tick: (now) => ({ airunreap: aiRunsOf(this.ctx, this.env).reap(now) }) },
-      /* PL-4 / IS-4 / SWEEP 4b.1: THE CAPTURE-REQUEST DRAIN — the NINTH consumer
-         on the one alarm, and ONE APPENDED ENTRY exactly as SCHEDULER.md
-         instructs: *"append an entry to #schedConsumers… Do NOT add a second
-         alarm or a cron; that is the decision this file records."* No cron line
-         is added to wrangler.jsonc and no second alarm exists.
-
-         THIS CONSUMER IS THE DAEMON THE DESIGN MEANS. §4: the AI does not
-         capture, it REQUESTS, and the daemon captures. The request door writes a
-         row and cannot fetch; this tick is the only thing in the plane that
-         turns a row into a fetch, and DEC-47's conduct is enforced inside it and
-         nowhere else.
-
-         Its `tick` is ASYNC (it does a governed acquire through env.SELF, the
-         archive-monitor's precedent) and onAlarm awaits it. Its WAKE is null
-         unless a request is actually waiting AND the instance is configured, so
-         an unconfigured or idle instance holds no alarm at all — the
-         self-termination property REC-1 prized and the Free tier is paid for. */
-      { name: "capture-request-drain",
-        due:  (now) => captureRequestsOf(this.ctx).drainPending() > 0 ? now : null,
-        wake: (now) => captureRequestsOf(this.ctx).drainPending() > 0 ? now + captureRequestsOf(this.ctx).drainIntervalMs() : null,
-        tick: (now) => captureRequestsOf(this.ctx).drain({ actor: "alarm", now }).then((d) => ({ capturerequests: d })) },
-      /* FL-4 / IS-9 / INVESTIGATIVE-SESSION.md §14b.3 — THE SUSPENDED RUN'S
-         WAKE: the TENTH consumer on the one alarm, and ONE APPENDED ENTRY
-         exactly as SCHEDULER.md instructs: *"append an entry to
-         #schedConsumers… Do NOT add a second alarm or a cron; that is the
-         decision this file records."* No cron line is added to wrangler.jsonc,
-         no second alarm exists, and this entry holds no timer of its own.
-
-         IT IS APPENDED AFTER `capture-request-drain` ON PURPOSE. onAlarm walks
-         the registry in order, so the drain's tick has already landed its
-         captures by the time this one runs: a request that completes on an
-         alarm wakes its run on that SAME alarm rather than one cadence later.
-         That ordering is a property of the array and is asserted by name in
-         test/scheduler.test.mjs, because an ordering nobody pins is an ordering
-         a later append silently changes.
-
-         WHAT "SUSPENDED" MEANS HERE, DERIVED AND NEVER DECLARED. §14a: a run
-         *"has natural suspension points by construction: search → identify →
-         request captures → WAIT ON THE DAEMON → post-process"*. A run is
-         therefore SUSPENDED when it is still `running` and the daemon still
-         owes it an answer — a `capture_requests` row of its own in `requested`
-         or `draining`. No status was added and no op was minted to say so, and
-         that is a decision rather than a shortcut: a declared `suspended` state
-         would be a second place to state a fact the request rows already state
-         (D-21), and — the deciding half — nothing in this plane can RE-ENTER a
-         suspended run, so a run parked in a status the reaper does not see
-         would be a run nothing could ever end. The delegation below the claim
-         records what is missing and whose it is.
-         [D-260, 2026-09-23: the plane now RE-ENTERS a woken run the instance's
-         own organisation credential opened — `#aiRunDispatch` hands it to
-         agent-worker — and only that run. A member's run is still resumable by
-         nobody but its principal, so the no-`suspended`-status reasoning above
-         still holds for it, and the wake says it was not dispatched.]
-
-         THE TWO THINGS IT DOES, AND THE FIRST ONE IS A DEFECT BEING CLOSED:
-
-           1. THE HOLD, on every resumption tick. A run's liveness test is its
-              LEASE, and a suspended run is not heartbeating BECAUSE IT IS
-              WAITING ON US. Before this consumer the reaper took every such run
-              at one hour and recorded `lease` as the bound that stopped it —
-              our own daemon's pacing written into the record as the run's
-              death, which is D-104's split inverted at the run grain. So while
-              the daemon owes an answer this tick pushes `expires` forward, and
-              the run stays alive to be resumed.
-
-              BOUNDED, AND THE BOUND IS THE REQUEST'S OWN. Only a request that
-              has not itself expired holds a run open, so a request nothing can
-              ever satisfy stops holding at its own TTL and the reaper takes the
-              run then, with an honest bound. An unbounded hold would be a run
-              that can never die, which is a worse defect than the one this
-              closes. Removing that predicate is a declared control arm.
-
-              GATED ON THE DRAIN BEING CONFIGURED, for the same reason the drain
-              is: on an instance with no self binding and no daemon credential
-              no request will EVER complete, so holding a run open there would
-              keep a run alive for something that is not coming. Unconfigured,
-              this consumer contributes no wake and holds no alarm.
-
-           2. THE WAKE, on daemon completion. A request that has reached a
-              terminal state (`captured` or `refused` — a refusal is an answer)
-              and has not yet been delivered wakes its run: ONE observation
-              entry through the one append site, a full lease so the driver has
-              a whole window to come back, and `run_woken_at` stamped so the
-              completion is delivered EXACTLY ONCE and the consumer then
-              SELF-TERMINATES rather than re-waking for ever.
-
-         THE HOLD WRITES NO LOG LINE AND THE WAKE WRITES ONE. A hold is the
-         plane declining to kill a run, not an observation about the world, and
-         a line every sixty seconds would fill a log that has a published
-         ceiling (AI_RUN_LOG_LIMIT_MAX) with the fact that nothing happened. The
-         wake's entry DERIVES its state through `#aiRunSearchState` — the same
-         function the one exit uses — so it restates what the run has already
-         established and invents nothing about a document it never saw.
-
-         INTERVAL-CONSUMER SHAPE, like queue-renotify, monitor-cadence and the
-         reaper: due only when a run actually needs holding or waking, so it
-         fires at its own moment and no other's, and its wake is null the
-         instant no run does — an instance with no suspended run holds no alarm
-         at all. */
-      { name: "ai-run-wake",
-        due:  (now) => aiRunsOf(this.ctx, this.env).wakeDue(now) > 0 ? now : null,
-        wake: (now) => aiRunsOf(this.ctx, this.env).wakeWake(now),
-        /* D-260: ASYNC since the wake gained its caller — the resumption dispatch awaits `agent-worker`. `onAlarm`
-           already awaits every tick, so this is the async-consumer shape REC-1 foresaw, not a reshape. */
-        tick: async (now) => ({ airunwake: await aiRunsOf(this.ctx, this.env).wake(now) }) },
-      /* CPDF-13 / D-183 — THE CALIBRATION RE-PROBE, and ONE APPENDED ENTRY
-         exactly as SCHEDULER.md instructs: *"append an entry to
-         #schedConsumers… Do NOT add a second alarm or a cron; that is the
-         decision this file records."* No cron line is added to wrangler.jsonc
-         and no second alarm exists.
-
-         A NOTE ON THE COUNT, because the item's own text will read as wrong to
-         the next person: QUEUE.md CPDF-13 calls this "a SIXTH REC-1 alarm
-         consumer", which it was on 2026-08-04 when Bob wrote the entry. Five
-         more landed while the item sat queued. This is the ELEVENTH, and the
-         figure is corrected here rather than in the item, because the item is
-         CONDUCT's ground and because a stale count in a brief is exactly the
-         hand-carried-number failure this repository names most often. What the
-         item MEANT — one more consumer on the one alarm, registered the
-         ordinary way — is what this is.
-
-         WHY A CONSUMER AT ALL, which is D-183's argument and not a scheduling
-         preference. A transcription's grade rests on a fidelity letter; a
-         fidelity letter is a measurement of an engine AT A DATE; engines move.
-         With no clock, the record's grades rest on a measurement that silently
-         ages, and the age is invisible because nothing is looking. This
-         consumer is the thing that looks.
-
-         INTERVAL-CONSUMER SHAPE, like queue-renotify, monitor-cadence and the
-         reaper: due only when a subject is actually past its own next-probe
-         instant, so it fires at its own moment and no other's. ITS CADENCE IS
-         PER SUBJECT and is `CALIBRATION_CADENCE_MS` — a DECLARED CONSTANT,
-         thirty days, chosen and recorded as chosen because nobody has yet
-         measured how fast a derivation engine drifts. It is revisable by
-         measurement and lives in `calibration.mjs`, in one place, which
-         SCHEDULER.md quotes by name rather than re-typing.
-
-         AND IT SELF-TERMINATES ON AN INSTANCE THAT HAS REGISTERED NOTHING.
-         `#calibrationWake` returns null on its first line when
-         `calibration_subjects` is empty, so an instance with no calibratable
-         engine holds NO ALARM AT ALL and this feature costs it exactly zero.
-         That is the property REC-1 prized and the one the Free tier the
-         installer targets is paid for. WHAT IT COSTS A GROUP THAT DOES
-         REGISTER ONE, stated here and in SCHEDULER.md so no group discovers it
-         by being billed: ONE PROBE PER SUBJECT PER CADENCE, on the INSTANCE'S
-         OWN ACCOUNT, against the free allocation — never one per document,
-         never one per capture, and never somebody else's vendor key (D-115's
-         class: a sovereign instance must not need a second account).
-
-         THE TICK RUNS NO PROBE AND WRITES NO CALIBRATION, and that is rule 1
-         holding at the one place it would be most tempting to bend. This plane
-         holds no derivation engine of its own; the tick marks the subject OWED
-         and says so in words. A tick that treated "the cadence elapsed and
-         nobody announced anything" as grounds to refresh a calibration would be
-         the claim-versus-measurement failure committed by the scheduler, and
-         `calibrationRecord` would refuse it anyway. */
-      { name: "calibration-reprobe",
-        due:  (now) => calibrationOf(this.ctx).calibrationDue(now) > 0 ? now : null,
-        wake: (now) => calibrationOf(this.ctx).calibrationWake(now, Store.SCHED_GRACE_MS),
-        tick: (now) => ({ calibration: calibrationOf(this.ctx).calibrationTick(now) }) },
-      /* REC-164 / Publication §7 point 3: the GROUP-DOMAIN RE-CHECK, the TWELFTH consumer, one appended entry as
-         SCHEDULER.md instructs. A domain the public is shown is one whose file named this instance at the LAST
-         check, so the check must recur: verifying once at set time would certify a file the domain can change the
-         next minute. INTERVAL shape — due one interval after the current claim's latest verdict — and an instance
-         claiming no domain holds no wake, so it self-terminates like every consumer here. */
-      { name: "group-domain-recheck",
-        due:  ()    => this.#groupDomainWake(),
-        wake: ()    => this.#groupDomainWake(),
-        tick: ()    => this.#groupDomainTick() },
-      /* D-86 (NOTIFICATIONS.md §The catalogue: *"a re-run owed after a lens change `[OBLIGATION]` — DISCLOSED,
-         never blocking"*; framework §13, bias debt and ageing are one mechanism): THE BIAS-DEBT SWEEP, the
-         TWELFTH consumer on the one alarm and ONE APPENDED ENTRY exactly as SCHEDULER.md instructs. It is
-         overdue-scan's other half and registers on the same alarm; it is APPENDED rather than inserted beside
-         it because an insertion renumbers every consumer a later census names (`airun.test.mjs` ARM S3b).
-
-         IT RAISES ONE OBLIGATION PER RUN WHOSE RECORDED LENS MOVED, AND IT NEVER COMPARES A HASH ITSELF. The
-         comparison is `aiRunRead`'s — `#biasForRun`, the one reader `op=airun` publishes — read whole per run;
-         a second comparison here would agree today and drift tomorrow, and D-86's control changes that ONE
-         function and watches the item follow it. `moved: null` raises nothing and clears nothing: undetermined
-         is stated, never rounded to either side. Nothing is refused anywhere (DEC-20).
-
-         INTERVAL-consumer shape, and it self-terminates: due and wake only while the lens inputs have moved
-         since the last complete sweep (`#biasDebtPending`, one small read), so an instance whose lens has not
-         changed holds no alarm for it. The lens-changing doors (`promote`, `biasadopt`) arm it. */
-      { name: "bias-debt",
-        due:  (now) => biasOf(this.ctx).biasDebtDue(now),
-        wake: (now) => biasOf(this.ctx).biasDebtWake(now),
-        tick: (now) => biasOf(this.ctx).biasDebtSweep(now).then((b) => ({ biasdebt: b })) },
-    ];
-    for (const name of Object.keys(probe || {})) {
-      const st = probe[name];
-      reg.push({
-        name,
-        due:  () => st.remaining > 0 ? st.next : null,
-        wake: () => st.remaining > 0 ? st.next : null,
-        tick: (now) => { st.fires.push(now); st.remaining -= 1;
-                         st.next = st.remaining > 0 ? st.next + st.period : null;
-                         return { probe: name }; } });
-    }
-    return reg;
-  }
-
-  /* `alarm()` is the reserved handler workerd invokes; it cannot be called over
-     RPC or in a unit test, so its whole body is `onAlarm`, which the suites
-     drive directly. The reserved entry is a one-line forward with nothing of its
-     own to break. onAlarm takes an explicit `now` so a suite can drive a pinned
-     virtual clock (following the reconciled `nextAt` exactly as workerd would);
-     workerd calls it with the default wall clock. */
-  async alarm() { await this.onAlarm(); }
-
-  async onAlarm(now = Date.now()) {
-    const probe = await this.#probeState(now);
-    const reg = this.#schedConsumers(probe);
-    const grace = Store.SCHED_GRACE_MS;
-    let swept = 0, drain = null, monitor = null, connderive = null, overduescan = null,
-        queuerenotify = null, monitorcadence = null, airunreap = null, capturerequests = null,
-        airunwake = null, calibration = null, groupdomain = null, biasdebt = null;
-    const probes = [];
-    for (const c of reg) {
-      const d = c.due(now);
-      if (d === null || d > now + grace) continue;
-      /* Awaited so an ASYNC consumer's work COMPLETES inside the alarm. The two
-         original consumers return synchronously, and awaiting a plain value is a
-         no-op, so this is a strict generalisation for the async consumers REC-1
-         foresaw ("the monitoring, archive-fallback eligibility ... clocks still
-         to come") — not a reshape of the mechanism. */
-      const r = await c.tick(now);
-      if (c.name === "selection-sweep") swept = r.swept;
-      else if (c.name === "task-drain") drain = r.drain;
-      else if (c.name === "archive-monitor") monitor = r && r.monitor;
-      else if (c.name === "connection-derive") connderive = r && r.connderive;
-      else if (c.name === "overdue-scan") overduescan = r && r.overduescan;
-      /* REC-21 / P-87. Named explicitly rather than falling through to `probes`:
-         an unnamed consumer would be reported as a test probe, which is how a
-         real clock disappears from the alarm's own account of itself. */
-      else if (c.name === "queue-renotify") queuerenotify = r && r.queuerenotify;
-      /* REC-26, named for the same reason queue-renotify is: an unnamed consumer
-         is reported as a test probe, which is how a real clock disappears from
-         the alarm's own account of itself. */
-      else if (c.name === "monitor-cadence") monitorcadence = r && r.monitorcadence;
-      /* IS-6, named for the third time for the same reason: an unnamed consumer
-         is reported as a test probe, and a reaper that disappears into `probes`
-         is a run whose death nobody can see was noticed. */
-      else if (c.name === "ai-run-reap") airunreap = r && r.airunreap;
-      /* PL-4, named for the fourth time and for the same reason: an unnamed
-         consumer is reported as a test probe, and a DRAIN that disappears into
-         `probes` is this instance's outward behaviour becoming invisible in the
-         alarm's own account of itself. */
-      else if (c.name === "capture-request-drain") capturerequests = r && r.capturerequests;
-      /* FL-4, named for the fifth time and for the same reason: an unnamed
-         consumer is reported as a test probe, and a WAKE that disappears into
-         `probes` is a suspended run being held and resumed with no account of
-         it in the alarm's own answer — which is exactly the shape of a
-         mechanism believed because it exists rather than because it was seen to
-         behave. */
-      else if (c.name === "ai-run-wake") airunwake = r && r.airunwake;
-      /* CPDF-13, named for the sixth time and for the same reason every one of
-         the five above is named: an unnamed consumer is reported as a TEST
-         PROBE, and a calibration clock that disappears into `probes` is the
-         record's only mechanism for noticing that its grades rest on an ageing
-         measurement, going unobservable in the alarm's own account of itself.
-         That is the mechanism-believed-on-its-existence shape exactly. */
-      else if (c.name === "calibration-reprobe") calibration = r && r.calibration;
-      /* REC-164, named for the seventh time and for the same reason: a domain re-check that disappears into
-         `probes` is the one mechanism keeping a public claim true, unobservable in the alarm's own account. */
-      else if (c.name === "group-domain-recheck") groupdomain = r && r.groupdomain;
-      /* D-86, named for the seventh time and for the same reason: an unnamed consumer is reported as a TEST
-         PROBE, and a debt that disappears into `probes` is a lens change nobody can see was noticed. */
-      else if (c.name === "bias-debt") biasdebt = r && r.biasdebt;
-      else probes.push(c.name);
-    }
-    /* Reconcile over the FULL registry, not just the consumers that ticked, and
-       AUTHORITATIVELY (`exact`): a fired alarm is spent, so onAlarm sets the
-       fresh earliest wake rather than only pulling an existing one earlier.
-       NEGATIVE CONTROL (see test/scheduler.test.mjs): pass a due-filtered subset
-       here instead of `reg` and a waiting consumer is starved the moment the
-       consumer sharing its window idles. */
-    const nextAt = await this.#reconcileAlarm(now, reg, true);
-    if (probe) await this.ctx.storage.put("sched_probe", probe);
-    const d = drain || { drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 };
-    return { swept, drained: d.drained, created: d.created.length,
-             folded: d.folded.length, refused: d.refused.length,
-             waiting: d.waiting.length, remaining: d.remaining,
-             rearmed: nextAt !== null, nextAt, probes,
-             ...(monitor ? { monitor } : {}),
-             ...(connderive ? { connderive } : {}),
-             ...(overduescan ? { overduescan } : {}),
-             ...(queuerenotify ? { queuerenotify } : {}),
-             ...(monitorcadence ? { monitorcadence } : {}),
-             ...(airunreap ? { airunreap } : {}),
-             ...(capturerequests ? { capturerequests } : {}),
-             ...(airunwake ? { airunwake } : {}),
-             ...(calibration ? { calibration } : {}),
-             ...(groupdomain ? { groupdomain } : {}),
-             ...(biasdebt ? { biasdebt } : {}) };
-  }
-
-  /* Reconcile the single alarm to the EARLIEST wake ANY active consumer wants,
-     and never push a sooner one later. Nothing pending deletes the alarm — the
-     exact invariant (no pending work, no pending alarm) that makes every
-     consumer self-terminate on an idle instance rather than spin. Post-fire the
-     alarm is already cleared, so `exact` sets the fresh minimum; on an arm the
-     pull-earlier test preserves a sooner wake another consumer set. `exact` is
-     what makes the mechanism correct even where a caller (a unit-test driver, or
-     a runtime that does not pre-clear) has not cleared the spent alarm — onAlarm
-     owns the alarm after a fire and states the new earliest outright. */
-  async #reconcileAlarm(now, reg, exact = false) {
-    const wants = [];
-    for (const c of reg) { const w = c.wake(now); if (w !== null) wants.push(w); }
-    if (!wants.length) { await this.ctx.storage.deleteAlarm(); return null; }
-    const want = Math.min(...wants);
-    if (exact) { await this.ctx.storage.setAlarm(want); return want; }
-    const at = await this.ctx.storage.getAlarm();
-    if (at === null || at > want) await this.ctx.storage.setAlarm(want);
-    return await this.ctx.storage.getAlarm();
-  }
-
-  /* The producer-side arm: a consumer that just created work reconciles the
-     alarm to include its wake, pulling it earlier if needed and never later.
-     Arming never writes work — it only schedules — so the producer/consumer
-     split D-109 relies on stays intact. */
-  async #armScheduler(now = Date.now()) {
-    const probe = await this.#probeState(now);
-    const reg = this.#schedConsumers(probe);
-    const at = await this.#reconcileAlarm(now, reg);
-    if (probe) await this.ctx.storage.put("sched_probe", probe);
-    return at;
-  }
-
-  /* The two producers keep their names and call sites — selectionCreate arms
-     through #armSweep, taskEnqueue through #armDrain — but both now route
-     through the one reconcile, so a selection's wake and a drain's wake are
-     always weighed together rather than by two hand-written arms. #armDrain
-     resets the progress flag so a fresh enqueue coalesces at the short DELAY. */
-  async #armSweep() { return await this.#armScheduler(); }
+  async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
+  async onAlarm(now) { return await schedulerOf(this.ctx, this.env).onAlarm(now); }
+  async #armScheduler(now) { return await schedulerOf(this.ctx, this.env).arm(now); }
   async #armDrain() { this.#lastDrainProgress = true; return await this.#armScheduler(); }
-
-  /* ---- env-gated scheduler test seam (inert unless SCHED_PROBE is set) ------
-     A probe is a synthetic INTERVAL consumer used only to exercise the registry
-     with two independent, pinnable cadences and to detect starvation by name.
-     In production SCHED_PROBE is unset, #probeState returns null before touching
-     storage, and not one line below runs — the two real consumers are the whole
-     registry. State lives in a `sched_probe` KV value, not a schema table, so it
-     needs no purge entry and no migration. */
-  #probeSpecs() {
-    try { const s = JSON.parse((this.env && this.env.SCHED_PROBE) || "[]"); return Array.isArray(s) ? s : []; }
-    catch { return []; }
-  }
-  async #probeState(now = Date.now()) {
-    const specs = this.#probeSpecs();
-    if (!specs.length) return null;
-    let st = await this.ctx.storage.get("sched_probe");
-    if (!st) {
-      st = {};
-      for (const s of specs)
-        st[s.name] = { period: s.period, remaining: s.fires, next: now + s.period, fires: [] };
-      await this.ctx.storage.put("sched_probe", st);
-    }
-    return st;
-  }
-  /* RPC entries for the suite, mirroring how the task-drain suite drives onAlarm
-     directly: arm the probes (initialise from SCHED_PROBE, then reconcile) and
-     read back what fired and when. */
-  async schedProbeArm(now = Date.now()) { return await this.#armScheduler(now); }
-  async schedProbeLog() { return (await this.ctx.storage.get("sched_probe")) || {}; }
-  async schedAlarmAt() { return await this.ctx.storage.getAlarm(); }
+  async schedProbeArm(now) { return await schedulerOf(this.ctx, this.env).probeArm(now); }
+  async schedProbeLog() { return await schedulerOf(this.ctx, this.env).probeLog(); }
+  async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
   static EDGE_REASON_MAX = 160;
   /* Longer than a reason, because a release acknowledgment is a statement of
