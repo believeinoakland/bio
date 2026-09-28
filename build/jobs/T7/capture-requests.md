@@ -48,3 +48,69 @@ Work for other modules that this extraction makes visible. Measured on `job/T7/c
    - The guard's `MULTI_SITE_CLOSED` entry for `CAPTURE_NOT_DRAINING` is now stale.
    Unchanged: the other 23 suites I ran that touch the table, including aicredential, rec168, rec165, rendered-capture, purge, migrate-released and notifications.
 6. **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale (fleetbundles 92/4, bio-plane only), as expected, for regeneration at the layer close.
+
+## J3 · COMPLETE
+
+**Entries applied.** T6-8, extracted per the map (re-checked, MAPS67) and the requirements, with J1's readings as adopted (K181, K182).
+
+New module files, `bio-plane/src/capture-requests/`:
+- `index.mjs`: the door, the attribution composer, the drain, the reads, retry, the wait source and the ops handlers.
+- `schema.mjs`: the table's DDL, moved from `schema.mjs` with its comments corrected (the plane principal is the caller's stamp; the arm is in process). It adds R40's `source_reason` column and two read indexes.
+- `checks.mjs`: C-108.1, `CAPTURE_SOURCE_REFUSED`.
+
+The factory `captureRequestsOf(ctx, deps)` (K61):
+- declares the table to record-core's purge, keyed by `target`;
+- registers R28 as observation-log's `sweep` resolver, which legacy-store no longer registers;
+- registers the K182 wait source with ai-runs when it is given `aiRuns`.
+
+Legacy-store now only delegates:
+- the scheduler consumer calls `drainPending`, `drainIntervalMs` and `drain`;
+- the queue's three producers call R26's bounded reads and R10;
+- purge calls `clearLead`;
+- the run wake reads `drainIntervalMs` and `configured`;
+- the ops route through `captureRequestsOps`;
+- `captureRequestDrain` stays as a Durable Object method for the suites that call it.
+
+Net change in legacy-store: 24 lines added, 1,114 removed.
+
+Carried rows and not-yet-met ids now met:
+- R6: the instance's clock, never a body's `at`; answers are the row as written.
+- R7: the id is minted here, never a body's `request`; the door never throws.
+- R11 and R37: "configured" is runtime-limits R26's `bound` rule, injected until R26 is built; `env.SELF` is no longer asked.
+- R16: the arm is in process.
+- R18 (D-582): C-83.6 is terminal and spends the host's slot; C-83.7 holds and spends it.
+- R19 (D-584): C-28.17 at its region.
+- R20 (D-581): every row past `expires`, plain or render, is released `expired` before selection.
+- R21: a `draining` row left by an interrupted tick returns to `requested`, or expires.
+- R27 (D-581): R26's walks are bounded in SQL on an index; nothing is deleted.
+- R29 (D-583): `expired` counts as a completion, in `waits` and `markWoken` and in the K182 source.
+- R40: `source_reason` by status, terminal statuses under C-108.1.
+- R42: `captureRequestRetry` with region `is-capture-request-retry` minting C-28.18. LEGACY-CHECKS #2 REPORT 3 is applied: `is-capture-fetch-failed` is marked and C-28.18 is minted.
+- N63's share: pending count and interval as named services, `expired` a completion.
+- N39's share: fills observation-log's registration and offers ai-runs' wait source.
+- CAPTURE-SOURCES #2's notes: the key goes on the first `credentialsOf` call; the row's `principal_plane`, `target` and `host` go to `credentialsForFetch`.
+
+Retired, per my Suggestions: `captureRequestDraining` and its store route. The Suggestion that tests assert R9 "over the door's source" is not followed. R9 is tested at the interface: the door is driven with capture, the governor, credentials and `fetch` each failing the test if touched.
+
+**Deferred.**
+- R38's promotion at `collected` (N141, K181). My side is in place: the captured row carries the run, both principals and the target.
+- R39's conditional fetch and R41's credentialed fetch with its provenance marking wait on capture's arm (N140). My side is built: the admitted credential is passed to the arm, and bytes already held (`existed`) are recorded as the held capture, the answer saying so.
+- R30 for `capturerequestretry` waits on legacy-index's OPS row (K181 (6)).
+
+**Found in other modules:** REPORT J2 (legacy-checks' C-28 `where`s; legacy-index's two OPS rows; ai-runs wiring the wait source; capture N140; legacy-tests' re-anchors, each measured on base and branch; the plane bundle stale).
+
+**Tests** (`node --test bio-plane/test/m/capture-requests/`): tests 53, pass 53, fail 0.
+- `door`, `drain`, `reads` and `retry` run over the real record-core, membership, observation-log, host-governor and capture-sources credentials on node:sqlite, with a scripted in-process capture arm.
+- `plane` runs in Miniflare's Durable Object: R30's admission per class, and the spine end to end through the ops (R16, R31).
+- Every live id is named by a test (42 of 42). No layer tests are named in the manifest.
+- Old battery: 33 suites run on base and branch; the differences are in REPORT J2 §5.
+- DEC-49 guard: 102 failures on the base, 103 here. Two base failures are cleared (the C-28.18 file now exists; `CAPTURE_FETCH_FAILED` has one site). Every new failure is a stale `where` or a stale declaration (REPORT §1, §5).
+- fleetbundles: 92/4, bio-plane's bundle stale.
+
+**Checks** (civicos-process):
+- `format`: 69 modules, 64 requirements files; 0 failures.
+- `architecture`: 9 product files, 29 relative imports; 0 failures.
+- `coverage`: 42 of 42 live requirement ids named by a test; 0 failures.
+- `ownership` vs `tranche/T7`: 12 files changed; legacy-store 24 lines added, 1,114 removed; 0 failures.
+
+Size (session_01NwvumqeZpXpPVxqHF2TYjC): test runs 45, module lines 1104
