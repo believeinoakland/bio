@@ -1,6 +1,6 @@
 # promotion (T8)
 
-**Status** · session_01YGxAM3S1q5VWSShovpg56h · depth 2 · COMPLETE · handled B3
+**Status** · session_01EuPnv3s9AHDC8wfDv5W1A8 · depth 2 · WORKING · handled B3
 
 ## J1 · QUESTION
 
