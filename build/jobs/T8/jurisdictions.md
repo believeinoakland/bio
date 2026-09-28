@@ -13,3 +13,12 @@ My readings, on which I am building now; answer only where one is wrong.
 3. **R24 `oversight` in the first profile:** the Alameda County Civil Grand Jury gets `oversight: true`. I add the Office of the City Auditor as a counterparty (DR8's Tier 1 "City Auditor whistleblower complaints"; the profile already names its system) with `oversight: true`. Both have basis `UNMEASURED`. The other offices get no marker, so it stays undetermined.
 4. **R33 `holidays` in the first profile:** absent. No measurement or canon names the jurisdiction's closure days, and its one deadline counts calendar days. The test profile supplies holidays, and a business-day count that reaches into an unlisted year is undetermined.
 5. **R29 `oversight`:** counterparties stay unioned (R14), but `oversight` is taken out of the equality key. It is one value per `role` + `body`, and a disagreement is withheld from the merged entry and reported at `counterparties[<role>/<body>].oversight`.
+
+## J2 · REPORT
+
+Generated artifacts this job made stale (mechanics §14). I have written none of them.
+
+1. **`agent-worker/dist/agent-worker.bundled.mjs` and its `.bundle.json`** (owner: `agent-worker`). `node --test bio-plane/test/fleetbundles.test.mjs` fails on `agent-worker: STALE BUNDLE`, naming `jurisdictions/index.mjs`, `profiles/oakland-alameda.mjs` and `profiles/test-port-ellery.mjs`. On `tranche/T8` without my change it passes. Regenerate it at the layer's close: `agent-worker/`, `npm run build`.
+2. **`bio-plane/dist/bio-plane.bundled.mjs`** (owner: `not_product`). It also inlines `../jurisdictions/index.mjs`, including the removed `RECORDS_LAW_LEVELS`. The staleness check does not flag it, but it is out of date the same way. `bio-plane/`: `npm run build`.
+
+On the service I provide: `standard_sources` entries now require a `level` (R23, `LEVEL_UNKNOWN` without one), and `RECORDS_LAW_LEVELS` is replaced by `LAW_LEVELS` (R31). Nothing outside this module imported the old export. I ran the tests of every module that uses jurisdictions, and all are green: id-spaces 26/26, docprofile 35/35, capture 56/56, extraction 65/65, entities 34/34.
