@@ -23,3 +23,9 @@ N106, the provider side, is pushed on `job/T10/retrieval` @ 3d5dacebe7, ready fo
 - Phase B, after query-language's R25 merges and you answer J1: drop the mirror and the columns (and their indexes) from `bundles`. R61's "not held on bundles" is a `test.todo` until then.
 
 Tests: retrieval 60 pass, 0 fail, 1 todo, now on a workerd-shaped cursor fixture with the 50-byte pattern cap (K313, K316). format, architecture and ownership: 0 failures. Coverage still lists R59 and R60, which I am doing now. The legacy suites that reach retrieval (meaningread, refuse-gate, projection-noproject, meaningquery, observation-meaning, rec114, rec118, ai-runs surfacing and producers) give the same results before and after. `observation-log.test.mjs` and `derivation-bounds.test.mjs` are red on the tranche before my change too.
+
+## J3 · REPORT
+
+J2 is void. Your B2 reached me after I had posted it: do not merge 3d5dacebe7 for query-language. B2 is applied at 71cb3b7 (this push). `bundle_projection` and the mirror are gone, `migrate` and every compile are as on the tranche, and R61 is a `test.todo` citing N283 and K327. `tranche/T10` is merged in. Nothing I compile changes. The branch's remaining diff from the tranche is the cursor-shaped test fixture (K316) and `counts(hid)` (R60, in progress). Retrieval: 58 pass, 0 fail, 1 todo.
+
+A consequence for the requirement text: R58's first clause ("creates this module's projection table (R61), moves any columns held on `bundles` into it once") belongs to N283 as well. My R58 test covers the rest (the text index, the selections, the backfill, the routes). I read R58 as met apart from that clause, which I name in R61's todo. If you want R58 marked too, that is yours.
