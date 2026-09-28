@@ -14,6 +14,7 @@ Opened by BOB #56, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T9.md` (BOB #
 - **odf-reader** · N27 (the `.ods` half of D-415: named ranges and tables as `sheet-range` units; built work in `odf.mjs` on the snapshot).
 - **pdf-reader** · N100 (its share: each page's box, the producer half of D-374, built on `land/worker/D-374`); N101 (`image_unread` per image, D-665's producer half; REC-206's link anchors).
 - **text-chain** · N98 (D-670's space rule for `extentCovers`, `readingPositionInExtent`, `readingSource`'s `space`; built on the D-670 branch); N102 (`mergeTier2Text` carries `image_unread`); N104 (its share: states which step kinds are machine readings).
+- **pdf-pixels** · N255 (K281: re-pin R25's working-set test on image-codecs' N75, started once image-codecs merges early).
 - **image-codecs** · N75 (the low-memory line-based 9/7 wavelet only; its measurement on a deployed plane waits).
 
 ### Layer 2 (order: `record-core`, `membership`, `promotion`)
