@@ -95,6 +95,37 @@
 
 Size (session_01Phb9xWYe7qD4YrUzf54unC): test runs 205, module lines 1173
 
+## CHANGE B6 (K195): basis-versions merged; off its interim
+
+- **Merged `tranche/T7`** @ fd703fbf0a. There were no conflicts.
+- **The module builds against basis-versions directly:**
+  - `basisVersionsOf(host)` is the provider;
+  - `versionAsWritten` normalises the write and C-27.5/C-27.10's comparison, and my `suggestionAsWritten` is deleted;
+  - `versionsIn` composes the candidate;
+  - `appendVersion` writes the version, which carries `author` and `at` after `run`, as the document held them before;
+  - `basisVersions` reads R5's answer back.
+- **Its candidate source** is registered with `onCandidates` (R40) at creation.
+- **Removed from the legacy store:**
+  - the `legacy-store` `onCandidates` line, with its comment;
+  - the seven basis-versions readers from the `runProductionsInterim` hand-over;
+  - the whole basis-versions arm of `interim.mjs`, of which only ai-runs' `runFor`, `boundOf` and `consumeBound` remain.
+- **B6 point 3.** My map gives me `#suggestionPersisted` and `#suggestionFrontmatter`:
+  - the first moved at extraction and is now basis-versions' `versionAsWritten` (K182);
+  - the second is `suggestionFrontmatter` in `index.mjs`.
+  
+  `#appendFmRows` is basis-versions' (map §2). The store's `static #appendFmRows` is still read by its other writers; none of them is mine to move.
+- **Tests:**
+  - module: `run-productions` 33/0 and `basis-versions` 42/0.
+  - old battery: `suggest` 94/7. The 7th source arm, "ONE WRITE SITE STILL", reads the write that is now basis-versions'. Every behaviour arm passes.
+  - `narrow` 52/0, `extractrun` 61/1 (`EXTRACT_NO_SCOPE`), `purge` 14/0.
+- **Checks:**
+  - `format: 69 modules, 64 requirements files; 0 failures`
+  - `architecture: 8 product files, 36 relative imports (0 naming no tracked file, not judged); 0 failures`
+  - `coverage: 1 modules, 19 of 19 live requirement ids named by a test; 0 failures`
+  - `ownership: 6 files changed by run-productions between tranche/T7 and HEAD; legacy-store: 2 line(s) added, 13 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`
+
+Size (session_01Phb9xWYe7qD4YrUzf54unC, after B6): test runs 265, module lines 1086
+
 ## CHANGE B5 (K192): merged `tranche/T7` @ 1da7eeddb4
 
 - **The conflicts** in `store.mjs` and `schema.mjs` were resolved keeping each module's removals:
