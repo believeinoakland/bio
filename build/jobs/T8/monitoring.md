@@ -2,6 +2,27 @@
 
 **Status** · session_01Lj27owwtEDMzBp4RqU8K7N · depth 2 · WORKING · handled B3
 
+## Completion (MONITORING #1)
+
+**Entries applied** (plan layer 10, the monitoring bullet): the extraction per map and requirements (K102) into `bio-plane/src/monitoring/` (`index.mjs`, `checks.mjs`, `schema.mjs`), `monitoringOf(ctx, deps)` (K61). Moved: from `store.mjs` `driveShells` and its bounds, the monitor's look (`monitorObservationFor`, `recordMonitorLook` → `recordLook`, `#recordMonitorAddressType`), the archive-monitor tick and its credential helpers, the idempotence key (`#tickRunning`, `#openTickEpoch`, `#closeTickEpoch`, `#claimFire`), the cadence (`MONITOR_CADENCE_MS`, `CONTRACT_FREQUENCY`, `monitorIntervalMs`, `#monitorSubjects` → `subjects`, the plan, wake and tick), the two fires, the routes `driveshells` and `monitorlook`, the purge entries, and the gathering arm of legacy-store's promotion step (registration rule, K206: removed there, registered as monitoring's own step); from `index.mjs` `op=monitor` with `monitorCadence`, `monitorAssess`, `monitorRecordLook` and the `CONTRACT_FREQUENCY` alias (now the DO service `monitor`; legacy-index forwards through `monitorOp`, K72 (11)); from `schema.mjs` the three tables; from `bio-checks.mjs` C-18.5 (`checkGatheringGrammar`, its four vocabularies; `checkBundle` no longer runs it, record-core's audit does through monitoring's registration, R42). N170 (R33's objective half: `watched` follows intent's `watchSet` cursor to null; `proposals` registered with `intent.registerSource`). N164 (K259 Q3: R12's version is a provenance receipt, which counts toward reevaluation R25; tested). N166 (the archive tick reads `source_reachability` through capture R59's contract). N116 (the combined view of the active profiles reaches `identify`, `doctypeFor` and `assess` where `op=monitor` now runs). N65 (2) (R34 bounded by actions R33: R44). B3 (K260): `configured()` answers R24's test to the scheduler (tested under R24). R24 through `runtime-limits.unattendedCredential(env)` (N63). Also built: R25 (the tick records its outcome with capture's reachability), R32 (`monitoring({viewer})`, route `monitoring`), R34 (`deadlineRecheck`), R35 (escalation asked after a mark and on an action's committed promotion). R14's two copies are one function, `cadenceFor` (the Suggestion).
+
+**Deferred, and why** (each a `test.todo` naming its cause):
+- R17 (no address-level setting or act exists), R18 (no volatility measure), R28 and R29 (nothing executes a gathering request; sweeps wait for a design), R23, R30, R45 (K259, N222: not built in T8).
+- R31: the item contract's catalogue ids and options are composed by legacy-store and affordances (queue, layer 11); this module offers the facts (R8's flag, R20's eligible addresses, R32's rows) and publishes no item yet. R34's "members are told" waits on it.
+- R33's published-finding half: publication offers no read of what a published finding rests on that this module can follow.
+
+**Fixed in the moved code:** a monitor tick now records its outcome with capture's reachability (R25: found in the reading; before, a monitored source that stopped answering never reached the fallback unless something acquired it); `op=monitor`'s store silence on the image read and on the promotion is one path (the service runs in the DO, the Worker names any silence); the cadence the tick answers and the plan's are one rule.
+
+**Found in other modules** (sent as REPORT J3): see J3.
+
+**Tests and checks run:**
+- `node --test test/m/monitoring/*.test.mjs`: tests 52, pass 42, fail 0, todo 10. Negative controls (each restored): the gathering step neutered, R25's record, D-518's `skipped` clause, the claim, the flag line, R44's pending guard: each turns at least one test red.
+- `node --test "test/m/**/*.test.mjs"`: tests 2241, pass 2198, fail 24, todo 19; `tranche/T8` @ 6e8a7544d4 alone: tests 2189, pass 2156, fail 24, todo 9. The 24 failing tests are the same ones by name (affordances, citation, connections, promotion and others, all present before this job); none is monitoring's.
+- Old suites that drive monitoring behaviour (Miniflare, over the source): monitor-assess, monitor-address, monitor-rendered, monitor-substance, archive-monitoring, d525-driveshells, d524-archive-baseline, gathering, mechanical, reachability, drive pass as on `tranche/T8`; monitor-cadence and d334-monitor-credential fail only on their source scans of `store.mjs` (monitor-cadence's behavioural blocks pass 66 of 67 with its scan pointed at the module); daemon-token and observation-log fail as on `tranche/T8`. 22 other suites that name moved identifiers: pass/fail identical to `tranche/T8`.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs … monitoring`: 0 failures. `checks/coverage.mjs … monitoring`: 45 of 45 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … monitoring tranche/T8`: legacy-store 11 lines added (import, construction, the purge filter, two listeners' `configured()`, the registry's five service calls, the ops spread), 1018 removed; legacy-index 2 added (import, the forward), 712 removed; legacy-checks 0 added, 77 removed; 0 failures.
+
+Size (session_01Lj27owwtEDMzBp4RqU8K7N): test runs 33, module lines 2106
+
 ## J1 · QUESTION
 
 Three questions; I carry on with the job on my best reading of each.
