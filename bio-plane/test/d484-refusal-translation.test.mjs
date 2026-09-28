@@ -150,11 +150,27 @@ const ENT = readFileSync(fileURLToPath(new URL("../src/entities/index.mjs", impo
 const PRG = readFileSync(fileURLToPath(new URL("../src/progressions/index.mjs", import.meta.url)), "utf8");
 const PRGC = readFileSync(fileURLToPath(new URL("../src/progressions/checks.mjs", import.meta.url)), "utf8");
 const cnt = (s, re) => (s.match(re) || []).length;
+/* RE-PINNED 2026-09-28 (T7 layer 6): store.mjs's last two sites left with their ops — op=conclude to basis-versions
+   (`#conclude`, BASIS-VERSIONS #1 J4.1) and the grouping partition to inquiry (`#ground`, INQUIRY #1 J2.2). Each
+   module mints NO_BASIS through its own `actNoBasis`, a copy of the store's helper inside its own
+   `is-act-no-basis` region reading the same catalogue row. Still the same seven sites, per file; store.mjs now has
+   none (its helper stays, uncalled — reported to legacy-store and legacy-checks, whose C-33.40 `where` names it). */
+const INQ = readFileSync(fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url)), "utf8");
+const BV = readFileSync(fileURLToPath(new URL("../src/basis-versions/index.mjs", import.meta.url)), "utf8");
 t("every former site now returns through a helper: 4 NO_BASIS + 3 NO_CITATION call sites, per file",
   { store: [cnt(store, /return actNoBasis\(/g), cnt(store, /return actNoCitation\(/g)],
+    inquiry: [cnt(INQ, /return actNoBasis\(/g), cnt(INQ, /return actNoCitation\(/g)],
+    basis_versions: [cnt(BV, /return actNoBasis\(/g), cnt(BV, /return actNoCitation\(/g)],
     entities: [cnt(ENT, /return actShape\("NO_BASIS"/g), cnt(ENT, /return actShape\("NO_CITATION"/g)],
     progressions: [cnt(PRG, /return refusal\("NO_BASIS"/g), cnt(PRG, /return refusal\("NO_CITATION"/g)] },
-  { store: [2, 0], entities: [1, 1], progressions: [1, 2] });
+  { store: [0, 0], inquiry: [1, 0], basis_versions: [1, 0], entities: [1, 1], progressions: [1, 2] });
+t("and the two moved copies mint NO_BASIS once each, inside their own is-act-no-basis region, from the catalogue row",
+  [INQ, BV].map((src) => {
+    const a = src.indexOf("DEC-49 REGION is-act-no-basis"), b = src.indexOf("END DEC-49 REGION is-act-no-basis");
+    const span = a >= 0 && b > a ? src.slice(a, b) : "";
+    return [cnt(src, /reason: "NO_BASIS"/g), span.includes('reason: "NO_BASIS"'),
+            span.includes("ACT_SHAPE_CHECKS.NO_BASIS")];
+  }), [[1, true, true], [1, true, true]]);
 t("and neither module mints either code as a bare literal outside its helper (the helpers read the catalogue row)",
   [cnt(ENT, /reason: "NO_(BASIS|CITATION)"/g), cnt(PRG, /reason: "NO_(BASIS|CITATION)"/g),
    /ACT_SHAPE_CHECKS\[code\]/.test(ENT), /ACT_SHAPE_CHECKS\[code\]/.test(PRGC)], [0, 0, true, true]);

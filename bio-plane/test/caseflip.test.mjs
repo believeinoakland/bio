@@ -102,6 +102,7 @@
 import "./stdio.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { connectionAtC } from "./earned-connection.mjs";   /* T7: an EARNED connection leg (strength R5, K187) */
 import { ratifyCase } from "./caseceremony.mjs"; /* CASE-5b: the case-level signing ceremony */
 import { parseFrontmatter } from "../checks/bio-checks.mjs"; /* D-442: the case document's roster row */
 import { CASE_DERIVATION_CHECKS } from "../checks/bio-checks.mjs"; /* UI-81: C-44.2's row, read, never typed */
@@ -209,9 +210,13 @@ const legLines = (legs) => legs.length
    not weak grades), so a load-bearing member with no connection leg is refused
    BELOW_PROJECT_STRENGTH before this suite reaches anything it is about. That
    refusal is CASE-2's subject and stays in CASE-2's suite. */
+/* RE-READ 2026-09-28 (T7, legacy-tests; strength R5, K187), never exempted: the connection leg was a `hunch`, which is
+   now INERT in every pair, so the case reached connection UNRATED and was refused BELOW_PROJECT_STRENGTH against its
+   own D/D bar before anything this suite is about. The connection C is EARNED instead: a `resolution` of INFO_A's
+   reading against each question's subject entity, at the correspondence tier (`earned-connection.mjs`). */
 const BOTH_AXES = [{ target: "INFO", grade: "B", axis: "capture", source: "capture" },
-                   { target: "INFO", grade: "C", axis: "connection", source: "hunch" }];
-const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs = [] } = {}) => ["---",
+                   { target: "INFO", grade: "C", axis: "connection", source: "resolution" }];
+const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs = [], extra = [] } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, "current_state: open", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -222,7 +227,7 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, refs = [], legs 
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
-  ...legLines(legs),
+  ...legLines(legs), ...extra,
   "---", "",
   "## Question", "", question, "",
   "## What It Rests On", "",
@@ -248,12 +253,13 @@ const infoMd = (id) => ["---",
   "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
 let snapSeq = 0;
-const promote = async (id, md, type, state = "open", register = []) => rP(await POST(`op=promote&token=${ROSA}`, {
+/* T7 (legacy-tests): `files` carries a cited document's reading beside its bundle.md (`earned-connection.mjs`). */
+const promote = async (id, md, type, state = "open", register = [], files = []) => rP(await POST(`op=promote&token=${ROSA}`, {
   bundleId: id, base: null,
   snapKey: `20260910T${String(300000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq)).slice(0, 8)}`,
   meta: { object_type: type, group: "believe-in-oakland",
           current_state: state, created: NOW, last_updated: LATER },
-  files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }],
+  files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }, ...files],
   register,
 }));
 const mustPromote = async (...a) => {
@@ -312,12 +318,19 @@ const LOOSE = "INQ-2026-5500-loose";     /* never a member of any case */
    EARNED capture grade of B and C-2.8 refuses a grade over a document whose
    arrival the record never witnessed. The fixture has to be legal on the axis
    this suite is not about, or nothing it IS about can be reached. */
+const CONN = await connectionAtC(async (b) => rP(await POST(`op=entitycreate&token=${ROSA}`, b)));
 await mustPromote(INFO_A, infoMd(INFO_A), "information", "collected",
-  [{ path: "snapshots/source.bin", sha256: sha("caseflip-INFO_A-bytes"), bytes: 512, encoding: "binary" }]);
+  [{ path: "snapshots/source.bin", sha256: sha("caseflip-INFO_A-bytes"), bytes: 512, encoding: "binary" }],
+  CONN.files(sha("caseflip-INFO_A-bytes"), "snapshots/source.bin"));   /* T7: its reading, so the connection C is earned */
+{
+  const res = rP(await POST(`op=resolve&token=${ROSA}`, { captureSha: sha("caseflip-INFO_A-bytes") }));
+  if (res?.ok === false) throw new Error(`resolve ${INFO_A}: ${JSON.stringify(res).slice(0, 400)}`);
+}
 await mustPromote(INFO_B, infoMd(INFO_B), "information", "collected");
 for (const id of [ALPHA, BETA, LOOSE])
   await mustPromote(id, withAdoptableReading(inquiryMd(id, { question: `Was the ${id} transfer authorised?`,
-    refs: [INFO_A], legs: BOTH_AXES.map((l) => ({ ...l, target: INFO_A })) })), "inquiry");   /* REC-136: all three are concluded */
+    refs: [INFO_A], legs: BOTH_AXES.map((l) => ({ ...l, target: INFO_A })),
+    extra: [`subject_entity: ${CONN.entityId}`] })), "inquiry");   /* REC-136: all three are concluded */
 
 const mustConclude = async (id) => {
   const c = await conclude(id, `${id} rests on a memo nobody adopted.`,

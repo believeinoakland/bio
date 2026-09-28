@@ -79,6 +79,8 @@ import { machineFences } from "../src/skillpack.mjs";
 import { readGitProvenance, repoPath, reportProvenance } from "../scripts/provenance.mjs";
 /* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for ARM D's `where` resolution. */
 import { storeCorpus } from "./extracted-sources.mjs";
+/* RE-ANCHORED 2026-09-28 (AI-RUNS #2 J6.1): §14a's capability row lives in ai-runs' own table now. */
+import { AI_RUN_ACT_SHAPE_CHECKS } from "../src/ai-runs/checks.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(HERE, "..", "src");
@@ -215,7 +217,14 @@ console.log("\nBLOCK B — every fence sits inside a GOVERNED span (source; REC-
     + "the structural half only, and names the other half rather than implying it",
     fs.existsSync(path.join(HERE, "machine-fences.test.mjs")), true);
 
-  const store_src = fs.readFileSync(path.join(SRC, "store.mjs"), "utf8");
+  /* RE-ANCHORED 2026-09-28 (T7 layer 6): four fences left store.mjs WITH their regions — MACHINE_CANNOT_CONCLUDE
+     (`conclude > is-machine-conclude`) to basis-versions (BASIS-VERSIONS #1 J4.1), MACHINE_CANNOT_DIVIDE and
+     MACHINE_CANNOT_GROUND (`#divide`, `#ground`) to inquiry (INQUIRY #1 J2.2), MACHINE_CANNOT_DECLARE
+     (`strengthBarSet > is-machine-strength-bar`) to strength (STRENGTH #1 J5) — as MACHINE_CANNOT_REOPEN went to
+     promotion at T3. The walk reads the store's corpus with the modules extracted from it. */
+  const store_src = [storeCorpus(["record-core", "membership", "promotion"]),
+    ...["inquiry", "basis-versions", "strength"].map((m) => fs.readFileSync(path.join(SRC, m, "index.mjs"), "utf8"))]
+    .join("\n");   /* each module's minting code (index.mjs); its checks.mjs holds the rows, and their prose */
   const regionSpans = [];
   for (const m of store_src.matchAll(/\/\*[\s*]*DEC-49 REGION\s+(is-machine-[\w-]+)/g)) {
     const end = store_src.indexOf(`END DEC-49 REGION ${m[1]}`, m.index);
@@ -228,7 +237,7 @@ console.log("\nBLOCK B — every fence sits inside a GOVERNED span (source; REC-
      it was the one fence the pack could already render. */
   const outside = hits.filter((m) => !inside(m.index) && m[1] !== "MACHINE_CANNOT_MOVE_VERSION")
                       .map((m) => m[1]).sort();
-  console.log(`  corpus: ${hits.length} fence literal(s) in store.mjs across `
+  console.log(`  corpus: ${hits.length} fence literal(s) in store.mjs and its extracted modules across `
             + `${regionSpans.length} machine-fence region(s)`);
 
   t("ARM B1: the corpus is non-empty in BOTH directions — a walk that found no literals, or no "
@@ -248,8 +257,11 @@ console.log("\nBLOCK B — every fence sits inside a GOVERNED span (source; REC-
  * ========================================================================= */
 console.log("\nBLOCK C — §14a: the capability sentence is one the surface RECEIVED (DEC-8)");
 {
-  const store_src = fs.readFileSync(path.join(SRC, "store.mjs"), "utf8");
-  const row = CATALOGUE.ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE;
+  /* RE-ANCHORED 2026-09-28 (AI-RUNS #2 J6.1, its R35): the run-open door and its row moved out of store.mjs and the
+     catalogue into ai-runs — `open` in src/ai-runs/index.mjs mints it from `AI_RUN_ACT_SHAPE_CHECKS`
+     (src/ai-runs/checks.mjs), C-33.29 and the sentence unchanged. */
+  const store_src = fs.readFileSync(path.join(SRC, "ai-runs", "index.mjs"), "utf8");
+  const row = AI_RUN_ACT_SHAPE_CHECKS.AI_RUN_CAPABILITY_UNAVAILABLE;
 
   t("ARM C1: the condition §14a promises the surface will SAY has a code and a canned translation, "
     + "so UI-38 was right to leave the sentence rather than author it",
@@ -264,14 +276,14 @@ console.log("\nBLOCK C — §14a: the capability sentence is one the surface REC
   t("ARM C2: the run-open door SENDS the code, the C-number AND the sentence — a surface renders "
     + "what it received and computes nothing (DEC-8 as amended by DEC-49)",
     [/code:\s*"AI_RUN_CAPABILITY_UNAVAILABLE"/.test(site),
-     /check:\s*ACT_SHAPE_CHECKS\.AI_RUN_CAPABILITY_UNAVAILABLE\.check/.test(site),
-     /translation:\s*ACT_SHAPE_CHECKS\.AI_RUN_CAPABILITY_UNAVAILABLE\.translation/.test(site)],
+     /check:\s*AI_RUN_ACT_SHAPE_CHECKS\.AI_RUN_CAPABILITY_UNAVAILABLE\.check/.test(site),
+     /translation:\s*AI_RUN_ACT_SHAPE_CHECKS\.AI_RUN_CAPABILITY_UNAVAILABLE\.translation/.test(site)],
     [true, true, true]);
 
   /* READ FROM ONE PLACE. The site must not spell the sentence itself: a hand
      copy agrees at zero cost, and PL-3's `promote` shipped `translation:
      undefined` from exactly this shape gone wrong. */
-  t("ARM C3: and store.mjs holds NO second copy of the sentence — the map is read from the "
+  t("ARM C3: and the minting module (ai-runs, formerly store.mjs) holds NO second copy of the sentence — the map is read from the "
     + "catalogue at the moment of refusal, which is REC-64's stated runtime-lookup choice",
     store_src.includes(row.translation.slice(0, 40)), false);
 
@@ -336,7 +348,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-32.6", "MACHINE_CANNOT_PUBLISH"],
     ["C-32.7", "MACHINE_CANNOT_DIVIDE"],
     ["C-32.8", "MACHINE_CANNOT_GROUND"],
-    ["C-32.9", "MACHINE_CANNOT_DECLARE"],
+    /* C-32.9: moved to PINNED_MOVED below (T7) */
     ["C-32.10", "MACHINE_CANNOT_FORWARD"],
     ["C-32.11", "MACHINE_CANNOT_RESOLVE"],
     /* REC-123 / IC-132, 2026-09-18 — the two ratification fences, the first of
@@ -384,11 +396,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.12", "ENTRY_REQUIREMENTS"],
     ["C-33.13", "NOT_INQUIRIES"],
     ["C-33.14", "NO_STATEMENT"],
-    ["C-33.15", "BAD_NOTE"],
-    ["C-33.16", "NO_ROLE"],
-    ["C-33.17", "BAD_ROLE"],
-    ["C-33.18", "ROLE_NOT_APPLICABLE"],
-    ["C-33.19", "SEVERED_EDGE"],
+    /* C-33.15, C-33.16, C-33.17, C-33.18, C-33.19: moved to PINNED_MOVED below (T7) */
     /* C-33.20: moved to PINNED_MOVED below (T5-12) */
     ["C-33.21", "CAS_STALE"],
     /* REC-176 (State Rules §2.4, 2026-09-23): op=promote refuses a snap key the bundle already holds, where the write
@@ -401,7 +409,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* C-33.26: moved to PINNED_MOVED below (T5-12) */
     ["C-33.27", "KIND_NOT_PERSONAL"],
     ["C-33.28", "LAST_OWNER"],
-    ["C-33.29", "AI_RUN_CAPABILITY_UNAVAILABLE"],
+    /* C-33.29: moved to PINNED_MOVED below (T7) */
     /* REC-76 / D-236 — CORRECTED HERE RATHER THAN EXEMPTED. Three rows landed in
        ACT_SHAPE_CHECKS when the DEC-49 guard's arm C stopped grading a refusal by
        the single literal `ok: false`: the two CODELESS refusals the widened
@@ -411,8 +419,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        `ok: !stopped` was invisible. **THE PIN GOING RED IS THIS ARM WORKING** —
        a copy that could absorb three new rows in silence would be the drift the
        block above says it exists to stop. */
-    ["C-33.30", "AI_RUN_NO_CONTEXT"],
-    ["C-33.31", "AI_RUN_ALREADY_OPEN"],
+    /* C-33.30, C-33.31: moved to PINNED_MOVED below (T7) */
     /* C-33.32: moved to PINNED_MOVED below (T5-12) */
     /* REC-117, 2026-09-17. `op=conclude` refuses a caller who states a falsifier
        AND asks to record that none was stated — two contradictory claims about
@@ -440,7 +447,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     /* D-168 / BOB #30, 2026-09-23: a retired item is not citable (`cite > is-cite-retired`).
        D-PIN-B failed naming exactly this row when it landed — the arm doing its job. C-33.38 was
        REC-175's (FILE_DIGEST_MISMATCH), on its own branch when this was written; both are pinned since CONDUCT #16's merge. */
-    ["C-33.39", "RETIRED_NOT_CITABLE"],
+    /* C-33.39: moved to PINNED_MOVED below (T7) */
     /* D-484, 2026-09-24: the first two rows ACT_SHAPE_CHECKS's own header said it could not hold —
        `NO_BASIS` (four sites) and `NO_CITATION` (three) each consolidated behind one governed
        helper, so each `where` names one real span. D-PIN-B failed naming exactly these two when
@@ -468,9 +475,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        run named itself, it named nothing this caller holds, or it named work in another context whose
        lens is a different lens. D-PIN-B failed naming exactly these three when they landed, which is
        this pair of arms doing its job. */
-    ["C-33.45", "AI_RUN_RERUN_SELF"],
-    ["C-33.46", "AI_RUN_RERUN_UNKNOWN"],
-    ["C-33.47", "AI_RUN_RERUN_OTHER_CONTEXT"],
+    /* C-33.45, C-33.46, C-33.47: moved to PINNED_MOVED below (T7) */
     /* REC-186, 2026-09-25 (BOB #31's ruling): op=projectleave refuses a project's ONLY owner. C-33.48, not
        .44, because REC-205/REC-207's unmerged branches hold .44-.46. D-PIN-B failed naming exactly this
        row when it landed — the arm doing its job. */
@@ -489,9 +494,19 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
      pinned HERE, where they now live, as literals for `coverage.mjs`, and each is resolved below against the span its
      own `where` claims exactly as the catalogue's rows are. D-PIN-B still fails if any of them comes back into the
      catalogue's two families unannounced. */
+  /* RE-PINNED 2026-09-28 (T7 layer 6, legacy-tests): THIRTEEN more rows left the catalogue's two families with their
+     ids, codes and translations unchanged — C-32.9 MACHINE_CANNOT_DECLARE to strength's `STRENGTH_BAR_CHECKS`
+     (STRENGTH #1 J5, R24); C-33.15 BAD_NOTE, C-33.16 NO_ROLE, C-33.17 BAD_ROLE, C-33.18 ROLE_NOT_APPLICABLE, C-33.19
+     SEVERED_EDGE and C-33.39 RETIRED_NOT_CITABLE to citation's `CITE_CHECKS` (CITATION #1 J1.5); C-33.29
+     AI_RUN_CAPABILITY_UNAVAILABLE, C-33.30 AI_RUN_NO_CONTEXT, C-33.31 AI_RUN_ALREADY_OPEN, C-33.45 AI_RUN_RERUN_SELF,
+     C-33.46 AI_RUN_RERUN_UNKNOWN and C-33.47 AI_RUN_RERUN_OTHER_CONTEXT to ai-runs' `AI_RUN_ACT_SHAPE_CHECKS`
+     (AI-RUNS #2 J6.1, R35). Pinned and resolved here, where they now live, exactly as T5-12's five are. */
   const MODULE_TABLES = {
     "retrieval SELECTION_CHECKS": (await import("../src/retrieval/checks.mjs")).SELECTION_CHECKS,
     "progressions PROGRESSION_CHECKS": (await import("../src/progressions/checks.mjs")).PROGRESSION_CHECKS,
+    "strength STRENGTH_BAR_CHECKS": (await import("../src/strength/checks.mjs")).STRENGTH_BAR_CHECKS,
+    "citation CITE_CHECKS": (await import("../src/citation/checks.mjs")).CITE_CHECKS,
+    "ai-runs AI_RUN_ACT_SHAPE_CHECKS": (await import("../src/ai-runs/checks.mjs")).AI_RUN_ACT_SHAPE_CHECKS,
   };
   const PINNED_MOVED = [
     ["C-33.20", "NO_SUCH_SELECTION", "retrieval SELECTION_CHECKS"],
@@ -499,8 +514,21 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.26", "UNKNOWN_AFTER", "progressions PROGRESSION_CHECKS"],
     ["C-33.42", "NO_DEFINITION_VERSION", "progressions PROGRESSION_CHECKS"],
     ["C-33.43", "DEFINITION_MOVED", "progressions PROGRESSION_CHECKS"],
+    ["C-32.9", "MACHINE_CANNOT_DECLARE", "strength STRENGTH_BAR_CHECKS"],
+    ["C-33.15", "BAD_NOTE", "citation CITE_CHECKS"],
+    ["C-33.16", "NO_ROLE", "citation CITE_CHECKS"],
+    ["C-33.17", "BAD_ROLE", "citation CITE_CHECKS"],
+    ["C-33.18", "ROLE_NOT_APPLICABLE", "citation CITE_CHECKS"],
+    ["C-33.19", "SEVERED_EDGE", "citation CITE_CHECKS"],
+    ["C-33.39", "RETIRED_NOT_CITABLE", "citation CITE_CHECKS"],
+    ["C-33.29", "AI_RUN_CAPABILITY_UNAVAILABLE", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
+    ["C-33.30", "AI_RUN_NO_CONTEXT", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
+    ["C-33.31", "AI_RUN_ALREADY_OPEN", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
+    ["C-33.45", "AI_RUN_RERUN_SELF", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
+    ["C-33.46", "AI_RUN_RERUN_UNKNOWN", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
+    ["C-33.47", "AI_RUN_RERUN_OTHER_CONTEXT", "ai-runs AI_RUN_ACT_SHAPE_CHECKS"],
   ];
-  t("ARM D-PIN-M: each of the five moved rows is in its module's table under the SAME C-number and code, with a "
+  t("ARM D-PIN-M: each of the eighteen moved rows (T5-12's five, T7's thirteen) is in its module's table under the SAME C-number and code, with a "
     + "translation — the catalogue's number did not change owner silently",
     PINNED_MOVED.filter(([n, c, tbl]) => !(MODULE_TABLES[tbl]?.[c]?.check === n
       && typeof MODULE_TABLES[tbl][c].translation === "string" && MODULE_TABLES[tbl][c].translation.trim()))
@@ -522,8 +550,12 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
      now lives. A span that resolves in store.mjs resolves exactly as before. What this does NOT do is invent a
      region: a fence whose markers did not move, or a row naming a code the plane no longer mints, stays red. */
   const read = (rel) => {
+    /* RE-ANCHORED 2026-09-28 (T7 layer 6): and the modules extracted from it at T7 whose regions still sit under a
+       `where` naming `src/store.mjs` (the catalogue's rows to re-point, reported to legacy-checks): `conclude`,
+       `#withdrawConclusion`, `#setProjectConclusion` to basis-versions; `divide`, `groundInquiry`, `dispose`,
+       `#promoteChecks > is-basis-acyclic` to inquiry. Each region moved WITH its markers. */
     if (!srcCache.has(rel)) srcCache.set(rel, rel === "src/store.mjs"
-      ? storeCorpus(["record-core", "membership", "promotion"])
+      ? storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions"])
       : fs.readFileSync(path.join(HERE, "..", rel), "utf8"));
     return srcCache.get(rel);
   };
@@ -578,7 +610,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
       + `(${String(row.where).split(",")[0]})`,
       [span !== null, span !== null && span.includes(`"${code}"`)], [true, true]);
   }
-  t("ARM D0-M: all five moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 5);
+  t("ARM D0-M: all eighteen moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 18);
   console.log(`  corpus: ${rowsSeen} rows across ${FAMILIES.length} families, each resolved against `
             + `the plane's source and each naming its own C-number`);
   /* THE CORPUS FLOOR. Without it a families list that stopped resolving would
@@ -658,7 +690,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        named — C-33.20 NO_SUCH_SELECTION and C-33.32 SET_MOVED (to retrieval, R31), C-33.26 UNKNOWN_AFTER, C-33.42
        NO_DEFINITION_VERSION and C-33.43 DEFINITION_MOVED (to progressions, R28). The five are resolved above where
        they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
-    rowsSeen, 64);
+    /* MOVED 64 -> 51 on 2026-09-28 (T7, legacy-tests), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 51 rows
+       across 2 families") on `job/T7/legacy-tests` over the merged tranche, never 64 - 13: THIRTEEN departures and no
+       arrival, each named at MODULE_TABLES above (strength one, citation six, ai-runs six). The thirteen are resolved
+       where they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
+    rowsSeen, 51);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

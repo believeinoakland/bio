@@ -179,7 +179,9 @@ arm("(4) **A THIRTEENTH FENCE MUST NOT ARRIVE UNMEASURED.** Drop one act out of 
      D-503 itself ("the plane can mint" -> "`src/store.mjs` mints", the over-claim corrected at
      its site). A control whose declaration cannot match its subject's output reads as a broken
      arm, which is the one failure mode that trains a reader to ignore it. */
-  ["EVERY MACHINE_CANNOT_* `src/store.mjs` mints was driven under a COMPLETE payload",
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the label names the modules extracted from the store since T3/T7
+     ("(with the modules extracted from it: …) mints"), so the fragment is the part before that parenthesis. */
+  ["EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it",
    "fences were actually driven"],
   ["the walk SEES the class it was built from",
    "MACHINE_CANNOT_GROUND — the machine is refused BY NAME"]);

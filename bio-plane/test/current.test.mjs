@@ -94,7 +94,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
 import { fileURLToPath } from "node:url";
@@ -105,7 +105,14 @@ import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* WIDENED 2026-09-28 (BASIS-VERSIONS #1 J4.1, K4): each extracted module now owns its tables in its own
+   `src/<module>/schema.mjs`, so "the whole schema source" is schema.mjs AND every module's schema. */
+const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"),
+  ...readdirSync(join(DIR, "..", "src"), { withFileTypes: true }).filter((d) => d.isDirectory())
+    .map((d) => { try { return readFileSync(SRC(d.name + "/schema.mjs"), "utf8"); } catch { return ""; } })].join("\n");
+/* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the make-current writer `#setProjectCurrentVersion` moved out of
+   store.mjs into src/basis-versions/index.mjs, where it promotes through the module's `#repromote`. */
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -219,6 +226,8 @@ const infoMd = (id) => ["---",
 const projectMd = (id, { title, cites = [], severed = [], current = [] } = {}) => ["---",
   ...(id ? [`id: ${id}`] : []), "object_type: project", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  `objective: "Decide what the ${title} team stands on."`,
   ...(cites.length || severed.length
     ? ["references:",
        ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"]),
@@ -537,14 +546,15 @@ const beforeShaA = await shaOf(A);
      name and found `this.#setProjectCurrentVersion(...)` inside `versionAct`
      FIRST, so the "writer" it examined was the tail of a different method —
      an arm reading the wrong span and reporting confidently about it. */
-  const body = STORE_SRC.slice(STORE_SRC.indexOf("\n  #setProjectCurrentVersion(projectRow"));
+  const body = BV_SRC.slice(BV_SRC.indexOf("\n  #setProjectCurrentVersion(projectRow"));
   const writer = body.slice(0, body.indexOf("\n  }\n"));
   if (writer.length < 400) throw new Error(`ARM 4 read ${writer.length} bytes of the writer — an arm that did not arm`);
   t("ARM 4 — STRUCTURALLY, the ONE writer performs NO table write whatsoever: no INSERT, no "
   + "UPDATE, no CREATE TABLE. It reads the document, rewrites the block and PROMOTES, so there is "
   + "no settings row for a future reader to find and no second place the stance is stated (D-21)",
     [/INSERT\s+INTO/i.test(writer), /UPDATE\s+\w+\s+SET/i.test(writer),
-     /CREATE\s+TABLE/i.test(writer), /this\.promote\(/.test(writer)],
+     /* RE-ANCHORED 2026-09-28: the module promotes through `#repromote` (promotion's `promote`), not `this.promote(`. */
+     /CREATE\s+TABLE/i.test(writer), /this\.#repromote\(/.test(writer)],
     [false, false, false, true]);
   t("and NO SCHEMA TABLE holds a per-project current version — the whole schema source names no "
   + "such column, so the structural claim is about the record and not about one method",

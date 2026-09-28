@@ -50,6 +50,10 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-rec166");   /* inside this worktree; gitignored */
 const STORE = join(ROOT, "src", "store.mjs");
+/* ADDED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1): the make-current's early return (`#moveVersionState`)
+   and the project's receipt (`#setProjectCurrentVersion`) moved to basis-versions; `#flagCasesOnRevision` stays in
+   store.mjs. Arms (a), (b), (d) edit BV, arm (c) edits both. */
+const BV = join(ROOT, "src", "basis-versions", "index.mjs");
 const SUITE = join(DIR, "current-shared-question.test.mjs");
 const LOG = join(PEN, "run.out");
 
@@ -98,30 +102,30 @@ const ARMS = {
   baseline: { files: [], label: "nothing armed — what distinguishes four-arms-working from four-arms-broken",
               apply: () => {}, mustFail: [], mustNotFail: ALL },
 
-  a: { files: [STORE],
+  a: { files: [BV],
        label: "(A) RESTORE THE INQUIRY PROMOTION — the make-current falls through to the question's promotion again",
-       apply: () => edit(STORE, EARLY, EARLY_RESTORED),
+       apply: () => edit(BV, EARLY, EARLY_RESTORED),
        mustFail: [S2_PIN, S2_BYTES, S2_FLAGS, S2_FENCE, S3_PIN, S3_FLAGS, S3_FENCE, S4_CURRENT],
        mustNotFail: [S1_FLAGS, S1_FENCE, S1_TWIN, S2_RECEIPT, S2_POINTER, S3_RECEIPT, S4_SIB] },
 
-  b: { files: [STORE],
+  b: { files: [BV],
        label: "(B) THE LIAR — the receipt dropped with the promotion: no `Reason:` in the project's entry",
-       apply: () => edit(STORE, RECEIPT,
+       apply: () => edit(BV, RECEIPT,
          "      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\\n`);"),
        mustFail: [S2_RECEIPT, S3_RECEIPT],
        mustNotFail: [S1_FLAGS, S1_FENCE, S1_TWIN, S2_PIN, S2_BYTES, S2_FLAGS, S2_FENCE, S2_POINTER,
                      S3_PIN, S3_FLAGS, S3_FENCE, S4_SIB, S4_CURRENT] },
 
-  c: { files: [STORE],
+  c: { files: [BV, STORE],
        label: "(C) THE REFUSED FIX (b) — the question promoted again, the revision flag exempted",
-       apply: () => { edit(STORE, EARLY, EARLY_RESTORED);
+       apply: () => { edit(BV, EARLY, EARLY_RESTORED);
                       edit(STORE, FLAG, FLAG.replace("    if (!bundleId || !replacedSha) return [];", "    return [];")); },
        mustFail: [S2_PIN, S2_BYTES, S2_FENCE, S3_PIN, S3_FENCE, S4_CURRENT],
        mustNotFail: [S1_FLAGS, S1_FENCE, S1_TWIN, S2_FLAGS, S2_RECEIPT, S2_POINTER, S3_FLAGS, S3_RECEIPT, S4_SIB] },
 
-  d: { files: [STORE],
+  d: { files: [BV],
        label: "(D) OVER-STRICTNESS — the project's Session Log sentence re-worded; the suite must stay GREEN",
-       apply: () => edit(STORE, "      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\\n`\n",
+       apply: () => edit(BV, "      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\\n`\n",
          "      + `Changes: reading '${vname}' of ${inquiryId} is what this team now stands on.\\n`\n"),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
 };

@@ -76,7 +76,13 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
    selection code where it now lives: walks A and the anchor over store.mjs AND the retrieval module, walk B and the
    formula over the module, walk C (the refuse-weight acts, still the store's) over store.mjs. */
 const RETRIEVAL_SRC = readFileSync(SRC("retrieval/index.mjs"), "utf8");
-const CORPUS_SRC = STORE_SRC + "\n" + RETRIEVAL_SRC;
+/* RE-ANCHORED 2026-09-28 (T7 layer 6): two of the refuse-weight acts and cite's record statement left store.mjs —
+   `cite` (with its `setMovedNote`) and `#edgeTransition` to citation (CITATION #1 J1), `dispose` to inquiry (INQUIRY #1
+   J2.2) — and each asks the gate through retrieval's service (`this.retrieval.selectionResolve`). The sweep reads them
+   where they live: walk A and the anchor over the corpus with both modules, walk C over the store and both modules. */
+const CITATION_SRC = readFileSync(SRC("citation/index.mjs"), "utf8");
+const INQUIRY_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
+const CORPUS_SRC = [STORE_SRC, RETRIEVAL_SRC, CITATION_SRC, INQUIRY_SRC].join("\n");
 
 const mf = new Miniflare({
   modules: true, script: STORE_SRC,
@@ -481,7 +487,7 @@ const refuseCallers = (src) => {
   const lines = src.split("\n");
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    if (!/this\.selectionResolve\(\{[^}]*weight: "refuse" \}\)/.test(lines[i])) continue;
+    if (!/this\.(?:retrieval\.)?selectionResolve\(\{[^}]*weight: "refuse" \}\)/.test(lines[i])) continue;
     let owner = "?";
     for (let j = i; j >= 0; j--) {
       const m = /^  (#?[A-Za-z]\w*)\(/.exec(lines[j]);
@@ -511,9 +517,11 @@ t("NO decision and NO record statement in the plane branches on a bare `sel.move
   bareNow, []);
 t("the refuse gate asks the answer-changed question", gateAsksAnswerChanged(RETRIEVAL_SRC), true);
 
-const callers = refuseCallers(STORE_SRC);
+const callers = [...refuseCallers(STORE_SRC), ...refuseCallers(CITATION_SRC), ...refuseCallers(INQUIRY_SRC)];
 t("the refuse-weight callers the one gate protects are found, and named",
-  callers.map((c) => c.owner).sort(), ["#edgeTransition", "dispose", "release", "retire"]);
+  /* RE-PINNED 2026-09-28 (INQUIRY #1 J2.2): `dispose` is inquiry's private `#dispose` now (the op reaches it through
+     the module's dispatch), so the walk names it by the name its enclosing method carries there. */
+  callers.map((c) => c.owner).sort(), ["#dispose", "#edgeTransition", "release", "retire"]);
 t("and every one of them RETURNS on the gate rather than reading past it",
   callers.filter((c) => !c.guarded).map((c) => `store.mjs:${c.n} ${c.owner}`), []);
 
@@ -551,7 +559,7 @@ t("REACH (i), as a delta: strip the gate's own predicate and walk B stops passin
 
 const strippedNote = strip("cite's Session Log clause",
   "const setMovedNote = answerChanged(sel.drift, sel.moved)",
-  "const setMovedNote = sel.moved");
+  "const setMovedNote = sel.moved", CITATION_SRC);   /* T7: cite's record statement is citation's now */
 t("REACH (ii), as a delta: put the record statement back on `sel.moved` and walk A names it",
   [bareMovedReads(CORPUS_SRC).length, bareMovedReads(strippedNote).length > 0], [0, true]);
 

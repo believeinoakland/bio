@@ -377,8 +377,13 @@ t("the predicate has EXACTLY three readers — the roster, `gateFacts` and `case
 + "text occurs ONCE, in the constant itself: a faithful inline copy at any of them is invisible to "
 + "every behavioural assertion in this file and visible only here",
   [readers, doorCallers, literals], [2, 2, 1]);
+/* RE-PINNED 2026-09-28 (T7, legacy-tests): the floor was 2,000,000 characters of store.mjs + membership; layer 6 and 7
+   extracted inquiry, citation, basis-versions, strength, contradiction, ai-runs, run-productions, capture-requests,
+   intent and reevaluation out of store.mjs (each record's legacy-store removals), so the same corpus now reads 1,501,586.
+   The floor guards an EMPTY or truncated read, not the store's size, and 1,000,000 still refuses one; the three readers
+   this pin is about did not move. */
 t("and the search that says so COMPILED over a real file rather than quietly matching nothing",
-  STORE_SRC.length > 2_000_000, true);
+  STORE_SRC.length > 1_000_000, true);
 
 } finally {
   /* DISPOSE. Without it the assertions all print, the tally reads clean, and the

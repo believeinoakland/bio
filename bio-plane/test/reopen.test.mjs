@@ -575,6 +575,8 @@ console.log("\n--- 6. chore (2): affordanceFacts' project arm goes through the m
        mints too), and each constant holds the id the plane answered with. */
     const projMdFor = (spelling, cites) => ["---", `object_type: ${spelling}`, "schema: project@1",
       `title: "Legacy dossier"`, "current_state: forming", "prior_state: null",
+      /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+      'objective: "Keep the dossier on the cited record."',
       `created: "${NOW}"`, `last_updated: "${LATER}"`,
       "produced_by:", "  mode: agent", "  capability_tier: high",
       "group: believe-in-oakland",
@@ -714,9 +716,16 @@ console.log("\n--- 7. chore (3): a capture-axis grade on an INQ- leg has no refe
        (whose word a DOCUMENT is), so the arm now reads the axis list
        `Store.DOCUMENT_AXES` — and the pin asserts that the list still carries
        capture, which is what this arm's reasoning is about. */
-    [/const noReferent = Store\.DOCUMENT_AXES\.includes\(axis\) && isInquiry;/.test(storeSrc)
-       && /static DOCUMENT_AXES = \["capture", "testimony"\];/.test(storeSrc),
-     /checkInquiryBasis now REFUSES the combination at the/.test(storeSrc)],
+    /* RE-ANCHORED 2026-09-28 (STRENGTH #1 J5): the derivation (the walk) moved from store.mjs to strength
+       (`src/strength/index.mjs`), where the arm reads the module's `DOCUMENT_AXES` (`arithmetic.mjs`, still capture
+       and testimony) and its comment points at the write's refusal as "The write refuses it (C-2.8)". */
+    (() => {
+      const strengthSrc = readFileSync(new URL("../src/strength/index.mjs", import.meta.url), "utf8");
+      const arithSrc = readFileSync(new URL("../src/strength/arithmetic.mjs", import.meta.url), "utf8");
+      return [/const noReferent = DOCUMENT_AXES\.includes\(axis\) && isInquiry;/.test(strengthSrc)
+                && /export const DOCUMENT_AXES = Object\.freeze\(\["capture", "testimony"\]\);/.test(arithSrc),
+              /The write refuses it \(C-2\.8\)/.test(strengthSrc)];
+    })(),
     [true, true]);
 }
 

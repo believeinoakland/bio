@@ -106,6 +106,9 @@ const RETRIEVAL_SRC = ["retrieval/index.mjs", "retrieval/schema.mjs", "retrieval
                        "retrieval/frontier.mjs", "retrieval/levels.mjs"].map((f) => readFileSync(SRC(f), "utf8")).join("\n");
 const ENTITIES_SCHEMA_SRC = readFileSync(SRC("entities/schema.mjs"), "utf8");
 const CONNECTIONS_SCHEMA_SRC = readFileSync(SRC("connections/schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (INQUIRY #1 J2.2): `inquiry_basis`, its `inquiry_basis_grade_source` index and the recorded
+   NO-INDEX-ON-role decision moved to inquiry's schema text (`src/inquiry/schema.mjs`). Section 12 reads it there. */
+const INQUIRY_SCHEMA_SRC = readFileSync(SRC("inquiry/schema.mjs"), "utf8");
 
 /* Pull one balanced parenthesised run out of a compiled statement. The set
    compilation is what is under test and it sits inside the `hits(fid) AS (...)`
@@ -861,7 +864,7 @@ console.log("\n--- 12. the indexes, and the one that was not added ---");
      pinned here, so an index removed or added silently fails a suite rather
      than only changing a timing nobody runs. */
   t("the D-223 index exists, keyed so the seek is COVERING",
-    /CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis\(grade_source, bundle_id\)/.test(SCHEMA_SRC), true);
+    /CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis\(grade_source, bundle_id\)/.test(INQUIRY_SCHEMA_SRC), true);
   t("the flagged-set index exists on resolutions(grade, bundle_id)",
     /* RE-ANCHORED 2026-09-27 (T5-12): `resolutions`' DDL is entities' schema text. */
     /CREATE INDEX IF NOT EXISTS resolutions_grade ON resolutions\(grade, bundle_id\)/.test(ENTITIES_SCHEMA_SRC), true);
@@ -882,8 +885,8 @@ console.log("\n--- 12. the indexes, and the one that was not added ---");
     [creates(STORE_SRC + RETRIEVAL_SRC, /CREATE UNIQUE INDEX IF NOT EXISTS bundles_fts_id ON bundles\(fts_id\)/g),
      creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON bundles\(fts_id\)/g)], [1, 0]);
   t("no index on inquiry_basis(role) — measured as a candidate at -9.1%, and the reason is recorded",
-    [creates(SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON inquiry_basis\(role/g),
-     /NO INDEX ON role/.test(SCHEMA_SRC)], [0, true]);
+    [creates(SCHEMA_SRC + INQUIRY_SCHEMA_SRC, /CREATE[^\n]*INDEX[^\n]*ON inquiry_basis\(role/g),
+     /NO INDEX ON role/.test(INQUIRY_SCHEMA_SRC)], [0, true]);
   t("no index on connections(grade) — no arm reads it, and the reason is recorded",
     /* RE-ANCHORED 2026-09-27 (T5-12): `connections`' DDL is connections' schema text and `resolutions`' is
        entities'; the recorded reason sat beside `resolutions_grade`, so all three texts are read. */
