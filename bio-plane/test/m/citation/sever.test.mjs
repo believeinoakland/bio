@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, STAMP, projMd } from "./fixture.mjs";
 import { CITE_CHECKS, CITE_LOG_SAMPLE, EDGE_NOTE_MAX, EDGE_REASON_MAX } from "../../../src/citation/index.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
 import { INLINE_MAX } from "../../../src/promotion/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
@@ -74,6 +75,7 @@ test("R4: the refusals in order — the selection, NO_SUCH_PROJECT (absent or un
     const unseen = w.cit[act]({ project: p, handle: hv, viewer: V("vera"), owner: "v", identity: V("vera"), reason: "" });
     const absent = w.cit[act]({ project: "PROJ-2026-0000-x", handle: hv, viewer: V("vera"), owner: "v", identity: V("vera"), reason: "" });
     assert.deepEqual([unseen.reason, { ...unseen, project: 0 }], ["NO_SUCH_PROJECT", { ...absent, project: 0 }]);
+    assert.deepEqual(unseen, noSuchProject(p), "membership's one answer (its R78)");
     const onQ = w.cit[act]({ project: "INQ-2026-0001", handle: h, ...ANN, reason: "" });
     assert.deepEqual([onQ.reason, onQ.got], ["NOT_A_PROJECT", "inquiry"]);
     const ha = await w.select(["INFO-2026-0001"], { viewer: V("adm"), owner: "a" });

@@ -5,24 +5,31 @@ import assert from "node:assert/strict";
 import { world, V, biasMd, docMd } from "./fixture.mjs";
 import { citationOps, inquiryServices, CITE_CHECKS, CITE_EXTENT_CHECKS } from "../../../src/citation/index.mjs";
 import { inquiryOf, BASIS_ROLES, checkLegExtentGrammar } from "../../../src/inquiry/index.mjs";
-import { ACT_SHAPE_CHECKS, CONTENT_EXTENT_CHECKS, STATES } from "../../../checks/bio-checks.mjs";
+import { ACT_SHAPE_CHECKS, CONTENT_EXTENT_CHECKS, STATES, OBJECT_TYPES } from "../../../checks/bio-checks.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 
-test("R5: true exactly when the current state is retired, for every type whose machine carries a retired state; false for every other state, an absent id and any non-id", () => {
+test("R5: true exactly when the current state is retired, for every type whose machine carries a retired state (each of its states in turn); false for every other type, an absent id and any non-id", () => {
   const w = world();
-  const retiring = Object.entries(STATES).filter(([, s]) => s.legal.includes("retired")).map(([t]) => t).sort();
-  assert.deepEqual(retiring, ["bias", "information"], "the types whose machine names `retired`, as the catalogue declares them");
-  w.put("INFO-2026-0001", docMd("INFO-2026-0001", "information", "retired"));
-  w.put("INFO-2026-0002", docMd("INFO-2026-0002", "information", "verified"));
-  w.put("INFO-2026-0003", docMd("INFO-2026-0003", "information", "collected"));
-  w.put("BIAS-2026-0001", biasMd("BIAS-2026-0001", "retired"));
-  w.put("BIAS-2026-0002", biasMd("BIAS-2026-0002", "adopted"));
+  /* Every retiring type the catalogue declares, read from its state tables rather than pinned (N203): a type that
+     gains a `retired` state is covered the day it gains it. Each is promoted once per legal state. */
+  const retiring = Object.entries(STATES).filter(([t, s]) => s.legal.includes("retired") && STATES[t] !== STATES.focus)
+    .map(([t]) => t).sort();
+  const prefixOf = Object.fromEntries(Object.entries(OBJECT_TYPES).map(([p, t]) => [t, p]));
+  assert.ok(retiring.length >= 3 && retiring.includes("aspiration"), `the retiring types: ${retiring}`);
+  let n = 0;
+  for (const type of retiring) {
+    assert.ok(prefixOf[type], `a prefix for ${type}`);
+    for (const state of STATES[type].legal) {
+      const id = `${prefixOf[type]}-2026-${String(++n).padStart(4, "0")}`;
+      w.put(id, type === "bias" ? biasMd(id, state) : docMd(id, type, state));
+      assert.equal(w.record.head(id).currentState, state, id);
+      assert.equal(w.cit.retiredNotCitable(id), state === "retired", `${type} in ${state}`);
+    }
+  }
   w.inquiry("INQ-2026-0001");
   const p = w.project();
-  assert.equal(w.cit.retiredNotCitable("INFO-2026-0001"), true);
-  assert.equal(w.cit.retiredNotCitable("BIAS-2026-0001"), true);
-  for (const id of ["INFO-2026-0002", "INFO-2026-0003", "BIAS-2026-0002", "INQ-2026-0001", p, "INFO-2026-0404"])
+  for (const id of ["INQ-2026-0001", p, "INFO-2026-0404"])
     assert.equal(w.cit.retiredNotCitable(id), false, id);
   for (const v of [null, undefined, "", 7, {}, []]) assert.equal(w.cit.retiredNotCitable(v), false);
 });

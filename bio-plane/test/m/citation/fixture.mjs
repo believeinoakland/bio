@@ -82,8 +82,8 @@ export function world(opts = {}) {
     /** Every table's rows, for "nothing was written" and "only these tables moved". */
     snapshot() {
       const out = {};
-      for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE '%fts%' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`));
+      for (const { name } of [...st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE '%fts%' ORDER BY name`)])
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM "${name}"`)]);
       return out;
     },
     /** A Citation over the same modules whose record answers `bundle.md` as `text` for `id` (a document shape the
