@@ -32,7 +32,7 @@
 - **reevaluation** · N239.
 - **publication** · N210; N237 (its share); N238 (its share); N230 (its share).
 - **jurisdictions** (layer 1) · N258.
-- **publication**, **ratification** · N256. **consequences** · N257.
+- **publication**, **ratification** · N256. **case-authoring** · N259. **publication** · N260. **consequences** · N257.
 - **conformance** · N233. **standards** · N220. **actions** · N231 (its share); N237 (its share); N246. Layer-9 sites of N217 (K275).
 - **monitoring** · N222; N224 (its share); N230 (its share); N247 (its share). **scheduler** · N223's and N224's consumers.
 - **legacy-store** · N191 (reads ai-runs' predicate).
