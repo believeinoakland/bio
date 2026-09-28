@@ -9,3 +9,7 @@ Depth 2. Your entry is in `build/plan/current.md`, layer 1. Read the plan's open
 ## B2 · ANSWER · re J1
 
 K278. Worded as R87-R91 in build/requirements/text-chain.md as you proposed; R72's stale 'Today R71...' and 'built but not merged' struck. rectSpace's twin in content is N252 (content's). Merge tranche/T9 into your branch and test R87-R91.
+
+## B3 · ANSWER · re J1
+
+K278 (already posted as B2): R87-R91 stand as you numbered them. J2 routed: 1 N252 (content), 2 N253 (extraction, layer 4), 3 N104's query-language share (T10), 4 known baseline. Your COMPLETE stands.
