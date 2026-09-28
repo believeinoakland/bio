@@ -1,6 +1,6 @@
 # legacy-index (T7)
 
-**Status** · session_0187Db6WrLHm27JAfM829YxD · depth 2 · RUNNING until 2026-09-28T05:35:25Z (the old battery on the merged branch and on the tranche tip (after B4)) · handled B4
+**Status** · session_0187Db6WrLHm27JAfM829YxD · depth 2 · COMPLETE · handled B4
 
 **Job** · LEGACY-INDEX #4, session `session_0187Db6WrLHm27JAfM829YxD`, branch `job/T7/legacy-index`, entry T6-13 and the items forwarded to legacy-index at the plan's foot (`build/plan/current.md`, layer 11). A legacy module: no requirements file and no `tests` path. Its contract is the entry, and the requirements of the modules whose ops it routes: intent R2–R18 and R23; reevaluation R8, R9 and R14–R16 (K199); capture-requests R42 (K181 (6)). BOB's B2 and B4 (tranche merges: queue, then affordances) and B3 (NEEDS for intent's reads) are applied.
 
