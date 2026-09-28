@@ -95,6 +95,38 @@
 
 Size (session_01Phb9xWYe7qD4YrUzf54unC): test runs 205, module lines 1173
 
+## CHANGE B5 (K192): merged `tranche/T7` @ 1da7eeddb4
+
+- **The conflicts** in `store.mjs` and `schema.mjs` were resolved keeping each module's removals:
+  - inquiry's legacy backfill, now `ensureLegContent`;
+  - capture-requests' door, drain, dispatch and table;
+  - this module's suggest and extract regions and tables;
+  - both modules' purge filters and migrations.
+- **Re-run on the tranche**, where the plane boots, against a worktree of `origin/tranche/T7`:
+
+  | suite | base | mine | why mine differs |
+  | --- | --- | --- | --- |
+  | `suggest` | 101/0 | 95/6 | the source-reading arms, REPORT J2 5 |
+  | `extractrun` | 62/0 | 61/1 | `EXTRACT_NO_SCOPE` |
+  | `dec65-strength-reach` | 17/10 | 16/11 | +1 source arm |
+  | `capturerequests` | 102–103/36–37 | same | flaky on the base too (3 runs each) |
+  | `d168-retired-cite` | 3/2 | 3/2 | — |
+  | `inquirystrength` | 54/14 | 54/14 | — |
+  | `project-sight` | 230/2 | 230/2 | — |
+  | `run-conditions` | 58/1 | 58/1 | — |
+  | the DEC-49 guard | 109 | 111 | stale `where`s, REPORT J2 1 |
+
+  Unchanged at mine: `narrow` 52/0, `purge` 14/0, `gate-reads` 115/0, `airun` 132/2, `rec165` 34/1, `dec65-single-part` 35/2.
+- **Module tests:** 33 pass, 0 fail.
+- **Checks:**
+  - `format: 69 modules, 64 requirements files; 0 failures`
+  - `architecture: 8 product files, 36 relative imports (0 naming no tracked file, not judged); 0 failures`
+  - `coverage: 1 modules, 19 of 19 live requirement ids named by a test; 0 failures`
+  - `ownership: 11 files changed by run-productions between tranche/T7 and HEAD; legacy-store: 24 line(s) added, 1614 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`
+- **Next:** the basis-versions CHANGE moves the module off `interim.mjs`'s basis-versions arm.
+
+Size (session_01Phb9xWYe7qD4YrUzf54unC, after B5): test runs 245, module lines 1173
+
 ## J1 · QUESTION
 
 Q1. Seven points where the approved text leaves the build open. Each has my best reading; I am building on them now and will conform to whatever you rule.
