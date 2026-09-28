@@ -5237,8 +5237,9 @@ export default {
     if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer });
 
     if (op === "acquire") {
-      /* K72 (8), (11): the acquisition is capture's service in the Durable Object; this op forwards to it and then
-         runs the reading block below over what it filed, until `extraction` takes the block (K49). */
+      /* K72 (8), (11); N265: the acquisition is capture's service in the Durable Object, and the reading of what it
+         filed is extraction's (R1, `acquireReadingOp`). This op forwards to the one, hands the other the filed document,
+         and adds only the grade note; it runs no reading of its own. */
       const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent,
         storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
       if (acquired.response) return acquired.response;
@@ -6491,6 +6492,16 @@ export default {
            reads, and no other promotion has a surfacing act to account for. */
         const replayed = creatingInquiry ? proven : null;
         if (replayed) b.migrationReplay = replayed;
+        /* N290 (K334; inquiry R44, SOURCE-ACCESS): THE MEMBER'S BROWSER AGENT IS THE SERVER'S STAMP, as `migrationReplay`
+           is one field over: a promotion never rewrites the caller's bytes, and a line the caller writes is one it can
+           invent. Deleted first for every caller; set only on a CREATION through a member's session, from that
+           request's own `User-Agent` header, trimmed, at most 512 characters. A deploy token or an `ai` key has no
+           member's browser behind it, so it carries none. The store records it at the creation (inquiry R44). */
+        delete b.memberUserAgent;
+        if (viaSession && b.base === null) {
+          const agent = (req.headers.get("User-Agent") || "").trim().slice(0, 512).trimEnd();
+          if (agent) b.memberUserAgent = agent;
+        }
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
