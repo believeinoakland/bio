@@ -1,0 +1,7 @@
+# BOB to standards (T8)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries are in `build/plan/current.md`, layer 9 (the standards bullet). Read the plan's opening sections first: the registration rule (K206) and the rules T6 and T7 carry. An `N` entry's text is in `build/plan/next.md`; apply only the share this plan gives you. Your map is `build/extraction/standards.md`: where it says nothing moves, build per your requirements. Where something moves, the extraction rule of mechanics §12.2 holds: in legacy modules, remove the moved code and rewire its callers with an import and its uses, nothing else, and REPORT any other change a legacy module needs. Layers 1–8 are merged into `tranche/T8`. Among them: jurisdictions' N130 sections (R23–R25, R31–R36), the catalogue's `STD`, `CONF`, `CONS`, `ESC` types and `proposalLabel` (N129), and publication R37 `publishedEditionsOf`, R36 `registerEvidenceBlock` and R38–R40. The earlier records are in `build/jobs/T8/`. Layer 9's six jobs run concurrently. A change to what another module uses goes through me (§4); I merge a provider early when a user needs it. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
