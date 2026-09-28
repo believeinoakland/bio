@@ -165,6 +165,14 @@ const NOT_AN_ATTESTATION = {
              + "(membership 4.2, refused while two or fewer administrators remain) — a roster act about oneself, "
              + "never a statement about the record, and reached from a member's own session",
   verify: "the public READ-and-verify surface, credential-free (classes: null)",
+  /* NAMED 2026-09-28 (legacy-tests T9): arrived in the OPS table with legacy-index's routing of layer 9's 36 ops
+     (K312, N216); read off `src/filings/index.mjs`'s `filingApprove` (filings R6, R16), not assumed. The matcher's
+     `approv`: an AUTHORED act of the MACHINE_CANNOT_* family this suite leaves to others (its header), refused to a
+     machine BY NAME (MACHINE_CANNOT_APPROVE, C-115.7) and driven so in filings' own module suite, which this suite
+     checks names it. */
+  filingapprove: "a member making a filing DRAFT's text their own before they send it to an outside venue — an "
+               + "authored act, never a statement vouching for the record; fenced MACHINE_CANNOT_APPROVE (filings R6, "
+               + "R16) and driven with a machine author by test/m/filings/approve-send.test.mjs",
 };
 const found = [...new Set([...byName, ...byRung, ...byStamp])].sort();
 t("THE CENSUS: every op any search found is DRIVEN here or NAMED as not an attestation — nothing found is unaccounted for",
@@ -173,6 +181,10 @@ t("and nothing in the trace list is a name the plane does not have (a stale list
   [...DRIVEN, ...Object.keys(NOT_AN_ATTESTATION)].filter((o) => !OPS.has(o)), []);
 t("versionaccept's cross-reference holds: machine-fences.test.mjs drives it with a machine credential",
   /"versionaccept"/.test(readFileSync(fileURLToPath(new URL("./machine-fences.test.mjs", import.meta.url)), "utf8")), true);
+/* NAMED 2026-09-28 (legacy-tests T9): filingapprove's cross-reference, as versionaccept's above. */
+t("filingapprove's cross-reference holds: filings' module suite drives it with a MACHINE author, refused MACHINE_CANNOT_APPROVE",
+  /approve\(x, d\.id, \{ author: MACHINE, text \}\)\.reason, "MACHINE_CANNOT_APPROVE"/.test(readFileSync(fileURLToPath(
+    new URL("./m/filings/approve-send.test.mjs", import.meta.url)), "utf8")), true);
 
 /* ============================================================== 1. FIXTURE */
 const dir = mkdtempSync(join(tmpdir(), "machine-attest-"));

@@ -529,7 +529,15 @@ console.log("\n--- 7.8: participants see each other, non-participants see nothin
      7.9 says an uninvited member cannot see that a project exists. */
   const absent = await call(`/projectparticipants?projectId=PROJ-2026-9999-nope&by=dave`);
   t("in the same words as one that does not exist", out.reason, absent.reason);
-  t("byte-identical, so the answer distinguishes nothing", JSON.stringify(out), JSON.stringify(absent));
+  /* RE-ANCHORED 2026-09-28 (legacy-tests T9; membership R78, N208/N146): the refusal is now membership's one
+     `noSuchProject(projectId)`, which ECHOES the id as asked in `project` (R78: "`project` the id as asked"). The
+     two ids asked here differ, so the two bodies differ in exactly that echo of the caller's own input and nothing
+     else. The echo is asserted to be each caller's own id, and the bodies are then compared BYTE FOR BYTE with the
+     echo set alike (in place, so key order still counts): the answer still distinguishes nothing. */
+  t("each refusal echoes only the id its caller asked (membership R78)", [out.project, absent.project],
+    [SECRET, "PROJ-2026-9999-nope"]);
+  t("byte-identical, so the answer distinguishes nothing",
+    JSON.stringify({ ...out, project: "<asked>" }), JSON.stringify({ ...absent, project: "<asked>" }));
 }
 
 console.log("\n--- negative controls ---");
