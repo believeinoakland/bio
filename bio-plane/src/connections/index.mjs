@@ -36,7 +36,7 @@ import { readingSourceFromColumns, readingSourceJson, readingOccurrenceKey, read
   from "../textchain.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { extractionOf, OCCURRENCES_PER_REF } from "../extraction/index.mjs";
@@ -45,7 +45,7 @@ import { captureOf } from "../capture/index.mjs";
 import { entitiesOf, gradeRank, isEstablished } from "../entities/index.mjs";
 import { CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES, migrateConnections } from "./schema.mjs";
 import { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
-import { Themes, THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
+import { Themes } from "./themes.mjs";
 
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
@@ -97,7 +97,7 @@ function entityOf(entities, id) {
 /* ------------------------------------------------------------------ the module */
 
 export class Connections {
-  #listeners = [];         // R3: {module, fn}
+  #listeners = [];         // R3: {module, fn, seq}, in the modules' total order
   #derivationProvider = null;   // R5: {module, fn}
 
   constructor({ storage, record, membership, promotion, content, extraction, capture, entities, env = null, now } = {}) {
@@ -153,13 +153,15 @@ export class Connections {
 
   /* ================================================================ derivation (R1–R3) */
 
-  /** R3: a later module registers once (`observation-log` records each derivation). */
+  /** R3 (N202): a later module registers once (`observation-log` records each derivation). A malformed or second
+   *  registration is refused by membership's one site for it (its R81); the listeners run in the modules' total order
+   *  (its R83's `MODULE_ORDER`; an unknown module last, in the order it registered). */
   onDerived(module, fn) {
-    if (typeof module !== "string" || !module || typeof fn !== "function")
-      return { ok: false, reason: "LISTENER_MALFORMED", detail: "a listener names the module that registers it and its function" };
-    if (this.#listeners.some((l) => l.module === module))
-      return { ok: false, reason: "LISTENER_DECLARED", module, detail: `${module} has already registered its listener` };
-    this.#listeners.push({ module, fn });
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
+    this.#listeners.push({ module, fn, seq: this.#listeners.length });
+    const at = (m) => { const i = MODULE_ORDER.indexOf(m); return i === -1 ? Infinity : i; };
+    this.#listeners.sort((x, y) => (at(x.module) - at(y.module)) || (x.seq - y.seq));
     return { ok: true, module };
   }
 

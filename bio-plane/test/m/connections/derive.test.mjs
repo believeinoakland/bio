@@ -2,6 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
+import { MODULE_ORDER } from "../../../src/membership/index.mjs";
+import { REGISTRATION_CHECKS } from "../../../checks/bio-checks.mjs";
 import { Connections, PAIR_RULE, CONNECTIONS_LIMIT_DEFAULT, CONNECTIONS_LIMIT_MAX, weakerGrade } from "../../../src/connections/index.mjs";
 
 const E = "ENT-2026-0001";
@@ -131,6 +133,29 @@ test("R3: onDerived runs after each derivation with what it wrote; a second regi
   w.k.derive({ entityId: E, assertedBy: "system" });
   assert.deepEqual(seen[0], { entityId: "ENT-2026-0404", count: 0, documents: 0, truncated: false, entityKnown: false, assertedBy: "system" });
   assert.deepEqual(seen[1], { entityId: E, count: 3, documents: 3, truncated: false, entityKnown: true, assertedBy: "system" });
+});
+
+test("R3 (N202): a malformed or second registration is refused through membership's listenerRefusal, with its catalogue row; listeners run in the modules' total order, an unknown module last", () => {
+  const w = world();
+  for (const [m, fn] of [["", () => {}], [null, () => {}], ["observation-log", null], ["observation-log", "fn"]]) {
+    const r = w.k.onDerived(m, fn);
+    assert.equal(r.ok, false); assert.equal(r.reason, "LISTENER_MALFORMED"); assert.equal(r.code, "LISTENER_MALFORMED");
+    const row = REGISTRATION_CHECKS.LISTENER_MALFORMED;
+    if (row) { assert.equal(r.check, row.check); assert.equal(r.translation, row.translation); }
+  }
+  const order = [];
+  /* Registered out of order: an unknown module first, then a later module, then an earlier one. */
+  assert.equal(w.k.onDerived("zz-unknown", () => order.push("zz-unknown")).ok, true);
+  assert.equal(w.k.onDerived("retrieval", () => order.push("retrieval")).ok, true);
+  assert.equal(w.k.onDerived("observation-log", () => order.push("observation-log")).ok, true);
+  assert.equal(w.k.onDerived("aa-unknown", () => order.push("aa-unknown")).ok, true);
+  const again = w.k.onDerived("retrieval", () => order.push("again"));
+  assert.equal(again.ok, false); assert.equal(again.reason, "LISTENER_DECLARED"); assert.equal(again.module, "retrieval");
+  const row = REGISTRATION_CHECKS.LISTENER_DECLARED;
+  if (row) { assert.equal(again.check, row.check); assert.equal(again.translation, row.translation); }
+  w.k.derive({ entityId: "ENT-2026-0404" });
+  assert.ok(MODULE_ORDER.indexOf("observation-log") < MODULE_ORDER.indexOf("retrieval"));
+  assert.deepEqual(order, ["observation-log", "retrieval", "zz-unknown", "aa-unknown"]);
 });
 
 test("R34, R38: never stronger than the weaker end; a C end is never established; asserted_by is the stamp, never member or source, never the grade", () => {

@@ -3,7 +3,7 @@
    provider the test controls, answered through the real derivation. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, sha } from "./fixture.mjs";
+import { world, V, MACHINE, sha, cursor } from "./fixture.mjs";
 import { membershipBeside } from "../../../src/extraction/filemembership.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
@@ -131,7 +131,11 @@ test("R49, R55, R56, R57: stored as a system connection graded C once both docum
 /* The rows a read of `table` took out of storage, per call: a bound in the SQL is what keeps this at `cap + 1`. */
 function spyReads(w, table) {
   const exec = w.st.sql.exec, reads = [];
-  w.st.sql.exec = (q, ...a) => { const r = exec(q, ...a); if (new RegExp(`FROM ${table}\\b`).test(q)) reads.push(r.length); return r; };
+  w.st.sql.exec = (q, ...a) => {
+    const rows = exec(q, ...a).toArray();
+    if (new RegExp(`FROM ${table}\\b`).test(q)) reads.push(rows.length);
+    return cursor(rows);
+  };
   return { reads, stop: () => { w.st.sql.exec = exec; } };
 }
 

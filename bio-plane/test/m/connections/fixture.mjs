@@ -1,5 +1,5 @@
 /* connections over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   extraction, capture), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. What
+   extraction, capture), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage at its shape (a cursor, K316). What
    `entities` would write (its `entities` and `resolutions` tables, a read contract here) and what extraction's reader
    would write (`reading_refs`) are rows the test inserts, as those modules' writers would; extraction's
    `pdfStructure` is a provider the test controls (R49). Every test drives `connections` at its interface. */
@@ -20,13 +20,37 @@ import { normalizeAddress } from "../../../src/subresources.mjs";
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` or `.length` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does, so code that indexes
+   a cursor or writes a long pattern fails here as it would in the Durable Object (K316; content's fixture's). */
+export const WORKERD_PATTERN_CAP = 50;
+export function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -83,13 +107,13 @@ export function world({ now = "2026-09-27T03:00:00.000Z", env = {} } = {}) {
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, capture, entities, k, clock, structures, readingListeners,
-    row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
+    rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     snapshot(tables) {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        if (!tables || tables.includes(name)) out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
+        if (!tables || tables.includes(name)) out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`).toArray());
       return out;
     },
     /** An information bundle registering one capture per text, with the address it was fetched from. */
