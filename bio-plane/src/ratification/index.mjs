@@ -54,7 +54,7 @@ export function fmSafe(s) {
 /* REC-135 / REC-157 — ONE MEMBER'S ROW OF `case_conclusions`, THE ONE WRITER OF IT.
    MOVED HERE BYTE FOR BYTE from `#caseDocumentText` (REC-135 wrote it inline) and
    changed in nothing: the document calls this for every roster member, and
-   `#editionsRecordingConclusion` calls it to render what a NEW edition would
+   `editionsRecordingConclusion` calls it to render what a NEW edition would
    record so the comparison is between two rows written by one function and
    read back by one parser — never between a row and a hand-copied idea of one.
    `c` null writes the row a member with no recorded conclusion gets. */
@@ -116,9 +116,9 @@ export class Ratification {
    * (conclude(), THE PROJECT'S CONCLUSION IS WRITTEN ON THE PROJECT AND NOWHERE
    * ELSE). Both halves of that are corrected here.
    *
-   * IT CALLS THE EXISTING READERS AND COPIES NEITHER. #conclusionOf is the
+   * IT CALLS THE EXISTING READERS AND COPIES NEITHER. basis-versions' `conclusionOf` is the
    * project half (REC-124/REC-136: the stance, and only while it is a conclusion
-   * — a withdrawal is never a standing answer) and #noProjectConclusionOf is the
+   * — a withdrawal is never a standing answer) and `noProjectConclusionOf` is the
    * inquiry's-own-bytes half (REC-124 item 5, REC-136 item 6). BOB #16's
    * one-reader rule at REC-144: two reads of one quantity must be the same
    * function, or the record can disagree with itself about what a project
@@ -232,7 +232,7 @@ export class Ratification {
    * `publish` AFFORDANCE (`#editionWarrantedForJoinedProjectOf`) BOTH ASK.
    *
    * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
-   * (`#caseRelationOf`'s pin), which answered "would a new edition say anything
+   * (publication's `caseRelation` pin), which answered "would a new edition say anything
    * different" correctly only while a case recorded nothing but those bytes. Since
    * REC-135 (IC-166) an edition also records the conclusion it rests on — WHOSE, on
    * which reading, with the claim verbatim — and a project's conclusion lives on the
@@ -241,8 +241,8 @@ export class Ratification {
    * pinned edition recorded, whether or not `bundle_sha` moved. The refusal compares
    * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
    *
-   * WHAT IS ASKED. `rel` is `#caseRelationOf(bundleId)` as the caller holds it; `conc`
-   * is `#caseConclusionFor`'s CONCLUDED answer — in publishCase() the very object the
+   * WHAT IS ASKED. `rel` is publication's `caseRelation(bundleId)` as the caller holds it; `conc`
+   * is `caseConclusionFor`'s CONCLUDED answer — in publishCase() the very object the
    * case document will record, carried on `prepared` and never re-read. The editions
    * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
    * (`rel.pinned`, across every case: DEC-72 clause 6 lets a finding serve many) and
@@ -256,7 +256,7 @@ export class Ratification {
    *     override, who concluded and when. A conclusion is a dated, authored ACT (§7.1
    *     item 1), so one re-taken after a withdrawal is a different conclusion even
    *     where it adopts the same claim, and the history already says so (DEC-19).
-   *     Both rows come from `#caseConclusionRowLines` and back through the one
+   *     Both rows come from `caseConclusionRowLines` and back through the one
    *     parser, so they are compared in ONE spelling.
    *   - THE NO-PROJECT relationship (a question concluded in its own bytes, §7.1 item
    *     5): the edition's row says `no_project`, OR it recorded no conclusion at all
@@ -266,7 +266,7 @@ export class Ratification {
    *     so it is the same conclusion by hash. An edition that recorded nothing rested
    *     on the question's own `concluded` state — the gate before REC-135 read nothing
    *     else — which is this relationship in these bytes. Comparing FIELDS here would
-   *     let a later rewording of the READER (`#noProjectConclusionOf`) warrant an
+   *     let a later rewording of the READER (basis-versions' `noProjectConclusionOf`) warrant an
    *     edition of bytes nobody moved, which is the liar's direction.
    *   - ANYTHING ELSE an edition recorded — another relationship, another project's
    *     row, a value this plane does not write — is not this conclusion.
@@ -418,7 +418,7 @@ export class Ratification {
 
      THIS IS THE METHOD THE WHOLE ITEM EXISTS FOR. Every case fact this plane
      holds is written here, FROM THE SIGNED CASE DOCUMENT AND FROM NOTHING ELSE
-     — #publishEdges' doctrine, arriving at the altitude the facts were always
+     — publication's `publishEdges` doctrine, arriving at the altitude the facts were always
      about. `cases`, `published_cases` and `published_case_members` are all
      parsed out of `case_documents.text`, whose hash the signature covers.
 
@@ -506,12 +506,12 @@ export class Ratification {
          (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5:
              publishing is the project owner's act). Before this the instance-wide signer
              set was the only authority asked, so any registered signer could commit an
-             owner's case under their own name. Asked through `#isProjectOwner`, §7's one
+             owner's case under their own name. Asked through membership's owner predicate, §7's one
              owner predicate, never a second spelling of it. A case document naming no
              project has no owner to sign it and is refused by the same rule — DEC-72
              removed the project-less case, so this is a legacy document, and an absent
              publisher is not a publisher of none. */
-      /* REC-140: both questions now live in `#caseAuthority`, which `op=ratify` asks too for a
+      /* REC-140: both questions now live in membership's `caseAuthority`, which `op=ratify` asks too for a
          finding a ratified case pins — MOVED there, not restated, so there is one rule. */
       const denied = this.membership.caseAuthority({ project, deliveredBy, signer: attestorMember, act: "caseratify",
                                            subject: `case ${id} edition ${ed}`, extra: { caseId: id, edition: ed } });
@@ -534,13 +534,13 @@ export class Ratification {
          relationship: `op=publish` asked it once, at preparation, and the window after is exactly where a
          project's conclusion can move while the finding's bytes and this document do not.
          SO THIS ASKS, PER ROSTER MEMBER, WHAT `op=publish` ASKS, through the SAME two readers and never a
-         copy of either: (1) `#caseConclusionFor` — is the question concluded FOR THE DOCUMENT'S PUBLISHING
-         PROJECT (the NOT_CONCLUDED gate's one reader), and (2) `#editionsRecordingConclusion` applied to
+         copy of either: (1) `caseConclusionFor` — is the question concluded FOR THE DOCUMENT'S PUBLISHING
+         PROJECT (the NOT_CONCLUDED gate's one reader), and (2) `editionsRecordingConclusion` applied to
          THIS ONE DOCUMENT as the preparation — is that conclusion the one the document RECORDS (item 9's
          comparison: a project conclusion compared as the dated, authored ENTRY; a no-project one by the
          pin). Concluded-ness ALONE would pass a project that withdrew and concluded again on another
          claim — the document would then sign claim A for a project standing on claim B — so both are asked.
-         THE VIEWER IS THE SIGNER, who `#caseAuthority` just established is an OWNER of the project, so the
+         THE VIEWER IS THE SIGNER, who `caseAuthority` just established is an OWNER of the project, so the
          project's own record is in sight; an owner cannot be told a project it owns "never concluded"
          for want of sight.
          ASKED AFTER THE RETRY, deliberately: a ratified edition answers forever (DEC-19 — its conclusion is
