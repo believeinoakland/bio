@@ -1014,8 +1014,6 @@ __export(bio_checks_exports, {
   CONTENT_ID_RE: () => CONTENT_ID_RE,
   CONTENT_MINTED_BY_PLANE: () => CONTENT_MINTED_BY_PLANE,
   CONTENT_MINT_STATES: () => CONTENT_MINT_STATES,
-  CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
-  CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS,
   CORE_FIELDS: () => CORE_FIELDS,
   CORRESPONDENCE_DIRECTIONS: () => CORRESPONDENCE_DIRECTIONS,
   CORRESPONDENCE_OUTCOMES: () => CORRESPONDENCE_OUTCOMES,
@@ -9182,50 +9180,6 @@ var PROJECT_ID_CHECKS = {
     check: "C-59.5",
     where: "src/record-core/index.mjs allocIdOp > is-allocid-prefix-gated",
     translation: "Ids of this kind are given by the record when the thing itself is created, and are not handed out in advance. Create the project, case, draft, grant or task through its own action and the record will answer with its id. Nothing was allocated."
-  }
-};
-var CONTRADICTION_PAIR_CHECKS = {
-  CONTRADICTION_KEY_UNKNOWN: {
-    check: "C-60.1",
-    where: "src/store.mjs contradictionPairs > is-contradiction-key-unknown",
-    translation: "The record pairs assertions by named keys, and that is not one of them. Rather than answer from a different key and let the answer look like a complete comparison, it says so and names the keys it holds. Ask again with one of them, or with none at all to run every key."
-  }
-};
-var CONTRADICTION_CANDIDATE_CHECKS = {
-  CANDIDATE_NO_PROPOSER: {
-    check: "C-93.1",
-    where: "src/store.mjs contradictionPropose > is-candidate-no-proposer",
-    translation: "A proposed contradiction records who proposed it, and this request arrived by a route that does not say. Rather than write a proposal nobody can be held to, nothing was written."
-  },
-  CANDIDATE_NO_RUN: {
-    check: "C-93.2",
-    where: "src/store.mjs contradictionPropose > is-candidate-no-run",
-    translation: "A proposed contradiction is machine work, and machine work happens inside a run a member opened. No open run by that name is visible here, so nothing was written. Open a run, then propose."
-  },
-  CANDIDATE_RUN_NOT_RUNNING: {
-    check: "C-93.3",
-    where: "src/store.mjs contradictionPropose > is-candidate-run-not-running",
-    translation: "That run has ended. Its work is read against the conditions it was formed under, and those stopped being current when it stopped, so nothing was written. Open a new run to go on working."
-  },
-  CANDIDATE_NO_PROPOSALS: {
-    check: "C-93.4",
-    where: "src/store.mjs contradictionPropose > is-candidate-no-proposals",
-    translation: "The request carried no proposals. An empty answer is not a judgement that found nothing; that belongs in the run log, which says which level was empty. Nothing was written."
-  },
-  CANDIDATE_LABEL_UNKNOWN: {
-    check: "C-93.5",
-    where: "src/store.mjs contradictionPropose > is-candidate-label-unknown",
-    translation: "A proposal carries exactly one of five labels: world, record, precision, unrelated or undetermined. One proposal in this batch carried something else, so none of the batch was written."
-  },
-  CANDIDATE_NO_REASON: {
-    check: "C-93.6",
-    where: "src/store.mjs contradictionPropose > is-candidate-no-reason",
-    translation: "Each proposal says in one sentence why it carries its label, so the member judging it can see what the machine saw. One proposal in this batch had no reason, so none of the batch was written."
-  },
-  CANDIDATE_PAIR_NOT_FORMED: {
-    check: "C-93.7",
-    where: "src/store.mjs contradictionPropose > is-candidate-pair-not-formed",
-    translation: "A proposal must name a pair the record itself put side by side for that key, as you can see it now. One proposal in this batch named two things the pairing does not pair, so none of the batch was written. Read the pairs again and propose over those."
   }
 };
 var QUOTE_CHECKS = {
