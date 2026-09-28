@@ -2,9 +2,11 @@
    refusal rows (R27, R28) and the outward text (R30). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
-import { PROGRESSION_CHECKS, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
+import { world, seeded, MEMBER } from "./fixture.mjs";
+import { PROGRESSION_CHECKS, GENERIC_CODES, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
 import { ACT_SHAPE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { noSuchEntity } from "../../../src/entities/index.mjs";
+import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const S = (o = {}) => ({ key: "a", cardinality: "1", required: "always", ...o });
 
@@ -140,36 +142,82 @@ test("R5: NO_KEY; an undeclared key is found:false; a read names versions, curre
   }
 });
 
-test("R27 R28: every refusal code this module answers carries its code, catalogue row and translation", () => {
-  const codes = ["NO_KEY", "NO_LABEL", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED",
-    "UNKNOWN_AFTER", "NOT_FOUND", "NO_ENTITY", "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_SUCH_ENTITY", "NO_STAGE",
-    "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED", "NO_REASON", "NO_SHA", "NOT_A_DISPOSITION",
-    "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED", "LISTENER_DECLARED"];
-  assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...codes].sort());
+test("R27 R28: every refusal this module answers carries its code with its row and translation, or is one it answers from its owner or as a generic code", async () => {
+  // C-100 and the three moved rows: one function and one marked region each (N118, N242), ids unique, a translation
+  const kept = ["NO_LABEL", "NOT_FOUND", "NO_ENTITY", "NO_SHA", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
+    "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_STAGE", "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED",
+    "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED"];
+  assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...kept].sort());
   const ids = new Set();
-  for (const c of codes) {
+  for (const c of kept) {
     const row = PROGRESSION_CHECKS[c];
     assert.match(row.check, /^C-\d+\.\d+$/, c);
     assert.ok(!ids.has(row.check), `${c}: ${row.check} used twice`);
     ids.add(row.check);
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, c);
-    assert.match(row.where, /^src\/progressions\/index\.mjs /, c);
+    assert.match(row.where, /^src\/progressions\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, c);   // one function, one region
   }
+  // the ids of the rows that left C-100 in T10 are retired, never reused
+  for (const retired of ["C-100.1", "C-100.12", "C-100.23"])
+    assert.ok(!ids.has(retired), retired);
+  // the generic code (N118): no row of this module's
+  assert.deepEqual([...GENERIC_CODES], ["NO_KEY"]);
+  for (const c of GENERIC_CODES) assert.equal(PROGRESSION_CHECKS[c], undefined, c);
   // R28: the three moved rows keep their ids; the shared act rows stay in the catalogue
   assert.equal(PROGRESSION_CHECKS.UNKNOWN_AFTER.check, "C-33.26");
   assert.equal(PROGRESSION_CHECKS.NO_DEFINITION_VERSION.check, "C-33.42");
   assert.equal(PROGRESSION_CHECKS.DEFINITION_MOVED.check, "C-33.43");
   for (const moved of ["UNKNOWN_AFTER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED"]) assert.equal(ACT_SHAPE_CHECKS[moved], undefined, moved);
   assert.ok(ACT_SHAPE_CHECKS.NO_BASIS && ACT_SHAPE_CHECKS.NO_CITATION);
-  // each refusal as answered carries its row
-  const w = world();
+
+  // every refusal each act answers, driven at the interface, and what it carries
+  const w = seeded();
   w.define();
-  for (const r of [w.p.defineProgression({}), w.p.readProgression({ progressionKey: "proc", version: 2 }),
-                   w.p.defineProgression({ progressionKey: "k", label: "L", stages: [S({ after: "q" })] })]) {
+  const S2 = (o) => ({ progressionKey: "k", label: "L", stages: [S(), S({ key: "b", ...o })] });
+  const P = (...ps) => w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1", placements: ps, threadedBy: "member:alice", viewer: MEMBER });
+  const Dc = (b) => w.p.dischargeStage({ progressionKey: "proc", entityId: "ENT-1", stageKey: "need", captureSha: "sa", reason: "r",
+                                         citation: "c", declaredBy: "member:alice", ...b });
+  const X = (b) => w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "r", definitionVersion: 1, decidedBy: "member:alice", ...b });
+  const f = () => {};
+  const answered = [
+    w.p.defineProgression({}), w.p.defineProgression({ progressionKey: "k" }), w.p.defineProgression({ progressionKey: "k", label: "L" }),
+    w.p.defineProgression(S2({ key: "" })), w.p.defineProgression(S2({ key: "a" })), w.p.defineProgression(S2({ cardinality: "" })),
+    w.p.defineProgression(S2({ required: "x" })), w.p.defineProgression(S2({ after: "q" })),
+    w.define("proc", { need: { required: "usually" } }), w.define("proc", { need: { required: "usually" } }, { basis: "b" }),
+    w.p.readProgression({}), w.p.readProgression({ progressionKey: "proc", version: 9 }),
+    await w.p.threadInstance({}), await w.p.threadInstance({ progressionKey: "proc" }), await w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1" }),
+    await w.p.threadInstance({ progressionKey: "nope", entityId: "ENT-1", placements: [{}] }),
+    await w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-9", placements: [{}] }),
+    await P({}), await P({ stage: "bid" }), await P({ stage: "need" }), await P({ stage: "need", captureSha: "sa" }, { stage: "need", captureSha: "sa" }),
+    await P({ stage: "need", captureSha: "zz" }),
+    w.p.readInstance({}), w.p.readInstance({ progressionKey: "proc" }), w.p.readExceptions({}), w.p.readExceptions({ progressionKey: "proc" }),
+    Dc({ progressionKey: "" }), Dc({ entityId: "" }), Dc({ stageKey: "" }), Dc({ captureSha: "" }), Dc({ reason: "" }), Dc({ citation: "" }),
+    Dc({ progressionKey: "nope" }), Dc({ entityId: "ENT-9" }), Dc({ stageKey: "bid" }), Dc({ captureSha: "zz" }),
+    w.p.captureProgressions({}),
+    X({ key: "" }), X({ key: "proc::" }), X({ to: "adopted" }), X({ reason: "" }), X({ reason: "a\nb" }), X({ decidedBy: "" }),
+    X({ key: "nope::award" }), X({ key: "proc::bid" }), X({ definitionVersion: null }), X({ definitionVersion: 2 }),
+    w.p.onThreaded("scheduler", f) && w.p.onThreaded("scheduler", f), w.p.onThreaded("", f),
+  ];
+  const seen = new Set();
+  for (const r of answered) {
+    assert.equal(r.ok, false, JSON.stringify(r));
     assert.equal(r.code, r.reason);
-    assert.equal(r.check, PROGRESSION_CHECKS[r.reason].check);
-    assert.equal(r.translation, PROGRESSION_CHECKS[r.reason].translation);
+    seen.add(r.code);
+    if (PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code] && (r.code === "NO_BASIS" || r.code === "NO_CITATION")) {
+      const row = PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code];
+      assert.deepEqual([r.check, r.translation], [row.check, row.translation], r.code);
+    } else if (r.code === "NO_SUCH_ENTITY") assert.deepEqual(r, noSuchEntity("ENT-9"));          // entities R36 (N208)
+    else if (r.code === "LISTENER_DECLARED") assert.deepEqual(r, listenerRefusal([{ module: "scheduler" }], "scheduler", f));
+    else if (r.code === "LISTENER_MALFORMED") assert.deepEqual(r, listenerRefusal([], "", f));   // membership R81 (N202)
+    else {
+      assert.ok(GENERIC_CODES.includes(r.code), `${r.code} answers with no row and is not a generic code`);
+      assert.deepEqual([r.check, r.translation], [undefined, undefined], r.code);
+      assert.ok(typeof r.detail === "string" && r.detail.length > 10, r.code);
+    }
   }
+  // the drive reached every code: each row, each generic code, the shared act rows and the owners' answers
+  assert.deepEqual([...seen].sort(), [...kept, ...GENERIC_CODES, "NO_BASIS", "NO_CITATION", "NO_SUCH_ENTITY",
+                                      "LISTENER_DECLARED", "LISTENER_MALFORMED"].sort());
 });
 
 test("R30: no place is named in this module's outward text", () => {

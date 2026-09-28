@@ -3,6 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, BOB } from "./fixture.mjs";
+import { noSuchEntity } from "../../../src/entities/index.mjs";
+import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const T = (w, placements, extra = {}) =>
   w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1", placements, threadedBy: "member:alice", viewer: MEMBER, ...extra });
@@ -18,7 +20,8 @@ test("R6: refusals in order, each writing nothing", async () => {
   assert.equal((await t({ progressionKey: "proc", entityId: "ENT-1" })).reason, "NO_PLACEMENTS");
   assert.equal((await t({ progressionKey: "proc", entityId: "ENT-1", placements: [] })).reason, "NO_PLACEMENTS");
   assert.equal((await t({ progressionKey: "nope", entityId: "ENT-1", placements: ok })).reason, "NO_SUCH_PROGRESSION");
-  assert.equal((await t({ progressionKey: "proc", entityId: "ENT-9", placements: ok })).reason, "NO_SUCH_ENTITY");
+  // N208: an unregistered entity is entities' one answer (its R36), byte for byte
+  assert.deepEqual(await t({ progressionKey: "proc", entityId: "ENT-9", placements: ok }), noSuchEntity("ENT-9"));
   const P = (...ps) => t({ progressionKey: "proc", entityId: "ENT-1", placements: ps });
   // per placement, in order, and a later placement's fault refuses the whole thread
   assert.equal((await P({ stage: "need", captureSha: "sa" }, { captureSha: "sb" })).reason, "NO_STAGE");
@@ -220,31 +223,46 @@ test("R31: a stage declared 1 or 0..1 holding more than one document is a findin
   assert.equal(ok.findings.filter((f) => f.kind === "cardinality_exceeded").length, 0);
 });
 
-test("R33: listeners registered once, told after each thread in order with the next deadline; a throwing one changes nothing", async () => {
+test("R33: listeners registered once through membership's refusal, told after each thread in the modules' total order with the next deadline; a throwing one changes nothing", async () => {
   const w = seeded();
   w.define();
   const told = [];
-  assert.equal(w.p.onThreaded("scheduler", (e) => { told.push(["scheduler", e]); }).ok, true);
-  const again = w.p.onThreaded("scheduler", () => {});
-  assert.equal(again.reason, "LISTENER_DECLARED");
-  assert.equal(again.check, "C-100.23");
-  w.p.onThreaded("later", async () => { told.push(["later"]); throw new Error("boom"); });
-  w.p.onThreaded("last", () => { told.push(["last"]); return Promise.reject(new Error("no")); });
+  const fn = (name) => (e) => { told.push([name, e]); };
+  // registered out of order: told in MODULE_ORDER (scheduler is layer 10, intent layer 7, bias layer 5)
+  assert.deepEqual(w.p.onThreaded("scheduler", fn("scheduler")), { ok: true, module: "scheduler" });
+  // a second registration by the same module, or a malformed one, is membership's one answer (its R81), never a throw
+  const g = () => {};
+  assert.deepEqual(w.p.onThreaded("scheduler", g), listenerRefusal([{ module: "scheduler" }], "scheduler", g));
+  assert.equal(w.p.onThreaded("scheduler", g).reason, "LISTENER_DECLARED");
+  assert.deepEqual(w.p.onThreaded("", g), listenerRefusal([], "", g));
+  assert.equal(w.p.onThreaded("", g).reason, "LISTENER_MALFORMED");
+  assert.equal(w.p.onThreaded("intent", "not a function").reason, "LISTENER_MALFORMED");
+  assert.equal(w.p.onThreaded(null, g).reason, "LISTENER_MALFORMED");
+  // a module outside the total order runs after every one in it, in registration order
+  w.p.onThreaded("zz-later", async (e) => { told.push(["zz-later", e]); throw new Error("boom"); });
+  w.p.onThreaded("intent", (e) => { told.push(["intent", e]); return Promise.reject(new Error("no")); });
+  w.p.onThreaded("aa-last", fn("aa-last"));
+  w.p.onThreaded("bias", fn("bias"));
   w.dates.reading.sa = "2026-09-01T00:00:00.000Z";
   w.clock.now = "2026-09-05T00:00:00.000Z";
   const r = await T(w, [{ stage: "need", captureSha: "sa" }]);
   assert.equal(r.ok, true);
   assert.equal(r.thread_version, 1);
-  assert.deepEqual(told.map((t) => t[0]), ["scheduler", "later", "last"]);
-  assert.deepEqual(told[0][1], { progressionKey: "proc", entityId: "ENT-1", nextDeadline: Date.parse("2026-10-01T00:00:00.000Z") });
-  // written despite the throwing listeners
+  assert.deepEqual(told.map((t) => t[0]), ["bias", "intent", "scheduler", "zz-later", "aa-last"]);
+  for (const [, e] of told)
+    assert.deepEqual(e, { progressionKey: "proc", entityId: "ENT-1", nextDeadline: Date.parse("2026-10-01T00:00:00.000Z") });
+  // written despite the throwing and rejecting listeners, and the answer is the thread's own
   assert.equal(w.count("progression_instances"), 1);
+  assert.equal(r.threaded, 1);
   // a refused thread tells nobody; no deadline is null
   told.length = 0;
   await T(w, [{ stage: "bogus", captureSha: "sa" }]);
   assert.equal(told.length, 0);
   await T(w, [{ stage: "contract", captureSha: "sb" }]);
+  assert.equal(told.length, 5);
   assert.equal(told[0][1].nextDeadline, null);
+  // a refused registration registered nothing: the malformed ones and the second 'scheduler' are not told
+  assert.equal(told.filter((t) => t[0] === "scheduler").length, 1);
 });
 
 test("R24: grades, findings and deadlines are derived on read, never stored", async () => {

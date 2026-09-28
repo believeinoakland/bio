@@ -1,23 +1,27 @@
 /* progressions' refusal rows (requirements: `build/requirements/progressions.md`, R27, R28). DEC-49: every refusal
- * this module answers carries its code, its catalogue row and the member's translation, so a surface shows the same
- * sentence wherever the act is reached.
+ * this module answers for a condition of its own carries its code, its catalogue row and the member's translation, so
+ * a surface shows the same sentence wherever the act is reached.
  *
  * Three rows moved here from the check catalogue's `ACT_SHAPE_CHECKS` with their ids and translations unchanged (K6,
  * R28): C-33.26 `UNKNOWN_AFTER` (REC-64) and REC-211's C-33.42 `NO_DEFINITION_VERSION` and C-33.43 `DEFINITION_MOVED`.
  * The rest are this module's own family, C-100, minted at the extraction (K107 (3)'s rule: the job names a new code's
  * row). `NO_BASIS` (C-33.40) and `NO_CITATION` (C-33.41) are shared act rows and stay in the catalogue, where the other
- * acts reach them; this module answers them from there (`actRefusal`). */
+ * acts reach them; this module answers them from there (`actRefusal`).
+ *
+ * ONE CODE, ONE SITE (K231, N118, N242, T10). Each row's `where` names one function and one marked region that wraps
+ * the whole refusal; a code this module answers from several acts is minted in one private helper of `Progressions`,
+ * which each act calls. What left C-100 in T10, its ids retired and never reused: `NO_SUCH_ENTITY` (C-100.12) is
+ * entities' one answer (its R36, `noSuchEntity`), `LISTENER_DECLARED` (C-100.23) membership's (its R81,
+ * `listenerRefusal`), and `NO_KEY` (C-100.1), which other modules mint for conditions of their own, is answered as the
+ * catalogue's generic code under its REC-64 rule (K163's precedent), with no row (`GENERIC_CODES`, `generic`). N118's
+ * other five (`NO_LABEL`, `NOT_FOUND`, `NO_ENTITY`, `NO_SHA`, `NOT_A_DISPOSITION`) keep their rows while the member
+ * surface receives them, so no member meets one untranslated (PROGRESSIONS #2's J2, for BOB's ruling under K275). */
 
 import { ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";
 
 const at = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 
 export const PROGRESSION_CHECKS = Object.freeze({
-  NO_KEY: {
-    check: 'C-100.1', where: at("defineProgression|readProgression|threadInstance|readInstance|dischargeStage|readExceptions|disposeProposal", "is-progression-keyed"),
-    translation: 'A declared flow is named by a short key, and this request names none, so the record cannot tell '
-      + 'which flow is meant. Name the flow by its key and try again. Nothing was written.',
-  },
   NO_LABEL: {
     check: 'C-100.2', where: at("defineProgression", "is-progression-labelled"),
     translation: 'A declared flow carries a name a person can read, and this one has none. Give it a name. '
@@ -62,7 +66,7 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'beside this message, and each reads back in full.',
   },
   NO_ENTITY: {
-    check: 'C-100.9', where: at("threadInstance|readInstance|dischargeStage|readExceptions", "is-instance-entity"),
+    check: 'C-100.9', where: at("#entityNamed", "is-instance-entity"),
     translation: 'An instance of a flow is followed through one registered subject, and this request names '
       + 'none. Name the subject by its id. Nothing was written.',
   },
@@ -72,27 +76,22 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'least one step and the document that fills it. Nothing was written.',
   },
   NO_SUCH_PROGRESSION: {
-    check: 'C-100.11', where: at("threadInstance|dischargeStage|disposeProposal", "is-progression-declared"),
+    check: 'C-100.11', where: at("#declared", "is-progression-declared"),
     translation: 'No flow of that key has been declared, so there is nothing to place documents in or to '
       + 'decide about. Declare the flow first. Nothing was written.',
   },
-  NO_SUCH_ENTITY: {
-    check: 'C-100.12', where: at("threadInstance|dischargeStage", "is-entity-registered"),
-    translation: 'The subject named here is not registered, so no document can be shown to concern it. '
-      + 'Register the subject first. Nothing was written.',
-  },
   NO_STAGE: {
-    check: 'C-100.13', where: at("threadInstance|dischargeStage|disposeProposal", "is-stage-named"),
+    check: 'C-100.13', where: at("#stageNamed", "is-stage-named"),
     translation: 'This request does not say which step of the flow it is about. Name the step. Nothing was '
       + 'written.',
   },
   BAD_STAGE: {
-    check: 'C-100.14', where: at("threadInstance|dischargeStage|disposeProposal", "is-stage-of-progression"),
+    check: 'C-100.14', where: at("#stageOf", "is-stage-of-progression"),
     translation: 'The step named here is not a step of this flow as it is declared now. Name one of its '
       + 'steps. Nothing was written.',
   },
   NO_CAPTURE: {
-    check: 'C-100.15', where: at("threadInstance|dischargeStage", "is-document-named"),
+    check: 'C-100.15', where: at("#documentNamed", "is-document-named"),
     translation: 'A step is filled by a captured document, named by its fingerprint, and this request names '
       + 'none. Name the document. Nothing was written.',
   },
@@ -102,13 +101,13 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'was written.',
   },
   NOT_CONCERNED: {
-    check: 'C-100.17', where: at("threadInstance|dischargeStage", "is-document-concerned"),
+    check: 'C-100.17', where: at("#concerned", "is-document-concerned"),
     translation: 'The record does not show this document concerning the subject this instance follows, so '
       + 'it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, '
       + 'or use it in the instance of the subject it does concern. Nothing was written.',
   },
   NO_REASON: {
-    check: 'C-100.18', where: at("dischargeStage|disposeProposal", "is-reason-stated"),
+    check: 'C-100.18', where: at("#reasonStated", "is-reason-stated"),
     translation: 'This act is recorded with a reason, in your own words, and none was given. A decision or '
       + 'an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was '
       + 'written.',
@@ -150,11 +149,11 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'named beside this message, the earlier one still reads back in full, and nothing was '
       + 'recorded.',
   },
-  LISTENER_DECLARED: {
-    check: 'C-100.23', where: at("onThreaded", "is-listener-once"),
-    translation: 'This module has already asked to be told of every threading; one registration is enough.',
-  },
 });
+
+/** The generic codes this module answers with no row of its own (N118; the catalogue's REC-64 rule, K163): each names
+ *  what a request left out, and other modules mint the same word for their own subjects. */
+export const GENERIC_CODES = Object.freeze(["NO_KEY"]);
 
 /** A refusal in DEC-49's shape: the code, its row and translation, then the site's own fields and sentence. `NO_BASIS`
  *  and `NO_CITATION` are the catalogue's shared act rows (C-33.40, C-33.41). Throws only when a code has no row with a
@@ -164,4 +163,11 @@ export function refusal(code, detail, extra = {}) {
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`progressions: ${code} has no row with a translation (DEC-49)`);
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, ...extra, detail };
+}
+
+/** A generic code's refusal (`GENERIC_CODES`): the code and the site's own fields and sentence, no row. Throws for any
+ *  other code, so a condition of this module's own cannot leave through here without its row. */
+export function generic(code, detail, extra = {}) {
+  if (!GENERIC_CODES.includes(code)) throw new Error(`progressions: ${code} is not a generic code; it answers with its row`);
+  return { ok: false, reason: code, code, ...extra, detail };
 }
