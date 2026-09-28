@@ -1,6 +1,6 @@
 # legacy-index (T8)
 
-**Status** · session_015DvrjDEhNepRfGzr6F7u2A · depth 2 · RUNNING until 2026-09-28T11:57:39Z (the old battery on this branch and on the tranche tip (after K263)) · handled B3
+**Status** · session_015DvrjDEhNepRfGzr6F7u2A · depth 2 · COMPLETE · handled B3
 
 **Job** · LEGACY-INDEX #5, session `session_015DvrjDEhNepRfGzr6F7u2A`, branch `job/T8/legacy-index`, the legacy-index bullet of layer 11 (`build/plan/current.md`). This is a legacy module, with no requirements file and no `tests` path. Its contract is the bullet and the Provides of the modules whose ops it routes. BOB's B2 (K262) and B3 (K263) are applied.
 
