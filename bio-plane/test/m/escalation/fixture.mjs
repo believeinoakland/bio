@@ -1,0 +1,268 @@
+/* escalation over the modules it uses: the real ones built before layer 9 (record-core, membership, promotion,
+   jurisdictions' `combine` over its test profile), on a real SQLite database (node:sqlite) standing in for a Durable
+   Object's storage; and stand-ins, in the shape of their Provides, for the four layer-9 modules built beside it,
+   which the test controls and records: conformance (`determinationRead` R9, `determinationsFor` R11), consequences
+   (`addressed` R9), actions (`actionRead` R29 with its ledger, `actionFacts` R12's clock rule) and filings (`filingsFor`
+   R13, `availableActions` R21). An action is a real `ACTN-` bundle whose document carries `breach`, `action_basis` and
+   `counterparty` (actions' Terms), committed through record-core; its ledger is the stand-in's. Every test drives
+   `escalation` at its interface. */
+import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
+import { promotionOf } from "../../../src/promotion/index.mjs";
+import { escalationOf } from "../../../src/escalation/index.mjs";
+import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+
+export function storage() {
+  const db = new DatabaseSync(":memory:");
+  let n = 0;
+  const sql = {
+    exec(q, ...args) {
+      const st = db.prepare(q);
+      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+    },
+  };
+  return {
+    db, sql,
+    transactionSync(fn) {
+      const sp = `sp${n++}`;
+      db.exec(`SAVEPOINT ${sp}`);
+      try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+      catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+    },
+  };
+}
+
+export const V = (id) => `member:${id}`;
+export const MACHINE = "class:ai";
+export const NOW = "2026-09-28T01:00:00Z";
+export const DAY = 86400000;
+export const ms = (iso) => Date.parse(iso);
+
+/** The test profile's offices (jurisdictions' `test-port-ellery`): elected, not elected, oversight, not oversight. */
+export const OFFICE = {
+  clerk: { role: "Town Clerk", body: "City of Port Ellery" },                   // elected: false, oversight unstated
+  board: { role: "Selectboard", body: "Port Ellery Selectboard" },              // elected: true, oversight unstated
+  harbour: { role: "Harbour District Board", body: "Port Ellery Harbour District" }, // elected, oversight: false
+  examiner: { role: "Examiner of Accounts", body: "Marlow County Audit Office" },     // not elected, oversight: true
+  unlisted: { role: "Water Board", body: "Nowhere Water District" },
+};
+
+export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } = {}) {
+  const st = storage();
+  const host = { storage: st };
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  const clock = { now };
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  const promotion = promotionOf(host, { record, membership, now: () => clock.now });
+  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  record.setSetting("jurisdiction_profiles", profiles, "test");
+
+  const calls = { determinationRead: [], determinationsFor: [], addressed: [], actionRead: [], actionFacts: [],
+                  filingsFor: [], availableActions: [] };
+  /* conformance's stand-in: determinations as its R9 answers them, sight by the determination's project. */
+  const determinations = new Map();
+  const sees = (project, viewer) => viewer === null || viewer === undefined || membership.inSight(project, viewer);
+  const conformance = {
+    determinationRead({ id, viewer }) {
+      calls.determinationRead.push({ id, viewer });
+      const d = determinations.get(id);
+      if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+      return { ok: true, ...structuredClone(d), live: !d.superseded_by };
+    },
+    determinationsFor({ act, standard, outcome, live, after, limit = 200, viewer }) {
+      calls.determinationsFor.push({ act, standard, outcome, live, after, viewer });
+      const all = [...determinations.values()].filter((d) => sees(d.project, viewer))
+        .filter((d) => !act || d.act.id === act)
+        .filter((d) => !live || !d.superseded_by)
+        .filter((d) => !standard || d.outcomes.some((o) => o.standard === standard && (!outcome || o.outcome === outcome)))
+        .filter((d) => standard || !outcome || d.outcomes.some((o) => o.outcome === outcome))
+        .sort((a, b) => (a.id < b.id ? -1 : 1)).filter((d) => !after || d.id > after);
+      const cap = Math.min(limit, conformance.pageSize ?? 200);
+      const items = all.slice(0, cap).map((d) => ({ ...structuredClone(d), live: !d.superseded_by }));
+      return { ok: true, items, cursor: items.at(-1)?.id ?? null, truncated: all.length > cap };
+    },
+  };
+  /* consequences' stand-in: `addressed` per determination, `undetermined` "no consequence recorded" by default (K172). */
+  const addressedBy = new Map();
+  const consequences = {
+    addressed({ determination, viewer }) {
+      calls.addressed.push({ determination, viewer });
+      return addressedBy.get(determination) || { state: "undetermined", parts: [], says: "no consequence recorded" };
+    },
+  };
+  /* actions' stand-in: the ledger of each action, and R12's clock rule over the document's clock. */
+  const ledgers = new Map();
+  const actions = {
+    actionRead({ id, viewer }) {
+      calls.actionRead.push({ id, viewer });
+      const h = typeof id === "string" ? record.head(id) : null;
+      if (!h || (viewer !== null && viewer !== undefined && !membership.inSight(id, viewer))) return { ok: false, reason: "NO_SUCH_BUNDLE" };
+      if (h.type !== "action") return { ok: false, reason: "NOT_AN_ACTION" };
+      const hidden = actionHidden.has(id) && viewer !== null && viewer !== undefined && viewer !== V("alice");
+      if (hidden) return { ok: false, reason: "NO_SUCH_BUNDLE" };
+      return { ok: true, id, kind: "request_for_comment", ledger: structuredClone(ledgers.get(id) || []) };
+    },
+    actionFacts(text, nowMs) {
+      calls.actionFacts.push({ nowMs });
+      const fm = typeof text === "string" ? parseFrontmatter(text).data : null;
+      if (!fm || fm.object_type !== "action") return { kind: null, clock_next: null, clock_overdue: null };
+      const pend = (Array.isArray(fm.clock) ? fm.clock : []).filter((c) => c && c.status === "pending" && /^\d{4}-\d{2}-\d{2}$/.test(c.date))
+        .map((c) => c.date).sort();
+      const next = pend[0] ?? null;
+      const today = new Date(nowMs).toISOString().slice(0, 10);
+      return { kind: fm.action_kind ?? null, clock_next: next, clock_overdue: next === null ? null : next < today };
+    },
+  };
+  const actionHidden = new Set();
+  /* filings' stand-in. */
+  const filings = {
+    filingsFor({ action, viewer }) { calls.filingsFor.push({ action, viewer }); return { ok: true, drafts: [{ id: `FD-${action}`, tier: 1 }], packets: [] }; },
+    availableActions({ determination, viewer }) {
+      calls.availableActions.push({ determination, viewer });
+      return { ok: true, kinds: [{ kind: "complaint", tier: 1, words: "Tier 1" }, { kind: "lawsuit", tier: 3, words: "Tier 3",
+        counsel: "such an action requires competent counsel" }] };
+    },
+  };
+  const given = Object.fromEntries(Object.entries({ conformance, consequences, actions, filings }).filter(([k]) => !omit.includes(k)));
+  const esc = escalationOf(host, { record, membership, promotion, ...given, now: () => clock.now });
+  esc.migrate();
+
+  let n = 0, nd = 0, na = 0;
+  const w = {
+    st, host, record, membership, promotion, esc, clock, calls, determinations, addressedBy, ledgers, actionHidden,
+    stand: { conformance, consequences, actions, filings },
+    rows: (q, ...a) => st.sql.exec(q, ...a),
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
+    fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
+    snapshot() {
+      const out = {};
+      for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
+        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
+      return out;
+    },
+    member(id, { role = "member", status = "active" } = {}) {
+      st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                   VALUES (?, ?, ?, ?, ?, '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role, status);
+    },
+    project(title, owner) {
+      const r = promotion.promote({ base: null, snapKey: `k${++n}`, author: V(owner), ownerMemberId: owner,
+        files: [{ path: "bundle.md", text: projMd(title) }], meta: { object_type: "project" } });
+      if (!r.ok) throw new Error(`fixture project refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.bundleId;
+    },
+    join(projectId, memberId, state = "joined") {
+      st.sql.exec(`INSERT OR REPLACE INTO project_participants (project_id, member_id, state, owner, created, updated)
+                   VALUES (?, ?, ?, 0, 't', 't')`, projectId, memberId, state);
+    },
+    /** A determination as conformance records it: per-standard outcomes, an act with an actor office. */
+    determine({ project, outcomes, actor = OFFICE.clerk, act = null, at = clock.now, supersededBy = null } = {}) {
+      const id = `CONF-2026-${String(++nd).padStart(4, "0")}-determination`;
+      determinations.set(id, { id, project, act: { id: act ?? `ACT-2026-${String(nd).padStart(4, "0")}`, description: "the act",
+        actor, at: "2026-09-01", evidence: ["c1"] }, outcomes, at, author: V("alice"), superseded_by: supersededBy });
+      return id;
+    },
+    supersede(id, by = "CONF-2026-9999-determination") { determinations.get(id).superseded_by = by; },
+    /** A real action bundle whose document states the breach, its legs and counterparty; its ledger the stand-in's. */
+    action({ project, breach = true, restsOn = [], counterparty = { state: "named", ...OFFICE.clerk }, clock: clk = [] } = {}) {
+      const id = `ACTN-2026-${String(++na).padStart(4, "0")}-act`;
+      const text = actionMd({ id, project, breach, restsOn, counterparty, clock: clk, at: clock.now });
+      const sha = createHash("sha256").update(text, "utf8").digest("hex");
+      record.transact(() => record.commit({ bundleId: id, type: "action", title: id, project: null, snapKey: `a${na}`,
+        kind: "promotion", base: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", author: V("alice"),
+        writer: null, operation: null, files: [{ path: "bundle.md", text, sha256: sha, bytes: Buffer.byteLength(text) }],
+        state: "active", priorState: null, group: "test-group", created: clock.now, lastUpdated: clock.now,
+        criticality: null, at: clock.now }));
+      ledgers.set(id, []);
+      return id;
+    },
+    /** One ledger entry, as actions' `actionCorrespond` appends it (R16): its position, direction, date and recording time. */
+    correspond(action, direction, at, recordedAt = clock.now) {
+      const l = ledgers.get(action);
+      l.push({ ord: l.length, direction, at, recorded_at: recordedAt, author: V("alice") });
+      return l.length - 1;
+    },
+  };
+  return w;
+}
+
+export function projMd(title) {
+  return ["---", "object_type: project", "schema: project@1", `title: "${title}"`, "current_state: forming",
+          "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`,
+          `objective: "Find out what happened."`, "references: []", "state_history: []", "---", "",
+          "## Objective", "", "Find out.", ""].join("\n");
+}
+
+function actionMd({ id, project, breach, restsOn, counterparty, clock, at }) {
+  const legs = restsOn.length ? ["action_basis:", ...restsOn.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])] : ["action_basis: []"];
+  const cp = ["counterparty:", ...Object.entries(counterparty).map(([k, v]) => `  ${k}: "${v}"`)];
+  const clk = clock.length ? ["clock:", ...clock.flatMap((c) => [`  - text: "${c.text ?? "reply due"}"`, `    date: "${c.date}"`,
+    `    basis: "${c.basis ?? "the rule"}"`, `    status: ${c.status ?? "pending"}`])] : ["clock: []"];
+  return ["---", `id: ${id}`, "object_type: action", `title: "${id}"`, "action_kind: request_for_comment", "current_state: active",
+    `project: ${project}`, `created: "${at}"`, `last_updated: "${at}"`, `breach: ${breach ? "true" : "false"}`, ...legs, ...cp,
+    ...clk, "correspondence: []", "---", "", "## Action", "", "An action.", ""].join("\n");
+}
+
+/** The common world: alice and bob joined in P, carol a member outside it; a determination noncompliant on two
+ *  standards (and compliant on a third) of an act by the clerk's office. */
+export function seeded(opts = {}) {
+  const w = world(opts);
+  for (const m of ["alice", "bob", "carol"]) w.member(m);
+  w.P = w.project("Budget watch", "alice");
+  w.join(w.P, "bob");
+  w.D = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" },
+    { standard: "STD-2026-0002-b", outcome: "noncompliant" }, { standard: "STD-2026-0003-c", outcome: "compliant" }] });
+  return w;
+}
+
+/** Open an escalation of `w.D` by bob; throws on refusal. */
+export function opened(w) {
+  const r = w.esc.escalationOpen({ determination: w.D, author: V("bob"), viewer: V("bob") });
+  if (!r.ok) throw new Error(`fixture open refused: ${JSON.stringify(r).slice(0, 400)}`);
+  w.E = r.id;
+  return r;
+}
+
+/** Drive an open escalation of `w.D` to `stage` along 1→2→3→4 (and 4→5 or 4→7), the record meeting each trigger.
+ *  Returns the notification action. */
+export function toStage(w, stage) {
+  opened(w);
+  const go = (to) => { const r = w.esc.escalationAdvance({ id: w.E, to, reason: `to ${to}`, author: V("bob"), viewer: V("bob") });
+                       if (!r.ok) throw new Error(`fixture advance to ${to} refused: ${JSON.stringify(r).slice(0, 600)}`); };
+  if (stage === 1) return null;
+  go(2);
+  const n = w.action({ project: w.P, restsOn: [w.D] });
+  w.N = n;
+  const at = w.esc.escalationAttach({ id: w.E, action: n, author: V("bob"), viewer: V("bob") });
+  if (!at.ok) throw new Error(`fixture attach refused: ${JSON.stringify(at)}`);
+  if (stage === 2) return n;
+  w.correspond(n, "sent", "2026-09-02");
+  go(3);
+  if (stage === 3) return n;
+  w.R = w.correspond(n, "received", "2026-09-10");
+  go(4);
+  if (stage === 4) return n;
+  const ev = w.esc.escalationEvaluate({ id: w.E, response: { action: n, ord: w.R }, reading: "denied", reason: "Refused outright.",
+                                        author: V("bob"), viewer: V("bob") });
+  if (!ev.ok) throw new Error(`fixture evaluate refused: ${JSON.stringify(ev)}`);
+  if (stage === 5 || stage === 7) { go(stage); return n; }
+  if (stage === 6) {
+    go(5);
+    const a5 = w.action({ project: w.P, restsOn: [w.D] });
+    w.A5 = a5;
+    const r = w.esc.escalationAttach({ id: w.E, action: a5, author: V("bob"), viewer: V("bob") });
+    if (!r.ok) throw new Error(`fixture attach 5 refused: ${JSON.stringify(r)}`);
+    w.correspond(a5, "sent", "2026-09-15");
+    go(6);
+    return n;
+  }
+  throw new Error(`no fixture path to stage ${stage}`);
+}
