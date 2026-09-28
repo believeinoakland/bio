@@ -25683,6 +25683,12 @@ var GOVERNOR = Object.freeze({
 });
 
 // ../bio-plane/src/capture/acquire.mjs
+var acquireGradeNote = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("op=acquire's note states what this surface earns AND the grade above it; with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${ceiling} toward evidentiary weight.`;
+};
+var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
 var ODF_DIGEST_MAX = 8 * 1024 * 1024;
 

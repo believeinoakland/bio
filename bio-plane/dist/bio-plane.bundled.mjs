@@ -45648,6 +45648,12 @@ var renderRow = (code) => {
     throw new Error(`renderRow: ${code} has no RENDER_CAPTURE_CHECKS row with a canned translation (DEC-49).`);
   return { code, check: row.check, translation: row.translation };
 };
+var acquireGradeNote = (ceiling, unreachable) => {
+  if (!ceiling || !unreachable)
+    throw new Error("op=acquire's note states what this surface earns AND the grade above it; with no grade above the ceiling the sentence cannot be composed truthfully");
+  return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${ceiling} toward evidentiary weight.`;
+};
+var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 function userAgent(env, purpose = "acquire", delegated = null) {
   if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
   return civicosUserAgent(env && env.VERSION || "0.0.0", env && env.INSTANCE_NAME || "unnamed", purpose);
@@ -46509,7 +46515,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     ...subsSkipped ? { subresources_skipped: subsSkipped } : {},
     ...receiptSignature ? { receipt_signature: receiptSignature } : {},
     store: storeName,
-    tokenClass: cls
+    tokenClass: cls,
+    note: ACQUIRE_GRADE_NOTE
   });
 }
 function snapshotOf(subs, sessionId, name, shellRecorded) {
@@ -46715,7 +46722,8 @@ async function continueCapture(cap, { body, session, cls, storeName, ev }) {
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...w.skipped ? { subresources_skipped: w.skipped } : {},
     store: storeName,
-    tokenClass: cls
+    tokenClass: cls,
+    note: ACQUIRE_GRADE_NOTE
   } };
 }
 
@@ -62899,12 +62907,12 @@ var attestFence = (ceiling, unreachable) => {
   return `What co-attestation answers: when did these bytes exist? It asks an independent timestamp authority to record that this capture's exact bytes existed no later than a fixed instant. What it does not answer: whether the document is TRUE, whether its source is authoritative, or how close it stands to the fact you are citing it for. A secondhand report that is co-attested is still a secondhand report. What it is worth: it strengthens a Grade ${ceiling} capture toward evidentiary weight. It never reaches Grade ${unreachable} \u2014 that needs a chain-of-custody web archive this surface cannot produce.`;
 };
 var ATTEST_FENCE = attestFence(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
-var acquireGradeNote = (ceiling, unreachable) => {
+var acquireGradeNote2 = (ceiling, unreachable) => {
   if (!ceiling || !unreachable)
     throw new Error("op=acquire's note states what this surface earns AND the grade above it; with no grade above the ceiling the sentence cannot be composed truthfully");
   return `Grade ${ceiling}: bytes as fetched, hashed at receipt. Grade ${unreachable} needs a chain-of-custody web archive, which this surface cannot produce. Co-attestation raises ${ceiling} toward evidentiary weight.`;
 };
-var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
+var ACQUIRE_GRADE_NOTE2 = acquireGradeNote2(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 var RUNG_LADDER = ["reversible", "reasoned", "terminal", "attested", "irreversible"];
 var IRREVERSIBLE_CORRECTION_PATH = "Publishing cannot be undone: what it published never stops answering. Correction always moves FORWARD \u2014 a further edition (a separate document; every published edition stands), or a withdrawal recorded as another attested act, with both standing in the record. Nothing is erased, and nothing is un-said.";
 var RUNG_ABSENCE_GROUNDS = {
@@ -102131,7 +102139,7 @@ var index_default = {
       if (acquired.response) return acquired.response;
       const read2 = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { storeSilent, storeName });
       if (read2.response) return read2.response;
-      return json(Object.assign(read2.body, { note: ACQUIRE_GRADE_NOTE }), 200);
+      return json(Object.assign(read2.body, { note: ACQUIRE_GRADE_NOTE2 }), 200);
     }
     if (op === "attest") {
       if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
