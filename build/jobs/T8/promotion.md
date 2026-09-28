@@ -153,3 +153,12 @@ See J4:
   - ownership: 3 files changed by promotion between tranche/T8 and HEAD; legacy-checks 0 lines, legacy-store 0 lines; 0 failures.
 
 Size (session_01YGxAM3S1q5VWSShovpg56h): test runs 58, module lines 2248
+
+## J6 · REPORT
+
+Found by this re-opening (B4). None of them is changed here.
+
+1. **Generated artifacts (§14):** this job changes `bio-plane/src/promotion/index.mjs`, so `agent-worker/dist/agent-worker.bundled.mjs` is stale (`fleetbundles`: the agent-worker rows fail on staleness and byte identity; ocr-worker and pdf-worker pass). `bio-plane/dist/bio-plane.bundled.mjs` embeds the same source, so it is stale too. Regenerate both at the close.
+2. **legacy-tests (K270), for the merge:** the four suites B4 names pass on this code only with LEGACY-TESTS #5's re-anchored copies of `reevaluation.test.mjs`, `frontier-chunk.test.mjs` and `frontier-chunk.control.mjs` (`job/T8/legacy-tests`). With `tranche/T8`'s own copies, `reevaluation.test.mjs` stops at its first publish on `UNCLEARED_HUNCH` (the hunch-debt fixture its plan entry re-grades), here and on the base alike. Figures below, in J7.
+3. **R39's wording, for BOB (no change made):** R39 says the registered checks run "in the total order (`legacy-store` last)". In the layer order of `modules.json`, `legacy-store` (layer 10) comes before the eight layer-11 modules. None of those registers a step, check, projection or listener today, so the two readings agree on every registration made now. If a layer-11 module ever registers a step, it would run after `legacy-store`, and R39's parenthesis would need its wording clarified.
+4. **`modules.json` and promotion:** promotion now holds the modules' order as a constant (`MODULE_ORDER`), because product code cannot read `build/` at run time. The R39 test holds it equal to `modules.json`. So a module added, moved or reordered there turns promotion's suite red until the list follows it. That is intended, but it is a promotion entry each time.
