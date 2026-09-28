@@ -26,6 +26,8 @@
 - **skills** · N156; N157 (its share); N245 (its share).
 - **agent-worker** · N153 (its share); N157 (its share).
 
+- **provenance** (layer 3) · N263.
+
 ### Layers 7–10
 
 - **intent** · N209 (BOB words R12–R13's bound first); N236; N208 (its site).
