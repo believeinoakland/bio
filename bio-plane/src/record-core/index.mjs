@@ -345,13 +345,17 @@ export class RecordCore {
    *  (the tables each mint site's `taken` reads; their owners declare them). COUNTER: for a prefix
    *  whose mint passes no tail, every id `seq` says the counter issued before REC-151, used or not,
    *  capped at 9,999. Rows already recorded are left as they are. One statement per source and one
-   *  for the counter, each doing its work inside SQLite. */
+   *  for the counter, each doing its work inside SQLite. A live id is matched by its literal `<prefix>-`
+   *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
+   *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
     const at = new Date().toISOString();
     for (const [prefix, table, column] of sources) {
       if (!IDENT.test(String(table)) || !IDENT.test(String(column))) continue;
+      const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
-                      SELECT DISTINCT ${column}, ?, 'live' FROM ${table} WHERE ${column} GLOB ?`, at, `${prefix}-*`);
+                      SELECT DISTINCT ${column}, ?, 'live' FROM ${table}
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at, head, head);
     }
     const scopes = RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -684,7 +688,9 @@ export class RecordCore {
    *  `manifest` is modified or removed (R29): a snap key already used for the bundle fails the
    *  append loudly (their primary keys) rather than rewriting it. R44: the row records the state, prior
    *  state, group, times and criticality as the caller gives them, and the entry's time is `at`, the
-   *  caller's stated time (this module's clock when it states none). */
+   *  caller's stated time (this module's clock when it states none). R37 (N287): `group_id` is the producing
+   *  group as the committer gave it, KEPT when a later commit gives none (absent or null: the column holds no
+   *  null), the empty string for a bundle created naming none; `prior_state` is `priorState` as last given. */
   commit({ bundleId, type, title = null, project = null, snapKey, kind = "promotion", base = null, author = null,
            writer = null, operation = null, files = [], state, priorState, group, created, lastUpdated, criticality,
            at }) {
@@ -708,7 +714,8 @@ export class RecordCore {
           f.bytes ?? (typeof f.text === "string" ? te.encode(f.text).length : 0), f.sha256);
       const bundleSha = (files.find((f) => f.path === "bundle.md") || files[0] || {}).sha256 ?? "";
       const given = [["current_state", state], ["prior_state", priorState], ["group_id", group], ["created", created],
-                     ["last_updated", lastUpdated], ["criticality", criticality]].filter(([, v]) => v !== undefined);
+                     ["last_updated", lastUpdated], ["criticality", criticality]]
+        .filter(([k, v]) => v !== undefined && !(k === "group_id" && v === null));
       if (cur)
         this.#sql.exec(
           `UPDATE bundles SET object_type=?, title=?, project=?, bundle_sha=?, row_version=row_version+1

@@ -10,7 +10,7 @@ import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_IT
 import { storage, bucket } from "./storage.mjs";
 
 const fresh = (opts) => { const s = storage(); const rc = recordOf({ storage: s }, opts); rc.migrate(); return { s, rc }; };
-const rows = (s, q, ...a) => s.sql.exec(q, ...a);
+const rows = (s, q, ...a) => [...s.sql.exec(q, ...a)];
 const sha = (t) => createHash("sha256").update(t).digest("hex");
 const file = (path, text) => ({ path, text, bytes: Buffer.byteLength(text), sha256: sha(text) });
 const put = (rc, id, snapKey, text = `x ${id} ${snapKey}`, more = {}) =>
@@ -559,7 +559,7 @@ test("R18 R19 R20 (N117): auditPass reads the store a page at a time, never the 
   const s = storage();
   const reads = [];
   const exec = s.sql.exec;
-  s.sql.exec = (q, ...a) => { const r = exec(q, ...a); if (/^\s*SELECT/i.test(q)) reads.push({ q, n: r.length }); return r; };
+  s.sql.exec = (q, ...a) => { const r = exec(q, ...a).toArray(); if (/^\s*SELECT/i.test(q)) reads.push({ q, n: r.length }); return r.values(); };
   const rc = recordOf({ storage: s }); rc.migrate();
   const ids = Array.from({ length: 23 }, (_, i) => `INFO-2026-${String(i + 1).padStart(4, "0")}-x`);
   const md = (id, t) => `---\nid: ${id}\nobject_type: information\ncurrent_state: collected\nreferences:\n  - target: ${t}\n    rel: cites\n    status: active\n---\n\n## Summary\n\nx\n`;
@@ -1267,4 +1267,63 @@ test("R61: releaseLease leaves a lease held by another actor as it is, live or e
   assert.deepEqual(recordOf({ storage: broken }).releaseLease(id, "alice"), { ok: true, released: false });
   assert.deepEqual(rc.releaseLease({ not: "an id" }, "alice"), { ok: true, released: false });
   assert.equal(typeof rc.releaseLease, "function");
+});
+
+/* ---- T11: R37's `bundles.group_id` and `bundles.prior_state` (N287), the plane's shape (K313, K316) ---- */
+
+test("R37 R44: bundles.group_id and bundles.prior_state hold their stated names, types and meaning, read in a later module's own SQL (N287)", () => {
+  const { s, rc } = fresh();
+  const b = Object.fromEntries(rows(s, `PRAGMA table_info(bundles)`).map((r) => [r.name, r]));
+  assert.deepEqual([b.group_id.type, b.group_id.notnull], ["TEXT", 1]);
+  assert.deepEqual([b.prior_state.type, b.prior_state.notnull], ["TEXT", 0]);
+  const a = "INFO-2026-0001-a", n = "INFO-2026-0002-b", z = "INFO-2026-0003-c";
+  const c = (id, k, more) => rc.commit({ bundleId: id, type: "information", snapKey: k, files: [file("bundle.md", `${id}${k}`)], ...more });
+  // a later module's own SQL: a projection of its own joined to the contract's columns (retrieval, query-language, inquiry)
+  s.db.exec(`CREATE TABLE later_projection (bundle_id TEXT)`);
+  for (const id of [a, n, z]) s.sql.exec(`INSERT INTO later_projection VALUES (?)`, id);
+  const read = (id) => ({ ...rows(s, `SELECT b.group_id, b.prior_state FROM later_projection p JOIN bundles b ON b.bundle_id = p.bundle_id
+                                        WHERE p.bundle_id = ?`, id)[0] });
+  const agrees = (id) => { const h = rc.head(id), r = read(id); assert.deepEqual([h.groupId, h.priorState], [r.group_id, r.prior_state], `head(${id}) reads the same columns`); };
+
+  // at creation: the group as given, or the empty string naming none; prior_state NULL when none was given
+  c(a, "K1", { state: "collected", group: "grp-1" });
+  c(n, "K1", { state: "collected" });
+  c(z, "K1", { state: "collected", group: null, priorState: "draft" });
+  assert.deepEqual(read(a), { group_id: "grp-1", prior_state: null });
+  assert.deepEqual(read(n), { group_id: "", prior_state: null }, "a bundle created naming no group: the empty string");
+  assert.deepEqual(read(z), { group_id: "", prior_state: "draft" }, "a null group names none; a prior state given at creation is kept");
+  assert.deepEqual(rows(s, `SELECT bundle_id FROM bundles WHERE group_id = '' ORDER BY bundle_id`).map((r) => r.bundle_id), [n, z]);
+
+  // a later commit that gives no group keeps it, whether it leaves group out or gives null; prior_state is as last given
+  c(a, "K2", { state: "verified", priorState: "collected" });
+  assert.deepEqual(read(a), { group_id: "grp-1", prior_state: "collected" });
+  c(a, "K3", { state: "verified", group: null });
+  assert.deepEqual(read(a), { group_id: "grp-1", prior_state: "collected" }, "group null keeps it; priorState absent keeps it");
+  c(a, "K4", { state: "archived", priorState: "verified", group: "grp-2" });
+  assert.deepEqual(read(a), { group_id: "grp-2", prior_state: "verified" }, "a group given replaces it");
+  c(a, "K5", { state: "archived", priorState: null });
+  assert.deepEqual(read(a), { group_id: "grp-2", prior_state: null }, "a prior state given as null is recorded as NULL");
+  c(n, "K2", { state: "verified", priorState: "collected", group: "grp-3" });
+  assert.deepEqual(read(n), { group_id: "grp-3", prior_state: "collected" }, "a group first given later is recorded");
+  for (const id of [a, n, z]) agrees(id);
+
+  // the columns' meaning survives the store's other writes: a lease, a purge of another bundle, a later module's divide by group
+  rc.acquireLease(a, "m", 1000); rc.purge({ bundleId: z });
+  assert.deepEqual(rows(s, `SELECT b.group_id, COUNT(*) AS n FROM later_projection p JOIN bundles b ON b.bundle_id = p.bundle_id
+                            GROUP BY b.group_id ORDER BY b.group_id`).map((r) => [r.group_id, r.n]), [["grp-2", 1], ["grp-3", 1]]);
+  assert.equal(rc.head(a).rowVersion, 5, "every commit above was taken whole, none refused");
+});
+
+test("R40 R28: seedMintLedger learns live ids under the plane's 50-byte LIKE/GLOB cap, whatever the prefix's length or characters (K313)", () => {
+  const { s, rc } = fresh();
+  const long = "X".repeat(60), odd = "A*[";
+  s.db.exec(`CREATE TABLE live (id TEXT)`);
+  s.sql.exec(`INSERT INTO live VALUES (?), (?), (?), (?)`, `${long}-2026-0003`, `${odd}-2026-0004`, "AB-2026-0005", "AZZZ-2026-0006");
+  assert.doesNotThrow(() => rc.seedMintLedger([[long, "live", "id"], [odd, "live", "id"]]));
+  assert.equal(draws([3, 4], () => rc.mintOpaqueId(long, "2026", "", () => false)), `${long}-2026-0004`, "a long prefix's live id was learned");
+  assert.equal(draws([4, 7], () => rc.mintOpaqueId(odd, "2026", "", () => false)), `${odd}-2026-0007`, "a prefix is matched literally");
+  assert.equal(draws([5], () => rc.mintOpaqueId("AB", "2026", "", () => false)), "AB-2026-0005",
+               "a prefix with pattern characters matched nothing else: A*[ is not A-anything");
+  // the fixture holds workerd's cap: a pattern over 50 bytes is refused, as on the plane
+  assert.throws(() => s.sql.exec(`SELECT 1 FROM live WHERE id GLOB ?`, "Y".repeat(51)), /pattern too complex/);
 });
