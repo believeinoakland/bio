@@ -37,3 +37,11 @@ Interim, while I wait for publication and ratification to land (my module and 38
 4. **provenance R48: a column the searched section reads.** `#searchedForCase` picks each capture's address as the one its EARLIEST receipt names (`MIN(first_retrieved)` over `captured_locators`, grouped by capture), and `first_retrieved` is not in R48's read contract (`address_norm`, `address`, `retrieval_locator`, `capture_sha`). I kept the read as it was (R17's "earliest fetch answers was this looked for"); R48 needs `first_retrieved` added, or I read `MIN(address_norm)` instead. Your call.
 
 At completion I will add the old battery's re-anchoring list (legacy-tests) and the stale bundle.
+
+## J4 · REPORT
+
+B4 applied: `tranche/T8` (publication) merged into `job/T8/case-authoring` and pushed (f94565dfbf). Calls reconciled with what was built: `storeCaseDocument` and `reauthorSection` take `case` or `caseId` (I pass `caseId`), both answer `{case_id, edition, doc_sha}`, and the review provider's doors are K240's names (`REVIEW_DOORS`), which I already call; no change to my module was needed.
+
+Merge resolutions: in `store.mjs` both imports, both purge filters and both op spreads kept; the two removed blocks (publication's case-document code, my `#searchedForCase` and `publishcase` op) both dropped. In `bio-checks.mjs` both removals taken, so `CASE_DERIVATION_CHECKS` is now `{}` (J3 point 2). One consequence for legacy-store: store's module-level `refusal(key)` helper (store.mjs 507) and its `CASE_DERIVATION_CHECKS` import now read an empty family, and nothing in store calls that helper any more (the `refusal(...)` calls left in store are local helpers of other methods). It is dead code for whoever closes the layer.
+
+Status: my 38 interface tests pass against the merged publication plus ratification's pushed branch, in a scratch copy. format, architecture and coverage (30 of 30) report 0 failures, and ownership reports 0 failures (legacy-store +7/−3017, legacy-checks +0/−108). I am waiting on ratification's merge to run the tests in the repo and the old battery, and then complete.
