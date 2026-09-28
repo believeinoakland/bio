@@ -152,7 +152,7 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
 });
 
 test("R3 R14 a provider this host was not given is never read as met or empty: the read and every act that needs it answer PROVIDER_UNAVAILABLE naming it, and nothing is written", () => {
-  for (const missing of ["actions", "filings"]) {
+  for (const missing of ["filings"]) {
     const w = seeded({ omit: [missing] });
     const before = w.snapshot();
     const tried = [];

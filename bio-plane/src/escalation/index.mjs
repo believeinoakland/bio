@@ -29,7 +29,8 @@
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (its R11); default `conformanceOf(host)` (K252).
  *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
- *   actions        `actionRead` (its R29), `actionFacts` (its R12, the one clock rule).
+ *   actions        `actionRead` (its R29: the ledger, legs, `breach`, counterparty); default `actionsOf(host)` (K253).
+ *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function.
  *   filings        `filingsFor` (its R13), `availableActions` (its R21).
  *   view           the active profiles' combined view (`jurisdictions.combine`, record-core R26), or null.
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
@@ -39,6 +40,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
+import { actionsOf, actionFacts } from "../actions/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
 import { ESCALATION, escalationId, escalationDoc, appendEntry, logOf, logSection, parseFm } from "./doc.mjs";
@@ -100,9 +102,9 @@ const actIdOf = (d) => actOf(d).id ?? null;
 const projectOf = (d) => d.project ?? null;
 const recordedAtOf = (d) => d.at ?? null;
 
-/** actions R25/R29: an action's correspondence ledger, in order, `[{ord, direction, at, recorded_at}]`. */
+/** actions R25/R29 (K253): an action's correspondence ledger, in order, `[{ord, direction, at, recorded_at}]`. */
 function ledgerOf(block) {
-  const raw = Array.isArray(block.ledger) ? block.ledger : Array.isArray(block.correspondence) ? block.correspondence : [];
+  const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
   return raw.map((e, i) => (isObj(e) ? { ord: Number.isInteger(e.ord) ? e.ord : i, direction: e.direction ?? null,
     at: e.at ?? null, recorded_at: e.recorded_at ?? null } : null)).filter(Boolean);
 }
@@ -186,8 +188,6 @@ export class Escalation {
     return r && r.ok !== false ? ledgerOf(r) : null;
   }
 
-  /* An action's document's front matter (its Terms), read through record-core. */
-  #actionFm(action) { return parseFm(this.#text(action)) || {}; }
 
   /* ===================================================================== *
    * THE TRIGGERS (R2, R4–R12): each edge out of the current stage, met or not, from the record at `nowMs`.
@@ -259,7 +259,7 @@ export class Escalation {
           if (reply) alts.push({ ms: Math.max(instantMs(s.entry.at), instantMs(reply.at)),
                                  ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`] });
         }
-        const facts = this.actions.actionFacts(this.#text(a.action), nowMs) || {};
+        const facts = actionFacts(this.#text(a.action), nowMs) || {};
         if (!facts.clock_next)
           notes.push({ action: a.action, says: "this notification action has no pending clock entry, so stage 3 never "
                        + "triggers by time on it; a member states a clock entry, with its basis, on the action" });
@@ -372,7 +372,7 @@ export class Escalation {
       if (a.stage === 7) {
         item.purpose = a.purpose;
         item.standards = a.standards;
-        const office = this.#office(this.#actionFm(a.action).counterparty, view);
+        const office = this.#office(visible.counterparty, view);
         if (a.purpose === "official_request" && office.elected === undefined)
           item.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
         if ((a.purpose === "oversight_request" || a.purpose === "audit_request") && office.oversight === undefined)
@@ -463,23 +463,23 @@ export class Escalation {
     const headType = c.head ? c.head.type : null;
     if (type !== ESCALATION && headType !== ESCALATION) return null;
     if (c.replay) return null;
+    /* DEC-49 REGION is-escalation-member */
     if (isMachine(c.author))
-      /* DEC-49 REGION is-escalation-member */
       return refusal("MACHINE_CANNOT_WRITE_ESCALATION", "an escalation is written only by a member's act; a machine "
                      + "prepares and never acts (Design Requirement 12). Nothing was written.");
-      /* END DEC-49 REGION is-escalation-member */
+    /* END DEC-49 REGION is-escalation-member */
+    /* DEC-49 REGION is-escalation-act */
     if (!c.pkg || c.pkg[ACT] !== true)
-      /* DEC-49 REGION is-escalation-act */
       return refusal("ESCALATION_BY_ACT_ONLY", "an escalation changes only through its acts (open, attach, evaluate, "
                      + "advance, decline, suspend, resume, end), so its log and its tables never disagree. Nothing was written.");
-      /* END DEC-49 REGION is-escalation-act */
+    /* END DEC-49 REGION is-escalation-act */
     if (c.head) {
       const held = logSection(this.#text(c.bundleId)) || "";
       const now = logSection(c.bundleMd && c.bundleMd.text) || "";
+      /* DEC-49 REGION is-escalation-append-only */
       if (!now.startsWith(held))
-        /* DEC-49 REGION is-escalation-append-only */
         return refusal("ESCALATION_HISTORY_REWRITTEN", "an escalation's log is append-only. Nothing was written.");
-        /* END DEC-49 REGION is-escalation-append-only */
+      /* END DEC-49 REGION is-escalation-append-only */
     }
     return null;
   }
@@ -531,44 +531,44 @@ export class Escalation {
   /** R1: open an escalation of a live noncompliant determination, at stage 1. */
   escalationOpen(args = {}) {
     const { determination, author, viewer } = args;
+    /* DEC-49 REGION is-open-member */
     if (isMachine(author))
-      /* DEC-49 REGION is-open-member */
       return refusal("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
-      /* END DEC-49 REGION is-open-member */
+    /* END DEC-49 REGION is-open-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const d = typeof determination === "string" && determination
       ? this.conformance.determinationRead({ id: determination, viewer }) : null;
+    /* DEC-49 REGION is-determination-seen */
     if (!d || d.ok === false)
-      /* DEC-49 REGION is-determination-seen */
       return refusal("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
                      + "exactly as one that does not exist.");
-      /* END DEC-49 REGION is-determination-seen */
+    /* END DEC-49 REGION is-determination-seen */
+    /* DEC-49 REGION is-determination-live */
     if (!liveOf(d))
-      /* DEC-49 REGION is-determination-live */
       return refusal("DETERMINATION_SUPERSEDED", "that determination has been superseded; an escalation pursues a live "
                      + "determination. Nothing was written.", { superseded_by: d.superseded_by ?? null });
-      /* END DEC-49 REGION is-determination-live */
+    /* END DEC-49 REGION is-determination-live */
     const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
+    /* DEC-49 REGION is-determination-noncompliant */
     if (!pursued.length)
-      /* DEC-49 REGION is-determination-noncompliant */
       return refusal("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no "
                      + "breach to pursue. Nothing was written.");
-      /* END DEC-49 REGION is-determination-noncompliant */
+    /* END DEC-49 REGION is-determination-noncompliant */
     const project = projectOf(d);
     const fence = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
+    /* DEC-49 REGION is-open-joined */
     if (fence)
-      /* DEC-49 REGION is-open-joined */
       return refusal("NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's "
                      + "project. Nothing was written.", { project, membership: fence.reason });
-      /* END DEC-49 REGION is-open-joined */
+    /* END DEC-49 REGION is-open-joined */
     const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
                             ORDER BY escalation_id LIMIT 1`, determination);
+    /* DEC-49 REGION is-one-escalation */
     if (held)
-      /* DEC-49 REGION is-one-escalation */
       return refusal("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is `
                      + "one open or suspended escalation per determination. Nothing was written.", { escalation: held.escalation_id });
-      /* END DEC-49 REGION is-one-escalation */
+    /* END DEC-49 REGION is-one-escalation */
     const at = this.now();
     const actId = actIdOf(d);
     const r = this.record.transact(() => {
@@ -591,66 +591,65 @@ export class Escalation {
   /** R9, R12: attach a breach action to the current stage (2, 5 or 7). */
   escalationAttach(args = {}) {
     const { id, action, purpose, standards, author, viewer } = args;
+    /* DEC-49 REGION is-attach-member */
     if (isMachine(author))
-      /* DEC-49 REGION is-attach-member */
       return refusal("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
-      /* END DEC-49 REGION is-attach-member */
+    /* END DEC-49 REGION is-attach-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
     const a = typeof action === "string" && action ? this.actions.actionRead({ id: action, viewer }) : null;
+    /* DEC-49 REGION is-action-seen */
     if (!a || a.ok === false)
-      /* DEC-49 REGION is-action-seen */
       return refusal("NO_SUCH_ACTION", "no action answers to that id here; one you may not see is answered exactly as one "
                      + "that does not exist.");
-      /* END DEC-49 REGION is-action-seen */
-    const fm = this.#actionFm(action);
-    const legs = Array.isArray(fm.action_basis) ? fm.action_basis : [];
-    if (fm.breach !== true || !legs.some((l) => isObj(l) && l.kind === "rests_on" && l.target === e.determination))
-      /* DEC-49 REGION is-breach-action */
+    /* END DEC-49 REGION is-action-seen */
+    const legs = Array.isArray(a.legs) ? a.legs : [];
+    /* DEC-49 REGION is-breach-action */
+    if (a.breach !== true || !legs.some((l) => isObj(l) && l.kind === "rests_on" && l.target === e.determination))
       return refusal("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and "
                      + "that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
-      /* END DEC-49 REGION is-breach-action */
+    /* END DEC-49 REGION is-breach-action */
+    /* DEC-49 REGION is-attaching-stage */
     if (!ATTACHING_STAGES.includes(e.stage))
-      /* DEC-49 REGION is-attaching-stage */
       return refusal("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages `
                      + "2, 5 and 7 do. Nothing was written.", { stage: e.stage });
-      /* END DEC-49 REGION is-attaching-stage */
+    /* END DEC-49 REGION is-attaching-stage */
     const held = this.#one(`SELECT escalation_id, stage FROM escalation_attachments WHERE action_id=?`, action);
+    /* DEC-49 REGION is-attached-once */
     if (held)
-      /* DEC-49 REGION is-attached-once */
       return refusal("ALREADY_ATTACHED", "that action is already attached to an escalation, at one stage. Nothing was written.",
                      held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {});
-      /* END DEC-49 REGION is-attached-once */
+    /* END DEC-49 REGION is-attached-once */
     const entry = { kind: "attach", action, stage: e.stage, author, at: this.now() };
     if (e.stage === 7) {
+      /* DEC-49 REGION is-accountability-purpose */
       if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
-        /* DEC-49 REGION is-accountability-purpose */
         return refusal("NOT_ACCOUNTABILITY", "a stage-7 act states one accountability purpose: "
                        + `${ACCOUNTABILITY_PURPOSES.join(", ")}. Policy advocacy and candidate support have none. Nothing was written.`,
                        { purposes: ACCOUNTABILITY_PURPOSES });
-        /* END DEC-49 REGION is-accountability-purpose */
+      /* END DEC-49 REGION is-accountability-purpose */
       const named = Array.isArray(standards) ? standards.filter((s) => typeof s === "string" && s) : [];
       const foreign = named.filter((s) => !e.standards.includes(s));
+      /* DEC-49 REGION is-pursued-standard */
       if (!named.length || foreign.length)
-        /* DEC-49 REGION is-pursued-standard */
         return refusal("NOT_THE_BREACH", "a stage-7 act names at least one of the escalation's noncompliant standards as "
                        + "the requirement it seeks enforced, and no other. Nothing was written.",
                        { pursued: e.standards, ...(foreign.length ? { not_pursued: foreign } : {}) });
-        /* END DEC-49 REGION is-pursued-standard */
-      const office = this.#office(fm.counterparty, this.#view());
+      /* END DEC-49 REGION is-pursued-standard */
+      const office = this.#office(a.counterparty, this.#view());
+      /* DEC-49 REGION is-elected-office */
       if (purpose === "official_request" && office.elected === false)
-        /* DEC-49 REGION is-elected-office */
         return refusal("COUNTERPARTY_NOT_ELECTED", "an official request asks an elected office to act on the breach, and "
                        + "the active profiles mark this action's office not elected. Nothing was written.");
-        /* END DEC-49 REGION is-elected-office */
+      /* END DEC-49 REGION is-elected-office */
+      /* DEC-49 REGION is-oversight-office */
       if ((purpose === "oversight_request" || purpose === "audit_request") && office.oversight === false)
-        /* DEC-49 REGION is-oversight-office */
         return refusal("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an oversight or audit "
                        + "body, and the active profiles mark this action's office not one. Nothing was written.");
-        /* END DEC-49 REGION is-oversight-office */
+      /* END DEC-49 REGION is-oversight-office */
       Object.assign(entry, { purpose, standards: [...new Set(named)] });
     }
     const w = this.#append(e, entry, { blurb: "Action attached" });
@@ -662,24 +661,24 @@ export class Escalation {
   /** R10: a member's reading of a response, at stage 4. */
   escalationEvaluate(args = {}) {
     const { id, response, reading, reason, author, viewer } = args;
+    /* DEC-49 REGION is-evaluate-member */
     if (isMachine(author))
-      /* DEC-49 REGION is-evaluate-member */
       return refusal("MACHINE_CANNOT_EVALUATE", "a response is evaluated by a named member. Nothing was written.");
-      /* END DEC-49 REGION is-evaluate-member */
+    /* END DEC-49 REGION is-evaluate-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
+    /* DEC-49 REGION is-evaluation-stage */
     if (e.stage !== 4)
-      /* DEC-49 REGION is-evaluation-stage */
       return refusal("NOT_IN_EVALUATION", `the escalation stands at stage ${e.stage} (${STAGES[e.stage]}); a response is `
                      + "evaluated at stage 4. Nothing was written.", { stage: e.stage });
-      /* END DEC-49 REGION is-evaluation-stage */
+    /* END DEC-49 REGION is-evaluation-stage */
     if (e.state === "ended") return refuseEnded();
+    /* DEC-49 REGION is-reading-known */
     if (!READINGS.includes(reading))
-      /* DEC-49 REGION is-reading-known */
       return refusal("READING_UNKNOWN", `a reading is one of ${READINGS.join(", ")}. Nothing was written.`, { readings: READINGS });
-      /* END DEC-49 REGION is-reading-known */
+    /* END DEC-49 REGION is-reading-known */
     let named = null;
     if (response !== undefined && response !== null) {
       const ok = isObj(response) && typeof response.action === "string" && Number.isInteger(response.ord)
@@ -690,10 +689,10 @@ export class Escalation {
       named = { action: response.action, ord: response.ord };
     } else if (reading !== "none")
       return refuseNoSuchResponse(`a ${reading} reading names the received entry it reads.`);
+    /* DEC-49 REGION is-none-unnamed */
     if (named && reading === "none")
-      /* DEC-49 REGION is-none-unnamed */
       return refusal("RESPONSE_FOR_NONE", "a none reading says nothing came back by the clock, so it names no response. Nothing was written.");
-      /* END DEC-49 REGION is-none-unnamed */
+    /* END DEC-49 REGION is-none-unnamed */
     const bad = refuseReason(reason);
     if (bad) return bad;
     const entry = { kind: "evaluate", reading, response: named, reason: str(reason), author, at: this.now() };
@@ -716,21 +715,21 @@ export class Escalation {
     if (judged) return { refused: judged };
     const e = this.#row(id, viewer);
     if (!e) return { refused: refuseNoSuchEscalation() };
+    /* DEC-49 REGION is-edge-open */
     if (e.state !== "open")
-      /* DEC-49 REGION is-edge-open */
       return { refused: refusal("NOT_OPEN", `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
                                 { state: e.state }) };
-      /* END DEC-49 REGION is-edge-open */
+    /* END DEC-49 REGION is-edge-open */
     const bad = refuseReason(reason);
     if (bad) return { refused: bad };
     const target = typeof to === "string" && /^\d$/.test(to) ? Number(to)
       : typeof to === "string" ? Number(Object.keys(STAGES).find((k) => STAGES[k] === to)) : to;
     const legal = STAGE_TABLE[e.stage] || [];
+    /* DEC-49 REGION is-edge-legal */
     if (!legal.includes(target))
-      /* DEC-49 REGION is-edge-legal */
       return { refused: refusal("ILLEGAL_STAGE", `stage ${e.stage} (${STAGES[e.stage]}) moves to ${legal.join(" or ")} only. Nothing was written.`,
                                 { from: e.stage, legal }) };
-      /* END DEC-49 REGION is-edge-legal */
+    /* END DEC-49 REGION is-edge-legal */
     return { e, target };
   }
 
@@ -742,11 +741,11 @@ export class Escalation {
     const nowMs = instantMs(this.now());
     const { triggers } = this.#triggers(e, nowMs, args.viewer);
     const t = triggers.find((x) => x.to === target);
+    /* DEC-49 REGION is-trigger-met */
     if (!t || !t.met)
-      /* DEC-49 REGION is-trigger-met */
       return refusal("TRIGGER_NOT_MET", `the trigger for stage ${target} (${STAGES[target]}) is not met: ${t ? t.missing : "no trigger"}. Nothing was written.`,
                      { from: e.stage, to: target, missing: t ? t.missing : null });
-      /* END DEC-49 REGION is-trigger-met */
+    /* END DEC-49 REGION is-trigger-met */
     const entry = { kind: "advance", from: e.stage, to: target, reason: str(args.reason), author: args.author,
                     at: this.now(), trigger: { ids: t.ids, instant: t.instant } };
     const w = this.#append(e, entry, { stage: target, blurb: `Advanced to stage ${target}` });
@@ -762,11 +761,11 @@ export class Escalation {
     const { e, target } = a;
     const { triggers } = this.#triggers(e, instantMs(this.now()), args.viewer);
     const t = triggers.find((x) => x.to === target);
+    /* DEC-49 REGION is-edge-proposed */
     if (!t || !t.met)
-      /* DEC-49 REGION is-edge-proposed */
       return refusal("NOT_PROPOSED", `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
                      { from: e.stage, to: target });
-      /* END DEC-49 REGION is-edge-proposed */
+    /* END DEC-49 REGION is-edge-proposed */
     const entry = { kind: "decline", from: e.stage, to: target, reason: str(args.reason), author: args.author, at: this.now() };
     const w = this.#append(e, entry, { blurb: `Declined stage ${target}` });
     if (!w.ok) return w;
@@ -777,10 +776,10 @@ export class Escalation {
   /** R14: end an escalation, only when compliance is restored and the consequences are addressed. */
   escalationEnd(args = {}) {
     const { id, author, viewer } = args;
+    /* DEC-49 REGION is-end-member */
     if (isMachine(author))
-      /* DEC-49 REGION is-end-member */
       return refusal("MACHINE_CANNOT_END", "an escalation is ended by a named member. Nothing was written.");
-      /* END DEC-49 REGION is-end-member */
+    /* END DEC-49 REGION is-end-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
@@ -789,22 +788,22 @@ export class Escalation {
     if (e.state === "ended") return refusal("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened.");
     /* END DEC-49 REGION is-end-once */
     const c = this.#compliance(e, viewer);
+    /* DEC-49 REGION is-compliance-restored */
     if (c.state !== "met")
-      /* DEC-49 REGION is-compliance-restored */
       return refusal("COMPLIANCE_NOT_RESTORED", `compliance is not restored: ${c.why}. Nothing was written.`,
                      { ids: c.ids, standards: c.standards ?? [] });
-      /* END DEC-49 REGION is-compliance-restored */
+    /* END DEC-49 REGION is-compliance-restored */
     const q = this.#consequencesState(e, viewer);
+    /* DEC-49 REGION is-consequences-addressed */
     if (q.state === "not_met")
-      /* DEC-49 REGION is-consequences-addressed */
       return refusal("CONSEQUENCES_NOT_ADDRESSED", `the consequences are not addressed: ${q.why}. Nothing was written.`, { ids: q.ids });
-      /* END DEC-49 REGION is-consequences-addressed */
+    /* END DEC-49 REGION is-consequences-addressed */
+    /* DEC-49 REGION is-consequences-determined */
     if (q.state !== "met")
-      /* DEC-49 REGION is-consequences-determined */
       return refusal("CONSEQUENCES_UNDETERMINED", `whether the consequences are addressed is undetermined: ${q.why}. A group `
                      + "that judges the breach had no consequence records an assessed part saying so and addresses it. Nothing was written.",
                      { ids: q.ids });
-      /* END DEC-49 REGION is-consequences-determined */
+    /* END DEC-49 REGION is-consequences-determined */
     const entry = { kind: "end", from: e.stage, author, at: this.now(), compliance: c.ids, consequences: q.ids };
     const w = this.#append(e, entry, { state: "ended", blurb: "Escalation ended" });
     if (!w.ok) return w;
@@ -814,10 +813,10 @@ export class Escalation {
   /** R15: suspend an open escalation, with a reason. */
   escalationSuspend(args = {}) {
     const { id, reason, author, viewer } = args;
+    /* DEC-49 REGION is-suspend-member */
     if (isMachine(author))
-      /* DEC-49 REGION is-suspend-member */
       return refusal("MACHINE_CANNOT_SUSPEND", "an escalation is suspended by a named member. Nothing was written.");
-      /* END DEC-49 REGION is-suspend-member */
+    /* END DEC-49 REGION is-suspend-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
@@ -838,10 +837,10 @@ export class Escalation {
   /** R15: resume a suspended escalation at the same stage. */
   escalationResume(args = {}) {
     const { id, reason, author, viewer } = args;
+    /* DEC-49 REGION is-resume-member */
     if (isMachine(author))
-      /* DEC-49 REGION is-resume-member */
       return refusal("MACHINE_CANNOT_RESUME", "an escalation is resumed by a named member. Nothing was written.");
-      /* END DEC-49 REGION is-resume-member */
+    /* END DEC-49 REGION is-resume-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const e = this.#row(id, viewer);
@@ -963,9 +962,10 @@ export function escalationOf(host, deps) {
     /* A provider merged into the tranche is reached through its factory on the same host unless given (K248, K250);
        one not yet merged stays an injected dep, and its absence refuses (PROVIDER_UNAVAILABLE). */
     const conformance = d.conformance || (() => conformanceOf(host, { record, membership, promotion }));
+    const actions = d.actions || (() => actionsOf(host, { record, membership, promotion }));
     const consequences = d.consequences
       || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
-    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences });
+    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions });
     instances.set(host, i);
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });

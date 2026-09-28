@@ -73,7 +73,6 @@ test("R6 stage 3's trigger to 4: after the sent entry a received or no_response 
     assert.deepEqual([edge(after, 4).met, edge(after, 4).instant, edge(after, 4).ids], [true, "2026-09-21T00:00:00Z", [n]]);
     assert.equal(after.proposed[0].age_ms, 0);
     assert.equal(read(w, ms("2026-09-23T00:00:00Z")).proposed[0].age_ms, 2 * DAY);
-    assert.ok(w.calls.actionFacts.some((c) => c.nowMs === ms("2026-09-21T00:00:00Z")), "the clock rule is actions', read at nowMs");
     /* a reply before the deadline is met first: the earliest alternative */
     w.correspond(n, "received", "2026-09-15");
     assert.equal(edge(read(w, ms("2026-09-25T00:00:00Z")), 4).instant, "2026-09-15T00:00:00Z");

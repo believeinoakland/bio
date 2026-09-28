@@ -108,7 +108,10 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
       if (h.type !== "action") return { ok: false, reason: "NOT_AN_ACTION" };
       const hidden = actionHidden.has(id) && viewer !== null && viewer !== undefined && viewer !== V("alice");
       if (hidden) return { ok: false, reason: "NO_SUCH_BUNDLE" };
-      return { ok: true, id, kind: "request_for_comment", ledger: structuredClone(ledgers.get(id) || []) };
+      const fm = parseFrontmatter(record.readFile(id, "bundle.md").text).data || {};
+      const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => ({ target: l.target, kind: l.kind }));
+      return { ok: true, id, kind: fm.action_kind ?? null, correspondence: structuredClone(ledgers.get(id) || []), legs,
+               breach: fm.breach === true, counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [] };
     },
     actionFacts(text, nowMs) {
       calls.actionFacts.push({ nowMs });
