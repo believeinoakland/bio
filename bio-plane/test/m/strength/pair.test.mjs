@@ -75,8 +75,9 @@ test("R2: an inquiry leg contributes the target's own answer per axis, recursive
   assert.equal(p.capture.grade, "C", "the sub-inquiry's own answer, capped below");
   assert.equal(p.capture.weakest.via, "inherited");
   assert.equal(p.capture.weakest.inherited_from, "INQ-2026-0002-a");
-  assert.equal(p.capture.weakest.through, "INQ-2026-0003-a", "the hop below names its own setter");
-  assert.equal(w.s.strengthOf("INQ-2026-0002-a").capture.weakest.through, "INFO-2026-0009-a", "the actual leg, one hop down");
+  assert.equal(p.capture.weakest.through, "INFO-2026-0009-a", "the reader is sent to the actual leg, two hops down");
+  assert.equal(w.s.strengthOf("INQ-2026-0002-a").capture.weakest.through, "INFO-2026-0009-a", "and one hop down");
+  assert.match(p.capture.detail, /\(through INFO-2026-0009-a\)/);
   assert.equal(p.connection.grade, "B");
   assert.equal(p.depth_bound, DEPTH_BOUND);
   assert.equal(DEPTH_BOUND, 6);

@@ -227,7 +227,8 @@ export class Strength {
         }
         members[axis].push({ ...site, via: "inherited", grade: s.grade,
           inherited_from: leg.target_id,
-          through: s.weakest ? s.weakest.target_id : null,
+          /* The actual leg, however deep: a weakest that was itself inherited already names it. */
+          through: s.weakest ? (s.weakest.through || s.weakest.target_id) : null,
           why: s.grade == null ? `${leg.target_id} is UNRATED on ${axis}, so it is not load-bearing here` : null });
       }
     }
