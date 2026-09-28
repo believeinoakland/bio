@@ -86,3 +86,48 @@ What this job found in other modules, or made stale there. Each item is describe
 8. **`test/m/`: 1,901 tests, 2 fail. Both are red on `tranche/T8` too:**
    - `citation/invariants` R5 (the catalogue now admits `aspiration`, N159's layer 1);
    - `connections/factory` (N131).
+
+## J5 · COMPLETE
+
+**Completion.** `publication` is extracted and built on `job/T8/publication`, per its map, its requirements (R1–R40) and B2–B4. The module's files:
+- `bio-plane/src/publication/index.mjs`: the services, the ops `publicationOps`, and the factory `publicationOf(host, deps)` (K61).
+- `publication/worker.mjs`: the Worker half (`publishedRoutes`, `assembleCaseContainer`, the governed refusals).
+- `publication/checks.mjs`: C-44.2, C-68.5, C-92.1–.9 and C-98, plus R20 re-exported.
+- `publication/schema.mjs`: the eleven tables, their migrations and the D-734 boot pass.
+- `container.mjs`, `inband.mjs` and `deliverer.mjs`, as they were.
+
+**Entries applied:**
+- **Extraction (K3, K31, K57, K94, K102).** Moved out of `store.mjs`:
+  - the case relation and the revision flags;
+  - the case-document reads;
+  - MK-7 attribution;
+  - the export and its log (N16);
+  - the published reads and the pinning helpers;
+  - the dispatch entries;
+  - the published-bundles migrations.
+
+  Moved out of `index.mjs`: the four helpers, `assembleCaseContainer` and the `op=publishedcase`/`op=publishedbytes` block. Moved out of `bio-checks.mjs`: four families. Moved out of `schema.mjs`: ten tables (with `export_log`, eleven). The movers' bodies are untouched. The store reaches the moved helpers through one-line private delegates (B3), and legacy-store fills R23's provider.
+- **Registration rule (K206, N152):** `caseMember`, `publishedRegistry` and `publishedCaseRegistry`, and the revision-flag projection, are registered by `publication`. legacy-store's two facts and its `#promoteProjections` flag call are removed.
+- **R21, R22 (K240, K241):** built as new code in B4's shapes. R35 is built. R36 (N69) is `registerEvidenceBlock`. R37 (K171 (4)) is built. R38–R40 are built. R23 has the doors K240 names.
+- **Snapshot rows:** D-712 (`document` on `op=publishedcase`) and D-734 (a ratified case document's hash is published and served, re-hashed) adopted. D-613 (DUPLICATE_PATH and PART_MISSING at 409, too large at 413) applied.
+- **N127:** `auditPass`' sight is asked per id (store 8106–8108, for your read at the close).
+- **N163:** (a) is N210; (b) moves with `publishCase`; (c) is done.
+- **N67:** line 2535 left for ratification (B2 item 4).
+- **Flaw fixed in this module:** `caseFlags` handed SQLite a fractional LIMIT for a fractional `limit` (a datatype error). It is floored now.
+
+**Deferred, and why:**
+- **R30 (D-246):** `test.todo`. Nothing in the plane publishes a rendering yet, so there is nothing to carry `pixels_sha256`.
+- **R32:** `test.todo`. The verifying import has no tranche (K102).
+
+**Found in other modules:** REPORT J4, 8 items.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/publication/`: 54 tests, 52 pass, 0 fail, 2 todo (R30, R32). Every one of R1–R40 is named.
+- `node --test bio-plane/test/m/`: 1,901 tests, 1,891 pass, 2 fail, 8 todo. Both fails are red on `tranche/T8` too (J4 item 8).
+- Old battery under miniflare: the plane boots and the publish, ratify and case-sign flows pass (`casesign`, `casepin`, `rec170-manifest-pair`, `exportnotice`). The reds this job adds are pins (J4 item 6).
+- `format`: 69 modules, 0 failures.
+- `architecture publication`: 15 product files, 52 imports, 0 failures.
+- `coverage publication`: 40 of 40 live ids named, 0 failures.
+- `ownership publication tranche/T8`: 1 failure, the N127 lines. legacy-store: 36 lines added, 3,071 removed. legacy-checks: 0 added, 172 removed. legacy-index: 6 added, 632 removed.
+
+Size (session_019xHaikQ3bX9KRMWSzbkdBb): test runs 24, module lines 5145
