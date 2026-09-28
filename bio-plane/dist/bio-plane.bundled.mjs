@@ -38831,12 +38831,13 @@ CREATE INDEX IF NOT EXISTS reading_text_source_kind
 -- not extracted, extracted but over the bound, and extracted and indexed are one
 -- vocabulary in one place (section 4.3).
 --
--- WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: a WORKBOOK
--- (a cell is not a passage, and the sheet-range extent arm landed with FW-19 but no unit writer uses it -- written before
--- that, when EXTRACTION-BREADTH section 3.2 had not landed -- 288 workbooks in M-20 census hold
--- 72,651,441 bytes of text over 1,056 sheets and not one indexable unit), and
--- HTML (no dom producer, Part II section 15). Neither is scored zero: the
--- capture's indexed observation says none with the reason.
+-- A WORKBOOK'S UNIT IS ITS SHEET (N108, D-672): one sheet-range unit per sheet at
+-- the whole used range its reader names (a cell is not a passage; M-20's census
+-- held 288 workbooks, 72,651,441 bytes of text over 1,056 sheets, and until N108
+-- not one indexable unit). A sheet whose range the reader could not name is no
+-- unit. WHAT HAS NO UNIT ARM AND IS THEREFORE ABSENT RATHER THAN EMPTY: HTML (no
+-- dom producer, Part II section 15). It is not scored zero: the capture's index
+-- state says none.
 --
 -- DERIVED, AND PURGED ON BOTH ARMS. It carries bundle_id -- the document this
 -- text is of -- so it rides purge's TABLES list. Text is a PROJECTION and is
@@ -38848,7 +38849,7 @@ CREATE INDEX IF NOT EXISTS reading_text_source_kind
 CREATE TABLE IF NOT EXISTS capture_text (
   capture_sha  TEXT    NOT NULL,   -- the document. The register's trust root
   bundle_id    TEXT    NOT NULL,   -- the join every query arm makes (section 2)
-  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape. sheet-range once a unit writer uses the FW-19 arm
+  extent_kind  TEXT    NOT NULL,   -- pdf-page | doc-para | slide-shape | sheet-range (N108)
   extent       TEXT    NOT NULL,   -- canonicalExtent's output. The SAME bytes the content address is taken over
   ref          TEXT    NOT NULL,   -- IC-1's required human form, from describeExtent
   seq          INTEGER NOT NULL,   -- reading order within the capture, so a partial index is a PREFIX and says so
@@ -39713,6 +39714,10 @@ async function tier3Extend(env, {
   const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered.length > 0);
   return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, seeded, engine, stillWanting };
 }
+var sheetRangeOf = (u) => {
+  const r = u.range;
+  return r && r.kind === "sheet-range" && typeof r.sheet === "string" && r.sheet && typeof r.range === "string" && r.range ? { sheet: r.sheet, range: r.range } : { sheet: null, range: null };
+};
 function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
@@ -39729,7 +39734,7 @@ function textUnitsFor(i2text) {
       i2text.slides,
       "slide-shape",
       (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
-    ) : null;
+    ) : Array.isArray(i2text.sheets) ? arm(i2text.sheets, "sheet-range", sheetRangeOf).filter((u) => u.extent.sheet !== null) : null;
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
     const kept = [], runs = [];
     let run = null;
@@ -51464,6 +51469,7 @@ var TEXT_SOURCE_LIMIT_DEFAULT2 = 200;
 var TEXT_SOURCE_LIMIT_MAX2 = 5e3;
 var CONTENT_READ_PARAMS = /* @__PURE__ */ new Set(["id", "viewer", "store"]);
 var CONTENT_EARNED_MAX = 200;
+var STALE_GRADED_MAX = 200;
 var isObj5 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var safeJson5 = (s) => {
   try {
@@ -52226,8 +52232,9 @@ var Content = class {
   /* ===================================================================== *
    * STALE (R22, R41).
    * ===================================================================== */
-  /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each row a replaced
-   *  reading marks stale whose passage the new text affects or cannot be told, `fn` is called with the notice. */
+  /** R41: a module that tells members what they cite (inquiry, K31's pattern) registers once; on each re-read that
+   *  stales a row whose passage the new text affects or cannot be told, `fn` is called ONCE with the re-read's notice
+   *  (`markStale`): the graded rows it must tell, and the count of rows past the bound, ungraded and so undetermined. */
   onStale(module, fn) {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return { ok: false, reason: "LISTENER_MALFORMED" };
@@ -52239,54 +52246,74 @@ var Content = class {
    *  from the new non-null chain becomes `stale`, one way (un-staling would be the record deciding an old citation is
    *  current again); nothing is deleted or moved; a null chain marks nothing (an unrecorded chain is not one that
    *  moved). A member's TYPING is never staled: its chain is `typed(member)` over the BYTES, which cannot change under
-   *  a row that names them. ONE statement, not a loop (rows per capture are unbounded by design).
-   *  R41: each row marked is graded old text against new — `unitsBefore`, the capture's units as they stood, and
-   *  `unitsAfter`, as the replacing reading wrote them (default: the index as it stands at the call, which is the new
-   *  one only when the call follows the write, as extraction's R24 listener does); without the old units the grade is
-   *  UNDETERMINED and says so — and every registered listener is told of each row whose grade is affected or
-   *  undetermined. Returns the count. */
+   *  a row that names them. Returns the count.
+   *  THE BOUND (N117; the store's REC-66 / D-227 shape): this runs inside the writer's transaction (extraction R24), so
+   *  a re-read costs ONE read and ONE update however many rows it stales. The read returns at most `STALE_GRADED_MAX`
+   *  rows, in content-id order, each carrying the total in the same statement; the UPDATE marks them all.
+   *  R41: with a listener registered, each row read is graded old text against new — `unitsBefore`, the capture's units
+   *  as they stood, and `unitsAfter`, as the replacing reading wrote them (default: the index as it stands at the call,
+   *  which is the new one only when the call follows the write, as extraction's R24 listener does); without the old
+   *  units the grade is UNDETERMINED and says so. Every listener is then called ONCE for the re-read, never per row,
+   *  with the rows whose grade is affected or undetermined, and the rows past the bound counted as ungraded, which is
+   *  undetermined and told as such. */
   markStale(captureSha, chain2, { unitsBefore = null, unitsAfter = null } = {}) {
     const live = Array.isArray(chain2) ? JSON.stringify(chain2) : null;
     if (live == null) return 0;
     const where = `capture_sha=? AND chain IS NOT NULL AND chain<>? AND stale=0
                    AND content_id NOT IN (SELECT content_id FROM transcriptions WHERE capture_sha=?)`;
-    const hit = this.staleListeners.length ? this.#rows(
-      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content WHERE ${where}`,
+    const hit = this.#rows(
+      `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as, count(*) OVER () AS n
+         FROM content WHERE ${where} ORDER BY content_id LIMIT ?`,
       captureSha,
       live,
-      captureSha
-    ) : null;
-    const n = hit ? hit.length : this.#one(`SELECT count(*) AS c FROM content WHERE ${where}`, captureSha, live, captureSha).c;
-    if (n) this.sql.exec(`UPDATE content SET stale=1 WHERE ${where}`, captureSha, live, captureSha);
-    if (hit && hit.length) {
-      const before = normUnits(unitsBefore);
-      const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.extraction.unitsOf(captureSha));
-      for (const row of hit) {
-        const extent = safeJson5(row.extent) ? { kind: row.extent_kind, ...safeJson5(row.extent) } : null;
-        const g = before.units.length ? gradeAcross(row, extent, before, after) : {
-          grade: "UNDETERMINED",
-          affects: "undetermined",
-          reason: "cited_text_not_held",
-          why: "the text this row was cited under is no longer held beside the new reading, so whether the re-read changed the passage cannot be told"
-        };
-        if (g.affects === "unaffected") continue;
-        const notice = {
-          content_id: row.content_id,
-          bundle_id: row.bundle_id,
-          capture_sha: row.capture_sha,
-          ref: row.ref,
-          grade: g.grade,
-          affects: g.affects,
-          reason: g.reason,
-          why: g.why,
-          found_at: g.found_at ?? null,
-          similarity: g.similarity ?? null,
-          stale: true,
-          says: "the document was re-read and the text under your citation may have changed. Nothing moved: keep the citation as it stands, or adopt the passage under the new reading"
-        };
-        for (const l of this.staleListeners) l.fn(notice);
-      }
+      captureSha,
+      STALE_GRADED_MAX
+    );
+    const n = hit.length ? hit[0].n : 0;
+    if (!n) return 0;
+    this.sql.exec(`UPDATE content SET stale=1 WHERE ${where}`, captureSha, live, captureSha);
+    if (!this.staleListeners.length) return n;
+    const before = normUnits(unitsBefore);
+    const after = normUnits(unitsAfter && Array.isArray(unitsAfter.units) ? unitsAfter : this.extraction.unitsOf(captureSha));
+    const rows = [];
+    for (const row of hit) {
+      const extent = safeJson5(row.extent) ? { kind: row.extent_kind, ...safeJson5(row.extent) } : null;
+      const g = before.units.length ? gradeAcross(row, extent, before, after) : {
+        grade: "UNDETERMINED",
+        affects: "undetermined",
+        reason: "cited_text_not_held",
+        why: "the text this row was cited under is no longer held beside the new reading, so whether the re-read changed the passage cannot be told"
+      };
+      if (g.affects === "unaffected") continue;
+      rows.push({
+        content_id: row.content_id,
+        bundle_id: row.bundle_id,
+        capture_sha: row.capture_sha,
+        ref: row.ref,
+        grade: g.grade,
+        affects: g.affects,
+        reason: g.reason,
+        why: g.why,
+        found_at: g.found_at ?? null,
+        similarity: g.similarity ?? null,
+        stale: true
+      });
     }
+    const ungraded = n - hit.length;
+    if (!rows.length && !ungraded) return n;
+    const notice = {
+      capture_sha: captureSha,
+      chain: chain2,
+      staled: n,
+      graded: hit.length,
+      rows,
+      ungraded,
+      ungraded_after: ungraded ? hit[hit.length - 1].content_id : null,
+      ungraded_affects: ungraded ? "undetermined" : null,
+      ungraded_why: ungraded ? `this re-read staled ${n} rows and ${STALE_GRADED_MAX} were graded; the other ${ungraded} (the capture's stale rows whose content_id sorts after ungraded_after) were marked stale and not graded, so whether the re-read changed their passages is UNDETERMINED` : null,
+      says: "the document was re-read and the text under your citation may have changed. Nothing moved: keep the citation as it stands, or adopt the passage under the new reading"
+    };
+    for (const l of this.staleListeners) l.fn(notice);
     return n;
   }
   /* ===================================================================== *
@@ -52681,8 +52708,8 @@ var Content = class {
    * THE CROP (R32; D-419, K70).
    * ===================================================================== */
   /** R32: the crop of an image cited by page and rectangle, cut through `pdf-pixels` from the capture's own bytes in
-   *  the evidence store, and served as a DERIVED RENDITION that says so (EXTRACTION-BREADTH §3.4: "the viewer shows the
-   *  crop; the crop is not the evidence"). Writes nothing. A crop from bytes whose digest is not the row's capture is
+   *  the evidence store, its file as `bytes_base64` (N119), and served as a DERIVED RENDITION that says so
+   *  (EXTRACTION-BREADTH §3.4: "the viewer shows the crop; the crop is not the evidence"). Writes nothing. A crop from bytes whose digest is not the row's capture is
    *  refused rather than shown. */
   async cropOf({ contentId = null, viewer = null } = {}) {
     const id = typeof contentId === "string" ? contentId.trim() : "";
@@ -52741,8 +52768,10 @@ var Content = class {
         cropped_from: out.capture_sha256 ?? null,
         detail: "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back"
       };
+    const { bytes: file, ...rest } = out;
     return {
-      ...out,
+      ...rest,
+      bytes_base64: base64Of(file),
       ok: true,
       derived: true,
       content_id: r.content_id,
@@ -52751,6 +52780,12 @@ var Content = class {
     };
   }
 };
+function base64Of(bytes2) {
+  const b = bytes2 instanceof Uint8Array ? bytes2 : new Uint8Array(bytes2 || []);
+  let bin = "";
+  for (let i = 0; i < b.length; i += 32768) bin += String.fromCharCode.apply(null, b.subarray(i, i + 32768));
+  return btoa(bin);
+}
 function chainOfReading(reading) {
   const chain2 = reading && typeof reading === "object" ? reading.text_source ?? null : null;
   return Array.isArray(chain2) ? chain2 : null;
@@ -88077,14 +88112,10 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
         );
       inquiry = b.bundle_id;
     } else {
-      const r = this.#one(`SELECT ${ROW_COLS2} FROM content WHERE content_id=?`, cid);
-      if (!r || !this.#viewerSees(r.bundle_id, viewer))
-        return refusal12(
-          "VERSION_NOTICE_NO_CONTENT",
-          `no cited passage by the id '${cid.slice(0, 80)}' is readable here.`,
-          { content: cid }
-        );
-      rows = [r];
+      const passage = contentOf(this.ctx).passageNotice({ contentId: cid, viewer });
+      if (!passage.ok) return passage;
+      const { ok, states, grades, wrote, proposal_only, visible_to, ...notice } = passage;
+      rows = [notice];
     }
     const max = Math.max(1, Math.min(
       _Store.VERSION_NOTICE_LEGS_MAX,
@@ -88107,7 +88138,7 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
       ) : [];
     }
     const memo = /* @__PURE__ */ new Map();
-    const byId = new Map(rows.map((r) => [r.content_id, contentOf(this.ctx).noticeForRow(r, viewer, memo)]));
+    const byId = new Map(rows.map((r) => [r.content_id, inquiry ? contentOf(this.ctx).noticeForRow(r, viewer, memo) : r]));
     const notices = inquiry ? legs.map((l) => l.content_id && byId.has(l.content_id) ? { ord: l.ord, target: l.target, ...byId.get(l.content_id) } : {
       ord: l.ord,
       target: l.target,
