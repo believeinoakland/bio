@@ -42,7 +42,7 @@ Terms are `publication`'s. A **ceremony** is `op=caseratify` (the case document)
 
 - `legacy-checks`: the rows until they move (R14), `parseFrontmatter`, `normalizeType`, `isMachineIdentity`, `sectionText`, `canonicalJson`.
 - `signatures`: `verifySshsig`, `ratifyStatement`, `caseRatifyStatement`, `NS_RATIFY` (R2, R4).
-- `record-core`: `recordOf(ctx)`, `transact`, `stampInstant`, `textAtSha` (R3), the `bundles`, `history` and `manifest` read contracts (R7). *(not declared: `textAtSha` not yet provided)*
+- `record-core`: `recordOf(ctx)`, `transact`, `stampInstant`, `textAtSha` (its R60; R3), the `bundles`, `history` and `manifest` read contracts (R7). *(`textAtSha` not yet provided: T8's record-core entry)*
 - `membership`: `caseAuthority`, `inSight`, `existenceAct`, `attestingKeys`.
 - `promotion`: `runGate`, `runCaseGate`, `registerStep` (R9) and the case-gate catalogue registration its R33 gains by K94 (R8). *(not declared: that registration not yet provided)*
 - `provenance`: the `register` read contract, `partsHeld` (R4, R6).
