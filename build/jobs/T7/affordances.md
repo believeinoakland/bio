@@ -1,6 +1,6 @@
 # affordances (T7)
 
-**Status** · session_01Uzmu9LYFCjcYb7iowFaKQZ · depth 2 · COMPLETE · handled B6
+**Status** · session_01Uzmu9LYFCjcYb7iowFaKQZ · depth 2 · COMPLETE · handled B9
 
 ## J1 · QUESTION
 
@@ -144,3 +144,44 @@ Found in other modules and in generated artifacts. None of it was changed by me.
 - `node checks/ownership.mjs /home/user/bio affordances tranche/T7` → ownership: 7 files changed by affordances between tranche/T7 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures
 
 Size (session_01Uzmu9LYFCjcYb7iowFaKQZ): test runs 34, module lines 2410
+
+## J6 · QUESTION
+
+B7 is applied. Both legacy suites now pass on the merged tree: `affordances` 99 arms green, `rung-ladder` 49 green. My tests pass: 68 in total, 65 pass, 0 fail, 3 todo. Two items for you before COMPLETE.
+
+**Q9. `triage` regraded `reasoned`, which changes the K211 Q4 absence.** The re-anchored `rung-ladder` NO UNDER-CLAIM arm now reads intent's source, and it finds `triage` refusing `NO_REASON`. That refusal fires for defer and dismiss. Under your K212 reading of R19 ("refused where the act revises what stands"), triage has `inquiryground`'s shape: setting a proposal down asks a reason, and adopting one asks none. Best reading, applied: `triage` is `reasoned` (R2's `reasoned` list gains it). The alternative, keeping it `undetermined`, leaves the legacy arm red.
+
+The other five, graded on R27 as K208/K211 rule:
+- `reevaluationrecord`: `reasoned`. It refuses `REEVALUATION_NOTE_MALFORMED` when the note is absent ("what was looked at and what was decided"). The code joins `JUSTIFICATION_REFUSALS`, as `RISK_TIER_REASON_REFUSED` did.
+- `versionadopt` and `versionkeep`: `undetermined`. They ask no reason (KEEP's why is optional), and no published act takes them back.
+- `reevaluationraise` and `capturerequestretry`: `substrate` (a sweep, and a re-queued request, on `capturerequestdrain`'s and `capturerequest`'s ground).
+- `capturerequestretry`, `versionadopt`, `versionkeep` and `reevaluationrecord` also have `NON_ACTS` rows.
+- R2's `reasoned` list therefore gains `reevaluationrecord` and `triage`.
+
+**Q10. `intent` in affordances' Uses.** R19's backing for `triage` needs an open proposal. The plane can reach one only through readings and resolutions, which is a large fixture. Intent's own fixture has one, so `backing.test.mjs` drives `triage` there, as it drives `narrow` through basis-versions' fixture. The architecture check fails on that import, because `intent` is not in my `uses`. Intent is layer 7, before 11, and affordances grades intent's acts (INTENT J4.3), so the use is real. Best reading: add `intent` to `uses`. Until then the architecture check reports that one import, and the rest passes: format, coverage 27/27, ownership 0/0.
+
+## J7 · COMPLETE
+
+**B7–B9 applied** (K219, K221), on `job/T7/affordances` after merging `tranche/T7` @ B9.
+
+- **Rows and rungs** for the ops routed by layer 11's other jobs:
+  - `NON_ACTS` for `capturerequestretry`, `versionadopt`, `versionkeep`, `reevaluationrecord`;
+  - `reasoned`: `reevaluationrecord` (`REEVALUATION_NOTE_MALFORMED` joins `JUSTIFICATION_REFUSALS`) and `triage` (K221: a reason where it sets a proposal down);
+  - `undetermined`: `versionadopt`, `versionkeep`;
+  - `substrate`: `reevaluationraise`, `capturerequestretry`.
+- **Tests:**
+  - R2 and R27 name K221's lists.
+  - R19 drives `reevaluationrecord` (plane) and `triage` (intent's fixture, `backing.test.mjs`) without their reasons, and accepts them with one.
+
+**Still not met** (unchanged from J5, each a `test.todo`): R26 (actions), R16/R14 `cites_in` (N176), R18 (N176). **R27 is met.** J5's record otherwise stands.
+
+**Tests and checks:**
+- Module: `node --test bio-plane/test/m/affordances/` → tests 68, pass 65, fail 0, todo 3.
+- Legacy: `affordances.test.mjs` all green (99 arms); `rung-ladder.test.mjs` all green (49 arms: FORWARD, EXACTLY 145, NO UNDER-CLAIM, NO UNBACKED CLAIM).
+- `test/m/` whole: pass 1816, fail 1 (`connections/factory` K155, red identically on the base: N131), todo 6.
+- `node checks/format.mjs /home/user/bio` → format: 69 modules, 64 requirements files; 0 failures
+- `node checks/architecture.mjs /home/user/bio affordances` → architecture: 6 product files, 27 relative imports (0 naming no tracked file, not judged); 0 failures
+- `node checks/coverage.mjs /home/user/bio affordances` → coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs /home/user/bio affordances tranche/T7` → ownership: 5 files changed by affordances between tranche/T7 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures
+
+Size (session_01Uzmu9LYFCjcYb7iowFaKQZ): test runs 44, module lines 2433

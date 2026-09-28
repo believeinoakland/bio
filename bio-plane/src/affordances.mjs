@@ -494,6 +494,9 @@ export const JUSTIFICATION_REFUSALS = [
   /* R27 as ruled by BOB (K211): the three acts it moved to `reasoned`, each refusing without the member's account —
      a bias-debt settlement's reason, a risk-tier revision's reason, and a narrowed reading's account of what changed. */
   "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION",
+  /* K219 (T7): a member's recorded re-evaluation carries its note, "what was looked at and what was decided"
+     (reevaluation R16); the code refuses it absent as well as malformed, as RISK_TIER_REASON_REFUSED does. */
+  "REEVALUATION_NOTE_MALFORMED",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -744,6 +747,10 @@ export const RUNGS = {
   biasdebtresolve:    "reasoned",   // BIAS_DEBT_NO_REASON (REC-207: an authored settlement, append-only)
   actionrisktier:     "reasoned",   // RISK_TIER_REASON_REFUSED (REC-214: a revision carries its reason)
   narrow:             "reasoned",   // NARROW_NO_DESCRIPTION (C-50.11: what changed and why)
+  /* K219 (T7). `triage` asks its reason where the act sets a proposal down (defer, dismiss), which is R19's "where
+     the act revises what stands" (K212), `inquiryground`'s shape; adopting or opening a question asks none. */
+  triage:             "reasoned",   // NO_REASON (intent R16: a proposal is deferred or dismissed with a reason)
+  reevaluationrecord: "reasoned",   // REEVALUATION_NOTE_MALFORMED (reevaluation R16: the note is the account)
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
@@ -1016,15 +1023,21 @@ export const RUNG_ABSENT = {
   themeplace:           { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
   themepropose:         { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" },
   /* INTENT #1 J4.3 (T7), on R27's rule: each is a member's act on the record, corrected forward by a further act of
-     its kind, that requires no authored reason and that no published act takes back. `triage` asks a reason only to
-     defer or dismiss, so adopting without one is accepted and the op is not `reasoned`. */
+     its kind, that requires no authored reason and that no published act takes back. `triage` is graded
+     `reasoned` since K219 (RUNGS). */
   objectivecondition:   { ground: "undetermined", is: "sets, replaces or removes a project's satisfaction condition as a new revision of its document; the earlier revision stays in history (intent R2)" },
   goaldeclare:          { ground: "undetermined", is: "a member declares a goal, bounded, optionally under an aspiration (intent R8)" },
   goallink:             { ground: "undetermined", is: "the author's dated claim that a project's objective serves a goal (intent R8)" },
   aspirationdeclare:    { ground: "undetermined", is: "a member declares an aspiration of the group, a project or a member (intent R9)" },
   aspirationdeadend:    { ground: "undetermined", is: "a dead end appended to an aspiration's pursuit record, dated and authored, never removed (intent R11)" },
-  triage:               { ground: "undetermined", is: "a member adopts a proposal into a project's objective, opens a question from it, or defers or dismisses it with a reason (intent R16)" },
   workobjective:        { ground: "undetermined", is: "a member sets an assistant to work a project's objective: a run through ai-runs with the project as its context (intent R18)" },
+  /* K219 (T7): reevaluation's two version acts (R15), on R27's rule — a member's act on a reference they hold, corrected
+     forward by a further choice, asking no reason (KEEP's why is optional), and no published act takes either back. */
+  versionadopt:         { ground: "undetermined", is: "a member adopts the newer capture a version notice names: a new version of the reference, the old staying readable (reevaluation R15)" },
+  versionkeep:          { ground: "undetermined", is: "a member records that a reference stays on the earlier capture, with who, when and an optional why (reevaluation R15)" },
+  /* K219 (T7): `capturerequestdrain`'s and `capturerequest`'s ground — the machinery a decided act rides on. */
+  reevaluationraise:    { ground: "substrate", is: "reevaluation's bounded sweep raising the version notices; the unattended path, stamping nothing (reevaluation R14)" },
+  capturerequestretry:  { ground: "substrate", is: "re-queues a capture request the source refused, once a member supplied what it asked; the capture is the act (capture-requests R42)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2315,6 +2328,13 @@ export const NON_ACTS = {
   pursuit: "read: one aspiration's pursuit record by id",
   intentproposals: "read: the open proposals for a project's objective, keyed by project",
   triage: "proposal-directed: a member adopts, opens a question from, defers or dismisses one proposal, keyed by proposal key",
+  /* K219 (T7): capture-requests' retry and reevaluation's three member acts. Their subjects are a REQUEST, a version
+     NOTICE and a (dependent, cause) pair — none a bundle in a state that `affordanceFacts` describes; each travels with
+     the queue item or the notice that offers it. */
+  capturerequestretry: "request-directed: retries a capture request the source refused, keyed by request id; travels with the request in op=capturerequests",
+  versionadopt: "notice-directed: adopts the newer capture a version notice names, keyed by notice; travels with the notice (reevaluation R14)",
+  versionkeep: "notice-directed: keeps a reference on the earlier capture, keyed by notice; travels with the notice (reevaluation R14)",
+  reevaluationrecord: "cause-directed: a member records a re-evaluation of a dependent against one standing cause, keyed by (dependent, cause), with its note",
   workobjective: "run-directed: opens an assistant's run on a project's objective, keyed by (run, project); the run is the subject and no bundle state offers it",
 };
 
