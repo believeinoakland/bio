@@ -24,3 +24,7 @@
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture filings`: 10 product files, 37 relative imports; 0 failures. `coverage filings`: 21 of 21 live requirement ids named by a test; 0 failures. `ownership filings tranche/T9`: 4 files changed; 0 failures.
 
 Size (session_015K2Cx7f4RGi8SiBt9nBb4r): test runs 9, module lines 1387
+
+## J1 · COMPLETE
+
+COMPLETE (K316). R11: packet reads, export and theoryPropose-by-packet gated on inSight of the drawn-on determination's project, per version, failing closed (NO_SUCH_PACKET, one answer). R13: filingsFor leaves out hidden drafts and packet versions, naming nothing, basis_changed included. Also fixed: #draft gated the same (filingApprove leaked FILING_STALE naming the hidden determination), and a superseding standard the viewer cannot see is not named. Tests over a workerd-shaped cursor with the 50-byte LIKE/GLOB cap: filings 33/0 (three new, red first), escalation 28/0, affordances 73/0/1 todo; format, architecture, coverage 21/21, ownership: 0 failures. Stale: plane bundle (reported, not rebuilt). Record: build/jobs/T9/filings.md. Size (session_015K2Cx7f4RGi8SiBt9nBb4r): test runs 9, module lines 1387
