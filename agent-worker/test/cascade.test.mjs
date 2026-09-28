@@ -201,7 +201,10 @@ const run = (body) =>
 
 console.log("\n--- 5 · through the endpoint: the resolved level is NAMED on the wire, beside the record's ---");
 {
-  const res = await run({ run_id: "run-project", store: "scratch", credential: AIK,
+  /* R40 CORRECTED THIS FIXTURE, NEVER EXEMPTED IT: resolved accounts with no `judgements` now run model turns
+     (`requirements.test.mjs` drives that mode). The facts this section is about — the level named, every level
+     stated, no secret — are the same in the supplied mode, which `judgements: []` selects. */
+  const res = await run({ run_id: "run-project", store: "scratch", credential: AIK, judgements: [],
     claude_accounts: { project: ALL.project, instance: ALL.instance } });
   t("a run whose record names the resolved level DRIVES", res.status, 200);
   const out = await res.json();
@@ -212,7 +215,7 @@ console.log("\n--- 5 · through the endpoint: the resolved level is NAMED on the
     + "the resolution did not reach is not a level whose fact is hidden",
     (out.claude_account?.levels || []).map((l) => `${l.level}:${l.state}`),
     [`member:${LEVEL_UNSET}`, "project:available", "instance:available"]);
-  t("the honesty pair is intact: the account resolved, the model turn still did not run",
+  t("the honesty pair is intact: the account resolved, judgements supplied, so no model turn ran",
     [out.turns_run, out.judgement_source], [0, "supplied"]);
   t("no secret reaches the wire in either direction",
     [JSON.stringify(out).includes(PROJECT_TOK), JSON.stringify(out).includes(INSTANCE_TOK)],

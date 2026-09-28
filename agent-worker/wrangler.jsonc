@@ -57,6 +57,11 @@
 
   "vars": { "VERSION": "0.79.0" },
 
+  // R47: REACHABLE ONLY THROUGH THE PLANE'S SERVICE BINDING. No `*.workers.dev` route and no preview URL: a
+  // public address would be a second way in for a member whose only caller is the plane.
+  "workers_dev": false,
+  "preview_urls": false,
+
   // THE NARROWEST BINDING THAT DOES THE JOB (fleet rule 3, I6/I8), and here that
   // is EXACTLY ONE. The member reads and writes nothing itself: everything it
   // learns, it learns by asking the plane, under a credential the plane hands it

@@ -255,7 +255,8 @@ console.log("\n--- 1 · the round trip: the member asks the plane and reports wh
   t("the stage says the HARNESS ran", out.stage, "harness");
   t("zero model turns were run, stated", out.turns_run, 0);
   t("and the judgement source is NAMED rather than implied", out.judgement_source, "supplied");
-  t("with FL-6's unresolved half stated in words", /FL-6/.test(out.judgement_note ?? ""), true);
+  /* R40 moved the sentence: model turns now run when an account resolves, so the note says which happened. */
+  t("with the missing model half stated in words", /no model turn was taken/.test(out.judgement_note ?? ""), true);
 
   console.log("\n  -- the principal is UNDETERMINED and SAYS SO (never guessed, never dropped) --");
   t("principal is null", out.principal, null);

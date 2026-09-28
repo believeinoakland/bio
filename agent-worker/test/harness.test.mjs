@@ -479,15 +479,19 @@ console.log("\n--- A8 · log-always: every row logs, and the entry is in the PLA
                     { step: "collect", why: "four sub-sessions spawned" });
   t("the entry names the transition it records", e.subject, "fanout -> collect");
   t("and carries D-129's state", e.state, "LOOKED_ABSENT");
-  t("a control-flow entry that observed nothing is NEVER_LOOKED, not an absence",
-    stepLog({ step: "plan" }, { step: "fanout", why: "w" }).state, "NEVER_LOOKED");
-  const term = stepLog({ step: "next-pass" }, { step: "close", why: "done", bound: "completed" });
+  /* CORRECTED BY R26 (K148), NEVER EXEMPTED: this read "a control-flow entry that observed nothing is
+     NEVER_LOOKED", and the record refuses NEVER_LOOKED from every member entry (observation-log R3). A step that
+     looked at nothing sends no entry at all. */
+  t("a control-flow step that observed nothing sends NO entry — never NEVER_LOOKED (R26, K148)",
+    [stepLog({ step: "plan" }, { step: "fanout", why: "w" }),
+     stepLog({ step: "plan", observed: "NEVER_LOOKED" }, { step: "fanout", why: "w" })], [null, null]);
+  const term = stepLog({ step: "next-pass", observed: "LOOKED_ABSENT" }, { step: "close", why: "done", bound: "completed" });
   t("the terminal entry is marked terminal and names the bound", [term.terminal, term.bound], [true, "completed"]);
   t("a non-terminal entry names no bound",
     [e.terminal, e.bound], [false, null]);
   /* D-104's split travels: our governor holding a host is a fact about US. */
   t("a governed observation carries the flag the plane's C-22.2 reads",
-    stepLog({ step: "plan", governed: true }, { step: "fanout", why: "w" }).governed, true);
+    stepLog({ step: "plan", governed: true, observed: "LOOKED_INDETERMINATE" }, { step: "fanout", why: "w" })?.governed, true);
   /* REC-100 / IC-130 — THE UNIT HALF OF SECTION R. A model-judged PRESENT is
      not written as PRESENT: this entry can name nothing that was found, and the
      plane now refuses a PRESENT that names nothing (C-22.10). */
@@ -523,9 +527,10 @@ console.log("\n--- A9 · query-never-load: the ops are PINNED, and every one is 
      the member two READS, `search` and `versionchain` — the `collect` row resolves each citation to its document
      through the record's own version chain (INVESTIGATIVE-SESSION.md §3, consumer (3)), so a document is counted
      ONCE with its versions. Both are non-mutating in the plane's table, which the two arms above hold. */
-  t("the pinned op set is exactly these twelve",
+  /* R48 added the thirteenth: `affordances`, what the plane publishes, which the skill pack is rendered from. */
+  t("the pinned op set is exactly these thirteen",
     Object.keys(PLANE_OPS).sort(),
-    ["airun", "airunclose", "airunlog", "airunspawn", "airuntick",
+    ["affordances", "airun", "airunclose", "airunlog", "airunspawn", "airuntick",
      "basisversions", "capturerequest", "meaningrows", "search", "suggest", "versionchain", "whoami"].sort());
   t("every op the DRIVER actually names is in the pinned set",
     [...new Set([...WORKER_CODE.matchAll(/call\(\s*"([a-z]+)"/g)].map((m) => m[1]),
@@ -773,9 +778,13 @@ console.log("\n--- B1 · a CHECK run walks the table and the plane holds the who
   t("the run ended and named its bound", out.ended?.bound ?? null, "completed");
 
   const st = await mockState(mf);
-  console.log("\n  -- LOG-ALWAYS: one observation entry per step, and the last one is TERMINAL --");
+  console.log("\n  -- LOG-ALWAYS: every step ticks, and the last entry is the plane's TERMINAL one --");
   t("the plane's observation log is not empty", st.runlog.length > 0, true);
-  t("every step the trace names produced a log entry", (out.trace || []).length + 1, st.runlog.length);
+  /* CORRECTED BY R26 (K148): "every step produced a log entry" meant one NEVER_LOOKED entry per step, which the
+     record refuses. Every step still TICKS; no step here judged a look, so the log holds only the plane's own
+     terminal entry. */
+  t("every step the trace names ticked, and none that looked at nothing sent an entry",
+    [st.log.filter((l) => l.op === "airuntick").length, st.runlog.length], [(out.trace || []).length, 1]);
   t("the last entry is terminal", st.runlog[st.runlog.length - 1]?.terminal ?? null, 1);
   t("and names the bound", st.runlog[st.runlog.length - 1]?.bound ?? null, "completed");
 
@@ -895,8 +904,8 @@ console.log("\n--- B3 · A BUDGET EXHAUSTION WRITES `runtime-ceiling-reached` --
     /condition\s*:\s*["'`]runtime-ceiling-reached/.test(WORKER_CODE + HARNESS_CODE), false);
   t("the word nevertheless reached the observation log — written by the PLANE",
     st.runlog.some((e) => e.condition === "runtime-ceiling-reached"), true);
-  t("a run that ended is not ticked again after its exit",
-    st.log.filter((l) => l.op === "airuntick").length <= st.runlog.length, true);
+  t("a run that ended is not ticked again after its exit — one tick per step taken, the last one the tick that ended it",
+    st.log.filter((l) => l.op === "airuntick").length, (out.trace || []).length);
   await mf.dispose();
 }
 
@@ -1651,14 +1660,14 @@ export default {
       judgements: [{ targets: [], level: "document", observed: "PRESENT" }] })).json();
     const log = await realLog(mf);
     const entries = Array.isArray(log.entries) ? log.entries : [];
-    t("R0: the fixture ARMED — the run completed and the REAL plane holds this run's entries (a real "
+    t("REC100-0: the fixture ARMED — the run completed and the REAL plane holds this run's entries (a real "
       + "log with nothing in it would make every assertion below free)",
       [out.ok, log.found, entries.length > 0, (out.present_unbacked ?? 0) > 0], [true, true, true, true]);
-    t("R1: a model-judged PRESENT is CARRIED — the REAL plane refused NONE of this run's step entries, "
+    t("REC100-1: a model-judged PRESENT is CARRIED — the REAL plane refused NONE of this run's step entries, "
       + "and not one of them is a bare PRESENT the record would have had to take on the model's word",
       [out.log_refused ?? "(not published)", entries.filter((e) => e.state === "PRESENT").length],
       [[], 0]);
-    t("R1b: …it is recorded as LOOKED_INDETERMINATE with the judgement STATED, once per judged step, "
+    t("REC100-1b: …it is recorded as LOOKED_INDETERMINATE with the judgement STATED, once per judged step, "
       + "and `logged` equals what the record actually holds — nothing counted that did not land",
       [entries.filter((e) => e.state === "LOOKED_INDETERMINATE"
                         && String(e.detail || "").startsWith("the model judged PRESENT")).length,
@@ -1675,11 +1684,13 @@ export default {
   {
     const mf = realMf({ mode: "check", maxPasses: 1, budget: wide });
     const out = await (await runOp(mf, { ...base,
-      judgements: [{ targets: [], level: "document", condition: "no-such-condition-rec100" }] })).json();
+      /* R26 (K148): only a step that states a look sends an entry, so the bad condition rides on a judged look. */
+      judgements: [{ targets: [], level: "document", observed: "LOOKED_INDETERMINATE",
+                     condition: "no-such-condition-rec100" }] })).json();
     const log = await realLog(mf);
     const entries = Array.isArray(log.entries) ? log.entries : [];
     const lr = Array.isArray(out.log_refused) ? out.log_refused : [];
-    t("R2: every step entry the REAL plane refused is SURFACED in the run's own output — named by the "
+    t("REC100-2: every step entry the REAL plane refused is SURFACED in the run's own output — named by the "
       + "plane's code and C-number and the step it came from — and none is silently dropped",
       [lr.length > 0, [...new Set(lr.map((r) => `${r.code}/${r.check}`))], lr.every((r) => typeof r.step === "string")],
       [true, ["AI_RUN_CONDITION_UNKNOWN/C-22.4"], true]);
@@ -1689,11 +1700,14 @@ export default {
        it GREEN, 0 = 0: an equality that cost nothing. Sent is one tick per trace
        step, landed is what the REAL plane holds, and the difference is what must
        be named. */
-    const sent = (out.trace || []).length;
-    t("R2b: …and they are in `refusals` too, while `logged` counts ONLY what landed — every entry "
-      + "SENT (one per trace step) is either held by the REAL plane or named as refused, none neither",
+    /* R26: one entry was SENT — the plan step's, the only step whose judgement stated a look. */
+    const sent = 1;
+    t("REC100-2b: …and they are in `refusals` too, while `logged` counts ONLY what landed — every entry "
+      + "SENT (one, the judged look) is either held by the REAL plane or named as refused, none neither",
       [sent > entries.length, (out.refusals || []).filter((r) => r.at === "airuntick.log").length, out.logged],
       [true, sent - entries.length, entries.length]);
+    t("REC100-2c: …and the one step that looked is the only one that sent — no NEVER_LOOKED entry reached the plane",
+      [entries.length + lr.length, entries.filter((e) => e.state === "NEVER_LOOKED").length], [sent, 0]);
     await mf.dispose();
   }
 }

@@ -275,6 +275,7 @@ export const PLANE_OPS = {
   basisversions:  { mutating: false, why: "PL-1's version set — what DEDUP compares against, read before any write" },
   search:         { mutating: false, why: "D-220 — which held bundle a citation names, and the source address its bytes name" },
   versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
+  affordances:    { mutating: false, why: "R48 — what the plane publishes, which the skill pack is rendered from before any model turn" },
   airuntick:      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
   suggest:        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
   capturerequest: { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },
@@ -790,17 +791,19 @@ export const PRESENT_UNBACKED_NOTE =
 export function stepLog(state, decision) {
   const s = state || {};
   const d = decision || {};
+  /* R26, K148 — A STEP THAT LOOKED AT NOTHING WRITES NO ENTRY. This entry used to default to `NEVER_LOOKED`, and
+     the record refuses that state from every member entry (observation-log R3: NEVER_LOOKED is the absence of a
+     row, never a row) and refuses an absent state too. So a control-flow entry carries the look its step's
+     judgement states, or the step sends none; the transition itself stays in the run's `trace`. */
+  if (!s.observed || s.observed === "NEVER_LOOKED") return null;
   const judgedPresent = s.observed === "PRESENT";
   const why = String(d.why || "");
   return {
     level:   s.level || null,
     subject: `${String(s.step || FIRST_STEP)} -> ${String(d.step || "?")}`,
-    /* NEVER_LOOKED is the honest default for a control-flow entry: the step's
-       own transition establishes nothing about the world. A step that DID look
-       supplies its own state, and D-129's whole point is that the four are
-       different claims — EXCEPT `PRESENT`, which this entry cannot back (see
-       the note above `PRESENT_UNBACKED_NOTE`). */
-    state:   judgedPresent ? "LOOKED_INDETERMINATE" : (s.observed || "NEVER_LOOKED"),
+    /* D-129's states are different claims — EXCEPT `PRESENT`, which this entry cannot back (see the note above
+       `PRESENT_UNBACKED_NOTE`). */
+    state:   judgedPresent ? "LOOKED_INDETERMINATE" : s.observed,
     governed: s.governed === true,
     condition: s.condition || null,
     terminal: d.step === "close",
