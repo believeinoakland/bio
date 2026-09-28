@@ -186,6 +186,9 @@ const SRC = {
      meaning frontier to retrieval (its R45, R46, R50); A6, J3 and J5 read them there. */
   obs: readFileSync(new URL("../src/observation-log/index.mjs", import.meta.url), "utf8"),
   frontier: readFileSync(new URL("../src/retrieval/frontier.mjs", import.meta.url), "utf8"),
+  /* T7 (legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): observation-log's `run` resolver and retrieval's hidden-run
+     tail are registered by ai-runs now; J5 reads them there. */
+  runs: readFileSync(new URL("../src/ai-runs/index.mjs", import.meta.url), "utf8"),
 };
 
 const TOK = "mem-rec95";
@@ -1112,8 +1115,12 @@ t("H6: and every set this function can return is a SUBSET of the published vocab
        && (SRC.frontier.match(/this\.r\.hiddenRunTail\(viewer\)/g) || []).length === 1,
      /const runSeen = \(r\) => r\.authority_kind !== "run" \|\| !r\.authority\s*\|\| this\.obs\.rowVisible\(\{ authority_kind: "run", authority: r\.authority/
        .test(SRC.frontier),
-     /registerAuthority\("run", \(run, viewer\) => this\.aiRunLog\(\{ run, viewer, limit: 1 \}\)\.found === true\)/.test(SRC.store),
-     (SRC.store.match(/registerHiddenRunTail\("legacy-store", \(viewer\) => this\.#hiddenRunTail\(viewer\)\)/g) || []).length],
+     /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1, ai-runs R36): ai-runs registers both, from
+        its constructor — the `run` resolver as the run's own sight (`runFor`, R28, whose visibility is the gate
+        `aiRunLog` asked), and `hiddenRunTail` as retrieval's tail. The store registers neither now. */
+     /observationLogOf\(ctx\)\.registerAuthority\("run", \(run, viewer\) => !!this\.runFor\(run, viewer\)\)/.test(SRC.runs)
+       && !/registerAuthority\("run"/.test(SRC.store),
+     (SRC.runs.match(/retrieval\.registerHiddenRunTail\("ai-runs", \(viewer\) => this\.hiddenRunTail\(viewer\)\)/g) || []).length],
     [true, true, true, 1]);
 
   /* J4 — THE OVER-STRICTNESS ARM, AND IT IS THE ONE THAT MATTERS MOST HERE.

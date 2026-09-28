@@ -37,6 +37,13 @@
          sweep around entities' `resolve`, so it is not a pure delegation). The row primitives `#rows` and `#one`
          are never renamed (the walk reads `#rows(` as the row source, whichever class runs it). A dispatch arrow
          is neither shape, so the dispatch census does not move. */
+/* WIDENED 2026-09-28 by legacy-tests (T7), OPT-IN (`{ modules }`; without it the text is byte-identical to what it was,
+   measured by sha256 over every caller's option set): T7's layers 6 and 7 EXTRACTED eleven more modules (`T7_MODULES`
+   below) the same way, and the same five substitutions are made for them by passing `{ modules: T7_MODULES }` over a
+   text this function has already made for T5's. Two spellings T5's modules never used are read, and only these: a
+   factory called with the store's `env` (`aiRunsOf(this.ctx, this.env)`) and a routes function taking no `body`
+   (`citationOps(citationOf(this.ctx), url)`); and the factory is named as the STORE imports it (`strengthModule` for
+   strength's `strengthOf`). */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -46,10 +53,24 @@ export const T5_MODULES = {
   connectionsOf: "connections", progressionsOf: "progressions", biasOf: "bias", observationLogOf: "observation-log",
   retrievalOf: "retrieval",
 };
-const OF = Object.keys(T5_MODULES).join("|");
+/* T7 (legacy-tests), 2026-09-28: T7's modules, keyed by the factory as the store's dispatch and delegations call it. */
+export const T7_MODULES = {
+  inquiryOf: "inquiry", basisVersionsOf: "basis-versions", contradictionOf: "contradiction",
+  reevaluationOf: "reevaluation", runProductionsOf: "run-productions", aiRunsOf: "ai-runs",
+  captureRequestsOf: "capture-requests", credentialsOf: "capture-sources", citationOf: "citation", intentOf: "intent",
+  strengthModule: "strength",
+};
 const HEAD = /^ {2}(?:static\s+|async\s+)*(?:get\s+|set\s+)?(?:\*\s*)?(#?[A-Za-z_$][\w$]*)\s*\(/;
-const DELEGATION = new RegExp(String.raw`^ {2}((?:static\s+|async\s+)*)(#?[A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{\s*return\s+(?:await\s+)?(${OF})\(this\.ctx\)\.([A-Za-z_$][\w$]*)\([^;]*\);\s*\}\s*$`);
-const SPREAD = new RegExp(String.raw`^( +)\.\.\.([A-Za-z_$][\w$]*)\((${OF})\(this\.ctx\), url, body(?:, this\.env)?\),[ \t]*$`, "gm");
+/* The factory call, `<of>(this.ctx)` or (T7) `<of>(this.ctx, this.env)`; the routes' arguments, `url, body[, this.env]`
+   or (T7) `url` alone. Every T5 spread and delegation is spelled the first way, so its matches are unchanged. */
+const matchers = (modules) => {
+  const OF = Object.keys(modules).join("|");
+  return {
+    OF,
+    DELEGATION: new RegExp(String.raw`^ {2}((?:static\s+|async\s+)*)(#?[A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{\s*return\s+(?:await\s+)?(${OF})\(this\.ctx(?:, this\.env)?\)\.([A-Za-z_$][\w$]*)\([^;]*\);\s*\}\s*$`),
+    SPREAD: new RegExp(String.raw`^( +)\.\.\.([A-Za-z_$][\w$]*)\((${OF})\(this\.ctx(?:, this\.env)?\), url(?:, body(?:, this\.env)?)?\),[ \t]*$`, "gm"),
+  };
+};
 
 const moduleText = (mod) => readdirSync(`${SRC_DIR}${mod}`).filter((f) => f.endsWith(".mjs")).sort()
   .map((f) => readFileSync(`${SRC_DIR}${mod}/${f}`, "utf8")).join("\n");
@@ -103,7 +124,9 @@ function classMethods(text) {
 
 /** The store's text (as handed in) with each pure T5 delegation re-inlined and, with `{ ops: true }`, each T5 routes
  *  spread expanded; `reinlined` lists every substitution. */
-export function reinlineLayer5(storeText, { ops = false, privates = false } = {}) {
+export function reinlineLayer5(storeText, { ops = false, privates = false, modules = T5_MODULES } = {}) {
+  const T5_MODULES = modules;   /* T7: the module map this call re-inlines (T5's unless another is passed) */
+  const { OF, DELEGATION, SPREAD } = matchers(modules);
   const texts = Object.fromEntries(Object.entries(T5_MODULES).map(([of, mod]) => [of, moduleText(mod)]));
   const methods = Object.fromEntries(Object.entries(texts).map(([of, t]) => [of, classMethods(t)]));
   const classes = Object.fromEntries(Object.entries(texts).map(([of, t]) => [of, moduleClasses(t)]));
@@ -164,7 +187,7 @@ export function reinlineLayer5(storeText, { ops = false, privates = false } = {}
     if (add.length) reinlined.push(`appended module methods: ${add.join(", ")}`);
   }
   if (privates) {
-    const RETURNED = new RegExp(String.raw`(return\s+(?:await\s+)?|const\s+[A-Za-z_$][\w$]*\s*=\s*(?:await\s+)?)(${OF})\(this\.ctx\)\.([A-Za-z_$][\w$]*)\(`, "g");
+    const RETURNED = new RegExp(String.raw`(return\s+(?:await\s+)?|const\s+[A-Za-z_$][\w$]*\s*=\s*(?:await\s+)?)(${OF})\(this\.ctx(?:, this\.env)?\)\.([A-Za-z_$][\w$]*)\(`, "g");
     const wrapped = [];
     text = text.replace(RETURNED, (whole, lead, of, m) => {
       if (!methods[of].has(m)) return whole;

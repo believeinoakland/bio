@@ -1,6 +1,6 @@
 # filings — extraction map
 
-**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `index.mjs` 9,069, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/filings.md` (R1–R21); K4, K13, K23, K31, K61, K92 (4), K102, K108 (4)–(5) (N72), N69 apply. The module exports `filingsOf(ctx)` (K61). A new module: no `from`, and none is needed (§1).
+**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `index.mjs` 9,069, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732): every `store.mjs`, `schema.mjs`, `bio-checks.mjs` and module-file line below is current there, superseding the sentence before; `index.mjs` cites are pending T7's close and marked so. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/filings.md` (R1–R21); K4, K13, K23, K31, K61, K92 (4), K102, K108 (4)–(5) (N72), N69 apply. The module exports `filingsOf(ctx)` (K61). A new module: no `from`, and none is needed (§1).
 
 ## 1. What moves to `filings`
 
@@ -12,13 +12,13 @@ Nothing. `grep` for a template, a pre-filled filing, an evidence package block, 
 
 | what | where today (T6) | owner | why |
 | --- | --- | --- | --- |
-| `RISK_TIERS` (the tier words: "do not file without counsel"), `riskTierState` | bio-checks 538–551 | `actions` | the action's risk tier (actions R23–R25); R2 reads it through `actionRead` |
-| `CORRESPONDENCE_DIRECTIONS`, `CORRESPONDENCE_STAGES` (`sent` includes `court_filing`) | bio-checks 811, 4505–4509 | `actions` | R7's `sent` entry is written by `actions.actionCorrespond` with its vocabulary |
-| `actionCorrespond`, `#spliceCorrespondence` | store 4923ff. | `actions` | R7 calls it |
+| `RISK_TIERS` (the tier words: "do not file without counsel"), `riskTierState` | bio-checks 538–551 (unchanged) | `actions` | the action's risk tier (actions R23–R25); R2 reads it through `actionRead` |
+| `CORRESPONDENCE_DIRECTIONS`, `CORRESPONDENCE_STAGES` (`sent` includes `court_filing`) | bio-checks 811, 4451–4455 | `actions` | R7's `sent` entry is written by `actions.actionCorrespond` with its vocabulary |
+| `actionCorrespond`, `#spliceCorrespondence` | store 3272–3534, 4164–4211 | `actions` | R7 calls it |
 | `ACTION_KINDS` (a state's records law and local kinds) | bio-checks 524 | `actions` (its R10 retires the place names) | the kinds R1–R4 read come from the profile's `action_kinds`, never from here (R20) |
-| `lawProposalLabel` and states; `isMachineIdentity` | bio-checks 743–800, 1667–1693 | `legacy-checks` | R5, R14 read `proposalLabel` over them, R16 `isMachineIdentity`, by import (§5.1) |
+| `lawProposalLabel` and states; `isMachineIdentity` | bio-checks 769–800, 1631–1642 | `legacy-checks` | R5, R14 read `proposalLabel` over them, R16 `isMachineIdentity`, by import (§5.1) |
 | `container.mjs` (the stored ZIP) | `bio-plane/src/container.mjs` | `publication` | a possible packet format (Suggestions); R11 forbids any path to publication, so a copy or a pure import only |
-| `attest`, `attestStatus` | provenance/index.mjs 599–731 | `provenance` | writes attestations; R9 needs a read (§5.4) |
+| `attest`, `attestStatus` | provenance/index.mjs 597–734 | `provenance` | writes attestations; R9 reads `attestationsOf` (§5.4) |
 
 ## 3. What earlier modules must provide (uses)
 
@@ -27,7 +27,7 @@ Nothing. `grep` for a template, a pre-filled filing, an evidence package block, 
 | `jurisdictions` | `combine`'s `action_kinds` (tier, venue, template, laws), `counterparties`, `deadlines`, `records_laws`; `advisory` (R4), `legal_organisations` (R15), `holidays` (N72) | kinds, tier, venue, template, counterparties, deadlines yes (R24–R29, built); **`advisory`, `legal_organisations`, `holidays` stated, not yet met** (jurisdictions R25, R32–R36; `SECTIONS`, index.mjs 16–18, holds none); built by the `jurisdictions` job before layer 9 (K171 (3)) |
 | `record-core` | `allocId`, `transact`, `stampInstant`, `getSetting`, `declarePurge` | yes |
 | `membership` | `viewerPredicate` | yes |
-| `provenance` | a capture's digest, locator, capture time (`homeOf`, `receipts`), attestations; capturing the approved bytes | digest/locator/time yes; `attestationsOf(captureSha)` to be stated by provenance before layer 9 (§5.4, K171 (13)) |
+| `provenance` | a capture's digest, locator, capture time (`homeOf`, `receipts`), attestations; capturing the approved bytes | digest/locator/time yes; `attestationsOf(captureSha)` yes (stated, and built at `provenance/index.mjs` 1124; §5.4, K171 (13)) |
 | `content` | the passages facts and exhibits cite | yes |
 | `publication` | a finding's published edition (R3, R9); the evidence-package registration (its R36) for R15 | editions yes (R9, R10); R36 stated, not yet met (K108 (4), N69); publication not yet extracted |
 | `standards` | `standardRead`, `inForce` | yes (standards R5, R7) |

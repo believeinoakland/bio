@@ -33,25 +33,38 @@ if (!ARMS.includes(ARM)) {
   console.log(`usage: node test/nc-rec119.mjs <${ARMS.join("|")}>`);
   process.exit(2);
 }
-const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1): this item's resolver `#versionLegsEarned` moved out
+   of store.mjs into src/basis-versions/index.mjs as `#legsEarned(rows)` (it asks inquiry's `earned` and applies
+   inquiry's `legCapped`), and the composition builder into src/basis-versions/grammar.mjs. The read-side arms
+   (a, c, d, e) patch the resolver there, arm (b) the builder there; each arm names its file, both files are
+   snapshotted, and every anchor was counted (exactly once) before it was written. The arms mean what they meant. */
+const BV = fileURLToPath(new URL("../src/basis-versions/index.mjs", import.meta.url));
+const GRAMMAR = fileURLToPath(new URL("../src/basis-versions/grammar.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./rec119-version-legs-earned.test.mjs", import.meta.url));
 const PHASE = fileURLToPath(new URL("./nc-rec119-freeze-phase.mjs", import.meta.url));
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SNAP = `${controlPen("rec119")}/store.mjs.nc-rec119-${ARM}.pristine`;
-const FLOOR = 500 * 1024;   /* a restore that lands a file smaller than this is not a restore */
+const FLOOR = 5 * 1024;   /* a restore that lands a file smaller than this is not a restore */
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const PRISTINE_SHA = sha(STORE), PRISTINE_SIZE = statSync(STORE).size;
-if (PRISTINE_SIZE < FLOOR) { console.log(`refusing: store.mjs is ${PRISTINE_SIZE} bytes, under the floor`); process.exit(3); }
-copyFileSync(STORE, SNAP);
+const SNAPS = [[BV, "bv-index"], [GRAMMAR, "bv-grammar"]].map(([file, tag]) => {
+  const snap = `${controlPen("rec119")}/${tag}.mjs.nc-rec119-${ARM}.pristine`;
+  const size = statSync(file).size;
+  if (size < FLOOR) { console.log(`refusing: ${file} is ${size} bytes, under the floor`); process.exit(3); }
+  copyFileSync(file, snap);
+  return { file, snap, sha: sha(file), size };
+});
 
 const restore = () => {
-  copyFileSync(SNAP, STORE);
-  const okSha = sha(STORE) === PRISTINE_SHA, okSize = statSync(STORE).size === PRISTINE_SIZE;
-  console.log(`  restored byte-identically: ${okSha && okSize ? "YES" : "NO"} ` +
-              `(sha ${okSha ? "match" : "MISMATCH"}, size ${statSync(STORE).size}/${PRISTINE_SIZE})`);
-  if (existsSync(SNAP)) unlinkSync(SNAP);
-  return okSha && okSize;
+  let all = true;
+  for (const x of SNAPS) {
+    copyFileSync(x.snap, x.file);
+    const okSha = sha(x.file) === x.sha, okSize = statSync(x.file).size === x.size;
+    console.log(`  restored ${x.file.split("/src/")[1]} byte-identically: ${okSha && okSize ? "YES" : "NO"} ` +
+                `(sha ${okSha ? "match" : "MISMATCH"}, size ${statSync(x.file).size}/${x.size})`);
+    if (existsSync(x.snap)) unlinkSync(x.snap);
+    all = all && okSha && okSize;
+  }
+  return all;
 };
 
 /* ---- THE PATCHES, EACH WITH WHAT IT IS DECLARED TO DO ----------------------
@@ -67,48 +80,44 @@ const restore = () => {
  * cannot be broken. REC-118 hit this and recorded it; this item hit it again in the same place,
  * which is what a trap looks like when the instrument for it already exists.
  */
-const PRISTINE_METHOD = `  #versionLegsEarned(rows) {
+const PRISTINE_METHOD = `  #legsEarned(rows) {
     if (!Array.isArray(rows) || !rows.length) return rows;
     const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
-      && typeof r.target_id === "string" && !!r.target_id
-      && normalizeType(r.target_type) !== "inquiry";
+      && typeof r.target_id === "string" && !!r.target_id && normalizeType(r.target_type) !== "inquiry";
     const targets = new Set();
     for (const r of rows) if (bounded(r)) targets.add(r.target_id);
-    const cap = targets.size
-      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
-      : {};
+    const inq = this.inquiry;
+    const cap = targets.size && inq && typeof inq.earned === "function"
+      ? (inq.earned(null, [...targets])?.earned?.capture || {}) : {};
     return rows.map((r) => {
-      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;
-      return { ...r,
-               grade: res ? res.grade : (r ? r.grade : null),
-               grade_authored: r ? r.grade : null,
-               grade_why: res ? res.why : null };
+      const res = bounded(r) && inq && typeof inq.legCapped === "function"
+        ? inq.legCapped(r.grade, cap[r.target_id], r.target_id) : null;
+      return { ...r, grade: res ? res.grade : r.grade, grade_authored: r.grade, grade_why: res ? res.why : null };
     });
   }`;
-const method = (body) => `  #versionLegsEarned(rows) {\n${body}\n  }`;
+const method = (body) => `  #legsEarned(rows) {\n${body}\n  }`;
+/* The resolver's prologue, shared by every read-side arm below (the arms differ only after it). */
+const HEAD = `    if (!Array.isArray(rows) || !rows.length) return rows;
+    const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
+      && typeof r.target_id === "string" && !!r.target_id && normalizeType(r.target_type) !== "inquiry";
+    const targets = new Set();
+    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
+    const inq = this.inquiry;
+    const cap = targets.size && inq && typeof inq.earned === "function"
+      ? (inq.earned(null, [...targets])?.earned?.capture || {}) : {};`;
 const PATCHES = {
   a: { what: "THE ITEM'S OWN — the registry is still asked and its answer DISCARDED, so both ops "
             + "publish the AUTHORED letter again, uncapped, beside a composition holding the same "
             + "letter. The fix removed, with the machinery left in place so the arm cannot be "
             + "mistaken for the resolver simply being absent.",
        expect: "the suite FAILS, and the headline names BOTH letters and BOTH ops",
-       from: PRISTINE_METHOD,
-       to: method(`    if (!Array.isArray(rows) || !rows.length) return rows;
-    const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
-      && typeof r.target_id === "string" && !!r.target_id
-      && normalizeType(r.target_type) !== "inquiry";
-    const targets = new Set();
-    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
-    const cap = targets.size
-      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
-      : {};
+       file: BV, from: PRISTINE_METHOD,
+       to: method(`${HEAD}
     return rows.map((r) => {
-      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;
+      const res = bounded(r) && inq && typeof inq.legCapped === "function"
+        ? inq.legCapped(r.grade, cap[r.target_id], r.target_id) : null;
       void res;
-      return { ...r,
-               grade: r ? r.grade : null,
-               grade_authored: r ? r.grade : null,
-               grade_why: null };
+      return { ...r, grade: r.grade, grade_authored: r.grade, grade_why: null };
     });`) },
 
   c: { what: "THE MEMBER'S ACT ERASED — the letter caps correctly, but `grade_authored` and "
@@ -116,62 +125,36 @@ const PATCHES = {
             + "question, implemented: cap the letter and say nothing about what was authored.",
        expect: "the suite FAILS — and this is the arm that proves the COMPROMISE is load-bearing "
              + "rather than decorative, because `legs[] publishes the earned letter` passes under it",
-       from: PRISTINE_METHOD,
-       to: method(`    if (!Array.isArray(rows) || !rows.length) return rows;
-    const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
-      && typeof r.target_id === "string" && !!r.target_id
-      && normalizeType(r.target_type) !== "inquiry";
-    const targets = new Set();
-    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
-    const cap = targets.size
-      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
-      : {};
+       file: BV, from: PRISTINE_METHOD,
+       to: method(`${HEAD}
     return rows.map((r) => {
-      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;
-      return { ...r, grade: res ? res.grade : (r ? r.grade : null) };
+      const res = bounded(r) && inq && typeof inq.legCapped === "function"
+        ? inq.legCapped(r.grade, cap[r.target_id], r.target_id) : null;
+      return { ...r, grade: res ? res.grade : r.grade };
     });`) },
 
   d: { what: "THE AXIS IGNORED — the capture ceiling applied to every leg carrying a letter, "
             + "whatever axis it is on. Also the arm that catches the cheapest wrong answer to this "
             + "item: making the two halves agree by copying a single letter across every leg.",
        expect: "the suite FAILS on the leg that must NOT move",
-       from: PRISTINE_METHOD,
-       to: method(`    if (!Array.isArray(rows) || !rows.length) return rows;
-    const bounded = (r) => !!r && r.grade != null
-      && typeof r.target_id === "string" && !!r.target_id
-      && normalizeType(r.target_type) !== "inquiry";
-    const targets = new Set();
-    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
-    const cap = targets.size
-      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
-      : {};
+       file: BV, from: PRISTINE_METHOD,
+       to: method(`${HEAD.replace('r.grade_axis === "capture" && ', "")}
     return rows.map((r) => {
-      const res = bounded(r) ? Store.#capturedAt(r.grade, cap[r.target_id], r.target_id) : null;
-      return { ...r,
-               grade: res ? res.grade : (r ? r.grade : null),
-               grade_authored: r ? r.grade : null,
-               grade_why: res ? res.why : null };
+      const res = bounded(r) && inq && typeof inq.legCapped === "function"
+        ? inq.legCapped(r.grade, cap[r.target_id], r.target_id) : null;
+      return { ...r, grade: res ? res.grade : r.grade, grade_authored: r.grade, grade_why: res ? res.why : null };
     });`) },
 
   e: { what: "OVER-STRICTNESS — the SAME rule written as an explicit `for` loop with a named row "
             + "instead of a `.map`. Correct work in a spelling this item did not anticipate.",
        expect: "the suite PASSES, unchanged",
-       from: PRISTINE_METHOD,
-       to: method(`    if (!Array.isArray(rows) || !rows.length) return rows;
-    const bounded = (r) => !!r && r.grade_axis === "capture" && r.grade != null
-      && typeof r.target_id === "string" && !!r.target_id
-      && normalizeType(r.target_type) !== "inquiry";
-    const targets = new Set();
-    for (const r of rows) if (bounded(r)) targets.add(r.target_id);
-    const cap = targets.size
-      ? (this.earnedBasisRegistry(null, [...targets])?.earned?.capture || {})
-      : {};
+       file: BV, from: PRISTINE_METHOD,
+       to: method(`${HEAD}
     const out = [];
     for (const row of rows) {
-      const res = bounded(row) ? Store.#capturedAt(row.grade, cap[row.target_id], row.target_id) : null;
-      out.push({ ...row,
-                 grade: res ? res.grade : (row ? row.grade : null),
-                 grade_authored: row ? row.grade : null,
+      const res = bounded(row) && inq && typeof inq.legCapped === "function"
+        ? inq.legCapped(row.grade, cap[row.target_id], row.target_id) : null;
+      out.push({ ...row, grade: res ? res.grade : row.grade, grade_authored: row.grade,
                  grade_why: res ? res.why : null });
     }
     return out;`) },
@@ -185,6 +168,9 @@ const PATCHES = {
             + "it. This is the half the freeze depends on and the arm this item exists to protect.",
        expect: "the FREEZE BREAKS — phase B is refused VERSION_FROZEN and an old case becomes "
              + "unratifiable",
+       /* RE-ANCHORED 2026-09-28: the builder is basis-versions' grammar.mjs, which has no rank table; a letter
+          stronger than C (A or B) is written as C, which is the same cap the arm always made. */
+       file: GRAMMAR,
        from: "...legs.map((l, k) => `leg\\t${k}\\t${c(l.target_id)}\\t${c(l.target_type)}\\t${c(l.role)}\\t${c(l.grade)}\\t`",
        /* THE COMPARISON DIRECTION IS THE ARM'S OWN FIRST CORRECTION, RECORDED AT THE ARM.
           Spelled `<` first, which armed the FILE and not the BEHAVIOUR: the patch applied on a
@@ -194,19 +180,19 @@ const PATCHES = {
           `rank > rank`. That is why `#capturedAt` itself reads `<=` to mean "no cap needed".
           The arm-that-did-not-arm class with the sign literally flipped, caught because the
           driver prints what phase B actually STORED rather than only whether it was refused. */
-       to: "...legs.map((l, k) => `leg\\t${k}\\t${c(l.target_id)}\\t${c(l.target_type)}\\t${c(l.role)}\\t${c(Store.#GRADE_RANK[l.grade] > Store.#GRADE_RANK[\"C\"] ? \"C\" : l.grade)}\\t`" },
+       to: "...legs.map((l, k) => `leg\\t${k}\\t${c(l.target_id)}\\t${c(l.target_type)}\\t${c(l.role)}\\t${c([\"A\", \"B\"].includes(l.grade) ? \"C\" : l.grade)}\\t`" },
 };
 
 const arm = (name) => {
   const p = PATCHES[name];
-  const src = readFileSync(STORE, "utf8");
+  const src = readFileSync(p.file, "utf8");
   const n = src.split(p.from).length - 1;
   if (n !== 1) {
     restore();
     console.log(`\nARM (${name}) NEVER ARMED — anchor occurs ${n} time(s). THAT IS A FINDING, not a pass.`);
     process.exit(4);
   }
-  writeFileSync(STORE, src.replace(p.from, p.to));
+  writeFileSync(p.file, src.replace(p.from, p.to));
   console.log(`  armed: anchor was unique`);
 };
 

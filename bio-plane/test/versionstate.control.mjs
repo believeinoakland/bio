@@ -21,7 +21,7 @@
  *    1. the CREDENTIAL STAMP  (index.mjs: a machine is `token:<class>`, and a
  *       caller-supplied `author` is overwritten rather than honoured)
  *    2. the ENDPOINT          (index.mjs NEEDS: the op requires `contribute`)
- *    3. the TRANSITION        (store.mjs: `isMachineIdentity` refuses by shape)
+ *    3. the TRANSITION        (basis-versions/index.mjs, moved from store.mjs: `isMachineIdentity` refuses by shape)
  *
  * — and each ABSORBS the others when it is whole. An `ai` credential refused at
  * the credential layer never reaches the transition refusal, so a control that
@@ -45,6 +45,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
   store: ROOT + "src/store.mjs",
+  /* ADDED 2026-09-28 (BASIS-VERSIONS #1 J4.1, INQUIRY #1 J2.2): the transition body and its six entry points moved to
+     basis-versions, the cycle walk to inquiry (`cyclePath`); the arms that edited them in store.mjs edit them there. */
+  bv: ROOT + "src/basis-versions/index.mjs",
+  inquiry: ROOT + "src/inquiry/index.mjs",
   index: ROOT + "src/index.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
   /* THE SUITE ITSELF IS A RESTORABLE FILE, added 2026-08-09 for arm (9). An arm
@@ -150,8 +154,11 @@ arm("(1a) LAYER 1 — THE CREDENTIAL STAMP, with layers 2 and 3 HELD OPEN. "
      still holds it, because `VERSION_ACTIONS.includes(op)` at this indent appears
      once in the stamp condition and once in the viewer condition several hundred
      lines up — so the anchor keeps the `if (` line above it to stay unique. */
-  [["index", `        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)\n        || VERSION_ACTIONS.includes(op)`,
-             `        || DECLARATION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op)\n        || (VERSION_ACTIONS.includes(op) && viaSession)`]],
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4), stale again and found by the occurs-once guard: REC-122 landed
+     `|| op === "connectionchoose"` between the DECLARATION/STRUCTURE line and this one, so the old two-line anchor
+     occurred zero times (already on tranche/T6). The line above it is now the neighbour that keeps it unique. */
+  [["index", `        || op === "connectionchoose"\n        || VERSION_ACTIONS.includes(op)`,
+             `        || op === "connectionchoose"\n        || (VERSION_ACTIONS.includes(op) && viaSession)`]],
   ["EVERY ONE OF THE SIX refuses a machine credential",
    "caller-supplied `author` was OVERWRITTEN"]);
 
@@ -172,7 +179,7 @@ arm("(1b) LAYER 2 — THE ENDPOINT CAPABILITY, with layers 1 and 3 HELD OPEN. "
 arm("(1c) LAYER 3 — THE TRANSITION, with layers 1 and 2 HELD OPEN. "
   + "Disable the store's one machine-identity guard: the credential is still honestly stamped "
   + "`token:member` and still holds no capability question to answer, so nothing else stops it.",
-  [["store", `    if (!who || isMachineIdentity(who))\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`,
+  [["bv", `    if (!who || isMachineIdentity(who))\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`,
              `    if (false)\n      return refuse("MACHINE_CANNOT_MOVE_VERSION",`]],
   ["EVERY ONE OF THE SIX refuses a machine credential"]);
 
@@ -180,7 +187,7 @@ arm("(1c) LAYER 3 — THE TRANSITION, with layers 1 and 2 HELD OPEN. "
 arm("(2) THE IMPLEMENTATION-COUNT PIN — a SECOND implementation of the machine-identity rule, inlined "
   + "in one entry point. EVERY BEHAVIOURAL ARM STILL PASSES, because the second copy does the first "
   + "one's job. This is IS-6's C-22.4 defect reproduced on purpose, and ONLY the count pin can see it.",
-  [["store", `  versionAccept(a)   { return this.#moveVersionState("accept", a); }`,
+  [["bv", `  versionAccept(a)   { return this.#moveVersionState("accept", a); }`,
              `  versionAccept(a)   { if (isMachineIdentity(String(a?.author ?? ""))) return { ok: false, reason: "MACHINE_CANNOT_MOVE_VERSION", code: "MACHINE_CANNOT_MOVE_VERSION", check: "C-25.24" };\n    return this.#moveVersionState("accept", a); }`]],
   ["ONE IMPLEMENTATION EACH"],
   /* HELD OPEN AND REQUIRED TO STAY GREEN: the behavioural arm sees nothing,
@@ -190,7 +197,7 @@ arm("(2) THE IMPLEMENTATION-COUNT PIN — a SECOND implementation of the machine
 /* ------------------------------------------------------------------- (3) */
 arm("(3) DROP THE REASON REQUIREMENT AT THE OP. A reading is turned down with nothing recorded — "
   + "D-214's anti-omission instrument, worthless without the reason.",
-  [["store", `    if (versionNeedsReason(to) && !why)`, `    if (false && versionNeedsReason(to) && !why)`]],
+  [["bv", `    if (versionNeedsReason(to) && !why)`, `    if (false && versionNeedsReason(to) && !why)`]],
   ["LAYER 1 (the op)"]);
 
 /* ------------------------------------------------------------------ (3b) */
@@ -205,22 +212,24 @@ arm("(3b) DROP THE CATALOG'S HALF INSTEAD. The op still refuses, so only the arm
 arm("(4) MOVE THE FENCE OUT OF THE CODE. Delete the store's machine-identity refusal entirely and leave "
   + "the act's published LABEL saying what a machine may not do. EVERY FENCE IS CODE, NEVER A LINE IN A "
   + "SKILL OR A LABEL — and the source assertion is what says so.",
-  [["store", `      return refuse("MACHINE_CANNOT_MOVE_VERSION",`, `      return refuse("VERSION_ACT_NO_VERSION",`]],
+  [["bv", `      return refuse("MACHINE_CANNOT_MOVE_VERSION",`, `      return refuse("VERSION_ACT_NO_VERSION",`]],
   ["FENCE LAYER 3", "EVERY ONE OF THE SIX refuses a machine credential"]);
 
 /* ------------------------------------------------------------------- (5) */
 arm("(5) BREAK THE TRANSITIVE CYCLE CHECK AT ACCEPT. A reading whose leg names a question that already "
   + "rests on this one is accepted, and the answer becomes its own support.",
-  [["store", `      cycle = inqTargets.length ? this.#basisCyclePath(target, inqTargets) : null;`,
-             `      cycle = null;`]],
+  /* RE-ANCHORED 2026-09-28: the accept asks inquiry's walk in basis-versions' `#moveVersionState`. */
+  [["bv", `        const cycle = this.inquiry.cyclePath(target, inqTargets);`,
+          `        const cycle = null;`]],
   ["ACCEPTING IT IS REFUSED"]);
 
 /* ------------------------------------------------------------------ (5b) */
 arm("(5b) WRITE A SECOND CYCLE WALK rather than calling the existing one. The behaviour is identical "
   + "TODAY, which is exactly the condition under which a second walk drifts from the first — PL-1 "
   + "recorded this edge rather than half-building it for this reason.",
-  [["store", `  #basisCyclePath(bundleId, targets) {`,
-             `  #basisCyclePathTwo(bundleId, targets) { return this.#basisCyclePath(bundleId, targets); }\n  #basisCyclePath(bundleId, targets) {`]],
+  /* RE-ANCHORED 2026-09-28: the walk is inquiry's `cyclePath`; the second walk is written beside it there. */
+  [["inquiry", `  cyclePath(bundleId, targets) {`,
+               `  cyclePathTwo(bundleId, targets) { return this.cyclePath(bundleId, targets); }\n  cyclePath(bundleId, targets) {`]],
   /* CORRECTED WHILE RUNNING: the pin that fires is the CALL-SITE count, not the
      DEFINITION count — a second walk under a second NAME leaves
      `#basisCyclePath(bundleId, targets) {` at one while the call count moves.
@@ -245,7 +254,7 @@ arm("(7) COLLAPSE THE TWO REASON CONDITIONS BACK INTO ONE, which is what `main` 
   + "answer a reason that ARRIVED and cannot be stored with VERSION_NO_REASON, whose canned "
   + "translation tells the member it is \"worth nothing without the reason\" — about a reason they "
   + "supplied, and on three acts that require no reason at all.",
-  [["store", `      return refuse("VERSION_REASON_MALFORMED",`, `      return refuse("VERSION_NO_REASON",`]],
+  [["bv", `      return refuse("VERSION_REASON_MALFORMED",`, `      return refuse("VERSION_NO_REASON",`]],
   ["A REASON THE MEMBER GAVE AND THE RECORD CANNOT STORE",
    "AND ON THE THREE ACTS THAT REQUIRE NO REASON AT ALL",
    "THE DRIVEN SET EQUALS THE REGISTRY"],
@@ -268,8 +277,9 @@ arm("(8) TIGHTEN THE FENCE PAST ITS RULE — refuse an apostrophe as well. Every
      here), so the guard line by itself would have armed three sites and the
      harness would have refused to arm blind — which it did, on the first run of
      this arm. */
-  [["store", `    if (why.length > Store.RELEASE_ACK_MAX || /["\\\\\\r\\n]/.test(why))\n      return refuse("VERSION_REASON_MALFORMED",`,
-             `    if (why.length > Store.RELEASE_ACK_MAX || /["'\\\\\\r\\n]/.test(why))\n      return refuse("VERSION_REASON_MALFORMED",`]],
+  /* RE-ANCHORED 2026-09-28: in basis-versions the bound is its own `VERSION_REASON_MAX`. */
+  [["bv", `    if (why.length > VERSION_REASON_MAX || /["\\\\\\r\\n]/.test(why))\n      return refuse("VERSION_REASON_MALFORMED",`,
+          `    if (why.length > VERSION_REASON_MAX || /["'\\\\\\r\\n]/.test(why))\n      return refuse("VERSION_REASON_MALFORMED",`]],
   ["OVER-STRICTNESS: a reason of EXACTLY the 500-character bound"],
   ["A REASON THE MEMBER GAVE AND THE RECORD CANNOT STORE"]);
 

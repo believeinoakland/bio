@@ -390,6 +390,8 @@ const projMd = (id, label = id) => [
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []",
+  /* 2026-09-28 (T7 LEGACY-TESTS #4; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Fixture objective."',
   "---", "", "## Thesis Summary", "", "X.", "", "## Open Questions", "",
   "## Ruled Out", "", "## Session Log", "", "## Review Notes", "",
 ].join("\n");
@@ -1075,29 +1077,42 @@ const reinstateApplies = String(ACTS.find((a) => a.id === "reinstate").applies);
    (which read 0 and was RIGHT to): a DEC-49 marker lives INSIDE a block comment, so the span does not
    exist in a comment-blanked copy at all. The total is still counted on the stripped source, where a
    spelling quoted in prose cannot inflate it. */
-const citeRegion = (storeSrc.match(
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; CITATION #1 J1.4, RUN-PRODUCTIONS #1): the helper is citation's
+   `retiredNotCitable(id)` (R5, src/citation/index.mjs), read by `cite`'s region and `#edgeTransition` there as
+   `this.retiredNotCitable(`, by the store's `affordanceFacts` as `citationOf(this.ctx).retiredNotCitable(`, and by the
+   suggest path's CHECK 1, now run-productions' `suggest` (src/run-productions/index.mjs), as
+   `this.citation.retiredNotCitable(`. The helper reads the head through record-core, so its one inline comparison is
+   spelled on `currentState`; the literal matches either spelling of the field. The census is taken over the three
+   files together, comments stripped. */
+const CITATION_SRC = readFileSync(new URL("../src/citation/index.mjs", import.meta.url), "utf8");
+const RUNPROD_SRC = readFileSync(new URL("../src/run-productions/index.mjs", import.meta.url), "utf8");
+const corpusNoComments = [storeSrcNoComments, stripComments(CITATION_SRC), stripComments(RUNPROD_SRC)].join("\n");
+const citeRegion = (CITATION_SRC.match(
   /DEC-49 REGION is-cite-retired[\s\S]*?END DEC-49 REGION is-cite-retired/) || [""])[0];
-const RETIRED_LITERAL = /String\(\w+\.current_state \?\? ""\)\.trim\(\) === "retired"/g;
-const helperBody = (storeSrcNoComments.match(/#retiredNotCitable\(id\) \{[\s\S]*?\n  \}/) || [""])[0];
-const suggestCheck1 = storeSrcNoComments.slice(
-  storeSrcNoComments.indexOf("const unreachable = [];"),
-  storeSrcNoComments.indexOf('refusal("SUGGEST_LEG_UNREACHABLE"'));
+const RETIRED_LITERAL = /String\(\w+\.(?:current_state|currentState) \?\? ""\)\.trim\(\) === "retired"/g;
+const helperBody = (stripComments(CITATION_SRC).match(/\n  retiredNotCitable\(id\) \{[\s\S]*?\n  \}/) || [""])[0];
+const runProdNoComments = stripComments(RUNPROD_SRC);
+const suggestCheck1 = runProdNoComments.slice(
+  runProdNoComments.indexOf("const unreachable = [];"),
+  runProdNoComments.indexOf('refusal("SUGGEST_LEG_UNREACHABLE"'));
 t("§0 STRUCTURAL (D-444, D-553): `#retiredNotCitable` is DEFINED once and READ at all four sites — "
 + "the fact, reinstate, the cite region, the suggest path; the inline spelling survives only in the "
 + "helper, which names no type; the suggest door asks it outside the viewer-gated query; and the arm "
 + "keys on the reinstatable count, never on the bare `severed` one",
-  [(storeSrcNoComments.match(/#retiredNotCitable\(/g) || []).length,
-   (storeSrcNoComments.match(RETIRED_LITERAL) || []).length,
+  [(corpusNoComments.match(/\bretiredNotCitable\(/g) || []).length,
+   (corpusNoComments.match(RETIRED_LITERAL) || []).length,
    (helperBody.match(RETIRED_LITERAL) || []).length,
    /object_type/.test(helperBody),
-   (citeRegion.match(/this\.#retiredNotCitable\(/g) || []).length,
+   (citeRegion.match(/this\.retiredNotCitable\(/g) || []).length,
    (citeRegion.match(RETIRED_LITERAL) || []).length,
    suggestCheck1.length > 200,
-   (suggestCheck1.match(/this\.#retiredNotCitable\(/g) || []).length,
+   (suggestCheck1.match(/this\.citation\.retiredNotCitable\(/g) || []).length,
    /current_state/.test(suggestCheck1),
-   /cites_out\.severed_reinstatable/.test(reinstateApplies),
-   /cites_out\.severed\b/.test(reinstateApplies),
-   /cites_out\.confirmed\b/.test(String(ACTS.find((a) => a.id === "sever").applies))],
+   /* RE-ANCHORED 2026-09-28 (T7; affordances' own `deriveActs reads counts`, K211): the predicates now read the
+      counts through `countOf(f.cites_out?.…)`, so the field is matched with or without the optional chain. */
+   /cites_out\??\.severed_reinstatable/.test(reinstateApplies),
+   /cites_out\??\.severed\b/.test(reinstateApplies),
+   /cites_out\??\.confirmed\b/.test(String(ACTS.find((a) => a.id === "sever").applies))],
   [5, 1, 1, false, 1, 0, true, 1, false, true, false, true]);
 
 /* §1 THE ITEM'S OWN ARM. P holds exactly ONE cites edge; it is severed; its

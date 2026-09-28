@@ -65,7 +65,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
-import { CONTRADICTION_PAIR_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-28 (T7 LEGACY-TESTS #4; CONTRADICTION #1 J2.1): C-60.1 left the catalogue with the pairing
+   (contradiction R20) and is `CONTRADICTION_PAIR_CHECKS` in src/contradiction/checks.mjs, exported by
+   src/contradiction/index.mjs; number, code and translation unchanged. */
+import { CONTRADICTION_PAIR_CHECKS } from "../src/contradiction/index.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = withSurfacingRun(new Miniflare({

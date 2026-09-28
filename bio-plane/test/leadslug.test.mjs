@@ -78,7 +78,12 @@ import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../src/tsa.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the `capture_requests` table, its additive
+   columns and its per-bundle purge arm left the store with CAPTURE-REQUESTS #1 — the CREATE TABLE literal and
+   `CAPTURE_REQUESTS_ADDITIVE` to `src/capture-requests/schema.mjs`, the lead's purge to its `clearLead` (R35), which the
+   store's `purge` calls on a per-bundle purge. §9c reads them there. */
+const CR_SCHEMA_SRC = readFileSync(SRC("capture-requests/schema.mjs"), "utf8");
+const CR_SRC = readFileSync(SRC("capture-requests/index.mjs"), "utf8");
 const NOTIFICATIONS = readFileSync(join(DIR, "..", "..", "docs", "development", "NOTIFICATIONS.md"), "utf8");
 
 let pass = 0, fail = 0;
@@ -190,7 +195,7 @@ const inquiryMd = (id, question, type = "inquiry", schema = "inquiry@1") => ["--
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's id is MINTED by the plane (Membership v2 §7); a
    creation's bytes carrying an `id:` line are refused PROJECT_ID_IN_BYTES, so the creation document has none. */
 const projectMd = (title, cites) => ["---",
-  "object_type: project", "schema: project@1",
+  "object_type: project", "objective: \"Fixture objective.\"", "schema: project@1",
   `title: "${title}"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",
@@ -797,8 +802,8 @@ console.log("\n--- 9. over-strictness: correct work in spellings this item did n
     Object.keys(QUEUE_MINT_CHECKS).sort(), ["KIND_MISCLASSED", "NO_CLASS", "NO_SUCH_KIND"]);
 
   console.log("\n--- 9c. the schema traps, asserted over this column's own span ---");
-  const tbl = SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
-  const body = SCHEMA_SRC.slice(tbl, SCHEMA_SRC.indexOf("\n);", tbl));
+  const tbl = CR_SCHEMA_SRC.indexOf("CREATE TABLE IF NOT EXISTS capture_requests");
+  const body = CR_SCHEMA_SRC.slice(tbl, CR_SCHEMA_SRC.indexOf("\n);", tbl));
   /* CORRECTED 2026-08-09 BY FL-4, NOT EXEMPTED, and the reason the old one was
      wrong is worth carrying because it is a class rather than a typo. It read
      `/lead_inquiry\s+TEXT\s*$/m` — "TEXT and then END OF LINE" — which pinned
@@ -813,10 +818,15 @@ console.log("\n--- 9. over-strictness: correct work in spellings this item did n
   + "made, and on THIS column that would mint a notification out of a migration",
     [!!leadDecl, /^TEXT\s*,?\s*$/.test((leadDecl && leadDecl[1]) || "")], [true, true]);
   t("it is backfilled by #migrate's ADD COLUMN list, so a store migrated forward and a fresh install "
-  + "present the same table", /\["capture_requests", "lead_inquiry", "TEXT"\]/.test(STORE_SRC), true);
+  + "present the same table",
+    [/CAPTURE_REQUESTS_ADDITIVE = Object\.freeze\(\[[^\]]*\["lead_inquiry", "TEXT"\]/.test(CR_SCHEMA_SRC),
+     /for \(const \[column, decl\] of CAPTURE_REQUESTS_ADDITIVE\)\s*\n\s*if \(!have\.includes\(column\)\) sql\.exec\(`ALTER TABLE capture_requests ADD COLUMN/.test(CR_SCHEMA_SRC)],
+    [true, true]);
   t("purge clears it in the per-bundle arm as well as the whole-store one — the column names a "
   + "SECOND bundle id and the whole-store DELETE cannot be the only cover",
-    /UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=\?/.test(STORE_SRC), true);
+    [/clearLead\(bundleId\) \{\s*\n\s*if \(bundleId\) this\.#sql\.exec\(`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=\?`/.test(CR_SRC),
+     /if \(bundleId\) captureRequestsOf\(this\.ctx\)\.clearLead\(bundleId\);/.test(STORE_SRC)],
+    [true, true]);
 }
 
 } catch (e) {

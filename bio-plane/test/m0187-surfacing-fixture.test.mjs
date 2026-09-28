@@ -189,7 +189,7 @@ console.log("\n--- ARM 6: a refusal the fixture cannot absorb is raised BY NAME,
 console.log("\n--- ARM 7 (OVER-STRICTNESS): what the fixture must NOT touch ---");
 {
   /* Built on the RAW plane, so this arm stands whatever the arms above did. */
-  const pmd = ["---", "object_type: project", "current_state: forming", `created: "${NOW}"`,
+  const pmd = ["---", "object_type: project", "objective: \"Fixture objective.\"", "current_state: forming", `created: "${NOW}"`,
     `last_updated: "${NOW}"`, "references: []", "---", "", "## Summary", "",
     "M0-187 arm 7a: a project the MEMBER token opens a run of its own over.", "", "## Session Log", ""].join("\n");
   const proj = await RAW(`op=promote&token=${E(MEM)}&store=bio`, {

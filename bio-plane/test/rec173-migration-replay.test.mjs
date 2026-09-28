@@ -52,7 +52,13 @@ import { join } from "node:path";
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.REC173_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { SURFACE_CHECKS, ACT_SHAPE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+const { SURFACE_CHECKS: CATALOGUE_SURFACE_CHECKS, ACT_SHAPE_CHECKS } =
+  await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+/* LEGACY-TESTS #4 (T7): C-66.1 (SURFACE_NO_RUN) left the catalogue's SURFACE_CHECKS for ai-runs' SURFACE_RUN_CHECKS (R35,
+   AI-RUNS #2 REPORT J6.1); REPLAY_UNVERIFIED (C-66.6, control-plane's) stays in the catalogue. Each row is read from
+   where it now lives, through the same SRC_DIR the control arms. */
+const { SURFACE_RUN_CHECKS } = await import(join(SRC_DIR, "ai-runs", "index.mjs"));
+const SURFACE_CHECKS = { ...CATALOGUE_SURFACE_CHECKS, ...SURFACE_RUN_CHECKS };
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

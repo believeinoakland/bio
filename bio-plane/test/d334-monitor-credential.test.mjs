@@ -105,7 +105,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { liveToken, PUBLISHED_TOKEN_HASHES } from "../src/tokens.mjs";
@@ -373,10 +373,20 @@ t("and every live fixture really is live, so a green arm is not green by acciden
  * ------------------------------------------------------------------------ */
 console.log("\n--- arm E (the class sweep): no presence-only credential selection in src/ ---");
 {
-  const files = [
+  /* WIDENED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5) to what the header always said it scans,
+     `src/**`: the four named files were the whole of the credential-reading plane when this was written, and the
+     extractions since have moved credential reads out of `store.mjs` (the capture-request drain's `configured()`
+     predicate and its fire are `src/capture-requests/index.mjs`'s now), so the four shrank under the floor below
+     while the class moved into files the arm could not see. The four are still required members of the corpus. */
+  const NAMED = [
     ["src/store.mjs", STORE_SRC_PATH], ["src/index.mjs", INDEX_SRC_PATH],
     ["src/tokens.mjs", TOKENS_SRC_PATH], ["src/livefire.mjs", LIVEFIRE_SRC_PATH],
   ];
+  const SRC_ROOT = fileURLToPath(new URL("../src/", import.meta.url));
+  const files = (function walk(d, rel) {
+    return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(d + e.name + "/", rel + e.name + "/")
+      : e.name.endsWith(".mjs") ? [[rel + e.name, d + e.name]] : []);
+  })(SRC_ROOT, "src/");
   const BINDING = /\b(ADMIN|MEMBER|PROBE|DAEMON)_TOKEN\b/;
   const PRESENCE_OR = /\b(ADMIN|MEMBER|PROBE|DAEMON)_TOKEN\s*\|\|/;
   /* STRIP COMMENTS PROPERLY, with a block state machine rather than a
@@ -425,7 +435,8 @@ console.log("\n--- arm E (the class sweep): no presence-only credential selectio
   console.log(`        corpus: ${files.length} source file(s), ${scannedLines} lines, ${readSites} executable token-binding read(s)`);
   console.log(`        presence-|| sites: ${offenders.length} selecting (must be 0) · ${arming.length} boolean-coerced arming predicate(s): ${arming.join(", ") || "none"}`);
   t("the corpus is non-empty and really reaches the bindings — this arm cannot pass vacuously",
-    [files.length === 4, scannedLines > 30000, readSites >= 10], [true, true, true]);
+    [NAMED.every(([n]) => files.some(([f]) => f === n)) && files.some(([f]) => f === "src/capture-requests/index.mjs"),
+     scannedLines > 30000, readSites >= 10], [true, true, true]);
   t("NO executable line in the plane selects a credential VALUE by presence with `||`",
     offenders, []);
   t("the one presence-`||` that remains is the boolean arming predicate, and there is exactly one",
@@ -442,8 +453,20 @@ console.log("\n--- arm E (cont.): the arming predicate cannot leak a credential 
       .test(STORE_SRC), true);
   /* Its callers: the two "is this consumer wired" predicates and nothing else.
      A third caller would be a new place where presence stands in for liveness. */
+  /* RE-PINNED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the second sync predicate,
+     `#captureRequestConfigured()`, left the store with the drain. Capture-requests' `configured()` (R11, R37) asks its
+     own presence predicate, `unattendedBound(env)` (runtime-limits R26's `bound` rule, injected until R26 is built),
+     which is `!!`-coerced the same way. So the two predicates are still the only consumers of a presence test and
+     each is still boolean: the store's `#monitorConfigured()` of `#monitorTokenBound()` (1 caller now, was 2), and
+     capture-requests' `configured()` of `unattendedBound` (1 call, boolean by construction). */
   const callers = (STORE_SRC.match(/this\.#monitorTokenBound\(\)/g) || []).length;
-  t("and it is consulted by exactly the two sync `*Configured()` predicates", callers, 2);
+  const CR_SRC = readFileSync(fileURLToPath(new URL("../src/capture-requests/index.mjs", import.meta.url)), "utf8");
+  t("and it is consulted by exactly the two sync `*Configured()` predicates",
+    [callers, /#monitorConfigured\(\) \{[\s\S]{0,200}?this\.#monitorTokenBound\(\)/.test(STORE_SRC),
+     (CR_SRC.match(/\bunattendedBound\(this\.#env\(\)\)/g) || []).length,
+     /configured\(\) \{\s*\n\s*try \{ return this\.#deps\.configured \? !!this\.#deps\.configured\(\) : unattendedBound\(this\.#env\(\)\); \}/.test(CR_SRC),
+     /export function unattendedBound\(env\) \{\s*\n\s*return !!\(/.test(CR_SRC)],
+    [1, true, 1, true, true]);
 }
 
 console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structurally ---");
@@ -476,10 +499,15 @@ console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structur
   t("with the no-live-credential refusal stated once and reused, never spelled three ways",
     (STORE_SRC.match(/Store\.MONITOR_NO_LIVE_CREDENTIAL/g) || []).length, 2);
   {
-    const at = STORE_SRC.indexOf("async #fireCaptureRequest(q) {");
-    const fire = at < 0 ? "" : STORE_SRC.slice(at, STORE_SRC.indexOf("\n  }\n", at));
+    /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): `#fireCaptureRequest` is capture-
+       requests' `#fire(q, verdict)` now, and capture's in-process arm is its injected `capture` (the store hands it
+       `captureOf(ctx)`). It still selects no monitoring credential; the fetch credential it may pass is a member's,
+       from `credentialsForFetch` (R41), and never a token binding. */
+    const CR_SRC = readFileSync(fileURLToPath(new URL("../src/capture-requests/index.mjs", import.meta.url)), "utf8");
+    const at = CR_SRC.indexOf("async #fire(q, verdict) {");
+    const fire = at < 0 ? "" : CR_SRC.slice(at, CR_SRC.indexOf("\n  }\n", at));
     t("the DEPARTED site is the capture-request fire, which selects no credential: it calls capture's in-process arm",
-      [fire.length > 200, /#monitorToken\(/.test(fire), /captureOf\(this\.ctx\)\.acquire\(/.test(fire)], [true, false, true]);
+      [fire.length > 200, /#monitorToken\(|_TOKEN\b/.test(fire), /this\.#deps\.capture\.acquire\(/.test(fire)], [true, false, true]);
   }
 }
 

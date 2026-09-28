@@ -137,6 +137,8 @@ const infoMd = (id) => ["---",
 const projectMd = (id) => ["---",
   ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Oversight"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Establish when the sewer transfer was booked."',
   "references:", `  - target: ${ACTED}`, "    rel: cites", "    status: confirmed",
   "required_strength:", "  capture: B", "  connection: C",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
@@ -266,8 +268,14 @@ console.log("\n--- 4. ONE READER: the single-bundle arm calls #noProjectConclusi
   t("ONE READER: the single-bundle arm calls `this.#noProjectConclusionOf(`",
     single.includes("for (const d of this.#decorations)") && single.includes("d.fn(row,")
       && decoration.includes("this.#noProjectConclusionOf("), true);
-  t("ONE READER: exactly ONE definition of the reader in store.mjs",
-    count(store, "\n  #noProjectConclusionOf("), 1);
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1, R23): the reader moved to src/basis-versions/index.mjs as
+     `noProjectConclusionOf(inquiryId)`; store.mjs keeps `#noProjectConclusionOf` only as a one-line delegate to it,
+     which reads nothing itself. So: ONE definition there, and the store's name is exactly that delegate. */
+  const BV = readFileSync(SRC("basis-versions/index.mjs"), "latin1");
+  t("ONE READER: exactly ONE definition of the reader (basis-versions), and the store's name is only its delegate",
+    [count(BV, "\n  noProjectConclusionOf(inquiryId) {"), count(store, "\n  #noProjectConclusionOf("),
+     store.includes("\n  #noProjectConclusionOf(...a) { return basisVersionsOf(this.ctx).noProjectConclusionOf(...a); }")],
+    [1, 1, true]);
   /* EXACT, not a floor — severedhomes.test.mjs's reason: it is the only
      instrument that sees a reader of the rule appear or disappear. A third
      call site is not wrong; it is somebody who must come here and say which.
@@ -281,14 +289,18 @@ console.log("\n--- 4. ONE READER: the single-bundle arm calls #noProjectConclusi
      hold: the token arm below still reads ONCE across both files, and it is the
      arm that would catch a fourth reader written out by hand. The count moves;
      the rule does not. */
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): op=basisversions is basis-versions' `basisVersions` now and
+     calls the reader as `this.noProjectConclusionOf(`; the other two stay in store.mjs through the delegate. Still
+     THREE, each counted in the file that holds it. */
   t("ONE READER: exactly THREE call sites — op=basisversions, op=projection's single-bundle arm, "
   + "and REC-135's #caseConclusionFor (the case path's no-project arm)",
-    count(store, "this.#noProjectConclusionOf("), 3);
+    [count(BV, "this.noProjectConclusionOf("), count(store, "this.#noProjectConclusionOf(")], [1, 2]);
   /* NAMED FILES, NOT A DIRECTORY WALK (hygiene.test.mjs's walk census): the store
      that holds the reader and the dispatch that could host a copy beside the op. */
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; retrieval): retrieval's files join the named ones, since the op's
      implementation now lives there and a copy beside it would sit there. */
-  const srcs = ["store.mjs", "index.mjs", "retrieval/index.mjs", "retrieval/projection.mjs"]
+  /* RE-ANCHORED 2026-09-28: and basis-versions', where the reader itself now lives. */
+  const srcs = ["store.mjs", "index.mjs", "retrieval/index.mjs", "retrieval/projection.mjs", "basis-versions/index.mjs"]
     .map((f) => readFileSync(SRC(f), "latin1")).join("\n");
   t("ONE READER: the reader's own tokens occur ONCE across store.mjs and index.mjs (a copy carries them twice)",
     [count(srcs, "relationship_established: false"), count(srcs, "fm.conclusion_claim"),

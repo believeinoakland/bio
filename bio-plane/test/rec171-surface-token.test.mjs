@@ -41,7 +41,10 @@ import { join } from "node:path";
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.REC171_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { AI_RUN_CHECKS, SURFACE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+/* LEGACY-TESTS #4 (T7): C-22.12 (AI_RUN_NOT_PRINCIPAL) and C-66.1 (SURFACE_NO_RUN) left the catalogue for ai-runs
+   (R35, AI-RUNS #2 REPORT J6.1); read from the module that now holds them, through the same SRC_DIR the control arms. */
+const { AI_RUNS_CHECKS: AI_RUN_CHECKS, SURFACE_RUN_CHECKS: SURFACE_CHECKS } =
+  await import(join(SRC_DIR, "ai-runs", "index.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

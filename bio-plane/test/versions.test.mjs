@@ -85,7 +85,7 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, parseFrontmatter, BASIS_VERSION_CHECKS,
@@ -99,7 +99,19 @@ import { checkBundle, parseFrontmatter, BASIS_VERSION_CHECKS,
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1, T7 layer 6): the version tables, their one write site (the
+   projection `project(c)`, a promotion step inside op=promote's transaction), `basisVersions` and
+   `versionCollections` moved out of store.mjs into src/basis-versions/ (index.mjs; the tables in its schema.mjs).
+   The version pins read the module; the plane-wide pins (one write site, no second table) read the store AND the
+   module AND every module schema, so a second write site or a shadow table anywhere is still found. */
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
+const walkSrc = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory()
+  ? walkSrc(d + "/" + e.name) : e.name.endsWith(".mjs") ? [d + "/" + e.name] : []);
+const PLANE_FILES = walkSrc(SRC("").replace(/\/$/, ""));
+const PLANE_SRC = PLANE_FILES.map((f) => readFileSync(f, "utf8")).join("\n");
+const MODULE_SCHEMAS = readdirSync(SRC(""), { withFileTypes: true }).filter((d) => d.isDirectory())
+  .map((d) => { try { return readFileSync(SRC(d.name + "/schema.mjs"), "utf8"); } catch { return ""; } });
+const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), ...MODULE_SCHEMAS].join("\n");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const CHECKS_SRC = readFileSync(fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url)), "utf8");
 
@@ -293,6 +305,8 @@ const infoMd = (id) => ["---",
    creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
 const projectMd = (id) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Find out where the sewer fund transfers went."',
   "---", "", "## Summary", "", "A project.", ""].join("\n");
 
 /* CORRECTED 2026-09-23 by M0-132, never exempted: this snap key's suffix was drawn from `Math.random`, and the key is
@@ -523,7 +537,7 @@ console.log("\n--- 5. derived_from: the closed vocabulary's word, and its first 
   t("`derived_from` is in the CLOSED relationship vocabulary already (State Rules v1.5), so IS-1 becomes "
   + "its first real producer rather than minting a synonym — no new edge word appears anywhere",
     [/'derived_from'/.test(CHECKS_SRC),
-     /\b(derives_from|version_of|forked_from|parent_version|supersedes_version)\b/.test(STORE_SRC + SCHEMA_SRC)],
+     /\b(derives_from|version_of|forked_from|parent_version|supersedes_version)\b/.test(PLANE_SRC + SCHEMA_SRC)],
     [true, false]);
   const ghost = await promote("INQ-2026-1000-ghost", inquiryMd("INQ-2026-1000-ghost", { versions: [
     { ...V1, name: "a reading", derived_from: "a version nobody wrote" },
@@ -564,7 +578,7 @@ console.log("\n--- 6. rewording the claim: a new version OR a new inquiry, and t
     [asInquiry?.ok, (await versionsOf(REW2))?.total], [true, 1]);
   t("the claim is a FIELD and never an object: no claim table, no claim id, no claim op anywhere "
   + "(SWEEP C13 — a versioned, named, stateful claim object rebuilds the multiplicity D-127 removed)",
-    [/CREATE TABLE IF NOT EXISTS claims\b/.test(SCHEMA_SRC), /\bCLAIM-\d{4}-/.test(STORE_SRC)], [false, false]);
+    [/CREATE TABLE IF NOT EXISTS claims\b/.test(SCHEMA_SRC), /\bCLAIM-\d{4}-/.test(PLANE_SRC)], [false, false]);
 }
 
 /* ====================================================================== 7
@@ -623,8 +637,10 @@ console.log("\n--- 8. the prune flag HIDES: the display shrinks, the acts remain
     typeof v1?.hidden, "boolean");
   t("and there is NO filter on the op to remove hidden versions: an op that filtered them here would "
   + "make hiding into deleting one layer down, which is exactly the collision SWEEP C1 found",
-    /hidden\s*=\s*0|hidden\s*<>\s*1|AND\s+NOT\s+hidden/.test(STORE_SRC.slice(
-      STORE_SRC.indexOf("basisVersions({"), STORE_SRC.indexOf("basisVersions({") + 4200)), false);
+    /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): `basisVersions` moved to src/basis-versions/index.mjs; the
+       slice is floored so a span that is not there cannot pass. */
+    [BV_SRC.indexOf("basisVersions({ id") > 0, /hidden\s*=\s*0|hidden\s*<>\s*1|AND\s+NOT\s+hidden/.test(BV_SRC.slice(
+      BV_SRC.indexOf("basisVersions({ id"), BV_SRC.indexOf("basisVersions({ id") + 4200))], [true, false]);
   const notBool = await promote("INQ-2026-1000-hidden", inquiryMd("INQ-2026-1000-hidden",
     { versions: [{ ...V1, hidden: "archived" }] }), "inquiry");
   t("and the flag admits no third value: hiding is ALL it does, so 'archived' is refused rather than "
@@ -643,7 +659,10 @@ console.log("\n--- 9. §14b.7: identity is not the run's ---");
   const RUN = "AIRUN-2026-1000-doomed";
   const opened = await POST(`op=airunopen&token=${RUTH}`, {
     run: RUN, contextType: "inquiry", contextId: INQ, label: "the run that will die",
-    mode: "background", principalClaude: "claude-account:oakland", skillVersion: "is-skill@1",
+    /* CORRECTED 2026-09-28 (ai-runs R40, C-109.1): only the deployment order's first mode, `check`, is deployed, so
+       `background` is refused AI_RUN_MODE_NOT_DEPLOYED before the run exists. The mode is not what this arm is
+       about (a version outliving its run), so the fixture opens the run in the mode the instance runs. */
+    mode: "check", principalClaude: "claude-account:oakland", skillVersion: "is-skill@1",
     state: "{}", bounds: [{ bound: "fetches", allowed: 10, unit: "requests" }],
   });
   t("MEASURED, not assumed: the run really exists first, so the death below is a real death and not a "
@@ -670,8 +689,9 @@ console.log("\n--- 9. §14b.7: identity is not the run's ---");
     after?.run, RUN);
   t("and it is enforced by the ABSENCE of a join rather than by a promise about one — nothing in the "
   + "version read touches ai_runs",
-    /ai_runs/.test(STORE_SRC.slice(STORE_SRC.indexOf("basisVersions({"),
-                                   STORE_SRC.indexOf("basisVersions({") + 4200)), false);
+    /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the read is basis-versions' `basisVersions` now. */
+    [BV_SRC.indexOf("basisVersions({ id") > 0, /ai_runs/.test(BV_SRC.slice(BV_SRC.indexOf("basisVersions({ id"),
+                                   BV_SRC.indexOf("basisVersions({ id") + 4200))], [true, false]);
 
   /* THE STRUCTURAL HALF: promote does not RESOLVE the run either, which is the
      stated departure from the resolve-or-refuse posture every other id-bearing
@@ -698,25 +718,32 @@ console.log("\n--- 10. the trap: no second version table, and ONE write site ---
      guard asserts the stripper removed something AND that a known statement
      survived it. */
   const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, " ");
-  const CODE = strip(STORE_SRC);
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the walk reads EVERY module of the plane (store.mjs among them),
+     since the write site moved to src/basis-versions/index.mjs `project(c)` and a second one could now sit anywhere. */
+  const CODE = strip(PLANE_SRC);
   const SCHEMA_CODE = SCHEMA_SRC.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
-  t("WALK GUARD (both ways): the comment stripper removed a substantial share of store.mjs AND left the "
+  t("WALK GUARD (both ways): the comment stripper removed a substantial share of the plane's source AND left the "
   + "code standing — a walk over an empty corpus reports a clean answer about nothing",
-    [CODE.length < STORE_SRC.length * 0.75, CODE.includes("INSERT INTO inquiry_basis_versions"),
+    [CODE.length < PLANE_SRC.length * 0.75, CODE.includes("INSERT INTO inquiry_basis_versions"),
      SCHEMA_CODE.length < SCHEMA_SRC.length * 0.75, SCHEMA_CODE.includes("CREATE TABLE IF NOT EXISTS inquiry_basis_versions")],
     [true, true, true, true]);
   const writes = (src, table) => (src.match(new RegExp(`(INSERT|REPLACE|UPDATE)\\s+(OR\\s+\\w+\\s+)?(INTO\\s+)?${table}\\b`, "g")) || []).length;
   const w1 = writes(CODE, "inquiry_basis_versions");
   const w2 = writes(CODE, "inquiry_basis_version_legs");
-  console.log(`  corpus: ${CODE.length} code chars in store.mjs, ${SCHEMA_CODE.length} in schema.mjs · `
+  console.log(`  corpus: ${CODE.length} code chars in ${PLANE_FILES.length} plane files, ${SCHEMA_CODE.length} in the schemas · `
     + `${w1} write(s) to inquiry_basis_versions, ${w2} to inquiry_basis_version_legs`);
   t("ONE WRITE SITE EACH, and it is inside op=promote's transaction: a version table an op could append "
   + "to directly is a second place to state a fact bundle.md already holds (D-21)",
     [w1, w2], [1, 1]);
-  const promoteBody = CODE.slice(CODE.indexOf("promote(pkg) {"), CODE.indexOf("recordLinks("));
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1, its R7): op=promote's version arm is now basis-versions'
+     projection `project(c)`, the step promotion runs inside op=promote's transaction; the span is that method's body
+     (it ends where the reads begin, `versionCollections(bundleId, row) {`), located in the stripped module source. */
+  const BV_CODE = strip(BV_SRC);
+  const promoteBody = BV_CODE.slice(BV_CODE.indexOf("  project(c) {"), BV_CODE.indexOf("versionCollections(bundleId, row) {"));
   t("and the write site is REACHED FROM promote and from nowhere else — asserted by locating it inside "
-  + "promote's own body rather than by reading the comment above it",
-    [writes(promoteBody, "inquiry_basis_versions"), writes(promoteBody, "inquiry_basis_version_legs")], [1, 1]);
+  + "promote's own projection step (basis-versions' `project(c)`) rather than by reading the comment above it",
+    [promoteBody.length > 200, writes(promoteBody, "inquiry_basis_versions"), writes(promoteBody, "inquiry_basis_version_legs")],
+    [true, 1, 1]);
 
   const tables = [...SCHEMA_CODE.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)].map((m) => m[1]);
   t("EXACTLY TWO TABLES carry versions of a basis, and they are the projection pair — no third, no "
@@ -810,8 +837,10 @@ console.log("\n--- 12. the bound PUBLISHED is the bound APPLIED, and the empty a
      every `#rows(` is matched by a `LIMIT ?`, the corpus is PRINTED, and it is
      FLOORED so a span that read nothing cannot pass. A future helper split or
      merge moves the number and the rule still holds. */
-  const body = STORE_SRC.slice(STORE_SRC.indexOf("#versionCollections(bundleId, row) {"),
-                               STORE_SRC.indexOf("      ok: true,\n      inquiry: inq,"));
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the shared reader (`versionCollections`, no longer private)
+     and the assembly (`basisVersions`) moved to src/basis-versions/index.mjs, whose answer opens `ok: true, inquiry: inq,`. */
+  const body = BV_SRC.slice(BV_SRC.indexOf("versionCollections(bundleId, row) {"),
+                            BV_SRC.indexOf("ok: true, inquiry: inq,"));
   const nRows = (body.match(/#rows\(/g) || []).length;
   const nLimit = (body.match(/LIMIT \?/g) || []).length;
   console.log(`      D-227 corpus: ${body.length} chars spanning the shared reader and the assembly · `
@@ -850,7 +879,8 @@ console.log("\n--- 13. DEC-49: every refusal carries a code and a translation, a
                     || BASIS_VERSION_CHECKS[k].translation.length < 40), []);
   t("NO SECOND COPY: neither store.mjs nor the surface holds a translation string of its own — the map "
   + "is read from one place, because a hand copy agrees at zero cost",
-    keys.filter((k) => STORE_SRC.includes(BASIS_VERSION_CHECKS[k].translation.slice(0, 45))), []);
+    /* WIDENED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the version code left store.mjs, so every plane file is read. */
+    keys.filter((k) => PLANE_SRC.includes(BASIS_VERSION_CHECKS[k].translation.slice(0, 45))), []);
   const stripped = CHECKS_SRC.replace(/\/\*[\s\S]*?\*\//g, " ");
   t("and no C-25 number is written anywhere in the catalog except in its own row — a second literal is a "
   + "second place for the number to drift",
@@ -999,7 +1029,10 @@ console.log("\n--- 14. one grammar at both gates; D-184's vocabulary; the gate f
   t("THE READ FAILS CLOSED on an absent viewer stamp, through the same one compilation point every read "
   + "in the store uses (D-15) — the honest bound is stated at the site: an inquiry is not a project, so "
   + "the participation arm cannot bite here, and this is the arm that can",
-    [/#bundleGate\("bx\.bundle_id", viewer\)/.test(STORE_SRC),
+    /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the read is basis-versions' `basisVersions`, which asks
+       `#seen` → its `#gate("bx.bundle_id", viewer)`, built on membership's one compilation point `viewerPredicate`
+       (the store's `#bundleGate` is the same predicate, K63). */
+    [/this\.#gate\("bx\.bundle_id", viewer\)/.test(BV_SRC) && /const gate = viewerPredicate\(viewer\)/.test(BV_SRC),
      /op === "basisversions"/.test(INDEX_SRC)], [true, true]);
   const dave = await versionsOf(INQ, "", DAVE);
   t("and an ordinary second member reads the same versions — compartmenting the evidence corpus is "

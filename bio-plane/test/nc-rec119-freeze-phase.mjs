@@ -15,10 +15,12 @@
  * argv[2] = "a" | "b" (the phase), argv[3] = persist root.
  */
 import "./stdio.mjs";
+import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const PHASE = process.argv[2], PERSIST = process.argv[3];
 if (!["a", "b"].includes(PHASE) || !PERSIST) {
@@ -27,7 +29,10 @@ if (!["a", "b"].includes(PHASE) || !PERSIST) {
 }
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
-const mf = new Miniflare({
+/* CORRECTED 2026-09-28 (LEGACY-TESTS #4; REC-171, C-66.1): phase A's question is created by a deploy token, which is
+   refused SURFACE_NO_RUN outside a run it holds, so the plane is wrapped as the suite's is. Phase B revises (a base is
+   named), which opens no run. */
+const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
@@ -35,7 +40,7 @@ const mf = new Miniflare({
   defaultPersistRoot: PERSIST,
   bindings: { ADMIN_TOKEN: "adm-nc", MEMBER_TOKEN: "mem-nc", PROBE_TOKEN: "prb-nc",
               AI_TOKEN: "ai-nc", VERSION: "test" },
-});
+}));
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const post = async (op, body, tok = "mem-nc") => rP(await (await mf.dispatchFetch(
   `http://x/api/?op=${op}&token=${tok}`, { method: "POST", body: JSON.stringify(body) })).json());
@@ -97,18 +102,26 @@ let snapSeq = PHASE === "a" ? 0 : 500;
 const promote = async (id, text, type, base, { register = [], reading = null } = {}) => {
   const files = [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }];
   if (reading) { const prov = JSON.stringify({ documents: [reading] });
-    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }); }
+    files.push({ path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) });
+    files.push(registerFile(reading)); }   /* the capture the document names, held in the bundle (T4, K121) */
   return post("promote", { bundleId: id, base,
     snapKey: `20260917T${String(800000 + (++snapSeq)).slice(-6)}Z_${sha(String(snapSeq) + PHASE).slice(0, 8)}`,
-    meta: { object_type: type, group: "believe-in-oakland", title: `Bundle ${id}`,
+    /* CORRECTED 2026-09-28 (LEGACY-TESTS #4; D-563, C-86.3): the envelope named `Bundle <id>` while every document
+       here states its own title, which is refused ENVELOPE_TITLE_DISAGREES; the envelope now names none, as the
+       suite's own promote does. */
+    meta: { object_type: type, group: "believe-in-oakland",
             current_state: type === "inquiry" ? "open" : "collected", created: NOW, last_updated: LATER },
     files, register });
 };
 const REG = [{ path: "snapshots/r.bin", sha256: S1, encoding: "binary", bytes: 10 }];
 const ENT = [{ ref: "ordinance:24681", kind: "ordinance", key: "24681", label: "Ordinance No. 24681" }];
-const readingOf = (chain) => ({ capture: { sha256: S1, encoding: "binary", bytes: 10 },
+/* CORRECTED 2026-09-28 (LEGACY-TESTS #4): the reading carrier completed to C-18.1's intake shape, which the write has
+   refused since T4 (provenance K121) — as rec119-version-legs-earned.test.mjs's own fixture already was — so phase A
+   writes rather than being refused PROVENANCE_REGISTER_REFUSED (`register-doc.mjs`). */
+const readingOf = (chain) => registerDoc({ capture: { sha256: S1, encoding: "binary", bytes: 10 },
   reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW,
-             entities: ENT, facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } });
+             entities: ENT, facts: {}, ...(chain === undefined ? {} : { text_source: chain }) } },
+  { file: "snapshots/r.bin" });
 const shaOf = async (id) => ((await get("list", "limit=1000"))?.bundles ?? [])
   .find((b) => b.bundle_id === id)?.bundle_sha ?? null;
 const VERSIONS = [{ name: VNAME, relationship: "and",

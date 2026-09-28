@@ -113,7 +113,7 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: 
    it into the bytes and refuses a creation that names one (C-59.1) or bytes that carry one (C-59.2). So a
    project's creation bytes carry no `id:` line and its request no bundleId (`id` is null for a project); the
    minted id is read from the answer. Every other type still names its own. */
-const projectMd = (id, title) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "${title}"`,
+const projectMd = (id, title) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`, "references: []",
   "---", "", "## Summary", "", "A project.", "", "## Session Log", ""].join("\n");
 let seq = 0;

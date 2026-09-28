@@ -1,6 +1,6 @@
 # consequences — extraction map
 
-**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/consequences.md` (R1–R14); K4, K12, K23, K31, K61, K88 (3), K102 apply. The module exports `consequencesModule(ctx)` (K61; `consequencesOf` is R7's service, whose approved name wins, K171 (17)). A new module: no `from`, and none is needed (§1).
+**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732): every `store.mjs`, `schema.mjs`, `bio-checks.mjs` and module-file line below is current there, superseding the sentence before; `index.mjs` cites are pending T7's close and marked so. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/consequences.md` (R1–R14); K4, K12, K23, K31, K61, K88 (3), K102 apply. The module exports `consequencesModule(ctx)` (K61; `consequencesOf` is R7's service, whose approved name wins, K171 (17)). A new module: no `from`, and none is needed (§1).
 
 ## 1. What moves to `consequences`
 
@@ -12,9 +12,9 @@ Nothing. Nothing in `store.mjs`, `schema.mjs`, `index.mjs` or `bio-checks.mjs` r
 
 | what | where today (T6) | owner | why |
 | --- | --- | --- | --- |
-| DEC-14's `consequenceState` (the group's own outcome or impact; `unproven` from sequence alone) | bio-checks 4654–4714; read at store 1399 in `#actionDerived` (1352–1405) | `actions` (R26 renames its read key) | a different meaning (K88 (3)); R5 copies only its discipline, never the code or the key |
-| `action_quotes` DDL, `actionQuotes` (the only money in the record: a fee quote, D-148) | schema 949–961, store 5704–5788 | `actions` | not a breach consequence |
-| `isMachineIdentity` | bio-checks 1667–1693 | `legacy-checks` | R3, R9 |
+| DEC-14's `consequenceState` (the group's own outcome or impact; `unproven` from sequence alone) | bio-checks 4625–4660; read at store 1187 in `#actionDerived` (1140–1193) | `actions` (R26 renames its read key) | a different meaning (K88 (3)); R5 copies only its discipline, never the code or the key |
+| `action_quotes` DDL, `actionQuotes` (the only money in the record: a fee quote, D-148) | schema 760, store 4053–4137 | `actions` | not a breach consequence |
+| `isMachineIdentity` | bio-checks 1631–1642 | `legacy-checks` | R3, R9 |
 | `content`'s `sheet-range` and `doc-table` arms | `bio-plane/src/content/` | `content` | the natural operands of R2 (Suggestions); read, not moved |
 
 ## 3. What earlier modules must provide (uses)
@@ -26,8 +26,8 @@ Nothing. Nothing in `store.mjs`, `schema.mjs`, `index.mjs` or `bio-checks.mjs` r
 | `promotion` | `promote` (a part as a record object, R14) | `promote` yes; the `CONS-` type by the head-of-layer `legacy-checks` job (K171 (1)) |
 | `content` | `contentRow` and the passage text; `passageNotice` (R8) | yes |
 | `provenance` | `captureGrade` (R2's operand grade, K171 (8)) | yes (provenance's Provides) |
-| `inquiry` | the causation inquiry's state and supersession (R5, R8: `supersededBy`, `stateHistory`) | stated in inquiry's requirements, not yet met: `main` has no `inquiry` module (T6 closed after layer 2, K165); its job in the next plan |
-| `strength` | `inquiryStrength` (R5) | stated in strength's requirements, not yet met: `main` has no `strength` module (`inquiryStrength` is still `store.mjs` 21861); its job in the next plan |
+| `inquiry` | the causation inquiry's state and supersession (R5, R8: `supersededBy`, `stateHistory`) | provided and merged (K189, K190): `supersededBy` (`inquiry/index.mjs` 474) and `stateHistory` (491, inquiry R19) |
+| `strength` | `inquiryStrength` (R5) | provided and merged (K188): `strength/index.mjs` 258, strength R6 |
 | `conformance` | `determinationRead` (R1: the per-standard outcome, superseded or not, the project) | yes (conformance R9) |
 | `legacy-checks` | `isMachineIdentity` | yes |
 

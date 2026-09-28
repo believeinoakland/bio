@@ -2594,8 +2594,12 @@ if (owedProblems.length)
    `--strict`. They are the old declaration and floor rules K100 (1) retired for requirement-named suites and N14's
    tooling: a module's own suites are held to its requirement ids (coverage in the process repository), and the fleet
    members' suites with them, so a floor that can only fall by an edit to an old suite's prose is a figure, not a
-   gate. `owed-controls` A13b reads this as "reported, not gated". */
-if (STRICT && (unreached.length || doOnly.length || unnamed.length || uncontrolled.length
+   gate. `owed-controls` A13b reads this as "reported, not gated".
+   K153 (T6-13, N88's remainder): op reach through the plane (`unreached`, `doOnly`) and check naming (`unnamed`) are
+   REPORTED above and no longer GATE `--strict` either, for K100 (1)'s reason: module coverage (P7, the process
+   repository's coverage check) is the check of record, and driving ops through the plane is the full regression's
+   (P11). */
+if (STRICT && (uncontrolled.length
     || catalogWentBlind
     || newlyUnclassified.length
     || fleetUnreached.length

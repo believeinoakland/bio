@@ -524,9 +524,18 @@ t("ARM F1: SK-4 adds no instruction-only item and does not move SK-2's and SK-3'
 /* THE RESIDUE IS NOT MERELY STATED, IT IS RE-MEASURED. The record claims that
    `ai_runs.mode` is free text with no check over it; a claim like that is
    exactly the kind that is true when written and quietly false a month later. */
-const modeColumn = /\n\s*mode\s+TEXT\s*,/.test(SCHEMA_SRC);
-const modeCheckedAnywhere = /['"]?\bmode\b['"]?\s*(?:===|!==)\s*['"](?:check|investigate)['"]/.test(CHECKS_SRC)
-                         || /AI_RUN_MODE/.test(CHECKS_SRC);
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1 and REPORT 3): the `ai_runs` table left
+   `schema.mjs` for ai-runs' own `src/ai-runs/schema.mjs`, and ai-runs' refusal rows left the catalogue for
+   `src/ai-runs/checks.mjs` — where R40 added `AI_RUN_MODE_NOT_DEPLOYED` (C-109.1): the open now refuses a blank or
+   undeployed mode. Both halves are re-measured where they now live, NOT re-pinned: the second half reads TRUE, so
+   this arm is red because the record's residue claim is no longer true (the gate DOES reach the record), which is
+   `skilldoctrine.mjs`'s stale `DEPLOYMENT_SEQUENCE` copy for skills to re-export from `src/ai-runs/deployment.mjs`
+   (AI-RUNS #2 REPORT 3); this arm's pins move with that re-export. */
+const RUNS_SCHEMA_SRC = readRepo("bio-plane/src/ai-runs/schema.mjs");
+const RUNS_CHECKS_SRC = readRepo("bio-plane/src/ai-runs/checks.mjs");
+const modeColumn = /\n\s*mode\s+TEXT\s*,/.test(SCHEMA_SRC + "\n" + RUNS_SCHEMA_SRC);
+const modeCheckedAnywhere = [CHECKS_SRC, RUNS_CHECKS_SRC].some((src) =>
+  /['"]?\bmode\b['"]?\s*(?:===|!==)\s*['"](?:check|investigate)['"]/.test(src) || /AI_RUN_MODE/.test(src));
 
 t("ARM F2 (THE RESIDUE, RE-MEASURED RATHER THAN BELIEVED): the record says the gate does not reach "
   + "the RECORD, because `ai_runs.mode` is free text with no vocabulary check and no C-number over "

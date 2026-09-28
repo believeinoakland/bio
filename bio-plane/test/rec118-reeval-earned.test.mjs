@@ -86,6 +86,15 @@ const LISTING_RESOLVER = (() => {
   const reg = at < 0 ? "" : STORE_SRC.slice(at, STORE_SRC.indexOf("\n    });", at));
   return method && reg ? `${method}\n${reg}` : "";
 })();
+/* RE-ANCHORED 2026-09-28 (T7 layers 6-7): this item's resolver `#reevalLegsEarned` moved with op=reevaluations to
+   reevaluation as `#legsEarned(obligations)` (REEVALUATION #1 J2.10, its R5), asking inquiry's registry
+   (`this.inquiry.earned`, formerly the store's `earnedBasisRegistry`) once and applying inquiry's `legCapped`; the
+   fourth reader `#versionLegsEarned` moved to basis-versions as `#legsEarned(rows)` (BASIS-VERSIONS #1 J4.1), the same
+   way (`inq.earned`, `inq.legCapped`); REC-105's `Store.#capturedAt` is now a one-line delegate to `legCapped`
+   (INQUIRY #1 J2.2), so "the one arithmetic" is `legCapped`, reached by either name. */
+const REEVAL_SRC = readFileSync(SRC("reevaluation/index.mjs"), "utf8");
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
+const INQ_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
@@ -379,14 +388,15 @@ console.log("\n--- 5. SOURCE PINS — ONE ARITHMETIC, AND A THREE-SITE DRIFT DET
 {
   /* The load-bearing structural claim: this op does not re-decide what a
      capture letter may be. It calls the SAME function the walk calls. */
-  const m = /#reevalLegsEarned\(obligations\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  const m = /#legsEarned\(obligations\) \{[\s\S]*?\n  \}/.exec(REEVAL_SRC)?.[0] ?? "";
+  /* RE-ANCHORED 2026-09-28: the arithmetic is called by its home name, `legCapped` (see REEVAL_SRC above). */
   t("the op's resolver EXISTS and calls `Store.#capturedAt` — REC-105's arithmetic, reused rather than restated",
-    { found: m.length > 0, calls_capturedAt: /Store\.#capturedAt\(/.test(m) },
+    { found: m.length > 0, calls_capturedAt: /\blegCapped\(/.test(m) },
     { found: true, calls_capturedAt: true });
   t("it mints NO grade letter of its own — no A/B/C/D literal anywhere in the resolver",
     /["']\s*[ABCD]\s*["']/.test(m), false);
   t("it asks the registry ONCE for the whole answer rather than once per obligation (a per-row probe on a member-facing sweep)",
-    (m.match(/earnedBasisRegistry\(/g) || []).length, 1);
+    (m.match(/\.earned\(/g) || []).length, 1);
   t("it does NOT reach for `strengthOf` — the leg letter is derived from the registry, never copied out of the envelope's other half",
     /strengthOf\(/.test(m), false);
   /* THE DRIFT DETECTOR, AND IT IS THIS ITEM'S OWN CONTRIBUTION TO THE ESTATE'S
@@ -406,12 +416,15 @@ console.log("\n--- 5. SOURCE PINS — ONE ARITHMETIC, AND A THREE-SITE DRIFT DET
   const sites = { walk: /#strengthWalk/.test(STORE_SRC),
                   listing: LISTING_RESOLVER,   /* RE-ANCHORED 2026-09-27 (T5-12): retrieval's method plus the store's registration */
                   reeval: m,
-                  versions: /#versionLegsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "" };
+                  versions: /#legsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(BV_SRC)?.[0] ?? "" };
+  /* RE-ANCHORED 2026-09-28: ONE arithmetic under its two names — `Store.#capturedAt` (the store's delegate, which the
+     listing's registration calls) or `legCapped` itself (reevaluation, and basis-versions as `inq.legCapped`). The
+     pin below holds that the store's name is nothing but the delegate. */
   const conditions = (src) => ({
     axis: /grade_axis === "capture"/.test(src),
     carries: /grade != null/.test(src),
     not_inquiry: /normalizeType\([a-z]\.target_type\) !== "inquiry"/.test(src),
-    one_arithmetic: /Store\.#capturedAt\(/.test(src) });
+    one_arithmetic: /Store\.#capturedAt\(|\blegCapped\(/.test(src) });
   t("ALL FOUR READERS OF ONE RULE CARRY THE SAME THREE CONDITIONS AND THE SAME ONE ARITHMETIC — the drift between them is measured, not trusted",
     { listing: conditions(sites.listing), reevaluations: conditions(sites.reeval),
       versions: conditions(sites.versions) },
@@ -420,16 +433,19 @@ console.log("\n--- 5. SOURCE PINS — ONE ARITHMETIC, AND A THREE-SITE DRIFT DET
       versions: { axis: true, carries: true, not_inquiry: true, one_arithmetic: true } });
   t("and the FOURTH reader (REC-119) asks the registry ONCE for the whole version and mints no letter of its own, on the same terms as the other three",
     { found: sites.versions.length > 0,
-      registry_calls: (sites.versions.match(/earnedBasisRegistry\(/g) || []).length,
+      registry_calls: (sites.versions.match(/\.earned\(/g) || []).length,
       mints_no_letter: /["']\s*[ABCD]\s*["']/.test(sites.versions),
       no_strengthOf: /strengthOf\(/.test(sites.versions) },
     { found: true, registry_calls: 1, mints_no_letter: false, no_strengthOf: false });
   t("the WALK is untouched by this item — `#capturedAt` is READ, never edited, which is what keeps the four readers one rule",
-    /static #capturedAt\(stated, earned, targetId\) \{/.test(STORE_SRC), true);
+    /export function legCapped\(stated, earned, targetId\) \{/.test(INQ_SRC)
+      && /static #capturedAt\(\.\.\.a\) \{ return legCapped\(\.\.\.a\); \}/.test(STORE_SRC), true);
   t("and REC-114's listing resolver is untouched by this item — its body still stands as that item landed it",
     sites.listing.includes("#legEarnedCapture(arm, rows)"), true);
   t("the leg SELECT now reads `target_type`, without which the no-referent arm cannot be applied at all",
-    /SELECT bundle_id, ord, target_id, target_type, role, grade, grade_axis, grade_source, at\n\s+FROM inquiry_basis WHERE target_id=\?/.test(STORE_SRC),
+    /* RE-ANCHORED 2026-09-28 (REEVALUATION #1 J2.10): the legs now arrive through inquiry's `restingOn`, and the
+       obligation stamps each with its target's type (`target_type: moved.object_type`) before the resolver runs. */
+    /legs: mine\.map\(\(l\) => \(\{ \.\.\.l, target_id: t, target_type: moved\.object_type/.test(REEVAL_SRC),
     true);
 }
 

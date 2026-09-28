@@ -56,6 +56,11 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; STRENGTH #1 J5): `inquiryStrength`, `#redactAxis`, `strengthOf`,
+   `#captureBoundsFor` and `#strengthWalk` moved out of store.mjs into src/strength/index.mjs (`inquiryStrength`, the
+   module function `redactAxis` with its `ID_IN_PROSE`, `#redactor`, `strengthOf`, `#captureBoundsFor`, `#walk`
+   reached through `#pairOver`). The source pins in sections 2 and 8 read it there. */
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 
@@ -194,6 +199,8 @@ const projMd = (id, label = id) => ["---",
   "produced_by:", "  mode: agent", "  capability_tier: high",
   "group: believe-in-oakland", "references: []", "state_history: []",
   "annotations_open: 0", "visuals: []",
+  /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+  'objective: "Decide what the secret project can show."',
   "---", "", "## Summary", "", "A project nobody else is invited to.", ""].join("\n");
 
 const promote = async (tok, id, text, type, base = null) => {
@@ -261,8 +268,11 @@ const bare = (target, role = "supports") => ({ target, role });
 console.log("--- 1. the op is REACHABLE through the control plane and answers the PAIR (D-43) ---");
 const MIX = "INQ-2026-0900-mixed";
 {
+  /* RE-READ 2026-09-28 BY K187 (strength R5, K102): CON_D's connection D was a HUNCH (the fixture's default), and a
+     hunch is now inert in every pair and named as a hunch. It is a member's testimony at D, the one authored
+     connection letter the record still counts (strength R1); CON_A stays a hunch and is inert, named. */
   const legs = [g(CAP_B, "B", "capture"), g(CAP_C, "C", "capture"),
-                g(CON_A, "A", "connection"), g(CON_D, "D", "connection")];
+                g(CON_A, "A", "connection"), g(CON_D, "D", "connection", "testimony")];
   await promote(carol, MIX, inquiryMd(MIX, { refs: legs.map((l) => l.target), legs }), "inquiry");
 
   const r = await pair(carol, MIX);
@@ -301,8 +311,14 @@ console.log("\n--- 2. it answers FROM strengthOf(), BYTE-EQUAL — never a rebui
     [op.depth_bound, authority.depth_bound], [6, 6]);
   /* A property of the CODE, not of one answer: the source assertions say the
      read cannot have consulted the cache, whatever any single fixture shows. */
-  const REGION = STORE_SRC.slice(STORE_SRC.indexOf("REC-34 · the gated read of the pair"),
-                                STORE_SRC.indexOf("REC-12: the projection CACHE, per axis"));
+  /* RE-ANCHORED (T7; STRENGTH #1 J5): the gated read is strength's `inquiryStrength` with its redaction, the
+     `#redactor` method, the module function `redactAxis` and the `ID_IN_PROSE` pattern it sweeps prose with. */
+  const cut = (from, to) => { const a = STRENGTH_SRC.indexOf(from); const b = STRENGTH_SRC.indexOf(to, a + 1);
+                              return a < 0 || b < 0 ? "" : STRENGTH_SRC.slice(a, b); };
+  const REGION = [cut("  inquiryStrength({ id = null, viewer = null } = {}) {", "\n  /** R13: the pair the search cache"),
+                  cut("  #redactor(viewer) {", "\n  /* R1 (REC-105, D-373)"),
+                  cut("function redactAxis(axis, keep) {", "\n/* R10 (DEC-44, DEC-40)"),
+                  cut("const ID_IN_PROSE = ", "\n")].join("\n");
   t("the op's own code calls the derivation",
     /this\.strengthOf\(/.test(REGION), true);
   t("and names NONE of the five cached columns",
@@ -320,7 +336,10 @@ const LEAF = "INQ-2026-0901-leaf", PARENT = "INQ-2026-0901-parent";
   const leafLegs = [g(L_CAP, "C", "capture"), g(L_CON, "B", "connection")];
   const leaf0 = inquiryMd(LEAF, { refs: leafLegs.map((l) => l.target), legs: leafLegs });
   const leafSha = (await promote(carol, LEAF, leaf0, "inquiry")).bundleSha;
-  const parentLegs = [g(P_CAP, "B", "capture"), g(LEAF, "A", "connection")];
+  /* RE-READ 2026-09-28 BY K187: the parent's edge to the leaf was a HUNCH at A, and a hunch leg to an inquiry now
+     inherits nothing (strength R5), so the inheritance this section reads through could not happen. The edge carries
+     no grade of its own; an ungraded inquiry leg still contributes the target's pair (R2). */
+  const parentLegs = [g(P_CAP, "B", "capture"), bare(LEAF)];
   await promote(carol, PARENT, inquiryMd(PARENT, { refs: parentLegs.map((l) => l.target), legs: parentLegs }), "inquiry");
 
   t("the parent inherits the leaf's CAPTURE per axis and reads C through it",
@@ -385,7 +404,8 @@ console.log("\n--- 5. UNRATED and undetermined are DIFFERENT FACTS, and the op k
   const D = (n) => `INQ-2026-0903-d${n}`;
   await promote(carol, D(8), inquiryMd(D(8), { refs: [CAP_B], legs: [g(CAP_B, "B", "capture")] }), "inquiry");
   for (let i = 7; i >= 0; i--)
-    await promote(carol, D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [g(D(i + 1), "A", "connection")] }), "inquiry");
+    /* RE-READ 2026-09-28 BY K187: each link was a HUNCH (inherits nothing now, strength R5); it carries no grade. */
+    await promote(carol, D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [bare(D(i + 1))] }), "inquiry");
   const deep = (await pair(carol, D(0))).body.result;
   t("a chain deeper than the bound reads `undetermined` and NAMES the depth (R3)",
     [deep.capture.state, deep.capture.grade, deep.capture.determined,
@@ -469,7 +489,9 @@ console.log("\n--- 6. THE BACK-REFERENCE POSTURE: an invisible id redacted, the 
      undetermined `why` embeds the sub-walk's whole detail. Nothing structured
      in the answer holds it, so the field-only redaction would miss it. */
   const OUTER = "INQ-2026-0905-outer";
-  await promote(carol, OUTER, inquiryMd(OUTER, { refs: [HID], legs: [g(HID, "A", "connection")] }), "inquiry");
+  /* RE-READ 2026-09-28 BY K187: OUTER's leg to HID was a HUNCH, which inherits nothing now (strength R5); it carries
+     no grade, so HID's pair (and the hidden project id inside it) still travels up and the redaction is still tested. */
+  await promote(carol, OUTER, inquiryMd(OUTER, { refs: [HID], legs: [bare(HID)] }), "inquiry");
   const outer = (await pair(dave, OUTER)).body.result;
   t("one level up, the inherited answer names no secret either",
     JSON.stringify(outer).includes(PROJ), false);
@@ -680,15 +702,25 @@ console.log("\n--- 8. REC-105 / D-373: the capture axis is resolved through `ear
      REACH the new code. These two pins are what make that a property of the
      source rather than a sentence — a call added inside the walk, or a bounds
      map handed to the version path, fails here by name. */
-  t("`strengthOf` is the ONLY caller that builds the bound map",
-    (STORE_SRC.match(/#captureBoundsFor\(/g) ?? []).length, 2);   /* the definition and the one call */
+  /* RE-READ 2026-09-28 (T7; STRENGTH #1 J1, J5; strength R1, R19, R26, approved K102). The last two pins read "the
+     version path's own walk call passes NO bound map" and "so does op=suggest's candidate pair". strength R1 now
+     requires the opposite on EVERY path ("a document leg's stated capture grade is bounded by what its target
+     earns"; R19: "no leg is counted above what the record earns for it"; R26: a candidate's pair is R1–R5), and the
+     extraction built it: the version path and the candidate pair both reach the ONE walk through `#pairOver`, which
+     builds the ONE bound map from the record. What stays pinned is what REC-105 guarded structurally: one builder of
+     the map, one registry call for the whole walk and none per leg, and the bound a SEPARATE parameter no leg can
+     carry. */
+  t("ONE builder of the bound map: `#captureBoundsFor` is defined once and called once, by `#pairOver`",
+    [(STRENGTH_SRC.match(/#captureBoundsFor\(/g) ?? []).length,
+     /this\.#walk\(bundleId, 0, DEPTH_BOUND, topLegs, this\.#captureBoundsFor\(bundleId, DEPTH_BOUND, topLegs\)\)/.test(STRENGTH_SRC)],
+    [2, true]);   /* the definition and the one call */
   t("and the walk itself asks the registry NOWHERE — one call for the whole walk, never one per leg",
-    /#strengthWalk\(bundleId, depth, bound, legsOverride = null, captureBounds = null\) \{[\s\S]*?\n  \}/
-      .exec(STORE_SRC)?.[0].includes("earnedBasisRegistry("), false);
-  t("the version path's own walk call passes NO bound map, so it reads exactly as it did",
-    /#strengthWalk\(inq, 0, bound, resolved\.legs\)/.test(STORE_SRC), true);
-  t("and so does op=suggest's candidate pair",
-    /#strengthWalk\(target, 0, Store\.QUEUE_ANCESTOR_DEPTH, walkLegs\)/.test(STORE_SRC), true);
+    /\n  #walk\(bundleId, depth, bound, legsOverride, captureBounds\) \{[\s\S]*?\n  \}\n/
+      .exec(STRENGTH_SRC)?.[0].match(/\.earned\(|earnedBasisRegistry\(/) ?? null, null);
+  t("the version path reaches the ONE walk through `#pairOver` with its legs, and the bound is built from the record (R1)",
+    /this\.#pairOver\(inq, resolved\.legs\)/.test(STRENGTH_SRC), true);
+  t("and so does op=suggest's candidate pair (R26)",
+    /\n  candidatePair\([\s\S]{0,800}?this\.#pairOver\(/.test(STRENGTH_SRC), true);
 }
 
 await mf.dispose();

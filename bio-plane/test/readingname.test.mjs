@@ -203,7 +203,7 @@ const dave = await member("dave", ["contribute"]);
 /* CORRECTED 2026-09-18 (REC-141, IC-158): a project's creation bytes carry NO `id:` line (the plane mints
    the id and refuses bytes naming one, C-59.2), so `id` null omits it; `name` is the title's label. */
 const bundleMd = (id, type, name = id) => [
-  "---", ...(id === null ? [] : [`id: ${id}`]), `object_type: ${type}`, `schema: ${type}@1`,
+  "---", ...(id === null ? [] : [`id: ${id}`]), `object_type: ${type}`, ...(type === "project" ? ['objective: "Fixture objective."'] : []), `schema: ${type}@1`,
   `title: "${name}"`, `current_state: ${type === "project" ? "forming" : "collected"}`,
   "prior_state: null", `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",

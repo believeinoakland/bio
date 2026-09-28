@@ -227,6 +227,9 @@ const decomment = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$
 const STORE = decomment(STORE_SRC);
 const INDEX = decomment(INDEX_SRC);
 const BIAS = decomment(BIAS_SRC);
+/* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the store's `aiRunSpawnPayload` moved into ai-runs as
+   `spawnPayload` (`src/ai-runs/index.mjs`, op=airunspawn through `aiRunsOps`); ARM F3/F3b read its payload there. */
+const RUNS = decomment(readFileSync(SRC("ai-runs/index.mjs"), "utf8"));
 
 /* The named method BODY, brace-matched off the source.
  *
@@ -717,8 +720,9 @@ await member("basil", ["contribute", "publish"], "admin");
 const MEMBER = await member("mo", ["contribute", "create_projects"]);
 const OUTSIDER = await member("otto", ["contribute"]);
 
+/* LEGACY-TESTS #4 (T7): intent R1 enforces C-2.9's objective at the write (K207), so the fixture states one. */
 const projectMd = (id, title) => ["---", ...(id ? [`id: ${id}`] : []), "object_type: project",
-  `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  `title: "${title}"`, 'objective: "Account for the sewer fund."', "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   "---", "", "## Thesis Summary", "", "A project.", "",
   "## Open Questions", "", "## Ruled Out", "", "## Session Log", "", "## Review Notes", ""].join("\n");
 
@@ -1091,7 +1095,7 @@ await block("13", async () => {
      would have been an arm that could only be satisfied by deleting the
      composing half, which is not the rule. */
   const payloadLiteral = (() => {
-    const body = bodyOf(STORE, "aiRunSpawnPayload({");
+    const body = bodyOf(RUNS, "spawnPayload({");
     const i = body.indexOf("const payload = {");
     if (i < 0) return "";
     let depth = 0;
@@ -1106,7 +1110,7 @@ await block("13", async () => {
     [payloadLiteral.length > 200, /bias|manifest|lens/i.test(payloadLiteral)], [true, false]);
   t("ARM F3b: and the payload is NOT built by spreading the run row — a spread would carry every column "
   + "`ai_runs` gains tomorrow straight through this fence",
-    /\.\.\.row/.test(bodyOf(STORE, "aiRunSpawnPayload({")), false);
+    /\.\.\.row/.test(bodyOf(RUNS, "spawnPayload({")), false);
   t("ARM F4: the COMPOSING half is a different question and is deliberately not fenced — §14 carries the "
   + "manifest there for disclosure and for the weighing it discloses",
     (await get("airunspawn", "run=run-with-lens&half=compose", MEMBER)).bias.in_force, true);

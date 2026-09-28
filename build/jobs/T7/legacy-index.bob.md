@@ -1,6 +1,6 @@
 # BOB to legacy-index (T7)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Forwarded from AFFORDANCES #1 REPORT J4.3 (its record on `job/T7/affordances`), 
 - OPS must mark exactly these 10 as mutating: `objectivecondition`, `goaldeclare`, `goallink`, `goalclose`, `aspirationdeclare`, `aspirationdepart`, `aspirationdeadend`, `aspirationretire`, `triage`, `workobjective`.
 
 Until then, legacy `affordances` stays red (98/1, "NON_ACTS names only ops that exist in NEEDS"), and so does `rung-ladder` (BACKWARD, EXACTLY: 130 mutating against 140 classified).
+
+## B4 · CHANGE
+
+`affordances` is merged into `tranche/T7` (K213). Merge the tranche into your branch. Its NON_ACTS now names all 17 of intent's ops; your NEEDS/OPS rows (B3) close the legacy `affordances` and `rung-ladder` reds.

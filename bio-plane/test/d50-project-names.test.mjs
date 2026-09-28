@@ -56,7 +56,7 @@ const t = (l, g, w) => {
    The title is written between quotes RAW, never through JSON.stringify: the restricted grammar does not unescape
    `\t`, so a JSON-escaped tab arrives as a backslash and a `t` and the case-and-spacing arm tests nothing. */
 const doc = (id, type, title, state, extra = "") =>
-  `---\nid: ${id}\nobject_type: ${type}\n${title === null ? "" : `title: "${title}"\n`}`
+  `---\nid: ${id}\nobject_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}${title === null ? "" : `title: "${title}"\n`}`
   + `current_state: ${state}\n${extra}created: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\nx\n`;
 const bundle = (id, type, title, state, extra) => ({ folderName: id, files: new Map([["bundle.md", doc(id, type, title, state, extra)]]) });
 
@@ -158,7 +158,7 @@ try {
   /* ====================================================== §3 THROUGH THE OP */
   const call = async (p, b) => (await (await mf.dispatchFetch("http://x" + p,
     b ? { method: "POST", body: JSON.stringify(b) } : {})).json()).result;
-  const md = (title) => `---\nobject_type: project\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\n${title}\n`;
+  const md = (title) => `---\nobject_type: project\nobjective: "Fixture objective."\ncurrent_state: forming\ncreated: "2026-07-01T00:00:00Z"\nlast_updated: "2026-07-01T00:00:00Z"\n---\n\n## Summary\n\n${title}\n`;
   const mk = (title, n) => call("/promote", {
     base: null, snapKey: `d50-${n}`, author: "suite",
     files: [{ path: "bundle.md", text: md(title), bytes: md(title).length, sha256: sha(md(title)) }],

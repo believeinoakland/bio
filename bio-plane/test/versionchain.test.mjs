@@ -152,6 +152,12 @@ const segments = (code) => {
   return out;
 };
 const SEGMENTS = segments(STORE_CODE);
+/* RE-ANCHORED 2026-09-28 (REEVALUATION #1 J2.10, its R12-R13): D-256's `changedFromAudit` and the sentence it matches,
+   `CHANGED_FROM_SENTENCE` (a static of the store's, an exported constant now), moved out of store.mjs into
+   src/reevaluation/index.mjs; the audit reads the chain through provenance's service (`this.provenance.versionChain`).
+   Read there, by its own segments, so the store corpus the other walks read is unchanged. */
+const REEVAL_CODE = decomment(readFileSync(SRC("reevaluation/index.mjs"), "utf8"));
+const REEVAL_SEGMENTS = segments(REEVAL_CODE);
 
 /* ====================================================================== 1
  * THE ASSUMPTION SWEEP, AND IT THROWS.
@@ -455,6 +461,8 @@ const infoMd = (id, locator, prose) => ["---",
    creation bytes carry no `id:` line (C-59.2) and the promote names no bundleId (C-59.1). `id` null = creation. */
 const projectMd = (id) => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Hold the budget version the team is working from."',
   "---", "", "## Summary", "", "A project the uninvited must not learn about.", ""].join("\n");
 
 const promote = async (id, text, type, register = [], tok = "mem-pl10") => await post("promote", {
@@ -1000,14 +1008,14 @@ console.log("\n--- 15. D-256: every changed-from sentence, classed through the c
     EVERY.filter((id) => after[id] !== before[id]), []);
   t("and the record's own counters read the same before and after — the witness, not a promise",
     JSON.stringify(await get("stats", "", "mem-pl10")) === JSON.stringify(statsBefore), true);
-  const seg = SEGMENTS.get("changedFromAudit") || "";
+  const seg = REEVAL_SEGMENTS.get("changedFromAudit") || "";
   t("STRUCTURAL: the audit holds no write statement, resolves through `versionChain` and never through a "
   + "ranked search or the text index",
-    [/\b(INSERT|UPDATE|DELETE|REPLACE)\b/.test(seg), /this\.versionChain\(/.test(seg),
+    [/\b(INSERT|UPDATE|DELETE|REPLACE)\b/.test(seg), /this\.(?:provenance\.)?versionChain\(/.test(seg),
      /this\.search\(|bundles_fts|\bMATCH\b|bm25/i.test(seg), seg.length > 1500],
     [false, true, false, true]);
   t("the sentence the audit matches IS the writer's literal — if addGo's words move, this goes red",
-    /static CHANGED_FROM_SENTENCE = "([^"]+)";/.exec(STORE_CODE)?.[1], CF_PARTS[1]);
+    /(?:static|export const) CHANGED_FROM_SENTENCE = "([^"]+)";/.exec(REEVAL_CODE)?.[1], CF_PARTS[1]);
 
   /* THE FENCE: admin and probe; probe confined to the scratch namespace. */
   t("op=changedfromaudit is declared admin and probe, non-mutating",

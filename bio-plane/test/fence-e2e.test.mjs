@@ -78,6 +78,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { AI_CREDENTIAL_CHECKS, CAPTURE_REQUEST_CHECKS, VERSION_ACT_CHECKS,
          MACHINE_FENCE_CHECKS, isMachineIdentity, isMachineStamp } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-28 (STRENGTH #1 J5, its R24): C-32.9 MACHINE_CANNOT_DECLARE left `MACHINE_FENCE_CHECKS` for
+   strength's own `STRENGTH_BAR_CHECKS`, id and translation unchanged, so the registry this suite reads includes it. */
+import { STRENGTH_BAR_CHECKS } from "../src/strength/index.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 /* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for section 10's harvest. */
@@ -230,6 +233,8 @@ const projectMd = (cites) => ["---",
   "object_type: project", "schema: project@1",
   `title: "The stance this project takes"`, "current_state: collected", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`, `group: ${GROUP}`,
+  /* ADDED 2026-09-28 (INTENT #1 J4.1, intent R1): C-2.9 is enforced at the write now, so a project states its objective. */
+  'objective: "Take a stance on the questions this project cites."',
   ...refLines(cites), "state_history: []", "---", "", "## Notes", ""].join("\n");
 
 /* CORRECTED 2026-09-23 by M0-132, never exempted: this snap key's suffix was drawn from `Math.random`, and the key is
@@ -358,7 +363,8 @@ t("and it is not one layer wearing three hats: the six attempts sit across THREE
    compared against WHAT THE PLANE SENT at each site. A hand copy agrees for
    free — measured five times in this repository, once over 131 op names — so
    the registry is the source and the wire is the subject, never the reverse. */
-const REGISTRY = { ...VERSION_ACT_CHECKS, ...MACHINE_FENCE_CHECKS, ...CAPTURE_REQUEST_CHECKS, ...AI_CREDENTIAL_CHECKS };
+const REGISTRY = { ...VERSION_ACT_CHECKS, ...MACHINE_FENCE_CHECKS, ...STRENGTH_BAR_CHECKS, ...CAPTURE_REQUEST_CHECKS,
+                   ...AI_CREDENTIAL_CHECKS };
 t("every code on the roster is in the catalog, and the catalog is what the C-numbers below are "
 + "compared against — never a number typed into this file",
   ROSTER.filter((r) => !(r.code in REGISTRY)).map((r) => r.code), []);
@@ -927,7 +933,10 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   /* RE-ANCHORED 2026-09-26 (T3, legacy-tests; promotion R22–R24): `reopen` and its MACHINE_CANNOT_REOPEN moved
      from store.mjs to `src/promotion/`, so the harvest's corpus is the store AND the extracted modules' files — the
      family the store minted before the extraction. */
-  const STORE_BARE = storeCorpus(["record-core", "membership", "promotion"])
+  /* RE-ANCHORED 2026-09-28 (T7 layer 6): MACHINE_CANNOT_CONCLUDE and MACHINE_CANNOT_MOVE_VERSION moved to
+     basis-versions (BASIS-VERSIONS #1 J4.1), MACHINE_CANNOT_DIVIDE and MACHINE_CANNOT_GROUND to inquiry (INQUIRY #1
+     J2.2), MACHINE_CANNOT_DECLARE to strength (STRENGTH #1 J5), each extracted from the store with its act. */
+  const STORE_BARE = storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions", "strength"])
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
   const HARVEST = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("the harvest found a REAL family and not an empty one — the guard is the evidence, never the "
@@ -937,7 +946,7 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      plane can mint" also covers the five fences minted in `src/index.mjs`, which this suite does not
      drive. Those five are harvested and driven, each under a payload a human then succeeds with, by
      `machine-fences.test.mjs` block 3b (D-503), which holds the same equality over them. */
-  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3) mints, so a thirteenth cannot arrive "
+  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, and `src/{inquiry,basis-versions,strength}/`, T7) mints, so a thirteenth cannot arrive "
   + "unmeasured (the five `src/index.mjs` mints are machine-fences.test.mjs block 3b's, D-503)",
     [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
     [[], []]);

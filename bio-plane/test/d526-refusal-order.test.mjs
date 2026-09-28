@@ -68,7 +68,7 @@ const post = async (op, body, token) =>
     { method: "POST", body: JSON.stringify(body) })).json());
 
 const HEAD = (id, type, schema, title, state) => [
-  "---", ...(id ? [`id: ${id}`] : []), `object_type: ${type}`, `schema: ${schema}`,
+  "---", ...(id ? [`id: ${id}`] : []), `object_type: ${type}`, ...(type === "project" ? ['objective: "Fixture objective."'] : []), `schema: ${schema}`,
   `title: "${title}"`, `current_state: ${state}`, "prior_state: null",
   `created: ${NOW}`, `last_updated: ${NOW}`,
   "produced_by:", "  mode: assisted", "  capability_tier: session",
@@ -92,7 +92,7 @@ const inquiryMd = (id, { surfacedBy = null } = {}) => [
   "---", "", "## Question", "", "Where did the sewer transfer go?", "", "## Session Log", ""].join(NL);
 
 /* A project with NO id line: the plane mints it (REC-141). */
-const projectMd = (title) => ["---", "object_type: project", `title: "${title}"`, "current_state: forming",
+const projectMd = (title) => ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "${title}"`, "current_state: forming",
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "references: []", "---", "",
   "## Thesis Summary", "", "A project.", "", "## Open Questions", "", "## Ruled Out", "",
   "## Session Log", "", "## Review Notes", ""].join(NL);

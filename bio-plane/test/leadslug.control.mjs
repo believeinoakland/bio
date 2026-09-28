@@ -37,8 +37,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the door's two lead refusals left the
+   store for `src/capture-requests/index.mjs` (`#inquiryInSight` is the C-28.14 question now), and the per-bundle purge
+   of the lead is capture-requests' `clearLead`, called by the store's `purge` in one guarded line; the condition-kind
+   vocabulary arm (7) anchors on `CONDITION_KINDS`, which queuestate.mjs re-exports from observation-log's
+   `vocabulary.mjs`. Each arm makes the same edit at the same condition. */
 const F = {
   store: ROOT + "src/store.mjs",
+  cr: ROOT + "src/capture-requests/index.mjs",
+  vocab: ROOT + "src/observation-log/vocabulary.mjs",
   queuestate: ROOT + "src/queuestate.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
 };
@@ -242,7 +249,7 @@ arm("(5) THE PURGE, BY CONSEQUENCE (D-113). Delete the per-bundle arm's `lead_in
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): record-core's purge (R22) runs every declared table's purge in one
      transaction and the store keeps this column's clear beside it as one guarded line (`if (bundleId) …`); the old
      anchor, the clear on its own line, matched nothing. The same clause is removed. */
-  [["store", `      if (bundleId) this.sql.exec(\`UPDATE capture_requests SET lead_inquiry=NULL WHERE lead_inquiry=?\`, bundleId);`,
+  [["store", `      if (bundleId) captureRequestsOf(this.ctx).clearLead(bundleId);`,
              `      /* armed by leadslug.control.mjs arm 5 */`]],
   /* CORRECTED AFTER THIS ARM'S FIRST RUN, AND THE CORRECTION IS THE FINDING.
      It was declared as "the member's feed still carries the lead", and it came
@@ -263,8 +270,8 @@ arm("(6) THE DOOR — A LEAD MUST NAME A QUESTION (C-28.14), the other refusal H
   + "gone a lead may name a document or a bundle id nothing answers to, and the notification is "
   + "filed under a home that cannot hold it. "
   + "DECLARED: the two C-28.14 arms MUST fail; C-28.15's arm MUST stay green.",
-  [["store", `      if (!lb || normalizeType(lb.object_type) !== "inquiry")`,
-             `      if (false)`]],
+  [["cr", `      if (!this.#inquiryInSight(lead, viewer))`,
+          `      if (false)`]],
   ["a lead naming a DOCUMENT is refused by name (C-28.14)",
    "both door codes were DRIVEN by this suite"],
   ["a lead pointing back at the question the run is working is refused by name (C-28.15)"]);
@@ -273,7 +280,7 @@ arm("(6b) THE DOOR — A LEAD IS NEVER THE TARGET (C-28.15), the other refusal H
   + "a run can file a lead on the question it is already working, and the member is told that "
   + "evidence for a different question was found — about this one. "
   + "DECLARED: C-28.15's arm MUST fail; C-28.14's arms MUST stay green.",
-  [["store", `      if (lead === target)`, `      if (false)`]],
+  [["cr", `      if (lead === target)`, `      if (false)`]],
   ["a lead pointing back at the question the run is working is refused by name (C-28.15)"],
   ["a lead naming a DOCUMENT is refused by name (C-28.14)"]);
 
@@ -287,7 +294,7 @@ arm("(7) THE CLASS IS DOCTRINE AND NOT A LABEL. Move the slug from QUEUE_FINDING
   + "DECLARED: block 1's class arms and the feed arms MUST fail; the door arms MUST stay green.",
   [["queuestate", `  "out-of-inquiry-lead":        "evidence for ANOTHER question`,
                   `  "out-of-inquiry-lead-moved":  "evidence for ANOTHER question`],
-   ["queuestate", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
+   ["vocab", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",\n  "out-of-inquiry-lead":         "moved by leadslug.control.mjs arm 7",`]],
   ["the slug exists and classOfKind answers FINDING",
    /* CORRECTED 2026-09-23 by D-125: "a member CANNOT mute it" was declared here

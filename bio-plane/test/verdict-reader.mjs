@@ -70,7 +70,8 @@
  *   - an outcome built into a VARIABLE and returned later (it reads literals);
  *   - a NEGATIVE-POLARITY verdict (`failed: true`), which reads as a success by
  *     construction. Each instrument states its own cross-check for that.
- *   - a verdict below the top level of the object.
+ *   - a verdict below the top level of the object — save ONE shape, the route answer
+ *     `{ status, body: { … } }`, which `outcomeReturns` reads as its body (T7).
  *   - A COMPARISON SPELLED `<=` OR `>=` (and `instanceof`, `in`). `verdictKind`
  *     reads `n >= cap` as NOT boolean-shaped although the language guarantees a
  *     boolean: the rule above says "boolean-producing operators" and the code
@@ -180,7 +181,40 @@ function matchBrace(text, open) {
 function outcomeReturns(text) {
   const out = [];
   const seen = new Set();
-  const push = (s, e) => { if (e > s && !seen.has(s)) { seen.add(s); out.push([s, e]); } };
+  /* THE ROUTE ANSWER (T7 legacy-tests; T4's and T5's deferral, "legacy-tests' share of N87"). The extracted modules
+     answer a route as `{ status: 403, body: { ok: false, reason: … } }` (extraction's `pdfStructure`, capture's
+     `acquire`, host-governor): the outcome is the BODY, and the envelope around it carries no verdict, so the
+     envelope was read as an outcome with NO verdict (the guard's `unclassifiedOutcomes`) and the refusal inside it
+     was never judged — a region around five of them judged nothing. So an object whose depth-0 properties are a
+     `status` and a `body` that is itself an object literal is read as that body. Positional like the wrapped form:
+     it names no transport. An object that is not that shape is read as before. */
+  const routeBody = (s, e) => {
+    const obj = text.slice(s, e + 1);
+    const props = topLevelProps(obj);
+    if (!props.some((p) => p.key === "status")) return null;
+    const b = props.find((p) => p.key === "body" && /^\s*\{/.test(p.value));
+    if (!b) return null;
+    /* the body's own `{`, found at depth 0 of the envelope (strings and comments skipped, as topLevelParts does) */
+    let depth = 0;
+    for (let i = s + 1; i < e; i++) {
+      const c = text[i];
+      if (c === '"' || c === "'" || c === "`") { i = skipString(text, i); continue; }
+      if (c === "/" && text[i + 1] === "*") { const j = text.indexOf(CLOSE_COMMENT, i + 2); i = j < 0 ? e : j + 1; continue; }
+      if (depth === 0 && /^body\s*:\s*\{/.test(text.slice(i, i + 40)) && !/[\w$]/.test(text[i - 1])) {
+        const open = text.indexOf("{", i);
+        const close = matchBrace(text, open);
+        return close > open ? [open, close] : null;
+      }
+      if (c === "{" || c === "[" || c === "(") depth++;
+      else if (c === "}" || c === "]" || c === ")") depth--;
+    }
+    return null;
+  };
+  const push = (s, e) => {
+    const inner = e > s ? routeBody(s, e) : null;
+    if (inner) [s, e] = inner;
+    if (e > s && !seen.has(s)) { seen.add(s); out.push([s, e]); }
+  };
   for (const m of text.matchAll(/\breturn\b/g)) {
     /* the direct form: only whitespace and opening parens may sit in front.
        `lead` is how many of those parens there were, and it is what the
@@ -197,7 +231,13 @@ function outcomeReturns(text) {
            outcome. Anchored at `i` so it cannot drift past the call it read. */
         const w = /^(?:new\s+)?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\(\s*/.exec(text.slice(i, i + 120));
         if (w) {
-          const argAt = i + w[0].length;
+          let argAt = i + w[0].length;
+          /* THE STATUS-FIRST TRANSPORT (T7 legacy-tests, with the route answer above): capture's
+             `return answer(403, { ok: false, … })` hands the outcome over SECOND, after the HTTP status. Read only
+             when argument one is a bare NUMBER — a refusal helper's first argument is a STRING code
+             (`refusal("D", detail, { at })`), so its detail object stays outside the corpus exactly as before. */
+          const status = /^\d+\s*,\s*/.exec(text.slice(argAt, argAt + 20));
+          if (status && text[argAt + status[0].length] === "{") argAt += status[0].length;
           if (text[argAt] === "{") { const e = matchBrace(text, argAt); if (e > 0) push(argAt, e); }
         }
       }
@@ -471,6 +511,11 @@ const READINGS = [
     ["{ ok: true }", '{ ok: false, code: "B" }']],
   ["outcomeReturns", () => slices('return json({ ok: false, code: "C" }, 403);'), ['{ ok: false, code: "C" }']],
   ["outcomeReturns", () => slices('return refusal("D", detail, { at });'), []],
+  /* T7: the ROUTE ANSWER is read as its body, and a status-first transport hands its outcome over second —
+     and a helper whose first argument is a string still hands over nothing */
+  ["outcomeReturns", () => slices('return { status: 403, body: { ok: false, code: "E" } };'), ['{ ok: false, code: "E" }']],
+  ["outcomeReturns", () => slices('return answer(400, { ok: false, code: "F" });'), ['{ ok: false, code: "F" }']],
+  ["outcomeReturns", () => slices('return { status: 200, body };'), ["{ status: 200, body }"]],
   ["outcomeReturns", () => slices("return f(g(pair ? { a: 1 } : null)); const returned = { ok: true };"), []],
   /* the depth-0 split: a line comment skipped, a string and an array kept whole */
   ["topLevelParts", () => topLevelParts(`{ a: 1, ${LINE_COMMENT} x, y\n b: "p, q", c: [1, 2] }`),
@@ -508,7 +553,7 @@ const READINGS = [
 /* THE READINGS FLOOR — the count at D-254. A reading deleted to make a changed
    reader pass is the liar's pass one level down, so the table may grow and never
    shrink without its reason at this site. */
-const READINGS_MIN = 31;
+const READINGS_MIN = 34;   /* T7 legacy-tests: 31 -> 34, the three readings of the route answer and the status-first transport */
 
 /* THE PIN. `differing` names every shared function that is NOT single-homed —
    missing from this file, not imported by the guard, or declared by the guard

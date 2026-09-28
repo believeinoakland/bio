@@ -153,7 +153,7 @@ const inquiryMd = (id, basis) => ["---",
    creation naming one (C-59.1) or bytes carrying `id:` (C-59.2). A project is created with `id` null — no bundleId,
    no id line — and its id is read from the answer; `label` keeps the title and snapshot key it had. */
 const projectMd = (id, cites = [], label = id) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", `title: "Project ${label}"`,
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", `title: "Project ${label}"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap(([x, st]) => [`  - target: ${x}`, "    rel: cites",
                                                                     `    status: ${st}`])]

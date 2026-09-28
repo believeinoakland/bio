@@ -153,7 +153,7 @@ import { withBiasChecks } from "./bias/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
 import { userAgent, profilesAsText, substanceDigests, ODF_DIGEST_MAX, driveRow } from "./capture/acquire.mjs";
-import { linksOp, captureObjectOp, archiveLookupOp, acquireOp, withReading } from "./capture/ops.mjs";
+import { linksOp, captureObjectOp, archiveLookupOp, acquireOp } from "./capture/ops.mjs";
 import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
@@ -725,6 +725,22 @@ const OPS = {
      from a citation's side; it writes nothing, so there is no act to fence. `viewer`
      is stamped below, fail-closed, like the chain it reads. */
   versionnotice: { classes: ["admin", "member", "probe"],        mutating: false },
+  /* T6-13 (reevaluation R8, R9, R14–R16; K199): reevaluation's six ops beyond the three above.
+     `reevaluationraise` is R14's BOUNDED SWEEP that raises the pushed notices, called by `scheduler` or `monitoring`:
+     the unattended path, so admin and daemon, `capturerequestdrain`'s cut and reason (K199 records the decision, and
+     UNATTENDED_BY_DECISION cites it); it reads under the store's own machine viewer and stamps nothing.
+     `reevaluationnotices` (R14's notices, for the queue that renders them) and `reevaluationchanges` (R9's pull read)
+     are READS on `reevaluations`' cut, viewer-stamped, and no NEEDS entry, `reevaluations`' precedent.
+     `versionadopt`, `versionkeep` (R15) and `reevaluationrecord` (R16) are a member's acts on a reference they hold:
+     `conclude`'s cut and reason — a machine REACHES them and the store refuses it BY NAME on the author stamped
+     below (MACHINE_CANNOT_ADOPT_VERSION, MACHINE_CANNOT_KEEP_VERSION, MACHINE_CANNOT_RECORD_REEVALUATION) — `contribute` in NEEDS, the
+     version acts' capability, and a session op in both sets. */
+  reevaluationraise:   { classes: ["admin", "daemon"],                    mutating: true  },
+  reevaluationnotices: { classes: ["admin", "member", "probe"],          mutating: false },
+  reevaluationchanges: { classes: ["admin", "member", "probe"],          mutating: false },
+  versionadopt:        { classes: ["admin", "member", "probe"],          mutating: true  },
+  versionkeep:         { classes: ["admin", "member", "probe"],          mutating: true  },
+  reevaluationrecord:  { classes: ["admin", "member", "probe"],          mutating: true  },
   /* PL-1 / IS-1: THE BASIS VERSIONS OF ONE INQUIRY — every alternative account
      of the evidence for a question, with its ground partition, the AND/OR
      relationship it states, the derivation edge it came along, and the run that
@@ -1291,6 +1307,33 @@ const OPS = {
      authoring; a preference is not even a disposition. */
   queuemute:          { classes: ["admin", "member"],               mutating: true  },
   queuesnooze:        { classes: ["admin", "member"],               mutating: true  },
+  /* T6-13 (intent R2–R18, K207; INTENT #1 REPORT J4.2): INTENT's seventeen ops — the objective's condition, progress
+     and gaps; goals; aspirations; the discovery loop's proposals and triage; working an objective.
+     THE TEN ACTS take `conclude`'s cut for `conclude`'s reason: a machine REACHES each and the store refuses it BY
+     NAME on the `author` stamped into the body below (MACHINE_CANNOT_SET_OBJECTIVE, MACHINE_CANNOT_DECLARE_GOAL,
+     MACHINE_CANNOT_DECLARE_ASPIRATION, MACHINE_CANNOT_TRIAGE, MACHINE_CANNOT_CHOOSE_THE_QUESTION) — except
+     `triage`'s `question`, the one act R16 gives a machine, which is why the cut must admit one. Each rides
+     `contribute` (a revision of a project document, a record document, an adoption, a question or a run) and is a
+     session op in both sets (INTENT_ACTIONS). THE SEVEN READS are open to every class that reads the record, and
+     what a caller may see is the store's, on the viewer stamped below (intent R23); each carries a NEEDS entry of
+     null, op=queue's precedent (B3). */
+  objectivecondition:  { classes: ["admin", "member", "probe"],      mutating: true  },
+  objectiveprogress:   { classes: ["admin", "member", "probe"],      mutating: false },
+  objectivegaps:       { classes: ["admin", "member", "probe"],      mutating: false },
+  goaldeclare:         { classes: ["admin", "member", "probe"],      mutating: true  },
+  goallink:            { classes: ["admin", "member", "probe"],      mutating: true  },
+  goalclose:           { classes: ["admin", "member", "probe"],      mutating: true  },
+  goal:                { classes: ["admin", "member", "probe"],      mutating: false },
+  aspirationdeclare:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  aspirationdepart:    { classes: ["admin", "member", "probe"],      mutating: true  },
+  aspirationdeadend:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  aspirationretire:    { classes: ["admin", "member", "probe"],      mutating: true  },
+  aspirations:         { classes: ["admin", "member", "probe"],      mutating: false },
+  aspirationcontacts:  { classes: ["admin", "member", "probe"],      mutating: false },
+  pursuit:             { classes: ["admin", "member", "probe"],      mutating: false },
+  intentproposals:     { classes: ["admin", "member", "probe"],      mutating: false },
+  triage:              { classes: ["admin", "member", "probe"],      mutating: true  },
+  workobjective:       { classes: ["admin", "member", "probe"],      mutating: true  },
   /* IS-6 / INVESTIGATIVE-SESSION.md §11: THE INVESTIGATIVE RUN. Three writes
      and two reads, and the class lists say two things worth stating.
 
@@ -1368,7 +1411,7 @@ const OPS = {
      behind it, and that the six pre-write checks run PLANE-SIDE. */
   suggest:            { classes: ["admin", "member", "probe"],      mutating: true  },
   /* PL-4 / IS-4 / SWEEP 4b.1 — THE CAPTURE-REQUEST DOOR, and the split between
-     these four rows IS the item.
+     the rows below IS the item.
 
      `capturerequest` is §4 group 1: *"It REQUESTS acquisition — it does not
      perform it."* It writes a row and holds no fetch, so it rides the same
@@ -1383,18 +1426,24 @@ const OPS = {
      the class *"by decision, not by drift"*, and test/daemon-token.test.mjs's
      totality assertion is corrected in the same turn rather than exempted.
 
-     `capturerequestdraining` and `capturerequests` are READS, and NEITHER
-     ADMITS THE DAEMON CLASS. That is deliberate and it is the narrower half of
-     the widening: op=acquire's capture-request arm asks the DURABLE OBJECT
-     directly, not through this table, so the daemon needs no read here — and a
-     credential that sits unattended in a config file has no business
-     enumerating the queue of addresses this group is about to fetch. The class
-     therefore reaches exactly THREE ops, one more than DEC-37 scoped it to and
-     that one by decision. */
+     `capturerequests` is a READ, and it DOES NOT ADMIT THE DAEMON CLASS. That
+     is deliberate and it is the narrower half of the widening: op=acquire's
+     capture-request arm asks the DURABLE OBJECT directly, not through this
+     table, so the daemon needs no read here — and a credential that sits
+     unattended in a config file has no business enumerating the queue of
+     addresses this group is about to fetch. The class therefore reaches exactly
+     THREE ops here, one more than DEC-37 scoped it to and that one by decision
+     (and `reevaluationraise` below, by K199's).
+     T6-13 (K181 (6)): `capturerequestdraining` is RETIRED — capture-requests
+     removed its function and its store route (its R16), so its row went with
+     them rather than answering admin and probe an `unknown op` from the store. */
   capturerequest:      { classes: ["admin", "member", "probe"],           mutating: true  },
   capturerequestdrain: { classes: ["admin", "probe", "daemon"],           mutating: true  },
-  capturerequestdraining: { classes: ["admin", "probe"],                  mutating: false },
   capturerequests:     { classes: ["admin", "member", "probe"],           mutating: false },
+  /* T6-13 (capture-requests R42, K181 (6)): RETRYING a request the SOURCE refused, once a member has supplied what it
+     asked for. A member's act on the group's queue: admin and member, `contribute` in NEEDS, a session op; the store
+     asks the stamped viewer's sight of the request's question and relays the stamped principal as the caller. */
+  capturerequestretry: { classes: ["admin", "member"],                    mutating: true  },
   /* PL-11 / IS-5 / D-199 — MINTING AN AI CREDENTIAL, AND THE CLASS LIST IS THE
      ENFORCEMENT RATHER THAN A NOTE ON IT.
 
@@ -1844,6 +1893,18 @@ const BIAS_ACTIONS = ["biasadopt"];
    signed-in member's resolve was answered SESSION_ROUTE_NOT_RECORDED, D-270's honest "no session reaches
    this and no decision says why". It is in BOTH lists because an administrator is a member too. */
 const BIAS_DEBT_ACTIONS = ["biasdebtresolve"];
+/* T6-13 (intent R2, R8–R11, R16, R18): INTENT's ten acts, as ONE array for the reason every array here is one — they
+   share a stamp (`author`, in the body), a capability (`contribute`) and both session sets, and a list written out in
+   four places is the drift that made DISPOSITIONS one array. Its own array and not STATE_ACTIONS: they move no bundle
+   state through the selection path and would inherit an `owner` stamp and a viewer-gated set shape they do not have. */
+const INTENT_ACTIONS = ["objectivecondition", "goaldeclare", "goallink", "goalclose", "aspirationdeclare",
+                        "aspirationdepart", "aspirationdeadend", "aspirationretire", "triage", "workobjective"];
+/* T6-13 (intent R3–R6, R12–R15): its seven reads, every one stamped with the viewer (intent R23). */
+const INTENT_READS = ["objectiveprogress", "objectivegaps", "goal", "aspirations", "aspirationcontacts", "pursuit",
+                      "intentproposals"];
+/* T6-13 (reevaluation R15, R16): a member's three acts on a reference they hold, stamped `author` in the query, where
+   reevaluation reads it after the body. */
+const REEVALUATION_ACTIONS = ["versionadopt", "versionkeep", "reevaluationrecord"];
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
    connection (resolvetestify), and READS the resolutions of a document (resolutions)
@@ -2019,6 +2080,10 @@ const SESSION_OPS = {
                    ...BIAS_DEBT_ACTIONS,
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
+                   /* T6-13: intent's ten acts and reevaluation's three, a member's own acts in their own name, and
+                      capture-requests' retry (R42), a member's act on the group's queue; in BOTH sets, because an
+                      administrator is a member too. */
+                   ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
                    /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
                       and a MEMBER is a signed-in person — not the MEMBER_TOKEN
                       machine credential, which stamps `token:member` and is a
@@ -2070,6 +2135,7 @@ const SESSION_OPS = {
                    ...BIAS_DEBT_ACTIONS,
                    ...BIAS_ACTIONS,
                    ...DECLARATION_ACTIONS, ...STRUCTURE_ACTIONS, ...VERSION_ACTIONS,
+                   ...INTENT_ACTIONS, ...REEVALUATION_ACTIONS, "capturerequestretry",
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2646,6 +2712,40 @@ const NEEDS = {
      sends traffic to somebody else's server with the group's name on it, which
      is corpus-shaping work and not a preference about one's own attention. */
   capturerequest:   "contribute",
+  /* T6-13 (capture-requests R42): retrying a refused request sends the group's traffic to the source again, the
+     request's own capability and reason. */
+  capturerequestretry: "contribute",
+  /* T6-13 (intent R2, R8–R11, R16, R18): each of intent's acts writes the working record — a project document's
+     condition or adoption, a goal or aspiration document, a question, a triage row, a run — so each rides
+     `contribute` and mints NO fifth capability token (CAPABILITIES.md §4). What bounds a GROUP aspiration to an
+     administrator (R9) and an adoption to a joined member is the store's, asked of the stamped author: who a session
+     IS, not a capability. */
+  objectivecondition: "contribute",
+  goaldeclare:        "contribute",
+  goallink:           "contribute",
+  goalclose:          "contribute",
+  aspirationdeclare:  "contribute",
+  aspirationdepart:   "contribute",
+  aspirationdeadend:  "contribute",
+  aspirationretire:   "contribute",
+  triage:             "contribute",
+  workobjective:      "contribute",
+  /* T6-13 (intent R3–R6, R12–R15; B3, AFFORDANCES #1 J4.3): intent's seven READS take NO capability, op=queue's
+     precedent and not op=reevaluations': each is a SURFACE a member acts from (progress and gaps, the goals and
+     aspirations in force, the proposals a triage is chosen out of), so it is present here, null, where REC-19's totality
+     guard SEES it and `affordances.mjs` names it in NON_ACTS with its reason. What bounds each is the viewer stamp. */
+  objectiveprogress:  null,
+  objectivegaps:      null,
+  goal:               null,
+  aspirations:        null,
+  aspirationcontacts: null,
+  pursuit:            null,
+  intentproposals:    null,
+  /* T6-13 (reevaluation R15, R16): adopting a newer version appends a basis version, keeping the earlier one and
+     recording a re-evaluation write the working record — the version acts' capability and their reason. */
+  versionadopt:       "contribute",
+  versionkeep:        "contribute",
+  reevaluationrecord: "contribute",
   /* PL-12 / D-84. Adopting a bias set is `contribute` and deliberately NOT
      `publish`: it is the group declaring the lens it works under, which is
      ordinary record work that every contributing member's own project managers
@@ -3931,6 +4031,10 @@ const UNATTENDED_BY_DECISION = {
   livefire: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/livefire.mjs, header: 'the only "
           + "channel available for reaching a deployment may be a plain fetch of a URL. Confined to the scratch "
           + "namespace' — the deployment's live-fire battery, addressed to the operator's credential.",
+  /* T6-13: recorded by K199 (BOB #51, 2026-09-28), reevaluation R14's sweep. The citation is the ruling's own words. */
+  reevaluationraise: "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep "
+                   + "raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or "
+                   + "monitoring calls.",
   reproject: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed "
            + "because a deploy runs the bounded pass once at construction and a large store may need more than "
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
@@ -7684,6 +7788,16 @@ export default {
            the caller was never invited to must be absent exactly as one that was
            never made. */
         || op === "capturerequests"
+        /* T6-13 (capture-requests R42): the retry names a request and the question it was asked under, so the store
+           asks this viewer's sight of it and answers an unseen request as an absent one. Fails closed on an absent
+           stamp. */
+        || op === "capturerequestretry"
+        /* T6-13 (intent R23): every one of intent's reads and acts names a project, a goal or an aspiration, and each
+           answers one the viewer may not see exactly as an absent one, so all seventeen take the stamp. */
+        || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op)
+        /* T6-13 (reevaluation R9, R14–R16, R20): the notices and the pull read name findings and passages, and the three
+           acts name a notice or a dependent, each seen through its holder; an unseen one answers as absent. */
+        || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op)
         /* D-266 / IC-60: the disposition act's SECOND key shape names a PROJECT — the team
            whose feed the decision governs — so it takes the same fail-closed stamp for the
            same reason every op above does. A project the caller was never invited to must
@@ -8189,6 +8303,12 @@ export default {
        and the store refuses it BY SHAPE (CONNECTION_ASSERT_NOT_A_MEMBER, FILE_MEMBERSHIP_NOT_A_MEMBER). */
     if (op === "connectionassert" || op === "filemembershipjudge")
       inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* T6-13 (reevaluation R15, R16): the member who adopts a newer version, keeps the earlier one, or records a
+       re-evaluation, stamped by the version acts' expression (`VERSION_ACTIONS`' author above), which reevaluation reads
+       from the query after the body; a caller's `author` is overwritten, and a machine arrives honestly named, refused
+       BY NAME at the store (MACHINE_CANNOT_ADOPT_VERSION, MACHINE_CANNOT_KEEP_VERSION, MACHINE_CANNOT_RECORD_REEVALUATION). */
+    if (REEVALUATION_ACTIONS.includes(op))
+      inner.searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership v2 §7, BOB #15): the acts that change
        a project and took the VISIBILITY gate as their only barrier (or none) now ask the actor's
        OWN POSITION in that project, and the store reads that position from THIS stamp — the
@@ -8374,6 +8494,13 @@ export default {
        REC-165 (§11 item 5 rule 1, BOB #25): THE SAME EXPRESSION FOR THE RUN'S TWO PRODUCTIONS, so a suggestion
        and a proposed reading are compared with the run's principal in the one form the open stamped. */
     if (RUN_VERB_ACTIONS.includes(op) || RUN_PRODUCTION_ACTIONS.includes(op))
+      inner.searchParams.set("principal",
+        viaSession ? sessIdentity
+        : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* T6-13 (capture-requests R42, K181 (6)): the retry's caller, by the same expression, in a statement of its own —
+       a retry is not a production of a run, so it does not join RUN_PRODUCTION_ACTIONS. */
+    if (op === "capturerequestretry")
       inner.searchParams.set("principal",
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
@@ -8918,6 +9045,35 @@ export default {
         const b = JSON.parse(passBody);
         b.decidedBy = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
         passBody = JSON.stringify(b);
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* T6-13 (intent R2, R8–R11, R16, R18, R20; INTENT #1 REPORT J4.2): WHO SET THE CONDITION, DECLARED, LINKED, CLOSED,
+       DEPARTED, RECORDED, RETIRED, TRIAGED OR SET AN ASSISTANT TO WORK — intent reads `author` from the BODY, so it is
+       stamped into the body here and a caller's is overwritten. It is the POSITIONAL identity (`member:<id>`, the
+       founder's `member:admin`), the form intent asks membership's `projectAuthority` of; a machine credential stamps
+       `class:<cls>` and an `ai` credential `class:ai/<tokenId>` (`contentmint`'s form), each a machine identity intent
+       refuses BY NAME at every act but `triage`'s `question` — NEVER a key's principal, which would put an assistant's
+       act under a person's name.
+       `triage` also carries `assistantPrincipal`, op=promote's stamp by op=promote's expression: `question` opens an
+       inquiry through promotion, and ai-runs' surfacing step (its R25) asks that stamp for the run the caller holds. It
+       is deleted first for every caller and set only for one that did not arrive by a session, so a session is never
+       taken for an assistant and an assistant cannot name another. `run` stays the caller's word: the step asks every
+       question of it (sight, position, status, bound). An empty POST body is stamped too, so a signed-in session's
+       act never reads as a machine's for want of a body. */
+    if (INTENT_ACTIONS.includes(op) && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) {
+          b.author = viaSession ? sessIdentity
+            : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+            : `${MACHINE_CLASS_PREFIX}${cls}`;
+          if (op === "triage") {
+            delete b.assistantPrincipal;
+            if (!viaSession)
+              b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+          }
+          passBody = JSON.stringify(b);
+        }
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
     if (op === "inboxresolve" && passBody) {

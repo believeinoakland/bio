@@ -143,7 +143,7 @@ const inquiryMd = (id, basis) => ["---", `id: ${id}`, "object_type: inquiry", "s
    the plane mints the project's id and writes it (C-59.2 refuses bytes already carrying one). */
 /* D-563: `title` is the project's NAME, stated in its document — 7.1 scans the document's title, not a label. */
 const projectMd = (id, cites = [], summary = "A project.", title = "Hidden project 9138") => ["---", ...(id === null ? [] : [`id: ${id}`]), "object_type: project",
-  `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
+  "objective: \"Fixture objective.\"", `title: "${title}"`, "current_state: forming", `created: "${NOW}"`, `last_updated: "${LATER}"`,
   ...(cites.length ? ["references:", ...cites.flatMap((x) => [`  - target: ${x}`, "    rel: cites", "    status: confirmed"])]
                    : ["references: []"]),
   "required_strength:", "  capture: B", "  connection: C", "---", "", "## Summary", "", summary, "",
@@ -1004,6 +1004,35 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
       if (xcur) routes[xcur] += xlines[i].replace(/\bq\("/g, 'searchParams.get("').replace(/\bq\.get\("/g, 'searchParams.get("');
     }
     t(`11g000 (T5): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
+      routes[witness] !== undefined, true);
+  }
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4; T6 and T7's extractions, CAPTURE-REQUESTS #1 and RUN-PRODUCTIONS #1
+     REPORT J2.5, 11g++): the store's map now also spreads the routes of ai-runs, basis-versions, run-productions,
+     capture-requests, strength, inquiry, reevaluation, contradiction, intent, citation and host-governor, each
+     declared in its module's index.mjs one indent level in and reading parameters through a local `q("<name>")`.
+     11g++ named fifteen classified reads (`airun`, `airunlog`, `airuns`, `airunspawn`, `basisversions`,
+     `narrowcandidates`, `extractproposals`, `capturerequests`, `inquirystrength`, `versionstrength`,
+     `partitionindependence`, `strengthbarof`, `earnedbasis`, `reevaluations`, `versionnotice`) whose routes had left
+     the store's own map for these. They are read into the same table as T5's are above (a store route of the same
+     name wins), from each function's `return {` so a helper arrow that closes at the same indent before it (as
+     basis-versions' `versionArgs` does) does not end the read early; each map is floored by one route it must carry. */
+  for (const [mod, fn, witness] of [
+    ["ai-runs", "aiRunsOps", "airun"], ["basis-versions", "basisVersionsOps", "basisversions"],
+    ["run-productions", "runProductionsOps", "extractproposals"], ["capture-requests", "captureRequestsOps", "capturerequests"],
+    ["strength", "strengthOps", "strengthbarof"], ["inquiry", "inquiryOps", "earnedbasis"],
+    ["reevaluation", "reevaluationOps", "reevaluations"], ["contradiction", "contradictionOps", "contradictionpairs"],
+    ["intent", "intentOps", "aspirations"], ["citation", "citationOps", "cite"],
+    ["host-governor", "governorRoutes", "governorstate"]]) {
+    const xlines = src(`${mod}/index.mjs`).split("\n");
+    const xfn = xlines.findIndex((l) => new RegExp(`^export function ${fn}\\(`).test(l));
+    const xat = xfn < 0 ? -1 : xlines.findIndex((l, i) => i > xfn && /^  return \{/.test(l));
+    let xcur = null;
+    for (let i = xat + 1; xat >= 0 && i < xlines.length && !/^  \};/.test(xlines[i]); i++) {
+      const m = xlines[i].match(/^    ([a-z0-9]+): /);
+      if (m) { xcur = m[1] in routes ? null : m[1]; if (xcur) routes[xcur] = ""; }
+      if (xcur) routes[xcur] += xlines[i].replace(/\bq\("/g, 'searchParams.get("');
+    }
+    t(`11g000 (T7): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
       routes[witness] !== undefined, true);
   }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));

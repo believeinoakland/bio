@@ -90,7 +90,7 @@ const NO_ROUTE = {
 };
 
 const bundleMd = (id, type, state) =>
-  `---\nid: ${id}\nobject_type: ${type}\ncurrent_state: ${state}\n---\n\n# ${id}\n`;
+  `---\nid: ${id}\nobject_type: ${type}\n${type === "project" ? "objective: \"Fixture objective.\"\n" : ""}current_state: ${state}\n---\n\n# ${id}\n`;
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),

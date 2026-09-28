@@ -48,7 +48,10 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("sk8");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, RUN-PRODUCTIONS #1 REPORT J2.5, its map §4): `extractPropose` left
+   `store.mjs` for `src/run-productions/index.mjs`, and its bound is read through ai-runs' `boundOf` (R29) rather than
+   the store's `#mintsBound`. The three arms that armed the store arm the same lines there. */
+const RP = join(PLANE, "src/run-productions/index.mjs");
 const EXTRACT = join(PLANE, "src/extractrun.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 /* `extractrun.mjs` is the smallest file this harness arms, so the floor is set
@@ -119,7 +122,7 @@ const ARMS = {
      surface rather than reporting a count, because a location is actionable and
      a count is not. */
   label: {
-    files: [STORE],
+    files: [RP],
     why: "delete the `mint:` line from `extractPropose`'s answer, dropping the label from the "
        + "WRITE while `extractproposals`'s rows stay labelled — the row's own declared control, a "
        + "label dropped from ONE surface",
@@ -131,8 +134,8 @@ const ARMS = {
             + "every bound, grade, coverage and run assertion stays green",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's `#mintLabel` is content's exported `mintLabel`
        (content R16, T5 layer 5); `extractPropose` stays in store.mjs and calls it. The arm drops the same line. */
-    patch: () => arm(STORE,
-      `             mint: mintLabel(proposedBy.trim()),\n             proposed: out, minted,`,
+    patch: () => arm(RP,
+      `             mint: mintLabel(by),\n             proposed: out, minted,`,
       `             proposed: out, minted,`),
   },
 
@@ -144,7 +147,7 @@ const ARMS = {
      then produces freely, and NOTHING WOULD EVER END IT, because `finishedBound`
      fires only on a row with `allowed > 0`. */
   bound: {
-    files: [STORE],
+    files: [RP],
     why: "make `#mintsBound` answer a DEFAULT ALLOWANCE instead of null for a run that declared "
        + "none — the invented number §7.3 (5) rules out, and the shape a builder reaches for to "
        + "avoid writing a refusal",
@@ -154,9 +157,11 @@ const ARMS = {
             + "refusal and the run ENDING on the bound — all stay green, because `#mintsBound` "
             + "still finds the real row. This arm moves ONE property and the failure is therefore "
             + "attributable to it",
-    patch: () => arm(STORE,
-      `      \`SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'mints'\`, run) || null;`,
-      `      \`SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = 'mints'\`, run)\n      || { allowed: 1000, consumed: 0 };`),
+    /* RE-ANCHORED 2026-09-28: the door's one read of the `mints` bound (`this.aiRuns.boundOf(runId, "mints")`),
+       given the same default allowance; ai-runs' generic `boundOf` is left alone so no other bound moves. */
+    patch: () => arm(RP,
+      `    const bound = this.aiRuns.boundOf(runId, "mints");`,
+      `    const bound = this.aiRuns.boundOf(runId, "mints") || { allowed: 1000, consumed: 0 };`),
   },
 
   /* ARM (e). "WHY KEEP TWO TABLES?" — the change that makes a machine's
@@ -166,7 +171,7 @@ const ARMS = {
      invisible from the proposal's own surface: it shows up only when a reverse
      index every earned tier reads starts answering the machine's reference. */
   coverage: {
-    files: [STORE],
+    files: [RP],
     why: "make `extractPropose` ALSO write its refs into `reading_refs` — the plausible "
        + "why-keep-two-tables edit, which makes an uncited machine proposal count as extraction "
        + "coverage the moment any earned tier reads the reverse index",
@@ -175,9 +180,9 @@ const ARMS = {
             + "arm writes the index, not the reading, which is why an arm judged only on the "
             + "reading would MISS it); the recogniser's resolutions are unchanged; and every "
             + "grade, bound and label assertion is untouched",
-    patch: () => arm(STORE,
-      "          contentId, proposedBy.trim(), when);\n        out.push({ ref: x.ref,",
-      "          contentId, proposedBy.trim(), when);\n"
+    patch: () => arm(RP,
+      "          contentId, by, when);\n        out.push({ ref: x.ref,",
+      "          contentId, by, when);\n"
       + "        this.sql.exec(\n"
       + "          `INSERT OR REPLACE INTO reading_refs (capture_sha,bundle_id,ref,ref_kind,ref_key,label)\n"
       + "           VALUES (?,?,?,?,?,?)`,\n"

@@ -139,7 +139,19 @@ const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.
 const CONNECTIONS_SRC = readdirSync(fileURLToPath(new URL("../src/connections/", import.meta.url)))
   .filter((f) => f.endsWith(".mjs")).sort()
   .map((f) => readFileSync(fileURLToPath(new URL(`../src/connections/${f}`, import.meta.url)), "utf8")).join("\n");
-const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC;
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; INQUIRY #1 J2.2, REEVALUATION #1 J2.10, STRENGTH #1 J5): three more
+   readers of the predicate left store.mjs. `#restsOnLive` and `restingOn` are inquiry's (`src/inquiry/index.mjs`,
+   `restsOnLive`, `restingOn`, which ask connections as `this.connections.edgeSevered(`; so does inquiry's
+   `projectsDrawingOn`), `reevaluations` is reevaluation's (`src/reevaluation/index.mjs`, reading the status through
+   inquiry's `restingOn`), and `#projectBar` is strength's `projectBar` (`src/strength/index.mjs`). The census reads
+   store.mjs, connections and inquiry; §7's site pins read each site where it now lives. */
+const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, import.meta.url)))
+  .filter((f) => f.endsWith(".mjs")).sort()
+  .map((f) => readFileSync(fileURLToPath(new URL(`../src/${m}/${f}`, import.meta.url)), "utf8")).join("\n");
+const INQUIRY_SRC = moduleSrc("inquiry");
+const REEVAL_SRC = moduleSrc("reevaluation");
+const STRENGTH_SRC = moduleSrc("strength");
+const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC + "\n" + INQUIRY_SRC;
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
 const mf = withSurfacingRun(new Miniflare({
@@ -703,7 +715,8 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      (or the store's old `#refEdgeSevered(citingId, targetId`); the callers are the store's `this.#refEdgeSevered(`
      and connections' `this.edgeSevered(` (citesInto, formerly the store's #citesInto). */
   const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\(citingId, targetId/g) || []).length;
-  const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered)\(/g) || []).length;
+  const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length;
+  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections and inquiry`);
   t("THE RULE HAS EXACTLY ONE IMPLEMENTATION, and D-280 added no second one — the shape that has "
   + "already absorbed a control in this estate",
     defs, 1);
@@ -734,18 +747,22 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "from the plane entirely, so DEC-17's strictest-across-citers composition cannot be reached by "
   + "any door — a removal proved by absence rather than by an op that stopped answering",
     /#requiredStrengthFor\s*\(/.test(STORE_SRC), false);
-  t("and its REPLACEMENT reads ONE project and walks no edges at all: #projectBar consults neither "
+  /* RE-ANCHORED (T7; STRENGTH #1 J5): `#projectBar` is strength's `projectBar(projectId)`; the body is read to its
+     own closing brace at the method indent, and the predicate is looked for under either spelling. */
+  const barBody = /\n  projectBar\(projectId\) \{[\s\S]*?\n  \}\n/.exec(STRENGTH_SRC)?.[0] ?? null;
+  t("and its REPLACEMENT reads ONE project and walks no edges at all: projectBar consults neither "
   + "the refs table nor the severance predicate, because under DEC-72 citation does not bear on a "
   + "bar and a walk left standing would be the composition surviving in a new name",
-    [/#projectBar\s*\(projectId\)/.test(STORE_SRC),
-     /#projectBar\(projectId\)\s*\{[\s\S]{0,1200}?\}/.exec(STORE_SRC)?.[0]?.includes("refs") ?? true,
-     /#projectBar\(projectId\)\s*\{[\s\S]{0,1200}?\}/.exec(STORE_SRC)?.[0]?.includes("#refEdgeSevered") ?? true],
+    [barBody !== null && /#requiredStrengthFor\s*\(/.test(STRENGTH_SRC) === false,
+     barBody?.includes("refs") ?? true,
+     /edgeSevered|#refEdgeSevered/.test(barBody ?? "edgeSevered")],
     [true, false, false]);
   t("the two SURVIVING D-280 sites really consult the predicate — asserted off the SOURCE as well "
   + "as through the op, because an op arm alone cannot tell a confirmation from a fixture that "
   + "happened to agree",
+    /* RE-ANCHORED (T7; INQUIRY #1): `restingOn` is inquiry's, and it asks connections' predicate for each row. */
     [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(STORE_SRC),
-     /restingOn\([\s\S]{0,3000}?this\.#refEdgeSevered\(/.test(STORE_SRC)], [true, true]);
+     /\n  restingOn\(targetId\) \{[\s\S]{0,3000}?this\.connections\.edgeSevered\(/.test(INQUIRY_SRC)], [true, true]);
 
   /* ---- THE SITES LEFT UNCHANGED, PINNED SO THE JUDGEMENT IS ENFORCED --------
      A silent partial fix is the thing D-280's row exists to prevent, so each
@@ -781,9 +798,15 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
        the pin now asserts exactly that: the predicate is consulted to PUBLISH a status and
        no `continue` rides on it. The behavioural half — a severed dependent STILL receives
        the obligation — is driven through the op in `reevaluation.test.mjs` block 9. */
-    [/reevaluations\([\s\S]{0,5000}?this\.#refEdgeSevered\(bundleId, t\) \? "severed" : "confirmed"/.test(STORE_SRC),
-     /reevaluations\([\s\S]{0,5000}?#refEdgeSevered\([^)]*\)\)?\s*\)?\s*(continue|return)/.test(STORE_SRC),
-     /reevaluations\([\s\S]{0,6000}?legStatus === "severed"\)?\s*continue/.test(STORE_SRC)],
+    /* RE-ANCHORED 2026-09-28 (T7; REEVALUATION #1 J2.10, INQUIRY #1): `reevaluations` is reevaluation's and it no
+       longer calls the predicate itself: it reads each dependent leg's `status` from inquiry's `restingOn`, which
+       consults connections' ONE predicate per row, and marks the leg from it. The pin keeps its three halves:
+       the status is consulted to MARK (inquiry's `restingOn` asks the predicate; `reevaluations` reads `restingOn`
+       and derives `legStatus` from it), and no `continue`/`return` rides on it in `reevaluations`. */
+    [/\n  restingOn\(targetId\) \{[\s\S]{0,3000}?status: this\.connections\.edgeSevered\(d\.bundle_id, targetId\) \? "severed" : "confirmed"/.test(INQUIRY_SRC)
+       && /\n  reevaluations\([\s\S]{0,1500}?this\.inquiry\.restingOn\(t\)[\s\S]{0,3000}?const legStatus = mine\.some\(\(l\) => l\.status === "severed"\) \? "severed" : "confirmed"/.test(REEVAL_SRC),
+     /\n  reevaluations\([\s\S]{0,5000}?(?:edgeSevered|#refEdgeSevered)\([^)]*\)\)?\s*\)?\s*(continue|return)/.test(REEVAL_SRC),
+     /\n  reevaluations\([\s\S]{0,6000}?(?:legStatus|l\.status) === "severed"\)?\s*(continue|return)/.test(REEVAL_SRC)],
     [true, false, false]);
   t("SITE (e) `#leadBasisAbsence` IS DELIBERATELY UNCHANGED, AND THE ARGUMENT IS THE PIN: it counts "
   + "basis legs to answer WAS THIS DOCUMENT MADE PART OF A CASE, and a document that was made part "

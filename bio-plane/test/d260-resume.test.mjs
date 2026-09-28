@@ -47,6 +47,11 @@ const IDX = join(TREE, "bio-plane", "src", "index.mjs");
 const AW = join(TREE, "agent-worker", "src", "index.mjs");
 const { instanceAiCredential, INSTANCE_AI_BINDING, INSTANCE_AI_UNSET, INSTANCE_AI_PUBLISHED, PUBLISHED_TOKEN_HASHES }
   = await import(join(TREE, "bio-plane", "src", "tokens.mjs"));
+/* T7 (legacy-tests; AGENT-WORKER #1 REPORT 1, AI-RUNS #2 J6 B6 (1)): agent-worker's R48 refuses a model segment whose run
+   did not record the pack it renders, so the opener records `renderPack(...).version` — rendered, as agent-worker
+   renders it, from the plane's own `op=affordances` answer and the check catalogue, both from the (possibly armed) tree. */
+const { renderPack } = await import(join(TREE, "bio-plane", "src", "skillpack.mjs"));
+const CATALOGUE = await import(join(TREE, "bio-plane", "checks", "bio-checks.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -157,10 +162,16 @@ try {
     [inst?.credential?.principal, other?.credential?.principal, memKey?.credential?.principal, typeof RUTH_KEY],
     ["class:ai", "class:ai", "member:ruth", "string"]);
 
+  /* RE-PINNED 2026-09-28 (T7, legacy-tests; AGENT-WORKER #1 REPORT 1): `investigative-session@1` names no pack digest,
+     and agent-worker's R48 now refuses (409 SKILL_VERSION_MISMATCH) a segment whose run did not record the pack it
+     rendered. So the fixture records the version agent-worker will render — the ONE value it can agree with. */
+  const PACK_VERSION = renderPack(await GET(`op=affordances&token=${ADM}`), CATALOGUE).version;
+  t("FIXTURE: the pack version the runs record is the one agent-worker renders from the plane's published affordances",
+    typeof PACK_VERSION === "string" && PACK_VERSION.length > 0, true);
   const open = async (tok, run, principalClaude) => POST(`op=airunopen&token=${tok}`, {
     run, contextType: "inquiry", contextId: INQ, label: `D-260 fixture ${run}`, mode: "check",
     principalClaude, principalClaudeRef: principalClaude === "instance" ? "instance" : "believe-in-oakland/claude",
-    skillVersion: "investigative-session@1", biasManifest: null,
+    skillVersion: PACK_VERSION, biasManifest: null,
     bounds: [{ bound: "fetches", allowed: 50, unit: "requests" }], at: iso(T0), leaseMs: 3600000 });
   const RUNS = {
     instance: { run: "RUN-2026-0923-d260-instance", tok: INSTANCE_AI, payer: "instance" },

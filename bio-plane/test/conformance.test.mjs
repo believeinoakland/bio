@@ -420,7 +420,8 @@ console.log("\n--- C-18.9: what a capture must establish before it may be publis
   const md = (state) => `---\nid: INFO-2026-0009-fence\nobject_type: information\ncurrent_state: ${state}\n---\n\n# Fence\n`;
   /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.9 left the catalogue with the other
      C-18 register arms for provenance's `registerChecks`, which the gate runs after the catalogue
-     (`withRegisterChecks`) and the audit after the pass (`provenanceAudit`). The fence is asked of both, as the gate
+     (`withRegisterChecks`) and the audit through provenance's registered audit check (`registerAuditCheck(
+     "provenance", …)` in `provenanceOf`, record-core R59; N92 retired `provenanceAudit`). The fence is asked of both, as the gate
      takes them; the assertions below are unchanged. */
   const judged = async (files) => {
     const { findings } = await checkBundle({ folderName: "INFO-2026-0009-fence", files,

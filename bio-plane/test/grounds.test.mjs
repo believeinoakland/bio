@@ -61,9 +61,15 @@ import { createHash } from "node:crypto";
 import { checkBundle, checkCaseDocument, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
+import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; INQUIRY #1 J3, STRENGTH #1 J5): the write path that calls the
+   catalogue's `checkInquiryBasis` is inquiry's promotion check (src/inquiry/index.mjs), and `#redactAxis` is
+   strength's module function `redactAxis` (src/strength/index.mjs); the two source pins read them there. */
+const INQUIRY_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
 const CHECKS_SRC = readFileSync(fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url)), "utf8");
 
 let pass = 0, fail = 0;
@@ -197,8 +203,9 @@ const groundLines = (rows) => rows === null ? [] : rows.length
       ...(r.statement ? [`    statement: "${r.statement}"`] : [])])]
   : ["grounds: []"];
 
+let SUBJECT = null;   /* the questions' registered subject, minted before the fixture (K187's re-read, below) */
 const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
-                         refs = [], legs = [], grounds = null, extra = [] } = {}) => ["---",
+                         refs = [], legs = [], grounds = null, extra = [], subject = SUBJECT } = {}) => ["---",
   `id: ${id}`, "object_type: inquiry", "schema: inquiry@1",
   `title: "${question}"`, `current_state: ${state}`, "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${LATER}"`,
@@ -209,6 +216,7 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, state = "open",
   "visuals: []", "surfaced_by: agent", 'disposition_reason: ""',
   "recheck_triggers:", "  - text: Revisit after the next budget cycle",
   "    description: The adopted budget may restate the transfer basis.",
+  ...(subject ? [`subject_entity: ${subject}`] : []),
   ...legLines(legs), ...groundLines(grounds), ...extra,
   "---", "",
   "## Question", "", question, "",
@@ -266,15 +274,47 @@ const mustPromote = async (...a) => {
 /* The capture axis never reaches A (CAPTURE-FIDELITY.md: B is what a direct
    capture by this instance is worth); a CONNECTION grade legitimately does. The
    two axes are not interchangeable even in a fixture. */
+/* RE-READ 2026-09-28 BY K187 (strength R5, K102), never exempted. The default CONNECTION source was `hunch`, the
+   only authored source above D; a hunch is now inert in every pair and named as a hunch (INVESTIGATIVE-SESSION §12),
+   so every connection letter this suite composes would read UNRATED. The same letters are now EARNED by resolution
+   against the questions' registered subject (entities' recogniser, framework §8.1): the charter's connection
+   document is a NAME match (C), the code's a KEY match (A). `resolution` is the default connection source, a
+   testimony leg is D (strength R1), and a leg to another QUESTION carries no grade of its own and inherits the
+   question's pair (R2), which is what the chains in §5 read through. The letters, parts and expectations are as
+   they were except where named at the site. */
 const HUNCH = { author: "carol", date: "2026-08-05" };
-const g = (target, grade, axis, ground = null, source = axis === "capture" ? "capture" : "hunch") =>
+const g = (target, grade, axis, ground = null, source = axis === "capture" ? "capture" : "resolution") =>
   ({ target, role: "supports", grade, axis, source, ...(source === "hunch" ? HUNCH : {}),
      ...(ground ? { ground } : {}) });
+const onQuestion = (target, ground = null) => ({ target, role: "supports", ...(ground ? { ground } : {}) });
 
 const CH_CAP = "INFO-2026-1000-charter-cap", CH_CON = "INFO-2026-1000-charter-con";
 const CO_CAP = "INFO-2026-1000-code-cap", CO_CON = "INFO-2026-1000-code-con";
 const SPARE = "INFO-2026-1000-spare";
-for (const d of [CH_CAP, CH_CON, CO_CAP, CO_CON, SPARE]) await mustPromote(d, infoMd(d), "information");
+SUBJECT = (await POST(`op=entitycreate&token=${RUTH}`,
+  { kind: "ordinance", label: "City Charter Transfer Authority", aliases: ["ordinance:1000"] })).entity_id;
+const CON_SHA = { [CH_CON]: sha("capture-of-charter-con-rec42"), [CO_CON]: sha("capture-of-code-con-rec42") };
+const promoteRead = async (id, entity) => {
+  const text = infoMd(id);
+  const doc = registerDoc({ capture: { sha256: CON_SHA[id], encoding: "binary", bytes: 10 },
+    reading: { content_type: "meeting_calendar", reader_version: 1, found: true, at: NOW, entities: [entity] } },
+    { file: "snapshots/d.bin" });
+  const prov = JSON.stringify({ documents: [doc] });
+  const r = await POST(`op=promote&token=${CAROL}`, {
+    bundleId: id, base: null, snapKey: `${id}-new-${String(++snapKeySeq).padStart(4, "0")}`, author: "suite",
+    files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) },
+            { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) }, registerFile(doc)],
+    register: [{ path: "snapshots/d.bin", sha256: CON_SHA[id], encoding: "binary", bytes: 10 }],
+    meta: { object_type: "information", group: "believe-in-oakland", current_state: "collected",
+            created: NOW, last_updated: LATER } });
+  if (!r.ok) throw new Error(`promote ${id}: ${JSON.stringify(r).slice(0, 700)}`);
+  await POST(`op=resolve&token=${RUTH}`, { captureSha: CON_SHA[id] });
+};
+for (const d of [CH_CAP, CO_CAP, SPARE]) await mustPromote(d, infoMd(d), "information");
+await promoteRead(CH_CON, { ref: "ordinance:9999", kind: "ordinance", key: "9999",
+                            label: "City Charter Transfer Authority" });                /* a NAME match: C */
+await promoteRead(CO_CON, { ref: "ordinance:1000", kind: "ordinance", key: "1000",
+                            label: "Ordinance No. 1000" });                             /* the KEY: A */
 
 /* THE FIXTURE THAT MAKES THE ARITHMETIC FALSIFIABLE. Two grounds of two legs:
      charter:  capture B, connection C
@@ -392,7 +432,7 @@ console.log("\n--- 3. THE DEFAULT IS AND: two independent defences, the gate and
   t("the CATALOG names the same document, so the rule is one function and not two copies",
     findings.some((x) => /no grounds\[\] block/.test(x.message)), true);
   t("and the store's write path calls the catalog's function rather than restating the rule",
-    /checkInquiryBasis\(basisFm, bf,/.test(STORE_SRC), true);
+    /checkInquiryBasis\(basisFm, bf,/.test(INQUIRY_SRC), true);
 
   /* (b) THE ARITHMETIC, INDEPENDENTLY. A half-labelled basis is refused at the
      write too — but history is append-only and a row can reach the projection
@@ -401,7 +441,7 @@ console.log("\n--- 3. THE DEFAULT IS AND: two independent defences, the gate and
      MINIMUM of the two parts. Weaker, never stronger. */
   const HALF = "INQ-2026-1003-half";
   const half = [g(CH_CAP, "B", "capture", "charter"), g(CO_CAP, "C", "capture", "code"),
-                g(SPARE, "D", "connection")];
+                g(SPARE, "D", "connection", null, "testimony")];
   const hr = await promote(HALF, inquiryMd(HALF, { refs: targetsOf(half), legs: half,
                                                    grounds: GROUND_ROWS }), "inquiry");
   t("a HALF-labelled basis is refused: a basis is grouped whole or not at all",
@@ -521,11 +561,13 @@ console.log("\n--- 5. R1 one level up: an unfinished leg leaves ITS branch undet
   const D = (n) => `INQ-2026-1012-d${n}`;
   await mustPromote(D(8), inquiryMd(D(8), { refs: [CH_CAP], legs: [g(CH_CAP, "B", "capture")] }), "inquiry");
   for (let i = 7; i >= 0; i--)
-    await mustPromote(D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [g(D(i + 1), "A", "connection")] }), "inquiry");
+    await mustPromote(D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [onQuestion(D(i + 1))] }), "inquiry");
   t("the deep chain really is undetermined on its own", (await strength(D(0))).connection.state, "undetermined");
 
   const MIXED = "INQ-2026-1013-one-open-branch";
-  const legs = [g(D(0), "A", "connection", "deep"), g(CO_CON, "C", "connection", "code")];
+  /* RE-READ (K187): the leg to the deep question carries no grade (a hunch would inherit nothing), and the code
+     branch's C is the charter document's EARNED name match, since the code document now earns A. */
+  const legs = [onQuestion(D(0), "deep"), g(CH_CON, "C", "connection", "code")];
   await mustPromote(MIXED, inquiryMd(MIXED, { refs: targetsOf(legs), legs,
     grounds: [{ ground: "deep" }, { ground: "code" }] }), "inquiry");
   const s = await strength(MIXED);
@@ -533,7 +575,7 @@ console.log("\n--- 5. R1 one level up: an unfinished leg leaves ITS branch undet
     s.connection.grounds.map((x) => [x.ground, x.state]), [["deep", "undetermined"], ["code", "graded"]]);
   t("the SECOND graded branch still carries the finding: the axis is graded at C",
     [s.connection.state, s.connection.grade, s.connection.determined, s.connection.weakest?.target_id ?? null],
-    ["graded", "C", true, CO_CON]);
+    ["graded", "C", true, CH_CON]);
   /* CORRECTED 2026-08-09 AT D-269 — THE NOUN ONLY, same reason as the block
      above. `ground` is the analyst's word and clause 1 forbids it on any
      member-facing surface; the property (the unfinished set is NAMED, and the
@@ -548,7 +590,7 @@ console.log("\n--- 5. R1 one level up: an unfinished leg leaves ITS branch undet
 
   /* EVERY branch unfinished — and only then does the finding go with them. */
   const ALLOPEN = "INQ-2026-1014-every-branch-open";
-  const legs2 = [g(D(0), "A", "connection", "deep"), g(D(1), "A", "connection", "deeper")];
+  const legs2 = [onQuestion(D(0), "deep"), onQuestion(D(1), "deeper")];
   await mustPromote(ALLOPEN, inquiryMd(ALLOPEN, { refs: targetsOf(legs2), legs: legs2,
     grounds: [{ ground: "deep" }, { ground: "deeper" }] }), "inquiry");
   const s2 = await strength(ALLOPEN);
@@ -588,7 +630,7 @@ console.log("\n--- 6. through the OP (D-43), byte-equal, with the branches swept
      JSON.stringify(op.connection) === JSON.stringify((await strength(OR2)).connection)],
     [true, true]);
   t("the per-ground breakdown is redacted by the SAME sweep as the axis, not by a second one",
-    /axis\.grounds \? \{ grounds: axis\.grounds\.map/.test(STORE_SRC), true);
+    /axis\.grounds \? \{ grounds: axis\.grounds\.map/.test(STRENGTH_SRC), true);
 
   /* AND THE SWEEP IS DRIVEN, not just read out of the source — REC-14's
      measured leak shape (`#requiredStrengthFor` spelled the same project ids
@@ -607,6 +649,8 @@ console.log("\n--- 6. through the OP (D-43), byte-equal, with the branches swept
     "produced_by:", "  mode: agent", "  capability_tier: high",
     "group: believe-in-oakland", "references: []", "state_history: []",
     "annotations_open: 0", "visuals: []",
+    /* 2026-09-28 (T7; INTENT #1 J4.1): C-2.9's objective arm is enforced at the write (intent R1). */
+    'objective: "Decide what the secret project can show."',
     "---", "", "## Summary", "", "A project nobody else is invited to.", ""].join("\n");
   const madeProj = await mustPromote("PROJ-2026-1000-secret", projMd(null, "PROJ-2026-1000-secret"), "project");
   const PROJ = madeProj.bundleId;

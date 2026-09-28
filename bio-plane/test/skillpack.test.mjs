@@ -631,7 +631,12 @@ const run = async () => {
   const mintedInSource = new Set();
   /* WIDENED 2026-09-26 (T3, legacy-tests; promotion R21): `reopen` and its MACHINE_CANNOT_REOPEN moved from
      store.mjs to `src/promotion/`, so the plane's source is store.mjs AND the extracted modules' files, with index.mjs. */
-  for (const src of [storeCorpus(["record-core", "membership", "promotion"]), INDEX_SRC])
+  /* WIDENED 2026-09-28 (T7, legacy-tests; BASIS-VERSIONS #1 REPORT J4.1, and T7's layer 6): MACHINE_CANNOT_CONCLUDE and
+     MACHINE_CANNOT_MOVE_VERSION moved from store.mjs to `src/basis-versions/`, MACHINE_CANNOT_DIVIDE and
+     MACHINE_CANNOT_GROUND to `src/inquiry/`, MACHINE_CANNOT_DECLARE to `src/strength/`; the plane's source is widened
+     to them as T3's was, so a fence the pack renders is counted where the plane now mints it. */
+  for (const src of [storeCorpus(["record-core", "membership", "promotion", "basis-versions", "inquiry", "strength"]),
+                     INDEX_SRC])
     for (const m of src.matchAll(/["'`](MACHINE_CANNOT_[A-Z0-9_]+)["'`]/g)) mintedInSource.add(m[1]);
   const rendered = new Set(fences.map((f) => f.code));
   const uncanned = [...mintedInSource].filter((c) => !rendered.has(c));

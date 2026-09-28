@@ -165,7 +165,7 @@ const inquiryMd = (id, question, legs) => ["---",
    creation bytes carrying an `id:` line are refused PROJECT_ID_IN_BYTES (C-59.2); `id` null builds the
    creation's bytes with no id line. */
 const projectMd = (id, cites) => ["---",
-  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "schema: project@1",
+  ...(id === null ? [] : [`id: ${id}`]), "object_type: project", "objective: \"Fixture objective.\"", "schema: project@1",
   `title: "Sewer Fund"`, "current_state: forming", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`,
   "produced_by:", "  mode: agent", "  capability_tier: high",

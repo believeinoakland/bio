@@ -27,25 +27,28 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
 const WORK = join(PLANE, "..");
 const SNAP = join(WORK, ".rec-183-control");
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; CITATION #1 J1.6): `#edgeTransition` (reinstate's door) moved out of
+   store.mjs into src/citation/index.mjs, and its refusal now spreads the row (`...rowOf(CITE_CHECKS, …)`) instead of
+   spelling the code; the two store arms patch that file at that site. The name `STORE` is kept for the arms' file. */
+const STORE = join(PLANE, "src/citation/index.mjs");
 const AFF = join(PLANE, "src/affordances.mjs");
 const SUITE = join(HERE, "rec-183-reinstate-retired.test.mjs");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
-const SITE = `      if (retiredMembers.length)\n        return { ok: false, reason: "RETIRED_NOT_CITABLE", code: "RETIRED_NOT_CITABLE",`;
+const SITE = `      if (retiredMembers.length)\n        return { ok: false, reason: "RETIRED_NOT_CITABLE", ...rowOf(CITE_CHECKS, "RETIRED_NOT_CITABLE"),`;
 const PRE = `&& !(ty === "information" && f.current_state === "retired"))`;
 const S1 = ["§1 MEMBER: reinstating", "§1 MACHINE CREDENTIAL", "§1 A MIXED SELECTION"];
 const S2 = ["§2 a LIVE target reinstates", "§2 ... and its edge is confirmed", "§2 a `source_status: removed`", "§2 ... and the edge onto RET"];
 const ARMS = {
   skip: {
-    file: STORE, floor: 1_000_000, from: SITE, to: SITE.replace("if (retiredMembers.length)", "if (false && retiredMembers.length)"),
+    file: STORE, floor: 30_000, from: SITE, to: SITE.replace("if (retiredMembers.length)", "if (false && retiredMembers.length)"),
     /* DECLARATION CORRECTED 2026-09-23 after the first run: §2's "edge onto RET is STILL severed" was declared
        to HOLD and failed — correctly, since with no check §1's member reinstate lands RET's edge. The arm was
        right and the declaration was wrong. */
     mustFail: [...S1, "§1 ... and nothing landed", "§2 ... and the edge onto RET"], mustHold: S2.slice(0, 3),
   },
   overstrict: {
-    file: STORE, floor: 1_000_000, from: SITE, to: SITE.replace("if (retiredMembers.length)", "if (true || retiredMembers.length)"),
+    file: STORE, floor: 30_000, from: SITE, to: SITE.replace("if (retiredMembers.length)", "if (true || retiredMembers.length)"),
     mustFail: ["§2 a LIVE target reinstates", "§2 a `source_status: removed`"], mustHold: S1,
   },
   preflight: {
@@ -72,9 +75,9 @@ for (const [arm, a] of Object.entries(ARMS)) {
   mkdirSync(SNAP, { recursive: true });
   const bytes = readFileSync(a.file);
   if (bytes.length < a.floor) { console.log(`REFUSING: ${a.file} is ${bytes.length} bytes`); process.exit(2); }
-  const dest = join(SNAP, `${arm}--${a.file === STORE ? "src_store" : "src_affordances"}.mjs.pristine`);
+  const dest = join(SNAP, `${arm}--${a.file === STORE ? "src_citation_index" : "src_affordances"}.mjs.pristine`);
   writeFileSync(dest, bytes);
-  console.log(`\narm ${arm}: pristine ${a.file === STORE ? "src/store.mjs" : "src/affordances.mjs"} ${bytes.length} bytes, sha256 ${sha(bytes).slice(0, 12)}…`);
+  console.log(`\narm ${arm}: pristine ${a.file === STORE ? "src/citation/index.mjs" : "src/affordances.mjs"} ${bytes.length} bytes, sha256 ${sha(bytes).slice(0, 12)}…`);
   const text = bytes.toString("latin1");
   const n = text.split(a.from).length - 1;
   if (n !== 1) { console.log(`  ARM DID NOT ARM: anchor matched ${n} times`); bad++; continue; }

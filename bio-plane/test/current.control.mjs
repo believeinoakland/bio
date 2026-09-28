@@ -39,6 +39,11 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const F = {
   store: ROOT + "src/store.mjs",
   queuestate: ROOT + "src/queuestate.mjs",
+  /* ADDED 2026-09-28 (LEGACY-TESTS #4): `#setProjectCurrentVersion` and `#projectsDrawingOn` moved to basis-versions
+     (BASIS-VERSIONS #1 J4.1), and QUEUE_CONDITION_KINDS is observation-log's `CONDITION_KINDS` (K78), re-exported by
+     queuestate.mjs; the arms that edited them edit them where they now live. */
+  bv: ROOT + "src/basis-versions/index.mjs",
+  vocabulary: ROOT + "src/observation-log/vocabulary.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -155,14 +160,16 @@ arm("1", "THE PLAN ROW'S ARM A — WRITE CURRENT VIA A SETTINGS ROW. `#setProjec
   + "does NOT break, because it is the whole argument for asserting four ways: a settings row "
   + "SERVES A READ PERFECTLY WELL, so any suite that only checked op=basisversions would have "
   + "passed over this.",
-  [["store", `    text = Store.#setScalar(text, "last_updated", \`"\${when}"\`);
-    text = Store.#appendSessionLog(text,
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): the writer is basis-versions' `#setProjectCurrentVersion`,
+     whose helpers are the module's own `setScalar` and `appendSessionLog`. */
+  [["bv", `    text = setScalar(text, "last_updated", \`"\${when}"\`);
+    text = appendSessionLog(text,
       \`### Session \${when} | Stands on | \${who}\\n\``,
                   `    this.sql.exec("CREATE TABLE IF NOT EXISTS project_current (project TEXT NOT NULL, inquiry TEXT NOT NULL, version TEXT NOT NULL, by TEXT, at TEXT, PRIMARY KEY (project, inquiry))");
     this.sql.exec("INSERT OR REPLACE INTO project_current (project,inquiry,version,by,at) VALUES (?,?,?,?,?)", pid, inquiryId, vname, who, when);
     if (pid) return { ok: true, bundleId: pid, settingsRow: true };
-    text = Store.#setScalar(text, "last_updated", \`"\${when}"\`);
-    text = Store.#appendSessionLog(text,
+    text = setScalar(text, "last_updated", \`"\${when}"\`);
+    text = appendSessionLog(text,
       \`### Session \${when} | Stands on | \${who}\\n\``]],
   ["ARM 1 — the pointer is a DATED FRONTMATTER ROW",
    "ARM 2 — the act is in the project's APPEND-ONLY HISTORY",
@@ -187,7 +194,8 @@ arm("2", "THE PLAN ROW'S ARM B, AND IT IS THE SHARP ONE — SUPPRESS THE NOTIFIC
                                 "a project moved what it stands on for a SHARED question and the other "`,
                   `  "x-moved-aside-stance-changed-here-not-elsewhere":
                                 "a project moved what it stands on for a SHARED question and the other "`],
-   ["queuestate", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
+   /* RE-ANCHORED 2026-09-28: the CONDITION catalogue is observation-log's `CONDITION_KINDS` (K78). */
+   ["vocabulary", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
   "stance-changed-here-not-elsewhere": "MOVED BY THE CONTROL ARM — a divergence a member may silence",`]],
   ["PL-13's two slugs are in the catalogue and are FINDING"],
@@ -207,7 +215,8 @@ arm("2b", "THE HALF ARM 2 CANNOT REACH, AND IT TAKES TWO EDITS TOGETHER ON PURPO
                                 "a project moved what it stands on for a SHARED question and the other "`,
                   `  "x-moved-aside-stance-changed-here-not-elsewhere":
                                 "a project moved what it stands on for a SHARED question and the other "`],
-   ["queuestate", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
+   /* RE-ANCHORED 2026-09-28: the CONDITION catalogue is observation-log's `CONDITION_KINDS` (K78). */
+   ["vocabulary", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
   "stance-changed-here-not-elsewhere": "MOVED BY THE CONTROL ARM — a divergence a member may silence",`],
    ["store", `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
@@ -239,9 +248,11 @@ arm("4", "THE SEVERED-STATUS CONFIRMATION. `#projectsDrawingOn` stops honouring 
   + "`status`, so trusting the table alone is a defect that looks exactly like a working walk — and "
   + "because `versionAct` refuses to MOVE such a project's stance, which would leave the feed and "
   + "the act disagreeing about who is even in the conversation.",
-  [["store", `                                  && x.status !== "severed"
-                                  && String(x.target ?? "").trim() === inq);`,
-             `                                  && String(x.target ?? "").trim() === inq);`]],
+  /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): `#projectsDrawingOn` is basis-versions' `projectsDrawingOn`. */
+  [["bv", `          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed"
+                                      && String(x.target ?? "").trim() === inq);`,
+          `          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites"
+                                      && String(x.target ?? "").trim() === inq);`]],
   ["the SEVERED project is not in the conversation at all"],
   ["and neither is the project that never cited the question"]);
 
@@ -343,17 +354,21 @@ arm("8", "THE QUESTION MUST STILL EXIST. `#queueSharedInquiry`'s guard is remove
   + "announcing a divergence about a question `op=purge` had removed. "
   + "DECLARED: the purge arm MUST fail. Recorded as an arm rather than as a quiet fix, because a "
   + "defect found by a control is the best evidence that the control is real.",
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the six-line anchor occurs TWICE (the conclusion producer carries the
+     same head), so the harness refused to arm; the stance producer's next line keeps it unique. */
   [["store", `      const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
       const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;
       const qname = q.title || inq;
-      for (const p of drawing) {`,
+      for (const p of drawing) {
+        if (!p.current || !p.current.version) continue;`,
              `      const q = this.#queueSharedInquiry(inq, viewer) || { title: null };
       const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;
       const qname = q.title || inq;
-      for (const p of drawing) {`]],
+      for (const p of drawing) {
+        if (!p.current || !p.current.version) continue;`]],
   ["PURGE THE SHARED QUESTION AND BOTH ITEMS GO QUIET"],
   ["both producers are live on the shared question before the purge"]);
 

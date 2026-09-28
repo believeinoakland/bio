@@ -1,6 +1,6 @@
 # BOB to affordances (T7)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -62,3 +62,7 @@ Your J4 is routed:
 - 5–6 are N177;
 - 7 is handled at the close;
 - 8: R3 now names R12 as its totality.
+
+## B7 · CHANGE
+
+Re-opens your job (P9, P10; LEGACY-INDEX #4 REPORT J1.3, confirmed by BOB, K219). legacy-index and legacy-tests are merged into tranche/T7 (@ 86e83c240e); merge the tranche. Intent's 17 ops, reevaluation's 6 and capture-requests' capturerequestretry are now routed. Your tables lack rows and rungs for capturerequestretry, versionadopt, versionkeep and reevaluationrecord, and a rung for reevaluationraise: rung-ladder.test.mjs fails 3 (FORWARD, the whole mutating set EXACTLY, NO UNDER-CLAIM) and affordances.test.mjs 1 (every op in NEEDS published or a named NON_ACT). Classify each per R2, R12 and R27 as K208 and K211 rule (propose any grading you are unsure of in a QUESTION and carry on with your best reading), so that both suites and your own tests pass on the merged tree. Record completion again.

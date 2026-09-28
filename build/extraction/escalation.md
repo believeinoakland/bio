@@ -1,10 +1,10 @@
 # escalation — extraction map
 
-**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `index.mjs` 9,069, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/escalation.md` (R1–R21); K4, K12, K14, K23, K31, K61, K92 (3), K102, K108 (3) and (5) (N72) apply. The module exports `escalationOf(ctx)` (K61). A new module: no `from`, and none is needed (§1).
+**Status** · Drafted by a worker for BOB #48, 2026-09-27 (P18), measured at `tranche/T6` @ `c7dfd835ef` (`store.mjs` 33,816 lines, `index.mjs` 9,069, `schema.mjs` 1,948, `checks/bio-checks.mjs` 14,317). ADOPTED by BOB #50, 2026-09-27 (K171), after its review (`docs/development/transition/drafts/layer9-review.md`); re-measured at `tranche/T7` @ `62a9517b6f` (`main` @ `8899ac7d97`, T6's layers 1–2 merged): `store.mjs` 33,760 lines, `bio-checks.mjs` 14,629, `index.mjs` and `schema.mjs` unchanged. Every `bio-checks` line cited below is unchanged; `store.mjs` lines cited up to about 5,800 are 2 later, and later ones about 56 earlier (review §3.1), not re-edited line by line. **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), after T7's layers 7 and 11 (`store.mjs` 18,726 lines, `schema.mjs` 1,176, `checks/bio-checks.mjs` 13,732): every `store.mjs`, `schema.mjs`, `bio-checks.mjs` and module-file line below is current there, superseding the sentence before; `index.mjs` cites are pending T7's close and marked so. §5's questions are resolved by K171 (and K172), as marked. The contract is `build/requirements/escalation.md` (R1–R21); K4, K12, K14, K23, K31, K61, K92 (3), K102, K108 (3) and (5) (N72) apply. The module exports `escalationOf(ctx)` (K61). A new module: no `from`, and none is needed (§1).
 
 ## 1. What moves to `escalation`
 
-Nothing. `grep -i escalat` over `store.mjs` and `index.mjs` at T6 finds only unrelated uses: DEC-10's notification escalation in the scheduler registry comment (store 1911), de-escalation of overclaims (store 10212, index 2248, 2273), a queue finding kind (store 19269), the capture ladder (index 5881); the host governor's back-off now lives in `bio-plane/src/host-governor/`. No catalogue row, table, op or migration belongs to it. **Schema (K4):** `escalations`, `escalation_moves`, `escalation_evaluations`, `escalation_attachments`, `escalation_declines` are new, declared to purge (R20).
+Nothing. `grep -i escalat` over `store.mjs` and `index.mjs` finds only unrelated uses: DEC-10's notification escalation in the scheduler registry comment (store 1657), the monitor fire's comment (store 18126), de-escalation of overclaims (index 2248, 2273 (index.mjs: re-cite at T7's close)), the capture ladder (index 5881 (index.mjs: re-cite at T7's close)); the T6 store hits for de-escalation and a queue finding kind are no longer in `store.mjs`; the host governor's back-off now lives in `bio-plane/src/host-governor/`. No catalogue row, table, op or migration belongs to it. **Schema (K4):** `escalations`, `escalation_moves`, `escalation_evaluations`, `escalation_attachments`, `escalation_declines` are new, declared to purge (R20).
 
 **Measured size:** 0 lines moved. Estimated 800–1,200 lines of new code.
 
@@ -12,11 +12,11 @@ Nothing. `grep -i escalat` over `store.mjs` and `index.mjs` at T6 finds only unr
 
 | what | where today (T6) | owner | why |
 | --- | --- | --- | --- |
-| `RESOLUTIONS` (with `escalated`) | bio-checks 838 | `actions` | an action's resolution word; this module never writes it |
+| `RESOLUTIONS` (with `escalated`) | bio-checks 838 (unchanged) | `actions` | an action's resolution word; this module never writes it |
 | `CORRESPONDENCE_DIRECTIONS` (`sent`, `received`, `no_response`) | bio-checks 811 | `actions` | the ledger facts R5–R7, R11 read through `actionRead` |
-| `actionClockNext`, `actionOverdue` | store 1261–1281 (statics) | `actions` (`actionFacts`, its R12; actions map §5.6) | R6's time trigger reads the one clock rule, never a copy |
+| `actionClockNext`, `actionOverdue` | store 1082–1102 (statics) | `actions` (`actionFacts`, its R12; actions map §5.6) | R6's time trigger reads the one clock rule, never a copy |
 | progressions' declared stages and overdue marking | `bio-plane/src/progressions/` | `progressions` | a member's template for a recurring process; the protocol's stages are fixed (Suggestions) and not reused |
-| `isMachineIdentity` | bio-checks 1667–1693 | `legacy-checks` | R17 |
+| `isMachineIdentity` | bio-checks 1631–1642 | `legacy-checks` | R17 |
 
 ## 3. What earlier modules must provide (uses)
 

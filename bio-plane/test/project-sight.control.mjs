@@ -52,8 +52,14 @@ const ARMS = {
   /* THE BRIEF'S CONTROL 1: ONE act's distinguishing answer restored — `cite` resolves its project with
      the bare lookup again, every other act held open. Only cite's two arms may go red. */
   "cite-distinguishing": {
-    patches: [["store.mjs", `    ${SIGHT_LINE}\n    /* Through normalizeType`,
-               "    if (!p) return Store.#noSuchProject(project);\n    /* Through normalizeType"]],
+    /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): `cite`, `sever` and `reinstate` are citation's (`src/citation/
+       index.mjs`), and the one sight gate is `#citingObject`, which both share. The arm takes `cite`'s call of it
+       out and keeps its existence answer (C-70.1) — sight dropped, nothing else — so `sever`/`reinstate` keep theirs. */
+    patches: [["citation/index.mjs", "    const obj = this.#citingObject(project, viewer);\n    if (obj.refusal) return obj.refusal;\n"
+               + "    const p = obj.head;\n    /* Through normalizeType",
+               "    const p = typeof project === \"string\" && project ? this.record.head(project) : null;\n"
+               + "    if (p) { const existence = this.membership.existenceAct(project, viewer); if (existence) return existence; }\n"
+               + "    if (!p) return noSuchProject(project);\n    /* Through normalizeType"]],
     mustFail: ["HIDDEN = ABSENT, raw (status, content type, body): op=cite", "NEVER POSITIONAL TO THE UNSIGHTED: op=cite"],
   },
 
@@ -61,11 +67,19 @@ const ARMS = {
      the sight gate. The gate is still there; C-56.1 now answers first, so sever's and reinstate's
      answers disclose the project, and the C-56-discloses arms must say so. */
   "position-first": {
-    patches: [["store.mjs", `a project this viewer cannot see answers as absent. */\n    ${SIGHT_LINE}`,
-               "a project this viewer cannot see answers as absent. */\n    if (!p) return Store.#noSuchProject(project);"],
-              ["store.mjs", "\"sever\" : \"reinstate\");\n    if (denied) return denied;",
+    /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): `#edgeTransition` is citation's; its sight gate is its call of
+       `#citingObject`, taken out (existence kept) and asked AFTER the position check instead. */
+    patches: [["citation/index.mjs", "    const obj = this.#citingObject(project, viewer);\n    if (obj.refusal) return obj.refusal;\n"
+               + "    const p = obj.head;\n    if (p.type !== \"project\")\n      return { ok: false, reason: \"NOT_A_PROJECT\", project, got: p.type,\n"
+               + "               detail: \"cites lives on the citing object",
+               "    const p = typeof project === \"string\" && project ? this.record.head(project) : null;\n"
+               + "    if (p) { const existence = this.membership.existenceAct(project, viewer); if (existence) return existence; }\n"
+               + "    if (!p) return noSuchProject(project);\n    if (p.type !== \"project\")\n"
+               + "      return { ok: false, reason: \"NOT_A_PROJECT\", project, got: p.type,\n"
+               + "               detail: \"cites lives on the citing object"],
+              ["citation/index.mjs", "\"sever\" : \"reinstate\");\n    if (denied) return denied;",
                "\"sever\" : \"reinstate\");\n    if (denied) return denied;\n"
-               + `    if (!this.#inSight(p.bundle_id, viewer)) return Store.#noSuchProject(project);`]],
+               + "    if (!this.membership.inSight(project, viewer)) return noSuchProject(project);"]],
     mustFail: ["HIDDEN = ABSENT, raw (status, content type, body): op=sever", "NEVER POSITIONAL TO THE UNSIGHTED: op=sever",
                "HIDDEN = ABSENT, raw (status, content type, body): op=reinstate", "NEVER POSITIONAL TO THE UNSIGHTED: op=reinstate"],
   },

@@ -81,6 +81,16 @@ const LISTING_RESOLVER = (() => {
   return method && reg ? `${method}\n${reg}` : "";
 })();
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-28 (T7 layer 6): REC-105's arithmetic `Store.#capturedAt` is inquiry's `legCapped` now (the store
+   keeps `static #capturedAt` as a one-line delegate to it, INQUIRY #1 J2.2); the sixth reader `#versionCollections`
+   and its resolver `#versionLegsEarned` moved to basis-versions as `versionCollections` and `#legsEarned`, which ask
+   inquiry's registry (`earned`, formerly the store's `earnedBasisRegistry`) and `legCapped` (BASIS-VERSIONS #1 J4.1,
+   its R10); the capped twin `#versionLegsAsMembers` moved to strength (STRENGTH #1 J5); op=suggest reads the version
+   back through basis-versions' `basisVersions` (RUN-PRODUCTIONS #1 J2.5); `basisFor` is inquiry's. */
+const INQ_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
+const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
+const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
+const RP_SRC = readFileSync(SRC("run-productions/index.mjs"), "utf8");
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 
 let pass = 0, fail = 0;
@@ -449,8 +459,11 @@ console.log("\n--- 8. SOURCE PINS — ONE ARITHMETIC, NOT TWO ---");
     { axis: true, carries: true, not_inquiry: true });
   t("and the derived fields are DECLARED in the compiler's registry, so `rowColumns` publishes them automatically",
     /rowDerived:\s*\{[\s\S]{0,400}?grade_authored[\s\S]{0,400}?grade_why/.test(QUERY_SRC), true);
+  /* RE-ANCHORED 2026-09-28: the arithmetic is inquiry's `legCapped(stated, earned, targetId)`, and the store's
+     `#capturedAt` the resolver above calls is exactly a delegate to it — one arithmetic, still read and never restated. */
   t("the WALK is untouched by this item — `#capturedAt` is READ, never edited, which is what keeps the two readers one rule",
-    /static #capturedAt\(stated, earned, targetId\) \{/.test(STORE_SRC), true);
+    /export function legCapped\(stated, earned, targetId\) \{/.test(INQ_SRC)
+      && /static #capturedAt\(\.\.\.a\) \{ return legCapped\(\.\.\.a\); \}/.test(STORE_SRC), true);
 }
 
 console.log("\n--- 9. THE FIFTH-READER CENSUS, DRIVEN THROUGH THE OPS AND NAMED ---");
@@ -534,29 +547,37 @@ console.log("\n--- 9. THE FIFTH-READER CENSUS, DRIVEN THROUGH THE OPS AND NAMED 
      now asks the question that survives the fix — is the letter RESOLVED on the
      way out, by the one arithmetic — rather than asking where one identifier
      happens to be spelled. */
-  const VC_BODY = /#versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
-  const VLE_BODY = /#versionLegsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(STORE_SRC)?.[0] ?? "";
+  /* RE-ANCHORED 2026-09-28 (see INQ_SRC above): the reader is basis-versions' `versionCollections`, its resolver
+     `#legsEarned`, which asks inquiry's registry (`inq.earned(`) once and applies `inq.legCapped(`. */
+  const VC_BODY = /\n  versionCollections\(bundleId, row\) \{[\s\S]*?\n  \}/.exec(BV_SRC)?.[0] ?? "";
+  const VLE_BODY = /#legsEarned\(rows\) \{[\s\S]*?\n  \}/.exec(BV_SRC)?.[0] ?? "";
   t("THE SIXTH READER IS CLOSED (REC-119/D-411): `#versionCollections` still reads the same columns, and now RESOLVES them through the named resolver, which asks the registry and applies the ONE arithmetic",
-    { reads_grade: /#versionCollections\(bundleId, row\) \{[\s\S]{0,900}?grade, grade_axis/.test(STORE_SRC),
-      routes_through_resolver: /#versionLegsEarned\(/.test(VC_BODY),
+    { reads_grade: /versionCollections\(bundleId, row\) \{[\s\S]{0,900}?grade, grade_axis/.test(BV_SRC),
+      routes_through_resolver: /this\.#legsEarned\(/.test(VC_BODY),
       resolver_exists: VLE_BODY.length > 0,
-      resolver_asks_registry: /earnedBasisRegistry\(/.test(VLE_BODY),
-      resolver_calls_one_arithmetic: /Store\.#capturedAt\(/.test(VLE_BODY),
+      resolver_asks_registry: /inq\.earned\(/.test(VLE_BODY),
+      resolver_calls_one_arithmetic: /inq\.legCapped\(/.test(VLE_BODY),
       labels_the_frozen_half: /composition_grades/.test(VC_BODY) },
     { reads_grade: true, routes_through_resolver: true, resolver_exists: true,
       resolver_asks_registry: true, resolver_calls_one_arithmetic: true,
       labels_the_frozen_half: true });
   t("...and its CAPPED TWIN reads the SAME table in the SAME shape, which is what makes this a defect rather than a design",
-    /#versionLegsAsMembers[\s\S]{0,4000}?earnedBasisRegistry\(/.test(STORE_SRC), true);
+    /* RE-ANCHORED 2026-09-28: the twin is strength's `#versionLegsAsMembers`, asking inquiry's registry `earned`. */
+    /#versionLegsAsMembers\(rows, subjectEntity\) \{[\s\S]{0,600}?this\.inquiry\.earned\(/.test(STRENGTH_SRC), true);
   t("both of its consumers are MEMBER-CLASS ops, so this is member-reachable and not a DO-internal read",
-    /#versionCollections\(inq, r\)/.test(STORE_SRC) && /#versionCollections\(target, recorded\)/.test(STORE_SRC), true);
+    /* RE-ANCHORED 2026-09-28: op=basisversions calls `this.versionCollections(inq, r)` in basis-versions, and op=suggest
+       (run-productions) reads the recorded version back through that same op's `basisVersions`, so both still go
+       through the one collection reader. */
+    /this\.versionCollections\(inq, r\)/.test(BV_SRC)
+      && /this\.basisVersions\.basisVersions\(\{ id: target/.test(RP_SRC), true);
 
   /* NAMED AND ALREADY CORRECT, rather than omitted — saying "no further
      reader" without naming these would be the absence-with-two-causes failure.
      `basisFor` and `restingOn` return the raw letter and are the DO-INTERNAL
      class: no entry in the ops whitelist reaches them. */
   t("`basisFor` is the raw seam and is DO-INTERNAL — named rather than omitted, and its two in-plane callers are the cap itself and the walk",
-    /basisFor\(bundleId\)/.test(STORE_SRC), true);
+    /* RE-ANCHORED 2026-09-28: `basisFor` is inquiry's (the store's is a delegate). */
+    /\n  basisFor\(bundleId, \{ limit = null \} = \{\}\) \{/.test(INQ_SRC), true);
 }
 
 await mf.dispose();

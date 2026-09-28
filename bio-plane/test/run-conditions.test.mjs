@@ -96,16 +96,22 @@ import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy t
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { STANDARD_BASIS, RUN_BOUNDS } from "../src/airun.mjs";
+import { DEFAULT_MODE } from "../src/ai-runs/index.mjs";
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const SRC = (f) => join(ROOT, "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
-const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): AI-RUNS #1 (T7 layer 7) extracted the run object. `ai_runs`' CREATE TABLE
+   literal is `src/ai-runs/schema.mjs`'s, and every reader of the row but two (`#findingsVersionFromAnotherTeam` and
+   `#hiddenSets`, still the store's) is a method of `AiRuns` in `src/ai-runs/index.mjs`. The corpus is the two files
+   that hold readers, walked by the same reader; the renames are named at the ROLE table. */
+const AIRUNS_SRC = readFileSync(SRC("ai-runs/index.mjs"), "utf8");
+const SCHEMA_SRC = readFileSync(SRC("ai-runs/schema.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -129,6 +135,10 @@ const block = async (name, fn) => {
 
 const decomment = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 const STORE = decomment(STORE_SRC);
+const AIRUNS = decomment(AIRUNS_SRC);
+/* The walked plane: the store and the run object's module, each walked alone (a method's span ends at the next
+   signature IN ITS OWN FILE) and the answers merged. */
+const PLANE = STORE + "\n" + AIRUNS;
 const INDEX = decomment(INDEX_SRC);
 
 console.log("\n=== run-conditions: REC-74 — what the run STORES against what each reader PUBLISHES ===");
@@ -138,11 +148,12 @@ console.log("\n=== run-conditions: REC-74 — what the run STORES against what e
  * ======================================================================= */
 console.log("\n--- S0. the comment stripper, guarded in BOTH directions, and the corpus printed ---");
 t("SEEK GUARD: a known CODE line survives decommenting",
-  /standard: this\.#standardForRun\(row\)/.test(STORE), true);
+  /standard: this\.#standardForRun\(row\)/.test(PLANE), true);
 t("SEEK GUARD: and a known PROSE line does NOT, so this file's own reasoning cannot satisfy an anchor",
-  /A condition recorded and never published is not recorded/.test(STORE), false);
+  /A condition recorded and never published is not recorded/.test(PLANE), false);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
-          + `schema.mjs ${SCHEMA_SRC.length}, index.mjs ${INDEX_SRC.length}`);
+          + `ai-runs/index.mjs ${AIRUNS_SRC.length} chars (${AIRUNS.length} after decomment), `
+          + `ai-runs/schema.mjs ${SCHEMA_SRC.length}, index.mjs ${INDEX_SRC.length}`);
 
 /* ========================================================================= W
  *  THE WALK — what the row STORES, and who READS it. Both driven.
@@ -259,13 +270,20 @@ const runReaders = (storeDecommented) => {
  *  timestamp), that is a different classification question and ARM W8 will not
  *  catch it: it reads the SQL projection, not arithmetic over the page. STATED
  *  here rather than left for somebody to discover. */
+/* RE-KEYED 2026-09-28 (LEGACY-TESTS #4), W3 and W3b naming every cell: AI-RUNS #1 extracted the run object into
+   `src/ai-runs/index.mjs` (class `AiRuns`) and renamed its ops' methods. Each cell below keeps the role it held, under
+   the name the method now has: `aiRunRead` → `read`, `aiRunSpawnPayload` → `spawnPayload`, `aiRunLog` → `log`,
+   `aiRunsInContext` → `listInContext`, `aiRunOpen` → `open`, `aiRunTick` → `tick`, `aiRunClose` → `close`,
+   `#aiRunReapPending` → `reapDue`, `#aiRunReapWake` → `reapWake`, `#aiRunReap` → `reap`; `#aiRunTerminate`,
+   `#aiRunInSight`, `#aiRunWakeHolds` and `#aiRunWakeRuns` kept their names. The departures and the three new
+   readers are argued at their cells. The comments below speak the old names where they record history. */
 const ROLE = {
-  aiRunRead:          "PUBLISHES",
-  aiRunSpawnPayload:  "PUBLISHES",
-  aiRunLog:           "PUBLISHES",
-  aiRunsInContext:    "SELECTS",
-  aiRunOpen:          "WRITES",
-  aiRunTick:          "WRITES",
+  read:               "PUBLISHES",
+  spawnPayload:       "PUBLISHES",
+  log:                "PUBLISHES",
+  listInContext:      "SELECTS",
+  open:               "WRITES",
+  tick:               "WRITES",
   "#aiRunTerminate":  "WRITES",
   /* THE THIRTEENTH READER, ADDED 2026-08-09 BY PL-18 — and ARM W3 is why it is
      here rather than in nobody's list: it FAILED naming `aiRunClose`, which is
@@ -279,9 +297,13 @@ const ROLE = {
      DIFFERENT act. It publishes nothing of the row: its refusal echoes only the
      caller's own `run` argument, so ARM W4's "exactly three publishers" is
      untouched and was re-checked rather than assumed. */
-  aiRunClose:         "WRITES",
-  suggestVersion:     "AUTHORISES",
-  captureRequest:     "AUTHORISES",
+  close:              "WRITES",
+  /* RETIRED 2026-09-28 (LEGACY-TESTS #4), W3b naming each, on `#counts`' precedent: `suggestVersion`,
+     `captureRequest`, `extractPropose`, `contradictionPropose` and `#surfacingGate` read no row of `ai_runs` any
+     more. Each left its file with its module (run-productions' `suggest` and `extractPropose`, capture-requests'
+     door, contradiction's `propose`, ai-runs' `#surfacingGate`) and each now asks ai-runs' `runFor` (R28) or its
+     `runGate` (R37, which calls `runFor`). They are CALLERS now, and callers are not in this table; their shared
+     read is `runFor`'s cell below, which keeps their role. */
   /* SK-8's, AND ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming
      itself, on this item's first full battery, which is the fourth time this
      ratchet has caught a new reader rather than absorbing one in silence.
@@ -298,14 +320,14 @@ const ROLE = {
      disclosed, so ARM W4's "exactly three publishers" stands and was re-checked
      rather than assumed. The `bound` block in its answer is `ai_run_bounds`', a
      different table with its own publisher rules. */
-  extractPropose:     "AUTHORISES",
+
   /* REC-147's, 2026-09-25, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the item's first
      full battery. `contradictionPropose` reads `ai_runs` (`status`, `principal_plane`) to decide whether a DIFFERENT
      act — writing contradiction candidates — is legal: AUTHORISES, `extractPropose`'s role word for word. NOT
      `WRITES`: it writes `contradiction_candidates` and not one column of `ai_runs`. NOT `PUBLISHES`: its answers echo
      only the run id the caller named; its RUN_NOT_RUNNING refusal deliberately carries no `status`, so ARM W4's
      "exactly three publishers" stands. */
-  contradictionPropose: "AUTHORISES",
+
   /* REC-152's, 2026-09-19, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself on the
      item's first full battery. `#aiRunInSight` reads `ai_runs` (the key and `context_id`, through
      `aiRunRead`'s own `#bundleGate`) to decide whether the TICK and the CLOSE — different acts — may even
@@ -321,10 +343,17 @@ const ROLE = {
      the ended run, its status word to the run's own principal only (asked after sight and position, the
      `suggestVersion` precedent). Its sibling `#surfacedIn` (the question's read of its run) reads NO row of
      `ai_runs` — it takes `aiRunRead`'s answer whole — so ARM W4's three publishers are untouched. */
-  "#surfacingGate":    "AUTHORISES",
-  "#aiRunReapPending": "HOUSEKEEPS",
-  "#aiRunReapWake":    "HOUSEKEEPS",
-  "#aiRunReap":        "HOUSEKEEPS",
+  /* ADDED 2026-09-28 (LEGACY-TESTS #4) — THE READ THE FIVE RETIRED AUTHORISERS NOW SHARE. `runFor` (ai-runs R28)
+     reads `status`, `mode`, the context and both principals of one run the viewer can see and hands them to the
+     module producing under the run, which decides whether ITS act (a suggestion, an extract proposal, a capture
+     request, contradiction candidates, a surfaced question) may land: AUTHORISES, the role every one of those callers
+     held when it read the row itself, carried to the one site that now does. Not PUBLISHES: it answers another
+     module, not a member, and ARM W4's three publishers are untouched. What a caller then echoes is the caller's
+     own refusal, as it was when the read was inline. */
+  runFor:              "AUTHORISES",
+  "reapDue":           "HOUSEKEEPS",
+  "reapWake":          "HOUSEKEEPS",
+  "reap":              "HOUSEKEEPS",
   /* D-464's, 2026-09-24, and ARM W3 IS WHY IT IS HERE — it arrived as a FAILURE naming itself. `#counts` (op=stats'
      and purge's proof) always COUNTED `ai_runs`, through a table name the walk could not see; D-464 made it SELECT
      `run` WHERE the context is a project the caller cannot see, to subtract that run's bounds from the caller's
@@ -401,7 +430,16 @@ const ROLE = {
      debt records comes through `read`, which is `aiRunRead` (the retired `#biasDebtSweep`'s delegation). No column
      reaches a caller through the constructor itself, so ARM W4's three publishers are untouched. Deleted with
      `bias/interim.mjs` when `ai-runs` registers its own runs (T6). */
-  constructor:         "AUTHORISES",
+  /* RE-SITED 2026-09-28 (LEGACY-TESTS #4): the `constructor` cell's reader left the store with `bias/interim.mjs`, as
+     its own comment foretold ("deleted when `ai-runs` registers its own runs"): ai-runs R30's `workProducts()` is that
+     registration. `list(after, limit)` projects the key alone and `read(run)` reads `rerun_of` and takes every other
+     fact from `read` (`aiRunRead`), so the discharge decides another run's `bias_debts` row: AUTHORISES, the cell's
+     role carried to its new site. W3b named `constructor`, W3 named `workProducts`. */
+  workProducts:        "AUTHORISES",
+  /* ADDED 2026-09-28 (LEGACY-TESTS #4): D-486's run half moved with the run object — `hiddenRunTail` (ai-runs R36)
+     is the WHERE tail over `observation_log` that subtracts the runs over projects the viewer cannot see. It projects
+     the key only inside a subquery and publishes no fact of any run: `#hiddenSets`' HOUSEKEEPS, word for word. */
+  hiddenRunTail:       "HOUSEKEEPS",
   /* UPDATED 2026-09-26 (T3, legacy-tests; record-core R21, R22): `purge`'s cell is REMOVED, and ARM W3b named it,
      on `#counts`' precedent above. Purge moved to `record-core`, which deletes from every DECLARED table with one
      generic statement; the store now DECLARES `ai_runs` to it (`{ name: "ai_runs", keys: [] }`, whole-store only)
@@ -477,13 +515,17 @@ const ROLE = {
 };
 
 const COLUMNS = runColumns(SCHEMA_SRC);
-const WALK = runReaders(STORE);
+const WALK = (() => {
+  const a = runReaders(STORE), b = runReaders(AIRUNS);
+  return { methods: a.methods + b.methods, readers: [...a.readers, ...b.readers],
+           bodies: new Map([...a.bodies, ...b.bodies]) };
+})();
 const PUBLISHERS = WALK.readers.filter((r) => ROLE[r] === "PUBLISHES");
 
 console.log("\n--- W. THE WALK: every column the run STORES, every method that READS it ---");
 console.log(`  corpus: ${COLUMNS.length} stored columns x ${WALK.readers.length} readers `
           + `= ${COLUMNS.length * WALK.readers.length} (method, column) pairs, over ${WALK.methods} `
-          + `methods scanned in store.mjs; ${PUBLISHERS.length} of the readers PUBLISH about the row, `
+          + `methods scanned in store.mjs and ai-runs/index.mjs; ${PUBLISHERS.length} of the readers PUBLISH about the row, `
           + `so ${COLUMNS.length * PUBLISHERS.length} cells are owed a disposition below`);
 t("ARM W1: the column corpus is READ from schema.mjs and is non-trivial — a walk over an empty corpus "
 + "reports its verdict triumphantly",
@@ -513,20 +555,32 @@ t("ARM W3b: and the classification names nothing the walk did not find, so a met
    than a label. */
 t("ARM W4: EXACTLY THREE readers publish about the row, and a FOURTH read op arrived without joining "
 + "them — `op=airuns` reads the row to choose ids and delegates every published fact to `aiRunRead`",
-  PUBLISHERS.slice().sort(), ["aiRunLog", "aiRunRead", "aiRunSpawnPayload"]);
+  PUBLISHERS.slice().sort(), ["log", "read", "spawnPayload"]);
 t("ARM W5: SEEK GUARD ON THE WALK — run over a source with the ai_runs reads removed it finds NONE, so "
 + "ARM W2's answer is the walk working rather than a regex that matches anything",
-  runReaders(STORE.replace(/FROM\s+ai_runs/g, "FROM nothing_at_all")).readers, []);
+  [...runReaders(STORE.replace(/FROM\s+ai_runs/g, "FROM nothing_at_all")).readers,
+   ...runReaders(AIRUNS.replace(/FROM\s+ai_runs/g, "FROM nothing_at_all")).readers], []);
+/* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): "outside store.mjs" meant "outside the walked source" while the store was
+   the only file with readers; it now means outside the two walked files, and the check is over EVERY other file of
+   the plane rather than the two (`index.mjs`, `query.mjs`) that were the only other candidates then. The files that
+   hold a read are PRINTED by name, so a reader in a module the walk does not see is a location, not a count. */
+const OUTSIDE = (function walk(d, rel = "") {
+  return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(join(d, e.name), rel + e.name + "/")
+    : e.name.endsWith(".mjs") ? [rel + e.name] : []);
+})(join(ROOT, "src")).filter((f) => f !== "store.mjs" && f !== "ai-runs/index.mjs")
+  .filter((f) => /FROM\s+ai_runs\b/.test(decomment(readFileSync(SRC(f), "utf8"))));
 t("ARM W6: and no reader of `ai_runs` lives OUTSIDE store.mjs — the walk's blind spot is named in this "
 + "file's header, and this is the arm that keeps it a blind spot rather than a hole",
-  /FROM\s+ai_runs/.test(INDEX) || /FROM\s+ai_runs/.test(decomment(readFileSync(SRC("query.mjs"), "utf8"))),
-  false);
+  OUTSIDE, []);
 /* CORRECTED 2026-08-09 by REC-69 — `airuns:` joins the list for the same reason
    the other three are on it. A judged reader nobody can route to proves nothing,
    and SELECTS is a claim about an OP's answer rather than about a method. */
 t("ARM W7: the four ops are DISPATCHED, so the readers this sweep judges are ones a caller can reach — "
 + "a store-level sweep over a method no op routes to would prove nothing (D-43)",
-  ["airun:", "airunspawn:", "airunlog:", "airuns:"].filter((o) => !STORE.includes(o)), []);
+  /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): the four ops are routed by ai-runs' `aiRunsOps`, which the store's
+     dispatch spreads. */
+  [...["airun:", "airunspawn:", "airunlog:", "airuns:"].filter((o) => !AIRUNS.includes(o)),
+   ...(/\.\.\.aiRunsOps\(/.test(STORE) ? [] : ["store dispatch does not spread aiRunsOps"])], []);
 
 /* ========================================================================= W8
  *  SELECTS, DRIVEN. The role above is an EXEMPTION FROM ARM P1's matrix, so it
@@ -670,13 +724,13 @@ t("ARM W8b: POLARITY, over segments this arm CONSTRUCTS rather than patches — 
   (() => {
     const projects = "  ncSelectsProjecting(a) {\n"
       + "    const page = this.#rows(`SELECT r.run, r.status FROM ai_runs r WHERE r.run = ?`, a);\n"
-      + "    return page.map((r) => this.aiRunRead({ run: r.run }));\n  }\n";
+      + "    return page.map((r) => this.read({ run: r.run }));\n  }\n";
     const undelegated = "  ncSelectsUndelegated(a) {\n"
       + "    const page = this.#rows(`SELECT r.run FROM ai_runs r WHERE r.run = ?`, a);\n"
       + "    return page.map((r) => ({ id: r.run }));\n  }\n";
     const correct = "  ncSelectsCorrect(a) {\n"
       + "    const page = this.#rows(`SELECT DISTINCT r.run AS run FROM ai_runs r WHERE r.run = ?`, a);\n"
-      + "    return page.map((r) => this.aiRunRead({ run: r.run }));\n  }\n";
+      + "    return page.map((r) => this.read({ run: r.run }));\n  }\n";
     const cols = (s) => [...new Set(projectedColumns(s))].filter((c) => c !== KEY_COLUMN);
     const delegates = (s) => PUBLISHERS.some((p) => new RegExp(`this\\.${p}\\s*\\(`).test(s));
     return [cols(projects), delegates(projects),
@@ -719,7 +773,7 @@ const promote = async (id, text, type, state) => await POST("promote", {
 });
 const inquiryMd = ["---", `id: ${INQUIRY}`, "---", "", "## Question", "",
   "Who signed the sewer fund transfers?", ""].join("\n");
-const projectMd = ["---", "object_type: project", `title: "Transfer review"`,
+const projectMd = ["---", "object_type: project", "objective: \"Fixture objective.\"", `title: "Transfer review"`,
   "current_state: forming", `created: "${NOW}"`, `last_updated: "${NOW}"`, "---", "",
   "## Thesis Summary", "", "A project.", "", "## Open Questions", "", "## Ruled Out", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
@@ -955,8 +1009,9 @@ await block("C", async () => {
   t("ARM C6: THERE IS ONE CONSUMER AND ONE PUBLISHER. `#standardForRun` is DEFINED once in the plane "
   + "and both readers CALL it — two computations of *what bar was this run formed under* would be two "
   + "answers to a question that has one, which is the defect this item is about",
-    [(STORE.match(/#standardForRun\(row\)\s*\{/g) || []).length,
-     (STORE.match(/this\.#standardForRun\(row\)/g) || []).length],
+    /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4): the definition and both calls moved with the run object. */
+    [(PLANE.match(/#standardForRun\(row\)\s*\{/g) || []).length,
+     (PLANE.match(/this\.#standardForRun\(row\)/g) || []).length],
     [1, 2]);
 });
 
@@ -1019,7 +1074,10 @@ await block("X", async () => {
    simply absent, which is the same false-clean this file exists to refuse. */
 const SENTINEL = {
   label: "sentinel-label-zulu-7731",
-  mode: "sentinel-mode-yankee-4412",
+  /* RE-SET 2026-09-28 (LEGACY-TESTS #4): ai-runs R40 (C-109.1) refuses a run in a mode that is not deployed, so a
+     stored `mode` is one of `DEPLOYED_MODES` — enum-like by construction, and this column joins the header's
+     path-check-only set by the plane's own rule rather than by this fixture's choice. ARM P3 prints it there. */
+  mode: DEFAULT_MODE,
   claudeRef: "sentinel-ref-xray-9926/claude",
   skill: "investigative-session@sentinel-9.9.9",
   bias: J({ scope: "instance", scope_id: "", statements_sha: "sentinelbiassha0000", bundles: [] }),
@@ -1032,7 +1090,7 @@ const SENTINEL = {
    that makes the difference between a designed narrowing and a silent one. */
 const W = (why) => ["WITHHELD", why];
 const MATRIX = {
-  aiRunRead: {
+  read: {
     op: "airun", root: "session",
     cells: {
       run: "id", status: "status", label: "label", mode: "mode",
@@ -1052,7 +1110,7 @@ const MATRIX = {
       lens_at_open: "bias.at_open.at",
     },
   },
-  aiRunSpawnPayload: {
+  spawnPayload: {
     op: "airunspawn", root: "payload",
     cells: {
       run: "run", context_type: "context.type", context_id: "context.id", mode: "mode",
@@ -1082,7 +1140,7 @@ const MATRIX = {
                     + "of that block"),
     },
   },
-  aiRunLog: {
+  log: {
     op: "airunlog", root: null,
     cells: {
       run: "run", status: "status",
@@ -1190,7 +1248,7 @@ await block("P", async () => {
    *     tomorrow would not be on the list and would fail.
    * A surprising result is a finding about the arm. Both are recorded. */
   const INCIDENTAL = {
-    "aiRunLog.context_id":
+    "log.context_id":
       "the TERMINAL log entry's `subject` is the run's context id, written by `#aiRunTerminate`. It "
     + "arrives as an observation's subject, not as a fact about the run, and the read is gated on that "
     + "same column so it discloses nothing the caller was not already granted.",
@@ -1205,16 +1263,16 @@ await block("P", async () => {
          `op=airun` itself withholds has NO reference at all, so it gets the path
          check alone and is counted in `weakCols` — stated rather than skipped
          silently, which is the half of a two-layer check that goes quiet. */
-      const own = MATRIX.aiRunRead.cells[col];
-      const ref = Array.isArray(own) ? null : dig(answers.aiRunRead, own);
+      const own = MATRIX.read.cells[col];
+      const ref = Array.isArray(own) ? null : dig(answers.read, own);
       if (!(typeof ref === "string" && ref.length >= 8)) { weakCols.push(`${reader}.${col}`); continue; }
       /* AND A VALUE THIS READER PUBLISHES UNDER ANOTHER COLUMN IS NOT A LEAK OF
          THIS ONE — it is two columns holding one value, which a value scan
          cannot resolve in either direction. */
       const shared = Object.entries(spec.cells).some(([c2, d2]) =>
         c2 !== col && !Array.isArray(d2)
-        && !Array.isArray(MATRIX.aiRunRead.cells[c2])
-        && dig(answers.aiRunRead, MATRIX.aiRunRead.cells[c2]) === ref);
+        && !Array.isArray(MATRIX.read.cells[c2])
+        && dig(answers.read, MATRIX.read.cells[c2]) === ref);
       if (shared) { ambiguous.push(`${reader}.${col}`); continue; }
       strongCols.push(`${reader}.${col}`);
       if (published.some((v) => v === ref || v.includes(ref))) leaked.push(`${reader}.${col}`);
@@ -1255,7 +1313,7 @@ await block("P", async () => {
 
   t("ARM P4b: AND `standard_pair` IS NO LONGER IN THE SILENT SET. Before this item it was published by "
   + "`aiRunSpawnPayload` alone; `aiRunRead` — the member's read — published nothing about it",
-    publishedBy.standard_pair, ["aiRunRead", "aiRunSpawnPayload"]);
+    publishedBy.standard_pair, ["read", "spawnPayload"]);
 
   /* CORRECTED ON FIRST RUN, AND THE CORRECTION IS THE FINDING RATHER THAN A
      TIDY-UP. This arm was written expecting §11's three conditions to be
@@ -1275,7 +1333,7 @@ await block("P", async () => {
       return [publishedBy.standard_pair, publishedBy.skill_version, publishedBy.bias_manifest,
               "bias" in search, "bias" in compose, compose.bias.in_force];
     })(),
-    [["aiRunRead", "aiRunSpawnPayload"], ["aiRunRead", "aiRunSpawnPayload"], ["aiRunRead"],
+    [["read", "spawnPayload"], ["read", "spawnPayload"], ["read"],
      false, true, true]);
 
   /* ARM P6 — THE SECOND INSTANCE THE SWEEP FOUND, NAMED AND NOT FIXED HERE. */
@@ -1335,12 +1393,14 @@ t("ARM V2: every term carries a PHRASE a member reads instead of the machine wor
   []);
 t("ARM V3: and it is a VOCABULARY and not a refusal family — this item PUBLISHES a condition and "
 + "refuses nothing, so no C-number is minted and no DEC-49 floor for families or rows moves",
-  [/STANDARD_BASIS_CHECKS/.test(STORE), Object.keys(RUN_BOUNDS).length >= 5], [false, true]);
+  [/STANDARD_BASIS_CHECKS/.test(PLANE), Object.keys(RUN_BOUNDS).length >= 5], [false, true]);
 t("ARM V4: the plane holds ONE copy of it — `store.mjs` imports the map rather than restating it, "
 + "which is the same rule `checkCondition` follows for the queue's condition kinds (C-22.4)",
-  [/STANDARD_BASIS[,\s]/.test(STORE.slice(0, 20000)),
-   (STORE.match(/recorded:\s*"this run was formed under a bar/g) || []).length],
-  [true, 0]);
+  /* EXTENDED 2026-09-28 (LEGACY-TESTS #4): the consumer of the map is now ai-runs' `#standardForRun`, so the
+     module that uses it is asked too: it imports the map, and neither file restates a sentence of it. */
+  [/STANDARD_BASIS[,\s]/.test(STORE.slice(0, 20000)), /STANDARD_BASIS[,\s]/.test(AIRUNS.slice(0, 20000)),
+   (PLANE.match(/recorded:\s*"this run was formed under a bar/g) || []).length],
+  [true, true, 0]);
 
 /* D-186: the sandbox goes down, or the battery's own residue assertion fails the
    run — and `hygiene.test.mjs` NAMES any suite that mints a Miniflare and does

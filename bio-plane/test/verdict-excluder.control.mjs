@@ -402,7 +402,11 @@ const DISPATCH_LINE = "        ncd240: () => this.ncD240Read(body),\n";
 const ON_BOUNDED = new RegExp("op" + "=ncd240\\s+-> ncD240Read");
 const DISPATCH_ANCHOR = (() => {
   const src = readFileSync(P.store, "utf8");
-  const m = /^ {8}airunlog: \(\) => .*$\n/m.exec(src);
+  /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4, N57 via m025 A4): `airunlog` left the store's dispatch map with AI-RUNS #1
+     (ai-runs' `aiRunsOps`, spread into the map), and `aiRunLog` left the class with it (`log` in
+     `src/ai-runs/index.mjs`). The plant needs only SOME store route and SOME store method to sit beside, so it anchors on
+     `contentcrop`'s route and `purge`, both still the store's; the plant is the same. */
+  const m = /^ {8}contentcrop: \(\) => .*$\n/m.exec(src);
   if (!m) throw new Error("cannot locate the dispatch table anchor");
   return m[0];
 })();
@@ -412,10 +416,10 @@ function plantStoreRead(methodText) {
   if (at < 0) throw new Error("dispatch anchor not found");
   if (src.split(DISPATCH_ANCHOR).length - 1 !== 1) throw new Error("dispatch anchor is not unique");
   const withDispatch = src.slice(0, at) + DISPATCH_LINE + src.slice(at);
-  /* the method goes immediately before `aiRunLog`, which the segmenter bounds by
+  /* the method goes immediately before `purge`, which the segmenter bounds by
      the NEXT signature — so the plant is a segment of its own and nothing else
      moves. The anchor is asserted unique before it is used. */
-  const anchor = "\n  aiRunLog({ run, viewer = null, limit = null } = {}) {";
+  const anchor = "\n  purge({ bundleId = null } = {}) {";
   if (withDispatch.split(anchor).length - 1 !== 1) throw new Error("method anchor is not unique");
   const mAt = withDispatch.indexOf(anchor);
   const out = withDispatch.slice(0, mAt) + "\n" + methodText + withDispatch.slice(mAt + 1);
