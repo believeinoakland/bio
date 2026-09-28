@@ -34,6 +34,9 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 - **R9** A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart from standards, labelled with who proposed it and whether it is machine work (`legacy-checks`' `proposalLabel(proposer, "standard")`: `lawProposalState`'s three states, one composer, K171), with a `why` of at most 240 characters. It is never a standard, never read by `standardsIn`, and is answered with a sentence saying so. *(not yet met: new module)*
 - **R10** `standardAdopt` is R1 by a member, naming the proposal; the new standard records the proposal it came from, and the proposal records its adoption. A proposal is adopted at most once. *(not yet met: new module)*
 
+**standardsOf(host) → the module's instance**
+- **R16** Constructing the instance creates every table this module declares to purge (R14), as the other factories do, so every service here and `record-core`'s purge succeed after construction with no caller calling `migrate()` (N220, N267, K267). *(not yet met: N220, N267; the tables exist only after `migrate()`)*
+
 ## Private
 
 ### Uses

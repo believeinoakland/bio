@@ -24,7 +24,7 @@ Terms. An **act** is `{id?, description, actor: {role, body}, at | period, evide
 - **R4** The outcome is given **per standard**, from the member, and is never composed across standards into one verdict. A determination whose rows for a standard are all `aligns` and whose outcome is `noncompliant`, or any `diverges` with `compliant`, is accepted and the disagreement stated beside it, never corrected. *(not yet met: new module)*
 - **R5** The three outcomes carry the same obligations (R1–R4): a compliant determination names its act, findings, standards and rows exactly as a noncompliant one does, and is read by the same services. *(not yet met: new module)*
 - **R6** An `unclear` outcome names at least one question, each `{question, inquiry}`: an existing inquiry the author may see, or a new inquiry opened in the same act (state `open`, titled from the question, in `project`). The determination and any inquiry it opens land together or not at all (Functional Architecture: "Unclear … triggers a return to Layer 1"): two `promotion.promote` calls inside one outer `record-core.transact`, a refused second rolling back the first (K171). *(not yet met: new module)*
-- **R7** A determination is never edited. `supersedes` names an earlier determination of the same act (its act id) in the same project, and the superseding determination carries its predecessor's act id, with a `reason` (at most 500 characters, else `BAD_REASON`); the earlier one stays readable and both reads name the link. A determination is superseded at most once (`ALREADY_SUPERSEDED`). *(not yet met: new module)*
+- **R7** A determination is never edited. `supersedes` names an earlier determination of the same act (its act id) in the same project, and the superseding determination carries its predecessor's act id, with a `reason`: an absent reason is `NO_REASON`, one over 500 characters `BAD_REASON` (N233, K264); the earlier one stays readable and both reads name the link. A determination is superseded at most once (`ALREADY_SUPERSEDED`). *(not yet met: N233; an absent reason answers `BAD_REASON`)*
 - **R8** No input or answer carries a significance, severity, priority, urgency, rank or score: a determination carrying any such key is refused. *(not yet met: new module)*
 
 **determinationRead({id, viewer}); determinationsFor({project?, act?, standard?, finding?, outcome?, live?, after?, limit?, viewer}) → `{items, cursor, truncated}`**
@@ -42,7 +42,7 @@ Terms. An **act** is `{id?, description, actor: {role, body}, at | period, evide
 
 - `legacy-checks`: `isMachineIdentity`, `proposalLabel` (added by the head-of-layer `legacy-checks` job, K171); the `CONF-` type registration (R17, K171).
 - `record-core`: `allocId`, `transact`, `stampInstant`.
-- `membership`: `sight`, `projectAuthority`, `viewerPredicate`.
+- `membership`: `sight`, `projectAuthority`, `viewerPredicate`; `noSuchProject` (its R78), through which R1's `NO_SUCH_PROJECT` is answered, its translation membership's C-70.5, in place of C-113.2 (N274, N208, K275). *(not yet met: N274)*
 - `promotion`: `promote` (R6's new inquiry; and the determination itself, R17, K102). *(not declared)*
 - `content`: `contentRow`, `passageNotice` (R1's evidence, R10).
 - `inquiry`: `supersededBy`, `stateHistory` (R10); visibility of a named inquiry (R6).

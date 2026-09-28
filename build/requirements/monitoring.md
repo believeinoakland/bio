@@ -67,7 +67,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R32** `monitoring({viewer})` answers every monitored address the viewer may see with its R15–R16 row, the unscheduled among them, so a document that is not being checked is visible without waiting for a tick. *(not yet met: found in this reading; REC-26's stated limit)*
 
 **What the understanding and action layers rest on** (`layers.md`, layers 7 and 9)
-- **R33** The sources a live objective or a published finding rests on are known to monitoring; one not monitored is proposed for monitoring to the members who own the objective or finding, never enabled by the daemon, and a member's adoption of the proposal is the ratification; a change at a watched source reaches `reevaluation` as R8's flag. *(not yet met: new; K102)*
+- **R33** The sources a live objective or a published finding rests on are known to monitoring; one not monitored is proposed for monitoring to the members who own the objective or finding, never enabled by the daemon, and a member's adoption of the proposal is the ratification; a change at a watched source reaches `reevaluation` as R8's flag. *(not yet met: new; K102)* A live objective's sources are read through `intent` R7, a published finding's through `publication` R42 (`restingCapturesOf`), each followed by its cursor to the end (N230). *(not yet met: N230)*
 - **R34** A `pending` clock entry of an action whose date has passed is marked `overdue` by a mechanical promotion `deadline-recheck` (only `clock[].status` and `last_updated`), and its action's members are told (State Rules §4.4, I-11). *(not yet met: new)*
 - **R44** R34's mark is bounded by `actions` R33: it reads the entries through `actions.pendingClocks` (actions R31) and moves an entry only from `pending` to `overdue`, never to or from any other status, and never adds, removes or re-dates an entry; an entry already `met`, `waived` or `overdue` is left as it is. *(not yet met: N65, with R34)*
 - **R35** When a clock is marked overdue or a response is recorded against an action, monitoring asks `escalation` whether a stage's trigger is met, so the next stage is proposed; monitoring never advances a stage. *(not yet met: new)*
@@ -87,7 +87,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - `docprofile`: `identify`, `doctypeFor`, `assess`, `CONTRACT`; `format-registry`: `detectFormat`. *(not declared)*
 - `observation-log`: its one append (R11). *(not declared)*
 - `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)). *(not declared)*
-- `intent`, `publication`, `reevaluation` (R33); `actions`: `pendingClocks` (its R31) and the bound of its R33 (R34, R44); `escalation` (R35). `publication` is *(not declared)*.
+- `intent` (its R7), `publication` (its R42, `restingCapturesOf`; N230), `reevaluation` (R33); `actions`: `pendingClocks` (its R31) and the bound of its R33 (R34, R44); `escalation` (R35). `publication` is *(not declared)*.
 - `runtime-limits`: `unattendedCredential(env)` (its R26: `bound` for R24's configured test, `token()` for the credential a fire spends), until R23. *(not declared)*
 - `subresources`: `normalizeAddress` (the look's subject, D-524's baseline match); `jurisdictions`: `combine` over record-core's `jurisdiction_profiles` setting, the view N116 passes to `identify`/`doctypeFor`/`assess` (K259).
 - `extraction`, `content`: nothing here calls them.
