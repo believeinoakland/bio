@@ -1,14 +1,8 @@
 # control-plane — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so (`build/extraction/control-plane.md` has the table). Code today, measured on `tranche/T3` @ `f324df9b`, in `index.mjs`:
-- the op declarations: `OPS` 419–1670, the act lists 1671–2063, `SESSION_OPS` 2064–2262, `NEEDS` 2263–2829, `UNATTENDED_BY_DECISION` 4316–4359;
-- authentication: `classify`, `scopeFor`, `namespaceGate`, `pinnedNamespaceGate`, `confinedNamespaceGate`, `aiCredentialPresented`, `aiConfinementDeclaration`, `aiReachesAsMember`, `aiScopeDeclaration`, `aiTaskScope` 3137–3663, and `resolveSession`, `reviewAnswer`, `caseReader` 3664–3758;
-- the envelope: `json`, `dec49Row`/`dec49Decorate`/`dec49Attach`, `doAnswer` 3768–3962, `storeSilent` 4020–4041, the row readers 4175–4230, `sessionOpGate` and `requiredArgument` 4360–4466, `StoreSilent` 4538–4540;
-- in `fetch`, the front door 6073–6176, admission and `whoami` 6849–7093, and the forward with its stamps 11860–13438.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 11. It has no code of its own yet. It is extracted from `legacy-index` (`bio-plane/src/index.mjs`), and from `legacy-store` and `legacy-checks` where the map says so. Code today: re-measured 2026-09-28 on `tranche/T10` @ `6faa8084` by a worker for BOB #59; `build/extraction/control-plane.md` has the table (T3's ranges kept there in brackets). Not yet met: R24 (D-679), R25 (D-629), R19's last sentence (D-586). R34 (the act gate) worded from the code by a worker for BOB #59, 2026-09-28. Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file).
 
-From `store.mjs`: `Store.fetch`'s frame (48479–48509, 49799–49811) and `PROJECT_NAMING_READS`, `PROJECT_NAMING_READS_NOT`, `#existenceRead` (33195–33258). Not yet met: R24 (D-679), R25 (D-629), R19's last sentence (D-586). Carried old-plan rows: D-629, D-679, and D-586 (placed here by membership's file).
-
-**Size (P6).** About 5,990 lines move, about 1,610 without comment-only and blank lines. `index.mjs` accounts for 5,500 (1,331 code), `bio-checks.mjs` for 382 (202) and `store.mjs` for 108 (74). The forward range (11860–13438) is an upper bound: the op-specific arms inside it leave with their modules. The raw figure is past the 4,000-line mark (`layers.md` ruling 1). K93 keeps it one module.
+**Size (P6).** At most about 6,630 lines move (about 1,930 of code), counting the whole forward; without the forward's op-specific arms, which leave with their modules, about 4,880 (about 1,460) (`build/extraction/control-plane.md`, re-measured 2026-09-28). Past the 4,000-line mark by lines; accepted as fitting one reading (K93, and BOB 2026-09-28), since the op declarations are a table. The split to take if a job reports it cannot read the module whole is in Suggestions.
 
 ## Public
 
@@ -64,6 +58,9 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R24** A public op relaying the store's answer answers the store's own status, and answers R23 on a store failure, never 200. `claim`, `login`, `invitelook` and `enroll` read the answer without its `ok` today. *(not yet met: D-679)*
 - **R25** An error thrown anywhere in either door is answered with a named internal-error code (`PLANE_INTERNAL_ERROR` in the Worker, `STORE_INTERNAL_ERROR` in the store) and a correlation id. It never carries the stack, the message, a path or a line, and the stack is logged server-side under the correlation id. *(not yet met: D-629; `Store.fetch` answers `String(e.stack)` today)*
 
+**The act gate: `ACT_GATE`, `decorateAct(act)`** (read by `affordances.decorate`, its R11, for `op=affordances` and queue R17's `op=queue`)
+- **R34** `ACT_GATE` is `{needs(id), mode(id)}`, read from the same tables that gate the ops: `needs(id)` answers `NEEDS[id]` (the capability a session needs for the op), or `null` when the op has no row; `mode(id)` answers `session` when the member session set (`SESSION_OPS.member`) holds the op, else `admin-session` when the founder's set (`SESSION_OPS.admin`) holds it, else `machine`. `decorateAct(act)` is `affordances.decorate(act, ACT_GATE)`, and it is the one decoration both `op=affordances` and `op=queue` apply, so an option in the feed equals the act `op=affordances` publishes for that subject. The gate is read only when a request is decorated, after both tables exist.
+
 **`dispatch(req)`, the record store's door**
 - **R26** An empty POST body is `null`, and a body that is not JSON is refused 400 `BAD_JSON`. A route no module serves is refused 400 `unknown op: <op>`. An answer is `{ok: true, result}`. The routes are the modules' own maps (the `membershipOps` pattern).
 - **R27** A read whose parameters name a project (the declared `PROJECT_NAMING_READS`), asked with a stamped `viewer` and naming a discoverable project, is answered by `membership.existenceAct` first (C-70.1), before its route runs. The reads declared to name no project are listed with the reason.
@@ -77,6 +74,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - `signatures`: the signing page (R1).
 - `publication`: `inbandQuartet`, for the review copy's answer (R20).
 - `instance-setup`: `setupPage`, its public group read (R1), the reports' handlers.
+- `affordances`: `decorate` (its R11) for R34, and `ACTS`, `CAPTURE_ACTS`, `PER_ITEM_ACTS`, `VOCABULARIES` for `op=affordances`' answer while its arm is here.
 - `legacy-checks`: the rows of R32 until they move; `CHECK_CATALOGUE` (R22); `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
 - `legacy-store`: its store routes and class until each module takes its own.
 - Every module whose op handlers or store routes it routes. These uses are declared as each module is extracted (K93).
@@ -105,6 +103,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **Shape.** An op table `{op: {spec, handler?}}` and a store-route table assembled from each module's map. The generic forward (today's tail of `fetch`) is the default handler.
 - **The internal-error codes** take the next free C-69 numbers when D-629's built work (`land/worker/D-629` @ `5e202b33`) is judged. That branch minted C-69.2 before D-561 gave C-69.2 to `STORE_DID_NOT_ANSWER` on `main`.
 - **For callers.** Handlers read stamps from the request, never the body's own fields. `promotion` trusts its identity stamps as given (its Suggestions); that trust is kept by R17 and R29.
+- **The split, if a job cannot read the module whole** (P6; BOB, 2026-09-28): the op declarations (`OPS`, the act lists, `SESSION_OPS`, `NEEDS`, `UNATTENDED_BY_DECISION`: about 2,950 lines, about 690 of code) as one data file separable from the two doors, which read it.
 - **Tests.** One arm per refusal code, with a negative control each. R28's order is driven by a request that would fail two gates at once. R29 is driven by sending every stamp field on every declared op.
 
 ## Open for Bob
