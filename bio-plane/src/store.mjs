@@ -12127,13 +12127,14 @@ export class Store extends DurableObject {
        and #queueAncestors both take the viewer and would answer nothing for
        them anyway. */
     const findingSeen = this.#bundleGate("pi.bundle_id", viewer);
-    items.push(...proposalFindingItems(feed, {
+    const proposalItems = proposalFindingItems(feed, {
       subjectsOf: (pk, eid) => this.#rows(`SELECT DISTINCT pi.bundle_id FROM progression_instances pi
           WHERE pi.progression_key=? AND pi.entity_id=? AND (${findingSeen.sql}) ORDER BY pi.bundle_id`,
         pk, eid, ...findingSeen.args).map((r) => r.bundle_id),
       homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
       optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity),
-      subjectsMax: Store.QUEUE_OPTION_SUBJECTS_MAX }));
+      subjectsMax: Store.QUEUE_OPTION_SUBJECTS_MAX });
+    items.push(...proposalItems);
 
     /* -------------------------------- FINDING · PL-15 / D-213 · THE LEAD
        The FINDING half's SECOND producer, and the first one that is not derived
