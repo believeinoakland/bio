@@ -272,14 +272,15 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    LISTENER_DECLARED (membership's `listenerRefusal`, its R81). CHANGED: C-22.17 AI_LOG_NEVER_LOOKED_STORED is now what
    observation-log's `checkObservation` answers a stored never-looked look, which C-22.1 answered until T10 (N118), so
    C-22.1 now refuses one condition and both changed. MOVED, NOT CHANGED: C-81.11–C-81.14 are held once, in the
-   catalogue's `THEME_CHECKS`, and connections' second copy became a view of them (N125); C-22.7 left the catalogue
-   file in T11's layer 1 (N289) for ai-runs' own table in layer 6 (K343, K348), its code, condition and translation
-   unmoved, so this version counts it where it lands. Wording only, what is refused or admitted unmoved: the `where`s of
+   catalogue's `THEME_CHECKS`, and connections' second copy became a view of them (N125); C-22.7 stays in the
+   catalogue until ai-runs holds its own copy (K350, N299), code, condition and translation unmoved. Wording only, what is refused or admitted unmoved: the `where`s of
    C-26.11, C-30.7, C-30.8, C-100.9, C-100.11, C-100.13–C-100.15, C-100.17, C-100.18 and inquiry's C-106 rows; the
    comments of C-22 and C-53 (N282, N286); and C-102.9, whose finding `caseCatalogueFailed` now builds the case gate's
    whole answer (N275), the same answer as before. MINOR, rule 17 moving the stamp for arrivals, departures and changed
-   checks. The d470 census, of the catalogue file only, printed on this tree: 397 -> 396 (C-22.7 left the file), sha256
-   de54b8bd…, behaviour source 8ada0f4c…; its 1.41.0 row, A3 and A5 are legacy-tests' re-pin. */
+   checks. The d470 census, of the catalogue file only, is unmoved (every arrival and departure is in a module's own
+   table): 397, sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree after K350's restore), so its
+   1.41.0 row, legacy-tests', names `changed: ["C-22.1", "C-22.17"]` to stand apart from 1.40.0's (A4); A3 and A5 are
+   that re-pin's. */
 export const CATALOG_VERSION = "1.41.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
