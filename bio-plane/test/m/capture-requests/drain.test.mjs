@@ -365,8 +365,8 @@ test("R38 a new capture is promoted at collected, never higher, as an informatio
   assert.match(md, /^current_state: collected$/m);
   assert.match(md, /^object_type: information$/m);
   assert.ok(md.includes(captureRequestAttribution(w.req(id)).statement), "the attribution is stated in the record");
-  const reg = w.row(`SELECT * FROM register WHERE capture_sha=?`, w.req(id).capture_sha);
-  assert.equal(reg.bundle_id, bid, "the capture's one home is the promoted bundle");
+  const primary = w.row(`SELECT sha256 FROM files WHERE bundle_id=? AND path=?`, bid, prov.documents[0].file);
+  assert.equal(primary && primary.sha256, w.req(id).capture_sha, "the primary is in the bundle, under its register document's name");
   /* the row itself is unchanged by the promotion: captured, its digest, R24's fields */
   assert.deepEqual([w.req(id).state, w.req(id).code], ["captured", null]);
 });
@@ -515,14 +515,13 @@ test("R12 given the scheduler's rank, the tick reads at most ten times its batch
     for (let i = 0; i < 3; i++) { xs.push(x.ask({ address: addr(i) }).request); x.tick(1000); }
     assert.deepEqual((await x.cr.drain({ rank: bad })).captured.map((c) => c.request), xs);
   }
-  /* the scheduler's own rank (its R10's rankBy) reads what is offered: a request waiting longer than one cadence is
-     overdue, one waiting less is not */
-  const { rankBy } = await import("../../../src/scheduler/index.mjs");
+  /* what is offered lets the scheduler's rank put work waiting longer than one cadence first (its R10): one request
+     waiting two cadences, one waiting none */
   const y = world().scene();
   y.ask({ address: addr(1) });
   y.tick(120_000);
   y.ask({ address: addr(2) });
-  let ranked = null;
-  await y.cr.drain({ rank: (items, now) => (ranked = rankBy(null, items, now)) });
-  assert.deepEqual(ranked.map((x) => x.rank.overdue), [true, false]);
+  let overdue = null;
+  await y.cr.drain({ rank: (items, now) => { overdue = items.map((x) => now - x.waitingSince > x.cadenceMs); return items; } });
+  assert.deepEqual(overdue, [true, false]);
 });

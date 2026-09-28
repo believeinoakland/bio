@@ -1,5 +1,5 @@
 /* capture-requests over the modules it uses, the record's own ones real (record-core, membership, promotion,
-   provenance, observation-log, host-governor, capture-sources' credentials) on a real SQLite database (node:sqlite)
+   observation-log, host-governor, capture-sources' credentials) on a real SQLite database (node:sqlite)
    standing in for a Durable Object's storage at its shape (a cursor, workerd's pattern cap; below). `capture`'s in-process arm is a stand-in the test scripts (K61: a test may pass its
    own instance), recording exactly what it was handed; ai-runs' run sight (`runFor`) is a table of runs the test
    writes. Every test drives `capture-requests` at its interface. */
@@ -8,7 +8,6 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
-import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { governorOf } from "../../../src/host-governor/index.mjs";
 import { credentialsOf } from "../../../src/capture-sources/credentials.mjs";
@@ -126,8 +125,6 @@ export function world({ env = ENV, configured, credentials = true, group = "test
   promotion.registerFact("producingGroup", "legacy-store", () => group);
   promotion.registerFact("citedBy", "legacy-store", () => []);
   promotion.registerFact("caseMember", "legacy-store", () => false);
-  const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
-  prov.migrate();
   const ex = { onReading: () => ({ ok: true }), readingOf: () => null, unitsOf: () => ({ units: [], state: null }),
                capturesReadFor: () => [] };
   const obs = observationLogOf(host, { record, membership, provenance: null, extraction: ex, now });
@@ -154,7 +151,7 @@ export function world({ env = ENV, configured, credentials = true, group = "test
                                        ...(order !== undefined ? { order } : {}) });
   cr.migrate();
   const w = {
-    st, host, record, membership, promotion, prov, obs, governor, creds, capture, runs, cr, clock, waitRegs,
+    st, host, record, membership, promotion, obs, governor, creds, capture, runs, cr, clock, waitRegs,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     req: (id) => st.sql.exec(`SELECT * FROM capture_requests WHERE request=?`, id).toArray()[0] ?? null,
