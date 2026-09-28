@@ -61,6 +61,9 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 - **R47** A later module (`ratification`, its R8) registers once at start the case-document catalogue `fn(fm, ctx) → findings` that R33 runs, in place of `legacy-checks`' `checkCaseDocument`. A second registration, by that module or any other, is refused `STEP_DECLARED`; a `fn` that is not a function is refused `LISTENER_MALFORMED`. The registration changes no answer's shape and no `GATE_VERSION` of its own: the catalogue's rows are counted by `CATALOG_VERSION` (R34) wherever they live (K94, N67, N69; K202).
 
+**`INLINE_MAX`** (a constant)
+- **R48** `INLINE_MAX` is 1,048,576: the most bytes one file of a promotion may carry inline. A promotion holding a larger inline file is refused `OVERSIZE_INLINE`, naming the file's `path` and `bytes`. A later module that bounds what it will hand to a promotion (`citation`'s `CITATION_TOO_LARGE`) reads this constant rather than its own. *(N142; K230)*
+
 **`CATALOG_VERSION`, `GATE_VERSION` → strings**
 
 - **R34** `GATE_VERSION` contains `CATALOG_VERSION`, and both gates report the same `GATE_VERSION`. One version names one catalogue: `CATALOG_VERSION` changes whenever a check is added, removed or changed, so two ratifications carrying the same string were judged by the same catalogue.
