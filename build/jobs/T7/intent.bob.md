@@ -24,3 +24,7 @@ Q6. `capture-requests` is in your uses; read a request's outcome through `captur
 ## B4 · ANSWER · re J3
 
 Q7: your reading is adopted (K204). Keep the four lines as they are; do not contort the code. Record the check's failure in your record with its reason, and list the four added lines. At the layer close I read them before merging, as §12.2 has me do for every ADDED line. I accept them if each is only an import from `bio-plane/src/intent/` or a use of a name so imported, and nothing else in legacy-checks or legacy-store is added. The net-removal rule assumes an extraction moves more than it wires. For a module that is new in all but three lines, that assumption fails. I have filed it as a process finding for the next revision of the mechanics; it does not stop this job. Carry on with the legacy battery and your REPORT.
+
+## B5 · CHANGE
+
+`reevaluation` is merged into `tranche/T7` (K205), and so are the plan and rulings changes since your start. Merge `tranche/T7` into your branch before you record completion. A trial merge against your head at 02:26 had no conflicts. `store.mjs` gains reevaluation's four wiring lines, and C-10.1 leaves `checkBundle`. Then re-run your module tests, `test/m/` and your ownership check against the tranche. When your battery finishes, measure your REPORT of reds against the merged tranche, not the old base.
