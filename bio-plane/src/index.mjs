@@ -1315,8 +1315,8 @@ const OPS = {
      `triage`'s `question`, the one act R16 gives a machine, which is why the cut must admit one. Each rides
      `contribute` (a revision of a project document, a record document, an adoption, a question or a run) and is a
      session op in both sets (INTENT_ACTIONS). THE SEVEN READS are open to every class that reads the record, and
-     what a caller may see is the store's, on the viewer stamped below (intent R23); no NEEDS entry,
-     `reevaluations`' precedent. */
+     what a caller may see is the store's, on the viewer stamped below (intent R23); each carries a NEEDS entry of
+     null, op=queue's precedent (B3). */
   objectivecondition:  { classes: ["admin", "member", "probe"],      mutating: true  },
   objectiveprogress:   { classes: ["admin", "member", "probe"],      mutating: false },
   objectivegaps:       { classes: ["admin", "member", "probe"],      mutating: false },
@@ -2730,6 +2730,17 @@ const NEEDS = {
   aspirationretire:   "contribute",
   triage:             "contribute",
   workobjective:      "contribute",
+  /* T6-13 (intent R3–R6, R12–R15; B3, AFFORDANCES #1 J4.3): intent's seven READS take NO capability, op=queue's
+     precedent and not op=reevaluations': each is a SURFACE a member acts from (progress and gaps, the goals and
+     aspirations in force, the proposals a triage is chosen out of), so it is present here, null, where REC-19's totality
+     guard SEES it and `affordances.mjs` names it in NON_ACTS with its reason. What bounds each is the viewer stamp. */
+  objectiveprogress:  null,
+  objectivegaps:      null,
+  goal:               null,
+  aspirations:        null,
+  aspirationcontacts: null,
+  pursuit:            null,
+  intentproposals:    null,
   /* T6-13 (reevaluation R15, R16): adopting a newer version appends a basis version, keeping the earlier one and
      recording a re-evaluation write the working record — the version acts' capability and their reason. */
   versionadopt:       "contribute",
