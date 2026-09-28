@@ -48,3 +48,7 @@ Two questions; I carry on with the job on my best reading of each.
 5. **legacy-index / control-plane**: `op=actionriskpropose` (R28) is in actions' ops map but needs its route and its `proposer` stamp in `index.mjs`; `actionRead`, `actionsFor`, `pendingClocks`, `clockPropose` are in-process services with no op yet.
 6. **Generated artifact**: `bio-plane/dist/bio-plane.bundled.mjs` is stale (store, schema, catalogue and the new module).
 7. **My readings to confirm:** R32's start event: `filed` is the first `sent` ledger entry, `received` the first `received` entry; `act` and `known` are not ledger events and read undetermined. R5's MACHINE-STATED reading uses the creation's recorded author (record-core's manifest, first by `seq`). R3/R27 match a quote's counterparty by "role, body". R33 refuses any clock change by a machine outside the mechanical `deadline-recheck` (pending→overdue past its date) as `CLOCK_STATUS_NOT_MECHANICAL`.
+
+## J3 · COMPLETE
+
+Job complete on job/T8/actions: every plan entry applied, 41 of 41 live ids named by tests (30 tests, 29 pass, 1 todo: R8's positive arm, waiting on conformance's early merge), the four checks pass. The completion section of this record lists entries, deferrals and the checks; J2 is the early-merge REPORT with the shapes and the findings in other modules.
