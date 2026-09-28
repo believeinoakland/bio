@@ -16,7 +16,6 @@ function real() {
   actionsOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, retrieval: null, conformance: w.c });
   s.esc = escalationOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion,
                                  now: () => w.clock.now });
-  s.esc.migrate();
   return s;
 }
 

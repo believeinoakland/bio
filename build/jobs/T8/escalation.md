@@ -1,6 +1,6 @@
 # escalation (T8)
 
-**Status** · session_01SpVCFJ485ktPaATS1SaQpH · depth 2 · COMPLETE · handled B9
+**Status** · session_01Dj21W7K2W3BqsaQUEQKpDo · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -51,3 +51,23 @@ Size (session_01SpVCFJ485ktPaATS1SaQpH): test runs 32, module lines 1425
 ## J4 · COMPLETE
 
 B9 applied; escalation COMPLETE: R1–R21 met over the real conformance, consequences, actions and filings; 27/27 tests, 0 todo; format, architecture, coverage, ownership 0 failures; no legacy file touched. Record § Completion.
+
+## Completion (ESCALATION #2, B10)
+
+**Entries applied.** B10 (K267): `escalationOf(host, deps)` now runs the module's `migrate()` at construction, before it declares its five tables to purge, as the other layer-9 factories do; `migrate()` stays public and idempotent (each `CREATE ... IF NOT EXISTS`). A caller that only constructs the module (monitoring, R35) now leaves the tables in place, so record-core's purge finds them. The test fixture and `real.test.mjs` no longer call `migrate()` themselves, so every arm runs on the construction path. New test (R20): after `escalationOf(host)` with no explicit `migrate()`, a whole-store purge and a bundle purge answer `ok` and clear the declared tables; a second construction and a second `migrate()` change nothing.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** Nothing new. N235 (instance-setup's `mdFor` counterparty shape) is BOB's, from LEGACY-TESTS #5.
+
+**Tests and checks** (on `job/T8/escalation` @ `tranche/T8`):
+- `node --test bio-plane/test/m/escalation/`: tests 28, pass 28, fail 0, todo 0. With the construction migrate removed: 0 pass, 28 fail (the failure reproduced).
+- `node --test bio-plane/test/m/monitoring/`: tests 52, pass 42, fail 0, todo 10 (unchanged).
+- `action-loop`, `actionquote`, `rec195-laws-proposal` (legacy-tests' versions from `job/T8/legacy-tests`, over this branch's escalation): 81/0, 49/0, 40/0; without the fix 79/2, 46/3, 38/2. On this branch's own copies these three files do not load (`QUOTE_CHECKS` is not exported by `bio-checks.mjs` at this base); legacy-tests' branch carries their update.
+- format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 34 relative imports; 0 failures. coverage: 21 of 21 live ids; 0 failures. ownership: 5 files changed; 0 failures (no legacy file touched).
+
+Size (session_01Dj21W7K2W3BqsaQUEQKpDo): test runs 12, module lines 1428
+
+## J5 · COMPLETE
+
+B10 applied (K267): escalationOf migrates its tables at construction, so a purge after construction finds them. New R20 test: whole-store and bundle purge ok after escalationOf(host) with no migrate(). Escalation 28/28; monitoring 42/0 (10 todo); action-loop 81/0, actionquote 49/0, rec195-laws-proposal 40/0 on legacy-tests' files (79/2, 46/3, 38/2 without the fix); format, architecture, coverage, ownership 0 failures. Record § Completion (ESCALATION #2, B10).
