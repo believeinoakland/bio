@@ -117,3 +117,7 @@ t("N290 a blank header: none", got[F], undefined);
 t("every promotion landed", rows.every((r) => r[1] === true), true);
 console.log(`\n${pass} pass, ${fail} fail`); process.exit(fail ? 1 : 0);
 ```
+
+## J2 · COMPLETE · re B2
+
+B2 applied: the N290 suite's full source is in my record under '### N290 suite (for legacy-tests)', one fenced block, with its path (bio-plane/test/n290-member-agent.test.mjs) and command (from bio-plane/: node test/n290-member-agent.test.mjs); re-run at that path, 6 pass, 0 fail. Only its header comment changed (it no longer says 'scratch, not committed'). Nothing else changed.
