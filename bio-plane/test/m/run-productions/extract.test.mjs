@@ -211,3 +211,45 @@ test("R15, R18: every production names a running run whose principal is the call
   assert.equal(notYours.code, "AI_RUN_NOT_PRINCIPAL");
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM proposed_readings WHERE proposed_by <> ?`, AK).n, 0, "attributed to the stamped proposer alone");
 });
+
+test("R10, R11 (N201): the chain's own refusal comes back with its sentence and NO_PROPOSALS with its; a cap equal to or weaker than the chain's is accepted at the op, the chain's cap computed; a production writes no reading, reading_refs or other extraction row", () => {
+  const { w, cap, propose } = base({ mints: 5 });
+  const before = w.snapshot();
+  const strong = propose({ cap: "A" });
+  refusedAs(strong, "TEXT_CHAIN_STRENGTHENS");
+  assert.match(strong.detail, /claims fidelity A, stronger than the C the chain already carries/);
+  assert.match(strong.detail, /can only weaken what it received/);
+  const empty = propose({ refs: [] });
+  refusedAs(empty, "NO_PROPOSALS");
+  assert.match(empty.detail, /An EMPTY one is not a reading that found nothing/);
+  assert.match(empty.detail, /belongs in the run's log/);
+  assert.deepEqual(w.snapshot(), before, "nothing written on either");
+  /* The op's cap: the same letter and a weaker one land, each step carrying what it claimed; the chain's cap is the
+     weakest step's. */
+  const same = propose({ refs: [REF(1)], cap: "C" });
+  assert.deepEqual([same.ok, same.chain.at(-1).cap, same.cap], [true, "C", "C"]);
+  const weaker = propose({ refs: [REF(2, { source: AT(0) })], cap: "D" });
+  assert.deepEqual([weaker.ok, weaker.chain.at(-1), weaker.cap],
+                   [true, { step: "ai", engine: "propose-reading", version: "0.1.0", cap: "D" }, "D"]);
+  assert.deepEqual(w.rows(`SELECT ref, cap FROM proposed_readings ORDER BY ref`), [{ ref: "ordinance:1", cap: "C" }, { ref: "ordinance:2", cap: "D" }]);
+  /* The listing says what the chain did, in text-chain's own sentence over the stored chain. */
+  const listed = w.p.extractProposals({ run: RUN, viewer: ALICE }).proposals.find((x) => x.ref === "ordinance:2");
+  assert.deepEqual(listed.basis.chain, weaker.chain);
+  assert.ok(typeof listed.basis.says === "string" && listed.basis.says.length > 0);
+  /* Never coverage (§7.3 (6)): only the proposals and the content row the positioned one minted moved; the extraction
+     tables (readings, reading_refs and the rest) are untouched. */
+  const after = w.snapshot();
+  assert.ok(["readings", "reading_refs"].every((t) => t in after), "extraction's tables are present to be written");
+  assert.deepEqual(Object.keys(after).filter((t) => after[t] !== before[t]).sort(), ["content", "proposed_readings"]);
+  assert.equal(w.row(`SELECT capture_sha FROM content WHERE content_id=?`, weaker.proposed[0].content_id).capture_sha, cap);
+});
+
+test("R12 (K313): the ratio's machine-credential pattern stays within workerd's 50-byte LIKE cap", () => {
+  const { w, propose } = base({ mints: 5 });
+  propose({ refs: [REF(1, { source: AT(0) })] });
+  w.st.patterns.length = 0;
+  const r = w.p.extractProposals({ run: RUN, viewer: ALICE });
+  assert.equal(r.instrument.minted, 1);
+  assert.ok(w.st.patterns.length > 0, "the ratio's statements ran a pattern");
+  assert.ok(w.st.patterns.every((p) => Buffer.byteLength(p) <= 50), JSON.stringify(w.st.patterns));
+});

@@ -152,7 +152,7 @@ import { promotionOf, stepContext, recordAudit } from "./promotion/index.mjs";
 import { provenanceOf, routeFinding, observerRef, TESTIMONY_PATH, PROVENANCE_TABLES } from "./provenance/index.mjs";
 import { Membership, membershipOf, membershipOps, noSuchProject } from "./membership/index.mjs";
 import { observationLogOf, observationLogOps, observationLogOwns, missingCause, OBSERVATION_LOG_MODULE } from "./observation-log/index.mjs";
-import { runProductionsOf, runProductionsOps, runProductionsOwns, runProductionsInterim, posFields } from "./run-productions/index.mjs";
+import { runProductionsOf, runProductionsOps, runProductionsOwns, posFields } from "./run-productions/index.mjs";
 import { captureRequestsOf, captureRequestsOps, renderHoldReason } from "./capture-requests/index.mjs";
 import { recordOf, stampInstant, instantOrder, perItem } from "./record-core/index.mjs";
 export { stampInstant, instantOrder } from "./record-core/index.mjs";
@@ -620,9 +620,7 @@ export class Store extends DurableObject {
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its
        tables to purge (R17) and registers its candidates with basis-versions (R14). ai-runs is handed over
        as its own module (its R28–R29). */
-    runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env), interim: runProductionsInterim({
-      aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
-    }) });
+    runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);   /* intent (K61, K198): its check (R1, R2, R26) joins every promotion before legacy-store's; its audit check keeps C-2.9 (R22) */
     caseAuthoringOf(ctx);
@@ -6633,7 +6631,6 @@ export class Store extends DurableObject {
   /* IS-6 — THE AI RUN is `ai-runs`' (`src/ai-runs/`, its R9–R29; T7). The store keeps the private
    * names its remaining readers call, each delegating to the module, until those readers are extracted. */
   #aiRuns() { return aiRunsOf(this.ctx, this.env); }
-  #aiRunInSight(run, viewer) { return !!this.#aiRuns().runFor(run, viewer); }
 
   /* CPDF-10: the transcription reads' page bound. ONE pair for BOTH reads
      deliberately -- they are one surface asked at two grains, and two constants

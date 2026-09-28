@@ -134,11 +134,18 @@ test("R19: no place is named in this module's behaviour or outward text — its 
   assert.deepEqual(texts.filter((t) => PLACE.test(t)), []);
 });
 
-test("K61: runProductionsOf answers one instance per storage, and a provider neither given nor handed over is refused loudly rather than guessed", () => {
+test("K61, R18 (N194): runProductionsOf answers one instance per storage; a provider not given is reached through its factory — ai-runs' own instance (aiRunsOf), whose runFor, boundOf and consumeBound are the only way a run or bound is read", async () => {
+  const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
   const { w } = extractWorld();
   assert.equal(RP.runProductionsOf(w.host), w.p);
-  assert.throws(() => RP.runProductionsOf({ storage: w.st }, { record: w.record, membership: w.membership, content: w.content,
-                                                                connections: w.connections }), /no aiRuns provider/);
+  const bare = world({ aiRuns: null });
+  assert.equal(bare.p.aiRuns, aiRunsOf(bare.host), "ai-runs reached through its factory, not a hand-over");
+  /* Driven through the real provider: a run nobody opened is SUGGEST_NO_RUN and NO_SUCH_RUN, read through its runFor. */
+  bare.inquiry(Q);
+  assert.equal(bare.suggest({ run: "RUN-NEVER" }).code, "SUGGEST_NO_RUN");
+  assert.equal(bare.p.extractPropose({ run: "RUN-NEVER", bundleId: DOC, fn: "propose-reading", version: "0.1.0",
+                                       refs: [{ ref: "k:1", refKind: "k", refKey: "1" }], proposedBy: AK, viewer: ALICE,
+                                       caller: AK }).code, "NO_SUCH_RUN");
 });
 
 test("R3's constants are published: the legs bound, the origin limit, the versions bound, the member-only fields and the three axes", () => {
