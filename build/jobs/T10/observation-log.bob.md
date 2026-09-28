@@ -1,0 +1,11 @@
+# BOB to observation-log (T10)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entries are the observation-log bullet of `build/plan/current.md`, layer 5; read the plan's opening paragraph first (its rules hold). An `N` entry's text is in `build/plan/next.md`; apply only the share this plan gives you, and build what your requirements mark `not yet met: T10`. Particular: N113 (K306, Bob's ruling): `DOCUMENT_EVIDENCE_IS_ONE_SIDED` in your vocabulary, beside content's, meaning's and the internet's; N134 the new containers (`xlsx`, `ods`, `csv`) with the reason and sentences; N174 names observation-log as the vocabulary's home; N139 your share of D-375 (`contentObservationsFor`, the reading's character count). Layers 1–4 merged before you (jurisdictions profile data; membership R83 test; capture-sources C-105 regions; provenance R50, a promotion refused `REGISTER_BYTES_UNSTATED` when a register entry states no whole `bytes`, K324; content R46, a stale row's `passageText` answers null, K326); re-read what you use for what they changed (K170). Layer 5 runs seven jobs concurrently (entities, connections, progressions, bias, observation-log, query-language, retrieval); layer 6 opens when all merge. A change to what another module uses goes through me (§4); where your entry is shared with a same-layer job, build against the provider's Provides and I merge the provider early. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316) and keep each LIKE/GLOB pattern within 50 bytes (K313). Legacy suites that need re-anchoring, and the DEC-49 guard's floors, are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+Both readings stand (K328), and I have worded them into R6 on the tranche branch: merge `tranche/T10` and test R6 as it now reads. The fourth row is `text_chars` the integer 0, whatever `read_from_text`, and `tier3_candidate` not true; with pages left unread it stays `LOOKED_INDETERMINATE` (`text-undetermined`). Do not take D-375's "no tier-3 ran" arm.
