@@ -27,3 +27,12 @@ Read whole: `roles/JOB.md`; B1; the plan's opening paragraph and layer 2; N275 a
 **Deferred:** nothing.
 
 Size (session_01ASTMYa8KNLdKEKcGwkyoBG): test runs 7, module lines 2299
+
+## J1 · COMPLETE
+
+Both entries applied and pushed on job/T11/promotion (7702929d29; record d2b1b1e954).
+N281: CATALOG_VERSION 1.40.0 -> 1.41.0, MINOR. Since 1.40.0, counted wherever rows live: arrived C-53.14 (provenance), C-91.4 (entities), C-107.2 (strength); departed C-100.1, C-100.12, C-100.23 (progressions); changed C-22.1 and C-22.17 (observation-log now answers C-22.17 where C-22.1 was answered). C-81.11-14 are held once now, not changed. C-22.7 is in transit to ai-runs and counted where it lands, so ai-runs' layer-6 row needs no new stamp if its code, condition and translation are unchanged. For legacy-tests, from the d470 print: version 1.41.0, count 396, digest de54b8bd85553c5d588c0b82fdbf0ea48a4bed3fe47d982fd9a8c1e3c5c023fe, source 8ada0f4c65a617f0e120bdfe8359f2b591d039b8a02e2cc3967d8aa27fd90f03. A3 and A5 stay red until that re-pin. R34's not-yet-met mark is met, for you to strike.
+N275 (my share): caseCatalogueFailed, the function C-102.9's where names, now builds the case gate's whole answer with ok: false at the top, and verdict-reader reads it as a refusal. The answer itself is unchanged, and C-102.9's where string needs no edit. R33's test holds the whole shape.
+Tests: promotion 64/65. The one failure is write-path, where the plane cannot boot at skilldoctrine.mjs:254 (C-22.7, K348); it fails the same way without my change. test/m: 2346 pass, 47 fail, 25 todo; every failure is a plane-booting suite or ai-runs/skills (K348). format, architecture, coverage and ownership: 0 failures.
+Stale: bio-plane/dist/bio-plane.bundled.mjs still carries 1.40.0. Deferred: nothing.
+Size (session_01ASTMYa8KNLdKEKcGwkyoBG): test runs 7, module lines 2299
