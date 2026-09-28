@@ -63,3 +63,7 @@ B4 applied (after J3): actionRead answers state_history, the action's state move
 ## J5 · COMPLETE
 
 Complete again after B4 (J4). Everything else as J3.
+
+## J6 · COMPLETE
+
+B5 and B6 (K252) applied: tranche/T8 merged; conformance defaults to conformanceOf(host), created with actions so its step joins before any promotion; R8 reads the R9 shape (live, superseded_by; NO_SUCH_DETERMINATION). R8's todo is now a test over the real module (no determination: refused) with a stand-in in R9's shape for the live and superseded arms. test/m/actions: 29 tests, 29 pass, 0 todo; format, architecture, coverage (41/41) and ownership pass. Record's completion section updated.
