@@ -405,11 +405,14 @@ export async function publishedRoutes({ op, url, env, stub }) {
       const docBytes = d.found && typeof d.text === "string" ? new TextEncoder().encode(d.text) : null;
       const docSha = docBytes ? [...new Uint8Array(await crypto.subtle.digest("SHA-256", docBytes))]
         .map((x) => x.toString(16).padStart(2, "0")).join("") : null;
-      if (docSha !== shaParam)
-        return P.json({ ok: false, reason: "CASE_DOCUMENT_UNSERVABLE", sha256: shaParam,
+      if (docSha !== shaParam) {
+        /* DEC-49 REGION is-case-document-unservable */
+        return P.json({ ok: false, reason: "CASE_DOCUMENT_UNSERVABLE", ...rowOf("CASE_DOCUMENT_UNSERVABLE"), sha256: shaParam,
           detail: "this hash is a ratified case document's and is published, but the record could not produce "
                 + "bytes that hash to it, so nothing is served. Nothing here says the document was never "
                 + "ratified: op=verify still answers for the hash." }, 500);
+        /* END DEC-49 REGION is-case-document-unservable */
+      }
       return new Response(docBytes, { status: 200, headers: {
         "content-type": "application/octet-stream", "access-control-allow-origin": "*",
         "x-published-sha256": shaParam, "x-published-kind": "case_document",

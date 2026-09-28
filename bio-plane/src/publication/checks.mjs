@@ -4,7 +4,7 @@
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R33): C-44.2 (the read's half
  * of D-309, raised by `#resolveOneCase`; C-44.1 and C-44.3–.5 stay in the catalogue's `CASE_DERIVATION_CHECKS` as
  * case-authoring's), C-68.5 (the published-store complaint, held here as its earliest raiser; the rest of C-68 stays
- * in `INSTALLATION_CHECKS`, and `control-plane` imports this row, K93 (3)), the whole of C-98 (the public door) and
+ * in `INSTALLATION_CHECKS`, and `control-plane` imports this row, K93 (3)), the whole of C-98 (the public door; C-98.9 added at the move, K245) and
  * C-92.1–.9 (the attribution act; C-92.10–.12 are ratification's and stay in the catalogue's `ATTRIBUTION_CHECKS`).
  * Each family keeps its catalogue name where it moved whole (`PUBLISHED_READ_CHECKS`) and takes a name of its own
  * where the catalogue keeps the rest of the family, so no two families share a name.
@@ -140,6 +140,16 @@ export const PUBLISHED_READ_CHECKS = {
     translation: 'Nothing this copy of the record has published answers to what you asked for. A case that was '
       + 'never published, an edition that does not exist and a name that never existed all get this same answer, '
       + 'so it says nothing about anything unpublished. Nothing was changed.',
+  },
+  /* D-734 (K245): a RATIFIED case document's hash is published, and its bytes are its signed text, re-hashed before
+     they are served. When the record cannot produce bytes that hash to it, nothing is served and this says so; it is
+     never NO_PUBLISHED_PART, whose sentence would call the document never published. */
+  CASE_DOCUMENT_UNSERVABLE: {
+    check: 'C-98.9',
+    where: 'src/publication/worker.mjs publishedRoutes > is-case-document-unservable',
+    translation: 'This case document is published and signed, but this copy of the record could not produce its exact '
+      + 'contents just now, so it hands over nothing rather than something different. The fingerprint is genuine and '
+      + 'can still be checked. Nothing was changed. Whoever runs this copy can repair it.',
   },
 };
 

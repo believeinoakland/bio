@@ -6,7 +6,6 @@ import { world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, REAUTHORABLE_SECTIONS,
          PUBLICATION_TABLES } from "../../../src/publication/index.mjs";
-import { REVIEW_COPY_CHECKS } from "../../../checks/bio-checks.mjs";
 
 /* One project owned by olive, one finding prepared into CASE-2026-0001 edition 1 (unsigned). */
 function prepared(opts = {}) {
@@ -198,7 +197,7 @@ test("R21 reauthorSection splices one named section only while unsigned and at d
   assert.equal(w2.p.reauthorSection({ case: "CASE-2026-0001", edition: 5, section: "attribution", lines }).doc_sha, null);
 });
 
-test("R23 one review provider, once; with none, no grant admits and every door refuses, the dead answer C-87.1's", () => {
+test("R23 one review provider, once; with none, no grant admits and every door refuses, the dead answer a bare NO_REVIEW_COPY", () => {
   const w = world();
   const none = w.p.reviewProvider();
   assert.equal(none.registered, false);
@@ -209,8 +208,7 @@ test("R23 one review provider, once; with none, no grant admits and every door r
   assert.equal(none.caseIdentitySentence("C", 1, false), null);
   assert.equal(none.statedEdition({}, false), null);
   const dead = none.deadAnswer();
-  assert.deepEqual([dead.ok, dead.reason, dead.code, dead.check, dead.translation],
-                   [false, "NO_REVIEW_COPY", "NO_REVIEW_COPY", "C-87.1", REVIEW_COPY_CHECKS.NO_REVIEW_COPY.translation]);
+  assert.deepEqual(dead, { ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY" }, "a bare refusal: C-87 is review's");
   const doors = { draftForMember: () => "d", draftIdentity: () => "i", caseIdentitySentence: () => "s",
                   statedEdition: () => 2, liveGrant: () => "g", grantAdmitsCaseEdition: () => true, deadAnswer: () => "x" };
   assert.equal(w.p.registerReviewProvider("legacy-store", { ...doors, deadAnswer: 3 }).reason, "PROVIDER_MALFORMED");
