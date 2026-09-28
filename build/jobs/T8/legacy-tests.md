@@ -97,3 +97,9 @@ The old battery on this tree (job/T8/legacy-tests = tranche/T8 @ a674760185 plus
 civicos-ui: `node civicos-ui/check-refusal-codes.mjs` 146 failures; `check-semantics.mjs` the N68 docprofile red; `test/refusal-codes.test.mjs` 158 green; `bias-vocabulary` 74/7; `add-surface` does not load (`ACQUIRE_GRADE_NOTE` left affordances, N80); `several-cases-choice` 14/1; `case-frozen-pair` 24/0.
 
 I now work the bullet's items, suite by suite, and measure against this.
+
+## Progress (working notes; the COMPLETE entry supersedes)
+
+- Baseline in J1: 87 of 369 old suites red; the guard 146 failures.
+- Work split into four families, each worked by an agent inside this session, each suite owned by one: (1) the DEC-49 guard and the refusal/catalogue suites (with d470's 1.37.0/1.38.0 rows); (2) bounds, reads and walked ratchets; (3) layer 8's case, publication and review suites, the hunch-debt fixtures, `publish` §9; (4) layers 9–11: actions, scheduler, monitoring, affordances, rung-ladder (N177), civicos-ui's two surface suites.
+- Next: fold each family's result, commit, re-run the whole battery, checks, COMPLETE.
