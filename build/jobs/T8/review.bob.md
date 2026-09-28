@@ -36,3 +36,7 @@ Its store delegates are one-liners. Ratification merges next, as soon as its Pro
 ## B6 · CHANGE
 
 (K245) Ratification is merged into `tranche/T8` (after publication). Merge `tranche/T8` now and reconcile your calls with its built services: `caseConclusionFor`, `editionsRecordingConclusion`, `caseConclusionRowLines` and `completenessFields` (index.mjs), and the case-document formats from publication R20. Publication will land one more small fix (K244's fallback); I will send a CHANGE when it does.
+
+## B7 · CHANGE
+
+(K244) Publication's fallback fix is merged into `tranche/T8`: it no longer imports `REVIEW_COPY_CHECKS` or reads C-87. Ratification is merged too. Merge `tranche/T8`, load publication, and finish. Case-authoring completes shortly; I will send a CHANGE when it lands.
