@@ -3,7 +3,7 @@
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/cpu.mjs`,
 `bio-plane/src/tokens.mjs`. No row of the old plan and no entry in `build/plan/next.md` targets this
 module; every requirement below is met by the code as it stands. N63 folded by a drafting worker for BOB #43,
-2026-09-26: R26 (`unattendedCredential`, K90 (2)), not yet met.
+2026-09-26: R26 (`unattendedCredential`, K90 (2)); met by RUNTIME-LIMITS #2 (T8, K227).
 
 ## Public
 
@@ -99,10 +99,10 @@ set a credential.
 
 **unattendedCredential(env) → {bound, token}** (K90 (2): the choice `monitoring` and `capture-requests` share)
 - **R26** `bound` is a boolean, computed synchronously: `true` exactly when `env.DAEMON_TOKEN` or
-  `env.ADMIN_TOKEN` is present and non-empty (presence only; publication is not asked). `token()` answers a
+  `env.ADMIN_TOKEN` is present and non-empty, that is truthy (presence only; publication is not asked; K227). `token()` answers a
   `Promise<string | null>`: `env.DAEMON_TOKEN` when it is a string that is `liveToken`, else
   `env.ADMIN_TOKEN` on the same test, else `null`. The object itself never carries a credential's value.
-  *(not yet met: N63; the store holds it as `#monitorTokenBound` and `#monitorToken`)*
+  *(met, T8; the store still holds its own copies, `#monitorTokenBound` and `#monitorToken`, until monitoring and capture-requests are extracted)*
 - Errors: never throws; `token()` never rejects.
 
 **The reason constants**

@@ -1,7 +1,7 @@
 <!-- The case-authoring survey, split three ways from the publication map for BOB #43 on 2026-09-26 on tranche/T3 (K94); superseded where it disagrees with build/requirements/case-authoring.md. -->
 # case-authoring — extraction map
 
-**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b` (`bio-plane/` unchanged at `03e2481`) by a drafting worker for BOB #43 (P18), split from the publication map's [A] rows (K94). **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), as `build/extraction/publication.md` states: `store.mjs`, `airun.mjs`, `bio-checks.mjs`, `schema.mjs` and module-file lines are current there; `index.mjs` cites are pending T7's close. Ranges and "code" as `build/extraction/publication.md` states them; the extraction job confirms each. The contract is `build/requirements/case-authoring.md` (R1–R30); K3, K6, K57, K61, K82 (5) and K94 apply. The module exports `caseAuthoringOf(ctx)` (K61); `legacy-store` delegates to it. **`from`: `["legacy-store", "legacy-checks"]`**; nothing moves from `index.mjs`. It uses `publication` and `ratification`.
+**Status** · Measured 2026-09-26 on `tranche/T3` @ `f324df9b` (`bio-plane/` unchanged at `03e2481`) by a drafting worker for BOB #43 (P18), split from the publication map's [A] rows (K94). **Re-cited** on `tranche/T7` @ `fd7e691a17` by a worker for BOB #53 (K214), as `build/extraction/publication.md` states: `store.mjs`, `airun.mjs`, `bio-checks.mjs`, `schema.mjs` and module-file lines are current there; `index.mjs` cites were re-cited at T8's opening, on `tranche/T8` @ 12e2067a5f (K226). Ranges and "code" as `build/extraction/publication.md` states them; the extraction job confirms each. The contract is `build/requirements/case-authoring.md` (R1–R30); K3, K6, K57, K61, K82 (5) and K94 apply. The module exports `caseAuthoringOf(ctx)` (K61); `legacy-store` delegates to it. **`from`: `["legacy-store", "legacy-checks"]`**; nothing moves from `index.mjs`. It uses `publication` and `ratification`.
 
 ## 1. What moves
 
@@ -58,7 +58,7 @@ Checks: 218 lines (85 code).
 | review's draft, grant and dead-answer helpers | store 6587–7362 | `review` | reached through `publication`'s provider (its R23) |
 | `SELECTION_ID_CHUNK` | `retrieval/schema.mjs` 100 (re-exported by `retrieval/index.mjs` 33); the store's static 1548 re-exports it | `retrieval` | this module keeps its own equal constant (K57) |
 | `refusal()`, `#fmSafe` | store 524–527, 8523–8525 | shared | copied (K57) |
-| `DO_PATH`'s alias of `op=publish`, the stamps of `publish` and `statementack` | index (index.mjs: re-cite at T7's close) | `control-plane` | K3 |
+| `DO_PATH`'s alias of `op=publish`, the stamps of `publish` and `statementack` | index | `control-plane` | K3 |
 
 ## 3. Callers to rewire
 
