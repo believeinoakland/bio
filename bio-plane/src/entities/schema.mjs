@@ -59,8 +59,8 @@ CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
 -- member's testimony, never the machine's. established is derived from the grade at the write (1 for A and B), so
 -- a C can never be read back as established. Keyed (capture_sha, ref, entity_id): a stronger re-resolution RAISES
 -- in place (raised_from), never a second row and never a downgrade (R10). Keyed to its bundle, so the per-bundle
--- purge clears it too (R30). A stated read contract (the Suggestions): capture_sha, bundle_id, ref, entity_id,
--- grade, established.
+-- purge clears it too (R30). A stated read contract (R35, N135): capture_sha, bundle_id, ref, entity_id, grade,
+-- established (1 exactly when isEstablished holds of grade, R34); so are entities' entity_id and at (N110).
 CREATE TABLE IF NOT EXISTS resolutions (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
