@@ -26,7 +26,7 @@
 - **skills** · N156; N157 (its share); N245 (its share).
 - **agent-worker** · N153 (its share); N157 (its share).
 
-- **provenance** (layer 3) · N263.
+- **provenance** (layer 3) · N263. **content** (layer 4) · N264.
 
 ### Layers 7–10
 
