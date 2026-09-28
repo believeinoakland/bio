@@ -1,9 +1,9 @@
-/* provenance: the register, written inside a promotion (R1–R3), and its reads (R4, R5, R11, R12); the invariants
+/* provenance: the register, written inside a promotion (R1–R3, R50), and its reads (R4, R5, R11, R12); the invariants
    about who writes it (R35, R38, R41) and the read contract (R48). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, provDoc } from "./fixture.mjs";
-import { PROVENANCE_TABLES } from "../../../src/provenance/index.mjs";
+import { PROVENANCE_TABLES, REGISTER_ENTRY_CHECKS } from "../../../src/provenance/index.mjs";
 
 test("R1: one row per capture, with the module's clock, and a revision updates it without clearing what it keeps", () => {
   const w = world({ now: "2026-09-27T03:00:00.000Z" });
@@ -328,9 +328,54 @@ test("R48: register.bytes is the registered capture's size as the entry that reg
   assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, 13);
 });
 
-test.todo("R50: a register entry whose bytes is absent, null, or not a whole number at least 0 is refused " +
-          "REGISTER_BYTES_UNSTATED (C-53.14) before anything is written; not yet met: T10, N263 (an absent bytes fails " +
-          "as PROMOTE_FAILED, -1 or 1.5 are stored as stated)");
+test("R50: an entry whose bytes is absent, null, or not a whole number at least 0 is refused REGISTER_BYTES_UNSTATED, first, before anything is written", () => {
+  const w = world();
+  const a = w.cap("a"), held = w.cap("held");
+  assert.equal(w.promoteInfo("INFO-2026-0001-h", { captures: [held] }).ok, true);
+  const t = w.prov.testify({ words: "The door was open.", observedAt: "2026-09-20", author: V("ruth") });
+  assert.equal(t.ok, true, JSON.stringify(t));
+  const row = REGISTER_ENTRY_CHECKS.REGISTER_BYTES_UNSTATED;
+  assert.deepEqual([row.check, typeof row.translation, /^src\/provenance\/index\.mjs /.test(row.where)], ["C-53.14", "string", true],
+                   "its catalogue row, its where naming the check's region");
+  const good = { sha256: a.sha, path: a.path, encoding: "utf8", bytes: Buffer.byteLength(a.text) };
+  const promote = (register, extra = {}) => w.promoteInfo("INFO-2026-0002-a", { captures: [a], pkg: { register, ...extra } });
+  const refusedAs = (r, index, sha256, path, what) => {
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "REGISTER_BYTES_UNSTATED", "REGISTER_BYTES_UNSTATED",
+                     "C-53.14", row.translation], what);
+    assert.deepEqual([r.index, r.sha256, r.path], [index, sha256, path], `${what}: names the entry's sha256 and path`);
+    assert.equal(typeof r.detail, "string", what);
+  };
+  /* Every way an entry can fail to state a whole size at least 0, each refused with nothing written. */
+  const { bytes: _drop, ...absent } = good;
+  const bad = [["absent", absent], ["null", { ...good, bytes: null }], ["negative", { ...good, bytes: -1 }],
+               ["fraction", { ...good, bytes: 1.5 }], ["a string", { ...good, bytes: "12" }], ["NaN", { ...good, bytes: NaN }],
+               ["infinite", { ...good, bytes: Infinity }], ["past exact", { ...good, bytes: 2 ** 53 }],
+               ["a bigint", { ...good, bytes: 12n }], ["an object", { ...good, bytes: { n: 12 } }], ["a boolean", { ...good, bytes: true }]];
+  for (const [what, entry] of bad) {
+    const before = w.snapshot();
+    refusedAs(promote([entry]), 0, a.sha, a.path, what);
+    assert.deepEqual(w.snapshot(), before, `${what}: nothing written`);
+  }
+  /* An entry that is not an object states no size: refused, naming no sha256 or path. The one past the first good entry
+     is the one named. */
+  refusedAs(promote([good, null]), 1, null, null, "a null entry");
+  refusedAs(promote([good, "x"]), 1, null, null, "a string entry");
+  /* A replay is not exempt, and the check is asked before the testimony fence (R3) and one-home (R2), which would also fire. */
+  refusedAs(promote([{ ...good, bytes: -1 }], { replay: true }), 0, a.sha, a.path, "a replay");
+  refusedAs(promote([{ sha256: held.sha, path: held.path }]), 0, held.sha, held.path, "before R2");
+  refusedAs(promote([{ sha256: t.capture_sha, path: t.file, bytes: 1.5 }]), 0, t.capture_sha, t.file, "before R3");
+  assert.equal(w.head("INFO-2026-0002-a"), null);
+  /* Accepted: 0 and the largest exact size, each stored exactly as stated (never compared with the stored object). */
+  const r = promote([{ ...good, bytes: 0 }]);
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, 0);
+  const rev = w.promoteInfo("INFO-2026-0002-a", { captures: [a], base: w.head("INFO-2026-0002-a").bundleSha,
+                                                  pkg: { register: [{ ...good, bytes: Number.MAX_SAFE_INTEGER }] } });
+  assert.equal(rev.ok, true, JSON.stringify(rev));
+  assert.equal(w.row(`SELECT bytes FROM register WHERE capture_sha = ?`, a.sha).bytes, Number.MAX_SAFE_INTEGER);
+  /* A promotion with no register list, or an empty one, is not asked. */
+  assert.equal(w.promoteInfo("INFO-2026-0003-n", { pkg: { register: [] } }).ok, true);
+});
 
 test("R48: captured_locators.via is the receipt's source and part of its key; last_retrieved its latest", () => {
   /* N227, K276: monitoring R26 reads `via`. */

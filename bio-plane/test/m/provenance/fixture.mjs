@@ -1,5 +1,6 @@
 /* provenance over the modules it uses, each the real one (record-core, membership, promotion), on a real SQLite
-   database (node:sqlite) standing in for a Durable Object's storage: `sql.exec` and `transactionSync`, which rolls
+   database (node:sqlite) standing in for a Durable Object's storage at its shape: `sql.exec`, answering a cursor as
+   workerd does, and `transactionSync`, which rolls
    back what `fn` wrote when it throws and nests as savepoints. Every test drives provenance at its interface; the
    promotions it registers into are driven through promotion's own `promote`. */
 import { DatabaseSync } from "node:sqlite";
@@ -13,13 +14,34 @@ export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Bu
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* A cursor as workerd's `sql.exec` answers one (K316): an iterator over the rows, read once, with `toArray()` and
+   `one()`; never an array, so `[0]` or `.length` on it is undefined, as in a Durable Object. */
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    columnNames: rows.length ? Object.keys(rows[0]) : [],
+    rowsRead: rows.length,
+    rowsWritten: 0,
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+    raw() { return c.toArray().map((r) => Object.values(r))[Symbol.iterator](); },
+  };
+  return c;
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -78,14 +100,14 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
   prov.migrate();
   const w = {
     st, host, record, membership, promotion, prov, clock, facts,
-    row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
+    rows: (q, ...a) => [...st.sql.exec(q, ...a)],
+    count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
     /** Every row of every table, for "nothing was written" (promotion R2). */
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM ${name}`));
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)]);
       return out;
     },
     /** Promote an information bundle with a register document for each capture. */
