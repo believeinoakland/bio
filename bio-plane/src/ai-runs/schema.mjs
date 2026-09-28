@@ -1,0 +1,94 @@
+/* ai-runs' tables (R38; Bob's ruling 3, "each module owns its tables"), moved from `schema.mjs` at the module's
+ * extraction. `lens_at_open` and `rerun_of` were additive columns of the store's migration; they are part of the
+ * table here, and `migrate` adds them to a table created before them. */
+export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
+
+export const AI_RUNS_SCHEMA = `
+
+-- IS-6 / INVESTIGATIVE-SESSION.md §11: THE RUN IS AN OBJECT, and it is built on
+-- the capture_sessions shape above rather than on a new one — "SCRATCH, not
+-- record… a work list with an expiry": ticks, an expiry, opaque state,
+-- resumable across invocations. Every column beyond that shape is one §11 or
+-- §14b.6 names, and each is here because a version is only interpretable
+-- against the conditions it was formed under.
+--
+-- THE LEASE IS THE HEARTBEAT AND 'expires' IS IT. A run extends it on every
+-- tick. A run that is KILLED extends nothing, so the lease lapses and the
+-- ai-run-reap scheduler consumer terminates it — which is how the observation
+-- log gets its terminal entry for a run that never ran its own exit path. That
+-- is the whole of §14b.6's guarantee and the reason this column is not merely a
+-- TTL for tidiness.
+--
+-- TWO PRINCIPALS, NEVER ONE (§14a, DEC-27(b), DEC-55.4). 'principal_plane' is
+-- the plane credential ('token:<class>' or a member id); 'principal_claude' is
+-- WHICH LEVEL of the Claude-account cascade paid — member, then project, then
+-- instance. They are two different principals and an act must say both. NEITHER
+-- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
+-- configured, not a secret, and nothing in the plane writes a credential here.
+--
+-- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
+-- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
+-- record store. 'state' is the run's resumable SCRATCH — its work list — and
+-- the observation log below is a structured account of where the search went.
+-- Neither is a transcript, and there is no column here one could be put in.
+CREATE TABLE IF NOT EXISTS ai_runs (
+  run                   TEXT PRIMARY KEY,
+  status                TEXT NOT NULL DEFAULT 'running',
+  label                 TEXT,
+  mode                  TEXT,
+  context_type          TEXT NOT NULL,
+  context_id            TEXT NOT NULL,
+  principal_plane       TEXT NOT NULL,
+  principal_claude      TEXT NOT NULL,
+  principal_claude_ref  TEXT,
+  skill_version         TEXT,
+  bias_manifest         TEXT,
+  standard_pair         TEXT,
+  created               TEXT NOT NULL,
+  updated               TEXT NOT NULL,
+  expires               TEXT NOT NULL,
+  ticks                 INTEGER NOT NULL DEFAULT 1,
+  state                 TEXT NOT NULL,
+  stopped_bound         TEXT,
+  stopped_condition     TEXT,
+  stopped_at            TEXT,
+  lens_at_open          TEXT,
+  rerun_of              TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
+CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
+
+-- §14b.6's budget, ONE ROW PER BOUND, with its live consumption beside it.
+-- Rows rather than columns because F11 (§19, carried by UI-38) requires the
+-- surface to render the budget and its consumption while the run is live, and
+-- its renderers are field-name-blind — they walk what the record published. A
+-- bound added later is a row, and nothing on any surface moves.
+--
+-- BOTH NUMBERS ARE STORED. UI-38 derives nothing and its suite fails any
+-- arithmetic in the rendered output, so the record must publish 'allowed' and
+-- 'consumed' separately; a percentage or a remainder computed here would only
+-- move the same defect one layer down.
+CREATE TABLE IF NOT EXISTS ai_run_bounds (
+  run       TEXT NOT NULL,
+  bound     TEXT NOT NULL,
+  allowed   INTEGER NOT NULL,
+  consumed  INTEGER NOT NULL DEFAULT 0,
+  unit      TEXT,
+  PRIMARY KEY (run, bound)
+);
+
+-- D-85 (INVESTIGATIVE-SESSION.md section 11 item 5, rule 2, BOB #25, 2026-09-21): AN ASSISTANT OPENS A
+-- QUESTION ONLY INSIDE A RUN. When an 'ai' credential creates an inquiry it names a RUNNING run whose
+-- principal it is, and the plane records the link HERE, keyed by the new inquiry. It is an INSTANCE row and
+-- never a line in the inquiry's signed bytes: the run is scratch and is never published, and a pointer in
+-- published bytes that no reader can resolve is not provenance. One row per inquiry (an inquiry is created
+-- once). Its principal is the control plane's stamp for the credential that created it, never a field it sent.
+-- The column is named bundle_id so the row rides purge's TABLES list and clears in BOTH arms (D-113).
+-- NO index beyond the key: every reader asks by the inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
+  bundle_id  TEXT PRIMARY KEY,
+  run        TEXT NOT NULL,
+  principal  TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+`;
