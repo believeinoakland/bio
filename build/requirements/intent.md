@@ -1,6 +1,6 @@
 # intent — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. A new module in all but one arm: measured on `tranche/T3` @ `f324df9b0f`, nothing in `bio-plane/src/store.mjs` or `schema.mjs` implements intent. What exists: a project's `objective` is a free-text frontmatter field, required non-empty by the first arm of C-2.9 (`bio-plane/checks/bio-checks.mjs` 4181–4183, inside `checkProjectExtension` 4178–4216); it is written at instance setup (`bio-plane/src/setup.mjs` 894, `instance-setup`'s) and by the UI. Named but unbuilt elsewhere: the queue kind `objective-gap` (`queuestate.mjs` 145, D-76, no producer), the observation-log authority kind `objective` (store.mjs 42143–42151: "no writer on this tree"). The discovery loop's defer and dismiss exist for one proposal source only, progressions' derived findings (`progressions` R20–R22, D-79). `from`: `legacy-store` as declared; `build/extraction/intent.md` proposes `legacy-checks` instead. Met: R1. Not yet met: R2–R18 (a new module), R26 (K102); the invariants R19–R25 bind the new code, and R22 is met when the check moves. No old-plan row is carried to `intent`.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 7. A new module in all but one arm: measured on `tranche/T3` @ `f324df9b0f`, nothing in `bio-plane/src/store.mjs` or `schema.mjs` implements intent. What exists: a project's `objective` is a free-text frontmatter field, required non-empty by the first arm of C-2.9 (`bio-plane/checks/bio-checks.mjs` 4181–4183, inside `checkProjectExtension` 4178–4216); it is written at instance setup (`bio-plane/src/setup.mjs` 894, `instance-setup`'s) and by the UI. Named but unbuilt elsewhere: the queue kind `objective-gap` (`queuestate.mjs` 145, D-76, no producer), the observation-log authority kind `objective` (store.mjs 42143–42151: "no writer on this tree"). The discovery loop's defer and dismiss exist for one proposal source only, progressions' derived findings (`progressions` R20–R22, D-79). `from`: `legacy-store` as declared; `build/extraction/intent.md` proposes `legacy-checks` instead. Met: R1. Not yet met: R2–R18 (a new module), R26 (K102); the invariants R19–R25 bind the new code, and R22 is met when the check moves. No old-plan row is carried to `intent`. N178 folded by BOB #54 (K228): R27 (ageing due and wake) and R28 (what a subject serves, scheduler's rank); not yet met.
 
 **Size (P6).** About 3 lines move today (C-2.9's objective arm). The module is written new from this file; its first job reports its size. Nothing here suggests it approaches 4,000.
 
@@ -26,10 +26,13 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R5** Each `short` instance names why: the stages missing, or the grade reached against the grade required and the weakest link (`progressions` R10). Bundle ids the viewer may not see are null; counts and grades are the same for every reader. *(not yet met: new module)*
 
 **gaps({project, viewer}) → `{ok, project, gaps}`**
-- **R6** One gap per short instance: a missing stage names the progression, entity and stage (the records request already specified); a short grade names the link to strengthen. Each gap is a proposal (Interaction Constructs, PROPOSAL), offered to `queue` as kind `objective-gap` and to `scheduler` for ordering. *(not yet met: D-76's producer, never built)*
+- **R6** One gap per short instance: a missing stage names the progression, entity and stage (the records request already specified); a short grade names the link to strengthen. Each gap is a proposal (Interaction Constructs, PROPOSAL), offered to `queue` as kind `objective-gap` and to `scheduler` for ordering through R28. *(not yet met: D-76's producer, never built)*
 
 **watchSet({project}) → `{entities, progressions, captures}`**
 - **R7** What the condition reads: its entity and related entities, its progression, and the captures placed in matched instances, so `monitoring` watches exactly those. Empty with no condition. *(not yet met: new module)*
+
+**servesOf({addresses?, bundles?, requests?}) → `{ok, serves, truncated}`** (for `scheduler`'s rank, its R10; not an op)
+- **R28** For each named subject (at most 1,000 in all; beyond that the first 1,000 in the order given, with `truncated: true`), `serves` holds `{kind, id, gaps, aspirations}`: `gaps` the keys (R6) of every open gap, in any project, the subject serves, and `aspirations` the ids of every `held` aspiration in force (R12) for the subject's project that it serves, member aspirations aside (they shape that member's queue only, §12.1). A bundle serves a gap when it is a document of the gap's short instance, and an aspiration when it is placed in an instance of a progression the aspiration names or concerns an entity it names; an address serves what the bundles captured from it serve; a request serves what its address and its `target` question serve. A subject serving nothing, or unknown, answers empty lists. It is read as the plane, orders work only and is never shown: no read of evidence uses it (R21). It writes nothing and never throws. *(not yet met: N178)*
 
 **Goals: declareGoal({statement, bounds, aspiration?, author}), linkObjective({goal, project, author}), closeGoal({goal, reason, author})**
 - **R8** Each refuses a machine (`MACHINE_CANNOT_DECLARE_GOAL`), an empty statement or bounds (`NO_STATEMENT`), a goal or aspiration the author may not see (`NO_SUCH_GOAL`, `NO_SUCH_ASPIRATION`), and `closeGoal` without a reason (`NO_REASON`). `linkObjective` records the decomposition as the author's dated claim and needs the author joined in that project. A goal carries no progress figure; its objectives do. A closed goal stays readable with its objectives and reason. *(not yet met: new module; how a goal is held is R26, K102)*
@@ -51,6 +54,9 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 **ageSurfaced(now) → `{aged}`** (called by `scheduler`)
 - **R17** A question surfaced by a machine (`surfaced_by: agent`) that no member has acted on within the instance's ageing interval moves to `deferred` with the recorded reason "surfaced by an assistant; no member acted within N days", through `inquiry`'s dispose act under a plane actor. Nothing is deleted. *(not yet met: new module)*
 
+**ageDue(now), ageWake(now) → instant | null** (for `scheduler`, beside R17 as its tick)
+- **R27** A question is **ageable** when R17 would move it (at `surfaced`, surfaced by a machine, no member's entry); its **ageing instant** is its last entry's time plus the ageing interval. `ageDue` answers the earliest ageing instant of any ageable question, past or not; `ageWake` the earliest one later than `now`; each answers null when there is none. A question R17 tried and could not move stays due and is tried again at a later firing, never woken for. Both write nothing and never throw. *(not yet met: N178)*
+
 **workObjective({project, author}) → the run opened, or refusal**
 - **R18** A member's act only (`MACHINE_CANNOT_CHOOSE_THE_QUESTION`, DEC-24 rule 2): opens a run through `ai-runs` with the project as its context and the objective and its current gaps as its instructions. The run's looks name the project under authority kind `objective`. *(not yet met: new module)*
 
@@ -62,7 +68,8 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - `record-core`: `recordOf(ctx)`, `transact`, id allocation for aspirations and goals, `declarePurge`.
 - `membership`: `viewerPredicate`, `projectAuthority`, `isAdministrator`, `isProjectEditor`.
 - `promotion`: `promote`, `registerStep` (R1, R2). *(not declared)*
-- `entities`: `readEntity`, the constitutive relations (R4, R7). *(not declared)*
+- `entities`: `readEntity`, the constitutive relations (R4, R7, R28). *(not declared)*
+- `provenance`: the captures held at an address (R28). *(not declared)*
 - `progressions`: `readProgression`, `readInstance`, `proposalsFeed`, `disposeProposal` (R4–R6, R15, R16).
 - `retrieval`: `selectionCreate` (one enumerated selection per aged question, owner `plane:intent`, for inquiry's `dispose`; R17; K198).
 - `capture-requests`: `captureRequests` (a request's outcome, for R14's pursuit; K200).
@@ -97,7 +104,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **Focus and problem.** §12 names both; the record has one construct for both since REC-10, the inquiry, so R16's `question` opens an inquiry at `surfaced`. An obstacle reads as such in its question text.
 - **Where the condition lives.** In the project document's frontmatter, beside `objective`, so it has the project's history and gate; R1's check gains the condition's grammar (R2's refusals) when it lands.
 - **Ageing interval.** An instance setting in record-core (K23), default 30 days, the staleness age C-10.1 already uses.
-- **Callers.** `monitoring` reads R7; `scheduler` reads R6 and R12 for ordering and calls R17; `publication` reads R14 and R16's deferred and dismissed proposals to state what was set aside; `queue` renders R6.
+- **Callers.** `monitoring` reads R7; `scheduler` reads R28 for ordering and calls R17 when R27 says it is due; `publication` reads R14 and R16's deferred and dismissed proposals to state what was set aside; `queue` renders R6.
 - Tests: each refusal gets a negative control; R4 gets an arm where an undetermined instance keeps `satisfied` null; R21 gets an arm that declares an aspiration and shows a search and a proposal list byte-identical before and after.
 
 ## Open for Bob
