@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, FM, S, source } from "./world.mjs";
-import { aiRunWorkProducts } from "../../../src/bias/index.mjs";
+import { viewerPredicate } from "../../../src/membership/index.mjs";
 
 const A = "BIAS-2026-0001-a", P = "PROJ-2026-0001-p", NOW = Date.parse("2026-07-10T00:00:00Z");
 const ADMIN = { author: "admin", identity: "member:admin", viewer: "admin" };
@@ -277,22 +277,105 @@ test("R41: biasDebtDue answers now and biasDebtWake now + the delay while pendin
   assert.deepEqual([t.bias.biasDebtDue(NOW), t.bias.biasDebtWake(NOW)], [null, null]);
 });
 
-test("R33 (interim): the legacy store's AI runs as work products — the lens at the open, else the handed manifest, the member principal, the re-run link", async () => {
-  const session = (bias, plane = "member:alice/tok-1") => ({ found: true, session: { context: { type: "project", id: P }, principal: { plane }, bias } });
-  const rows = { "RUN-1": { rerun_of: " RUN-0 " }, "RUN-2": { rerun_of: null }, "RUN-3": {} };
-  const reads = {
-    "RUN-1": session({ moved_basis: "at_open", at_open: { statements_sha: "aa" }, in_force: true, manifest: { statements_sha: "bb" } }),
-    "RUN-2": session({ moved_basis: "handed", in_force: true, manifest: { statements_sha: "cc" } }, "class:ai"),
-    "RUN-3": session({ moved_basis: null, in_force: false, manifest: null }),
-  };
-  const src = aiRunWorkProducts({ list: (after, limit) => Object.keys(rows).filter((k) => k > after).slice(0, limit),
-    row: (r) => rows[r] ?? null, read: async (r, viewer) => (viewer === "member:cora" ? { found: false } : reads[r] ?? { found: false }) });
-  assert.deepEqual(src.list("RUN-1", 5), ["RUN-2", "RUN-3"]);
-  assert.deepEqual(await src.read("RUN-1"), { context: { type: "project", id: P }, principal: "alice",
-    lens: { basis: "at_open", statements_sha: "aa" }, ranUnder: "bb", rerunOf: "RUN-0" });
-  assert.deepEqual(await src.read("RUN-2"), { context: { type: "project", id: P }, principal: null,
-    lens: { basis: "handed", statements_sha: "cc" }, ranUnder: "cc", rerunOf: null });
-  assert.equal((await src.read("RUN-3")).lens, null);
-  assert.equal(await src.read("RUN-9"), null);
-  assert.deepEqual([await src.visible("RUN-1", "member:alice"), await src.visible("RUN-1", "member:cora")], [true, false]);
+test("R33: given the scheduler's rank, each batch is compared in the rank's order, offered as {kind: bundle, id: context id, waitingSince}; cursor, batch and outcomes unchanged; without rank, or a rank that fails, the cursor's order", async () => {
+  const w = await debtWorld({ BIAS_DEBT_BATCH: "3" });
+  const then = w.lens();
+  const wps = { "RUN-1": run(then, { registered: "2026-07-01T00:00:00Z" }), "RUN-2": run(then, { registered: 1000 }),
+                "RUN-3": run(then), "RUN-4": run(then) };
+  w.bias.registerWorkProducts("ai-run", source(wps));
+  w.move("Moved.");
+  const offered = [];
+  const reverse = (items, now) => { offered.push({ items: items.map((x) => JSON.parse(JSON.stringify(x))), now, keys: items.map((x) => Object.keys(x)) }); return [...items].reverse(); };
+  const s1 = await w.bias.biasDebtSweep(NOW, reverse);
+  assert.deepEqual(offered[0].keys, [["kind", "id", "waitingSince"], ["kind", "id", "waitingSince"], ["kind", "id", "waitingSince"]]);
+  delete offered[0].keys;
+  assert.deepEqual(offered, [{ now: NOW, items: [
+    { kind: "bundle", id: P, waitingSince: Date.parse("2026-07-01T00:00:00Z") },
+    { kind: "bundle", id: P, waitingSince: 1000 }, { kind: "bundle", id: P, waitingSince: null }] }]);
+  assert.deepEqual([s1.raised, s1.complete, s1.batch], [["RUN-3", "RUN-2", "RUN-1"], false, 3], "the rank's order; the cursor's batch");
+  const s2 = await w.bias.biasDebtSweep(NOW + 1, reverse);
+  assert.deepEqual([s2.raised, s2.complete], [["RUN-4"], true], "the cursor resumes after the batch, whatever the order");
+  /* the same outcomes as an unranked sweep over the same world */
+  const u = await debtWorld({ BIAS_DEBT_BATCH: "3" });
+  u.bias.registerWorkProducts("ai-run", source(Object.fromEntries(Object.keys(wps).map((k) => [k, run(u.lens())]))));
+  u.move("Moved.");
+  const plain = await u.bias.biasDebtSweep(NOW);
+  assert.deepEqual(plain.raised, ["RUN-1", "RUN-2", "RUN-3"], "no rank: the cursor's order");
+  const cols = "run, context_type, context_id, moved_basis, lens_now, recipients, raised, cleared_at";
+  await u.bias.biasDebtSweep(NOW + 1);
+  assert.deepEqual(u.rows(`SELECT ${cols} FROM bias_debts ORDER BY run`).map((r) => ({ ...r, lens_now: 0 })),
+    w.rows(`SELECT ${cols} FROM bias_debts ORDER BY run`).map((r) => ({ ...r, lens_now: 0 })));
+  /* a rank that throws, answers nothing usable, or drops items: the cursor's order, every item still compared */
+  for (const bad of [() => { throw new Error("down"); }, () => null, (items) => [items[2]], (items) => [{ kind: "bundle" }, ...items]]) {
+    const x = await debtWorld();
+    const t = x.lens();
+    x.bias.registerWorkProducts("ai-run", source({ "RUN-1": run(t), "RUN-2": run(t), "RUN-3": run(t) }));
+    x.move("Moved.");
+    const s = await x.bias.biasDebtSweep(NOW, bad);
+    assert.equal(s.read, 3);
+    assert.deepEqual([...s.raised].sort(), ["RUN-1", "RUN-2", "RUN-3"]);
+  }
+  const dropped = await debtWorld();
+  const t = dropped.lens();
+  dropped.bias.registerWorkProducts("ai-run", source({ "RUN-1": run(t), "RUN-2": run(t), "RUN-3": run(t) }));
+  dropped.move("Moved.");
+  assert.deepEqual((await dropped.bias.biasDebtSweep(NOW, (items) => [items[2]])).raised, ["RUN-3", "RUN-1", "RUN-2"]);
+});
+
+test("R42: counts answers the bias statements and adoptions held; hid leaves out rows naming a hidden bundle (a statement by its bundle, an adoption by its bundle or project); synchronous, writing nothing, never throwing", async () => {
+  const w = await debtWorld();
+  const B = "BIAS-2026-0002-proj";
+  w.set(B, [S("p1"), S("p2")], "adopted");
+  w.bias.biasAdopt({ bundleId: B, scope: "project", scopeId: P, author: "ruth", identity: "member:ruth", viewer: "member:ruth" });
+  const before = w.dump();
+  assert.deepEqual(w.bias.counts(), { biasStatements: 3, biasAdoptions: 2 });
+  const hid = (...ids) => ({ sql: `(${ids.map(() => "?").join(",")})`, args: ids });
+  assert.deepEqual(w.bias.counts(hid(B)), { biasStatements: 1, biasAdoptions: 1 });
+  assert.deepEqual(w.bias.counts(hid(P)), { biasStatements: 3, biasAdoptions: 1 }, "an adoption naming a hidden project");
+  assert.deepEqual(w.bias.counts(hid(A)), { biasStatements: 2, biasAdoptions: 1 });
+  assert.deepEqual(w.bias.counts({ sql: "(SELECT bundle_id FROM bundles WHERE object_type='project')", args: [] }),
+    { biasStatements: 3, biasAdoptions: 1 });
+  assert.equal(w.dump(), before, "writes nothing");
+  assert.deepEqual(w.bias.counts({ sql: "(((", args: [] }), { biasStatements: null, biasAdoptions: null }, "never throws");
+});
+
+test("R43: uncleared answers the open debts the gate admits, newest raised first then by run, with their fields and recipients, at most limit (1–1,000, default 200), truncated by one more; writes nothing, never throws", async () => {
+  const w = await debtWorld({ BIAS_DEBT_BATCH: "500" });
+  const then = w.lens();
+  const wps = { "RUN-1": run(then), "RUN-2": run(then), "RUN-3": run(then, { context: { type: "inquiry", id: "INQ-2026-0001-q" }, principal: null }) };
+  w.bias.registerWorkProducts("ai-run", source(wps));
+  w.move("Moved.");
+  await w.bias.biasDebtSweep(NOW);
+  const now = w.lens();
+  w.sql.exec(`UPDATE bias_debts SET raised='2026-07-11T00:00:00Z' WHERE run='RUN-2'`);
+  const admin = viewerPredicate("admin");
+  const all = w.bias.uncleared({ gate: admin });
+  assert.deepEqual([all.limit, all.truncated, all.debts.map((d) => d.run)], [200, false, ["RUN-2", "RUN-1", "RUN-3"]]);
+  assert.deepEqual(all.debts[1], { run: "RUN-1", context_type: "project", context_id: P, moved_basis: "at_open", lens_then: then,
+    lens_now: now, observed: "2026-07-10T00:00:00Z", raised: "2026-07-10T00:00:00Z", recipients: ["alice", "ruth"] });
+  assert.deepEqual(all.debts[2].recipients, [], "a debt naming nobody carries an empty list");
+  /* the gate: a member outside the project sees the inquiry's debt only (its context is not a held bundle, so it is not
+     admitted either); a participant sees the project's; a denied viewer and a malformed gate see none */
+  assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate("member:cora") }).debts.map((d) => d.run), []);
+  assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate("member:alice") }).debts.map((d) => d.run), ["RUN-2", "RUN-1"]);
+  assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate("nobody") }).debts, []);
+  for (const gate of [null, {}, { sql: 1, args: [] }, "admin"]) assert.deepEqual(w.bias.uncleared({ gate }).debts, [], String(gate));
+  /* cleared debts are not listed */
+  w.bias.biasDebtResolve({ run: "RUN-2", reason: "Not bearing.", actor: "alice", viewer: "member:alice" });
+  assert.deepEqual(w.bias.uncleared({ gate: admin }).debts.map((d) => d.run), ["RUN-1", "RUN-3"]);
+  /* the bound */
+  assert.deepEqual([w.bias.uncleared({ gate: admin, limit: 1 }).debts.length, w.bias.uncleared({ gate: admin, limit: 1 }).truncated], [1, true]);
+  for (let i = 0; i < 1005; i++)
+    w.sql.exec(`INSERT INTO bias_debts (run, context_type, context_id, recipients, raised, observed) VALUES (?,'project',?,'[]','t','t')`,
+      `X-${String(i).padStart(4, "0")}`, P);
+  const big = w.bias.uncleared({ gate: admin, limit: 5000 });
+  assert.deepEqual([big.limit, big.debts.length, big.truncated], [1000, 1000, true]);
+  assert.deepEqual([w.bias.uncleared({ gate: admin }).debts.length, w.bias.uncleared({ gate: admin, limit: 0 }).limit], [200, 200]);
+  const before = w.dump();
+  w.bias.uncleared({ gate: admin });
+  assert.equal(w.dump(), before, "writes nothing");
+  w.sql.exec(`DROP TABLE bias_debt_settlements`);
+  w.sql.exec(`ALTER TABLE bias_debts RENAME TO gone`);
+  const failed = w.bias.uncleared({ gate: admin });
+  assert.deepEqual([failed.debts, failed.undetermined], [[], true], "never throws");
 });

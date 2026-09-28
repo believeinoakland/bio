@@ -104,8 +104,6 @@ test("R23: a promotion that moves a bias set's head notifies each registered mod
   const w = world();
   const seen = [];
   assert.equal(w.bias.onLensChange("scheduler", () => seen.push(w.count("bias_statements"))).ok, true);
-  assert.equal(w.bias.onLensChange("scheduler", () => {}).reason, "LISTENER_DECLARED");
-  assert.equal(w.bias.onLensChange("", () => {}).reason, "LISTENER_MALFORMED");
   let thrown = 0;
   w.bias.onLensChange("queue", () => { thrown++; throw new Error("a listener that fails"); });
   const r = w.promote(A, FM(A));
@@ -119,4 +117,24 @@ test("R23: a promotion that moves a bias set's head notifies each registered mod
     files: [{ path: "bundle.md", text: "---\nid: INFO-2026-0001-x\nobject_type: information\ntitle: x\ncurrent_state: collected\ncreated: 2026-07-01T00:00:00Z\nlast_updated: 2026-07-01T00:00:00Z\ngroup: test-group\n---\n" }] });
   await new Promise((res) => setTimeout(res, 0));
   assert.deepEqual(seen, [1]);
+});
+
+test("R23: registrations are refused through membership's listenerRefusal (LISTENER_MALFORMED, LISTENER_DECLARED); listeners run in the modules' total order (MODULE_ORDER)", async () => {
+  const { listenerRefusal, MODULE_ORDER } = await import("../../../src/membership/index.mjs");
+  const w = world();
+  const order = [];
+  const f = (m) => () => order.push(m);
+  for (const m of ["queue", "scheduler", "legacy-store", "ai-runs"]) assert.deepEqual(w.bias.onLensChange(m, f(m)), { ok: true, module: m });
+  assert.deepEqual(w.bias.onLensChange("scheduler", () => {}), listenerRefusal([{ module: "scheduler" }], "scheduler", () => {}));
+  assert.equal(w.bias.onLensChange("scheduler", () => {}).reason, "LISTENER_DECLARED");
+  for (const [m, fn] of [["", () => {}], [null, () => {}], ["x", "not a function"]]) {
+    const r = w.bias.onLensChange(m, fn);
+    assert.deepEqual(r, listenerRefusal([], m, fn));
+    assert.equal(r.reason, "LISTENER_MALFORMED");
+  }
+  w.promote(A, FM(A));
+  await w.bias.noticesDelivered();
+  const at = (m) => MODULE_ORDER.indexOf(m);
+  assert.deepEqual(order, ["ai-runs", "scheduler", "legacy-store", "queue"]);
+  assert.ok(order.every((m, i) => i === 0 || at(order[i - 1]) < at(m)));
 });

@@ -447,7 +447,7 @@ export const BIAS_CHECKS = {
      file. */
   BIAS_REFUSED: {
     check: 'C-26.11',
-    where: 'src/bias/index.mjs #promotionCheck > bias-set-refusal, reached from op=promote',
+    where: 'src/bias/index.mjs promotionCheck > bias-set-refusal, reached from op=promote',
     translation: 'That bias set was not written. One or more of its statements is not something the '
       + 'record can honour, and each one is named below with what is wrong with it. '
       + 'Nothing was saved, so nothing needs undoing — correct the statements and write it again.',
