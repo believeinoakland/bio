@@ -1,6 +1,6 @@
 # review (T8)
 
-**Status** · session_01B11NRC4vX3HGNywo9Ky3Cz · depth 2 · WAITING ON BOB (J3) · handled B6
+**Status** · session_01B11NRC4vX3HGNywo9Ky3Cz · depth 2 · WAITING ON BOB (J3) · handled B7
 
 ## J1 · QUESTION
 
