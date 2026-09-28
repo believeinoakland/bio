@@ -736,9 +736,6 @@ export class Store extends DurableObject {
        legacy-store answers reevaluation's obligation (R21, R25) and strength's pair (R28) until each is extracted. */
     inquiryOf(ctx).onRaised("reevaluation", ({ target, viewer }) => this.#reevalRaisedBy(target, viewer));
     inquiryOf(ctx).onGrounded("strength", (id) => ((st) => Object.fromEntries(Store.STRENGTH_AXES.map((a) => [a, st[a]])))(this.strengthOf(id)));
-    /* basis-versions (K61): joins every promotion after inquiry and before legacy-store (R6, R7). Its extract candidates
-       (R40) are run-productions', which registers them itself. */
-    basisVersionsOf(ctx);
     strengthModule(ctx, { inquiry: { basisFor: (id, o) => inquiryOf(ctx).basisFor(id, o), earned: (e, t) => inquiryOf(ctx).earned(e, t),
       legCapped, subjectEntityOf: (id) => inquiryOf(ctx).subjectEntityOf(id) },
       versions: basisVersionsOf(ctx) });   /* strength (K61), over inquiry's and basis-versions' own services */
@@ -751,7 +748,7 @@ export class Store extends DurableObject {
     bias.onLensChange("legacy-store", () => (biasOf(ctx).biasDebtDue(Date.now()) === null ? null : this.#armScheduler()));
     /* run-productions (K61, K120): created here, after content, connections, strength and citation, so it declares its
        tables to purge (R17) and registers its candidates with basis-versions (R14). ai-runs, not yet extracted, is built
-       from what this store hands over until it merges (`run-productions/interim.mjs`). */
+       by `runProductionsInterim` from what this store hands over until it merges. */
     runProductionsOf(ctx, { interim: runProductionsInterim({
       aiRunInSight: (run, viewer) => this.#aiRunInSight(run, viewer),
     }) });
