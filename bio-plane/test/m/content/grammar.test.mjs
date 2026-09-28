@@ -180,6 +180,15 @@ test("R10: a rect states its space; only user space is addressed, and any other 
                canonicalExtent({ kind: "pdf-page", page: 0, rect: [0, 0, 5, 5] }), "unstated is user space: one address");
   assert.deepEqual(citationExtent({ target: "INFO-1", extent_kind: "pdf-page", extent_page: 0, extent_rect: [0, 0, 1, 1], extent_space: "image-px" }).space, "image-px");
   assert.equal(extentRelation({ kind: "pdf-page", page: 0, rect: [0, 0, 9, 9] }, { kind: "pdf-page", page: 0, rect: [1, 1, 2, 2], space: "image-px" }), "unreadable");
+  /* N252: the space is read by text-chain's rectSpace (its R87): a space that is not a non-empty string is unreadable,
+     refused C-45.13 and unreadable to the relation, never read as user space; null is unstated, user space */
+  for (const space of ["", "  ", 0, 7, true, {}, ["user"]]) {
+    const e = { kind: "pdf-page", page: 0, rect: [0, 0, 5, 5], space };
+    assert.equal(code(checkContentExtent(e, ctxOf({ pageCount: 1 }))), "CONTENT_EXTENT_NOT_USER_SPACE", JSON.stringify(space));
+    assert.equal(extentRelation({ kind: "pdf-page", page: 0 }, e), "unreadable", JSON.stringify(space));
+  }
+  assert.equal(checkContentExtent({ kind: "image", page: 0, rect: [0, 0, 5, 5], space: null }, ctxOf({ pageCount: 1 })), null);
+  assert.equal(extentRelation({ kind: "pdf-page", page: 0 }, { kind: "pdf-page", page: 0, rect: [0, 0, 5, 5], space: null }), "narrower");
 });
 
 test("R33: an office document's envelope items are citable through an envelope extent, never as the body", () => {

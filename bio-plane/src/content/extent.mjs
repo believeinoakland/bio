@@ -26,7 +26,7 @@ import {
   extentRelation as catalogueRelation,
   imagePartUndetermined, canonicalJson, sha256HexSync,
 } from "../../checks/bio-checks.mjs";
-import { chainKindFor, checkChain, STEP_KINDS, CHAIN_KIND_MIXED } from "../textchain.mjs";
+import { chainKindFor, checkChain, STEP_KINDS, CHAIN_KIND_MIXED, rectSpace, RECT_USER_SPACE } from "../textchain.mjs";
 
 export { CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KIND_NO_PRODUCER, CONTENT_ID_RE, CONTENT_EXTENT_A1_RE,
          CONTENT_EXTENT_DOCUMENT_ONLY, imagePartUndetermined, legExtent, legHasAuthoredExtent, CHAIN_KIND_MIXED };
@@ -59,14 +59,10 @@ export const CONTENT_CITED_AS_ENVELOPE = "envelope";
 /** The element kinds an envelope item may be anchored at; a core property is anchored at nothing (`at: null`). */
 export const ENVELOPE_ANCHOR_KINDS = Object.freeze(["doc-para", "slide-shape"]);
 
-/** D-670 — the one coordinate space the grammar addresses: PDF default user space (IC-203). An unstated space reads
- *  as user space (every rect written before D-670 was one); anything else is returned as the string it is, so it can
- *  be refused BY NAME. */
-export const EXTENT_USER_SPACE = "user";
-export function extentSpace(extent) {
-  const v = extent && typeof extent === "object" ? extent.space : undefined;
-  return v === undefined || v === null ? EXTENT_USER_SPACE : String(v);
-}
+/* D-670 — the one coordinate space the grammar addresses is PDF default user space (IC-203), and a rect's space is
+   read by text-chain's one reader (`rectSpace`, its R87; N252): an unstated space is user space (every rect written
+   before D-670 was one), a non-empty string is that space, and anything else is `null`, a space nobody can read. Every
+   space but user space is refused BY NAME (C-45.13) and is `unreadable` to `extentRelation`. */
 
 /** C-45.13 (D-670): a rect stated in a space other than user space. The row is this module's until the catalogue
  *  carries it (reported to legacy-checks); its shape is the catalogue's, so a surface reads it like any other. */
@@ -207,7 +203,7 @@ export function extentRelation(outer, inner) {
   const a = isObj(outer) ? outer : null;
   const b = isObj(inner) ? inner : null;
   if (!a || !b) return "unreadable";
-  if (extentSpace(a) !== EXTENT_USER_SPACE || extentSpace(b) !== EXTENT_USER_SPACE) return "unreadable";
+  if (rectSpace(a) !== RECT_USER_SPACE || rectSpace(b) !== RECT_USER_SPACE) return "unreadable";
   if (a.kind === "envelope" || b.kind === "envelope") {
     const known = (k) => Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, k);
     if (!known(a.kind) || !known(b.kind)) return "unreadable";
@@ -314,9 +310,9 @@ export function checkContentExtent(extent, ctx = {}) {
   if (!e || e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER || !Object.prototype.hasOwnProperty.call(CONTENT_EXTENT_KINDS, e.kind))
     return catalogueCheck(extent, ctx);
   /* DEC-49 REGION is-content-extent-space */
-  if ((e.kind === "pdf-page" || e.kind === "image") && extentSpace(e) !== EXTENT_USER_SPACE)
+  if ((e.kind === "pdf-page" || e.kind === "image") && rectSpace(e) !== RECT_USER_SPACE)
     return refusal("CONTENT_EXTENT_NOT_USER_SPACE",
-      `this ${e.kind} extent states its rect in space '${extentSpace(e).slice(0, 40)}'; the grammar addresses PDF `
+      `this ${e.kind} extent states its rect in space '${String(e.space).slice(0, 40)}'; the grammar addresses PDF `
       + `default user space only (points, the page as the file lays it out), so the rect is not converted and not `
       + `read as points. A text-recognition anchor is in the pixels of the frame it read`);
   /* END DEC-49 REGION is-content-extent-space */
