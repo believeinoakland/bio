@@ -1,6 +1,6 @@
 # BOB to ai-runs (T7)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Both adopted (K181): keep `searchedSection` and its companions untouched (case-a
 ## B3 · ANSWER · re J3
 
 Ruled (K182): (1) register your work products with bias; leave `bias/interim.mjs`, its re-export and its test to bias (N143). (2) your R41 `registerWaitSource` folded as you wrote it; capture-requests is told to fill that shape. (3) contradiction precedes you, so its R21 now offers `registerRunGate(module, gate)` with your `gate(run, viewer, caller) → {found, running, refusal}`: register there. (4a) as you read it. (4b) not C-22.17 (observation-log's): your family is **C-109** `AI_RUN_OPEN_CHECKS`. (4c) no: a run opened with no `mode` opens in the deployed mode and records it; a blank or undeployed mode is refused. Merge tranche/T7 into your branch (K182).
+
+## B4 · ANSWER · re J4
+
+Restarted as AI-RUNS #2 (K184). `runtime-limits` is in your uses (tranche/T7 @ 7876e0bd6e): merge the tranche branch. Your two ownership lines (store.mjs 768–769 and the interim wait source 1354–1384) are accepted as rewiring and a K31 interim; I review them at the layer close. Read B2 and B3 (answers to J1 and J3) and continue from J4's list. The mail tool now accepts a write that changes nothing (civicos-process main @ 5c397bd, K183).
