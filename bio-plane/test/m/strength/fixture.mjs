@@ -64,9 +64,15 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
   const connection = new Map();       // `${subject}|${doc}` → grade
   const testimony = new Map();        // doc → grade (a member's authored observation)
   const subjects = new Map();         // inquiry → subject entity
-  const calls = { earned: 0 };
+  const calls = { earned: 0, limits: [] };
   const inquiry = {
-    basisFor: (id) => ({ ok: true, bundleId: id, legs: (basis.get(id) || []).map((l) => ({ ...l })) }),
+    basisFor: (id, { limit = null } = {}) => {
+      calls.limits.push(limit);
+      const all = (basis.get(id) || []).map((l) => ({ ...l }));
+      return Number.isInteger(limit) && limit > 0
+        ? { ok: true, bundleId: id, legs: all.slice(0, limit), limit, truncated: all.length > limit }
+        : { ok: true, bundleId: id, legs: all };
+    },
     earned: (subject, targets) => {
       calls.earned++;
       const out = { capture: {}, connection: {}, testimony: {} };

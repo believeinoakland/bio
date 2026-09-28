@@ -34,11 +34,6 @@ import { parseFrontmatter, checkGatheringGrammar, checkInboxGrammar, MECHANICAL_
             supersession never lands and cannot audit clean either. Before this
             item `supersedes` had no producer and no requirements at all. */
          BUNDLE_ID_RE, supersedesEdgeFindings,
-         /* REC-37: the basis ROLE vocabulary, imported for the widened cite's
-            own refusal and for op=affordances' published vocabularies. The one
-            place the words live is the catalog function that enforces them; a
-            second copy here is exactly the drift the MAP RULE exists to stop. */
-         BASIS_ROLES,
          /* REC-51 (2026-08-04): the basis GRADE vocabulary, for the same reason
             BASIS_ROLES is imported one line up, and it arrives one level BELOW
             the doctrine sentences REC-43/REC-48/REC-50 composed. Those three
@@ -744,9 +739,6 @@ export class Store extends DurableObject {
     /* connections (K61): its projection of references[] and the fact citedBy join every promotion before legacy-store's
        (R19, R23), and it marks its own dirt on entities' notice (R17). legacy-store registers observation-log's row per
        derivation (its R8) and its derivation statement with connections (R3, R5) until observation-log does. */
-    /* citation (K61, K120's pattern): the inquiry services it builds against (inquiry R4, R5, R13), answered by
-       legacy-store until inquiry is extracted. */
-    citationOf(ctx, { inquiry: { earned: (s, t, c) => this.earnedBasisRegistry(s, t, c), checkLegExtentGrammar, BASIS_ROLES } });
     connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
     connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
     promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
