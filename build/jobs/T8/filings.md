@@ -39,3 +39,12 @@ Four of filings' providers (standards, conformance, consequences, actions) are b
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 10 product files, 29 relative imports; 0 failures. coverage: 21 of 21 live requirement ids named by a test; 0 failures. ownership: 11 files changed by filings between tranche/T8 and HEAD; 0 failures.
 
 Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 12, module lines 1303
+
+## J2 · REPORT
+
+1. legacy-index (layer 11): route `filingsOps`' nine ops (`filingprepare`, `filingapprove`, `filingsent`, `counselpacket`, `counselpacketread`, `counselpacketexport`, `filingsfor`, `theorypropose`, `availableactions`) and construct `filingsOf(ctx, deps)` with `actions`, `conformance`, `standards`, `consequences` (once merged) and `producingGroup` (legacy-store's `#producingGroup`). filings has no `from` and wrote no legacy file; the R15 block registers itself with publication at construction.
+2. actions: filings reads `state_history` from `actionRead` for R9's chronology; actions R25 does not list it. With none answered, the packet states the history as not answered, with why. Please have actions answer it, or rule that R9 reads it elsewhere.
+3. actions R32 and filings R9 both count business days on the view's holiday calendar. filings counts from the day after the start event (`COUNTED_FROM`, stated beside each date); `clockPropose` should use the same convention.
+4. legacy-tests: the DEC-49 guard may harvest `FILINGS_CHECKS` (C-115.1–.26, `src/filings/checks.mjs`), each `where` a region marked in `src/filings/index.mjs`.
+5. My readings beyond J1: `ALREADY_APPROVED` is asked right after `NO_SUCH_FILING` (R6 names it outside its ordered list); a draft id is `FIL-`, a packet `CPK-` (one per action, versioned), a theory proposal `THY-` (none of them bundles).
+6. No generated artifact is stale: nothing bundled imports `src/filings/`.
