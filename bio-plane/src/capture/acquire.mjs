@@ -3,7 +3,8 @@
  * drain calls it in process through its trusted arm (K58). It fetches, hashes and stores the bytes as they arrive,
  * records the fetch as a receipt, profiles what it is, captures a page's supporting files, requests co-attestation,
  * and ANSWERS the provenance document a caller promotes. It writes no bundle (R33) and it does not READ the document
- * (R42): the reading is `extraction`'s, run by the op after this answers until that module takes it (K49, K72 (8)).
+ * (R42): the reading is `extraction`'s, over the stored primary it reads itself, run by the op after this answers
+ * (K49, K72 (8); N103).
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
@@ -894,36 +895,4 @@ async function continueCapture(cap, { body, session, cls, storeName, ev }) {
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
     store: storeName, tokenClass: cls } };
-}
-
-/** K72 (8): what the op's reading block (legacy-index, until `extraction` takes it) needs from an acquire answer to
- *  read the document it filed: the stored primary read back, and the profile context rebuilt from the answer by the
- *  same rules acquire profiled it with. Nothing here reads the document; it hands the reader its inputs. */
-export async function readingInputs(env, storeName, answer) {
-  const doc = answer.document;
-  const ids = doc.profile && doc.profile.jurisdiction_view;
-  const combined = Array.isArray(ids) ? combine(ids) : null;
-  const view = combined && combined.ok ? combined.view : undefined;
-  const sha = doc.capture.sha256, total = doc.capture.bytes, ct = doc.capture.content_type || "";
-  const multipart = Array.isArray(doc.parts);
-  const retrieved = doc.retrieved;
-  const headerPairs = (doc.capture.transport || (doc.shell && doc.shell.transport) || {}).http_headers || [];
-  const profHeaders = {};
-  for (const [hk, hv] of headerPairs) profHeaders[String(hk).toLowerCase()] = hv;
-  const driveHopOf = (doc.provenance_chain || []).find((h) => h && h.drive_file_id);
-  const driveCapture = driveHopOf ? readDriveAddress(driveHopOf.document_address) : null;
-  const documentAddress = driveCapture ? driveCapture.address
-    : (doc.provenance_chain || []).find((h) => h && h.via === "archive.org" && h.document_address)?.document_address || doc.locator;
-  let profileText = "", profileBytes = null;
-  if (profilesAsText(ct, total, multipart) && typeof env.CAPTURES?.get === "function") {
-    try {
-      const o = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
-      if (o) { profileBytes = new Uint8Array(await o.arrayBuffer()); profileText = new TextDecoder("utf-8", { fatal: false }).decode(profileBytes); }
-    } catch { /* unreadable: the reading says so */ }
-  }
-  const profCtx = { headers: profHeaders, locator: documentAddress, content_type: ct || null, text: profileText };
-  const stackId = identify(profCtx);
-  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...(view ? { view } : {}) });
-  return { sha, total, ct, multipart, retrieved, profHeaders, profCtx, profileText, profileBytes, stackId, docType,
-           documentAddress, driveCapture, profile: doc.profile };
 }
