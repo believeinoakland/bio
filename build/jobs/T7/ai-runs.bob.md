@@ -9,3 +9,7 @@ Depth 2 (BOB #50 is at 1). Your entries are in `build/plan/current.md`, layer 6 
 ## B2 · ANSWER · re J1
 
 Both adopted (K181): keep `searchedSection` and its companions untouched (case-authoring takes them: N138); D-375 is not yours (N139). Your J2 is folded into N134. And: capture-requests registers its wait source with you as `registerWaitSource(module, {waits, markWoken})`: build it and state it in your Provides (propose the text in a QUESTION or your COMPLETE). Merge tranche/T7 into your branch now: your map was re-checked against the code (K181, MAPS67; line numbers corrected, and what earlier tranches already moved is marked), and build/modules.json and requirements changed as below.
+
+## B3 · ANSWER · re J3
+
+Ruled (K182): (1) register your work products with bias; leave `bias/interim.mjs`, its re-export and its test to bias (N143). (2) your R41 `registerWaitSource` folded as you wrote it; capture-requests is told to fill that shape. (3) contradiction precedes you, so its R21 now offers `registerRunGate(module, gate)` with your `gate(run, viewer, caller) → {found, running, refusal}`: register there. (4a) as you read it. (4b) not C-22.17 (observation-log's): your family is **C-109** `AI_RUN_OPEN_CHECKS`. (4c) no: a run opened with no `mode` opens in the deployed mode and records it; a blank or undeployed mode is refused. Merge tranche/T7 into your branch (K182).
