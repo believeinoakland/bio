@@ -66,7 +66,7 @@ test("R28 a changed group is stamped with this member and now; an unchanged one 
   assert.match(w.text(Q), /\| Restructured \| member:bob\nTrigger: op=inquiryground on INQ-2026-0001-q\nChanges: grouping removed/);
 });
 
-test("R28 the Session Log records the partition, the reason and the pair before; the answer carries the pair before and after (strength's registration)", () => {
+test("R28 R42 the Session Log records the partition, the reason and the pair before; the answer carries the pair before and after (onGrounded)", () => {
   const w = setup();
   const pairs = [{ capture: { state: "graded", grade: "C" }, connection: { state: "undetermined", grade: null } },
                  { capture: { state: "graded", grade: "B" }, connection: { state: "undetermined", grade: null } }];
@@ -82,4 +82,6 @@ test("R28 the Session Log records the partition, the reason and the pair before;
   assert.equal(r2.strength, undefined); assert.match(r2.strength_absent, /no module/);
   assert.match(w2.text(Q), /Strength before: not stated/);
   assert.equal(w.k.onGrounded("again", () => null).reason, "LISTENER_DECLARED");
+  assert.equal(w2.k.onGrounded("", () => null).reason, "LISTENER_MALFORMED");
+  assert.equal(w2.k.onGrounded("strength", "not a function").reason, "LISTENER_MALFORMED");
 });
