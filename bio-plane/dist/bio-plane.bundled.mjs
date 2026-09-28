@@ -4780,7 +4780,7 @@ var MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_PUBLISH: {
     check: "C-32.6",
-    where: "src/store.mjs publishCase > is-machine-publish",
+    where: "src/case-authoring/index.mjs #publishCase > is-machine-publish",
     translation: "Publishing puts the group's name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgements, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it."
   },
   MACHINE_CANNOT_DIVIDE: {
@@ -4924,7 +4924,7 @@ var ACT_SHAPE_CHECKS = {
   },
   NO_STATEMENT: {
     check: "C-33.14",
-    where: "src/store.mjs publishCase > is-publish-statement",
+    where: "src/case-authoring/index.mjs #publishCase > is-publish-statement",
     translation: "A published case has to say what it does NOT cover. A case that is silent about its own limits is claiming to cover everything, and that is the overclaim this record exists to refuse."
   },
   CAS_STALE: {
@@ -5629,7 +5629,7 @@ var DRIVE_CAPTURE_CHECKS = {
      and `test/monitor-assess.test.mjs` drives both of these by name. */
   DRIVE_TICK_EXPORT_IS_THE_SHELL: {
     check: "C-48.8",
-    where: "src/index.mjs fetch > is-drive-tick-export",
+    where: "src/monitoring/index.mjs monitor > is-drive-tick-export",
     translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
   },
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
@@ -5640,7 +5640,7 @@ var DRIVE_CAPTURE_CHECKS = {
      the document CHANGED on every visit — the cry-wolf this row exists to end. */
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
     check: "C-48.9",
-    where: "src/index.mjs fetch > is-drive-tick-bytes",
+    where: "src/monitoring/index.mjs monitor > is-drive-tick-bytes",
     translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
   },
   DRIVE_EXPORT_UNREACHABLE: {
@@ -7385,6 +7385,21 @@ var REGISTRATION_CHECKS = {
     check: "C-102.7",
     where: "src/promotion/index.mjs registerStep > is-step-named",
     translation: "A part of this instance tried to add its own check to every promotion without naming itself, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  STEP_DECLARED: {
+    check: "C-102.8",
+    where: "src/promotion/index.mjs stepDeclared",
+    translation: "A part of this instance tried to register something it had already registered, or that another part already provides, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  CASE_CATALOGUE_FAILED: {
+    check: "C-102.9",
+    where: "src/gate.mjs caseCatalogueFailed",
+    translation: "The checks a case document must pass could not be run over this one, so it was not passed. The fault is in the checks, not the document, and nothing was signed."
+  },
+  CASE_MEMBER_REFUSED: {
+    check: "C-102.10",
+    where: "src/ratification/index.mjs check",
+    translation: "This document claims to be part of a published case, and it does not carry what a part of a published case must carry, so it was not written. Each problem is named beside this message. Nothing in the record changed."
   }
 };
 var CONNECTION_PAIR_CHECKS = {
@@ -21102,10 +21117,10 @@ var STEP_KINDS = {
   pixels: { role: "derivation", label: "the page as pixels", tier: 3 },
   /* An OCR engine over those pixels. Names engine and version, because that
      pair is what a calibration is of and what a re-run would need. */
-  ocr: { role: "derivation", label: "optical character recognition", tier: 3 },
+  ocr: { role: "derivation", label: "optical character recognition", tier: 3, machine: true },
   /* A model that rewrote the text — cleaning, joining, correcting. THE STEP
      THIS WHOLE MODULE IS MOST AFRAID OF, and rule 2 is pointed at it. */
-  ai: { role: "derivation", label: "a model rewrote the text", tier: null },
+  ai: { role: "derivation", label: "a model rewrote the text", tier: null, machine: true },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
   attested: { role: "verification", label: "a member checked it against the image", tier: null },
@@ -21207,6 +21222,9 @@ var STEP_KINDS = {
     letter: "never"
   }
 };
+var MACHINE_READ_KINDS = Object.freeze(
+  Object.keys(STEP_KINDS).filter((k) => STEP_KINDS[k].machine === true)
+);
 var CONFIDENCE_BASES = { engine: 1, none: 1 };
 var EXTENT_KINDS = { region: 1, page: 1, document: 1 };
 function extentOf(step) {
@@ -21582,6 +21600,7 @@ function extentCovers(extent, target) {
   const src = extent.source;
   if (!src || src.page !== target.page) return false;
   if (!Array.isArray(target.rect) || target.rect.length !== 4) return false;
+  if (!sameSpace(src, target)) return false;
   const [ax0, ay0, ax1, ay1] = normRect(src.rect);
   const [bx0, by0, bx1, by1] = normRect(target.rect);
   return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
@@ -21590,6 +21609,16 @@ function normRect(r) {
   const [x0, y0, x1, y1] = r;
   return [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)];
 }
+var RECT_USER_SPACE = "user";
+function rectSpace(holder) {
+  const v = holder && typeof holder === "object" ? holder.space : void 0;
+  if (v === void 0 || v === null) return RECT_USER_SPACE;
+  return typeof v === "string" && v.trim() ? v : null;
+}
+var sameSpace = (a, b) => {
+  const x = rectSpace(a);
+  return x !== null && x === rectSpace(b);
+};
 function gradeCeiling(chain2, target, attestations = []) {
   const covering = (Array.isArray(attestations) ? attestations : []).filter((a) => !checkAttestation(a) && extentCovers(a.extent, target));
   if (covering.length) {
@@ -21626,8 +21655,9 @@ function readingSource(source) {
   const ref = String(source.ref).slice(0, 200);
   if (kind === "pdf-page") {
     if (!isIndex(source.page)) return null;
-    const rect = Array.isArray(source.rect) && source.rect.length === 4 && source.rect.every((n) => typeof n === "number" && Number.isFinite(n)) ? source.rect.map(Number) : null;
-    return { kind, ref, page: source.page, rect };
+    const space = rectSpace(source);
+    const rect = space !== null && Array.isArray(source.rect) && source.rect.length === 4 && source.rect.every((n) => typeof n === "number" && Number.isFinite(n)) ? source.rect.map(Number) : null;
+    return rect && space !== RECT_USER_SPACE ? { kind, ref, page: source.page, rect, space: space.slice(0, 40) } : { kind, ref, page: source.page, rect };
   }
   if (kind === "doc-para") {
     if (!isIndex(source.para)) return null;
@@ -21679,6 +21709,7 @@ function readingPositionInExtent(position, extentKind, extent) {
     if (!isIndex(e.page) || e.page !== p.page) return false;
     if (!Array.isArray(e.rect) || e.rect.length !== 4) return true;
     if (!Array.isArray(p.rect) || p.rect.length !== 4) return false;
+    if (!sameSpace(p, e)) return false;
     const [ax0, ay0, ax1, ay1] = normRect(e.rect);
     const [bx0, by0, bx1, by1] = normRect(p.rect);
     return bx0 >= ax0 && by0 >= ay0 && bx1 <= ax1 && by1 <= ay1;
@@ -21775,8 +21806,11 @@ function mergeTier2Text(base, t2) {
     if (winner === "tier2" && cand) {
       replaced.push(b.page);
       const own2 = Array.isArray(cand.undetermined) ? cand.undetermined : [];
+      const had = Array.isArray(b.undetermined) ? b.undetermined : [];
       const isImage = (u) => u && typeof u.reason === "string" && u.reason.startsWith("image_content_");
-      const images = own2.some(isImage) ? [] : (Array.isArray(b.undetermined) ? b.undetermined : []).filter(isImage);
+      const sameMark = (x, y) => x && y && x.reason === y.reason && JSON.stringify(x.rect ?? null) === JSON.stringify(y.rect ?? null);
+      const tier2Images = own2.some(isImage);
+      const images = had.filter((u) => isImage(u) && !tier2Images || u && u.reason === "image_unread" && !own2.some((o) => sameMark(o, u)));
       const fields = Object.fromEntries(Object.entries(b).filter(([k]) => k.startsWith("image_content_")));
       pages.push({
         ...fields,
@@ -21979,20 +22013,49 @@ function pickSrcsetCandidate(cands) {
   const sorted = [...cands].sort((a, b) => score(b.descriptor) - score(a.descriptor));
   return { pick: sorted[0], rest: sorted.slice(1) };
 }
-function parseHtmlRefs(html) {
+function regionStack() {
+  const region = [];
+  return {
+    here() {
+      const body = region.find((r) => r.region === "body");
+      if (body) return body;
+      const furn = region[region.length - 1];
+      return furn || { region: "body", basis: "default" };
+    },
+    close(tag2) {
+      for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag2) {
+          if (region[i].nest > 0) region[i].nest--;
+          else region.splice(i, 1);
+          break;
+        }
+    },
+    open(tag2, as, selfClosing) {
+      if (VOID_ELEMENTS.has(tag2) || selfClosing) return;
+      const role = (attr(as, "role") || "").toLowerCase().trim().split(/\s+/)[0];
+      let entry = null;
+      if (FURNITURE_ROLES.has(role)) entry = { tag: tag2, region: "furniture", basis: `role=${role}` };
+      else if (role === "main" || role === "article") entry = { tag: tag2, region: "body", basis: `role=${role}` };
+      else if (FURNITURE_TAGS.has(tag2)) entry = { tag: tag2, region: "furniture", basis: `<${tag2}>` };
+      else if (BODY_TAGS.has(tag2)) entry = { tag: tag2, region: "body", basis: `<${tag2}>` };
+      if (entry) region.push({ ...entry, nest: 0 });
+      else for (let i = region.length - 1; i >= 0; i--)
+        if (region[i].tag === tag2) {
+          region[i].nest++;
+          break;
+        }
+    }
+  };
+}
+function scanHtml(html) {
   const src = String(html).replace(COMMENT_RE, "");
   const refs = [];
-  const region = [];
-  const here = () => {
-    const body = region.find((r) => r.region === "body");
-    if (body) return body;
-    const furn = region[region.length - 1];
-    return furn || { region: "body", basis: "default" };
-  };
+  const linkChrome = /* @__PURE__ */ new Map();
+  const region = regionStack();
   const add = (ref, kind, where, extra) => {
     if (!ref || !ref.trim()) return;
     if (ref.trim().startsWith("#")) return;
-    const r = here();
+    const r = region.here();
     refs.push({ ref: ref.trim(), kind, where, region: r.region, region_basis: r.basis, ...extra || {} });
   };
   const addFamily = (cands, kind, where) => {
@@ -22014,28 +22077,15 @@ function parseHtmlRefs(html) {
     const closing = raw.startsWith("/");
     const tag2 = (closing ? raw.slice(1) : raw).toLowerCase();
     if (closing) {
-      for (let i = region.length - 1; i >= 0; i--)
-        if (region[i].tag === tag2) {
-          if (region[i].nest > 0) region[i].nest--;
-          else region.splice(i, 1);
-          break;
-        }
+      region.close(tag2);
       continue;
     }
     const as = attrsOf(m[2] || "");
-    if (!VOID_ELEMENTS.has(tag2) && m[3] !== "/") {
-      const role = (attr(as, "role") || "").toLowerCase().trim().split(/\s+/)[0];
-      let entry = null;
-      if (FURNITURE_ROLES.has(role)) entry = { tag: tag2, region: "furniture", basis: `role=${role}` };
-      else if (role === "main" || role === "article") entry = { tag: tag2, region: "body", basis: `role=${role}` };
-      else if (FURNITURE_TAGS.has(tag2)) entry = { tag: tag2, region: "furniture", basis: `<${tag2}>` };
-      else if (BODY_TAGS.has(tag2)) entry = { tag: tag2, region: "body", basis: `<${tag2}>` };
-      if (entry) region.push({ ...entry, nest: 0 });
-      else for (let i = region.length - 1; i >= 0; i--)
-        if (region[i].tag === tag2) {
-          region[i].nest++;
-          break;
-        }
+    region.open(tag2, as, m[3] === "/");
+    if (tag2 === "a" || tag2 === "area") {
+      const href = (attr(as, "href") || "").trim();
+      const r = region.here();
+      if (href && r.region === "furniture" && !linkChrome.has(href)) linkChrome.set(href, r.basis);
     }
     const inlineStyle = attr(as, "style");
     if (inlineStyle) for (const c of cssRefList(inlineStyle)) add(c.url, c.kind, `${tag2}[style]`);
@@ -22090,7 +22140,7 @@ function parseHtmlRefs(html) {
       continue;
     }
   }
-  return refs;
+  return { refs, linkChrome };
 }
 function classifyRef(ref, base, isPublic) {
   const lower = ref.toLowerCase();
@@ -22422,6 +22472,7 @@ async function captureSubresources({
     baseHost = null;
   }
   let queue;
+  let linkChrome;
   if (resume) {
     for (const r of resume.records || []) {
       records.push(r);
@@ -22429,6 +22480,7 @@ async function captureSubresources({
       if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
     }
     for (const l of resume.links || []) links.push(l);
+    linkChrome = meter.sync("link_containment", () => scanHtml(html).linkChrome, html.length);
     for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
     for (const o of resume.siteObservations || []) siteObservations.push(o);
     discovered = resume.discovered || records.length;
@@ -22445,7 +22497,9 @@ async function captureSubresources({
         discovered--;
       }
   } else {
-    queue = meter.sync("parse_html", () => parseHtmlRefs(html), html.length).map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
+    const scan = meter.sync("parse_html", () => scanHtml(html), html.length);
+    linkChrome = scan.linkChrome;
+    queue = scan.refs.map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
   }
   const settle = (item, rec) => {
     if (rec) records.push(rec);
@@ -22733,21 +22787,38 @@ async function captureSubresources({
     return rec.ok ? placeholderFor(rec.sha256) : PLACEHOLDER_MISSING;
   };
   const when0 = resume && resume.when0 ? resume.when0 : stamp2();
-  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, true]));
+  const seenLink = new Map(links.map((l) => [`${l.type}\0${l.citation || l.address || l.ref}`, l]));
+  const contain = (l, basis) => {
+    if (basis) {
+      if (l.chrome !== true) {
+        l.chrome = true;
+        l.chrome_basis = basis;
+      }
+    } else if (l.chrome !== true) {
+      l.chrome = false;
+      l.chrome_basis = null;
+    }
+  };
+  for (const l of links) contain(l, linkChrome.get(String(l.ref || "").trim()) || null);
   const classifyLink = (ref) => {
     const raw = String(ref || "").trim();
+    const basis = linkChrome.get(raw) || null;
     const note = (type, address, extra = {}) => {
       const key = `${type}\0${extra.citation || address || raw}`;
       if (!seenLink.has(key)) {
-        seenLink.set(key, true);
-        links.push({
+        const l = {
           ref: raw,
           type,
           address: address || null,
           as_of: when0,
           ...address ? originOf(address, baseHost) : {},
           ...extra
-        });
+        };
+        contain(l, basis);
+        seenLink.set(key, l);
+        links.push(l);
+      } else {
+        contain(seenLink.get(key), basis);
       }
       return { type, address, ...extra };
     };
@@ -24121,6 +24192,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const content = await pageContent(doc, pageMap);
   const toks = tokenizeContent(content.text);
   const pieces = [];
+  const boxes2 = [];
+  const undecodedCenters = [];
+  let unpositioned = 0;
   const undetermined = content.unread.map((reason) => ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
   let curFont = null;
   let curFontName = null;
@@ -24142,6 +24216,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (!curFont) {
       penKnown = false;
       inkValid = false;
+      unpositioned += bytes2.length;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -24152,7 +24227,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
-      advanceOver(bytes2);
+      {
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes2);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes2.length / (curFont.width || 1));
+      }
       endRun();
       undetermined.push({
         page: pageIdx,
@@ -24165,9 +24245,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes2, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
+      const box = before && penKnown ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u = curFont.toUni.get(code);
       if (u == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -24178,9 +24262,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       } else {
         if (softAt === pieces.length && /^\s/.test(u)) {
           pieces.pop();
+          boxes2.pop();
           softAt = -1;
         }
         pieces.push(u);
+        boxes2.push(box);
       }
     }
     endRun();
@@ -24215,9 +24301,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const breakLine = () => {
     if (softAt === pieces.length && pieces.length) {
       pieces.pop();
+      boxes2.pop();
       softAt = -1;
     }
     pieces.push("\n");
+    boxes2.push(null);
     lineY = baselineOf(tlm, ctm);
   };
   let tmat = IDENTITY_MATRIX.slice();
@@ -24235,11 +24323,18 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const m = matMul(tmat, ctm);
     return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
   };
+  const glyphBox = (m0, m1) => {
+    const a = matMul(m0, ctm), b = matMul(m1, ctm);
+    const pt = (m, x, y) => [x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]];
+    const p0 = pt(a, 0, 0), p1 = pt(b, 0, 0), q0 = pt(a, 0, tfs);
+    return { c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])] };
+  };
   const softSpace = () => {
     if (!pieces.length) return;
     const last = pieces[pieces.length - 1];
     if (last.endsWith(" ") || last.endsWith("\n")) return;
     pieces.push(" ");
+    boxes2.push(null);
     softAt = pieces.length;
   };
   const judgeGap = (toX) => {
@@ -24501,7 +24596,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text: text3, undetermined };
+  return { text: text3, undetermined, placed: { pieces, boxes: boxes2, undecodedCenters, unpositioned } };
 }
 var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
 var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
@@ -24560,7 +24655,33 @@ function pageDrawsImage(doc, resources) {
   }
   return false;
 }
-async function extractText(doc) {
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a, b, c, d] = source.rect;
+  const x0 = Math.min(a, c), x1 = Math.max(a, c), y0 = Math.min(b, d), y1 = Math.max(b, d);
+  const inside = (pt) => pt[0] >= x0 && pt[0] <= x1 && pt[1] >= y0 && pt[1] <= y1;
+  let out = "", gap = false;
+  for (let i = 0; i < placed.pieces.length; i++) {
+    const p = placed.pieces[i], bx = placed.boxes[i];
+    if (bx && !/^\s*$/.test(p) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p;
+      gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown" : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return {
+    text: out,
+    why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+    tier: 1
+  };
+}
+async function extractText(doc, placedByPage = /* @__PURE__ */ new Map(), linkPages = /* @__PURE__ */ new Set()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -24592,6 +24713,7 @@ async function extractText(doc) {
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    if (res.placed && linkPages.has(idx)) placedByPage.set(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
@@ -24772,24 +24894,25 @@ async function extractImages(doc) {
 var IMAGE_CONTENT_MAX_GLYPHS = 4;
 var IMAGE_CONTENT_MIN_SHARE = 0.18;
 var IMAGE_CONTENT_TEXT_GLYPHS = 22;
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap, d = 0;
+  while (p && d++ < 32) {
+    if (p[key] !== void 0) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return void 0;
+}
+function inheritedBox(doc, pageMap, key) {
+  const a = inheritedAttr(doc, pageMap, key);
+  if (!a || a.t !== "arr" || a.items.length !== 4) return null;
+  const v = a.items.map((x) => doc.resolve(x));
+  if (!v.every((x) => typeof x === "number" && Number.isFinite(x))) return null;
+  return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+}
 function pageBox(doc, pageMap) {
-  const read2 = (key) => {
-    let p = pageMap, d = 0;
-    while (p && d++ < 32) {
-      const a = doc.resolve(p[key]);
-      if (a && a.t === "arr" && a.items.length === 4) {
-        const v = a.items.map((x) => doc.resolve(x));
-        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
-          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
-        return null;
-      }
-      p = doc.dictOf(p.Parent);
-    }
-    return null;
-  };
-  const mb = read2("MediaBox");
+  const mb = inheritedBox(doc, pageMap, "MediaBox");
   if (!mb) return null;
-  const cb = read2("CropBox");
+  const cb = inheritedBox(doc, pageMap, "CropBox");
   return cb ? clipRect(cb, mb) : mb;
 }
 var clipRect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
@@ -24842,11 +24965,70 @@ function markImageContent(doc, text3, images) {
     added++;
   }
   if (!added) return;
+  restateUndetermined(text3);
+}
+function restateUndetermined(text3) {
   text3.undetermined = [
     ...text3.pages.flatMap((p) => p.undetermined),
     ...text3.undetermined.filter((m) => !Number.isInteger(m.page))
   ];
   text3.counts = { ...text3.counts, undetermined: text3.undetermined.length };
+}
+var IMAGE_UNREAD_MIN_SHARE = 1e-3;
+function markImagesUnread(doc, text3, images) {
+  if (!text3 || !Array.isArray(text3.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text3.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({
+        page: pg.page,
+        reason: "image_unread",
+        font: null,
+        codes: "",
+        count: 0,
+        rect: im.rect,
+        area_share: raw === null ? null : Math.round(raw * 1e4) / 1e4
+      });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...pg.undetermined, ...marks];
+    added += marks.length;
+  }
+  if (added) restateUndetermined(text3);
+}
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const box = inheritedBox(doc, pageMap, "MediaBox");
+  if (!box || !(box[2] > box[0] && box[3] > box[1])) return null;
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  const rotate = r === void 0 || r === null ? 0 : typeof r === "number" && Number.isInteger(r) && r % 90 === 0 ? (r % 360 + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
+function extractPageBoxes(doc) {
+  if (!doc.pageCount) return null;
+  const boxes2 = [], key = /* @__PURE__ */ new Map(), of_page = [];
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const b = pdfPageBox(doc, doc.pageDict(idx));
+    if (!b) {
+      of_page.push(null);
+      continue;
+    }
+    const k = JSON.stringify(b);
+    if (!key.has(k)) {
+      key.set(k, boxes2.length);
+      boxes2.push(b);
+    }
+    of_page.push(key.get(k));
+  }
+  return { boxes: boxes2, of_page };
 }
 async function loadPdf(bytes2) {
   const doc = new PdfDoc(bytes2);
@@ -24917,9 +25099,13 @@ async function extractPdfStructure(bytes2) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
-  const text3 = await extractText(doc);
+  const placedByPage = /* @__PURE__ */ new Map();
+  const linkPages = new Set(links.map((l) => l.source && l.source.page));
+  const text3 = await extractText(doc, placedByPage, linkPages);
+  for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
   const imgs = await extractImages(doc);
   if (imgs.images) markImageContent(doc, text3, imgs.images);
+  if (imgs.images) markImagesUnread(doc, text3, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -24930,6 +25116,9 @@ async function extractPdfStructure(bytes2) {
     text: text3,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
+    /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
+       replaces `text`): the bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc),
     notes: doc.notes
   };
 }
@@ -25588,17 +25777,22 @@ function usedSheetRange(name, usedRows, usedCols) {
   if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
   return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
 }
+var isCorner = (c) => c != null && Number.isInteger(c.col) && c.col > 0 && Number.isInteger(c.row) && c.row > 0;
 function a1Corner(s) {
-  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(String(s ?? "").trim());
+  if (typeof s !== "string") return null;
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(s.trim());
   if (!m) return null;
   let col = 0;
   for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
   return { col, row: parseInt(m[2], 10) };
 }
-function rangeUnitFor(sheetName, a, b, sheets, grid) {
-  let sheet = sheets.includes(sheetName) ? sheetName : null;
+function rangeUnitFor(sheetName, a, b, sheets, grid = null) {
+  if (!isCorner(a) || !isCorner(b)) return { why: "not_a_range_reference" };
+  const names = Array.isArray(sheets) ? sheets.filter((s) => typeof s === "string") : [];
+  if (typeof sheetName !== "string") return { why: "no_such_sheet" };
+  let sheet = names.includes(sheetName) ? sheetName : null;
   if (sheet == null) {
-    const ci = sheets.filter((s) => String(s).toLowerCase() === String(sheetName).toLowerCase());
+    const ci = names.filter((s) => s.toLowerCase() === sheetName.toLowerCase());
     if (ci.length === 1) sheet = ci[0];
   }
   if (sheet == null) return { why: "no_such_sheet" };
@@ -25676,13 +25870,7 @@ function xlsxRangeUnits(parts) {
 }
 var XLSX_GRID_ROWS = 1048576;
 var XLSX_GRID_COLS = 16384;
-function a1Col(ref) {
-  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
-  if (!m) return null;
-  let n = 0;
-  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n;
-}
+var a1Col = (ref) => a1Corner(ref)?.col ?? null;
 function classifyUrl(url) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
   const scheme = m ? m[1].toLowerCase() : null;
@@ -27666,6 +27854,96 @@ function odsStructure(parts) {
     notes
   };
 }
+function splitUnquoted(s, sepRe) {
+  const out = [];
+  let quoted2 = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted2 && s[i + 1] === "'") {
+        cur += "''";
+        i++;
+        continue;
+      }
+      quoted2 = !quoted2;
+    } else if (!quoted2 && sepRe.test(ch)) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+function odfCellAddress(s) {
+  const m = /^\$?(?:'((?:[^']|'')*)'|([^'.\s]*))\.(\S+)$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  const sheet = m[1] != null ? m[1].replace(/''/g, "'") : m[2] === "" ? null : m[2];
+  const corner = a1Corner(m[3]);
+  if (corner) return { sheet, corner };
+  return /^\$?(?:[A-Za-z]{1,3}|[1-9]\d*)$/.test(m[3]) ? { sheet, line: true } : null;
+}
+function odsRangeAddressUnit(address, sheets) {
+  const a = String(address ?? "").trim();
+  if (!a) return { why: "empty_reference" };
+  if (/#REF/i.test(a)) return { why: "broken_reference" };
+  if (splitUnquoted(a, /\s/).filter((x) => x !== "").length > 1) return { why: "multi_area" };
+  if (/^(?:'(?:[^']|'')*'|[^'.\s]*)#/.test(a)) return { why: "external_workbook" };
+  const ends = splitUnquoted(a, /:/);
+  if (ends.length > 2) return { why: "not_a_range_reference" };
+  const first = odfCellAddress(ends[0]);
+  const second3 = ends.length === 2 ? odfCellAddress(ends[1]) : first;
+  if (!first || !second3 || first.sheet == null) return { why: "not_a_range_reference" };
+  if (second3.sheet != null && second3.sheet !== first.sheet) return { why: "multi_sheet_reference" };
+  if (first.line || second3.line) return { why: "whole_row_or_column" };
+  return rangeUnitFor(first.sheet, first.corner, second3.corner, sheets, null);
+}
+function odsRangeUnits(bodyXml, sheets) {
+  const names = sheets.map((s) => s.name);
+  const rangeUnits = [], rangeUnitsSkipped = [];
+  const RE = tokens();
+  let m, depth = 0, top2 = -1, scope = null;
+  while ((m = RE.exec(bodyXml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (name === "table") {
+      if (closing) {
+        if (depth > 0 && --depth === 0) scope = null;
+      } else if (depth === 0) {
+        top2++;
+        if (!selfClosed) {
+          depth = 1;
+          scope = sheets[top2]?.name ?? null;
+        }
+      } else if (!selfClosed) depth++;
+      continue;
+    }
+    if (closing) continue;
+    const kind = name === "named-range" || name === "named-expression" || name === "database-range" ? name : null;
+    if (!kind) continue;
+    const attrs = attrsOf4(m[2]);
+    const label = attrs.name ?? null;
+    if (kind === "named-expression") {
+      rangeUnitsSkipped.push({ source: kind, name: label, ref: attrs.expression ?? null, why: "not_a_range_reference" });
+      continue;
+    }
+    const ref = (kind === "named-range" ? attrs["cell-range-address"] : attrs["target-range-address"]) ?? null;
+    const r = odsRangeAddressUnit(ref, names);
+    if (r.unit) {
+      rangeUnits.push({
+        source: kind,
+        name: label,
+        scope: kind === "named-range" ? scope : r.unit.sheet,
+        hidden: false,
+        unit: r.unit
+      });
+    } else rangeUnitsSkipped.push({ source: kind, name: label, ref, why: r.why });
+  }
+  return { rangeUnits, rangeUnitsSkipped };
+}
 function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
@@ -27676,6 +27954,9 @@ function odsText(parts) {
       container: "ods",
       document: null,
       sheets: [],
+      rangeUnits: null,
+      rangeUnitsSkipped: null,
+      // content.xml not read: not looked, never none
       undetermined: [parts.guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -27689,6 +27970,9 @@ function odsText(parts) {
       container: "ods",
       document: null,
       sheets: [],
+      rangeUnits: null,
+      rangeUnitsSkipped: null,
+      // content.xml not read: not looked, never none
       undetermined: [marker],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -27696,7 +27980,8 @@ function odsText(parts) {
   const styles = automaticStyles(parts.contentXml);
   const outSheets = [];
   let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheetsOf(body, styles)) {
+  const odsSheets = sheetsOf(body, styles);
+  for (const sheet of odsSheets) {
     const walked = walkSheet(sheet.xml);
     const lines = [];
     for (const row2 of walked.rows) {
@@ -27739,6 +28024,9 @@ function odsText(parts) {
     container: "ods",
     document,
     sheets: outSheets,
+    /* D-415 (N27): named ranges and database ranges as `sheet-range` units,
+       beside each sheet's whole-sheet `range`. */
+    ...odsRangeUnits(body, odsSheets),
     undetermined: [],
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
   };
@@ -30987,19 +31275,19 @@ var JPX_REFUSES = Object.freeze({
   "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: 4 bytes a sample for every component of the largest tile, and a tiled image's 8-bit output beside them"
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"
 });
 var MEMORY_BOUND = 613e5;
-function workingSet(siz) {
-  const span = (o, to, t, end2) => {
-    const n = ceilDiv(end2 - to, t);
-    let max = 0;
-    for (const p of /* @__PURE__ */ new Set([0, Math.min(1, n - 1), n - 1])) max = Math.max(max, Math.min(to + (p + 1) * t, end2) - Math.max(to + p * t, o));
-    return { n, max };
-  };
-  const x = span(siz.XO, siz.XTO, siz.XT, siz.X), y = span(siz.YO, siz.YTO, siz.YT, siz.Y);
-  const nc = siz.comps.length;
-  return nc * x.max * y.max * 4 + (x.n * y.n > 1 ? (siz.X - siz.XO) * (siz.Y - siz.YO) * nc : 0);
+function workingSet(cs, nTiles) {
+  const { siz } = cs;
+  const slots = [];
+  for (const [no2, t] of cs.tiles) {
+    if (no2 >= nTiles) continue;
+    tileSlots(tileLayout(cs, t, no2)).forEach((n, i) => {
+      slots[i] = Math.max(slots[i] ?? 0, n);
+    });
+  }
+  return (siz.X - siz.XO) * (siz.Y - siz.YO) * siz.comps.length + slots.reduce((a, n) => a + n, 0);
 }
 var f32 = Math.fround;
 function boxes(d, p, end2) {
@@ -31574,7 +31862,7 @@ function packetOrder(tc, layers, progs, tile, comps) {
   }
   return out;
 }
-function decodeTile(cs, t, tileNo, pool) {
+function tileLayout(cs, t, tileNo) {
   const { siz, main } = cs;
   const cod = t.cod || main.cod;
   const nTx = ceilDiv(siz.X - siz.XTO, siz.XT);
@@ -31585,8 +31873,7 @@ function decodeTile(cs, t, tileNo, pool) {
     x1: Math.min(siz.XTO + (p + 1) * siz.XT, siz.X),
     y1: Math.min(siz.YTO + (q6 + 1) * siz.YT, siz.Y)
   };
-  const comps = siz.comps;
-  const tc = comps.map((cp, c) => {
+  const tc = siz.comps.map((cp, c) => {
     const sp = t.coc[c] || (t.cod ? t.cod.sp : null) || main.coc[c] || main.cod.sp;
     const qc = t.qcc[c] || t.qcd || main.qcc[c] || main.qcd;
     const roi = t.rgn[c] ?? main.rgn[c] ?? 0;
@@ -31614,41 +31901,56 @@ function decodeTile(cs, t, tileNo, pool) {
         B.numbps = st.expn + qc.guard - 1;
         const rb = cp.prec + (sp.qmfbid === 0 ? 0 : bandno === 0 ? 0 : bandno === 3 ? 2 : 1);
         B.stepsize = f32((1 + st.mant / 2048) * 2 ** (rb - st.expn));
-        const bpx = r === 0 ? ppx : ppx - 1, bpy = r === 0 ? ppy : ppy - 1;
-        B.prec = [];
-        for (let py = 0; py < R0.nph; py++) for (let px = 0; px < R0.npw; px++) {
-          const X0 = Math.max(B.x0, (R0.pgx + px) * 2 ** bpx), Y0 = Math.max(B.y0, (R0.pgy + py) * 2 ** bpy);
-          const X1 = Math.min(B.x1, (R0.pgx + px + 1) * 2 ** bpx), Y1 = Math.min(B.y1, (R0.pgy + py + 1) * 2 ** bpy);
-          const pr = { cblks: [], cw: 0, ch: 0 };
-          if (X1 > X0 && Y1 > Y0) {
-            const cx0 = Math.floor(X0 / 2 ** xcb), cy0 = Math.floor(Y0 / 2 ** ycb);
-            pr.cw = ceilDiv(X1, 2 ** xcb) - cx0;
-            pr.ch = ceilDiv(Y1, 2 ** ycb) - cy0;
-            for (let j = 0; j < pr.ch; j++) for (let i = 0; i < pr.cw; i++) {
-              pr.cblks.push({
-                x0: Math.max(X0, (cx0 + i) * 2 ** xcb),
-                y0: Math.max(Y0, (cy0 + j) * 2 ** ycb),
-                x1: Math.min(X1, (cx0 + i + 1) * 2 ** xcb),
-                y1: Math.min(Y1, (cy0 + j + 1) * 2 ** ycb),
-                included: false,
-                numbps: 0,
-                lblock: 3,
-                segs: [],
-                passes: 0
-              });
-            }
-            pr.incl = new TagTree(pr.cw, pr.ch);
-            pr.imsb = new TagTree(pr.cw, pr.ch);
-          }
-          B.prec.push(pr);
-        }
+        B.bpx = r === 0 ? ppx : ppx - 1;
+        B.bpy = r === 0 ? ppy : ppy - 1;
+        B.xcb = xcb;
+        B.ycb = ycb;
         return B;
       });
       res.push(R0);
     }
     return { x0, y0, x1, y1, nl: sp.nl, sp, qc, roi, res };
   });
-  const progs = t.poc || main.poc ? (t.poc || main.poc).map((pg) => ({ ...pg, re: Math.min(pg.re, 33) })) : [{ rs: 0, cs: 0, lye: cod.layers, re: 33, ce: comps.length, prog: cod.prog }];
+  return { tile, cod, tc };
+}
+function addPrecincts(x) {
+  for (const R0 of x.res) for (const B of R0.bands) {
+    const { bpx, bpy, xcb, ycb } = B;
+    B.prec = [];
+    for (let py = 0; py < R0.nph; py++) for (let px = 0; px < R0.npw; px++) {
+      const X0 = Math.max(B.x0, (R0.pgx + px) * 2 ** bpx), Y0 = Math.max(B.y0, (R0.pgy + py) * 2 ** bpy);
+      const X1 = Math.min(B.x1, (R0.pgx + px + 1) * 2 ** bpx), Y1 = Math.min(B.y1, (R0.pgy + py + 1) * 2 ** bpy);
+      const pr = { cblks: [], cw: 0, ch: 0 };
+      if (X1 > X0 && Y1 > Y0) {
+        const cx0 = Math.floor(X0 / 2 ** xcb), cy0 = Math.floor(Y0 / 2 ** ycb);
+        pr.cw = ceilDiv(X1, 2 ** xcb) - cx0;
+        pr.ch = ceilDiv(Y1, 2 ** ycb) - cy0;
+        for (let j = 0; j < pr.ch; j++) for (let i = 0; i < pr.cw; i++) {
+          pr.cblks.push({
+            x0: Math.max(X0, (cx0 + i) * 2 ** xcb),
+            y0: Math.max(Y0, (cy0 + j) * 2 ** ycb),
+            x1: Math.min(X1, (cx0 + i + 1) * 2 ** xcb),
+            y1: Math.min(Y1, (cy0 + j + 1) * 2 ** ycb),
+            included: false,
+            numbps: 0,
+            lblock: 3,
+            segs: [],
+            passes: 0
+          });
+        }
+        pr.incl = new TagTree(pr.cw, pr.ch);
+        pr.imsb = new TagTree(pr.cw, pr.ch);
+      }
+      B.prec.push(pr);
+    }
+  }
+}
+function decodeTile(cs, t, tileNo) {
+  const comps = cs.siz.comps;
+  const layout = tileLayout(cs, t, tileNo);
+  const { tile, cod, tc } = layout;
+  for (const x of tc) addPrecincts(x);
+  const progs = t.poc || cs.main.poc ? (t.poc || cs.main.poc).map((pg) => ({ ...pg, re: Math.min(pg.re, 33) })) : [{ rs: 0, cs: 0, lye: cod.layers, re: 33, ce: comps.length, prog: cod.prog }];
   const packets = packetOrder(tc, cod.layers, progs, tile, comps);
   const body = concat(t.data);
   let bp = 0;
@@ -31659,7 +31961,7 @@ function decodeTile(cs, t, tileNo, pool) {
     if (sop && bp + 6 <= body.length && body[bp] === 255 && body[bp + 1] === 145) bp += 6;
     const bio = new Bio(body, bp, body.length);
     const contrib = [];
-    if (bio.p >= body.length) throw truncated2(`the tile's packets run out at packet ${packets.indexOf(packets.find((q7) => q7[0] === l && q7[1] === r && q7[2] === c && q7[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.p >= body.length) throw truncated2(`the tile's packets run out at packet ${packets.indexOf(packets.find((q6) => q6[0] === l && q6[1] === r && q6[2] === c && q6[3] === pi)) + 1} of ${packets.length}`);
     if (bio.bit()) {
       for (const B of res.bands) {
         const pr = B.prec[pi];
@@ -31714,85 +32016,166 @@ function decodeTile(cs, t, tileNo, pool) {
       bp += k.len;
     }
   }
-  const irreversible = tc.map((x) => x.sp.qmfbid === 0);
-  const flagScratch = new Uint16Array(1026 * 6);
-  const planes = tc.map((x, c) => {
-    const w = x.x1 - x.x0, h = x.y1 - x.y0;
-    if (!pool[c] || pool[c].byteLength < w * h * 4) pool[c] = new ArrayBuffer(w * h * 4);
-    const plane2 = irreversible[c] ? new Float32Array(pool[c], 0, w * h) : new Int32Array(pool[c], 0, w * h);
-    plane2.fill(0);
-    const tmp = new Int32Array(4096);
-    for (let r = 0; r < x.res.length; r++) {
-      const R0 = x.res[r], prev = r ? x.res[r - 1] : null;
-      for (const B of R0.bands) {
-        const offx = B.bandno & 1 ? prev.x1 - prev.x0 : 0, offy = B.bandno & 2 ? prev.y1 - prev.y0 : 0;
-        const half = f32(0.5 * B.stepsize);
-        for (const pr of B.prec) for (const cb of pr.cblks) {
-          const cw = cb.x1 - cb.x0, ch = cb.y1 - cb.y0;
-          const segs = cb.segs.filter((s) => s.passes > 0).map((s) => ({ data: concat(s.chunks), passes: s.passes }));
-          if (!segs.length) continue;
-          const bpn = x.roi + cb.numbps;
-          if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
-          tmp.fill(0, 0, cw * ch);
-          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, flagScratch);
-          if (x.roi) {
-            const th = 2 ** x.roi;
-            for (let i = 0; i < cw * ch; i++) {
-              const v = tmp[i], m = Math.abs(v);
-              if (m >= th) tmp[i] = v < 0 ? -(m >> x.roi) : m >> x.roi;
-            }
-          }
-          const bx = cb.x0 - B.x0 + offx, by = cb.y0 - B.y0 + offy;
-          for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
-            const v = tmp[j * cw + i];
-            plane2[(by + j) * w + bx + i] = irreversible[c] ? f32(f32(v) * half) : Math.trunc(v / 2);
-          }
+  return layout;
+}
+var LIFT97 = [f32(-DELTA), f32(-GAMMA), f32(-BETA), f32(-ALPHA)];
+var Pool = class {
+  constructor() {
+    this.slots = [];
+    this.i = 0;
+  }
+  take(T, n) {
+    const i = this.i++;
+    if (!this.slots[i] || this.slots[i].byteLength < n * 4) this.slots[i] = new ArrayBuffer(n * 4);
+    return new T(this.slots[i], 0, n);
+  }
+};
+var stripSize = (B) => (B.x1 - B.x0) * Math.max(0, Math.min(2 ** B.ycb, B.y1 - B.y0));
+var BandRows = class {
+  constructor(x, B, irr, t1, pool) {
+    this.x = x;
+    this.B = B;
+    this.irr = irr;
+    this.t1 = t1;
+    this.w = B.x1 - B.x0;
+    this.g = 2 ** B.ycb;
+    this.s0 = Math.floor(B.y0 / this.g);
+    this.strips = /* @__PURE__ */ new Map();
+    for (const pr of B.prec) for (const cb of pr.cblks) {
+      const s = Math.floor(cb.y0 / this.g) - this.s0;
+      if (!this.strips.has(s)) this.strips.set(s, []);
+      this.strips.get(s).push(cb);
+    }
+    this.buf = pool.take(irr ? Float32Array : Int32Array, stripSize(B));
+    this.strip = -1;
+    this.top = 0;
+  }
+  /** Band row y's offset in `buf`. */
+  row(y) {
+    const s = Math.floor((this.B.y0 + y) / this.g) - this.s0;
+    if (s !== this.strip) this.load(s);
+    return (y - this.top) * this.w;
+  }
+  /** Decode one strip's code-blocks into the buffer (dequantised, as before). */
+  load(s) {
+    const { x, B, irr, w, buf } = this;
+    this.strip = s;
+    this.top = Math.max(0, (this.s0 + s) * this.g - B.y0);
+    buf.fill(0);
+    const half = f32(0.5 * B.stepsize), tmp = this.t1.tmp;
+    for (const cb of this.strips.get(s) || []) {
+      const cw = cb.x1 - cb.x0, ch = cb.y1 - cb.y0;
+      const segs = cb.segs.filter((sg) => sg.passes > 0).map((sg) => ({ data: concat(sg.chunks), passes: sg.passes }));
+      cb.segs = null;
+      if (!segs.length) continue;
+      const bpn = x.roi + cb.numbps;
+      if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
+      tmp.fill(0, 0, cw * ch);
+      decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, this.t1.flags);
+      if (x.roi) {
+        const th = 2 ** x.roi;
+        for (let i = 0; i < cw * ch; i++) {
+          const v = tmp[i], m = Math.abs(v);
+          if (m >= th) tmp[i] = v < 0 ? -(m >> x.roi) : m >> x.roi;
         }
       }
-    }
-    for (let r = 1; r < x.res.length; r++) {
-      const R0 = x.res[r], prev = x.res[r - 1];
-      const rw = R0.x1 - R0.x0, rh = R0.y1 - R0.y0, sw = prev.x1 - prev.x0, sh = prev.y1 - prev.y0;
-      const casx = R0.x0 & 1, casy = R0.y0 & 1;
-      const line = irreversible[c] ? new Float32Array(Math.max(rw, rh)) : new Int32Array(Math.max(rw, rh));
-      const oneD = irreversible[c] ? idwt97 : idwt53;
-      for (let y = 0; y < rh; y++) {
-        const o = y * w;
-        for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = plane2[o + i];
-        for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = plane2[o + sw + i];
-        oneD(line, rw, casx);
-        for (let i = 0; i < rw; i++) plane2[o + i] = line[i];
-      }
-      for (let xx = 0; xx < rw; xx++) {
-        for (let i = 0; i < sh; i++) line[casy ? 2 * i + 1 : 2 * i] = plane2[i * w + xx];
-        for (let i = 0; i < rh - sh; i++) line[casy ? 2 * i : 2 * i + 1] = plane2[(sh + i) * w + xx];
-        oneD(line, rh, casy);
-        for (let i = 0; i < rh; i++) plane2[i * w + xx] = line[i];
-      }
-    }
-    return plane2;
-  });
-  if (cod.mct && comps.length >= 3) {
-    const [a, b, c] = planes;
-    if (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2]) throw corrupt2("a colour transform over mixed wavelets");
-    if (irreversible[0]) {
-      for (let i = 0; i < a.length; i++) {
-        const y = a[i], u = b[i], v = c[i];
-        a[i] = f32(y + f32(v * f32(1.402)));
-        b[i] = f32(f32(y - f32(u * f32(0.34413))) - f32(v * f32(0.71414)));
-        c[i] = f32(y + f32(u * f32(1.772)));
-      }
-    } else {
-      for (let i = 0; i < a.length; i++) {
-        const y = a[i], u = b[i], v = c[i];
-        const g = y - Math.floor((u + v) / 4);
-        a[i] = v + g;
-        b[i] = g;
-        c[i] = u + g;
+      const bx = cb.x0 - B.x0, by = cb.y0 - B.y0 - this.top;
+      for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+        const v = tmp[j * cw + i];
+        buf[(by + j) * w + bx + i] = irr ? f32(f32(v) * half) : Math.trunc(v / 2);
       }
     }
   }
-  return { tile, tc, planes, irreversible };
+};
+var LowestRows = class {
+  constructor(band) {
+    this.band = band;
+    this.buf = band.buf;
+    this.y = 0;
+  }
+  next() {
+    return this.band.row(this.y++);
+  }
+};
+var LevelRows = class {
+  constructor(prev, [hl, lh, hh], R0, P, irr, pool) {
+    Object.assign(this, { prev, hl, lh, hh, irr });
+    this.rw = R0.x1 - R0.x0;
+    this.rh = R0.y1 - R0.y0;
+    this.sw = P.x1 - P.x0;
+    this.casx = R0.x0 & 1;
+    this.casy = R0.y0 & 1;
+    this.S = irr ? 4 : 2;
+    const T = irr ? Float32Array : Int32Array;
+    this.line = pool.take(T, this.rw);
+    this.R = this.S + 3;
+    this.buf = pool.take(T, this.R * this.rw);
+    this.k = 0;
+    this.m = 0;
+    this.lo = 0;
+    this.hi = 0;
+  }
+  next() {
+    const m = this.m++;
+    while (this.k <= m + this.S && this.k < this.rh + this.S) this.arrive();
+    return m % this.R * this.rw;
+  }
+  arrive() {
+    const k = this.k++, { rw, rh, sw, casx, casy, irr, S: S2, R: R5, buf, line } = this;
+    if (k < rh) {
+      const low = (k & 1) === casy;
+      const A = low ? this.prev : this.lh, B = low ? this.hl : this.hh;
+      const ao = low ? this.prev.next() : this.lh.row(this.hi);
+      const bo = low ? this.hl.row(this.lo++) : this.hh.row(this.hi++);
+      const a = A.buf, b = B.buf;
+      for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = a[ao + i];
+      for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = b[bo + i];
+      (irr ? idwt97 : idwt53)(line, rw, casx);
+      const o = k % R5 * rw;
+      if (rh === 1) {
+        if (!irr && casy) for (let i = 0; i < rw; i++) buf[o + i] = Math.trunc(line[i] / 2);
+        else buf.set(line, o);
+      } else if (irr) {
+        const g = low ? K : TWO_INVK;
+        for (let i = 0; i < rw; i++) buf[o + i] = f32(line[i] * g);
+      } else buf.set(line, o);
+    }
+    if (rh < 2) return;
+    for (let s = 1; s <= S2; s++) {
+      const j = k - s;
+      if (j < 0 || j >= rh || (j & 1) !== (s & 1 ? casy : 1 - casy)) continue;
+      const o = j % R5 * rw, up = j > 0 ? (j - 1) % R5 * rw : -1, dn = j + 1 < rh ? (j + 1) % R5 * rw : -1;
+      if (irr) {
+        const c = LIFT97[s - 1];
+        if (up < 0) for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(f32(buf[dn + i] + buf[dn + i]) * c));
+        else if (dn < 0) {
+          const c2 = f32(c + c);
+          for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(buf[up + i] * c2));
+        } else for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(f32(buf[up + i] + buf[dn + i]) * c));
+      } else {
+        const u = up < 0 ? dn : up, d = dn < 0 ? up : dn;
+        if (s === 1) for (let i = 0; i < rw; i++) buf[o + i] -= Math.floor((buf[u + i] + buf[d + i] + 2) / 4);
+        else for (let i = 0; i < rw; i++) buf[o + i] += Math.floor((buf[u + i] + buf[d + i]) / 2);
+      }
+    }
+  }
+};
+function componentRows(x, irr, t1, pool) {
+  const band = (B) => new BandRows(x, B, irr, t1, pool);
+  let src = new LowestRows(band(x.res[0].bands[0]));
+  for (let r = 1; r < x.res.length; r++) src = new LevelRows(src, x.res[r].bands.map(band), x.res[r], x.res[r - 1], irr, pool);
+  return src;
+}
+function tileSlots({ tc }) {
+  const out = [];
+  for (const x of tc) {
+    const S2 = x.sp.qmfbid === 0 ? 4 : 2;
+    for (const R0 of x.res) {
+      for (const B of R0.bands) out.push(4 * stripSize(B));
+      if (R0.r) out.push(4 * (R0.x1 - R0.x0), 4 * (S2 + 3) * (R0.x1 - R0.x0));
+    }
+  }
+  return out;
 }
 function concat(parts) {
   if (parts.length === 1) return parts[0];
@@ -31822,28 +32205,58 @@ function decodeJpx(d) {
     if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
   }
   const W2 = siz.X - siz.XO, H = siz.Y - siz.YO;
-  const need = workingSet(siz);
+  const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
+  const need = workingSet(cs, nTiles);
   if (need > MEMORY_BOUND) {
     throw unsupported2("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
   }
-  const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
-  let out = nTiles > 1 ? new Uint8Array(W2 * H * nc) : null;
   if (cs.tiles.size < nTiles) throw truncated2(`${cs.tiles.size} of ${nTiles} tiles are present`);
+  let out = null;
+  const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };
+  const pool = new Pool();
+  const shift = 1 << 7;
+  const put = (v, irr) => {
+    const s = irr ? v > 2147483647 ? 255 : v < -2147483648 ? 0 : rintEven(v) + shift : v + shift;
+    return s < 0 ? 0 : s > 255 ? 255 : s;
+  };
   let transform = null;
-  const pool = [];
   for (const [no2, t] of cs.tiles) {
     if (no2 >= nTiles) throw corrupt2(`tile ${no2} of ${nTiles}`);
-    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no2, pool);
+    const { tile, cod: cod2, tc } = decodeTile(cs, t, no2);
+    out ??= new Uint8Array(W2 * H * nc);
+    const irreversible = tc.map((x) => x.sp.qmfbid === 0);
     transform ??= irreversible[0] ? "9/7" : "5/3";
-    const shift = 1 << 7;
-    if (!out) out = new Uint8Array(planes[0].buffer, 0, W2 * H * nc);
-    for (let c = 0; c < nc; c++) {
-      const x = tc[c], w = x.x1 - x.x0, pl = planes[c];
-      for (let j = 0; j < x.y1 - x.y0; j++) for (let i = 0; i < w; i++) {
-        const v = pl[j * w + i];
-        let s = irreversible[c] ? v > 2147483647 ? 255 : v < -2147483648 ? 0 : rintEven(v) + shift : v + shift;
-        s = s < 0 ? 0 : s > 255 ? 255 : s;
-        out[((tile.y0 - siz.YO + j) * W2 + (tile.x0 - siz.XO + i)) * nc + c] = s;
+    const mct = cod2.mct && nc >= 3;
+    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt2("a colour transform over mixed wavelets");
+    pool.i = 0;
+    const src = tc.map((x, c) => componentRows(x, irreversible[c], t1, pool));
+    const w = tile.x1 - tile.x0, h = tile.y1 - tile.y0;
+    const ro = new Array(nc);
+    for (let j = 0; j < h; j++) {
+      for (let c = 0; c < nc; c++) ro[c] = src[c].next();
+      let o = ((tile.y0 - siz.YO + j) * W2 + (tile.x0 - siz.XO)) * nc;
+      if (mct && irreversible[0]) {
+        const [a, b, c] = src.map((s) => s.buf), [ao, bo, co] = ro;
+        for (let i = 0; i < w; i++, o += 3) {
+          const y = a[ao + i], u = b[bo + i], v = c[co + i];
+          out[o] = put(f32(y + f32(v * f32(1.402))), true);
+          out[o + 1] = put(f32(f32(y - f32(u * f32(0.34413))) - f32(v * f32(0.71414))), true);
+          out[o + 2] = put(f32(y + f32(u * f32(1.772))), true);
+        }
+      } else if (mct) {
+        const [a, b, c] = src.map((s) => s.buf), [ao, bo, co] = ro;
+        for (let i = 0; i < w; i++, o += 3) {
+          const y = a[ao + i], u = b[bo + i], v = c[co + i];
+          const g = y - Math.floor((u + v) / 4);
+          out[o] = put(v + g | 0, false);
+          out[o + 1] = put(g | 0, false);
+          out[o + 2] = put(u + g | 0, false);
+        }
+      } else {
+        for (let c = 0; c < nc; c++) {
+          const row2 = src[c].buf, rc = ro[c], irr = irreversible[c];
+          for (let i = 0; i < w; i++) out[o + i * nc + c] = put(row2[rc + i], irr);
+        }
       }
     }
   }
@@ -53569,7 +53982,7 @@ var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.c
 var CONTENT_CITED_AS_BYTES = contentCitedAs2({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
 var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
-var MACHINE_READ_KINDS = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
+var MACHINE_READ_KINDS2 = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -53897,8 +54310,8 @@ var MEANING = {
         col: "chain_kind",
         case: "lower",
         vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
-        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
-        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
+        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS2.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS2.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a

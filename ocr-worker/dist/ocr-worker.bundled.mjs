@@ -3220,19 +3220,19 @@ var JPX_REFUSES = Object.freeze({
   "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: 4 bytes a sample for every component of the largest tile, and a tiled image's 8-bit output beside them"
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"
 });
 var MEMORY_BOUND = 613e5;
-function workingSet(siz) {
-  const span = (o, to, t, end) => {
-    const n = ceilDiv(end - to, t);
-    let max = 0;
-    for (const p of /* @__PURE__ */ new Set([0, Math.min(1, n - 1), n - 1])) max = Math.max(max, Math.min(to + (p + 1) * t, end) - Math.max(to + p * t, o));
-    return { n, max };
-  };
-  const x = span(siz.XO, siz.XTO, siz.XT, siz.X), y = span(siz.YO, siz.YTO, siz.YT, siz.Y);
-  const nc = siz.comps.length;
-  return nc * x.max * y.max * 4 + (x.n * y.n > 1 ? (siz.X - siz.XO) * (siz.Y - siz.YO) * nc : 0);
+function workingSet(cs, nTiles) {
+  const { siz } = cs;
+  const slots = [];
+  for (const [no, t] of cs.tiles) {
+    if (no >= nTiles) continue;
+    tileSlots(tileLayout(cs, t, no)).forEach((n, i) => {
+      slots[i] = Math.max(slots[i] ?? 0, n);
+    });
+  }
+  return (siz.X - siz.XO) * (siz.Y - siz.YO) * siz.comps.length + slots.reduce((a, n) => a + n, 0);
 }
 var f32 = Math.fround;
 function boxes(d, p, end) {
@@ -3807,7 +3807,7 @@ function packetOrder(tc, layers, progs, tile, comps) {
   }
   return out;
 }
-function decodeTile(cs, t, tileNo, pool) {
+function tileLayout(cs, t, tileNo) {
   const { siz, main } = cs;
   const cod = t.cod || main.cod;
   const nTx = ceilDiv(siz.X - siz.XTO, siz.XT);
@@ -3818,8 +3818,7 @@ function decodeTile(cs, t, tileNo, pool) {
     x1: Math.min(siz.XTO + (p + 1) * siz.XT, siz.X),
     y1: Math.min(siz.YTO + (q + 1) * siz.YT, siz.Y)
   };
-  const comps = siz.comps;
-  const tc = comps.map((cp, c) => {
+  const tc = siz.comps.map((cp, c) => {
     const sp = t.coc[c] || (t.cod ? t.cod.sp : null) || main.coc[c] || main.cod.sp;
     const qc = t.qcc[c] || t.qcd || main.qcc[c] || main.qcd;
     const roi = t.rgn[c] ?? main.rgn[c] ?? 0;
@@ -3847,41 +3846,56 @@ function decodeTile(cs, t, tileNo, pool) {
         B.numbps = st.expn + qc.guard - 1;
         const rb = cp.prec + (sp.qmfbid === 0 ? 0 : bandno === 0 ? 0 : bandno === 3 ? 2 : 1);
         B.stepsize = f32((1 + st.mant / 2048) * 2 ** (rb - st.expn));
-        const bpx = r === 0 ? ppx : ppx - 1, bpy = r === 0 ? ppy : ppy - 1;
-        B.prec = [];
-        for (let py = 0; py < R0.nph; py++) for (let px = 0; px < R0.npw; px++) {
-          const X0 = Math.max(B.x0, (R0.pgx + px) * 2 ** bpx), Y0 = Math.max(B.y0, (R0.pgy + py) * 2 ** bpy);
-          const X1 = Math.min(B.x1, (R0.pgx + px + 1) * 2 ** bpx), Y1 = Math.min(B.y1, (R0.pgy + py + 1) * 2 ** bpy);
-          const pr = { cblks: [], cw: 0, ch: 0 };
-          if (X1 > X0 && Y1 > Y0) {
-            const cx0 = Math.floor(X0 / 2 ** xcb), cy0 = Math.floor(Y0 / 2 ** ycb);
-            pr.cw = ceilDiv(X1, 2 ** xcb) - cx0;
-            pr.ch = ceilDiv(Y1, 2 ** ycb) - cy0;
-            for (let j = 0; j < pr.ch; j++) for (let i = 0; i < pr.cw; i++) {
-              pr.cblks.push({
-                x0: Math.max(X0, (cx0 + i) * 2 ** xcb),
-                y0: Math.max(Y0, (cy0 + j) * 2 ** ycb),
-                x1: Math.min(X1, (cx0 + i + 1) * 2 ** xcb),
-                y1: Math.min(Y1, (cy0 + j + 1) * 2 ** ycb),
-                included: false,
-                numbps: 0,
-                lblock: 3,
-                segs: [],
-                passes: 0
-              });
-            }
-            pr.incl = new TagTree(pr.cw, pr.ch);
-            pr.imsb = new TagTree(pr.cw, pr.ch);
-          }
-          B.prec.push(pr);
-        }
+        B.bpx = r === 0 ? ppx : ppx - 1;
+        B.bpy = r === 0 ? ppy : ppy - 1;
+        B.xcb = xcb;
+        B.ycb = ycb;
         return B;
       });
       res.push(R0);
     }
     return { x0, y0, x1, y1, nl: sp.nl, sp, qc, roi, res };
   });
-  const progs = t.poc || main.poc ? (t.poc || main.poc).map((pg) => ({ ...pg, re: Math.min(pg.re, 33) })) : [{ rs: 0, cs: 0, lye: cod.layers, re: 33, ce: comps.length, prog: cod.prog }];
+  return { tile, cod, tc };
+}
+function addPrecincts(x) {
+  for (const R0 of x.res) for (const B of R0.bands) {
+    const { bpx, bpy, xcb, ycb } = B;
+    B.prec = [];
+    for (let py = 0; py < R0.nph; py++) for (let px = 0; px < R0.npw; px++) {
+      const X0 = Math.max(B.x0, (R0.pgx + px) * 2 ** bpx), Y0 = Math.max(B.y0, (R0.pgy + py) * 2 ** bpy);
+      const X1 = Math.min(B.x1, (R0.pgx + px + 1) * 2 ** bpx), Y1 = Math.min(B.y1, (R0.pgy + py + 1) * 2 ** bpy);
+      const pr = { cblks: [], cw: 0, ch: 0 };
+      if (X1 > X0 && Y1 > Y0) {
+        const cx0 = Math.floor(X0 / 2 ** xcb), cy0 = Math.floor(Y0 / 2 ** ycb);
+        pr.cw = ceilDiv(X1, 2 ** xcb) - cx0;
+        pr.ch = ceilDiv(Y1, 2 ** ycb) - cy0;
+        for (let j = 0; j < pr.ch; j++) for (let i = 0; i < pr.cw; i++) {
+          pr.cblks.push({
+            x0: Math.max(X0, (cx0 + i) * 2 ** xcb),
+            y0: Math.max(Y0, (cy0 + j) * 2 ** ycb),
+            x1: Math.min(X1, (cx0 + i + 1) * 2 ** xcb),
+            y1: Math.min(Y1, (cy0 + j + 1) * 2 ** ycb),
+            included: false,
+            numbps: 0,
+            lblock: 3,
+            segs: [],
+            passes: 0
+          });
+        }
+        pr.incl = new TagTree(pr.cw, pr.ch);
+        pr.imsb = new TagTree(pr.cw, pr.ch);
+      }
+      B.prec.push(pr);
+    }
+  }
+}
+function decodeTile(cs, t, tileNo) {
+  const comps = cs.siz.comps;
+  const layout = tileLayout(cs, t, tileNo);
+  const { tile, cod, tc } = layout;
+  for (const x of tc) addPrecincts(x);
+  const progs = t.poc || cs.main.poc ? (t.poc || cs.main.poc).map((pg) => ({ ...pg, re: Math.min(pg.re, 33) })) : [{ rs: 0, cs: 0, lye: cod.layers, re: 33, ce: comps.length, prog: cod.prog }];
   const packets = packetOrder(tc, cod.layers, progs, tile, comps);
   const body = concat(t.data);
   let bp = 0;
@@ -3892,7 +3906,7 @@ function decodeTile(cs, t, tileNo, pool) {
     if (sop && bp + 6 <= body.length && body[bp] === 255 && body[bp + 1] === 145) bp += 6;
     const bio = new Bio(body, bp, body.length);
     const contrib = [];
-    if (bio.p >= body.length) throw truncated2(`the tile's packets run out at packet ${packets.indexOf(packets.find((q2) => q2[0] === l && q2[1] === r && q2[2] === c && q2[3] === pi)) + 1} of ${packets.length}`);
+    if (bio.p >= body.length) throw truncated2(`the tile's packets run out at packet ${packets.indexOf(packets.find((q) => q[0] === l && q[1] === r && q[2] === c && q[3] === pi)) + 1} of ${packets.length}`);
     if (bio.bit()) {
       for (const B of res.bands) {
         const pr = B.prec[pi];
@@ -3947,85 +3961,166 @@ function decodeTile(cs, t, tileNo, pool) {
       bp += k.len;
     }
   }
-  const irreversible = tc.map((x) => x.sp.qmfbid === 0);
-  const flagScratch = new Uint16Array(1026 * 6);
-  const planes = tc.map((x, c) => {
-    const w = x.x1 - x.x0, h = x.y1 - x.y0;
-    if (!pool[c] || pool[c].byteLength < w * h * 4) pool[c] = new ArrayBuffer(w * h * 4);
-    const plane = irreversible[c] ? new Float32Array(pool[c], 0, w * h) : new Int32Array(pool[c], 0, w * h);
-    plane.fill(0);
-    const tmp = new Int32Array(4096);
-    for (let r = 0; r < x.res.length; r++) {
-      const R0 = x.res[r], prev = r ? x.res[r - 1] : null;
-      for (const B of R0.bands) {
-        const offx = B.bandno & 1 ? prev.x1 - prev.x0 : 0, offy = B.bandno & 2 ? prev.y1 - prev.y0 : 0;
-        const half = f32(0.5 * B.stepsize);
-        for (const pr of B.prec) for (const cb of pr.cblks) {
-          const cw = cb.x1 - cb.x0, ch = cb.y1 - cb.y0;
-          const segs = cb.segs.filter((s) => s.passes > 0).map((s) => ({ data: concat(s.chunks), passes: s.passes }));
-          if (!segs.length) continue;
-          const bpn = x.roi + cb.numbps;
-          if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
-          tmp.fill(0, 0, cw * ch);
-          decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, flagScratch);
-          if (x.roi) {
-            const th = 2 ** x.roi;
-            for (let i = 0; i < cw * ch; i++) {
-              const v = tmp[i], m = Math.abs(v);
-              if (m >= th) tmp[i] = v < 0 ? -(m >> x.roi) : m >> x.roi;
-            }
-          }
-          const bx = cb.x0 - B.x0 + offx, by = cb.y0 - B.y0 + offy;
-          for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
-            const v = tmp[j * cw + i];
-            plane[(by + j) * w + bx + i] = irreversible[c] ? f32(f32(v) * half) : Math.trunc(v / 2);
-          }
+  return layout;
+}
+var LIFT97 = [f32(-DELTA), f32(-GAMMA), f32(-BETA), f32(-ALPHA)];
+var Pool = class {
+  constructor() {
+    this.slots = [];
+    this.i = 0;
+  }
+  take(T, n) {
+    const i = this.i++;
+    if (!this.slots[i] || this.slots[i].byteLength < n * 4) this.slots[i] = new ArrayBuffer(n * 4);
+    return new T(this.slots[i], 0, n);
+  }
+};
+var stripSize = (B) => (B.x1 - B.x0) * Math.max(0, Math.min(2 ** B.ycb, B.y1 - B.y0));
+var BandRows = class {
+  constructor(x, B, irr, t1, pool) {
+    this.x = x;
+    this.B = B;
+    this.irr = irr;
+    this.t1 = t1;
+    this.w = B.x1 - B.x0;
+    this.g = 2 ** B.ycb;
+    this.s0 = Math.floor(B.y0 / this.g);
+    this.strips = /* @__PURE__ */ new Map();
+    for (const pr of B.prec) for (const cb of pr.cblks) {
+      const s = Math.floor(cb.y0 / this.g) - this.s0;
+      if (!this.strips.has(s)) this.strips.set(s, []);
+      this.strips.get(s).push(cb);
+    }
+    this.buf = pool.take(irr ? Float32Array : Int32Array, stripSize(B));
+    this.strip = -1;
+    this.top = 0;
+  }
+  /** Band row y's offset in `buf`. */
+  row(y) {
+    const s = Math.floor((this.B.y0 + y) / this.g) - this.s0;
+    if (s !== this.strip) this.load(s);
+    return (y - this.top) * this.w;
+  }
+  /** Decode one strip's code-blocks into the buffer (dequantised, as before). */
+  load(s) {
+    const { x, B, irr, w, buf } = this;
+    this.strip = s;
+    this.top = Math.max(0, (this.s0 + s) * this.g - B.y0);
+    buf.fill(0);
+    const half = f32(0.5 * B.stepsize), tmp = this.t1.tmp;
+    for (const cb of this.strips.get(s) || []) {
+      const cw = cb.x1 - cb.x0, ch = cb.y1 - cb.y0;
+      const segs = cb.segs.filter((sg) => sg.passes > 0).map((sg) => ({ data: concat(sg.chunks), passes: sg.passes }));
+      cb.segs = null;
+      if (!segs.length) continue;
+      const bpn = x.roi + cb.numbps;
+      if (bpn >= 31) throw corrupt2("a code-block of 31 or more bit-planes");
+      tmp.fill(0, 0, cw * ch);
+      decodeCodeBlock(cw, ch, B.bandno, bpn, cb.numbps, x.sp.cblksty, segs, tmp, this.t1.flags);
+      if (x.roi) {
+        const th = 2 ** x.roi;
+        for (let i = 0; i < cw * ch; i++) {
+          const v = tmp[i], m = Math.abs(v);
+          if (m >= th) tmp[i] = v < 0 ? -(m >> x.roi) : m >> x.roi;
         }
       }
-    }
-    for (let r = 1; r < x.res.length; r++) {
-      const R0 = x.res[r], prev = x.res[r - 1];
-      const rw = R0.x1 - R0.x0, rh = R0.y1 - R0.y0, sw = prev.x1 - prev.x0, sh = prev.y1 - prev.y0;
-      const casx = R0.x0 & 1, casy = R0.y0 & 1;
-      const line = irreversible[c] ? new Float32Array(Math.max(rw, rh)) : new Int32Array(Math.max(rw, rh));
-      const oneD = irreversible[c] ? idwt97 : idwt53;
-      for (let y = 0; y < rh; y++) {
-        const o = y * w;
-        for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = plane[o + i];
-        for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = plane[o + sw + i];
-        oneD(line, rw, casx);
-        for (let i = 0; i < rw; i++) plane[o + i] = line[i];
-      }
-      for (let xx = 0; xx < rw; xx++) {
-        for (let i = 0; i < sh; i++) line[casy ? 2 * i + 1 : 2 * i] = plane[i * w + xx];
-        for (let i = 0; i < rh - sh; i++) line[casy ? 2 * i : 2 * i + 1] = plane[(sh + i) * w + xx];
-        oneD(line, rh, casy);
-        for (let i = 0; i < rh; i++) plane[i * w + xx] = line[i];
-      }
-    }
-    return plane;
-  });
-  if (cod.mct && comps.length >= 3) {
-    const [a, b, c] = planes;
-    if (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2]) throw corrupt2("a colour transform over mixed wavelets");
-    if (irreversible[0]) {
-      for (let i = 0; i < a.length; i++) {
-        const y = a[i], u = b[i], v = c[i];
-        a[i] = f32(y + f32(v * f32(1.402)));
-        b[i] = f32(f32(y - f32(u * f32(0.34413))) - f32(v * f32(0.71414)));
-        c[i] = f32(y + f32(u * f32(1.772)));
-      }
-    } else {
-      for (let i = 0; i < a.length; i++) {
-        const y = a[i], u = b[i], v = c[i];
-        const g = y - Math.floor((u + v) / 4);
-        a[i] = v + g;
-        b[i] = g;
-        c[i] = u + g;
+      const bx = cb.x0 - B.x0, by = cb.y0 - B.y0 - this.top;
+      for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) {
+        const v = tmp[j * cw + i];
+        buf[(by + j) * w + bx + i] = irr ? f32(f32(v) * half) : Math.trunc(v / 2);
       }
     }
   }
-  return { tile, tc, planes, irreversible };
+};
+var LowestRows = class {
+  constructor(band) {
+    this.band = band;
+    this.buf = band.buf;
+    this.y = 0;
+  }
+  next() {
+    return this.band.row(this.y++);
+  }
+};
+var LevelRows = class {
+  constructor(prev, [hl, lh, hh], R0, P, irr, pool) {
+    Object.assign(this, { prev, hl, lh, hh, irr });
+    this.rw = R0.x1 - R0.x0;
+    this.rh = R0.y1 - R0.y0;
+    this.sw = P.x1 - P.x0;
+    this.casx = R0.x0 & 1;
+    this.casy = R0.y0 & 1;
+    this.S = irr ? 4 : 2;
+    const T = irr ? Float32Array : Int32Array;
+    this.line = pool.take(T, this.rw);
+    this.R = this.S + 3;
+    this.buf = pool.take(T, this.R * this.rw);
+    this.k = 0;
+    this.m = 0;
+    this.lo = 0;
+    this.hi = 0;
+  }
+  next() {
+    const m = this.m++;
+    while (this.k <= m + this.S && this.k < this.rh + this.S) this.arrive();
+    return m % this.R * this.rw;
+  }
+  arrive() {
+    const k = this.k++, { rw, rh, sw, casx, casy, irr, S: S2, R: R3, buf, line } = this;
+    if (k < rh) {
+      const low = (k & 1) === casy;
+      const A = low ? this.prev : this.lh, B = low ? this.hl : this.hh;
+      const ao = low ? this.prev.next() : this.lh.row(this.hi);
+      const bo = low ? this.hl.row(this.lo++) : this.hh.row(this.hi++);
+      const a = A.buf, b = B.buf;
+      for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = a[ao + i];
+      for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = b[bo + i];
+      (irr ? idwt97 : idwt53)(line, rw, casx);
+      const o = k % R3 * rw;
+      if (rh === 1) {
+        if (!irr && casy) for (let i = 0; i < rw; i++) buf[o + i] = Math.trunc(line[i] / 2);
+        else buf.set(line, o);
+      } else if (irr) {
+        const g = low ? K : TWO_INVK;
+        for (let i = 0; i < rw; i++) buf[o + i] = f32(line[i] * g);
+      } else buf.set(line, o);
+    }
+    if (rh < 2) return;
+    for (let s = 1; s <= S2; s++) {
+      const j = k - s;
+      if (j < 0 || j >= rh || (j & 1) !== (s & 1 ? casy : 1 - casy)) continue;
+      const o = j % R3 * rw, up = j > 0 ? (j - 1) % R3 * rw : -1, dn = j + 1 < rh ? (j + 1) % R3 * rw : -1;
+      if (irr) {
+        const c = LIFT97[s - 1];
+        if (up < 0) for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(f32(buf[dn + i] + buf[dn + i]) * c));
+        else if (dn < 0) {
+          const c2 = f32(c + c);
+          for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(buf[up + i] * c2));
+        } else for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(f32(buf[up + i] + buf[dn + i]) * c));
+      } else {
+        const u = up < 0 ? dn : up, d = dn < 0 ? up : dn;
+        if (s === 1) for (let i = 0; i < rw; i++) buf[o + i] -= Math.floor((buf[u + i] + buf[d + i] + 2) / 4);
+        else for (let i = 0; i < rw; i++) buf[o + i] += Math.floor((buf[u + i] + buf[d + i]) / 2);
+      }
+    }
+  }
+};
+function componentRows(x, irr, t1, pool) {
+  const band = (B) => new BandRows(x, B, irr, t1, pool);
+  let src = new LowestRows(band(x.res[0].bands[0]));
+  for (let r = 1; r < x.res.length; r++) src = new LevelRows(src, x.res[r].bands.map(band), x.res[r], x.res[r - 1], irr, pool);
+  return src;
+}
+function tileSlots({ tc }) {
+  const out = [];
+  for (const x of tc) {
+    const S2 = x.sp.qmfbid === 0 ? 4 : 2;
+    for (const R0 of x.res) {
+      for (const B of R0.bands) out.push(4 * stripSize(B));
+      if (R0.r) out.push(4 * (R0.x1 - R0.x0), 4 * (S2 + 3) * (R0.x1 - R0.x0));
+    }
+  }
+  return out;
 }
 function concat(parts) {
   if (parts.length === 1) return parts[0];
@@ -4055,28 +4150,58 @@ function decodeJpx(d) {
     if (cp.prec !== 8) throw samples(`${cp.prec}-bit samples; only 8-bit are decoded here`, { precision: cp.prec });
   }
   const W2 = siz.X - siz.XO, H = siz.Y - siz.YO;
-  const need = workingSet(siz);
+  const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
+  const need = workingSet(cs, nTiles);
   if (need > MEMORY_BOUND) {
     throw unsupported2("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND, width: W2, height: H, components: nc });
   }
-  const nTiles = ceilDiv(siz.X - siz.XTO, siz.XT) * ceilDiv(siz.Y - siz.YTO, siz.YT);
-  let out = nTiles > 1 ? new Uint8Array(W2 * H * nc) : null;
   if (cs.tiles.size < nTiles) throw truncated2(`${cs.tiles.size} of ${nTiles} tiles are present`);
+  let out = null;
+  const t1 = { tmp: new Int32Array(4096), flags: new Uint16Array(1026 * 6) };
+  const pool = new Pool();
+  const shift = 1 << 7;
+  const put = (v, irr) => {
+    const s = irr ? v > 2147483647 ? 255 : v < -2147483648 ? 0 : rintEven(v) + shift : v + shift;
+    return s < 0 ? 0 : s > 255 ? 255 : s;
+  };
   let transform = null;
-  const pool = [];
   for (const [no, t] of cs.tiles) {
     if (no >= nTiles) throw corrupt2(`tile ${no} of ${nTiles}`);
-    const { tile, tc, planes, irreversible } = decodeTile(cs, t, no, pool);
+    const { tile, cod: cod2, tc } = decodeTile(cs, t, no);
+    out ??= new Uint8Array(W2 * H * nc);
+    const irreversible = tc.map((x) => x.sp.qmfbid === 0);
     transform ??= irreversible[0] ? "9/7" : "5/3";
-    const shift = 1 << 7;
-    if (!out) out = new Uint8Array(planes[0].buffer, 0, W2 * H * nc);
-    for (let c = 0; c < nc; c++) {
-      const x = tc[c], w = x.x1 - x.x0, pl = planes[c];
-      for (let j = 0; j < x.y1 - x.y0; j++) for (let i = 0; i < w; i++) {
-        const v = pl[j * w + i];
-        let s = irreversible[c] ? v > 2147483647 ? 255 : v < -2147483648 ? 0 : rintEven(v) + shift : v + shift;
-        s = s < 0 ? 0 : s > 255 ? 255 : s;
-        out[((tile.y0 - siz.YO + j) * W2 + (tile.x0 - siz.XO + i)) * nc + c] = s;
+    const mct = cod2.mct && nc >= 3;
+    if (mct && (irreversible[0] !== irreversible[1] || irreversible[1] !== irreversible[2])) throw corrupt2("a colour transform over mixed wavelets");
+    pool.i = 0;
+    const src = tc.map((x, c) => componentRows(x, irreversible[c], t1, pool));
+    const w = tile.x1 - tile.x0, h = tile.y1 - tile.y0;
+    const ro = new Array(nc);
+    for (let j = 0; j < h; j++) {
+      for (let c = 0; c < nc; c++) ro[c] = src[c].next();
+      let o = ((tile.y0 - siz.YO + j) * W2 + (tile.x0 - siz.XO)) * nc;
+      if (mct && irreversible[0]) {
+        const [a, b, c] = src.map((s) => s.buf), [ao, bo, co] = ro;
+        for (let i = 0; i < w; i++, o += 3) {
+          const y = a[ao + i], u = b[bo + i], v = c[co + i];
+          out[o] = put(f32(y + f32(v * f32(1.402))), true);
+          out[o + 1] = put(f32(f32(y - f32(u * f32(0.34413))) - f32(v * f32(0.71414))), true);
+          out[o + 2] = put(f32(y + f32(u * f32(1.772))), true);
+        }
+      } else if (mct) {
+        const [a, b, c] = src.map((s) => s.buf), [ao, bo, co] = ro;
+        for (let i = 0; i < w; i++, o += 3) {
+          const y = a[ao + i], u = b[bo + i], v = c[co + i];
+          const g = y - Math.floor((u + v) / 4);
+          out[o] = put(v + g | 0, false);
+          out[o + 1] = put(g | 0, false);
+          out[o + 2] = put(u + g | 0, false);
+        }
+      } else {
+        for (let c = 0; c < nc; c++) {
+          const row = src[c].buf, rc = ro[c], irr = irreversible[c];
+          for (let i = 0; i < w; i++) out[o + i * nc + c] = put(row[rc + i], irr);
+        }
       }
     }
   }

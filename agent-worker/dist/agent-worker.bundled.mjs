@@ -5742,7 +5742,7 @@ var MACHINE_FENCE_CHECKS = {
   },
   MACHINE_CANNOT_PUBLISH: {
     check: "C-32.6",
-    where: "src/store.mjs publishCase > is-machine-publish",
+    where: "src/case-authoring/index.mjs #publishCase > is-machine-publish",
     translation: "Publishing puts the group's name on a case, together with an assertion that it is complete and a stated position on putting it to the people it concerns. Both of those are declared judgements, and the credential that asked here is an automated one. It can assemble the case; sign in to publish it."
   },
   MACHINE_CANNOT_DIVIDE: {
@@ -5886,7 +5886,7 @@ var ACT_SHAPE_CHECKS = {
   },
   NO_STATEMENT: {
     check: "C-33.14",
-    where: "src/store.mjs publishCase > is-publish-statement",
+    where: "src/case-authoring/index.mjs #publishCase > is-publish-statement",
     translation: "A published case has to say what it does NOT cover. A case that is silent about its own limits is claiming to cover everything, and that is the overclaim this record exists to refuse."
   },
   CAS_STALE: {
@@ -6591,7 +6591,7 @@ var DRIVE_CAPTURE_CHECKS = {
      and `test/monitor-assess.test.mjs` drives both of these by name. */
   DRIVE_TICK_EXPORT_IS_THE_SHELL: {
     check: "C-48.8",
-    where: "src/index.mjs fetch > is-drive-tick-export",
+    where: "src/monitoring/index.mjs monitor > is-drive-tick-export",
     translation: "The check of that Google Drive document did not run: the export address answered with a web page rather than a document, which is what Drive does when a file stops being shared with anyone who has the link. Nothing was compared and nothing about the record changed \u2014 what is known is that this instance could not see the document today."
   },
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
@@ -6602,7 +6602,7 @@ var DRIVE_CAPTURE_CHECKS = {
      the document CHANGED on every visit — the cry-wolf this row exists to end. */
   DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: {
     check: "C-48.9",
-    where: "src/index.mjs fetch > is-drive-tick-bytes",
+    where: "src/monitoring/index.mjs monitor > is-drive-tick-bytes",
     translation: "The check of that Google Drive document did not run: the export address said it was sending a document and sent a web page instead. This instance reads the bytes rather than the label, so the application page was recognised and not compared against the captured document \u2014 comparing it would report a change on every visit that nobody made."
   },
   DRIVE_EXPORT_UNREACHABLE: {
@@ -8347,6 +8347,21 @@ var REGISTRATION_CHECKS = {
     check: "C-102.7",
     where: "src/promotion/index.mjs registerStep > is-step-named",
     translation: "A part of this instance tried to add its own check to every promotion without naming itself, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  STEP_DECLARED: {
+    check: "C-102.8",
+    where: "src/promotion/index.mjs stepDeclared",
+    translation: "A part of this instance tried to register something it had already registered, or that another part already provides, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  },
+  CASE_CATALOGUE_FAILED: {
+    check: "C-102.9",
+    where: "src/gate.mjs caseCatalogueFailed",
+    translation: "The checks a case document must pass could not be run over this one, so it was not passed. The fault is in the checks, not the document, and nothing was signed."
+  },
+  CASE_MEMBER_REFUSED: {
+    check: "C-102.10",
+    where: "src/ratification/index.mjs check",
+    translation: "This document claims to be part of a published case, and it does not carry what a part of a published case must carry, so it was not written. Each problem is named beside this message. Nothing in the record changed."
   }
 };
 var CONNECTION_PAIR_CHECKS = {
@@ -15684,6 +15699,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const content = await pageContent(doc, pageMap);
   const toks = tokenizeContent(content.text);
   const pieces = [];
+  const boxes = [];
+  const undecodedCenters = [];
+  let unpositioned = 0;
   const undetermined = content.unread.map((reason) => ({ page: pageIdx, reason, font: null, codes: "", count: 0 }));
   let curFont = null;
   let curFontName = null;
@@ -15705,6 +15723,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (!curFont) {
       penKnown = false;
       inkValid = false;
+      unpositioned += bytes.length;
       undetermined.push({
         page: pageIdx,
         reason: curFontName ? "font_not_in_resources" : "no_current_font",
@@ -15715,7 +15734,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       return;
     }
     if (!curFont.toUni) {
-      advanceOver(bytes);
+      {
+        const before = penKnown ? tmat.slice() : null;
+        advanceOver(bytes);
+        if (before && penKnown) undecodedCenters.push(glyphBox(before, tmat).c);
+        else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
+      }
       endRun();
       undetermined.push({
         page: pageIdx,
@@ -15728,9 +15752,13 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
     for (const code of codes) {
+      const before = penKnown ? tmat.slice() : null;
       advanceOne(code);
+      const box = before && penKnown ? glyphBox(before, tmat) : null;
+      if (!box) unpositioned++;
       const u = curFont.toUni.get(code);
       if (u == null) {
+        if (box) undecodedCenters.push(box.c);
         undetermined.push({
           page: pageIdx,
           reason: "unmapped_code",
@@ -15741,9 +15769,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       } else {
         if (softAt === pieces.length && /^\s/.test(u)) {
           pieces.pop();
+          boxes.pop();
           softAt = -1;
         }
         pieces.push(u);
+        boxes.push(box);
       }
     }
     endRun();
@@ -15778,9 +15808,11 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const breakLine = () => {
     if (softAt === pieces.length && pieces.length) {
       pieces.pop();
+      boxes.pop();
       softAt = -1;
     }
     pieces.push("\n");
+    boxes.push(null);
     lineY = baselineOf(tlm, ctm);
   };
   let tmat = IDENTITY_MATRIX.slice();
@@ -15798,11 +15830,18 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const m = matMul(tmat, ctm);
     return Math.abs(tfs) * th * Math.hypot(m[0], m[1]);
   };
+  const glyphBox = (m0, m1) => {
+    const a = matMul(m0, ctm), b = matMul(m1, ctm);
+    const pt = (m, x, y) => [x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]];
+    const p0 = pt(a, 0, 0), p1 = pt(b, 0, 0), q0 = pt(a, 0, tfs);
+    return { c: [(p0[0] + p1[0]) / 2 + 0.35 * (q0[0] - p0[0]), (p0[1] + p1[1]) / 2 + 0.35 * (q0[1] - p0[1])] };
+  };
   const softSpace = () => {
     if (!pieces.length) return;
     const last = pieces[pieces.length - 1];
     if (last.endsWith(" ") || last.endsWith("\n")) return;
     pieces.push(" ");
+    boxes.push(null);
     softAt = pieces.length;
   };
   const judgeGap = (toX) => {
@@ -16064,7 +16103,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       count: 0
     });
   }
-  return { text, undetermined };
+  return { text, undetermined, placed: { pieces, boxes, undecodedCenters, unpositioned } };
 }
 var TEXT_SHOWING_OPERATORS = Object.freeze(["Tj", "TJ", "'", '"']);
 var TEXT_SHOWING = new Set(TEXT_SHOWING_OPERATORS);
@@ -16123,7 +16162,33 @@ function pageDrawsImage(doc, resources) {
   }
   return false;
 }
-async function extractText(doc) {
+function anchorOf(placed, source) {
+  if (!source || !Array.isArray(source.rect) || !Number.isInteger(source.page))
+    return { text: null, why: "no_rect", tier: 1 };
+  if (!placed) return { text: null, why: "text_not_read", tier: 1 };
+  const [a, b, c, d] = source.rect;
+  const x0 = Math.min(a, c), x1 = Math.max(a, c), y0 = Math.min(b, d), y1 = Math.max(b, d);
+  const inside = (pt) => pt[0] >= x0 && pt[0] <= x1 && pt[1] >= y0 && pt[1] <= y1;
+  let out = "", gap = false;
+  for (let i = 0; i < placed.pieces.length; i++) {
+    const p = placed.pieces[i], bx = placed.boxes[i];
+    if (bx && !/^\s*$/.test(p) && inside(bx.c)) {
+      if (gap && out.length) out += " ";
+      out += p;
+      gap = false;
+    } else gap = true;
+  }
+  out = out.replace(/\s+/g, " ").trim();
+  const undecodable = placed.undecodedCenters.some(inside);
+  if (!out.length)
+    return { text: null, why: placed.unpositioned ? "positions_unknown" : undecodable ? "undecodable" : "no_text_in_rect", tier: 1 };
+  return {
+    text: out,
+    why: undecodable ? "partly_undecodable" : placed.unpositioned ? "partly_unplaced" : null,
+    tier: 1
+  };
+}
+async function extractText(doc, placedByPage = /* @__PURE__ */ new Map(), linkPages = /* @__PURE__ */ new Set()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -16155,6 +16220,7 @@ async function extractText(doc) {
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    if (res.placed && linkPages.has(idx)) placedByPage.set(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
   const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
@@ -16330,24 +16396,25 @@ async function extractImages(doc) {
 var IMAGE_CONTENT_MAX_GLYPHS = 4;
 var IMAGE_CONTENT_MIN_SHARE = 0.18;
 var IMAGE_CONTENT_TEXT_GLYPHS = 22;
+function inheritedAttr(doc, pageMap, key) {
+  let p = pageMap, d = 0;
+  while (p && d++ < 32) {
+    if (p[key] !== void 0) return doc.resolve(p[key]);
+    p = doc.dictOf(p.Parent);
+  }
+  return void 0;
+}
+function inheritedBox(doc, pageMap, key) {
+  const a = inheritedAttr(doc, pageMap, key);
+  if (!a || a.t !== "arr" || a.items.length !== 4) return null;
+  const v = a.items.map((x) => doc.resolve(x));
+  if (!v.every((x) => typeof x === "number" && Number.isFinite(x))) return null;
+  return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
+}
 function pageBox(doc, pageMap) {
-  const read2 = (key) => {
-    let p = pageMap, d = 0;
-    while (p && d++ < 32) {
-      const a = doc.resolve(p[key]);
-      if (a && a.t === "arr" && a.items.length === 4) {
-        const v = a.items.map((x) => doc.resolve(x));
-        if (v.every((x) => typeof x === "number" && Number.isFinite(x)))
-          return [Math.min(v[0], v[2]), Math.min(v[1], v[3]), Math.max(v[0], v[2]), Math.max(v[1], v[3])];
-        return null;
-      }
-      p = doc.dictOf(p.Parent);
-    }
-    return null;
-  };
-  const mb = read2("MediaBox");
+  const mb = inheritedBox(doc, pageMap, "MediaBox");
   if (!mb) return null;
-  const cb = read2("CropBox");
+  const cb = inheritedBox(doc, pageMap, "CropBox");
   return cb ? clipRect(cb, mb) : mb;
 }
 var clipRect = (a, b) => [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.min(a[2], b[2]), Math.min(a[3], b[3])];
@@ -16400,11 +16467,70 @@ function markImageContent(doc, text, images) {
     added++;
   }
   if (!added) return;
+  restateUndetermined(text);
+}
+function restateUndetermined(text) {
   text.undetermined = [
     ...text.pages.flatMap((p) => p.undetermined),
     ...text.undetermined.filter((m) => !Number.isInteger(m.page))
   ];
   text.counts = { ...text.counts, undetermined: text.undetermined.length };
+}
+var IMAGE_UNREAD_MIN_SHARE = 1e-3;
+function markImagesUnread(doc, text, images) {
+  if (!text || !Array.isArray(text.pages) || !Array.isArray(images)) return;
+  let added = 0;
+  for (const pg of text.pages) {
+    const painted = images.filter((im) => im.page === pg.page);
+    if (!painted.length) continue;
+    const pageMap = doc.pageDict(pg.page);
+    const box = pageMap ? pageBox(doc, pageMap) : null;
+    const boxArea = box ? rectArea(box) : 0;
+    const marks = [];
+    for (const im of painted) {
+      const raw = boxArea > 0 ? rectArea(clipRect(im.rect, box)) / boxArea : null;
+      if (raw !== null && raw < IMAGE_UNREAD_MIN_SHARE) continue;
+      marks.push({
+        page: pg.page,
+        reason: "image_unread",
+        font: null,
+        codes: "",
+        count: 0,
+        rect: im.rect,
+        area_share: raw === null ? null : Math.round(raw * 1e4) / 1e4
+      });
+    }
+    if (!marks.length) continue;
+    pg.undetermined = [...pg.undetermined, ...marks];
+    added += marks.length;
+  }
+  if (added) restateUndetermined(text);
+}
+function pdfPageBox(doc, pageMap) {
+  if (!pageMap) return null;
+  const box = inheritedBox(doc, pageMap, "MediaBox");
+  if (!box || !(box[2] > box[0] && box[3] > box[1])) return null;
+  const r = inheritedAttr(doc, pageMap, "Rotate");
+  const rotate = r === void 0 || r === null ? 0 : typeof r === "number" && Number.isInteger(r) && r % 90 === 0 ? (r % 360 + 360) % 360 : null;
+  return { media_box: box, w: box[2] - box[0], h: box[3] - box[1], rotate };
+}
+function extractPageBoxes(doc) {
+  if (!doc.pageCount) return null;
+  const boxes = [], key = /* @__PURE__ */ new Map(), of_page = [];
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const b = pdfPageBox(doc, doc.pageDict(idx));
+    if (!b) {
+      of_page.push(null);
+      continue;
+    }
+    const k = JSON.stringify(b);
+    if (!key.has(k)) {
+      key.set(k, boxes.length);
+      boxes.push(b);
+    }
+    of_page.push(key.get(k));
+  }
+  return { boxes, of_page };
 }
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
@@ -16470,9 +16596,13 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
-  const text = await extractText(doc);
+  const placedByPage = /* @__PURE__ */ new Map();
+  const linkPages = new Set(links.map((l) => l.source && l.source.page));
+  const text = await extractText(doc, placedByPage, linkPages);
+  for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
   const imgs = await extractImages(doc);
   if (imgs.images) markImageContent(doc, text, imgs.images);
+  if (imgs.images) markImagesUnread(doc, text, imgs.images);
   return {
     ok: true,
     container: "pdf",
@@ -16483,6 +16613,9 @@ async function extractPdfStructure(bytes) {
     text,
     images: imgs.images,
     ...imgs.images ? {} : { imagesWhy: imgs.why },
+    /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
+       replaces `text`): the bound a `pdf-page` rect is checked against. */
+    pageBoxes: extractPageBoxes(doc),
     notes: doc.notes
   };
 }
@@ -17672,17 +17805,22 @@ function usedSheetRange(name, usedRows, usedCols) {
   if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
   return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
 }
+var isCorner = (c) => c != null && Number.isInteger(c.col) && c.col > 0 && Number.isInteger(c.row) && c.row > 0;
 function a1Corner(s) {
-  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(String(s ?? "").trim());
+  if (typeof s !== "string") return null;
+  const m = /^\$?([A-Za-z]{1,3})\$?([1-9]\d{0,6})$/.exec(s.trim());
   if (!m) return null;
   let col = 0;
   for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
   return { col, row: parseInt(m[2], 10) };
 }
-function rangeUnitFor(sheetName, a, b, sheets, grid) {
-  let sheet = sheets.includes(sheetName) ? sheetName : null;
+function rangeUnitFor(sheetName, a, b, sheets, grid = null) {
+  if (!isCorner(a) || !isCorner(b)) return { why: "not_a_range_reference" };
+  const names = Array.isArray(sheets) ? sheets.filter((s) => typeof s === "string") : [];
+  if (typeof sheetName !== "string") return { why: "no_such_sheet" };
+  let sheet = names.includes(sheetName) ? sheetName : null;
   if (sheet == null) {
-    const ci = sheets.filter((s) => String(s).toLowerCase() === String(sheetName).toLowerCase());
+    const ci = names.filter((s) => s.toLowerCase() === sheetName.toLowerCase());
     if (ci.length === 1) sheet = ci[0];
   }
   if (sheet == null) return { why: "no_such_sheet" };
@@ -17760,13 +17898,7 @@ function xlsxRangeUnits(parts) {
 }
 var XLSX_GRID_ROWS = 1048576;
 var XLSX_GRID_COLS = 16384;
-function a1Col(ref) {
-  const m = /^\$?([A-Za-z]{1,3})\$?\d+$/.exec(String(ref ?? "").trim());
-  if (!m) return null;
-  let n = 0;
-  for (const ch of m[1].toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n;
-}
+var a1Col = (ref) => a1Corner(ref)?.col ?? null;
 function classifyUrl(url) {
   const m = /^([a-zA-Z][a-zA-Z0-9+.\-]*):/.exec(url || "");
   const scheme = m ? m[1].toLowerCase() : null;
@@ -19750,6 +19882,96 @@ function odsStructure(parts) {
     notes
   };
 }
+function splitUnquoted(s, sepRe) {
+  const out = [];
+  let quoted2 = false, cur = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "'") {
+      if (quoted2 && s[i + 1] === "'") {
+        cur += "''";
+        i++;
+        continue;
+      }
+      quoted2 = !quoted2;
+    } else if (!quoted2 && sepRe.test(ch)) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+function odfCellAddress(s) {
+  const m = /^\$?(?:'((?:[^']|'')*)'|([^'.\s]*))\.(\S+)$/.exec(String(s ?? "").trim());
+  if (!m) return null;
+  const sheet = m[1] != null ? m[1].replace(/''/g, "'") : m[2] === "" ? null : m[2];
+  const corner = a1Corner(m[3]);
+  if (corner) return { sheet, corner };
+  return /^\$?(?:[A-Za-z]{1,3}|[1-9]\d*)$/.test(m[3]) ? { sheet, line: true } : null;
+}
+function odsRangeAddressUnit(address, sheets) {
+  const a = String(address ?? "").trim();
+  if (!a) return { why: "empty_reference" };
+  if (/#REF/i.test(a)) return { why: "broken_reference" };
+  if (splitUnquoted(a, /\s/).filter((x) => x !== "").length > 1) return { why: "multi_area" };
+  if (/^(?:'(?:[^']|'')*'|[^'.\s]*)#/.test(a)) return { why: "external_workbook" };
+  const ends = splitUnquoted(a, /:/);
+  if (ends.length > 2) return { why: "not_a_range_reference" };
+  const first = odfCellAddress(ends[0]);
+  const second = ends.length === 2 ? odfCellAddress(ends[1]) : first;
+  if (!first || !second || first.sheet == null) return { why: "not_a_range_reference" };
+  if (second.sheet != null && second.sheet !== first.sheet) return { why: "multi_sheet_reference" };
+  if (first.line || second.line) return { why: "whole_row_or_column" };
+  return rangeUnitFor(first.sheet, first.corner, second.corner, sheets, null);
+}
+function odsRangeUnits(bodyXml, sheets) {
+  const names = sheets.map((s) => s.name);
+  const rangeUnits = [], rangeUnitsSkipped = [];
+  const RE = tokens();
+  let m, depth = 0, top = -1, scope = null;
+  while ((m = RE.exec(bodyXml)) !== null) {
+    if (m[1] === void 0) continue;
+    const name = localOf3(m[1]);
+    const closing = m[0][1] === "/";
+    const selfClosed = m[3] === "/";
+    if (name === "table") {
+      if (closing) {
+        if (depth > 0 && --depth === 0) scope = null;
+      } else if (depth === 0) {
+        top++;
+        if (!selfClosed) {
+          depth = 1;
+          scope = sheets[top]?.name ?? null;
+        }
+      } else if (!selfClosed) depth++;
+      continue;
+    }
+    if (closing) continue;
+    const kind = name === "named-range" || name === "named-expression" || name === "database-range" ? name : null;
+    if (!kind) continue;
+    const attrs = attrsOf3(m[2]);
+    const label = attrs.name ?? null;
+    if (kind === "named-expression") {
+      rangeUnitsSkipped.push({ source: kind, name: label, ref: attrs.expression ?? null, why: "not_a_range_reference" });
+      continue;
+    }
+    const ref = (kind === "named-range" ? attrs["cell-range-address"] : attrs["target-range-address"]) ?? null;
+    const r = odsRangeAddressUnit(ref, names);
+    if (r.unit) {
+      rangeUnits.push({
+        source: kind,
+        name: label,
+        scope: kind === "named-range" ? scope : r.unit.sheet,
+        hidden: false,
+        unit: r.unit
+      });
+    } else rangeUnitsSkipped.push({ source: kind, name: label, ref, why: r.why });
+  }
+  return { rangeUnits, rangeUnitsSkipped };
+}
 function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
@@ -19760,6 +19982,9 @@ function odsText(parts) {
       container: "ods",
       document: null,
       sheets: [],
+      rangeUnits: null,
+      rangeUnitsSkipped: null,
+      // content.xml not read: not looked, never none
       undetermined: [parts.guard],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -19773,6 +19998,9 @@ function odsText(parts) {
       container: "ods",
       document: null,
       sheets: [],
+      rangeUnits: null,
+      rangeUnitsSkipped: null,
+      // content.xml not read: not looked, never none
       undetermined: [marker],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
@@ -19780,7 +20008,8 @@ function odsText(parts) {
   const styles = automaticStyles(parts.contentXml);
   const outSheets = [];
   let cellCount = 0, formulaCount = 0;
-  for (const sheet of sheetsOf(body, styles)) {
+  const odsSheets = sheetsOf(body, styles);
+  for (const sheet of odsSheets) {
     const walked = walkSheet(sheet.xml);
     const lines = [];
     for (const row of walked.rows) {
@@ -19823,6 +20052,9 @@ function odsText(parts) {
     container: "ods",
     document,
     sheets: outSheets,
+    /* D-415 (N27): named ranges and database ranges as `sheet-range` units,
+       beside each sheet's whole-sheet `range`. */
+    ...odsRangeUnits(body, odsSheets),
     undetermined: [],
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount, undetermined: 0 }
   };
@@ -22890,10 +23122,10 @@ var STEP_KINDS = {
   pixels: { role: "derivation", label: "the page as pixels", tier: 3 },
   /* An OCR engine over those pixels. Names engine and version, because that
      pair is what a calibration is of and what a re-run would need. */
-  ocr: { role: "derivation", label: "optical character recognition", tier: 3 },
+  ocr: { role: "derivation", label: "optical character recognition", tier: 3, machine: true },
   /* A model that rewrote the text — cleaning, joining, correcting. THE STEP
      THIS WHOLE MODULE IS MOST AFRAID OF, and rule 2 is pointed at it. */
-  ai: { role: "derivation", label: "a model rewrote the text", tier: null },
+  ai: { role: "derivation", label: "a model rewrote the text", tier: null, machine: true },
   /* A member checked the text against the image and said so, over a stated
      extent. Not a derivation: see the header. */
   attested: { role: "verification", label: "a member checked it against the image", tier: null },
@@ -22995,6 +23227,9 @@ var STEP_KINDS = {
     letter: "never"
   }
 };
+var MACHINE_READ_KINDS = Object.freeze(
+  Object.keys(STEP_KINDS).filter((k) => STEP_KINDS[k].machine === true)
+);
 var CHAIN_KIND_MIXED = "mixed";
 
 // ../bio-plane/src/readingprov.mjs
@@ -24240,7 +24475,7 @@ var JPX_REFUSES = Object.freeze({
   "sYCC colour": "the JP2 colour specification is sYCC, whose conversion is not bit-defined",
   "an extended capability": "a Part 2 extension the decoder must understand (a CAP marker, or Rsiz beyond Part 1)",
   "packed packet headers": "the packet headers are carried apart from the packets (PPM or PPT markers); no encoder at hand writes them, so no decode of them could be checked",
-  "an image past the memory bound": "the decode would hold more at once than the memory bound: 4 bytes a sample for every component of the largest tile, and a tiled image's 8-bit output beside them"
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it, at 4 bytes a sample, one code-block row of every band and a few rows of every level of the largest tile"
 });
 var f32 = Math.fround;
 var N = 1;
@@ -24287,6 +24522,7 @@ var ALPHA = f32(-1.586134342);
 var BETA = f32(-0.052980118);
 var GAMMA = f32(0.882911075);
 var DELTA = f32(0.443506852);
+var LIFT97 = [f32(-DELTA), f32(-GAMMA), f32(-BETA), f32(-ALPHA)];
 
 // ../pdf-worker/src/ccittdecode.mjs
 var WHITE_CODES = {
@@ -24871,7 +25107,7 @@ var citedExists = (alias) => `(EXISTS (SELECT 1 FROM inquiry_basis ib WHERE ib.c
 var CONTENT_CITED_AS_BYTES = contentCitedAs2({ kind: "image" });
 var CHAIN_DOES_NOT_APPLY = "does-not-apply";
 var CAP_DOES_NOT_APPLY = CHAIN_DOES_NOT_APPLY;
-var MACHINE_READ_KINDS = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
+var MACHINE_READ_KINDS2 = Object.freeze(["ocr", "ai"].filter((k) => k in STEP_KINDS));
 var MEANING = {
   /* The basis of an inquiry, one row per LEG. D-223's table.
      EVERY VOCABULARY HERE IS IMPORTED FROM THE CHECK CATALOG, never listed. The
@@ -25199,8 +25435,8 @@ var MEANING = {
         col: "chain_kind",
         case: "lower",
         vocab: [...Object.keys(STEP_KINDS), CHAIN_KIND_MIXED],
-        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
-        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
+        selects: `how the unit was read (\`chain_last\` on the row). A machine reading (${MACHINE_READ_KINDS2.join(", ")}) also selects the units read in more than one way (\`${CHAIN_KIND_MIXED}\`), which contain machine-read text`,
+        pred: (cmp, v) => v === "undetermined" ? { sql: `chain IS NULL AND cited_as <> ?`, args: [CONTENT_CITED_AS_BYTES] } : v === CHAIN_DOES_NOT_APPLY ? { sql: `cited_as = ?`, args: [CONTENT_CITED_AS_BYTES] } : cmp === "present" ? { sql: `chain_kind IS NOT NULL`, args: [] } : cmp === "=" && MACHINE_READ_KINDS2.includes(v) ? { sql: `chain_kind IN (?, ?)`, args: [v, CHAIN_KIND_MIXED] } : null
       },
       /* DEC-24 — THE MACHINE DOES THE LOOKING, THE MEMBER DOES THE CONCLUDING.
          A content row is an ADDRESS; it becomes part of a finding only when a
