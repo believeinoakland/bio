@@ -75,7 +75,7 @@
  *   node scripts/pensweep.mjs        print the sweep; exit 1 on a DIRTY or UNCLASSIFIED pen in the floored set
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync, realpathSync, lstatSync } from "node:fs";
 import { dirname, join, isAbsolute, relative, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { stripComments } from "./walkfloor.mjs";
@@ -589,6 +589,20 @@ export const ignoreProbe = (p) => {
   return (cut < 0 ? segs : segs.slice(0, cut)).join("/");
 };
 
+/* N70 (T6-13): the first prefix of a repo-relative path, whole segments and the path itself included, that is a
+   SYMBOLIC LINK in this checkout, or null. `git check-ignore` refuses a path that runs through a link, and a link's
+   own `dir/` form ("beyond a symbolic link", exit 128), and one refused line ends the whole `--stdin` call. */
+export const linkedPrefix = (p, repo = REPO) => {
+  const segs = String(p).split("/").filter(Boolean);
+  for (let i = 1; i <= segs.length; i++) {
+    const pre = segs.slice(0, i).join("/");
+    let st;
+    try { st = lstatSync(join(repo, pre)); } catch { return null; }   /* absent: nothing further down exists */
+    if (st.isSymbolicLink()) return pre;
+  }
+  return null;
+};
+
 export function sweepPens({ repo = REPO } = {}) {
   const listed = git(["ls-files", "--cached", "--others", "--exclude-standard", "-z"], repo);
   if (listed === null) return { walkFailed: true, corpus: 0, drivers: [] };
@@ -620,10 +634,17 @@ export function sweepPens({ repo = REPO } = {}) {
      bare probe answered NO for every declared pen in the estate and read it DIRTY. Measured 2026-09-24:
      `.pl13-harness` bare is unignored, `.pl13-harness/` is ignored at `.gitignore:54`. The slash is what
      tells git the path is a directory. */
+  /* N70 (T6-13): A PROBE THAT RUNS THROUGH A SYMBOLIC LINK IS ASKED AT THE LINK, BARE. Measured by LEGACY-TESTS #1
+     (T3): in a checkout whose member `node_modules` are links, `pdf-worker/node_modules/` is a line git refuses, the
+     call exited 128, and EVERY pen in the estate read unignored. The link's own answer is the true one for this
+     checkout: a pattern for a directory does not cover a link, and git would track the link. Each probe asked that
+     way is named in `linked`, so a reader sees which answers are about a link. */
   const cand = [...candidates].filter(Boolean);
-  const probes = cand.flatMap((c) => [c, `${c}/`]);
+  const linkOf = new Map(cand.map((c) => [c, linkedPrefix(c, repo)]));
+  const probes = [...new Set(cand.flatMap((c) => (linkOf.get(c) ? [linkOf.get(c)] : [c, `${c}/`])))];
   const hitSet = new Set(probes.length ? (git(["check-ignore", "--stdin"], repo, `${probes.join("\n")}\n`) || "").split("\n").filter(Boolean) : []);
-  const ignored = new Set(cand.filter((c) => hitSet.has(c) || hitSet.has(`${c}/`)));
+  const ignored = new Set(cand.filter((c) => (linkOf.get(c) ? hitSet.has(linkOf.get(c)) : hitSet.has(c) || hitSet.has(`${c}/`))));
+  const linked = cand.filter((c) => linkOf.get(c)).map((c) => ({ probe: c, link: linkOf.get(c), ignored: ignored.has(c) }));
 
   const graded = [];
   const ledgerDrift = [];
@@ -702,7 +723,7 @@ export function sweepPens({ repo = REPO } = {}) {
   const unignoredBack = UNIGNORED_PENS
     .map((p) => ({ pen: p, by: graded.filter((d) => d.paths.some((x) => String(x.expr).includes(p))).map((d) => d.file) }))
     .filter((x) => x.by.length);
-  return { walkFailed: false, corpus: files.length, drivers: graded, unignoredBack, ledgerDrift, shared };
+  return { walkFailed: false, corpus: files.length, drivers: graded, unignoredBack, ledgerDrift, shared, linked };
 }
 
 export function report(res, log = console.log) {
@@ -727,6 +748,9 @@ export function report(res, log = console.log) {
   for (const s of res.shared) log(`        ${s.pen}  <- ${s.drivers.join(", ")}`);
   log(`    (c) a driver that LEAVES its pen behind on a clean run: NOT CHECKABLE HERE — it is a property of a RUN,`
     + ` not of the source. M0-172 owns it (status.control.mjs), and this walk says so rather than scoring it 0.`);
+  for (const l of res.linked || [])
+    log(`  ASKED AT A LINK  ${l.probe}: ${l.link} is a symbolic link in this checkout, so git was asked about the link`
+      + ` itself (${l.ignored ? "ignored" : "not ignored"}), never about a path through it (N70)`);
   for (const d of res.ledgerDrift) log(`  LEDGER DRIFT  ${d}`);
   for (const u of res.unignoredBack) log(`  UNIGNORED PEN NAMED AGAIN: ${u.pen} by ${u.by.join(", ")}`);
   log("  REACH: the paths a driver NAMES from its own constants (a join/resolve/new URL/literal/template), over"

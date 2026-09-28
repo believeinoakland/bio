@@ -8,7 +8,9 @@
  * DIFFERENT FILES the census names the walking file and never enumerates the file
  * carrying the floors behind it.
  *
- * THE MEASURED INSTANCE, and it is live in this repository rather than imagined:
+ * THE MEASURED INSTANCE, and it was live in this repository rather than imagined
+ * until T4 removed both files (N12, legacy-index; N68): the account below, and every
+ * later mention of them in this header, is its record, in the tense it was written:
  * `scripts/op-claims.mjs` walks the whole repository (`corpus()`), and
  * `test/op-claims.test.mjs` carries FOUR floors over what that walk found —
  * `files >= 300`, `chars >= 10_000_000`, `mentions >= 5000`, `names.length >= 150`.
