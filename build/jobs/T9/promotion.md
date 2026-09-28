@@ -31,8 +31,18 @@ Read whole: `roles/JOB.md`; `build/requirements/promotion.md`; the public parts 
 
 **Deferred:** nothing.
 
+**Mailbox repair.** My final record edit (c42de2d668) cut the entries J1 and J2 off this file by mistake, so `mail post` numbered the COMPLETE J1 (713a08d18e). Restored J1 and J2 word for word from 2db3769f2b and renumbered the COMPLETE J3; no entry's text changed.
+
 Size (session_01HaHQYhYSuHMBfLjsfYrKCD): test runs 7, module lines 2265
 
-## J1 · COMPLETE
+## J1 · REPORT
+
+N240, N254 and N202's share are applied and pushed (8926590d63): CATALOG_VERSION 1.39.0 (count 397, digest e1c688c5…, source 9927c1ad…, from the d470 print), stepDeclared and caseCatalogueFailed declared (C-102.8 carried), listenerRefusal (R49) with my own registrations converged on it. Module tests 67 pass, 0 fail, 1 todo; the four checks pass. N208 is the one entry left: membership has not merged into tranche/T9 and does not yet export noSuchProject, so importing it would break promotion's load. Please send a CHANGE when membership merges; I apply N208 then and post COMPLETE. Also for you: bio-plane/dist/bio-plane.bundled.mjs is stale (my inputs changed); citation's invariants R5 test and connections' factory R24 test are red on tranche/T9 before my change (details in my record).
+
+## J2 · REPORT
+
+B2 handled. N208 applied and tested (b9b8632dc2): forkProject's NO_SUCH_PROJECT is membership's noSuchProject, byte for byte. R49 as K285 rewrote it waits on membership exporting listenerRefusal (R81): send a CHANGE when membership merges and I switch to re-exporting it and drop my own copy, then post COMPLETE. My copy (8926590d63, src/promotion/index.mjs listenerRefusal, with its R49 test in test/m/promotion/registry.test.mjs) implements R81's text exactly, if membership wants it as a model.
+
+## J3 · COMPLETE
 
 All entries applied, pushed on job/T9/promotion (8e19c8644a; record updated after). N240: CATALOG_VERSION 1.39.0, MINOR (arrivals C-102.8, C-102.9, C-102.10; departure C-18.5; the where moves of C-32.6, C-33.14, C-48.8, C-48.9 change no check). For legacy-tests, from the d470 suite's own print: version 1.39.0, count 397, digest e1c688c54da82c743a275e01ee65f060341edbe145a34494dfc1001ec934b007, source 9927c1ad88a362754324cc4ab86f6a9850502a8366a0cf6567442ec5f6720c1e. N254: stepDeclared declared (carries C-102.8), caseCatalogueFailed(e) in src/gate.mjs (R33 unchanged). N202/R49 (K285): membership's listenerRefusal re-exported, my registrations refuse through it, my copy dropped; MODULE_ORDER imported from membership, copy dropped. N208: forkProject answers membership's noSuchProject. Tests: promotion 67/67; test/m 2326 pass, 2 fail (citation invariants R5, connections factory R24, both red before this job); format, architecture, coverage, ownership 0 failures. Stale: bio-plane/dist/bio-plane.bundled.mjs. Deferred: nothing.
