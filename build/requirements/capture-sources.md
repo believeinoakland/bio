@@ -144,7 +144,7 @@ Terms. A **credential** is what a member supplies so that a source's refusal (ca
 - `subresources.originOf`: the origin of each data load and executed script (R12, R13).
 - `subresources.SUBRESOURCE_CAP`, `SUBRESOURCE_MAX`, `SUBRESOURCE_BUDGET`: the ceilings on a render's kept bodies (R9, R25).
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge` (the credentials table, R63), and `bundleInfo` (a project's existence, R55, and a target's project, R56).
-- `membership`: `memberFacts` (an active member, R55, R63), `isProjectEditor` and `isProjectOwner` (R63), `isAdministrator` (R58, R63) and `sight` (R58); a member's revocation (membership R8, R20) for R63.
+- `membership`: `memberFacts` (an active member, R55, R63), `isProjectEditor` and `isProjectOwner` (R63), `isAdministrator` (R58, R63), `sight` and `viewerPredicate` (R43) (R58); `onRevoked` (R79) for R63 (K288).
 
 ### Invariants
 
