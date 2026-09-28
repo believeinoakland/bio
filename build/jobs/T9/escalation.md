@@ -21,3 +21,7 @@
 - `checks/ownership.mjs escalation tranche/T9`: 5 files changed; 0 failures.
 
 Size (session_017896epnHBaft9zoBzym1HF): test runs 7, module lines 1429
+
+## J1 · COMPLETE
+
+B1 applied (K316). #rows now spreads every sql.exec (cursor in workerd); module tests run on a workerd-style cursor fixture. Confirmed red first on the old code (25/28; second open made ESC-0002 beside ESC-0001, owner read NO_SUCH_ESCALATION, escalationsDue empty); now 28/28 green; monitoring + affordances 116 pass, 0 fail, 11 todo (as on tranche/T9). format, architecture, coverage (21/21), ownership: 0 failures. No LIKE/GLOB in the module; the tests' one is 11 bytes. Stales bio-plane/dist/bio-plane.bundled.mjs (not_product): reported, not rebuilt. Size (session_017896epnHBaft9zoBzym1HF): test runs 7, module lines 1429. Record: build/jobs/T9/escalation.md on job/T9/escalation.
