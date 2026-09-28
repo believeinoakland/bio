@@ -83,3 +83,15 @@ For BOB to fold into filings' requirements (codes are interface detail, K238's p
 ## J6 · COMPLETE
 
 B4 and B5 applied: standards defaulted to standardsOf and tested real; conformance's settled shape read; each C-115 code has one mint site (DEC-49 guard clean for filings). 30/30 tests, 21/21 ids; the four checks clean. Record §Completion · B4, B5; REPORT J5.
+
+## Completion · B6, B7 (K252, K253)
+
+**Changes applied.** `tranche/T8` merged (conformance and actions merged early; every layer-9 provider is in the tranche).
+- Every dep defaults to its real factory on the host: `actionsOf`, `conformanceOf`, `consequencesModule`, `standardsOf` (with no host, each is absent and every service needing one refuses, K248).
+- actions' J2 confirms J1 items 1–2. One reconciliation: `actionRead`'s `state_history` is `[{state, at, by}]`, so R9's chronology states "the action entered <state>" (with who), from that shape.
+- **The suite runs over the real modules only**: record-core, membership, promotion, provenance, content, inquiry, publication, standards, conformance (with strength and reevaluation through its own factories), consequences and actions. Every change a test makes goes through the owning module's act: actions created by promotion and moved by `actionRiskTier`, `actionLaws`, `actionCorrespond` and member revisions; determinations by `conformance.determine`, superseded by its R7; standards by `standardDeclare`; consequence parts by `consequenceRecord`. "Invisible" is a viewer membership R43 admits to nothing (every member sees every action, which is not a project), and a determination is unseen by a member outside its project.
+- DEC-49 guard on this branch: conformance also mints `NO_STANDARDS`, so R14's empty list is `THEORY_NO_STANDARDS` (C-115.23). No guard line names filings now.
+
+**Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 30, pass 30, fail 0. Negative controls on the real modules: the laxer tier → 18 fail; the superseded-determination staleness arm off → 1 fail; restored green. format: 0 failures. architecture: 10 product files, 36 relative imports; 0 failures. coverage: 21 of 21; 0 failures. ownership: 11 files; 0 failures.
+
+Size (session_01N4paMRwP5wLaRFraqLcEB1): test runs 29, module lines 1342
