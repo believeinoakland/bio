@@ -103,3 +103,9 @@ civicos-ui: 87 of 90 green (N241's three); the guard 113 failures, all other mod
 - `node checks/ownership.mjs /home/user/bio legacy-tests tranche/T9` → ownership: 61 files changed by legacy-tests between tranche/T9 and HEAD; 0 failures
 
 Size (session_01NtbuUmjDKeKm6364QwnWp2): test runs 2 whole batteries plus about 450 single-suite and control runs by the job and its nine family agents, module lines 1953 (1625 added, 328 removed)
+
+## J4 · COMPLETE
+
+B5 done. tranche/T9 merged (K318, K319); `gate-reads` 160/5 → **165/0** (475ff33451): the two filings leak arms and escalation's owner arms went green unchanged, and `counselpacketread`, `filingsfor`, `escalation`, `escalationsdue` are classified GATED, each reason read off the fixed code. Noted in escalation's reasons: `#row` skips sight for a viewer never sent (a direct internal call), so the Worker's fail-closed ESCALATION_READS stamp is load-bearing (`Store#rosterInSight`'s precedent).
+
+Whole old battery re-run on the merged tree (369 suites, @ 475ff33451): **355 green, 14 red**, every one at its figure and owner in J3: bounds 220/3, derivation-bounds 69/4 (filings' paged `#seenRows` added no unbounded read), meaning-bounds 92/4, plane-envelope 62/2, hygiene 1346/1, strengthpair 90/1, observation-content 74/1, observation-log 130/1, run-conditions 56/3, scheduler 47/4, d543-instant-precision 11/1, machine-fences 91/1, machinefences-dec49 88/1, skillsequencing 26/1. The guard: 113 failures, unchanged, all other modules'. J3 stands otherwise; its gate-reads red is cleared.
