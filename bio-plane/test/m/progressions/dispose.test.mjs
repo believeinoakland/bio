@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER } from "./fixture.mjs";
-import { PROGRESSION_CHECKS, DISPOSITIONS, PROGRESSIONS_TABLES } from "../../../src/progressions/index.mjs";
+import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES } from "../../../src/progressions/index.mjs";
 
 const X = (w, b = {}) => w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "later", definitionVersion: 1,
                                                decidedBy: "member:alice", ...b });
@@ -21,8 +21,9 @@ test("R21: refusals in order, each writing nothing", () => {
     const faults = Object.assign({}, ...order.slice(i).map(([f]) => f).reverse());   // the earliest fault of a field wins
     const r = X(w, faults);
     assert.equal(r.reason, order[i][1], `step ${i}`);
-    assert.equal(r.check, PROGRESSION_CHECKS[r.reason].check);
-    assert.equal(r.translation, PROGRESSION_CHECKS[r.reason].translation);
+    const row = GENERIC_CODES.includes(r.reason) ? {} : PROGRESSION_CHECKS[r.reason];   // R27: a generic code has no row (N118)
+    assert.equal(r.check, row.check);
+    assert.equal(r.translation, row.translation);
   }
   // BAD_REASON: over 160 characters, a quote, a backslash, a line break; 160 plain characters pass
   for (const bad of ["x".repeat(161), 'a"b', "a\\b", "a\nb", "a\rb"]) assert.equal(X(w, { reason: bad }).reason, "BAD_REASON");

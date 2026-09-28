@@ -3,6 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, BOB } from "./fixture.mjs";
 import { ACT_SHAPE_CHECKS } from "../../../checks/bio-checks.mjs";
+import { noSuchEntity } from "../../../src/entities/index.mjs";
+import { PROGRESSION_CHECKS, GENERIC_CODES } from "../../../src/progressions/index.mjs";
 
 const D = (w, b = {}) => w.p.dischargeStage({ progressionKey: "proc", entityId: "ENT-1", stageKey: "need", captureSha: "sa",
   reason: "sole source", citation: "Ord. 7", declaredBy: "member:alice", viewer: MEMBER, ...b });
@@ -23,7 +25,11 @@ test("R14: refusals in order, each writing nothing", () => {
     const r = D(w, faults);
     assert.equal(r.reason, order[i][1], `step ${i}`);
     assert.equal(r.code, order[i][1]);
-    assert.ok(r.translation);
+    // R27: each carries its row; the generic codes none (N118); NO_SUCH_ENTITY is entities' (N208)
+    const row = PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code];
+    if (GENERIC_CODES.includes(r.code)) assert.deepEqual([r.check, r.translation], [undefined, undefined], r.code);
+    else if (r.code === "NO_SUCH_ENTITY") assert.deepEqual(r, noSuchEntity("ENT-9"));
+    else assert.deepEqual([r.check, r.translation], [row.check, row.translation], r.code);
   }
   assert.equal(D(w, { citation: "" }).check, ACT_SHAPE_CHECKS.NO_CITATION.check);   // C-33.41, the shared row
   assert.deepEqual(w.snapshot(), before);

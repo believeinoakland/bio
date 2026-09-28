@@ -19,23 +19,24 @@
  *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`, R16).
  *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`, R16).
  *   entities     `entitiesOf(host)`: `has(id)` (R7), `readEntity({entityId})` (R5), `strongestByCapture(id)` (R16); the
- *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34).
+ *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34), and an
+ *                unregistered entity is answered by its export `noSuchEntity` (R36, N208).
  *   connections  `weakerGrade(a, b)`, its module-level export (connections R50).
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
  *                else the wall clock. */
 
 import { recordOf, perItem } from "../record-core/index.mjs";
-import { viewerPredicate } from "../membership/index.mjs";
+import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
-import { entitiesOf, gradeRank, isEstablished } from "../entities/index.mjs";
+import { entitiesOf, gradeRank, isEstablished, noSuchEntity } from "../entities/index.mjs";
 import { weakerGrade } from "../connections/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
-import { PROGRESSION_CHECKS, refusal } from "./checks.mjs";
+import { refusal, generic } from "./checks.mjs";
 
 export { PROGRESSIONS_SCHEMA, PROGRESSIONS_TABLES } from "./schema.mjs";
-export { PROGRESSION_CHECKS } from "./checks.mjs";
+export { PROGRESSION_CHECKS, GENERIC_CODES } from "./checks.mjs";
 
 /** The closed vocabulary of stage requiredness (Framework §8.2). Held here since the extraction (K78 (3)); `affordances`
  *  publishes it and re-exports it from here when its own job runs (N49). */
@@ -163,6 +164,86 @@ export class Progressions {
   }
 
   /* ===================================================================== *
+   * THE REFUSALS SEVERAL ACTS ANSWER (R6, R14, R21; K231, N242): each code is minted in its one helper, which
+   * answers the refusal or null; every act that asks the question calls it with its own sentence and fields.
+   * ===================================================================== */
+
+  /* C-100.11: no definition of this key has been declared. */
+  #declared(key, detail) {
+    /* DEC-49 REGION is-progression-declared */
+    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
+      return refusal("NO_SUCH_PROGRESSION", detail,
+                     { progression_key: key });
+    return null;
+    /* END DEC-49 REGION is-progression-declared */
+  }
+
+  /* C-100.9: the request names no entity (`entityId` as the caller sent it). */
+  #entityNamed(entityId, detail) {
+    /* DEC-49 REGION is-instance-entity */
+    /* an instance is (progression, entity): a request naming no entity says nothing about whose instance it means */
+    if (!str(entityId))
+      return refusal("NO_ENTITY", detail,
+                     {});
+    return null;
+    /* END DEC-49 REGION is-instance-entity */
+  }
+
+  /* C-100.13: the request names no stage. */
+  #stageNamed(stageKey, detail, extra = {}) {
+    /* DEC-49 REGION is-stage-named */
+    /* every act that names a stage asks this first: a request naming none says nothing about which step it means */
+    if (!stageKey)
+      return refusal("NO_STAGE", detail,
+                     extra);
+    return null;
+    /* END DEC-49 REGION is-stage-named */
+  }
+
+  /* C-100.14: the stage named is not a stage of the definition as it is declared now. */
+  #stageOf(key, stageKey, detail, extra = {}) {
+    /* DEC-49 REGION is-stage-of-progression */
+    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, stageKey))
+      return refusal("BAD_STAGE", detail,
+                     extra);
+    return null;
+    /* END DEC-49 REGION is-stage-of-progression */
+  }
+
+  /* C-100.15: the request names no captured document. */
+  #documentNamed(captureSha, detail, extra = {}) {
+    /* DEC-49 REGION is-document-named */
+    /* a stage is filled, or its skip excused, by a captured document: a request naming none has nothing to place */
+    if (!captureSha)
+      return refusal("NO_CAPTURE", detail,
+                     extra);
+    return null;
+    /* END DEC-49 REGION is-document-named */
+  }
+
+  /* C-100.17: the document does not resolve to the entity (`resolution` is its strongest resolution, or absent). */
+  #concerned(resolution, detail, extra = {}) {
+    /* DEC-49 REGION is-document-concerned */
+    /* the record's own resolution, never the caller's word: a document that does not concern the entity is refused */
+    if (!resolution)
+      return refusal("NOT_CONCERNED", detail,
+                     extra);
+    return null;
+    /* END DEC-49 REGION is-document-concerned */
+  }
+
+  /* C-100.18: the act carries no reason (`reason` already trimmed by the act, each by its own rule). */
+  #reasonStated(reason, detail) {
+    /* DEC-49 REGION is-reason-stated */
+    /* an excused step and a member's decision are each kept with the reason in the member's own words, or not at all */
+    if (!reason)
+      return refusal("NO_REASON", detail,
+                     {});
+    return null;
+    /* END DEC-49 REGION is-reason-stated */
+  }
+
+  /* ===================================================================== *
    * THE DECLARED FLOW (R1–R5; FW-8, D-128).
    * ===================================================================== */
 
@@ -210,25 +291,52 @@ export class Progressions {
    *  writes nothing. The declarer is the control plane's stamp (R26). */
   defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (!str(progressionKey))
-      return refusal("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
+      return generic("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
     const key = str(progressionKey);
-    if (!str(label)) return refusal("NO_LABEL", "a progression definition carries a human label");
+    /* DEC-49 REGION is-progression-labelled — C-100.2. */
+    if (!str(label))
+      return refusal("NO_LABEL",
+        "a progression definition carries a human label, the name a member reads it by beside its key");
+    /* END DEC-49 REGION is-progression-labelled */
+    /* DEC-49 REGION is-progression-staged — C-100.3. */
     if (!Array.isArray(stages) || stages.length === 0)
-      return refusal("NO_STAGES", "a progression is its ordered stages; name at least one");
+      return refusal("NO_STAGES",
+        "a progression is its ordered stages, each a key with how many documents it holds and how firmly it is "
+        + "expected; name at least one");
+    /* END DEC-49 REGION is-progression-staged */
     /* Every stage is checked before any is written, so a bad stage refuses the whole definition (R1). */
     const norm = [];
     const seen = new Set();
     for (let i = 0; i < stages.length; i++) {
       const s = stages[i] || {};
       const sk = str(s.key) || str(s.stageKey);
-      if (!sk) return refusal("NO_STAGE_KEY", `stage ${i + 1} has no key`, { stage: i + 1 });
-      if (seen.has(sk)) return refusal("DUPLICATE_STAGE", `stage key '${sk}' appears twice`, { stage_key: sk });
+      /* DEC-49 REGION is-stage-keyed — C-100.4. */
+      if (!sk)
+        return refusal("NO_STAGE_KEY",
+          `stage ${i + 1} has no key, so nothing could later be placed at it or found missing from it`,
+          { stage: i + 1 });
+      /* END DEC-49 REGION is-stage-keyed */
+      /* DEC-49 REGION is-stage-unique — C-100.5. */
+      if (seen.has(sk))
+        return refusal("DUPLICATE_STAGE",
+          `stage key '${sk}' appears twice, so a document placed at it could belong to either stage`,
+          { stage_key: sk });
+      /* END DEC-49 REGION is-stage-unique */
       seen.add(sk);
       const card = str(s.cardinality);
-      if (!card) return refusal("NO_CARDINALITY", `stage '${sk}' needs a cardinality (1, 0..1, 0..n)`, { stage_key: sk });
+      /* DEC-49 REGION is-stage-counted — C-100.6. */
+      if (!card)
+        return refusal("NO_CARDINALITY",
+          `stage '${sk}' needs a cardinality (1, 0..1, 0..n): how many documents it may hold`,
+          { stage_key: sk });
+      /* END DEC-49 REGION is-stage-counted */
       const req = str(s.required);
+      /* DEC-49 REGION is-stage-required — C-100.7. */
       if (!STAGE_REQUIREDNESS.includes(req))
-        return refusal("BAD_REQUIRED", `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "), { stage_key: sk });
+        return refusal("BAD_REQUIRED",
+          `stage '${sk}' required must be one of ` + STAGE_REQUIREDNESS.join(", "),
+          { stage_key: sk });
+      /* END DEC-49 REGION is-stage-required */
       norm.push({ stage_key: sk, stage_no: i + 1,
                   label: typeof s.label === "string" && s.label ? s.label : null,
                   after_stage: str(s.after) || str(s.afterStage) || null,
@@ -291,7 +399,7 @@ export class Progressions {
   /** R5 (`op=progression`): a definition, the current version by default or any held one, with every version held. */
   readProgression({ progressionKey, version = null } = {}) {
     if (!str(progressionKey))
-      return refusal("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
+      return generic("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
     const key = str(progressionKey);
     const cur = this.#current(key);
     if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
@@ -303,11 +411,13 @@ export class Progressions {
                                basis: basisView(v.basis_statement, v.basis_citation) }))
       : [{ version: 1, declared_by: cur.declared_by, at: cur.at, basis: cur.basis }];
     const want = version == null || version === "" ? cur.version : Number(version);
+    /* DEC-49 REGION is-version-held — C-100.8. */
     if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
       return refusal("NOT_FOUND", `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions `
                                  + versions.map((v) => v.version).join(", "),
                      { progression_key: key, version: String(version).slice(0, 40), current_version: cur.version,
                        versions_held: versions.map((v) => v.version) });
+    /* END DEC-49 REGION is-version-held */
     let def = cur, stages = cur.stages;
     if (want !== cur.version) {
       def = this.#one(
@@ -502,36 +612,47 @@ export class Progressions {
    *  only if it resolves to the entity, at the grade the record holds (R7). The thread is a new dated version (R8); then
    *  every listener registered with `onThreaded` is told (R33). */
   async threadInstance({ progressionKey, entityId, placements, threadedBy = null, viewer = null } = {}) {
-    if (!str(progressionKey)) return refusal("NO_KEY", "a progression instance names its definition by key (op=thread)");
+    if (!str(progressionKey)) return generic("NO_KEY", "a progression instance names its definition by key (op=thread)");
     const key = str(progressionKey);
-    if (!str(entityId)) return refusal("NO_ENTITY", "a progression instance is threaded by an entity, named by its id");
+    const nameless = this.#entityNamed(entityId, "a progression instance is threaded by an entity, named by its id");
+    if (nameless) return nameless;
     const eid = str(entityId);
+    /* DEC-49 REGION is-thread-placed — C-100.10. */
     if (!Array.isArray(placements) || placements.length === 0)
-      return refusal("NO_PLACEMENTS", "name at least one {stage, captureSha} placement to thread");
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
-      return refusal("NO_SUCH_PROGRESSION", "define the progression first (op=progressiondefine), then thread documents through it",
-                     { progression_key: key });
-    if (!this.entities.has(eid))
-      return refusal("NO_SUCH_ENTITY", "the threading entity must be registered (op=entitycreate)", { entity_id: eid });
-    const stageKeys = new Set(this.#rows(`SELECT stage_key FROM progression_stages WHERE progression_key=?`, key).map((r) => r.stage_key));
+      return refusal("NO_PLACEMENTS",
+        "name at least one {stage, captureSha} placement to thread: the step, and the captured document that "
+        + "fills it");
+    /* END DEC-49 REGION is-thread-placed */
+    const undeclared = this.#declared(key, "define the progression first (op=progressiondefine), then thread documents through it");
+    if (undeclared) return undeclared;
+    /* R6 (N208): an unregistered entity is entities' one answer (its R36), minted there */
+    if (!this.entities.has(eid)) return noSuchEntity(eid);
     const concerning = this.entities.strongestByCapture(eid);
     const norm = [];
     const seen = new Set();
     for (let i = 0; i < placements.length; i++) {
       const p = placements[i] || {};
       const sk = str(p.stage) || str(p.stageKey);
-      if (!sk) return refusal("NO_STAGE", `placement ${i + 1} names no stage`, { placement: i + 1 });
-      if (!stageKeys.has(sk)) return refusal("BAD_STAGE", `'${sk}' is not a stage of progression '${key}'`, { stage_key: sk });
+      const refused = this.#stageNamed(sk, `placement ${i + 1} names no stage`, { placement: i + 1 })
+        || this.#stageOf(key, sk, `'${sk}' is not a stage of progression '${key}'`, { stage_key: sk });
+      if (refused) return refused;
       const cs = str(p.captureSha) || str(p.capture_sha);
-      if (!cs) return refusal("NO_CAPTURE", `placement for '${sk}' names no capture sha`, { stage_key: sk });
+      const unnamed = this.#documentNamed(cs, `placement for '${sk}' names no capture sha`, { stage_key: sk });
+      if (unnamed) return unnamed;
       const dup = sk + "\u0000" + cs;
-      if (seen.has(dup)) return refusal("DUPLICATE_PLACEMENT", `the same document is placed at '${sk}' twice`,
-                                        { stage_key: sk, capture_sha: cs });
+      /* DEC-49 REGION is-placement-unique — C-100.16. */
+      if (seen.has(dup))
+        return refusal("DUPLICATE_PLACEMENT",
+          `the same document is placed at '${sk}' twice in this request; place it once`,
+          { stage_key: sk, capture_sha: cs });
+      /* END DEC-49 REGION is-placement-unique */
       seen.add(dup);
       const res = concerning.get(cs);
-      if (!res) return refusal("NOT_CONCERNED", "this document does not resolve to the threading entity, so it cannot be threaded on it "
-                                              + "(resolve it first with op=resolve, or thread it on the entity it actually concerns)",
-                               { stage_key: sk, capture_sha: cs, entity_id: eid });
+      const unconcerned = this.#concerned(res,
+        "this document does not resolve to the threading entity, so it cannot be threaded on it "
+        + "(resolve it first with op=resolve, or thread it on the entity it actually concerns)",
+        { stage_key: sk, capture_sha: cs, entity_id: eid });
+      if (unconcerned) return unconcerned;
       norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
     }
     const at = this.now();
@@ -553,8 +674,8 @@ export class Progressions {
           key, eid, p.stage_key, p.capture_sha, p.bundle_id, p.grade, by, at);
     });
     const answer = { ...this.#answer(key, eid, viewer), threaded: norm.length, threaded_by: by, at };
-    /* R33: told after the write, in the modules' total order (registration order); a listener that throws or rejects
-       changes neither the thread nor its answer. */
+    /* R33: told after the write, in the modules' total order (`onThreaded` keeps them so); a listener that throws or
+       rejects changes neither the thread nor its answer. */
     if (this.threadListeners.length) {
       let nextDeadline = null;
       try { nextDeadline = this.overdueScan(Date.parse(at)).next_deadline; } catch { nextDeadline = null; }
@@ -574,20 +695,25 @@ export class Progressions {
          VALUES (?,?,?,?,?,?,?)`, key, eid, version, p.stage_key, p.capture_sha, p.bundle_id, p.grade);
   }
 
-  /** R33: a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). */
+  /** R33 (N202): a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). A
+   *  malformed registration, or a second by the same module, is membership's one answer (its R81); the listeners are
+   *  kept in the modules' total order (its R83), a module outside that list after every one in it, in registration
+   *  order. */
   onThreaded(module, fn) {
-    if (typeof fn !== "function") throw new TypeError("onThreaded: fn must be a function");
-    if (this.threadListeners.some((l) => l.module === module))
-      return refusal("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
-    this.threadListeners.push({ module, fn });
+    const refused = listenerRefusal(this.threadListeners, module, fn);
+    if (refused) return refused;
+    const i = MODULE_ORDER.indexOf(module);
+    this.threadListeners.push({ module, fn, rank: i === -1 ? Infinity : i, seq: this.threadListeners.length });
+    this.threadListeners.sort((a, b) => (a.rank - b.rank) || (a.seq - b.seq));
     return { ok: true, module };
   }
 
   /** R9–R13 (`op=instance`). */
   readInstance({ progressionKey, entityId, viewer = null } = {}) {
     const how = "read an instance by progression key and entity id (op=instance&key=procurement&id=ENT-...)";
-    if (!str(progressionKey)) return refusal("NO_KEY", how);
-    if (!str(entityId)) return refusal("NO_ENTITY", how);
+    if (!str(progressionKey)) return generic("NO_KEY", how);
+    const nameless = this.#entityNamed(entityId, how);
+    if (nameless) return nameless;
     return this.#answer(str(progressionKey), str(entityId), viewer);
   }
 
@@ -600,30 +726,32 @@ export class Progressions {
    *  same stage again writes a new dated version; the current one applies and every earlier one reads back (R15).
    *  Whether it discharges anything is derived on read (R11). */
   dischargeStage({ progressionKey, entityId, stageKey, stage, captureSha, capture_sha, reason, citation, declaredBy = null, viewer = null } = {}) {
-    if (!str(progressionKey)) return refusal("NO_KEY", "an exception document names its progression by key (op=discharge)");
+    if (!str(progressionKey)) return generic("NO_KEY", "an exception document names its progression by key (op=discharge)");
     const key = str(progressionKey);
-    if (!str(entityId)) return refusal("NO_ENTITY", "an exception document discharges a skip in one entity's instance, named by id");
+    const nameless = this.#entityNamed(entityId, "an exception document discharges a skip in one entity's instance, named by id");
+    if (nameless) return nameless;
     const eid = str(entityId);
     const sk = str(stageKey) || str(stage);
-    if (!sk) return refusal("NO_STAGE", "an exception document NAMES the stage it discharges");
     const cs = str(captureSha) || str(capture_sha);
-    if (!cs) return refusal("NO_CAPTURE", "an exception document IS a captured document, named by its capture sha");
     const rsn = str(reason);
-    if (!rsn) return refusal("NO_REASON", "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)");
     const cite = str(citation);
-    if (!cite) return refusal("NO_CITATION", "an exception document carries a citation -- where the justification for the skip is published");
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, key))
-      return refusal("NO_SUCH_PROGRESSION", "define the progression first (op=progressiondefine), then discharge a skip in one of its instances",
-                     { progression_key: key });
-    if (!this.entities.has(eid))
-      return refusal("NO_SUCH_ENTITY", "the threading entity must be registered (op=entitycreate)", { entity_id: eid });
-    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, key, sk))
-      return refusal("BAD_STAGE", `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge`,
-                     { stage_key: sk });
+    const refused = this.#stageNamed(sk, "an exception document NAMES the stage it discharges")
+      || this.#documentNamed(cs, "an exception document IS a captured document, named by its capture sha")
+      || this.#reasonStated(rsn, "an exception document carries a reason -- why the stage may lawfully be missing (framework 8.2)")
+      || (!cite ? refusal("NO_CITATION", "an exception document carries a citation -- where the justification for the skip is published")
+                : null)
+      || this.#declared(key, "define the progression first (op=progressiondefine), then discharge a skip in one of its instances")
+      /* R14 (N208): an unregistered entity is entities' one answer (its R36), minted there */
+      || (!this.entities.has(eid) ? noSuchEntity(eid) : null)
+      || this.#stageOf(key, sk, `'${sk}' is not a stage of progression '${key}' -- an exception must name a real stage to discharge`,
+                       { stage_key: sk });
+    if (refused) return refused;
     const res = this.entities.strongestByCapture(eid).get(cs);
-    if (!res) return refusal("NOT_CONCERNED", "this document does not resolve to the threading entity, so it cannot discharge that entity's skip "
-                                            + "(resolve it first with op=resolve, or discharge the skip in the instance it actually concerns)",
-                             { stage_key: sk, capture_sha: cs, entity_id: eid });
+    const unconcerned = this.#concerned(res,
+      "this document does not resolve to the threading entity, so it cannot discharge that entity's skip "
+      + "(resolve it first with op=resolve, or discharge the skip in the instance it actually concerns)",
+      { stage_key: sk, capture_sha: cs, entity_id: eid });
+    if (unconcerned) return unconcerned;
     const at = this.now();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
     const r = rsn.slice(0, REASON_MAX), c = cite.slice(0, CITATION_MAX);
@@ -665,8 +793,9 @@ export class Progressions {
    *  each with every version recorded (oldest first; the current one is the exception's own fields). */
   readExceptions({ progressionKey, entityId, viewer = null } = {}) {
     const how = "read exceptions by progression key and entity id (op=exceptions&key=procurement&id=ENT-...)";
-    if (!str(progressionKey)) return refusal("NO_KEY", how);
-    if (!str(entityId)) return refusal("NO_ENTITY", how);
+    if (!str(progressionKey)) return generic("NO_KEY", how);
+    const nameless = this.#entityNamed(entityId, how);
+    if (nameless) return nameless;
     const key = str(progressionKey), eid = str(entityId);
     const keep = this.#redactor(viewer);
     const versions = new Map();
@@ -856,8 +985,12 @@ export class Progressions {
    *  assembled once, with its missing, overdue and other findings, each carrying `established`, `needs_confirmation`
    *  and its decision, and the instance's `open_finding_count`. */
   captureProgressions({ captureSha, nowMs } = {}) {
+    /* DEC-49 REGION is-capture-named — C-100.19. */
     if (typeof captureSha !== "string" || !captureSha)
-      return refusal("NO_SHA", "progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)");
+      return refusal("NO_SHA",
+        "progression membership is read for a captured document, by its capture sha256 "
+        + "(op=captureprogressions&sha256=...)");
+    /* END DEC-49 REGION is-capture-named */
     const now = this.nowMs(nowMs);
     const rows = this.#rows(
       `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
@@ -911,27 +1044,34 @@ export class Progressions {
       if (!pk) pk = key.slice(0, i).trim();
       if (!sk) sk = key.slice(i + 2).trim();
     }
-    if (!pk) return refusal("NO_KEY", "a proposal disposition names its progression (progressionKey, or key='progression::stage')");
-    if (!sk) return refusal("NO_STAGE", "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
+    if (!pk) return generic("NO_KEY", "a proposal disposition names its progression (progressionKey, or key='progression::stage')");
+    const unstaged = this.#stageNamed(sk, "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
+    if (unstaged) return unstaged;
     const st = str(to) || str(state);
+    /* DEC-49 REGION is-disposition-word — C-100.20. */
     if (!DISPOSITIONS.includes(st))
       return refusal("NOT_A_DISPOSITION", "a proposal is deferred (parked) or dismissed (declined); adopting one authors a "
                                         + "focus (op=promote) and is not a disposition", { to: st || null, dispositions: DISPOSITIONS });
+    /* END DEC-49 REGION is-disposition-word */
     const why = String(reason ?? "").trim();
-    if (!why) return refusal("NO_REASON", "deferring or dismissing the record's own question is recorded with a reason, in the "
-                                        + "member's own words — a disposition with no reason ages a finding with no account of why");
+    const unreasoned = this.#reasonStated(why, "deferring or dismissing the record's own question is recorded with a reason, in the "
+                                          + "member's own words — a disposition with no reason ages a finding with no account of why");
+    if (unreasoned) return unreasoned;
+    /* DEC-49 REGION is-reason-bounded — C-100.21. */
     if (why.length > DISPOSITION_REASON_MAX || /["\\\r\n]/.test(why))
       return refusal("BAD_REASON", `a reason is at most ${DISPOSITION_REASON_MAX} characters and cannot contain a quote, `
                                  + `a backslash, or a newline: the restricted frontmatter grammar has no escapes`);
+    /* END DEC-49 REGION is-reason-bounded */
     const by = decidedBy == null ? "" : String(decidedBy).trim();
-    if (!by) return refusal("NO_DECIDER", "a disposition is recorded under the deciding member, stamped from the session. An "
-                                        + "unnamed decider cannot age the record's question.");
-    if (!this.#one(`SELECT 1 AS x FROM progression_defs WHERE progression_key=?`, pk))
-      return refusal("NO_SUCH_PROGRESSION", "define the progression first (op=progressiondefine); a proposal exists only for a defined one",
-                     { progression_key: pk });
-    if (!this.#one(`SELECT 1 AS x FROM progression_stages WHERE progression_key=? AND stage_key=?`, pk, sk))
-      return refusal("BAD_STAGE", `'${sk}' is not a stage of progression '${pk}' — a disposition must name a real stage`,
-                     { progression_key: pk, stage_key: sk });
+    /* DEC-49 REGION is-decider-stamped — C-100.22. */
+    if (!by)
+      return refusal("NO_DECIDER", "a disposition is recorded under the deciding member, stamped from the session. An "
+                                 + "unnamed decider cannot age the record's question.");
+    /* END DEC-49 REGION is-decider-stamped */
+    const absent = this.#declared(pk, "define the progression first (op=progressiondefine); a proposal exists only for a defined one")
+      || this.#stageOf(pk, sk, `'${sk}' is not a stage of progression '${pk}' — a disposition must name a real stage`,
+                       { progression_key: pk, stage_key: sk });
+    if (absent) return absent;
     const currentVersion = this.definitionVersionOf(pk).version;
     /* a number, or a string holding one; a boolean, object or array says nothing about what was read */
     const seen = (typeof definitionVersion === "number" || (typeof definitionVersion === "string" && definitionVersion.trim() !== ""))
