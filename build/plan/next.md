@@ -1,10 +1,10 @@
 # Plan: next tranche
 
-**Status** · Entries not carried by T8 (opened by BOB #54, 2026-09-28), and those arising during it, awaiting the tranche they join (PROCESS-MECHANICS §5). An entry T8 carries only in part stays here for the shares T8 does not carry. Grouped by module, modules by layer. `draft-T9.md` drafts the next tranche from them.
+**Status** · Entries not carried by T9 (opened by BOB #56, 2026-09-28), and those arising during it, awaiting the tranche they join (PROCESS-MECHANICS §5). An entry T9 carries only in part stays here for the shares T9 does not carry. Grouped by module, modules by layer. `draft-T10.md` drafts the next tranche from them.
 
-## Carried by T8
+## Carried by T9
 
-`build/plan/current.md` names the entries T8 carries and each one's share.
+`build/plan/current.md` names the entries T9 carries and each one's share.
 
 ## Later layers
 
