@@ -5,6 +5,7 @@ import * as doctrine from "../../../src/skilldoctrine.mjs";
 import { OBSERVATION_LEVELS, OBSERVATION_STATES, DEFINITIVE_STATES } from "../../../src/observation-log/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../../../src/airun.mjs";
 import * as strength from "../../../src/strength/index.mjs";
+import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "../../../src/run-productions/index.mjs";
 import { ROOT, SRC, catalogue, read, norm, foundIn, section, canonDocuments, published, stringLiterals }
   from "./fixture.mjs";
 
@@ -26,10 +27,10 @@ function table() {
   return { left: rows.map((r) => r[0]), right: rows.map((r) => r[1]).filter((c) => c !== "—") };
 }
 
-/* Every C-number any keyed row of the catalogue, or of a family moved to its module, carries. */
+/* Every C-number any keyed row of the catalogue, or of a family moved to its module (strength, run-productions), carries. */
 function keyedNumbers() {
   const out = new Set();
-  for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS])
+  for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS, SUGGEST_CHECKS])
     if (rows && typeof rows === "object" && !Array.isArray(rows))
       for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
   return out;
@@ -162,10 +163,10 @@ test("R19 absenceByLevel: one entry per level in order, the level's fact, the ne
 test("R20 reportsAs is the SUGGEST_LEVELS member equal to the level or the level plus s, else null; never throws", () => {
   for (const level of Object.keys(OBSERVATION_LEVELS)) {
     const r = reportsAs(level);
-    assert.ok(catalogue.SUGGEST_LEVELS.includes(r), `${level} reports as ${r}`);
+    assert.ok(SUGGEST_LEVELS.includes(r), `${level} reports as ${r}`);
     assert.ok(r === level || r === level + "s");
   }
-  for (const s of catalogue.SUGGEST_LEVELS) assert.equal(reportsAs(s), s);
+  for (const s of SUGGEST_LEVELS) assert.equal(reportsAs(s), s);
   for (const odd of ["nowhere", "", undefined, null, 3, {}]) assert.equal(reportsAs(odd), null);
 });
 
@@ -205,7 +206,7 @@ test("R23 no member of an imported or driven vocabulary appears in the module's 
   add("DEFINITIVE_STATES", [...DEFINITIVE_STATES]);
   add("RUN_BOUNDS", Object.keys(RUN_BOUNDS));
   add("RUN_ENDINGS", Object.keys(RUN_ENDINGS));
-  add("SUGGEST_LEVELS", catalogue.SUGGEST_LEVELS);
+  add("SUGGEST_LEVELS", SUGGEST_LEVELS);
   add("BASIS_ROLES", catalogue.BASIS_ROLES);
   add("EARNED_GRADE_SOURCES", catalogue.EARNED_GRADE_SOURCES);
   add("VERSION_STRENGTH_INERT_SOURCES", strength.VERSION_STRENGTH_INERT_SOURCES);
