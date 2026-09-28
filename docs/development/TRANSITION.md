@@ -149,12 +149,11 @@ Each: what it is, and how the plan handles it.
 
 Replaced at each handoff; the progress log (§4) is the history.
 
-**Where things stand.** **T8 is OPEN** on `tranche/T8` (plan `build/plan/current.md`). Layers 1, 2, 3, 7, 8 and 9 are closed and merged (K232, K234, K236, K239, K246, K257), each with its bundles regenerated (fleetbundles 96/0) and its sessions archived with rows in `build/metrics/T8.csv`. **Running since ~09:55:** PROMOTION #7 (re-opened for the 1.38.0 stamp, B3 CHANGE: count layer 8's and 9's departures, re-pin write-path R18's floor and R17's fixture, K233, K253), and **layer 10**: MONITORING #1, SCHEDULER #1 (each has only its `START`; addresses in the plan's `Jobs` line). BOB #54's backstop is `trig_01TLTu8J6mNpbp2uFrU187G6` and its `WATCH` into ROOT `trig_0148cKZ5Cfn1Xqdi1dSNLtT5`: delete both when you take over and arm your own. BOB #54's row (`BOB-final`, T8) is yours to write when you archive it. BOB #55 (`session_01TRtC2Yt43Cqs9G3wtifaWc`) was started by ROOT at 07:25 and waits on Bob's approval typed in its session.
+**Where things stand.** **T8 is OPEN** on `tranche/T8` (plan `build/plan/current.md`). Layers 1, 2, 3, 7, 8 and 9 and promotion's 1.38.0 re-opening are closed and merged (K232, K234, K236, K239, K246, K257, K258), each with its bundles regenerated (fleetbundles 96/0) and its sessions archived with rows in `build/metrics/T8.csv`. **Layer 10 runs** since ~09:55: MONITORING #1, SCHEDULER #1 (J1s answered by K259; merge monitoring early once its R19/R20 are tested, then CHANGE the scheduler). BOB #54's backstop is `trig_01TLTu8J6mNpbp2uFrU187G6` and its `WATCH` into ROOT `trig_0148cKZ5Cfn1Xqdi1dSNLtT5`: delete both when you take over and arm your own. BOB #54's row (`BOB-final`, T8) is yours to write when you archive it. BOB #55 (`session_01TRtC2Yt43Cqs9G3wtifaWc`) was started by ROOT at 07:25 and waits on Bob's approval typed in its session.
 
 **Decided this session:** K223–K246 (T8's opening, N200 folded as Bob ruled, N178's provider services folded into intent R27–R28 and reevaluation R25 before layer 7, one-code-one-site K231, and each layer's answers and closes). New entries N202–N209. T7's close meter 58% (Bob), recorded as T8's opening reading too.
 
 **Open items, in order.**
-1. **Promotion #7:** merge it when COMPLETE (ownership against the merge-base, K255; bundles; archive; row).
 2. **Layer 10** (running: answer, merge early per §4 if one needs the other, close as the earlier layers), then **layer 11** (affordances, legacy-index, installer, legacy-tests; legacy-tests' entry has grown by each layer's re-pins).
 3. **P18:** N209 wants a bound worded into intent R12–R13 (BOB's); `draft-T9.md` is the next plan (legacy-store's own job carries N28, N89, N193, N205).
 
