@@ -20,7 +20,7 @@
 - Users of calibration: extraction 65/65, content 50/50, scheduler 46 pass 0 fail 6 todo.
 - `format`: 0 failures. `architecture calibration`: 0 failures (2 before K291, the membership import). `coverage calibration`: 17 of 17 live ids named; 0 failures. `ownership calibration tranche/T9`: 0 failures.
 
-Size (session_014rdgsa7CsV4uZBTdm9Rh2U): test runs 5, module lines 1777
+Size (session_014rdgsa7CsV4uZBTdm9Rh2U): test runs 5, module lines 1775
 
 ## J1 · QUESTION
 
