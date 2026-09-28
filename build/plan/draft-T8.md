@@ -32,7 +32,7 @@ Drafted for BOB #51 on `tranche/T7` while T7 runs (P18), from `build/plan/next.m
 
 ### Layer 7 (order: `intent`) (K218)
 
-- **intent** · N179 (progressions' configured clock on the plane: intent builds no progressions instance of its own, or builds it with the plane's `env`, so progressions R16 reads `env.BIO_NOW_MS` again; a test at intent's interface that progressions reached through a plane-built intent keeps the configured clock). N180 (its refusal family renumbered out of reevaluation's C-110, BOB assigning it; `NO_STATEMENT` its own code; its guard lines); N181 (its unbounded reads, `doc.mjs`'s `GRADES`, the unused `intent_triage_key` index).
+- **intent** · N199 first (hidden-project reads, R23; K222); N179 (progressions' configured clock on the plane: intent builds no progressions instance of its own, or builds it with the plane's `env`, so progressions R16 reads `env.BIO_NOW_MS` again; a test at intent's interface that progressions reached through a plane-built intent keeps the configured clock). N180 (its refusal family renumbered out of reevaluation's C-110, BOB assigning it; `NO_STATEMENT` its own code; its guard lines); N181 (its unbounded reads, `doc.mjs`'s `GRADES`, the unused `intent_triage_key` index).
 
 ### Layer 8 (order: `publication`, `ratification`, `case-authoring`, `review`)
 
