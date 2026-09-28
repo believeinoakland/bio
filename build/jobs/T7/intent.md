@@ -1,6 +1,6 @@
 # intent (T7)
 
-**Status** · session_01GQGyDoacLdEkcPzHjpqTBg · depth 2 · RUNNING until 2026-09-28T02:42:25Z (legacy battery, base and head) · handled B5
+**Status** · session_01GQGyDoacLdEkcPzHjpqTBg · depth 2 · RUNNING until 2026-09-28T03:05:14Z (legacy battery against the merged tranche) · handled B5
 
 ## J1 · QUESTION
 
