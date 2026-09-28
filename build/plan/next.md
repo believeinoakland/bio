@@ -78,7 +78,7 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 
 - N87 · 2026-09-27 · **legacy-checks** (LEGACY-TESTS #2, T4): re-point every row whose `where` names `src/store.mjs` or `src/index.mjs` for code layer 3 moved with its DEC-49 markers into `src/capture/` and `src/provenance/` (the list in legacy-tests' T4 record).
 
-- N89 · 2026-09-27 · **legacy-store** (LEGACY-TESTS #2 REPORT 6): classify `archivelookup` in `PROJECT_NAMING_READS` or `_NOT` (project-sight).
+- N89 · 2026-09-27 · **legacy-store** (LEGACY-TESTS #2 REPORT 6): classify `archivelookup` in `PROJECT_NAMING_READS` or `_NOT` (project-sight); with it, `pdfstructure` into `PROJECT_NAMING_READS_NOT` beside `reading` (QUEUE #1 REPORT J2.1, K210).
 - N90 · 2026-09-27 · **capture** (LEGACY-TESTS #2 REPORT 8): bound its six unbounded routes (meaning-bounds ceiling 45 → 51, not moved).
 
 - N91 · 2026-09-27 · **affordances** (RECORD-CORE #2, K130): re-export record-core's `PER_ITEM_MAX` (R49) and pass its `PER_ITEM_ACTS` groups to `perItem`, deleting its own copy.
@@ -171,6 +171,11 @@ T6's unrun layers 3, 4, 6, 7 and 11 (K165) are T7's plan (`build/plan/current.md
 - N168 · 2026-09-28 · **legacy-ui** (INTENT #1 REPORT J4.1): `civicos-ui/test/` fixtures that promote a project with no `objective` (`project-workspace`, `published-index-pair`, `several-cases-choice`, `conclude-reading`, `statement-ack`, `review-copy`) are refused `NO_OBJECTIVE` since intent R1; each states one.
 - N169 · 2026-09-28 · **capture-requests** (INTENT #1 REPORT J4.7): a read of one request by id in Provides, so intent's `pursuitOf` (R14) reads outcomes exactly rather than through a bounded list.
 - N170 · 2026-09-28 · **monitoring** (INTENT #1 REPORT J4.6): monitoring watches `intentOf(ctx).watchSet({project})` (intent R7), and its findings join intent's proposals through `registerSource` (R15), as scheduler's do (N167).
+- N171 · 2026-09-28 · **retrieval**, **bias**, **queue** (QUEUE #1 Q3, K209): retrieval `counts(hid)` → `{indexed, selections, selectionItems}` and bias `counts(hid)` → `{biasStatements, biasAdoptions}` and `uncleared({gate, limit})` (the uncleared debts with their recipients, newest first), as run-productions' `counts(hid)`; queue's `#counts` and `#obligationsBiasDebt` then read them (N112's remainder).
+- N172 · 2026-09-28 · **queue** (QUEUE #1 Q4, Q5, K209; REEVALUATION #1 J2.2, INTENT #1 J4.6): at queue's extraction, reevaluation's notices as a FINDING kind with its producer and its ADOPT/KEEP door (`versionadopt`, `versionkeep`), and `objective-gap`'s producer over intent's `gaps` (bounded projects); `reevaluation` and `intent` join queue's uses; BOB folds R1, R9, R12 first from QUEUE #1's J1 proposals.
+- N173 · 2026-09-28 · **queue** (QUEUE #1 Q1, K209): at queue's extraction, requirement-named tests at the interface for R6–R40 (the feed in legacy-store until then).
+- N174 · 2026-09-28 · **observation-log** (QUEUE #1 REPORT J2.3): `src/observation-log/vocabulary.mjs` 8–9, 1346–1348 and the refusal at 1599 name `queuestate.mjs` as the vocabulary's home; since N114 it is observation-log's, re-exported by queue: name it.
+- N175 · 2026-09-28 · **process** (QUEUE #1 REPORT J2.5): `checks/ownership.mjs`' `usesOwn` does not see an imported name used through spread (`...name(…)`), because it excludes a name after `.`; allow `...` before it (with the C15 revision, P3).
 
 ## Before layer 9
 
