@@ -2,3 +2,5 @@ session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_l
 session_01BAtq2TaoZKd4kjwhUtvgEL,BOB-final,,109531248,1713727,1156,465446,,,
 session_01EwVH7Frcm6uLT9v54Y4Xi3,job,legacy-checks,20046538,437464,128,21036,,4,12304
 session_01X21rA21HbLKssMYh2XjGmk,job,legacy-checks,1714919,41679,44,8139,,6,12329
+session_01F4Zw6fHHxLm7fXnQfo4nc5,job,record-core,6281898,164201,82,21272,,8,1046
+session_01ASTMYa8KNLdKEKcGwkyoBG,job,promotion,14332318,220487,151,31203,,17,2300
