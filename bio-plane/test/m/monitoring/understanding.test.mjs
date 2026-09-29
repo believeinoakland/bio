@@ -8,7 +8,6 @@ import { MECHANICAL_FIELD_SETS, parseFrontmatter } from "../../../checks/bio-che
 
 test.todo("R28 each open named request in data/gathering.json whose cadence is due is captured through capture.acquire from its locators in order, the request named as authority (not yet met: Intake Doctrine §4; nothing executes a gathering request, and T8 plans no build of it)");
 test.todo("R29 a ratified sweep runs within its scope and breadth budget and lands at collected (not yet met: K102; sweeps wait for a design of what a sweep's query is)");
-test.todo("R30 an administrator may pause the daemon, and its due slate is exported as quoted data inside fixed instruction framing (not yet met: Intake Doctrine §4, K102, K259; N222)");
 test.todo("R31 items in the item contract with their options: source-modified, source-removed, archive-fallback-eligible, monitoring-recheck-due, read by queue (not yet met: the item contract's catalogue ids and options are composed by legacy-store and affordances today (queue, layer 11); this module offers the facts through R8's flag, R20's eligible addresses and R32's rows, and publishes no item yet)");
 
 /* An action with two clock entries, one past and one not, by a member. */
@@ -51,7 +50,46 @@ test("R33 (N170) the sources a live objective rests on are known to monitoring t
   assert.equal(src.reader({ project: "PROJ-2026-0001-p", viewer: "nobody" }).length, 0, "through the viewer's sight");
   /* a change at a watched source reaches reevaluation as R8's flag: the document's own reeval_pending (tick.test R8) */
 });
-test.todo("R33 the sources a published finding rests on are known to monitoring and proposed the same way (not yet met: publication offers no read of what a published finding rests on that this module can follow; the objective half is built, N170)");
+test("R33 (N230) the sources a published finding rests on are known to monitoring through publication's restingCapturesOf, followed by its cursor to the end, and one not monitored is proposed to the finding's project the same way, never enabled", () => {
+  const w = world();
+  const P = "PROJ-2026-0002-f", OTHER = "PROJ-2026-0003-o";
+  const a = w.monitored("INFO-2026-0740-rests", "https://records.example.org/f1", "f1", { freq: "daily" });
+  const b = w.monitored("INFO-2026-0741-unwatched", "https://records.example.org/f2", "f2", { enabled: false });
+  const c = w.monitored("INFO-2026-0742-both", "https://records.example.org/f3", "f3", { enabled: false });
+  const d = w.monitored("INFO-2026-0743-other", "https://records.example.org/f4", "f4", { enabled: false });
+  const F = "FIND-2026-0001-x";
+  w.publication.resting.push(
+    { capture_sha: a.cap, findings: [{ bundle_id: F, projects: [P] }] },
+    { capture_sha: b.cap, findings: [{ bundle_id: F, projects: [P, OTHER] }] },
+    { capture_sha: c.cap, findings: [{ bundle_id: F, projects: [P] }] },
+    { capture_sha: d.cap, findings: [{ bundle_id: "FIND-2026-0002-y", projects: [OTHER] }] });
+  w.intent.watch[P] = [c.cap];
+  const k = w.m.watched({ project: P });
+  assert.equal(k.ok, true);
+  const by = Object.fromEntries(k.captures.map((x) => [x.bundle, x]));
+  assert.deepEqual(Object.keys(by).sort(), ["INFO-2026-0740-rests", "INFO-2026-0741-unwatched", "INFO-2026-0742-both"], "only this project's findings");
+  assert.deepEqual(by["INFO-2026-0741-unwatched"].rests_on, ["finding"]);
+  assert.deepEqual(by["INFO-2026-0741-unwatched"].findings, [F]);
+  assert.deepEqual(by["INFO-2026-0742-both"].rests_on.sort(), ["finding", "objective"]);
+  assert.equal(by["INFO-2026-0740-rests"].monitored, true);
+  /* the cursor is followed to its end (pages of two) */
+  const sorted = [a.cap, b.cap, c.cap, d.cap].sort();
+  assert.deepEqual(w.publication.calls.map((x) => x.after), [null, sorted[1]]);
+  /* proposed through intent's registration to the project, never enabled */
+  const src = w.intent.sources.find((s) => s.kind === "monitoring");
+  const props = src.reader({ project: P, viewer: "class:daemon" });
+  assert.deepEqual(props.map((p) => p.basis.bundle).sort(), ["INFO-2026-0741-unwatched", "INFO-2026-0742-both"]);
+  const pb = props.find((p) => p.basis.bundle === "INFO-2026-0741-unwatched");
+  assert.match(pb.basis.says, /^a published finding of this project rests on this document/);
+  assert.match(props.find((p) => p.basis.bundle === "INFO-2026-0742-both").basis.says, /^an objective and a published finding/);
+  assert.equal(w.fm("INFO-2026-0741-unwatched").monitoring.enabled, false, "never enabled by the daemon");
+  /* a publication that cannot be read leaves the objective half standing, and says so */
+  const x = world({ publication: { restingCapturesOf: () => { throw new Error("gone"); } } });
+  const xa = x.monitored("INFO-2026-0744-obj", "https://records.example.org/f5", "f5", { enabled: false });
+  x.intent.watch[P] = [xa.cap];
+  const xk = x.m.watched({ project: P });
+  assert.deepEqual([xk.ok, xk.captures.length, xk.findings_unread], [true, 1, "gone"]);
+});
 
 test("R34 a pending clock entry whose date has passed is marked overdue by a mechanical deadline-recheck promotion changing only clock[].status and last_updated", async () => {
   const w = world({ realActions: true, escalation: { calls: [], escalationsDue(q) { this.calls.push(q); return { ok: true, items: [], truncated: false }; } } });
@@ -68,6 +106,16 @@ test("R34 a pending clock entry whose date has passed is marked overdue by a mec
   for (const k of Object.keys(fb)) if (k !== "clock" && k !== "last_updated") assert.deepEqual(fa[k], fb[k], k);
   assert.deepEqual(fa.clock.map(({ status, ...rest }) => rest), fb.clock.map(({ status, ...rest }) => rest));
   assert.match(after, /Deadline recheck: the clock entry dated 2026-09-01 passed while pending and is marked overdue/);
+  /* N297: a promotion refusing with no code is said in words, never given a bare code of monitoring's */
+  const P2 = "ACTN-2026-0701-nocode";
+  createAction(w, P2, [["late", "2026-09-02", "pending"]]);
+  const real = w.promotion.promote.bind(w.promotion);
+  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false } : real(pkg));
+  const nc = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual(nc.failed, [{ action: P2, reason: null, detail: "the promotion refused the mark and named no reason" }]);
+  w.promotion.promote = real;
+  const done = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual(done.marked.map((x) => x.action), [P2]);
   /* nothing further to mark: a second recheck writes nothing */
   const n = w.manifest(ACT).length;
   const again = await w.m.deadlineRecheck(NOW_MS);

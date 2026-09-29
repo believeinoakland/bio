@@ -69,7 +69,7 @@ test("R15 the subject is an address: versions group by address, the current vers
   assert.equal(row.disagreement.governs, "weekly");
   assert.deepEqual(row.disagreement.authored.map((x) => x.frequency).sort(), ["hourly", "weekly"]);
   /* last checked when any version was */
-  w.st.sql.exec(`UPDATE bundles SET monitor_last_checked='2026-09-10T00:00:00Z' WHERE bundle_id='INFO-2026-0210-v1'`);
+  w.st.sql.exec(`UPDATE bundle_projection SET monitor_last_checked='2026-09-10T00:00:00Z' WHERE bundle_id='INFO-2026-0210-v1'`);
   assert.equal(w.m.subjects().rows.find((r) => r.address === addr).monitor_last_checked, "2026-09-10T00:00:00Z");
   /* a bundle with no captured address is its own subject; so is one captured at several addresses none singly its locator */
   const lone = w.monitored("INFO-2026-0213-lone", "https://records.example.org/lone", "lone-v1", { freq: "daily" });
@@ -90,7 +90,7 @@ test("R16 the plan: never checked is due; nothing authored and nothing read is d
   const mk = (n, freq, lastMs) => {
     const id = `INFO-2026-02${n}-plan`;
     w.monitored(id, `https://records.example.org/p${n}`, `plan-${n}`, { freq });
-    if (lastMs != null) w.st.sql.exec(`UPDATE bundles SET monitor_last_checked=? WHERE bundle_id=?`, iso(lastMs), id);
+    if (lastMs != null) w.st.sql.exec(`UPDATE bundle_projection SET monitor_last_checked=? WHERE bundle_id=?`, iso(lastMs), id);
     return id;
   };
   const never = mk(20, "daily", null);

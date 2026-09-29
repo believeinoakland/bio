@@ -71,6 +71,21 @@ test("R1 refusals, in order, each writing nothing; a store silence is named, nev
     return new Response(JSON.stringify({ ok: true, result: await monitoringOps(w.m, u, body).monitor() })); } };
   const relayed = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, viewer: "nobody", storeName: "s", cls: "daemon" });
   assert.deepEqual([relayed.s, relayed.b.reason, relayed.b.store, relayed.b.tokenClass], [404, "ABSENT", "s", "daemon"]);
+  /* N278, N247: with the control plane's `doAnswer` handed in (as it hands it to knockOp), the envelope is opened
+     through it and nowhere else, and the verdict is the store's, declared first */
+  const opened = [];
+  const doAnswer = async (res) => { opened.push(1); let o = null; try { o = await (await res).json(); } catch { o = null; }
+    return o && o.ok === true ? { answered: true, result: o.result } : { answered: false, result: undefined }; };
+  const via = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, viewer: DAEMON, storeName: "s", cls: "daemon" });
+  assert.deepEqual([opened.length, via.s, via.b.ok, via.b.store], [1, 200, true, "s"]);
+  assert.equal(Object.keys(via.b)[0], "ok", "the verdict is declared first");
+  const viaDead = await monitorOp(req(), deadStore, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer });
+  assert.deepEqual([opened.length, viaDead], [2, { silent: "monitor" }]);
+  const viaNotOk = await monitorOp(req(), notOk, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer });
+  assert.deepEqual(viaNotOk, { silent: "monitor" });
+  /* an envelope that answered with no status is no answer either */
+  const bare = { fetch: async () => new Response(JSON.stringify({ ok: true, result: { body: {} } })) };
+  assert.deepEqual(await monitorOp(req(), bare, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer }), { silent: "monitor" });
 });
 
 test("R2 the tick fetches the Drive export or the locator, through the host governor; a governed refusal writes a governed look and nothing else", async () => {

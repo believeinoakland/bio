@@ -20,8 +20,7 @@ test("R36 the daemon fetches only what store state authorizes: op=monitor takes 
   assert.deepEqual(w.net.seen, [LOC], "only the document's own locator was fetched");
   /* the archive fire's body names only the document address (R20's test drives the whole tick) */
   const calls = [];
-  w.m.env.SELF = { fetch: async (req) => { calls.push(await req.json()); return new Response(JSON.stringify({ ok: false, reason: "NOT_ELIGIBLE" })); } };
-  w.m.env.DAEMON_TOKEN = "a-live-token-for-r36-000000000001";
+  w.capture.acquire = async (body) => { calls.push(body); return { status: 409, body: { ok: false, reason: "NOT_ELIGIBLE" } }; };
   for (let i = 0; i < 3; i++) await w.capture.recordSourceOutcome({ addressNorm: "https://gone.example.org/p", outcome: "fetch_failed", at: "2026-09-20T00:00:00Z" });
   await w.m.archiveTick(NOW_MS);
   assert.deepEqual(calls, [{ via: "archive.org", address: "https://gone.example.org/p" }]);
@@ -105,10 +104,11 @@ test("R41 the three tables are this module's, derived and declared to purge: mon
   const id = "INFO-2026-0850-purge";
   w.monitored(id, LOC, "purge-v1", { freq: "hourly" });
   w.net.routes[LOC] = serve("purge-v1");
-  w.m.env.SELF = { fetch: async () => { throw new Error("down"); } };
-  w.m.env.DAEMON_TOKEN = "a-live-token-for-r41-000000000001";
-  await w.m.cadenceTick(NOW_MS);   /* fails: its claim and epoch stay */
   await tick(w, id);                /* reads the address's type */
+  const real = w.m.monitor;
+  w.m.monitor = async () => { throw new Error("down"); };
+  await w.m.cadenceTick(NOW_MS + 2 * 3600000);   /* fails: its claim and epoch stay */
+  w.m.monitor = real;
   const count = (t) => w.rows(`SELECT count(*) c FROM ${t}`)[0].c;
   assert.deepEqual([count("monitor_fired"), count("monitor_tick_epoch"), count("monitor_address_type")], [1, 1, 1]);
   w.record.purge({ bundleId: id });
