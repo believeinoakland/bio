@@ -324,7 +324,7 @@ test("R12 stage 7, entered from 4 or 5: each attachment states one accountabilit
   assert.equal(x.esc.escalationAdvance({ id: x.E, to: 7, reason: "Go.", author: V("bob"), viewer: V("bob") }).ok, true);
 });
 
-test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, NOT_OPEN, NO_REASON, ILLEGAL_STAGE (with the legal ones), TRIGGER_NOT_MET (naming what is missing), else appends {from, to, reason, author, at, trigger ids}; escalationDecline records a member's choice not to advance with the same refusals and NOT_PROPOSED, and the proposal stays with its age and the declines", () => {
+test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, NOT_OPEN, NO_REASON, ILLEGAL_STAGE (with the legal ones), TRIGGER_NOT_MET (naming what is missing), else appends {from, to, reason, author, at, trigger ids}; escalationDecline records a member's choice not to advance with the same refusals and EDGE_NOT_PROPOSED in place of TRIGGER_NOT_MET, and the proposal stays with its age and the declines", () => {
   const w = seeded();
   opened(w);
   const ok = { to: 2, reason: "The office is named." };
@@ -348,7 +348,7 @@ test("R13 escalationAdvance refuses MACHINE_CANNOT_ADVANCE, NO_SUCH_ESCALATION, 
   assert.equal(tn.reason, "TRIGGER_NOT_MET");
   assert.match(tn.missing, /names no office/);
   const td = w.esc.escalationDecline({ id: o2.id, to: 2, reason: "Not now.", author: V("bob"), viewer: V("bob") });
-  assert.equal(td.reason, "NOT_PROPOSED");
+  assert.deepEqual([td.reason, td.code, td.check], ["EDGE_NOT_PROPOSED", "EDGE_NOT_PROPOSED", "C-116.30"]);
   /* decline: same refusals */
   const dec = (extra) => w.esc.escalationDecline({ id: w.E, to: 2, reason: "Not yet.", author: V("alice"), viewer: V("alice"), ...extra });
   assert.equal(dec({ author: MACHINE, id: "ESC-none" }).reason, "MACHINE_CANNOT_DECLINE");

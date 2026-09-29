@@ -29,6 +29,7 @@
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `getSetting`, `declarePurge`;
  *                                   `inSight`, `projectAuthority`; `promote`, `registerStep`.
  *   conformance    `determinationRead` (its R9), `determinationsFor` (its R11); default `conformanceOf(host)` (K252).
+ *                  Its `noSuchDetermination` and `determinationSuperseded` (R19, R20) answer R1's two conditions.
  *   consequences   `addressed` (its R9); default `consequencesModule(host)` (K250).
  *   actions        `actionRead` (its R29: the ledger, legs, `breach`, counterparty); default `actionsOf(host)` (K253).
  *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function.
@@ -39,7 +40,7 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { conformanceOf } from "../conformance/index.mjs";
+import * as conformanceModule from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
@@ -91,6 +92,20 @@ const instantMs = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 };
 const iso = (ms) => stampInstant("second", ms);
+
+/* conformance R19, R20 (N309, N312, K275): the one answer to an absent or unseen determination, and to a superseded
+   one, minted there and answered through here (R1). Until conformance's helpers are merged into the tranche (its job
+   builds them beside this one), a stand-in in their wording answers, with conformance's own row where it has one; the
+   stand-in goes when they land. */
+const { conformanceOf, CONFORMANCE_CHECKS } = conformanceModule;
+const standIn = (code, determination, fields, detail, extra) => ({ ...(extra || {}), ok: false, reason: code, code,
+  check: CONFORMANCE_CHECKS[code]?.check ?? null, translation: CONFORMANCE_CHECKS[code]?.translation ?? null,
+  determination: determination ?? null, ...fields, detail });
+const noSuchDetermination = conformanceModule.noSuchDetermination || ((determinationId, extra) =>
+  standIn("NO_SUCH_DETERMINATION", determinationId, {}, "No determination you may see answers to that id.", extra));
+const determinationSuperseded = conformanceModule.determinationSuperseded || ((determinationId, supersededBy, extra) =>
+  standIn("DETERMINATION_SUPERSEDED", determinationId, { superseded_by: supersededBy ?? null },
+          "That determination has been superseded by a later one.", extra));
 
 /* ---- the providers' answers, read in one place each (their Provides) ---- */
 
@@ -543,16 +558,14 @@ export class Escalation {
     if (judged) return judged;
     const d = typeof determination === "string" && determination
       ? this.conformance.determinationRead({ id: determination, viewer }) : null;
-    /* DEC-49 REGION is-determination-seen */
-    if (!d || d.ok === false)
-      return refusal("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
-                     + "exactly as one that does not exist.");
-    /* END DEC-49 REGION is-determination-seen */
-    /* DEC-49 REGION is-determination-live */
-    if (!liveOf(d))
-      return refusal("DETERMINATION_SUPERSEDED", "that determination has been superseded; an escalation pursues a live "
-                     + "determination. Nothing was written.", { superseded_by: d.superseded_by ?? null });
-    /* END DEC-49 REGION is-determination-live */
+    /* conformance R19: absent and unseen are one answer, the id as asked. */
+    if (!d || d.ok === false) return noSuchDetermination(typeof determination === "string" && determination ? determination : null);
+    /* conformance R20: its successor named only when this viewer can read it. */
+    if (!liveOf(d)) {
+      const by = typeof d.superseded_by === "string" && d.superseded_by ? d.superseded_by : null;
+      const next = by ? this.conformance.determinationRead({ id: by, viewer }) : null;
+      return determinationSuperseded(determination, next && next.ok !== false ? by : null);
+    }
     const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
     /* DEC-49 REGION is-determination-noncompliant */
     if (!pursued.length)
@@ -563,7 +576,7 @@ export class Escalation {
     const fence = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
     /* DEC-49 REGION is-open-joined */
     if (fence)
-      return refusal("NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's "
+      return refusal("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's "
                      + "project. Nothing was written.", { project, membership: fence.reason });
     /* END DEC-49 REGION is-open-joined */
     const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
@@ -764,7 +777,7 @@ export class Escalation {
     const t = triggers.find((x) => x.to === target);
     /* DEC-49 REGION is-edge-proposed */
     if (!t || !t.met)
-      return refusal("NOT_PROPOSED", `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
+      return refusal("EDGE_NOT_PROPOSED", `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
                      { from: e.stage, to: target });
     /* END DEC-49 REGION is-edge-proposed */
     const entry = { kind: "decline", from: e.stage, to: target, reason: str(args.reason), author: args.author, at: this.now() };

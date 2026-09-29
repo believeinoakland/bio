@@ -2,8 +2,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, V, MACHINE, OFFICE, DAY, ms } from "./fixture.mjs";
+import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
 
-test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent and invisible one answer), DETERMINATION_SUPERSEDED, NOT_NONCOMPLIANT, NOT_A_PARTICIPANT, ALREADY_OPEN (named); otherwise open at stage 1 recording the noncompliant standards pursued, who and when; any joined member may open", () => {
+test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent and invisible one answer, through conformance R19), DETERMINATION_SUPERSEDED (through conformance R20, its successor named only when readable), NOT_NONCOMPLIANT, ESCALATION_NOT_A_PARTICIPANT (C-116.6), ALREADY_OPEN (named); otherwise open at stage 1 recording the noncompliant standards pursued, who and when; any joined member may open", () => {
   const w = seeded();
   w.member("dave");
   w.join(w.P, "dave", "invited");
@@ -12,21 +13,37 @@ test("R1 refusals in order: MACHINE_CANNOT_OPEN, NO_SUCH_DETERMINATION (absent a
   /* machine or empty author, asked first (even of an absent determination) */
   for (const author of ["", "  ", MACHINE, "token:run-1", "ai", undefined])
     assert.equal(open({ author, determination: "CONF-none" }).reason, "MACHINE_CANNOT_OPEN", String(author));
-  /* absent and invisible: one answer */
+  /* absent and invisible: one answer, conformance R19's, the id as asked (null when none) */
   const absent = open({ determination: "CONF-2026-0404-none" });
   const unseen = w.esc.escalationOpen({ determination: w.D, author: V("carol"), viewer: V("carol") });
-  assert.equal(absent.reason, "NO_SUCH_DETERMINATION");
-  assert.deepEqual(unseen, absent, "a determination the viewer may not see is answered exactly as an absent one");
-  assert.equal(open({ determination: undefined }).reason, "NO_SUCH_DETERMINATION");
-  /* superseded, before noncompliance and participation */
+  assert.deepEqual([absent.ok, absent.reason, absent.code, absent.determination],
+                   [false, "NO_SUCH_DETERMINATION", "NO_SUCH_DETERMINATION", "CONF-2026-0404-none"]);
+  assert.equal(typeof absent.detail, "string");
+  assert.deepEqual({ ...unseen, determination: null }, { ...absent, determination: null },
+                   "a determination the viewer may not see is answered exactly as an absent one");
+  assert.equal(unseen.determination, w.D);
+  for (const determination of [undefined, null, "", 7])
+    assert.deepEqual(open({ determination }), { ...absent, determination: null }, String(determination));
+  assert.ok(!("NO_SUCH_DETERMINATION" in ESCALATION_CHECKS), "the code is conformance's, not minted here");
+  /* superseded, before noncompliance and participation: conformance R20's answer, naming its successor only when
+     this viewer can read it */
   const S = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }], supersededBy: "CONF-x" });
-  assert.equal(w.esc.escalationOpen({ determination: S, author: V("dave"), viewer: V("dave") }).reason, "DETERMINATION_SUPERSEDED");
+  const sup = w.esc.escalationOpen({ determination: S, author: V("dave"), viewer: V("dave") });
+  assert.deepEqual([sup.ok, sup.reason, sup.code, sup.determination, sup.superseded_by],
+                   [false, "DETERMINATION_SUPERSEDED", "DETERMINATION_SUPERSEDED", S, null]);
+  assert.equal(typeof sup.detail, "string");
+  assert.ok(!("DETERMINATION_SUPERSEDED" in ESCALATION_CHECKS), "the code is conformance's, not minted here");
+  const later = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }] });
+  w.supersede(S, later);
+  const named = w.esc.escalationOpen({ determination: S, author: V("dave"), viewer: V("dave") });
+  assert.deepEqual({ ...named, superseded_by: null }, sup, "the same answer, the successor aside");
+  assert.equal(named.superseded_by, later);
   /* no standard noncompliant (compliant and unclear only), before participation */
   const C = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }, { standard: "STD-2026-0002-b", outcome: "unclear" }] });
   assert.equal(w.esc.escalationOpen({ determination: C, author: V("dave"), viewer: V("dave") }).reason, "NOT_NONCOMPLIANT");
   /* an invited (not joined) participant sees the determination and may not open */
   const np = w.esc.escalationOpen({ determination: w.D, author: V("dave"), viewer: V("dave") });
-  assert.equal(np.reason, "NOT_A_PARTICIPANT");
+  assert.deepEqual([np.reason, np.code, np.check], ["ESCALATION_NOT_A_PARTICIPANT", "ESCALATION_NOT_A_PARTICIPANT", "C-116.6"]);
   assert.equal(np.project, w.P);
   assert.deepEqual(w.snapshot(), before, "no refusal writes anything");
   /* a joined member who is not an owner opens it */
