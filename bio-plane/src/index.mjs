@@ -121,7 +121,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
                                  governor: stub ? governorOverStub(stub) : null });
 }
 import { cpuProbe } from "./cpu.mjs";
-import { Store } from "./control-plane/dispatch.mjs";
+import { Store } from "./store.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";

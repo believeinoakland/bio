@@ -47,6 +47,7 @@ import * as M_PROGRESSIONS from "../progressions/checks.mjs";
 import * as M_PROMOTION from "../promotion/checks.mjs";
 import * as M_PROVENANCE from "../provenance/checks.mjs";
 import * as M_PUBLICATION from "../publication/checks.mjs";
+import * as M_QUEUE from "../queue/checks.mjs";
 import * as M_RATIFICATION from "../ratification/checks.mjs";
 import * as M_REEVALUATION from "../reevaluation/checks.mjs";
 import * as M_RETRIEVAL from "../retrieval/checks.mjs";
@@ -774,7 +775,7 @@ const MODULE_CHECK_FILES = [
   M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CASE_AUTHORING,
   M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
   M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
-  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_RATIFICATION, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
+  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
   M_SKILLDOCTRINE, M_STANDARDS, M_STRENGTH];
 let DEC49_ROWS = null;
 function dec49Row(code) {
@@ -910,14 +911,10 @@ async function doAnswer(res) {
    the same code for the three post-commit sub-reports in `ratify` and `recordcasemanifest` — the SAME condition
    (the store did not answer), stated inside an answer rather than refused; the DEC-49 guard's arm G declares the two
    spellings one condition by name. The wire only GAINS `code`, `check` and `translation`. */
-/* R25: when the store's failure was its own named internal error, the silence carries that error's correlation id, so
-   an operator can find the logged stack; nothing else of the store's envelope is relayed. */
-function storeSilent(op, failed = null) {
-  const correlation = failed && failed.reason === "STORE_INTERNAL_ERROR" && typeof failed.correlation === "string"
-    && /^[0-9a-f-]{36}$/.test(failed.correlation) ? failed.correlation : undefined;
+function storeSilent(op) {
   /* DEC-49 REGION is-store-silent */
   return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", ...dispatchRow("STORE_DID_NOT_ANSWER"),
-                op, detail: STORE_SILENT_DETAIL, correlation }, 502);
+                op, detail: STORE_SILENT_DETAIL }, 502);
   /* END DEC-49 REGION is-store-silent */
 }
 
@@ -929,11 +926,11 @@ function storeSilent(op, failed = null) {
 async function relayAnswer(res, op) {
   let r = null, out = null;
   try { r = await res; out = await r.json(); } catch { out = null; }
-  if (!out || out.ok !== true) return storeSilent(op, out);
+  if (!out || out.ok !== true) return storeSilent(op);
   return json({ ok: true, result: out.result }, r.status);
 }
 
-/* D-629 / DEC-49 (C-69.4, R25) — THE WORKER'S OUTERMOST CATCH, which it did not have: a throw anywhere in the door
+/* D-629 / DEC-49 (C-69.3, R25) — THE WORKER'S OUTERMOST CATCH, which it did not have: a throw anywhere in the door
    reached the Workers runtime as an uncaught exception (the platform's own error page), no BIO answer at all. A throw
    is logged server-side with its stack under a CORRELATION id, and the caller receives the code, the canned
    translation and the id — no stack, no message, no path. A named refusal is RETURNED, never thrown, so none passes
@@ -3476,7 +3473,7 @@ export function makeFetch(hooks = {}) {
     /* R23, R30: an answer that is not JSON with `ok: true` is a silence, never relayed (a store's stack included). */
     let body = null;
     try { body = await res.json(); } catch { body = null; }
-    if (!body || body.ok !== true) return storeSilent(op, body);
+    if (!body || body.ok !== true) return storeSilent(op);
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body?.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);

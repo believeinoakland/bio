@@ -1,4 +1,4 @@
-/* control-plane: the declaration tables (R31, R34). The store's door (R26, R27) is `dispatch.test.mjs`'s. */
+/* control-plane: the declaration tables (R31, R34), and the store's door (R26, R27), which stays legacy-store's in T12. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, defaultHooks, cred, aik } from "./harness.mjs";
@@ -75,3 +75,11 @@ test("R34: ACT_GATE is {needs(id), mode(id)} read from NEEDS and SESSION_OPS for
   finally { SESSION_OPS.member.add(a.id); }
   assert.equal(decorateAct(a).mode, "session");
 });
+
+test.todo("R26 the store's dispatch door: an empty POST body is null, a non-JSON body 400 BAD_JSON, an unserved route "
+  + "400 `unknown op: <op>`, answers {ok:true, result}, routes from the modules' own maps (not yet met: N333, K412 — the "
+  + "door stays legacy-store's Store.fetch in T12; commit d2bbae2f75 holds the move and its tests, re-applied in T13)");
+
+test.todo("R27 a read naming a project (PROJECT_NAMING_READS) with a stamped viewer and a discoverable project is answered "
+  + "by membership.existenceAct first (C-70.1), and the reads naming none are listed with the reason (not yet met: N333, "
+  + "K412 — the check runs in legacy-store's Store.fetch until the door moves; commit d2bbae2f75)");

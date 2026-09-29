@@ -274,24 +274,13 @@ export const DISPATCH_CHECKS = {
       + 'statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your '
       + 'request was meant to change something, look before repeating it, because this reply cannot say whether it did.',
   },
-  /* D-629 (R25, C-69.3, C-69.4) — AN OP THAT THREW. The Durable Object's outermost catch answered `String(e.stack)` for
-     any throw on any op — file paths, line numbers and constraint text to whoever asked, public ops included — and the
-     Worker had no outermost catch at all (the platform's own error page). The stack is now logged server-side under a
-     CORRELATION id, and the caller receives the code, this sentence and the id, nothing else. TWO ROWS, because they are
-     two conditions with two sites: the store threw, or the control plane in front of it did. Numbered after C-69.2,
-     which D-561 gave `STORE_DID_NOT_ANSWER` (D-629's branch had minted C-69.2 for the first of these).
-     THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD: a throw part-way through an op may or may not have left a write
-     behind, and the catch cannot say which, so "nothing was changed" would claim more than the plane can support. */
-  STORE_INTERNAL_ERROR: {
-    check: 'C-69.3',
-    where: 'src/control-plane/dispatch.mjs internalAnswer > is-store-internal-error',
-    translation: 'This copy failed inside its own record while carrying out the request, so no answer was produced. '
-      + 'That is a fault in this copy, not a statement about what the record holds or about your request; whether '
-      + 'any part of it took effect is not known from here. The administrator can find the details in this copy\'s '
-      + 'logs under the reference given with this answer.',
-  },
+  /* D-629 (R25, C-69.3) — THE WORKER DOOR THREW. It had no outermost catch (the platform's own error page); the stack is
+     now logged server-side under a CORRELATION id, and the caller receives the code, this sentence and the id, nothing
+     else. Numbered after C-69.2, which D-561 gave `STORE_DID_NOT_ANSWER`. The store's own row (`STORE_INTERNAL_ERROR`)
+     comes with the store's door (N333, K412). THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD: a throw part-way through
+     an op may or may not have left a write behind, and the catch cannot say which. */
   PLANE_INTERNAL_ERROR: {
-    check: 'C-69.4',
+    check: 'C-69.3',
     where: 'src/control-plane/index.mjs planeInternalAnswer > is-plane-internal-error',
     translation: 'This copy failed while handling the request, before it could produce an answer. That is a fault '
       + 'in this copy, not a statement about what the record holds or about your request; whether any part of it '
