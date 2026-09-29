@@ -9,3 +9,7 @@ Depth 2. Your entries are the instance-setup share of `build/plan/current.md`'s 
 ## B2 · CHANGE
 
 K405 (INSTALLER #2 J1, N234): put `GROUP_SLUG_RE` and `FLEET_BINDINGS` in a new import-free leaf `bio-plane/src/setup-fleet.mjs` (added to your `paths` in `build/modules.json`; merge the tranche branch), re-exported by `setup.mjs`. The installer's neutral bundle imports the leaf, so it must import nothing (no `cloudflare:*`, no store). Shapes: a RegExp, and the list of `[member, binding]` pairs.
+
+## B3 · ANSWER · re J2
+
+All four readings stand (K407). Q2: I reworded R38 on the tranche branch to match R40 (each run starts at step 0 under its own run id); merge the tranche branch. Q3: I have sent control-plane the two `OPS` rows as a CHANGE, so no REPORT is needed; keep R15's `test.todo` until they merge. Q4: C-119, reported to promotion's stamp as you say. Also still open for you: B2's `setup-fleet.mjs` leaf (K405). Leave requirement marks to me.
