@@ -30294,8 +30294,8 @@ async function linksOp(url, store, { json: json5, storeSilent: storeSilent2, sto
     reason: "NEED_CAPTURE_OR_ADDRESS",
     detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, or host=<host> for how that host's navigation changed between captures"
   }, 400);
-  const unanswered2 = relayUnanswered(r, "links", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (unanswered2) return unanswered2;
+  const unanswered3 = relayUnanswered(r, "links", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered3) return unanswered3;
   return json5({ ok: true, ...r.result });
 }
 var EVIDENCE_ABSENT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "sha256", "store"]);
@@ -30374,8 +30374,8 @@ async function archiveLookupOp(req, url, store, { json: json5, storeSilent: stor
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ address })
   }));
-  const unanswered2 = relayUnanswered(r, "archivelookup", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (unanswered2) return unanswered2;
+  const unanswered3 = relayUnanswered(r, "archivelookup", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered3) return unanswered3;
   return json5(r.result.body, r.result.status);
 }
 async function acquireOp(req, env, store, {
@@ -30399,8 +30399,8 @@ async function acquireOp(req, env, store, {
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body || {})
   }));
-  const unanswered2 = relayUnanswered(r, "acquire", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (unanswered2) return { response: unanswered2 };
+  const unanswered3 = relayUnanswered(r, "acquire", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered3) return { response: unanswered3 };
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json5(answer, status) };
   return { answer };
@@ -31008,7 +31008,7 @@ ${said2}` : b.text,
     }
     for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
   }
-  const unanswered2 = eligible.filter((p) => !filled.includes(p));
+  const unanswered3 = eligible.filter((p) => !filled.includes(p));
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
   const regions = ocr && Array.isArray(ocr.regions) ? ocr.regions.filter((r) => r && r.source && filled.includes(r.source.page)) : [];
   const text3 = {
@@ -31026,7 +31026,7 @@ ${said2}` : b.text,
     appended,
     refused: refusedWhy.map((r) => r.page),
     refusedWhy,
-    unanswered: unanswered2,
+    unanswered: unanswered3,
     wholesale: false
   };
 }
@@ -31244,7 +31244,7 @@ async function tier3Extend(env, {
   seed = null,
   liveCalibration = null
 }) {
-  let chain2, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered2 = [], loop = null;
+  let chain2, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered3 = [], loop = null;
   let seeded = [];
   const wanted = !!(i2text && needsTier3(i2text));
   if (wanted) {
@@ -31317,7 +31317,7 @@ async function tier3Extend(env, {
               if (m.filled.length) wiredTier = 3;
               filled = fresh;
               seeded = keptIn;
-              unanswered2 = m.unanswered || [];
+              unanswered3 = m.unanswered || [];
               ocrNote = withLoopNote(tier3Note(m, built.note, layerPages.filter((p) => !appendedTo.includes(p))), loop);
               if (keptIn.length)
                 ocrNote = `${ocrNote}; ${keptIn.length} of them were transcribed by an earlier reading of this capture and kept, not asked for again`;
@@ -31331,7 +31331,7 @@ async function tier3Extend(env, {
       ocrNote = "this document has no text layer to read and no OCR engine is installed in this instance, so nothing is claimed about what it says";
     }
   }
-  const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered2.length > 0);
+  const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered3.length > 0);
   return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, seeded, engine, stillWanting };
 }
 var sheetRangeOf = (u) => {
@@ -48267,8 +48267,8 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
       now: Date.now()
     })
   })));
-  const unanswered2 = relayUnanswered(out, "knock", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (unanswered2) return unanswered2;
+  const unanswered3 = relayUnanswered(out, "knock", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered3) return unanswered3;
   const rec = out.result || {};
   if (!rec.ok) {
     if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
@@ -112663,17 +112663,41 @@ var Store2 = class extends Store {
 };
 
 // src/extraction/ops.mjs
-async function ask(store, path, init) {
+var CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+async function readAnswer(res) {
+  let r = null, out = null;
   try {
-    const out = await (await store.fetch(path, init)).json();
-    return out && out.ok === true ? { answered: true, result: out.result } : { answered: false };
+    r = await res;
+    out = await r.json();
   } catch {
-    return { answered: false };
+    out = null;
   }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION.test(out.correlation) ? out.correlation : void 0;
+  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
+}
+async function ask(store, path, init, doAnswer2) {
+  const res = (async () => store.fetch(path, init))();
+  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
+}
+var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
+  status,
+  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+});
+function unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (r && r.refused && r.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json5(r.reply.body, r.reply.status);
+  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
+  return null;
 }
 async function pdfStructureOp(url, env, store, {
   json: json5,
   storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
   storageAbsent: storageAbsent2,
   requiredArgument: requiredArgument2,
   cls,
@@ -112703,17 +112727,17 @@ async function pdfStructureOp(url, env, store, {
     store: storeName || "bio"
   });
   if (url.searchParams.has("ocr")) q6.set("ocr", url.searchParams.get("ocr") ?? "");
-  const r = await ask(store, `http://x/pdfstructure?${q6}`);
-  if (!r.answered || !r.result) return storeSilent2(op);
-  return json5(r.result.body, r.result.status);
+  const r = await ask(store, `http://x/pdfstructure?${q6}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json5(r.result.body, r.result.status);
 }
-async function acquireReadingOp(answer, store, { storeSilent: storeSilent2, storeName }) {
+async function acquireReadingOp(answer, store, { json: json5 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
   const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ document: answer.document })
-  });
-  if (!r.answered || !r.result) return { response: storeSilent2("acquire") };
+  }, doAnswer2);
+  const relayed = unanswered2(r, "acquire", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (relayed) return { response: relayed };
   const out = r.result;
   const body = withReading(answer, {
     reading: out.reading,
