@@ -44,3 +44,7 @@ N285 applied: attestationsFor answers no digest (absent, not a string, empty) th
 - format: 69 modules, 64 requirements files; 0 failures. architecture: 14 product files, 43 relative imports; 0 failures. coverage: 47 of 47 live ids named; 0 failures. ownership (tranche/T12): legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_017fc5LrB8dqSfCReXYcSpsV, B2): test runs 1, module lines 2233
+
+## J3 · COMPLETE · re J2
+
+B2 applied: merged tranche/T12 (92533fa714); content's R44 answers through extraction's real noSha. Tests 57/57 against the real helper; format, architecture, coverage 47/47, ownership: 0 failures. DEC-49 guard loads; arm G NO_SHA: 5 sites, none content's (entities x3, extraction/checks.mjs, progressions). Plane bundle still stale. Record: Completion (B2).
