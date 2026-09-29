@@ -268,11 +268,11 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
   const membership = membershipOf(host, { record });
   membership.migrate();
   reviewOf(host, { record, membership, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} });
-  const minted = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).map((r) => r.id);
+  const minted = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).toArray().map((r) => r.id);
   for (const id of ["DRAFT-2026-0417", "DRAFT-2026-7316", "RVG-2026-7316"]) assert.ok(minted.includes(id), id);
   record.purge({});
-  assert.equal(st.sql.exec(`SELECT COUNT(*) AS n FROM case_drafts`)[0].n, 0);
-  const again = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).map((r) => r.id);
+  assert.equal(st.sql.exec(`SELECT COUNT(*) AS n FROM case_drafts`).one().n, 0);
+  const again = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).toArray().map((r) => r.id);
   assert.deepEqual(again, minted, "the ledger outlives the purge, so none of them can be drawn again");
   /* a store whose ledger table does not exist yet: the module still starts */
   const bare = storage();

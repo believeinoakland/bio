@@ -18,7 +18,7 @@ export const CASE_DERIVATION_CHECKS = Object.freeze({
      new one): a further edition of one of them and a new case over the same findings are opposite acts. */
   CASE_IDENTITY_AMBIGUOUS: {
     check: 'C-44.1',
-    where: at('publishCase', 'case-identity-derivation'),
+    where: at('#publishCase', 'case-identity-derivation'),
     translation: 'This publication did not say which case it is. The findings you are publishing '
       + 'already serve more than one published case, and a finding is allowed to serve many — so '
       + 'the record cannot work out from them alone whether you are publishing a further edition '
@@ -30,21 +30,21 @@ export const CASE_DERIVATION_CHECKS = Object.freeze({
      minted, so a refusal spends none; none of them can refuse a publication that names no draft. */
   PUBLISH_DRAFT_NOT_FOUND: {
     check: 'C-44.3',
-    where: at('publishCase', 'is-publish-draft-found'),
+    where: at('#publishCase', 'is-publish-draft-found'),
     translation: 'The draft named for this case is not a draft of this project that you can open. Nothing was '
       + 'published. Name the draft this case was prepared in, or publish without naming one; readings of a '
       + 'draft that was not named are then counted in the case file and not attributed to anyone.',
   },
   PUBLISH_DRAFT_NOT_THIS_CASE: {
     check: 'C-44.4',
-    where: at('publishCase', 'is-publish-draft-this-case'),
+    where: at('#publishCase', 'is-publish-draft-this-case'),
     translation: 'The draft named here was prepared for a different case than the one being published, so its '
       + 'readers did not read this one. Nothing was published. Publish the case that draft is for, or name '
       + 'the draft of this case.',
   },
   PUBLISH_DRAFT_ALREADY_BOUND: {
     check: 'C-44.5',
-    where: at('publishCase', 'is-publish-draft-bound'),
+    where: at('#publishCase', 'is-publish-draft-bound'),
     translation: 'That draft has already been named as the draft of another published case, and the people who '
       + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
       + 'Nothing was published.',

@@ -112,7 +112,9 @@ export function world() {
      — the case document facts, the pins, what rests on a bundle, the claims, the registries and the attribution
      facts — answered from the maps below. Every call is recorded; a test replaces any method by assigning it. */
   const realPub = publicationOf(host, { storage: st, record, membership, promotion, now: () => NOW,
-    inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => bv.reach } });
+    inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => bv.reach },
+    /* reevaluation R26: publication registers its R41 and R43 at creation (K359); nothing here reads them */
+    reevaluation: { registerCaseParts: () => ({ ok: true }) } });
   const calls = [];
   const pub = { facts: new Map(), pins: new Map(), resting: new Map(), claims: new Map(), committed: [] };
   const steered = {

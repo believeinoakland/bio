@@ -47,7 +47,7 @@
  * `captured_locators` (R48); extraction's `readings` (R58); observation-log's `observation_log` (R29). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
@@ -97,6 +97,10 @@ function refusal(family, key, extra = {}) {
   const row = family[key];
   return { ok: false, reason: key, code: key, check: row.check, translation: row.translation, ...extra };
 }
+/* Each family's own helper, the code its literal first argument, so the DEC-49 guard judges the code at each site
+   against the rows that govern it (N259, N275). */
+const derivationRefusal = (key, extra) => refusal(CASE_DERIVATION_CHECKS, key, extra);
+const fenceRefusal = (key, extra) => refusal(MACHINE_FENCE_CHECKS, key, extra);
 
 export class CaseAuthoring {
   #deps;
@@ -161,10 +165,10 @@ export class CaseAuthoring {
     const who = str(author);
     /* DEC-49 REGION is-machine-publish — R1 / C-32.6. The fence alone, before anything else is read. */
     if (!who || isMachineIdentity(who))
-      return { ...refusal(MACHINE_FENCE_CHECKS, "MACHINE_CANNOT_PUBLISH"),
-               detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
-                     + "may never author the completeness assertion or the position on putting it to its "
-                     + "subject, both of which are declared bias. Sign in as a member." };
+      return fenceRefusal("MACHINE_CANNOT_PUBLISH", {
+        detail: "publishing puts the group's name on a case. A machine credential may prepare one and "
+              + "may never author the completeness assertion or the position on putting it to its "
+              + "subject, both of which are declared bias. Sign in as a member." });
     /* END DEC-49 REGION is-machine-publish */
 
     /* R2 — CASE-2 / DEC-72: PUBLICATION IS A PRODUCTION OF A PROJECT, wielded by an OWNER of it. These authority fences
@@ -181,12 +185,9 @@ export class CaseAuthoring {
     /* record-core R37's read contract, through membership's one sight rule (its R43). */
     const pb = this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
                          proj, ...gate.args);
-    /* REC-149: at EXISTENCE the positional C-70.1 (membership R77); NONE falls to the unchanged answer below. */
+    /* REC-149: at EXISTENCE the positional C-70.1 (membership R77); NONE is membership's one answer (its R78). */
     if (!pb) { const existence = this.membership.existenceAct(proj, viewer); if (existence) return existence; }
-    if (!pb)
-      return { ok: false, reason: "NO_SUCH_PROJECT", project: proj,
-               detail: `no project answers to ${proj}. A project you cannot see is answered exactly as one that `
-                     + `does not exist, which is this record's standing posture and not a hint.` };
+    if (!pb) return noSuchProject(proj);
     if (normalizeType(pb.object_type) !== "project")
       return { ok: false, reason: "NOT_A_PROJECT", project: proj, object_type: pb.object_type,
                detail: `${proj} is a ${pb.object_type}, and only a PROJECT has a standard of evidence to hold a `
@@ -470,14 +471,14 @@ export class CaseAuthoring {
        mints, with one the derivation reads a fact, `caseId` answers the question one way and `newCase` the other.
        With two there is no default that is anybody's meaning, and that is what this refuses. */
     if (newCase && str(caseId))
-      return refusal(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS", {
+      return derivationRefusal("CASE_IDENTITY_AMBIGUOUS", {
         cases: [str(caseId)],
         members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
         detail: `this act both NAMES case ${str(caseId)} and asks for a new case to be minted. `
               + `Those are opposite instructions and the record will not choose between them: name the `
               + `case to publish a further edition of it, or ask for a new one, not both.` });
     if (!newCase && !str(caseId) && distinct.length > 1)
-      return refusal(CASE_DERIVATION_CHECKS, "CASE_IDENTITY_AMBIGUOUS", {
+      return derivationRefusal("CASE_IDENTITY_AMBIGUOUS", {
         cases: distinct.slice().sort(),
         members: [...belongs].map(([id, cs]) => ({ target: id, cases: cs })),
         detail: `these findings already serve ${distinct.length} published cases `
@@ -531,7 +532,7 @@ export class CaseAuthoring {
       const predicted = theCase ? this.#highestEdition(theCase) + 1 : 1;
       /* DEC-49 REGION is-publish-draft-found */
       if (!d || d.project_id !== proj)
-        return refusal(CASE_DERIVATION_CHECKS, "PUBLISH_DRAFT_NOT_FOUND", { draft: draftNamed, project: proj,
+        return derivationRefusal("PUBLISH_DRAFT_NOT_FOUND", { draft: draftNamed, project: proj,
           detail: `no draft of ${proj} that you can read answers to ${draftNamed}. A draft you cannot read is `
                 + `answered exactly as one that does not exist. Name the draft this case was prepared in, or `
                 + `publish without draft= and its readings are stated as undetermined.` });
@@ -539,7 +540,7 @@ export class CaseAuthoring {
       const di = review.draftIdentity(d);
       /* DEC-49 REGION is-publish-draft-this-case */
       if (di.caseId ? (di.caseId !== theCase || di.edition !== predicted) : predicted !== 1)
-        return refusal(CASE_DERIVATION_CHECKS, "PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
+        return derivationRefusal("PUBLISH_DRAFT_NOT_THIS_CASE", { draft: draftNamed,
           draft_case: di.caseId ?? null, draft_edition: di.edition,
           case_id: theCase ?? null, edition: predicted,
           detail: `draft ${draftNamed} is prepared for ${review.caseIdentitySentence(di.caseId, di.edition)}, and `
@@ -552,7 +553,7 @@ export class CaseAuthoring {
                                    AND NOT (case_id IS ? AND edition=?) LIMIT 1`, d.draft_id, theCase ?? null, predicted);
       /* DEC-49 REGION is-publish-draft-bound */
       if (already)
-        return refusal(CASE_DERIVATION_CHECKS, "PUBLISH_DRAFT_ALREADY_BOUND", { draft: draftNamed,
+        return derivationRefusal("PUBLISH_DRAFT_ALREADY_BOUND", { draft: draftNamed,
           bound_to: { case_id: already.case_id, edition: Number(already.edition) },
           detail: `draft ${draftNamed} was already named as the draft of edition ${already.edition} of `
                 + `${already.case_id}, and its readings bound to that case at that act. One draft produces one `

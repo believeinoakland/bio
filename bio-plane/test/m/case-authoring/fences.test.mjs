@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, AUTHORED } from "./fixture.mjs";
 import { MACHINE_FENCE_CHECKS, PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
 import { COMPLETENESS_MAX, MEMBER_ROLES } from "../../../src/case-authoring/index.mjs";
+import { noSuchProject } from "../../../src/membership/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -44,6 +45,10 @@ test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at e
   assert.equal(unseen.reason, "NO_SUCH_PROJECT");
   assert.deepEqual({ ...unseen, project: null, detail: unseen.detail.replace(P, "X") },
                    { ...absent, project: null, detail: absent.detail.replace("PROJ-2026-9999-none", "X") });
+  /* membership's one answer to the condition (its R78), byte for byte, with its code and catalogue row */
+  assert.deepEqual(unseen, noSuchProject(P));
+  assert.deepEqual(absent, noSuchProject("PROJ-2026-9999-none"));
+  assert.deepEqual([unseen.code, typeof unseen.check, typeof unseen.translation], ["NO_SUCH_PROJECT", "string", "string"]);
   /* a discoverable project, asked by a member outside it: the existence refusal, membership's own (C-70.1) */
   assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to all",
                                                    by: "alice", viewer: V("alice") }).ok, true);

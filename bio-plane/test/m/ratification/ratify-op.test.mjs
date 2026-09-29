@@ -1,11 +1,12 @@
 /* ratification R4: `op=ratify` at the control plane (`ratifyOp`, the Worker half), in its order of refusals; R5's
    refusals relayed; R6: after the commit every part is copied to the published store by hash, the case container is
    assembled when the last member lands, and the reuse report is carried; R16: a `name` edge turns `serve` when its
-   target is published (publication R35). */
+   target is published (publication R35), and a reference held privately for a published finding does (R5; N256). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signBundle, cleanInfoMd, V, SILENT } from "./fixture.mjs";
 import { ratifyOp } from "../../../src/ratification/ops.mjs";
+import { publishedGraphEdges } from "../../../src/publication/index.mjs";
 import { RATIFY_MACHINE_FENCE_CHECKS as FENCE, RATIFY_TESTIMONY_CHECKS as TESTIMONY,
          RATIFY_ATTRIBUTION_CHECKS as ATTRIBUTION, RATIFY_SCOPE_CHECKS as SCOPE } from "../../../src/ratification/index.mjs";
 
@@ -183,7 +184,47 @@ test("R16: publishing a target turns a `name` edge to it from a published findin
     "a division's disclosure is name-only by kind and never turns; nothing else in either edition changed");
 });
 
-test.todo("R16, R5: a finding's reference to evidence not yet published is recorded as a `name` edge (so R16 can turn it) — publication's `publishEdges` drops it instead (reported to BOB, J5)");
+/* N256 (K283): a finding's reference to evidence not yet published. The edges are what the Worker hands the commit, the
+   one classification `publishedGraphEdges` makes of the signed bytes; the finding's bytes cite DOC and a divided parent. */
+function heldWorld() {
+  const w = world();
+  w.member("alice");
+  const P = w.project("Team", "alice");
+  w.inquiry(Q, { extra: ["division_parent: INQ-2026-0000-parent"] }); w.info(DOC);
+  w.pub.pins.set(`${Q}@${w.sha(Q)}`, [{ case_id: "CASE-2026-0001", edition: 1 }]);
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0001', ?, 't')`, P);
+  w.pub.resting.set(DOC, [{ case_id: "CASE-2026-0001", finding: Q, project: P }]);
+  const args = (id, edges) => ({ bundleId: id, bundleSha: w.sha(id), attestorKey: "K", attestorMember: "alice", gateVersion: "g",
+    sigArmored: "s", shas: [{ sha256: w.sha(id), path: "bundle.md", kind: "bundle", bytes: 1 }], edges, deliveredBy: V("alice") });
+  const edges = publishedGraphEdges({ references: [{ target: DOC, rel: "cites" }], division_parent: "INQ-2026-0000-parent" });
+  return { w, args, edges };
+}
+
+test("R5: a finding's reference to a target not yet published never enters the published graph: its id is not published", () => {
+  const { w, args, edges } = heldWorld();
+  assert.deepEqual(edges.map((e) => [e.to, e.disclosure]), [[DOC, "serve"], ["INQ-2026-0000-parent", "name"]]);
+  const r = w.r.publish(args(Q, edges));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  assert.deepEqual(w.st.sql.exec(`SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=?`, Q),
+    [{ to_bundle: "INQ-2026-0000-parent", kind: "division_parent", disclosure: "name" }]);
+  assert.doesNotMatch(JSON.stringify([w.publication.publishedManifest(), w.publication.publishedList(),
+                                      w.publication.publishedEditions(Q)]), new RegExp(DOC));
+});
+
+test("R16, R5: the reference held for a published finding becomes a `serve` edge when its target is published; nothing else in either edition changes", () => {
+  const { w, args, edges } = heldWorld();
+  assert.equal(w.r.publish(args(Q, edges)).ok, true);
+  const q1 = w.row(`SELECT * FROM published_bundles WHERE bundle_id=?`, Q);
+  const r = w.r.publish(args(DOC, []));
+  assert.deepEqual([r.ok, r.heldLinked], [true, 1]);
+  assert.deepEqual(w.st.sql.exec(`SELECT to_bundle, kind, disclosure FROM published_edges WHERE from_bundle=? ORDER BY kind`, Q),
+    [{ to_bundle: DOC, kind: "cites", disclosure: "serve" },
+     { to_bundle: "INQ-2026-0000-parent", kind: "division_parent", disclosure: "name" }]);
+  assert.deepEqual(w.row(`SELECT * FROM published_bundles WHERE bundle_id=?`, Q), q1, "the finding's edition is unchanged");
+  assert.deepEqual(w.st.sql.exec(`SELECT to_bundle FROM published_edges WHERE from_bundle=?`, DOC), [], "the target's edition gains nothing");
+  assert.equal(w.r.publish(args(DOC, [])).existed, true, "a retry turns nothing twice");
+  assert.equal(w.count("published_edges"), 2);
+});
 
 test("R15: no place is named in either ceremony's answers", async () => {
   const { w, P, run, sig } = await setup();
