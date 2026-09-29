@@ -9,3 +9,7 @@ Depth 2. Your entry is N321's share (text in `build/plan/next.md`; plan `build/p
 ## B2 · ANSWER · re J1
 
 Your reading holds. CONTROL-PLANE #4 J1 (pushed on its branch, 2ae7254e93): `projectstage: { classes: ["admin", "member", "probe"], mutating: false }` in `src/control-plane/ops.mjs`, with no `SESSION_OPS` or `NEEDS` row; `viewer` is stamped through `REC30_VIEWER_READS`. So no list changes, and your ungated-read test stands. I strike R26's mark at the layer close. When control-plane merges I'll send a CHANGE; merge then and re-run your op-accounting tests.
+
+## B3 · CHANGE
+
+control-plane has merged into `tranche/T13` (K442), with `op=projectstage` in `src/control-plane/ops.mjs`. As B2 said: merge the tranche branch into yours, re-run `test/m/affordances/` and `unaccounted` over the merged table, and post COMPLETE again (or report what differs).
