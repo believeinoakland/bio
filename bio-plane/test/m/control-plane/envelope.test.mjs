@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUERY_STAMPS } from "./harness.mjs";
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
 import * as CP_CHECKS from "../../../src/control-plane/checks.mjs";
+const D = await import("../../../src/control-plane/dispatch.mjs");
 
 const { OPS, UNATTENDED_BY_DECISION } = O;
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
@@ -86,6 +87,30 @@ test("R22: through the door — a forwarded store refusal under result, and the 
   const hooks = { publicOp: async () => M.json({ ok: false, reason: "SCOPE_REFUSED" }, 403), gatedOp: async () => undefined };
   const h = await call(w.env, { op: "knock", hooks, method: "POST", body: {} });
   assert.deepEqual([h.status, h.json.check], [403, "C-38.6"]);
+});
+
+test("R22: every row a module holds in the files the door reads resolves to a row of that code — record-core's MINT_EXHAUSTED (C-59.6) among them, decorating a forwarded refusal", async () => {
+  const { RECORD_CORE_CHECKS } = await import("../../../src/record-core/checks.mjs");
+  assert.ok(M.MODULE_CHECK_FILES.some((f) => f.RECORD_CORE_CHECKS === RECORD_CORE_CHECKS), "record-core's checks.mjs is read");
+  let rows = 0;
+  for (const source of M.MODULE_CHECK_FILES)
+    for (const [fam, table] of Object.entries(source)) {
+      if (!/_CHECKS$/.test(fam) || !table || typeof table !== "object") continue;
+      for (const [code, row] of Object.entries(table)) {
+        if (!row || typeof row.translation !== "string" || !row.translation) continue;
+        rows++;
+        const got = M.dec49Row(code);
+        assert.ok(got && typeof got.translation === "string" && got.translation, `${fam}.${code}`);
+      }
+    }
+  assert.ok(rows > 100, String(rows));
+  assert.deepEqual(M.dec49Row("MINT_EXHAUSTED"), { check: "C-59.6", translation: RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation });
+  const w = world({ answer: (c) => (c.route === "promote" ? reply({ ok: true, result: { ok: false, reason: "MINT_EXHAUSTED" } })() : null) });
+  const r = await call(w.env, { op: "promote", token: w.env.ADMIN_TOKEN, method: "POST", body: {} });
+  assert.deepEqual([r.json.result.code, r.json.result.check, r.json.result.translation],
+                   ["MINT_EXHAUSTED", "C-59.6", RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation]);
+  /* negative control: a code no file holds is not decorated */
+  assert.equal(M.dec49Row("NO_SUCH_CODE_ANYWHERE"), null);
 });
 
 test("R23: an answer that is not JSON carrying a boolean ok is 502 STORE_DID_NOT_ANSWER (C-69.2) naming the op, never an absence, refusal or success; a JSON ok:false is the store's own refusal, relayed with its status, code and sentence (R26's BAD_JSON among them)", async () => {
@@ -263,9 +288,52 @@ test("R25: an error thrown in the Worker door is answered PLANE_INTERNAL_ERROR (
   assert.notEqual(two[0], two[1]);
 });
 
-test.todo("R25 the store door's half: an error thrown in the record store's door is answered STORE_INTERNAL_ERROR with a "
-  + "correlation id (not yet met: N333, K412 — the store's door stays legacy-store's in T12 and its catch still answers "
-  + "String(e.stack); commit d2bbae2f75 holds the move, re-applied when promotion's write-path suite is re-pointed)");
+test("R25: an error thrown in the record store's door is answered STORE_INTERNAL_ERROR (C-69.4) with a correlation id, never the stack, message, path or line, the stack logged under the id; the Worker's silence carries that id and nothing else of the store's answer", async () => {
+  const SECRET = "SQLITE_CONSTRAINT secret-value /srv/plane/src/store.mjs:4242";
+  const thrower = () => { throw new Error(SECRET); };
+  /* the store: dispatch's catch, for a route that throws and for the route map itself throwing */
+  for (const routes of [() => ({ boom: thrower }), thrower]) {
+    const { value: res, logged } = await quietly(() => D.dispatch(new Request("http://do/boom", { method: "POST", body: "{}" }),
+      { routes, membership: () => { throw new Error("not asked"); } }));
+    assert.equal(res.status, 500);
+    const text = await res.text();
+    const j = JSON.parse(text);
+    assert.deepEqual([j.ok, j.reason, j.code, j.check], [false, "STORE_INTERNAL_ERROR", "STORE_INTERNAL_ERROR", "C-69.4"]);
+    assert.equal(j.translation, CP_CHECKS.DISPATCH_CHECKS.STORE_INTERNAL_ERROR.translation);
+    assert.match(j.correlation, UUID);
+    assert.deepEqual(Object.keys(j).sort(), ["check", "code", "correlation", "error", "ok", "reason", "translation"]);
+    assert.equal(text.includes("secret-value") || text.includes("store.mjs") || text.includes(" at "), false);
+    assert.equal(logged.length, 1);
+    const line = JSON.parse(logged[0]);
+    assert.deepEqual([line.event, line.correlation, line.op], ["STORE_INTERNAL_ERROR", j.correlation, "boom"]);
+    assert.match(line.stack, /secret-value/);
+  }
+  /* the Durable Object class answers through the same catch */
+  const obj = Object.create(D.Store.prototype);
+  obj.ctx = {};
+  obj.routes = () => ({ boom: thrower });
+  const { value: dres } = await quietly(() => obj.fetch(new Request("http://do/boom")));
+  assert.deepEqual([dres.status, (await dres.json()).check], [500, "C-69.4"]);
+  /* the Worker relays the store's failure as R23's silence, carrying the store's correlation id and nothing else of it:
+     through the forward and through a relay */
+  const corr = crypto.randomUUID();
+  const failed = { ok: false, error: SECRET, reason: "STORE_INTERNAL_ERROR", correlation: corr };
+  const w = world({ answer: (c) => (c.route === "index" ? reply(failed, 500)() : null) });
+  const r = await call(w.env, { op: "index", token: w.env.ADMIN_TOKEN });
+  refused(r, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+  assert.equal(r.json.correlation, corr);
+  assert.equal(r.text.includes("secret-value"), false);
+  const x = await M.relayAnswer(reply(failed, 500)(), "enroll");
+  assert.deepEqual([x.status, (await x.json()).correlation], [502, corr]);
+  /* negative controls: a correlation not from the store's own code, or not an id, is not carried */
+  for (const bad of [{ ok: false, correlation: corr }, { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: "x<script>" },
+                     { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: corr + "0" }]) {
+    const v = world({ answer: (c) => (c.route === "index" ? reply(bad, 500)() : null) });
+    const vr = await call(v.env, { op: "index", token: v.env.ADMIN_TOKEN });
+    refused(vr, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+    assert.equal(vr.json.correlation, undefined);
+  }
+});
 
 test("R30: no credential, session token, secret or stack appears in any answer — the one minting answer of R19 excepted — a store's stack included", async () => {
   const w = world();
@@ -291,7 +359,7 @@ test("R30: no credential, session token, secret or stack appears in any answer �
   assert.equal(later.text.includes(minted), false);
 });
 
-test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.3, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
+test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.4, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
   const { env, S, A } = w;
   const got = {};
@@ -332,10 +400,13 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   const { value: pie } = await quietly(() => call(env, { op: "index", token: env.ADMIN_TOKEN,
     hooks: { publicOp: async () => M.json({}), gatedOp: () => { throw new Error("x"); } } }));
   note(pie);                                                                    /* C-69.3 */
+  const { value: sie } = await quietly(() => D.dispatch(new Request("http://do/x"), { routes: () => ({ x: () => { throw new Error("x"); } }) }));
+  const sj = await sie.json();
+  got[sj.code] = sj.check; sentences[sj.code] = sj.translation;                 /* C-69.4 */
   assert.deepEqual(got, {
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
     NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7", SESSION_ROUTE_NOT_RECORDED: "C-38.8",
-    UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", PLANE_INTERNAL_ERROR: "C-69.3",
+    UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", PLANE_INTERNAL_ERROR: "C-69.3", STORE_INTERNAL_ERROR: "C-69.4",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
@@ -350,7 +421,7 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   assert.deepEqual(Object.fromEntries(Object.entries(own).map(([c, r]) => [c, r.check])), got);
   for (const [code, row] of Object.entries(own)) {
     assert.equal(sentences[code], row.translation, code);
-    assert.match(row.where, /^src\/control-plane\/index\.mjs \S+ > is-[a-z-]+$/, code);
+    assert.match(row.where, /^src\/control-plane\/(index|dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
   }
 });
 

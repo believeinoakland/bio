@@ -207,3 +207,30 @@ test("R6: probe lands in scratch (a named other namespace is refused 403 SCOPE_R
   assert.deepEqual(M.scopeFor("member", u("store=scratch")), { name: "scratch" });
   assert.deepEqual(M.scopeFor("admin", u("")), { name: "bio" });
 });
+
+test("R2, R17 (N321): op=projectstage is declared and forwarded to the store's route of that name (publication R44), with `viewer` stamped from the caller and the caller's own viewer discarded; without a credential it is refused", async () => {
+  assert.deepEqual(OPS.projectstage, { classes: ["admin", "member", "probe"], mutating: false });
+  const { env, S, A } = world();
+  const cases = [
+    [S.ann, {}, "member:ann", "bio"], [S.founder, {}, "admin", "bio"], [env.ADMIN_TOKEN, {}, "class:admin", "bio"],
+    [env.MEMBER_TOKEN, { store: "scratch" }, "class:member", "scratch"], [env.PROBE_TOKEN, { store: "scratch" }, "class:probe", "scratch"],
+    [A.ann, {}, "member:ann", "bio"],
+  ];
+  for (const [token, extra, viewer, ns] of cases) {
+    env.calls.length = 0;
+    const r = await call(env, { op: "projectstage", token, params: { project: "prj-1", viewer: "member:forged", ...extra } });
+    assert.equal(r.status, 200, r.text);
+    assert.equal(r.json.store, ns);
+    const inner = opCalls(env);
+    assert.equal(inner.length, 1);
+    assert.equal(inner[0].route, "projectstage");
+    assert.equal(inner[0].ns, ns);
+    assert.equal(inner[0].params.project, "prj-1");
+    assert.equal(inner[0].params.viewer, viewer, `the stamped viewer for ${viewer}`);
+  }
+  /* negative control: the daemon class is not among the op's classes, and no credential is no class */
+  refused(await call(env, { op: "projectstage", token: env.DAEMON_TOKEN, params: { project: "prj-1" } }), 403, "CLASS_FORBIDDEN", "C-38.2");
+  env.calls.length = 0;
+  refused(await call(env, { op: "projectstage", params: { project: "prj-1" } }), 401, "NOT_AUTHENTICATED", "C-38.1");
+  assert.equal(opCalls(env).length, 0);
+});

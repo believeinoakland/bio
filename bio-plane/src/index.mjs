@@ -96,7 +96,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
   return fetchGoverned(target, { userAgent: userAgent(env, purpose, delegated), fetch: (...a) => fetch(...a),
                                  governor: stub ? governorOverStub(stub) : null });
 }
-import { Store } from "./store.mjs";
+import { Store } from "./control-plane/dispatch.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";

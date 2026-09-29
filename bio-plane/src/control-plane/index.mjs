@@ -49,6 +49,7 @@ import * as M_PROVENANCE from "../provenance/checks.mjs";
 import * as M_PUBLICATION from "../publication/checks.mjs";
 import * as M_QUEUE from "../queue/checks.mjs";
 import * as M_RATIFICATION from "../ratification/checks.mjs";
+import * as M_RECORD_CORE from "../record-core/checks.mjs";
 import * as M_REEVALUATION from "../reevaluation/checks.mjs";
 import * as M_RETRIEVAL from "../retrieval/checks.mjs";
 import * as M_REVIEW from "../review/checks.mjs";
@@ -636,7 +637,7 @@ function resolveSession(sess) {
    silence, stated as one. */
 async function reviewAnswer(out, op) {
   if (out.refused) return storeRefusal(out);   /* R23: the store's own refusal, at its status */
-  if (!out.answered) return storeSilent(op);
+  if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
   if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
   if (op === "reviewcopy") {
@@ -776,7 +777,7 @@ const MODULE_CHECK_FILES = [
   M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CASE_AUTHORING,
   M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
   M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
-  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
+  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_RECORD_CORE, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
   M_SKILLDOCTRINE, M_STANDARDS, M_STRENGTH];
 let DEC49_ROWS = null;
 function dec49Row(code) {
@@ -906,7 +907,11 @@ async function doAnswer(res) {
   const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
   if (out.ok === true) return { answered: true, result: out.result, reply };
   if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
-  return { answered: false, result: undefined };
+  /* R25 (N333): the store's own internal error carries a correlation id, which the silence carries on (and nothing else
+     of the store's envelope), so an operator can find the logged stack. */
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(out.correlation) ? out.correlation : undefined;
+  return correlation ? { answered: false, result: undefined, correlation } : { answered: false, result: undefined };
 }
 
 /* R23 (K421): the store's own refusal, relayed with its status, code and sentence; `extra` is what the relay adds (R21). */
@@ -923,10 +928,11 @@ function storeRefusal(out, extra = {}) {
    the same code for the three post-commit sub-reports in `ratify` and `recordcasemanifest` — the SAME condition
    (the store did not answer), stated inside an answer rather than refused; the DEC-49 guard's arm G declares the two
    spellings one condition by name. The wire only GAINS `code`, `check` and `translation`. */
-function storeSilent(op) {
+/* R25 (N333): `correlation`, when `doAnswer` read one from the store's own internal error, is carried. */
+function storeSilent(op, correlation = undefined) {
   /* DEC-49 REGION is-store-silent */
   return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", ...dispatchRow("STORE_DID_NOT_ANSWER"),
-                op, detail: STORE_SILENT_DETAIL }, 502);
+                op, detail: STORE_SILENT_DETAIL, correlation }, 502);
   /* END DEC-49 REGION is-store-silent */
 }
 
@@ -939,7 +945,7 @@ async function relayAnswer(res, op) {
   /* REC-52: the store's envelope is opened by `doAnswer` and nowhere else. */
   const out = await doAnswer(res);
   if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op);
+  if (!out.answered) return storeSilent(op, out.correlation);
   return json({ ok: true, result: out.result }, out.reply.status);
 }
 
@@ -1826,7 +1832,11 @@ export function makeFetch(hooks = {}) {
                                 "projectparticipants",
                                 /* REC-150: the requests read decides by the caller's SIGHT of the project it
                                    names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
-                                "projectrequests"];
+                                "projectrequests",
+                                /* N321 (publication R44): the stage read names a project by its own id and answers by
+                                   the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
+                                   takes the stamp and fails closed without it. */
+                                "projectstage"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
@@ -3489,7 +3499,7 @@ export function makeFetch(hooks = {}) {
        silence, never relayed (a store's stack included). */
     const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
-    if (!out.answered) return storeSilent(op);
+    if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")

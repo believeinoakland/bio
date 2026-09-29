@@ -69,6 +69,9 @@ const OPS = {
   projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true  },
   projectvisibility:    { classes: ["admin", "member", "probe"], mutating: false },
   projectdirectory:     { classes: ["admin", "member", "probe"], mutating: false },
+  /* N321 (publication R44): the project's stage and readiness, derived at the read; viewer-stamped, the roster read's
+     classes. */
+  projectstage:         { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-150 (§7.14): asking and withdrawing are a member session's acts (C-95.1), answering an owner's (C-95.5); the
      read to owners, administrators and the asker. */
   projectrequest:         { classes: ["admin", "member", "probe"], mutating: true  },
