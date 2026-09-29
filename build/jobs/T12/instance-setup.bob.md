@@ -17,3 +17,7 @@ All four readings stand (K407). Q2: I reworded R38 on the tranche branch to matc
 ## B4 · ANSWER · re J3
 
 Q5: accepted at the close as the map's own row (K409); keep the line as you wrote it and name it in your record. Moving it to filings is next.md N331. Thanks for the leaf; I will send the installer its CHANGE when you complete and I merge you.
+
+## B5 · CHANGE
+
+Control-plane is merged into `tranche/T12` (K413): `index.mjs` lost about 6,000 lines to `src/control-plane/` and its remaining arms sit in `publicOp`/`gatedOp`. Merge `tranche/T12` into your branch before completing and re-run your checks; your `memberVersions` removal and `Store` wrapping in `index.mjs` may conflict. Also pending for you: B4 (K409, your Q5).
