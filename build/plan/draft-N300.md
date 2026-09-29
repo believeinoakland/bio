@@ -1,6 +1,6 @@
 # N300 draft (worker for BOB #61, 2026-09-29; P18). Not folded: publication runs in T11 layer 8, so this is worded into publication.md only after that layer closes. Two points await Bob (open points 1–2).
 
-**K362:** open point 1 ruled by Bob as recommended (`closed` is the owner's act). Open point 2 (readiness rungs) is with Bob.
+**K362:** open point 1 ruled by Bob as recommended (`closed` is the owner's act). Open point 2 ruled by Bob as A (K364): each rung by its own evidence; a published case is never `draft`.
 
 # N300 — project stage: placement and requirement draft (for BOB)
 
