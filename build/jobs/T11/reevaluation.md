@@ -51,3 +51,26 @@ Points 2–5 of J1 stand: pinned capture by `record.textAtSha` + `content_hash` 
 - SQL: no LIKE/GLOB added; every read goes through the cursor-iterating `#rows`/`#one`.
 
 Size (session_01HnoN5aneqU2Z7HVyorPUBY): test runs 12, module lines 1634
+
+## J4 · COMPLETE
+
+**Completion of B3 (T11 layer 8, K365).** Branch `job/T11/reevaluation`, `tranche/T11` merged through B3.
+
+**Applied**
+- **K365** (R26): a case part is publication R41's `{bundle_id, capture_sha}`. `#caseHalf` takes the part's `capture_sha` (a whole sha-256, trimmed and lower-cased) as its pinned capture and grades it directly; `#pinnedCapture` (the `record.textAtSha` + `content_hash` + `content.captureFor` path) is removed. A part naming no whole capture (missing, not a sha-256, or the old `bundle_sha` shape) is passed over: nothing graded, nobody told. Grading, the notice key (case, part, pinned capture, newer capture), owners, listing, `keepVersion`/`adoptVersion` are unchanged.
+- Since nothing records a bundle sha, the `part_sha` column is dropped from `reevaluation_case_notices` (new this tranche, never deployed), from the notice view (`case: {case, edition, project, part}`) and from `raised` entries.
+- Tests: `caseparts.test.mjs`' fake answers the new shape; the pinned-capture test now checks that the edition's `capture_sha` is graded, not the part's live `content_hash`, and that five malformed parts tell nobody.
+
+**For BOB**
+- **Strike R26's `(not yet met: K365; …)` mark**: my work meets it. I struck it, but the ownership check refuses `build/requirements/reevaluation.md` as outside my paths, so I reverted that edit.
+- Uses: this module no longer calls `record.textAtSha` (record-core R60) or `content.captureFor` (content R11) for R26; if the requirements name them for R26, they can go.
+- `bio-plane/dist/bio-plane.bundled.mjs` is stale by this change (it still holds `part_sha`); not rebuilt (yours).
+
+**Deferred:** none.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/reevaluation/`: tests 49, pass 49, fail 0, todo 0.
+- `node --test bio-plane/test/m/inquiry/`: tests 60, pass 60, fail 0, todo 0.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture reevaluation`: 11 product files, 45 relative imports; 0 failures. `coverage reevaluation`: 26 of 26 live ids; 0 failures. `ownership reevaluation tranche/T11`: 4 files; legacy-store 0/0, legacy-checks 0/0; 0 failures.
+
+Size (session_017vCzJ7Qy2uRJxaScJFZefA): test runs 3, module lines 1622
