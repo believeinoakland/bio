@@ -69,6 +69,12 @@
 - N175 · belongs to the process repository (`checks/ownership.mjs`), not a module job.
 - N225 · BOB's own docs edit (`SCHEDULER.md`), not a module job.
 
+### Re-opened by verification (K411)
+
+A worker checked the list below against the archives, rulings and code: 238 met. These were listed wrongly or only in part, and are open: **N13** (affordances' share: `store.mjs` still imports `affordances.mjs`; queue's share T12 carries); **N155** (deferred by K229, never planned: `SUGGEST_LEVELS`, `SUGGEST_CHECKS` still in the catalogue); **N21** (docprofile's no-view fallback, `doctypes/index.mjs` 156–182); **N212**, **N214** (the emptied exports: with N251's legacy-checks share); **N128** (the listener rows: with N202); **N68**, **N70** (legacy-ui's check-semantics share: with N241); **N242** (reevaluation's and escalation's unclassified outcomes); **N248** (its N57 controls: in N279); **N112**, **N171** (legacy-store's `#counts`: N328); **N277** (N238). BOB places each at T13's cut.
+
 ### Met, still filed
+
+Moved out of `next.md` into `archive/next-applied.md` with their evidence (K411), except those T12 carries (moved when it closes) and nine resting on T8's plan alone (kept).
 
 These are applied by T3–T11 (archives' outcomes and "Already applied" lists) or carried in full by T12 (`current.md`), and are not planned again: N4–N6, N10 (except the installer share), N13, N16, N21, N27, N28, N35, N36, N38, N39, N41, N42, N44–N47, N49, N50, N52–N55, N59–N70, N72, N77–N82, N84, N87, N89–N119, N122–N135, N138–N143, N145–N156, N158–N174, N176–N196, N199–N201, N203–N210, N212–N220, N222–N224, N226–N231, N233–N237, N239, N240, N242–N244, N246–N248, N252–N271, N273–N278, N280–N302 (N301's legacy-ui label excepted), N303 (strength's share; its remainder is under Not ready), N304–N316.
