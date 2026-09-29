@@ -1371,3 +1371,17 @@ response: **As recommended, Bob, 2026-09-29.** "Undetermined" is one component w
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §U.
 owed: the five treatments and sentence patterns in the redesign; the UX page's open question 6 marked ruled.
+
+### DEC-84 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 7)
+for: bob
+question: How does the rung ladder look and feel, so a member senses an act's weight before acting, especially the attested and irreversible rungs?
+why it is Bob's: UX, within Interaction Constructs revision 0.2 and K356.
+provisional: the old interface showed one dialog with a five-rung ladder and the act's rung lit.
+alternative: the same dialog for every act, the rung highlighted (read, not felt: the flattening revision 0.2 warns against).
+recommendation: escalating friction by rung, the rung's name on the button, an undetermined rung treated as reasoned until assigned.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29, with the principle stated in his words.** Friction is kept as low as possible so the tool fades and the work stays in focus, while members still appreciate the weight of their work and the finality of some steps: information-rich cues convey state, relationships, context, progression and available actions; elements are self-evident to newcomers (quietly showing how to understand more) and intuitive to experienced members; and visual tools slow a member down, even for a moment, before a heavier act. The rule: reversible acts inline; reasoned acts a reason field in place; terminal and attested acts a full dialog stating what ends or cannot be silently undone, and who signs; irreversible acts only through the ceremony (DEC-80). Every act's button carries its rung's name and weight mark (DEC-82's pips). An act with an undetermined rung is treated as reasoned until BOB assigns it.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
+owed: the act surfaces in the redesign; BOB's assignment of the acts still graded undetermined (affordances R27); the UX page's open question 7 marked ruled.

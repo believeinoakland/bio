@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-83): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** as of 2026-09-29.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-83): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-84): friction escalates with an act's rung.** as of 2026-09-29.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -30,6 +30,7 @@
 - [S · SELECTION-SCOPED ACTION — how any act goes bulk, safely](#s-selection-scoped-action-how-any-act-goes-bulk-safely)
 - [P · THE ASSISTANT — one way in, on every surface](#p-the-assistant-one-way-in-on-every-surface)
 - [U · UNDETERMINED — a display primitive, not an act](#u-undetermined-a-display-primitive-not-an-act)
+- [F · FRICTION MATCHES WEIGHT — how an act's rung is felt (Bob, 2026-09-29, DEC-84)](#f-friction-matches-weight-how-an-acts-rung-is-felt-bob-2026-09-29-dec-84)
 - [M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)](#m-the-measures-map-how-every-scale-reads-approved-by-bob-2026-09-29-dec-82)
 - [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
 
@@ -587,6 +588,26 @@ what or how many, DEC-36); **"Unrated"** (nothing graded yet: rests on nothing, 
 searched there; distinct from looked-and-absent, observation-log R1); **"Refused"** (the system declined an act, naming its
 reason and translation). None of the five is ever dressed as an error, and all five are written as named terms (§M). The
 exact marks and sentence patterns are the redesign's, within this rule.
+
+## F · FRICTION MATCHES WEIGHT — how an act's rung is felt (Bob, 2026-09-29, DEC-84)
+
+**The principle, in Bob's words.** The work must be *"efficient, productive, sustainable"*, and the tool should *"fade into the
+distance so that users' focus is where it belongs — on the work"*; yet members should also *"appreciate the weight of the work
+they're doing"* and *"the implications/finality of some steps"*. So friction is kept as low as possible, while information-rich
+visual cues convey state, relationships, context, progression and available actions; elements are self-evident to a new member
+(and quietly show how to understand more), innately intuitive to an experienced one, and **visual tools slow a member down, even
+for a moment, before a heavier act.**
+
+**The rule (question 7, as recommended).** Friction escalates with the act's rung (affordances R2; K356):
+- **Reversible** acts happen inline, one step, undoable.
+- **Reasoned** acts open a reason field in place; the reason is required.
+- **Terminal** and **attested** acts open a full dialog that states what ends, or what cannot be silently undone, and who signs.
+- **Irreversible** acts are reached only through the ceremony (Publication §5, DEC-80).
+
+Every act's button carries its rung's name and weight mark (the measures map's pips, §M), so weight is read before the click and
+felt in it. **An act whose rung is still undetermined is treated as reasoned** until BOB assigns it (affordances R27 names the
+acts still ungraded). A single dialog for every act, with the rung merely highlighted, is the weight flattening revision 0.2
+names a doctrine failure, and is not used.
 
 ## M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)
 
