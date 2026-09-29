@@ -26,3 +26,13 @@ Read whole: `roles/JOB.md`; B1; the plan's opening paragraph and layer 5; N294 i
 **Deferred:** nothing.
 
 Size (session_01TigRGSFxE29ocquNjATfru): test runs 8, module lines 2863
+
+## J1 · COMPLETE
+
+N294 (my share) applied and pushed on job/T11/observation-log (code 0e5cb9fcb5, record 66ca3b4020; details in my record's Work section).
+R7 now listens to extraction's index notice (R62): listenTo registers onIndexNotice beside onReadingNotice, each once. One derive row per indexed authored observation by R7's rule (PRESENT; partial with bound; LOOKED_ABSENT when no glyph-holding unit was offered; LOOKED_INDETERMINATE naming a container other than document), referent the capture, no content row or reader run. A refused row throws, failing the index write (R62's reason). Tested over the controlled notice and end to end through extraction's indexTestimony; negative control fails three R7 tests by name.
+Marks met, for you to strike: R7's (N294). Also stale: R20's D-681 (leadList built and fully tested). R21's D-682: leadRead half holds; the frontier half is retrieval's, left to you.
+Found: legacy-store's #testimonyWithin must drop its direct observeIndexed call when it moves to indexTestimony (layer 10), or a capture gets two index rows.
+Stale: agent-worker/dist/agent-worker.bundled.mjs (fleetbundles reports STALE BUNDLE on src/observation-log/index.mjs), and by inputs bio-plane/dist/bio-plane.bundled.mjs. Not rebuilt.
+Tests: observation-log 45 pass, 0 fail; extraction 81 pass, 2 todo; test/m 2441 pass, 0 fail, 27 todo. format, architecture, coverage (29 of 29) and ownership: 0 failures. Deferred: nothing.
+Size (session_01TigRGSFxE29ocquNjATfru): test runs 8, module lines 2863
