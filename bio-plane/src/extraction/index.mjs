@@ -16,13 +16,14 @@ import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap,
 import { canonicalExtent, describeExtent, sha256HexSync, contentMintState } from "../../checks/bio-checks.mjs";
 import { compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../readingprov.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
-import { REEXTRACT_CHECKS, reextractRow } from "./checks.mjs";
+import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL } from "./checks.mjs";
+import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
          readingFromWire, decodeView, textCountsOf, pageBoxesFrom, CAPTURE_TEXT_UNIT_CAP } from "./pipeline.mjs";
 
-export { REEXTRACT_CHECKS, reextractRow, CAPTURE_TEXT_UNIT_CAP };
+export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP };
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
@@ -600,10 +601,9 @@ export class Extraction {
 
   /* ---- reading the record (R27–R30, R36, R37) ---- */
 
-  /** R27 (`op=reading`). */
+  /** R27 (`op=reading`): a request naming no digest answers R63's `noSha`. */
   readingFor(captureSha, viewer = null) {
-    if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "a reading is read by its capture sha256" };
+    if (typeof captureSha !== "string" || !captureSha) return noSha("a reading is read by its capture sha256");
     const row = this.#one(
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
               origin, asserted_by, asserted_standing, justification
@@ -850,7 +850,8 @@ export class Extraction {
     /* END DEC-49 REGION is-reextract */
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const obj = ev ? await ev.get(sha) : null;
-    if (!obj) return { status: 404, body: { ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls } };
+    /* R31 (N285): an absent object is capture's one answer for it (its R63), byte-identical to op=capture's own. */
+    if (!obj) return evidenceAbsent(sha, storeName, { tokenClass: cls });
     const bytes = new Uint8Array(await obj.arrayBuffer());
     const pdfEntry = getFormat("pdf");
     if (!pdfEntry || typeof pdfEntry.structure !== "function")

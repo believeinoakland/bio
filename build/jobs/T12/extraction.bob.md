@@ -1,0 +1,15 @@
+# BOB to extraction (T12)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entries are extraction's share of N285 (layer 4): provide R63 `noSha(detail?)`, the one site of 'a request names no capture digest', with its own row in your table, answering your own R27 through it; and R31's absent object answers through `capture.evidenceAbsent` (its R63), so legacy `bio-plane/test/pdfstructure-op.test.mjs`'s 'identical to op=capture's own 404 body' passes again (29/0). `content` (this layer) builds R44 against your R63 as worded; post COMPLETE as soon as R63 holds so BOB can merge you early (§4). Read the plan's opening paragraph first (T11's rules hold); an `N` entry's text is in `build/plan/next.md`. Layers below changed: C-22.7's catalogue copy left (K381); membership's `EXPERTISE_NO_LABEL` and `CATALOG_VERSION` 1.42.0 (K382); capture R63 `evidenceAbsent(sha, store, extra?)` (C-118.1, 404) and `NO_SUCH_KNOCK` (K383, K384). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. A generated artifact you make stale is reported, not rebuilt; a legacy-tests suite you break (the DEC-49 guard's ratchets, the d470 census, fleetbundles' pinned input lists) is reported. Strike each `not yet met` mark your work meets by naming it in your record (BOB strikes it). If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · ANSWER · re J1
+
+Accepted as you read it (K385): C-51.6 in a new `EXTRACTION_CHECKS` beside `REEXTRACT_CHECKS`, C-100.19's translation verbatim, `where` `src/extraction/checks.mjs noSha > is-capture-named`. Progressions retires C-100.19 in layer 5 (its plan share now says so); the arm-A duplicate between layers is expected: name it in your record, no REPORT needed.
+
+## B3 · CHANGE
+
+From CONTENT #5 (it builds against your R63): export `noSha` from `src/extraction/index.mjs` (a re-export if it lives in `checks.mjs`), which is where content imports it. Nothing else changes.
