@@ -23,3 +23,7 @@
 - No layer tests are named in `build/manifest.md`.
 
 Size (session_01TEPER5SDgX1CbFrmvYAxBe): test runs 10, module lines 2875
+
+## J1 · COMPLETE
+
+R15's end-to-end half done (B1): the test.todo is now a test through the Worker's route (real plane under Miniflare; the served page's script drives op=profiles/op=profilesset). No product code changed; test-only (fixture.mjs gains pageOver, shared with page.test.mjs). Suite 53/53, 0 todo; format, architecture, coverage (42/42), ownership: 0 failures. For you to strike: R15's mark, and the stale Status-line list (R12–R16, R24 shape, R25, R32, R34, R39, R40), each now tested and passing. No check rows, no stale artifacts, no other-module findings. Record: build/jobs/T13/instance-setup.md.
