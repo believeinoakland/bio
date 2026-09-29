@@ -4447,9 +4447,9 @@ const MEMBER_ID_RE = /^[a-z0-9][a-z0-9-]{1,40}$/;
  *  comment warns against.
  *
  *  Scoped by declared contract: enforced only where the file is present.
- *  Exported for the same reason checkGatheringGrammar is: the gate runs it at
- *  ratification, and the plane runs THIS function at the write, so a malformed
- *  task never lands and never costs a member the attention of reading it. */
+ *  N325 (T14): `checkBundle` no longer calls it. C-19.1 is queue's, a promotion
+ *  check and an audit check queue registers; this export stays one tranche,
+ *  until queue holds its copy (T15), and then goes. */
 export function checkInboxGrammar(ctx, findings) {
   const raw = ctx.files.get('data/inbox.json');
   if (!raw) return;
@@ -4767,7 +4767,8 @@ export async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     await checkInfo2Contract(ctx, findings);
-    checkInboxGrammar(ctx, findings);
+    /* N325 (T14): `checkInboxGrammar(ctx, findings)` stood here. C-19.1 is queue's, a promotion check and an audit
+       check it registers, so the bundle check no longer runs it; the export stays one tranche for queue to copy. */
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
     checkInquiryExtension(ctx, findings);
@@ -6861,40 +6862,17 @@ export const CAPTURE_REQUEST_CHECKS = {
  * confinement) and C-29.11–C-29.12 (T4, N44: membership R29 and R62, driven by
  * membership's own tests, `test/m/membership/`).
  *
- * (T4, N44: the mint and the revocation moved with membership's extraction, T3-2,
- * to `src/membership/index.mjs`, with their regions; `src/store.mjs` below now
- * means that file.)
- *
- * THE FAMILY SPANS TWO FILES, AND THE SPLIT IS THE ITEM'S SHAPE RATHER THAN AN
- * ACCIDENT OF WHERE THE CODE FELL.
- *
- *   src/store.mjs   — WHO MAY MINT, and WHAT THE RECORD MUST SAY. Minting is a
- *                     MEMBER act (D-199 (3)) and the record names the token
- *                     IDENTITY and the PRINCIPAL behind it (D-199 (4)). Both
- *                     are facts about the record, so they are judged where the
- *                     record is written.
- *   src/index.mjs   — WHAT A SCOPE MAY REACH. The reach question is the CONTROL
- *                     PLANE's, because the OPS table is the only thing that
- *                     knows what an op is and which classes may call it. The
- *                     store cannot see it and must not keep a copy.
- *
- * THE FENCE IS A SHAPE, NOT A CLASS LIST, AND THAT IS PL-4'S DELEGATED
- * CONSTRAINT DISCHARGED. `AI_SCOPE_BEYOND_MEMBER_REACH` compares the op against
- * ONE property of the OPS table — does a MEMBER class reach it — and nothing
- * else. op=capturerequestdrain carries no member class BY CONSTRUCTION (PL-4:
- * "a member reaching for it by hand would be a person doing the daemon's job"),
- * so no authored scope can ever name it, and adding "ai" to its class list
- * would admit nothing either, because no op's class list is consulted for this
- * class at all. Two independent proofs, both driven.
- *
- * WHY THE GATE REFUSES WITH ONE CODE AND THE MINT WITH TWO. The mint judges the
- * DECLARATION -- may this sentence be written into the record at all -- and the
- * gate judges the CALL against a declaration already judged. PL-4 measured what
- * happens when the same predicate sits at two points: one of them becomes
- * unreachable and its code cannot be driven. So the floor is re-evaluated at the
- * gate on every call (a row can outlive the rule that admitted it) but it
- * answers with the gate's own code, and the mint's two codes are about the act
- * of authoring rather than about the act of calling.
+ * WHAT THE FAMILY HOLDS NOW (T14, legacy-checks, N334). The mint's and the
+ * revocation's rows, C-29.1–.5 and C-29.11–.12, all minted in
+ * `src/membership/index.mjs` (moved with membership's extraction, T3-2). The
+ * reach question, what a declared scope admits, is the control plane's, because
+ * the OPS table is the only thing that knows what an op is and which classes may
+ * call it: the gate on every call and the declaration judged at the mint,
+ * C-29.6–.10, are in control-plane's `AI_SCOPE_CHECKS`
+ * (`src/control-plane/checks.mjs`, split out at its extraction, T12). The
+ * account of the fence's shape (a MEMBER-reach property of the OPS table, not a
+ * class list) and of the gate's one code against the mint's two stood here until
+ * T14 and is the control plane's to keep beside its rows.
  *
  * WHAT IS NOT HERE. There is no `AI_CREDENTIAL_SCOPE_NOT_ON_THE_RECORD`. A scope
  * that is not on the record is not a narrower scope; it is NO CREDENTIAL, and
@@ -7021,51 +6999,6 @@ export const AI_CREDENTIAL_CHECKS = {
    The instrument was right: it cannot tell a number in a sentence from a
    number in a row, and neither can the sweep. So the rule is stated in words
    and the example is gone. */
-
-/* =========================================================================
- * C-44 — THE CASE IDENTITY A PUBLISHING ACT DID NOT STATE (D-309, DEC-72
- * clause 6). ONE C-NUMBER, ONE CODE, ONE FAMILY.
- *
- * WHY THE FAMILY EXISTS AT ALL, since `publishCase()` already makes ~20 refusals
- * and none of them is in a DEC-49 family. It is not a sweep of that function and
- * must not become one: REC-64's sweep is its own work, and the `where` below
- * names a REGION rather than the function for exactly the reason C-22's header
- * records — PL-1's two rows named `promote` when they meant an arm of it, and
- * **32 long-standing refusals instantly owed translations they were never in
- * scope for, and `main`'s UI harness went red.** So the governed span here is
- * `case-identity-derivation` and nothing else: the one refusal D-309 mints.
- *
- * WHY IT IS A NEW FAMILY RATHER THAN A ROW IN AN EXISTING ONE, which is a real
- * cost and is paid deliberately. A new `*_CHECKS` family is a FLOOR in
- * `civicos-ui/check-refusal-codes.mjs` that buys slack for everybody else's walk
- * unless it is moved in the same turn — C-22's own header says so, and CASE-3 and
- * C-25.32 both chose an existing family to avoid it. There was no existing family
- * to choose here: not one of `publishCase()`'s refusals carries a code today, so
- * this condition has no relatives. The floor IS moved in the same turn, from the
- * figures a green run printed.
- *
- * WHAT THE CONDITION IS. DEC-72 clause 6 rules that a finding can serve many
- * cases. REC-44 gave the publishing act three routes to a case identity — NAME
- * one, DERIVE one from what the members already belong to, MINT one — and while
- * a finding could belong to at most one case the DERIVE route was reading a fact.
- * Under clause 6 it can face several candidates, and then it is a guess between
- * two opposite acts: a further edition of an existing case, or a new case resting
- * on findings that already serve one. The act refuses and names every candidate.
- *
- * IT IS AN ALLOCATION CARRYING ITS ENFORCEMENT SITE, on AI_RUN_CHECKS' precedent,
- * and `checkBundle` does not call it: the condition is about an ACT's arguments
- * against the published record, and there is no such thing in a bundle document.
- * The C-number, the wire code and the translation are ONE ROW, and no module
- * holds a second copy — a hand copy agrees at zero cost, measured five times.
- *
- * EMPTY SINCE T8 (layer 8). C-44.1 and C-44.3–.5 are case-authoring's
- * (`src/case-authoring/checks.mjs` CASE_DERIVATION_CHECKS), C-44.2 publication's
- * (`src/publication/checks.mjs`). The empty export remains only because
- * case-authoring's R29 suite still imports it by name to show its rows left
- * here; it goes, with this header, once that suite no longer reads it (N212).
- * ========================================================================= */
-export const CASE_DERIVATION_CHECKS = {
-};
 
 /* =========================================================================
  * REC-64 / DEC-49 — THE MACHINE/MEMBER BOUNDARY, IN WORDS.
@@ -7748,28 +7681,22 @@ export const REQUIRED_ARGUMENT_CHECKS = {
 
    BOB #26's per-group ruling, PROVISIONAL, 2026-09-22 (`INTERFACES.md` I3,
    **Answers**): the refusals that still answered only `error` are coded one
-   group at a time. Two of those groups are THIS family, because the condition
-   is the same kind of fact — something about how the copy was SET UP, which no
-   change to the request can cure:
+   group at a time, and the groups whose condition is something about how the
+   copy was SET UP, which no change to the request can cure, took C-68.
 
-   (4) THE CAPABILITY COMPLAINTS (503). `capture`, `pdfstructure`, `acquire` and
-       `attest` on a copy with no evidence storage bound. ONE row: the condition
-       is one condition whichever op meets it, and the op is named beside it.
-       Minted in ONE governed helper, `storageAbsent`, so the row's `where` names
-       one span rather than four sites inside `fetch`.
-   (2) `claim`'s THREE BOOTSTRAP-CREDENTIAL COMPLAINTS. Pre-authentication, met
-       before anyone holds anything, and each SAYS NO MORE THAN ITS `error` DID —
-       the mismatch row in particular does not tell the caller anything about
-       the token it failed to match.
+   THIS FAMILY HOLDS ONE ROW, C-68.1: THE CAPABILITY COMPLAINT (503).
+   `capture`, `pdfstructure`, `acquire` and `attest` on a copy with no evidence
+   storage bound. ONE row: the condition is one condition whichever op meets it,
+   and the op is named beside it. Minted in ONE governed helper, `storageAbsent`,
+   so the row's `where` names one span rather than several sites. Its sentence is
+   addressed to WHOEVER INSTALLED THE COPY, the only person who can act on it, and
+   `error` is kept beside the code byte-identical (D-270's pattern).
 
-   The translations are addressed to WHOEVER INSTALLED THE COPY, because that is
-   the only person who can act on them. `error` is kept beside every code
-   byte-identical (D-270's pattern), so no consumer reading it moves.
-
-   C-68.5 (D-549, NO_PUBLISHED_STORE), whose ops are public and whose sentence is
-   written for a member of the public, is publication's (`src/publication/checks.mjs`
-   PUBLISHED_STORE_CHECKS), which raises it first; this family keeps C-68.1–.4
-   (T9, N214).
+   THE REST OF C-68 IS HELD ELSEWHERE (T14, legacy-checks, N214, N334).
+   `claim`'s three bootstrap-credential complaints, C-68.2–.4, are control-plane's
+   (`src/control-plane/checks.mjs` BOOTSTRAP_CHECKS, since its extraction, T12).
+   C-68.5 (D-549, NO_PUBLISHED_STORE) is publication's
+   (`src/publication/checks.mjs` PUBLISHED_STORE_CHECKS).
    =========================================================================== */
 export const INSTALLATION_CHECKS = {
   EVIDENCE_STORAGE_NOT_CONFIGURED: {
@@ -9831,43 +9758,6 @@ export const TRANSCRIBE_CHECKS = {
  * (`src/provenance/checks.mjs`, region `is-register-bytes` in `#registerEntries`),
  * and never stood here.
  * ===================================================================== */
-/* =====================================================================
- * C-92 — THE ATTRIBUTION ACT AND ITS GATE (MK-7; MEMBER-KNOWLEDGE-DESIGN.md
- * §4.2–§4.6, BOB #19, 2026-09-21). C-92 minted with `node tools/mintid.mjs C`.
- *
- * A member's firsthand observation is published only beside a statement of
- * WHO SAID IT, at the level its author chose for that case edition — group,
- * project, cover or name — and that choice is the author's alone, never
- * prefilled. ITS OWN FAMILY because its subject is the author's control over
- * their own words, where C-53 is the observation's integrity as a record.
- *
- *   is-attribute-act      who is choosing (a signed-in member, stamped), and
- *                         that a level was chosen at all, from the four
- *   is-attribute-author   that the chooser is the observation's author, and
- *                         an active member (§4.2, §4.5)
- *   is-attribute-edition  that the edition is a prepared, unsigned one that
- *                         reaches the observation, and that `name` has a
- *                         handle to publish (§4.6)
- *   is-attribution-gate (src/index.mjs)
- *                         op=caseratify refuses an edition while any
- *                         observation it reaches is unchosen, naming each, or
- *                         while its bytes state a level the acts no longer do
- *                         (§4.4); op=ratify refuses an observation's own bytes
- *                         until a ratified case document states its level
- *
- * PROVISIONAL, carried to Bob: §4.4's narrow veto (C-92.10 is that veto) and
- * §4.6's reading of `name` as the member's handle (C-92.9).
- *
- * EMPTY SINCE T8. The act's rows, C-92.1–.9, are publication's
- * (`src/publication/checks.mjs` ATTRIBUTION_ACT_CHECKS); the gate's, C-92.10–.12,
- * are ratification's (`src/ratification/checks.mjs` RATIFY_ATTRIBUTION_CHECKS).
- * The empty export remains only because ratification's R14 suite still reads it
- * to show its rows left here; it goes, with this header, once that suite no
- * longer reads it (N214).
- * ===================================================================== */
-export const ATTRIBUTION_CHECKS = {
-};
-
 export const TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: 'C-53.1',
@@ -10060,16 +9950,17 @@ export const SIGNER_ENROLMENT_CHECKS = {
  * an administrator does"*; DEC-49). D-134 gave an administrator's session a surface over `memberadd`,
  * `memberset`, `signeradd` and `signerset`, and every refusal that surface can receive must arrive with a
  * canned translation rather than as a machine token. MEMBER_ID_RESERVED (C-55.1) and the two SIGNER_MEMBER
- * rows (C-63) already had one; these are the rest.
+ * rows (C-63) already had one; these are the rest. C-96.1 NOT_AN_ADMIN, the caller who is not an administrator,
+ * is membership's (`src/membership/checks.mjs` MEMBERSHIP_CHECKS, minted at one site, `notAnAdmin`; K408 (4)):
+ * its copy here went in T14.
  *
  * A ROW TRANSLATES ITS CODE AT EVERY SITE THAT MINTS IT, NOT ONLY AT ITS `where`: the control plane's
  * `dec49Decorate` (index.mjs) attaches a family row's `check` and `translation` to ANY refusal carrying the
  * row's code on its way out. So each sentence below was checked against every site that mints its code,
  * and is written to be true at all of them:
- *   NOT_AN_ADMIN       `#custodialBar`, `memberCaps`, `adminEndorse`, `adminRemove` — each the CALLER. The
- *                      one site where it meant the TARGET (`adminRemove`, a member named for removal who
- *                      is not an administrator) is SPLIT to its own code, TARGET_NOT_AN_ADMIN, because no
- *                      single sentence is true of both facts;
+ *   TARGET_NOT_AN_ADMIN `adminRemove`, a member named for removal who is not an administrator: split from
+ *                      NOT_AN_ADMIN (the CALLER, membership's row), because no single sentence is true of both
+ *                      facts;
  *   EXISTS             `memberAdd` (a member id) and `promote` (a bundle created against an existing one;
  *                      promotion R1, `src/promotion/index.mjs` `#promote` since T3-3: N36 is served by this
  *                      row, because one code holds one row and this sentence is true at both sites);
@@ -10079,13 +9970,6 @@ export const SIGNER_ENROLMENT_CHECKS = {
  * plane listed to it (no member or signer row is ever deleted) and only the two statuses the ops take, so it
  * cannot receive them; EXPERTISE_IS_NOT_ASSIGNED likewise, because the surface never sends `expertise`. */
 export const CUSTODIAL_CHECKS = {
-  NOT_AN_ADMIN: {
-    check: 'C-96.1',
-    where: 'src/membership/index.mjs #custodialBar > is-custodial-admin',
-    translation: 'Only an active administrator of this group can do that, and the account asking is not '
-      + 'one of them here. The record reads who is asking from the signed-in session, never from the '
-      + 'request. Nothing was changed.',
-  },
   BAD_MEMBER_ID: {
     check: 'C-96.2',
     where: 'src/membership/index.mjs memberAdd > is-member-add-id',
