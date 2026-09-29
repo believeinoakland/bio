@@ -1,10 +1,11 @@
-/* ai-runs R1–R8, R35, R39: the run's vocabulary and pure rules, and the catalogue rows the module holds. */
+/* ai-runs R1–R8, R35, R39: the run's vocabulary and pure rules, and the catalogue rows the module holds (R45's pure
+   half is in state.test.mjs). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { RUN_BOUNDS, RUN_ENDINGS, RUN_STATUS, RUN_NEVER_STARTED, runStatusFor, STANDARD_BASIS, RUN_CONTEXTS,
          checkBound, checkConsume, PLANE_COUNTED_BOUNDS, PLANE_DECIDED_BOUNDS, finishedBound, projectGate,
          PROJECT_GATE_GROUNDS, runConsultsProjects, checkRunContextKind, runPrincipalOf, runPrincipalGate,
-         checkSkillVersion, parseSkillVersion, translationOf, AI_RUN_CHECKS } from "../../../src/airun.mjs";
+         checkSkillVersion, parseSkillVersion, translationOf, checkRunState, AI_RUN_CHECKS } from "../../../src/airun.mjs";
 import { AI_RUNS_CHECKS, AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS,
          AI_RUN_OPEN_CHECKS, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES } from "../../../src/ai-runs/index.mjs";
 import * as CATALOGUE from "../../../checks/bio-checks.mjs";
@@ -138,9 +139,9 @@ test("R8: checkSkillVersion — blank or not <pack>@<edition> is AI_RUN_SKILL_VE
   assert.equal(translationOf("NOT_A_CODE"), null);
 });
 
-test("R35: every check the module owns is one row here (C-22.7 named from the catalogue, where skills claims it), with its C-number, translation and a site in this module, and not a second copy in the catalogue", () => {
+test("R35: every check the module owns is one row here (C-22.7 beside its one minting site, C-22.18 the state ceiling's), with its C-number, translation and a site in this module; no row but C-22.7 is still in the catalogue, and C-22.7's is this module's", () => {
   const ids = Object.values(AI_RUNS_CHECKS).map((r) => r.check).sort();
-  const want = ["C-22.5", "C-22.8", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16",
+  const want = ["C-22.5", "C-22.7", "C-22.8", "C-22.11", "C-22.12", "C-22.13", "C-22.14", "C-22.15", "C-22.16", "C-22.18",
                 "C-33.29", "C-33.30", "C-33.31", "C-33.45", "C-33.46", "C-33.47", "C-36.1", "C-36.2", "C-36.3",
                 "C-66.1", "C-66.2", "C-66.3", "C-66.4", "C-109.1"].sort();
   assert.deepEqual(ids, want);
@@ -154,16 +155,27 @@ test("R35: every check the module owns is one row here (C-22.7 named from the ca
   assert.deepEqual(Object.keys(SURFACE_RUN_CHECKS), ["SURFACE_NO_RUN", "SURFACE_RUN_NOT_RUNNING", "SURFACE_NO_BOUND", "SURFACE_BOUND_REACHED"]);
   assert.deepEqual(Object.keys(AI_RUN_OPEN_CHECKS), ["AI_RUN_MODE_NOT_DEPLOYED"]);
   assert.equal(Object.keys(AI_RUN_ACT_SHAPE_CHECKS).length, 6);
-  /* airun.mjs's AI_RUN_CHECKS carries the run's rows and the observation log's, one object */
+  /* airun.mjs's AI_RUN_CHECKS carries the run's rows and the observation log's, one object, the run's own winning */
   for (const code of Object.keys(AI_RUN_OWN_CHECKS)) assert.equal(AI_RUN_CHECKS[code], AI_RUN_OWN_CHECKS[code]);
-  /* one copy: the catalogue holds none of them any more */
+  /* one copy: the catalogue holds none of them — C-22.7's copy, which keeps the plane booting until this row is read,
+     leaves it in T12 (N299) and is legacy-checks', so it is neither asserted present nor absent here */
   const catalogue = Object.entries(CATALOGUE).filter(([k, v]) => /_CHECKS$/.test(k) && v && typeof v === "object")
     .flatMap(([, fam]) => Object.values(fam)).filter((r) => r && typeof r.check === "string").map((r) => r.check);
-  for (const id of want) assert.equal(catalogue.includes(id), false, `${id} is still in the catalogue`);
-  /* C-22.7: named, not held — the catalogue keeps the row skills claims (its R25), and checkSkillVersion builds from it */
-  assert.equal(catalogue.filter((c) => c === "C-22.7").length, 1);
-  assert.equal(checkSkillVersion("3").translation, CATALOGUE.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.translation);
-  assert.equal(AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, CATALOGUE.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED);
+  for (const id of want.filter((c) => c !== "C-22.7")) assert.equal(catalogue.includes(id), false, `${id} is still in the catalogue`);
+  /* C-22.7: held here, beside its one minting site, and the refusal is built from this row (N289, K333) */
+  const skill = AI_RUN_OWN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
+  assert.equal(skill.check, "C-22.7");
+  assert.match(skill.where, /^src\/ai-runs\/skill-version\.mjs checkSkillVersion\b/);
+  assert.equal(AI_RUNS_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, skill);
+  assert.equal(AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, skill, "this module's row wins in airun.mjs' spread");
+  for (const v of [null, "3"]) {
+    const r = checkSkillVersion(v);
+    assert.deepEqual([r.code, r.check, r.translation], ["AI_RUN_SKILL_VERSION_UNNAMED", skill.check, skill.translation]);
+  }
+  /* C-22.18: the state ceiling's row, minted by checkRunState (R45) */
+  const size = AI_RUN_OWN_CHECKS.AI_RUN_STATE_TOO_LARGE;
+  assert.equal(size.check, "C-22.18");
+  assert.match(size.where, /^src\/airun\.mjs checkRunState\b/);
 });
 
 test("R39: no place is named in the module's outward text — its rows' translations, its vocabularies' sentences, its refusals' details, the deployment order's text", () => {
@@ -175,6 +187,7 @@ test("R39: no place is named in the module's outward text — its rows' translat
     checkBound("x").detail, checkConsume({ x: 1 }, { map: true }).detail, checkSkillVersion("3").detail,
     projectGate({ actor: "a", contextType: "project", contextId: "P" }).detail,
     checkRunContextKind({ contextType: "x" }).detail, runPrincipalGate({}).detail,
+    checkRunState({ notes: "x".repeat(262144) }).detail,
     JSON.stringify(DEPLOYMENT_SEQUENCE),
   ];
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));

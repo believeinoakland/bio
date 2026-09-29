@@ -10,6 +10,10 @@
 - **entities** (layer 5) · N285 (R37 `noEntity`; `ENTITY_NO_LABEL`). **progressions** (layer 5) · N285 (R35 `notADisposition`; `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`). **connections** (layer 5) · N285 (R1 through `noEntity`).
 - **inquiry** (layer 6) · N285 (R20 through `notADisposition`). **intent** (layer 7) · N285 (its `NO_SUCH_ENTITY` site, entities R36). **legacy-store** · N285 (its proposal dispose).
 
+### Bob's UX rulings (K356)
+
+- N300 (a project's derived stage, placed and worded before T12 opens); N301 (the queue's `FINDING` class shown as **Noticed**, with queue's extraction).
+
 ### Layer 11
 
 - **queue**, **instance-setup**, **control-plane** extractions, with T8's "Not in T8" list (N38 met by K102, N10, N53, N65 (3), N66, N95, N13; D-719, D-629, D-679, D-586, D-623, REC-202, DIST-15), N171's rewire, N172, N173, N229, N234, N235 (requirements folded, K344).
