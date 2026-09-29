@@ -46,6 +46,12 @@ Read whole: `roles/JOB.md`, the requirements (as K410 left them), the map, `laye
 
 Size (session_019VRv42WPEJNBLLAJbEDG3c): test runs 16, module lines 6,092
 
+**B6 (K412), applied at 6ce8267b0b.** The store half of item 4 is reverted: the door stays legacy-store's `Store.fetch` in T12 (promotion's layer is closed and its `write-path` suite would stand red). **Commit `d2bbae2f75` holds the move for T13 (N333)**: `src/control-plane/dispatch.mjs` (the door, `PROJECT_NAMING_READS(_NOT)`, the existence read through `visibilityOf` — N332 — the class and the store's `STORE_INTERNAL_ERROR` row), `dispatch.test.mjs`, legacy-store's `routes(url, body)` and legacy-index's `Store` import; re-apply it after promotion re-points its script, and renumber the store's row after C-69.3. Kept from that commit: the Worker's outermost catch, `PLANE_INTERNAL_ERROR` now C-69.3 (R25's Worker half), and `relayAnswer` for `claim`, `login`, `invitelook`, `enroll` (R24). R25's store half, R26 and R27 are `test.todo`s naming N333. Q3: `MODULE_CHECK_FILES` reads `src/queue/checks.mjs` (the edge added). N318's list changes accordingly: new is C-69.3 `PLANE_INTERNAL_ERROR` only.
+
+After B6: control-plane 42 tests, 39 pass, 0 fail, 3 todo; every module (`test/m/`) 2,665 tests, 2,645 pass, 0 fail, 20 todo. Checks at 6ce8267b0b: format 0 failures; architecture 9 files, 59 imports, 0 failures; coverage 34/34, 0 failures; ownership 2 failures (the `publicOp`/`gatedOp` headers, J1); legacy-index 16 added, 6,175 removed; legacy-store untouched; legacy-checks 0 added, 401 removed.
+
+Size (session_019VRv42WPEJNBLLAJbEDG3c, after B6): test runs 19, module lines 5,910
+
 ## J1 · QUESTION
 
 Q1. The forward's versionchain stamp normalises `address` with subresources' `normalizeAddress` (index.mjs 5826, moved with the forward). control-plane's uses lack `subresources` (layer 1, no cycle), so architecture fails once. My best reading: add the edge `control-plane` → `subresources`; I import it meanwhile. (Also for your review at close: ownership lists two added legacy-index lines it cannot pair with an import, the headers of `publicOp`/`gatedOp`, the functions that now hold legacy-index's remaining arms for `makeFetch`; the arm bodies are unchanged lines.)
