@@ -36,6 +36,7 @@ import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, migrateInquiry } from "./schema.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, fmSafe, rand } from "./text.mjs";
@@ -64,8 +65,9 @@ const agentOf = (v) => {
   const t = typeof v === "string" ? v.trim() : "";
   return t && t.length <= MEMBER_AGENT_MAX && !/[\u0000-\u001f\u007f]/.test(t) ? t : null;
 };
-/** R20: the two dispositions (a copy, K78 (3): `affordances` re-exports it). */
-export const DISPOSITIONS = ["deferred", "dismissed"];
+/** R20 (N285): the two dispositions, `progressions`' one list (its R35), re-exported for `affordances` (K78 (3)); this
+ *  module holds no copy of its own. */
+export { DISPOSITIONS };
 
 /** R39 (K102, K107 (3)): the refusal of a disposition a second team's stance would feel, its row held here (K174's
  *  pattern, the catalogue untouched). */
@@ -633,11 +635,9 @@ export class Inquiry {
    * between refusing a write and writing something that fails its own checks. */
   dispose(args = {}) { return withRow(this.#dispose(args || {})); }
   #dispose({ handle, to, reason = "", viewer = null, owner = null, author = null } = {}) {
-    /* DISPOSITIONS is the PUBLISHED set, imported from affordances.mjs
-       (REC-11's folded chore). This method held its own literal copy from the
-       REC-19 wave's separate claims, with the affordances suite pinning the
-       two arrays identical; the import is what makes that pin unnecessary —
-       one array, no drift to pin against. */
+    /* DISPOSITIONS is progressions' one list (its R35), and a word outside it is answered by progressions'
+       `notADisposition`, the one site that mints NOT_A_DISPOSITION with its row, C-100.20 (N285, K275): this act
+       holds neither a literal of its own nor the row. */
     /* Legal transitions, IMPORTED from the catalog's own table (REC-10). The
        comment here used to claim exactly that over a literal second copy of
        the machine; DATA-MODEL.md §2.7 caught the claim being false, and this
@@ -649,10 +649,9 @@ export class Inquiry {
     if (!INQUIRY_STATES.includes(to))
       return { ok: false, reason: "BAD_TARGET_STATE", to, legal: INQUIRY_STATES,
                detail: `an inquiry's state is one of ${INQUIRY_STATES.join(", ")}` };
-    if (!DISPOSITIONS.includes(to))
-      return { ok: false, reason: "NOT_A_DISPOSITION", to, dispositions: DISPOSITIONS,
-               detail: "only deferring and dismissing are dispositions: every other inquiry state is "
-                     + "entered by its own act, with its own entry requirements, never by a bulk state flip." };
+    /* R20 (N285): the one answer to a word that is no disposition, minted in `progressions.notADisposition`. */
+    const undisposed = notADisposition(to);
+    if (undisposed) return undisposed;
 
     const why = String(reason ?? "").trim();
     if (!why)
