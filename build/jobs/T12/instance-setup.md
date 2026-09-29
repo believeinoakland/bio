@@ -81,3 +81,11 @@ Generated artifacts made stale (not rebuilt): `bio-plane/dist/bio-plane.bundled.
 - Process checks: format 0 failures; architecture 0 failures; coverage 42 of 42 live ids, 0 failures; ownership 1 failure, store.mjs:622 (K409).
 
 Size (session_01Qk57v2crns3EGpjW9ysjS3): test runs 128, module lines 2871
+
+## J6 · COMPLETE
+
+B5 applied: `tranche/T12` (control-plane, K413) merged into `job/T12/instance-setup` and pushed. Conflicts resolved: `bio-checks.mjs` (control-plane took C-64.4, I took the five; only C-64.1 is left in `INSTANCE_GROUP_CHECKS`), `schema.mjs` (queue's `${QUEUE_SCHEMA}`, without my moved tables), `store.mjs` (queue's `queueOf`/`queueOps`, without the `group-domain-recheck` consumer and `recordruntime`), `index.mjs` (control-plane's `json`/`storeSilent`/`publicOp`; `bootstrap`'s tail calls `bootstrapReport`). One rewire the merge needed: control-plane's `makeFetch` hook `publicInstanceGroup` is called with three arguments, so index.mjs hands it `(env, storeName, projection) => publicInstanceGroup(env, storeName, projection, doAnswer)`.
+
+After the merge: `node --test test/m/instance-setup/` tests 52, pass 51, fail 0, todo 1 (R15); `bootstrap` 18/0, `group-public` 26/0, `livefire` 19/19 pass, `d116-serving-builds` 16/0; `instance-group` 37/4 and `group-identity` 35/8 as J5 reports (the new base is 36/7 on `group-identity`: its six A1 arms are control-plane's C-64.4 move); `d475-page-namespace` and `d456-namespace-scope` die on import on the new base too (`NAMESPACE_CHECKS`, `ADMISSION_CHECKS` left bio-checks with control-plane). Checks: format 0, architecture 0, coverage 42/42, ownership 1 failure (store.mjs:588, the K409 line, moved from 622 by the merge). J5 otherwise stands.
+
+Size (session_01Qk57v2crns3EGpjW9ysjS3): test runs 142, module lines 2871
