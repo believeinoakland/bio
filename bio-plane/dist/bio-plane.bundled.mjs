@@ -106869,11 +106869,7 @@ var CaseAuthoring = class {
     const minted = !theCase;
     if (minted) {
       theCase = this.record.mintOpaqueId("CASE", this.#when("second").slice(0, 4), "", (id) => !!(this.#one(`SELECT 1 FROM cases WHERE case_id=?`, id) || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id) || this.#one(`SELECT 1 FROM published_case_members WHERE case_id=? LIMIT 1`, id)));
-      if (!theCase) return {
-        ok: false,
-        reason: "MINT_EXHAUSTED",
-        detail: "the plane could not find a free case id; nothing was published"
-      };
+      if (!theCase) return mintExhausted("CASE");
     }
     const ownedBy = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase);
     const claimedProject = ownedBy ? ownedBy.project_id : this.#preparedProject(theCase);
@@ -107868,14 +107864,6 @@ var REVIEW_COPY_CHECKS = Object.freeze({
     check: "C-87.11",
     where: at16("comment", "is-review-comment-text"),
     translation: "A comment has to say something, and at most 4000 characters of it. Nothing was recorded. What you have written is still yours to send once it is within that length."
-  },
-  /* N306 (K392, R27): the draft act's new draft and the grant act each mint an opaque id, and when no free one can be
-     drawn both answer this ONE row, minted by one helper (as `notReviewOwner` is), its detail naming which id it could
-     not mint. Nothing is written. Next.md N322 retires it into the one row beside record-core's `mintOpaqueId`. */
-  MINT_EXHAUSTED: {
-    check: "C-87.12",
-    where: at16("mintExhausted", "is-review-mint-exhausted"),
-    translation: "The plane could not find a free identifier for this, so nothing was saved and nothing was issued. Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs this instance."
   }
 });
 
@@ -108004,12 +107992,6 @@ function notReviewOwner(act) {
   return refusal18(
     "REVIEW_NOT_PROJECT_OWNER",
     `${AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
-  );
-}
-function mintExhausted2(what) {
-  return refusal18(
-    "MINT_EXHAUSTED",
-    `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.`
   );
 }
 function statedEdition(ident, newCase) {
@@ -108280,7 +108262,7 @@ var Review = class {
     } else {
       this.seedLedger();
       id = this.record.mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) => !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d) || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
-      if (!id) return mintExhausted2("draft");
+      if (!id) return mintExhausted("DRAFT");
       this.sql.exec(
         `INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -108332,7 +108314,7 @@ var Review = class {
       "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g)
     );
-    if (!id) return mintExhausted2("grant");
+    if (!id) return mintExhausted("RVG");
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, who2, when);
     const newCase = !!JSON.parse(d.params).newCase;
