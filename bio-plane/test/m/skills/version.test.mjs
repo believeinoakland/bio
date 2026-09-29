@@ -6,7 +6,9 @@ import { CLAUSES } from "../../../src/skilldoctrine.mjs";
 import * as airun from "../../../src/airun.mjs";
 import { catalogue, published } from "./fixture.mjs";
 
-const ROW = catalogue.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
+/* C-22.7's row, read through ai-runs (its AI_RUN_CHECKS, R35), never from the catalogue: the catalogue keeps a
+   distinct copy until T12 (K350, N299), and the row this module names is ai-runs' (R25, N289). */
+const ROW = airun.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
 
 /* Every value R12 refuses, and every value it accepts, the malformed ones one of each shape. */
 const REFUSED_BLANK = [undefined, null, 0, 3, true, {}, [], "", " ", "\t\n  "];
@@ -66,10 +68,9 @@ test("R13 parseSkillVersion returns {pack, edition, digest} for an accepted valu
 test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, number and translation unchanged, and SKILL_CHECKS' row is the one checkSkillVersion mints", () => {
   assert.deepEqual(SKILL_CHECK_KEYS, ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   assert.deepEqual(Object.keys(SKILL_CHECKS), ["AI_RUN_SKILL_VERSION_UNNAMED"]);
-  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, airun.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED,
-    "ai-runs' own row, never a copy");
-  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "the row the catalogue held, unchanged");
+  assert.equal(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, ROW, "ai-runs' row, never a copy");
   assert.equal(ROW.check, "C-22.7");
+  assert.equal(airun.translationOf("AI_RUN_SKILL_VERSION_UNNAMED"), ROW.translation, "ai-runs resolves the code to this row");
   assert.equal(ROW.translation, "This run did not say which version of its instructions it was working under. "
     + "What a run found can only be read against the instructions it was given, so the record "
     + "asks for that version before the run starts rather than guessing at it afterwards.");
@@ -77,3 +78,5 @@ test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, n
   assert.deepEqual([r.code, r.check, r.translation], ["AI_RUN_SKILL_VERSION_UNNAMED", ROW.check, ROW.translation]);
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
+
+test.todo("R25 C-22.7's row is held in ai-runs' own table with its one minting site, its where naming src/ai-runs/skill-version.mjs checkSkillVersion: waits on ai-runs R35 (N289), running beside this job in layer 6");
