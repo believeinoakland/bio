@@ -1378,7 +1378,7 @@ answer: **All as recommended (Bob, 2026-09-29), with two revised in discussion.*
 decided: 2026-09-29 · Bob
 owed: N345's requirement changes drafted from the design and these answers, brought to Bob for approval; the design's §15 marked ruled.
 
-### DEC-85 · answered
+### DEC-86 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 6)
 for: bob
 question: What is the one visual treatment and voice of "Undetermined", and how does it differ from "Withheld", "Unrated", "Nobody looked" and "Refused"?
@@ -1392,7 +1392,7 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §U.
 owed: the five treatments and sentence patterns in the redesign; the UX page's open question 6 marked ruled.
 
-### DEC-86 · answered
+### DEC-87 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 7)
 for: bob
 question: How does the rung ladder look and feel, so a member senses an act's weight before acting, especially the attested and irreversible rungs?
@@ -1406,12 +1406,12 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
 owed: the act surfaces in the redesign; BOB's assignment of the acts still graded undetermined (affordances R27); the UX page's open question 7 marked ruled.
 
-### DEC-87 · answered
-raised: 2026-09-29 · the same design session with Bob (following DEC-86: the acts whose rung is undetermined)
+### DEC-88 · answered
+raised: 2026-09-29 · the same design session with Bob (following DEC-87: the acts whose rung is undetermined)
 for: bob
-question: Can the 57 acts graded `undetermined` in `affordances.RUNG_ABSENT` be given rungs from the principles already ruled (affordances R27; DEC-86)?
+question: Can the 57 acts graded `undetermined` in `affordances.RUNG_ABSENT` be given rungs from the principles already ruled (affordances R27; DEC-87)?
 why it is Bob's: the banding logic is UX and doctrine (how heavy an act feels); assigning each act is BOB's detail (P17), put to Bob here at his request.
-provisional: each is treated as reasoned (DEC-86).
+provisional: each is treated as reasoned (DEC-87).
 alternative: leave them to BOB one by one.
 recommendation: three bands, with six judgement calls named.
 reversal cost: low; nothing is built.
@@ -1424,7 +1424,7 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
 owed (BOB's): move the 57 from `RUNG_ABSENT` into `RUNGS` in `bio-plane/src/affordances.mjs` and update affordances R27's text (which says 56; the code holds 57); add a required reason to each reasoned act whose requirement does not yet require one (an act whose own authored words serve as its reason counts); publish the consequence statement for the six; regrade `inboxresolve` to reasoned when DEC-78's pull admits material.
 
-### DEC-88 · answered
+### DEC-89 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 8)
 for: bob
 question: Where does a member record why a noncompliant finding is, or is not, significant enough to escalate, given that no significance, severity, priority or score may be stored?
@@ -1433,12 +1433,12 @@ provisional: reasons are recorded once an escalation exists; deciding NOT to esc
 alternative: record the reasoning in the unbuilt, never-published action plan (S11); or leave it to discussion outside the record.
 recommendation: a required reason when opening an escalation, and a reasoned "decline to escalate" act, both prose only.
 reversal cost: low; nothing is built.
-response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escalationopen`, reasoned in DEC-87) requires a written reason: why this breach is worth pursuing. (2) A new act, DECLINE TO ESCALATE, on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now; reasoned, attributed and dated; corrected forward only (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are PROSE ONLY: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere (conformance R8, escalation R19), so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one.
+response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escalationopen`, reasoned in DEC-88) requires a written reason: why this breach is worth pursuing. (2) A new act, DECLINE TO ESCALATE, on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now; reasoned, attributed and dated; corrected forward only (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are PROSE ONLY: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere (conformance R8, escalation R19), so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one.
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the requirement changes in `escalation` (the required opening reason; the decline act and its read) and `conformance` (a determination shows whether it was escalated, declined or neither), with the decline act's rung (reasoned) in `affordances`, for Bob's approval; the UX page's open question 8 marked ruled.
 
-### DEC-89 · answered
+### DEC-90 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 10)
 for: bob
 question: What does the assistant dialog look like on each surface, and how is "the machine did the looking, you do the concluding" made felt?
@@ -1452,7 +1452,7 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the assistant panel in the redesign; the UX page's open question 10 marked ruled.
 
-### DEC-90 · deferred
+### DEC-91 · deferred
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 11)
 for: bob
 question: What does a newcomer learn first, and how do starter materials and onboarding fit a first session (Design Requirement 11: usable within one session)?
@@ -1467,7 +1467,7 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the UX page's open question 11 marked deferred, with this trigger.
 
-### DEC-91 · answered
+### DEC-92 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 12)
 for: bob
 question: How are the Roadmap's five trust levels (our work, independently verified, meets standards, not yet evaluated, flagged) shown on information from other groups?
@@ -1476,13 +1476,13 @@ provisional: no module produces the levels; nothing records that a group verifie
 alternative: build the five levels as written, with a compliance evaluator of incoming work; or drop the indicator and rely on grades and provenance.
 recommendation: derive the levels from recorded facts, shown as an origin mark rather than a trust ladder.
 reversal cost: low; nothing is built.
-response: **As recommended, Bob, 2026-09-29, "but there's still more to decide later."** Earlier rulings already settle how checkable evidence is (DEC-82), what we don't know (DEC-85), who a source is (DEC-78 item 5), whether our copies are co-attested (DEC-81), and that citing another group's edition inherits the fact of publication, never the credibility of its content (AUTHORITY-AND-TRUST, 2026-07-30; inquiry R7). What this adds: the five levels become an ORIGIN MARK in the same family as the "Machine work" label, answering who made this: **Ours**; **Another group's** (a published edition, signature verified); **Accepted by our group** (a new reasoned act, attributed, with a reason); **"Not yet evaluated"**; **"Flagged"** only when a member's recorded evaluation names specific issues, never a machine's. "Meets standards" is deferred until an evaluator of incoming work exists. The mark is ambient; a hover shows the fact behind it (who produced it, which edition, who accepted it and why). It is never composed with grades or strength into one trust score.
+response: **As recommended, Bob, 2026-09-29, "but there's still more to decide later."** Earlier rulings already settle how checkable evidence is (DEC-82), what we don't know (DEC-86), who a source is (DEC-78 item 5), whether our copies are co-attested (DEC-81), and that citing another group's edition inherits the fact of publication, never the credibility of its content (AUTHORITY-AND-TRUST, 2026-07-30; inquiry R7). What this adds: the five levels become an ORIGIN MARK in the same family as the "Machine work" label, answering who made this: **Ours**; **Another group's** (a published edition, signature verified); **Accepted by our group** (a new reasoned act, attributed, with a reason); **"Not yet evaluated"**; **"Flagged"** only when a member's recorded evaluation names specific issues, never a machine's. "Meets standards" is deferred until an evaluator of incoming work exists. The mark is ambient; a hover shows the fact behind it (who produced it, which edition, who accepted it and why). It is never composed with grades or strength into one trust score.
 still open (Bob's, later): the rest of question 12, which Bob will take up later; known candidates: what accepting another group's work commits the group to and whether it can be withdrawn; how a flag is raised, answered and cleared; whether "meets standards" returns and what evaluates it; how the mark travels when a group republishes work it accepted.
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Complete_Roadmap_v5.md` §11.
 owed: the acceptance act and the origin mark's requirements (inquiry, publication, affordances), for Bob's approval; the UX page's open question 12 marked partly ruled.
 
-### DEC-92 · answered
+### DEC-93 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 9)
 for: bob
 question: What does the action plan surface (S11) look like: options, dependencies, deadlines, resources, outcome branches, declined options, and support status on every element?
@@ -1491,7 +1491,7 @@ provisional: the plan surface is undesigned and unbuilt.
 alternative: decide it in this design session.
 recommendation: none taken here.
 reversal cost: none.
-response: **MOVED by Bob, 2026-09-29:** "I've started a separate session that will be used for work related to Actions." Question 9 stays open and is decided in that session, which was given the rulings that bear on Actions (DEC-81, DEC-86, DEC-87, DEC-88).
+response: **MOVED by Bob, 2026-09-29:** "I've started a separate session that will be used for work related to Actions." Question 9 stays open and is decided in that session, which was given the rulings that bear on Actions (DEC-81, DEC-87, DEC-88, DEC-89).
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: nothing here; the Actions session owns question 9.
