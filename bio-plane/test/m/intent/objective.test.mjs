@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { checkBundle } from "../../../checks/bio-checks.mjs";
 import { INTENT_CHECKS } from "../../../src/intent/index.mjs";
 import { noSuchProject, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { noSuchEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 import { world, seeded, V, MACHINE, COND, projMd } from "./fixture.mjs";
 
 const strip = (r) => { const { detail, project, ...rest } = r; return rest; };
@@ -50,7 +51,7 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   assert.equal(pass.tallyDetail["C-2.9/NO_OBJECTIVE"], 1);
   /* every refusal code intent.md names has its row here, with a check id and a translation */
   const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "CONDITION_UNREADABLE", "NO_SUCH_PROGRESSION",
-    "NO_SUCH_ENTITY", "BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
+    "BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
     "NO_SUCH_ASPIRATION", "NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS", "GROUP_ASPIRATION_NOT_ADMIN",
     "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION"];
   for (const code of named) {
@@ -100,6 +101,23 @@ test("R22 R2 R3 NO_SUCH_PROJECT is membership's one row (its R78, C-70.5): inten
   assert.equal(noSuchProject(hidden).check, MEMBERSHIP_CHECKS.NO_SUCH_PROJECT.check);
 });
 
+test("R22 R2 R9 NO_SUCH_ENTITY is entities' one row (its R36, C-91.4): intent holds no row for it (C-111.5 retired, N285), and a condition or an aspiration naming an entity the record does not hold answers exactly entities' noSuchEntity", () => {
+  assert.equal(INTENT_CHECKS.NO_SUCH_ENTITY, undefined, "intent's own row is retired");
+  assert.ok(!Object.values(INTENT_CHECKS).some((r) => r.check === "C-111.5"), "its number is not reused");
+  const w = seeded();
+  w.entity("ENT-1");
+  w.define();
+  const snap = w.snapshot();
+  for (const id of ["ENT-9", "ENT-2026-0001", "x"]) {
+    assert.deepEqual(w.i.setCondition({ project: w.P, condition: { ...COND, entity: id }, author: V("bob"), viewer: V("bob") }),
+                     noSuchEntity(id), `setCondition ${id}`);
+    assert.deepEqual(w.i.declareAspiration({ scope: "group", statement: "s", entities: ["ENT-1", id], author: V("alice") }),
+                     noSuchEntity(id), `declareAspiration ${id}`);
+  }
+  assert.equal(noSuchEntity("ENT-9").check, ENTITY_CHECKS.NO_SUCH_ENTITY.check);
+  assert.deepEqual(w.snapshot(), snap, "neither refusal wrote anything");
+});
+
 test("R2 setCondition's refusals, in order: machine, absent or unseen project (one answer), not joined, unreadable, no progression, no entity, bad stage, bad grade, bad share", async () => {
   const w = seeded();
   w.entity("ENT-1");
@@ -118,7 +136,7 @@ test("R2 setCondition's refusals, in order: machine, absent or unseen project (o
                      { ...COND, required: { grade: "B", stages: "need" } }, "text"])
     assert.equal(set(bad).reason, "CONDITION_UNREADABLE", JSON.stringify(bad));
   assert.equal(set({ ...COND, progression: "nope", required: { grade: "E" } }).reason, "NO_SUCH_PROGRESSION", "asked before the grade");
-  assert.equal(set({ ...COND, entity: "ENT-9", required: { grade: "E" } }).reason, "NO_SUCH_ENTITY");
+  assert.deepEqual(set({ ...COND, entity: "ENT-9", required: { grade: "E" } }), noSuchEntity("ENT-9"), "asked before the stage and grade");
   assert.equal(set({ ...COND, required: { grade: "E", stages: ["need", "signoff"] } }).reason, "BAD_STAGE");
   assert.equal(set({ ...COND, required: { grade: "E", stages: ["need"] } }).reason, "CONDITION_BAD_GRADE");
   for (const share of [0, 101, 50.5, "50", null, -1]) assert.equal(set({ ...COND, satisfied: { share } }).reason, "BAD_SHARE", String(share));
