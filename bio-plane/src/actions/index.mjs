@@ -18,7 +18,8 @@
  *                                   `promote`, `registerStep`.
  *   retrieval      `registerActionFacts`, `registerProjectionDecoration` (its R53, R56).
  *   content        `captureFor` (R11).
- *   conformance    `determinationRead` (R8, R30), when provided (see R8 below).
+ *   conformance    `determinationRead` (R8, R30), when provided (see R8 below); its module-level
+ *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -31,7 +32,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
-import { conformanceOf } from "../conformance/index.mjs";
+import * as conformanceModule from "../conformance/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
          BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
@@ -171,7 +172,7 @@ export class Actions {
      host on which it cannot be created answers null, and R8 then refuses, never passes. */
   get conformance() {
     if (this.#deps.conformance === undefined || this.#deps.conformance === null) {
-      try { this.#deps.conformance = conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
+      try { this.#deps.conformance = conformanceModule.conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
     }
     return this.#deps.conformance || null;
   }
@@ -595,12 +596,11 @@ export class Actions {
       let d = null;
       try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
       if (!d || d.ok === false) continue;
-      if (d.live === false || d.superseded_by) { superseded = l.target; continue; }
+      if (d.live === false || d.superseded_by) { superseded ||= { id: l.target, by: d.superseded_by ?? null }; continue; }
       return null;
     }
-    if (superseded)
-      return { ok: false, reason: "DETERMINATION_SUPERSEDED", determination: superseded,
-               detail: `the determination ${superseded} this action rests on has been superseded; rest it on the live one.` };
+    /* N312 (K275): the condition is conformance's, and its answer is minted there (its R20). */
+    if (superseded) return determinationSuperseded(superseded.id, superseded.by);
     /* DEC-49 REGION is-breach-determination */
     return refuse("ACTION_NO_DETERMINATION", readable
       ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. "
@@ -1865,11 +1865,12 @@ export class Actions {
                  says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
   }
 
-  /** R31 (N237, N283): every `pending` clock entry dated before `before` across visible actions, at most 500 per page.
-   *  A page reads at most 500 actions, in id order after `after`, and answers each action it reads whole: an action
-   *  whose entries would not all fit is left to the next page, so `cursor`, the last action read, never cuts one. The
-   *  seek is retrieval's projection (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from
-   *  the document, the authority. */
+  /** R31 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
+   *  in (action id, entry position) order after `after`: a previous page's `cursor` (`<action>#<position>`), or an
+   *  action id, read as after all that action's entries. A page reads at most 500 actions and may end inside one;
+   *  `cursor` is the last entry answered when `truncated`, else null, so paging from the start through each `cursor` to
+   *  null reaches every entry, an action holding more than a page among them. The seek is retrieval's projection
+   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority. */
   pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
     const day = String(before ?? "").slice(0, 10);
     /* DEC-49 REGION is-pending-before */
@@ -1877,36 +1878,38 @@ export class Actions {
       return refuse("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
     /* END DEC-49 REGION is-pending-before */
     const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
+    /* `<action>#<position>` resumes inside that action, after the position; anything else is an action id. */
+    const from = after === null || after === undefined || after === "" ? null : String(after);
+    const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
+    const seek = at ? { id: at[1], pos: Number(at[2]) } : from ? { id: from, pos: Infinity } : null;
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(`SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
-      WHERE b.object_type='action' AND (${gate.sql}) ${after ? "AND b.bundle_id>?" : ""}
+      WHERE b.object_type='action' AND (${gate.sql}) ${seek ? "AND b.bundle_id>=?" : ""}
         AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
-      ...gate.args, ...(after ? [String(after)] : []), day, PENDING_CLOCKS_ACTIONS_MAX + 1);
+      ...gate.args, ...(seek ? [seek.id] : []), day, PENDING_CLOCKS_ACTIONS_MAX + 1);
     const items = [];
     let truncated = rows.length > PENDING_CLOCKS_ACTIONS_MAX;
-    let cursor = null;
-    for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
+    let full = false, lastRead = null;
+    read: for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
       const fm = this.#heldFm(r.bundle_id) || {};
       const clock = Array.isArray(fm.clock) ? fm.clock : [];
-      const mine = [];
-      for (let i = 0; i < clock.length; i++) {
+      const skip = seek && r.bundle_id === seek.id ? seek.pos : -1;
+      for (let i = skip + 1; i < clock.length; i++) {
         const e = clock[i];
         if (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) continue;
-        mine.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
-                    past: e.date < day });
+        /* The page is full and an entry remains: the next page resumes after the last one answered. */
+        if (items.length === max) { full = truncated = true; break read; }
+        items.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
+                     past: e.date < day });
       }
-      /* The page is full before this action: it is read on the next page, whole. An action holding more entries than a
-         page is answered alone, its first `max`, and the page says so (`cut_inside`). */
-      if (items.length + mine.length > max && items.length) { truncated = true; break; }
-      if (mine.length > max) {
-        items.push(...mine.slice(0, max));
-        cursor = r.bundle_id;
-        return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated: true,
-                 cursor, cut_inside: { action: r.bundle_id, entries: mine.length, answered: max } };
-      }
-      items.push(...mine);
-      cursor = r.bundle_id;
+      lastRead = { id: r.bundle_id, end: Math.max(clock.length - 1, Number.isFinite(skip) ? skip : 0, 0) };
     }
+    /* The last entry answered; when the page ends on the action bound past an action whose document holds none (its
+       projection behind it), the end of that action instead, so the next page still moves on. */
+    const tail = items[items.length - 1];
+    const cursor = !truncated ? null
+      : tail && (full || !lastRead || tail.action === lastRead.id) ? `${tail.action}#${tail.ord}`
+        : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
     return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated, cursor };
   }
 
@@ -2018,6 +2021,16 @@ export class Actions {
           + "and a member states it.",
     };
   }
+}
+
+/* R8 (N312): conformance's `determinationSuperseded` (its R20), the one site of `DETERMINATION_SUPERSEDED`. Until
+   conformance provides it, a stub in its wording answers, carrying no row of its own: the code is not minted here. */
+function determinationSuperseded(determinationId, supersededBy) {
+  const own = conformanceModule.determinationSuperseded;
+  if (typeof own === "function") return own(determinationId, supersededBy);
+  return { ok: false, reason: "DETERMINATION_SUPERSEDED", code: "DETERMINATION_SUPERSEDED", check: null, translation: null,
+           determination: determinationId ?? null, superseded_by: supersededBy ?? null,
+           detail: "the determination named has been superseded; rest on the live one." };
 }
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
