@@ -30,3 +30,7 @@ The test no longer depends on which derived tables a promotion touches. R6 itsel
 - `node checks/ownership.mjs … citation tranche/T11`: 1 file changed; legacy-store and legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01PWEz1riZjrFQ4eskisubQr): test runs 3, module lines 1040
+
+## J1 · COMPLETE
+
+citation T11 complete. N283's reader applied: invariants.test R6 now proves that no refs and no inquiry_basis row is written and that every write is the citing document's promotion (or the selection's last use); it no longer pins the tables a promotion moves. No source change was needed. Tests 49/49 pass; format, architecture, coverage (11/11) and ownership: 0 failures. Nothing deferred, nothing found in other modules, no artifact stale. Record: build/jobs/T11/citation.md on job/T11/citation.
