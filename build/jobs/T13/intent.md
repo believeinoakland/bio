@@ -52,3 +52,7 @@
 - `node checks/ownership.mjs … intent tranche/T13`: legacy-checks 0/0, legacy-store 0/0; 0 failures. Run before this record was written, so it counted 1 file changed.
 
 Size (session_01NeUjSARtJrUvGsQ3fY9FRB): test runs 28, module lines 1863
+
+## J1 · REPORT
+
+Found in other modules (my record's Completion section has the full list): (1) Stale, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs, which takes src/intent/index.mjs. (2) civicos-ui and affordances: no hits on the names I added or retired. (3) DEC-49 guard: the same 16 failures as on the parent, every figure unchanged. (4) The legacy suite meaning-bounds fails on the parent too; its only change is that op=pursuit now lists goals_read_limit and goals_read_truncated. (5) As worded in K408 (1): ageDue and ageWake answer null for an ageable question behind 1,000 older non-ageable questions at surfaced, until those leave surfaced.
