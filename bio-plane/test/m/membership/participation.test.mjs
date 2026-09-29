@@ -86,7 +86,7 @@ test("R36 R63 projectRemove: refusals; removes whether or not they asked; every 
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "second", viewer: V("second") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "cal", viewer: V("cal") }).reason, "NOT_THE_OWNER");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "zed", by: "ann", viewer: V("ann") }).reason, "NO_SUCH_HANDLE");
-  assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "eve", by: "ann", viewer: V("ann") }).reason, "NOT_A_PARTICIPANT");
+  assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "eve", by: "ann", viewer: V("ann") }).reason, "TARGET_NOT_A_PARTICIPANT");
   assert.equal(w.m.projectRemove({ projectId: "PROJ-P", handle: "ann", by: "ann", viewer: V("ann") }).reason, "OWNER");
   const r = w.m.projectRemove({ projectId: "PROJ-P", handle: "bob", by: "ann", comment: "did not show up", viewer: V("ann") });
   assert.deepEqual([r.ok, r.removed, r.comment], [true, true, "did not show up"]);

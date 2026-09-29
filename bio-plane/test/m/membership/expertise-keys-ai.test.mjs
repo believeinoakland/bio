@@ -29,10 +29,10 @@ test("R21 expertiseDeclare: the member's own act; refusals; labels normalised", 
   assert.equal(w.row(`SELECT actor FROM member_expertise WHERE member_id='ann' ORDER BY seq LIMIT 1`).actor, "ann");
 });
 
-test("R22 expertiseConfirm: ADMIN_ONLY, NO_SUCH_MEMBER, NOT_DECLARED, ALREADY_CONFIRMED, NOT_CONFIRMED; admin for admin", async () => {
+test("R22 expertiseConfirm: NOT_AN_ADMIN (R84), NO_SUCH_MEMBER, NOT_DECLARED, ALREADY_CONFIRMED, NOT_CONFIRMED; admin for admin", async () => {
   const w = await world().group("ann");
   w.m.expertiseDeclare({ memberId: "ann", label: "CPA" });
-  assert.equal(w.m.expertiseConfirm({ memberId: "ann", label: "CPA", by: "ann" }).reason, "ADMIN_ONLY");
+  assert.equal(w.m.expertiseConfirm({ memberId: "ann", label: "CPA", by: "ann" }).reason, "NOT_AN_ADMIN");
   assert.equal(w.m.expertiseConfirm({ memberId: "nobody", label: "CPA", by: "admin" }).reason, "NO_SUCH_MEMBER");
   assert.equal(w.m.expertiseConfirm({ memberId: "ann", label: "Lawyer", by: "admin" }).reason, "NOT_DECLARED");
   assert.equal(w.m.expertiseConfirm({ memberId: "ann", label: "CPA", by: "admin", withdraw: true }).reason, "NOT_CONFIRMED");
@@ -138,18 +138,18 @@ test("R28 aiCredentialMint: refusals; records minted_by; never a secret, only it
   assert.equal(w.row(`SELECT secret_sha FROM ai_credentials`).secret_sha, SHA("a"));
 });
 
-test("R62 an organisation-scoped credential is minted only by an active administrator, the founder included", async () => {
+test("R62 an organisation-scoped credential is minted only by an active administrator, the founder included; anyone else NOT_AN_ADMIN (R84) with its remedy", async () => {
   const w = await world().group("ann");
   const org = { secretSha: SHA("b"), principalKind: "organisation" };
   const r = w.m.aiCredentialMint({ ...org, tokenId: "o1", who: "ann" });
-  assert.deepEqual([r.ok, r.reason], [false, "AI_CREDENTIAL_ORG_NOT_ADMIN"]);
-  assert.deepEqual([r.code, r.check, r.translation, r.who],   // N73: C-29.12, the catalogue's row
-    ["AI_CREDENTIAL_ORG_NOT_ADMIN", "C-29.12", AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_ORG_NOT_ADMIN.translation, "ann"]);
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.by], [false, "NOT_AN_ADMIN", "NOT_AN_ADMIN", "C-96.1", "ann"]);
+  assert.match(r.remedy, /member-scoped/, "the remedy names the member-scoped credential");
+  assert.equal(r.message, `${MEMBERSHIP_CHECKS.NOT_AN_ADMIN.translation} ${r.remedy}`);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM ai_credentials`).n, 0);
   assert.equal(w.m.aiCredentialMint({ ...org, tokenId: "o2", who: "admin" }).credential.principal, "class:ai");
   assert.equal(w.m.aiCredentialMint({ ...org, tokenId: "o3", who: "second" }).ok, true);
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
-  assert.equal(w.m.aiCredentialMint({ ...org, tokenId: "o4", who: "second" }).reason, "AI_CREDENTIAL_ORG_NOT_ADMIN");
+  assert.equal(w.m.aiCredentialMint({ ...org, tokenId: "o4", who: "second" }).reason, "NOT_AN_ADMIN");
   assert.equal(w.m.aiCredentialMint({ tokenId: "m1", secretSha: SHA("c"), principalKind: "member", who: "ann" }).ok, true,
     "a member-scoped credential stays open to every member");
 });

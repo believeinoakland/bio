@@ -33,7 +33,7 @@ test("R38 ownerMath and projectOwnerArithmetic, the live row absent to a viewer 
   assert.deepEqual(w.m.projectOwnerArithmetic({ projectId: "PROJ-P", viewer: V("zed") }).live, Membership.ownerMath(0));
 });
 
-test("R39 projectOwnerAdd: refusals; an invited or leaving member is NOT_A_PARTICIPANT; the sole owner adds alone, then consensus", async () => {
+test("R39 projectOwnerAdd: refusals; an invited, leaving or absent member is TARGET_NOT_JOINED (C-56.5); the sole owner adds alone, then consensus", async () => {
   const w = await owned();
   await w.enrol("fay");
   w.m.memberSet({ memberId: "fay", status: "revoked", by: "admin" });
@@ -42,11 +42,11 @@ test("R39 projectOwnerAdd: refusals; an invited or leaving member is NOT_A_PARTI
   assert.equal(add(w, "zed", "ann").reason, "NO_SUCH_HANDLE");
   assert.equal(add(w, "fay", "ann").reason, "NOT_ACTIVE");
   const inv = add(w, "eve", "ann");
-  assert.deepEqual([inv.reason, inv.state], ["NOT_A_PARTICIPANT", "invited"]);
+  assert.deepEqual([inv.reason, inv.state], ["TARGET_NOT_JOINED", "invited"]);
   assert.equal(w.row(`SELECT state, owner FROM project_participants WHERE member_id='eve'`).state, "invited", "not joined by it");
   w.m.projectLeave({ projectId: "PROJ-P", by: "dee", viewer: V("dee") });
-  assert.equal(add(w, "dee", "ann").reason, "NOT_A_PARTICIPANT");
-  assert.equal(w.m.projectOwnerAdd({ projectId: "PROJ-P", handle: "second", by: "ann", viewer: V("ann") }).reason, "NOT_A_PARTICIPANT");
+  assert.equal(add(w, "dee", "ann").reason, "TARGET_NOT_JOINED");
+  assert.equal(w.m.projectOwnerAdd({ projectId: "PROJ-P", handle: "second", by: "ann", viewer: V("ann") }).reason, "TARGET_NOT_JOINED");
   assert.equal(add(w, "ann", "ann").reason, "ALREADY_AN_OWNER");
   assert.deepEqual(add(w, "bob", "ann").owners, ["ann", "bob"], "the sole owner adds the second alone");
   const c = add(w, "cal", "ann");
@@ -88,7 +88,7 @@ test("R41 projectOwnerRescue: an administrator adds an owner only when every own
   w.project("PROJ-M");   // a machine-created project: no owner rows
   const resc = (projectId, handle, by, reason = "stranded") => w.m.projectOwnerRescue({ projectId, handle, by, reason,
     viewer: by === "admin" ? "admin" : V(by) });   // the founder's viewer is the bare `admin` (R43)
-  assert.equal(resc("PROJ-P", "bob", "cal").reason, "ADMIN_ONLY");
+  assert.equal(resc("PROJ-P", "bob", "cal").reason, "NOT_AN_ADMIN");
   assert.equal(resc("PROJ-M", "bob", "second").reason, "NO_OWNERS");
   const busy = resc("PROJ-P", "bob", "second");
   assert.deepEqual([busy.reason, busy.active], ["OWNERS_ARE_ACTIVE", ["ann"]]);
@@ -182,10 +182,10 @@ test("R75 rescueRefusal answers R41's caller-and-project refusals in order, byte
     if (r) assert.deepEqual(act(projectId, by), r, `${projectId} ${by}: the act answers the same`);
     return r;
   };
-  // ADMIN_ONLY first, whatever the project: an ordinary member, an owner, a revoked administrator, nobody
+  // NOT_AN_ADMIN (R84) first, whatever the project: an ordinary member, an owner, a revoked administrator, nobody
   for (const by of ["cal", "ann", null, undefined, "", "class:admin"])
-    assert.equal(both("PROJ-P", by)?.reason, "ADMIN_ONLY", JSON.stringify(by));
-  assert.equal(w.m.rescueRefusal("PROJ-M", "cal").reason, "ADMIN_ONLY", "asked before NO_OWNERS");
+    assert.equal(both("PROJ-P", by)?.reason, "NOT_AN_ADMIN", JSON.stringify(by));
+  assert.equal(w.m.rescueRefusal("PROJ-M", "cal").reason, "NOT_AN_ADMIN", "asked before NO_OWNERS");
   // NO_OWNERS, for the founder and an administrator
   for (const by of ["admin", "second"]) assert.equal(both("PROJ-M", by).reason, "NO_OWNERS");
   assert.equal(w.m.rescueRefusal("PROJ-NEVER", "admin").reason, "NO_OWNERS", "no such project has no owner");
@@ -200,7 +200,7 @@ test("R75 rescueRefusal answers R41's caller-and-project refusals in order, byte
   assert.equal(act("PROJ-P", "second").ok, true);
   // a revoked administrator is no administrator
   w.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
-  assert.equal(w.m.rescueRefusal("PROJ-M", "second").reason, "ADMIN_ONLY");
+  assert.equal(w.m.rescueRefusal("PROJ-M", "second").reason, "NOT_AN_ADMIN");
   for (const [p, by] of [[null, null], [undefined, "admin"], [{}, []], [42, 7], ["PROJ-P", {}]])
     assert.doesNotThrow(() => w.m.rescueRefusal(p, by), JSON.stringify([p, by]));
 });
