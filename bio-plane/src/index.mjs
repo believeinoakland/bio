@@ -150,7 +150,7 @@ export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 // control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.
 import { makeFetch, json, doAnswer, storeSilent, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
          SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow } from "./control-plane/index.mjs";
-import { decorateAct } from "./control-plane/ops.mjs";
+import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs";
 
 /* REC-163 / IC-174 — THE PUBLIC READ OF THE PRODUCING GROUP, ONE READER FOR THE TWO SURFACES THAT SHOW IT TO A
    STRANGER: op=instancegroup's public arm and the setup page served at `/`. `BIO_Publication_v0_1.md` §7 point 1:
