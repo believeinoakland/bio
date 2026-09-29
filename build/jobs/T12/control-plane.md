@@ -33,3 +33,7 @@ Checks (after the tests' commit): format 0 failures; architecture 0 failures (th
 ## J1 · QUESTION
 
 Q1. The forward's versionchain stamp normalises `address` with subresources' `normalizeAddress` (index.mjs 5826, moved with the forward). control-plane's uses lack `subresources` (layer 1, no cycle), so architecture fails once. My best reading: add the edge `control-plane` → `subresources`; I import it meanwhile. (Also for your review at close: ownership lists two added legacy-index lines it cannot pair with an import, the headers of `publicOp`/`gatedOp`, the functions that now hold legacy-index's remaining arms for `makeFetch`; the arm bodies are unchanged lines.)
+
+## J2 · BLOCKED
+
+Cause: context. Past half my window (the whole of index.mjs read). Done and pushed: index.mjs's extraction into src/control-plane/ (ops.mjs, index.mjs with makeFetch), N314's Worker half, K383, D-586, B3's two ops, interface tests 42/36 pass/6 todo with coverage 34/34, and six defects the tests found fixed. Next step, in the record's Open list: R28's replay-check order, then R32's check families from legacy-checks, the store's dispatch door (R25–R27), D-629/D-679, N53, the OPS comments. A wording question on R17 and a strikable R19 mark are in the record's Work section. Restart me from the record.
