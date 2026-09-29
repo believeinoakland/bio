@@ -7086,77 +7086,6 @@ export const AI_CREDENTIAL_CHECKS = {
    number in a row, and neither can the sweep. So the rule is stated in words
    and the example is gone. */
 
-/* ===========================================================================
- * C-31 — THE QUEUE MINT: EVERY ITEM CARRIES A CLASS, AND A KIND THE CATALOGUE
- * NAMES UNDER THAT CLASS (PL-15 / D-213, NOTIFICATIONS.md).
- *
- * THREE C-NUMBERS ALLOCATED HERE AND NOWHERE ELSE. C-25 is PL-1/PL-2's, C-26
- * PL-12's, C-27 PL-3's, C-28 PL-4's, C-29 PL-11's and C-30 PL-14's — all six
- * MEASURED as taken over this file before C-31 was claimed, and C-31 measured
- * as free. If a parallel slot measured the same family free at the same moment,
- * CONDUCT renumbers the later merge and the note above C-30 says why that is
- * not the worker's error.
- *
- * WHY IT IS A FAMILY AND NOT AN EXTRA ROW ON SOMEBODY ELSE'S. SK-1 recorded
- * that a new family is a FLOOR and that adding one buys slack for everybody
- * else's walk, which is a real cost and the reason it declined to mint one.
- * This is the case that earns it anyway: `op=queue` had TWO refusals with no
- * translations at all (`NO_CLASS` sat inside REC-64's named reach gap, and
- * `NO_CONDITION_KIND` never reached a surface), and the item that swept the
- * fence for the class is the item that owes them their member-facing words.
- * Three codes, three rows, and the reach gap FALLS by one because NO_CLASS is
- * now translated — a family that pays for itself on the ceiling as well as
- * costing a floor.
- *
- * THE SWEEP THIS FAMILY RECORDS. REC-32 fenced the mint for CONDITION items
- * ONLY. Its reason — an uncatalogued condition kind is one no member could ever
- * mute — was true and partial: a kind is what a surface renders and what
- * `op=affordances` publishes, so an OBLIGATION or a FINDING minted under an
- * unnamed kind was exactly as unrenderable and was not refused. PL-15 needed
- * one new FINDING slug fenced and swept the class rather than fixing its own
- * instance.
- *
- * TWO CODES WHERE REC-32 HAD ONE, and the split is the difference between
- * UNKNOWN and WRONG that `classOfKind` was built three-valued to express.
- * NO_SUCH_KIND is a typo, an invented slug, or an `N-<n>` id copied out of a
- * design document — the catalogue does not name it at all. KIND_MISCLASSED is
- * the sharper one: the kind is real and filed under a DIFFERENT class, and
- * class is what decides whether leaving a member's list is a personal mute or
- * an authored record act (D-125, DEC-16). A refusal that said only "no" to both
- * would be the gate that pressures somebody into inventing a way past it.
- *
- * NO MEMBER-FACING TRANSLATION BELOW USES THE WORD `kind`, `class`, `mint`,
- * `producer` or `catalogue` as the thing the member is asked to understand.
- * These sentences are read by somebody whose queue just failed to load, and the
- * only useful thing to tell them is that the list is incomplete, that nothing
- * was lost, and that this is ours to fix rather than theirs.
- * ========================================================================= */
-export const QUEUE_MINT_CHECKS = {
-  NO_CLASS: {
-    check: 'C-31.1',
-    where: 'src/store.mjs queueFeed > is-queue-mint',
-    translation: 'Your list could not be assembled: something on it does not say what sort of item '
-      + 'it is, and showing it without that would put an entry in front of you that nobody can act '
-      + 'on. Nothing has been lost and nothing about the record has changed — this is a fault on '
-      + 'our side, not something you did.',
-  },
-  NO_SUCH_KIND: {
-    check: 'C-31.2',
-    where: 'src/store.mjs queueFeed > is-queue-mint',
-    translation: 'Your list could not be assembled: something on it is described in a word this '
-      + 'record does not know, so there is no sentence to show you in place of it. Rather than '
-      + 'showing you a line you could not read, the list refuses whole. Nothing has been lost.',
-  },
-  KIND_MISCLASSED: {
-    check: 'C-31.3',
-    where: 'src/store.mjs queueFeed > is-queue-mint',
-    translation: 'Your list could not be assembled: something on it is filed one way and described '
-      + 'another, and the difference decides whether setting it aside is a private choice of yours '
-      + 'or a change to the record everyone shares. That is not a difference to guess at, so the '
-      + 'list refuses until it is right. Nothing has been lost.',
-  },
-};
-
 /* =========================================================================
  * C-44 — THE CASE IDENTITY A PUBLISHING ACT DID NOT STATE (D-309, DEC-72
  * clause 6). ONE C-NUMBER, ONE CODE, ONE FAMILY.
@@ -7303,22 +7232,6 @@ export const MACHINE_FENCE_CHECKS = {
       + 'weaker. That decision needs a person behind it, and the credential that asked is an '
       + 'automated one. Sign in to ground it.',
   },
-  MACHINE_CANNOT_FORWARD: {
-    check: 'C-32.10',
-    where: 'src/store.mjs taskForward > is-machine-forward',
-    translation: 'Forwarding hands an obligation to a named person, and deciding who is better '
-      + 'placed to answer it is a judgement about people rather than about records. The credential '
-      + 'that asked here is an automated one: it can surface the work and route it as it arrives, '
-      + 'and cannot re-address it. Sign in to forward it.',
-  },
-  MACHINE_CANNOT_RESOLVE: {
-    check: 'C-32.11',
-    where: 'src/store.mjs taskResolve > is-machine-resolve',
-    translation: 'Closing an obligation says the thing the record asked for has been answered, and '
-      + 'somebody has to be willing to say that. The credential that asked here is an automated '
-      + 'one — it may surface the work and prepare what it needs, and closing work that is '
-      + 'nobody\'s is still closing it. Sign in to resolve it.',
-  },
   /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
      the same doctrine rather than a new one: *the credential that delivers an
      act decides when the record changes, and the record names the actor.* A
@@ -7378,26 +7291,6 @@ export const MACHINE_FENCE_CHECKS = {
  * family's business, and a whole-function `where` conscripts every one of them.
  * ========================================================================= */
 export const ACT_SHAPE_CHECKS = {
-  /* REC-205, 2026-09-24 — A CLASS THAT IS NOT DISPOSED AT ALL, and it is a MEMBER-FACING refusal from
-     the day the queue lets a selection carry one. D-126's per-item weight means a member ticks items and
-     applies one handler; NOTIFICATIONS.md's "MARKED AS HANDLED" section says the scope differs by class,
-     so a CONDITION is muted and an OBLIGATION is resolved and neither is DISPOSED. Before this row the act
-     answered NO_SUCH_PROGRESSION and told the member to define a progression — true of the key it read and
-     useless about what they clicked, the same fault IC-60's bridge exists to have fixed one door over.
-     THE TRANSLATION NAMES THE ACT THAT DOES REACH IT rather than only refusing, because the member is
-     holding a selection and the next move is the whole question. It does NOT say the item is gone: under
-     the per-item weight the rest of the selection was handled and this one stays in the list, which is the
-     fact a member re-reading their queue needs. Numbered inside this family (C-33.x) on REC-211's own
-     precedent two rows down — C-33.42 and C-33.43 were added to it without minting a top-level C. */
-  CLASS_NOT_DISPOSED: {
-    check: 'C-33.44',
-    where: 'src/store.mjs proposeDispose > is-dispose-class',
-    translation: 'This is not something the record disposes of. Deferring and dismissing are decisions '
-      + 'about a FINDING — the record\'s own question — and this item is a different kind of thing: a '
-      + 'CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work '
-      + 'a named person owes and leaves every list when it is resolved. Nothing about it was changed, and '
-      + 'it is still in your list. The answer names the act that does reach it.',
-  },
   NO_CONCLUSION: {
     check: 'C-33.1',
     where: 'src/basis-versions/index.mjs conclude > is-conclude-answer',
@@ -7586,13 +7479,6 @@ export const ACT_SHAPE_CHECKS = {
     translation: 'Another name for something needs to actually be a name. This one is empty once '
       + 'the spacing and punctuation are taken off, so there would be nothing for anybody to '
       + 'search on later.',
-  },
-  KIND_NOT_PERSONAL: {
-    check: 'C-33.27',
-    where: 'src/store.mjs queueMute > is-mute-class',
-    translation: 'Setting this aside would be a change everybody sees rather than a private choice '
-      + 'of yours, and that is a decision the group takes together rather than one this control '
-      + 'makes. The kinds you can quiet for yourself are listed beside the refusal.',
   },
   LAST_OWNER: {
     check: 'C-33.28',
@@ -11797,23 +11683,6 @@ function coversImagePlacement(e, container) {
     + `${onPage.length ? ` (${listed}${onPage.length > 6 ? ' …' : ''})` : ''} and none at `
     + `[${want.join(', ')}], the rectangle the extent names`;
 }
-
-/* D-126 / C-76 — THE TASK-ACTOR FENCE'S REFUSAL, TRANSLATED BECAUSE A MEMBER CAN NOW MEET IT.
- *
- * `NOT_YOURS` is REC-4's fence (`store.mjs #refuseNotYours`): a member who is neither a task's assignee nor an
- * administrator may not resolve or forward it. Until D-126 no surface could receive it — `op=queue` lists a member
- * only their own and unassigned obligations, so the queue had nothing it could be refused (UI-14 §7). A SELECTION
- * changes that: an obligation that moves to somebody else between the paint and the act is RETAINED under this
- * code, and the queue renders the reason. So the code enters reach and carries a canned sentence (DEC-49). The
- * `detail` still names who holds it; the translation does not, because it is canned. */
-export const TASK_ACTOR_CHECKS = {
-  NOT_YOURS: {
-    check: 'C-76.1',
-    where: 'src/store.mjs #refuseNotYours > is-task-actor-fence',
-    translation: 'This task is not yours to act on: it is with another member now, so nothing was done to it. '
-      + 'The record says below who holds it. Ask them, or an administrator, if it still needs you.',
-  },
-};
 
 /* D-126 / C-75 — THE PER-ITEM WEIGHT (NOTIFICATIONS.md §Applying a handler to a selection).
  *
