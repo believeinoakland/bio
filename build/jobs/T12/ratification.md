@@ -29,3 +29,7 @@ N308 applied against a local stub of R38's cursor answer: R5's scope arm pages r
 Merged `tranche/T12`. The fixture's fallback (`restingPage`, no steered list) now calls the real `ratifiedFindingsRestingOn(id, {after, limit})` and returns its answer as is (the array wrapper is gone); the C-58.2 / C-58.3 tests reach the real read through it. Runs against the real read: `node --test test/m/ratification/` 70 pass, 0 fail; `test/ratify-authority.test.mjs` 53 pass, 0 fail (back to the tranche's count); `test/caseobject.test.mjs` 19/0; `test/derivation-bounds.test.mjs` 0 fail. Checks: format, architecture, coverage (16 of 16), ownership: 0 failures each. The `RESTING` anchor in `ratify-authority.control.mjs` remains legacy-tests' (noted by BOB). Deferred: none.
 
 Size (session_01WpDgkzKHXhpC2PuizXicGz): test runs 11, module lines 3051
+
+## J2 · COMPLETE · re B2
+
+B2 done: tranche merged; fixture fallback calls the real ratifiedFindingsRestingOn(id, {after, limit}) directly. Against the real read: module 70/0; ratify-authority 53/0; caseobject 19/0; derivation-bounds 0 fail. format, architecture, coverage (16/16), ownership: 0 failures. Record updated.
