@@ -28,7 +28,7 @@
 
 import { normalizeType, STATES, vocabFor, isMachineIdentity, isMachineStamp, MACHINE_AUTHOR_PREFIX,
          MACHINE_CLASS_PREFIX, isPublicHttpsLocator, checkInboxGrammar, parseFrontmatter } from "../../checks/bio-checks.mjs";
-import { recordOf, stampInstant, perItem } from "../record-core/index.mjs";
+import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, noSuchProject } from "../membership/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -3567,7 +3567,7 @@ export class Queue {
          the absent answer above and learns nothing here. */
       const denied = this.#projectAuthority(proj, identity, "joined", "proposedispose");
       if (denied) return denied;
-      const atS = new Date().toISOString();
+      const atS = stampInstant("millisecond", this.#nowMs(null));
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
       this.sql.exec(
         `INSERT INTO finding_dispositions (project_id,finding_id,kind,state,reason,decided_by,at)
@@ -3729,7 +3729,7 @@ export class Queue {
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = clampLimit(limit, 50, 500);
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs(null));
     /* capture R45: the queued events oldest first, each `{kind, captureSha, subject, locator, enqueued, attempts}`;
        provenance R4: the bundle a capture is filed in. */
     const queued = this.#capture.taskEvents({ limit: cap })
@@ -3763,12 +3763,15 @@ export class Queue {
       const slug = taskSlug(q.subject);
       /* REC-151: OPAQUE, never the TASK counter (Membership v2 §7) — a task naming a bundle the viewer cannot see
          is withheld (REC-30), so a counted id told a member how many tasks existed that they could not read. On
-         exhaustion the event is KEPT, as an unfiled capture's is, never dropped. */
+         exhaustion the event is KEPT, as an unfiled capture's is, never dropped, and its `waiting` entry carries the
+         one answer to that condition, record-core's `mintExhausted("TASK")` (its R62; R23, N322): its code, row and
+         sentence, minted there and nowhere here. */
       const taskId = this.#record.mintOpaqueId("TASK", year, `-${slug}`,
         (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id));
       if (!taskId) {
+        const exhausted = mintExhausted("TASK");
         out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts,
-          detail: "the plane could not find a free task id (MINT_EXHAUSTED); the event is kept, not dropped" });
+          code: exhausted.code, check: exhausted.check, detail: exhausted.detail });
         continue;
       }
       const task = {
@@ -3996,7 +3999,7 @@ export class Queue {
     const target = facts && facts.status === "active" ? { member_id: to } : null;
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs(null));
     const task = this.#taskOf(row);
     task.history.push({ at, event: "forwarded", actor });
     task.assignee = target.member_id;
@@ -4044,7 +4047,7 @@ export class Queue {
     if (row.status === "resolved") return { ok: true, id, already: true, resolved_at: row.resolved_at };
     const fenced = this.#refuseNotYours(row, actor, "resolve");
     if (fenced) return fenced;
-    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second");
+    const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs(null));
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });
     task.status = "resolved";
