@@ -38,6 +38,8 @@ test("R1: NO_ENTITY for an empty id; one connection per unordered pair, graded t
   assert.ok(caps.length === 3);
 });
 
+test.todo("R1: NO_ENTITY is answered by entities.noEntity (its R37) — not yet met: N285, T12 (K347)");
+
 test("R1: per capture the strongest resolution wins, ties to the first reference by sort, with the position of its first read", () => {
   const w = world();
   w.entity(E);
