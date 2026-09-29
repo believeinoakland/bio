@@ -122,8 +122,12 @@ const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names t
 import {
   CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS, MEANING_ARM,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
-  advance, resumableState, resumeFrom,
+  advance, publishableState, resumeFrom,
 } from "./harness.mjs";
+
+/* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS ai-runs' (its R45), read from its own file and never copied.
+ * `airun.mjs` is already in this bundle through `skills`' `skillpack.mjs`. */
+import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/airun.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
@@ -549,14 +553,28 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R11, N153: the tick also publishes where the table goes next, so a later segment continues there. The gate's
        tick publishes nothing: until `resume` has moved on, the resume point is the one the record already holds. */
     const after = advance(state, decision);
+    /* R49: the state stays within ai-runs' ceiling; one that would not is published as its pass restarted, and the
+       step's trace says so (the answer's keys are R28's). */
+    let published = null;
+    if (CONTROL_FLOW.resume.to.includes(after.step)) {
+      published = publishableState(after, AI_RUN_STATE_MAX_BYTES);
+      if (published.restarted) {
+        const last = trace[trace.length - 1];
+        last.note = (last.note ? `${last.note}; ` : "")
+          + `the table's state is ${published.restarted.bytes} bytes, over the ${published.restarted.limit} a run's `
+          + `state may hold (ai-runs R45), so this tick publishes the pass restarted at '${published.restarted.at}' `
+          + "and a later segment re-does it rather than resume from a state the record refuses";
+      }
+    }
     const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume,
-        ...(CONTROL_FLOW.resume.to.includes(after.step) ? { state: resumableState(after) } : {}) });
+      { run: runId, log: entry ? [entry] : [], consume, ...(published ? { state: published.state } : {}) });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
        an entry that landed. */
     const tickAnswer = planeAnswer(tick, "airuntick");
     if (tickAnswer.refused) {
+      /* R49: `AI_RUN_STATE_TOO_LARGE` (ai-runs R45) among them — a refusal of this tick, never the plane failing; the
+         segment carries on. */
       refusals.push({ at: "airuntick", code: tickAnswer.refused.code, check: tickAnswer.refused.check,
                       plane: tickAnswer.refused.plane });
     } else {
