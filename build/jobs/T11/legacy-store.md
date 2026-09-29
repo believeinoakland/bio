@@ -49,3 +49,14 @@ For routing; full detail is in my record's § Completion.
 1. **Merge order:** this branch calls monitoring's `counts()` (R46, N266), which is not merged yet. Merge MONITORING #3 first, or `op=stats` and `op=purge` throw.
 2. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest, from `store.mjs` (fleetbundles 96/0 → 92/4), for the layer close (§14).
 3. **K365, a finding:** on the tranche, review's and filings' factories already build `publicationOf` during construction as a side effect, so the alarm-first `case_parts_absent` could not occur there. The explicit construction now makes it independent of those side effects. With none of the three, the Durable Object does not boot ("no such table: cases").
+
+## J2 · COMPLETE
+
+All four entries handled.
+- **N266:** `#counts` reads monitoring's `counts()` (R46). The keys are unchanged. **Needs MONITORING #3 merged first.**
+- **N267:** the `standardsOf(ctx).migrate()` call is gone.
+- **N294:** the testimony path calls `indexTestimony` (R61) and no longer calls `observeIndexed`. The driver shows one `derive` row, and the negative control shows two.
+- **K365:** `publicationOf(ctx)` is built after `reevaluationOf(ctx, {env})`. A fresh Durable Object reached only by RPC sees the registration. It was already registered on the tranche through review's and filings' factories (REPORT).
+
+**Battery:** 383 suites, 361 green on both trees. The red sets are identical except `fleetbundles` (the stale plane bundle).
+**Checks:** format, coverage and ownership 0 failures; architecture shows only the 4 pre-existing failures.
