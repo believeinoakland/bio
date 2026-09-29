@@ -47,12 +47,22 @@ function bodyAt(src, anchor) {
 
 export const STORE_DISPATCH_ANCHOR = "const map = {";
 
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2; AFFORDANCES #5 J2, BOB's B10): control-plane's extraction moved the
+   `OPS` table (with `NEEDS`) out of `src/index.mjs` into `src/control-plane/ops.mjs`, and the `DO_PATH` alias map into
+   `src/control-plane/index.mjs` (the `fetch` handler's store relay). The reader follows each table to where it lives
+   now, by the same brace-matched read; the store's dispatch map is still `src/store.mjs`'s (K412). Its only borrowers
+   are `rung-ladder.test.mjs`, which also holds this parse equal to control-plane's exported `OPS`, and
+   `rung-ladder.control.mjs`. */
+export const OPS_FILE = "src/control-plane/ops.mjs";
+export const DO_PATH_FILE = "src/control-plane/index.mjs";
+
 export function readDispatch(planeDir = PLANE) {
-  const indexSrc = readFileSync(join(planeDir, "src/index.mjs"), "utf8");
+  const indexSrc = readFileSync(join(planeDir, OPS_FILE), "utf8");
+  const doPathSrc = readFileSync(join(planeDir, DO_PATH_FILE), "utf8");
   const storeSrc = readFileSync(join(planeDir, "src/store.mjs"), "utf8");
 
   const opsBody = tableBody(indexSrc, "OPS");
-  if (opsBody == null) throw new Error("OPS table not found in src/index.mjs");
+  if (opsBody == null) throw new Error(`OPS table not found in ${OPS_FILE}`);
   const opRows = [...opsBody.matchAll(/^\s{2}([a-z][a-z0-9]*)\s*:\s*\{([^}]*)\}/gm)];
   const ops = new Set(opRows.map((m) => m[1]));
 
@@ -67,7 +77,7 @@ export function readDispatch(planeDir = PLANE) {
 
   /* The public-name -> DO-path alias map. THE ONE PLACE that difference lives, and
      the reason existence alone is not a sufficient check. */
-  const doPathBody = tableBody(indexSrc, "DO_PATH");
+  const doPathBody = tableBody(doPathSrc, "DO_PATH");
   const doPath = new Map();
   if (doPathBody != null)
     for (const m of doPathBody.matchAll(/([a-z][a-z0-9]*)\s*:\s*"([a-z][a-z0-9]*)"/g))

@@ -89,6 +89,13 @@ const t = (label, got, want) => {
 const val = (o, k) => (o && typeof o === "object" && k in o) ? o[k] : null;
 
 const INDEX_SRC = readFileSync(SRC("src/index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the control plane's identity STAMP SITES (the `declaredBy`,
+   `decidedBy`, `author` … stamps with their comment blocks and markers) and the `OPS` table left `src/index.mjs` for
+   `src/control-plane/index.mjs` and `src/control-plane/ops.mjs`. The sweep's index side is those two files, read as one
+   text in that order; the names below keep the `@src/index.mjs` spelling the sets were pinned in (the plane's entry,
+   which the control plane now is a module of), so a site moving between the two files moves no name. */
+const CP_SRC = readFileSync(SRC("src/control-plane/index.mjs"), "utf8") + "\n"
+             + readFileSync(SRC("src/control-plane/ops.mjs"), "utf8");
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2): the store's `testify`, the chain and route-mark
    services and the register/receipt reads moved to `src/provenance/`, and the store keeps a ONE-LINE delegation for
    each (`x(...a) { return provenanceOf(this.ctx).y(...a); }`). The sweep reads a method's fence off the store's own
@@ -123,6 +130,13 @@ console.log(`  T5: ${T5_INLINE.reinlined.length} substitutions for the sweep: ${
 const T8_INLINE = reinlineLayer5(STORE_SRC, { ops: true, modules: T8_MODULES });
 STORE_SRC = T8_INLINE.text;
 console.log(`  T8: ${T8_INLINE.reinlined.length} substitutions for the sweep: ${T8_INLINE.reinlined.join(", ")}`);
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): the queue's acts (`proposeDispose`, `taskForward`, `taskResolve`, `taskDrain`,
+   `queueMute` …) left the store for `src/queue/index.mjs`, and the dispatch map spreads `...queueOps(queueOf(this.ctx),
+   url, body)`. The same re-inliner is passed queue's factory as a fourth pass, so each of those ops reads the method its
+   fence now lives in; nothing else changes. */
+const Q_INLINE = reinlineLayer5(STORE_SRC, { ops: true, modules: { queueOf: "queue" } });
+STORE_SRC = Q_INLINE.text;
+console.log(`  T12: ${Q_INLINE.reinlined.length} substitutions for the sweep: ${Q_INLINE.reinlined.join(", ")}`);
 
 let MF;
 const mf = new Miniflare({
@@ -148,10 +162,10 @@ try {
    and which of those the code actually enforces.
    ===================================================================== */
 console.log("\n--- 1. the sweep: the corpus, printed before anything is claimed over it ---");
-const S = sweep(INDEX_SRC, STORE_SRC);
+const S = sweep(CP_SRC, STORE_SRC);
 const sites = S.sites;
 const fencedCount = [...S.enforcement.values()].filter((v) => v.fenced).length;
-console.log(`  corpus: ${sites.length} identity STAMP SITES in src/index.mjs · `
+console.log(`  corpus: ${sites.length} identity STAMP SITES in src/control-plane/{index,ops}.mjs · `
   + `${S.enforcement.size} ops in store.mjs's dispatch table · ${fencedCount} of them carrying a machine fence · `
   + `${S.opsTable.size} ops in the OPS table`);
 for (const s of sites)
@@ -163,7 +177,13 @@ for (const s of sites)
    that read zero files. Every claim below is made only after the corpus is floored. */
 t("(a) the sweep reaches the stamp sites at all — corpus floored, never assumed",
   sites.length >= 18, true);
-t("(a) the store's dispatch table is read and non-trivial", S.enforcement.size >= 150, true);
+/* MOVED 2026-09-29 (K414, INSTANCE-SETUP #1; K409, QUEUE #2), 150 -> 145, FROM THE FIGURE THIS SWEEP PRINTED (148):
+   instance-setup's eleven ops (instancegroup, instancegrouppublic, instancegroupseed, groupnameset, groupdomainset,
+   groupidentity, groupidentitypublic, runtimeobservations, cpuprobestate, recordcpuprobestep, recordruntime) left the
+   store's `const map = {` for instance-setup's own Durable Object door (`instanceSetupRoute`, src/setup.mjs), which is
+   no spread of the store's map and so no op of the dispatch table this sweep reads; queue's eight ops are read through
+   the fourth re-inlining pass above. The plane lost no op; the store's table is smaller by the ones that left it. */
+t("(a) the store's dispatch table is read and non-trivial", S.enforcement.size >= 145, true);
 t("(a) machine fences ARE found — a fence detector that finds none would pass everything",
   fencedCount >= 15, true);
 t("(a) the OPS table is read, which is what separates a write from a read scope",

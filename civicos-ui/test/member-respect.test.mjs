@@ -115,7 +115,10 @@ function ok(cond, msg){ n++; if(!cond){ fails.push(msg); console.error("  FAIL",
 function eq(a, b, msg){ ok(a === b, `${msg} (got ${JSON.stringify(a)}, want ${JSON.stringify(b)})`); }
 
 const APP_PATH   = new URL("../app.html", import.meta.url).pathname;
-const PLANE_INDEX= new URL("../../bio-plane/src/index.mjs", import.meta.url).pathname;
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the plane's OPS table — this sweep's mutating set (ARM C) and
+   op=readingname's row (ARM 3a) — left `bio-plane/src/index.mjs` for control-plane's `src/control-plane/ops.mjs`; the
+   same parse reads it there. */
+const PLANE_INDEX= new URL("../../bio-plane/src/control-plane/ops.mjs", import.meta.url).pathname;
 const DECISIONS  = new URL("../../docs/development/DECISIONS.md", import.meta.url).pathname;
 const app    = fs.readFileSync(APP_PATH, "utf8");
 const plane  = fs.readFileSync(PLANE_INDEX, "utf8");
@@ -873,15 +876,20 @@ for(const [host, s] of Object.entries(SETS)){
      && /\n  resolve\(\{[^}]*\bitems \} = \{\}\) \{\s*(?:\/\*[\s\S]*?\*\/\s*)?if \(items !== undefined\)\s*return perItem\("resolve", [^;]*\(b\) => this\.#resolveOne\(b\)/.test(entitiesSrc)
      && /\n  #resolveOne\(\{/.test(entitiesSrc),
      "ARM 4d: `op=resolve` (`resolveReferences`) no longer opens with the set branch into the per-item weight (`#perItem`) over the SAME one-document act the single form runs (`#resolveOne`) — the bulk path in `resolveCandPaint` would be sending a selection the plane cannot take. Re-measure the act.");
+  /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): `proposeDispose`, `taskResolve`, `taskForward` and `queueMute` left the
+     store for queue's `bio-plane/src/queue/index.mjs` with their set branches (`this.#perItem(…)`, queue's delegation to
+     record-core's per-item weight) and `queueMute`'s signature and undo unchanged; every claim below that read them
+     in store.mjs reads them there. */
+  const queueSrc = fs.readFileSync(new URL("../../bio-plane/src/queue/index.mjs", import.meta.url).pathname, "utf8");
   for(const [op, method] of [["proposedispose","proposeDispose"], ["taskresolve","taskResolve"], ["taskforward","taskForward"]])
-    ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(store),
+    ok(new RegExp(`\\n  ${method}\\(\\{[^}]*\\bitems \\} = \\{\\}\\) \\{\\s*(?:/\\*[\\s\\S]*?\\*/\\s*)?if \\(items !== undefined\\)\\s*return this\\.#perItem\\("${op}"`).test(queueSrc),
        `ARM 4d: \`op=${op}\` (\`${method}\`) no longer opens with the set branch into the per-item weight (\`#perItem\`) — the bulk path in \`queueSelBarHtml\` would be sending a selection the plane cannot take. Re-measure the act.`);
   for(const c of stillScalar)
     ok(c.sig.test(c.src || store),
        `ARM 4d: the carried row for '${c.op}' claims the plane takes ONE key, and the plane's own signature no longer matches that claim. Re-measure it: if the op now accepts a set, the bulk path is buildable here and the carry must be STRUCK in the same commit that builds it.`);
   /* And the correction's own claim, measured the same way and in the other
      direction: `op=queuemute` DOES take a set, which is why UI-55 could fix it here. */
-  ok(/queueMute\(\{[^}]*kinds\s*=\s*null/.test(store),
+  ok(/queueMute\(\{[^}]*kinds\s*=\s*null/.test(queueSrc),
      "ARM 4d: `op=queuemute` still takes `kinds` as a set — that is what made UI-55's single-kind path a one-parameter change rather than a plane delegation");
   const muteHtml = FN_BY_NAME.get("queueMuteHtml");
   ok(!!muteHtml && /data-mute1=/.test(muteHtml.body),
@@ -893,7 +901,7 @@ for(const [host, s] of Object.entries(SETS)){
      "ARM 4d: the per-kind control is WIRED — a control the surface draws and never binds is worse than none");
   /* UI-86: the per-item mute, measured the same way. The plane's item form is
      the claim its SETS row rests on, so it is re-read from the plane's source. */
-  ok(/queueMute\(\{[^}]*\bitem\s*=\s*null/.test(store),
+  ok(/queueMute\(\{[^}]*\bitem\s*=\s*null/.test(queueSrc),
      "ARM 4d: `op=queuemute` still takes an `item` — the single-item mute's SETS row rests on that");
   ok(!!wire && /data-muteitem/.test(wire.body),
      "ARM 4d: the per-item mute is WIRED — a control the surface draws and never binds is worse than none");
@@ -901,9 +909,9 @@ for(const [host, s] of Object.entries(SETS)){
      that claim is re-read from the plane's own source the way the two above are.
      If `queueMute` ever stops taking the flag, this goes RED at the claim rather
      than leaving a control that sends a field the plane ignores. */
-  ok(/queueMute\(\{[^}]*\bunmute\s*=\s*false/.test(store)
-     && /if \(unmute\) this\.sql\.exec\(\s*`DELETE FROM queue_item_mutes/.test(store)
-     && /const next = unmute \? had\.filter/.test(store),
+  ok(/queueMute\(\{[^}]*\bunmute\s*=\s*false/.test(queueSrc)
+     && /if \(unmute\) this\.sql\.exec\(\s*`DELETE FROM queue_item_mutes/.test(queueSrc)
+     && /const next = unmute \? had\.filter/.test(queueSrc),
      "ARM 4d: `op=queuemute` no longer takes `unmute` in BOTH forms — the item form's DELETE and the case form's DIFFERENCE are what `queueMuteReportHtml`'s two undo controls send. Re-measure the act before trusting either control.");
   ok(!!wire && /data-unmuteitem/.test(wire.body) && /data-unmutecase/.test(wire.body),
      "ARM 4d: the two UNDO controls are WIRED — a control the surface draws and never binds is worse than none");

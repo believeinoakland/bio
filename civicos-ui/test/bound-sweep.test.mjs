@@ -244,8 +244,14 @@ const SRC = fs.readFileSync(new URL("../app.html", import.meta.url), "utf8");
    roster lost it while the op stayed capped. The corpus gains the two further passes of the SAME re-inliner that
    `bio-plane/test/bounds.test.mjs` now reads (`{ modules: T7_MODULES }`, then `{ modules: T8_MODULES }`, each
    `{ ops: true, privates: true }`), leaving every earlier substitution as it was. */
-const STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2; LEGACY-UI #1 J2's B7): `op=queue` (`queueFeed`) and `op=tasks` (`taskList`) —
+   two of the three ops UI-39 named, and their call sites `queueLoadFeed` reads — left the store with the queue for
+   `bio-plane/src/queue/index.mjs`, spread into the dispatch map by `...queueOps(queueOf(this.ctx), url, body)`, still
+   capped unconditionally. The corpus gains a fourth pass of the SAME re-inliner over queue's factory, leaving every
+   earlier substitution as it was. */
+const STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
+  { ops: true, privates: true, modules: { queueOf: "queue" } }).text;
 const QUERY = fs.readFileSync(new URL("../../bio-plane/src/query.mjs", import.meta.url), "utf8");
 
 /* ==========================================================================
@@ -335,8 +341,13 @@ const helperExpr = (text, name, args) => {
   const esc = name.replace(/[#$]/g, "\\$&");
   let params = null, expr = null;
   const meth = new RegExp(`^\\s+${esc}\\s*\\(([^)]*)\\)\\s*\\{([\\s\\S]*?)\\n\\s*\\}`, "m").exec(text);
-  const arrow = new RegExp(`const ${esc}\\s*=\\s*\\(([^)]*)\\)\\s*=>\\s*([^;]+);`).exec(text);
+  /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): queue's module-level `clampLimit(limit, dflt, max)` (its R6/R23/R24) is an
+     arrow with a BLOCK body — `{ const n = …; return Number.isFinite(n) ? Math.max(1, Math.min(max, n)) : dflt; }` —
+     read as its `return` expression exactly as a method's is; a concise arrow is read as before. */
+  const arrowBlock = new RegExp(`const ${esc}\\s*=\\s*\\(([^)]*)\\)\\s*=>\\s*\\{([\\s\\S]*?)\\n\\};`).exec(text);
+  const arrow = new RegExp(`const ${esc}\\s*=\\s*\\(([^)]*)\\)\\s*=>\\s*([^;{]+);`).exec(text);
   if(meth){ const r = /return\s+([^;]+);/.exec(meth[2]); if(r){ params = meth[1]; expr = r[1]; } }
+  else if(arrowBlock){ const r = /return\s+([^;]+);/.exec(arrowBlock[2]); if(r){ params = arrowBlock[1]; expr = r[1]; } }
   else if(arrow){ params = arrow[1]; expr = arrow[2]; }
   if(expr === null) return null;
   const ps = params.split(",").map(x => x.split("=")[0].trim()).filter(Boolean);
@@ -368,8 +379,10 @@ const unconditional = (cap) =>
 /* The helpers live in the modules' own source (a free function such as connections' `clamp`, or a private method the
    re-inlined text does not carry), so the helper lookup reads the corpus AND the T5 modules' files. */
 const T5_MODULE_SRC = Object.values(T5_MODULES).map((d) => moduleSources(d)).join("\n");
+/* RE-ANCHORED 2026-09-29 (K409): queue's helper `clampLimit` is a free function of its own source, read beside T5's. */
+const QUEUE_MODULE_SRC = moduleSources("queue");
 const classifyOps = (text) => {
-  CAP_CORPUS = text + "\n" + T5_MODULE_SRC;
+  CAP_CORPUS = text + "\n" + T5_MODULE_SRC + "\n" + QUEUE_MODULE_SRC;
   const bodies = methodBodies(text);
   const uncond = new Map(), optional = new Map(), unjudged = new Map();
   for(const [op, meth] of forwardsLimit(text)){

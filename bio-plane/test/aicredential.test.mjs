@@ -44,7 +44,14 @@ import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): t
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { AI_CREDENTIAL_CHECKS, isMachineIdentity, isMachineStamp, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+import { AI_CREDENTIAL_CHECKS as MINT_CHECKS, isMachineIdentity, isMachineStamp, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the family C-29 is split across two tables since control-plane's
+   extraction — the catalogue's `AI_CREDENTIAL_CHECKS` keeps the mint's and the revocation's rows (C-29.1–.5, .11, .12,
+   membership's) and control-plane's `AI_SCOPE_CHECKS` holds the gate's and the declaration's (C-29.6–.10), each row
+   keeping its id and words. This suite's subject is the family whole, so `AI_CREDENTIAL_CHECKS` below is the union. */
+import { AI_SCOPE_CHECKS } from "../src/control-plane/checks.mjs";
+import { GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../src/control-plane/ops.mjs";
+const AI_CREDENTIAL_CHECKS = Object.freeze({ ...MINT_CHECKS, ...AI_SCOPE_CHECKS });
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
@@ -63,9 +70,17 @@ const SRC = (f) => join(DIR, "..", "src", f);
    store's as it stood before those extractions too. Actions brought one new fence of the same family with it
    (MACHINE_CANNOT_STATE_RECORDS_LAW, C-32.20, actions R5), which block 8 drives. (Layer 9's other modules mint
    fences that never were the store's and are not routed in T8, K263/K264; not widened to.) */
+/* WIDENED 2026-09-29 (K409, QUEUE #2): the task acts' fences (MACHINE_CANNOT_FORWARD, MACHINE_CANNOT_RESOLVE) left the
+   store with the obligation inbox for `src/queue/`; the corpus is the store's as it stood before that extraction too. */
 const STORE_SRC = storeCorpus(["membership", "promotion", "basis-versions", "inquiry", "strength", "actions",
-                               "case-authoring", "review"]);
+                               "case-authoring", "review", "queue"]);
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): `classify`, the `ai` branch's lookup, `aiTaskScope`, the scope and
+   confinement declarations with their DEC-49 regions moved out of `src/index.mjs` into `src/control-plane/index.mjs`,
+   and the `OPS` table into `src/control-plane/ops.mjs`. The source arms read them there; `INDEX_SRC` stays for what
+   the plane's entry still holds. */
+const CP_SRC = readFileSync(SRC("control-plane/index.mjs"), "utf8");
+const CP_OPS_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 /* The ai_credentials DDL moved with membership's tables (R57–R59) into `src/membership/schema.mjs`. */
 const MEMBERSHIP_SCHEMA_SRC = readFileSync(SRC("membership/schema.mjs"), "utf8");
@@ -94,6 +109,8 @@ const decomment = (src) => src
   .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
   .replace(/(^|[^:])\/\/[^\n]*/gm, (m, p) => p + " ".repeat(m.length - p.length));
 const INDEX_BARE = decomment(INDEX_SRC);
+const CP_BARE = decomment(CP_SRC);
+const CP_OPS_BARE = decomment(CP_OPS_SRC);
 const STORE_BARE = decomment(STORE_SRC);
 
 let MF;
@@ -246,21 +263,21 @@ console.log("\n--- 1. one class, and D-199 (2): the scope is a ROW, not a bindin
      none of them is an AI one. A fifth binding would be exactly the settings row
      D-199 (2) refuses, and it would be invisible to every behavioural arm here
      because it would simply work. */
-  const cl = INDEX_BARE.indexOf("async function classify(token, env)");
-  const clBody = INDEX_BARE.slice(cl, INDEX_BARE.indexOf("\n}", cl));
+  const cl = CP_BARE.indexOf("async function classify(token, env)");
+  const clBody = CP_BARE.slice(cl, CP_BARE.indexOf("\n}", cl));
   const bindings = [...clBody.matchAll(/env\.([A-Z_]+_TOKEN)/g)].map((m) => m[1]);
   t("classify() resolves EXACTLY the four env-binding classes", [...new Set(bindings)].sort(),
     ["ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
   t("and NO AI_TOKEN binding exists anywhere in the plane's sources — a fifth binding IS the "
   + "settings row D-199 (2) rules out, and nothing behavioural could see it",
-    /\bAI_TOKEN\b/.test(decomment(INDEX_SRC) + decomment(STORE_SRC)), false);
+    /\bAI_TOKEN\b/.test(decomment(INDEX_SRC) + CP_BARE + CP_OPS_BARE + decomment(STORE_SRC)), false);
   /* The span is non-trivial: a walk over an empty body would report "no
      bindings" triumphantly. */
   t("(the classify() span the walk read is a real body, not a collapsed match)", clBody.length > 200, true);
 
   /* AND THE POSITIVE HALF: the class resolves against the STORE. */
   t("the ai branch resolves by asking the Durable Object, not by comparing a binding",
-    /AI_TOKEN_SHAPE\.test\(t\)/.test(INDEX_BARE) && /aicredentiallook\?sha=/.test(INDEX_BARE), true);
+    /AI_TOKEN_SHAPE\.test\(t\)/.test(CP_BARE) && /aicredentiallook\?sha=/.test(CP_BARE), true);
 }
 
 /* ====================================================================== 2
@@ -420,8 +437,8 @@ console.log("\n--- 5. the fence is a SHAPE: driven over EVERY op in the table --
   /* THE OP TABLE, PARSED FROM SOURCE rather than typed here. Producing the set
      by DRIVING is the rule; producing the QUESTION by typing would be the same
      defect one step earlier. */
-  const opsAt = INDEX_BARE.indexOf("const OPS = {");
-  const opsSrc = INDEX_BARE.slice(opsAt, INDEX_BARE.indexOf("\n};", opsAt));
+  const opsAt = CP_OPS_BARE.indexOf("const OPS = {");
+  const opsSrc = CP_OPS_BARE.slice(opsAt, CP_OPS_BARE.indexOf("\n};", opsAt));
   const OPS = {};
   for (const m of opsSrc.matchAll(/^\s*([a-z][a-z0-9]*)\s*:\s*\{\s*classes:\s*(\[[^\]]*\]|null)\s*,\s*mutating:\s*(true|false)/gm))
     OPS[m[1]] = { classes: m[2] === "null" ? null : JSON.parse(m[2].replace(/'/g, '"')),
@@ -437,7 +454,14 @@ console.log("\n--- 5. the fence is a SHAPE: driven over EVERY op in the table --
   + "membership in it, so adding the class to a row would grant nothing",
     names.filter((n) => Array.isArray(OPS[n].classes) && OPS[n].classes.includes("ai")), []);
 
-  const memberReach = names.filter((n) => Array.isArray(OPS[n].classes) && OPS[n].classes.includes("member"));
+  /* RE-ANCHORED 2026-09-29 (K410, control-plane R19's last sentence, D-586; CONTROL-PLANE #2): an op R14 refuses to
+     every bearer — the §4 governance acts and the group-identity acts, control-plane's GOVERNANCE_ACTIONS and
+     IDENTITY_ACTIONS — is a named administrator's own session act and counts as BEYOND member reach at the mint, though
+     its row names `member` for that session. The member floor is the rows naming `member` less those; the ops so moved
+     join the side below and are driven through the mint like every other op there. */
+  const R14_REFUSED = new Set([...GOVERNANCE_ACTIONS, ...IDENTITY_ACTIONS]);
+  const memberReach = names.filter((n) => Array.isArray(OPS[n].classes) && OPS[n].classes.includes("member")
+    && !R14_REFUSED.has(n));
   const beyond = names.filter((n) => !memberReach.includes(n));
   t("the two sets partition the table and both are substantial",
     [memberReach.length + beyond.length === names.length, memberReach.length > 100, beyond.length > 10],
@@ -501,8 +525,8 @@ console.log("\n--- 5. the fence is a SHAPE: driven over EVERY op in the table --
 
   /* THE RULE HAS NO OP NAMES IN IT. A shape with an exception list in it is a
      list, so this is asserted over the function's own source. */
-  const gAt = INDEX_BARE.indexOf("function aiTaskScope(cred, op, spec)");
-  const gBody = INDEX_BARE.slice(gAt, INDEX_BARE.indexOf("\n}", gAt));
+  const gAt = CP_BARE.indexOf("function aiTaskScope(cred, op, spec)");
+  const gBody = CP_BARE.slice(gAt, CP_BARE.indexOf("\n}", gAt));
   t("(the aiTaskScope span the walk read is a real body)", gBody.length > 400, true);
   const opLiterals = [...gBody.matchAll(/["']([a-z][a-z0-9]{3,})["']/g)].map((m) => m[1])
     .filter((s) => s in OPS);
@@ -679,7 +703,7 @@ console.log("\n--- 8. DEC-55.5 (owed control 1), first half: every MACHINE_CANNO
      `machine-fences.test.mjs` block 3b (D-503). The corpus is NOT widened here: this suite's subject
      is the store's fence set under a credential, and widening it would make this arm red over acts
      it was never written to drive. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3, and `src/basis-versions/`, `src/inquiry/` and `src/strength/`, T7) mints was driven under an `ai` credential — a complete "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with `src/membership/` and `src/promotion/`, extracted from it, T3, and `src/basis-versions/`, `src/inquiry/` and `src/strength/`, T7, `src/{actions,case-authoring,review}/`, T8, and `src/queue/`, T12) mints was driven under an `ai` credential — a complete "
   + "sweep OF THAT CORPUS, and it says so because it was checked, not because it looks like one. The "
   + "five `src/index.mjs` mints are machine-fences.test.mjs block 3b's (D-503)",
     minted.filter((c) => !(c in ACTS)), []);
@@ -805,7 +829,7 @@ console.log("\n--- 10. DEC-49: every allocated code driven, and nothing driven t
     wheres.filter((w) => !/ > /.test(w)), []);
   t("and the regions it names are the ones the sources actually declare",
     wheres.map((w) => w.split(" > ")[1]).sort().filter((r, i, a) => a.indexOf(r) === i)
-      .filter((r) => !(INDEX_SRC + STORE_SRC).includes(`DEC-49 REGION ${r}`)), []);
+      .filter((r) => !(INDEX_SRC + CP_SRC + STORE_SRC).includes(`DEC-49 REGION ${r}`)), []);
 }
 
 } finally {

@@ -17,9 +17,13 @@
  *       arms fail).
  *   (2) THE OUT-OF-INQUIRY LEAD WITH ITS `options[]` — and with the two things
  *       PL-15's delegation says a surface must not paper over: `options_grain`
- *       (the acts a member wants are at inquiry grain and do not exist, D-222)
- *       and `basis_entry`, THREE-VALUED, where collapsing `undetermined` into
- *       `absent` is the overclaim the plane refused to make.
+ *       (the acts a member wants are at another grain, D-222) and `basis_entry`,
+ *       THREE-VALUED, where collapsing `undetermined` into `absent` is the
+ *       overclaim the plane refused to make. RE-ANCHORED 2026-09-29 (queue R18,
+ *       REC-202; K409, QUEUE #2): the lead now OFFERS its inquiry-grain acts
+ *       itself (`cite`, and with a project home `proposedispose`) and carries no
+ *       `options_grain`; the grain declaration is pinned on the stance item,
+ *       which still carries one (`missing: "stance"`).
  *   (3) SUGGESTION KINDS LOOK DERIVED (D-82), AGGREGATE (the plane's `basis.n`,
  *       never a count this browser did) AND AGE RATHER THAN VANISH (§6.4): a
  *       disposed proposal leaves the OPEN list and the record's own account of
@@ -105,6 +109,9 @@
  * see) fails "…draws NO undo control"; ARM 20 (the flag in another spelling)
  * stays GREEN. The driver's scratch pen MOVED OUT OF THE WORKTREE in the same
  * edit (BOB #32, 2026-09-24), which is why its own header's practice line changed.
+ * legacy-tests T12 (queue R18 re-anchor), RUN 2026-09-29 in a scratch worktree at d3f5329855: 24 arms, 24 as
+ * declared, exit 0, every restore verified by sha256 and cmp; baseline 100 pass, 0 fail. ARM 6 (paper over the
+ * grain) now fails the two §2 grain arms on the STANCE item, since the lead declares no grain after R18.
  */
 import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit must not
    discard the writer's own output. SHARED from the plane's test estate rather than copied into
@@ -119,6 +126,9 @@ import { appScript } from "./extract.mjs";
 import { analystHits, reachLine } from "./analyst-vocabulary.mjs";
 import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
          classOfKind } from "../../bio-plane/src/queuestate.mjs";
+/* RE-ANCHORED 2026-09-29 (queue R18, REC-202; K409): the lead's take-up act is queue's own published option, read
+   from the module rather than typed here, so the fixture carries the act the producer mints. */
+import { Queue } from "../../bio-plane/src/queue/index.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg); } }
@@ -143,8 +153,11 @@ const LEAD_DETAIL  = "https://example.gov/dredge.pdf was captured at an investig
   + INQ_A + ", because it bears on " + INQ_B + ". The act is the daemon's, performed at the session's request. "
   + "The document is IN THE STORE and is part of NO claim.";
 const LEAD_BASIS_DETAIL = "BOTH PRINCIPALS ARE NAMED and BOTH QUESTIONS ARE NAMED: the act is the daemon's, performed at the session's request.";
-const GRAIN_DETAIL = "the acts offered are the ones this record can actually perform on the question this lead is filed under. "
-  + "The acts a member would most naturally want here are at INQUIRY grain and they do not exist yet.";
+/* RE-ANCHORED 2026-09-29 (queue R18, REC-202; K409): the lead no longer declares a grain gap — R18 offers the
+   inquiry-grain acts on the lead itself — so the grain sentence this suite pins verbatim is the STANCE item's, the
+   producer (`#findingsStanceDiverged`) that still publishes `options_grain` ({offered: document, missing: stance}). */
+const GRAIN_DETAIL = "the natural acts here are at STANCE grain — move to the reading the others are on, or record why "
+  + "we are staying — and the first of those is op=versioncurrent on THIS project and nobody else's.";
 const ABSENT_DETAIL = "LOOKED FOR AND NOT THERE, which is the point of this item rather than an omission.";
 const UNDET_DETAIL  = "no register entry answers to this capture, so the bytes are not attached to a document this store can name.";
 const PRESENT_DETAIL = "this document IS carried by a reading of some question, so the lead has already been acted on.";
@@ -185,10 +198,32 @@ function LEAD(entryState){
              detail: LEAD_BASIS_DETAIL },
     age: { state:"determined", since:"2026-08-08T09:00:00Z", ms: 90000000 },
     assignee: null, assignee_role: null,
-    options: [{ id:"cite", label:"Cite this document as a reason", rung:"reversible" }],
-    options_grain: { offered:"document", missing:"inquiry", detail: GRAIN_DETAIL },
+    /* RE-ANCHORED 2026-09-29 (queue R18, REC-202; K409): the lead's options are queue's `LEAD_TAKE_UP` (op=cite into
+       the inquiry it bears on), decorated with its rung as `op=queue` publishes it; the project-scoped set-aside
+       (`LEAD_SET_ASIDE`) is added only where the item's disposition is available, which this fixture's is not. The
+       old `options_grain: {offered: "document", missing: "inquiry"}` is RETIRED by R18 and is gone from the lead. */
+    options: [{ ...Queue.LEAD_TAKE_UP, rung:"reversible" }],
   };
 }
+
+/* THE STANCE ITEM (PL-13, `#findingsStanceDiverged`) — the producer that still declares a grain gap: its natural acts
+   are at STANCE grain and are deliberately not offered on an item another project can see. Carried here so §2's
+   `options_grain` arms render a grain the record really publishes (RE-ANCHORED 2026-09-29, queue R18). */
+const STANCE = {
+  id: "FINDING::stance-changed-here-not-elsewhere::" + INQ_A + "::" + PROJ,
+  class: "FINDING",
+  kind: "stance-changed-here-not-elsewhere",
+  case: CASE_A,
+  subject: { kind:"project_stance", id:PROJ, inquiry:INQ_A, version:"second-reading" },
+  summary: "The marina project stands on reading 'second-reading' of " + INQ_A + ", and the other project drawing on it does not",
+  detail: INQ_A + " is drawn on by 2 projects and holds NO stance of its own.",
+  basis: { source:"project frontmatter (current_versions[]) + refs", inquiry:INQ_A,
+           detail:"two projects were driven onto two different readings of one shared question and the plane refused neither." },
+  age: { state:"determined", since:"2026-08-08T12:00:00Z", ms: 90000000 },
+  assignee: null, assignee_role: null,
+  options: [],
+  options_grain: { offered:"document", missing:"stance", detail: GRAIN_DETAIL },
+};
 
 /* THE DERIVED PROPOSAL — the finding op=proposedispose CAN be keyed on, and the
    only kind of finding for which the three controls are drawn. Its basis
@@ -316,7 +351,9 @@ const V_SUGGESTED = {
      /* WIDENED 2026-09-24 (UI-93), never exempted: the bias-debt fixture §7 drives is
         an OBLIGATION, and an arm that walked only the three kinds this file happened to
         carry in August would have scored a fourth one silently. */
-     && classOfKind(BIAS(true).kind) === "OBLIGATION");
+     && classOfKind(BIAS(true).kind) === "OBLIGATION"
+     /* WIDENED 2026-09-29 (queue R18): the stance item §2 now drives for `options_grain`. */
+     && classOfKind(STANCE.kind) === "FINDING");
   /* CORRECTED 2026-08-09 (PL-13), NEVER EXEMPTED — and the alarm did exactly
      what UI-45 built it to do.
 
@@ -608,12 +645,26 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
   await ctx.__renderQueue();
   const html = keep("the lead with basis_entry=absent", q(ctx));
 
-  ok("§2 the lead's options[] are rendered — the acts the record DOES publish on it",
-     html.includes("Cite this document as a reason"));
-  ok("§2 `options_grain` IS RENDERED, not papered over: the grain words the producer chose reach the page",
-     /at document level/.test(html) && /at inquiry level/.test(html));
+  ok("§2 the lead's options[] are rendered — the acts the record DOES publish on it (queue R18: take it up "
+     + "under the question it bears on)",
+     html.includes(Queue.LEAD_TAKE_UP.label));
+  /* RE-ANCHORED 2026-09-29 (queue R18, REC-202; K409, QUEUE #2), never exempted. These arms read the LEAD's
+     `options_grain` ({offered: document, missing: inquiry}) — the gap REC-202 closed: R18 offers the inquiry-grain
+     acts on the lead itself and the lead declares no grain. What the arms protect is unchanged — a grain the record
+     DECLARES is rendered, never papered over — so they are driven on the STANCE item, which still declares one, and
+     the lead is asserted to render NO grain line, since it declares none. */
+  ok("§2 R18: the lead declares no grain gap any more, so no grain line is drawn on it — a surface that invented "
+     + "one would be claiming a gap the record closed",
+     !/at inquiry level/.test(html) && !/q-grain/.test(html));
+  const pg = makePlane({ items:[STANCE] });
+  const cg = boot(pg);
+  await cg.__renderQueue();
+  const hg = keep("the stance item declaring its grain", q(cg));
+  ok("§2 `options_grain` IS RENDERED, not papered over: the grain words the producer chose reach the page "
+     + "(the stance item's, offered at document grain and missing at stance grain)",
+     /at document level/.test(hg) && /at stance level/.test(hg));
   ok("§2 and the producer's own grain sentence reaches the page verbatim (D-222's declared gap)",
-     html.includes(GRAIN_DETAIL));
+     hg.includes(GRAIN_DETAIL));
   ok("§2 `basis_entry` state ABSENT says the record LOOKED, which is what makes it different from undetermined",
      /The record LOOKED, and this document is part of no case/.test(html));
   ok("§2 and the producer's own sentence for that state reaches the page verbatim",
