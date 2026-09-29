@@ -30,3 +30,7 @@ Both relays (`governorstate`, `governorconfig`) go through this one site.
 **Checks.** `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 5 product files, 9 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures`; `ownership: 3 files changed by host-governor between tranche/T14 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures`.
 
 Size (session_013JNFsyhP13DN7TavJx3aJp): test runs 4, module lines 419
+
+## J1 · COMPLETE
+
+R27 applied (N339 widened by N349, K445): governorOp takes an optional fourth argument {doAnswer, storeRefusal}; with it, a store refusal answers {refused, response: storeRefusal(out)}, a non-answer {silent, correlation?}; without it, legacy-index's call at src/index.mjs:671 answers as today. What legacy-index hands at layer 11, the not-yet-met marks met (R27, and the Status line's), the stale agent-worker bundle (reported, not rebuilt) and the ui/affordances grep are in the record. Tests 33/33; format, architecture, coverage (27/27), ownership: 0 failures. No rows.
