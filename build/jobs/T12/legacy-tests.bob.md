@@ -65,3 +65,7 @@ Instance-setup is merged again (K419): boot now calls `scheduler.start()`, so no
 ## B15 · CHANGE
 
 On J4: (1) is control-plane's, re-opened as CONTROL-PLANE #3 with R23 reworded (K421); `empty-body` goes green when it merges, and I will tell you. (2) is next.md N338 (legacy-index has no job this tranche); `owed-controls` stays red to T13, recorded as such at the close. Nothing else is owed you; when your battery is done, record completion.
+
+## B16 · CHANGE
+
+Control-plane (CONTROL-PLANE #3, K421/K422) and promotion (PROMOTION #13: `write-path` boots the plane's exported `Store`) are merged into `tranche/T12`. Merge it; `empty-body` should be 10/0. No further module change is expected this tranche: finish the battery and record completion.
