@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. as of 2026-09-14.
+**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-91 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** as of 2026-09-29.
 
 **Place in the system** · The top of the mission level (`BIO_System_Design.md` §2): the Design Requirements govern it on conflict, the Technical Architecture Decisions govern it on technology, the State Rules govern it on the data store, and the Functional Architecture extends its §9. It owns no construct; it owns the values and the stance every construct serves.
 
@@ -685,6 +685,15 @@ with caution.
 no-transitive-trust rule for incoming work products, and trust signals
 attached from local evaluation results) are decided in
 BIO_Technical_Architecture_Decisions Section 5.
+
+**Revised 2026-09-29 by Bob (DEC-91), with more to decide later.** The five levels above are shown as an ORIGIN MARK, not as a
+trust ladder: one ladder mixing who produced a thing, whether the group accepted it, and a verdict on it reads as a single trust
+score, which DEC-44 and the measures map (DEC-82) forbid. The mark joins the "Machine work" label in answering *who made this*:
+**Ours** (produced by a member of this group); **Another group's** (a published edition, signature verified, cited under the
+inherited-trust rule: the fact of publication, never the credibility of the content); **Accepted by our group** (a new reasoned
+act, attributed, with a reason); **"Not yet evaluated"**; and **"Flagged"** only when a member's recorded evaluation names specific
+issues, never a machine's. "Meets standards" waits until an evaluator of incoming work exists. The mark stays ambient; a hover
+shows the fact behind it.
 
 ## Inter-group awareness
 
