@@ -41,3 +41,13 @@ Everything else in J1 stands: N311 as built, nothing deferred, same findings. Th
 - `format: 69 modules, 64 requirements files; 0 failures` · `architecture: 9 product files, 34 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 43 of 43 live requirement ids named by a test; 0 failures` · `ownership: 4 files changed by actions between tranche/T12 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`
 
 Size (session_01CzFMjecNnKwWk2jgMUJbg6): test runs 78, module lines 3499
+
+## J3 · COMPLETE
+
+**B3 applied** (on `job/T12/actions` @ 50e26a44c8, tranche/T12 merged in with K401). B2's work was already done and recorded in J2 (the stub is gone; R8 calls conformance's real `determinationSuperseded`, and its real-helper test passes). K401's R31 wording matches the code: when the 500-action bound ends a page past an action with no qualifying entry, `cursor` is that action's last position. No code change this round.
+
+**Tests and checks** (on the merged tree): actions 40 tests, 40 pass, 0 fail, 0 todo; monitoring 51/0; escalation 29/0. `format: 69 modules, 64 requirements files; 0 failures` · `architecture: 9 product files, 34 relative imports (0 naming no tracked file, not judged); 0 failures` · `coverage: 1 modules, 43 of 43 live requirement ids named by a test; 0 failures` · `ownership: 4 files changed by actions between tranche/T12 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures`
+
+A correction to J2: module lines are 3498, not 3499.
+
+Size (session_01CzFMjecNnKwWk2jgMUJbg6): test runs 81, module lines 3498
