@@ -824,6 +824,9 @@ export const RUNG_ABSENT = {
   /* REC-164: the group's display name and its domain claim — presentation of WHO publishes, never what the record says. */
   groupnameset:         { ground: "substrate", is: "records the group's own words for itself, a presentation value in no signed bytes" },
   groupdomainset:       { ground: "substrate", is: "records a domain CLAIM and its verdict; it moves no document, claim or grade" },
+  /* K407 (instance-setup, C-119): `groupnameset`'s ground — which jurisdiction profiles the instance works under is its
+     configuration, beneath the record; it moves no document, claim or grade. */
+  profilesset:          { ground: "substrate", is: "records which jurisdiction profiles the instance works under, an administrator's configuration; it moves no document, claim or grade" },
   connect:              { ground: "substrate", is: "DERIVES connections from documents already held; re-running re-derives" },
   provenancechain:      { ground: "substrate", is: "rebuilds the provenance register from what is already recorded" },
   provenanceroute:      { ground: "substrate", is: "assesses a route already captured" },
@@ -2207,6 +2210,10 @@ export const NON_ACTS = {
      public identity (Publication §7 points 2 and 3), never a bundle. */
   groupnameset: "the group's public display name — the subject is the instance's identity, not a bundle",
   groupdomainset: "the group's claimed domain — the subject is the instance's identity, not a bundle",
+  /* K407 (instance-setup, C-119): an administrator's session act, `groupnameset`'s reason; its refusals are
+     PROFILES_NOT_ADMIN, NOT_A_LIST, UNKNOWN_PROFILE and PROFILE_IS_TEST. `op=profiles` is a read with no `NEEDS` row
+     and is not named here (R12). */
+  profilesset: "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator",
   signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   governorconfig: "operator tuning of the per-host governor",
