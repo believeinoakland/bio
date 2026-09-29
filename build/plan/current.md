@@ -1,6 +1,6 @@
 # Plan: tranche T13
 
-**Status** · OPEN
+**Status** · OPEN · BOB #65 · session_016zEDcomCDUHSGu1SA7kzqo · depth 1
 
 Opened by BOB #65, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 8dfc4fb5ca, T12 closed (K423). Cut from `draft-T13.md` re-read against T12's close (K424); its wordings folded before opening (K408, commit 59463bf73d; N332 worded as membership R85). Bob's weekly meter at the opening: asked (18% at T12's close). An `N` entry's text is in `build/plan/next.md`.
 
