@@ -27,6 +27,6 @@ Both relays (`governorstate`, `governorconfig`) go through this one site.
 
 **Tests.** `node --test bio-plane/test/m/host-governor/`: `tests 33, pass 33, fail 0, todo 0` (three new R27 tests: a stub store behind each relay answering 400 `BAD_JSON`, 404 and 409 refusals gets its status and envelope; a 500 `{ok: false, error}` gets 502 `STORE_DID_NOT_ANSWER` with no stack and no `correlation` key; a 500 `STORE_INTERNAL_ERROR` with a correlation id gets 502 carrying it, without one no key; answers unchanged). The layer has no layer tests (manifest). The only user of `governorOp` is legacy-index, whose call is unchanged.
 
-**Checks.** `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 5 product files, 9 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures`; ownership: see below.
+**Checks.** `format: 69 modules, 64 requirements files; 0 failures`; `architecture: 5 product files, 9 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 27 of 27 live requirement ids named by a test; 0 failures`; `ownership: 3 files changed by host-governor between tranche/T14 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-index: 0 line(s) added, 0 removed; 0 failures`.
 
 Size (session_013JNFsyhP13DN7TavJx3aJp): test runs 4, module lines 419
