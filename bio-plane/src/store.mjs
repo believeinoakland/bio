@@ -419,6 +419,7 @@ import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
 import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
+import { GROUP_SLUG_RE } from "./setup.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -5629,10 +5630,6 @@ export class Store extends DurableObject {
    * group, and the group default bar with no group named are refused the same way.
    * ===================================================================== */
 
-  /* The installer's slug grammar, `newgroup/src/index.mjs`'s SLUG_RE, byte for byte. instance-group.test.mjs
-     pins the two sources equal, so neither can move alone. */
-  static GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-
   /** THE ONE READER: the recorded slug, or null when this store records none. Every default and every stamp
    *  asks here, and it reads the store and nothing else — never `this.env`. */
   #producingGroup() {
@@ -5643,7 +5640,7 @@ export class Store extends DurableObject {
   /* DECISION (a)'s write, called by `#migrate` only when it found no `bundles` table before the schema ran. */
   #recordGroupAtFirstBoot() {
     const slug = String((this.env && this.env.INSTANCE_NAME) ?? "").trim();
-    if (!Store.GROUP_SLUG_RE.test(slug)) return;
+    if (!GROUP_SLUG_RE.test(slug)) return;
     this.sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
                    VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`,
                   slug, new Date().toISOString());
@@ -5689,7 +5686,7 @@ export class Store extends DurableObject {
     };
     const s = typeof slug === "string" ? slug.trim() : "";
     /* DEC-49 REGION is-instance-group-seed */
-    if (!Store.GROUP_SLUG_RE.test(s))
+    if (!GROUP_SLUG_RE.test(s))
       return refusal("GROUP_SLUG_MALFORMED",
         `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the `
         + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `

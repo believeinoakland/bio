@@ -1,6 +1,6 @@
 import { SCHEMA } from "./schema.mjs";
 import { livefire } from "./livefire.mjs";
-import { setupPage } from "./setup.mjs";
+import { setupPage, memberVersions } from "./setup.mjs";
 import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { GATE_VERSION } from "./gate.mjs";
@@ -3814,49 +3814,6 @@ function storeSilent(op) {
   /* END DEC-49 REGION is-store-silent */
 }
 
-/* D-116 — EACH FLEET MEMBER'S BUILD, READ BACK THROUGH THE BINDING THIS PLANE ACTUALLY HOLDS.
- *
- * A member versions and rolls out on its own (`BIO_Distribution_v0_1.md` §4 rule 1), and an installer that uploaded
- * one has only Cloudflare's word that it landed — never the member's, and never the PLANE's view of it, which is the
- * one that decides whether a group's PDFs, OCR and assistant do what every description of them says (D-115). So the
- * question is asked where it matters: over `env.<BINDING>`, `GET /version`, the route every member has served since
- * CPDF-9 / FL-2 / CPDF-10. Each answer is the MEMBER'S OWN reply — its `name` and `version` fields, copied — and never
- * this isolate's env.VERSION: a plane that filled these in from its own env would make every member agree for free.
- *
- * States, per member, each a first-class statement rather than a missing key:
- *   SERVING   the member answered through the binding, under its own name, with `version`.
- *   UNBOUND   this plane holds no binding by that name — the member is unreachable FROM HERE whatever the account holds.
- *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
- *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
- * Read only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to three workers. */
-const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
-const MEMBER_VERSION_WAIT_MS = 4000;
-async function memberVersions(env) {
-  const out = {};
-  await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
-    const b = env[binding];
-    if (!b || typeof b.fetch !== "function") { out[member] = { binding, state: "UNBOUND" }; return; }
-    let timer;
-    try {
-      const r = await Promise.race([
-        b.fetch(`https://${member}/version`, { method: "GET" }),
-        new Promise((_, no) => { timer = setTimeout(() => no(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
-                                                    MEMBER_VERSION_WAIT_MS); }),
-      ]);
-      const j = await r.json().catch(() => null);
-      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
-        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
-      } else if (j.name !== member) {
-        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
-      } else {
-        out[member] = { binding, state: "SERVING", version: j.version };
-      }
-    } catch (e) {
-      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
-    } finally { clearTimeout(timer); }
-  }));
-  return out;
-}
 
 /* THE ADMISSION GATE'S DEC-49 FIELDS, read from the ONE row (REC-79 / C-38).
  *
