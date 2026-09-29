@@ -8627,7 +8627,7 @@ async function modelCall(token, serialized) {
 async function converse({
   token,
   model,
-  meter,
+  meter: meter2,
   system,
   messages,
   tools,
@@ -8644,16 +8644,16 @@ async function converse({
       tools,
       tool_choice: { type: "auto" }
     });
-    if (meter.turns >= meter.turnsBound) {
-      meter.stopped = "turns";
+    if (meter2.turns >= meter2.turnsBound) {
+      meter2.stopped = "turns";
       return { stopped: "turns" };
     }
-    if (meter.bytes + serialized.length > meter.bytesBound) {
-      meter.stopped = "bytes";
+    if (meter2.bytes + serialized.length > meter2.bytesBound) {
+      meter2.stopped = "bytes";
       return { stopped: "bytes" };
     }
-    meter.turns += 1;
-    meter.bytes += serialized.length;
+    meter2.turns += 1;
+    meter2.bytes += serialized.length;
     const got = await modelCall(token, serialized);
     if (got.silent || got.refused) return got;
     const content = Array.isArray(got.result.content) ? got.result.content : [];
@@ -19404,6 +19404,54 @@ function asBytes(x) {
   }
   return null;
 }
+var ODF_REPEAT_EXPANSION_MAX = 262144;
+var REPEAT_TEXT_BOUND_CHARS = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var OverRepeatBound = class extends Error {
+  constructor(marker) {
+    super("over_repeat_bound");
+    this.marker = marker;
+  }
+};
+var meter = null;
+function metered(fn) {
+  const saved = meter;
+  meter = { units: 0, chars: 0 };
+  try {
+    return fn();
+  } finally {
+    meter = saved;
+  }
+}
+function spend(n) {
+  if (!meter) throw new Error("odf.mjs: an expansion ran outside a metered read");
+  if (!(n > 0)) return;
+  if (meter.units + n > ODF_REPEAT_EXPANSION_MAX) {
+    throw new OverRepeatBound({
+      text: "undetermined",
+      why: "over_repeat_bound",
+      units: ODF_REPEAT_EXPANSION_MAX + 1,
+      bound: ODF_REPEAT_EXPANSION_MAX,
+      boundName: "ODF_REPEAT_EXPANSION_MAX",
+      metric: "expanded_repeat_units"
+    });
+  }
+  meter.units += n;
+}
+function spendChars(n) {
+  if (!meter) throw new Error("odf.mjs: an expansion ran outside a metered read");
+  if (!(n > 0)) return;
+  if (meter.chars + n > REPEAT_TEXT_BOUND_CHARS) {
+    throw new OverRepeatBound({
+      text: "undetermined",
+      why: "over_repeat_bound",
+      units: REPEAT_TEXT_BOUND_CHARS + 1,
+      bound: REPEAT_TEXT_BOUND_CHARS,
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES",
+      metric: "repeated_text_chars"
+    });
+  }
+  meter.chars += n;
+}
 var ODF_ROWS = CONTAINER_FLAVOURS.filter((f2) => f2.partMap === "odf");
 function odfRow(flavour) {
   const row = ODF_ROWS.find((f2) => f2.flavour === flavour);
@@ -19517,7 +19565,9 @@ function visibleText(xml) {
     const name = localOf3(m[1]);
     if (name === "s") {
       const c = parseInt(attrsOf3(m[2]).c ?? "1", 10);
-      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
+      const n = Number.isFinite(c) && c > 0 ? c : 1;
+      spend(n);
+      out += " ".repeat(n);
     } else if (name === "tab") out += "	";
     else if (name === "line-break") out += "\n";
   }
@@ -19675,7 +19725,7 @@ async function odfPartsUnguarded(row, bytes) {
   let core = null;
   if (hasMember(container, META_PART)) {
     const read2 = await readPart(b, container, META_PART);
-    const c = read2.ok ? parseOdfMeta(UTF85.decode(read2.bytes)) : { ok: false, why: read2.why };
+    const c = read2.ok ? metaOf(UTF85.decode(read2.bytes)) : { ok: false, why: read2.why };
     if (c.ok) core = c;
     else undetermined.push({ part: META_PART, why: c.why });
   } else {
@@ -19731,6 +19781,14 @@ function parseOdfMeta(xml) {
     modified: field("date"),
     title: field("title")
   };
+}
+function metaOf(xml) {
+  try {
+    return metered(() => parseOdfMeta(xml));
+  } catch (e) {
+    if (e instanceof OverRepeatBound) return { ok: false, why: "over_repeat_bound" };
+    throw e;
+  }
 }
 function corePropertiesItems(parts) {
   if (!parts.core) return [];
@@ -19840,9 +19898,15 @@ function officeBody(contentXml, kind) {
   const inner = elementsNested(body.inner, kind)[0];
   return inner ? inner.inner : null;
 }
+function bodyNotRead(parts, element) {
+  if (parts.guard) return "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())";
+  if (parts.repeat) return `content.xml not read: its repeats expand past ${parts.repeat.boundName} (stated in evidentiary.undetermined and by text())`;
+  return `content.xml unreadable or carries no <office:${element}>: element references unavailable (stated)`;
+}
 function envelopeUndetermined(parts) {
   const out = [...parts.undetermined];
   if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
+  if (parts.repeat) out.push({ part: CONTENT_PART, why: "over_repeat_bound", guard: parts.repeat });
   return out;
 }
 function envelopeOf(container, items, undetermined) {
@@ -19861,7 +19925,7 @@ function countPartitions(links) {
   for (const l of links) counts[l.partition]++;
   return counts;
 }
-function walkTextBody(bodyXml) {
+function walkTextBody(bodyXml, { withText = true } = {}) {
   const paragraphs = [];
   const hyperlinks = [];
   const annotations = [];
@@ -19919,8 +19983,8 @@ function walkTextBody(bodyXml) {
     if (closing && (name === "p" || name === "h") && inPara) {
       depthInPara--;
       if (depthInPara === 0) {
-        const raw = served.slice(paraStart, m.index);
-        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
+        const raw = withText ? served.slice(paraStart, m.index) : "";
+        paragraphs.push({ para, text: withText ? visibleText(stripElement(raw, "annotation")) : null });
         inPara = false;
         paraStart = -1;
       }
@@ -19994,11 +20058,11 @@ function odtStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "text");
   if (body == null) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "text"));
   }
   let paragraphs = null;
   if (body != null) {
-    const walk = walkTextBody(body);
+    const walk = walkTextBody(body, { withText: false });
     paragraphs = walk.paragraphs.length;
     for (const h of walk.hyperlinks) {
       links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
@@ -20091,14 +20155,14 @@ function odtText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true,
       container: "odt",
       document: null,
       paragraphs: [],
       tables: null,
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       // the marker VERBATIM, never a truncation
       counts: { chars: 0, undetermined: 1 }
     };
@@ -20157,40 +20221,60 @@ function walkSheet(tableXml) {
     const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
     const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
     const vis = row.attrs.visibility;
+    const hidden = vis === "collapse" || vis === "filter";
+    if (hidden) {
+      spend(1);
+      hiddenRows.push({ min: rowIndex + 1, max: rowIndex + nRows, visibility: vis });
+    }
     const cells = [];
+    let rowSpaces = 0, rowChars = 0, rowLinks = 0;
     let c = 0;
     for (const cell of elementsNested(row.inner, "table-cell")) {
       const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
       const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
       const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
-      const emit = carries ? nCols : 0;
-      for (let k = 0; k < emit; k++) {
-        cells.push({
-          col: c + k,
-          cell: `${columnName(c + k)}${rowIndex + 1}`,
+      if (carries) {
+        const before = meter.units;
+        const display = elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n");
+        const spaces2 = meter.units - before;
+        const value = cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null;
+        const hrefs = hrefsIn(cell.inner);
+        const chars = display !== "" ? display.length : (value ?? "").length;
+        spend(nCols);
+        spend(spaces2 * (nCols - 1));
+        spend(hrefs.length * (nCols - 1));
+        spendChars(chars * (nCols - 1));
+        rowSpaces += spaces2 * nCols;
+        rowChars += chars * nCols;
+        rowLinks += hrefs.length * nCols;
+        const base = {
           valueType: cell.attrs["value-type"] ?? null,
-          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
+          value,
           formula: cell.attrs.formula ?? null,
-          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
-             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
-          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
-          hrefs: hrefsIn(cell.inner)
-        });
+          display,
+          hrefs
+        };
+        for (let k = 0; k < nCols; k++) {
+          cells.push({ col: c + k, cell: `${columnName(c + k)}${rowIndex + 1}`, ...base });
+        }
       }
       c += nCols;
     }
     const materialise = cells.length ? nRows : 0;
+    if (materialise > 1) {
+      const copies = materialise - 1;
+      spend(copies * cells.length);
+      spend(copies * rowSpaces);
+      spend(copies * rowLinks);
+      spendChars(copies * rowChars);
+    }
     for (let k = 0; k < materialise; k++) {
       const r = rowIndex + k;
-      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
       rows.push({
         r: r + 1,
-        hidden: vis === "collapse" || vis === "filter" ? vis : false,
-        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
+        hidden: hidden ? vis : false,
+        cells: k === 0 ? cells : cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
       });
-    }
-    if (!materialise && (vis === "collapse" || vis === "filter")) {
-      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
     }
     rowIndex += nRows;
   }
@@ -20224,7 +20308,7 @@ function odsStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "spreadsheet");
   if (body == null) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "spreadsheet"));
   }
   if (parts.guard) notes.push("text_parts_over_bound");
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
@@ -20374,7 +20458,7 @@ function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true,
       container: "ods",
@@ -20383,7 +20467,7 @@ function odsText(parts) {
       rangeUnits: null,
       rangeUnitsSkipped: null,
       // content.xml not read: not looked, never none
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
   }
@@ -20476,7 +20560,7 @@ var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
   "object",
   "image"
 ]);
-function walkPage(pageXml) {
+function walkPage(pageXml, { withText = true } = {}) {
   const slideOnly = stripElement(pageXml, "notes");
   const shapes = [];
   const RE = tokens();
@@ -20564,7 +20648,8 @@ function walkPage(pageXml) {
          every shape nested in it: a frame's `<draw:text-box>` or table, and
          the paragraphs a custom shape or rectangle holds DIRECTLY (which a
          text-box-only reading dropped). */
-      text: ownShapeText(s.inner),
+      text: withText ? ownShapeText(s.inner) : null,
+      // structure() emits none, so expands none (R45)
       hrefs: hrefsOf.get(s.shape) ?? []
     }))
   };
@@ -20619,13 +20704,13 @@ function odpStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "presentation");
   if (body == null) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "presentation"));
   }
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
   const deck = body != null ? deckOf2(body, styles) : null;
   if (deck) {
     for (const page of deck) {
-      const walked = walkPage(page.xml);
+      const walked = walkPage(page.xml, { withText: false });
       for (const s of walked.shapes) {
         for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
       }
@@ -20667,7 +20752,7 @@ function odpText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true,
       container: "odp",
@@ -20675,7 +20760,7 @@ function odpText(parts) {
       slides: [],
       speakerNotes: [],
       deckLength: null,
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       counts: { chars: 0, notesChars: 0, undetermined: 1 }
     };
   }
@@ -20741,6 +20826,14 @@ var isRawBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 function entryFor(row, structureOf, textOf2) {
   const failed = (e) => ({ ok: false, container: row.flavour, reason: `reader_failed:${e?.name ?? "Error"}`, part: null });
   const partsOf = async (partsOrBytes) => isRawBytes(partsOrBytes) ? odfParts(row, partsOrBytes) : partsOrBytes;
+  const bounded = (projectionOf2, parts) => {
+    try {
+      return metered(() => projectionOf2(parts));
+    } catch (e) {
+      if (!(e instanceof OverRepeatBound)) throw e;
+      return projectionOf2({ ...parts, contentXml: null, repeat: e.marker });
+    }
+  };
   return {
     format: row.flavour,
     detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
@@ -20750,7 +20843,7 @@ function entryFor(row, structureOf, textOf2) {
        while a caller that already paid for parts() does not pay twice. */
     structure: async (partsOrBytes) => {
       try {
-        return structureOf(await partsOf(partsOrBytes));
+        return bounded(structureOf, await partsOf(partsOrBytes));
       } catch (e) {
         return failed(e);
       }
@@ -20763,7 +20856,7 @@ function entryFor(row, structureOf, textOf2) {
     text: async (partsOrBytes) => {
       try {
         const parts = await partsOf(partsOrBytes);
-        return await withContainerImages(textOf2(parts), parts, "Pictures/");
+        return await withContainerImages(bounded(textOf2, parts), parts, "Pictures/");
       } catch (e) {
         return failed(e);
       }
@@ -27573,9 +27666,9 @@ async function handleRun(req, env) {
       plane: asked.body
     }, 403);
   const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
-  const meter = segmentMeter({ turnsBound: requested, bytesBound });
+  const meter2 = segmentMeter({ turnsBound: requested, bytesBound });
   const modelMode = !!(cascade && cascade.available) && !Array.isArray(body.judgements);
-  const model = modelMode ? { token: (await cascadeToken(body.claude_accounts)).token, id: env.MODEL || DEFAULT_MODEL, meter } : null;
+  const model = modelMode ? { token: (await cascadeToken(body.claude_accounts)).token, id: env.MODEL || DEFAULT_MODEL, meter: meter2 } : null;
   const drive = await driveHarness(env, {
     runId,
     store,
@@ -27596,14 +27689,14 @@ async function handleRun(req, env) {
        different claims. `stage: "harness"` says the deterministic table ran;
        `turns_run: 0` and `judgement_source` say the model half did not. */
     stage: "harness",
-    turns_run: meter.turns,
+    turns_run: meter2.turns,
     judgement_source: modelMode ? "model" : "supplied",
     /* CORRECTED AT FL-6, never exempted: this note used to say the model
        account "is FL-6's cascade and is not resolved here". The cascade IS
        resolved here now, and the honest remainder is different — the account
        is resolved and NAMED, and what still does not happen is a MODEL TURN,
        whose sizing is D-218's measurement and not this item's. */
-    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns (${meter.turns}), under the Claude account the cascade resolved and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller, so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
+    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns (${meter2.turns}), under the Claude account the cascade resolved and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller, so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
     /* FL-6 ON THE WIRE, secret-free by construction. Three shapes, each an
        honest statement of a different fact: material supplied and RESOLVED
        (level + ref + every level's own state); material supplied and NOTHING
@@ -27657,8 +27750,8 @@ async function handleRun(req, env) {
       turns_requested: requested,
       turns_bound: bound,
       bound_source: BOUND_SOURCE,
-      turns_run: meter.turns,
-      bytes_sent: meter.bytes,
+      turns_run: meter2.turns,
+      bytes_sent: meter2.bytes,
       bytes_bound: bytesBound,
       bytes_source: SEGMENT_BYTES_SOURCE,
       stopped: drive.segmentStopped ?? null

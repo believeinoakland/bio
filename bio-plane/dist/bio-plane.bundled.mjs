@@ -18702,7 +18702,7 @@ async function captureSubresources({
   /* Measured, not assumed. Every synchronous compute segment in here is timed so
      the record can say what a capture actually costs against whatever ceiling
      the runtime has. Network waits are never inside a segment. */
-  meter = makeMeter()
+  meter: meter2 = makeMeter()
 }) {
   for (const [name, fn] of [["fetchOne", fetchOne], ["put", put], ["sha256", sha2562], ["isPublic", isPublic]])
     if (typeof fn !== "function") throw new TypeError(`captureSubresources: ${name} must be a function`);
@@ -18734,7 +18734,7 @@ async function captureSubresources({
       if (r.ok && r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
     }
     for (const l of resume.links || []) links.push(l);
-    linkChrome = meter.sync("link_containment", () => scanHtml(html).linkChrome, html.length);
+    linkChrome = meter2.sync("link_containment", () => scanHtml(html).linkChrome, html.length);
     for (const [k, v] of Object.entries(resume.refToUrl || {})) refToUrl.set(k, v);
     for (const o of resume.siteObservations || []) siteObservations.push(o);
     discovered = resume.discovered || records.length;
@@ -18751,7 +18751,7 @@ async function captureSubresources({
         discovered--;
       }
   } else {
-    const scan = meter.sync("parse_html", () => scanHtml(html), html.length);
+    const scan = meter2.sync("parse_html", () => scanHtml(html), html.length);
     linkChrome = scan.linkChrome;
     queue = scan.refs.map((r) => ({ ...r, depth: 1, from: primaryFile, against: base }));
   }
@@ -18974,7 +18974,7 @@ async function captureSubresources({
       continue;
     }
     spent += bytes2.length;
-    const sha = await meter.cpuAwait("hash_subresource", () => sha2562(bytes2), bytes2.length);
+    const sha = await meter2.cpuAwait("hash_subresource", () => sha2562(bytes2), bytes2.length);
     const { existed } = await put(sha, bytes2);
     const ct = (r.contentType || "").split(";")[0].trim();
     const rec = {
@@ -19003,13 +19003,13 @@ async function captureSubresources({
     if (isCss && item.depth < CSS_MAX_DEPTH) {
       let text3 = "";
       try {
-        text3 = meter.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes2), bytes2.length);
+        text3 = meter2.sync("decode_css", () => new TextDecoder("utf-8", { fatal: false }).decode(bytes2), bytes2.length);
       } catch {
         text3 = "";
       }
       rec.css = true;
       rec.rewrite = [];
-      for (const c of meter.sync("parse_css", () => cssRefList(text3)))
+      for (const c of meter2.sync("parse_css", () => cssRefList(text3)))
         queue.push({
           ref: c.url,
           kind: c.kind,
@@ -19103,9 +19103,9 @@ async function captureSubresources({
     return { type: "deferred", wrapper: linkWrapper.deferred(cls.url), address: cls.url };
   };
   const when = when0;
-  const companionText = meter.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
-  const companionBytes = meter.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
-  const companionSha = await meter.cpuAwait("hash_companion", () => sha2562(companionBytes));
+  const companionText = meter2.sync("render_companion", () => renderCompanion(html, { resolve, classifyLink, primarySha, when }), html.length);
+  const companionBytes = meter2.sync("encode_companion", () => new TextEncoder().encode(companionText), companionText.length);
+  const companionSha = await meter2.cpuAwait("hash_companion", () => sha2562(companionBytes));
   await put(companionSha, companionBytes);
   const fetched = records.filter((r) => r.ok);
   const manifest = {
@@ -19125,7 +19125,7 @@ async function captureSubresources({
     truncated: truncated3,
     budget_exhausted: budgetHit,
     complete: !platformHit && !truncated3 && !budgetHit && deferred === 0,
-    compute: meter.report(),
+    compute: meter2.report(),
     reuse: {
       reused,
       fetched: fetched.length - reused,
@@ -19182,15 +19182,15 @@ async function captureSubresources({
     link_note: "Every <a> the page carried, characterised. `intra` resolves inside this bundle and is final. `deferred` is an address whose partition depends on what the store holds and is therefore NOT final: held_at_capture records only what was true when this page was captured, and a viewer must re-resolve it against the store at read time. A deferred link that later resolves to a capture in another bundle is a link to THAT VERSION of the target only if the target's capture can be shown to be the version the source was pointing at on this page's retrieval date. Until that is established the link is unconfirmed, and unconfirmed is a third answer rather than a synonym for either of the other two.",
     note: "Every entry the viewer renders must be fetched by sha256 through op=capture and verified against that sha before use. Entries with ok:false are recorded because a stylesheet the source failed to serve is part of what the source served that day. Script entries hold bytes and are never referenced by the render companion."
   };
-  const manifestBytes = meter.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
-  const manifestSha = await meter.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
+  const manifestBytes = meter2.sync("serialise_manifest", () => new TextEncoder().encode(JSON.stringify(manifest, null, 1)), records.length);
+  const manifestSha = await meter2.cpuAwait("hash_manifest", () => sha2562(manifestBytes));
   await put(manifestSha, manifestBytes);
   return {
     subresources: records,
     links,
     siteObservations,
     reused,
-    meter,
+    meter: meter2,
     /* Everything the next tick needs, and nothing it does not. The primary HTML
        is NOT in here: it is already in the store under primarySha, and carrying
        a copy in session state would be a second, unverified copy of evidence. */
@@ -23763,6 +23763,54 @@ function asBytes(x) {
   }
   return null;
 }
+var ODF_REPEAT_EXPANSION_MAX = 262144;
+var REPEAT_TEXT_BOUND_CHARS = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var OverRepeatBound = class extends Error {
+  constructor(marker) {
+    super("over_repeat_bound");
+    this.marker = marker;
+  }
+};
+var meter = null;
+function metered(fn) {
+  const saved = meter;
+  meter = { units: 0, chars: 0 };
+  try {
+    return fn();
+  } finally {
+    meter = saved;
+  }
+}
+function spend(n) {
+  if (!meter) throw new Error("odf.mjs: an expansion ran outside a metered read");
+  if (!(n > 0)) return;
+  if (meter.units + n > ODF_REPEAT_EXPANSION_MAX) {
+    throw new OverRepeatBound({
+      text: "undetermined",
+      why: "over_repeat_bound",
+      units: ODF_REPEAT_EXPANSION_MAX + 1,
+      bound: ODF_REPEAT_EXPANSION_MAX,
+      boundName: "ODF_REPEAT_EXPANSION_MAX",
+      metric: "expanded_repeat_units"
+    });
+  }
+  meter.units += n;
+}
+function spendChars(n) {
+  if (!meter) throw new Error("odf.mjs: an expansion ran outside a metered read");
+  if (!(n > 0)) return;
+  if (meter.chars + n > REPEAT_TEXT_BOUND_CHARS) {
+    throw new OverRepeatBound({
+      text: "undetermined",
+      why: "over_repeat_bound",
+      units: REPEAT_TEXT_BOUND_CHARS + 1,
+      bound: REPEAT_TEXT_BOUND_CHARS,
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES",
+      metric: "repeated_text_chars"
+    });
+  }
+  meter.chars += n;
+}
 var ODF_ROWS = CONTAINER_FLAVOURS.filter((f8) => f8.partMap === "odf");
 function odfRow(flavour) {
   const row2 = ODF_ROWS.find((f8) => f8.flavour === flavour);
@@ -23876,7 +23924,9 @@ function visibleText(xml) {
     const name = localOf3(m[1]);
     if (name === "s") {
       const c = parseInt(attrsOf4(m[2]).c ?? "1", 10);
-      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
+      const n = Number.isFinite(c) && c > 0 ? c : 1;
+      spend(n);
+      out += " ".repeat(n);
     } else if (name === "tab") out += "	";
     else if (name === "line-break") out += "\n";
   }
@@ -24034,7 +24084,7 @@ async function odfPartsUnguarded(row2, bytes2) {
   let core = null;
   if (hasMember(container2, META_PART)) {
     const read2 = await readPart(b, container2, META_PART);
-    const c = read2.ok ? parseOdfMeta(UTF85.decode(read2.bytes)) : { ok: false, why: read2.why };
+    const c = read2.ok ? metaOf(UTF85.decode(read2.bytes)) : { ok: false, why: read2.why };
     if (c.ok) core = c;
     else undetermined.push({ part: META_PART, why: c.why });
   } else {
@@ -24090,6 +24140,14 @@ function parseOdfMeta(xml) {
     modified: field("date"),
     title: field("title")
   };
+}
+function metaOf(xml) {
+  try {
+    return metered(() => parseOdfMeta(xml));
+  } catch (e) {
+    if (e instanceof OverRepeatBound) return { ok: false, why: "over_repeat_bound" };
+    throw e;
+  }
 }
 function corePropertiesItems(parts) {
   if (!parts.core) return [];
@@ -24199,9 +24257,15 @@ function officeBody(contentXml, kind) {
   const inner = elementsNested(body.inner, kind)[0];
   return inner ? inner.inner : null;
 }
+function bodyNotRead(parts, element) {
+  if (parts.guard) return "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())";
+  if (parts.repeat) return `content.xml not read: its repeats expand past ${parts.repeat.boundName} (stated in evidentiary.undetermined and by text())`;
+  return `content.xml unreadable or carries no <office:${element}>: element references unavailable (stated)`;
+}
 function envelopeUndetermined(parts) {
   const out = [...parts.undetermined];
   if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
+  if (parts.repeat) out.push({ part: CONTENT_PART, why: "over_repeat_bound", guard: parts.repeat });
   return out;
 }
 function envelopeOf(container2, items, undetermined) {
@@ -24220,7 +24284,7 @@ function countPartitions(links) {
   for (const l of links) counts[l.partition]++;
   return counts;
 }
-function walkTextBody(bodyXml) {
+function walkTextBody(bodyXml, { withText = true } = {}) {
   const paragraphs = [];
   const hyperlinks = [];
   const annotations = [];
@@ -24278,8 +24342,8 @@ function walkTextBody(bodyXml) {
     if (closing && (name === "p" || name === "h") && inPara) {
       depthInPara--;
       if (depthInPara === 0) {
-        const raw = served.slice(paraStart, m.index);
-        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
+        const raw = withText ? served.slice(paraStart, m.index) : "";
+        paragraphs.push({ para, text: withText ? visibleText(stripElement(raw, "annotation")) : null });
         inPara = false;
         paraStart = -1;
       }
@@ -24353,11 +24417,11 @@ function odtStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "text");
   if (body == null) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "text"));
   }
   let paragraphs = null;
   if (body != null) {
-    const walk = walkTextBody(body);
+    const walk = walkTextBody(body, { withText: false });
     paragraphs = walk.paragraphs.length;
     for (const h of walk.hyperlinks) {
       links.push(linkRecord(h.href, h.para == null ? null : docParaRef(h.para)));
@@ -24450,14 +24514,14 @@ function odtText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true,
       container: "odt",
       document: null,
       paragraphs: [],
       tables: null,
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       // the marker VERBATIM, never a truncation
       counts: { chars: 0, undetermined: 1 }
     };
@@ -24516,40 +24580,60 @@ function walkSheet(tableXml) {
     const rep = parseInt(row2.attrs["number-rows-repeated"] ?? "1", 10);
     const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
     const vis = row2.attrs.visibility;
+    const hidden = vis === "collapse" || vis === "filter";
+    if (hidden) {
+      spend(1);
+      hiddenRows.push({ min: rowIndex + 1, max: rowIndex + nRows, visibility: vis });
+    }
     const cells = [];
+    let rowSpaces = 0, rowChars = 0, rowLinks = 0;
     let c = 0;
     for (const cell of elementsNested(row2.inner, "table-cell")) {
       const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
       const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
       const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
-      const emit = carries ? nCols : 0;
-      for (let k = 0; k < emit; k++) {
-        cells.push({
-          col: c + k,
-          cell: `${columnName(c + k)}${rowIndex + 1}`,
+      if (carries) {
+        const before = meter.units;
+        const display = elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n");
+        const spaces2 = meter.units - before;
+        const value = cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null;
+        const hrefs = hrefsIn(cell.inner);
+        const chars = display !== "" ? display.length : (value ?? "").length;
+        spend(nCols);
+        spend(spaces2 * (nCols - 1));
+        spend(hrefs.length * (nCols - 1));
+        spendChars(chars * (nCols - 1));
+        rowSpaces += spaces2 * nCols;
+        rowChars += chars * nCols;
+        rowLinks += hrefs.length * nCols;
+        const base = {
           valueType: cell.attrs["value-type"] ?? null,
-          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"] ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
+          value,
           formula: cell.attrs.formula ?? null,
-          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
-             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
-          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
-          hrefs: hrefsIn(cell.inner)
-        });
+          display,
+          hrefs
+        };
+        for (let k = 0; k < nCols; k++) {
+          cells.push({ col: c + k, cell: `${columnName(c + k)}${rowIndex + 1}`, ...base });
+        }
       }
       c += nCols;
     }
     const materialise = cells.length ? nRows : 0;
+    if (materialise > 1) {
+      const copies = materialise - 1;
+      spend(copies * cells.length);
+      spend(copies * rowSpaces);
+      spend(copies * rowLinks);
+      spendChars(copies * rowChars);
+    }
     for (let k = 0; k < materialise; k++) {
       const r = rowIndex + k;
-      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
       rows.push({
         r: r + 1,
-        hidden: vis === "collapse" || vis === "filter" ? vis : false,
-        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
+        hidden: hidden ? vis : false,
+        cells: k === 0 ? cells : cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` }))
       });
-    }
-    if (!materialise && (vis === "collapse" || vis === "filter")) {
-      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
     }
     rowIndex += nRows;
   }
@@ -24583,7 +24667,7 @@ function odsStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "spreadsheet");
   if (body == null) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "spreadsheet"));
   }
   if (parts.guard) notes.push("text_parts_over_bound");
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
@@ -24733,7 +24817,7 @@ function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true,
       container: "ods",
@@ -24742,7 +24826,7 @@ function odsText(parts) {
       rangeUnits: null,
       rangeUnitsSkipped: null,
       // content.xml not read: not looked, never none
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
     };
   }
@@ -24835,7 +24919,7 @@ var ODP_SHAPE_TAGS = /* @__PURE__ */ new Set([
   "object",
   "image"
 ]);
-function walkPage(pageXml) {
+function walkPage(pageXml, { withText = true } = {}) {
   const slideOnly = stripElement(pageXml, "notes");
   const shapes = [];
   const RE = tokens();
@@ -24923,7 +25007,8 @@ function walkPage(pageXml) {
          every shape nested in it: a frame's `<draw:text-box>` or table, and
          the paragraphs a custom shape or rectangle holds DIRECTLY (which a
          text-box-only reading dropped). */
-      text: ownShapeText(s.inner),
+      text: withText ? ownShapeText(s.inner) : null,
+      // structure() emits none, so expands none (R45)
       hrefs: hrefsOf.get(s.shape) ?? []
     }))
   };
@@ -24978,13 +25063,13 @@ function odpStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "presentation");
   if (body == null) {
-    notes.push(parts.guard ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())" : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "presentation"));
   }
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: /* @__PURE__ */ new Map(), pageVisible: /* @__PURE__ */ new Map() };
   const deck = body != null ? deckOf2(body, styles) : null;
   if (deck) {
     for (const page of deck) {
-      const walked = walkPage(page.xml);
+      const walked = walkPage(page.xml, { withText: false });
       for (const s of walked.shapes) {
         for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
       }
@@ -25026,7 +25111,7 @@ function odpText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odp", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true,
       container: "odp",
@@ -25034,7 +25119,7 @@ function odpText(parts) {
       slides: [],
       speakerNotes: [],
       deckLength: null,
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       counts: { chars: 0, notesChars: 0, undetermined: 1 }
     };
   }
@@ -25100,6 +25185,14 @@ var isRawBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 function entryFor(row2, structureOf, textOf2) {
   const failed2 = (e) => ({ ok: false, container: row2.flavour, reason: `reader_failed:${e?.name ?? "Error"}`, part: null });
   const partsOf2 = async (partsOrBytes) => isRawBytes(partsOrBytes) ? odfParts(row2, partsOrBytes) : partsOrBytes;
+  const bounded = (projectionOf2, parts) => {
+    try {
+      return metered(() => projectionOf2(parts));
+    } catch (e) {
+      if (!(e instanceof OverRepeatBound)) throw e;
+      return projectionOf2({ ...parts, contentXml: null, repeat: e.marker });
+    }
+  };
   return {
     format: row2.flavour,
     detect: (bytes2, contentType) => detectOdf(row2, bytes2, contentType),
@@ -25109,7 +25202,7 @@ function entryFor(row2, structureOf, textOf2) {
        while a caller that already paid for parts() does not pay twice. */
     structure: async (partsOrBytes) => {
       try {
-        return structureOf(await partsOf2(partsOrBytes));
+        return bounded(structureOf, await partsOf2(partsOrBytes));
       } catch (e) {
         return failed2(e);
       }
@@ -25122,7 +25215,7 @@ function entryFor(row2, structureOf, textOf2) {
     text: async (partsOrBytes) => {
       try {
         const parts = await partsOf2(partsOrBytes);
-        return await withContainerImages(textOf2(parts), parts, "Pictures/");
+        return await withContainerImages(bounded(textOf2, parts), parts, "Pictures/");
       } catch (e) {
         return failed2(e);
       }
