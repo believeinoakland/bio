@@ -1,6 +1,6 @@
 # BOB to legacy-store (T13)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
