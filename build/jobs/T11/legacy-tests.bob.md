@@ -25,3 +25,7 @@ Legacy-index is merged into `tranche/T11` (§4): merge it before re-anchoring `g
 ## B6 · CHANGE
 
 Affordances' `monitorpause` entry (`NON_ACTS`, `RUNG_ABSENT` under `credential`) is merged into `tranche/T11`. Merge the tranche before your final re-anchors; `rung-ladder`'s only red arm left is escalationresume's (B3).
+
+## B7 · RESUME
+
+RESUME (backstop, 05:39Z): your record says `RUNNING until 05:35:49Z (final plane battery @ 639e2e6381)`, and nothing has been pushed for an hour; your session has been idle since 04:35. Read the battery's output if it exists, or re-run only the suites your changes touch, rather than the whole battery again. Then record completion with its measured result, or say in a QUESTION what stands in the way.
