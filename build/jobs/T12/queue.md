@@ -48,3 +48,18 @@ What this extraction touches outside queue, each for its owner.
 - Legacy suites run as a check (J2 item 5).
 
 Size (session_01AA2FMtVLuYJEyYEy7Hivyi): test runs 14, module lines 4892
+
+## J4 · COMPLETE
+
+B3 applied, after merging `tranche/T12`. The DEC-49 region `is-dispose-scope` (`src/queue/index.mjs` `#noProjectScope`) now spans the whole refusal site, which is the refusal written out with its code as a string literal and its check and translation read off the C-33.50 row. That makes it 5 lines. The guard (`civicos-ui/check-refusal-codes.mjs`) reads it as `is-dispose-scope 5L (1 judged, 2 code(s) checked)`, and arm C claims every marker in queue.
+
+The guard still fails on two things, neither of them this module's. The first is the FLOOR SLACK ratchet on `regionLines`: it measures 5,495 against a floor of 5,455, so legacy-tests needs to re-pin it after this landing. The second is one unclaimed marker in `src/membership/index.mjs` (`is-listener-registrat…`), which belongs to membership.
+
+Checks:
+- `node --test bio-plane/test/m/queue/`: 58 pass, 0 fail, 1 todo.
+- format: 0 failures.
+- architecture: 0 failures.
+- coverage: 40 of 40 ids named, 0 failures.
+- ownership: 0 lines added to legacy files, 0 failures.
+
+Size (session_01AA2FMtVLuYJEyYEy7Hivyi): test runs 16, module lines 4896
