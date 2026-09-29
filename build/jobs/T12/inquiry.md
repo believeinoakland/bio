@@ -36,3 +36,7 @@ Size (session_01SF3BCxa5TAs5uVuri45pJU): test runs 6, module lines 3089
 ## J2 · REPORT
 
 Found beyond my module (record, Completion 'Found'): (1) agent-worker bundle now stale. inquiry/index.mjs is an input, and the progressions import adds inputs. fleetbundles.test.mjs already failed on the tranche before my change (manifest lacks capture/checks.mjs, capture/ops.mjs). Plane bundle too. Not rebuilt. (2) DEC-49 guard: NOT_A_DISPOSITION goes from 3 literal sites to 2. store.mjs is the last, legacy-store's N285 share. Nothing else in the guard moved. (3) inquiry requirements text is stale. Suggestions' 'DISPOSITIONS is written here as a copy' no longer holds. The Status line's 'Not yet met: R19, R22, R26, R39' is contradicted by passing tests and no inline marks; only R31 is still unmet. R20 is applied: tests 60 pass, 0 fail, 1 todo (R31). Completion waits only on J1 (progressions in modules.json uses).
+
+## J3 · COMPLETE · re B2
+
+N285 applied: R20 answers NOT_A_DISPOSITION through progressions.notADisposition (C-100.20), and DISPOSITIONS is progressions' list, re-exported with no copy. R31 has a test.todo naming its cause. tranche/T12 merged for B2. Tests: 60 pass, 0 fail, 1 todo; users of what changed 122 pass, 0 fail. format, architecture, coverage 45/45 and ownership each report 0 failures. Strike: R20's N285 mark (done by B2). Found: J2. Size (session_01SF3BCxa5TAs5uVuri45pJU): test runs 6, module lines 3089. Record: build/jobs/T12/inquiry.md, Completion.
