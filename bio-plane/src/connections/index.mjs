@@ -24,7 +24,8 @@
  *                the same host unless a test passes its own.
  *   entities     `entitiesOf(host)` unless a test passes its own: `has`, `readEntity` (R1's label) and
  *                `onResolved` (its R13), on which this module marks dirt (R17); the resolutions themselves are read
- *                through their read contract.
+ *                through their read contract. `noEntity` (its R37), the one `NO_ENTITY` answer (R1), is imported from
+ *                the module itself, never from `deps`.
  *   env          the bindings `CONNECTION_DERIVE_DELAY_MS` and `CONNECTION_DERIVE_BATCH` (R18); also handed to the
  *                capture and extraction this module creates when none is passed (K155).
  *   now          the module's clock, an ISO instant (default: the wall clock). */
@@ -42,7 +43,7 @@ import { contentOf } from "../content/index.mjs";
 import { extractionOf, OCCURRENCES_PER_REF } from "../extraction/index.mjs";
 import { MEMBERSHIP_LABEL, checkMembershipLabel } from "../extraction/filemembership.mjs";
 import { captureOf } from "../capture/index.mjs";
-import { entitiesOf, gradeRank, isEstablished } from "../entities/index.mjs";
+import { entitiesOf, gradeRank, isEstablished, noEntity } from "../entities/index.mjs";
 import { CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES, migrateConnections } from "./schema.mjs";
 import { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 import { Themes } from "./themes.mjs";
@@ -193,8 +194,9 @@ export class Connections {
    *  place. `asserted_by` is the control plane's stamp (`system` from it and from the sweep); a derivation is never a
    *  member's or the source's (R38), and never runs through a declared relation or a theme (R34, R47). */
   derive({ entityId, assertedBy = "system", limit = null } = {}) {
+    /* N285 (K275): a request naming no entity is entities' one answer (its R37), with this act's sentence. */
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)" };
+      return noEntity("a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)");
     const author = typeof assertedBy === "string" && assertedBy.trim() ? assertedBy.trim() : "system";
     if (author === "member" || author === "source")
       return { ok: false, reason: "CONNECTION_AUTHOR_NOT_DERIVED", asserted_by: author,
