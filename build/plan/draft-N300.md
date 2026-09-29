@@ -1,5 +1,7 @@
 # N300 draft (worker for BOB #61, 2026-09-29; P18). Not folded: publication runs in T11 layer 8, so this is worded into publication.md only after that layer closes. Two points await Bob (open points 1–2).
 
+**K362:** open point 1 ruled by Bob as recommended (`closed` is the owner's act). Open point 2 (readiness rungs) is with Bob.
+
 # N300 — project stage: placement and requirement draft (for BOB)
 
 Sources read: K356 (`build/rulings.md`), N300 (`build/plan/next.md`), `build/requirements/README.md`, State Rules §4.3–§4.5 and its amendments (`docs/architecture/BIO_State_Rules_Consistency_v1_5.md`), `build/modules.json`, `build/layers.md`, the public parts of `inquiry.md`, `publication.md`, `basis-versions.md`, `review.md`, `membership.md` (R43, R44, R55, R80), `connections.md` (R22, R58), `record-core.md` (R37), `queue.md` (R27), and the Purposes of `ratification`, `case-authoring`, `review`, `monitoring`, `affordances`, `queue`, `control-plane`, `intent`. The UX substrate's research on this question (`docs/development/ux-substrate/ux-experience.json`, the entry "Does a project show a stage …").
