@@ -459,7 +459,9 @@ console.log("\n--- .ods: formats-xlsx.mjs's shape, sheet-cell references, formul
   t("the hidden SHEET is a first-class finding (source null — workbook-scoped, stated)",
     hiddenSheet, { kind: "hidden-sheet", sheet: "Reconciliation", state: "hidden", source: null });
   const hRows = st.evidentiary.items.find((i) => i.kind === "hidden-rows");
-  t("a hidden ROW is flagged with its 1-based number", [hRows.sheet, hRows.rows], ["Appropriations", [3]]);
+  /* odf-reader R16 (N30, T13): hidden rows are listed as ranges, as columns always were. */
+  t("a hidden ROW is flagged as its 1-based range with ODF's own visibility word (R16)",
+    [hRows.sheet, hRows.rows, hRows.count], ["Appropriations", [{ min: 3, max: 3, visibility: "collapse" }], 1]);
   const hCols = st.evidentiary.items.find((i) => i.kind === "hidden-cols");
   t("a hidden COLUMN is flagged with its span and ODF's own visibility word",
     [hCols.sheet, hCols.cols], ["Appropriations", [{ min: 2, max: 2, visibility: "collapse" }]]);
