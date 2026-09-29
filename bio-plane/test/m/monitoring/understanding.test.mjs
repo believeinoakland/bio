@@ -8,7 +8,6 @@ import { MECHANICAL_FIELD_SETS, parseFrontmatter } from "../../../checks/bio-che
 
 test.todo("R28 each open named request in data/gathering.json whose cadence is due is captured through capture.acquire from its locators in order, the request named as authority (not yet met: Intake Doctrine §4; nothing executes a gathering request, and T8 plans no build of it)");
 test.todo("R29 a ratified sweep runs within its scope and breadth budget and lands at collected (not yet met: K102; sweeps wait for a design of what a sweep's query is)");
-test.todo("R30 an administrator may pause the daemon, and its due slate is exported as quoted data inside fixed instruction framing (not yet met: Intake Doctrine §4, K102, K259; N222)");
 test.todo("R31 items in the item contract with their options: source-modified, source-removed, archive-fallback-eligible, monitoring-recheck-due, read by queue (not yet met: the item contract's catalogue ids and options are composed by legacy-store and affordances today (queue, layer 11); this module offers the facts through R8's flag, R20's eligible addresses and R32's rows, and publishes no item yet)");
 
 /* An action with two clock entries, one past and one not, by a member. */

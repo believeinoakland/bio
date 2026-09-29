@@ -78,7 +78,7 @@ test("R32 monitoring({viewer}): every monitored address the viewer may see, with
   w.monitored("INFO-2026-0513-off", "https://records.example.org/d", "r32 d", { enabled: false });
   const r = w.m.monitoring({ viewer: DAEMON, now: NOW_MS });
   assert.equal(r.ok, true);
-  assert.equal(r.configured, false, "visible without waiting for a tick, and without the daemon being configured");
+  assert.equal(r.configured, true, "visible without waiting for a tick; configured on every instance (R45)");
   const by = Object.fromEntries(r.items.map((i) => [i.bundle, i]));
   assert.deepEqual(Object.keys(by).sort(), ["INFO-2026-0510-due", "INFO-2026-0511-meeting", "INFO-2026-0512-later"]);
   assert.equal(by["INFO-2026-0510-due"].state, "due");
