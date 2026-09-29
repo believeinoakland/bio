@@ -228,6 +228,15 @@ test("R14: the catalogue's inquiry extension no longer runs the case-member arm;
   assert.ok(R.caseMemberFindings(CAT.parseFrontmatter(text).data).some((x) => /integer edition/.test(x.message)));
 });
 
+/* Every row family the catalogue exports (an object whose entries carry a `check`), named by export, that holds the code
+   or the check id: read over the whole module, so no family's name is assumed (N251: `ATTRIBUTION_CHECKS` is empty and
+   goes). */
+const catalogueHolding = (code, check) => Object.entries(CAT)
+  .filter(([, fam]) => fam && typeof fam === "object" && !Array.isArray(fam)
+    && Object.values(fam).some((row) => typeof row?.check === "string"))
+  .filter(([, fam]) => Object.hasOwn(fam, code) || Object.values(fam).some((row) => row?.check === check))
+  .map(([name]) => name);
+
 test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and C-92.10–C-92.12 moved here with their codes, ids and translations, and the catalogue no longer holds them", () => {
   const want = {
     RATIFY_MACHINE_FENCE_CHECKS: { MACHINE_CANNOT_RATIFY: "C-32.12", MACHINE_CANNOT_RATIFY_CASE: "C-32.13",
@@ -246,10 +255,11 @@ test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and C-9
       assert.match(v.where, /^src\/ratification\/(ops|index)\.mjs \w+ > is-[a-z-]+$/, code);
       assert.ok(typeof v.translation === "string" && v.translation.length > 60, code);
       assert.deepEqual(R.rowOf(code), { code, check: v.check, translation: v.translation });
-      for (const legacy of [CAT.MACHINE_FENCE_CHECKS, CAT.TESTIMONY_CHECKS, CAT.ATTRIBUTION_CHECKS])
-        assert.equal(legacy[code], undefined, `${code} left the catalogue`);
+      assert.deepEqual(catalogueHolding(code, v.check), [], `${code} left the catalogue`);
     }
   }
+  assert.deepEqual(catalogueHolding("MACHINE_CANNOT_RELEASE", "C-32.1"), ["MACHINE_FENCE_CHECKS"],
+    "negative control: a row the catalogue still holds is found");
   assert.equal(CAT.CASE_CONCLUSION_CHECKS, undefined);
   assert.equal(CAT.RATIFY_SCOPE_CHECKS, undefined);
   assert.throws(() => R.rowOf("NOT_A_CODE"), /DEC-49/);
