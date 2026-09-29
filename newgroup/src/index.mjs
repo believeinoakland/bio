@@ -23,12 +23,14 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, publisherFooter } from "./ui.mjs";
+import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, publisherFooter, PROFILE_CHOICES } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
+/* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. */
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -151,8 +153,7 @@ const html = (s, status = 200, headers = {}) =>
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-const slugOk = (s) => typeof s === "string" && SLUG_RE.test(s) && s !== "newgroup";
+const slugOk = (s) => typeof s === "string" && GROUP_SLUG_RE.test(s) && s !== "newgroup";
 
 const readCookie = (req, name) => {
   const raw = req.headers.get("cookie") || "";
@@ -278,10 +279,10 @@ export const BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" 
  * Until DIST-6 both upload paths below bound the plane its buckets, its secrets and SELF and NOTHING ELSE, so on a
  * group's own copy `installFleet` uploaded pdf-worker, ocr-worker and agent-worker and the plane could reach none of
  * them: tier-2/3 extraction and the assistant member did nothing there (found by D-116's worker, 2026-09-23; D-116's
- * verify step read each member UNBOUND). The binding NAMES are the plane's own (`FLEET_BINDINGS` in
- * `bio-plane/src/index.mjs` — the wizard suite pins the two tables equal, read from the plane's source); the TARGET is
- * the script name `installFleet` uploads each member under (`m.member`), never the plane's slug and never a name in a
- * file. A member absent from this table (a release naming a member the plane does not call) is uploaded and not bound.
+ * verify step read each member UNBOUND). The binding NAMES are the plane's own, instance-setup's `FLEET_BINDINGS`,
+ * imported (R30); the TARGET is the script name `installFleet` uploads each member under (`m.member`), never the
+ * plane's slug and never a name in a file. A member absent from that list (a release naming a member the plane does not
+ * call) is uploaded and not bound.
  *
  * THE ORDER, and the evidence it rests on. Cloudflare REFUSES an upload whose service binding names a worker that does
  * not exist — measured here, not read in a vendor page: `tools/deploy-fleet.mjs` records the refusal
@@ -296,9 +297,8 @@ export const BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" 
  * Step 1 binding what already exists is what keeps an UPDATE from un-binding a working copy's members for the
  * duration of the update, or for good when the fleet step cannot run (the repository unreachable): `service` is not
  * in `keep_bindings`, so a member not restated in a PUT is a member dropped. */
-export const MEMBER_BINDINGS = Object.freeze({ "agent-worker": "AGENT_WORKER", "pdf-worker": "PDF_WORKER",
-                                               "ocr-worker": "OCR_WORKER" });
-const memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS)
+const BINDING_OF = new Map(FLEET_BINDINGS);
+const memberBindings = (members = []) => [...BINDING_OF]
   .filter(([member]) => members.includes(member))
   .map(([member, name]) => ({ type: "service", name, service: member }));
 
@@ -307,7 +307,7 @@ const memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS)
    step 3 binds whatever step 2 then uploads. */
 async function membersPresent(token, acct) {
   const present = [];
-  for (const member of Object.keys(MEMBER_BINDINGS)) {
+  for (const member of BINDING_OF.keys()) {
     try { if (await scriptExists(token, acct, member)) present.push(member); } catch { /* unestablished: not bound */ }
   }
   return present;
@@ -341,6 +341,25 @@ const instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name:
  * release (an installer installing a later release with a different ceiling still sends this one); the signed manifest
  * has no plane-limits field, and adding one to the fleet statement would fail every older installer's verification. */
 export const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
+
+/* R21 (N10): the jurisdiction profiles the operator chose, in the order chosen, bound for the copy to record at its first
+   boot (instance-setup R13). None chosen binds nothing, and R13 then records nothing. An update never sends it: only
+   the install's own two plane uploads (the install PUT and its step-3 re-PUT, whose update shape keeps no `plain_text`,
+   and which may precede the store's first boot) carry it. */
+export const PROFILES_BINDING = "JURISDICTION_PROFILES";
+const HELD_CHOICES = new Set(PROFILE_CHOICES.map((p) => p.id));
+const profilesBinding = (ids) => Array.isArray(ids) && ids.length
+  ? [{ type: "plain_text", name: PROFILES_BINDING, text: ids.join(",") }] : [];
+/* The refusal for a `profiles` value /begin cannot bind, or null. */
+function profilesRefusal(v, mode) {
+  if (v === undefined) return null;
+  if (mode === "update") return "An update never changes which jurisdiction profiles your copy reads; an administrator changes them on your copy's setup page.";
+  if (!Array.isArray(v)) return "The jurisdiction profiles must be a list of the profiles offered.";
+  const bad = v.filter((id) => typeof id !== "string" || !HELD_CHOICES.has(id));
+  if (bad.length) return "Not a jurisdiction profile this installer offers: " + bad.map((x) => JSON.stringify(x)).join(", ") + ".";
+  if (new Set(v).size !== v.length) return "A jurisdiction profile was chosen twice.";
+  return null;
+}
 
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
@@ -377,13 +396,15 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
       /* DIST-9 (D-260's deploy half): the organisation `ai` credential, ONLY when the operator supplied one. */
       ...instanceAiBinding(secrets.instanceAi),
+      /* R21: the chosen jurisdiction profiles, only when some were chosen. */
+      ...profilesBinding(opts.profiles),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
       /* DIST-11 (IC-252): the Browser Rendering binding D-64's render arm looks for. On every Workers tier, so an
          install is never refused over it; the plane reports it as a binding whose in-plane driver is not built. */
       BROWSER_BINDING,
-      /* DIST-6: the members this account already holds (none on a fresh account — see MEMBER_BINDINGS). */
+      /* DIST-6: the members this account already holds (none on a fresh account — see BINDING_OF). */
       ...memberBindings(opts.members),
     ],
     /* SQLite backend is the irreversible choice, made correctly, once. */
@@ -433,7 +454,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          refusal cannot also cost the copy its members. An update never passes it. */
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
       /* DIST-6: the fleet members, by the same healing shape as SELF — an update of a copy installed without them
-         gains them (step 3 of the order at MEMBER_BINDINGS), and one that has them keeps them (step 1). */
+         gains them (step 3 of the order at BINDING_OF), and one that has them keeps them (step 1). */
       ...memberBindings(opts.members),
       /* DIST-11: restated on every update, because `browser` is not in keep_bindings below — an update that did not
          name it would DROP it from a copy that holds it, and one installed before DIST-11 gains it here. */
@@ -456,6 +477,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          it. Unlike DAEMON_TOKEN above there is NO `|| rand(32)` here, and there must never be one: see
          instanceAiBinding. */
       ...instanceAiBinding(opts.instanceAi),
+      /* R21: restated only by the install's step-3 re-PUT (see PROFILES_BINDING); an update never passes it. */
+      ...profilesBinding(opts.profiles),
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -602,7 +625,7 @@ async function installFleet(emit, token, acct, slug, release) {
   return { done, left };
 }
 
-/* DIST-6, step 3 of the order at MEMBER_BINDINGS: RE-PUT the plane bound to every bindable member now present — those
+/* DIST-6, step 3 of the order at BINDING_OF: RE-PUT the plane bound to every bindable member now present — those
    bound at step 1 and those `installFleet` just uploaded. The re-PUT takes the UPDATE's shape on both paths (no
    `migrations`, the group's passwords and the Durable Object kept by `keep_bindings`), because that is the shape
    already proven against an existing script on every update; an install's own shape would restate its `v1` migration
@@ -610,14 +633,14 @@ async function installFleet(emit, token, acct, slug, release) {
    no PUT. A refusal DEGRADES, never fails the act: the members stay installed, the step is marked, and the verify step
    names each member the plane cannot reach (servingVerdict) — never a success over it. */
 async function bindMembers(emit, token, acct, slug, release, already, fleet, opts) {
-  const want = Object.keys(MEMBER_BINDINGS)
+  const want = [...BINDING_OF.keys()]
     .filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
   const added = want.filter((m) => !already.includes(m));
   if (added.length === 0) return { bound: already, unbound: [] };
   emit.step("bind", "Connecting your copy to its capability workers");
   try {
     await uploadUpdate(token, acct, slug, opts.withR2, release,
-      { members: want, daemon: opts.daemon, noSelf: opts.noSelf });
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles });
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
     return { bound: want, unbound: [] };
   } catch (e) {
@@ -690,8 +713,8 @@ export function reportsBuilds(source) {
    failed is named here whatever the plane answers, because the plane's own reading of it (UNBOUND, or a previous
    build) cannot say that THIS act tried and failed — and on a release that cannot report members it is the only
    place the failure reaches the verdict. A member the plane does not bind is named at the fleet step and not here. */
-const failedLags = (failed = []) => failed.filter((l) => l && l.member in MEMBER_BINDINGS)
-  .map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${MEMBER_BINDINGS[l.member]}`
+const failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member))
+  .map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${BINDING_OF.get(l.member)}`
     + ` connection to use (${l.why})`);
 
 function servingVerdict(j, want, installed, capable, failed = []) {
@@ -924,11 +947,12 @@ async function runInstall(emit, code, saved) {
                     ...(instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}) };
   emit.ok("gen");
 
-  /* DIST-6, step 1: bind only the members this account already holds (see MEMBER_BINDINGS for the order). */
+  /* DIST-6, step 1: bind only the members this account already holds (see BINDING_OF for the order). */
   const present = await membersPresent(token, acct.id);
+  const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");
-  try { await uploadInstall(token, acct.id, slug, secrets, release, { members: present }); emit.ok("install"); }
+  try { await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles }); emit.ok("install"); }
   catch (e) {
     /* An install carries a service binding to the script this very upload
        creates. That self-reference cannot be rehearsed here — the only way to
@@ -939,7 +963,7 @@ async function runInstall(emit, code, saved) {
        never installed is not. Same doctrine as the storage arm of the update:
        an install is never refused over something it can complete later. */
     let degraded = false;
-    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present }); degraded = true; }
+    try { await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles }); degraded = true; }
     catch { /* the original refusal is the one worth reporting */ }
     selfRefused = degraded;
     if (!degraded) {
@@ -961,7 +985,7 @@ async function runInstall(emit, code, saved) {
      install otherwise), the DAEMON_TOKEN restated is the one just generated, and SELF is restated only if the
      install kept it. */
   await bindMembers(emit, token, acct.id, slug, release, present, fleet,
-    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused });
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles });
   /* DIST-9: told only AFTER the upload that carried it succeeded — never "stored" ahead of the act. */
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
 
@@ -1257,7 +1281,11 @@ export default {
       const ai = typeof body.instanceAi === "string" ? body.instanceAi.trim() : "";
       if (ai && !instanceAiOk(ai))
         return json({ ok: false, error: "The organisation AI credential does not look like one: paste it exactly as it was shown when it was minted (16 to 512 characters, no spaces), or leave the box empty." }, 400);
-      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}) })));
+      /* R21: the chosen jurisdiction profiles (install only), refused by name when not offered, never silently dropped. */
+      const profilesWhy = profilesRefusal(body.profiles, mode);
+      if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
+      const p = Array.isArray(body.profiles) && body.profiles.length ? body.profiles : null;
+      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...(ai ? { ai } : {}), ...(p ? { p } : {}) })));
       return json({ ok: true, authorize: `${CFG.AUTHORIZE}?${q}` }, 200,
         { "set-cookie": setCookie(cookie, CFG.COOKIE_MAX_AGE_S) });
     }

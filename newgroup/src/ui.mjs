@@ -7,11 +7,33 @@
  * prerequisites the install enforces.
  */
 
+import { list as heldProfiles } from "../../jurisdictions/index.mjs";
+
 export const PRODUCT = "CivicOS";
 export const PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
 /* The example name is not a place (R22): a group names itself for what it does. */
 export const EXAMPLE_SLUG = "clean-water-coalition";
 export const publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
+
+/* R21 (N10): the jurisdiction profiles an install offers, every held profile but the test ones, each by name and
+   coverage. They are `jurisdictions`' data, shown as data (layers.md, "No jurisdiction in the product", rules 1–2): the
+   installer's own words name no place (R31). */
+export const PROFILE_CHOICES = Object.freeze(heldProfiles().filter((p) => p.test !== true)
+  .map(({ id, name, covers }) => Object.freeze({ id, name, covers: Object.freeze([...covers]) })));
+const escText = (s) => String(s).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+export const PROFILES_NONE = `Choosing none is allowed. Your copy then reads no jurisdiction's local facts (identifier
+forms, publishing systems, laws and their deadlines): every fact that needs one says it is undetermined rather than
+guessing. An administrator can choose profiles later on your copy's setup page.`;
+const profilesBlock = () => `<h2>Where your group works</h2>
+<p>Your copy reads local facts from jurisdiction profiles. Choose the ones that cover where your group works, in the
+order they should be read. None is chosen for you.</p>
+<fieldset class="profiles" id="profiles">
+<legend class="small">Jurisdiction profiles this installer holds</legend>
+${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name="profile" value="${escText(p.id)}">`
+  + `<span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
+</fieldset>
+<p class="hint">${PROFILES_NONE}</p>`;
 
 export const PAGE_CSS = `
 :root{
@@ -55,6 +77,8 @@ button.copy:hover{border-color:var(--verdigris)}
 .choice{display:block;border:1px solid var(--rule);background:#fff;padding:15px 17px;margin:0 0 10px;cursor:pointer}
 .choice:hover{border-color:var(--verdigris)}
 .choice input{margin-right:9px}
+fieldset.profiles{border:0;padding:0;margin:0 0 6px}
+fieldset.profiles legend{padding:0;margin:0 0 8px}
 .kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--rule);font-size:14.5px}
 .kv:first-child{border-top:0}
 .kv .k{color:var(--muted);min-width:150px;flex-shrink:0}
@@ -107,6 +131,8 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
+const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
+  const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
   try{e.target.setSelectionRange(p,p)}catch{}});
 $("#go").addEventListener("click",async()=>{
@@ -116,7 +142,7 @@ $("#go").addEventListener("click",async()=>{
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -160,6 +186,8 @@ through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
 that your group can stand up a copy even if the publisher of CivicOS releases
 disappears.</p>
+
+${profilesBlock()}
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",

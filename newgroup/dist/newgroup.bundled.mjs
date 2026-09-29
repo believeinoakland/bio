@@ -1,8 +1,708 @@
+// ../jurisdictions/profiles/oakland-alameda.mjs
+var R = String.raw;
+var oakland_alameda_default = {
+  id: "oakland-alameda",
+  name: "City of Oakland and Alameda County",
+  covers: ["City of Oakland", "Alameda County"],
+  test: false,
+  spaces: {
+    enactment: {
+      label: "resolution or ordinance number (C.M.S.)",
+      forms: [
+        {
+          form: "cms",
+          pattern: { re: R`^(?:C\.?\s?M\.?\s?S\.?\s*)?(\d{4,5})(?:\s*C\.?\s?M\.?\s?S\b\.?)?$`, flags: "i" },
+          normal: [{ group: 1 }],
+          clean: { spaces: "collapse" },
+          basis: "M-119, M-132"
+        }
+      ],
+      kinds: [
+        {
+          kind: "ordinance",
+          prefix: { re: R`ordinance\s+(?:no\.?\s*|number\s+)?`, flags: "i" },
+          floor: { first: 12274, system: "oakland.legistar", basis: "M-132" },
+          basis: "M-119, M-132"
+        },
+        {
+          kind: "resolution",
+          prefix: { re: R`resolution\s+(?:no\.?\s*|number\s+)?`, flags: "i" },
+          floor: { first: 75950, system: "oakland.legistar", basis: "M-132" },
+          basis: "M-119, M-132"
+        }
+      ]
+    },
+    project: {
+      label: "project or capital improvement number",
+      /* Concurrent forms, told apart by shape (M-132: C###### 2000–2026, 100xxxx 2015–2026). C and P
+         are kept apart: nothing measured says they share an allocator. A suffixed new-form value is a
+         different string (M-157). */
+      forms: [
+        {
+          form: "C#####",
+          pattern: { re: R`^(C\d{5,6})$` },
+          normal: [{ group: 1 }],
+          clean: { strip: [{ re: R`#\s*` }], spaces: "remove", upper: true },
+          basis: "M-132"
+        },
+        {
+          form: "P#####",
+          pattern: { re: R`^(P\d{5,6})$` },
+          normal: [{ group: 1 }],
+          clean: { strip: [{ re: R`#\s*` }], spaces: "remove", upper: true },
+          basis: "M-132"
+        },
+        {
+          form: "100xxxx",
+          pattern: { re: R`^(100\d{4})$` },
+          normal: [{ group: 1 }],
+          clean: { strip: [{ re: R`#\s*` }], spaces: "remove", upper: true },
+          basis: "M-132"
+        },
+        {
+          form: "100xxxx+suffix",
+          pattern: { re: R`^(100\d{4}[A-Z])$` },
+          normal: [{ group: 1 }],
+          clean: { strip: [{ re: R`#\s*` }], spaces: "remove", upper: true },
+          basis: "M-157"
+        }
+      ]
+    },
+    fund: {
+      label: "fund code",
+      forms: [
+        {
+          form: "####",
+          pattern: { re: R`^(\d{4})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "collapse" },
+          basis: "M-119"
+        }
+      ]
+    },
+    parcel: {
+      label: "assessor's parcel number (APN)",
+      /* Book (digits with an optional letter, or a bare letter), page, parcel (optional letter),
+         optional sub. M-157's key: every numeric part read without its zero-padding (the legislative
+         record pads every part, the roll does not); a digit is never folded. */
+      forms: [
+        {
+          form: "alameda-apn",
+          pattern: { re: R`^0*(\d{1,3}[A-Z]?|[A-Z])-0*(\d{1,4})-0*(\d{1,3}[A-Z]?)(?:-0*(\d{1,2}))?$` },
+          normal: [
+            { group: 1, unpad: true },
+            "-",
+            { group: 2, unpad: true },
+            "-",
+            { group: 3, unpad: true },
+            "-",
+            { group: 4, unpad: true, default: "0" }
+          ],
+          clean: { strip: [{ re: R`APN\s*`, flags: "i" }], spaces: "remove", upper: true },
+          basis: "M-157"
+        }
+      ]
+    }
+  },
+  systems: [
+    /* The shared API host serves every client city of the vendor, so only this path is this city's. */
+    {
+      origin: "oakland.legistar",
+      name: "Legistar, the City of Oakland's legislative record",
+      hosts: ["webapi.legistar.com"],
+      path: { re: R`^\/v1\/oakland(\/|$)`, flags: "i" },
+      basis: "M-119 LEG"
+    },
+    /* An agenda links each item to its matter page and each file to the file, through the gateway;
+       which links are items and which are files is read off these shapes (REC-206, M-120). */
+    {
+      origin: "oakland.legistar",
+      name: "Legistar, the City of Oakland's legislative record",
+      hosts: ["oakland.legistar.com", "oakland.legistar1.com"],
+      links: {
+        item: { re: R`^\/gateway\.aspx\?m=l&id=\/matter\.aspx\?key=\d+`, flags: "i" },
+        file: { re: R`^\/gateway\.aspx\?m=f&id=[^&#]+`, flags: "i" }
+      },
+      basis: "M-119 LEG, M-120"
+    },
+    {
+      origin: "oakland.budget",
+      name: "the City of Oakland's budget system (its Open Data line items)",
+      hosts: ["data.oaklandca.gov"],
+      path: { re: R`vmzx-e5fe`, flags: "i" },
+      basis: "M-119 ODP"
+    },
+    {
+      origin: "alameda.assessor",
+      name: "the Alameda County Assessor's parcel layer, republished by the City of Oakland's portal (the portal does not state its provenance; its schema, keys and 2012-13 vintage are the county's)",
+      hosts: ["data.oaklandca.gov"],
+      path: { re: R`c3xp-qcgn`, flags: "i" },
+      republishes: true,
+      provenance_stated: false,
+      basis: "M-132, M-157"
+    },
+    {
+      origin: "alameda.assessor",
+      name: "the Alameda County Assessor's own publications (Open Data Hub)",
+      hosts: ["services5.arcgis.com", "data.acgov.org"],
+      path: { re: R`(ROBnTHSNjoZ2Wm1P\/.*(Parcel|Assessor_Office))`, flags: "i" },
+      basis: "M-157 (4)"
+    },
+    {
+      origin: "oakland.permits",
+      name: "the City of Oakland's permit system (Accela)",
+      hosts: ["aca-prod.accela.com"],
+      path: { re: R`\/OAKLAND\/`, flags: "i" },
+      basis: "M-157 (1)"
+    },
+    {
+      origin: "oakland.auditor",
+      name: "the Office of the City Auditor",
+      hosts: ["www.oaklandauditor.com"],
+      basis: "M-119 AUD"
+    }
+  ],
+  mixed_hosts: [
+    {
+      host: "www.oaklandca.gov",
+      why: "the City's general website, serving many offices' publications",
+      basis: "M-119 FIN, M-132"
+    },
+    {
+      host: "cao-94612.s3.us-west-2.amazonaws.com",
+      why: "the storage behind the City's general website, serving many offices' publications",
+      basis: "M-119 FIN, M-132"
+    }
+  ],
+  /* M-157: no crosswalk is captured, so the section is absent (an absent section supplies nothing). */
+  vocabulary: {
+    furniture: [
+      { pattern: { re: R`^City of Oakland$`, flags: "i" }, basis: "2026-08-03, M-24" },
+      { pattern: { re: R`^Office of the City Clerk$`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^View Report$`, flags: "i" }, basis: "2026-08-03, M-24" },
+      { pattern: { re: R`^View Legislation$`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^View (Attachment|Supplemental)\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^Attachments:$`, flags: "i" }, basis: "2026-08-03, M-24" },
+      { pattern: { re: R`^Sponsors:$`, flags: "i" }, basis: "2026-08-03, M-24" }
+    ],
+    bodies: [
+      /* A header line naming the body that meets (agenda and minutes mastheads). */
+      { pattern: { re: R`(Committee|City Council|Commission|Board|Authority)\s*$` }, basis: "2026-08-03, M-24" },
+      /* The enacting body printed above an instrument's own caption. */
+      {
+        pattern: { re: R`\b(?:CITY\s+COUNCIL|COUNCIL\s+OF\s+THE\s+CITY|BOARD\s+OF\s+[A-Z]+|COMMISSION|AUTHORITY|CITY\s+OF\s+[A-Z]+)\b` },
+        basis: "M-24"
+      }
+    ],
+    member_titles: [
+      { pattern: { re: R`^Councilmember`, flags: "i" }, basis: "2026-08-03, M-24" }
+    ],
+    enactment_markers: [
+      /* Council Meeting Series, printed after an instrument's number. */
+      { pattern: { re: R`C\.?\s?M\.?\s?S\.?`, flags: "i" }, basis: "M-24, M-132" }
+    ],
+    codes: [
+      { key: "omc", label: "O.M.C.", pattern: { re: R`O\.?M\.?C\.?|Oakland\s+Municipal\s+Code`, flags: "i" }, basis: "M-24" }
+    ],
+    file_numbers: [
+      { pattern: { re: R`\d{2}-\d{4}` }, system: "oakland.legistar", basis: "2026-08-03, M-24" }
+    ],
+    report_titles: [
+      { pattern: { re: R`^AGENDA\s+REPORT\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^STAFF\s+REPORT\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^INFORMATIONAL\s+REPORT\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^CITY\s+ADMINISTRATOR'?S?\s+REPORT\b`, flags: "i" }, basis: "M-24" }
+    ],
+    report_sections: [
+      { pattern: { re: R`^RECOMMENDATION\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^EXECUTIVE\s+SUMMARY\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^(BACKGROUND|LEGISLATIVE\s+HISTORY|BACKGROUND\s*\/\s*LEGISLATIVE\s+HISTORY)\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^ANALYSIS(\s+AND\s+POLICY\s+ALTERNATIVES)?\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^FISCAL\s+IMPACT\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^PUBLIC\s+OUTREACH\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^COORDINATION\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^SUSTAINABLE\s+OPPORTUNITIES\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^ACTION\s+REQUESTED\b`, flags: "i" }, basis: "M-24" },
+      { pattern: { re: R`^REASON\s+FOR\b`, flags: "i" }, basis: "M-24" }
+    ],
+    recommendation_openers: [
+      { pattern: { re: R`\bStaff\s+Recommends\s+That\b`, flags: "i" }, basis: "M-24" }
+    ],
+    template_blanks: [
+      { pattern: { re: R`^\s*INTRODUCED\s+BY\b[^\]]*\]`, flags: "i" }, basis: "M-24" }
+    ]
+  },
+  practice: {
+    /* A threshold for raising a question, never for asserting a violation; the city's practice is
+       not measured (its code says so). */
+    minutes_due_days: { value: 21, basis: "UNMEASURED" }
+  },
+  locale: { value: "en-US", basis: "UNMEASURED" },
+  search_terms: [
+    { term: "oakland", basis: "UNMEASURED" },
+    { term: "police", basis: "UNMEASURED" }
+  ],
+  records_laws: [
+    {
+      level: "state",
+      name: "California Public Records Act",
+      citation: "Cal. Gov. Code \xA7 7920.000 et seq.",
+      basis: "D-149"
+    }
+  ],
+  standard_sources: [
+    {
+      source: "Oakland Municipal Code",
+      kind: "ordinance",
+      issuer: "Oakland City Council",
+      cite: { re: R`\b(?:O\.?M\.?C\.?|Oakland\s+Municipal\s+Code)\s+(?:Section|Chapter)\s+[\d.]+[\w.]*`, flags: "i" },
+      level: "city",
+      code: "omc",
+      basis: "M-24"
+    },
+    {
+      source: "Ordinances and resolutions of the Oakland City Council",
+      kind: "ordinance",
+      issuer: "Oakland City Council",
+      level: "city",
+      cite: { re: R`\b(?:Ordinance|Resolution)\s+No\.?\s*\d{3,6}(?:\s*C\.?\s?M\.?\s?S\.?)?`, flags: "i" },
+      basis: "M-24"
+    },
+    {
+      source: "California Government Code",
+      kind: "statute",
+      issuer: "California Legislature",
+      level: "state",
+      cite: { re: R`\b(?:Cal(?:ifornia|\.)?\s+)?Gov(?:ernment|\.|t\.?)?\s+Code\s+(?:§+\s*|Section\s+)?\d+(?:\.\d+)?`, flags: "i" },
+      basis: "UNMEASURED"
+    }
+  ],
+  counterparties: [
+    { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
+    { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
+    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
+    /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
+    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true, basis: "UNMEASURED" },
+    { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" }
+  ],
+  action_kinds: [
+    {
+      kind: "records_request",
+      label: "public records request",
+      tier: 1,
+      laws: ["California Public Records Act"],
+      venue: { name: "the City's public records request portal (NextRequest)", how: "portal", basis: "UNMEASURED" },
+      basis: "D-182"
+    },
+    { kind: "grand_jury", label: "complaint to the civil grand jury", tier: 1, basis: "D-182" },
+    { kind: "controller_referral", label: "referral to the State Controller", tier: 1, basis: "D-182" },
+    { kind: "public_comment", label: "public comment to a body", basis: "UNMEASURED" },
+    { kind: "media", label: "media outreach", tier: 1, basis: "D-182" },
+    { kind: "litigation_support", label: "support for litigation", basis: "UNMEASURED" },
+    { kind: "request_for_comment", label: "request for comment on specific claims", basis: "DEC-13" },
+    { kind: "other", label: "other action", basis: "UNMEASURED" },
+    /* Design Requirement 8 and Roadmap v5 §8: Tier 2, with its advisory note, and Tier 3, which has no
+       template. The Roadmap names the court a records petition is filed in. */
+    {
+      kind: "records_petition",
+      label: "court petition to enforce a public records request",
+      tier: 2,
+      laws: ["California Public Records Act"],
+      venue: { name: "Alameda County Superior Court", how: "court", basis: "UNMEASURED" },
+      advisory: "File with caution: a procedural error can have the petition dismissed, usually without prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
+      basis: "D-182"
+    },
+    { kind: "assessment_challenge", label: "challenge to a tax, assessment or fee under Proposition 218", tier: 3, basis: "D-182" },
+    { kind: "taxpayer_action", label: "taxpayer action (Code of Civil Procedure \xA7 526a)", tier: 3, basis: "D-182" },
+    { kind: "consent_decree_motion", label: "motion under a federal consent decree", tier: 3, basis: "D-182" },
+    { kind: "constitutional_claim", label: "claim involving constitutional interpretation or statutory construction", tier: 3, basis: "D-182" }
+  ],
+  deadlines: [
+    {
+      rule: "records_response",
+      applies_to: "records_request",
+      days: 10,
+      count: "calendar",
+      starts: "received",
+      extension: { days: 14, count: "calendar", when: "unusual circumstances, by written notice to the requester" },
+      citation: "Cal. Gov. Code \xA7 7922.535",
+      basis: "UNMEASURED"
+    }
+  ],
+  /* Design Requirement 8's legal organisations, as Bob named them (K283 (2), K303): each takes up the
+     Tier 3 kinds given here; none takes up consent_decree_motion. Their public websites are unmeasured. */
+  legal_organisations: [
+    {
+      name: "Howard Jarvis Taxpayers Association",
+      evaluates: ["assessment_challenge", "taxpayer_action"],
+      contacts: [{ how: "web", value: "https://www.hjta.org" }],
+      basis: "UNMEASURED"
+    },
+    {
+      name: "First Amendment Coalition",
+      evaluates: ["constitutional_claim"],
+      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }],
+      basis: "UNMEASURED"
+    }
+  ]
+  /* holidays: absent. No measurement names the offices' closure days, and the profile's one deadline
+     counts calendar days; a business-day count here is undetermined (R27, R33). */
+};
+
+// ../jurisdictions/profiles/test-port-ellery.mjs
+var R2 = String.raw;
+var test_port_ellery_default = {
+  id: "test-port-ellery",
+  name: "City of Port Ellery and Marlow County (test)",
+  covers: ["City of Port Ellery", "Marlow County"],
+  test: true,
+  spaces: {
+    enactment: {
+      label: "act or bylaw number (P.E.)",
+      forms: [
+        {
+          form: "pe",
+          pattern: { re: R2`^(?:P\.?E\.?\s*)?(\d{3,4})(?:\s*P\.?E\.?)?$`, flags: "i" },
+          normal: [{ group: 1 }],
+          clean: { spaces: "collapse" },
+          basis: "TEST"
+        }
+      ],
+      kinds: [
+        {
+          kind: "act",
+          prefix: { re: R2`act\s+(?:no\.?\s*)?`, flags: "i" },
+          floor: { first: 500, system: "ellery.minutes", basis: "TEST" },
+          basis: "TEST"
+        },
+        {
+          kind: "bylaw",
+          prefix: { re: R2`bylaw\s+(?:no\.?\s*)?`, flags: "i" },
+          floor: { first: 1200, system: "ellery.minutes", basis: "TEST" },
+          basis: "TEST"
+        }
+      ]
+    },
+    project: {
+      label: "works order number",
+      forms: [
+        {
+          form: "WO-####",
+          pattern: { re: R2`^WO-?(\d{4})$` },
+          normal: ["WO-", { group: 1 }],
+          clean: { spaces: "remove", upper: true },
+          basis: "TEST"
+        },
+        {
+          form: "E#####",
+          pattern: { re: R2`^(E\d{5})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "remove", upper: true },
+          basis: "TEST"
+        }
+      ]
+    },
+    fund: {
+      label: "ledger fund number",
+      forms: [
+        {
+          form: "###-##",
+          pattern: { re: R2`^(\d{3})-(\d{2})$` },
+          normal: [{ group: 1 }, "-", { group: 2 }],
+          clean: { spaces: "remove" },
+          basis: "TEST"
+        }
+      ]
+    },
+    parcel: {
+      label: "lot and block number",
+      forms: [
+        {
+          form: "marlow-lot",
+          pattern: { re: R2`^(?:LOT)?0*(\d{1,4})\/0*(\d{1,3})([a-z])?$`, flags: "i" },
+          normal: [{ group: 1, unpad: true }, "/", { group: 2, unpad: true }, { group: 3, upper: true, default: "" }],
+          clean: { strip: [{ re: R2`parcel\s*`, flags: "i" }], spaces: "remove" },
+          basis: "TEST"
+        }
+      ]
+    }
+  },
+  systems: [
+    {
+      origin: "ellery.minutes",
+      name: "the Port Ellery clerk's minute book",
+      hosts: ["minutes.port-ellery.example"],
+      links: { item: { re: R2`^\/entry\/\d+$` }, file: { re: R2`^\/papers\/[a-z0-9-]+\.pdf$`, flags: "i" } },
+      basis: "TEST"
+    },
+    {
+      origin: "ellery.minutes",
+      name: "the Port Ellery clerk's minute book, through the shared records API",
+      hosts: ["api.records-host.example"],
+      path: { re: R2`^\/ellery\/`, flags: "i" },
+      basis: "TEST"
+    },
+    {
+      origin: "ellery.ledger",
+      name: "the Port Ellery general ledger",
+      hosts: ["ledger.port-ellery.example"],
+      basis: "TEST"
+    },
+    {
+      origin: "marlow.lands",
+      name: "the Marlow County lands register, republished by the city's portal",
+      hosts: ["open.port-ellery.example"],
+      path: { re: R2`lots` },
+      republishes: true,
+      provenance_stated: false,
+      basis: "TEST"
+    },
+    {
+      origin: "marlow.lands",
+      name: "the Marlow County lands register",
+      hosts: ["lands.marlow-county.example"],
+      basis: "TEST"
+    }
+  ],
+  mixed_hosts: [
+    { host: "www.port-ellery.example", why: "the city's general website, serving every department", basis: "TEST" }
+  ],
+  crosswalks: [
+    {
+      space: "project",
+      forms: ["WO-####", "E#####"],
+      pairs: [["WO-0001", "E10001"], ["WO-0002", "E10002"]],
+      source: "0f".repeat(32),
+      basis: "TEST"
+    }
+  ],
+  vocabulary: {
+    furniture: [
+      { pattern: { re: R2`^Port Ellery Town Hall$`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`^Marlow County Clerk$`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`^Open Minute$`, flags: "i" }, basis: "TEST" }
+    ],
+    bodies: [
+      { pattern: { re: R2`(Selectboard|Harbour Commission|Town Meeting)\s*$` }, basis: "TEST" }
+    ],
+    member_titles: [
+      { pattern: { re: R2`^Selectman`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`^Selectwoman`, flags: "i" }, basis: "TEST" }
+    ],
+    enactment_markers: [
+      { pattern: { re: R2`P\.?E\.?`, flags: "i" }, basis: "TEST" }
+    ],
+    codes: [
+      { key: "pebl", label: "P.E. Bylaws", pattern: { re: R2`Port\s+Ellery\s+Bylaws|P\.?E\.?B\.?L\.?`, flags: "i" }, basis: "TEST" }
+    ],
+    file_numbers: [
+      { pattern: { re: R2`M\d{3}\/\d{2}` }, system: "ellery.minutes", basis: "TEST" }
+    ],
+    report_titles: [
+      { pattern: { re: R2`^OFFICER'?S\s+MEMORANDUM\b`, flags: "i" }, basis: "TEST" }
+    ],
+    report_sections: [
+      { pattern: { re: R2`^PROPOSAL\b`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`^COSTS\b`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`^CONSULTATION\b`, flags: "i" }, basis: "TEST" }
+    ],
+    recommendation_openers: [
+      { pattern: { re: R2`\bThe\s+Officer\s+Proposes\b`, flags: "i" }, basis: "TEST" }
+    ],
+    template_blanks: [
+      { pattern: { re: R2`\[INSERT\s+[A-Z ]+\]`, flags: "i" }, basis: "TEST" }
+    ]
+  },
+  practice: { minutes_due_days: { value: 30, basis: "TEST" } },
+  locale: { value: "en-GB", basis: "TEST" },
+  search_terms: [{ term: "harbour", basis: "TEST" }],
+  records_laws: [
+    { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. \xA7 1.100", basis: "TEST" },
+    { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. \xA7 4", basis: "TEST" },
+    { level: "federal", name: "National Records Access Act (test)", citation: "Test U.S.C. \xA7 552", basis: "TEST" }
+  ],
+  standard_sources: [
+    {
+      source: "Port Ellery Bylaws",
+      kind: "ordinance",
+      issuer: "Port Ellery Selectboard",
+      level: "city",
+      cite: { re: R2`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" },
+      code: "pebl",
+      basis: "TEST"
+    },
+    {
+      source: "Marlow County Budget Commitments",
+      kind: "commitment",
+      issuer: "Marlow County Commission",
+      level: "county",
+      cite: { re: R2`\bMCBC\s+\d{4}-\d+` },
+      basis: "TEST"
+    }
+  ],
+  counterparties: [
+    { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false, basis: "TEST" },
+    { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
+    { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
+    { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" }
+  ],
+  action_kinds: [
+    {
+      kind: "records_request",
+      label: "request under the records act",
+      tier: 2,
+      laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
+      venue: { name: "the Town Clerk's office", how: "email", basis: "TEST" },
+      template: "To the Town Clerk: under {{law}}, please provide {{records}}.",
+      advisory: "A test advisory: have a solicitor read the request before it is sent.",
+      basis: "TEST"
+    },
+    {
+      kind: "bylaw_complaint",
+      label: "complaint under the bylaws",
+      tier: 1,
+      laws: ["Port Ellery Bylaws"],
+      venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
+      template: "To the Selectboard: {{act}} does not conform to {{bylaw}}.",
+      basis: "TEST"
+    },
+    {
+      kind: "commitment_claim",
+      label: "claim on a budget commitment",
+      tier: 3,
+      venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
+      basis: "TEST"
+    }
+  ],
+  deadlines: [
+    {
+      rule: "records_answer",
+      applies_to: "records_request",
+      days: 5,
+      count: "business",
+      starts: "received",
+      extension: { days: 5, count: "business", when: "the records are held off site" },
+      citation: "Test Stat. \xA7 1.140",
+      basis: "TEST"
+    },
+    {
+      rule: "claim_notice",
+      applies_to: "claim",
+      days: 90,
+      count: "calendar",
+      starts: "known",
+      citation: "Test Stat. \xA7 9.20",
+      basis: "TEST"
+    }
+  ],
+  legal_organisations: [
+    {
+      name: "Marlow Commons Legal Society (test)",
+      evaluates: ["commitment_claim"],
+      contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
+      basis: "TEST"
+    }
+  ],
+  holidays: [
+    {
+      year: 2026,
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-03-17", name: "Harbour Day" },
+        { date: "2026-07-03", name: "Founders' Day (observed)" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      basis: "TEST"
+    },
+    {
+      year: 2027,
+      days: [
+        { date: "2027-01-01", name: "New Year's Day" },
+        { date: "2027-03-17", name: "Harbour Day" },
+        { date: "2027-12-24", name: "Christmas Day (observed)" }
+      ],
+      basis: "TEST"
+    }
+  ]
+};
+
+// ../jurisdictions/index.mjs
+var SECTIONS = Object.freeze([
+  "id",
+  "name",
+  "covers",
+  "test",
+  "spaces",
+  "systems",
+  "mixed_hosts",
+  "crosswalks",
+  "vocabulary",
+  "practice",
+  "search_terms",
+  "records_laws",
+  "standard_sources",
+  "counterparties",
+  "action_kinds",
+  "deadlines",
+  "legal_organisations",
+  "holidays",
+  "locale"
+]);
+var SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
+var VOCABULARY = Object.freeze([
+  "furniture",
+  "bodies",
+  "member_titles",
+  "enactment_markers",
+  "codes",
+  "file_numbers",
+  "report_titles",
+  "report_sections",
+  "recommendation_openers",
+  "template_blanks"
+]);
+var LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
+var COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
+var SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
+var VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
+var COUNTS = Object.freeze(["calendar", "business"]);
+var STARTS = Object.freeze(["received", "filed", "act", "known"]);
+var TIERS = Object.freeze([1, 2, 3]);
+var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
+var deepFreeze = (o) => {
+  if (o && typeof o === "object") {
+    Object.values(o).forEach(deepFreeze);
+    Object.freeze(o);
+  }
+  return o;
+};
+var clone = (o) => o === void 0 ? void 0 : JSON.parse(JSON.stringify(o));
+var HELD = new Map([oakland_alameda_default, test_port_ellery_default].map((p) => [p.id, deepFreeze(clone(p))]));
+function list() {
+  return [...HELD.values()].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0).map((p) => ({ id: p.id, name: p.name, covers: p.covers.slice(), test: p.test === true }));
+}
+
 // src/ui.mjs
 var PRODUCT = "CivicOS";
 var PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
 var EXAMPLE_SLUG = "clean-water-coalition";
 var publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
+var PROFILE_CHOICES = Object.freeze(list().filter((p) => p.test !== true).map(({ id, name, covers }) => Object.freeze({ id, name, covers: Object.freeze([...covers]) })));
+var escText = (s) => String(s).replace(
+  /[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
+);
+var PROFILES_NONE = `Choosing none is allowed. Your copy then reads no jurisdiction's local facts (identifier
+forms, publishing systems, laws and their deadlines): every fact that needs one says it is undetermined rather than
+guessing. An administrator can choose profiles later on your copy's setup page.`;
+var profilesBlock = () => `<h2>Where your group works</h2>
+<p>Your copy reads local facts from jurisdiction profiles. Choose the ones that cover where your group works, in the
+order they should be read. None is chosen for you.</p>
+<fieldset class="profiles" id="profiles">
+<legend class="small">Jurisdiction profiles this installer holds</legend>
+${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name="profile" value="${escText(p.id)}"><span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
+</fieldset>
+<p class="hint">${PROFILES_NONE}</p>`;
 var PAGE_CSS = `
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
@@ -45,6 +745,8 @@ button.copy:hover{border-color:var(--verdigris)}
 .choice{display:block;border:1px solid var(--rule);background:#fff;padding:15px 17px;margin:0 0 10px;cursor:pointer}
 .choice:hover{border-color:var(--verdigris)}
 .choice input{margin-right:9px}
+fieldset.profiles{border:0;padding:0;margin:0 0 6px}
+fieldset.profiles legend{padding:0;margin:0 0 8px}
 .kv{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--rule);font-size:14.5px}
 .kv:first-child{border-top:0}
 .kv .k{color:var(--muted);min-width:150px;flex-shrink:0}
@@ -108,6 +810,8 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
+const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
+  const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
   try{e.target.setSelectionRange(p,p)}catch{}});
 $("#go").addEventListener("click",async()=>{
@@ -117,7 +821,7 @@ $("#go").addEventListener("click",async()=>{
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -160,6 +864,8 @@ through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
 that your group can stand up a copy even if the publisher of CivicOS releases
 disappears.</p>
+
+${profilesBlock()}
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",
@@ -392,6 +1098,10 @@ plane ${plane.sha256} ${plane.bytes} ${plane.asset}
   return `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset} compat=${m.compat.date}+${m.compat.flags.length ? [...m.compat.flags].sort().join(",") : "-"} services=${renderServices(m.services)} parts=${renderParts(m.parts)}`;
 }).join("\n") + "\n";
 
+// ../bio-plane/src/setup-fleet.mjs
+var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
+var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+
 // src/index.mjs
 var CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -482,8 +1192,7 @@ var esc = (s) => String(s ?? "").replace(
   /[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
 );
-var SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-var slugOk = (s) => typeof s === "string" && SLUG_RE.test(s) && s !== "newgroup";
+var slugOk = (s) => typeof s === "string" && GROUP_SLUG_RE.test(s) && s !== "newgroup";
 var readCookie = (req, name) => {
   const raw = req.headers.get("cookie") || "";
   for (const part of raw.split(/;\s*/)) {
@@ -585,15 +1294,11 @@ function uploadForm(meta, source) {
 }
 var selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
 var BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" });
-var MEMBER_BINDINGS = Object.freeze({
-  "agent-worker": "AGENT_WORKER",
-  "pdf-worker": "PDF_WORKER",
-  "ocr-worker": "OCR_WORKER"
-});
-var memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS).filter(([member]) => members.includes(member)).map(([member, name]) => ({ type: "service", name, service: member }));
+var BINDING_OF = new Map(FLEET_BINDINGS);
+var memberBindings = (members = []) => [...BINDING_OF].filter(([member]) => members.includes(member)).map(([member, name]) => ({ type: "service", name, service: member }));
 async function membersPresent(token, acct) {
   const present = [];
-  for (const member of Object.keys(MEMBER_BINDINGS)) {
+  for (const member of BINDING_OF.keys()) {
     try {
       if (await scriptExists(token, acct, member)) present.push(member);
     } catch {
@@ -606,6 +1311,18 @@ var INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 var instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 var instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
 var PLANE_LIMITS = Object.freeze({ subrequests: 1e4 });
+var PROFILES_BINDING = "JURISDICTION_PROFILES";
+var HELD_CHOICES = new Set(PROFILE_CHOICES.map((p) => p.id));
+var profilesBinding = (ids) => Array.isArray(ids) && ids.length ? [{ type: "plain_text", name: PROFILES_BINDING, text: ids.join(",") }] : [];
+function profilesRefusal(v, mode) {
+  if (v === void 0) return null;
+  if (mode === "update") return "An update never changes which jurisdiction profiles your copy reads; an administrator changes them on your copy's setup page.";
+  if (!Array.isArray(v)) return "The jurisdiction profiles must be a list of the profiles offered.";
+  const bad = v.filter((id) => typeof id !== "string" || !HELD_CHOICES.has(id));
+  if (bad.length) return "Not a jurisdiction profile this installer offers: " + bad.map((x) => JSON.stringify(x)).join(", ") + ".";
+  if (new Set(v).size !== v.length) return "A jurisdiction profile was chosen twice.";
+  return null;
+}
 async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
   const meta = {
     main_module: "index.mjs",
@@ -637,13 +1354,15 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
       /* DIST-9 (D-260's deploy half): the organisation `ai` credential, ONLY when the operator supplied one. */
       ...instanceAiBinding(secrets.instanceAi),
+      /* R21: the chosen jurisdiction profiles, only when some were chosen. */
+      ...profilesBinding(opts.profiles),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...opts.noSelf ? [] : [selfBinding(slug)],
       /* DIST-11 (IC-252): the Browser Rendering binding D-64's render arm looks for. On every Workers tier, so an
          install is never refused over it; the plane reports it as a binding whose in-plane driver is not built. */
       BROWSER_BINDING,
-      /* DIST-6: the members this account already holds (none on a fresh account — see MEMBER_BINDINGS). */
+      /* DIST-6: the members this account already holds (none on a fresh account — see BINDING_OF). */
       ...memberBindings(opts.members)
     ],
     /* SQLite backend is the irreversible choice, made correctly, once. */
@@ -685,7 +1404,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          refusal cannot also cost the copy its members. An update never passes it. */
       ...opts.noSelf ? [] : [selfBinding(slug)],
       /* DIST-6: the fleet members, by the same healing shape as SELF — an update of a copy installed without them
-         gains them (step 3 of the order at MEMBER_BINDINGS), and one that has them keeps them (step 1). */
+         gains them (step 3 of the order at BINDING_OF), and one that has them keeps them (step 1). */
       ...memberBindings(opts.members),
       /* DIST-11: restated on every update, because `browser` is not in keep_bindings below — an update that did not
          name it would DROP it from a copy that holds it, and one installed before DIST-11 gains it here. */
@@ -707,7 +1426,9 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          and a value the copy already holds is KEPT by keep_bindings (secret_text) — an update neither sets nor clears
          it. Unlike DAEMON_TOKEN above there is NO `|| rand(32)` here, and there must never be one: see
          instanceAiBinding. */
-      ...instanceAiBinding(opts.instanceAi)
+      ...instanceAiBinding(opts.instanceAi),
+      /* R21: restated only by the install's step-3 re-PUT (see PROFILES_BINDING); an update never passes it. */
+      ...profilesBinding(opts.profiles)
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -829,7 +1550,7 @@ async function installFleet(emit, token, acct, slug, release) {
   return { done, left };
 }
 async function bindMembers(emit, token, acct, slug, release, already, fleet, opts) {
-  const want = Object.keys(MEMBER_BINDINGS).filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
+  const want = [...BINDING_OF.keys()].filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
   const added = want.filter((m) => !already.includes(m));
   if (added.length === 0) return { bound: already, unbound: [] };
   emit.step("bind", "Connecting your copy to its capability workers");
@@ -840,7 +1561,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
       slug,
       opts.withR2,
       release,
-      { members: want, daemon: opts.daemon, noSelf: opts.noSelf }
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles }
     );
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
     return { bound: want, unbound: [] };
@@ -898,7 +1619,7 @@ var BUILD_FIELDS = ["storeVersion", "memberVersions"];
 function reportsBuilds(source) {
   return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
-var failedLags = (failed = []) => failed.filter((l) => l && l.member in MEMBER_BINDINGS).map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${MEMBER_BINDINGS[l.member]} connection to use (${l.why})`);
+var failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member)).map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${BINDING_OF.get(l.member)} connection to use (${l.why})`);
 function servingVerdict(j, want, installed, capable, failed = []) {
   const lags = [];
   if (!j || typeof j !== "object") {
@@ -1107,15 +1828,16 @@ async function runInstall(emit, code, saved) {
   };
   emit.ok("gen");
   const present = await membersPresent(token, acct.id);
+  const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");
   try {
-    await uploadInstall(token, acct.id, slug, secrets, release, { members: present });
+    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles });
     emit.ok("install");
   } catch (e) {
     let degraded = false;
     try {
-      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present });
+      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles });
       degraded = true;
     } catch {
     }
@@ -1139,7 +1861,7 @@ async function runInstall(emit, code, saved) {
     release,
     present,
     fleet,
-    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused }
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles }
   );
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
   emit.step("addr", "Turning on your web address");
@@ -1364,7 +2086,10 @@ var index_default = {
       const ai = typeof body.instanceAi === "string" ? body.instanceAi.trim() : "";
       if (ai && !instanceAiOk(ai))
         return json({ ok: false, error: "The organisation AI credential does not look like one: paste it exactly as it was shown when it was minted (16 to 512 characters, no spaces), or leave the box empty." }, 400);
-      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...ai ? { ai } : {} })));
+      const profilesWhy = profilesRefusal(body.profiles, mode);
+      if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
+      const p = Array.isArray(body.profiles) && body.profiles.length ? body.profiles : null;
+      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...ai ? { ai } : {}, ...p ? { p } : {} })));
       return json(
         { ok: true, authorize: `${CFG.AUTHORIZE}?${q}` },
         200,
@@ -1432,8 +2157,8 @@ export {
   BROWSER_BINDING,
   CFG,
   INSTANCE_AI_BINDING,
-  MEMBER_BINDINGS,
   PLANE_LIMITS,
+  PROFILES_BINDING,
   index_default as default,
   instanceAiOk,
   reportsBuilds
