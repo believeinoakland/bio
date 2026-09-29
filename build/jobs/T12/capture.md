@@ -49,3 +49,7 @@ N285 applied: R63 evidenceAbsent(sha, store, extra?) in src/capture/ops.mjs answ
 - Legacy `test/doorbell.test.mjs`: 71 pass, 1 fail (item 2).
 
 Size (session_0195mhRMLSwyJgRodhjV2CEg, B2): test runs 5, module lines 3075
+
+## J3 · COMPLETE
+
+B2 (K383) applied: inboxGet and inboxResolve answer an unknown knock id through one helper #noSuchKnock: NO_SUCH_KNOCK, row CAPTURE_CHECKS.NO_SUCH_KNOCK C-118.2, identical for read and resolve, nothing written. Tests 70/70; format, architecture, coverage 63/63, ownership: 0 failures. Report: (1) the 404 cannot come from this module: the DO's generic route answers 200 {ok:true,result} and the control plane passes that status (src/index.mjs ~7120); legacy-index maps NO_SUCH_KNOCK to 404 for inboxget/inboxresolve as it does NO_REVIEW_COPY/NO_SUCH_BUNDLE, or R32's '404' is reworded. (2) legacy test/doorbell.test.mjs:508 pins NOT_FOUND: 71/1 (legacy-tests). No UI key on it. (3) guard vs tranche tip, whole job: families +1, rows +2, census +1, reach +1, governedSites +2, regions +2, regionLines +11, codesChecked +4, outcomeReturns +2, refusalsJudged +2; arm G NOT_FOUND 7->5 sites; no new failure kind. Record: Completion (B2).
