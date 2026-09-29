@@ -1,6 +1,6 @@
 # control-plane (T12)
 
-**Status** · session_019VRv42WPEJNBLLAJbEDG3c · depth 2 · COMPLETE · handled B6
+**Status** · session_019VRv42WPEJNBLLAJbEDG3c · depth 2 · COMPLETE · handled B7
 
 ## Work (CONTROL-PLANE #1)
 
@@ -52,6 +52,10 @@ After B6: control-plane 42 tests, 39 pass, 0 fail, 3 todo; every module (`test/m
 
 Size (session_019VRv42WPEJNBLLAJbEDG3c, after B6): test runs 19, module lines 5,910
 
+**B7 (K418), applied.** `relayAnswer` opened the store's reply itself (`r.json()`), a second envelope reader beside REC-52's `doAnswer`; it now reads the reply through `doAnswer` and keeps only `r.status` (a rejected or absent reply is a silence). New interface test (R24, REC-52): over ten reply shapes, `relayAnswer` answers exactly when `doAnswer` calls the reply answered, with its result, at the reply's status, and 502 `STORE_DID_NOT_ANSWER` otherwise. `plane-envelope.test.mjs` does not load here (it imports `DISPATCH_CHECKS` from the catalogue, J4 item 3), so Detector A's confirmation is legacy-tests'. After B7: control-plane 43 tests, 40 pass, 0 fail, 3 todo (N333); format, architecture, coverage (34/34) and ownership 0 failures (the earlier work is on the tranche; this change touches only `control-plane/index.mjs` and its test).
+
+Size (session_019VRv42WPEJNBLLAJbEDG3c, after B7): test runs 21, module lines 5,911
+
 ## J1 · QUESTION
 
 Q1. The forward's versionchain stamp normalises `address` with subresources' `normalizeAddress` (index.mjs 5826, moved with the forward). control-plane's uses lack `subresources` (layer 1, no cycle), so architecture fails once. My best reading: add the edge `control-plane` → `subresources`; I import it meanwhile. (Also for your review at close: ownership lists two added legacy-index lines it cannot pair with an import, the headers of `publicOp`/`gatedOp`, the functions that now hold legacy-index's remaining arms for `makeFetch`; the arm bodies are unchanged lines.)
@@ -88,3 +92,7 @@ The job's Open list is done (record, "Work (CONTROL-PLANE #2)"): R28's replay or
 ## J6 · COMPLETE
 
 B6 (K412) applied at 6ce8267b0b: the store's door reverted to legacy-store (commit d2bbae2f75 holds the move for N333, named in the record); R25's Worker half kept with PLANE_INTERNAL_ERROR renumbered C-69.3 (the store's row goes with N333), R24's relay kept; R25's store half, R26, R27 are test.todo naming N333; queue's checks.mjs in MODULE_CHECK_FILES. Control-plane 39 pass, 0 fail, 3 todo; every module's tests 2,645 pass, 0 fail (promotion's write-path green again); format, architecture, coverage 0 failures; ownership the two J1 headers only, legacy-store untouched. N318: the only new row is C-69.3 PLANE_INTERNAL_ERROR; the moved rows as J4.
+
+## J7 · COMPLETE
+
+B7 (K418) applied: relayAnswer reads the store's reply through doAnswer, keeping only r.status; new R24 interface test that it answers exactly as doAnswer classifies (ten reply shapes, rejected and absent replies). Control-plane 40 pass, 0 fail, 3 todo (N333); format, architecture, coverage 34/34, ownership 0 failures. plane-envelope does not load (imports DISPATCH_CHECKS from the catalogue, J4 item 3), so Detector A is legacy-tests' to confirm.
