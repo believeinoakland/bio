@@ -35,11 +35,11 @@
  * type column), provenance's `register` (R17's author, R18's register) and connections' `refs` (R18). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { observerRef } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
-import { basisVersionsOf } from "../basis-versions/index.mjs";
+import { basisVersionsOf, PROJECT_QUESTIONS_MAX } from "../basis-versions/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { parseFrontmatter, isMachineIdentity, createSha256, sectionText as caseSectionText } from "../../checks/bio-checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -75,6 +75,15 @@ export const RATIFIED_CASES_MAX = 1000;
 /** R42 (N315, K380): the resting findings one capture answers, and those one page answers in all. */
 export const RESTING_FINDINGS_PER_CAPTURE = 200;
 export const RESTING_FINDINGS_PER_PAGE = 10000;
+/** R45: the held questions one `projectStage` reads, in pages of basis-versions' PROJECT_QUESTIONS_MAX (500). */
+export const STAGE_QUESTIONS_MAX = 2000;
+/** R46: the work products (cases) one `projectStage` answers. */
+export const WORK_PRODUCTS_MAX = 200;
+/** R45: State Rules §4.3's four stages, and the reasons an owner records a close with. */
+export const PROJECT_STAGES = Object.freeze(["forming", "investigating", "matured", "closed"]);
+export const CLOSED_REASONS = Object.freeze(["resolved", "superseded", "abandoned"]);
+/** R46: State Rules §4.3's readiness ladder, lowest first. */
+export const READINESS_RUNGS = Object.freeze(["draft", "internally_checked", "externally_compliant", "distributed"]);
 /** R38: the pins one `ratifiedFindingsRestingOn` page reads, its default and its ceiling. */
 export const RESTING_PINS_MAX = 1000;
 /* A caller's page size: a whole number of rows, floored, clamped to 1–max, the default when absent or not a number. */
@@ -1110,6 +1119,131 @@ export class Publication {
                findings_truncated: c.cut })),
              limit: cap, truncated,
              cursor: truncated && answered.length ? answered[answered.length - 1].capture_sha : null };
+  }
+
+  /* ---------------------------------------------------------------- R44–R47: a project's stage */
+
+  /** R44–R47 (N300; K356, K362, K364, K379): a project's stage and its work products' readiness, derived afresh at every
+   *  read from the record and never stored (R47): the project's own document (rule 1's recorded close), the questions
+   *  it holds (basis-versions R41 `projectQuestions`, whose stance is R22's `conclusionOf` reading) and the cases it
+   *  owns and has published. Fenced by membership R44's sight: `NO_ID` for no project; absent, not a project and no
+   *  sight are one answer, membership's `noSuchProject` (R29); existence only is membership's C-70.1 through
+   *  `existenceAct`; only FULL sight is answered. Writes nothing; never throws (a part it cannot read is stated
+   *  undetermined, R28). */
+  projectStage({ project = null, viewer = null } = {}) {
+    const pid = str(project);
+    if (!pid) return { ok: false, reason: "NO_ID", detail: "projectStage names a project" };
+    let row = null;
+    try { row = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid); } catch { row = null; }
+    if (!row || row.object_type !== "project") return noSuchProject(pid);
+    let sight = "none";
+    try { sight = this.membership.sight(pid, viewer); } catch { sight = "none"; }
+    if (sight === "existence") {
+      let seen = null;
+      try { seen = this.membership.existenceAct(pid, viewer); } catch { seen = null; }
+      return seen || noSuchProject(pid);
+    }
+    if (sight !== "full") return noSuchProject(pid);
+    const work = this.#workProducts(pid);
+    const out = { ok: true, project: pid, stage: null, closed_reason: null,
+                  questions: { read: 0, with_legs: 0, concluded: 0, truncated: false },
+                  published_editions: work.published_editions, work_products: work.items,
+                  work_products_limit: WORK_PRODUCTS_MAX, work_products_truncated: work.truncated,
+                  readiness: work.readiness, basis: null };
+    /* Rule 1: the owner's recorded close, read from the project's own document and from nothing else. The document's
+       `forming`, `investigating` or `matured` is never read (R45, R47). */
+    const text = this.#fileText(pid, "bundle.md");
+    if (!text) return { ...out, stage: "undetermined",
+      detail: "the project's own document could not be read, so whether its owner closed it is undetermined" };
+    const fm = parseFrontmatter(text.content).data || {};
+    if (fm.current_state === "closed" && CLOSED_REASONS.includes(fm.closed_reason))
+      return { ...out, stage: "closed", closed_reason: fm.closed_reason,
+               basis: { rule: "closed", question: null, case: null, edition: null } };
+    /* Rules 2 and 3 over the held questions, in pages, stopping once rule 2 is met or at the cap. */
+    let after = null, concluded = null, legged = null, more = false;
+    try {
+      while (out.questions.read < STAGE_QUESTIONS_MAX) {
+        const page = this.basisVersions.projectQuestions({ project: pid, after,
+          limit: Math.min(PROJECT_QUESTIONS_MAX, STAGE_QUESTIONS_MAX - out.questions.read) });
+        const items = page && Array.isArray(page.items) ? page.items : [];
+        for (const q of items) {
+          out.questions.read++;
+          if (q.legs) { out.questions.with_legs++; legged ??= q.inquiry; }
+          if (q.stance === "concluded") { out.questions.concluded++; concluded ??= q.inquiry; }
+        }
+        more = !!(page && page.cursor) && items.length > 0;
+        if (concluded || !more) break;
+        after = page.cursor;
+      }
+    } catch {
+      return { ...out, stage: "undetermined", at_least: legged ? "investigating" : "forming",
+               questions: { ...out.questions, truncated: true },
+               detail: "the questions this project holds could not all be read, so its stage is undetermined" };
+    }
+    if (concluded)
+      return { ...out, stage: "matured", basis: { rule: "matured", question: concluded, case: null, edition: null } };
+    if (work.first_ratified)
+      return { ...out, stage: "matured", basis: { rule: "matured", question: null, ...work.first_ratified } };
+    if (more) {
+      /* The cap reached with rules 1–2 unmet: what was established, never filled in (R28). */
+      return { ...out, stage: "undetermined", at_least: legged ? "investigating" : "forming",
+               questions: { ...out.questions, truncated: true },
+               detail: `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of `
+                     + "those read is concluded and it has published no case, so whether it has matured is "
+                     + "undetermined; it is at least as far as stated" };
+    }
+    if (legged)
+      return { ...out, stage: "investigating", basis: { rule: "investigating", question: legged, case: null, edition: null } };
+    return { ...out, stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
+  }
+
+  /* R46: the project's work products. A work product is a case the project owns: its `cases` row (written at the first
+     edition's signature), or, for a case not yet signed, the `case_project` its unsigned document names (R21; so a case
+     prepared and never signed is the project's draft). Each rung is stated by its own condition. */
+  #workProducts(pid) {
+    const ids = this.#rows(
+      `SELECT case_id FROM (
+         SELECT case_id FROM cases WHERE project_id=?
+         UNION SELECT d.case_id FROM case_documents d
+          WHERE d.sig_armored IS NULL AND instr(d.text, ?) > 0
+            AND NOT EXISTS (SELECT 1 FROM cases k WHERE k.case_id=d.case_id))
+        ORDER BY case_id LIMIT ?`, pid, `\ncase_project: ${pid}\n`, WORK_PRODUCTS_MAX + 1).map((r) => r.case_id);
+    const truncated = ids.length > WORK_PRODUCTS_MAX;
+    if (truncated) ids.length = WORK_PRODUCTS_MAX;
+    const items = [];
+    for (const id of ids) {
+      /* A case with no `cases` row counts only when its unsigned document's own `case_project` is this project. */
+      const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
+      if (!owned) {
+        const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND sig_armored IS NULL AND instr(text, ?) > 0
+                              ORDER BY edition LIMIT 1`, id, `\ncase_project: ${pid}\n`);
+        if (!d || String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() !== pid) continue;
+      }
+      const drafted = !!this.#one(`SELECT 1 AS d FROM case_documents WHERE case_id=? AND sig_armored IS NULL LIMIT 1`, id);
+      const ed = this.#one(`SELECT COUNT(*) AS n, MAX(edition) AS latest FROM published_cases
+                             WHERE case_id=? AND ratified_at IS NOT NULL`, id) || {};
+      const editions = Number(ed.n) || 0;
+      const notEvaluated = { met: false, why: "no evaluation is recorded" };
+      const rungs = {
+        draft: drafted ? { met: true } : { met: false, why: "no unsigned case document of this case is stored" },
+        internally_checked: notEvaluated,
+        externally_compliant: notEvaluated,
+        distributed: editions ? { met: true } : { met: false, why: "no edition of this case is ratified" },
+      };
+      const readiness = [...READINESS_RUNGS].reverse().find((r) => rungs[r].met) ?? "none";
+      items.push({ case: id, readiness, editions, latest_edition: editions ? Number(ed.latest) : null, rungs });
+    }
+    const top = items.reduce((m, w) => Math.max(m, READINESS_RUNGS.indexOf(w.readiness)), -1);
+    /* Over every case the project owns, not only the page answered: the count, and rule 2's first case edition by id. */
+    const all = this.#one(`SELECT COUNT(*) AS n FROM published_cases c JOIN cases k ON k.case_id=c.case_id
+                            WHERE k.project_id=? AND c.ratified_at IS NOT NULL`, pid) || {};
+    const first = this.#one(`SELECT c.case_id, MIN(c.edition) AS edition FROM published_cases c
+                               JOIN cases k ON k.case_id=c.case_id
+                              WHERE k.project_id=? AND c.ratified_at IS NOT NULL
+                              GROUP BY c.case_id ORDER BY c.case_id LIMIT 1`, pid);
+    return { items, truncated, published_editions: Number(all.n) || 0,
+             readiness: !items.length ? "absent" : top < 0 ? "none" : READINESS_RUNGS[top],
+             first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null };
   }
 
   /* ---------------------------------------------------------------- moved from the store */
@@ -3473,5 +3607,7 @@ export function publicationOps(p, url, body) {
     publishedlist: () => p.publishedList(),
     /* D-734: internal, the signed text behind a published case-document hash; the control plane re-hashes it. */
     publishedcasedoctext: () => p.publishedCaseDocumentText((q("sha256") || "").toLowerCase()),
+    /* R44 (N300): the viewer the control plane stamps; the route is legacy-index's (N321). */
+    projectstage: () => p.projectStage({ project: q("project"), viewer: q("viewer") }),
   };
 }
