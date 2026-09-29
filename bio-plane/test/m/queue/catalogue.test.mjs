@@ -9,12 +9,12 @@ import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive"];
-/* R1's twenty, `cardinality_exceeded` among them (N107, K209). */
+/* R1's twenty-one, `cardinality_exceeded` (N107, K209) and `newer-capture-affects-reference` (N172) among them. */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
   "source-removed", "duplicate-document", "link-verdict-changed", "reused-asset-changed", "assistant-surfaced-focus",
   "grade-improvable", "objective-gap", "measure-decay", "export-performed", "audit-finding", "register-unbacked",
   "out-of-inquiry-lead", "stance-changed-here-not-elsewhere", "new-version-arrived-from-another-team",
-  "shared-inquiry-concluded-by-another-project", "cardinality_exceeded"];
+  "shared-inquiry-concluded-by-another-project", "cardinality_exceeded", "newer-capture-affects-reference"];
 const CONDITION = ["monitoring-recheck-due", "archive-fallback-eligible", "capture-session-ttl-expiring",
   "source-unreachable-governed", "capture-completed-unattended", "partial-capture-outstanding", "text-undetermined",
   "client-rendered-shell", "invitation-spent-or-expired", "governor-holding-host", "runtime-ceiling-reached",
