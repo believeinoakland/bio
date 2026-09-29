@@ -1,5 +1,5 @@
 import json, html, re, os
-S = "/tmp/claude-0/-home-user-bio/c4522ba1-57f2-5222-b1d8-fe77a0d83037/scratchpad/"
+S = __import__('os').path.dirname(__import__('os').path.abspath(__file__)) + '/'
 d = json.load(open(S + "ux-substrate-v2.json"))
 x = json.load(open(S + "ux-experience.json")) if os.path.exists(S + "ux-experience.json") else {}
 e = lambda s: html.escape(", ".join(map(str, s)) if isinstance(s, list) else str(s if s is not None else ""), quote=True)
@@ -185,13 +185,13 @@ flux = "".join(f'<tr><td>{e(f["what"])}</td><td>{e(f.get("why"))}</td><td>{src(f
 
 BOBQ = [
  ("What does “rung” mean to a member?", "The design documents use “rung ladder” for the path to publication (release, stand behind, ground, conclude, accept, ratify, publish). The requirements use it for how heavy each act is (can be undone, needs a reason, ends something, signed, cannot be undone). A member sees the second on every button.",
-  "Keep “rung” for the weight of an act. Call the sequence the <b>path to publication</b>. I correct System Design and Publication to match."),
+  "“Rung” means the weight of an act. The sequence is the <b>path to publication</b>. System Design and Publication are corrected to match."),
  ("What does “finding” mean to a member?", "In Case Making a finding is a concluded question. In the queue, “FINDING” is a class of item: something the record noticed that nobody has judged yet.",
-  "Keep <b>finding</b> for a concluded question. Show the queue class to members as <b>Noticed</b>. Only the word a member sees changes."),
+  "<b>Finding</b> means a concluded question. The queue class is shown to members as <b>Noticed</b>. Only the word a member sees changes."),
  ("Does a project show its stage?", "State Rules §4.3 gives a project four stages (forming, investigating, matured, closed) and a readiness for its work products. No requirement carries them, so no screen can show them today.",
-  "Add the four stages to the project's requirements in T12, computed from the questions it holds and what it has published, not set by hand. The redesign will want a project's stage on its home screen."),
+  "A project shows its stage. The four stages go into the project's requirements in T12, computed from the questions it holds and what it has published, never set by hand, and the redesign shows a project's stage on its home screen."),
 ]
-bobq = "".join(f'<article class="q bob"><h3>{t}</h3><p>{w}</p><p class="rec"><b>Recommendation:</b> {r}</p></article>' for t, w, r in BOBQ)
+bobq = "".join(f'<article class="q bob"><h3>{t}</h3><p>{w}</p><p class="rec"><b>Ruled by Bob, 2026-09-29, as recommended (K356):</b> {r}</p></article>' for t, w, r in BOBQ)
 
 cnt = {k: sum(1 for c in d["constructs"] if c["maturity"] == k) for k in MAT}
 sx = {k: sum(1 for s in d["surfaces"] if s.get("existsInOldUI") == k) for k in ("yes", "partial", "no")}
@@ -306,13 +306,13 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h1>The UX substrate</h1>
 <p class="lede">What a CivicOS member sees and works with, as the approved requirements define it, and everything a designer needs to build its experience on: who uses it, for what, what they meet at each step, and what each screen must and must never do.</p>
 <div class="readme">
-<div><b>Part 1 · Overview</b>For Bob: what the product is to a member, in plain words and a few diagrams, and three questions for you.</div>
+<div><b>Part 1 · Overview</b>For Bob: what the product is to a member, in plain words and a few diagrams, and your three rulings on its words.</div>
 <div><b>Part 2 · Design inputs</b>For the UX work: audiences, use cases, the experience step by step, screens and their rules, how heavy each act is, and the words. Each line is marked <span class="pill fixed">Fixed</span> by the canon or <span class="pill open">Open</span> for design.</div>
 <div><b>Part 3 · Reference</b>Every construct with its lifecycle and acts, who may act, what is still changing. Turn on “Show sources” to see the requirement behind each line.</div>
 </div>
-<div class="stats"><span class="pill built">{cnt["built"]} built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"]} not built</span><span class="pill askb">3 questions for Bob</span>{f'<span class="pill open">{fixed_open}</span>' if fixed_open else ""}</div>
+<div class="stats"><span class="pill built">{cnt["built"]} built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"]} not built</span><span class="pill askb">3 ruled by Bob</span>{f'<span class="pill open">{fixed_open}</span>' if fixed_open else ""}</div>
 </header>
-<nav class="bar" aria-label="Sections"><a href="#overview">Overview</a><a href="#bob">For Bob</a>{'<a href="#audiences">Audiences</a><a href="#usecases">Use cases</a><a href="#experience">Experience</a>' if x else ""}<a href="#screens">Screens</a><a href="#weights">Act weights</a><a href="#words">Words</a>{'<a href="#open">Open questions</a>' if x else ""}<a href="#constructs">Constructs</a><a href="#roles">Who may act</a><a href="#flux">In flux</a>
+<nav class="bar" aria-label="Sections"><a href="#overview">Overview</a><a href="#bob">Bob's rulings</a>{'<a href="#audiences">Audiences</a><a href="#usecases">Use cases</a><a href="#experience">Experience</a>' if x else ""}<a href="#screens">Screens</a><a href="#weights">Act weights</a><a href="#words">Words</a>{'<a href="#open">Open questions</a>' if x else ""}<a href="#constructs">Constructs</a><a href="#roles">Who may act</a><a href="#flux">In flux</a>
 <label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label></nav>
 
 <p class="part">Part 1 · Overview</p>
@@ -325,8 +325,8 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h3 style="margin-top:28px">How much of it has a screen today</h3>
 <p>The requirements imply <b>{len(d["surfaces"])}</b> screens. In the old interface <b>{sx["yes"]}</b> exist, <b>{sx["partial"]}</b> exist in part, and <b>{sx["no"]}</b> were never built. Of the <b>{len(allacts)}</b> acts a member or administrator can take, <b>{n_none}</b> have no control in the old interface. The redesign starts from the requirements, not from the old screens.</p>
 
-<h2 id="bob">Three questions for Bob</h2>
-<p>The design documents and the requirements disagree on these, and each changes what members read. The other differences I found are mine to settle and are listed under “In flux”.</p>
+<h2 id="bob">Bob's rulings</h2>
+<p>The design documents and the requirements disagreed on these, and each changes what members read. Bob ruled all three on 2026-09-29, as recommended. The other differences I found are mine to settle and are listed under “In flux”.</p>
 {bobq}
 
 <p class="part">Part 2 · Design inputs</p>
