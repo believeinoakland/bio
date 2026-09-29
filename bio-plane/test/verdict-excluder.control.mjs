@@ -104,7 +104,11 @@ const P = {
   store: ROOT + "src/store.mjs",
   guard: REPO + "civicos-ui/check-refusal-codes.mjs",
 };
-const MIN_BYTES = { mb: 40000, pe: 30000, reader: 20000, index: 150000, store: 500000, guard: 150000 };
+/* RE-FLOORED 2026-09-29 (LEGACY-TESTS #11, T13): `store` 500,000 -> 200,000 and `index` 150,000 -> 40,000, below the
+   measured 213,570 and 51,020 bytes. The extractions since T9 (queue, instance-setup, control-plane's door) took the
+   store under its old floor, so arm (5) threw before arming and (5b) and (6) never ran. Still blindness floors: an
+   unreadable or truncated file still refuses to arm. */
+const MIN_BYTES = { mb: 40000, pe: 30000, reader: 20000, index: 40000, store: 200000, guard: 150000 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* A pristine copy per ARM, uniquely named, plus the digest and the byte count
