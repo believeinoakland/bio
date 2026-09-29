@@ -288,6 +288,12 @@ let someone else continue the pseudonym. The mechanism is BOB's; the rule is Bob
 the knocker's and never as evidence of its truth. The `contact` stays in the doorbell inbox, readable by members and never in the record
 or any publication, so a whistleblower's way of being reached cannot be published by accident.
 
+**A source's identity evolves (Bob, 2026-09-29, DEC-78 item 5).** An unknown source may become a publicly known one: by revealing
+themself to the group or in public, by parts of their identity (an occupation, say) appearing in a whistleblower filing, or by being found
+and exposed by those hostile to their evidence. The record holds a source's identity as a HISTORY of disclosures, each dated and
+attributed, never as one field overwritten, and each capture keeps its source as it stood when the material was received. The doctrine of
+who may disclose what, to whom, is open with Bob.
+
 **The limit is a BOUND (BOB #32, 2026-09-24, D-496).** A limit the instance publishes is one it holds, not the name of a bucket. The limits
 are 12 knocks per source (a fingerprint of the connecting address, never the address) and 300 per instance, in any 10 minutes, counted in
 the same transaction as the write so a race cannot slip past them. The count is a two-bucket weighted sliding window,
