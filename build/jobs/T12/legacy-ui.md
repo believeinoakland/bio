@@ -33,3 +33,7 @@
 - `ownership.mjs … legacy-ui tranche/T12`: 2 files changed by legacy-ui; 0 failures.
 
 Size (session_01BSC2Ek4hARuMbaqzmitcK9): test runs 4, module lines 53
+
+## J1 · COMPLETE
+
+Complete (record's Completion). K387: entitycreate probe keys on ENTITY_NO_LABEL; intent-write.test.mjs green again. No other UI probe or label keys on a T12-renamed code (grep; the rest render the plane's translation). N301: queue class FINDING shown as Noticed (one helper queueClassLabel: row chip, notifClassLine) and 'noticed item' in the queue, set-aside ledgers and progression/document decision sentences; 'finding' kept for concluded questions. For legacy-tests to re-anchor (text pins of the old N301 wording): notifications.test.mjs:894,:923; queue.test.mjs:725; queue-projectscope.test.mjs:397; document-decided-finding.test.mjs:254/277/285/327-330; progression-decided-finding.test.mjs:224/247/253. Pre-existing, unchanged: add-surface, bias-vocabulary, semantics-harvest; the three check scripts' FAILs identical before/after. No code added or retired; no generated artifact stale. Checks: format, architecture, coverage, ownership 0 failures.
