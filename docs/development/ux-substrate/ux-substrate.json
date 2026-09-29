@@ -4308,9 +4308,9 @@
    "ids": "ai-runs R40, R44; AI Roles §2, §8"
   },
   {
-   "what": "Contradictions: never shown to members; PRESENT and RESOLVE undesigned",
-   "why": "design gap",
-   "ids": "contradiction Purpose; System Design §3 row 8"
+   "what": "Contradictions: never shown to members. How they are presented and resolved is DECIDED (Bob, 2026-09-29): conditional, met inline by a 'how do these differ?' clarifier, resolved as an inquiry with a recorded kind, context supports without silently deciding",
+   "why": "decided, not yet designed in detail or built: the PRESENT and RESOLVE design and its requirement changes are owed",
+   "ids": "DEC-76, DEC-77; Case Making §CONTRADICTION; contradiction Purpose; System Design §3 row 8"
   },
   {
    "what": "Layer 9 (standards to escalation) built in T8 but requirement files still carry 'not yet met: new module' marks; fixes pending",
