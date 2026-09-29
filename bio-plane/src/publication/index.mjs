@@ -1214,16 +1214,18 @@ export class Publication {
     for (const id of ids) {
       /* A case with no `cases` row counts only when its unsigned document's own `case_project` is this project. */
       const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
-      const drafts = this.#rows(`SELECT edition, text FROM case_documents WHERE case_id=? AND sig_armored IS NULL
-                                  ORDER BY edition`, id);
-      if (!owned && !drafts.some((d) => String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() === pid))
-        continue;
+      if (!owned) {
+        const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND sig_armored IS NULL AND instr(text, ?) > 0
+                              ORDER BY edition LIMIT 1`, id, `\ncase_project: ${pid}\n`);
+        if (!d || String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() !== pid) continue;
+      }
+      const drafted = !!this.#one(`SELECT 1 AS d FROM case_documents WHERE case_id=? AND sig_armored IS NULL LIMIT 1`, id);
       const ed = this.#one(`SELECT COUNT(*) AS n, MAX(edition) AS latest FROM published_cases
                              WHERE case_id=? AND ratified_at IS NOT NULL`, id) || {};
       const editions = Number(ed.n) || 0;
       const notEvaluated = { met: false, why: "no evaluation is recorded" };
       const rungs = {
-        draft: drafts.length ? { met: true } : { met: false, why: "no unsigned case document of this case is stored" },
+        draft: drafted ? { met: true } : { met: false, why: "no unsigned case document of this case is stored" },
         internally_checked: notEvaluated,
         externally_compliant: notEvaluated,
         distributed: editions ? { met: true } : { met: false, why: "no edition of this case is ratified" },
