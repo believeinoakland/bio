@@ -1,0 +1,7 @@
+# BOB to intent (T12)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries (layer 7): N305, the bounds on R28's `servesOf`, `#conditioned` and `pursuitOf` as worded in your requirements' Bounds paragraph (K367), each with an interface test at the bound; and your share of N285: R2's `NO_SUCH_ENTITY` answers through `entities.noSuchEntity` (entities R36), retiring your `refuseNoSuchEntity` and its row C-111.5. Read the plan's opening paragraph first (T11's rules hold); `N` entries' text is in `build/plan/next.md`. Layers below changed (K381–K390): one site per shared code across capture, extraction, entities (`noEntity` C-91.5, `noSuchEntity` R36, `ENTITY_NO_LABEL`), progressions (`notADisposition`, renames) and inquiry (re-exports progressions' `DISPOSITIONS`); basis-versions R41 `projectQuestions`; strength R6 withholds hidden members whole; `CATALOG_VERSION` 1.42.0. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test. Grep `civicos-ui/` and affordances' lists for any code you retire and report each hit. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. A generated artifact you make stale is reported, not rebuilt; a legacy-tests suite you break is reported. Name each `not yet met` mark your work meets in your record. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
