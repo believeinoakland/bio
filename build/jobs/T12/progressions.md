@@ -38,3 +38,21 @@ Found beyond my module (record, Completion 'Found'): (1) legacy suite test/progr
 ## J3 · COMPLETE · re B2
 
 N285 applied: R35 notADisposition (C-100.20, R35's translation), exported with DISPOSITIONS, and R21 answers through it. Renamed PROGRESSION_NO_LABEL (C-100.2) and PROGRESSION_VERSION_NOT_HELD (C-100.8). R19 answers through extraction.noSha, and C-100.19 is retired. NO_ENTITY is kept per B2 under a test.todo. Tests 41 pass, 0 fail, 2 todo; users intent, scheduler, affordances and queue are green; format, architecture, coverage 35/35 and ownership each report 0 failures. Strike: R1, R5, R35 N285 marks. Record: build/jobs/T12/progressions.md, Completion.
+
+## Completion (B3)
+
+**Applied.** I merged `tranche/T12` (entities R37 `noEntity`, C-91.5; K387). `#entityNamed` now answers `noEntity(detail)` for a request naming no entity id (absent, not a string, or blank), so R6, R9, R14 and R15 answer through it. Row C-100.9 is retired: it is out of `PROGRESSION_CHECKS` and added to the retired-ids test. R27's `test.todo` is now the full-compliance test "R27: NO_ENTITY is entities' one answer…": four acts × eight shapes of absence, each matching `noEntity(detail)` field for field, C-91.5, writing nothing, with a negative control. R14's order test and the R27 sweep read `NO_ENTITY` as entities'.
+
+**Strike.** R27's `not yet met: N285` is met.
+
+**Deferred.** R32 only (K102).
+
+**Found.**
+- DEC-49 guard on the merged tree: progressions no longer mints `NO_ENTITY`. Arm G still lists `ENTITY_CHECKS.NO_ENTITY` at 2 sites, the other being `src/connections/index.mjs` (connections' R1, its own job).
+- `NO_LABEL`'s reach ratchet is back to 32 and untranslated to 287, now that entities has landed `ENTITY_NO_LABEL` (J2 item 3 resolved).
+- `test/progression-versions.test.mjs`:196 still fails on `NOT_FOUND` (J2 item 1, legacy-tests').
+- The plane bundle is still stale.
+
+**Tests and checks.** progressions: pass 42, fail 0, todo 1 (R32). Users' and providers' tests: intent 41/0, scheduler 46/0, affordances 74/0, queue 10/0, connections 65/0, entities 41/0. `format`: 0 failures. `architecture`: 10 files, 33 imports, 0 failures. `coverage`: 35 of 35 ids, 0 failures. `ownership`: 7 files, legacy 0/0, 0 failures.
+
+Size (session_01X6gfmWECg3C2k8SqLBBz7h): test runs 13, module lines 1614
