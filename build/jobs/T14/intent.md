@@ -51,3 +51,7 @@ Size (session_01FqpsV7C2NPXUooqgeT942u): test runs 10, module lines 1864
 ## J1 · QUESTION
 
 R22 wording (not blocking; built on my reading): R22 says every refusal intent.md names gets a row in this module except NO_SUCH_PROJECT and NO_SUCH_ENTITY. R9 now names NOT_AN_ADMIN, whose one row is membership's C-96.1 (R84), and R2 already names PROJECT_ACT_NOT_A_PARTICIPANT, also membership's. My reading: R22's exceptions gain both (N327 for NOT_AN_ADMIN), and the code follows R84 (no intent row for either). Nothing to change in code if you agree.
+
+## J2 · REPORT
+
+Found outside intent (record, Found in other modules): (1) stale, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs still carries GROUP_ASPIRATION_NOT_ADMIN / C-111.16 (:69085, :69654). (2) legacy-tests: civicos-ui/check-refusal-codes.mjs (already red on the tranche, same 17 failures before and after) — this change moves rows, census, reach, governedSites, regions, codesChecked, refusalsJudged each -1 and regionLines -4, for the FLOOR re-pin. (3) No suite outside test/m/intent names GROUP_ASPIRATION_NOT_ADMIN; test/fixtures/row-census-1.43.0.jsonl lists C-111.16 as the frozen 1.43.0 census (promotion's stamp). No civicos-ui or affordances hit for GROUP_ASPIRATION_NOT_ADMIN, C-111.16, GROUP_ASPIRATION_ACT or GROUP_ASPIRATION_REMEDY.
