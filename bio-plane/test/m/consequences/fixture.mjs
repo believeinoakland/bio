@@ -1,8 +1,12 @@
 /* consequences over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   inquiry, strength; inquiry reaches its own connections and entities), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. Two stand-ins
-   the test controls: `conformance` (not yet merged into this tranche; it answers `determinationRead` as conformance R9
-   states it, gated on the project's sight) and the passage text of a content row (content provides no read of it yet;
-   see the module's header). Every test drives `consequences` at its interface. */
+   inquiry, strength; inquiry reaches its own connections and entities), on a real SQLite database (node:sqlite) standing
+   in for a Durable Object's storage, shaped as workerd's (K316: `sql.exec` answers a cursor; K313: a LIKE or GLOB
+   pattern over 50 bytes is refused). Two stand-ins the test controls: `conformance`'s `determinationRead`, answering as
+   conformance R9 states it (`outcomes`, `superseded_by`, `live`), gated on the project's sight, so a test states a
+   determination's outcomes and supersession directly (filings' and escalation's suites drive the real conformance with
+   this module); and the passage text of a content row (content R46 reads it from extraction's units, which this world
+   does not index), unless `passages: false` leaves content's own read in place. Every test drives `consequences` at its
+   interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -17,13 +21,30 @@ import { consequencesModule } from "../../../src/consequences/index.mjs";
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` of it is undefined; and it refuses a LIKE or GLOB pattern over 50 bytes (K313), which node:sqlite does not. */
+export const WORKERD_PATTERN_CAP = 50;
+function cursor(rows) {
+  let i = 0;
+  return {
+    [Symbol.iterator]() { return this; },
+    next: () => (i < rows.length ? { value: rows[i++], done: false } : { value: undefined, done: true }),
+    toArray: () => { const r = rows.slice(i); i = rows.length; return r; },
+    one: () => { if (rows.length - i !== 1) throw new Error("Expected exactly one result from SQL query"); return rows[i++]; },
+  };
+}
+
 function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -118,12 +139,12 @@ export function world({ passages = true, group = "test-group", superseded = null
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, inquiry, strength, c, clock, ex, texts, determinations,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    rows: (q, ...a) => [...st.sql.exec(q, ...a)],
+    count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`));
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM "${name}"`)]);
       return out;
     },
     member(id, { role = "member" } = {}) {

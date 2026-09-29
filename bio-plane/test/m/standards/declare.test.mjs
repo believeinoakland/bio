@@ -118,6 +118,16 @@ test("R3 the citation is matched against the active profiles' standard_sources: 
     assert.equal(w3.declare({ cite: "SEC 4" }).source.source, "Act D1");
   }
   {
+    /* a matched entry that states no level (a profile jurisdictions validates always states one, so the provider here
+       answers the view directly): level undetermined beside the match (K108 (5), K171), never a default */
+    const noLevel = { ...src("Act N", "\\bNSEC\\s+\\d+"), profile: "pn" };
+    delete noLevel.level;
+    const w = seeded({ profiles: ["pn"], combine: () => ({ ok: true, view: { standard_sources: [noLevel] } }) });
+    const r = w.declare({ cite: "NSEC 4" });
+    assert.deepEqual([r.source.state, r.source.source, r.source.level, r.source.profile, typeof r.source.level_why],
+                     ["matched", "Act N", "undetermined", "pn", "string"], JSON.stringify(r.source));
+  }
+  {
     /* a profile listing no source */
     const w = seeded({ profiles: ["pe"], written: [profile("pe", [])] });
     assert.match(w.declare().source.why, /list no source/);

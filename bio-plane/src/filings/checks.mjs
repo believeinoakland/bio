@@ -1,8 +1,9 @@
 /* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21). DEC-49: every
  * refusal this module answers carries its code, its catalogue row and the member's translation. The family is C-115
  * (K248). A refusal another module answers passes through as it came: `actions.actionCorrespond`'s (R7), standards'
- * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. R1's and R14's
- * `NO_AUTHOR` is the catalogue's generic code, minted elsewhere for other conditions, so each act here has its own
+ * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. `NO_SUCH_ACTION` (R1,
+ * R8, R13, R14) is actions' `noSuchAction` (its R43; N217, K275), so C-115.2 is retired, its id never reused. R1's and
+ * R14's `NO_AUTHOR` is the catalogue's generic code, minted elsewhere for other conditions, so each act here has its own
  * (`FILING_NO_PREPARER`, `THEORY_NO_PROPOSER`), as standards did for its R1 (K251); R14's `NO_STANDARDS` is
  * conformance's, so a theory naming none is `THEORY_NO_STANDARDS`. */
 
@@ -12,11 +13,6 @@ export const FILINGS_CHECKS = Object.freeze({
   FILING_NO_PREPARER: {
     check: "C-115.1", where: at("filingPrepare", "is-filing-prepare"),
     translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it.",
-  },
-  NO_SUCH_ACTION: {
-    check: "C-115.2", where: at("#noAction", "is-no-such-action"),
-    translation: "There is no action by that id that you can read here. An action you may not see answers exactly as one "
-      + "that does not exist.",
   },
   ACTION_CLOSED: {
     check: "C-115.3", where: at("filingPrepare", "is-filing-prepare"),

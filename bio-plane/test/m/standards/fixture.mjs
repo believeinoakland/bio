@@ -2,7 +2,9 @@
    provenance content builds on the same host), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage. The readings
    content reads through extraction are a provider the test controls, as `contentOf`'s `deps.extraction` takes it.
    Jurisdiction profiles are the real ones: the test profile (`test-port-ellery`), and profile objects a test writes
-   (never Oakland's, `layers.md` rule 3). Every test drives `standards` at its interface. */
+   (never Oakland's, `layers.md` rule 3). Every test drives `standards` at its interface. Storage is at the plane's
+   shape (K313, K316): `sql.exec` answers a cursor, as workerd's does, never an array, and refuses a LIKE or GLOB
+   pattern over workerd's 50 bytes. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -16,17 +18,47 @@ import { combine } from "../../../../jurisdictions/index.mjs";
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
+export const WORKERD_PATTERN_CAP = 50;
+
+/* A cursor as workerd's `sql.exec` answers one: an iterator over the rows, read once, with `toArray()` and `one()`;
+   never an array, so `[0]` or `.length` of it is undefined. */
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
+/* The patterns a statement would hand LIKE or GLOB: its quoted literals, and every string it binds when it binds one. */
+function patternsOf(q, args) {
+  const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+  const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+  return [...literal, ...bound];
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      if (patternsOf(q, args).some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
+  /* the fixture's own reads, as arrays */
+  const rows = (q, ...args) => [...sql.exec(q, ...args)];
   return {
-    db, sql,
+    db, sql, rows,
     transactionSync(fn) {
       const sp = `sp${n++}`;
       db.exec(`SAVEPOINT ${sp}`);
@@ -52,8 +84,9 @@ export const src = (source, re, extra = {}) => ({ source, kind: "statute", issue
                                                   cite: { re }, basis: "TEST", ...extra });
 
 /** `written`: profile objects the test wrote, which the instance setting names by id; `jurisdictions.combine` (the
- *  real one) is handed the object for such an id and the id itself for a held profile. */
-export function world({ now = NOW, profiles = [TEST_PROFILE], written = [] } = {}) {
+ *  real one) is handed the object for such an id and the id itself for a held profile. `combine` replaces it with a
+ *  provider the test controls. */
+export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], construct = true, combine: combineWith = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -83,19 +116,20 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [] } = {
   content.migrate();
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
   const byId = new Map(written.map((p) => [p.id, p]));
-  const s = standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
-                                combine: (ids) => combine(ids.map((id) => byId.get(id) ?? id)) });
-  s.migrate();
+  /* R16: the instance is constructed and never migrated by its caller. `construct: false` leaves it to the test. */
+  const build = () => standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
+                                          combine: combineWith || ((ids) => combine(ids.map((id) => byId.get(id) ?? id))) });
+  const s = construct ? build() : null;
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, s, clock, ex,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    st, host, record, membership, promotion, prov, content, s, clock, ex, build,
+    rows: (q, ...a) => st.rows(q, ...a),
+    count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
     snapshot() {
       const out = {};
-      for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = st.sql.exec(`SELECT * FROM ${name}`);
+      for (const { name } of st.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
+        out[name] = st.rows(`SELECT * FROM ${name}`);
       return out;
     },
     member(id, { role = "member", status = "active" } = {}) {

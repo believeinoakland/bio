@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { scene, V } from "../conformance/fixture.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
-import { actionsOf } from "../../../src/actions/index.mjs";
+import { actionsOf, noSuchAction } from "../../../src/actions/index.mjs";
 
 function real() {
   const s = scene();
@@ -67,7 +67,8 @@ test("R9 over the real actions: a breach action resting on the determination att
   const plain = make("ACTN-2026-0002-records", false, d.id);
   assert.equal(actions.actionRead({ id: N, viewer: V("pat") }).breach, true);
   assert.equal(x.esc.escalationAttach({ id: E, action: plain, author: V("pat"), viewer: V("pat") }).reason, "NOT_A_BREACH_ACTION");
-  assert.equal(x.esc.escalationAttach({ id: E, action: "ACTN-2026-0999-none", author: V("pat"), viewer: V("pat") }).reason, "NO_SUCH_ACTION");
+  assert.deepEqual(x.esc.escalationAttach({ id: E, action: "ACTN-2026-0999-none", author: V("pat"), viewer: V("pat") }),
+                   noSuchAction("ACTN-2026-0999-none"), "actions' one answer (its R43)");
   assert.equal(x.esc.escalationAttach({ id: E, action: N, author: V("pat"), viewer: V("pat") }).ok, true);
   assert.deepEqual(x.esc.escalationRead({ id: E, viewer: V("pat") }).actions.map((a) => [a.action, a.stage]), [[N, 2]]);
   /* filings, reached through its default on this host, answers the available actions for the determination (R8's read) */

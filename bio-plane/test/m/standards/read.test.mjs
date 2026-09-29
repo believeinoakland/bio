@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { seeded, V, MACHINE, UNKNOWN_CITE } from "./fixture.mjs";
 import { STANDARDS_CHECKS, PAGE_MAX, IN_FORCE_STATES } from "../../../src/standards/index.mjs";
 
-test("R5 standardRead answers R1's fields, R3's source, the declarer and time, both ends of a supersession, and for each text passage its standing and whether a newer capture of its document holds it, moving nothing; NO_ID; an absent id and any id for a viewer naming no member are NO_SUCH_STANDARD, one answer", () => {
+test("R5 standardRead answers R1's fields, R3's source, the declarer and time, both ends of a supersession, and for each text passage its standing and whether a newer capture of its document holds it, moving nothing; STANDARD_NO_ID (N269: coded, R5's NO_ID); an absent id and any id for a viewer naming no member are NO_SUCH_STANDARD, one answer", () => {
   const w = seeded();
   const a = w.passage("statute", { address: "https://ex.org/code" });
   const b = w.passage("other");
@@ -30,12 +30,16 @@ test("R5 standardRead answers R1's fields, R3's source, the declarer and time, b
   assert.equal(tb.newer.state, "chain_unread", "no recorded address: unread, never read as none");
   assert.deepEqual(read.text, [a.contentId, b.contentId], "nothing was moved");
   assert.match(read.says, /never whether it is a good one/);
-  /* NO_ID */
-  for (const id of [null, "", "  "]) {
-    const n = w.s.standardRead({ id, viewer: V("carol") });
-    assert.equal(n.reason, "NO_ID");
-    assert.equal(n.check, undefined, "NO_ID is row-less, as every module answers it");
-  }
+  /* R5's NO_ID, refused through its own row as STANDARD_NO_ID (N269, K275), never codeless; for any viewer */
+  for (const id of [null, undefined, "", "  "])
+    for (const viewer of [V("carol"), null]) {
+      const n = w.s.standardRead({ id, viewer });
+      assert.deepEqual([n.ok, n.reason, n.code, n.check, n.translation],
+                       [false, "STANDARD_NO_ID", "STANDARD_NO_ID", STANDARDS_CHECKS.STANDARD_NO_ID.check,
+                        STANDARDS_CHECKS.STANDARD_NO_ID.translation]);
+      assert.equal(typeof n.detail, "string");
+    }
+  assert.equal(STANDARDS_CHECKS.STANDARD_NO_ID.check, "C-112.11");
   /* absent, and any id for a viewer the record admits to nothing: one answer */
   const strip = (x) => ({ ...x, id: null });
   const absent = w.s.standardRead({ id: "STD-2026-9999-ordinance", viewer: V("carol") });
@@ -73,6 +77,11 @@ test("R7 inForce answers in_force, not_in_force or undetermined with why: not_in
   for (const date of ["2020-02-30", "20200101", null, ""])
     assert.equal(w.s.inForce(both, date).reason, "STANDARD_DATE_INVALID", String(date));
   assert.equal(w.s.inForce("STD-2026-9999-x", "2020-01-01").reason, "NO_SUCH_STANDARD");
+  for (const id of [null, "", " "]) {
+    const n = w.s.inForce(id, "2020-01-01");
+    assert.deepEqual([n.reason, n.check], ["STANDARD_NO_ID", STANDARDS_CHECKS.STANDARD_NO_ID.check],
+                     "naming no standard is refused through its row");
+  }
 });
 
 test("R8 standardsIn lists what its filters admit, in id order, at most 200 a page (a lower limit honoured, a higher not), truncated measured one past the page; with at, each carries R7's answer and not_in_force ones are left out", () => {

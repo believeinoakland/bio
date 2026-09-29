@@ -93,6 +93,50 @@ test("R5 R12: a concluded inquiry establishes the causation, naming it, with its
   assert.equal(sup.c.consequenceRecord({ ...sup.base, causation: INQ }).part.causation.state, "unproven");
 });
 
+test("R5 R12 (N257): a part whose measure is zero answers causation not_applicable, whatever inquiry is named", () => {
+  const w = setup();
+  w.inquiryAt(INQ, "open", { target: DOC });
+  const cases = [
+    [{ measure: { unit: "count", value: 0 } }, "an assessed value of zero"],
+    [{ measure: { unit: "time", range: { low: 0, high: 0 } } }, "an assessed range [0, 0]"],
+    [{ measure: { unit: "money", value: 0 }, causation: INQ }, "an inquiry named, not concluded"],
+  ];
+  for (const [over, what] of cases) {
+    const r = w.c.consequenceRecord({ ...w.base, ...over });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.equal(r.part.causation.state, "not_applicable", what);
+    assert.match(r.part.causation.why, /measure is zero/, what);
+    assert.equal(r.part.causation.strength, undefined, what);
+  }
+  /* A computed zero: the module's own arithmetic gives 0 (a difference of equal figures). */
+  const a = w.figure("INFO-2026-0002-a", "Appropriated 5,000");
+  const b = w.figure("INFO-2026-0003-b", "Restored 5,000");
+  const comp = w.c.consequenceRecord({ ...w.base, measure: { unit: "money" },
+    basis: { op: "difference", operands: [{ content: a, figure: "5,000" }, { content: b, figure: "5,000" }] } });
+  assert.deepEqual([comp.part.state, comp.part.measure.value, comp.part.causation.state], ["computed", 0, "not_applicable"]);
+  /* Negative controls: a value or a range that is not zero is unproven with no concluded inquiry; an undetermined part
+     has no measure to be zero. */
+  for (const measure of [{ unit: "count", value: 1 }, { unit: "count", value: -2 }, { unit: "time", range: { low: 0, high: 4 } }])
+    assert.equal(w.c.consequenceRecord({ ...w.base, measure }).part.causation.state, "unproven", JSON.stringify(measure));
+  assert.equal(w.c.consequenceRecord({ ...w.base, measure: null, basis: null }).part.causation.state, "unproven");
+  /* R7: a zero part is not listed unproven; R12: every part answers established, unproven or, for zero, not_applicable. */
+  const of = w.c.consequencesOf({ determination: w.D, viewer: V("alice") });
+  const zeroIds = of.parts.filter((p) => p.causation.state === "not_applicable").map((p) => p.id);
+  assert.equal(zeroIds.length, 4);
+  assert.equal(zeroIds.some((id) => of.unproven.includes(id)), false);
+  assert.ok(of.parts.every((p) => ["established", "unproven", "not_applicable"].includes(p.causation.state)));
+  /* A revision that gives a zero part a measure above zero reads its causation again; the reverse makes it zero. */
+  const z = w.c.consequenceRecord({ ...w.base, measure: { unit: "count", value: 0 }, causation: INQ });
+  const up = w.c.consequenceRevise({ id: z.id, measure: { unit: "count", value: 7 }, reason: "recounted", author: V("alice") });
+  assert.deepEqual([up.part.causation.state, up.part.causation.inquiry], ["unproven", INQ]);
+  const down = w.c.consequenceRevise({ id: up.id, measure: { unit: "count", value: 0 }, reason: "none after all", author: V("alice") });
+  assert.equal(down.part.causation.state, "not_applicable");
+  /* R8: an inquiry named on a zero part raises no causation notice, since the part rests on none. */
+  w.inquiryAt(INQ, "concluded", { target: DOC, prior: "open" });
+  w.inquiryAt(INQ, "open", { target: DOC, prior: "concluded" });
+  assert.equal(w.c.consequenceRead({ id: down.id, viewer: V("alice") }).part.basis_changed, undefined);
+});
+
 test("R6: a part is never edited; a revision records a successor with R1's refusals, and the earlier part stays readable", () => {
   const w = setup();
   const first = w.c.consequenceRecord(w.base);

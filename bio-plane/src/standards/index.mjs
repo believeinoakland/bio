@@ -17,8 +17,8 @@
  * (`jurisdictions.combine` over record-core's `jurisdiction_profiles`), and a fact they do not supply is undetermined.
  *
  * REACHED as `standardsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
- * call with `deps` and returned to every later caller. At creation it registers its check with `promotion` (R39) and
- * its tables with purge (R14). `deps`:
+ * call with `deps` and returned to every later caller. At creation it creates its tables (R16), registers its check
+ * with `promotion` (R39) and its tables with purge (R14). `deps`:
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own (`content` is reached lazily, on first use).
  *   combine      `jurisdictions.combine` (default); a test passes its own, which resolves profiles it wrote by id.
@@ -96,6 +96,7 @@ export class Standards {
     this.contentRef = content;
     this.combine = combine;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
+    migrateStandards(this.sql);   // R16: the tables exist once the instance does, so no caller migrates (N220, N267)
   }
 
   #rows(qs, ...a) { return [...this.sql.exec(qs, ...a)]; }
@@ -103,7 +104,7 @@ export class Standards {
   get content() { return typeof this.contentRef === "function" ? this.contentRef() : this.contentRef; }
   #when() { return stampInstant("second", Date.parse(this.now())); }
 
-  /** The module's tables (R14). */
+  /** The module's tables (R14), created at construction (R16); kept, idempotent, for a caller that still calls it. */
   migrate() { migrateStandards(this.sql); }
 
   /* ===================================================================== *
@@ -306,9 +307,7 @@ export class Standards {
   /** R5: one standard, with each text passage's standing and whether a newer capture of its document holds it. */
   standardRead({ id = null, viewer = null } = {}) {
     const sid = str(id);
-    /* NO_ID, the generic code of many reads, is row-less under the catalogue's REC-64 rule (K163), as every other
-       module answers it. */
-    if (!sid) return { ok: false, reason: "NO_ID", detail: "name the standard to read: id=<standard id>." };
+    if (!sid) return refuseNoId("standard");
     const row = this.#row(sid);
     if (!row || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
     const a = this.#answer(row);
@@ -327,6 +326,7 @@ export class Standards {
 
   /** R7: whether a standard was in force on a date, with why. */
   inForce(id, date) {
+    if (!str(id)) return refuseNoId("standardinforce");
     if (!isDate(date)) return refuseDateInvalid(date);
     const row = this.#row(str(id));
     if (!row) return refuseNoSuchStandard(str(id));
@@ -566,6 +566,14 @@ function refuseNoSuchStandard(id) {
   /* END DEC-49 REGION is-standard-held */
 }
 
+/* R5, R7: a read that names no standard (N269: its own coded row, never a codeless `NO_ID`; K275). */
+function refuseNoId(op) {
+  /* DEC-49 REGION is-standard-named */
+  return refusal("STANDARD_NO_ID", `a standard is read by its id, and none was named: ${op} takes id=<standard id>. `
+                 + "Nothing was answered.", { op });
+  /* END DEC-49 REGION is-standard-named */
+}
+
 function refuseDateInvalid(date) {
   /* DEC-49 REGION is-date-readable */
   return refusal("STANDARD_DATE_INVALID", "a date is written YYYY-MM-DD and names a day that exists.",
@@ -592,8 +600,8 @@ export function standardsOps(s, url, body) {
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host, created on the first call with `deps`. It registers its check with promotion (R39,
- *  for R11) and its tables with purge (R14). */
+/** K61: the one instance per host, created on the first call with `deps`. Its tables are created with it (R16); it
+ *  registers its check with promotion (R39, for R11) and its tables with purge (R14). */
 export function standardsOf(host, deps) {
   let s = instances.get(host);
   if (!s) {

@@ -61,6 +61,8 @@ test("R10 standardAdopt is R1 by a member naming the proposal: the standard reco
   assert.deepEqual([a.cite, a.kind, a.issuer, a.text, a.declared_by], [BYLAW, "ordinance", "Port Ellery Selectboard", [text], V("bob")]);
   assert.deepEqual(a.adopted.from_proposal, ["cite", "kind", "issuer", "text"], "the fields taken from the proposal are named");
   assert.equal(w.s.standardRead({ id: a.id, viewer: V("carol") }).proposal, p.id);
+  assert.deepEqual(w.rows(`SELECT proposal_id, standard_id, adopted_by FROM standard_adoptions`),
+                   [{ proposal_id: p.id, standard_id: a.id, adopted_by: V("bob") }], "the proposal records its adoption");
   /* adopted at most once; the proposal records its adoption and the refusal names it */
   const snap = w.snapshot();
   const again = w.s.standardAdopt({ proposal: p.id, author: V("carol") });

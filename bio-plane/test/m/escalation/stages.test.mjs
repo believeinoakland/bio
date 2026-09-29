@@ -4,6 +4,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, MACHINE, OFFICE, DAY, ms } from "./fixture.mjs";
+import { noSuchAction } from "../../../src/actions/index.mjs";
+import { ACTION_CATALOGUE_CHECKS } from "../../../src/actions/checks.mjs";
+import { ESCALATION_CHECKS } from "../../../src/escalation/index.mjs";
 
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
 const edge = (r, to) => r.triggers.find((t) => t.to === to);
@@ -147,7 +150,7 @@ test("R8 stage 5: breach actions attached here with their filings or counsel pac
   assert.equal(read(w).available.state, "undetermined");
 });
 
-test("R9 escalationAttach refuses in order MACHINE_CANNOT_ATTACH, NO_SUCH_ESCALATION, NO_SUCH_ACTION, NOT_A_BREACH_ACTION, STAGE_TAKES_NO_ACTION (stages 1, 3, 4, 6), ALREADY_ATTACHED; an action attaches to one escalation at one stage, at stage 2, 5 or 7", () => {
+test("R9 escalationAttach refuses in order MACHINE_CANNOT_ATTACH, NO_SUCH_ESCALATION, NO_SUCH_ACTION (actions R43 noSuchAction), NOT_A_BREACH_ACTION, STAGE_TAKES_NO_ACTION (stages 1, 3, 4, 6), ALREADY_ATTACHED; an action attaches to one escalation at one stage, at stage 2, 5 or 7", () => {
   const w = seeded();
   opened(w);
   const good = w.action({ project: w.P, restsOn: [w.D] });
@@ -159,11 +162,22 @@ test("R9 escalationAttach refuses in order MACHINE_CANNOT_ATTACH, NO_SUCH_ESCALA
   assert.equal(attach(w, good, { author: "" }).reason, "MACHINE_CANNOT_ATTACH");
   assert.equal(attach(w, "ACTN-none", { id: "ESC-2026-0999-escalation" }).reason, "NO_SUCH_ESCALATION");
   assert.equal(attach(w, good, { author: V("carol"), viewer: V("carol") }).reason, "NO_SUCH_ESCALATION", "invisible is absent");
-  assert.equal(attach(w, "ACTN-2026-0999-none").reason, "NO_SUCH_ACTION");
-  assert.equal(attach(w, w.P).reason, "NO_SUCH_ACTION", "not an action");
+  /* NO_SUCH_ACTION is actions' one answer (its R43 noSuchAction, row C-117.2; N217): absent, not an action and
+     unseen alike, each naming the id asked, with actions' fixed detail and row */
+  const row = ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
+  const noAction = (id, why) => {
+    const r = attach(w, id);
+    assert.deepEqual(r, noSuchAction(id), why);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.action], [false, "NO_SUCH_ACTION", "NO_SUCH_ACTION", row.check, row.translation, id], why);
+    assert.equal(r.check, "C-117.2", why);
+  };
+  noAction("ACTN-2026-0999-none", "absent");
+  noAction(w.P, "not an action");
   w.actionHidden.add(good);
-  assert.equal(attach(w, good).reason, "NO_SUCH_ACTION", "an action the viewer may not see");
+  noAction(good, "an action the viewer may not see");
   w.actionHidden.delete(good);
+  assert.deepEqual(attach(w, undefined), noSuchAction(null), "none named");
+  assert.equal("NO_SUCH_ACTION" in ESCALATION_CHECKS, false, "escalation holds no row of its own for it");
   for (const a of [noBreach, noLeg, otherLeg]) assert.equal(attach(w, a).reason, "NOT_A_BREACH_ACTION", a);
   assert.equal(attach(w, good).reason, "STAGE_TAKES_NO_ACTION", "stage 1");
   assert.deepEqual(w.snapshot(), before, "no refusal writes anything");

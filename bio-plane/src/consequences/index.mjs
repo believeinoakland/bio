@@ -7,7 +7,8 @@
  * hold, graded by the weakest operand capture (R2, DEC-21); ASSESSED, a member's stated value with a rationale and
  * what it rests on (R3); UNDETERMINED, with why, never read as zero (R4). That the harm follows from the act is a
  * finding: a part names the inquiry that concluded it, or its causation is `unproven`, stated and never refused or
- * graded low (R5, R12; DEC-14's discipline, applied to the government's act). A part is never edited: a revision is a
+ * graded low (R5, R12; DEC-14's discipline, applied to the government's act); a part whose measure is zero claims no
+ * harm, and its causation is `not_applicable` (R5, N257). A part is never edited: a revision is a
  * successor (R6). A member records each part addressed or not, with evidence (R9), which `escalation` reads.
  * Significance is not here (K12): no answer carries a significance, severity, priority or score (R11).
  *
@@ -18,11 +19,11 @@
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `declarePurge`, `head`, `readFile`, `bundleInfo`;
  *                                   `sight`, `inSight`, `projectAuthority`; `promote`.
- *   conformance    `determinationRead` (conformance R9; R1 here). No default until conformance is merged: without it
- *                  every determination reads as absent (fail closed).
+ *   conformance    `determinationRead` (conformance R9; R1 here); default `conformanceOf(host)`. With neither a host nor
+ *                  a `conformance`, every determination reads as absent (fail closed).
  *   content        `contentRow` (R2's operands, R9's evidence), `passageNotice` (R8).
  *   passageText    `(contentId) → text | null`, the passage an operand's figure is read from (R2); default
- *                  `content.passageText` where content provides it, else null ("held in a form not read", R4).
+ *                  `content.passageText` (content R46), whose null is "held in a form not read" (R4).
  *   provenance     `captureGrade` (R2, K171 (8)).
  *   inquiry        `supersededBy`, `stateHistory` (R5, R8).
  *   strength       `inquiryStrength` (R5).
@@ -37,6 +38,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
+import { conformanceOf } from "../conformance/index.mjs";
 import { isMachineIdentity, normalizeType, MACHINE_CLASS_PREFIX, BASIS_GRADES } from "../../checks/bio-checks.mjs";
 import { OPS, parseFigure, passageHolds, compute, addMeasures } from "./figures.mjs";
 import { CONSEQUENCES_TABLES, migrateConsequences } from "./schema.mjs";
@@ -92,32 +94,66 @@ function refuse(code, detail, extra = {}) {
            ...extra };
 }
 
+/* One code, one site (K231): each refusal minted by more than one act of this module is minted by one helper here,
+   and its row's `where` names that helper. `wrote` adds the sentence an act that writes ends its refusal with. */
+const NOTHING = " Nothing was written.";
+
+/** R1, R7, R9, R13: no determination answers to the id, or the reader may not see it: one answer. */
+function noSuchDetermination(determination, wrote = false) {
+  return refuse("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
+    + `exactly as one that does not exist.${wrote ? NOTHING : ""}`, { determination: determination ?? null });
+}
+
+/** R6, R9, R13: no part answers to the id, or the reader may not see it: one answer. */
+function noSuchPart(id, wrote = false) {
+  return refuse("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered exactly "
+    + `as one that does not exist.${wrote ? NOTHING : ""}`, { id: id ?? null });
+}
+
+/** R6, R9: the part has a successor, which carries the record forward. */
+function alreadySuperseded(id, next) {
+  return refuse("ALREADY_SUPERSEDED", `${id} has been revised by ${next}; act on that one.${NOTHING}`,
+                { id, superseded_by: next });
+}
+
+/** R6, R9: a revision's or an addressed record's reason: null when it is stated and within `REASON_MAX`. */
+function reasonRefusal(reason) {
+  if (!str(reason)) return refuse("NO_REASON", `the record says why.${NOTHING}`);
+  if (reason.trim().length > REASON_MAX)
+    return refuse("BAD_REASON", `a reason is at most ${REASON_MAX} characters.${NOTHING}`);
+  return null;
+}
+
+/** R2, R3: a basis this module cannot read as a computation, or an assessment's rests-on that is not a list. */
+function basisUnreadable(why, extra = {}) {
+  return refuse("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
+}
+
 /* ===================================================================== *
  * THE TERMS, CHECKED (R1's shape refusals, R10). Pure.
  * ===================================================================== */
 
 /** R1, R10: an affected is `{kind, description, role?}`; answers the canonical form or a refusal. */
 export function checkAffected(a) {
-  if (!isObj(a)) return refuse("AFFECTED_UNKNOWN_KIND", `an affected is {kind, description, role?}, kind one of `
-                                + `${AFFECTED_KINDS.join(", ")}. Nothing was written.`);
-  const kind = str(a.kind) ? a.kind.trim().toLowerCase() : null;
-  const personKey = [a, isObj(a.role) ? a.role : {}].flatMap((o) => PERSON_KEYS.filter((k) => o[k] != null && o[k] !== ""));
-  if ((kind && PERSON_KINDS.has(kind)) || personKey.length)
+  const o = isObj(a) ? a : {};
+  const kind = str(o.kind) ? o.kind.trim().toLowerCase() : null;
+  /* R10: a person's kind or name, on the affected or its role, is refused before anything else about the affected; a
+     role that is not a whole office, once the kind and description are known. Each code has this one site. */
+  const personKey = [o, isObj(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
+  const halfRole = o.role != null && (!isObj(o.role) || !str(o.role.role) || !str(o.role.body));
+  const unknown = !isObj(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str(o.description);
+  const individual = isObj(a) && ((kind && PERSON_KINDS.has(kind)) || personKey.length || (halfRole && !unknown));
+  if (individual)
     return refuse("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled `
-      + `out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}: record a class (kind "class") `
+      + `out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}${halfRole && !personKey.length
+        ? " (a role is an office, {role, body}: the office and the body it belongs to)" : ""}: record a class (kind "class") `
       + `or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
-  if (!kind || !AFFECTED_KINDS.includes(kind) || !str(a.description))
-    return refuse("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `"${String(a.kind ?? "")}" is not `
-      + `a kind of affected` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a `
-      + `description. Nothing was written.`, { kind: kind ?? null });
-  let role = null;
-  if (a.role != null) {
-    if (!isObj(a.role) || !str(a.role.role) || !str(a.role.body))
-      return refuse("AFFECTED_INDIVIDUAL", "a role is an office, {role, body}: the office and the body it belongs to, "
-        + "never a person. Nothing was written.", { kind });
-    role = { role: a.role.role.trim(), body: a.role.body.trim() };
-  }
-  return { ok: true, affected: { kind, description: a.description.trim(), ...(role ? { role } : {}) } };
+  if (unknown)
+    return refuse("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj(a) ? `"${String(o.kind ?? "")}" `
+      + "is not a kind of affected" : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind `
+      + `one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
+  const role = o.role != null ? { role: o.role.role.trim(), body: o.role.body.trim() } : null;
+  return { ok: true, affected: { kind, description: o.description.trim(), ...(role ? { role } : {}) } };
 }
 
 /** R1: a measure is `{unit, currency?, value | range}`; answers the canonical form (value and range both optional here:
@@ -162,6 +198,21 @@ export function checkPeriod(p) {
   return { ok: true, period: { from, to } };
 }
 
+/** R5 (N257): a measure of zero, value 0 or range [0, 0], states that the part did no harm. */
+export function isZeroMeasure(m) {
+  if (!isObj(m)) return false;
+  if (typeof m.value === "number") return m.value === 0;
+  return isObj(m.range) && m.range.low === 0 && m.range.high === 0;
+}
+
+/* R5 (N257, K283): a zero measure answers causation `not_applicable`: there is no harm whose following from the act
+   needs a finding, and R9 does not count it unproven, so a group's judgment of no consequence can be addressed. An
+   inquiry named is kept, and read again when a revision gives the part a measure that is not zero. */
+function zeroCausation(inquiryId) {
+  return { state: "not_applicable", inquiry: str(inquiryId),
+           why: "the measure is zero: the part states no harm, so there is no causation to establish" };
+}
+
 /* ===================================================================== *
  * THE MODULE
  * ===================================================================== */
@@ -184,7 +235,7 @@ export class Consequences {
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
-  get conformance() { return this.#deps.conformance; }
+  get conformance() { return this.#deps.conformance ||= (this.#deps.host ? conformanceOf(this.#deps.host) : null); }
 
   migrate() { migrateConsequences(this.sql); }
 
@@ -260,7 +311,7 @@ export class Consequences {
     const sup = this.#supersededBy(inquiryId);
     if (sup.length)
       return { state: "unproven", inquiry: inquiryId,
-               why: `the inquiry named has been superseded (by ${sup.join(", ")}), so its finding does not stand` };
+               why: "the inquiry named has been superseded, so its finding does not stand" };
     if (!CONCLUDED.has(st))
       return { state: "unproven", inquiry: inquiryId,
                why: `the inquiry named is ${st ?? "in no state"}, not concluded: until it concludes that the harm follows `
@@ -284,6 +335,24 @@ export class Consequences {
     return !!info && normalizeType(info.type) === "inquiry" && this.membership.inSight(id, who);
   }
 
+  /* R3, R9: null when every id resolves (`#resolvesEvidence`); else the refusal naming the ids that do not. */
+  #evidenceRefusal(ids, who, what) {
+    const unknown = ids.filter((x) => !this.#resolvesEvidence(x, who));
+    if (!unknown.length) return null;
+    return refuse("NO_SUCH_EVIDENCE", `${what} content or findings this record holds and you may see.${NOTHING}`,
+                  { unknown: unknown.map((x) => (typeof x === "string" ? x : null)) });
+  }
+
+  /* R1, R9: a member acting on a part has joined the determination's project (K171 (11): membership's refusal,
+     translated); null when the author has, or the part is in no project. */
+  #participantRefusal(project, author, act) {
+    if (!project) return null;
+    const denied = this.membership.projectAuthority(project, str(author), "joined", act);
+    if (!denied) return null;
+    return refuse("NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str(author)} has not `
+      + `joined it.${NOTHING}`, { project });
+  }
+
   /* ===================================================================== *
    * R1–R6: RECORDING A PART
    * ===================================================================== */
@@ -297,14 +366,10 @@ export class Consequences {
     const { id = null, reason = null, author = null, viewer = null } = args;
     const who = viewer ?? author;
     const old = this.#part(id, who);
-    if (!old) return refuse("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is "
-                                             + "answered exactly as one that does not exist. Nothing was written.", { id });
+    if (!old) return noSuchPart(id, true);
     const next = this.#successor(old.bundle_id);
-    if (next) return refuse("ALREADY_SUPERSEDED", `${old.bundle_id} has already been revised by ${next}; revise that `
-                                                  + "one. Nothing was written.", { id: old.bundle_id, superseded_by: next });
-    if (!str(reason)) return refuse("NO_REASON", "a revision says why the part is revised. Nothing was written.");
-    if (reason.trim().length > REASON_MAX)
-      return refuse("BAD_REASON", `a revision's reason is at most ${REASON_MAX} characters. Nothing was written.`);
+    if (next) return alreadySuperseded(old.bundle_id, next);
+    const bad = reasonRefusal(reason); if (bad) return bad;
     const pick = (k, stored) => (k in args ? args[k] : stored);
     const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) }
       : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse(old.rests_on) || [] }
@@ -323,9 +388,7 @@ export class Consequences {
     const byMachine = machine(author);
     /* R1, in order. */
     const d = this.#determination(determination, who);
-    if (!d || !this.#seesProject(d.project, who))
-      return refuse("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
-                                              + "exactly as one that does not exist. Nothing was written.", { determination });
+    if (!d || !this.#seesProject(d.project, who)) return noSuchDetermination(determination, true);
     if (!str(standard) || d.outcome(standard) !== "noncompliant" || !d.live)
       return refuse("NOT_NONCOMPLIANT", !d.live
         ? `${d.id} has been superseded: a consequence is recorded against a live determination, and the parts of the `
@@ -335,11 +398,7 @@ export class Consequences {
         { determination: d.id, standard: standard ?? null });
     /* A member author has joined the determination's project; a machine's computed part answers no project authority
        (K171 (9)), and a machine may record nothing else (R3, below). K171 (11): membership's refusal, translated. */
-    if (!byMachine && d.project) {
-      const denied = this.membership.projectAuthority(d.project, str(author), "joined", "consequenceRecord");
-      if (denied) return refuse("NOT_A_PARTICIPANT", `recording a consequence is work inside ${d.project}, and `
-                                  + `${str(author)} has not joined it. Nothing was written.`, { project: d.project });
-    }
+    if (!byMachine) { const denied = this.#participantRefusal(d.project, author, "consequenceRecord"); if (denied) return denied; }
     const a = checkAffected(affected); if (!a.ok) return a;
     const m = checkMeasure(measure); if (!m.ok) return m;
     const p = checkPeriod(period); if (!p.ok) return p;
@@ -347,8 +406,9 @@ export class Consequences {
     const b = this.#basis(basis, m.measure, who, byMachine);
     if (!b.ok) return b;
 
-    /* R5: the causation, as it reads when recorded; nothing recomputes it (R8). */
-    const cause = this.#causationNow(causation, who);
+    /* R5: the causation, as it reads when recorded; nothing recomputes it (R8). A zero measure claims no harm, so it
+       has no causation to prove (N257). */
+    const cause = isZeroMeasure(b.measure) ? zeroCausation(causation) : this.#causationNow(causation, who);
     const at = this.#when();
     return this.record.transact(() => {
       const id = `${this.record.allocId("CONS", at.slice(0, 4)).id}-${a.affected.kind}`;
@@ -392,11 +452,9 @@ export class Consequences {
       if (rationale.length > RATIONALE_MAX)
         return refuse("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
       const rests = basis.rests_on ?? basis.restsOn ?? [];
-      if (!Array.isArray(rests)) return refuse("BASIS_UNREADABLE", "what an assessment rests on is a list of content ids "
-                                               + "or findings, possibly empty. Nothing was written.");
-      const unknown = rests.filter((x) => !this.#resolvesEvidence(x, who));
-      if (unknown.length) return refuse("NO_SUCH_EVIDENCE", "an assessment rests on content or findings this record holds "
-        + "and you may see. Nothing was written.", { unknown: unknown.map((x) => (typeof x === "string" ? x : null)) });
+      if (!Array.isArray(rests))
+        return basisUnreadable("what an assessment rests on is a list of content ids or findings, possibly empty");
+      const unseen = this.#evidenceRefusal(rests, who, "an assessment rests on"); if (unseen) return unseen;
       return { ok: true, state: "assessed", measure, rationale, restsOn: rests.map(String),
                doc: { rationale, rests_on: rests.map(String) } };
     }
@@ -411,11 +469,10 @@ export class Consequences {
   #computation(basis, measure, who) {
     const op = str(basis.op);
     if (!op || !OPS.includes(op))
-      return refuse("BASIS_UNREADABLE", `a computation names its op, one of ${OPS.join(", ")}. Nothing was written.`,
-                    { op: basis.op ?? null });
+      return basisUnreadable(`a computation names its op, one of ${OPS.join(", ")}`, { op: basis.op ?? null });
     if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj(o) || !str(o.content)))
-      return refuse("BASIS_UNREADABLE", "a computation's operands are a list of {content, figure}: the content id whose "
-                                         + "passage holds the figure, and the figure as read. Nothing was written.");
+      return basisUnreadable("a computation's operands are a list of {content, figure}: the content id whose passage "
+                             + "holds the figure, and the figure as read");
     const operands = [];
     let lacking = null;
     for (const [i, raw] of basis.operands.entries()) {
@@ -435,7 +492,7 @@ export class Consequences {
           lacking ||= { code: "not_in_record", why: `operand ${i} states no figure as read` };
         } else {
           const f = parseFigure(o.figure);
-          if (!f.ok) return refuse("BASIS_UNREADABLE", `operand ${i}: ${f.why}. Nothing was written.`, { operand: i });
+          if (!f.ok) return basisUnreadable(`operand ${i}: ${f.why}`, { operand: i });
           const text = this.#passageText(o.content);
           if (text === null)
             lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
@@ -453,8 +510,7 @@ export class Consequences {
     let result = null;
     if (!lacking) {
       result = compute(op, operands);
-      if (!result.ok && result.code === "operands_extra")
-        return refuse("BASIS_UNREADABLE", `${result.why}. Nothing was written.`);
+      if (!result.ok && result.code === "operands_extra") return basisUnreadable(result.why);
       if (!result.ok) lacking = { code: result.code === "operand_missing" ? "not_in_record" : "not_computable", why: result.why };
     }
     const unitOnly = measure ? { unit: measure.unit, ...(measure.currency ? { currency: measure.currency } : {}) } : null;
@@ -523,15 +579,17 @@ export class Consequences {
                            says: "undetermined: not known, and never read as zero" };
     }
     out.causation = { state: r.causation_state, inquiry: r.causation, why: r.causation_why };
+    const seen = !r.causation || this.membership.inSight(r.causation, who);
     if (r.causation_state === "established" && r.causation) {
       let s = null;
-      try { s = this.strength.inquiryStrength({ id: r.causation, viewer: who }); } catch { s = null; }
+      try { s = seen ? this.strength.inquiryStrength({ id: r.causation, viewer: who }) : null; } catch { s = null; }
       out.causation.strength = s && s.ok
         ? { capture: s.capture ?? null, connection: s.connection ?? null, testimony: s.testimony ?? null,
             says: "per axis, never composed (DEC-44)" }
         : { capture: null, connection: null, testimony: null, says: "the inquiry's strength could not be read for you" };
-      if (!this.membership.inSight(r.causation, who)) { out.causation.inquiry = null; out.causation.why = "an object you may not see"; }
     }
+    /* R13: an inquiry the reader may not see is not named, whatever the causation's state. */
+    if (!seen) { out.causation.inquiry = null; out.causation.why = "an object you may not see"; }
     const a = this.#addressedOf(r.bundle_id);
     out.addressed = a
       ? { state: a.state, evidence: parse(a.evidence) || [], reason: a.reason, by: a.author, at: a.at }
@@ -554,7 +612,7 @@ export class Consequences {
             + "does not carry its passage; nothing is recomputed until a member revises this part" });
       }
     }
-    if (r.causation) {
+    if (r.causation && r.causation_state !== "not_applicable") {
       const sup = this.#supersededBy(r.causation);
       if (sup.length) causes.push({ cause: "causation_superseded", why: "the causation inquiry has been superseded" });
       else if (r.causation_state === "established") {
@@ -579,8 +637,7 @@ export class Consequences {
   /** R6, R13: one part, superseded or not, with its links; absent and unseen are one answer. */
   consequenceRead({ id = null, viewer = null } = {}) {
     const r = this.#part(id, viewer);
-    if (!r) return refuse("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered "
-                                           + "exactly as one that does not exist.", { id });
+    if (!r) return noSuchPart(id);
     return { ok: true, part: this.#answer(r, viewer) };
   }
 
@@ -595,9 +652,7 @@ export class Consequences {
    *  are undetermined or unproven, in front of the member. */
   consequencesOf({ determination = null, standard = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer))
-      return refuse("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
-                                              + "exactly as one that does not exist.", { determination });
+    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination);
     const rows = this.#liveParts(d.id, str(standard)).filter((r) => this.#seesProject(r.project, viewer));
     const parts = rows.map((r) => this.#answer(r, viewer));
     const groups = new Map();
@@ -630,29 +685,19 @@ export class Consequences {
         + "evidence; a machine never records it. Nothing was written.");
     const who = viewer ?? str(author);
     const r = this.#part(id, who);
-    if (!r) return refuse("NO_SUCH_PART", "no consequence part answers to that id here; one you may not see is answered "
-                                           + "exactly as one that does not exist. Nothing was written.", { id });
+    if (!r) return noSuchPart(id, true);
     const next = this.#successor(r.bundle_id);
-    if (next) return refuse("ALREADY_SUPERSEDED", `${r.bundle_id} has been revised by ${next}; record it on that one. `
-                                                  + "Nothing was written.", { id: r.bundle_id, superseded_by: next });
-    if (r.project) {
-      const denied = this.membership.projectAuthority(r.project, str(author), "joined", "addressedRecord");
-      if (denied) return refuse("NOT_A_PARTICIPANT", `recording whether a consequence is addressed is work inside `
-        + `${r.project}, and ${str(author)} has not joined it. Nothing was written.`, { project: r.project });
-    }
+    if (next) return alreadySuperseded(r.bundle_id, next);
+    const denied = this.#participantRefusal(r.project, author, "addressedRecord"); if (denied) return denied;
     if (!ADDRESSED_STATES.includes(state))
       return refuse("ADDRESSED_UNKNOWN_STATE", `a part is recorded ${ADDRESSED_STATES.join(" or ")}. Nothing was written.`,
                     { state: state ?? null });
-    if (!str(reason)) return refuse("NO_REASON", "the record says why. Nothing was written.");
-    if (reason.trim().length > REASON_MAX)
-      return refuse("BAD_REASON", `a reason is at most ${REASON_MAX} characters. Nothing was written.`);
+    const bad = reasonRefusal(reason); if (bad) return bad;
     const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
     if (state === "addressed" && !ev.length)
       return refuse("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content "
         + "or findings in the record. Partial redress does not end an escalation. Nothing was written.");
-    const unknown = ev.filter((x) => !this.#resolvesEvidence(x, who));
-    if (unknown.length) return refuse("NO_SUCH_EVIDENCE", "evidence is content or findings this record holds and you may "
-      + "see. Nothing was written.", { unknown: unknown.map((x) => (typeof x === "string" ? x : null)) });
+    const unseen = this.#evidenceRefusal(ev, who, "evidence is"); if (unseen) return unseen;
     const at = this.#when();
     this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at)
       VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str(author), at));
@@ -665,9 +710,7 @@ export class Consequences {
    *  for a superseded determination too (escalation R14). */
   addressed({ determination = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer))
-      return refuse("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered "
-                                              + "exactly as one that does not exist.", { determination });
+    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination);
     const parts = this.#liveParts(d.id).filter((r) => this.#seesProject(r.project, viewer)).map((r) => {
       const a = this.#addressedOf(r.bundle_id);
       return { id: r.bundle_id, standard: r.standard, part_state: r.state, causation: r.causation_state,
