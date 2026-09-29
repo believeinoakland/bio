@@ -52,6 +52,10 @@ After B6: control-plane 42 tests, 39 pass, 0 fail, 3 todo; every module (`test/m
 
 Size (session_019VRv42WPEJNBLLAJbEDG3c, after B6): test runs 19, module lines 5,910
 
+**B7 (K418), applied.** `relayAnswer` opened the store's reply itself (`r.json()`), a second envelope reader beside REC-52's `doAnswer`; it now reads the reply through `doAnswer` and keeps only `r.status` (a rejected or absent reply is a silence). New interface test (R24, REC-52): over ten reply shapes, `relayAnswer` answers exactly when `doAnswer` calls the reply answered, with its result, at the reply's status, and 502 `STORE_DID_NOT_ANSWER` otherwise. `plane-envelope.test.mjs` does not load here (it imports `DISPATCH_CHECKS` from the catalogue, J4 item 3), so Detector A's confirmation is legacy-tests'. After B7: control-plane 43 tests, 40 pass, 0 fail, 3 todo (N333); format, architecture, coverage (34/34) and ownership 0 failures (the earlier work is on the tranche; this change touches only `control-plane/index.mjs` and its test).
+
+Size (session_019VRv42WPEJNBLLAJbEDG3c, after B7): test runs 21, module lines 5,911
+
 ## J1 · QUESTION
 
 Q1. The forward's versionchain stamp normalises `address` with subresources' `normalizeAddress` (index.mjs 5826, moved with the forward). control-plane's uses lack `subresources` (layer 1, no cycle), so architecture fails once. My best reading: add the edge `control-plane` → `subresources`; I import it meanwhile. (Also for your review at close: ownership lists two added legacy-index lines it cannot pair with an import, the headers of `publicOp`/`gatedOp`, the functions that now hold legacy-index's remaining arms for `makeFetch`; the arm bodies are unchanged lines.)
