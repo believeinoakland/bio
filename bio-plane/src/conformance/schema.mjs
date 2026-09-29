@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS determination_questions (
   PRIMARY KEY (determination_id, ord)
 );
 -- R7: A SUPERSESSION, one row, keyed by the determination superseded, so a
--- second is refused by the key as well as by the act (ALREADY_SUPERSEDED).
+-- second is refused by the key as well as by the act (DETERMINATION_SUPERSEDED, R20).
 CREATE TABLE IF NOT EXISTS determination_supersessions (
   superseded        TEXT PRIMARY KEY,
   superseded_by     TEXT NOT NULL UNIQUE,
