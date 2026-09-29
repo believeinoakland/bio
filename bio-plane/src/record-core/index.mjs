@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R61).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R62).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -10,8 +10,10 @@
    caller names. Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the reasoning the
    legacy comments carried is kept beside the code it explains. */
 import { checkBundle, createSha256, PROJECT_ID_CHECKS, PER_ITEM_CHECKS } from "../../checks/bio-checks.mjs";
+import { RECORD_CORE_CHECKS } from "./checks.mjs";
 
 export { RECORD_SCHEMA } from "./schema.mjs";
+export { RECORD_CORE_CHECKS } from "./checks.mjs";
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const REFUSED = Symbol("record-core-refusal");
@@ -77,6 +79,29 @@ function manifestFiles(filesJson) {
   let arr;
   try { arr = filesJson == null ? null : JSON.parse(filesJson); } catch { arr = null; }
   return Array.isArray(arr) ? arr.filter((f) => f && typeof f === "object") : [];
+}
+
+/* ---- no free opaque id (R62, C-59.6): module-level ---- */
+
+/* What each gated prefix's id is called in R62's detail; the prefixes are R3's set (`RecordCore.GATED_ID_PREFIXES`). */
+const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" });
+
+/** R62 (N322, N250, K275, K392): THE ONE ANSWER TO ONE CONDITION, no free opaque id could be drawn (`mintOpaqueId`
+ *  answered null, R9). Every act of any module that meets it answers through here, so `MINT_EXHAUSTED` is minted at
+ *  one site under one row (C-59.6). `detail` is one fixed sentence per prefix, naming the id that could not be drawn
+ *  and saying nothing was written, the same for every caller; a prefix outside R3's set is named by no object. `extra`
+ *  adds the caller's own fields and never replaces these. It writes nothing and never throws. */
+export function mintExhausted(prefix, extra) {
+  const asked = typeof prefix === "string" ? prefix : "";        /* only a string names a prefix */
+  const what = Object.hasOwn(MINTED_OBJECT, asked) ? `${MINTED_OBJECT[asked]} ` : "";
+  let own = {};
+  try { if (extra && typeof extra === "object" && !Array.isArray(extra)) own = { ...extra }; } catch { own = {}; }
+  const row = RECORD_CORE_CHECKS.MINT_EXHAUSTED;
+  /* DEC-49 REGION is-mint-exhausted */
+  return { ...own, ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: row.check,
+           translation: row.translation, prefix: asked,
+           detail: `the plane could not find a free ${what}id: every one it drew was already taken. Nothing was written.` };
+  /* END DEC-49 REGION is-mint-exhausted */
 }
 
 /* ---- the set form of an act (R49–R52, R55, C-75): module-level ---- */
