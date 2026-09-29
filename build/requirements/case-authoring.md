@@ -39,7 +39,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 
 - **R19** Doors: a recipient through a live review grant (a named draft must be the grant's own); a member, of a draft, or of an unsigned case document it has standing in. Every other caller receives the review copy's dead answer (`publication`'s review provider, its R23), byte-identical. `STATEMENT_ACK_NO_SUBJECT` (C-82.2), then a signed document `STATEMENT_ACK_ALREADY_SIGNED` (C-82.3); a member not a joined participant of the publishing project `STATEMENT_ACK_NOT_A_PARTICIPANT` (C-82.4); no statement C-82.5; the writer undetermined, for a participant, C-82.7; the writer, or on the case door the publisher, `STATEMENT_ACK_BY_ITS_AUTHOR` (C-82.6). A recipient is never the writer.
 - **R20** An acknowledgement is keyed by the statement's SHA-256, the project, the case identity it was given at and the acknowledger, and a repeat answers `existed: true`. It is matched by that identity or by the draft named at publication, never by the statement's bytes. On an unsigned document it re-authors only that document's list (`publication.reauthorSection`), so its hash moves. Every list states `acknowledged` (zero included), withholds and counts the publisher's own and the writer's own rows, withholds and counts every participant row when the writer is undetermined, and counts, never names, readings bindable to no case. Nothing about an acknowledgement refuses publication. `statementAcknowledgements(...)` is the one list, read by R14 and by the review copy.
-- **R21** `statement_by` is the member whose write made the statement's current bytes: the named draft's stamp; else a draft of the project holding that sentence; else the publisher, named as both, with the sentence saying so. Drafts disagreeing, or a draft from before the stamp, make it null, stated undetermined, never filled from the publisher. *(not yet met, the named-draft half: Publication §3 rule 13, "REC-212's writer read still reads every no-case draft"; no row)*
+- **R21** `statement_by` is the member whose write made the statement's current bytes: the named draft's stamp; else a draft of the project holding that sentence; else the publisher, named as both, with the sentence saying so. Drafts disagreeing, or a draft from before the stamp, make it null, stated undetermined, never filled from the publisher.
 
 ## Private
 
@@ -47,7 +47,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 
 - `legacy-checks`: the rows until they move (R29), `parseFrontmatter`, `normalizeType`, `isMachineIdentity`, `canonicalJson`.
 - `record-core`: `recordOf(ctx)`, `transact`, `mintOpaqueId` (R7), `stampInstant`, `declarePurge`.
-- `membership`: `viewerPredicate`, `isProjectOwner`, `isJoinedParticipant`, `existenceAct`.
+- `membership`: `viewerPredicate`, `isProjectOwner`, `isJoinedParticipant`, `existenceAct`; `noSuchProject` (its R78), through which R2's `NO_SUCH_PROJECT` is answered (K231).
 - `provenance`: the `register` and `captured_locators` read contracts (R16).
 - `extraction`: the `readings` read (R16). `content`: the content read (R17).
 - `bias`: `biasManifest` (R14).

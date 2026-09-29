@@ -2,7 +2,7 @@
    the pinning reads ratification's scope arms use (R38). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, NOW } from "./fixture.mjs";
+import { planeWorld as world, V, NOW } from "./fixture.mjs";
 import { CASE_FLAGS_LIMIT } from "../../../src/publication/index.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";

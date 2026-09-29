@@ -19,7 +19,8 @@
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
  * record-core's purge (R31), registers the facts `caseMember`, `publishedRegistry` and `publishedCaseRegistry` with
- * promotion (R4, R7; the registration rule, K206, N152) and its promotion projection, the revision flag (R5).
+ * promotion (R4, R7; the registration rule, K206, N152) and its promotion projection, the revision flag (R5), and
+ * registers a case's cited parts and the ratified cases (R41, R43) with reevaluation (its R26, K359).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `head`, `readFile`, `textAtSha` (R60), `declarePurge`, the
  *                                   `bundles`, `files`, `history` and `manifest` tables (R18's export);
@@ -27,6 +28,7 @@
  *                                   `registerFact`, the fact `producingGroup`.
  *   inquiry        `exclusionsNaming` (R12).
  *   basisVersions  `testimonyReach` (R2, R17).
+ *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles`, `files`, `history` and `manifest` (R18, R21's
@@ -38,6 +40,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { observerRef } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
+import { reevaluationOf } from "../reevaluation/index.mjs";
 import { parseFrontmatter, isMachineIdentity, createSha256, sectionText as caseSectionText } from "../../checks/bio-checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf, ATTRIBUTION_ACT_CHECKS, caseDocumentStatesMemberBlocks,
@@ -64,7 +67,16 @@ export const EXPORT_LOG_LIMIT_MAX = 1000;
 export const EXPORT_NOTE_MAX = 280;
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
 export const EDITIONS_OF_MAX = 500;
+/** R41: the cited parts one `caseCitedParts` read answers. */
+export const CITED_PARTS_MAX = 1000;
+/** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
+export const RESTING_CAPTURES_MAX = 1000;
+export const RATIFIED_CASES_MAX = 1000;
+/* A caller's page size: a whole number of rows, floored, clamped to 1–max, the default when absent or not a number. */
+const pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
 
+/* R41 (C-41.15's vocabulary): the citation versions that name the capture a case edition cited. */
+const CITATION_NAMES_CAPTURE = Object.freeze(["pinned", "only_capture"]);
 /* CPDF-10: a column this module WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 /* A value written into a case document's front matter on one line: line breaks folded, quotes and backslashes made
@@ -442,7 +454,7 @@ export class Publication {
                      + `${highest} keeps its own signature, attestor, time and gate version, and a new one `
                      + `joins it. This is the FINDING's edition, not the edition of any case it is a member `
                      + `of: since CASE-5 the two are separate numbers.` };
-    const now = str(at) || new Date().toISOString();
+    const now = str(at) || this.#when();
     /* REC-44: THE CASE ROW AND THE MEMBERSHIP, both written from the RATIFIED
        BYTES the control plane read out of the signed document and out of
        nothing else — #publishEdges' doctrine, for #publishEdges' reason: the
@@ -707,8 +719,10 @@ export class Publication {
          ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
         s.sha256, bundleId, s.path, s.kind, s.bytes ?? null, now);
     const graph = this.publishEdges(bundleId, edges, now);
-    /* R35: publishing this target turns every name edge a published finding holds to it into a serve edge. */
+    /* R35: publishing this target turns every name edge a published finding holds to it into a serve edge; R22
+       (N256): and every reference held privately for it becomes one. */
     const promoted = this.#promoteNamedEdges(bundleId);
+    const linked = this.#linkHeldReferences(bundleId, now);
     /* IS THE CASE EDITION COMPLETE? A case edition is servable as a container
        only when every member finding has been ratified — each on its own
        bytes, because the finding is the unit of truth. Until then the edition
@@ -754,6 +768,7 @@ export class Publication {
        is where reads live. */
     return { ok: true, bundleId, bundleSha, edition: ed, existed, ratifiedAt: now, edges: graph,
              ...(promoted ? { namesServed: promoted } : {}),
+             ...(linked ? { heldLinked: linked } : {}),
              caseCount: byCase.length,
              /* A BOOLEAN AND NOT THE LIST, for `caseCount`'s reason exactly and
                 measured the same way. The first draft returned `bars` — the
@@ -792,17 +807,38 @@ export class Publication {
   /* R35 (ratification R16): publishing a target turns every `name` edge to it FROM A PUBLISHED FINDING into a `serve`
      edge, in the same transaction — the one change R24 permits to a published row. A name edge was classified name
      only because its target was not yet published (a division's disclosures are name-only BY KIND and never turn);
-     both ends are now covered by signatures, so serving it states nothing either signature does not. */
+     both ends are now covered by signatures, so serving it states nothing either signature does not.
+     SET-WISE (N237, N277; K351): one count and one statement, so no edge is read into the worker's memory however many
+     findings name the target; the count is what the statement then turns, inside the caller's transaction. */
   #promoteNamedEdges(targetId) {
-    const from = this.#rows(
-      `SELECT e.from_bundle, e.kind FROM published_edges e
+    const turnable = `FROM published_edges e
         WHERE e.to_bundle=? AND e.disclosure='name' AND e.kind NOT IN ('division_parent','division_sibling')
-          AND EXISTS (SELECT 1 FROM published_bundles p WHERE p.bundle_id=e.from_bundle)
-        ORDER BY e.from_bundle, e.kind`, targetId);
-    for (const e of from)
-      this.sql.exec(`UPDATE published_edges SET disclosure='serve' WHERE from_bundle=? AND to_bundle=? AND kind=?
-                       AND disclosure='name'`, e.from_bundle, targetId, e.kind);
-    return from.length;
+          AND EXISTS (SELECT 1 FROM published_bundles p WHERE p.bundle_id=e.from_bundle)`;
+    const n = Number((this.#one(`SELECT COUNT(*) AS n ${turnable}`, targetId) || {}).n) || 0;
+    if (n)
+      this.sql.exec(`UPDATE published_edges SET disclosure='serve'
+                      WHERE rowid IN (SELECT e.rowid ${turnable})`, targetId);
+    return n;
+  }
+
+  /* R22, R35 (N256; Bob, K283): publishing a target turns every reference HELD PRIVATELY for it (a serve-class edge a
+     published finding named before the target was published, `publishEdges` below) into a `serve` edge of the
+     published graph, in the same transaction, and stamps the held row with the instant. Set-wise as
+     `#promoteNamedEdges` is: one count, one insert, one update, no edge read into memory. Only a reference from a
+     finding that is itself published is linked; a row whose target is not this one is untouched. */
+  #linkHeldReferences(targetId, now) {
+    const held = `FROM published_held_references h
+        WHERE h.to_bundle=? AND h.linked_at IS NULL
+          AND EXISTS (SELECT 1 FROM published_bundles p WHERE p.bundle_id=h.from_bundle)`;
+    const n = Number((this.#one(`SELECT COUNT(*) AS n ${held}`, targetId) || {}).n) || 0;
+    if (!n) return 0;
+    this.sql.exec(
+      `INSERT INTO published_edges (from_bundle,to_bundle,kind,disclosure,published)
+       SELECT h.from_bundle, h.to_bundle, h.kind, 'serve', ? ${held}
+       ON CONFLICT(from_bundle,to_bundle,kind) DO UPDATE SET disclosure='serve'`, now, targetId);
+    this.sql.exec(`UPDATE published_held_references SET linked_at=?
+                    WHERE rowid IN (SELECT h.rowid ${held})`, now, targetId);
+    return n;
   }
 
   /** R22 (K241): commit one case edition from its SIGNED document, inside the caller's transaction: the case's owning
@@ -930,6 +966,114 @@ export class Publication {
     return { ok: true, finding: id, items, limit: EDITIONS_OF_MAX, truncated };
   }
 
+  /* ---------------------------------------------------------------- R41, R43: a case's cited parts, for reevaluation */
+
+  /** R41 (N210, N163 (a); K363): a ratified case edition's cited parts, the latest ratified edition when `edition` is
+   *  absent: `{case, edition, project, parts: [{bundle_id, capture_sha}], limit, truncated}`, at most CITED_PARTS_MAX,
+   *  viewer-free. A cited part is a document the edition cites as evidence: a row of its SIGNED document's
+   *  `case_citations` (`{target, version, capture}`, C-41.15) whose version names the capture it was pinned to
+   *  (`pinned`, `only_capture`), once per (document, capture), in the document's order; `reevaluation` R14 grades that
+   *  capture. A row naming no capture (`undetermined`, `no_capture`, `no_bytes`) has nothing to grade and is no part,
+   *  and neither is a member finding (it holds no capture). A document older than /4 signed no citations: no parts.
+   *  The part is the capture, not a `bundle_sha`: the edition pins a capture, never the cited document's version
+   *  (K365). `project` is
+   *  the case's owning project, null for a case older than DEC-72. Registered with R43 as reevaluation's
+   *  `registerCaseParts` (its R26). A case with no ratified edition (or not that one) answers `NO_SUCH_CASE_EDITION`;
+   *  no case named, `NO_ID`. Writes nothing. */
+  caseCitedParts({ case: caseArg = null, caseId = null, edition = null } = {}) {
+    const id = str(caseArg ?? caseId);
+    if (!id) return { ok: false, reason: "NO_ID", detail: "caseCitedParts names a case" };
+    const want = edition == null || edition === "" ? null : Number(edition);
+    const row = Number.isInteger(want)
+      ? this.#one(`SELECT edition FROM published_cases WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`, id, want)
+      : want === null
+        ? this.#one(`SELECT MAX(edition) AS edition FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id)
+        : null;
+    if (!row || row.edition == null)
+      return { ok: false, reason: "NO_SUCH_CASE_EDITION", case: id, edition: Number.isInteger(want) ? want : null,
+               detail: "no ratified edition of that case answers here, so it cites nothing yet" };
+    const ed = Number(row.edition);
+    const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
+    /* The signed bytes, and nothing else: an unsigned re-authoring of the same edition cannot reach here. */
+    const doc = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`, id, ed);
+    const signed = doc ? signedCitations(doc.text) : { state: "undetermined", rows: null };
+    const seen = new Set(), parts = [];
+    for (const c of Array.isArray(signed.rows) ? signed.rows : []) {
+      const target = c && typeof c.target === "string" ? c.target.trim() : "";
+      const capture = c && typeof c.capture === "string" ? c.capture.trim().toLowerCase() : "";
+      if (!target || !CITATION_NAMES_CAPTURE.includes(c.version) || !/^[0-9a-f]{64}$/.test(capture)) continue;
+      const k = `${target}\u0000${capture}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      parts.push({ bundle_id: target, capture_sha: capture });
+    }
+    const truncated = parts.length > CITED_PARTS_MAX;
+    return { ok: true, case: id, edition: ed, project: owner ? owner.project_id ?? null : null,
+             parts: parts.slice(0, CITED_PARTS_MAX), limit: CITED_PARTS_MAX, truncated };
+  }
+
+  /** R43 (N210; K359): the cases holding at least one ratified edition, in case id order after `after`, at most `limit`
+   *  (default RATIFIED_CASES_MAX, clamped to 1–RATIFIED_CASES_MAX): `{cases: [case_id], cursor}`, `cursor` the last case
+   *  answered when more follow, else null, so reevaluation pages through them (a case is no bundle; only this module
+   *  can list them). Viewer-free; writes nothing. */
+  ratifiedCases({ after = null, limit = null } = {}) {
+    const cap = pageOf(limit, RATIFIED_CASES_MAX);
+    const rows = this.#rows(
+      `SELECT DISTINCT case_id FROM published_cases WHERE ratified_at IS NOT NULL AND case_id > ?
+        ORDER BY case_id LIMIT ?`, typeof after === "string" ? after : "", cap + 1);
+    const more = rows.length > cap;
+    const cases = rows.slice(0, cap).map((r) => r.case_id);
+    return { ok: true, cases, limit: cap, cursor: more ? cases[cases.length - 1] : null };
+  }
+
+  /* ---------------------------------------------------------------- R42: the captures published findings rest on */
+
+  /** R42 (N230): in capture order after `after`, each capture a ratified finding's published basis rests on, with those
+   *  findings and each one's owning projects: `{captures: [{capture_sha, findings: [{bundle_id, projects}]}], limit,
+   *  truncated, cursor}`. `limit` defaults to RESTING_CAPTURES_MAX and is clamped to 1–RESTING_CAPTURES_MAX; `cursor`
+   *  is the last capture answered when more follow, else null, so `monitoring` R33 follows it to the end (as intent R7).
+   *  Read as the plane: viewer-free, and it writes nothing.
+   *  THE SOURCE ROWS, CONFIRMED (the R42 note): what a finding RESTS ON is its `serve`-class edge set (D-431,
+   *  `publishedGraphEdges`), which the published graph holds as `published_edges` rows of disclosure `serve`, and, for
+   *  a target not yet published, as the reference held privately for it (N256, `published_held_references`, until it
+   *  is linked); a captured byte sequence is the register's (provenance's read contract), homed on a bundle that
+   *  exists. A RATIFIED finding is one with a published edition that a committed case edition's roster names; its
+   *  owning projects are those cases' (`cases`), null for a case older than DEC-72. `published_bundles` names no
+   *  capture, and the published basis files would be a parse per finding, unpageable in capture order. */
+  restingCapturesOf({ after = null, limit = null } = {}) {
+    const cap = pageOf(limit, RESTING_CAPTURES_MAX);
+    const rests = `WITH rests(finding, target) AS (
+        SELECT e.from_bundle, e.to_bundle FROM published_edges e WHERE e.disclosure='serve'
+        UNION SELECT h.from_bundle, h.to_bundle FROM published_held_references h WHERE h.linked_at IS NULL),
+      ratified(finding, project) AS (
+        SELECT DISTINCT m.bundle_id, k.project_id FROM published_case_members m
+          JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
+          LEFT JOIN cases k ON k.case_id=m.case_id
+         WHERE EXISTS (SELECT 1 FROM published_bundles p WHERE p.bundle_id=m.bundle_id))`;
+    const held = `FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
+        JOIN rests x ON x.target=r.bundle_id JOIN ratified f ON f.finding=x.finding`;
+    const page = this.#rows(
+      `${rests} SELECT DISTINCT r.capture_sha ${held} WHERE r.capture_sha > ? ORDER BY r.capture_sha LIMIT ?`,
+      typeof after === "string" ? after : "", cap + 1);
+    const truncated = page.length > cap;
+    const shas = page.slice(0, cap).map((r) => r.capture_sha);
+    const by = new Map(shas.map((c) => [c, new Map()]));
+    if (shas.length)
+      for (const r of this.#rows(
+        `${rests} SELECT DISTINCT r.capture_sha, f.finding, f.project ${held}
+          WHERE r.capture_sha IN (SELECT value FROM json_each(?)) ORDER BY r.capture_sha, f.finding, f.project`,
+        JSON.stringify(shas))) {
+        const fs = by.get(r.capture_sha);
+        if (!fs) continue;
+        if (!fs.has(r.finding)) fs.set(r.finding, []);
+        fs.get(r.finding).push(r.project ?? null);
+      }
+    return { ok: true,
+             captures: shas.map((c) => ({ capture_sha: c,
+               findings: [...by.get(c)].map(([bundle_id, projects]) => ({ bundle_id, projects })) })),
+             limit: cap, truncated, cursor: truncated ? shas[shas.length - 1] : null };
+  }
+
   /* ---------------------------------------------------------------- moved from the store */
   /* ================== CASE-4 / DEC-72: THE CASE RELATION ====================
    *
@@ -1039,8 +1183,12 @@ export class Publication {
   #caseClaimInBytes(bundleId) {
     const b = this.#headRow(bundleId);
     if (!b) return null;
+    /* Only an unsigned document whose text names this bundle as a list entry can claim it: `instr` is the index (as in
+       `attributionStatedFor`), the parse the authority. Every promotion asks this (promotion's fact `caseMember`), so it
+       no longer parses every unsigned case document in the store to answer about one bundle. */
     for (const d of this.#rows(
-      `SELECT case_id, edition, text FROM case_documents WHERE ratified_at IS NULL ORDER BY case_id, edition`)) {
+      `SELECT case_id, edition, text FROM case_documents WHERE ratified_at IS NULL AND instr(text, ?) > 0
+        ORDER BY case_id, edition`, `  - target: ${bundleId}\n`)) {
       const fm = parseFrontmatter(d.text).data || {};
       const rows = Array.isArray(fm.case_roles) ? fm.case_roles : [];
       if (rows.some((r) => r && r.target === bundleId && r.version_sha === b.bundle_sha))
@@ -1748,7 +1896,8 @@ export class Publication {
         refs: this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id),
       };
     });
-    const at = new Date().toISOString();
+    /* The module's clock (`now`), as every instant it writes, so the log row and the answer carry one instant. */
+    const at = this.#when();
     this.sql.exec(
       `INSERT INTO export_log (at,scope,bundles,files,note) VALUES (?,'working-corpus',?,?,?)`,
       at, bundles.length, fileCount, note ? String(note).slice(0, 280) : null);
@@ -2229,7 +2378,7 @@ export class Publication {
       this.sql.exec(
         `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
          ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
-        manifestSha, caseId, "MANIFEST.json", "manifest", bytes ?? null, new Date().toISOString());
+        manifestSha, caseId, "MANIFEST.json", "manifest", bytes ?? null, this.#when());
       return { ok: true, caseId, edition: ed, manifest_sha: manifestSha };
     });
   }
@@ -2259,17 +2408,27 @@ export class Publication {
      Idempotent on (from, to, kind) so a second edition re-asserting an edge
      does not double it, and the class is REFRESHED on re-publication: whether a
      target is published is a fact about the record now, not about the edition
-     that first named it. */
+     that first named it.
+
+     N256 / K283 (Bob, 2026-09-28): A SERVE-CLASS EDGE WHOSE TARGET IS NOT YET
+     PUBLISHED IS HELD PRIVATELY, no longer dropped. It is written to
+     `published_held_references`, which the public read path never reads, so the
+     target's id stays unpublished; when the target is published, `commitEdition`
+     turns it into a `serve` edge (R22, R35). `held` counts them; `dropped` is
+     kept in the answer and is now always 0 (nothing is dropped). */
   publishEdges(bundleId, edges, now) {
-    if (!Array.isArray(edges)) return { serve: 0, name: 0, dropped: 0 };
-    const out = { serve: 0, name: 0, dropped: 0 };
+    if (!Array.isArray(edges)) return { serve: 0, name: 0, held: 0, dropped: 0 };
+    const out = { serve: 0, name: 0, held: 0, dropped: 0 };
     for (const e of edges) {
       if (!e || typeof e.to !== "string" || !e.to || typeof e.kind !== "string" || !e.kind) continue;
       /* A self-edge discloses nothing and is not a graph. */
       if (e.to === bundleId) continue;
       const nameOnly = e.disclosure === "name";
       if (!nameOnly && !this.#one(`SELECT bundle_id FROM published_bundles WHERE bundle_id=? LIMIT 1`, e.to)) {
-        out.dropped++;
+        this.sql.exec(
+          `INSERT INTO published_held_references (from_bundle,to_bundle,kind,held_at) VALUES (?,?,?,?)
+           ON CONFLICT(from_bundle,to_bundle,kind) DO NOTHING`, bundleId, e.to, e.kind, now);
+        out.held++;
         continue;
       }
       this.sql.exec(
@@ -3199,7 +3358,8 @@ const instances = new WeakMap();
 /** The one instance for a host (K61). The first call creates it with `deps` (a test passes its own), creates its
  *  tables, declares them to purge (R31), and registers with promotion what this module provides (K206, N152): the
  *  facts `caseMember` (R4), `publishedRegistry` and `publishedCaseRegistry` (R7), and the revision flag (R5) as its
- *  step's projection, raised in the promotion's transaction after the new version is written. */
+ *  step's projection, raised in the promotion's transaction after the new version is written; and with reevaluation
+ *  its cited parts and ratified cases (R41, R43). */
 export function publicationOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -3219,6 +3379,10 @@ export function publicationOf(host, deps) {
        refuses nothing, so no promotion fails on it. */
     promotion.registerStep("publication", {
       project: (c) => { p.flagCasesOnRevision(c.bundleId, c.base ?? null, stampInstant("second")); return null; } });
+    /* R41, R43 (N210; K359): reevaluation's R14 case half reads a case's cited parts and pages the ratified cases through
+       this one registration (its R26). legacy-store builds reevaluation first, with its `env` (its R25). */
+    (d.reevaluation || reevaluationOf(host)).registerCaseParts("publication", {
+      parts: (a) => p.caseCitedParts(a || {}), cases: (a) => p.ratifiedCases(a || {}) });
   }
   return p;
 }

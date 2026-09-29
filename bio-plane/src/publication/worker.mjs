@@ -56,12 +56,14 @@ export function publishedStoreAbsent(env) {
 /* D-561 (C-98.1): NO PUBLISHED PART ANSWERS TO THAT HASH, at `publishedbytes`. It answered `NOT_FOUND` until
  * D-561, a code the plane also mints for three other conditions, so no row could be written for it without
  * putting this sentence on theirs. `detail` is the site's own sentence, BYTE-IDENTICAL to what it said before:
- * a hash that was never ratified and a hash that never existed stay ONE answer, and the translation keeps that. */
+ * a hash that was never ratified and a hash that never existed stay ONE answer, and the translation keeps that.
+ * Returns the refusal OBJECT, as `publishedObjectMissing` does, and its one site wraps it (404): the region then holds
+ * the refusal itself, so the verdict reader judges it rather than a `json(` call it cannot see into (N242, N297). */
 export function noPublishedPart(sha256) {
   /* DEC-49 REGION is-no-published-part */
-  return plane().json({ ok: false, reason: "NO_PUBLISHED_PART", ...rowOf("NO_PUBLISHED_PART"), sha256,
-    detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
-          + "never existed are the same answer here, deliberately." }, 404);
+  return { ok: false, reason: "NO_PUBLISHED_PART", ...rowOf("NO_PUBLISHED_PART"), sha256,
+           detail: "no published part answers to that hash. A hash that was never ratified and a hash that "
+                 + "never existed are the same answer here, deliberately." };
   /* END DEC-49 REGION is-no-published-part */
 }
 
@@ -390,7 +392,7 @@ export async function publishedRoutes({ op, url, env, stub }) {
     if (!vOut.answered) return P.storeSilent("publishedbytes");
     const v = vOut.result;
     /* D-561: NO_PUBLISHED_PART (C-98.1) from its one governed site; it was `NOT_FOUND`. */
-    if (!v || !v.published) return noPublishedPart(shaParam);
+    if (!v || !v.published) return P.json(noPublishedPart(shaParam), 404);
     /* D-734 (BOB #36, 2026-09-25 11:50Z, D-731 (b); BIO_Publication_v0_1.md §4): A RATIFIED CASE DOCUMENT'S HASH is
        registered when it is signed (kind `case_document`), and its bytes never go to the published bucket — they are
        the signed text itself. So they are read from the store and served only after THIS layer re-hashes them and

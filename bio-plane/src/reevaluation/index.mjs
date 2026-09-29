@@ -94,6 +94,8 @@ const PAIR_AXES = Object.freeze(["capture", "connection", "testimony"]);
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const MACHINE_ADMIN = `${MACHINE_CLASS_PREFIX}admin`;
 const UNSTORABLE = /["\\\n\r]/;
+/* R26 (K365): a pinned capture is a whole sha-256, as publication R41 answers it. */
+const SHA256_HEX = /^[0-9a-fA-F]{64}$/;
 const asList = (v) => {
   if (Array.isArray(v)) return v.map((x) => String(x ?? "").trim()).filter(Boolean);
   if (typeof v === "string") return v.split(",").map((x) => x.trim()).filter(Boolean);
@@ -526,7 +528,7 @@ export class Reevaluation {
   }
 
   /** R26 (N210): the one registration of a case edition's cited parts (publication R41): `parts({case, edition?})`
-   *  answers `{case, edition, project, parts: [{bundle_id, bundle_sha}]}`, and `cases({after, limit})` the cases with a
+   *  answers `{case, edition, project, parts: [{bundle_id, capture_sha}]}` (K365), and `cases({after, limit})` the cases with a
    *  ratified edition, `{cases, cursor}`, which the sweep's case half pages through (a case is no bundle, so only its
    *  holder can list them). Both refusals are membership's (its R81): a registration missing either function is
    *  malformed; a second, by any module, is declared. */
@@ -813,13 +815,13 @@ export class Reevaluation {
           const id = `RC-${sha256HexSync(`${p.case}\u0000${p.part}\u0000${p.capture_sha}\u0000${c.capture_sha}`).slice(0, 24)}`;
           if (this.#one(`SELECT 1 AS x FROM reevaluation_case_notices WHERE notice_id=?`, id)) continue;
           this.sql.exec(
-            `INSERT INTO reevaluation_case_notices (notice_id, case_id, edition, project, ord, part, part_sha, capture_sha,
+            `INSERT INTO reevaluation_case_notices (notice_id, case_id, edition, project, ord, part, capture_sha,
                                                     newer_capture, newer_bundle, grade, affects, owners, raised_at, state)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'open')`,
-            id, p.case, p.edition, p.project, p.ord, p.part, p.part_sha, p.capture_sha, c.capture_sha,
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, 'open')`,
+            id, p.case, p.edition, p.project, p.ord, p.part, p.capture_sha, c.capture_sha,
             c.bundle_id ?? null, c.grade ?? null, c.affects, JSON.stringify(p.owners), when);
           raised.push({ notice: id, kind: "case", case: p.case, edition: p.edition, project: p.project, ord: p.ord,
-                        part: p.part, part_sha: p.part_sha, capture_sha: p.capture_sha, newer_capture: c.capture_sha,
+                        part: p.part, capture_sha: p.capture_sha, newer_capture: c.capture_sha,
                         grade: c.grade ?? null, affects: c.affects, owners: p.owners });
         }
       }
@@ -855,7 +857,7 @@ export class Reevaluation {
   }
 
   /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each
-     cited part graded at its pinned capture. Reads only; the caller writes. `cursor` is the last case read when more
+     cited part graded at the capture the edition pinned (its `capture_sha`, K365). Reads only; the caller writes. `cursor` is the last case read when more
      may follow (`""` when the budget is spent before the first), else null; `absent` when nothing is registered. */
   #caseHalf(afterCase, budget, memo) {
     const reg = this.#caseParts;
@@ -874,29 +876,16 @@ export class Reevaluation {
       let owners = [];
       try { owners = project ? this.membership.projectOwners(project) || [] : []; } catch { owners = []; }
       a.parts.forEach((p, ord) => {
-        const part = p ? str(p.bundle_id) : null, pin = p ? str(p.bundle_sha) : null;
-        if (!part || !pin) return;
-        const capture = this.#pinnedCapture(part, pin);
-        const notice = capture ? this.#gradeWhole(part, capture, memo) : null;
+        const part = p ? str(p.bundle_id) : null;
+        const capture = p && typeof p.capture_sha === "string" && SHA256_HEX.test(p.capture_sha.trim())
+          ? p.capture_sha.trim().toLowerCase() : null;
+        if (!part || !capture) return;
         parts.push({ case: caseId, edition: Number.isInteger(a.edition) ? a.edition : null, project, owners, ord,
-                     part, part_sha: pin, capture_sha: capture, notice });
+                     part, capture_sha: capture, notice: this.#gradeWhole(part, capture, memo) });
       });
     }
     /* A full page may have more after it; a short one is the end. */
     return { parts, cursor: ids.length === budget ? ids[ids.length - 1] : null };
-  }
-
-  /* R26: a cited part's pinned capture: the capture its bundle.md at the pin names (`content_hash`), held for the part,
-     else the part's first-held capture (content R11), read at the pin (record-core R60). Null when none is held. */
-  #pinnedCapture(part, pin) {
-    let text = null;
-    try { text = this.record.textAtSha(part, pin); } catch { text = null; }
-    if (typeof text !== "string") return null;
-    let fm = null;
-    try { fm = parseFrontmatter(text).data; } catch { fm = null; }
-    const authored = fm && typeof fm.content_hash === "string" && /^[0-9a-fA-F]{64}$/.test(fm.content_hash.trim())
-      ? fm.content_hash.trim().toLowerCase() : null;
-    try { return this.content.captureFor(part, authored) || null; } catch { return null; }
   }
 
   /* R26: content's notice for the whole of one capture of a part, as the record holds it (a machine viewer). */
@@ -912,7 +901,7 @@ export class Reevaluation {
              grade: r.grade, affects: r.affects, raised_at: r.raised_at, state: r.state,
              closed_by: r.closed_by, closed_at: r.closed_at, why: r.why, adopted_version: r.adopted_version,
              ...(r.kind === "case" ? { case: { case: r.holder, edition: r.edition, project: r.project,
-                                               part: r.target_id, part_sha: r.part_sha } } : {}) };
+                                               part: r.target_id } } : {}) };
   }
 
   /* R14, R26: the two kinds of notice as one listing. A leg notice is seen through its holder; a case notice only by
@@ -923,12 +912,12 @@ export class Reevaluation {
       `SELECT * FROM (
          SELECT 'leg' AS kind, n.notice_id, n.holder, n.ord, n.content_id, n.target_id, n.capture_sha, n.newer_capture,
                 n.newer_bundle, n.grade, n.affects, n.raised_at, n.state, n.closed_by, n.closed_at, n.why,
-                n.adopted_version, NULL AS edition, NULL AS project, NULL AS part_sha
+                n.adopted_version, NULL AS edition, NULL AS project
            FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder WHERE (${g.sql})
          UNION ALL
          SELECT 'case' AS kind, c.notice_id, c.case_id, c.ord, NULL, c.part, c.capture_sha, c.newer_capture,
                 c.newer_bundle, c.grade, c.affects, c.raised_at, c.state, c.closed_by, c.closed_at, c.why,
-                NULL, c.edition, c.project, c.part_sha
+                NULL, c.edition, c.project
            FROM reevaluation_case_notices c
           WHERE ? = 1 OR EXISTS (SELECT 1 FROM json_each(c.owners) o WHERE o.value = ?)
        ) WHERE ${where} ${tail}`, ...g.args, seeAll, g.member ?? null, ...args, ...tailArgs);

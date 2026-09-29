@@ -1,5 +1,5 @@
 /* publication over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   connections, inquiry, basis-versions; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   connections, inquiry, basis-versions, reevaluation; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module registers (legacy-store's fact `producingGroup`, the review provider) is a stand-in the
    test controls. The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
    test through R21 and R22, exactly as those modules call them. Every test drives `publication` at its interface. */
@@ -12,19 +12,50 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
+import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
-export function storage() {
+/* workerd's `sql.exec` answers a cursor, never an array: rows are read by iterating it (or its `toArray()`/`one()`),
+   and `[0]` or `.length` of it is undefined. It also refuses a LIKE or GLOB pattern over 50 bytes ("LIKE or GLOB
+   pattern too complex"), which node:sqlite does not (K313). This storage answers as workerd does, so code that indexes
+   a cursor or writes a long pattern fails here as it would in the Durable Object (K316). */
+export const WORKERD_PATTERN_CAP = 50;
+export function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() {
+      const rest = c.toArray();
+      if (rest.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${rest.length}`);
+      return rest[0];
+    },
+  };
+  return c;
+}
+
+/* `workerd: false` answers arrays, as this fixture did before K316: another module's fixture builds on `world()` and
+   shapes the storage itself (filings'), so the default is kept for it; this module's own tests use `planeWorld`. */
+export function storage({ workerd = false } = {}) {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
+      if (!workerd) {
+        const st = db.prepare(q);
+        return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      }
+      const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
+      const bound = /\b(?:GLOB|LIKE)\s+\?|\b(?:glob|like)\s*\(/i.test(q) ? args.filter((a) => typeof a === "string") : [];
+      if ([...literal, ...bound].some((p) => Buffer.byteLength(p) > WORKERD_PATTERN_CAP))
+        throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -63,8 +94,12 @@ const NO_READINGS = {
   readingOf: () => null, unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [], onReading: () => ({ ok: true }),
 };
 
-export function world({ group = "test-group" } = {}) {
-  const st = storage();
+/** This module's tests: the world over storage shaped as workerd's (K316). */
+export const planeWorld = (opts = {}) => world({ ...opts, workerd: true });
+
+export function world({ group = "test-group", workerd = false } = {}) {
+  const st = storage({ workerd });
+  const all = (c) => (Array.isArray(c) ? c : c.toArray());
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
@@ -94,17 +129,21 @@ export function world({ group = "test-group" } = {}) {
     inquiry: { earned: (s, t) => k.earned(s, t), legCapped, cyclePath: (id, t) => k.cyclePath(id, t) },
     now: () => clock.now });
   basisVersions.migrate();
-  const p = publicationOf(host, { record, membership, promotion, inquiry: k, basisVersions, now: () => clock.now });
+  /* reevaluation before publication, as legacy-store builds them: publication registers its cited parts with it (R41, R43). */
+  const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
+                                   basisVersions, now: () => clock.now });
+  const p = publicationOf(host, { record, membership, promotion, inquiry: k, basisVersions, reevaluation: r,
+                                  now: () => clock.now });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, connections, k, basisVersions, p, clock, groupRef,
-    row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    st, host, record, membership, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef,
+    row: (q, ...a) => all(st.sql.exec(q, ...a))[0] ?? null,
+    rows: (q, ...a) => all(st.sql.exec(q, ...a)),
+    count: (t) => all(st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`))[0].n,
     snapshot(tables = null) {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        if (!tables || tables.includes(name)) out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`));
+        if (!tables || tables.includes(name)) out[name] = JSON.stringify(all(st.sql.exec(`SELECT * FROM "${name}"`)));
       return out;
     },
     /** An op, as the legacy store's op map runs it: `query` the control plane's search params, `body` its JSON. */
@@ -186,7 +225,7 @@ export function world({ group = "test-group" } = {}) {
 /** A case document (`bio-case-document/4` unless `format`): the facts this module reads from it. `roles`:
  *  [{target, version_sha, edition?, role?}]; `strength`: [{target, axis, state, grade}]; `excluded`: [{target,
  *  description, reason}]; `attributions`: [{observation, level, shown, chosen_at_edition}] (a run is written only when
- *  given); `citations`: rows for /4's `case_citations`. */
+ *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given). */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], format = "bio-case-document/4",
                                            excludes = "Nothing else.", ack = false } = {}) {
@@ -205,7 +244,8 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
       `    level: ${r.level ?? "null"}`, `    shown: ${r.shown == null ? "null" : `"${r.shown}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])] : []),
     ...(citations.length ? ["case_citations:", ...citations.flatMap((c) => [`  - target: ${c.target}`,
-      `    version: ${c.version}`])] : ["case_citations: []"]),
+      `    version: ${c.version}`, ...(c.capture !== undefined ? [`    capture: ${c.capture ?? "null"}`] : [])])]
+      : ["case_citations: []"]),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),

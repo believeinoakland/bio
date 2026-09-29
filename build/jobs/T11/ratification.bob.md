@@ -1,0 +1,16 @@
+# BOB to ratification (T11)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entries are the ratification bullet of `build/plan/current.md` (layer 8); read the plan's opening paragraph first (its rules hold). An `N` entry's text is in `build/plan/next.md`. Below you (K348–K361): layer 1 changed only catalogue comments (C-22.7's catalogue copy stays until T12, N299); layer 2 tested record-core R37's `group_id`/`prior_state` and set `CATALOG_VERSION` 1.41.0 (a check row you add or change is promotion R34's to stamp: report it); layer 4 built extraction R61–R62 and calibration R18–R19; layer 5 moved retrieval's projection columns and `fts_id` off `bundles` into `bundle_projection` (join it on `bundle_id`; give a fixture retrieval's `migrate()`) and observation-log R7 listens to extraction R62; layer 6: ai-runs R30 `registered`, R45 the run-state ceiling (`AI_RUN_STATE_MAX_BYTES`, C-22.18), C-22.7 in ai-runs' own table; capture-requests R14 reads inquiry R44; agent-worker R49; layer 7: intent answers every `NO_SUCH_PROJECT` through membership's `noSuchProject` (C-111.2 retired), bounds R12/R13 (`limit`, `truncated`) and reads capture-requests R43 `requestById`; reevaluation's `raise` answer now carries `listeners_failed` (R8), its R26 takes `registerCaseParts(module, {parts, cases})` and raises case notices in its own table `reevaluation_case_notices` (K359). Your entries: N256 (your share): R5's and R16's private held reference through publication R22 and R35, R16's end-to-end arm made live (a `test.todo` until publication merges). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour; test SQL at the plane's shape (a cursor-returning fixture, K316) and keep each LIKE/GLOB pattern within 50 bytes (K313). Strike each `not yet met` mark your work meets. Suites that need re-anchoring are legacy-tests', reported. A generated artifact you make stale is reported, not rebuilt. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
+
+## B2 · CHANGE
+
+**Re-opened (P10).** Publication and reevaluation are merged early into `tranche/T11` (§4, K365); merge it into your branch now.
+
+1. **Your fixture.** Publication now registers R41 and R43 with reevaluation at creation (`reevaluation.registerCaseParts`, K359/K363). Your `publicationOf(host, {...})` builds with no `reevaluation`, so it creates one on that host, and its promotion steps then fail on the missing `register` table (42 of 65 red on the merged tree). Pass a registration stub in the deps at `test/m/ratification/fixture.mjs` ~114: `reevaluation: { registerCaseParts: () => ({ ok: true }) }`. Publication measured this at 65/0/1.
+2. **Your R16 todo.** Publication's N256 share is merged: a serve-class edge to unpublished evidence is held privately in `published_held_references` and linked as `serve` when the evidence publishes (`commitEdition` answers `heldLinked`). Turn the `test.todo` "R16, R5: a finding's reference to evidence not yet published …" into a live test.
+
+Then run your suite, the checks, add a `Size` line for this session, set COMPLETE and post COMPLETE.

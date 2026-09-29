@@ -2,7 +2,7 @@
    (R34), and the two ids that do not hold yet (R30, R32). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, SIG, NOW } from "./fixture.mjs";
+import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
 import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 import { CASE_RESOLUTION_CHECKS, PUBLISHED_STORE_CHECKS, PUBLISHED_READ_CHECKS, ATTRIBUTION_ACT_CHECKS,
          rowOf } from "../../../src/publication/checks.mjs";
@@ -32,9 +32,14 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.equal(w.count("case_revision_flags"), 1);
   const exempt = w.snapshot(PUBLICATION_EXEMPT);
   /* one bundle's rows: its flags, its attributions and the published graph's edges touching it */
+  /* a reference F holds privately to evidence not yet published (N256) is working material, purged with either end */
+  w.doc("INFO-2026-0003-annex");
+  w.record.transact(() => w.p.publishEdges(F, [{ to: "INFO-2026-0003-annex", kind: "cites", disclosure: "serve" }], NOW));
+  assert.equal(w.count("published_held_references"), 1);
   w.record.purge({ bundleId: F });
   assert.equal(w.count("case_revision_flags"), 0);
   assert.equal(w.row(`SELECT COUNT(*) AS n FROM published_edges WHERE from_bundle=?`, F).n, 0);
+  assert.equal(w.count("published_held_references"), 0);
   w.record.purge({ bundleId: obs });
   assert.equal(w.count("observation_attributions"), 0);
   /* the whole store: unsigned documents and their exclusions go, the signed one and every published row stay */
@@ -45,7 +50,8 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "export_log", "published_bundles", "published_case_members",
                                                     "published_cases", "published_shas"]);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
-                   ["case_documents", "case_exclusions", "case_revision_flags", "observation_attributions", "published_edges"]);
+                   ["case_documents", "case_exclusions", "case_revision_flags", "observation_attributions", "published_edges",
+                    "published_held_references"]);
   assert.equal(publicationOwns("published_edges"), true);
   assert.equal(publicationOwns({ name: "export_log" }), true);
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
@@ -90,19 +96,19 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
 });
 
 test("R24 an existing store migrates: every ratified row of the old, edition-less shape survives as edition 1, and nothing is invented", () => {
-  const st = storage();
+  const st = storage({ workerd: true });
   st.db.exec(`CREATE TABLE published_bundles (bundle_id TEXT PRIMARY KEY, bundle_sha TEXT NOT NULL, ratified_at TEXT NOT NULL,
     attestor_key TEXT NOT NULL, attestor_member TEXT, gate_version TEXT NOT NULL, sig_armored TEXT NOT NULL)`);
   st.sql.exec(`INSERT INTO published_bundles VALUES ('INQ-2026-0001-legacy','legacysha','2026-01-01T00:00:00Z','LEGACYKEY','bob','plane-gate/0.9','sig')`);
   migratePublication(st.sql);
   migratePublication(st.sql);   /* every boot: idempotent */
-  const rows = st.sql.exec(`SELECT * FROM published_bundles`);
+  const rows = st.sql.exec(`SELECT * FROM published_bundles`).toArray();
   assert.equal(rows.length, 1);
   assert.deepEqual([rows[0].edition, rows[0].bundle_sha, rows[0].attestor_member, rows[0].gate_version, rows[0].sig_armored],
                    [1, "legacysha", "bob", "plane-gate/0.9", "sig"]);
   assert.deepEqual([rows[0].strength, rows[0].required, rows[0].delivered_by], [null, null, null], "nothing invented");
-  assert.equal(st.sql.exec(`SELECT name FROM sqlite_master WHERE name='published_bundles_preeditions'`).length, 0);
-  assert.ok(st.sql.exec(`PRAGMA table_info(published_case_members)`).some((c) => c.name === "version_sha"));
+  assert.equal(st.sql.exec(`SELECT name FROM sqlite_master WHERE name='published_bundles_preeditions'`).toArray().length, 0);
+  assert.ok(st.sql.exec(`PRAGMA table_info(published_case_members)`).toArray().some((c) => c.name === "version_sha"));
 });
 
 test.todo("R30 a published rendering is verified by pixels_sha256 over its normalised samples — NOT YET MET (D-246): nothing in the plane publishes a rendering yet (no `kind: rendering` part is written to published_shas or a container), so there is no rendering to carry the pixel hash; it joins when the rendering path does");
