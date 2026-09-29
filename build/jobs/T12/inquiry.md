@@ -17,7 +17,7 @@ My best reading, which I am building on: you add `"progressions"` to inquiry's `
 
 **Strike.** Met by this work: R20's `not yet met: N285`.
 
-**Waiting on J1.** `build/modules.json` does not list `progressions` in inquiry's `uses`, so `architecture` fails on the two imports (source and test) until BOB adds it. The requirements' Uses already name it.
+**J1 answered** (B2, K389): `progressions` is in inquiry's `uses`; `tranche/T12` merged, and the checks were re-run green.
 
 **Deferred.** R31 (MK-5, K181), as before.
 
@@ -29,7 +29,9 @@ My best reading, which I am building on: you add `"progressions"` to inquiry's `
 **Tests and checks.**
 - `node --test bio-plane/test/m/inquiry/`: pass 60, fail 0, todo 1 (R31). R20's test now drives every legal state outside `DISPOSITIONS` (at least four) and requires the whole answer to equal `notADisposition(s)`, with C-100.20 and its translation. It also requires `DISPOSITIONS` to be progressions' array itself.
 - Users of what changed (`DISPOSITIONS`, the `NOT_A_DISPOSITION` answer): `test/reopen`, `repair-reachability`, `affordances`, `m/affordances/`, `m/progressions/`, `d266scope`, `disposition`, `proposedispose`: 122 pass, 0 fail, 2 todo.
-- `format`: 69 modules, 64 requirements files; 0 failures. `architecture … inquiry`: 14 product files, 46 relative imports; 2 failures (J1: `progressions` not in `uses`). `coverage … inquiry`: 45 of 45 live ids named; 0 failures. `ownership … inquiry tranche/T12`: 4 files; legacy-store 0/0, legacy-checks 0/0; 0 failures.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture … inquiry` (after merging `tranche/T12` for B2): 14 product files, 46 relative imports; 0 failures. `coverage … inquiry`: 45 of 45 live ids named; 0 failures. `ownership … inquiry tranche/T12`: 4 files; legacy-store 0/0, legacy-checks 0/0; 0 failures. After the merge, the inquiry suite again passes 60, fails 0, todo 1.
+
+Size (session_01SF3BCxa5TAs5uVuri45pJU): test runs 6, module lines 3089
 
 ## J2 · REPORT
 
