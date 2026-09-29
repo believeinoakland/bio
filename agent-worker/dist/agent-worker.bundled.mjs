@@ -362,6 +362,19 @@ function resumableState(state) {
   for (const k of RESUMABLE) out[k] = s[k] === void 0 ? null : s[k];
   return out;
 }
+var STATE_RESTART_STEPS = ["next-pass", "close"];
+function stateBytes(state) {
+  return new TextEncoder().encode(JSON.stringify(state ?? null)).length;
+}
+function publishableState(state, limit) {
+  const full = resumableState(state);
+  const bytes = stateBytes(full);
+  const ceiling = Number(limit);
+  if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
+  const at3 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const restart = resumableState({ step: at3, pass: full.pass, adjusted: false });
+  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at3 } };
+}
 var list = (v) => Array.isArray(v) ? v : [];
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
 function resumeFrom(published) {
@@ -440,602 +453,6 @@ function applyJudgement(state, judgement) {
   const next = { ...state };
   for (const k of JUDGEABLE) if (Object.prototype.hasOwnProperty.call(j, k)) next[k] = j[k];
   return { ok: true, state: next };
-}
-
-// src/subsession.mjs
-var REPORT_STATES = {
-  NEVER_LOOKED: "nobody looked at this level for this subject",
-  LOOKED_ABSENT: "we looked and it is positively not there",
-  LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT: "we looked and it is there",
-  partial: "we looked and got part of it"
-};
-var FOUND_STATES = /* @__PURE__ */ new Set(["PRESENT", "partial"]);
-var LOOKED_STATES = new Set(
-  Object.keys(REPORT_STATES).filter((s) => s !== "NEVER_LOOKED")
-);
-var SUMMARY_MAX = 500;
-var ADDRESS_MAX = 200;
-var CITATIONS_MAX = 20;
-var REPORT_KEYS = {
-  level: true,
-  /* which of the four this sub-session searched */
-  state: true,
-  /* D-129 — what the search ESTABLISHED, never a boolean */
-  observed_at: false,
-  /* the observation-log address, owed by anything that looked */
-  summary: false,
-  /* the conclusion, in prose, BOUNDED. §14b.2's "the passage" */
-  citations: false,
-  /* addresses the parent can re-read. NEVER the bytes */
-  governed: false,
-  /* D-104 — our governor holding a host is a fact about US */
-  condition: false
-  /* the record's condition vocabulary. Validated by the PLANE */
-};
-var CITATION_KEYS = { address: true };
-var SUBSESSION_OPS = ["meaningrows"];
-function refusal(code, detail, extra) {
-  return { ok: false, code, reason: code, detail, ...extra || {} };
-}
-function deepFreeze(value) {
-  if (value === null || typeof value !== "object") return value;
-  for (const k of Object.keys(value)) deepFreeze(value[k]);
-  return Object.freeze(value);
-}
-function spawnContract({ level, payload } = {}) {
-  if (!LEVELS.includes(String(level)))
-    return refusal(
-      "SPAWN_LEVEL_UNKNOWN",
-      `'${String(level)}' is not one of the four levels a run searches: ${LEVELS.join(", ")}. A fan-out that spawned a level nobody declared would be searching somewhere the observation log has no word for.`
-    );
-  if (payload == null || typeof payload !== "object")
-    return refusal(
-      "SPAWN_PAYLOAD_MISSING",
-      "the plane returned no search-half payload for this run, and this member composes none of its own: a run's conditions are the record's. There is nothing to brief a sub-session with."
-    );
-  if (Object.prototype.hasOwnProperty.call(payload, "bias"))
-    return refusal(
-      "SPAWN_PAYLOAD_CARRIES_LENS",
-      "the search-half payload arrived carrying the run's bias manifest. \xA714: the search half never receives the lens \u2014 bias never shapes what is captured or searched, only how conclusions are weighed \u2014 and the spawn contract omits it BY CONSTRUCTION, so there should be no field here to read. This member refuses rather than ignoring it: a search half that has been handed the lens has been handed it, and a run that continued could not later prove it did not use it."
-    );
-  const contract = deepFreeze({
-    /* THE ONE THING THAT DIFFERS BETWEEN THE FOUR, and the reason each
-       sub-session searches somewhere rather than everywhere. */
-    level: String(level),
-    run: payload.run ?? null,
-    /* BUILT FRESH, not aliased: two contracts sharing one `context` object would
-       be two sub-sessions sharing state through the parent's own brief. */
-    context: { type: payload.context?.type ?? null, id: payload.context?.id ?? null },
-    mode: payload.mode ?? null,
-    skill: payload.skill ?? null,
-    /* THE BAR TRAVELS AND THE LENS DOES NOT, and that distinction is DEC-54 (a):
-       a standard pair tells the search what strength the work must reach, which
-       is not the coupling §14 forbids. Both spellings the plane publishes are
-       carried — the column verbatim and REC-74's judged block — because a caller
-       receiving a bare `null` cannot tell "no bar was in force" from "this reader
-       does not publish the fact". */
-    standard_pair: payload.standard_pair ?? null,
-    /* READ KEY BY KEY, AND THE FIRST DRAFT OF THIS LINE SPREAD THE BLOCK —
-       CAUGHT BY THIS ITEM'S OWN KEY-TREE ARM ON ITS FIRST RUN, not by review. A
-       spread here would have been the delete-list defect wearing the other
-       costume: whatever the plane adds to `#standardForRun`'s return tomorrow
-       would ride into a sub-session's brief, which is precisely the property
-       "by construction" is supposed to deny. The four keys are the plane's own
-       and they are named. */
-    standard: payload.standard == null ? null : {
-      in_force: payload.standard.in_force ?? null,
-      basis: payload.standard.basis ?? null,
-      stated: payload.standard.stated ?? null,
-      pair: payload.standard.pair ?? null
-    },
-    /* NO WRITE. See SUBSESSION_OPS. */
-    scope: [...SUBSESSION_OPS],
-    /* THE RETURN CONTRACT TRAVELS WITH THE BRIEF. A sub-session that is told what
-       it may return is a sub-session whose violation is a defect rather than a
-       misunderstanding — and the parent validates it on the way back regardless,
-       because a contract enforced only by telling somebody about it is a skill
-       and not a fence (§14b.4). */
-    returns: {
-      keys: Object.keys(REPORT_KEYS),
-      required: Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k]),
-      citation_keys: Object.keys(CITATION_KEYS),
-      states: Object.keys(REPORT_STATES),
-      summary_max: SUMMARY_MAX,
-      citations_max: CITATIONS_MAX,
-      address_max: ADDRESS_MAX,
-      rule: "return a REPORT with a citation, never documents. The parent re-reads by address."
-    }
-  });
-  return { ok: true, contract };
-}
-var size = (v) => JSON.stringify(v ?? null).length;
-function checkReport(report) {
-  if (report == null || typeof report !== "object" || Array.isArray(report))
-    return refusal(
-      "REPORT_NOT_AN_OBJECT",
-      "a sub-session returns a REPORT object. What arrived is not one."
-    );
-  const unknown = Object.keys(report).filter((k) => !(k in REPORT_KEYS));
-  if (unknown.length)
-    return refusal(
-      "REPORT_UNKNOWN_FIELD",
-      `a REPORT carries exactly ${Object.keys(REPORT_KEYS).join(", ")} \u2014 ${unknown.join(", ")} ${unknown.length === 1 ? "is not one of them" : "are not among them"}. \xA714b.1: a sub-session hands back what it FOUND and never the documents; the parent re-reads by address. The contract is an exact key set rather than a list of banned spellings, because a list of spellings goes stale the moment a fourth is written.`,
-      { fields: unknown }
-    );
-  const missing = Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k] && (report[k] == null || report[k] === ""));
-  if (missing.length)
-    return refusal(
-      "REPORT_INCOMPLETE",
-      `a REPORT must name ${missing.join(" and ")}: which level was searched and what the search ESTABLISHED are the two things a parent cannot derive for itself.`,
-      { fields: missing }
-    );
-  if (!LEVELS.includes(String(report.level)))
-    return refusal(
-      "REPORT_LEVEL_UNKNOWN",
-      `'${String(report.level)}' is not one of ${LEVELS.join(", ")}. Absence at one level is not evidence of absence at the next, so a report that cannot say which level it is about establishes nothing at any of them.`
-    );
-  if (!Object.prototype.hasOwnProperty.call(REPORT_STATES, String(report.state)))
-    return refusal(
-      "REPORT_STATE_UNKNOWN",
-      `'${String(report.state)}' is not one of ${Object.keys(REPORT_STATES).join(", ")} (D-129). A report that cannot say what it ESTABLISHED is a report a later reader cannot check.`
-    );
-  if (LOOKED_STATES.has(String(report.state)) && !(typeof report.observed_at === "string" && report.observed_at.trim() !== ""))
-    return refusal(
-      "REPORT_UNLOCATED",
-      `a '${String(report.state)}' report claims something about the world and must say WHERE the search that establishes it was written in the run's observation log. A claim nobody can locate is a claim nobody can check, which is the whole reason the log exists (\xA711).`
-    );
-  const cites = report.citations == null ? [] : report.citations;
-  if (!Array.isArray(cites))
-    return refusal(
-      "REPORT_CITATIONS_NOT_A_LIST",
-      "`citations` is a list of addresses the parent can re-read. What arrived is not a list."
-    );
-  if (FOUND_STATES.has(String(report.state)) && cites.length === 0)
-    return refusal(
-      "REPORT_NO_CITATION",
-      `a '${String(report.state)}' report says something IS there and must cite where, by address. \xA714b.1: the contract is a REPORT with a citation and the parent re-reads by address. An absence cites nothing and is not held to this, because there would be nothing to cite.`
-    );
-  if (cites.length > CITATIONS_MAX)
-    return refusal(
-      "REPORT_OVER_BOUND",
-      `${cites.length} citations exceed the ${CITATIONS_MAX} a single report may carry. A report is a conclusion with addresses, and a list long enough to be the reading itself is the reading.`,
-      { bound: "citations", limit: CITATIONS_MAX, got: cites.length }
-    );
-  for (const c of cites) {
-    if (c == null || typeof c !== "object" || Array.isArray(c))
-      return refusal(
-        "REPORT_CITATION_NOT_AN_ADDRESS",
-        "a citation is an object carrying the address the parent re-reads by. What arrived is not one."
-      );
-    const extra = Object.keys(c).filter((k) => !(k in CITATION_KEYS));
-    if (extra.length)
-      return refusal(
-        "REPORT_CITATION_NOT_AN_ADDRESS",
-        `a citation carries exactly ${Object.keys(CITATION_KEYS).join(", ")} \u2014 ${extra.join(", ")} is not part of it. The parent re-reads BY ADDRESS; a citation that carried the content would be the document arriving inside the thing that exists to replace it.`,
-        { fields: extra }
-      );
-    if (!(typeof c.address === "string" && c.address.trim() !== ""))
-      return refusal(
-        "REPORT_CITATION_NOT_AN_ADDRESS",
-        "a citation must carry a non-empty address. An address the parent cannot re-read by is not a citation, it is a claim."
-      );
-    if (c.address.length > ADDRESS_MAX)
-      return refusal(
-        "REPORT_OVER_BOUND",
-        `an address of ${c.address.length} characters exceeds ${ADDRESS_MAX}. An address is how the parent re-reads; something this long is content wearing an address's field.`,
-        { bound: "address", limit: ADDRESS_MAX, got: c.address.length }
-      );
-  }
-  if (report.summary != null && typeof report.summary !== "string")
-    return refusal(
-      "REPORT_SUMMARY_NOT_PROSE",
-      "`summary` is what the sub-session concluded, in prose. A structure here is the reading itself arriving under the field that exists to replace it."
-    );
-  if (typeof report.summary === "string" && report.summary.length > SUMMARY_MAX)
-    return refusal(
-      "REPORT_OVER_BOUND",
-      `a summary of ${report.summary.length} characters exceeds ${SUMMARY_MAX}. \xA714b.1: a sub-session hands back what it FOUND, never the documents \u2014 and a prose field with no ceiling is where a document arrives when every other door is shut.`,
-      { bound: "summary", limit: SUMMARY_MAX, got: report.summary.length }
-    );
-  if (size(report) > REPORT_MAX_BYTES)
-    return refusal(
-      "REPORT_OVER_BOUND",
-      `this report serialises to ${size(report)} bytes against a ${REPORT_MAX_BYTES}-byte ceiling computed from the contract's own fields. Whatever it is carrying, it is not a conclusion.`,
-      { bound: "report", limit: REPORT_MAX_BYTES, got: size(report) }
-    );
-  return null;
-}
-var REPORT_MAX_BYTES = SUMMARY_MAX + CITATIONS_MAX * (ADDRESS_MAX + 20) + 400;
-function takeReports(returns) {
-  const taken = [], refused = [];
-  for (const r of Array.isArray(returns) ? returns : []) {
-    const bad = checkReport(r);
-    if (bad) refused.push({
-      level: r && typeof r === "object" ? r.level ?? null : null,
-      code: bad.code,
-      detail: bad.detail,
-      ...bad.fields ? { fields: bad.fields } : {}
-    });
-    else taken.push(r);
-  }
-  return { taken, refused };
-}
-function citedAddresses(reports) {
-  const out = [];
-  for (const r of Array.isArray(reports) ? reports : [])
-    for (const c of Array.isArray(r?.citations) ? r.citations : [])
-      if (c && typeof c.address === "string" && c.address && !out.includes(c.address)) out.push(c.address);
-  return out.slice(0, CITATIONS_MAX);
-}
-function documentHoldings(resolved) {
-  const documents = /* @__PURE__ */ new Map();
-  const unchained = [], undetermined = [];
-  const list3 = Array.isArray(resolved) ? resolved : [];
-  for (const r of list3) {
-    if (!r || typeof r !== "object") continue;
-    if (r.refused) {
-      undetermined.push({
-        citation: r.citation ?? null,
-        at: r.refused.at ?? null,
-        code: r.refused.code ?? null,
-        check: r.refused.check ?? null
-      });
-      continue;
-    }
-    const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
-    const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";
-    const held = chain ? Number(chain.total) || 0 : 0;
-    if (!key || held < 1) {
-      unchained.push({
-        citation: r.citation ?? null,
-        address: r.address ?? null,
-        reason: r.reason ?? "the record holds no captured version at this address"
-      });
-      continue;
-    }
-    const versions = Array.isArray(chain.versions) ? chain.versions : [];
-    const inChain = new Set(versions.map((v) => v && v.bundle_id).filter(Boolean));
-    let doc = documents.get(key);
-    if (!doc) {
-      doc = {
-        address_norm: key,
-        versions_held: held,
-        truncated: chain.truncated === true,
-        cited: [],
-        versions_cited: [],
-        cited_not_listed: []
-      };
-      documents.set(key, doc);
-    }
-    doc.cited.push(r.citation ?? null);
-    if (r.bundle) {
-      if (inChain.has(r.bundle)) {
-        if (!doc.versions_cited.includes(r.bundle)) doc.versions_cited.push(r.bundle);
-      } else doc.cited_not_listed.push(r.bundle);
-    }
-  }
-  const docs = [...documents.values()];
-  return {
-    /* THE COUNT A READER WILL TAKE AS COVERAGE, and it counts DOCUMENTS. */
-    documents: docs.length,
-    citations: list3.length,
-    versions_cited: docs.reduce((n, d) => n + d.versions_cited.length, 0),
-    versions_held: docs.reduce((n, d) => n + d.versions_held, 0),
-    unchained: unchained.length,
-    undetermined: undetermined.length,
-    by_document: docs,
-    unchained_items: unchained,
-    undetermined_items: undetermined,
-    identity: "op=versionchain's address_norm \u2014 the record's captured_locators \u22C8 register join (PL-10), never a title, a text or a byte comparison"
-  };
-}
-function holdingsNote(h) {
-  if (!h) return "";
-  let s = `${h.documents} document(s) held across ${h.citations} citation(s), each counted ONCE with its versions (${h.versions_cited} of ${h.versions_held} held version(s) cited, read through op=versionchain)`;
-  if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
-  if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED \u2014 the plane refused a read, so they are counted as neither a document nor an item`;
-  return s;
-}
-
-// ../bio-plane/src/tokens.mjs
-var PUBLISHED_TOKEN_HASHES = /* @__PURE__ */ new Set([
-  // dist/SECRETS.txt of the 0.2.0 test deployment
-  // ADMIN_TOKEN
-  "34451e5e855bf8d45e93d89fca560e6bd392cf1d0cc6832e3121614d1c68d9db",
-  // MEMBER_TOKEN
-  "7ecc5d014e25ce4c2e8457424afa0420288742c69182db1be5f4caccd63d4c91",
-  // PROBE_TOKEN
-  "5910ebbfe7816d9d5e2451012f9db8ac92aaa3f65a8f50da3f7255ab8bdb26ad"
-]);
-var sha256hex = async (v) => {
-  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
-  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-};
-
-// src/cascade.mjs
-var CASCADE_ORDER = Object.freeze(["member", "project", "instance"]);
-var CASCADE_NO_ACCOUNT = "NO_ACCOUNT_RESOLVED";
-var LEVEL_UNSET = "unset";
-var LEVEL_REVOKED = "revoked_by_publication";
-var LEVEL_AVAILABLE = "available";
-async function levelState(entry) {
-  const v = entry && typeof entry.token === "string" ? entry.token : "";
-  if (v.length === 0) return LEVEL_UNSET;
-  if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
-  return LEVEL_AVAILABLE;
-}
-async function resolveClaudeCascade(accounts = {}) {
-  const levels = [];
-  let resolved = null;
-  for (const level of CASCADE_ORDER) {
-    const entry = accounts?.[level];
-    const state = await levelState(entry);
-    levels.push({ level, state });
-    if (!resolved && state === LEVEL_AVAILABLE)
-      resolved = { level, ref: typeof entry.ref === "string" && entry.ref ? entry.ref : null };
-  }
-  if (resolved) return { available: true, level: resolved.level, ref: resolved.ref, levels };
-  return {
-    available: false,
-    reason: CASCADE_NO_ACCOUNT,
-    levels,
-    detail: "no Claude account resolved at any level of the cascade (member, then project, then instance). The capability is UNAVAILABLE and this is that statement \u2014 an honest absence, stated, because a silent no-op is indistinguishable from a run that found nothing. Each level's own absence is named beside this."
-  };
-}
-async function cascadeToken(accounts = {}) {
-  const st = await resolveClaudeCascade(accounts);
-  if (!st.available) return null;
-  return { level: st.level, token: accounts[st.level].token };
-}
-
-// src/model.mjs
-var MODEL_ENDPOINT = "https://api.anthropic.com/v1/messages";
-var MODEL_API_VERSION = "2023-06-01";
-var DEFAULT_MODEL = "claude-opus-5";
-var MODEL_MAX_TOKENS = 16e3;
-var DEFAULT_MAX_SEGMENT_BYTES = 1e9;
-var SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the 30 s default; a segment sends at most a third of that";
-var CONVERSATION_MAX_TURNS = 12;
-function segmentMeter({ turnsBound, bytesBound }) {
-  return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
-}
-async function modelCall(token, serialized) {
-  let res;
-  try {
-    res = await fetch(MODEL_ENDPOINT, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": token, "anthropic-version": MODEL_API_VERSION },
-      body: serialized
-    });
-  } catch (e) {
-    return { silent: { detail: String(e && e.message || e).slice(0, 200) } };
-  }
-  let body = null;
-  try {
-    body = await res.json();
-  } catch {
-    body = null;
-  }
-  if (body == null) return { silent: { detail: `the model API answered ${res.status} with a body that is not JSON` } };
-  if (res.status !== 200)
-    return { refused: {
-      status: res.status,
-      type: body?.error?.type ?? null,
-      message: String(body?.error?.message ?? "").slice(0, 300)
-    } };
-  if (body.stop_reason === "refusal")
-    return { refused: {
-      status: 200,
-      type: "refusal",
-      message: String(body?.stop_details?.explanation ?? "").slice(0, 300)
-    } };
-  return { result: body };
-}
-async function converse({
-  token,
-  model,
-  meter,
-  system,
-  messages,
-  tools,
-  finalTool,
-  onTool,
-  maxTurns = CONVERSATION_MAX_TURNS
-}) {
-  for (let k = 0; k < maxTurns; k += 1) {
-    const serialized = JSON.stringify({
-      model,
-      max_tokens: MODEL_MAX_TOKENS,
-      system,
-      messages,
-      tools,
-      tool_choice: { type: "auto" }
-    });
-    if (meter.turns >= meter.turnsBound) {
-      meter.stopped = "turns";
-      return { stopped: "turns" };
-    }
-    if (meter.bytes + serialized.length > meter.bytesBound) {
-      meter.stopped = "bytes";
-      return { stopped: "bytes" };
-    }
-    meter.turns += 1;
-    meter.bytes += serialized.length;
-    const got = await modelCall(token, serialized);
-    if (got.silent || got.refused) return got;
-    const content = Array.isArray(got.result.content) ? got.result.content : [];
-    messages.push({ role: "assistant", content });
-    const uses = content.filter((b) => b && b.type === "tool_use");
-    const final = uses.find((u) => u.name === finalTool);
-    if (final) {
-      messages.push({ role: "user", content: uses.map((u) => ({
-        type: "tool_result",
-        tool_use_id: u.id,
-        content: u === final ? "received" : "not performed: the answer ended this step"
-      })) });
-      return { answer: final.input && typeof final.input === "object" ? final.input : {} };
-    }
-    if (!uses.length) {
-      messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
-      continue;
-    }
-    const results = [];
-    for (const u of uses) {
-      const r = await onTool(u.name, u.input || {});
-      if (r && r.halt) return r.halt;
-      results.push({
-        type: "tool_result",
-        tool_use_id: u.id,
-        content: JSON.stringify(r?.content ?? null),
-        ...r?.error ? { is_error: true } : {}
-      });
-    }
-    messages.push({ role: "user", content: results });
-  }
-  return { exhausted: true };
-}
-var STATE_ENUM = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"];
-var LOOK_FIELDS = (levels) => ({
-  level: { type: "string", enum: levels, description: "the level a look at this step was made at, if any" },
-  observed: { type: "string", enum: STATE_ENUM, description: "what a look at this step established; omit when nothing was looked at" },
-  governed: { type: "boolean" },
-  condition: { type: "string" }
-});
-function judgeTools(levels) {
-  const obj = (properties, description, name) => ({
-    name,
-    description,
-    input_schema: { type: "object", properties, additionalProperties: false }
-  });
-  return [
-    obj(
-      {
-        targets: { type: "array", items: {
-          type: "object",
-          properties: {
-            level: { type: "string", enum: levels },
-            url: { type: "string" },
-            target: { type: "string" }
-          },
-          required: ["level"]
-        } },
-        ...LOOK_FIELDS(levels)
-      },
-      "plan: what to search for this pass. An internet target names the https address to request.",
-      "judge_plan"
-    ),
-    obj(
-      {
-        candidates: {
-          type: "array",
-          items: { type: "object" },
-          description: "candidate versions, each the body of op=suggest (see the acts layer)"
-        },
-        ...LOOK_FIELDS(levels)
-      },
-      "compose: what the reports mean, and what each version says.",
-      "judge_compose"
-    ),
-    obj(
-      { candidates: {
-        type: "array",
-        items: { type: "object" },
-        description: "the candidates that differ in substance from what the record holds"
-      } },
-      "dedup: whether each reading differs in substance.",
-      "judge_dedup"
-    ),
-    obj(
-      { submission: { type: "object", description: "the changed submission; the refused one unchanged drops it" } },
-      "adjust: how to answer the plane's refusal.",
-      "judge_adjust"
-    )
-  ];
-}
-var LOAD_LAYER = (disclosable) => ({
-  name: "load_layer",
-  description: "load one of the skill pack's disclosed layers when the work needs it",
-  input_schema: {
-    type: "object",
-    properties: { name: { type: "string", enum: disclosable } },
-    required: ["name"],
-    additionalProperties: false
-  }
-});
-function parentSystem(pack) {
-  return "You make the judgements inside the steps of a BIO AI run. The run's control flow is a table you do not decide: at each judged step you are told the step and its facts, and you answer only by calling that step's judge tool. The instructions you work under are this skill pack, version " + String(pack.version) + ".\n\nRESIDENT LAYER:\n" + JSON.stringify(pack.resident) + "\n\nDisclosed layers, loaded with load_layer when your work needs them: " + (pack.resident?.disclosable ?? []).map((d) => `${d.layer} (${d.load_when})`).join("; ");
-}
-function rowPrompt(step, row, facts) {
-  return `STEP ${step}: ${row.does}. You judge: ${row.judged}. Facts: ${JSON.stringify(facts)}. Answer by calling judge_${step}.`;
-}
-function rowFacts(s, levels) {
-  switch (s.step) {
-    case "plan":
-      return {
-        pass: Number(s.pass) + 1,
-        max_passes: s.maxPasses,
-        mode: s.mode,
-        target: s.target ?? null,
-        target_basis: s.targetBasis ?? null,
-        levels,
-        resumed_from: s.resumedFrom
-      };
-    case "compose":
-      return {
-        target: s.target ?? null,
-        reports: s.reports || [],
-        reports_refused: s.reportsRefused || [],
-        holdings: s.holdings ?? null,
-        candidates: s.candidates || []
-      };
-    case "dedup":
-      return { target: s.target ?? null, candidates: s.candidates || [] };
-    case "adjust":
-      return { refusal: s.refusal ?? null, refused_submission: s.refusedSubmission ?? null };
-    default:
-      return {};
-  }
-}
-function subsessionSystem(pack, contract) {
-  return "You are a search sub-session of a BIO AI run, searching ONE level and returning a REPORT, never documents: the parent re-reads by address. Search with the meaningrows tool, then call report once.\n\nRESIDENT LAYER:\n" + JSON.stringify(pack.resident) + "\n\nYOUR SPAWN CONTRACT:\n" + JSON.stringify(contract);
-}
-function subsessionTools(contract) {
-  const r = contract.returns || {};
-  return [
-    {
-      name: "meaningrows",
-      description: "query the record at meaning grain through the plane (op=meaningrows)",
-      input_schema: { type: "object", properties: {
-        q: { type: "string" },
-        rows: { type: "string", description: "the meaning arm, e.g. leg" },
-        limit: { type: "integer", minimum: 1, maximum: 50 }
-      }, required: ["rows"], additionalProperties: false }
-    },
-    {
-      name: "report",
-      description: String(r.rule || "return a REPORT with a citation, never documents"),
-      input_schema: {
-        type: "object",
-        properties: {
-          state: { type: "string", enum: r.states || [] },
-          summary: { type: "string", maxLength: r.summary_max || 500 },
-          citations: { type: "array", maxItems: r.citations_max || 20, items: {
-            type: "object",
-            properties: {
-              address: { type: "string", maxLength: r.address_max || 200 }
-            },
-            required: ["address"],
-            additionalProperties: false
-          } },
-          governed: { type: "boolean" },
-          condition: { type: "string" }
-        },
-        required: ["state"],
-        additionalProperties: false
-      }
-    }
-  ];
 }
 
 // ../bio-plane/checks/bio-checks.mjs
@@ -7229,7 +6646,7 @@ var CONTENT_EXTENT_CHECKS = {
     translation: 'This citation calls a region of the page an image, and the page paints no image there. When this document was captured the record listed every image each page draws and where, and none sits at this address \u2014 so a row saying "an image is here" would claim something the file does not show. If you meant the words in that region, cite it as a region of the page; if you meant a picture, pick it from the images the record lists for this page, which are named beside this refusal.'
   }
 };
-function refusal2(key, detail, extra = null) {
+function refusal(key, detail, extra = null) {
   const row = CONTENT_EXTENT_CHECKS[key] || CONNECTION_PAIR_CHECKS[key];
   return {
     ok: false,
@@ -8076,168 +7493,168 @@ function themeLegFindings(label, leg, findings) {
 function checkContentExtent(extent, ctx = {}) {
   const e = extent && typeof extent === "object" ? extent : null;
   if (!e)
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_UNREADABLE",
       `no extent was supplied and none could be read from the leg`
     );
   if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_NO_PRODUCER",
       `extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate`
     );
   const row = CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_UNREADABLE",
       `extent kind '${String(e.kind).slice(0, 40)}' is not one of: ${Object.keys(CONTENT_EXTENT_KINDS).join(", ")}`
     );
   if (!row.landed)
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_UNREADABLE",
       `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with REC-82 and the other three follow with REC-85`
     );
   if (e.kind === "pdf-page") {
     if (!Number.isInteger(e.page) || e.page < 0)
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a pdf-page extent names which page, as a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`
       );
     if (e.rect !== void 0 && e.rect !== null && !(Array.isArray(e.rect) && e.rect.length === 4 && e.rect.every((n) => typeof n === "number" && Number.isFinite(n))))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a pdf-page extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose`
       );
     if (ctx.known !== false && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_OUT_OF_RANGE",
         `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the extent names page ${e.page}`
       );
   }
   if (e.kind === "sheet-cell") {
     if (typeof e.sheet !== "string" || !e.sheet.trim())
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a sheet-cell extent names which sheet, as the workbook spells it. This one names '${String(e.sheet).slice(0, 40)}'`
       );
     if (typeof e.cell !== "string" || !CONTENT_EXTENT_A1_RE.test(e.cell.trim()))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a sheet-cell extent names which cell in A1 notation (B14, $B$14). This one names '${String(e.cell).slice(0, 40)}'`
       );
     const outside = coversSheetCell(e, ctx.container);
-    if (outside) return refusal2("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === "doc-para") {
     if (!Number.isInteger(e.para) || e.para < 0)
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a doc-para extent names which paragraph, as a 0-based integer. This one names '${String(e.para).slice(0, 40)}'`
       );
     if (e.run !== void 0 && e.run !== null && !(Number.isInteger(e.run) && e.run >= 0))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a doc-para extent's run is a 0-based integer or absent. A run that is present and unreadable is worse than none, because it looks like a span somebody chose`
       );
     const outside = coversDocPara(e, ctx.container);
-    if (outside) return refusal2("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === "slide-shape") {
     if (!Number.isInteger(e.slide) || e.slide < 1)
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a slide-shape extent names which slide, as a 1-based integer (slide 1 is the first). This one names '${String(e.slide).slice(0, 40)}'`
       );
     if (e.shape !== void 0 && e.shape !== null && !(Number.isInteger(e.shape) && e.shape >= 0))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a slide-shape extent's shape is a 0-based integer or absent. A shape that is present and unreadable is worse than none, because it looks like an element somebody chose`
       );
     const outside = coversSlideShape(e, ctx.container);
-    if (outside) return refusal2("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   const citedAs = contentCitedAs(e);
   if (citedAs !== "text" && citedAs !== "bytes")
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_UNREADABLE",
       `cited_as says whether a part is cited for its TEXT or as its own BYTES, and is one of text, bytes. This one says '${String(citedAs).slice(0, 40)}'`
     );
   if (citedAs === "bytes" && e.kind !== "image")
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_UNREADABLE",
       `only an image can be cited as its bytes. A ${e.kind} extent addresses text, and reading 'bytes' here as 'text' would silently change what the citation claims, so it is refused`
     );
   if (e.kind === "sheet-range") {
     if (typeof e.sheet !== "string" || !e.sheet.trim())
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a sheet-range extent names which sheet, as the workbook spells it. This one names '${String(e.sheet).slice(0, 40)}'`
       );
     if (typeof e.range !== "string" || !rangeCorners(e.range))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a sheet-range extent names which cells in A1:A1 notation (A1:C10, $A$1:$C$10). This one names '${String(e.range).slice(0, 40)}'`
       );
     const outside = coversSheetRange(e, ctx.container);
-    if (outside) return refusal2("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === "doc-table") {
     if (!Number.isInteger(e.table) || e.table < 0)
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a doc-table extent names which table, as a 0-based ordinal in document order. This one names '${String(e.table).slice(0, 40)}'`
       );
     if (e.cell !== void 0 && e.cell !== null && !(typeof e.cell === "string" && CONTENT_EXTENT_A1_RE.test(e.cell.trim())))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `a doc-table extent's cell is A1 notation over the table's grid (B3) or absent. A cell that is present and unreadable is worse than none, because it looks like one somebody chose`
       );
     const outside = coversDocTable(e, ctx.container);
-    if (outside) return refusal2("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
   }
   if (e.kind === "image") {
     const hasPart = e.part !== void 0 && e.part !== null && e.part !== "";
     const hasPage = e.page !== void 0 && e.page !== null && e.page !== "";
     if (hasPart === hasPage)
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         hasPart ? `an image extent names EITHER the embedded part's content hash OR a page and rectangle, and this one names both \u2014 one image stated twice, where the two can disagree` : `an image extent names the embedded part's content hash (in a container) or the page it is on (in a PDF), and this one names neither`
       );
     if (hasPart && !(typeof e.part === "string" && /^[0-9a-fA-F]{64}$/.test(e.part.trim())))
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_UNREADABLE",
         `an image's part is the SHA-256 of the embedded media member, 64 hexadecimal characters. This one names '${String(e.part).slice(0, 40)}'`
       );
     if (hasPage) {
       if (!Number.isInteger(e.page) || e.page < 0)
-        return refusal2(
+        return refusal(
           "CONTENT_EXTENT_UNREADABLE",
           `an image extent's page is a 0-based integer. This one names '${String(e.page).slice(0, 40)}'`
         );
       if (e.rect !== void 0 && e.rect !== null && !(Array.isArray(e.rect) && e.rect.length === 4 && e.rect.every((n) => typeof n === "number" && Number.isFinite(n))))
-        return refusal2(
+        return refusal(
           "CONTENT_EXTENT_UNREADABLE",
           `an image extent's rect is four finite numbers or absent. A rect that is present and unreadable is worse than none, because it looks like a region somebody chose`
         );
       if (ctx.known !== false && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)
-        return refusal2(
+        return refusal(
           "CONTENT_EXTENT_OUT_OF_RANGE",
           `this capture's page set holds ${ctx.pageCount} page(s) (0-${ctx.pageCount - 1}) and the image extent names page ${e.page}`
         );
       const unpainted = ctx.known !== false ? coversImagePlacement(e, ctx.container) : null;
-      if (unpainted) return refusal2("CONTENT_EXTENT_NO_IMAGE_PAINTED", unpainted);
+      if (unpainted) return refusal("CONTENT_EXTENT_NO_IMAGE_PAINTED", unpainted);
     }
     const notContainer = hasPart && ctx.known !== false ? partOutsideAnyContainer(ctx.container) : null;
-    if (notContainer) return refusal2("CONTENT_EXTENT_NOT_A_CONTAINER", notContainer);
+    if (notContainer) return refusal("CONTENT_EXTENT_NOT_A_CONTAINER", notContainer);
     const outside = hasPart ? coversImage(e, ctx.container) : null;
-    if (outside) return refusal2("CONTENT_EXTENT_OUT_OF_RANGE", outside);
+    if (outside) return refusal("CONTENT_EXTENT_OUT_OF_RANGE", outside);
     if (hasPart && citedAs === "text")
-      return refusal2(
+      return refusal(
         "CONTENT_EXTENT_NO_CHAIN",
         `this citation asks for the TEXT of an embedded image, and nothing in this record has read text off an embedded image \u2014 the container's transcription covers its text parts and never its media. Cite the image as itself (cited_as: bytes), or cite the passage that quotes it`
       );
   }
   if (ctx.known !== false && citedAs !== "bytes" && e.kind !== "document" && !(Array.isArray(ctx.chain) && ctx.chain.length))
-    return refusal2(
+    return refusal(
       "CONTENT_EXTENT_NO_CHAIN",
       `this record holds no extraction chain for the capture this leg cites, so there is no transcription over ${describeExtent(e)} for the citation to point at`
     );
@@ -8686,6 +8103,1117 @@ function contentIdFor(captureSha, extent, chain) {
     extent: canonicalExtent(extent),
     chain: chain == null ? null : canonicalJson(chain)
   }));
+}
+
+// ../bio-plane/src/ai-runs/checks.mjs
+var AI_RUN_OWN_CHECKS = {
+  /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
+     which bound and where it stopped". A close with no bound named is the
+     `heldMatch` defect exactly — not found and did not finish looking made
+     indistinguishable — so the terminate path REFUSES it rather than writing an
+     unattributed ending. This is what makes "names the bound" a mechanism
+     rather than an intention. */
+  AI_RUN_BOUND_UNNAMED: {
+    check: "C-22.5",
+    where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
+    translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
+  },
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+       bias manifest in force, the launching project's standard pair, and THE
+       SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+       a hat" and a version is only interpretable against them. SK-1's row makes
+       the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+       disclosure standard), and a condition that may be omitted is not recorded:
+       it is recorded by the runs that felt like it.
+  
+       REFUSED AT THE OPEN, beside the two principals, for the same reason those
+       are: refusing later would mean a run had already searched under
+       instructions nobody can name. Two ways to fail and ONE code, because they
+       are one fact — the run object cannot say what it ran under. The worse of
+       the two is a version that names no pack: `3` reads as an answer and
+       identifies nothing, which is the blank-principal shape PL-4 measured one
+       field over, arriving on a condition instead of an identity.
+  
+       A WHOLE-FUNCTION `where`: `checkSkillVersion` is small, single-purpose, and
+       the only refusal it makes is this one. Moved from the catalogue with its
+       reasons and translation unchanged (N289, K333); its `where` names the site
+       this module holds (`skillpack.mjs`'s copy was deleted by N156). */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: "C-22.7",
+    where: "src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
+    translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
+  },
+  /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
+       THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
+       Bob ruled 2026-08-09 that an investigation can be started by ANY MEMBER OF
+       THE PROJECT: the gate is participation in the project the inquiry belongs
+       to, and the capability token stays `contribute` only as the FLOOR beneath
+       it. IS-6's provisional checked `contribute` alone.
+  
+       WHY IT IS ITS OWN CODE AND NOT THE CAPABILITY REFUSAL'S, which is the whole
+       content of the item rather than a nicety. *You are not a member of this
+       project* and *you lack contribute* are DIFFERENT FACTS ABOUT A MEMBER, and
+       they have different remedies: one is answered by an owner of that project
+       inviting you, the other by an administrator granting a capability. A single
+       refusal covering both would tell a member nothing they can act on, which is
+       DEC-49's rule and the ACT-AND-SAY principle in one place. The capability
+       half keeps its own existing, differently-shaped refusal at the control
+       plane (`NOT_CAPABLE`, carrying `needs`), so a caller can always tell which
+       of the two stopped them.
+  
+       THE TRANSLATION DELIBERATELY NAMES NO PROJECT. A member who is not in a
+       project may not be entitled to learn it exists — the skeleton-visibility
+       rule (7.12) — so the canned sentence a surface renders says what happened
+       and what to do, and the refusal's own `detail`, composed at the site, names
+       only what the caller already put in their own request.
+  
+       CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18): this refusal is now said
+       ONLY over a run whose context is a PROJECT. A run over a question consults no project, so the old
+       first sentence (*"asking the system to look into a question is work inside the project that
+       question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
+  AI_RUN_NOT_PROJECT_MEMBER: {
+    check: "C-22.8",
+    where: "src/airun.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
+    translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
+  },
+  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
+       DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
+       the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
+       Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
+       `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
+       walked around by a word the caller chose.
+  
+       ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
+       rather than economy. A second code for *"that is a project, not a question"* would be said over a
+       project the caller can see and withheld over one they cannot, so the difference between the two codes
+       would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
+       three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
+       *nothing of the kind you named answers to that id for you* — not two behind one number.
+  
+       CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
+       SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
+       own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
+       first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
+       `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
+       than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
+       do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
+       REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
+       code carrying any bit. */
+  AI_RUN_NO_SUCH_CONTEXT: {
+    check: "C-22.11",
+    where: "src/airun.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
+    translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
+  },
+  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
+       AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
+       on its own branch, so this number was taken with the gap left for it.
+  
+       WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
+       DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
+       nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
+       is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
+       for an invitation they already hold.
+  
+       SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
+       does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
+       nor the caller — and the store's `detail` names only the rule. */
+  AI_RUN_NOT_PRINCIPAL: {
+    check: "C-22.12",
+    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
+    where: "src/airun.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
+    translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
+  },
+  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
+     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
+     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
+     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
+     is a CLOSE naming no bound, this is a figure no bound can hold. */
+  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
+     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
+     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
+  AI_RUN_CONSUME_INVALID: {
+    check: "C-22.13",
+    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
+  },
+  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
+     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
+     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
+     number. A zero claims nothing and is not refused. */
+  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
+     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
+     translation now names the lease beside the counts. */
+  AI_RUN_BOUND_PLANE_COUNTED: {
+    check: "C-22.14",
+    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
+    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+  },
+  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
+     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
+     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
+     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
+     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
+     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
+  AI_RUN_BOUND_UNKNOWN: {
+    check: "C-22.15",
+    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
+    translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
+  },
+  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
+     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
+     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
+     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
+     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
+  AI_RUN_BOUND_NO_ALLOWANCE: {
+    check: "C-22.16",
+    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
+    translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
+  },
+  /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
+     run's resumable work list (R12, DEC-61: never a transcript), and it was stored with no bound on its size: the run's
+     principal could write any amount on every tick, into a row every read of the run publishes whole (R19). The
+     ceiling is `AI_RUN_STATE_MAX_BYTES`, measured as the UTF-8 length of the state's JSON, the bytes the row holds. Its
+     own code and not C-22.13's: the figure there is a budget's; here nothing is wrong with any figure, the work list is
+     simply too large to keep, and the remedy differs (keep less, or keep it elsewhere). A WHOLE-FUNCTION `where`, as
+     C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
+  AI_RUN_STATE_TOO_LARGE: {
+    check: "C-22.18",
+    where: "src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
+    translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
+  }
+};
+var AI_RUN_ACT_SHAPE_CHECKS = {
+  /* ---------------------------------------------------------------------------
+       UI-38's §14a RIDER, AND IT IS IN THIS FAMILY BECAUSE ANOTHER FAMILY'S SUITE
+       REFUSED IT — WHICH IS THE CORRECT OUTCOME AND IS RECORDED RATHER THAN
+       WORKED AROUND.
+  
+       REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
+       open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
+       allocation must name its enforcement site in a PURE CHECK MODULE**
+       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
+       pure function. This condition is enforced in `store.mjs` at the run-open
+       door, so it does not satisfy that invariant and does not belong in C-22. The
+       ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
+       invariant, and this one is load-bearing — it is what lets `op=audit` reach
+       every C-22 condition without opening the store.
+  
+       WHAT IT IS. §14a promises the running-session surface SAYS SO when the
+       capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
+       guards: *"when no token resolves the capability is UNAVAILABLE and says so —
+       never a silent no-op"*. UI-38 correctly LEFT that sentence rather than
+       authoring it at the surface, because member-facing refusal wording is
+       DEC-49's. The site already refused this condition — with NO CODE, so a
+       surface could only render the operator's sentence verbatim or blank, the
+       exact state DEC-49 ended.
+  
+       THE TRANSLATION SAYS "NOTHING RAN" IN SO MANY WORDS, on purpose: an
+       unavailable capability must not be indistinguishable from a run that looked
+       and found nothing. The second is a claim about the world; the first is a fact
+       about us. That is `CLAUDE.md`'s "our governor refusing is not the source
+       failing", arriving at the run door.
+  
+       ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
+       REC-64's work — and the reason WAS a defect in the guard rather than a
+       judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
+       C's matcher was `ok: false`, so a REGION here would have judged zero refusals
+       and FAILED as a drifted marker. The whole-function form is honest at this site
+       (every refusal `aiRunOpen` makes is a condition of opening a run) and the
+       blindness was measured and delegated at the guard's own `codesChecked` floor.
+  
+       **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
+       WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
+       A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
+       0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
+       at a governed site, for as long as the row has existed. They are the two rows
+       immediately below. Nothing about the span changed; the instrument started
+       seeing it.
+  
+       **D-589 (2026-09-25) NARROWED ALL THREE INTO REGIONS, AND THE PARAGRAPH TWO
+       ABOVE IS NOW HISTORY, NOT RULE.** The whole-function `where` stopped being
+       honest the moment a SECOND family's refusal was written inside `aiRunOpen`:
+       REC-207's first draft put its re-run refusals in a narrowed region there and
+       the guard failed them by name, because the region was judged once by its own
+       rows and again by this whole-function site, where their codes are not rows.
+       So each of these three rows now names the region around its one refusal
+       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
+       judges a claimed region a second time from an enclosing whole-function
+       `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
+       the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
+       seed — each minted and governed at its own site) are not read at this
+       function while no whole-function row names it.
+       --------------------------------------------------------------------------- */
+  AI_RUN_CAPABILITY_UNAVAILABLE: {
+    check: "C-33.29",
+    where: "src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen",
+    translation: "Nothing was run, because this instance could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
+  },
+  /* ---------------------------------------------------------------------------
+       REC-76 / D-236 — THE TWO CODELESS REFUSALS THE WIDENED CLASSIFIER FOUND.
+  
+       Both have been at this governed site since before the row above was written,
+       and neither was ever judged, because arm C could not see a refusal spelled
+       `started: false`. They are not new conditions and they are not new refusals:
+       they are two sentences a surface could only render verbatim or blank, which
+       is the state DEC-49 ended. **The item that fixes an instrument owes the
+       sites the instrument newly sees, and these are them.**
+       --------------------------------------------------------------------------- */
+  AI_RUN_NO_CONTEXT: {
+    check: "C-33.30",
+    where: "src/ai-runs/index.mjs open > is-airun-open-context, reached from op=airunopen",
+    translation: "Nothing was run, because the request did not say what the run is for or what it belongs to. A run has to sit inside a question or a project so that the people working on that question can see it happened; one belonging to nothing would be invisible to everybody."
+  },
+  AI_RUN_ALREADY_OPEN: {
+    check: "C-33.31",
+    where: "src/ai-runs/index.mjs open > is-airun-open-already, reached from op=airunopen",
+    translation: "Nothing was run, because a run with this name is already on record here. The record keeps what each run did under its own name, so starting a second one under a name already in use would write two different histories into one place. Give this one a name of its own."
+  },
+  /* ---------------------------------------------------------------------------
+       REC-207 — THE RE-RUN LINK'S THREE REFUSALS (BOB #32, 2026-09-23 23:42Z).
+  
+       They are ACT-SHAPE conditions — the answer to *may this open carry this
+       link* — so they belong here rather than in a family of their own (SK-1's
+       rule, and the same one that put the BIAS_DEBT rows in BIAS_CHECKS).
+  
+       WHY THEY ARE REFUSALS AT ALL, rather than a link stored and judged later.
+       `aiRunClose` settles a bias debt on the strength of `rerun_of`, so a link
+       the record cannot stand behind is a DISCHARGE resting on the caller's word.
+       The three conditions are the three ways that could happen: the run names
+       itself, it names something that is not there, or it names work in another
+       context whose lens is a different lens entirely.
+  
+       A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
+       narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+       `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
+       rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
+       region's refusals twice, once at the region and once at the enclosing
+       function, where their codes were not rows. So these three were written at
+       the whole function. D-589 (2026-09-25) then narrowed those three neighbours
+       into governed regions (`is-airun-open-context`, `-capability`, `-already`,
+       the rows above) and made arm C judge a claimed region once, by its own rows
+       (`nestedRegionsIn`). These three are now the ONLY rows naming `aiRunOpen`
+       as a whole, and the three regions' lines inside it are governed by the
+       regions, not by this site. Narrowing these three into a region of their own
+       is now possible and has not been done.
+       --------------------------------------------------------------------------- */
+  AI_RUN_RERUN_SELF: {
+    check: "C-33.45",
+    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
+    translation: "Nothing was run, because this run was told it is a re-run of itself. A re-run says which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its own outstanding re-run. Name the earlier run, or leave the field out."
+  },
+  AI_RUN_RERUN_UNKNOWN: {
+    check: "C-33.46",
+    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
+    translation: "Nothing was run, because the earlier run it says it repeats is not one this record holds for you. It may never have existed, it may have been removed, or it may belong to work you have not been brought into. Check the name."
+  },
+  AI_RUN_RERUN_OTHER_CONTEXT: {
+    check: "C-33.47",
+    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
+    translation: "Nothing was run, because the earlier run it says it repeats belongs to a different question or project. Repeating work means asking the same question again under the lens that is in force for it \u2014 somewhere else the group's declared lens can be a different one, so the two runs would not be comparable and settling anything on that basis would be wrong."
+  }
+};
+var AI_RUNS_CONTEXT_CHECKS = {
+  /* No kind named at all. There is no honest default: `inquiry` and `project`
+     are different objects with different membership, and answering from one
+     when the caller meant the other is a confidently wrong answer about a
+     different context — MEANING_ROWS_NO_ARM's reasoning, one table over. */
+  AI_RUNS_NO_CONTEXT_TYPE: {
+    check: "C-36.1",
+    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
+    translation: "That request did not say what kind of thing to look in. Background work is attached either to a question or to a project, and those are different places \u2014 so the record asks which rather than choosing one for you."
+  },
+  /* A kind was named and the record has no such context. Refused rather than
+     answered empty: see the header — an empty answer here would be the record
+     saying nothing is running, on the strength of a word it did not recognise. */
+  AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
+    check: "C-36.2",
+    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
+    translation: "Background work is not attached to anything of that kind. Rather than answer as though nothing were running there, the record says so and names the kinds of thing it does attach work to."
+  },
+  /* A kind but no id. The gate is compiled over the CONTEXT ID, so a blank one
+     would ask the record about every context at once — which is not a wider
+     answer, it is a different question nobody asked. */
+  AI_RUNS_NO_CONTEXT_ID: {
+    check: "C-36.3",
+    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
+    translation: "That request named a kind of thing but not which one. Background work belongs to a particular question or a particular project, and the record answers for the one you are looking at rather than for all of them."
+  }
+};
+var SURFACE_RUN_CHECKS = {
+  SURFACE_NO_RUN: {
+    check: "C-66.1",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "An assistant opens a question only inside an investigation it is running, and this one named none that can be read here. The investigation is what records the lens and the purpose the question was opened under, so without one nothing could say why it exists. Nothing was created."
+  },
+  SURFACE_RUN_NOT_RUNNING: {
+    check: "C-66.2",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "The investigation this question was to be opened inside has ended. A question is read against the conditions of the investigation that opened it, and those stopped being current when it stopped. Nothing was created; a member can start a new investigation."
+  },
+  SURFACE_NO_BOUND: {
+    check: "C-66.3",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "This investigation was not given a limit on how many questions it may open, so it may open none: an assistant opening questions without a limit fills the record with questions nobody asked for. The limit is set by the member who starts the investigation. Nothing was created."
+  },
+  SURFACE_BOUND_REACHED: {
+    check: "C-66.4",
+    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
+    translation: "This investigation has already opened as many questions as the member who started it allowed. Nothing was created. The investigation ends at its next step and says which limit stopped it."
+  }
+};
+var AI_RUN_OPEN_CHECKS = {
+  AI_RUN_MODE_NOT_DEPLOYED: {
+    check: "C-109.1",
+    where: "src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen",
+    translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
+  }
+};
+var AI_RUNS_CHECKS = Object.freeze({
+  ...AI_RUN_OWN_CHECKS,
+  ...AI_RUN_ACT_SHAPE_CHECKS,
+  ...AI_RUNS_CONTEXT_CHECKS,
+  ...SURFACE_RUN_CHECKS,
+  ...AI_RUN_OPEN_CHECKS
+});
+
+// ../bio-plane/src/observation-log/checks.mjs
+var OBSERVATION_CHECK_KEYS = Object.freeze([
+  "AI_LOG_STATE_UNKNOWN",
+  "AI_LOG_GOVERNED_ABSENCE",
+  "AI_LOG_SHELL_PRESENT",
+  "AI_RUN_CONDITION_UNKNOWN",
+  "AI_LOG_NOT_A_BUNDLE",
+  "OBS_AUTHORITY_UNNAMED",
+  "OBS_PRESENT_NO_REFERENT",
+  "AI_LOG_NEVER_LOOKED_STORED"
+]);
+var OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
+
+// ../bio-plane/src/observation-log/vocabulary.mjs
+var OBSERVATION_LEVELS = {
+  meaning: "the framework layer: findings, legs, connections",
+  content: "extracted content within documents (DEC-23: content is the unit)",
+  document: "documents the store holds",
+  internet: "the open internet, through the capture path"
+};
+var OBSERVATION_STATES = {
+  NEVER_LOOKED: "nobody looked at this level for this subject",
+  LOOKED_ABSENT: "we looked and it is positively not there",
+  LOOKED_INDETERMINATE: "we looked and could not tell",
+  PRESENT: "we looked and it is there",
+  partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
+};
+var OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
+  Object.entries(OBSERVATION_STATES).map(([k, v]) => [k, v.replace(/\s*\([^()]*\)\s*$/, "")])
+));
+var LEAD_LOOK_OUTCOMES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
+var LEAD_VOCABULARY = Object.freeze({ states: OBSERVATION_STATE_WORDS, outcomes: LEAD_LOOK_OUTCOMES });
+var DEFINITIVE_STATES = /* @__PURE__ */ new Set(["LOOKED_ABSENT", "PRESENT"]);
+var WATERMARK_BAND_CAUSE = "watermark_band";
+var MISSING_ROW_CAUSES = {
+  pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
+  /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
+     deleted, because it is the defect and a reader who meets the new one should be
+     able to see what it replaced. It read: *"...so either the log did not yet exist
+     for it or a whole-store purge cleared the rows that described it. NEITHER CAN
+     BE RULED OUT, and they are different facts."* That is an ENUMERATION of the
+     undetermined set, published on every row, and it had TWO members where the live
+     set has three: a capture reaches this cause because the `readings` probe MISSED,
+     and NOBODY HAVING LOOKED is fully live in that bucket. The sentence excluded it,
+     so a member reading the row concluded the capture had been extracted (or purged)
+     and left it off the never-extracted worklist. **The set is now stated per row in
+     `not_ruled_out` rather than asserted in prose here**, so this sentence describes
+     the cause and stops claiming what it cannot. */
+  purged: "this capture predates the earliest content-level row this log holds, so the log may not yet have existed for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
+  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement",
+  /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
+     SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
+     them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
+     because the alternative was the reader PICKING between them. `not_ruled_out`
+     is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
+  [WATERMARK_BAND_CAUSE]: "this capture entered the record in the clock second IMMEDIATELY BEFORE the earliest content-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the capture entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them. The uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW"
+};
+var MEANING_MISSING_ROW_CAUSES = {
+  pre_log: "this subject was looked at BEFORE the observation log carried the meaning level, so the look is recorded in the table that holds what it produced -- a reading, a resolution, a connection -- and not here. It is not a subject nobody looked at",
+  /* CORRECTED BY REC-107, the same defect as the content level's above and with one
+     member MORE at two of this level's three subject kinds. It read: *"...either the
+     log did not yet carry this level for it or a whole-store purge cleared the rows
+     that described it. NEITHER CAN BE RULED OUT."* Two members, and the live set is
+     three at a capture and three at a reference or an entity for DIFFERENT reasons —
+     `never_looked` was missing at all three, and at a reference or an entity the
+     PRE-LOG LOOK THAT FOUND NOTHING is live as well, because it left no artifact for
+     cause (1) to read. That second widening was published, but as the top-level
+     `evidence_one_sided` map a caller had to remember to join to the row. Both now
+     sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
+  purged: "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
+  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement",
+  /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
+     the row it is measured against differs, which is A3b's rule applied to the
+     word this item adds rather than inherited by it. */
+  [WATERMARK_BAND_CAUSE]: "this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the subject entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them; at a reference or an entity a pre-log look that found NOTHING is live in the set as well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"
+};
+var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
+var CONDITION_KINDS = Object.freeze({
+  "monitoring-recheck-due": "a monitoring recheck or deadline sweep has come due (S-7)",
+  "archive-fallback-eligible": "the archive fallback became eligible: three failures or fourteen days (D-104)",
+  "capture-session-ttl-expiring": "a capture session is expiring with work outstanding (CAPTURE-SCALING)",
+  "source-unreachable-governed": "the source was unreachable because OUR pacing governed it, distinguishably from theirs (D-104)",
+  "capture-completed-unattended": "a capture the member walked away from has completed (D-61)",
+  "partial-capture-outstanding": "a capture did not finish and subresources are outstanding",
+  "text-undetermined": "no text layer, CID fonts, or over the envelope (CPDF, D-121)",
+  "client-rendered-shell": "a client-rendered shell was captured and is not citable (D-64)",
+  "invitation-spent-or-expired": "an invitation was spent, or expired unused",
+  "governor-holding-host": "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
+  "runtime-ceiling-reached": "a CPU or subrequest ceiling was reached (D-54, D-56)",
+  /* D-523, LIVE from its landing: store.mjs #conditionsRenderDeferred, derived on read from
+     `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
+     a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
+     recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
+     pacing is what holds it, a fact about our machinery and never about the page. */
+  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: store.mjs #conditionsRenderDeferred"
+});
+
+// ../bio-plane/src/airun.mjs
+var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
+var RUN_BOUNDS = {
+  fetches: "fetches requested of the capture path",
+  subsessions: "evidence sub-sessions spawned",
+  wallclock: "wall time across resumptions, in milliseconds",
+  runtime: "CPU or subrequest ceiling (D-54, D-56) \u2014 IS-9(d) builds its producer",
+  /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
+       *"A machine that may mint citable rows without a bound produces a store of
+       proposals nobody cited — each correctly labelled, the whole unexamined"*,
+       which is exactly the failure `INVESTIGATIVE-SESSION.md` §15 named for
+       versions one layer up. So the EXTRACT role's productions are budgeted in the
+       table the run already has: **no schema, no new vocabulary**, which was the
+       answer's own test.
+  
+       IT IS A ROW HERE AND NOT A SECOND FENCE. `finishedBound` already terminates
+       a run whose consumed reaches its allowed, and `#aiRunTerminate` already
+       writes which bound stopped it and where — a run that ran out of mints ends
+       exactly as a run that ran out of fetches does, with no branch anywhere
+       asking which kind of bound it was.
+  
+       IT IS LAST IN DECLARATION ORDER BEFORE `lease`, WHICH IS A TIE-BREAK RULE
+       AND NOT AN OPINION: `finishedBound` sorts exhausted bounds by this object's
+       key order, so a run that exhausted both its fetches and its mints in one
+       tick reports FETCHES — the earlier, cheaper-to-explain cause. Putting mints
+       first would have renamed every such run's ending without changing anything
+       about it. */
+  mints: "passages a machine credential marked citable (\xA77.3 (5)) \u2014 the EXTRACT role's budget",
+  /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
+     RUN, AND THE RUN BOUNDS HOW MANY. Ruled on `mints`' rule, so it is `mints`' shape: a ROW in this table, no
+     schema and no second vocabulary; declared at `op=airunopen` by the member who opens the run; a creation
+     under a run that declares none is REFUSED rather than given an allowance invented in code (a number
+     chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
+     allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
+     in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
+  surfaces: "questions an assistant opened inside this run (\xA711 item 5, rule 2) \u2014 the run's bound on what it may surface",
+  lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
+};
+var RUN_ENDINGS = {
+  completed: "the run finished its work",
+  cancelled: "a member stopped it",
+  "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
+};
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
+var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
+var AI_RUN_STATE_MAX_BYTES = 262144;
+
+// src/subsession.mjs
+var REPORT_STATES = {
+  NEVER_LOOKED: "nobody looked at this level for this subject",
+  LOOKED_ABSENT: "we looked and it is positively not there",
+  LOOKED_INDETERMINATE: "we looked and could not tell",
+  PRESENT: "we looked and it is there",
+  partial: "we looked and got part of it"
+};
+var FOUND_STATES = /* @__PURE__ */ new Set(["PRESENT", "partial"]);
+var LOOKED_STATES = new Set(
+  Object.keys(REPORT_STATES).filter((s) => s !== "NEVER_LOOKED")
+);
+var SUMMARY_MAX = 500;
+var ADDRESS_MAX = 200;
+var CITATIONS_MAX = 20;
+var REPORT_KEYS = {
+  level: true,
+  /* which of the four this sub-session searched */
+  state: true,
+  /* D-129 — what the search ESTABLISHED, never a boolean */
+  observed_at: false,
+  /* the observation-log address, owed by anything that looked */
+  summary: false,
+  /* the conclusion, in prose, BOUNDED. §14b.2's "the passage" */
+  citations: false,
+  /* addresses the parent can re-read. NEVER the bytes */
+  governed: false,
+  /* D-104 — our governor holding a host is a fact about US */
+  condition: false
+  /* the record's condition vocabulary. Validated by the PLANE */
+};
+var CITATION_KEYS = { address: true };
+var SUBSESSION_OPS = ["meaningrows"];
+function refusal2(code, detail, extra) {
+  return { ok: false, code, reason: code, detail, ...extra || {} };
+}
+function deepFreeze(value) {
+  if (value === null || typeof value !== "object") return value;
+  for (const k of Object.keys(value)) deepFreeze(value[k]);
+  return Object.freeze(value);
+}
+function spawnContract({ level, payload } = {}) {
+  if (!LEVELS.includes(String(level)))
+    return refusal2(
+      "SPAWN_LEVEL_UNKNOWN",
+      `'${String(level)}' is not one of the four levels a run searches: ${LEVELS.join(", ")}. A fan-out that spawned a level nobody declared would be searching somewhere the observation log has no word for.`
+    );
+  if (payload == null || typeof payload !== "object")
+    return refusal2(
+      "SPAWN_PAYLOAD_MISSING",
+      "the plane returned no search-half payload for this run, and this member composes none of its own: a run's conditions are the record's. There is nothing to brief a sub-session with."
+    );
+  if (Object.prototype.hasOwnProperty.call(payload, "bias"))
+    return refusal2(
+      "SPAWN_PAYLOAD_CARRIES_LENS",
+      "the search-half payload arrived carrying the run's bias manifest. \xA714: the search half never receives the lens \u2014 bias never shapes what is captured or searched, only how conclusions are weighed \u2014 and the spawn contract omits it BY CONSTRUCTION, so there should be no field here to read. This member refuses rather than ignoring it: a search half that has been handed the lens has been handed it, and a run that continued could not later prove it did not use it."
+    );
+  const contract = deepFreeze({
+    /* THE ONE THING THAT DIFFERS BETWEEN THE FOUR, and the reason each
+       sub-session searches somewhere rather than everywhere. */
+    level: String(level),
+    run: payload.run ?? null,
+    /* BUILT FRESH, not aliased: two contracts sharing one `context` object would
+       be two sub-sessions sharing state through the parent's own brief. */
+    context: { type: payload.context?.type ?? null, id: payload.context?.id ?? null },
+    mode: payload.mode ?? null,
+    skill: payload.skill ?? null,
+    /* THE BAR TRAVELS AND THE LENS DOES NOT, and that distinction is DEC-54 (a):
+       a standard pair tells the search what strength the work must reach, which
+       is not the coupling §14 forbids. Both spellings the plane publishes are
+       carried — the column verbatim and REC-74's judged block — because a caller
+       receiving a bare `null` cannot tell "no bar was in force" from "this reader
+       does not publish the fact". */
+    standard_pair: payload.standard_pair ?? null,
+    /* READ KEY BY KEY, AND THE FIRST DRAFT OF THIS LINE SPREAD THE BLOCK —
+       CAUGHT BY THIS ITEM'S OWN KEY-TREE ARM ON ITS FIRST RUN, not by review. A
+       spread here would have been the delete-list defect wearing the other
+       costume: whatever the plane adds to `#standardForRun`'s return tomorrow
+       would ride into a sub-session's brief, which is precisely the property
+       "by construction" is supposed to deny. The four keys are the plane's own
+       and they are named. */
+    standard: payload.standard == null ? null : {
+      in_force: payload.standard.in_force ?? null,
+      basis: payload.standard.basis ?? null,
+      stated: payload.standard.stated ?? null,
+      pair: payload.standard.pair ?? null
+    },
+    /* NO WRITE. See SUBSESSION_OPS. */
+    scope: [...SUBSESSION_OPS],
+    /* THE RETURN CONTRACT TRAVELS WITH THE BRIEF. A sub-session that is told what
+       it may return is a sub-session whose violation is a defect rather than a
+       misunderstanding — and the parent validates it on the way back regardless,
+       because a contract enforced only by telling somebody about it is a skill
+       and not a fence (§14b.4). */
+    returns: {
+      keys: Object.keys(REPORT_KEYS),
+      required: Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k]),
+      citation_keys: Object.keys(CITATION_KEYS),
+      states: Object.keys(REPORT_STATES),
+      summary_max: SUMMARY_MAX,
+      citations_max: CITATIONS_MAX,
+      address_max: ADDRESS_MAX,
+      rule: "return a REPORT with a citation, never documents. The parent re-reads by address."
+    }
+  });
+  return { ok: true, contract };
+}
+var size = (v) => JSON.stringify(v ?? null).length;
+function checkReport(report) {
+  if (report == null || typeof report !== "object" || Array.isArray(report))
+    return refusal2(
+      "REPORT_NOT_AN_OBJECT",
+      "a sub-session returns a REPORT object. What arrived is not one."
+    );
+  const unknown = Object.keys(report).filter((k) => !(k in REPORT_KEYS));
+  if (unknown.length)
+    return refusal2(
+      "REPORT_UNKNOWN_FIELD",
+      `a REPORT carries exactly ${Object.keys(REPORT_KEYS).join(", ")} \u2014 ${unknown.join(", ")} ${unknown.length === 1 ? "is not one of them" : "are not among them"}. \xA714b.1: a sub-session hands back what it FOUND and never the documents; the parent re-reads by address. The contract is an exact key set rather than a list of banned spellings, because a list of spellings goes stale the moment a fourth is written.`,
+      { fields: unknown }
+    );
+  const missing = Object.keys(REPORT_KEYS).filter((k) => REPORT_KEYS[k] && (report[k] == null || report[k] === ""));
+  if (missing.length)
+    return refusal2(
+      "REPORT_INCOMPLETE",
+      `a REPORT must name ${missing.join(" and ")}: which level was searched and what the search ESTABLISHED are the two things a parent cannot derive for itself.`,
+      { fields: missing }
+    );
+  if (!LEVELS.includes(String(report.level)))
+    return refusal2(
+      "REPORT_LEVEL_UNKNOWN",
+      `'${String(report.level)}' is not one of ${LEVELS.join(", ")}. Absence at one level is not evidence of absence at the next, so a report that cannot say which level it is about establishes nothing at any of them.`
+    );
+  if (!Object.prototype.hasOwnProperty.call(REPORT_STATES, String(report.state)))
+    return refusal2(
+      "REPORT_STATE_UNKNOWN",
+      `'${String(report.state)}' is not one of ${Object.keys(REPORT_STATES).join(", ")} (D-129). A report that cannot say what it ESTABLISHED is a report a later reader cannot check.`
+    );
+  if (LOOKED_STATES.has(String(report.state)) && !(typeof report.observed_at === "string" && report.observed_at.trim() !== ""))
+    return refusal2(
+      "REPORT_UNLOCATED",
+      `a '${String(report.state)}' report claims something about the world and must say WHERE the search that establishes it was written in the run's observation log. A claim nobody can locate is a claim nobody can check, which is the whole reason the log exists (\xA711).`
+    );
+  const cites = report.citations == null ? [] : report.citations;
+  if (!Array.isArray(cites))
+    return refusal2(
+      "REPORT_CITATIONS_NOT_A_LIST",
+      "`citations` is a list of addresses the parent can re-read. What arrived is not a list."
+    );
+  if (FOUND_STATES.has(String(report.state)) && cites.length === 0)
+    return refusal2(
+      "REPORT_NO_CITATION",
+      `a '${String(report.state)}' report says something IS there and must cite where, by address. \xA714b.1: the contract is a REPORT with a citation and the parent re-reads by address. An absence cites nothing and is not held to this, because there would be nothing to cite.`
+    );
+  if (cites.length > CITATIONS_MAX)
+    return refusal2(
+      "REPORT_OVER_BOUND",
+      `${cites.length} citations exceed the ${CITATIONS_MAX} a single report may carry. A report is a conclusion with addresses, and a list long enough to be the reading itself is the reading.`,
+      { bound: "citations", limit: CITATIONS_MAX, got: cites.length }
+    );
+  for (const c of cites) {
+    if (c == null || typeof c !== "object" || Array.isArray(c))
+      return refusal2(
+        "REPORT_CITATION_NOT_AN_ADDRESS",
+        "a citation is an object carrying the address the parent re-reads by. What arrived is not one."
+      );
+    const extra = Object.keys(c).filter((k) => !(k in CITATION_KEYS));
+    if (extra.length)
+      return refusal2(
+        "REPORT_CITATION_NOT_AN_ADDRESS",
+        `a citation carries exactly ${Object.keys(CITATION_KEYS).join(", ")} \u2014 ${extra.join(", ")} is not part of it. The parent re-reads BY ADDRESS; a citation that carried the content would be the document arriving inside the thing that exists to replace it.`,
+        { fields: extra }
+      );
+    if (!(typeof c.address === "string" && c.address.trim() !== ""))
+      return refusal2(
+        "REPORT_CITATION_NOT_AN_ADDRESS",
+        "a citation must carry a non-empty address. An address the parent cannot re-read by is not a citation, it is a claim."
+      );
+    if (c.address.length > ADDRESS_MAX)
+      return refusal2(
+        "REPORT_OVER_BOUND",
+        `an address of ${c.address.length} characters exceeds ${ADDRESS_MAX}. An address is how the parent re-reads; something this long is content wearing an address's field.`,
+        { bound: "address", limit: ADDRESS_MAX, got: c.address.length }
+      );
+  }
+  if (report.summary != null && typeof report.summary !== "string")
+    return refusal2(
+      "REPORT_SUMMARY_NOT_PROSE",
+      "`summary` is what the sub-session concluded, in prose. A structure here is the reading itself arriving under the field that exists to replace it."
+    );
+  if (typeof report.summary === "string" && report.summary.length > SUMMARY_MAX)
+    return refusal2(
+      "REPORT_OVER_BOUND",
+      `a summary of ${report.summary.length} characters exceeds ${SUMMARY_MAX}. \xA714b.1: a sub-session hands back what it FOUND, never the documents \u2014 and a prose field with no ceiling is where a document arrives when every other door is shut.`,
+      { bound: "summary", limit: SUMMARY_MAX, got: report.summary.length }
+    );
+  if (size(report) > REPORT_MAX_BYTES)
+    return refusal2(
+      "REPORT_OVER_BOUND",
+      `this report serialises to ${size(report)} bytes against a ${REPORT_MAX_BYTES}-byte ceiling computed from the contract's own fields. Whatever it is carrying, it is not a conclusion.`,
+      { bound: "report", limit: REPORT_MAX_BYTES, got: size(report) }
+    );
+  return null;
+}
+var REPORT_MAX_BYTES = SUMMARY_MAX + CITATIONS_MAX * (ADDRESS_MAX + 20) + 400;
+function takeReports(returns) {
+  const taken = [], refused = [];
+  for (const r of Array.isArray(returns) ? returns : []) {
+    const bad = checkReport(r);
+    if (bad) refused.push({
+      level: r && typeof r === "object" ? r.level ?? null : null,
+      code: bad.code,
+      detail: bad.detail,
+      ...bad.fields ? { fields: bad.fields } : {}
+    });
+    else taken.push(r);
+  }
+  return { taken, refused };
+}
+function citedAddresses(reports) {
+  const out = [];
+  for (const r of Array.isArray(reports) ? reports : [])
+    for (const c of Array.isArray(r?.citations) ? r.citations : [])
+      if (c && typeof c.address === "string" && c.address && !out.includes(c.address)) out.push(c.address);
+  return out.slice(0, CITATIONS_MAX);
+}
+function documentHoldings(resolved) {
+  const documents = /* @__PURE__ */ new Map();
+  const unchained = [], undetermined = [];
+  const list3 = Array.isArray(resolved) ? resolved : [];
+  for (const r of list3) {
+    if (!r || typeof r !== "object") continue;
+    if (r.refused) {
+      undetermined.push({
+        citation: r.citation ?? null,
+        at: r.refused.at ?? null,
+        code: r.refused.code ?? null,
+        check: r.refused.check ?? null
+      });
+      continue;
+    }
+    const chain = r.chain && typeof r.chain === "object" ? r.chain : null;
+    const key = chain && typeof chain.address_norm === "string" ? chain.address_norm : "";
+    const held = chain ? Number(chain.total) || 0 : 0;
+    if (!key || held < 1) {
+      unchained.push({
+        citation: r.citation ?? null,
+        address: r.address ?? null,
+        reason: r.reason ?? "the record holds no captured version at this address"
+      });
+      continue;
+    }
+    const versions = Array.isArray(chain.versions) ? chain.versions : [];
+    const inChain = new Set(versions.map((v) => v && v.bundle_id).filter(Boolean));
+    let doc = documents.get(key);
+    if (!doc) {
+      doc = {
+        address_norm: key,
+        versions_held: held,
+        truncated: chain.truncated === true,
+        cited: [],
+        versions_cited: [],
+        cited_not_listed: []
+      };
+      documents.set(key, doc);
+    }
+    doc.cited.push(r.citation ?? null);
+    if (r.bundle) {
+      if (inChain.has(r.bundle)) {
+        if (!doc.versions_cited.includes(r.bundle)) doc.versions_cited.push(r.bundle);
+      } else doc.cited_not_listed.push(r.bundle);
+    }
+  }
+  const docs = [...documents.values()];
+  return {
+    /* THE COUNT A READER WILL TAKE AS COVERAGE, and it counts DOCUMENTS. */
+    documents: docs.length,
+    citations: list3.length,
+    versions_cited: docs.reduce((n, d) => n + d.versions_cited.length, 0),
+    versions_held: docs.reduce((n, d) => n + d.versions_held, 0),
+    unchained: unchained.length,
+    undetermined: undetermined.length,
+    by_document: docs,
+    unchained_items: unchained,
+    undetermined_items: undetermined,
+    identity: "op=versionchain's address_norm \u2014 the record's captured_locators \u22C8 register join (PL-10), never a title, a text or a byte comparison"
+  };
+}
+function holdingsNote(h) {
+  if (!h) return "";
+  let s = `${h.documents} document(s) held across ${h.citations} citation(s), each counted ONCE with its versions (${h.versions_cited} of ${h.versions_held} held version(s) cited, read through op=versionchain)`;
+  if (h.unchained) s += `; ${h.unchained} cited item(s) in no version chain, each counted as itself`;
+  if (h.undetermined) s += `; ${h.undetermined} citation(s) whose document is UNDETERMINED \u2014 the plane refused a read, so they are counted as neither a document nor an item`;
+  return s;
+}
+
+// ../bio-plane/src/tokens.mjs
+var PUBLISHED_TOKEN_HASHES = /* @__PURE__ */ new Set([
+  // dist/SECRETS.txt of the 0.2.0 test deployment
+  // ADMIN_TOKEN
+  "34451e5e855bf8d45e93d89fca560e6bd392cf1d0cc6832e3121614d1c68d9db",
+  // MEMBER_TOKEN
+  "7ecc5d014e25ce4c2e8457424afa0420288742c69182db1be5f4caccd63d4c91",
+  // PROBE_TOKEN
+  "5910ebbfe7816d9d5e2451012f9db8ac92aaa3f65a8f50da3f7255ab8bdb26ad"
+]);
+var sha256hex = async (v) => {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+
+// src/cascade.mjs
+var CASCADE_ORDER = Object.freeze(["member", "project", "instance"]);
+var CASCADE_NO_ACCOUNT = "NO_ACCOUNT_RESOLVED";
+var LEVEL_UNSET = "unset";
+var LEVEL_REVOKED = "revoked_by_publication";
+var LEVEL_AVAILABLE = "available";
+async function levelState(entry) {
+  const v = entry && typeof entry.token === "string" ? entry.token : "";
+  if (v.length === 0) return LEVEL_UNSET;
+  if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
+  return LEVEL_AVAILABLE;
+}
+async function resolveClaudeCascade(accounts = {}) {
+  const levels = [];
+  let resolved = null;
+  for (const level of CASCADE_ORDER) {
+    const entry = accounts?.[level];
+    const state = await levelState(entry);
+    levels.push({ level, state });
+    if (!resolved && state === LEVEL_AVAILABLE)
+      resolved = { level, ref: typeof entry.ref === "string" && entry.ref ? entry.ref : null };
+  }
+  if (resolved) return { available: true, level: resolved.level, ref: resolved.ref, levels };
+  return {
+    available: false,
+    reason: CASCADE_NO_ACCOUNT,
+    levels,
+    detail: "no Claude account resolved at any level of the cascade (member, then project, then instance). The capability is UNAVAILABLE and this is that statement \u2014 an honest absence, stated, because a silent no-op is indistinguishable from a run that found nothing. Each level's own absence is named beside this."
+  };
+}
+async function cascadeToken(accounts = {}) {
+  const st = await resolveClaudeCascade(accounts);
+  if (!st.available) return null;
+  return { level: st.level, token: accounts[st.level].token };
+}
+
+// src/model.mjs
+var MODEL_ENDPOINT = "https://api.anthropic.com/v1/messages";
+var MODEL_API_VERSION = "2023-06-01";
+var DEFAULT_MODEL = "claude-opus-5";
+var MODEL_MAX_TOKENS = 16e3;
+var DEFAULT_MAX_SEGMENT_BYTES = 1e9;
+var SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the 30 s default; a segment sends at most a third of that";
+var CONVERSATION_MAX_TURNS = 12;
+function segmentMeter({ turnsBound, bytesBound }) {
+  return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
+}
+async function modelCall(token, serialized) {
+  let res;
+  try {
+    res = await fetch(MODEL_ENDPOINT, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": token, "anthropic-version": MODEL_API_VERSION },
+      body: serialized
+    });
+  } catch (e) {
+    return { silent: { detail: String(e && e.message || e).slice(0, 200) } };
+  }
+  let body = null;
+  try {
+    body = await res.json();
+  } catch {
+    body = null;
+  }
+  if (body == null) return { silent: { detail: `the model API answered ${res.status} with a body that is not JSON` } };
+  if (res.status !== 200)
+    return { refused: {
+      status: res.status,
+      type: body?.error?.type ?? null,
+      message: String(body?.error?.message ?? "").slice(0, 300)
+    } };
+  if (body.stop_reason === "refusal")
+    return { refused: {
+      status: 200,
+      type: "refusal",
+      message: String(body?.stop_details?.explanation ?? "").slice(0, 300)
+    } };
+  return { result: body };
+}
+async function converse({
+  token,
+  model,
+  meter,
+  system,
+  messages,
+  tools,
+  finalTool,
+  onTool,
+  maxTurns = CONVERSATION_MAX_TURNS
+}) {
+  for (let k = 0; k < maxTurns; k += 1) {
+    const serialized = JSON.stringify({
+      model,
+      max_tokens: MODEL_MAX_TOKENS,
+      system,
+      messages,
+      tools,
+      tool_choice: { type: "auto" }
+    });
+    if (meter.turns >= meter.turnsBound) {
+      meter.stopped = "turns";
+      return { stopped: "turns" };
+    }
+    if (meter.bytes + serialized.length > meter.bytesBound) {
+      meter.stopped = "bytes";
+      return { stopped: "bytes" };
+    }
+    meter.turns += 1;
+    meter.bytes += serialized.length;
+    const got = await modelCall(token, serialized);
+    if (got.silent || got.refused) return got;
+    const content = Array.isArray(got.result.content) ? got.result.content : [];
+    messages.push({ role: "assistant", content });
+    const uses = content.filter((b) => b && b.type === "tool_use");
+    const final = uses.find((u) => u.name === finalTool);
+    if (final) {
+      messages.push({ role: "user", content: uses.map((u) => ({
+        type: "tool_result",
+        tool_use_id: u.id,
+        content: u === final ? "received" : "not performed: the answer ended this step"
+      })) });
+      return { answer: final.input && typeof final.input === "object" ? final.input : {} };
+    }
+    if (!uses.length) {
+      messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
+      continue;
+    }
+    const results = [];
+    for (const u of uses) {
+      const r = await onTool(u.name, u.input || {});
+      if (r && r.halt) return r.halt;
+      results.push({
+        type: "tool_result",
+        tool_use_id: u.id,
+        content: JSON.stringify(r?.content ?? null),
+        ...r?.error ? { is_error: true } : {}
+      });
+    }
+    messages.push({ role: "user", content: results });
+  }
+  return { exhausted: true };
+}
+var STATE_ENUM = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"];
+var LOOK_FIELDS = (levels) => ({
+  level: { type: "string", enum: levels, description: "the level a look at this step was made at, if any" },
+  observed: { type: "string", enum: STATE_ENUM, description: "what a look at this step established; omit when nothing was looked at" },
+  governed: { type: "boolean" },
+  condition: { type: "string" }
+});
+function judgeTools(levels) {
+  const obj = (properties, description, name) => ({
+    name,
+    description,
+    input_schema: { type: "object", properties, additionalProperties: false }
+  });
+  return [
+    obj(
+      {
+        targets: { type: "array", items: {
+          type: "object",
+          properties: {
+            level: { type: "string", enum: levels },
+            url: { type: "string" },
+            target: { type: "string" }
+          },
+          required: ["level"]
+        } },
+        ...LOOK_FIELDS(levels)
+      },
+      "plan: what to search for this pass. An internet target names the https address to request.",
+      "judge_plan"
+    ),
+    obj(
+      {
+        candidates: {
+          type: "array",
+          items: { type: "object" },
+          description: "candidate versions, each the body of op=suggest (see the acts layer)"
+        },
+        ...LOOK_FIELDS(levels)
+      },
+      "compose: what the reports mean, and what each version says.",
+      "judge_compose"
+    ),
+    obj(
+      { candidates: {
+        type: "array",
+        items: { type: "object" },
+        description: "the candidates that differ in substance from what the record holds"
+      } },
+      "dedup: whether each reading differs in substance.",
+      "judge_dedup"
+    ),
+    obj(
+      { submission: { type: "object", description: "the changed submission; the refused one unchanged drops it" } },
+      "adjust: how to answer the plane's refusal.",
+      "judge_adjust"
+    )
+  ];
+}
+var LOAD_LAYER = (disclosable) => ({
+  name: "load_layer",
+  description: "load one of the skill pack's disclosed layers when the work needs it",
+  input_schema: {
+    type: "object",
+    properties: { name: { type: "string", enum: disclosable } },
+    required: ["name"],
+    additionalProperties: false
+  }
+});
+function parentSystem(pack) {
+  return "You make the judgements inside the steps of a BIO AI run. The run's control flow is a table you do not decide: at each judged step you are told the step and its facts, and you answer only by calling that step's judge tool. The instructions you work under are this skill pack, version " + String(pack.version) + ".\n\nRESIDENT LAYER:\n" + JSON.stringify(pack.resident) + "\n\nDisclosed layers, loaded with load_layer when your work needs them: " + (pack.resident?.disclosable ?? []).map((d) => `${d.layer} (${d.load_when})`).join("; ");
+}
+function rowPrompt(step, row, facts) {
+  return `STEP ${step}: ${row.does}. You judge: ${row.judged}. Facts: ${JSON.stringify(facts)}. Answer by calling judge_${step}.`;
+}
+function rowFacts(s, levels) {
+  switch (s.step) {
+    case "plan":
+      return {
+        pass: Number(s.pass) + 1,
+        max_passes: s.maxPasses,
+        mode: s.mode,
+        target: s.target ?? null,
+        target_basis: s.targetBasis ?? null,
+        levels,
+        resumed_from: s.resumedFrom
+      };
+    case "compose":
+      return {
+        target: s.target ?? null,
+        reports: s.reports || [],
+        reports_refused: s.reportsRefused || [],
+        holdings: s.holdings ?? null,
+        candidates: s.candidates || []
+      };
+    case "dedup":
+      return { target: s.target ?? null, candidates: s.candidates || [] };
+    case "adjust":
+      return { refusal: s.refusal ?? null, refused_submission: s.refusedSubmission ?? null };
+    default:
+      return {};
+  }
+}
+function subsessionSystem(pack, contract) {
+  return "You are a search sub-session of a BIO AI run, searching ONE level and returning a REPORT, never documents: the parent re-reads by address. Search with the meaningrows tool, then call report once.\n\nRESIDENT LAYER:\n" + JSON.stringify(pack.resident) + "\n\nYOUR SPAWN CONTRACT:\n" + JSON.stringify(contract);
+}
+function subsessionTools(contract) {
+  const r = contract.returns || {};
+  return [
+    {
+      name: "meaningrows",
+      description: "query the record at meaning grain through the plane (op=meaningrows)",
+      input_schema: { type: "object", properties: {
+        q: { type: "string" },
+        rows: { type: "string", description: "the meaning arm, e.g. leg" },
+        limit: { type: "integer", minimum: 1, maximum: 50 }
+      }, required: ["rows"], additionalProperties: false }
+    },
+    {
+      name: "report",
+      description: String(r.rule || "return a REPORT with a citation, never documents"),
+      input_schema: {
+        type: "object",
+        properties: {
+          state: { type: "string", enum: r.states || [] },
+          summary: { type: "string", maxLength: r.summary_max || 500 },
+          citations: { type: "array", maxItems: r.citations_max || 20, items: {
+            type: "object",
+            properties: {
+              address: { type: "string", maxLength: r.address_max || 200 }
+            },
+            required: ["address"],
+            additionalProperties: false
+          } },
+          governed: { type: "boolean" },
+          condition: { type: "string" }
+        },
+        required: ["state"],
+        additionalProperties: false
+      }
+    }
+  ];
 }
 
 // ../bio-plane/src/record-core/index.mjs
@@ -23507,19 +24035,6 @@ var EXTRACTION_TABLES = Object.freeze([
 ]);
 var EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings"]);
 
-// ../bio-plane/src/observation-log/checks.mjs
-var OBSERVATION_CHECK_KEYS = Object.freeze([
-  "AI_LOG_STATE_UNKNOWN",
-  "AI_LOG_GOVERNED_ABSENCE",
-  "AI_LOG_SHELL_PRESENT",
-  "AI_RUN_CONDITION_UNKNOWN",
-  "AI_LOG_NOT_A_BUNDLE",
-  "OBS_AUTHORITY_UNNAMED",
-  "OBS_PRESENT_NO_REFERENT",
-  "AI_LOG_NEVER_LOOKED_STORED"
-]);
-var OBSERVATION_CHECKS = Object.freeze(Object.fromEntries(OBSERVATION_CHECK_KEYS.map((k) => [k, AI_RUN_CHECKS[k]])));
-
 // ../bio-plane/src/observation-log/schema.mjs
 var OBSERVATION_LOG_TABLES = Object.freeze([
   "lead_shares",
@@ -23527,475 +24042,11 @@ var OBSERVATION_LOG_TABLES = Object.freeze([
   { name: "leads", keys: [] }
 ]);
 
-// ../bio-plane/src/observation-log/vocabulary.mjs
-var OBSERVATION_LEVELS = {
-  meaning: "the framework layer: findings, legs, connections",
-  content: "extracted content within documents (DEC-23: content is the unit)",
-  document: "documents the store holds",
-  internet: "the open internet, through the capture path"
-};
-var OBSERVATION_STATES = {
-  NEVER_LOOKED: "nobody looked at this level for this subject",
-  LOOKED_ABSENT: "we looked and it is positively not there",
-  LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT: "we looked and it is there",
-  partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
-};
-var OBSERVATION_STATE_WORDS = Object.freeze(Object.fromEntries(
-  Object.entries(OBSERVATION_STATES).map(([k, v]) => [k, v.replace(/\s*\([^()]*\)\s*$/, "")])
-));
-var LEAD_LOOK_OUTCOMES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
-var LEAD_VOCABULARY = Object.freeze({ states: OBSERVATION_STATE_WORDS, outcomes: LEAD_LOOK_OUTCOMES });
-var DEFINITIVE_STATES = /* @__PURE__ */ new Set(["LOOKED_ABSENT", "PRESENT"]);
-var WATERMARK_BAND_CAUSE = "watermark_band";
-var MISSING_ROW_CAUSES = {
-  pre_log: "this capture was extracted BEFORE the observation log carried the content level, so the look is recorded in the readings table and not here. It is not a capture nobody read",
-  /* CORRECTED BY REC-107, and the old sentence is quoted in the reason rather than
-     deleted, because it is the defect and a reader who meets the new one should be
-     able to see what it replaced. It read: *"...so either the log did not yet exist
-     for it or a whole-store purge cleared the rows that described it. NEITHER CAN
-     BE RULED OUT, and they are different facts."* That is an ENUMERATION of the
-     undetermined set, published on every row, and it had TWO members where the live
-     set has three: a capture reaches this cause because the `readings` probe MISSED,
-     and NOBODY HAVING LOOKED is fully live in that bucket. The sentence excluded it,
-     so a member reading the row concluded the capture had been extracted (or purged)
-     and left it off the never-extracted worklist. **The set is now stated per row in
-     `not_ruled_out` rather than asserted in prose here**, so this sentence describes
-     the cause and stops claiming what it cannot. */
-  purged: "this capture predates the earliest content-level row this log holds, so the log may not yet have existed for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked at all. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW, and they are different facts",
-  never_looked: "the log existed and was not purged over this capture's lifetime, and the record holds nothing else about its text -- so nobody has tried to extract it. This is the one cause that licenses a positive statement",
-  /* D-516 / BOB #33 (2026-09-24 17:58Z) — THE FOURTH WORD, AND IT IS NOT A FOURTH
-     SECTION 5.1 CAUSE. Section 5.1 has three causes and this word names none of
-     them: it says WHICH TWO OF THEM THE STORED PRECISION LEFT OPEN, and it exists
-     because the alternative was the reader PICKING between them. `not_ruled_out`
-     is still drawn from `ALL_MISSING_ROW_CAUSES`, which stays at three. */
-  [WATERMARK_BAND_CAUSE]: "this capture entered the record in the clock second IMMEDIATELY BEFORE the earliest content-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the capture entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them. The uncertainty is in the STORED VALUE and no comparison can remove it. THIS ROW'S `not_ruled_out` NAMES THE SET THIS RECORD COULD NOT NARROW"
-};
-var MEANING_MISSING_ROW_CAUSES = {
-  pre_log: "this subject was looked at BEFORE the observation log carried the meaning level, so the look is recorded in the table that holds what it produced -- a reading, a resolution, a connection -- and not here. It is not a subject nobody looked at",
-  /* CORRECTED BY REC-107, the same defect as the content level's above and with one
-     member MORE at two of this level's three subject kinds. It read: *"...either the
-     log did not yet carry this level for it or a whole-store purge cleared the rows
-     that described it. NEITHER CAN BE RULED OUT."* Two members, and the live set is
-     three at a capture and three at a reference or an entity for DIFFERENT reasons —
-     `never_looked` was missing at all three, and at a reference or an entity the
-     PRE-LOG LOOK THAT FOUND NOTHING is live as well, because it left no artifact for
-     cause (1) to read. That second widening was published, but as the top-level
-     `evidence_one_sided` map a caller had to remember to join to the row. Both now
-     sit ON the row, in `not_ruled_out` and `evidence_one_sided`. */
-  purged: "this subject entered the record before the earliest meaning-level row this log holds, so the log may not yet have carried this level for it, a whole-store purge may have cleared the rows that described it, or nobody may have looked -- and at a reference or an entity a pre-log look that found NOTHING is live too, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT",
-  never_looked: "the log carried this level over this subject's whole lifetime and was not purged since, AND the record holds no product of such a look -- so nobody has looked. This is the one cause that licenses a positive statement",
-  /* D-516 — THE SAME FOURTH WORD AT THIS LEVEL, and the sentence differs because
-     the row it is measured against differs, which is A3b's rule applied to the
-     word this item adds rather than inherited by it. */
-  [WATERMARK_BAND_CAUSE]: "this subject entered the record in the clock second IMMEDIATELY BEFORE the earliest meaning-level row this log holds, and `observation_log.at` stores whole seconds -- so the stored watermark denotes a one-second interval and this record cannot tell whether the subject entered before that row or within the same second of it. Those are different facts and this record DOES NOT PICK between them; at a reference or an entity a pre-log look that found NOTHING is live in the set as well, having left no artifact. THIS ROW'S `not_ruled_out` NAMES THE SET, and `evidence_one_sided` SAYS WHETHER THIS SUBJECT KIND'S EVIDENCE COULD EVER HAVE NARROWED IT"
-};
-var ALL_MISSING_ROW_CAUSES = Object.freeze(["pre_log", "purged", "never_looked"]);
-var CONDITION_KINDS = Object.freeze({
-  "monitoring-recheck-due": "a monitoring recheck or deadline sweep has come due (S-7)",
-  "archive-fallback-eligible": "the archive fallback became eligible: three failures or fourteen days (D-104)",
-  "capture-session-ttl-expiring": "a capture session is expiring with work outstanding (CAPTURE-SCALING)",
-  "source-unreachable-governed": "the source was unreachable because OUR pacing governed it, distinguishably from theirs (D-104)",
-  "capture-completed-unattended": "a capture the member walked away from has completed (D-61)",
-  "partial-capture-outstanding": "a capture did not finish and subresources are outstanding",
-  "text-undetermined": "no text layer, CID fonts, or over the envelope (CPDF, D-121)",
-  "client-rendered-shell": "a client-rendered shell was captured and is not citable (D-64)",
-  "invitation-spent-or-expired": "an invitation was spent, or expired unused",
-  "governor-holding-host": "the per-host governor is holding a host: the capture is PACED, not broken (D-103)",
-  "runtime-ceiling-reached": "a CPU or subrequest ceiling was reached (D-54, D-56)",
-  /* D-523, LIVE from its landing: store.mjs #conditionsRenderDeferred, derived on read from
-     `capture_requests`. BOB #33 RULED 2026-09-24 19:54Z (CLIENT-RENDERED.md, "RULED 2026-09-24 by BOB #33"):
-     a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
-     recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
-     pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: store.mjs #conditionsRenderDeferred"
-});
-
 // ../bio-plane/src/observation-log/index.mjs
 var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
 var INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["document"]));
 var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
 var AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs" });
-
-// ../bio-plane/src/ai-runs/checks.mjs
-var AI_RUN_OWN_CHECKS = {
-  /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
-     which bound and where it stopped". A close with no bound named is the
-     `heldMatch` defect exactly — not found and did not finish looking made
-     indistinguishable — so the terminate path REFUSES it rather than writing an
-     unattributed ending. This is what makes "names the bound" a mechanism
-     rather than an intention. */
-  AI_RUN_BOUND_UNNAMED: {
-    check: "C-22.5",
-    where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
-    translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
-  },
-  /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
-       THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
-       Bob ruled 2026-08-09 that an investigation can be started by ANY MEMBER OF
-       THE PROJECT: the gate is participation in the project the inquiry belongs
-       to, and the capability token stays `contribute` only as the FLOOR beneath
-       it. IS-6's provisional checked `contribute` alone.
-  
-       WHY IT IS ITS OWN CODE AND NOT THE CAPABILITY REFUSAL'S, which is the whole
-       content of the item rather than a nicety. *You are not a member of this
-       project* and *you lack contribute* are DIFFERENT FACTS ABOUT A MEMBER, and
-       they have different remedies: one is answered by an owner of that project
-       inviting you, the other by an administrator granting a capability. A single
-       refusal covering both would tell a member nothing they can act on, which is
-       DEC-49's rule and the ACT-AND-SAY principle in one place. The capability
-       half keeps its own existing, differently-shaped refusal at the control
-       plane (`NOT_CAPABLE`, carrying `needs`), so a caller can always tell which
-       of the two stopped them.
-  
-       THE TRANSLATION DELIBERATELY NAMES NO PROJECT. A member who is not in a
-       project may not be entitled to learn it exists — the skeleton-visibility
-       rule (7.12) — so the canned sentence a surface renders says what happened
-       and what to do, and the refusal's own `detail`, composed at the site, names
-       only what the caller already put in their own request.
-  
-       CORRECTED 2026-09-19 by REC-145 (DEC-63 as amended by Bob, 2026-09-18): this refusal is now said
-       ONLY over a run whose context is a PROJECT. A run over a question consults no project, so the old
-       first sentence (*"asking the system to look into a question is work inside the project that
-       question belongs to"*) stated the ruling Bob reversed — *a project does not own a line of inquiry*. */
-  AI_RUN_NOT_PROJECT_MEMBER: {
-    check: "C-22.8",
-    where: "src/airun.mjs projectGate, called from src/ai-runs/index.mjs open/tick/close",
-    translation: "Asking the system to look into a project is work inside that project, and this account is not one of that project's participants. This is not about what the account is allowed to do in general \u2014 it is about which piece of work it is part of. Someone who owns that project can invite you to it."
-  },
-  /* REC-153, 2026-09-19 — THE RUN'S CONTEXT IS THE KIND IT SAYS IT IS. Membership Architecture v2 §7, the
-       DEC-63 ruling bullet, *"AND THE CONTEXT KIND IS CHECKED"* (BOB #16): *"A run's `contextType` must equal
-       the named bundle's type; a mismatch is refused, and an id the caller cannot see answers as absent."*
-       Once REC-145 made the run verdict turn on the KIND (a question consults no project), a run labelled
-       `inquiry` over a PROJECT's id opened for a member who had not joined that project — the joined gate
-       walked around by a word the caller chose.
-  
-       ONE CODE FOR THE MISMATCH, THE ABSENT ID AND THE HIDDEN ONE, and that is the §7.9 half of the ruling
-       rather than economy. A second code for *"that is a project, not a question"* would be said over a
-       project the caller can see and withheld over one they cannot, so the difference between the two codes
-       would be the bit. The refusal is built from what the caller SENT and nothing else, which makes the
-       three one object by construction (`#noSuchProject`'s discipline, one act over). It is one condition —
-       *nothing of the kind you named answers to that id for you* — not two behind one number.
-  
-       CORRECTED THE SAME DAY on BOB #16's ruling (`7d03e852`), which the first build did not have: (i) A MACHINE
-       SEES NO MORE THAN ITS PRINCIPAL — an `ai` credential's open over an id its member cannot see is that member's
-       own absent answer, and an operator credential's open over a never-minted id is refused as absent too (the
-       first build let a machine through for an id the store did not hold, on PL-18's word); (ii) THE KIND IS
-       `RUN_CONTEXTS`' CLOSED VOCABULARY — any other word is refused HERE before any bundle is looked at, rather
-       than matched against the bundle's type. Both are this row's one condition: the kind and id the caller named
-       do not resolve to a context they can run in. A new code for (ii) was weighed and declined: C-22.12 is
-       REC-152's, and the word refused is the caller's own, so the refusal can say which failed without a second
-       code carrying any bit. */
-  AI_RUN_NO_SUCH_CONTEXT: {
-    check: "C-22.11",
-    where: "src/airun.mjs checkRunContextKind, called from src/ai-runs/index.mjs open",
-    translation: "Nothing of the kind this run names answers to that id here. A run is over a question or a project, nothing else; a run over a question has to name a question, and a run over a project has to name a project. Something you cannot see is answered exactly as something that does not exist, so this says nothing about whether anything else goes by that id."
-  },
-  /* REC-152, 2026-09-19 — TICK AND CLOSE ARE THE RUN'S PRINCIPAL'S ACTS (Membership v2 §7, "WHO MAY TICK
-       AND CLOSE A RUN", BOB #16). C-22.12 and not C-22.11: CONDUCT #6 assigned C-22.11 to REC-153, which is
-       on its own branch, so this number was taken with the gap left for it.
-  
-       WHY IT IS ITS OWN CODE AND NOT C-22.8's. *You are not in this project* and *this is not your run* are
-       DIFFERENT FACTS with different remedies: the first is answered by an owner inviting you, the second by
-       nobody — the run is its principal's, and one nobody drives ends on its own lease. A co-participant who
-       is fully joined meets this and never C-22.8, and a single refusal covering both would tell them to ask
-       for an invitation they already hold.
-  
-       SAID ONLY TO SOMEBODY WHO CAN SEE THE RUN'S CONTEXT. A caller who cannot is answered as for a run that
-       does not exist, before this is reached (§7.9), so the sentence names nobody — neither the principal
-       nor the caller — and the store's `detail` names only the rule. */
-  AI_RUN_NOT_PRINCIPAL: {
-    check: "C-22.12",
-    /* REC-165 (§11 item 5 rule 1, BOB #25): the run's two productions ask the same gate. */
-    where: "src/airun.mjs runPrincipalGate, called from src/ai-runs/index.mjs tick/close/runGate/#surfacingGate and by run-productions",
-    translation: "Only the person who started this investigation \u2014 or an AI credential they created for it \u2014 can continue it or end it. It is not about which projects you belong to or what you are allowed to do in general: an investigation nobody continues ends by itself when its time or budget runs out."
-  },
-  /* REC-169, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6 — A RUN IS BOUNDED, AND THE BOUND IS RECORDED). The tick
-     wrote `consumed + Number(v)` for any figure, so the run's own principal could REFUND a bound its member set
-     (`surfaces: -1`, and open another question). A figure is a non-negative whole JSON number; the refusal is the
-     whole tick's (or the whole open's, for a seed), and nothing is written. Its own code and not C-22.5's: that one
-     is a CLOSE naming no bound, this is a figure no bound can hold. */
-  /* REC-172, 2026-09-23: ALSO the member's `allowed` at the open (it was written `Number(x) || 0`, so `-1`, `1.5` and
-     `"3"` became a declaration nobody made). One code for both halves of a bound's figure — the rule is the same whole
-     number — and the translation widened from SPENDING to GIVING an amount so it reads true of either. */
-  AI_RUN_CONSUME_INVALID: {
-    check: "C-22.13",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
-    translation: "The investigation gave an amount for its budget that is not a whole number of zero or more. A budget is set and used up in whole steps, and never goes down, so nothing was recorded for this step."
-  },
-  /* REC-169 — THE BOUNDS THE PLANE COUNTS (`PLANE_COUNTED_BOUNDS`: `mints`, counted by extractPropose, and `surfaces`,
-     counted by promote since D-85). WHY ITS OWN CODE: the figure may be perfectly well-formed; what is wrong is WHO
-     is counting. The remedy differs too — the caller sends nothing for these, where C-22.13's caller sends a proper
-     number. A zero claims nothing and is not refused. */
-  /* REC-172, 2026-09-23: ALSO `lease` (`PLANE_DECIDED_BOUNDS`), at the tick and as a declaration at the open, and
-     for ANY figure including zero. Same rationale — the plane decides it, off the clock — so the same code; the
-     translation now names the lease beside the counts. */
-  AI_RUN_BOUND_PLANE_COUNTED: {
-    check: "C-22.14",
-    where: "src/airun.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
-    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
-  },
-  /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
-     that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
-     spent nothing, so a caller believed it counted work the record never held (the live instrument vf4 sent an array
-     for its whole life). The open DROPPED an entry naming no bound, so a member who declared `fetchs: 3` got a run
-     with no fetch ceiling. Its own code and not C-22.13's: the figure may be perfectly good; what is wrong is that it
-     names nothing the run has, and the remedy (spell the bound, send a map) differs. */
-  AI_RUN_BOUND_UNKNOWN: {
-    check: "C-22.15",
-    where: "src/airun.mjs checkConsume (the tick's map, the open's list, and every key in either), called from src/ai-runs/index.mjs tick and open",
-    translation: "The investigation named a part of its budget that does not exist, or did not say which part it meant. Nothing was recorded, so no budget was spent or set that nobody could account for."
-  },
-  /* REC-177, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b item 6, BOB #30). A bound declared at `op=airunopen` with an
-     ABSENT or ZERO `allowed` was opened at 0, and `finishedBound` reads 0 as NO CEILING — so the run recorded a bound
-     it did not have. Refused at the open, nothing written. Its own code and not C-22.13's: C-22.13 is a figure of the
-     wrong FORM (a string, a fraction, a negative), and 0 is a perfectly good whole number; what is wrong here is that
-     the declaration states no allowance, and the remedy differs (state one, or do not declare the bound). */
-  AI_RUN_BOUND_NO_ALLOWANCE: {
-    check: "C-22.16",
-    where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
-    translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
-  }
-};
-var AI_RUN_ACT_SHAPE_CHECKS = {
-  /* ---------------------------------------------------------------------------
-       UI-38's §14a RIDER, AND IT IS IN THIS FAMILY BECAUSE ANOTHER FAMILY'S SUITE
-       REFUSED IT — WHICH IS THE CORRECT OUTCOME AND IS RECORDED RATHER THAN
-       WORKED AROUND.
-  
-       REC-64 first put this row in `AI_RUN_CHECKS`, where the run's other three
-       open-time conditions live. `airun.test.mjs` ARM D3 failed it: **every C-22
-       allocation must name its enforcement site in a PURE CHECK MODULE**
-       (`src/airun.mjs` or `src/skillpack.mjs`), so the catalogue can be walked to a
-       pure function. This condition is enforced in `store.mjs` at the run-open
-       door, so it does not satisfy that invariant and does not belong in C-22. The
-       ARM WAS NOT WIDENED: an invariant relaxed to fit a new row is not an
-       invariant, and this one is load-bearing — it is what lets `op=audit` reach
-       every C-22 condition without opening the store.
-  
-       WHAT IT IS. §14a promises the running-session surface SAYS SO when the
-       capability is unavailable, and IS-BUILD-PLAN's FL-6 row names the failure it
-       guards: *"when no token resolves the capability is UNAVAILABLE and says so —
-       never a silent no-op"*. UI-38 correctly LEFT that sentence rather than
-       authoring it at the surface, because member-facing refusal wording is
-       DEC-49's. The site already refused this condition — with NO CODE, so a
-       surface could only render the operator's sentence verbatim or blank, the
-       exact state DEC-49 ended.
-  
-       THE TRANSLATION SAYS "NOTHING RAN" IN SO MANY WORDS, on purpose: an
-       unavailable capability must not be indistinguishable from a run that looked
-       and found nothing. The second is a claim about the world; the first is a fact
-       about us. That is `CLAUDE.md`'s "our governor refusing is not the source
-       failing", arriving at the run door.
-  
-       ITS `where` IS A WHOLE FUNCTION AND NOT A REGION, which is the only one in
-       REC-64's work — and the reason WAS a defect in the guard rather than a
-       judgement about the span. `aiRunOpen` refuses with `started: false`, and arm
-       C's matcher was `ok: false`, so a REGION here would have judged zero refusals
-       and FAILED as a drifted marker. The whole-function form is honest at this site
-       (every refusal `aiRunOpen` makes is a condition of opening a run) and the
-       blindness was measured and delegated at the guard's own `codesChecked` floor.
-  
-       **REC-76 CLOSED THAT DELEGATION (D-236), AND THE WHOLE-FUNCTION `where` IS
-       WHAT MADE IT PAY.** Arm C now grades an outcome by whether it DECLARES ITSELF
-       A SUCCESS rather than by one literal, so this site went from `92L (0 judged,
-       0 code(s) checked)` to four refusals judged — and TWO of them were CODELESS,
-       at a governed site, for as long as the row has existed. They are the two rows
-       immediately below. Nothing about the span changed; the instrument started
-       seeing it.
-  
-       **D-589 (2026-09-25) NARROWED ALL THREE INTO REGIONS, AND THE PARAGRAPH TWO
-       ABOVE IS NOW HISTORY, NOT RULE.** The whole-function `where` stopped being
-       honest the moment a SECOND family's refusal was written inside `aiRunOpen`:
-       REC-207's first draft put its re-run refusals in a narrowed region there and
-       the guard failed them by name, because the region was judged once by its own
-       rows and again by this whole-function site, where their codes are not rows.
-       So each of these three rows now names the region around its one refusal
-       (`is-airun-open-context`, `-capability`, `-already`), and arm C no longer
-       judges a claimed region a second time from an enclosing whole-function
-       `where` (the guard's `nestedRegionsIn`). What the narrowing costs, stated:
-       the five RELAYED refusals in `aiRunOpen` (existence, kind, gate, skill,
-       seed — each minted and governed at its own site) are not read at this
-       function while no whole-function row names it.
-       --------------------------------------------------------------------------- */
-  AI_RUN_CAPABILITY_UNAVAILABLE: {
-    check: "C-33.29",
-    where: "src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen",
-    translation: "Nothing was run, because this instance could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
-  },
-  /* ---------------------------------------------------------------------------
-       REC-76 / D-236 — THE TWO CODELESS REFUSALS THE WIDENED CLASSIFIER FOUND.
-  
-       Both have been at this governed site since before the row above was written,
-       and neither was ever judged, because arm C could not see a refusal spelled
-       `started: false`. They are not new conditions and they are not new refusals:
-       they are two sentences a surface could only render verbatim or blank, which
-       is the state DEC-49 ended. **The item that fixes an instrument owes the
-       sites the instrument newly sees, and these are them.**
-       --------------------------------------------------------------------------- */
-  AI_RUN_NO_CONTEXT: {
-    check: "C-33.30",
-    where: "src/ai-runs/index.mjs open > is-airun-open-context, reached from op=airunopen",
-    translation: "Nothing was run, because the request did not say what the run is for or what it belongs to. A run has to sit inside a question or a project so that the people working on that question can see it happened; one belonging to nothing would be invisible to everybody."
-  },
-  AI_RUN_ALREADY_OPEN: {
-    check: "C-33.31",
-    where: "src/ai-runs/index.mjs open > is-airun-open-already, reached from op=airunopen",
-    translation: "Nothing was run, because a run with this name is already on record here. The record keeps what each run did under its own name, so starting a second one under a name already in use would write two different histories into one place. Give this one a name of its own."
-  },
-  /* ---------------------------------------------------------------------------
-       REC-207 — THE RE-RUN LINK'S THREE REFUSALS (BOB #32, 2026-09-23 23:42Z).
-  
-       They are ACT-SHAPE conditions — the answer to *may this open carry this
-       link* — so they belong here rather than in a family of their own (SK-1's
-       rule, and the same one that put the BIAS_DEBT rows in BIAS_CHECKS).
-  
-       WHY THEY ARE REFUSALS AT ALL, rather than a link stored and judged later.
-       `aiRunClose` settles a bias debt on the strength of `rerun_of`, so a link
-       the record cannot stand behind is a DISCHARGE resting on the caller's word.
-       The three conditions are the three ways that could happen: the run names
-       itself, it names something that is not there, or it names work in another
-       context whose lens is a different lens entirely.
-  
-       A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
-       narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
-       `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
-       rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
-       region's refusals twice, once at the region and once at the enclosing
-       function, where their codes were not rows. So these three were written at
-       the whole function. D-589 (2026-09-25) then narrowed those three neighbours
-       into governed regions (`is-airun-open-context`, `-capability`, `-already`,
-       the rows above) and made arm C judge a claimed region once, by its own rows
-       (`nestedRegionsIn`). These three are now the ONLY rows naming `aiRunOpen`
-       as a whole, and the three regions' lines inside it are governed by the
-       regions, not by this site. Narrowing these three into a region of their own
-       is now possible and has not been done.
-       --------------------------------------------------------------------------- */
-  AI_RUN_RERUN_SELF: {
-    check: "C-33.45",
-    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
-    translation: "Nothing was run, because this run was told it is a re-run of itself. A re-run says which EARLIER piece of work it repeats, and a run pointing at itself would be able to clear its own outstanding re-run. Name the earlier run, or leave the field out."
-  },
-  AI_RUN_RERUN_UNKNOWN: {
-    check: "C-33.46",
-    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
-    translation: "Nothing was run, because the earlier run it says it repeats is not one this record holds for you. It may never have existed, it may have been removed, or it may belong to work you have not been brought into. Check the name."
-  },
-  AI_RUN_RERUN_OTHER_CONTEXT: {
-    check: "C-33.47",
-    where: "src/ai-runs/index.mjs open, reached from op=airunopen",
-    translation: "Nothing was run, because the earlier run it says it repeats belongs to a different question or project. Repeating work means asking the same question again under the lens that is in force for it \u2014 somewhere else the group's declared lens can be a different one, so the two runs would not be comparable and settling anything on that basis would be wrong."
-  }
-};
-var AI_RUNS_CONTEXT_CHECKS = {
-  /* No kind named at all. There is no honest default: `inquiry` and `project`
-     are different objects with different membership, and answering from one
-     when the caller meant the other is a confidently wrong answer about a
-     different context — MEANING_ROWS_NO_ARM's reasoning, one table over. */
-  AI_RUNS_NO_CONTEXT_TYPE: {
-    check: "C-36.1",
-    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
-    translation: "That request did not say what kind of thing to look in. Background work is attached either to a question or to a project, and those are different places \u2014 so the record asks which rather than choosing one for you."
-  },
-  /* A kind was named and the record has no such context. Refused rather than
-     answered empty: see the header — an empty answer here would be the record
-     saying nothing is running, on the strength of a word it did not recognise. */
-  AI_RUNS_UNKNOWN_CONTEXT_TYPE: {
-    check: "C-36.2",
-    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
-    translation: "Background work is not attached to anything of that kind. Rather than answer as though nothing were running there, the record says so and names the kinds of thing it does attach work to."
-  },
-  /* A kind but no id. The gate is compiled over the CONTEXT ID, so a blank one
-     would ask the record about every context at once — which is not a wider
-     answer, it is a different question nobody asked. */
-  AI_RUNS_NO_CONTEXT_ID: {
-    check: "C-36.3",
-    where: "src/ai-runs/index.mjs listInContext > is-airuns-context, reached from op=airuns",
-    translation: "That request named a kind of thing but not which one. Background work belongs to a particular question or a particular project, and the record answers for the one you are looking at rather than for all of them."
-  }
-};
-var SURFACE_RUN_CHECKS = {
-  SURFACE_NO_RUN: {
-    check: "C-66.1",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "An assistant opens a question only inside an investigation it is running, and this one named none that can be read here. The investigation is what records the lens and the purpose the question was opened under, so without one nothing could say why it exists. Nothing was created."
-  },
-  SURFACE_RUN_NOT_RUNNING: {
-    check: "C-66.2",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "The investigation this question was to be opened inside has ended. A question is read against the conditions of the investigation that opened it, and those stopped being current when it stopped. Nothing was created; a member can start a new investigation."
-  },
-  SURFACE_NO_BOUND: {
-    check: "C-66.3",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "This investigation was not given a limit on how many questions it may open, so it may open none: an assistant opening questions without a limit fills the record with questions nobody asked for. The limit is set by the member who starts the investigation. Nothing was created."
-  },
-  SURFACE_BOUND_REACHED: {
-    check: "C-66.4",
-    where: "src/ai-runs/index.mjs #surfacingGate > is-surface-run",
-    translation: "This investigation has already opened as many questions as the member who started it allowed. Nothing was created. The investigation ends at its next step and says which limit stopped it."
-  }
-};
-var AI_RUN_OPEN_CHECKS = {
-  AI_RUN_MODE_NOT_DEPLOYED: {
-    check: "C-109.1",
-    where: "src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen",
-    translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
-  }
-};
-var AI_RUNS_CHECKS = Object.freeze({
-  ...AI_RUN_OWN_CHECKS,
-  ...AI_RUN_ACT_SHAPE_CHECKS,
-  ...AI_RUNS_CONTEXT_CHECKS,
-  ...SURFACE_RUN_CHECKS,
-  ...AI_RUN_OPEN_CHECKS
-});
-
-// ../bio-plane/src/airun.mjs
-var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUN_OWN_CHECKS });
-var RUN_BOUNDS = {
-  fetches: "fetches requested of the capture path",
-  subsessions: "evidence sub-sessions spawned",
-  wallclock: "wall time across resumptions, in milliseconds",
-  runtime: "CPU or subrequest ceiling (D-54, D-56) \u2014 IS-9(d) builds its producer",
-  /* SK-8, AND IT IS A BOUND RATHER THAN A POLICY BECAUSE §7.3 (5) RULED IT ONE.
-       *"A machine that may mint citable rows without a bound produces a store of
-       proposals nobody cited — each correctly labelled, the whole unexamined"*,
-       which is exactly the failure `INVESTIGATIVE-SESSION.md` §15 named for
-       versions one layer up. So the EXTRACT role's productions are budgeted in the
-       table the run already has: **no schema, no new vocabulary**, which was the
-       answer's own test.
-  
-       IT IS A ROW HERE AND NOT A SECOND FENCE. `finishedBound` already terminates
-       a run whose consumed reaches its allowed, and `#aiRunTerminate` already
-       writes which bound stopped it and where — a run that ran out of mints ends
-       exactly as a run that ran out of fetches does, with no branch anywhere
-       asking which kind of bound it was.
-  
-       IT IS LAST IN DECLARATION ORDER BEFORE `lease`, WHICH IS A TIE-BREAK RULE
-       AND NOT AN OPINION: `finishedBound` sorts exhausted bounds by this object's
-       key order, so a run that exhausted both its fetches and its mints in one
-       tick reports FETCHES — the earlier, cheaper-to-explain cause. Putting mints
-       first would have renamed every such run's ending without changing anything
-       about it. */
-  mints: "passages a machine credential marked citable (\xA77.3 (5)) \u2014 the EXTRACT role's budget",
-  /* D-85 (INVESTIGATIVE-SESSION.md §11 item 5, rule 2, BOB #25): AN ASSISTANT OPENS A QUESTION ONLY INSIDE A
-     RUN, AND THE RUN BOUNDS HOW MANY. Ruled on `mints`' rule, so it is `mints`' shape: a ROW in this table, no
-     schema and no second vocabulary; declared at `op=airunopen` by the member who opens the run; a creation
-     under a run that declares none is REFUSED rather than given an allowance invented in code (a number
-     chosen here would be a measurement with no measurement behind it); and a run whose surfaces reach the
-     allowance ends at its next tick through `finishedBound`, as one that ran out of mints does. AFTER `mints`
-     in declaration order for the tie-break reason `mints` gives: appending it renames no existing ending. */
-  surfaces: "questions an assistant opened inside this run (\xA711 item 5, rule 2) \u2014 the run's bound on what it may surface",
-  lease: "the run stopped heartbeating and its lease lapsed: it died rather than finished"
-};
-var RUN_ENDINGS = {
-  completed: "the run finished its work",
-  cancelled: "a member stopped it",
-  "mode-not-deployed": "the deployment gate refused this launch before it spent anything: the mode it asked for is not deployed yet, so no member stopped this run and no budget ran out"
-};
-var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces"]);
-var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
 
 // ../pdf-worker/src/dctdecode.mjs
 var ZIGZAG = Int32Array.from([
@@ -27230,15 +27281,18 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     const entry = stepLog(state, decision);
     if (entry && state.observed === "PRESENT") presentUnbacked += 1;
     const after = advance(state, decision);
+    let published = null;
+    if (CONTROL_FLOW.resume.to.includes(after.step)) {
+      published = publishableState(after, AI_RUN_STATE_MAX_BYTES);
+      if (published.restarted) {
+        const last = trace[trace.length - 1];
+        last.note = (last.note ? `${last.note}; ` : "") + `the table's state is ${published.restarted.bytes} bytes, over the ${published.restarted.limit} a run's state may hold (ai-runs R45), so this tick publishes the pass restarted at '${published.restarted.at}' and a later segment re-does it rather than resume from a state the record refuses`;
+      }
+    }
     const tick = await call(
       "airuntick",
       null,
-      {
-        run: runId,
-        log: entry ? [entry] : [],
-        consume,
-        ...CONTROL_FLOW.resume.to.includes(after.step) ? { state: resumableState(after) } : {}
-      }
+      { run: runId, log: entry ? [entry] : [], consume, ...published ? { state: published.state } : {} }
     );
     if (!tick.reached) return { refusal: planeSilent(tick) };
     const tickAnswer = planeAnswer(tick, "airuntick");

@@ -88362,6 +88362,31 @@ var AI_RUN_OWN_CHECKS = {
     where: "src/airun.mjs checkBound, called from src/ai-runs/index.mjs #aiRunTerminate",
     translation: "The run stopped without saying what stopped it. Not finding something and not finishing the search are different facts, and only one of them licenses a conclusion."
   },
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+       bias manifest in force, the launching project's standard pair, and THE
+       SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+       a hat" and a version is only interpretable against them. SK-1's row makes
+       the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+       disclosure standard), and a condition that may be omitted is not recorded:
+       it is recorded by the runs that felt like it.
+  
+       REFUSED AT THE OPEN, beside the two principals, for the same reason those
+       are: refusing later would mean a run had already searched under
+       instructions nobody can name. Two ways to fail and ONE code, because they
+       are one fact — the run object cannot say what it ran under. The worse of
+       the two is a version that names no pack: `3` reads as an answer and
+       identifies nothing, which is the blank-principal shape PL-4 measured one
+       field over, arriving on a condition instead of an identity.
+  
+       A WHOLE-FUNCTION `where`: `checkSkillVersion` is small, single-purpose, and
+       the only refusal it makes is this one. Moved from the catalogue with its
+       reasons and translation unchanged (N289, K333); its `where` names the site
+       this module holds (`skillpack.mjs`'s copy was deleted by N156). */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: "C-22.7",
+    where: "src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open",
+    translation: "This run did not say which version of its instructions it was working under. What a run found can only be read against the instructions it was given, so the record asks for that version before the run starts rather than guessing at it afterwards."
+  },
   /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
        THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
        Bob ruled 2026-08-09 that an investigation can be started by ANY MEMBER OF
@@ -88487,6 +88512,18 @@ var AI_RUN_OWN_CHECKS = {
     check: "C-22.16",
     where: "src/airun.mjs checkConsume (the open's list, its allowance arm), called from src/ai-runs/index.mjs open",
     translation: "The investigation was given a limit on part of its budget without saying how much it may use. A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, or leave that part out."
+  },
+  /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
+     run's resumable work list (R12, DEC-61: never a transcript), and it was stored with no bound on its size: the run's
+     principal could write any amount on every tick, into a row every read of the run publishes whole (R19). The
+     ceiling is `AI_RUN_STATE_MAX_BYTES`, measured as the UTF-8 length of the state's JSON, the bytes the row holds. Its
+     own code and not C-22.13's: the figure there is a budget's; here nothing is wrong with any figure, the work list is
+     simply too large to keep, and the remedy differs (keep less, or keep it elsewhere). A WHOLE-FUNCTION `where`, as
+     C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
+  AI_RUN_STATE_TOO_LARGE: {
+    check: "C-22.18",
+    where: "src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
+    translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -88685,7 +88722,7 @@ var AI_RUNS_CHECKS = Object.freeze({
 
 // src/ai-runs/skill-version.mjs
 function refusal12(key, detail) {
-  const row2 = AI_RUN_CHECKS[key];
+  const row2 = AI_RUN_OWN_CHECKS[key];
   return { ok: false, code: key, check: row2.check, translation: row2.translation, detail };
 }
 function checkSkillVersion(version) {
@@ -88844,6 +88881,24 @@ function checkConsume(entries, { seed = false, allowance = false, map = false, l
       );
   }
   return null;
+}
+var AI_RUN_STATE_MAX_BYTES = 262144;
+function checkRunState(state) {
+  if (state == null) return null;
+  let json5;
+  try {
+    json5 = JSON.stringify(state);
+  } catch {
+    return null;
+  }
+  if (typeof json5 !== "string") return null;
+  const bytes2 = new TextEncoder().encode(json5).length;
+  if (bytes2 <= AI_RUN_STATE_MAX_BYTES) return null;
+  return refusal13(
+    "AI_RUN_STATE_TOO_LARGE",
+    `the run's state is ${bytes2} bytes as JSON, over the ${AI_RUN_STATE_MAX_BYTES} a run may keep: \`state\` is the run's resumable work list (\xA714b.7), not what it read. Nothing was written`,
+    { bytes: bytes2, limit: AI_RUN_STATE_MAX_BYTES }
+  );
 }
 var PROJECT_GATE_GROUNDS = {
   /* No member is behind this caller at all — a machine credential. The gate is
@@ -89083,8 +89138,10 @@ var AiRuns = class _AiRuns {
   /** R30: the runs as the bias debt's work products (bias R33): `list(after, limit)` the run ids after `after`,
    *  ascending; `read(run)` the run's context, member principal, the lens recorded when it began (the lens in force
    *  at its open where the open recorded one, else the manifest it was handed; null when neither can be read, R32),
-   *  the manifest it ran under when that was the lens in force, and its `rerun_of`; `visible(run, viewer)` R19's
-   *  sight. Read as the administrator viewer, as bias reads every work product. */
+   *  the manifest it ran under when that was the lens in force, its `rerun_of`, and `registered` (N284): the run's
+   *  `created`, the open's instant, which bias offers the scheduler's rank as the product's `waitingSince` (null
+   *  when the stored instant cannot be read, never filled in); `visible(run, viewer)` R19's sight. Read as the
+   *  administrator viewer, as bias reads every work product. */
   workProducts() {
     const MEMBER = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
     return {
@@ -89094,7 +89151,7 @@ var AiRuns = class _AiRuns {
         Math.max(1, Math.floor(Number(limit) || 50))
       ).map((r) => String(r.run)),
       read: async (run) => {
-        const row2 = this.#one(`SELECT rerun_of FROM ai_runs WHERE run = ?`, String(run ?? ""));
+        const row2 = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run ?? ""));
         if (!row2) return null;
         const a = await this.read({ run, viewer: "admin" });
         const s = a && a.found === true ? a.session : null;
@@ -89108,7 +89165,8 @@ var AiRuns = class _AiRuns {
           principal: pm ? pm[1] : null,
           lens,
           ranUnder: bias.in_force === true ? sha(bias.manifest) : null,
-          rerunOf: row2.rerun_of != null && String(row2.rerun_of).trim() ? String(row2.rerun_of).trim() : null
+          rerunOf: row2.rerun_of != null && String(row2.rerun_of).trim() ? String(row2.rerun_of).trim() : null,
+          registered: typeof row2.created === "string" && Number.isFinite(Date.parse(row2.created)) ? row2.created : null
         };
       },
       visible: async (run, viewer) => !!this.runFor(run, viewer)
@@ -89581,7 +89639,7 @@ var AiRuns = class _AiRuns {
    *  merely stored, because "every run records the skill version it ran under"
    *  is a requirement and a condition that may be omitted is not recorded. It
    *  is still never derived: the plane refuses, it does not fill in. The
-   *  refusal is C-22.7, built in `skillpack.mjs checkSkillVersion`. */
+   *  refusal is C-22.7, built in `./skill-version.mjs checkSkillVersion`. */
   async open({
     run,
     contextType,
@@ -89700,6 +89758,18 @@ var AiRuns = class _AiRuns {
         check: badSeed.check,
         translation: badSeed.translation,
         note: badSeed.detail
+      };
+    const badState = checkRunState(state);
+    if (badState)
+      return {
+        run,
+        started: false,
+        code: badState.code,
+        check: badState.check,
+        translation: badState.translation,
+        note: badState.detail,
+        bytes: badState.bytes,
+        limit: badState.limit
       };
     const lensNow = await this.#bias().biasManifest({
       scope: String(contextType) === "project" ? "project" : "instance",
@@ -89918,6 +89988,21 @@ var AiRuns = class _AiRuns {
         detail: badConsume.detail,
         bound: badConsume.bound,
         note: "a run's budget moves only up, by whole numbers, and only on the bounds the caller counts. Nothing was appended and no budget was spent"
+      };
+    const badState = checkRunState(state);
+    if (badState)
+      return {
+        run,
+        ticked: false,
+        found: true,
+        status: row2.status,
+        code: badState.code,
+        check: badState.check,
+        translation: badState.translation,
+        detail: badState.detail,
+        bytes: badState.bytes,
+        limit: badState.limit,
+        note: "a run's state is its resumable work list, and it is bounded. Nothing was appended and no budget was spent"
       };
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : _AiRuns.AI_RUN_LEASE_MS;
     const refused = [];
@@ -93120,7 +93205,8 @@ var CaptureRequests = class _CaptureRequests {
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
    *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
    *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default), `promotion` (R38), `order` (R44: the
-   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own). */
+   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own), `inquiry` (R14: its R44
+   *  `memberUserAgent(id)`). */
   constructor(storage, deps = {}) {
     this.#sql = storage.sql;
     this.#deps = deps;
@@ -93773,15 +93859,13 @@ var CaptureRequests = class _CaptureRequests {
       return false;
     }
   }
-  /** The member agent RECORDED on the inquiry (its `member_user_agent`), or null: read from the question's own
-   *  `bundle.md` through record-core, and null answered honestly rather than defaulted, because a default here is the
-   *  invented client BOB-3 does not license. */
+  /** R14 (N295, K342): the member agent RECORDED on the inquiry, as inquiry answers it (its R44 `memberUserAgent`: the
+   *  control plane's stamp at the inquiry's creation, else its document's `member_user_agent`), or null: answered
+   *  honestly rather than defaulted, because a default here is the invented client BOB-3 does not license. Inquiry
+   *  is the one reader of that record (K231); this module never reads the document's line itself. */
   #memberAgent(target) {
     try {
-      const f8 = this.#deps.record.readFile(target, "bundle.md");
-      if (!f8 || typeof f8.text !== "string") return null;
-      const fm = parseFrontmatter(f8.text).data || {};
-      const ua = fm.member_user_agent;
+      const ua = this.#deps.inquiry.memberUserAgent(target);
       return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
     } catch {
       return null;
@@ -94274,7 +94358,10 @@ function captureRequestsOf(host, deps = {}) {
       /* CAPTURE-SOURCES #2's note: the key rides the first `credentialsOf` call. */
       credentials: deps.credentials === void 0 ? credentialsOf(host, { key: env.CAPTURE_CREDENTIALS_KEY ?? null }) : deps.credentials,
       /* R38 (N141): the one promotion on this storage, through which a requested capture enters the record. */
-      promotion: deps.promotion || promotionOf(host, { record })
+      promotion: deps.promotion || promotionOf(host, { record }),
+      /* R14 (N295): the member-browser agent is inquiry's R44 answer. Reached when the drain asks, not at creation, so
+         the one inquiry on this host is the one the plane built with its own deps. */
+      inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
     };
     c = new CaptureRequests(storage, d);
     instances28.set(storage, c);
