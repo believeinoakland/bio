@@ -1,3 +1,6 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_01NWS1PUu3dajfGZfz3TptN7,job,legacy-checks,6488425,120929,110,23899,,583,11615
 session_01JYHQ5hY1x1mG3gkXoP1uAf,BOB-final,,98845460,2031198,27875,430686,,,
+session_016yKhRLi47N7TnetztZ9wyP,job,record-core,8510348,206696,92,23178,,4,1161
+session_018enJcPLdFUzkqbmn9nSNdx,job,membership,12337725,292527,114,44462,,51,6060
+session_0133sVWEYMsdWzBRbtncwygV,job,promotion,19512436,313393,154,27490,,12,79
