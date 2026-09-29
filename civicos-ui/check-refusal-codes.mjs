@@ -210,6 +210,7 @@ const heldTwice = (check, a, b) => {
   return !!h && [a, b].sort().join("|") === [...h.rows].sort().join("|");
 };
 const HELD_TWICE_SEEN = new Map();   /* check -> the findings accepted this run, for the staleness arm */
+const ROWS_PRESENT = new Set();      /* `${family}.${code}` for every row armA reads, so the staleness arm knows the pair's state */
 /* M0-79 — EVERY FIGURE A RATCHET KEY GATES IS RECORDED WHERE IT IS COMPARED, so the
    slack arm at the foot judges the SAME number the floor or ceiling judged, and a key
    whose figure nobody recorded is a named failure rather than a gate that silently
@@ -2047,6 +2048,7 @@ function armA(families) {
   for (const [fam, table] of families) {
     for (const [code, row] of Object.entries(table)) {
       /* `home`: the file defining the row (T5-12: the catalogue or a module), relative to bio-plane/. */
+      ROWS_PRESENT.add(`${fam}.${code}`);
       rows.push({ fam, code, ...row, home: path.relative(PLANE, FAMILY_CODE_FILE.get(code) || CATALOG).split(path.sep).join("/") });
 
       if (!CODE_RE.test(code))
@@ -4075,7 +4077,8 @@ const RATCHET_KEYS = (() => {
 for (const [check, h] of HELD_TWICE) {
   const seen = new Set(HELD_TWICE_SEEN.get(check) || []);
   const missing = ["check", "translation", "where"].filter((k) => !seen.has(k));
-  if (missing.length)
+  /* Inert on a tree holding neither row (a fixture tree); live the moment either is held. */
+  if (missing.length && h.rows.some((r) => ROWS_PRESENT.has(r)))
     FAIL(`HELD TWICE: ${check} (${h.rows.join(" and ")}) is accepted by name, but this run met no ${missing.join(", no ")} `
        + `finding for it — the pair has changed or gone (${h.why}). Retire the acceptance in the same commit.`);
 }
