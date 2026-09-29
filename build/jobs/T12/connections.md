@@ -43,3 +43,7 @@ N285 applied: R1's NO_ENTITY is now entities.noEntity(<this act's sentence>), im
 **Deferred:** none. **Other modules:** nothing found.
 
 Size (session_01Tpv6PUqFfj5j6NHC4X1yVi): test runs 1, module lines 2227
+
+## J2 · COMPLETE · re B2
+
+B2 done: merged tranche/T12 (entities R37, C-91.5); re-ran against the real noEntity: 66/66 pass, 0 todo; format, architecture, coverage 59/59, ownership all 0 failures. No module code changed at this step; record updated with its own Size line.
