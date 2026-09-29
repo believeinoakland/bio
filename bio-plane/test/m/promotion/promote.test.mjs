@@ -7,6 +7,7 @@ import { makePromotion, doc, infoDoc, create, revise, sha, EMPTY, T0, T1 } from 
 import { INLINE_MAX, PROMOTION_CHECKS } from "../../../src/promotion/index.mjs";
 import { STATES, vocabFor, normalizeType, projectNameKey, ACT_SHAPE_CHECKS, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 import * as C from "../../../checks/bio-checks.mjs";
+import { mintExhausted } from "../../../src/record-core/index.mjs";
 
 const ID = "INFO-2026-0001";
 
@@ -377,6 +378,29 @@ test("R19: projects — the plane mints the id, titles are unique ignoring case 
   const m = machine.p.promote({ ...mk("Machine made"), ownerMemberId: undefined, author: "token:ai" });
   assert.deepEqual([m.ok, m.owner, m.visibility], [true, null, "hidden"]);
   assert.deepEqual(machine.membership.created, []);
+});
+
+test("R19: when no free project id can be drawn, the creation is refused MINT_EXHAUSTED through record-core's mintExhausted (its R62), and nothing is written", () => {
+  const { p, record, membership } = makePromotion();
+  const drawn = [];
+  record.mintOpaqueId = (prefix, ...rest) => { drawn.push(prefix); return null; };
+  const before = record.dump();
+  const r = p.promote({ base: null, snapKey: "p1", author: "member:ann", ownerMemberId: "ann", visibility: "discoverable", meta: {},
+    files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Sewer Fund", current_state: "forming", created: T0, last_updated: T0 }) }] });
+  /* The answer is record-core's own, byte for byte: code, row C-59.6, translation, the prefix asked and its sentence. */
+  assert.deepEqual(r, mintExhausted("PROJ"));
+  assert.deepEqual([r.reason, r.code, r.check, r.prefix], ["MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", "PROJ"]);
+  assert.deepEqual(drawn, ["PROJ"]);
+  assert.equal(record.dump(), before);
+  assert.deepEqual(membership.created, []);
+  /* A fork mints the same way, and answers the same. */
+  record.mintOpaqueId = () => "PROJ-2026-0001-origin";
+  const o = p.promote({ base: null, snapKey: "o1", author: "member:ann", ownerMemberId: "ann", meta: {},
+    files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Origin", current_state: "forming", created: T0, last_updated: T0 }) }] });
+  assert.equal(o.ok, true, JSON.stringify(o));
+  record.mintOpaqueId = () => null;
+  const f = p.forkProject({ projectId: o.bundleId, title: "Fork", by: "ann" });
+  assert.deepEqual(f, mintExhausted("PROJ"));
 });
 
 test("R20: a revision of a bundle the stamped actor may not see answers exactly as ABSENT, before anything that reads the head", () => {
