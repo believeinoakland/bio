@@ -1357,3 +1357,14 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; the approved page at `docs/development/ux-substrate/measures-map.html` (rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni); folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §M.
   QUESTION 5 ITSELF, decided against the map (Bob, 2026-09-29, as recommended): the project workspace SHOWS strength. Each question in the list shows its two strength badges (capture and connection, in the map's colours and icons, with a testimony badge beside them when an account is part of the answer), one plain phrase against the project's bar ("Meets the bar", "Short on connection", "Short on capture", or "Unrated": rests on nothing yet), and "Undetermined" named with its reason, never a blank; e.g. `[capture B] [connection C]  Short on connection · bar B/B`. It never shows one combined badge or score (DEC-44). Hovering a badge names the weakest document or link and how to raise it; a click opens the question's page with that leg highlighted. The old interface's grade-free workspace (UI-16's note) was an interface choice, not canon, and is superseded.
 owed: the redesign's workspace and display primitives aligned to the map; the UX page's open question 5 marked ruled.
+
+### DEC-83 · answered
+raised: 2026-09-29 · BOB #65 (N327: four admin-only refusals converging on membership's `notAnAdmin`, K275)
+for: bob
+question: When refusals of one condition converge on one code, what does a member read: the shared general sentence, or each act's own specific sentence?
+why it is Bob's: UX (the words a member reads).
+provisional: four codes (`ADMIN_ONLY`, `AI_CREDENTIAL_ORG_NOT_ADMIN`, `GROUP_ASPIRATION_NOT_ADMIN`, `BIAS_ADOPTION_NOT_AN_ADMINISTRATOR`) each with its own sentence.
+alternative: keep each code and its sentence (K275's exception for different conditions).
+answer: The message is the standard one, followed by a specific recommendation of what to do next or instead. The shared row's translation is shown first; the act's own fixed remedy sentence is shown after it, as part of what the member reads, never a hidden field. BOB reads this as the pattern for every refusal converged under K275, not only these four.
+decided: 2026-09-29 · Bob
+owed: N327 carried in T14 with membership R84 worded to match; the redesign shows the remedy line after the translation.
