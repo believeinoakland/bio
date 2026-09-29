@@ -1286,3 +1286,17 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §2a (the pulling paragraph, and the corrected sentence).
   4. THE NOTE AND THE CONTACT (Bob, 2026-09-29, as recommended; he also confirmed item 3's four safeguards): the note travels with the capture as the source's own words, labelled as the knocker's and never as evidence of its truth; the contact stays in the doorbell inbox, readable by members and never in the record or any publication, so a whistleblower's way of being reached cannot be published by accident; a member who needs it reads it there.
 owed: capture's requirements (a doorbell provenance with the knock's receipt; the pull act creating the capture; the knocker secret, its pseudonym and its keyed digest), for Bob's approval; the UX page's open question 2 marked ruled.
+
+### DEC-79 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 3)
+for: bob
+question: How does a project show its stage and its work products' readiness?
+why it is Bob's: UX.
+provisional: nothing is blocked; the stage is in canon only (N300, T12).
+alternative: a text label or chip for the stage.
+recommendation: the page's own: all four stages shown, `forming`, `investigating` and `matured` computed and `closed` the owner's reasoned act, with the readiness ladder shown only for rungs the record can earn, each unearned rung stated rather than hidden.
+reversal cost: low; nothing is built.
+response: **As recommended (which K362 and K364, recorded by BOB #61 the same day, already carry), and Bob set the display, 2026-09-29.** The stage is shown as coloured bars that build on top of each other as the project advances into each new stage, one bar per stage reached, giving a quick, space-efficient sense of where the project stands. Mousing over the bars discloses more; clicking them opens a larger display showing more about each stage and what is still needed to reach the next. Recorded with three conditions that follow from standing rules: what is still needed is stated from the same rule that computes the stage, so the display can never promise a stage the computation would not give; hover has a focus or tap equivalent, since phones and keyboards have no hover (UI-KICKOFF, devices); and `closed` shows its reason and never reads as a finished stack (an abandoned project is not a completed one), with each bar carrying its stage's name so colour is never the only signal.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.3.
+owed: carried into N300's wording (T12) and the UX redesign; the UX page's open question 3 marked ruled.
