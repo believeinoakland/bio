@@ -1,7 +1,9 @@
 /* observation-log over the modules it uses, each the real one (record-core, membership, provenance, content's table), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage at its shape (a cursor, workerd's pattern
    cap: K313, K316). Extraction's reading notice
-   (its R24) is a provider the test controls, as `observationLogOf`'s `deps.extraction` takes it: `w.ex.fire(e)` runs
-   every registered listener, as extraction does after a write. Every test drives `observation-log` at its interface;
+   (its R24) and index notice (its R62) are a provider the test controls, as `observationLogOf`'s `deps.extraction`
+   takes it: `w.ex.fire(e)` and `w.ex.fireIndexed(e)` run every registered listener, as extraction does after a write.
+   `world({ extraction: "module" })` is extraction itself instead, its tables created, so a test drives its R61 write
+   and reads what this module recorded. Every test drives `observation-log` at its interface;
    the setup writes bundles, participants and content rows through their owners' read contracts. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -10,6 +12,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
+import { Extraction } from "../../../src/extraction/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -60,21 +63,25 @@ export function storage() {
   };
 }
 
-/** Extraction's reading notice, as its R24 states it: `onReading(module, fn)` once per module; `fire` runs them. */
+/** Extraction's reading notice and index notice, as its R24 and R62 state them: `onReading(module, fn)` and
+ *  `onIndexed(module, fn)` once per module; `fire` and `fireIndexed` run them. */
 export function extractionNotice() {
-  const listeners = [];
+  const listeners = [], indexListeners = [];
+  const register = (list) => (module, fn) => {
+    if (list.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED" };
+    list.push({ module, fn }); return { ok: true };
+  };
   return {
-    listeners,
-    onReading(module, fn) {
-      if (listeners.some((l) => l.module === module)) return { ok: false, reason: "LISTENER_DECLARED" };
-      listeners.push({ module, fn }); return { ok: true };
-    },
+    listeners, indexListeners,
+    onReading: register(listeners),
+    onIndexed: register(indexListeners),
     fire(e) { return listeners.map((l) => ({ module: l.module, answer: l.fn(e) })); },
+    fireIndexed(e) { return indexListeners.map((l) => ({ module: l.module, answer: l.fn(e) })); },
     readingOf: () => null, unitsOf: () => ({ units: [], state: null }), capturesReadFor: () => [],
   };
 }
 
-export function world({ now = "2026-09-27T03:00:00Z" } = {}) {
+export function world({ now = "2026-09-27T03:00:00Z", extraction = "notice" } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -86,7 +93,8 @@ export function world({ now = "2026-09-27T03:00:00Z" } = {}) {
   membership.migrate();
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
-  const ex = extractionNotice();
+  let ex = extractionNotice();
+  if (extraction === "module") { ex = new Extraction(st, { record, membership }); ex.migrate(); }
   const content = contentOf(host, { record, membership, provenance: prov, extraction: ex, now: () => clock.now });
   content.migrate();
   const obs = observationLogOf(host, { record, membership, provenance: prov, extraction: ex, now: () => Date.parse(clock.now) });
