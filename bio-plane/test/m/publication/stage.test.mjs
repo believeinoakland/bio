@@ -5,13 +5,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, NOW, SIG } from "./fixture.mjs";
-import { STAGE_QUESTIONS_MAX, WORK_PRODUCTS_MAX, READINESS_RUNGS, PROJECT_STAGES } from "../../../src/publication/index.mjs";
+import { STAGE_QUESTIONS_MAX, WORK_PRODUCTS_MAX, READINESS_RUNGS, PROJECT_STAGES, STAGE_NEEDS, STAGE_SENTENCES,
+         CLOSED_REASONS, CLOSED_RECORDED_MAX } from "../../../src/publication/index.mjs";
 
 const Q1 = "INQ-2026-0001", Q2 = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 
 /* A project's document: its own title and state, the questions it cites (`severed` marks a severed citation) and its
    conclusion record (`conclusions` rows as basis-versions reads them). */
-function projDoc(title, { state = "forming", closedReason = null, cites = [], severed = [], conclusions = [] } = {}) {
+function projDoc(title, { state = "forming", closedReason = null, cites = [], severed = [], conclusions = [], history = [] } = {}) {
   const refs = [...cites.map((t) => ({ t, s: "confirmed" })), ...severed.map((t) => ({ t, s: "severed" }))];
   return ["---", "object_type: project", "schema: project@1", `title: "${title}"`, `current_state: ${state}`,
     "prior_state: null", ...(closedReason ? [`closed_reason: ${closedReason}`] : []),
@@ -22,7 +23,9 @@ function projDoc(title, { state = "forming", closedReason = null, cites = [], se
       `    act: ${c.act ?? "concluded"}`, "    by: olive", `    at: "${c.at ?? NOW}"`,
       ...(c.act === "withdrawn" ? ["    reason: \"a new reading\""] : ["    conclusion: \"It is so.\"", "    falsifier: \"A record.\""])])]
       : []),
-    "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
+    ...(history.length ? ["state_history:", ...history.flatMap((h) => [`  - timestamp: "${h.at}"`, `    from_state: ${h.from}`,
+      `    to_state: ${h.to}`, `    blurb: "The owner's act."`, "    author: olive"])] : ["state_history: []"]),
+    "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
 let n = 0;
@@ -253,4 +256,292 @@ test("R45 reading stops once rule 2 is met: a concluded question read in the sec
   const s = stage();
   assert.deepEqual([s.stage, s.basis.question, s.questions.concluded, s.questions.truncated], ["matured", ids[700], 1, false]);
   assert.equal(s.questions.read, 1000, "two pages of 500 read, the third never asked");
+});
+
+/* ---------------------------------------------------------------- R49: `stages` (N346; DEC-79; K448, K452) */
+
+const COMPUTED = ["forming", "investigating", "matured"];
+/* R49's one-rule invariant over an answer: the four in order, each with the six fields; the reached computed stages an
+   unbroken prefix whose last is the stage (or, closed, what the read computed); `needs` only on a computed stage not
+   reached, listing R45's inputs only; `since` only where something earned the stage. */
+function oneRule(s) {
+  assert.deepEqual(s.stages.map((x) => x.stage), PROJECT_STAGES);
+  for (const x of s.stages)
+    for (const k of ["stage", "reached", "earned", "since", "needs", "why"]) assert.ok(k in x, `${x.stage} carries ${k}`);
+  const reached = s.stages.slice(0, 3).map((x) => x.reached);
+  const firstNot = reached.findIndex((r) => r !== true);
+  if (firstNot >= 0) assert.ok(reached.slice(firstNot).every((r) => r !== true), `an unbroken prefix: ${reached}`);
+  const last = COMPUTED[(firstNot < 0 ? 3 : firstNot) - 1];
+  if (s.stage === "closed") assert.equal(s.stages[3].reached, true);
+  else if (s.stage === "undetermined") assert.equal(last, s.at_least ?? undefined);
+  else { assert.equal(last, s.stage); assert.equal(s.stages[3].reached, false); }
+  for (const x of s.stages) {
+    if (x.reached !== true) assert.equal(x.since, null, `${x.stage}: no since unless reached`);
+    if (x.earned === null) assert.equal(x.since, null, `${x.stage}: no since without earning evidence`);
+    if (x.stage === "closed" || x.reached !== false || s.stage === "closed") assert.equal(x.needs, null, `${x.stage}: no needs`);
+    else assert.deepEqual(x.needs.any_of.map((c) => c.condition), STAGE_NEEDS[x.stage]);
+  }
+  return s;
+}
+const at = (s, name) => s.stages.find((x) => x.stage === name);
+const fill = (key, n) => STAGE_SENTENCES[key].replace(/\{(\w+)\}/g, (_, k) => String(n[k]));
+
+test("R49 one rule: on every step of the four-stage walk `stages` is produced with `stage`, the reached stages an unbroken prefix, each `since` the instant of the evidence that earns it", () => {
+  const { w, proj, write, stage } = setup();
+  let s = oneRule(stage());
+  assert.deepEqual(s.stages.map((x) => [x.stage, x.reached, x.earned, x.since]),
+    [["forming", true, null, null], ["investigating", false, null, null], ["matured", false, null, null], ["closed", false, null, null]]);
+  w.doc(DOC);
+  w.inquiry(Q1);
+  write({ cites: [Q1] });
+  oneRule(stage());
+  w.inquiry(Q1, { legs: [{ target: DOC, date: "2026-09-20T00:00:00Z" }, { target: DOC, date: "2026-09-18T00:00:00Z" }] });
+  s = oneRule(stage());
+  assert.deepEqual(at(s, "investigating"), { stage: "investigating", reached: true, earned: { question: Q1 },
+    since: "2026-09-18T00:00:00Z", needs: null, why: fill("investigating_reached", { read: 1, with_legs: 1 }) });
+  write({ cites: [Q1], conclusions: [{ inquiry: Q1, at: "2026-09-25T00:00:00Z" }] });
+  s = oneRule(stage());
+  assert.deepEqual([s.stage, at(s, "matured").reached, at(s, "matured").earned, at(s, "matured").since],
+                   ["matured", true, { question: Q1 }, "2026-09-25T00:00:00Z"]);
+  write({ cites: [Q1], conclusions: [{ inquiry: Q1, at: "2026-09-25T00:00:00Z" }, { inquiry: Q1, act: "withdrawn", at: "2026-09-26T00:00:00Z" }] });
+  s = oneRule(stage());
+  assert.deepEqual([s.stage, at(s, "matured").reached, at(s, "matured").since], ["investigating", false, null]);
+  aCase(w, proj, "CASE-2026-0001", { sign: true });
+  s = oneRule(stage());
+  assert.deepEqual([at(s, "matured").earned, at(s, "matured").since], [{ case: "CASE-2026-0001", edition: 1 }, NOW]);
+  write({ state: "closed", closedReason: "resolved", cites: [Q1], history: [{ at: "2026-09-26T12:00:00Z", from: "investigating", to: "closed" }] });
+  s = oneRule(stage());
+  assert.deepEqual(at(s, "closed"), { stage: "closed", reached: true, earned: { closed_reason: "resolved" },
+    since: "2026-09-26T12:00:00Z", needs: null, why: STAGE_SENTENCES.closed_reached });
+  write({ state: "investigating", cites: [Q1] });
+  oneRule(stage());
+});
+
+test("R49 K448: withdrawing the earning conclusion moves matured's `since` to the evidence that earns it then, or unreaches it", () => {
+  const { w, proj, write, stage } = setup();
+  w.doc(DOC);
+  w.inquiry(Q1, { legs: [{ target: DOC }] });
+  w.inquiry(Q2);
+  const c1 = { inquiry: Q1, at: "2026-09-20T00:00:00Z" }, c2 = { inquiry: Q2, at: "2026-09-24T00:00:00Z" };
+  write({ cites: [Q1, Q2], conclusions: [c1, c2] });
+  assert.equal(at(oneRule(stage()), "matured").since, "2026-09-20T00:00:00Z");
+  /* the earliest conclusion withdrawn: the later one earns it now */
+  write({ cites: [Q1, Q2], conclusions: [c1, c2, { inquiry: Q1, act: "withdrawn", at: "2026-09-25T00:00:00Z" }] });
+  let s = oneRule(stage());
+  assert.deepEqual([s.stage, at(s, "matured").earned, at(s, "matured").since], ["matured", { question: Q2 }, "2026-09-24T00:00:00Z"]);
+  /* both withdrawn: matured unreached, the leg still earns investigating (its leg carries no instant: stated null) */
+  write({ cites: [Q1, Q2], conclusions: [c1, c2, { inquiry: Q1, act: "withdrawn", at: "2026-09-25T00:00:00Z" },
+                                          { inquiry: Q2, act: "withdrawn", at: "2026-09-26T00:00:00Z" }] });
+  s = oneRule(stage());
+  assert.deepEqual([s.stage, at(s, "matured").reached, at(s, "matured").since, at(s, "investigating").since],
+                   ["investigating", false, null, null]);
+  /* a ratified case edition (at NOW) beside a conclusion: the earliest of the two halves earns it; the conclusion
+     withdrawn, the edition's own instant */
+  aCase(w, proj, "CASE-2026-0001", { sign: true, finding: "INQ-2026-0003" });
+  write({ cites: [Q1, Q2], conclusions: [c2] });
+  s = oneRule(stage());
+  assert.deepEqual([at(s, "matured").earned, at(s, "matured").since], [{ question: Q2 }, "2026-09-24T00:00:00Z"]);
+  write({ cites: [Q1, Q2], conclusions: [c2, { inquiry: Q2, act: "withdrawn", at: "2026-09-26T00:00:00Z" }] });
+  s = oneRule(stage());
+  assert.deepEqual([at(s, "matured").earned, at(s, "matured").since], [{ case: "CASE-2026-0001", edition: 1 }, NOW]);
+});
+
+test("R49 no promise: each listed condition, met alone with nothing else changed, makes R45 decide that stage or a later one", () => {
+  const rank = (st) => PROJECT_STAGES.indexOf(st);
+  /* forming, holding one question without a leg: each input that `investigating` and `matured` list, alone */
+  const base = () => { const t = setup(); t.w.doc(DOC); t.w.inquiry(Q1); t.write({ cites: [Q1] }); return t; };
+  let t = base();
+  let s = oneRule(t.stage());
+  assert.deepEqual([s.stage, at(s, "investigating").needs, at(s, "matured").needs],
+    ["forming", { any_of: [{ condition: "held_question_with_leg", have: 0 }] },
+     { any_of: [{ condition: "concluded_held_question", have: 0 }, { condition: "ratified_case_edition", have: 0 }] }]);
+  t.w.inquiry(Q1, { legs: [{ target: DOC }] });
+  assert.ok(rank(t.stage().stage) >= rank("investigating"), "held_question_with_leg");
+  t = base();
+  t.write({ cites: [Q1], conclusions: [{ inquiry: Q1 }] });
+  assert.ok(rank(t.stage().stage) >= rank("matured"), "concluded_held_question");
+  t = base();
+  aCase(t.w, t.proj, "CASE-2026-0001", { sign: true });
+  assert.ok(rank(t.stage().stage) >= rank("matured"), "ratified_case_edition");
+  /* investigating: each of matured's two, alone */
+  const legged = () => { const u = base(); u.w.inquiry(Q1, { legs: [{ target: DOC }] }); return u; };
+  t = legged();
+  s = oneRule(t.stage());
+  assert.deepEqual([s.stage, at(s, "matured").needs.any_of.map((c) => c.have)], ["investigating", [0, 0]]);
+  t.write({ cites: [Q1], conclusions: [{ inquiry: Q1 }] });
+  assert.equal(t.stage().stage, "matured");
+  t = legged();
+  aCase(t.w, t.proj, "CASE-2026-0001", { sign: true });
+  assert.equal(t.stage().stage, "matured");
+});
+
+test("R49 uncounted inputs move nothing: a no-project conclusion, a signed edition not ratified, the document's own `matured`, a severed citation", () => {
+  const { w, proj, write, stage } = setup();
+  w.doc(DOC);
+  w.inquiry(Q1);
+  write({ cites: [Q1] });
+  const was = JSON.stringify(stage());
+  const same = (why) => assert.equal(JSON.stringify(stage()), was, why);
+  /* the question's own (no-project) conclusion */
+  w.inquiry(Q1, { state: "concluded" });
+  same("a conclusion made without the project");
+  /* a case edition signed and never ratified */
+  w.inquiry(Q2, { legs: [{ target: DOC }] });
+  w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: Q2, version_sha: w.head(Q2) }] });
+  w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: Q2, version_sha: w.head(Q2), role: "load_bearing" }] });
+  const signed = JSON.parse(JSON.stringify(stage()));
+  const strip = (x) => JSON.stringify({ ...x, work_products: null, readiness: null });
+  assert.equal(strip(signed), strip(JSON.parse(was)), "a signed edition not ratified");
+  /* the document's own current_state, and a severed citation of a legged, concluded question */
+  write({ state: "investigating", cites: [Q1] });   /* the declared moves, forming → investigating → matured */
+  write({ state: "matured", cites: [Q1], severed: [Q2], conclusions: [{ inquiry: Q2 }] });
+  const after = stage();
+  assert.equal(strip(after), strip(JSON.parse(was)), "the document's state word and a severed citation");
+});
+
+test("R49 the investigating need: no question held says so; one held without a leg has 0 of 1", () => {
+  const { w, write, stage } = setup();
+  let s = oneRule(stage());
+  assert.deepEqual([at(s, "investigating").why, at(s, "investigating").needs.any_of[0].have],
+                   [STAGE_SENTENCES.investigating_none_held, 0]);
+  w.inquiry(Q1);
+  write({ cites: [Q1] });
+  s = oneRule(stage());
+  assert.deepEqual([s.questions.read, at(s, "investigating").needs, at(s, "investigating").why],
+    [1, { any_of: [{ condition: "held_question_with_leg", have: 0 }] }, fill("investigating_no_leg", { read: 1 })]);
+});
+
+test("R49 a skipped stage: a ratified case edition and no held question with a leg reads matured, investigating reached with `earned: null`", () => {
+  const { w, proj, write, stage } = setup();
+  w.inquiry(Q1);
+  write({ cites: [Q1] });
+  aCase(w, proj, "CASE-2026-0001", { sign: true });
+  const s = oneRule(stage());
+  assert.equal(s.stage, "matured");
+  assert.deepEqual(at(s, "investigating"), { stage: "investigating", reached: true, earned: null, since: null, needs: null,
+                                             why: fill("investigating_skipped", { read: 1 }) });
+  assert.deepEqual(at(s, "matured").why, fill("matured_reached", { concluded: 0, read: 1, editions: 1 }));
+});
+
+test("R49 the cap: past 2,000 held questions with rules 1–2 unmet, the stages up to `at_least` are reached and those above are undetermined with the answer's detail", () => {
+  const { stage } = crowded(STAGE_QUESTIONS_MAX + 1, { legged: [5] });
+  const s = oneRule(stage());
+  assert.deepEqual([s.stage, s.at_least], ["undetermined", "investigating"]);
+  assert.deepEqual(s.stages.map((x) => x.reached), [true, true, null, null]);
+  for (const x of s.stages.slice(2)) assert.deepEqual([x.needs, x.earned, x.since, x.why], [null, null, null, s.detail]);
+});
+
+test("R49 R45 a failed question read still asks rule 2's ratified half: a ratified case edition is matured with it as basis; with none, undetermined with at_least", () => {
+  const { w, proj, write, stage } = setup();
+  w.doc(DOC);
+  w.inquiry(Q1, { legs: [{ target: DOC }] });
+  write({ cites: [Q1] });
+  const real = w.basisVersions.projectQuestions.bind(w.basisVersions);
+  let calls = 0;
+  /* the first page reads, the second throws */
+  w.basisVersions.projectQuestions = (a) => {
+    if (calls++ % 2) throw new Error("the read failed");
+    return { ...real(a), cursor: Q1 };
+  };
+  let s = oneRule(stage());
+  assert.deepEqual([s.stage, s.at_least, s.questions.truncated, s.basis], ["undetermined", "investigating", true, null]);
+  assert.equal(s.detail, "the questions this project holds could not all be read, so its stage is undetermined");
+  assert.deepEqual(s.stages.map((x) => x.reached), [true, true, null, null]);
+  w.basisVersions.projectQuestions = () => { throw new Error("the read failed"); };
+  assert.deepEqual([stage().stage, stage().at_least], ["undetermined", "forming"]);
+  aCase(w, proj, "CASE-2026-0001", { sign: true });
+  s = oneRule(stage());
+  assert.deepEqual([s.stage, s.basis, "at_least" in s],
+                   ["matured", { rule: "matured", question: null, case: "CASE-2026-0001", edition: 1 }, false]);
+  delete w.basisVersions.projectQuestions;
+});
+
+test("R49 closed: each reason in `closed_reason` and `closed.earned`; the computed stages stated with every `needs` null; reopened, derived again", () => {
+  const { w, write, stage } = setup();
+  w.doc(DOC);
+  w.inquiry(Q1, { legs: [{ target: DOC, date: "2026-09-19T00:00:00Z" }] });
+  for (const reason of CLOSED_REASONS) {
+    write({ state: "closed", closedReason: reason, cites: [Q1],
+            history: [{ at: "2026-09-26T08:00:00Z", from: "investigating", to: "closed" }] });
+    const s = oneRule(stage());
+    assert.deepEqual([s.stage, s.closed_reason, at(s, "closed").earned, at(s, "closed").since],
+                     ["closed", reason, { closed_reason: reason }, "2026-09-26T08:00:00Z"]);
+    /* how far it had come: investigating, from its leg; matured not reached, needing nothing while closed */
+    assert.deepEqual(s.stages.slice(0, 3).map((x) => [x.reached, x.needs]), [[true, null], [true, null], [false, null]]);
+    assert.deepEqual([at(s, "investigating").since, at(s, "matured").why], ["2026-09-19T00:00:00Z", STAGE_SENTENCES.closed_project]);
+    assert.deepEqual(s.questions, { read: 1, with_legs: 1, concluded: 0, truncated: false });
+  }
+  /* a close recorded with no history entry: the instant is not held, so it is null */
+  write({ state: "closed", closedReason: "abandoned", cites: [Q1] });
+  assert.equal(at(stage(), "closed").since, null);
+  write({ state: "investigating", cites: [Q1] });
+  const s = oneRule(stage());
+  assert.deepEqual([s.stage, at(s, "closed").reached, at(s, "closed").why, "recorded" in at(s, "closed")],
+                   ["investigating", false, STAGE_SENTENCES.closed_not_recorded, false]);
+});
+
+test("R49 a close without a recognised reason is not closed: `closed.recorded` holds the reason as written (null if absent, cut to 40), the stage computed", () => {
+  const { w, write, stage } = setup();
+  w.inquiry(Q1);
+  for (const [reason, recorded] of [[null, null], ["finished", "finished"], ["x".repeat(60), "x".repeat(CLOSED_RECORDED_MAX)]]) {
+    write({ state: "closed", closedReason: reason, cites: [Q1] });
+    const s = oneRule(stage());
+    assert.deepEqual([s.stage, s.closed_reason, at(s, "closed")], ["forming", null,
+      { stage: "closed", reached: false, earned: null, since: null, needs: null, why: STAGE_SENTENCES.closed_unrecognised, recorded }]);
+  }
+  assert.equal(CLOSED_RECORDED_MAX, 40);
+});
+
+test("R49 an unread document: all four stages undetermined with the answer's detail", () => {
+  const { w, proj, stage } = setup();
+  w.st.sql.exec(`DELETE FROM files WHERE bundle_id=? AND path='bundle.md'`, proj);
+  const s = stage();
+  assert.equal(s.stage, "undetermined");
+  assert.deepEqual(s.stages, PROJECT_STAGES.map((st) => ({ stage: st, reached: null, earned: null, since: null, needs: null, why: s.detail })));
+});
+
+test("R49 R34 fixed text: every `why` is one of the module's fixed sentences with counts filled in, naming no member, question or place", () => {
+  const { w, proj, write, stage } = setup();
+  const templates = Object.values(STAGE_SENTENCES).map((t) =>
+    new RegExp(`^${t.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/\\?\{(read|with_legs|concluded|editions)\\?\}/g, "\\d+")}$`));
+  const whys = [];
+  const take = () => { const s = stage(); for (const x of s.stages) whys.push([x.why, s.detail]); };
+  take();
+  w.doc(DOC);
+  w.inquiry(Q1, { question: "Did the Oakland council vote?" });
+  write({ cites: [Q1] });
+  take();
+  w.inquiry(Q1, { question: "Did the Oakland council vote?", legs: [{ target: DOC }] });
+  take();
+  write({ cites: [Q1], conclusions: [{ inquiry: Q1 }] });
+  take();
+  aCase(w, proj, "CASE-2026-0001", { sign: true });
+  take();
+  write({ state: "closed", closedReason: "superseded", cites: [Q1] });
+  take();
+  write({ state: "closed", closedReason: "done", cites: [Q1] });
+  take();
+  for (const [why, detail] of whys) {
+    assert.ok(templates.some((re) => re.test(why)) || why === detail, `a fixed sentence: ${why}`);
+    assert.doesNotMatch(why, /olive|h_olive|Oakland|council|Parks|INQ-|CASE-|PROJ-/, why);
+  }
+});
+
+test("R49 R47 nothing written: every table's rows are the same before and after each read, closed and undetermined included", () => {
+  const { w, proj, write, stage } = setup();
+  w.doc(DOC);
+  w.inquiry(Q1, { legs: [{ target: DOC }] });
+  for (const opts of [{ cites: [Q1] }, { cites: [Q1], conclusions: [{ inquiry: Q1 }] },
+                      { state: "closed", closedReason: "resolved", cites: [Q1] }, { state: "closed", closedReason: "later", cites: [Q1] }]) {
+    write(opts);
+    const snap = w.snapshot();
+    stage();
+    w.op("projectstage", { project: proj, viewer: V("olive") });
+    assert.deepEqual(w.snapshot(), snap);
+  }
+  w.basisVersions.projectQuestions = () => { throw new Error("the read failed"); };
+  const snap = w.snapshot();
+  assert.equal(stage().stage, "undetermined");
+  assert.deepEqual(w.snapshot(), snap);
+  delete w.basisVersions.projectQuestions;
 });
