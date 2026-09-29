@@ -43,3 +43,7 @@ N256 (my share) applied: R5's held reference stated and tested live (a reference
 **Correction to the first completion.** "Generated artifacts: none made stale" was loose: `bio-plane/dist/bio-plane.bundled.mjs` is built from the plane's source, which includes this module, so the comment edits stale its bytes. BOB rebuilds it at the layer close; nothing else is affected.
 
 Size (session_01TrJPeeGe3xdCv9sCLy1TBh): test runs 5, module lines 3039
+
+## J2 · COMPLETE · re B2
+
+B2 applied: tranche/T11 merged; fixture passes a reevaluation registerCaseParts stub; R16's end-to-end arm is live (held reference linked serve, heldLinked 1). Tests 67: 67 pass, 0 fail, 0 todo. format, architecture, coverage 16/16, ownership: 0 failures. R16 now holds: please strike its 'not yet met: K102' mark and the header's 'Not yet met: R16' in build/requirements/ratification.md (not mine to write). Correction: the comment edits do stale bio-plane.bundled.mjs (rebuilt at layer close).
