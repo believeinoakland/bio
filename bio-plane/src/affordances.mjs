@@ -854,6 +854,8 @@ export const RUNG_ABSENT = {
   signeradd:            { ground: "credential", is: "signer governance — the KEY, not what is signed with it" },
   signerset:            { ground: "credential", is: "signer governance" },
   governorconfig:       { ground: "credential", is: "operator tuning of the per-host governor" },
+  /* K377 (monitoring R30): the administrator's pause of the monitoring daemon, on `governorconfig`'s ground beside it. */
+  monitorpause:         { ground: "credential", is: "an administrator's setting over the instance's own fetching: pauses or resumes the monitoring daemon" },
   expertisedeclare:     { ground: "credential", is: "a member's own declaration about themselves" },
   expertiseconfirm:     { ground: "credential", is: "administrator act on a declaration" },
   enroll:               { ground: "credential", is: "an invitee becoming a member" },
@@ -2207,6 +2209,8 @@ export const NON_ACTS = {
   signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   governorconfig: "operator tuning of the per-host governor",
+  /* K377 (monitoring R30). */
+  monitorpause: "a machine-directed setting over the instance's own fetching, not an act on an object",
   /* Task acts: their subject is a TASK row, assignee-fenced by the store
      (NOT_YOURS), published with the task itself via op=tasks. */
   taskforward: "task act, assignee-fenced; travels with the task via op=tasks",
