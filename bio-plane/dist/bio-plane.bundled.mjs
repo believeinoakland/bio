@@ -9819,6 +9819,10 @@ var ACTION_CATALOGUE_CHECKS = {
 };
 
 // src/record-core/checks.mjs
+var checks_exports2 = {};
+__export(checks_exports2, {
+  RECORD_CORE_CHECKS: () => RECORD_CORE_CHECKS
+});
 var at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 var RECORD_CORE_CHECKS = Object.freeze({
   MINT_EXHAUSTED: Object.freeze({
@@ -11340,8 +11344,8 @@ var MEMBERSHIP_PROJECT_TABLES = [
 ];
 
 // src/membership/checks.mjs
-var checks_exports2 = {};
-__export(checks_exports2, {
+var checks_exports3 = {};
+__export(checks_exports3, {
   MEMBERSHIP_CHECKS: () => MEMBERSHIP_CHECKS
 });
 var at2 = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
@@ -14853,8 +14857,8 @@ function membershipOps(m, url, body, env) {
 }
 
 // src/promotion/checks.mjs
-var checks_exports3 = {};
-__export(checks_exports3, {
+var checks_exports4 = {};
+__export(checks_exports4, {
   PROMOTION_CHECKS: () => PROMOTION_CHECKS
 });
 var PROMOTION_CHECKS = {
@@ -17303,8 +17307,8 @@ async function governorOp(op, url, store) {
 }
 
 // src/calibration/checks.mjs
-var checks_exports4 = {};
-__export(checks_exports4, {
+var checks_exports5 = {};
+__export(checks_exports5, {
   CALIBRATION_CHECKS: () => CALIBRATION_CHECKS
 });
 var CALIBRATION_CHECKS = {
@@ -30036,8 +30040,8 @@ CREATE TABLE IF NOT EXISTS composed_readings (
 `;
 
 // src/extraction/checks.mjs
-var checks_exports5 = {};
-__export(checks_exports5, {
+var checks_exports6 = {};
+__export(checks_exports6, {
   EXTRACTION_CHECKS: () => EXTRACTION_CHECKS,
   NO_SHA_DETAIL: () => NO_SHA_DETAIL,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
@@ -33746,8 +33750,8 @@ function registerChecks({ files, fm, elided = null }) {
 }
 
 // src/provenance/checks.mjs
-var checks_exports6 = {};
-__export(checks_exports6, {
+var checks_exports7 = {};
+__export(checks_exports7, {
   REGISTER_ENTRY_CHECKS: () => REGISTER_ENTRY_CHECKS
 });
 var REGISTER_ENTRY_CHECKS = {
@@ -35908,8 +35912,8 @@ function provenanceOf(host, deps) {
 }
 
 // src/observation-log/checks.mjs
-var checks_exports7 = {};
-__export(checks_exports7, {
+var checks_exports8 = {};
+__export(checks_exports8, {
   LEAD_CHECKS: () => LEAD_CHECKS2,
   OBSERVATION_CHECKS: () => OBSERVATION_CHECKS,
   OBSERVATION_CHECK_KEYS: () => OBSERVATION_CHECK_KEYS
@@ -45821,8 +45825,8 @@ WHERE ${gate.sql}`,
 }
 
 // src/retrieval/checks.mjs
-var checks_exports8 = {};
-__export(checks_exports8, {
+var checks_exports9 = {};
+__export(checks_exports9, {
   MEANING_READ_CHECKS: () => MEANING_READ_CHECKS,
   SELECTION_CHECKS: () => SELECTION_CHECKS
 });
@@ -52772,8 +52776,8 @@ var WITHDRAWAL_COLUMNS = Object.freeze([
 ]);
 
 // src/entities/checks.mjs
-var checks_exports9 = {};
-__export(checks_exports9, {
+var checks_exports10 = {};
+__export(checks_exports10, {
   ENTITY_CHECKS: () => ENTITY_CHECKS,
   IDSPACE_CHECKS: () => IDSPACE_CHECKS,
   idspaceRefusal: () => idspaceRefusal
@@ -56809,8 +56813,8 @@ function migrateProgressions(sql) {
 }
 
 // src/progressions/checks.mjs
-var checks_exports10 = {};
-__export(checks_exports10, {
+var checks_exports11 = {};
+__export(checks_exports11, {
   DISPOSITIONS: () => DISPOSITIONS,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
@@ -58363,8 +58367,8 @@ function progressionsOf(host, deps) {
 }
 
 // src/bias/checks.mjs
-var checks_exports11 = {};
-__export(checks_exports11, {
+var checks_exports12 = {};
+__export(checks_exports12, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS2,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -60062,8 +60066,8 @@ CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candida
 `;
 
 // src/contradiction/checks.mjs
-var checks_exports12 = {};
-__export(checks_exports12, {
+var checks_exports13 = {};
+__export(checks_exports13, {
   CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
 });
@@ -60943,8 +60947,8 @@ function contradictionOps(c, url, body) {
 }
 
 // src/ai-runs/checks.mjs
-var checks_exports13 = {};
-__export(checks_exports13, {
+var checks_exports14 = {};
+__export(checks_exports14, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -67460,8 +67464,8 @@ function migrateCaptureRequests(sql) {
 }
 
 // src/capture-requests/checks.mjs
-var checks_exports14 = {};
-__export(checks_exports14, {
+var checks_exports15 = {};
+__export(checks_exports15, {
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS
 });
 var CAPTURE_SOURCE_CHECKS = Object.freeze({
@@ -68751,8 +68755,8 @@ function captureRequestsOps(c, url, body) {
 }
 
 // src/intent/checks.mjs
-var checks_exports15 = {};
-__export(checks_exports15, {
+var checks_exports16 = {};
+__export(checks_exports16, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal12
 });
@@ -73371,8 +73375,8 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
 }
 
 // src/strength/checks.mjs
-var checks_exports16 = {};
-__export(checks_exports16, {
+var checks_exports17 = {};
+__export(checks_exports17, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   STRENGTH_BAR_CHECKS: () => STRENGTH_BAR_CHECKS,
   VERSION_STRENGTH_CHECKS: () => VERSION_STRENGTH_CHECKS,
@@ -74541,8 +74545,8 @@ function strengthOf(host, deps) {
 }
 
 // src/reevaluation/checks.mjs
-var checks_exports17 = {};
-__export(checks_exports17, {
+var checks_exports18 = {};
+__export(checks_exports18, {
   REEVALUATION_ACT_CHECKS: () => REEVALUATION_ACT_CHECKS,
   REEVAL_POLICY_AGE_DAYS: () => REEVAL_POLICY_AGE_DAYS,
   REEVAL_SOURCES: () => REEVAL_SOURCES,
@@ -76380,8 +76384,8 @@ function delivererOf(stored) {
 }
 
 // src/publication/checks.mjs
-var checks_exports18 = {};
-__export(checks_exports18, {
+var checks_exports19 = {};
+__export(checks_exports19, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -80544,8 +80548,8 @@ function publicationOps(p, url, body) {
 }
 
 // src/standards/checks.mjs
-var checks_exports19 = {};
-__export(checks_exports19, {
+var checks_exports20 = {};
+__export(checks_exports20, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal13
 });
@@ -81392,8 +81396,8 @@ function standardsOf(host, deps) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports20 = {};
-__export(checks_exports20, {
+var checks_exports21 = {};
+__export(checks_exports21, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal14
 });
@@ -85785,8 +85789,8 @@ function migrateConsequences(sql) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports21 = {};
-__export(checks_exports21, {
+var checks_exports22 = {};
+__export(checks_exports22, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at11 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -86839,8 +86843,8 @@ function migrateFilings(sql) {
 }
 
 // src/filings/checks.mjs
-var checks_exports22 = {};
-__export(checks_exports22, {
+var checks_exports23 = {};
+__export(checks_exports23, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf4
 });
@@ -88604,8 +88608,8 @@ function migrateEscalation(sql) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports23 = {};
-__export(checks_exports23, {
+var checks_exports24 = {};
+__export(checks_exports24, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal15
 });
@@ -95872,8 +95876,8 @@ async function publishedRoutes({ op, url, env, stub }) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports24 = {};
-__export(checks_exports24, {
+var checks_exports25 = {};
+__export(checks_exports25, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS2,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY2,
@@ -97516,8 +97520,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/citation/checks.mjs
-var checks_exports25 = {};
-__export(checks_exports25, {
+var checks_exports26 = {};
+__export(checks_exports26, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -100637,8 +100641,8 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 `;
 
 // src/queue/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
@@ -103922,7 +103926,7 @@ var Queue = class _Queue {
       if (!row2 || normalizeType(row2.object_type) !== "project") return noSuchProject(proj, { finding: find });
       const denied = this.#projectAuthority(proj, identity, "joined", "proposedispose");
       if (denied) return denied;
-      const atS = (/* @__PURE__ */ new Date()).toISOString();
+      const atS = stampInstant("millisecond", this.#nowMs(null));
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
       this.sql.exec(
         `INSERT INTO finding_dispositions (project_id,finding_id,kind,state,reason,decided_by,at)
@@ -104092,7 +104096,7 @@ var Queue = class _Queue {
    *  exists, and inventing a refers_to would be worse than being patient. */
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = clampLimit3(limit, 50, 500);
-    const at17 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second");
+    const at17 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs(null));
     const queued = this.#capture.taskEvents({ limit: cap }).map((e) => ({ ...e, capture_sha: e.captureSha, attempts: Number(e.attempts) || 0 }));
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     const drop = (q6) => this.#capture.taskEventRemove({ kind: q6.kind, captureSha: q6.capture_sha });
@@ -104132,10 +104136,13 @@ var Queue = class _Queue {
         (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id)
       );
       if (!taskId) {
+        const exhausted = mintExhausted("TASK");
         out.waiting.push({
           captureSha: q6.capture_sha,
           attempts: q6.attempts,
-          detail: "the plane could not find a free task id (MINT_EXHAUSTED); the event is kept, not dropped"
+          code: exhausted.code,
+          check: exhausted.check,
+          detail: exhausted.detail
         });
         continue;
       }
@@ -104365,7 +104372,7 @@ var Queue = class _Queue {
     const target = facts && facts.status === "active" ? { member_id: to } : null;
     if (!target) return { ok: false, reason: "NO_SUCH_MEMBER", detail: "a task is forwarded to an active member of this group" };
     if (target.member_id === row2.assignee) return { ok: false, reason: "ALREADY_THEIRS" };
-    const at17 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second");
+    const at17 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs(null));
     const task = this.#taskOf(row2);
     task.history.push({ at: at17, event: "forwarded", actor });
     task.assignee = target.member_id;
@@ -104416,7 +104423,7 @@ var Queue = class _Queue {
     if (row2.status === "resolved") return { ok: true, id, already: true, resolved_at: row2.resolved_at };
     const fenced = this.#refuseNotYours(row2, actor, "resolve");
     if (fenced) return fenced;
-    const at17 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second");
+    const at17 = now && ISO_INSTANT3.test(now) ? now : stampInstant("second", this.#nowMs(null));
     const task = this.#taskOf(row2);
     task.history.push({ at: at17, event: "resolved", actor });
     task.status = "resolved";
@@ -104748,8 +104755,8 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 }
 
 // src/run-productions/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS2,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -105821,8 +105828,8 @@ function runProductionsOps(p, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS2,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
 });
@@ -107785,8 +107792,8 @@ function caseAuthoringOps(c, url, body) {
 }
 
 // src/review/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at16 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -111229,122 +111236,6 @@ Mitigation: ${mit}
   #reindexProjectSight(...a) {
     return membershipOf(this.ctx).reindexProjectSight(...a);
   }
-  #existenceAct(...a) {
-    return membershipOf(this.ctx).existenceAct(...a);
-  }
-  /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
-   * 7.14, RULED 2026-09-23 by BOB #32, (a)).
-   *
-   * THE DEFECT. REC-149 refused every ACT at EXISTENCE positionally, and left every READ that names a project by id
-   * answering as for a project that does not exist ("Record reads do not widen"). So a member the directory had just
-   * shown a project to was told by `op=projectparticipants`, `op=image`, `op=projectvisibility` … that it does not
-   * exist — the record calling a project the record itself had just shown nonexistent. The ruling: a read naming the
-   * PROJECT'S OWN id answers exactly as an act does, C-70.1 through `#existenceAct` (the id and the name, nothing
-   * else); a read naming anything INSIDE the project answers exactly as today; `viewerPredicate` is unchanged.
-   *
-   * ONE DOOR, ONE TABLE. The check sits in `fetch`, before the route runs, rather than in thirty read methods: every
-   * read below is reached by exactly that door, so no read can answer a second thing. The table names, per read, the
-   * parameters that carry a BUNDLE id — the only parameters that can name a project. `#existenceAct` answers only
-   * when that id is a PROJECT the caller sees at EXISTENCE, so an id of anything inside a project (a bundle, a run, a
-   * draft), an absent id, a hidden project and every caller with full sight all fall through to the read unchanged.
-   * `PROJECT_NAMING_READS_NOT` names each read whose parameters name something that is never a bundle, with the
-   * reason, and `project-sight.test.mjs` §11 sweeps every id-carrying read op into exactly one of the two tables, so a
-   * new read cannot join the plane unclassified.
-   *
-   * COST, STATED: one indexed lookup on `project_sight` per named parameter of a stamped read, and `#sight` only for
-   * an id that row calls discoverable. A viewer never sent (an internal call) is not asked. */
-  static PROJECT_NAMING_READS = Object.freeze({
-    image: ["id"],
-    file: ["id"],
-    projection: ["id"],
-    excludedby: ["id"],
-    backlinks: ["target"],
-    reevaluations: ["target"],
-    inquirystrength: ["id"],
-    earnedbasis: ["id"],
-    partitionindependence: ["id"],
-    narrowcandidates: ["target"],
-    versionnotice: ["target"],
-    basisversions: ["id", "project"],
-    versionstrength: ["id", "project"],
-    strengthbarof: ["project", "target"],
-    extractproposals: ["bundle"],
-    capturerequests: ["target"],
-    tasks: ["refers"],
-    biasmanifest: ["scopeId"],
-    airuns: ["contextId"],
-    casedrafts: ["project"],
-    gatefacts: ["id"],
-    affordancefacts: ["target"],
-    projectownerarith: ["projectId"],
-    projectvisibility: ["projectId"],
-    projectparticipants: ["projectId"],
-    /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
-       C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
-    projectrequests: ["projectId"],
-    /* N193: a document's bundle id. N216's layer-9 reads naming a record object's bundle, or (`determinations`) a project. */
-    connectionsasserted: ["bundle"],
-    standard: ["id"],
-    standardinforce: ["id"],
-    determination: ["id"],
-    determinations: ["project"],
-    consequence: ["id"],
-    escalation: ["id"]
-  });
-  static PROJECT_NAMING_READS_NOT = Object.freeze({
-    content: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
-    concerns: "`id` is an ENTITY id",
-    connections: "`id` is an ENTITY id",
-    instance: "`id` is an ENTITY id",
-    exceptions: "`id` is an ENTITY id",
-    transcription: "`id` is a transcription's content id",
-    themeread: "`id` is a THEME id",
-    leadread: "`id` is a LEAD id",
-    versionchain: "`address` is a normalised source address, never a bundle id",
-    airun: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
-    airunlog: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
-    airunspawn: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
-    /* c22-batch29: `biasdebt` (REC-207, on main) reached REC-196's sweep only at this union. */
-    biasdebt: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
-    reviewcopy: "`draft` is a DRAFT id \u2014 a thing inside a project, whose existence is contents",
-    casedocument: "`case` is a CASE id, answered by the case door's own fence",
-    reading: "`sha256` is a CAPTURE's digest",
-    resolutions: "`sha256` is a CAPTURE's digest",
-    textattest: "`sha256` is a CAPTURE's digest",
-    readingname: "`entity` is an ENTITY id",
-    entity: "`id` is an ENTITY id",
-    relation: "`id` is a RELATION id",
-    inboxget: "`id` is an INBOX item's id",
-    sourcereach: "`address` is a source address",
-    captureprogressions: "`sha256` is a CAPTURE's digest",
-    verify: "`sha256` is a published artifact's digest",
-    publishedcase: "`id` is a PUBLISHED case \u2014 the published record, served to anybody",
-    publishededitions: "`id` is a PUBLISHED case \u2014 the published record, served to anybody",
-    caseflags: "`case` and `target` name a case and its member finding, every field already published",
-    /* N89, N193 (N112, K210): `pdfstructure` beside `reading`. */
-    archivelookup: "`address` is a source address",
-    pdfstructure: "`sha256` is a CAPTURE's digest",
-    contentcrop: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
-    filemembership: "`sha256` is a CAPTURE's digest",
-    /* N216's layer-9 reads whose id names a row inside a project, never a bundle. */
-    comparison: "`id` is a comparison PROPOSAL id \u2014 a thing inside a project, whose existence is contents",
-    counselpacketread: "`id` is a COUNSEL PACKET id \u2014 a thing inside a project, whose existence is contents"
-  });
-  #existenceRead(op, url, body) {
-    const params = Object.prototype.hasOwnProperty.call(_Store.PROJECT_NAMING_READS, op) ? _Store.PROJECT_NAMING_READS[op] : null;
-    const viewer = url.searchParams.get("viewer");
-    if (!params || viewer === null) return null;
-    for (const p of params) {
-      const fromBody = body && typeof body === "object" && typeof body[p] === "string" ? body[p] : null;
-      for (const id of [url.searchParams.get(p), fromBody]) {
-        if (typeof id !== "string" || id === "") continue;
-        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;
-        const existence = this.#existenceAct(id, viewer);
-        if (existence) return existence;
-      }
-    }
-    return null;
-  }
   projectVisibilitySet(...a) {
     return membershipOf(this.ctx).projectVisibilitySet(...a);
   }
@@ -111782,382 +111673,832 @@ Mitigation: ${mit}
     const v = url.searchParams.get(k);
     return v === null || v === "" ? void 0 : Number(v);
   }
-  async fetch(req) {
-    const url = new URL(req.url);
-    const op = url.pathname.slice(1);
-    let body = null;
-    if (req.method === "POST") {
-      const raw = await req.text();
-      if (raw.trim() !== "") {
-        try {
-          body = JSON.parse(raw);
-        } catch {
-          return Response.json({
-            ok: false,
-            reason: "BAD_JSON",
-            detail: "the request body is not valid JSON"
-          }, { status: 400 });
-        }
+  routes(url, body) {
+    const map = {
+      ...membershipOps(membershipOf(this.ctx), url, body, this.env),
+      ...captureOps(captureOf(this.ctx), url, body, this.env),
+      ...calibrationOps(calibrationOf(this.ctx), url, body),
+      ...biasOps(biasOf(this.ctx), url, body),
+      ...extractionOps(extractionOf(this.ctx), url, body, this.env),
+      ...connectionsOps(connectionsOf(this.ctx), url, body, this.env),
+      ...inquiryOps(inquiryOf(this.ctx), url, body),
+      ...citationOps(citationOf(this.ctx), url),
+      /* MK-4 / D-681: the lead's ops, observation-log's (K3); the stamps are the control plane's, read from the query. */
+      ...observationLogOps(observationLogOf(this.ctx), url, body),
+      /* run-productions' ops (K3): op=suggest and the extract productions; the stamps are the control plane's. */
+      ...runProductionsOps(runProductionsOf(this.ctx), url, body),
+      ...entitiesOps(entitiesOf(this.ctx), url, body),
+      ...contradictionOps(contradictionOf(this.ctx), url, body),
+      ...progressionOps(progressionsOf(this.ctx), url, body),
+      ...intentOps(intentOf(this.ctx), url, body),
+      ...basisVersionsOps(basisVersionsOf(this.ctx), url, body),
+      ...strengthOps(strengthOf(this.ctx), url, body),
+      ...reevaluationOps(reevaluationOf(this.ctx), url, body),
+      ...caseAuthoringOps(caseAuthoringOf(this.ctx), url, body),
+      ...ratificationOps(ratificationOf(this.ctx), url, body),
+      ...publicationOps(publicationOf(this.ctx), url, body),
+      promote: () => promotionOf(this.ctx).promote(body),
+      allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
+      lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
+      /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
+      snapkeycensus: () => recordOf(this.ctx).snapKeyCensus({ limit: url.searchParams.get("limit") }),
+      /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
+      homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
+      /* D-476: does the register hold these whole-document bytes, read-only and naming no
+         bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
+         is never stored under its own hash for R2 to be asked about. */
+      registerholds: () => this.registerHolds({
+        sha: url.searchParams.get("sha256"),
+        bundle: url.searchParams.get("bundle")
+      }),
+      /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
+         reads. `viewer` is stamped by the control plane, never taken from a
+         caller's own parameters there; an invisible bundle answers null,
+         exactly as an absent one does, and an absent viewer sees nothing
+         (fail closed, the search path's own posture). The METHODS stay
+         ungated because the store itself is a legitimate whole-corpus
+         reader (audit, eachImage, ratify's assembly); this dispatch map is
+         the store's one external door. */
+      image: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer")) ? recordOf(this.ctx).readImage(url.searchParams.get("id")) : null,
+      file: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer")) ? recordOf(this.ctx).readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
+      list: () => this.listBundles({
+        type: url.searchParams.get("type"),
+        state: url.searchParams.get("state"),
+        after: url.searchParams.get("after") || null,
+        limit: url.searchParams.get("limit"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
+      /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
+         parts so ratification can re-fetch them; `recordreuseverdicts` commits
+         the outcomes the control plane produced; `reuseverdicts` reads them
+         (also surfacing the free posthoc verdicts by source_capture). */
+      /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
+         `extras` hands the store EVERY parameter name that arrived so the op
+         can refuse a predicate or a page by name rather than ignoring it. The
+         control plane strips `op` and `token` and forwards the rest, so what
+         this list holds is exactly what the caller sent plus the viewer the
+         control plane stamped; `Store.CONTENT_READ_PARAMS` is the accepted
+         set and everything else is refused. GATED like every read that names
+         a bundle: the store fails closed on an absent `viewer` and answers an
+         invisible row exactly as an absent one. */
+      contentcrop: () => contentOf(this.ctx).cropOf({ contentId: url.searchParams.get("id"), viewer: url.searchParams.get("viewer") }),
+      content: () => this.contentRead({
+        id: url.searchParams.get("id"),
+        viewer: url.searchParams.get("viewer"),
+        extras: [...url.searchParams.keys()]
+      }),
+      /* SK-7 / framework Part II 14.4 (Bob's 5.7): MARKING A PASSAGE CITABLE.
+         `mintedBy` is taken from the QUERY STRING and never from the body,
+         and that is the whole fence at this door: the control plane stamps it
+         there from the credential that authenticated and a caller-supplied
+         one in the body is not read at all, so a machine credential cannot
+         post a member's name into the field that says who did this. GATED on
+         `viewer` like every write that names a bundle. */
+      contentmint: () => this.contentMint({
+        bundleId: (body || {}).bundleId,
+        extent: (body || {}).extent,
+        at: (body || {}).at || null,
+        mintedBy: url.searchParams.get("mintedBy"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
+         sha, and the reverse index by raw entity reference. */
+      /* REC-30: `viewer` is stamped by the control plane, never read from a
+         caller's own parameters there, and an absent one fails closed — the
+         bundle back-reference is withheld rather than the answer refused. */
+      /* CPDF-10. Three arms, and the split is the item's own doctrine.
+         `textprovenance` READS which documents' text a machine produced — the
+         index half of "distinguishable in the projection, the index and an
+         export". `textattest` READS the attestations over one capture and
+         what a leg citing a given region may claim. `attesttext` is the WRITE,
+         and it is the only one of the three a machine credential cannot
+         reach — the control plane refuses it before it gets here (MEMBER_ONLY
+         in the OPS table), and `checkAttestation` refuses it again at the
+         store, because an act refusable at one door only is an act with one
+         door left open. */
+      textattest: () => this.attestationsFor(
+        url.searchParams.get("sha256"),
+        url.searchParams.get("page") == null ? null : {
+          page: Number(url.searchParams.get("page")),
+          rect: safeJson17(url.searchParams.get("rect"))
+        },
+        url.searchParams.get("viewer"),
+        url.searchParams.get("limit")
+      ),
+      /* SK-7: THE ATTESTOR COMES FROM THE QUERY STRING, WHERE THE CONTROL
+         PLANE STAMPED IT, AND THE BODY'S `member` IS NOT READ AT ALL. Before
+         this the attestor was taken from the body, so C-35.10 refused only a
+         caller that volunteered a machine-shaped name — measured through a
+         real minted `ai` credential, which attested in a member's name and had
+         the act LAND. `contentmint` beside it takes its minter the same way
+         and for the same reason. An absent stamp reaches `checkAttestation`
+         as an absent member and is refused there (*unattributed is not
+         attested*), so a route that skipped the stamp fails closed. */
+      attesttext: () => contentOf(this.ctx).attestText({
+        ...body || {},
+        member: url.searchParams.get("attestor"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS. resolve runs the
+         recogniser over a captured document's references and stores each resolution
+         with its §8.1 grade (A/B/C, never D — the machine never testifies);
+         resolvetestify is the member's grade-D testimony path; resolutions reads a
+         document's resolutions; concerns is the REVERSE INDEX, every document that
+         concerns an entity, by joining on entity_id (never through a relation). */
+      resolve: () => this.resolveReferences(body || {}),
+      resolvetestify: () => this.testifyResolution(body || {}),
+      /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA carrying a GRADE (the
+         two-node base case of a progression), and the PROGRESSION DEFINITION as data.
+         connect DERIVES the connections among the documents that concern one entity,
+         each graded the WEAKER of its two ends (D-67 storage + D-72 grade); connections
+         reads them by entity or by capture; progressiondefine authors an ordered stage
+         set (both example progressions expressible as rows); progression reads one. */
+      ...queueOps(queueOf(this.ctx), url, body),
+      /* D-64: the daily render allowance. `renderadmit` takes a render or records
+         a DEFERRAL; `renderspend` adds the browser time a render reported. */
+      recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
+      /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
+         — the control plane runs it through `normalizeAddress`, the same
+         function the capture wrote the row with, because `normalizeAddress`
+         lives in subresources.mjs and this file does not import it. That is
+         the seam op=links already uses for the same reason. `viewer` is
+         stamped by the control plane and an absent one compiles to the deny
+         predicate, so this fails closed like every other gated read. */
+      versionchain: () => this.versionChain({
+        addressNorm: url.searchParams.get("address"),
+        at: url.searchParams.get("at"),
+        limit: url.searchParams.get("limit"),
+        offset: url.searchParams.get("offset"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      /* REC-87 / IC-128: TRANSCRIBE. The TYPIST and the ATTESTOR come from the
+         QUERY STRING, where the control plane stamped them, and never from the
+         body — `attesttext`'s correction, taken from the start rather than
+         re-learned: a body field a caller can fill is a name a machine can post. */
+      /* MK-1 / IC-133: TESTIFY. The AUTHOR comes from the QUERY STRING, where the
+         control plane stamped it over anything the caller put there. The body's
+         own author field is read ONLY to be REFUSED (C-53.2): every spelling a
+         caller could use to name the person is collected, so naming it under a
+         synonym is not a way round the refusal. */
+      testify: () => this.testify({
+        words: body ? body.words : null,
+        observedAt: body ? body.observedAt : null,
+        title: body ? body.title : null,
+        author: url.searchParams.get("author"),
+        claimedAuthor: body ? ["author", "observer", "authoredBy", "authored_by", "by", "member", "memberId"].map((k) => body[k]).find((v) => v !== void 0 && v !== null) ?? null : null
+      }),
+      transcribe: () => this.transcribe({
+        bundleId: body && body.bundleId || null,
+        extent: body && body.extent !== void 0 ? body.extent : null,
+        text: body ? body.text : null,
+        at: body && body.at || null,
+        transcriber: url.searchParams.get("transcriber"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      transcriptionattest: () => this.transcriptionAttest({
+        contentId: body && body.contentId || url.searchParams.get("contentId"),
+        at: body && body.at || null,
+        note: body ? body.note : null,
+        attestor: url.searchParams.get("attestor"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      transcription: () => this.transcriptionRead({
+        id: url.searchParams.get("id"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      ...captureRequestsOps(captureRequestsOf(this.ctx), url, body),
+      ...governorRoutes(governorOf(this.ctx), url, body),
+      ...aiRunsOps(aiRunsOf(this.ctx, this.env), url, body),
+      /* retrieval's ops (K3): frontier, contentaxis, projection, search, meaningrows, searchfields, select, selection,
+         selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
+      ...retrievalRoutes(retrievalOf(this.ctx), url, body),
+      ...actionsOps(actionsOf(this.ctx), url, body),
+      /* N216 (K250, K263): layer 9's ops. escalation publishes no op map, so its ten are named here (LEGACY-INDEX #5's
+         table, K262); `author` and `viewer` are the control plane's stamps, read from the query after the body, and
+         `now` and `limit` are numbers or absent. */
+      ...standardsOps(standardsOf(this.ctx), url, body),
+      ...conformanceOps(conformanceOf(this.ctx), url, body),
+      ...consequencesOps(consequencesModule(this.ctx), url, body),
+      ...filingsOps(filingsOf(this.ctx), url, body),
+      escalationopen: () => escalationOf(this.ctx).escalationOpen({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalation: () => escalationOf(this.ctx).escalationRead({
+        id: url.searchParams.get("id"),
+        nowMs: _Store.#numberParam(url, "now"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationattach: () => escalationOf(this.ctx).escalationAttach({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationevaluate: () => escalationOf(this.ctx).escalationEvaluate({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationadvance: () => escalationOf(this.ctx).escalationAdvance({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationdecline: () => escalationOf(this.ctx).escalationDecline({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationend: () => escalationOf(this.ctx).escalationEnd({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationsuspend: () => escalationOf(this.ctx).escalationSuspend({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationresume: () => escalationOf(this.ctx).escalationResume({
+        ...body || {},
+        author: url.searchParams.get("author"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      escalationsdue: () => escalationOf(this.ctx).escalationsDue({
+        nowMs: _Store.#numberParam(url, "now"),
+        limit: _Store.#numberParam(url, "limit"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      ...monitoringOps(monitoringOf(this.ctx), url, body),
+      /* REC-19: the facts behind op=affordances. The control plane derives
+         the act list from these; this endpoint only reports what the store
+         holds about the object. */
+      affordancefacts: () => affordancesOf(this.ctx).affordanceFacts({
+        target: url.searchParams.get("target"),
+        viewer: url.searchParams.get("viewer"),
+        identity: url.searchParams.get("identity"),
+        /* D-311: the two act stamps, as the acts receive them */
+        author: url.searchParams.get("author"),
+        by: url.searchParams.get("by")
+      }),
+      stats: () => this.stats({
+        capacity: url.searchParams.get("capacity") === "1",
+        viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
+      }),
+      retire: () => this.retire({
+        handle: url.searchParams.get("handle"),
+        reason: url.searchParams.get("reason"),
+        viewer: url.searchParams.get("viewer"),
+        owner: url.searchParams.get("owner"),
+        author: url.searchParams.get("author")
+      }),
+      release: () => this.release({
+        handle: url.searchParams.get("handle"),
+        acknowledgment: url.searchParams.get("acknowledgment"),
+        mitigation: url.searchParams.get("mitigation"),
+        viewer: url.searchParams.get("viewer"),
+        owner: url.searchParams.get("owner"),
+        author: url.searchParams.get("author")
+      }),
+      /* REC-54 / D-200. ONE bundle, no handle and no owner: this is a
+         correction to a named document's register, not a set application, so
+         it takes the target and the viewer/author stamps the control plane
+         sets. `apply` is opt-in — the default is a REPORT, because every use
+         of this is a decision about the real record. */
+      provenancechain: () => this.provenanceChainRebuild({
+        bundleId: url.searchParams.get("bundleId"),
+        apply: url.searchParams.get("apply") === "1",
+        viewer: url.searchParams.get("viewer"),
+        author: url.searchParams.get("author")
+      }),
+      /* REC-63 / DEC-56 / D-204. The other half of the op above: where that
+         one REFUSES to invent a chain, this one RECORDS that the route cannot
+         be shown. One bundle, the viewer/author stamps the control plane sets,
+         and NO `apply` flag — there is nothing to opt into, because the act
+         moves no state and touches no byte of the document. */
+      provenanceroute: () => this.provenanceRouteAssess({
+        bundleId: url.searchParams.get("bundleId"),
+        viewer: url.searchParams.get("viewer"),
+        author: url.searchParams.get("author")
+      }),
+      /* REC-116 / IC-120. The READ beside the two writes above — the `airun`
+         / `airuns` shape one construct over: the singular acts on one bundle,
+         the plural answers about the instance. No `author`, because reading
+         who was doubted is not itself a named act; `viewer` is the control
+         plane's server-side stamp exactly as it is for its two siblings. */
+      provenanceroutes: () => this.provenanceRoutesMarked({
+        after: url.searchParams.get("after"),
+        limit: url.searchParams.get("limit"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      /* REC-31, conclude's shape exactly: ONE target, no handle and no
+         owner, with the viewer and author stamps the control plane sets. */
+      reopen: () => this.reopen({
+        target: url.searchParams.get("target"),
+        reason: url.searchParams.get("reason"),
+        viewer: url.searchParams.get("viewer"),
+        author: url.searchParams.get("author")
+      }),
+      projectfork: () => this.forkProject({
+        projectId: url.searchParams.get("projectId"),
+        newId: url.searchParams.get("newId"),
+        title: url.searchParams.get("title"),
+        visibility: url.searchParams.get("visibility"),
+        /* REC-197: absent is null, which is HIDDEN */
+        by: url.searchParams.get("by"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      /* REC-138 */
+      registeraudit: () => this.registerAudit(),
+      /* REC-175: the digest census, read-only (see `digestCensus`). */
+      digestcensus: () => recordOf(this.ctx).digestCensus({ limit: url.searchParams.get("limit") }),
+      /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
+         `publish` because they are the same three acts one altitude up —
+         hand out the facts, read the document, commit from the signed bytes. */
+      ...reviewOps(reviewOf(this.ctx), url, body),
+      audit: () => this.auditPass({
+        after: url.searchParams.get("after") || "",
+        limit: url.searchParams.get("limit"),
+        viewer: url.searchParams.get("viewer")
+      }),
+      purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") })
+    };
+    return map;
+  }
+};
+
+// src/control-plane/checks.mjs
+var checks_exports31 = {};
+__export(checks_exports31, {
+  ADMISSION_CHECKS: () => ADMISSION_CHECKS,
+  AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
+  BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
+  DISPATCH_CHECKS: () => DISPATCH_CHECKS,
+  GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
+  NAMESPACE_CHECKS: () => NAMESPACE_CHECKS,
+  OPERATOR_FENCE_CHECKS: () => OPERATOR_FENCE_CHECKS,
+  REPLAY_CHECKS: () => REPLAY_CHECKS
+});
+var ADMISSION_CHECKS = {
+  /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
+     do rather than what happened, because a person reading this has not yet done
+     anything wrong — they have simply not said who they are. */
+  NOT_AUTHENTICATED: {
+    check: "C-38.1",
+    where: "src/control-plane/index.mjs fetch > is-admission",
+    translation: "Nothing in this request said who you are. Sign in, or send a credential this instance issued, and try again."
+  },
+  /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
+     sentence: this is not a rung on a ladder the caller can climb. A credential
+     is issued for a purpose and this is not that purpose, so the honest advice
+     is to use the right one rather than to ask for this one to be widened. */
+  CLASS_FORBIDDEN: {
+    check: "C-38.2",
+    where: "src/control-plane/index.mjs fetch > is-admission",
+    translation: "The credential you sent is not one this operation accepts. Credentials here are issued for a particular purpose, and widening this one is not the way through: use the credential meant for this work."
+  },
+  /* The mirror of the row above, and it exists separately because the two are
+       opposite facts about the caller. This one is a PERSON asking for something
+       only an unattended writer does; the row above is a credential of the wrong
+       kind entirely. One refusal covering both would tell neither caller anything
+       they could act on — DEC-49's own argument, and PL-18's.
+  
+       **NARROWED 2026-09-19 BY D-270, AND THE `where` MOVED WITH THE SITE.** This
+       row is a DESIGN CLAIM — it tells a person that a verb is not for people —
+       and BOB #17 ruled that the plane may make it ONLY where such a decision is
+       recorded. Until D-270 this one sentence answered THREE different facts and
+       was FALSE for two of them: it went to five ops an administrator's own
+       browser performs, and to ops whose OPS rows say in as many words that they
+       are a named member's judgement. The site is now `sessionOpGate`, which
+       sends this row only for an op named in `UNATTENDED_BY_DECISION`, and the
+       refusal carries the citation in `recorded`, so the claim and its warrant
+       travel together. The rule's home is
+       `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (the §4.7 block). */
+  MACHINE_CREDENTIAL_REQUIRED: {
+    check: "C-38.3",
+    where: "src/control-plane/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. This instance holds a recorded decision to that effect and names it beside this message."
+  },
+  /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
+     OUTCOMES, and the one the plane could ALWAYS have said: it is about the
+     CALLER rather than about the design, so it needs no recorded decision to be
+     sayable. Five ops — `governorconfig`, `memberadd`, `memberset`, `signeradd`,
+     `signerset` — were answered with the row above, which told a member to go
+     and find a machine credential for an act an administrator performs from
+     their own browser. There is no such credential to find. This sentence names
+     the person to ask instead, because that is the action actually available.
+     CORRECTED 2026-09-25 by REC-162 (Membership v2 §4.9, BOB #23): it read "but an
+     administrator of this group, and this session is not one … ask an administrator".
+     After REC-159 the one op it answers is `governorconfig`, which the FOUNDER'S session
+     alone reaches — an enrolled administrator holds a member's session and was told they
+     were not an administrator. The sentence now names the SESSION, as the refusal's own
+     `reachedBy` does. */
+  SESSION_ROLE_CANNOT_REACH_OP: {
+    check: "C-38.7",
+    where: "src/control-plane/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "A signed-in person does perform this operation, but from a different session than this one, and this refusal names which. Where it names the founder's session, being an administrator of this group does not reach it: every enrolled member, an administrator included, signs in with a member's session. No machine credential is needed and finding one is not the way through: ask the person who holds the session it names."
+  },
+  /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
+       otherwise have to cover a case neither is true of.
+  
+       **THE ARGUMENT, AND IT IS THIS ROW'S WHOLE REASON.** A false rationale
+       SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
+       will not report it as a gap, so the sentence recruits the one person who
+       could have caught it into believing there is nothing to catch. The measured
+       case is D-136's — `adminendorse`, `adminremove` and `membercaps` WERE
+       reachable by no session, and Membership Architecture §4.7 assigns that very
+       vote to a person. **D-136 LANDED 2026-09-19 and discharged that case**: the
+       three now hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
+       administrator's session reaches them and a member's gets the ROLE sentence,
+       not this one. The receipt stays in the past tense because it is the ARGUMENT
+       for this row rather than a roster of its members — the gap was reported only
+       because the plane declined to call it a decision, and deleting the evidence
+       once the gap closes is how a rule outlives the reason it was made. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
+       independently that the old sentence told an administrator the act §4.9
+       assigns them needs a credential §4.8 says somebody else holds, and that
+       there is no action a member can take from it.
+  
+       SO THIS ROW STATES THE FACT AND INVENTS NO RATIONALE. It says what is true
+       — no session route exists — and says plainly that the record holds no
+       decision explaining it, which is an INVITATION to report the gap rather
+       than a wall in front of it. A refusal may state only what the system can
+       support. */
+  SESSION_ROUTE_NOT_RECORDED: {
+    check: "C-38.8",
+    where: "src/control-plane/index.mjs sessionOpGate > is-session-op-gate",
+    translation: "No signed-in session reaches this operation, and this instance holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
+  },
+  /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
+     ENOUGH, and the translation says so, because a member refused here will
+     otherwise read it as a bug in their own permissions. The security property
+     is the point and a person who cannot get in deserves to know it is
+     deliberate. */
+  ROOT_OF_TRUST_REQUIRED: {
+    check: "C-38.4",
+    where: "src/control-plane/index.mjs fetch > is-admission",
+    translation: "This needs the administrator token itself, not a signed-in session \u2014 and that includes the founder's own browser. A session is derived from a password; the root of trust is the token held in the hosting account. The published record needs no credential at all."
+  },
+  /* **THE LIVE DEFECT THIS ROW CLOSES, and it is why REC-79 chose this family.**
+     `civicos-ui/app.html` hand-authored a sentence for this code:
+     *"This credential cannot write to the record. Capturing needs a member
+     holding contribute."* But this refusal is PLANE-WIDE — it is minted for
+     whatever capability the op needed, and `create_projects` and `publish` are
+     not `contribute`. So a surface had invented capture-specific wording for a
+     refusal that is not about capture, and a member denied for `create_projects`
+     was told about contributing. **That is precisely the drift a canned
+     translation exists to stop** (found by PL-18; DEC-49's own argument for
+     option (b) is that thirteen surfaces would otherwise each invent wording).
+     The sentence here names no capability, because the plane already sends the
+     one that was needed in `needs` and the surface renders that. */
+  NOT_CAPABLE: {
+    check: "C-38.5",
+    where: "src/control-plane/index.mjs fetch > is-admission",
+    translation: "Your account does not hold the capability this needs. Capabilities are granted by an administrator, so ask one rather than looking for another route to the same thing."
+  },
+  /* A credential that MAY act, but not HERE. Distinct from every row above,
+     which are all about whether the caller may act at all. */
+  SCOPE_REFUSED: {
+    check: "C-38.6",
+    where: "src/control-plane/index.mjs fetch > is-admission",
+    translation: "That credential is allowed to act, but not on the part of the record this request named. It is confined to its own namespace and this request reached outside it."
+  }
+};
+var NAMESPACE_CHECKS = {
+  NAMESPACE_UNKNOWN: {
+    check: "C-78.1",
+    where: "src/control-plane/index.mjs namespaceGate > is-namespace-gate",
+    translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
+  },
+  /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
+     Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
+     them, a knock, WROTE there. The sentence says nothing happened first and names no remedy but the true one. */
+  NAMESPACE_PINNED: {
+    check: "C-78.2",
+    where: "src/control-plane/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
+    translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
+  },
+  /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
+     named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
+     does not exist, an operation that has no scratch version; this one is a property of the CALLER, which is
+     why it is a third row and not a widening of either. Confinement is by REFUSAL and never by silent
+     redirection when a store is NAMED (`scopeFor`'s rule for the probe class, and D-456's for everyone): a
+     caller who believes it addressed the record must be told it did not. An ABSENT `store=` is not a refusal —
+     the credential's own confinement is its default, which is the whole point of minting one. */
+  NAMESPACE_CONFINED: {
+    check: "C-78.3",
+    where: "src/control-plane/index.mjs confinedNamespaceGate > is-confined-namespace-gate",
+    translation: "The credential used for this request can only ever reach the scratch area kept apart for testing, and this request asked for a different part of the record, so nothing was read or changed. Leave the part out of the request and it reaches scratch, which is the only place this credential goes."
+  }
+};
+var DISPATCH_CHECKS = {
+  UNKNOWN_OP: {
+    check: "C-69.1",
+    where: "src/control-plane/index.mjs fetch > is-unknown-op",
+    translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
+  },
+  /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
+     `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
+     and until D-561 the code reached them bare. It is a fact about the EXCHANGE, never about the record, and the
+     sentence says only that. It does NOT say "nothing was changed": `storeSilent` also answers a write whose store
+     went silent, and whether that write took effect is exactly what a silence cannot say. */
+  STORE_DID_NOT_ANSWER: {
+    check: "C-69.2",
+    where: "src/control-plane/index.mjs storeSilent > is-store-silent",
+    translation: "This copy of the record could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
+  },
+  /* D-629 (R25, C-69.3) — THE WORKER DOOR THREW. It had no outermost catch (the platform's own error page); the stack is
+     now logged server-side under a CORRELATION id, and the caller receives the code, this sentence and the id, nothing
+     else. Numbered after C-69.2, which D-561 gave `STORE_DID_NOT_ANSWER`. The store's own row (`STORE_INTERNAL_ERROR`,
+     C-69.4) came with the store's door (N333, K412). THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD: a throw part-way through
+     an op may or may not have left a write behind, and the catch cannot say which. */
+  PLANE_INTERNAL_ERROR: {
+    check: "C-69.3",
+    where: "src/control-plane/index.mjs planeInternalAnswer > is-plane-internal-error",
+    translation: "This copy failed while handling the request, before it could produce an answer. That is a fault in this copy, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in this copy's logs under the reference given with this answer."
+  },
+  /* D-629 (R25, C-69.4) — THE STORE'S DOOR THREW. Its outermost catch answered `String(e.stack)` for any throw on any op
+     (file paths, line numbers and constraint text, public ops included). It came with the store's door (N333, K412);
+     C-69.3 being PLANE_INTERNAL_ERROR's since T12, it takes the next free number (awaiting stamp, N318). Same posture:
+     the stack is logged under a CORRELATION id, the caller receives the code, this sentence and the id. */
+  STORE_INTERNAL_ERROR: {
+    check: "C-69.4",
+    where: "src/control-plane/dispatch.mjs internalAnswer > is-store-internal-error",
+    translation: "This copy failed inside its own record while carrying out the request, so no answer was produced. That is a fault in this copy, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in this copy's logs under the reference given with this answer."
+  }
+};
+var BOOTSTRAP_CHECKS = {
+  BOOTSTRAP_CREDENTIAL_UNSET: {
+    check: "C-68.2",
+    where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
+    translation: "This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed."
+  },
+  BOOTSTRAP_CREDENTIAL_PUBLISHED: {
+    check: "C-68.3",
+    where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
+    translation: "This copy's administrator token is a value published in the project's public repository, so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a fresh one in the hosting account. Nothing was changed."
+  },
+  BOOTSTRAP_CREDENTIAL_MISMATCH: {
+    check: "C-68.4",
+    where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
+    translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
+  }
+};
+var AI_SCOPE_CHECKS = {
+  /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
+  /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
+     gate BY REFUSING. It is one code because it answers one question — is this
+     op within what the record declared for this credential — and the two ways
+     of failing it (outside the member-reach floor, or not among the declared
+     writes) are the same answer to the caller. */
+  AI_BEYOND_TASK_SCOPE: {
+    check: "C-29.6",
+    where: "src/control-plane/index.mjs aiTaskScope > is-ai-task-scope",
+    translation: "This credential was created for a particular piece of work and that is not part of it. What an agent may do here is written down on the record by the member who set it up, so widening it means somebody amending that entry, not the agent asking again."
+  },
+  AI_CREDENTIAL_REVOKED: {
+    check: "C-29.7",
+    where: "src/control-plane/index.mjs aiTaskScope > is-ai-task-scope",
+    translation: "This agent credential has been withdrawn by a member of the group, so it no longer reaches anything here. The record keeps the entry and the date rather than deleting it, so what it did while it was live remains readable."
+  },
+  /* ---- THE DECLARATION. WHAT MAY BE AUTHORED IN THE FIRST PLACE. ---- */
+  /* A scope naming something that is not an op is not a narrower scope: it is a
+     sentence in the record that nothing enforces, which is precisely what
+     D-199 (2) moved the scope out of a settings row to avoid. */
+  AI_SCOPE_UNKNOWN_OP: {
+    check: "C-29.8",
+    where: "src/control-plane/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
+    translation: "The list of things this credential may change names something this instance does not do. An entry nothing recognises would sit in the record looking like a permission while meaning nothing, so it is refused rather than stored."
+  },
+  /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
+     forbidden ops — a property of the op: can a MEMBER reach it. The unattended
+     verbs carry no member class by construction, so they are outside every
+     scope anybody can write, today and after the next op lands. */
+  AI_SCOPE_BEYOND_MEMBER_REACH: {
+    check: "C-29.9",
+    where: "src/control-plane/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
+    translation: "An agent may only be given things a member of this group could hand to it, and this is not one of them. The background worker's own jobs, and the acts a member performs only from their own signed-in session, are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
+  },
+  /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
+     A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
+     `bio` is refused with the rest, and that is the decision rather than an omission: `bio` is where every
+     unconfined credential already lands, so a row saying "confined to bio" would be a sentence in the record
+     that reads like a fence and constrains nothing — D-199 (2)'s complaint about a settings row, arriving as
+     a column. The value is matched EXACTLY — nothing trimmed, nothing case-folded — on D-456's rule one layer in,
+     because a Durable Object name is an exact string and folding it would be the code guessing what a member meant.
+     ABSENT (the field omitted, or null) is the ONLY silence, and it is the case every caller written before this item
+     is in; a PRESENT empty string is a value and is refused with the rest, because an empty `store=` is one of the
+     values D-456 measured addressing the real record. */
+  AI_CONFINEMENT_NOT_SCRATCH: {
+    check: "C-29.10",
+    where: "src/control-plane/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration",
+    translation: "A credential can be confined to the scratch area and to nothing else, spelt exactly. Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; naming the record itself is not a confinement, so it is refused rather than written down as one. Nothing was created."
+  }
+};
+var OPERATOR_FENCE_CHECKS = {
+  /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
+     the same doctrine rather than a new one: *the credential that delivers an
+     act decides when the record changes, and the record names the actor.* A
+     §4.7 vote is C-32.14's shape with the member's signature replaced by a
+     roster position — an act the record attributes to a named administrator,
+     which a bearer token held in the hosting account cannot be.
+     ONE ROW FOR THE THREE OPS, on C-32.16's precedent rather than C-32.14's: the
+     endorsement, the removal vote and the capability edit enter through ONE
+     region and are refused by ONE predicate, so three rows would be one rule with
+     three homes. The op is named in the answer, so a caller still learns which
+     verb was refused, and the class is named in `tokenClass`, so an operator
+     learns which of its credentials asked.
+     THE PREDICATE IS `!viaSession` — how the caller ARRIVED, not which token it
+     held — so it covers ADMIN, MEMBER and PROBE today and any binding added
+     tomorrow, and no class list appears at the site to go stale. */
+  OPERATOR_TOKEN_CANNOT_GOVERN: {
+    check: "C-32.17",
+    where: "src/control-plane/index.mjs fetch > is-operator-governance-act",
+    translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for this copy, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
+  }
+};
+var GROUP_IDENTITY_FENCE_CHECKS = {
+  /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
+     administrator's own signed-in session, and the record names who set each one. */
+  GROUP_IDENTITY_NEEDS_SESSION: {
+    check: "C-64.4",
+    where: "src/control-plane/index.mjs fetch > is-group-identity-session",
+    translation: "The name this group shows the public, and the web address it claims, are set by one of its administrators, and the record names who set each one. The credential that asked here is one of the operator's access tokens for this copy, not a person, so it cannot be that administrator. Sign in as the administrator and set it from there. Nothing was changed."
+  }
+};
+var REPLAY_CHECKS = {
+  /* D-512 (INVESTIGATIVE-SESSION.md §11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33's
+     STEP (2)): `replay` exempts a promotion from every shape fence `promote` has, because a replay re-states the
+     record's own past verbatim. D-511 (step 1) removed the flag from every caller but the ADMIN class with no
+     session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
+     drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
+     by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
+     listing this revision's `bundle.md` SHA-256 — never against the request's own claim (CLAUDE.md §5). Measured
+     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
+     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
+     BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
+     promotion, because the one honest sender (`migrate.mjs`) carries the past verbatim and an ordinary creation is
+     rewritten on the way in. */
+  REPLAY_UNVERIFIED: {
+    check: "C-66.6",
+    where: "src/control-plane/index.mjs fetch > is-promote-replay-verified",
+    translation: "This save says it is a replay of the record's own history, and the plane could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved."
+  }
+};
+
+// src/control-plane/dispatch.mjs
+var PROJECT_NAMING_READS = Object.freeze({
+  image: ["id"],
+  file: ["id"],
+  projection: ["id"],
+  excludedby: ["id"],
+  backlinks: ["target"],
+  reevaluations: ["target"],
+  inquirystrength: ["id"],
+  earnedbasis: ["id"],
+  partitionindependence: ["id"],
+  narrowcandidates: ["target"],
+  versionnotice: ["target"],
+  basisversions: ["id", "project"],
+  versionstrength: ["id", "project"],
+  strengthbarof: ["project", "target"],
+  extractproposals: ["bundle"],
+  capturerequests: ["target"],
+  tasks: ["refers"],
+  biasmanifest: ["scopeId"],
+  airuns: ["contextId"],
+  casedrafts: ["project"],
+  gatefacts: ["id"],
+  affordancefacts: ["target"],
+  projectownerarith: ["projectId"],
+  projectvisibility: ["projectId"],
+  projectparticipants: ["projectId"],
+  /* c22-batch29 (REC-196 x REC-150): REC-150's requests read names the project by its own id, so the door answers
+     C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
+  projectrequests: ["projectId"],
+  /* N193: a document's bundle id. N216's layer-9 reads naming a record object's bundle, or (`determinations`) a project. */
+  connectionsasserted: ["bundle"],
+  standard: ["id"],
+  standardinforce: ["id"],
+  determination: ["id"],
+  determinations: ["project"],
+  consequence: ["id"],
+  escalation: ["id"],
+  /* N321 (publication R44): the stage read names the project by its own id; publication answers the same C-70.1 through
+     the same `existenceAct`, so the door's answer and the route's agree. */
+  projectstage: ["project"]
+});
+var PROJECT_NAMING_READS_NOT = Object.freeze({
+  content: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
+  concerns: "`id` is an ENTITY id",
+  connections: "`id` is an ENTITY id",
+  instance: "`id` is an ENTITY id",
+  exceptions: "`id` is an ENTITY id",
+  transcription: "`id` is a transcription's content id",
+  themeread: "`id` is a THEME id",
+  leadread: "`id` is a LEAD id",
+  versionchain: "`address` is a normalised source address, never a bundle id",
+  airun: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
+  airunlog: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
+  airunspawn: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
+  /* c22-batch29: `biasdebt` (REC-207, on main) reached REC-196's sweep only at this union. */
+  biasdebt: "`run` is a RUN id \u2014 a thing inside a project, whose existence is contents",
+  reviewcopy: "`draft` is a DRAFT id \u2014 a thing inside a project, whose existence is contents",
+  casedocument: "`case` is a CASE id, answered by the case door's own fence",
+  reading: "`sha256` is a CAPTURE's digest",
+  resolutions: "`sha256` is a CAPTURE's digest",
+  textattest: "`sha256` is a CAPTURE's digest",
+  readingname: "`entity` is an ENTITY id",
+  entity: "`id` is an ENTITY id",
+  relation: "`id` is a RELATION id",
+  inboxget: "`id` is an INBOX item's id",
+  sourcereach: "`address` is a source address",
+  captureprogressions: "`sha256` is a CAPTURE's digest",
+  verify: "`sha256` is a published artifact's digest",
+  publishedcase: "`id` is a PUBLISHED case \u2014 the published record, served to anybody",
+  publishededitions: "`id` is a PUBLISHED case \u2014 the published record, served to anybody",
+  caseflags: "`case` and `target` name a case and its member finding, every field already published",
+  /* N89, N193 (N112, K210): `pdfstructure` beside `reading`. */
+  archivelookup: "`address` is a source address",
+  pdfstructure: "`sha256` is a CAPTURE's digest",
+  contentcrop: "`id` is a content row's fixed key, hash(capture, extent, chain) \u2014 never a bundle id",
+  filemembership: "`sha256` is a CAPTURE's digest",
+  /* N216's layer-9 reads whose id names a row inside a project, never a bundle. */
+  comparison: "`id` is a comparison PROPOSAL id \u2014 a thing inside a project, whose existence is contents",
+  counselpacketread: "`id` is a COUNSEL PACKET id \u2014 a thing inside a project, whose existence is contents"
+});
+function existenceRead(membershipOf2, op, url, body) {
+  const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
+  const viewer = url.searchParams.get("viewer");
+  if (!params || viewer === null) return null;
+  const membership = membershipOf2();
+  for (const p of params) {
+    const fromBody = body && typeof body === "object" && typeof body[p] === "string" ? body[p] : null;
+    for (const id of [url.searchParams.get(p), fromBody]) {
+      if (typeof id !== "string" || id === "") continue;
+      if (membership.visibilityOf(id) !== "discoverable") continue;
+      const existence = membership.existenceAct(id, viewer);
+      if (existence) return existence;
+    }
+  }
+  return null;
+}
+function storeInternalError(e, op) {
+  const correlation = crypto.randomUUID();
+  const answer = internalAnswer(correlation);
+  console.error(JSON.stringify({
+    event: answer.reason,
+    correlation,
+    op: String(op || "").slice(0, 200),
+    stack: String(e && e.stack || e)
+  }));
+  return answer;
+}
+function internalAnswer(correlation) {
+  const row2 = DISPATCH_CHECKS.STORE_INTERNAL_ERROR;
+  return {
+    ok: false,
+    error: "internal error",
+    reason: "STORE_INTERNAL_ERROR",
+    code: "STORE_INTERNAL_ERROR",
+    check: row2.check,
+    translation: row2.translation,
+    correlation
+  };
+}
+async function dispatch(req, store) {
+  const url = new URL(req.url);
+  const op = url.pathname.slice(1);
+  let body = null;
+  if (req.method === "POST") {
+    const raw = await req.text();
+    if (raw.trim() !== "") {
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return Response.json({
+          ok: false,
+          reason: "BAD_JSON",
+          detail: "the request body is not valid JSON"
+        }, { status: 400 });
       }
     }
-    try {
-      const map = {
-        ...membershipOps(membershipOf(this.ctx), url, body, this.env),
-        ...captureOps(captureOf(this.ctx), url, body, this.env),
-        ...calibrationOps(calibrationOf(this.ctx), url, body),
-        ...biasOps(biasOf(this.ctx), url, body),
-        ...extractionOps(extractionOf(this.ctx), url, body, this.env),
-        ...connectionsOps(connectionsOf(this.ctx), url, body, this.env),
-        ...inquiryOps(inquiryOf(this.ctx), url, body),
-        ...citationOps(citationOf(this.ctx), url),
-        /* MK-4 / D-681: the lead's ops, observation-log's (K3); the stamps are the control plane's, read from the query. */
-        ...observationLogOps(observationLogOf(this.ctx), url, body),
-        /* run-productions' ops (K3): op=suggest and the extract productions; the stamps are the control plane's. */
-        ...runProductionsOps(runProductionsOf(this.ctx), url, body),
-        ...entitiesOps(entitiesOf(this.ctx), url, body),
-        ...contradictionOps(contradictionOf(this.ctx), url, body),
-        ...progressionOps(progressionsOf(this.ctx), url, body),
-        ...intentOps(intentOf(this.ctx), url, body),
-        ...basisVersionsOps(basisVersionsOf(this.ctx), url, body),
-        ...strengthOps(strengthOf(this.ctx), url, body),
-        ...reevaluationOps(reevaluationOf(this.ctx), url, body),
-        ...caseAuthoringOps(caseAuthoringOf(this.ctx), url, body),
-        ...ratificationOps(ratificationOf(this.ctx), url, body),
-        ...publicationOps(publicationOf(this.ctx), url, body),
-        promote: () => promotionOf(this.ctx).promote(body),
-        allocid: () => recordOf(this.ctx).allocIdOp(url.searchParams.get("prefix"), url.searchParams.get("year")),
-        lease: () => recordOf(this.ctx).acquireLease(url.searchParams.get("id"), url.searchParams.get("actor"), 3e5),
-        /* REC-176: the census of manifest rows a repeated snap key overwrote, read-only (see `snapKeyCensus`). */
-        snapkeycensus: () => recordOf(this.ctx).snapKeyCensus({ limit: url.searchParams.get("limit") }),
-        /* REC-190: the census of displaced homes, read-only (see `homeCensus`). */
-        homecensus: () => this.homeCensus({ limit: url.searchParams.get("limit") }),
-        /* D-476: does the register hold these whole-document bytes, read-only and naming no
-           bundle (see `registerHolds`). op=acquire asks it of a MULTI-PART capture, whose whole
-           is never stored under its own hash for R2 to be asked about. */
-        registerholds: () => this.registerHolds({
-          sha: url.searchParams.get("sha256"),
-          bundle: url.searchParams.get("bundle")
-        }),
-        /* REC-25 / F-8: the D-15 gate on the whole-image and single-file
-           reads. `viewer` is stamped by the control plane, never taken from a
-           caller's own parameters there; an invisible bundle answers null,
-           exactly as an absent one does, and an absent viewer sees nothing
-           (fail closed, the search path's own posture). The METHODS stay
-           ungated because the store itself is a legitimate whole-corpus
-           reader (audit, eachImage, ratify's assembly); this dispatch map is
-           the store's one external door. */
-        image: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer")) ? recordOf(this.ctx).readImage(url.searchParams.get("id")) : null,
-        file: () => this.#viewerSees(url.searchParams.get("id"), url.searchParams.get("viewer")) ? recordOf(this.ctx).readFile(url.searchParams.get("id"), url.searchParams.get("path")) : null,
-        list: () => this.listBundles({
-          type: url.searchParams.get("type"),
-          state: url.searchParams.get("state"),
-          after: url.searchParams.get("after") || null,
-          limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        index: () => this.buildIndex({ viewer: url.searchParams.get("viewer") }),
-        /* CAP-4: reuse verification. `reusedparts` enumerates a bundle's reused
-           parts so ratification can re-fetch them; `recordreuseverdicts` commits
-           the outcomes the control plane produced; `reuseverdicts` reads them
-           (also surfacing the free posthoc verdicts by source_capture). */
-        /* REC-83 / IC-84 (4): THE FIXED-KEY CONTENT READ. One key, one row —
-           `extras` hands the store EVERY parameter name that arrived so the op
-           can refuse a predicate or a page by name rather than ignoring it. The
-           control plane strips `op` and `token` and forwards the rest, so what
-           this list holds is exactly what the caller sent plus the viewer the
-           control plane stamped; `Store.CONTENT_READ_PARAMS` is the accepted
-           set and everything else is refused. GATED like every read that names
-           a bundle: the store fails closed on an absent `viewer` and answers an
-           invisible row exactly as an absent one. */
-        contentcrop: () => contentOf(this.ctx).cropOf({ contentId: url.searchParams.get("id"), viewer: url.searchParams.get("viewer") }),
-        content: () => this.contentRead({
-          id: url.searchParams.get("id"),
-          viewer: url.searchParams.get("viewer"),
-          extras: [...url.searchParams.keys()]
-        }),
-        /* SK-7 / framework Part II 14.4 (Bob's 5.7): MARKING A PASSAGE CITABLE.
-           `mintedBy` is taken from the QUERY STRING and never from the body,
-           and that is the whole fence at this door: the control plane stamps it
-           there from the credential that authenticated and a caller-supplied
-           one in the body is not read at all, so a machine credential cannot
-           post a member's name into the field that says who did this. GATED on
-           `viewer` like every write that names a bundle. */
-        contentmint: () => this.contentMint({
-          bundleId: (body || {}).bundleId,
-          extent: (body || {}).extent,
-          at: (body || {}).at || null,
-          mintedBy: url.searchParams.get("mintedBy"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        /* CONSTRUCTS Step 3 (FW-5): read a captured document's reading by capture
-           sha, and the reverse index by raw entity reference. */
-        /* REC-30: `viewer` is stamped by the control plane, never read from a
-           caller's own parameters there, and an absent one fails closed — the
-           bundle back-reference is withheld rather than the answer refused. */
-        /* CPDF-10. Three arms, and the split is the item's own doctrine.
-           `textprovenance` READS which documents' text a machine produced — the
-           index half of "distinguishable in the projection, the index and an
-           export". `textattest` READS the attestations over one capture and
-           what a leg citing a given region may claim. `attesttext` is the WRITE,
-           and it is the only one of the three a machine credential cannot
-           reach — the control plane refuses it before it gets here (MEMBER_ONLY
-           in the OPS table), and `checkAttestation` refuses it again at the
-           store, because an act refusable at one door only is an act with one
-           door left open. */
-        textattest: () => this.attestationsFor(
-          url.searchParams.get("sha256"),
-          url.searchParams.get("page") == null ? null : {
-            page: Number(url.searchParams.get("page")),
-            rect: safeJson17(url.searchParams.get("rect"))
-          },
-          url.searchParams.get("viewer"),
-          url.searchParams.get("limit")
-        ),
-        /* SK-7: THE ATTESTOR COMES FROM THE QUERY STRING, WHERE THE CONTROL
-           PLANE STAMPED IT, AND THE BODY'S `member` IS NOT READ AT ALL. Before
-           this the attestor was taken from the body, so C-35.10 refused only a
-           caller that volunteered a machine-shaped name — measured through a
-           real minted `ai` credential, which attested in a member's name and had
-           the act LAND. `contentmint` beside it takes its minter the same way
-           and for the same reason. An absent stamp reaches `checkAttestation`
-           as an absent member and is refused there (*unattributed is not
-           attested*), so a route that skipped the stamp fails closed. */
-        attesttext: () => contentOf(this.ctx).attestText({
-          ...body || {},
-          member: url.searchParams.get("attestor"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISERS. resolve runs the
-           recogniser over a captured document's references and stores each resolution
-           with its §8.1 grade (A/B/C, never D — the machine never testifies);
-           resolvetestify is the member's grade-D testimony path; resolutions reads a
-           document's resolutions; concerns is the REVERSE INDEX, every document that
-           concerns an entity, by joining on entity_id (never through a relation). */
-        resolve: () => this.resolveReferences(body || {}),
-        resolvetestify: () => this.testifyResolution(body || {}),
-        /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA carrying a GRADE (the
-           two-node base case of a progression), and the PROGRESSION DEFINITION as data.
-           connect DERIVES the connections among the documents that concern one entity,
-           each graded the WEAKER of its two ends (D-67 storage + D-72 grade); connections
-           reads them by entity or by capture; progressiondefine authors an ordered stage
-           set (both example progressions expressible as rows); progression reads one. */
-        ...queueOps(queueOf(this.ctx), url, body),
-        /* D-64: the daily render allowance. `renderadmit` takes a render or records
-           a DEFERRAL; `renderspend` adds the browser time a render reported. */
-        recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
-        /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
-           — the control plane runs it through `normalizeAddress`, the same
-           function the capture wrote the row with, because `normalizeAddress`
-           lives in subresources.mjs and this file does not import it. That is
-           the seam op=links already uses for the same reason. `viewer` is
-           stamped by the control plane and an absent one compiles to the deny
-           predicate, so this fails closed like every other gated read. */
-        versionchain: () => this.versionChain({
-          addressNorm: url.searchParams.get("address"),
-          at: url.searchParams.get("at"),
-          limit: url.searchParams.get("limit"),
-          offset: url.searchParams.get("offset"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        /* REC-87 / IC-128: TRANSCRIBE. The TYPIST and the ATTESTOR come from the
-           QUERY STRING, where the control plane stamped them, and never from the
-           body — `attesttext`'s correction, taken from the start rather than
-           re-learned: a body field a caller can fill is a name a machine can post. */
-        /* MK-1 / IC-133: TESTIFY. The AUTHOR comes from the QUERY STRING, where the
-           control plane stamped it over anything the caller put there. The body's
-           own author field is read ONLY to be REFUSED (C-53.2): every spelling a
-           caller could use to name the person is collected, so naming it under a
-           synonym is not a way round the refusal. */
-        testify: () => this.testify({
-          words: body ? body.words : null,
-          observedAt: body ? body.observedAt : null,
-          title: body ? body.title : null,
-          author: url.searchParams.get("author"),
-          claimedAuthor: body ? ["author", "observer", "authoredBy", "authored_by", "by", "member", "memberId"].map((k) => body[k]).find((v) => v !== void 0 && v !== null) ?? null : null
-        }),
-        transcribe: () => this.transcribe({
-          bundleId: body && body.bundleId || null,
-          extent: body && body.extent !== void 0 ? body.extent : null,
-          text: body ? body.text : null,
-          at: body && body.at || null,
-          transcriber: url.searchParams.get("transcriber"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        transcriptionattest: () => this.transcriptionAttest({
-          contentId: body && body.contentId || url.searchParams.get("contentId"),
-          at: body && body.at || null,
-          note: body ? body.note : null,
-          attestor: url.searchParams.get("attestor"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        transcription: () => this.transcriptionRead({
-          id: url.searchParams.get("id"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        ...captureRequestsOps(captureRequestsOf(this.ctx), url, body),
-        ...governorRoutes(governorOf(this.ctx), url, body),
-        ...aiRunsOps(aiRunsOf(this.ctx, this.env), url, body),
-        /* retrieval's ops (K3): frontier, contentaxis, projection, search, meaningrows, searchfields, select, selection,
-           selectionlist, selectionrelease, searchindexcheck, projectionplan, projectionclear, reproject. */
-        ...retrievalRoutes(retrievalOf(this.ctx), url, body),
-        ...actionsOps(actionsOf(this.ctx), url, body),
-        /* N216 (K250, K263): layer 9's ops. escalation publishes no op map, so its ten are named here (LEGACY-INDEX #5's
-           table, K262); `author` and `viewer` are the control plane's stamps, read from the query after the body, and
-           `now` and `limit` are numbers or absent. */
-        ...standardsOps(standardsOf(this.ctx), url, body),
-        ...conformanceOps(conformanceOf(this.ctx), url, body),
-        ...consequencesOps(consequencesModule(this.ctx), url, body),
-        ...filingsOps(filingsOf(this.ctx), url, body),
-        escalationopen: () => escalationOf(this.ctx).escalationOpen({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalation: () => escalationOf(this.ctx).escalationRead({
-          id: url.searchParams.get("id"),
-          nowMs: _Store.#numberParam(url, "now"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationattach: () => escalationOf(this.ctx).escalationAttach({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationevaluate: () => escalationOf(this.ctx).escalationEvaluate({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationadvance: () => escalationOf(this.ctx).escalationAdvance({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationdecline: () => escalationOf(this.ctx).escalationDecline({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationend: () => escalationOf(this.ctx).escalationEnd({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationsuspend: () => escalationOf(this.ctx).escalationSuspend({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationresume: () => escalationOf(this.ctx).escalationResume({
-          ...body || {},
-          author: url.searchParams.get("author"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        escalationsdue: () => escalationOf(this.ctx).escalationsDue({
-          nowMs: _Store.#numberParam(url, "now"),
-          limit: _Store.#numberParam(url, "limit"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        ...monitoringOps(monitoringOf(this.ctx), url, body),
-        /* REC-19: the facts behind op=affordances. The control plane derives
-           the act list from these; this endpoint only reports what the store
-           holds about the object. */
-        affordancefacts: () => affordancesOf(this.ctx).affordanceFacts({
-          target: url.searchParams.get("target"),
-          viewer: url.searchParams.get("viewer"),
-          identity: url.searchParams.get("identity"),
-          /* D-311: the two act stamps, as the acts receive them */
-          author: url.searchParams.get("author"),
-          by: url.searchParams.get("by")
-        }),
-        stats: () => this.stats({
-          capacity: url.searchParams.get("capacity") === "1",
-          viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : void 0
-        }),
-        retire: () => this.retire({
-          handle: url.searchParams.get("handle"),
-          reason: url.searchParams.get("reason"),
-          viewer: url.searchParams.get("viewer"),
-          owner: url.searchParams.get("owner"),
-          author: url.searchParams.get("author")
-        }),
-        release: () => this.release({
-          handle: url.searchParams.get("handle"),
-          acknowledgment: url.searchParams.get("acknowledgment"),
-          mitigation: url.searchParams.get("mitigation"),
-          viewer: url.searchParams.get("viewer"),
-          owner: url.searchParams.get("owner"),
-          author: url.searchParams.get("author")
-        }),
-        /* REC-54 / D-200. ONE bundle, no handle and no owner: this is a
-           correction to a named document's register, not a set application, so
-           it takes the target and the viewer/author stamps the control plane
-           sets. `apply` is opt-in — the default is a REPORT, because every use
-           of this is a decision about the real record. */
-        provenancechain: () => this.provenanceChainRebuild({
-          bundleId: url.searchParams.get("bundleId"),
-          apply: url.searchParams.get("apply") === "1",
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author")
-        }),
-        /* REC-63 / DEC-56 / D-204. The other half of the op above: where that
-           one REFUSES to invent a chain, this one RECORDS that the route cannot
-           be shown. One bundle, the viewer/author stamps the control plane sets,
-           and NO `apply` flag — there is nothing to opt into, because the act
-           moves no state and touches no byte of the document. */
-        provenanceroute: () => this.provenanceRouteAssess({
-          bundleId: url.searchParams.get("bundleId"),
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author")
-        }),
-        /* REC-116 / IC-120. The READ beside the two writes above — the `airun`
-           / `airuns` shape one construct over: the singular acts on one bundle,
-           the plural answers about the instance. No `author`, because reading
-           who was doubted is not itself a named act; `viewer` is the control
-           plane's server-side stamp exactly as it is for its two siblings. */
-        provenanceroutes: () => this.provenanceRoutesMarked({
-          after: url.searchParams.get("after"),
-          limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        /* REC-31, conclude's shape exactly: ONE target, no handle and no
-           owner, with the viewer and author stamps the control plane sets. */
-        reopen: () => this.reopen({
-          target: url.searchParams.get("target"),
-          reason: url.searchParams.get("reason"),
-          viewer: url.searchParams.get("viewer"),
-          author: url.searchParams.get("author")
-        }),
-        projectfork: () => this.forkProject({
-          projectId: url.searchParams.get("projectId"),
-          newId: url.searchParams.get("newId"),
-          title: url.searchParams.get("title"),
-          visibility: url.searchParams.get("visibility"),
-          /* REC-197: absent is null, which is HIDDEN */
-          by: url.searchParams.get("by"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        /* REC-138 */
-        registeraudit: () => this.registerAudit(),
-        /* REC-175: the digest census, read-only (see `digestCensus`). */
-        digestcensus: () => recordOf(this.ctx).digestCensus({ limit: url.searchParams.get("limit") }),
-        /* CASE-5b: the case ceremony's three hops, beside `gatefacts` and
-           `publish` because they are the same three acts one altitude up —
-           hand out the facts, read the document, commit from the signed bytes. */
-        ...reviewOps(reviewOf(this.ctx), url, body),
-        audit: () => this.auditPass({
-          after: url.searchParams.get("after") || "",
-          limit: url.searchParams.get("limit"),
-          viewer: url.searchParams.get("viewer")
-        }),
-        purge: () => this.purge({ bundleId: url.searchParams.get("bundleId") })
-      };
-      if (!map[op]) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
-      const existence = this.#existenceRead(op, url, body);
-      return Response.json({ ok: true, result: existence ?? await map[op]() });
-    } catch (e) {
-      return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });
-    }
+  }
+  try {
+    const map = store.routes(url, body);
+    if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
+    const existence = existenceRead(() => store.membership(), op, url, body);
+    return Response.json({ ok: true, result: existence ?? await map[op]() });
+  } catch (e) {
+    return Response.json(storeInternalError(e, op), { status: 500 });
+  }
+}
+var Store2 = class extends Store {
+  static PROJECT_NAMING_READS = PROJECT_NAMING_READS;
+  static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
+  async fetch(req) {
+    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx) });
   }
 };
 
@@ -112917,315 +113258,6 @@ async function ratifyOp(req, stub, ctx) {
   }, 200);
 }
 
-// src/control-plane/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
-  ADMISSION_CHECKS: () => ADMISSION_CHECKS,
-  AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
-  BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
-  DISPATCH_CHECKS: () => DISPATCH_CHECKS,
-  GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
-  NAMESPACE_CHECKS: () => NAMESPACE_CHECKS,
-  OPERATOR_FENCE_CHECKS: () => OPERATOR_FENCE_CHECKS,
-  REPLAY_CHECKS: () => REPLAY_CHECKS
-});
-var ADMISSION_CHECKS = {
-  /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
-     do rather than what happened, because a person reading this has not yet done
-     anything wrong — they have simply not said who they are. */
-  NOT_AUTHENTICATED: {
-    check: "C-38.1",
-    where: "src/control-plane/index.mjs fetch > is-admission",
-    translation: "Nothing in this request said who you are. Sign in, or send a credential this instance issued, and try again."
-  },
-  /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
-     sentence: this is not a rung on a ladder the caller can climb. A credential
-     is issued for a purpose and this is not that purpose, so the honest advice
-     is to use the right one rather than to ask for this one to be widened. */
-  CLASS_FORBIDDEN: {
-    check: "C-38.2",
-    where: "src/control-plane/index.mjs fetch > is-admission",
-    translation: "The credential you sent is not one this operation accepts. Credentials here are issued for a particular purpose, and widening this one is not the way through: use the credential meant for this work."
-  },
-  /* The mirror of the row above, and it exists separately because the two are
-       opposite facts about the caller. This one is a PERSON asking for something
-       only an unattended writer does; the row above is a credential of the wrong
-       kind entirely. One refusal covering both would tell neither caller anything
-       they could act on — DEC-49's own argument, and PL-18's.
-  
-       **NARROWED 2026-09-19 BY D-270, AND THE `where` MOVED WITH THE SITE.** This
-       row is a DESIGN CLAIM — it tells a person that a verb is not for people —
-       and BOB #17 ruled that the plane may make it ONLY where such a decision is
-       recorded. Until D-270 this one sentence answered THREE different facts and
-       was FALSE for two of them: it went to five ops an administrator's own
-       browser performs, and to ops whose OPS rows say in as many words that they
-       are a named member's judgement. The site is now `sessionOpGate`, which
-       sends this row only for an op named in `UNATTENDED_BY_DECISION`, and the
-       refusal carries the citation in `recorded`, so the claim and its warrant
-       travel together. The rule's home is
-       `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (the §4.7 block). */
-  MACHINE_CREDENTIAL_REQUIRED: {
-    check: "C-38.3",
-    where: "src/control-plane/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. This instance holds a recorded decision to that effect and names it beside this message."
-  },
-  /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
-     OUTCOMES, and the one the plane could ALWAYS have said: it is about the
-     CALLER rather than about the design, so it needs no recorded decision to be
-     sayable. Five ops — `governorconfig`, `memberadd`, `memberset`, `signeradd`,
-     `signerset` — were answered with the row above, which told a member to go
-     and find a machine credential for an act an administrator performs from
-     their own browser. There is no such credential to find. This sentence names
-     the person to ask instead, because that is the action actually available.
-     CORRECTED 2026-09-25 by REC-162 (Membership v2 §4.9, BOB #23): it read "but an
-     administrator of this group, and this session is not one … ask an administrator".
-     After REC-159 the one op it answers is `governorconfig`, which the FOUNDER'S session
-     alone reaches — an enrolled administrator holds a member's session and was told they
-     were not an administrator. The sentence now names the SESSION, as the refusal's own
-     `reachedBy` does. */
-  SESSION_ROLE_CANNOT_REACH_OP: {
-    check: "C-38.7",
-    where: "src/control-plane/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "A signed-in person does perform this operation, but from a different session than this one, and this refusal names which. Where it names the founder's session, being an administrator of this group does not reach it: every enrolled member, an administrator included, signs in with a member's session. No machine credential is needed and finding one is not the way through: ask the person who holds the session it names."
-  },
-  /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
-       otherwise have to cover a case neither is true of.
-  
-       **THE ARGUMENT, AND IT IS THIS ROW'S WHOLE REASON.** A false rationale
-       SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
-       will not report it as a gap, so the sentence recruits the one person who
-       could have caught it into believing there is nothing to catch. The measured
-       case is D-136's — `adminendorse`, `adminremove` and `membercaps` WERE
-       reachable by no session, and Membership Architecture §4.7 assigns that very
-       vote to a person. **D-136 LANDED 2026-09-19 and discharged that case**: the
-       three now hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
-       administrator's session reaches them and a member's gets the ROLE sentence,
-       not this one. The receipt stays in the past tense because it is the ARGUMENT
-       for this row rather than a roster of its members — the gap was reported only
-       because the plane declined to call it a decision, and deleting the evidence
-       once the gap closes is how a rule outlives the reason it was made. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
-       independently that the old sentence told an administrator the act §4.9
-       assigns them needs a credential §4.8 says somebody else holds, and that
-       there is no action a member can take from it.
-  
-       SO THIS ROW STATES THE FACT AND INVENTS NO RATIONALE. It says what is true
-       — no session route exists — and says plainly that the record holds no
-       decision explaining it, which is an INVITATION to report the gap rather
-       than a wall in front of it. A refusal may state only what the system can
-       support. */
-  SESSION_ROUTE_NOT_RECORDED: {
-    check: "C-38.8",
-    where: "src/control-plane/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "No signed-in session reaches this operation, and this instance holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
-  },
-  /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
-     ENOUGH, and the translation says so, because a member refused here will
-     otherwise read it as a bug in their own permissions. The security property
-     is the point and a person who cannot get in deserves to know it is
-     deliberate. */
-  ROOT_OF_TRUST_REQUIRED: {
-    check: "C-38.4",
-    where: "src/control-plane/index.mjs fetch > is-admission",
-    translation: "This needs the administrator token itself, not a signed-in session \u2014 and that includes the founder's own browser. A session is derived from a password; the root of trust is the token held in the hosting account. The published record needs no credential at all."
-  },
-  /* **THE LIVE DEFECT THIS ROW CLOSES, and it is why REC-79 chose this family.**
-     `civicos-ui/app.html` hand-authored a sentence for this code:
-     *"This credential cannot write to the record. Capturing needs a member
-     holding contribute."* But this refusal is PLANE-WIDE — it is minted for
-     whatever capability the op needed, and `create_projects` and `publish` are
-     not `contribute`. So a surface had invented capture-specific wording for a
-     refusal that is not about capture, and a member denied for `create_projects`
-     was told about contributing. **That is precisely the drift a canned
-     translation exists to stop** (found by PL-18; DEC-49's own argument for
-     option (b) is that thirteen surfaces would otherwise each invent wording).
-     The sentence here names no capability, because the plane already sends the
-     one that was needed in `needs` and the surface renders that. */
-  NOT_CAPABLE: {
-    check: "C-38.5",
-    where: "src/control-plane/index.mjs fetch > is-admission",
-    translation: "Your account does not hold the capability this needs. Capabilities are granted by an administrator, so ask one rather than looking for another route to the same thing."
-  },
-  /* A credential that MAY act, but not HERE. Distinct from every row above,
-     which are all about whether the caller may act at all. */
-  SCOPE_REFUSED: {
-    check: "C-38.6",
-    where: "src/control-plane/index.mjs fetch > is-admission",
-    translation: "That credential is allowed to act, but not on the part of the record this request named. It is confined to its own namespace and this request reached outside it."
-  }
-};
-var NAMESPACE_CHECKS = {
-  NAMESPACE_UNKNOWN: {
-    check: "C-78.1",
-    where: "src/control-plane/index.mjs namespaceGate > is-namespace-gate",
-    translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
-  },
-  /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
-     Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
-     them, a knock, WROTE there. The sentence says nothing happened first and names no remedy but the true one. */
-  NAMESPACE_PINNED: {
-    check: "C-78.2",
-    where: "src/control-plane/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
-    translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
-  },
-  /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
-     named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
-     does not exist, an operation that has no scratch version; this one is a property of the CALLER, which is
-     why it is a third row and not a widening of either. Confinement is by REFUSAL and never by silent
-     redirection when a store is NAMED (`scopeFor`'s rule for the probe class, and D-456's for everyone): a
-     caller who believes it addressed the record must be told it did not. An ABSENT `store=` is not a refusal —
-     the credential's own confinement is its default, which is the whole point of minting one. */
-  NAMESPACE_CONFINED: {
-    check: "C-78.3",
-    where: "src/control-plane/index.mjs confinedNamespaceGate > is-confined-namespace-gate",
-    translation: "The credential used for this request can only ever reach the scratch area kept apart for testing, and this request asked for a different part of the record, so nothing was read or changed. Leave the part out of the request and it reaches scratch, which is the only place this credential goes."
-  }
-};
-var DISPATCH_CHECKS = {
-  UNKNOWN_OP: {
-    check: "C-69.1",
-    where: "src/control-plane/index.mjs fetch > is-unknown-op",
-    translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
-  },
-  /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
-     `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
-     and until D-561 the code reached them bare. It is a fact about the EXCHANGE, never about the record, and the
-     sentence says only that. It does NOT say "nothing was changed": `storeSilent` also answers a write whose store
-     went silent, and whether that write took effect is exactly what a silence cannot say. */
-  STORE_DID_NOT_ANSWER: {
-    check: "C-69.2",
-    where: "src/control-plane/index.mjs storeSilent > is-store-silent",
-    translation: "This copy of the record could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
-  },
-  /* D-629 (R25, C-69.3) — THE WORKER DOOR THREW. It had no outermost catch (the platform's own error page); the stack is
-     now logged server-side under a CORRELATION id, and the caller receives the code, this sentence and the id, nothing
-     else. Numbered after C-69.2, which D-561 gave `STORE_DID_NOT_ANSWER`. The store's own row (`STORE_INTERNAL_ERROR`)
-     comes with the store's door (N333, K412). THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD: a throw part-way through
-     an op may or may not have left a write behind, and the catch cannot say which. */
-  PLANE_INTERNAL_ERROR: {
-    check: "C-69.3",
-    where: "src/control-plane/index.mjs planeInternalAnswer > is-plane-internal-error",
-    translation: "This copy failed while handling the request, before it could produce an answer. That is a fault in this copy, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in this copy's logs under the reference given with this answer."
-  }
-};
-var BOOTSTRAP_CHECKS = {
-  BOOTSTRAP_CREDENTIAL_UNSET: {
-    check: "C-68.2",
-    where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
-    translation: "This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed."
-  },
-  BOOTSTRAP_CREDENTIAL_PUBLISHED: {
-    check: "C-68.3",
-    where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
-    translation: "This copy's administrator token is a value published in the project's public repository, so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a fresh one in the hosting account. Nothing was changed."
-  },
-  BOOTSTRAP_CREDENTIAL_MISMATCH: {
-    check: "C-68.4",
-    where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
-    translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
-  }
-};
-var AI_SCOPE_CHECKS = {
-  /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
-  /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
-     gate BY REFUSING. It is one code because it answers one question — is this
-     op within what the record declared for this credential — and the two ways
-     of failing it (outside the member-reach floor, or not among the declared
-     writes) are the same answer to the caller. */
-  AI_BEYOND_TASK_SCOPE: {
-    check: "C-29.6",
-    where: "src/control-plane/index.mjs aiTaskScope > is-ai-task-scope",
-    translation: "This credential was created for a particular piece of work and that is not part of it. What an agent may do here is written down on the record by the member who set it up, so widening it means somebody amending that entry, not the agent asking again."
-  },
-  AI_CREDENTIAL_REVOKED: {
-    check: "C-29.7",
-    where: "src/control-plane/index.mjs aiTaskScope > is-ai-task-scope",
-    translation: "This agent credential has been withdrawn by a member of the group, so it no longer reaches anything here. The record keeps the entry and the date rather than deleting it, so what it did while it was live remains readable."
-  },
-  /* ---- THE DECLARATION. WHAT MAY BE AUTHORED IN THE FIRST PLACE. ---- */
-  /* A scope naming something that is not an op is not a narrower scope: it is a
-     sentence in the record that nothing enforces, which is precisely what
-     D-199 (2) moved the scope out of a settings row to avoid. */
-  AI_SCOPE_UNKNOWN_OP: {
-    check: "C-29.8",
-    where: "src/control-plane/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
-    translation: "The list of things this credential may change names something this instance does not do. An entry nothing recognises would sit in the record looking like a permission while meaning nothing, so it is refused rather than stored."
-  },
-  /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
-     forbidden ops — a property of the op: can a MEMBER reach it. The unattended
-     verbs carry no member class by construction, so they are outside every
-     scope anybody can write, today and after the next op lands. */
-  AI_SCOPE_BEYOND_MEMBER_REACH: {
-    check: "C-29.9",
-    where: "src/control-plane/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
-    translation: "An agent may only be given things a member of this group could hand to it, and this is not one of them. The background worker's own jobs, and the acts a member performs only from their own signed-in session, are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
-  },
-  /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
-     A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
-     `bio` is refused with the rest, and that is the decision rather than an omission: `bio` is where every
-     unconfined credential already lands, so a row saying "confined to bio" would be a sentence in the record
-     that reads like a fence and constrains nothing — D-199 (2)'s complaint about a settings row, arriving as
-     a column. The value is matched EXACTLY — nothing trimmed, nothing case-folded — on D-456's rule one layer in,
-     because a Durable Object name is an exact string and folding it would be the code guessing what a member meant.
-     ABSENT (the field omitted, or null) is the ONLY silence, and it is the case every caller written before this item
-     is in; a PRESENT empty string is a value and is refused with the rest, because an empty `store=` is one of the
-     values D-456 measured addressing the real record. */
-  AI_CONFINEMENT_NOT_SCRATCH: {
-    check: "C-29.10",
-    where: "src/control-plane/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration",
-    translation: "A credential can be confined to the scratch area and to nothing else, spelt exactly. Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; naming the record itself is not a confinement, so it is refused rather than written down as one. Nothing was created."
-  }
-};
-var OPERATOR_FENCE_CHECKS = {
-  /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
-     the same doctrine rather than a new one: *the credential that delivers an
-     act decides when the record changes, and the record names the actor.* A
-     §4.7 vote is C-32.14's shape with the member's signature replaced by a
-     roster position — an act the record attributes to a named administrator,
-     which a bearer token held in the hosting account cannot be.
-     ONE ROW FOR THE THREE OPS, on C-32.16's precedent rather than C-32.14's: the
-     endorsement, the removal vote and the capability edit enter through ONE
-     region and are refused by ONE predicate, so three rows would be one rule with
-     three homes. The op is named in the answer, so a caller still learns which
-     verb was refused, and the class is named in `tokenClass`, so an operator
-     learns which of its credentials asked.
-     THE PREDICATE IS `!viaSession` — how the caller ARRIVED, not which token it
-     held — so it covers ADMIN, MEMBER and PROBE today and any binding added
-     tomorrow, and no class list appears at the site to go stale. */
-  OPERATOR_TOKEN_CANNOT_GOVERN: {
-    check: "C-32.17",
-    where: "src/control-plane/index.mjs fetch > is-operator-governance-act",
-    translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for this copy, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
-  }
-};
-var GROUP_IDENTITY_FENCE_CHECKS = {
-  /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
-     administrator's own signed-in session, and the record names who set each one. */
-  GROUP_IDENTITY_NEEDS_SESSION: {
-    check: "C-64.4",
-    where: "src/control-plane/index.mjs fetch > is-group-identity-session",
-    translation: "The name this group shows the public, and the web address it claims, are set by one of its administrators, and the record names who set each one. The credential that asked here is one of the operator's access tokens for this copy, not a person, so it cannot be that administrator. Sign in as the administrator and set it from there. Nothing was changed."
-  }
-};
-var REPLAY_CHECKS = {
-  /* D-512 (INVESTIGATIVE-SESSION.md §11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33's
-     STEP (2)): `replay` exempts a promotion from every shape fence `promote` has, because a replay re-states the
-     record's own past verbatim. D-511 (step 1) removed the flag from every caller but the ADMIN class with no
-     session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
-     drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
-     by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
-     listing this revision's `bundle.md` SHA-256 — never against the request's own claim (CLAUDE.md §5). Measured
-     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
-     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
-     BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
-     promotion, because the one honest sender (`migrate.mjs`) carries the past verbatim and an ordinary creation is
-     rewritten on the way in. */
-  REPLAY_UNVERIFIED: {
-    check: "C-66.6",
-    where: "src/control-plane/index.mjs fetch > is-promote-replay-verified",
-    translation: "This save says it is a replay of the record's own history, and the plane could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved."
-  }
-};
-
 // src/control-plane/ops.mjs
 var OPS2 = {
   //  op          class allowed              mutating
@@ -113255,6 +113287,9 @@ var OPS2 = {
   projectvisibilityset: { classes: ["admin", "member", "probe"], mutating: true },
   projectvisibility: { classes: ["admin", "member", "probe"], mutating: false },
   projectdirectory: { classes: ["admin", "member", "probe"], mutating: false },
+  /* N321 (publication R44): the project's stage and readiness, derived at the read; viewer-stamped, the roster read's
+     classes. */
+  projectstage: { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-150 (§7.14): asking and withdrawing are a member session's acts (C-95.1), answering an owner's (C-95.5); the
      read to owners, administrators and the asker. */
   projectrequest: { classes: ["admin", "member", "probe"], mutating: true },
@@ -115068,7 +115103,7 @@ function resolveSession(sess) {
 }
 async function reviewAnswer(out, op) {
   if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op);
+  if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
   if (!r?.ok) return json4({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
   if (op === "reviewcopy") {
@@ -115125,40 +115160,41 @@ var json4 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), nul
 });
 var MODULE_CHECK_FILES = [
   checks_exports,
+  checks_exports14,
+  checks_exports12,
+  checks_exports5,
+  checks_exports15,
+  credentials_exports,
+  checks_exports29,
+  checks_exports26,
+  checks_exports21,
+  themes_exports,
+  checks_exports22,
+  extent_exports,
   checks_exports13,
+  checks_exports31,
+  checks_exports10,
+  checks_exports24,
+  checks_exports6,
+  checks_exports23,
+  inquiry_exports,
+  checks_exports16,
+  checks_exports3,
+  checks_exports8,
   checks_exports11,
   checks_exports4,
-  checks_exports14,
-  credentials_exports,
-  checks_exports28,
-  checks_exports25,
-  checks_exports20,
-  themes_exports,
-  checks_exports21,
-  extent_exports,
-  checks_exports12,
-  checks_exports30,
-  checks_exports9,
-  checks_exports23,
-  checks_exports5,
-  checks_exports22,
-  inquiry_exports,
-  checks_exports15,
-  checks_exports2,
   checks_exports7,
-  checks_exports10,
-  checks_exports3,
-  checks_exports6,
-  checks_exports18,
-  checks_exports26,
-  checks_exports24,
-  checks_exports17,
-  checks_exports8,
-  checks_exports29,
-  checks_exports27,
-  skilldoctrine_exports,
   checks_exports19,
-  checks_exports16
+  checks_exports27,
+  checks_exports25,
+  checks_exports2,
+  checks_exports18,
+  checks_exports9,
+  checks_exports30,
+  checks_exports28,
+  skilldoctrine_exports,
+  checks_exports20,
+  checks_exports17
 ];
 var DEC49_ROWS = null;
 function dec49Row(code) {
@@ -115211,24 +115247,26 @@ async function doAnswer(res) {
   const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
   if (out.ok === true) return { answered: true, result: out.result, reply };
   if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
-  return { answered: false, result: void 0 };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(out.correlation) ? out.correlation : void 0;
+  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
 }
 function storeRefusal(out, extra = {}) {
   return json4({ ...out.reply.body, ...extra }, out.reply.status);
 }
-function storeSilent(op) {
+function storeSilent(op, correlation = void 0) {
   return json4({
     ok: false,
     reason: "STORE_DID_NOT_ANSWER",
     ...dispatchRow("STORE_DID_NOT_ANSWER"),
     op,
-    detail: STORE_SILENT_DETAIL
+    detail: STORE_SILENT_DETAIL,
+    correlation
   }, 502);
 }
 async function relayAnswer(res, op) {
   const out = await doAnswer(res);
   if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op);
+  if (!out.answered) return storeSilent(op, out.correlation);
   return json4({ ok: true, result: out.result }, out.reply.status);
 }
 function planeInternalError(e, req) {
@@ -115686,7 +115724,11 @@ function makeFetch(hooks = {}) {
       "projectparticipants",
       /* REC-150: the requests read decides by the caller's SIGHT of the project it
          names (C-70.1 at EXISTENCE, the absent answer at NONE), so it takes the stamp. */
-      "projectrequests"
+      "projectrequests",
+      /* N321 (publication R44): the stage read names a project by its own id and answers by
+         the caller's SIGHT (the absent answer at NONE, the id and name at EXISTENCE), so it
+         takes the stamp and fails closed without it. */
+      "projectstage"
     ];
     if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
@@ -116131,7 +116173,7 @@ function makeFetch(hooks = {}) {
       return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
     const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
-    if (!out.answered) return storeSilent(op);
+    if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json4({ ...body, store: storeName, tokenClass: cls }, 404);
@@ -116140,7 +116182,7 @@ function makeFetch(hooks = {}) {
 }
 
 // src/index.mjs
-var InstanceStore = instanceSetupStore(Store);
+var InstanceStore = instanceSetupStore(Store2);
 var requiredArgumentRow = (code) => {
   const row2 = REQUIRED_ARGUMENT_CHECKS[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
