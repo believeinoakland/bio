@@ -59,7 +59,7 @@ Terms are `publication`'s. A **ceremony** is `op=caseratify` (the case document)
 - **R13** What a commit records is read from the signed bytes only; what they are silent about is recorded null, never filled (an acknowledgement list, a deliverer undetermined).
 - **R14** Each check moves here as an invariant with its test (K6): C-41.1–C-41.15 with the case arms of C-2.8, C-3.1 and C-21.1; C-58.1–C-58.3; C-65.1; C-53.10–C-53.12; C-32.12–C-32.15; C-92.10–C-92.12. A change to any moves `CATALOG_VERSION` (rule 17).
 - **R15** No place is named in this module's behaviour or outward text.
-- **R17** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349).
+- **R17** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349). This holds for a store read made inside a longer act (K444): the ratify gate's `registerholds` probe answers the store's silence as `STORE_DID_NOT_ANSWER` with the correlation id, and its refusal as the store's own, never as a finding about the record (`PLANE_MISSING_BYTES`) (N354, K477). *(N354: not yet met)*
 
 ### Satisfies
 
