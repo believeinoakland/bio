@@ -1,6 +1,6 @@
 # legacy-store (T14)
 
-**Status** · session_01Dx3FYgfzfhAU44B9xY9RCc · depth 2 · WORKING · handled B1
+**Status** · session_01Dx3FYgfzfhAU44B9xY9RCc · depth 2 · RUNNING until 2026-09-29T23:11:28Z (node --test test/m/ (chunks)) · handled B1
 
 ## Progress
 
