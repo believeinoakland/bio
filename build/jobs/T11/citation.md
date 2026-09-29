@@ -1,6 +1,6 @@
 # citation (T11)
 
-**Status** · session_01PWEz1riZjrFQ4eskisubQr · depth 2 · WORKING · handled B1
+**Status** · session_01PWEz1riZjrFQ4eskisubQr · depth 2 · COMPLETE · handled B1
 
 CITATION #3, layer 6 of T11. Started from B1 (START).
 
