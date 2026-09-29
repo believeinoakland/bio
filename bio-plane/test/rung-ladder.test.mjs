@@ -475,13 +475,15 @@ t("`reversible` is carried by exactly the acts with a published way back",
 {
   const resume = methodBody(ESCALATION_SRC, "escalationResume") ?? "";
   const suspend = methodBody(ESCALATION_SRC, "escalationSuspend") ?? "";
+  /* RE-ANCHORED 2026-09-29 (T11, legacy-tests; K371, escalation N297): the two refusals now sit inside DEC-49 regions
+     with the `return` on its own line, so the guard and its refusal are matched across any whitespace. */
   t("escalationresume's way back is published and moves exactly the other way: both ops are routed mutating acts, "
   + "resume takes a SUSPENDED escalation to `open` and suspend an OPEN one to `suspended`, neither moving the stage",
     [table.mutating.has("escalationresume") && table.mutating.has("escalationsuspend"),
      ESCALATION_ROUTES.get("escalationresume"), ESCALATION_ROUTES.get("escalationsuspend"),
-     /if \(e\.state !== "suspended"\) return refusal\("NOT_SUSPENDED"/.test(resume),
+     /if \(e\.state !== "suspended"\)\s*return refusal\("NOT_SUSPENDED"/.test(resume),
      /this\.#append\(e, entry, \{ state: "open", blurb: "Escalation resumed" \}\)/.test(resume),
-     /if \(e\.state === "suspended"\) return refusal\("ALREADY_SUSPENDED"/.test(suspend),
+     /if \(e\.state === "suspended"\)\s*return refusal\("ALREADY_SUSPENDED"/.test(suspend),
      /this\.#append\(e, entry, \{ state: "suspended", blurb: "Escalation suspended" \}\)/.test(suspend),
      /\bstage:/.test(/this\.#append\([^)]*\)/.exec(resume)?.[0] ?? "stage:")
        || /\bstage:/.test(/this\.#append\([^)]*\)/.exec(suspend)?.[0] ?? "stage:")],

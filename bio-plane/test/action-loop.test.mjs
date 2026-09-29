@@ -394,8 +394,10 @@ let actSha = null;
 console.log("\n--- 3. op=actionmove: planned -> active, with an authored reason (c) ---");
 {
   const noReason = await actionmove(NADIA, { target: ACT, to: "active" });
+  /* RE-ANCHORED 2026-09-29 (T11, legacy-tests; K368, actions R13): the move's missing reason is its own code,
+     `ACTION_MOVE_NO_REASON` (C-117.4), no longer the shared `NO_REASON`. */
   t("a move with no reason is refused BEFORE anything moves, and the action is still planned",
-    [noReason.ok, noReason.reason, await stateOf(ACT, NADIA)], [false, "NO_REASON", "planned"]);
+    [noReason.ok, noReason.reason, await stateOf(ACT, NADIA)], [false, "ACTION_MOVE_NO_REASON", "planned"]);
   const bad = await actionmove(NADIA, { target: ACT, to: "resolved", reason: "skipping ahead" });
   t("planned -> resolved is refused: the catalog's table has no such edge",
     [bad.ok, bad.reason, await stateOf(ACT, NADIA)], [false, "ILLEGAL_TRANSITION", "planned"]);
