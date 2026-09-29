@@ -27,3 +27,22 @@
 Deferred: none.
 
 Size (session_019nqDEB4hQb2Jh2ENi3A6bQ): test runs 7, module lines 2719
+
+## J2 · COMPLETE · re B2
+
+**B2 applied** (commit after merging `tranche/T12` @ K413):
+- `RUNG_ABSENT.profilesset` is on the `substrate` ground, as `groupnameset` is: the instance's configuration, beneath the record, moving no document, claim or grade.
+- `NON_ACTS.profilesset` gives the subject as the instance's configuration, not a bundle, and names its admin refusal `PROFILES_NOT_ADMIN` (the other refusals, C-119, are named in the comment).
+- `op=profiles` is a read with no `NEEDS` row, so I named it nowhere. A read with a row here would show up as `stale` (R12).
+
+**Totality, through my R12 service over control-plane's real tables** (`OPS`, `NEEDS` from `control-plane/ops.mjs`): 311 ops, 170 mutating, 181 gated. `unaccounted` → `{unpublished: [], unranked: [], stale: []}`.
+
+**Tests and checks.**
+- `test/m/affordances/`: 75 tests, 74 pass, 0 fail, 1 todo (R26, N231).
+- format, architecture, coverage (27/27) and ownership: 0 failures each.
+
+**REPORT: `test/rung-ladder.test.mjs` cannot run on `tranche/T12`.** Its `test/dispatch-reader.mjs`:55 throws "OPS table not found in src/index.mjs", because control-plane moved `OPS` to `src/control-plane/ops.mjs`. The whole file fails before any arm runs, with or without my change. That file belongs to legacy-tests: point `readDispatch` at `control-plane/ops.mjs` (or have the suite call control-plane's exported `OPS`/`NEEDS` with affordances' `unaccounted`, as above). The totality it guards holds, per the line above.
+
+Grep: no hit in `civicos-ui/` for `profilesset` or `PROFILES_NOT_ADMIN`. No check row changed and no artifact made stale beyond the plane bundle, which is regenerated at layer close.
+
+Size (session_019nqDEB4hQb2Jh2ENi3A6bQ): test runs 10, module lines 2729
