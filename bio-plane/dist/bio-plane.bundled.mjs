@@ -98711,6 +98711,7 @@ var MONITOR_TICK_MS = 36e5;
 var MONITOR_TICK_BATCH = 50;
 var MONITOR_RANK_READ = 10;
 var MONITOR_PAUSE_SETTING = "monitoring_paused";
+var MONITOR_ROOT_OF_TRUST = "class:admin";
 var MONITOR_CADENCE_MS = Object.freeze({
   hourly: 36e5,
   daily: 864e5,
@@ -100032,20 +100033,13 @@ var Monitoring = class {
     return v && typeof v === "object" && v.paused === true ? { paused: true, by: typeof v.by === "string" ? v.by : null, at: typeof v.at === "string" ? v.at : null } : { paused: false };
   }
   /** R30: an administrator pauses the daemon (`paused: true`) or resumes it (`false`). `by` is the control plane's
-   *  stamp of who asked; this service is reached only by the administrator's route. While paused, neither tick fetches
-   *  anything (monitoring's and the fallback's fetches stop); `op=monitor` asked by a caller still answers, since a
-   *  caller naming one bundle is not the daemon. Answers `{ok, paused, by, at}`. */
+   *  stamp of who asked (the `actor` it stamps: a member's id for a session, `class:<cls>` for a credential). N314
+   *  (K380): the caller's standing is this service's to decide, not the route's: a stamp that is not an administrator
+   *  (membership R64's `isAdministrator`) nor the root of trust (`MONITOR_ROOT_OF_TRUST`) is refused `NOT_AN_ADMIN`,
+   *  membership's code with its row C-96.1, asked before the request's shape, and nothing is written. While paused,
+   *  neither tick fetches anything (monitoring's and the fallback's fetches stop); `op=monitor` asked by a caller still
+   *  answers, since a caller naming one bundle is not the daemon. Answers `{ok, paused, by, at}`. */
   pause({ paused = null, by = null } = {}) {
-    if (typeof paused !== "boolean")
-      return {
-        ok: false,
-        reason: "REQUIRED_ARGUMENT_MISSING",
-        op: "monitorpause",
-        argument: "paused",
-        shape: "true or false",
-        error: "the pause needs paused: true or false",
-        detail: "monitorpause needs 'paused' in the shape true or false, and this request carried none the operation could use. Nothing was changed."
-      };
     if (typeof by !== "string" || !by.trim())
       return {
         ok: false,
@@ -100056,10 +100050,38 @@ var Monitoring = class {
         error: "the pause needs who set it",
         detail: "monitorpause needs 'by', the administrator the control plane stamped, and this request carried none. Nothing was changed."
       };
+    if (!this.#administers(by)) {
+      const row2 = CUSTODIAL_CHECKS.NOT_AN_ADMIN;
+      return {
+        ok: false,
+        reason: "NOT_AN_ADMIN",
+        code: "NOT_AN_ADMIN",
+        check: row2.check,
+        translation: row2.translation,
+        by,
+        detail: "pausing or resuming the monitoring daemon is an administrator's act (R30), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators. Nothing was changed."
+      };
+    }
+    if (typeof paused !== "boolean")
+      return {
+        ok: false,
+        reason: "REQUIRED_ARGUMENT_MISSING",
+        op: "monitorpause",
+        argument: "paused",
+        shape: "true or false",
+        error: "the pause needs paused: true or false",
+        detail: "monitorpause needs 'paused' in the shape true or false, and this request carried none the operation could use. Nothing was changed."
+      };
     const at15 = stampInstant("second", this.now());
     const r = this.record.setSetting(MONITOR_PAUSE_SETTING, { paused, by, at: at15 }, by);
     if (!r || r.ok !== true) return { ok: false, reason: r?.reason ?? "SETTING_UNWRITTEN", detail: r?.detail ?? null };
     return { ok: true, ...this.paused() };
+  }
+  /** R30 (N314): an administrator here is one membership R64 names (the founder once claimed, an active member with
+   *  role `admin`) or the root of trust's credential. Any other stamp, another machine class included, is not. */
+  #administers(by) {
+    if (by === MONITOR_ROOT_OF_TRUST) return true;
+    return typeof this.membership.isAdministrator === "function" && this.membership.isAdministrator(by) === true;
   }
   /* ================================================================== *
    * For `scheduler` (R19–R24, R45)
@@ -100854,7 +100876,7 @@ async function monitorOp(req, store, {
   json: json5,
   storeSilent: storeSilent2,
   requiredArgument: requiredArgument2,
-  doAnswer: doAnswer2 = openEnvelope,
+  doAnswer: doAnswer2,
   viewer,
   actorClass,
   actor,
@@ -100871,6 +100893,7 @@ async function monitorOp(req, store, {
       "a non-empty string in the POST body",
       "monitor needs a bundleId"
     ) }, 400);
+  if (typeof doAnswer2 !== "function") return storeSilent2("monitor");
   const qs = new URLSearchParams({ viewer: viewer || "", actorClass: actorClass || "machine", actor: actor || "" });
   let out;
   try {
@@ -100887,15 +100910,6 @@ async function monitorOp(req, store, {
   if (!r || typeof r.status !== "number" || !r.body || typeof r.body !== "object") return storeSilent2("monitor");
   if (r.body.ok === true) return json5({ ok: true, ...r.body, store: storeName, tokenClass: cls }, r.status);
   return json5({ ok: false, ...r.body, store: storeName, tokenClass: cls }, r.status);
-}
-async function openEnvelope(res) {
-  let out = null;
-  try {
-    out = await (await res).json();
-  } catch {
-    out = null;
-  }
-  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: void 0 };
 }
 
 // src/queuestate.mjs
@@ -108574,14 +108588,8 @@ Mitigation: ${mit}
       decidedBy
     });
     const st = typeof to === "string" ? to.trim() : typeof state === "string" ? state.trim() : "";
-    if (!DISPOSITIONS.includes(st))
-      return {
-        ok: false,
-        reason: "NOT_A_DISPOSITION",
-        to: st || null,
-        dispositions: DISPOSITIONS,
-        detail: "a proposal is deferred (parked) or dismissed (declined); adopting one authors a focus (op=promote) and is not a disposition"
-      };
+    const undisposed = notADisposition(st);
+    if (undisposed) return undisposed;
     const why = String(reason ?? "").trim();
     if (!why)
       return {
