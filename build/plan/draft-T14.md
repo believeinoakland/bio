@@ -35,7 +35,7 @@
 ## Layer 8
 
 - **ratification** · N339 (R17).
-- **publication** · N339 (R48).
+- **publication** · N339 (R48). N346 (R44, R45, R47, new R49: each stage not reached states what it needs; `since`; `closed` with its reason; K448).
 
 ## Layer 9
 
