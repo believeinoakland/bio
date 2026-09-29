@@ -3,7 +3,10 @@
  * act is reached. The family is C-116 (K248), minted with the module (K174: a new module holds its new family). Each
  * code is minted at one site (K231), named by its row's `where`. Refusals minted by the modules escalation uses
  * (conformance's, actions', filings', consequences', promotion's) are relayed with their own rows where it relays them;
- * `NO_SUCH_ACTION` is actions' own (its R43 `noSuchAction`, C-117.2; N217), so C-116.11 is retired and not reused. */
+ * `NO_SUCH_ACTION` is actions' own (its R43 `noSuchAction`, C-117.2; N217), so C-116.11 is retired and not reused;
+ * `NO_SUCH_DETERMINATION` and `DETERMINATION_SUPERSEDED` are conformance's own (its R19 `noSuchDetermination`, R20
+ * `determinationSuperseded`; N309, N312, K380), so C-116.3 and C-116.4 are retired and not reused. C-116.6 and C-116.30
+ * carry their module's names, `ESCALATION_NOT_A_PARTICIPANT` and `EDGE_NOT_PROPOSED` (K380). */
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
@@ -19,21 +22,11 @@ export const ESCALATION_CHECKS = Object.freeze({
       + 'warrants action, and how urgently, is the members\' judgment, made with the consequences in front of them. '
       + 'Send the act without it. Nothing was written.',
   },
-  NO_SUCH_DETERMINATION: {
-    check: 'C-116.3', where: at("escalationOpen", "is-determination-seen"),
-    translation: 'No determination answers to that here. One you may not see is answered exactly as one that does not '
-      + 'exist. Nothing was written.',
-  },
-  DETERMINATION_SUPERSEDED: {
-    check: 'C-116.4', where: at("escalationOpen", "is-determination-live"),
-    translation: 'That determination has been superseded by a later one. An escalation pursues the determination in '
-      + 'force: open it on the later one. Nothing was written.',
-  },
   NOT_NONCOMPLIANT: {
     check: 'C-116.5', where: at("escalationOpen", "is-determination-noncompliant"),
     translation: 'That determination finds no standard breached, so there is nothing to escalate. Nothing was written.',
   },
-  NOT_A_PARTICIPANT: {
+  ESCALATION_NOT_A_PARTICIPANT: {
     check: 'C-116.6', where: at("escalationOpen", "is-open-joined"),
     translation: 'An escalation is opened by a member who has joined the project that made the determination. Join '
       + 'the project first. Nothing was written.',
@@ -147,7 +140,7 @@ export const ESCALATION_CHECKS = Object.freeze({
     translation: 'That stage\'s trigger is not met in the record yet; what is missing is named. When it is met the '
       + 'stage is proposed, and a member advances it. Nothing was written.',
   },
-  NOT_PROPOSED: {
+  EDGE_NOT_PROPOSED: {
     check: 'C-116.30', where: at("escalationDecline", "is-edge-proposed"),
     translation: 'That stage is not proposed, so there is nothing to decline. Nothing was written.',
   },
