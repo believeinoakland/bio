@@ -29,6 +29,6 @@
 - `node checks/format.mjs`: format: 69 modules, 64 requirements files; 0 failures.
 - `node checks/architecture.mjs … case-authoring`: architecture: 12 product files, 57 relative imports (0 naming no tracked file, not judged); 0 failures.
 - `node checks/coverage.mjs … case-authoring`: coverage: 1 modules, 30 of 30 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs … case-authoring tranche/T11`: see the line below, run after the commit.
+- `node checks/ownership.mjs … case-authoring tranche/T11` (after the commit): ownership: 5 files changed by case-authoring between tranche/T11 and HEAD; legacy-store: 0 line(s) added, 0 removed; legacy-checks: 0 line(s) added, 0 removed; 0 failures.
 
 Size (session_015k1nax4hEesSV8iyG1Ve91): test runs 6, module lines 2258
