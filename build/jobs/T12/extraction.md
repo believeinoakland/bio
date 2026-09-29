@@ -35,3 +35,7 @@ R63's row number. My reading, which I am building on: `NO_SHA`'s one row is a ne
 ## J2 · COMPLETE
 
 N285 applied (K385): R63 noSha(detail?) in src/extraction/checks.mjs (re-exported from src/extraction/index.mjs), {ok:false, reason/code NO_SHA, check C-51.6, translation (C-100.19's verbatim), detail}, row EXTRACTION_CHECKS.NO_SHA; R27 answers through it; R31's absent object is capture.evidenceAbsent(sha, store, {tokenClass}) and legacy pdfstructure-op is 29/0. content can build R44 against it now. Strike R63's and R31's 'not yet met: N285'. Module tests 86/86 (0 todo); format, architecture, coverage (58/58), ownership: 0 failures. Reported in the record: agent-worker and plane bundles stale (extraction/checks.mjs, index.mjs are inputs); DEC-49 guard floors +1 family/row/region and the expected cross-layer duplicate translation. Record: build/jobs/T12/extraction.md on job/T12/extraction @ 6ac7bd8144+.
+
+## J3 · COMPLETE · re B3
+
+B3 already met, no change: `noSha` (with `EXTRACTION_CHECKS` and `NO_SHA_DETAIL`) is re-exported from `src/extraction/index.mjs` since 3b0fefbb81 (line 26); `import { noSha } from "../extraction/index.mjs"` answers {ok:false, reason/code NO_SHA, check C-51.6, …}; `nosha.test.mjs` imports it from there. Tests and checks as in J2.
