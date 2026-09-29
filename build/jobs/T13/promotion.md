@@ -1,6 +1,6 @@
 # promotion (T13)
 
-**Status** · session_01JwRGiAAQuCSCteSnVJeMBi · depth 2 · WAITING ON BOB (J1) · handled B3
+**Status** · session_01JwRGiAAQuCSCteSnVJeMBi · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
