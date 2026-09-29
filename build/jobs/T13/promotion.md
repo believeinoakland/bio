@@ -47,3 +47,7 @@ For other modules (details in my record's Completion):
 2. legacy-tests: civicos-ui/check-refusal-codes.mjs:3781 declares MINT_EXHAUSTED multi-site from review's C-87.12. Promotion's site now answers through record-core's C-59.6, with a translation, so that guard's counts may move.
 3. Stale generated artifacts: agent-worker/dist/agent-worker.bundled.mjs and bio-plane/dist/bio-plane.bundled.mjs (gate.mjs, promotion/index.mjs). Reported, not rebuilt.
 4. The stamp list, against the diff: C-100.20 is not new. It dates from T5; T12 changed its where and translation. C-33.44's translation was reworded on its move to queue, which the list does not name. Both are stamped.
+
+## J3 · COMPLETE
+
+N322, N318 and N319 applied on job/T13/promotion (54abd9a659 and after). R19 answers MINT_EXHAUSTED through record-core's mintExhausted. CATALOG_VERSION is 1.43.0, stamping every row change since 1.42.0 (the list, plus C-59.6, C-96.1 held twice, C-100.20 and C-33.44 wording). ROW_CENSUS is {1.43.0, 820, f01ed42a…}. Promotion tests 69/0. format, architecture and coverage (50/50): 0 failures. ownership: 1, the three requirement marks struck as START asked. Re-pins and stale bundles are in J3.
