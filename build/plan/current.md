@@ -9,7 +9,7 @@ Opened by BOB #62, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ b1febba320, T
 ### Layers 2–7 · N285 (K275 per code, each keeping its translation; worded K343)
 
 - **membership** (layer 2) · N285 (`EXPERTISE_NO_LABEL`). **capture** (layer 3) · N285 (R63 `evidenceAbsent`). **extraction** (layer 4) · N285 (R63 `noSha`; R31 through capture R63). **content** (layer 4) · N285 (R44 through `noSha`).
-- **entities** (layer 5) · N285 (R37 `noEntity`; `ENTITY_NO_LABEL`). **progressions** (layer 5) · N285 (R35 `notADisposition`; `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`). **connections** (layer 5) · N285 (R1 through `noEntity`).
+- **entities** (layer 5) · N285 (R37 `noEntity`; `ENTITY_NO_LABEL`). **progressions** (layer 5) · N285 (R35 `notADisposition`; `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`; R19's no-digest answer through `extraction.noSha`, its row C-100.19 retiring for extraction's C-51.6, K385). **connections** (layer 5) · N285 (R1 through `noEntity`).
 - **inquiry** (layer 6) · N285 (R20 through `notADisposition`). **intent** (layer 7) · N285 (its `NO_SUCH_ENTITY` site, entities R36). **legacy-store** (layer 10) · N285 (its proposal dispose).
 
 ### Arising in T11 (worded before T12 opened: K360, K367, K379, K380)
