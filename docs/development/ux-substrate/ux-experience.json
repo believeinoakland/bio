@@ -9947,7 +9947,7 @@
      "DEC-95"
     ],
     "status": "ruled",
-    "decided": "As recommended, and extended by Bob to what happens after capture. The whole grade note is shown once when a capture completes; a capture that completes later and unattended carries the note on the completed capture and its queue item. Captures still held (neither released nor set aside) are listed per member and per project, sortable by age, source and possible relevance, their age shown and never notified, and triaged several at a time. The system may suggest that a held capture bears on a member's work under six guards: shown where the member works, never as a notification; labelled machine work with its reason; a dismissal remembered; never during a heavy act; switchable off per member; its acceptance rate measured."
+    "decided": "The whole grade note is shown once when a capture completes; a capture that completes later and unattended carries the note on the completed capture and its queue item. Bob extended the question to what happens after capture: the system may suggest that a capture not yet released bears on a member's work under six guards (shown where the member works, never as a notification; labelled machine work with its reason; a dismissal remembered; never during a heavy act; switchable off per member; its acceptance rate measured). Still open: a held-captures list with bulk triage was proposed and not ruled."
    }
   },
   {
