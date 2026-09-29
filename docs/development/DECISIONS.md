@@ -1306,3 +1306,20 @@ response: **As recommended (which K362 and K364, recorded by BOB #61 the same da
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.3.
 owed: carried into N300's wording (T12) and the UX redesign; the UX page's open question 3 marked ruled.
+### DEC-80 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 4)
+for: bob
+question: Does the publication ceremony still need to remain a placeholder, or can it be built now; and if built, how does an owner sign from the browser?
+why it is Bob's: DEC-33 is his deferral; how a member signs is architecture and UX.
+provisional: members reach a placeholder; the founder's session delivers signatures (D-421).
+alternative: keep the placeholder and design the five steps on paper only; for signing, keep command-line `ssh-keygen` signing, or build a separate signing app.
+recommendation: retire the placeholder; design and build the ceremony in the redesign; sign with a browser-held key.
+reversal cost: low until built.
+response: **As recommended, with browser signing (option b), Bob, 2026-09-29.**
+  1. DEC-33's trigger has fired: Publication §5 reopens the ceremony "when Bob turns to the member surfaces", and the UX redesign is that. The ceremony (UI-17) and its pre-flight (REC-15) are designed and built in the redesign, and no placeholder of any sort remains.
+  2. Its five steps (what becomes permanent; what this rests on; what you are leaving out; the edition this creates; sign) are re-derived for DEC-72, and step three carries today's rulings: any unresolved RECORD contradiction disclosed (DEC-76) and consent for any source identity the case reveals (DEC-78 item 5).
+  3. The plane's pre-flight runs the real refusals, without writing, before the first screen; the uncleared-hunch refusal (case-authoring R12) lands with it.
+  4. An owner signs in the browser with a browser-held key registered as their attesting key, producing the same `sshsig` signature the plane verifies, so strangers verify with `ssh-keygen` as before; the act is confirmed by passphrase or device unlock; a lost key is revoked and replaced as keys already are; founder delivery (D-421) stays as a fallback.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Publication_v0_1.md` §5.
+owed: the ceremony's requirements (the pre-flight read, R12's refusal, the browser key's registration and signing) in `case-authoring`, `ratification`, `membership`, `affordances` and the interface, for Bob's approval; a tranche entry; the UX page's open question 4 marked ruled.
