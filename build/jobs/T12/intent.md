@@ -54,3 +54,13 @@ Two readings of the Bounds paragraph's N305 sentence (K367). I am building on bo
 
 1. `proposals` with no project "reads at most the first 1,000 projects in id order". My reading: the first 1,000 projects **the viewer may see**, in id order, so `projects_truncated` never tells a viewer that projects hidden from them exist (R23; DEC-36's "no count"). The cost is that each hidden project is skipped with one `inSight` check, which is not counted. The other reading is every project whatever the viewer sees. That bounds the walk strictly, but a viewer who sees 3 projects could then read `projects_truncated: true`.
 2. R28 reads "the first 1,000 conditioned projects". As worded, finding them walks project documents until the 1,001st conditioned one turns up. When few projects state a condition, that walk is still bounded only by the number of projects held. I am building it as worded. If you want the walk itself bounded, the wording would be "of the first 1,000 projects in id order, those with a condition", like (1).
+
+## J2 · REPORT
+
+Found, from my record's Completion section:
+(1) Stale, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs, which takes src/intent/checks.mjs and index.mjs.
+(2) DEC-49 guard: failures go from 26 to 25, because NO_SUCH_ENTITY leaves arm G (65 -> 64). Floors move down: rows 786->785, regions 458->457, regionLines 5477->5472, governedSites 497->496, codesChecked 890->888, refusalsJudged 860->859, outcomeReturns 263->262. The multiSiteCodes comment still names intent's refuseNoSuchEntity as a site; legacy-tests re-anchors it.
+(3) civicos-ui and affordances: no hit on the retired helper or C-111.5.
+(4) R22 names NO_SUCH_PROJECT as its only row exception. NO_SUCH_ENTITY (entities R36) is now a second one; the Uses line says so, R22 does not.
+(5) Four unbounded internal reads left in my module, each needing wording like N305's: pursuitOf's walk over every goal document; #ageable's walk over every inquiry and its manifest (R17, R27); R28's conditioned-project walk (J1.2); #heldAspirations passing over retired aspirations without counting them.
+Legacy suites derivation-bounds and meaning-bounds match their parent's output; bounds, gate-reads, hygiene and rung-ladder pass.
