@@ -39,3 +39,7 @@ Job complete (record § Completion, pushed). N257: a zero measure (value 0 or ra
 ## B2 · CHANGE (CONFORMANCE #2's forward, K369)
 
 Both already met by commit 61e52042f1 (J1): `BAD_REASON`'s translation (C-114.17) is a sentence now, and `addressedRecord` no longer mints `NO_REASON` or `BAD_REASON` itself: both come from `reasonRefusal`, which their rows' `where` (C-114.16, .17) now names, so the guard judges them against their own rows. Re-run on the tree with tranche/T11's latest: the guard names neither code and no arm C or translation failure of this module; `test/m/consequences/` 24/0. The row changes are those J1 reported for promotion R34's stamp (no new ones). No requirement change needed.
+
+## J3 · COMPLETE
+
+B2 (CHANGE, BAD_REASON/NO_REASON) was already met by J1's commit 61e52042f1: C-114.17's translation is a full sentence, and NO_REASON/BAD_REASON are minted only in reasonRefusal, which their rows' where now names; addressedRecord calls it. Guard re-run: neither code named, no arm C or translation failure of consequences; tests 24/0. Row changes for promotion R34 are J1's list, no new ones. Record § B2.
