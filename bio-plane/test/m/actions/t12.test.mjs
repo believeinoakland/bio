@@ -101,18 +101,14 @@ test("R8 (N312) a breach action resting only on a superseded determination is re
   assert.equal(w.promote(A, md(D2, D1)).ok, true);
 });
 
-if (typeof conformance.determinationSuperseded === "function") {
-  test("R8 (N312) the answer is conformance's own, check and translation its catalogue row's", () => {
-    const D1 = "CONF-2026-0001-determination", D2 = "CONF-2026-0002-determination";
-    const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null }, [D2]: { ok: true, id: D2, live: false, superseded_by: D1 } };
-    const w = world({ conformance: { determinationRead: ({ id }) => dets[id] || { ok: false } } });
-    for (const id of [D1, D2])
-      w.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",
-        'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } });
-    const r = w.promote(A, actionMd(A, [...CP, "action_kind: other", "breach: true", "action_basis:", `  - target: ${D2}`, "    kind: rests_on"]));
-    assert.deepEqual(r, conformance.determinationSuperseded(D2, D1));
-    assert.ok(r.check && r.translation, "its row's");
-  });
-} else {
-  test.todo("R8 (N312) the answer is conformance's own, check and translation its catalogue row's: awaits conformance R20's `determinationSuperseded` (N312), built beside this job");
-}
+test("R8 (N312) the answer is conformance's own, check and translation its catalogue row's", () => {
+  const D1 = "CONF-2026-0001-determination", D2 = "CONF-2026-0002-determination";
+  const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null }, [D2]: { ok: true, id: D2, live: false, superseded_by: D1 } };
+  const w = world({ conformance: { determinationRead: ({ id }) => dets[id] || { ok: false } } });
+  for (const id of [D1, D2])
+    w.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",
+      'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } });
+  const r = w.promote(A, actionMd(A, [...CP, "action_kind: other", "breach: true", "action_basis:", `  - target: ${D2}`, "    kind: rests_on"]));
+  assert.deepEqual(r, conformance.determinationSuperseded(D2, D1));
+  assert.ok(r.check && r.translation, "its row's");
+});

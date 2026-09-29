@@ -32,7 +32,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
-import * as conformanceModule from "../conformance/index.mjs";
+import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
          BUNDLE_ID_RE } from "../../checks/bio-checks.mjs";
@@ -172,7 +172,7 @@ export class Actions {
      host on which it cannot be created answers null, and R8 then refuses, never passes. */
   get conformance() {
     if (this.#deps.conformance === undefined || this.#deps.conformance === null) {
-      try { this.#deps.conformance = conformanceModule.conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
+      try { this.#deps.conformance = conformanceOf(this.#deps.host); } catch { this.#deps.conformance = false; }
     }
     return this.#deps.conformance || null;
   }
@@ -2021,16 +2021,6 @@ export class Actions {
           + "and a member states it.",
     };
   }
-}
-
-/* R8 (N312): conformance's `determinationSuperseded` (its R20), the one site of `DETERMINATION_SUPERSEDED`. Until
-   conformance provides it, a stub in its wording answers, carrying no row of its own: the code is not minted here. */
-function determinationSuperseded(determinationId, supersededBy) {
-  const own = conformanceModule.determinationSuperseded;
-  if (typeof own === "function") return own(determinationId, supersededBy);
-  return { ok: false, reason: "DETERMINATION_SUPERSEDED", code: "DETERMINATION_SUPERSEDED", check: null, translation: null,
-           determination: determinationId ?? null, superseded_by: supersededBy ?? null,
-           detail: "the determination named has been superseded; rest on the live one." };
 }
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
