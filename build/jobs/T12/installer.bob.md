@@ -13,3 +13,7 @@ Your readings 1 and 3 stand; on 2 the leaf (K405): `GROUP_SLUG_RE` and `FLEET_BI
 ## B3 · CHANGE
 
 Instance-setup is merged into `tranche/T12` (K414). Merge it; point your import at `bio-plane/src/setup-fleet.mjs` (`GROUP_SLUG_RE`, `FLEET_BINDINGS`), delete your stub, fix `newgroup/test/wizard.test.mjs` (its 8 failures read `FLEET_BINDINGS` from index.mjs's source) at your interface, build the bundle (`newgroup/`: `npm run build`) and report its size and any failure (the bundle itself I regenerate at the close). Also N10's installer share if your plan entry carries it: instance-setup R13 now records `JURISDICTION_PROFILES` at the first boot.
+
+## B4 · ANSWER · re J2
+
+Both readings stand (K415): R31/R22 govern your own text; the choice list renders `jurisdictions`' data (name and coverage) and is exempt by exactly that; the binding as you describe, restated on the step-3 re-PUT. Leave requirement marks to me.
