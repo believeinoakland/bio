@@ -110,3 +110,7 @@ B6 (K412) applied at 6ce8267b0b: the store's door reverted to legacy-store (comm
 ## J7 · COMPLETE
 
 B7 (K418) applied: relayAnswer reads the store's reply through doAnswer, keeping only r.status; new R24 interface test that it answers exactly as doAnswer classifies (ten reply shapes, rejected and absent replies). Control-plane 40 pass, 0 fail, 3 todo (N333); format, architecture, coverage 34/34, ownership 0 failures. plane-envelope does not load (imports DISPATCH_CHECKS from the catalogue, J4 item 3), so Detector A is legacy-tests' to confirm.
+
+## J8 · COMPLETE
+
+B8 (K421) applied: doAnswer now reports the store's own refusal (JSON ok:false below 500: BAD_JSON, unknown op) as refused with its status and envelope; the generic forward, relayAnswer (claim, login, invitelook, enroll), reviewAnswer (reviewcopy, reviewcomment, statementack, casedrafts), the mint and the grant relay it at the store's status with its code and sentence (storeRefusal) instead of R23's 502. Reading for you to confirm: an ok:false at 500+ is the store's catch (its error is a stack), so it stays R23's silence for R30 until N333. Interface tests (R23, R24): refusals relayed, silences 502 through every relay. Control-plane 40 pass, 0 fail, 3 todo (N333); empty-body 10/0 (was 9/1); test/m 2,695 pass, 1 fail (promotion write-path, FACT_UNAVAILABLE producingGroup, red on the tranche too: record); format, architecture, coverage 34/34, ownership 0 failures. R23's mark is yours. Other modules' handlers that relay through doAnswer still answer a refusal as 502 (record).
