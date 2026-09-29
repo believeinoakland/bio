@@ -3,7 +3,9 @@
  * sentence wherever the act is reached. The family is C-113, this module's own, minted with the module (K107 (3)'s
  * rule: the job names a new code's row; K174: a module holds its new family). `NOT_A_PARTICIPANT` is this module's
  * code, translated in one line from membership's `PROJECT_ACT_NOT_A_PARTICIPANT` (K171 (11)); membership's existence
- * answer (C-70.1) is relayed with its own row and not restated here. */
+ * answer (C-70.1) is relayed with its own row and not restated here. `NO_SUCH_PROJECT` is membership's one row (C-70.5,
+ * answered through its `noSuchProject`, R78); this module's C-113.2 is retired (N274, N208, K275) and its number is not
+ * reused. An absent supersession reason is `NO_REASON` (C-113.22), a malformed one `BAD_REASON` (N233, K264). */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -12,11 +14,6 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     check: 'C-113.1', where: at("#refuseMachine", "is-determination-member"),
     translation: 'Whether a government act complied is a member\'s judgment. An assistant may prepare the comparison; '
       + 'it may not determine. Sign in as a member. Nothing was written.',
-  },
-  NO_SUCH_PROJECT: {
-    check: 'C-113.2', where: at("#projectRefusal", "is-project-seen"),
-    translation: 'No project answers to that id here. A project you cannot see is answered exactly as one that does '
-      + 'not exist, so this is not a hint either way.',
   },
   NOT_A_PARTICIPANT: {
     check: 'C-113.3', where: at("#participantRefusal", "is-project-joined"),
@@ -64,7 +61,7 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'diverge or are open. A standard has no row, or a row is missing a part. Nothing was written.',
   },
   OUTCOME_UNKNOWN: {
-    check: 'C-113.12', where: at("#readStandards", "is-outcome-stated"),
+    check: 'C-113.12', where: at("determine", "is-outcome-stated"),
     translation: 'Each standard carries the member\'s outcome: compliant, noncompliant or unclear. One is missing or '
       + 'not one of the three. Nothing was written.',
   },
@@ -91,7 +88,12 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   BAD_REASON: {
     check: 'C-113.17', where: at("#supersession", "is-reason-stated"),
-    translation: 'Superseding a determination says why, in at most 500 characters. Nothing was written.',
+    translation: 'The reason for superseding a determination is not text of at most 500 characters. Say why, more '
+      + 'briefly. Nothing was written.',
+  },
+  NO_REASON: {
+    check: 'C-113.22', where: at("#supersession", "is-reason-given"),
+    translation: 'Superseding a determination says why it is superseded. Give the reason. Nothing was written.',
   },
   ALREADY_SUPERSEDED: {
     check: 'C-113.18', where: at("#supersession", "is-supersedable"),

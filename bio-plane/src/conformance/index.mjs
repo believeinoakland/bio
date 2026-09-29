@@ -22,7 +22,8 @@
  * purge (K23), registers its step with promotion (R13, R17) and its listener with reevaluation's `onBasisChanged`
  * (R10). `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record        `allocId`, `transact`, `bundleInfo`, `declarePurge`; `stampInstant`.
- *   membership    `sight`, `existenceAct`, `projectAuthority`, `positionalMember`, `inSight`; `viewerPredicate`.
+ *   membership    `sight`, `existenceAct`, `projectAuthority`, `positionalMember`, `inSight`; `viewerPredicate`,
+ *                 `noSuchProject` (its R78: R1's `NO_SUCH_PROJECT`, minted there with its one row, N274).
  *   promotion     `promote`, `registerStep` (R6, R17).
  *   content       `contentRow`, `passageNotice` (R1's evidence, R10).
  *   inquiry       `supersededBy`, `stateHistory` (R10).
@@ -36,7 +37,7 @@
  * membership's viewer predicate over a determination's project (R11, R15). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, Membership } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, Membership, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
@@ -155,17 +156,14 @@ export class Conformance {
   }
 
   /* R1, R15 (membership R44): a project the viewer sees only at existence answers membership's own refusal; one not
-     seen, absent or not a project, one answer. */
+     seen, absent or not a project, one answer: membership's `noSuchProject` (its R78, N274), whose row is its own. */
   #projectRefusal(project, viewer) {
     const id = str(project);
     const existence = id ? this.membership.existenceAct(id, viewer) : null;
     if (existence) return existence;
     const info = id ? this.record.bundleInfo(id) : null;
-    /* DEC-49 REGION is-project-seen */
     if (!info || normalizeType(info.type) !== "project" || this.membership.sight(id, viewer) !== Membership.SIGHT_FULL)
-      return refusal("NO_SUCH_PROJECT", "no project answers to that id here. A project you may not see answers exactly "
-        + "as one that does not exist.", { project: id });
-    /* END DEC-49 REGION is-project-seen */
+      return noSuchProject(id);
     return null;
   }
 
@@ -221,10 +219,13 @@ export class Conformance {
                              str(supersedes), project);
       if (prev) id = prev.act_id;
     }
-    const incomplete = (part, detail, extra = {}) =>
+    const incomplete = (part, detail, extra = {}) => {
       /* DEC-49 REGION is-act-complete */
-      refusal("ACT_INCOMPLETE", `${detail} Nothing was written.`, { part, ...extra });
+      const missing = { part, ...extra };
+      return refusal("ACT_INCOMPLETE", `${detail} The act names what was done, the office that did it, when, and the `
+        + "content that shows it. Nothing was written.", missing);
       /* END DEC-49 REGION is-act-complete */
+    };
     if (id) {
       const held = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? AND act_minted=1 LIMIT 1`,
                              id, project);
@@ -355,10 +356,13 @@ export class Conformance {
     const list = Array.isArray(rows) ? rows : [];
     const named = new Set(standards.map((s) => s.standard));
     const out = [];
-    const incomplete = (detail, extra = {}) =>
+    const incomplete = (detail, extra = {}) => {
       /* DEC-49 REGION is-comparison-complete */
-      refusal("ROWS_INCOMPLETE", `${detail} Nothing was written.`, extra);
+      const where = { ...extra };
+      return refusal("ROWS_INCOMPLETE", `${detail} Each standard named has a row stating what it requires, what was `
+        + "done and its reading. Nothing was written.", where);
       /* END DEC-49 REGION is-comparison-complete */
+    };
     for (const [i, r] of list.entries()) {
       const row = isObj(r) ? r : {};
       const standard = str(row.standard), requires = text(row.requires), did = text(row.did);
@@ -381,10 +385,13 @@ export class Conformance {
   #readQuestions(questions, outcomes, author) {
     const list = Array.isArray(questions) ? questions : [];
     const out = [];
-    const bad = (detail, extra = {}) =>
+    const bad = (detail, extra = {}) => {
       /* DEC-49 REGION is-question-named */
-      refusal("UNCLEAR_NO_QUESTION", `${detail} Nothing was written.`, extra);
+      const which = { ...extra };
+      return refusal("UNCLEAR_NO_QUESTION", `${detail} Each question is sent back to an inquiry the author may see, or `
+        + "to a new one opened with this determination. Nothing was written.", which);
       /* END DEC-49 REGION is-question-named */
+    };
     for (const [i, x] of list.entries()) {
       const item = isObj(x) ? x : { question: x };
       const question = text(item.question);
@@ -403,7 +410,7 @@ export class Conformance {
   }
 
   /* R7: `supersedes` names an earlier determination of the same act in the same project, not yet superseded, with a
-     reason. */
+     reason: an absent one is `NO_REASON`, one over REASON_MAX characters `BAD_REASON` (N233, K264). */
   #supersession(supersedes, reason, act, project, viewer) {
     const id = str(supersedes);
     if (!id) return { ok: true, prev: null };
@@ -415,10 +422,15 @@ export class Conformance {
       return refusal("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. `
         + "Nothing was written.", { supersedes: id, act: act.id, predecessor_act: prev.act_id });
     /* END DEC-49 REGION is-same-act */
-    const why = typeof reason === "string" ? reason.trim() : "";
+    const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
+    /* DEC-49 REGION is-reason-given */
+    if (why === "")
+      return refusal("NO_REASON", "superseding a determination says why it is superseded; this names no reason. "
+        + "Nothing was written.", { supersedes: id, max: REASON_MAX });
+    /* END DEC-49 REGION is-reason-given */
     /* DEC-49 REGION is-reason-stated */
-    if (!why || why.length > REASON_MAX)
-      return refusal("BAD_REASON", `superseding a determination says why, in 1 to ${REASON_MAX} characters. `
+    if (why === null || why.length > REASON_MAX)
+      return refusal("BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX} characters. `
         + "Nothing was written.", { supersedes: id, max: REASON_MAX });
     /* END DEC-49 REGION is-reason-stated */
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
