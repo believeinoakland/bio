@@ -32,4 +32,4 @@
 - `coverage.mjs … legacy-ui`: 0 of 0 live requirement ids; 0 failures.
 - `ownership.mjs … legacy-ui tranche/T12`: 2 files changed by legacy-ui; 0 failures.
 
-Size (session_01BSC2Ek4hARuMbaqzmitcK9): test runs 4, module lines 43
+Size (session_01BSC2Ek4hARuMbaqzmitcK9): test runs 4, module lines 53
