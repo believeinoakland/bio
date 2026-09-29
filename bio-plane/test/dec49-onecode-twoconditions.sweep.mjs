@@ -73,13 +73,44 @@ for (const [f, t] of Object.entries(FILES)) {
   if (t.length >= raw.length) { console.log(`FATAL: stripper matched nothing in ${f}`); process.exit(2); }
   if (t.length < 1000 && (f === "src/store.mjs" || f === "src/index.mjs")) { console.log(`FATAL: stripper ate ${f}`); process.exit(2); }
 }
-if (FILES["src/store.mjs"].includes("THE SIXTH STATE MACHINE'S SIX MEMBER OPS")) {
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11): both anchors had left store.mjs, so the "removed a real return site"
+   check stopped the sweep on every run and the "left a comment behind" check was vacuous. T7 basis-versions (commit
+   032e53cec4) moved `refuse("MACHINE_CANNOT_MOVE_VERSION"` into `src/basis-versions/index.mjs` (its one mint); the
+   PL-2 block comment naming the six member ops now opens `src/index.mjs`'s VERSION_MEMBER_OPS. Each anchor is read
+   in the file that holds it, and fails by name if that file is not walked. */
+const anchored = (f) => { if (!(f in FILES)) { console.log(`FATAL: anchor file ${f} is not walked`); process.exit(2); } return FILES[f]; };
+if (anchored("src/index.mjs").includes("THE SIXTH STATE MACHINE'S SIX MEMBER OPS")) {
   console.log("FATAL: stripper left a block comment behind"); process.exit(2); }
-if (!FILES["src/store.mjs"].includes('refuse("MACHINE_CANNOT_MOVE_VERSION"')) {
+if (!anchored("src/basis-versions/index.mjs").includes('refuse("MACHINE_CANNOT_MOVE_VERSION"')) {
   console.log("FATAL: stripper removed a real return site"); process.exit(2); }
 
-/* THE RESERVED SUFFIX, harvested in `multisite-census.mjs` (D-550). */
-const { families, codes } = dec49Codes(CATALOG);
+/* THE RESERVED SUFFIX, harvested in `multisite-census.mjs` (D-550).
+   RE-ANCHORED 2026-09-29 (legacy-tests T11): read from the catalogue AND every `src/` file exporting a `*_CHECKS`
+   name, as arm G reads them (the guard's `dec49Families`, T5-12): T5 onward moved whole families into the modules,
+   and the catalogue alone printed 50 families / 339 codes against arm G's 100 / 764. One family by name (a split
+   family's halves are one table), one row per code, the first definer (the catalogue, then the files that
+   `export const` one) keeping it — a re-export or a view adds no code. */
+const walkAll = (dir) => readdirSync(fileURLToPath(new URL(dir, import.meta.url))).sort().flatMap((n) => {
+  if (n === "test" || n === "dist" || n.startsWith(".")) return [];
+  const rel = `${dir}${n}`;
+  if (statSync(fileURLToPath(new URL(rel, import.meta.url))).isDirectory()) return walkAll(`${rel}/`);
+  return n.endsWith(".mjs") ? [rel] : [];
+});
+const DEFINES = /\bexport\s+(?:const|let|var)\s+[A-Z][A-Z0-9_]*_CHECKS\b/;
+const EXPORTS = /\bexport\s+(?:const|let|var)\s+[A-Z][A-Z0-9_]*_CHECKS\b|\bexport\s*\{[^}]*\b[A-Z][A-Z0-9_]*_CHECKS\b/;
+const familySources = walkAll("../src/").filter((rel) => EXPORTS.test(src(rel)))
+  .sort((a, b) => DEFINES.test(src(b)) - DEFINES.test(src(a)));
+const HARVEST = {}, seenCode = new Set();
+for (const mod of [CATALOG, ...await Promise.all(familySources.map((rel) => import(new URL(rel, import.meta.url))))])
+  for (const [k, v] of Object.entries(mod)) {
+    if (!/_CHECKS$/.test(k) || !v || typeof v !== "object" || Array.isArray(v)) continue;
+    for (const [code, row] of Object.entries(v)) {
+      if (seenCode.has(code)) continue;
+      seenCode.add(code);
+      (HARVEST[k] ??= {})[code] = row;
+    }
+  }
+const { families, codes } = dec49Codes(HARVEST);
 
 if (codes.size === 0) { console.log("FATAL: empty corpus — no DEC-49 codes harvested"); process.exit(2); }
 if (families.length < 3) { console.log(`FATAL: only ${families.length} families harvested`); process.exit(2); }

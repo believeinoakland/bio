@@ -491,6 +491,12 @@ export function record(platform, url) {
 }
 `);
 
+  /* T11 (legacy-tests #8): more plane files an arm needs, by path under src/ (ARM 17's module table and selection). */
+  for (const [rel, text] of Object.entries(over.srcFiles || {})) {
+    fs.mkdirSync(path.dirname(path.join(src, rel)), { recursive: true });
+    fs.writeFileSync(path.join(src, rel), text);
+  }
+
   fs.writeFileSync(path.join(ui, "app.html"), over.app || `<html><script>
 const PART_REASON = {
   NO_ADDRESS_GIVEN: "the page never said where it was",
@@ -2062,6 +2068,47 @@ withTree(helperTree({ fixtureSrc: HELPER_SRC(undefined, undefined, "FIXTURE_UNRO
     /\(in checkFixture > fixture-ternary\) calls refusal\(… \? … "FIXTURE_UNROWED_BRANCH" …\), which is NOT a row/.test(r.out), true);
 });
 
+/* ============================================================
+   ARM 17 — T11 (legacy-tests #8): A SELECTION BY KEY IS A VIEW WHEREVER ITS FILE SORTS.
+   Skills' `SKILL_CHECKS` (src/skilldoctrine.mjs, R25, K349) picks C-22.7's row by key from ai-runs' own table
+   (N289, K358). Its file is top-level, so the harvest read it before `src/ai-runs/checks.mjs` and counted a
+   family that defines nothing, and C-22.7 claimed under a name no module writes. In miniature: `src/pick.mjs`
+   selects one row of `src/mod/checks.mjs`'s two, and sorts first.
+   ============================================================ */
+const MOD_CHECKS_SRC = `export const MOD_CHECKS = ${JSON.stringify({
+  MOD_ONE: { check: "C-92.1", where: "src/fixture.mjs checkSecond",
+    translation: "The module's first condition held, so nothing was written and the request is answered with the reason." },
+  MOD_TWO: { check: "C-92.2", where: "src/fixture.mjs checkSecond",
+    translation: "The module's second condition held instead, which is a different fact about the request you sent." },
+}, null, 2)};\n`;
+const SELECTION_TREE = {
+  srcFiles: {
+    "mod/checks.mjs": MOD_CHECKS_SRC,
+    "pick.mjs": `import { MOD_CHECKS } from "./mod/checks.mjs";\n`
+      + `export const PICK_CHECKS = Object.freeze({ MOD_ONE: MOD_CHECKS.MOD_ONE });\n`,
+  },
+  floor: { families: 2, rows: 5, census: 9, reach: 9 },
+};
+console.log("\n--- ARM 17 · a family SELECTED BY KEY from a module's table is read as a VIEW, not a family — GREEN ---");
+withTree(SELECTION_TREE, tree => {
+  const r = runGuard(tree);
+  t("ARM 17: exits 0", r.exit, 0);
+  t("ARM 17: the selection is named on the VIEWS line as the module table's, by reference",
+    /PICK_CHECKS \(src\/pick\.mjs\) -> 1 row\(s\) of MOD_CHECKS by reference/.test(r.out), true);
+  t("ARM 17: and the row's C-number is claimed once, by the table that defines it",
+    /C-92\.1 is claimed by BOTH/.test(r.out), false);
+});
+
+console.log("\n--- ARM 17b · the SAME tree with the selection rule removed FAILS — the family nobody wrote ---");
+withTree({ ...SELECTION_TREE, mutateGuard: g => g.replace("&& isSelection(v)) {", "&& false) {") }, tree => {
+  const r = runGuard(tree);
+  t("ARM 17b: exits 1", r.exit, 1);
+  t("ARM 17b: the selection is counted as a FAMILY defining the row it only picked (the real tree's SKILL_CHECKS)",
+    /arm A: 3 DEC-49 families \(FIXTURE_CHECKS, MOD_CHECKS, PICK_CHECKS\)/.test(r.out), true);
+  t("ARM 17b: and it fails by name, as the family floor's slack",
+    /FLOOR SLACK — `families`: floor 2, measured 3/.test(r.out), true);
+});
+
 console.log("\n--- ARM 8 · the arms above actually ran ---");
 t("ARM 8: this suite made assertions (a suite that asserts nothing passes everything)", n > 20, true);
 t("ARM 8: the real guard is where test/run.mjs expects it", fs.existsSync(GUARD), true);
@@ -2116,5 +2163,6 @@ console.log(`\nrefusal-codes: ${n} assertions${bad ? `, ${bad} FAILED` : ", all 
   + `markers are excluded all the same (15d), and an UNCLAIMED marker is not excluded (15e). AND SINCE T8 (legacy-tests #5) `
   + `the helper walk reads a refusal through a FUNCTION-LOCAL ALIAS and one whose code is a CONDITIONAL between two `
   + `literals (16), refuses an arrow that does not pass its code on (16b), and fails by name a code either sends that `
-  + `is not the region's row (16c, 16d)`);
+  + `is not the region's row (16c, 16d). AND SINCE T11 (legacy-tests #8) a family SELECTED BY KEY from a module's `
+  + `table is read as a view wherever its file sorts (17), and with that rule removed it is a family nobody wrote (17b)`);
 if (bad) process.exit(1);
