@@ -431,8 +431,24 @@ test("R28: R14's refusals come before the op — a module handler (hooks.gatedOp
   assert.equal((await call(env, { op: "adminendorse", token: w.S.founder, hooks, method: "POST", body: {} })).json.servedBy, "hook");
 });
 
-test.todo("R28 R16's replay refusal comes before the op (not yet met: control-plane/index.mjs still asks hooks.gatedOp "
-  + "(after the R14 fences) before R16's REPLAY_UNVERIFIED check in the promote block, so a module handler serving promote "
-  + "would run for an unverified replay; driven: a gatedOp hook answering every op answers promote with replay:true and "
-  + "no provenance for the ADMIN_TOKEN bearer. Harmless while no gated arm serves promote, but the order is not the "
-  + "module's to rely on)");
+test("R28: R16's replay refusal comes before the op — a module handler (hooks.gatedOp) willing to serve promote is never asked for an unverified replay, and still receives the whole body when the replay verifies or none is asserted", async () => {
+  const asked = [];
+  const hooks = { publicOp: async () => M.json({ ok: true }),
+                  gatedOp: async (c) => { asked.push({ op: c.op, body: await c.req.text() }); return M.json({ ok: true, servedBy: "hook" }); } };
+  for (const bad of [{ holdBytes: false }, { target: "B-2" }, { register: false }]) {
+    const w = replayWorld(bad);
+    asked.length = 0;
+    const r = await call(w.env, { op: "promote", token: w.env.ADMIN_TOKEN, hooks, method: "POST", body: w.body });
+    refused(r, 403, "REPLAY_UNVERIFIED", "C-66.6");
+    assert.deepEqual(asked, [], `${JSON.stringify(bad)}: the handler ran before the refusal`);
+    assert.equal(opCalls(w.env).length, 0);
+  }
+  /* negative controls: a verified replay, and an ordinary promotion by any caller, reach the handler with the body whole */
+  const ok = replayWorld();
+  for (const [token, body] of [[ok.env.ADMIN_TOKEN, ok.body], [ok.env.MEMBER_TOKEN, ok.body], [ok.S.ann, { ...ok.body, replay: false }]]) {
+    asked.length = 0;
+    const r = await call(ok.env, { op: "promote", token, hooks, method: "POST", body });
+    assert.equal(r.json.servedBy, "hook");
+    assert.deepEqual(JSON.parse(asked[0].body), body);
+  }
+});

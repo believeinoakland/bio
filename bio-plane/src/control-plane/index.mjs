@@ -1210,6 +1210,38 @@ async function migrationReplayOf(env, storeName, b) {
   return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
 }
 
+/* D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1): WHAT A PROMOTION IS, derived ONCE from the bytes the caller sent —
+   the document's own `object_type` through the catalogue's `normalizeType`, the envelope's only where the document
+   states none — exactly as `promote` derives it in the store. The gates that ask it (the migration-replay admission,
+   `create_projects`, D-78's `surfaced_by` restamp) asked the ENVELOPE, and an envelope is legal with no type at all:
+   measured on 8bdf20e6, a member without `create_projects` created a project by leaving the type out. A contradicting
+   envelope is still refused, by the store (ENVELOPE_TYPE_DISAGREES); here it only decides which gate a caller meets. */
+function promotedTypeOf(b) {
+  const md = Array.isArray(b.files) ? b.files.find((f) => f && f.path === "bundle.md") : null;
+  const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+  const said = fm && typeof fm === "object" ? fm.object_type : undefined;
+  if (typeof said === "string" && said.trim() !== "") return normalizeType(said);
+  return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : undefined;
+}
+
+/* R16 (D-511, D-512): A PROMOTION'S REPLAY, judged from the body as sent. Only the ADMIN class with no session may
+   assert one (D-511: every other caller's flag is deleted by the promote block, and it is judged by the fences it tried
+   to skip); an admin's assertion, or an admin's inquiry creation, is checked by `migrationReplayOf`. `asserted` with no
+   `proven` is refused REPLAY_UNVERIFIED before any handler runs (R28). A body that is not a JSON object asserts nothing:
+   the store refuses it in its own words. */
+async function replayVerdict(env, storeName, text, viaSession, cls) {
+  let b;
+  try { b = JSON.parse(text); } catch { return null; }
+  if (!b || typeof b !== "object" || Array.isArray(b)) return null;
+  const admin = !viaSession && cls === "admin";
+  const asserted = admin && !!b.replay;
+  const creatingInquiry = b.base === null && !!b.meta && promotedTypeOf(b) === "inquiry";
+  const proven = admin && (asserted || creatingInquiry) ? await migrationReplayOf(env, storeName, b) : null;
+  return { asserted, proven,
+           bundleId: typeof b.bundleId === "string" ? b.bundleId.slice(0, 200) : null,
+           provenanceCapture: typeof b.provenanceCapture === "string" ? b.provenanceCapture.slice(0, 64) : null };
+}
+
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
@@ -2525,7 +2557,21 @@ export function makeFetch(hooks = {}) {
               + `session, and the record names who set each one (Publication §7). The credential that asked is the `
               + `operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.` }, 403);
     /* END DEC-49 REGION is-group-identity-session */
-    /* R28: an op whose handler still lives in legacy-index answers here, after the R14 fences; undefined falls
+    /* R16, R28: a promotion's replay is judged here, after the R14 fences and before any handler, from a copy of the
+       body (the request's own body stays whole for whoever serves the op). The verdict is the promote block's below. */
+    const replay = op === "promote" && req.method === "POST"
+      ? await replayVerdict(env, storeName, await req.clone().text(), viaSession, cls) : null;
+    /* DEC-49 REGION is-promote-replay-verified */
+    if (replay?.asserted && !replay.proven)
+      return json({ ok: false, reason: "REPLAY_UNVERIFIED", ...replayRow("REPLAY_UNVERIFIED"), op,
+        bundleId: replay.bundleId, provenanceCapture: replay.provenanceCapture,
+        detail: `this promotion says it is a replay of the record's own past, and a replay is honoured only when the `
+              + `plane can check it: it must name a drive-provenance capture (\`provenanceCapture\`) that this `
+              + `promotion registers at ${DRIVE_PROVENANCE_PATH}, whose bytes the record holds, and whose preserved `
+              + `promotion records name this bundle and list this revision's bundle.md SHA-256. One of those did not `
+              + `hold. Nothing was written.` }, 403);
+    /* END DEC-49 REGION is-promote-replay-verified */
+    /* R28: an op whose handler still lives in legacy-index answers here, after the R14 fences and R16; undefined falls
        through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
@@ -2714,21 +2760,8 @@ export function makeFetch(hooks = {}) {
     if (op === "promote" && passBody) {
       try {
         const b = JSON.parse(passBody);
-        /* D-526 (`BIO_Case_Making_v0_1.md` §2; D-510, C-86.1): WHAT THIS PROMOTION IS, derived ONCE from the bytes
-           the caller sent — the document's own `object_type` through the catalogue's `normalizeType`, the envelope's
-           only where the document states none — exactly as `promote` derives it in the store. The three gates below
-           that ask it (the migration-replay admission, `create_projects`, D-78's `surfaced_by` restamp) asked the
-           ENVELOPE, and an envelope is legal with no type at all: measured on 8bdf20e6, a member without
-           `create_projects` created a project by leaving the type out, and a member's question kept the
-           `surfaced_by: agent` its bytes claimed. A contradicting envelope is still refused, by the store
-           (ENVELOPE_TYPE_DISAGREES); here it only stops deciding which gate a caller meets. */
-        const promotedType = (() => {
-          const md = Array.isArray(b.files) ? b.files.find((f) => f && f.path === "bundle.md") : null;
-          const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
-          const said = fm && typeof fm === "object" ? fm.object_type : undefined;
-          if (typeof said === "string" && said.trim() !== "") return normalizeType(said);
-          return b.meta && typeof b.meta === "object" ? normalizeType(b.meta.object_type) : undefined;
-        })();
+        /* D-526: what this promotion is, derived once (`promotedTypeOf`). */
+        const promotedType = promotedTypeOf(b);
         delete b.ownerMemberId;
         /* Who is ACTING, for the 7.11 owner check on deactivation and
            reactivation. Deleted first and stamped only for a session, like every
@@ -2840,22 +2873,10 @@ export function makeFetch(hooks = {}) {
            RESIDUE, STATED: the provenance capture is itself uploaded by the root of trust, whose honesty the record
            does not model (Membership §DEC-2, deferred). After this step no caller can ASSERT a replay the held
            bytes do not list; an admin can still FABRICATE the bytes. */
-        const replayAsserted = !!b.replay;
         delete b.replay;
         const creatingInquiry = b.base === null && !!b.meta && promotedType === "inquiry";   /* D-526's one derivation (c21-batch28) */
-        const proven = (!viaSession && cls === "admin" && (replayAsserted || creatingInquiry))
-          ? await migrationReplayOf(env, storeName, b) : null;
-        /* DEC-49 REGION is-promote-replay-verified */
-        if (replayAsserted && !proven)
-          return json({ ok: false, reason: "REPLAY_UNVERIFIED", ...replayRow("REPLAY_UNVERIFIED"), op,
-            bundleId: typeof b.bundleId === "string" ? b.bundleId.slice(0, 200) : null,
-            provenanceCapture: typeof b.provenanceCapture === "string" ? b.provenanceCapture.slice(0, 64) : null,
-            detail: `this promotion says it is a replay of the record's own past, and a replay is honoured only when the `
-                  + `plane can check it: it must name a drive-provenance capture (\`provenanceCapture\`) that this `
-                  + `promotion registers at ${DRIVE_PROVENANCE_PATH}, whose bytes the record holds, and whose preserved `
-                  + `promotion records name this bundle and list this revision's bundle.md SHA-256. One of those did not `
-                  + `hold. Nothing was written.` }, 403);
-        /* END DEC-49 REGION is-promote-replay-verified */
+        /* R16: the verdict reached before the handler (above); an unverified assertion never reaches this line. */
+        const proven = replay?.proven ?? null;
         if (proven) b.replay = true;
         /* REC-173's migration-replay stamp stays an INQUIRY CREATION's: it is what `op=projection`'s `surfaced_in`
            reads, and no other promotion has a surfacing act to account for. */
