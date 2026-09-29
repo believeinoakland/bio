@@ -62,8 +62,8 @@ export const REASON_MAX = 160;
  *  set aside that `proposals` lists beside the open ones, newest first (R16); SERVES_MAX: the subjects one `servesOf`
  *  call answers (R28); ASPIRATIONS_MAX: the held aspirations `aspirationsFor` reads and `contacts` pairs, the first in
  *  id order (R12, R13; N209, K338); CONTACTS_MAX: the pairs `contacts` lists (R13). N305 (K367), the internal reads:
- *  CONTEXT_MAX: the held aspirations in force and the conditioned projects one `servesOf` call measures against, each
- *  the first in id order (R28); PROJECTS_MAX: the projects `proposals` reads with no project named, the first in id
+ *  CONTEXT_MAX: the held aspirations in force one `servesOf` call measures against, and the projects it walks for
+ *  those with a condition, each the first in id order (R28; K391); PROJECTS_MAX: the projects `proposals` reads with no project named, the first in id
  *  order (R15); REQUESTS_MAX: the capture requests one pursuit record reads, in the order the basis names them (R14). */
 export const MEASURE_MAX = 1000, WATCH_LIMIT_MAX = 1000, DEPARTURES_MAX = 1000, GOALS_MAX = 200, TRIAGED_MAX = 1000,
              SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000, CONTEXT_MAX = 1000,
@@ -503,8 +503,8 @@ export class Intent {
   /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
    *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
    *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. What it
-   *  measures against is bounded (N305): `context_truncated` says the held aspirations or the conditioned projects
-   *  were cut at CONTEXT_MAX. Writes nothing; never throws. */
+   *  measures against is bounded (N305, K391): `context_truncated` says the held aspirations or the projects walked
+   *  for conditions were cut at CONTEXT_MAX. Writes nothing; never throws. */
   servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
     const named = [];
     for (const [kind, list] of [["address", addresses], ["bundle", bundles], ["request", requests]])
@@ -532,13 +532,15 @@ export class Intent {
 
   /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
      the bundles documenting their short instances, and each held group or project aspiration with what it names.
-     N305: the first CONTEXT_MAX conditioned projects and the first CONTEXT_MAX held aspirations in force, each in id
-     order; `cut` says either was cut. */
+     N305 (K391): of the first CONTEXT_MAX projects in id order, those with a condition, and the first CONTEXT_MAX held
+     aspirations in force in id order; `cut` says either walk was cut. */
   #servesContext() {
     const gapsByBundle = new Map();
     const all = [];
-    const conditioned = this.#projectsInOrder(PLANE_VIEWER, true, CONTEXT_MAX);
-    for (const pid of conditioned.ids) {
+    const walked = this.#projectsInOrder(PLANE_VIEWER, CONTEXT_MAX);
+    for (const pid of walked.ids) {
+      const d = this.#doc(pid);
+      if (!d || !conditionOf(d.fm)) continue;
       const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
       if (g.ok) all.push(...g.gaps);
     }
@@ -572,7 +574,7 @@ export class Intent {
       `SELECT 1 AS x FROM progression_instances WHERE bundle_id=? AND progression_key IN (SELECT value FROM json_each(?))
        LIMIT 1`, bundleId, JSON.stringify(keys));
     return {
-      cut: conditioned.truncated || inForce.truncated,
+      cut: walked.truncated || inForce.truncated,
       gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
       /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
          no project is under the group's alone */
@@ -977,7 +979,7 @@ export class Intent {
                      basis: p.basis ?? null, instances: Array.isArray(p.instances) ? p.instances : [],
                      surfaced_by: p.surfaced_by ?? "machine" });
     }
-    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, false, PROJECTS_MAX);
+    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, PROJECTS_MAX);
     for (const pid of projects.ids) {
       const g = this.gaps({ project: pid, viewer });
       if (g.ok) for (const gap of g.gaps) out.push({ ...gap, source_key: gap.key.slice("intent::".length) });
@@ -985,18 +987,16 @@ export class Intent {
     return { list: out, projects_truncated: projects.truncated };
   }
 
-  /* N305: the first `max` projects the viewer may see (every project for a null viewer), in id order, or with
-     `conditioned` only those whose objective states a condition; walked a page at a time and read one past, so
-     `truncated` says one was made. A project the viewer may not see is not counted, so a cut says nothing of it
-     (R23). */
-  #projectsInOrder(viewer, conditioned, max) {
+  /* N305 (K391): the first `max` projects the viewer may see (every project for a null viewer), in id order, walked a
+     page at a time and read one past, so `truncated` says a cut was made. A project the viewer may not see is not
+     counted, so a cut says nothing of it (R23, DEC-36). */
+  #projectsInOrder(viewer, max) {
     const ids = [];
     let after = "", truncated = false;
     for (;;) {
       const page = this.record.listByType({ type: "project", after, limit: 200 });
       for (const id of page.ids) {
         if (viewer != null && !this.membership.inSight(id, viewer)) continue;
-        if (conditioned) { const d = this.#doc(id); if (!d || !conditionOf(d.fm)) continue; }
         if (ids.length === max) { truncated = true; break; }
         ids.push(id);
       }

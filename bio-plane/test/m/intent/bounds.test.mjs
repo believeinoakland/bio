@@ -134,8 +134,8 @@ test("R28 (N305) servesOf measures against at most the first 1,000 held aspirati
   assert.equal(r.truncated, false, "the subjects were not cut");
 });
 
-test("R28 (N305) servesOf measures against at most the first 1,000 conditioned projects, in id order, a project stating no condition not counted, answering context_truncated when cut", async () => {
-  const w = seeded();
+test("R28 (N305, K391) servesOf walks at most the first 1,000 projects in id order and measures those with a condition, a project stating none counted in the walk, answering context_truncated when the walk is cut", async () => {
+  const w = seeded();                                                 // P states no condition: walked, not measured
   w.entity("ENT-1"); w.entity("ENT-2");
   w.relate("ENT-2", "ENT-1", "member_of");
   w.define();
@@ -150,16 +150,17 @@ test("R28 (N305) servesOf measures against at most the first 1,000 conditioned p
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
     return r.bundleId;
   };
-  const projects = Array.from({ length: 1000 }, conditioned);
-  w.project("Unconditioned", "bob");                                  // P and this state none: not counted
+  const projects = Array.from({ length: 999 }, conditioned);           // with P, 1,000 projects
   const gapOf = (pid) => `intent::${pid}::proc::ENT-2`;
   let r = w.i.servesOf({ bundles: ["INFO-ENT-2-need"] });
-  assert.deepEqual([r.serves[0].gaps.length, r.context_truncated], [1000, false], "at the bound, nothing is cut");
+  assert.deepEqual([r.serves[0].gaps.length, r.context_truncated], [999, false], "at the bound, nothing is cut");
   assert.deepEqual(r.serves[0].gaps, projects.map(gapOf).sort());
   const extra = conditioned();
   r = w.i.servesOf({ bundles: ["INFO-ENT-2-need"] });
-  assert.equal(r.context_truncated, true, "the 1,001st is cut, and it says so");
-  assert.deepEqual(r.serves[0].gaps, [...projects, extra].sort().slice(0, 1000).map(gapOf).sort(), "the first 1,000 in id order");
+  assert.equal(r.context_truncated, true, "the 1,001st project is cut, and it says so");
+  const walked = [w.P, ...projects, extra].sort().slice(0, 1000);
+  assert.deepEqual(r.serves[0].gaps, walked.filter((p) => p !== w.P).map(gapOf).sort(),
+                   "the conditioned among the first 1,000 in id order, whichever is past the cut");
 });
 
 test("R15 R16 (N305) proposals with no project named reads at most the first 1,000 projects the viewer may see, in id order, answering projects_limit and projects_truncated; a project it may not see is not counted", async () => {

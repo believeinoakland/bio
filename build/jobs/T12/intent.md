@@ -7,13 +7,13 @@
 **Applied** (on `tranche/T12` at 30263aa2eb, layer 6 closed):
 - **N285 (entities R36; intent R2, R9's entity check, R22).** `setCondition`'s `NO_SUCH_ENTITY` (R2) and `declareAspiration`'s (an aspiration naming an unregistered entity) now answer `entities.noSuchEntity(id)` byte for byte. Intent's `refuseNoSuchEntity`, its region `is-named-entity` and its row `INTENT_CHECKS.NO_SUCH_ENTITY` (C-111.5) are gone; the number is not reused. `checks.mjs` and the foot of `index.mjs` say why, as they already did for C-111.2.
 - **N305 (the Bounds paragraph, K367).** Exported `CONTEXT_MAX`, `PROJECTS_MAX` and `REQUESTS_MAX` (1,000 each).
-  - R28 `servesOf` measures against the first 1,000 held group or project aspirations in id order, with member and retired ones not counted, and against the first 1,000 conditioned projects in id order. It answers `context_truncated`, which is also false on the path where the context read fails.
-  - `proposals` with no project named reads the first 1,000 projects the viewer may see, in id order, and answers `projects_limit` and `projects_truncated`. This is my J1.1 reading. `triage` with no project named reads the same bounded set.
+  - R28 `servesOf` measures against the first 1,000 held group or project aspirations in id order, with member and retired ones not counted. It walks the first 1,000 projects in id order and measures the ones with a condition (K391, B2). It answers `context_truncated` when either walk is cut; the answer is also false on the path where the context read fails.
+  - `proposals` with no project named reads the first 1,000 projects the viewer may see, in id order, and answers `projects_limit` and `projects_truncated`. This is my J1.1 reading, confirmed in B2 (K391). `triage` with no project named reads the same bounded set.
   - `pursuitOf` reads at most 1,000 distinct named capture requests, in the order the triage acts and their bases name them, and answers `requests_limit` and `requests_truncated`.
-  - One project walker, `#projectsInOrder`, replaces the unbounded `#conditioned`. `#heldAspirations` takes a scope filter and a bound. The unbounded `#aspirations` is gone.
+  - One bounded project walker, `#projectsInOrder`, replaces the unbounded `#conditioned`; R28 and `proposals` both use it. `#heldAspirations` takes a scope filter and a bound. The unbounded `#aspirations` is gone.
 - **Tests.** New in `bounds.test.mjs`, each run at the bound and at one past it:
   - R28's aspiration context, with member and retired aspirations not counted.
-  - R28's conditioned-project context, with unconditioned projects not counted.
+  - R28's project walk: a project with no condition is walked but not measured, and at 1,001 projects the ones past the cut are not measured.
   - `proposals`' project read: a project the viewer may not see is not counted; the 1,000th project in id order is read and the 1,001st's gap is not.
   - R14's request read: the first 1,000 read in basis order, a repeat read once, and no more than 1,000 `requestById` calls.
   - In `objective.test.mjs`, a new test "R22 R2 R9 NO_SUCH_ENTITY is entities' one row" covers both sites answering `noSuchEntity(id)` and C-111.5 retired. R2's order test now expects the `noSuchEntity` answer.
@@ -25,8 +25,7 @@
 **Deferred** (flaws in my own module that need wording before I can bound them; sent to BOB in J2):
 1. `pursuitOf`'s goal walk reads every goal document to find those under the aspiration. `GOALS_MAX` bounds the answer but not the walk.
 2. R17/R27's `#ageable` reads every inquiry document and its manifest on each `ageDue`, `ageWake` and `ageSurfaced` call.
-3. R28's walk for conditioned projects (J1.2).
-4. `#heldAspirations` passes over retired aspirations without counting them.
+3. `#heldAspirations` passes over retired aspirations without counting them.
 Each is an internal read like N305's.
 
 **Found in other modules or docs** (reported in J2):
@@ -46,7 +45,13 @@ Each is an internal read like N305's.
 - `node checks/coverage.mjs … intent`: 28 of 28 live requirement ids named by a test; 0 failures.
 - `node checks/ownership.mjs … intent tranche/T12`: 5 files; legacy-checks 0/0, legacy-store 0/0; 0 failures.
 
-Size (session_01Aqw26aHPhWB2gFJysEPTSZ): test runs 24, module lines 1837
+**After B2 (K391):** I merged `tranche/T12`, bounded R28's project walk itself and re-ran everything:
+- intent: 46 of 46 pass.
+- Modules using intent: 181 pass, 0 fail, 9 todo (the 9 todos were there before).
+- `derivation-bounds` and `meaning-bounds`: the same output as before, apart from corpus counts.
+- format, architecture, coverage (28 of 28 ids) and ownership: 0 failures.
+
+Size (session_01Aqw26aHPhWB2gFJysEPTSZ): test runs 28, module lines 1836
 
 ## J1 · QUESTION
 
