@@ -328,7 +328,8 @@ layer:
     > chain-of-custody capture of the source as served; the ceiling for
     > adversarial or legal use; produced by a network-capable agentic
     > session or the M2' fetch layer where the source permits. No route
-    > builds one yet; whether and how to is being researched (DEC-81).
+    > builds one yet; the credible options are documented in
+    > `docs/development/GRADE-A-CAPTURE.md` and DEFERRED (DEC-81 item 4).
     > **Corrected in place 2026-09-29 (DEC-81, Bob):** this said Grade A
     > was *required before external distribution of any work product
     > resting on the document*; no requirement enforced it and no route
