@@ -325,6 +325,17 @@ const NAMED_MULTI = [
     why: "DELIBERATE: the arm patches with `.replaceAll`, which is the spelling that HANDLES a repeated anchor "
        + "rather than being defeated by it, and the paired `.includes` is a presence check rather than a patch "
        + "site. An exactly-once rule applied here would refuse a correct arm." },
+  /* NAMED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413 CONTROL-PLANE #2, K410 control-plane R14/D-586): a MOVE,
+     not a duplicate. The governance fence left `src/index.mjs` for `src/control-plane/index.mjs`, which also holds
+     R14's D-586 exclusion `if (GOVERNANCE_ACTIONS.includes(op) || IDENTITY_ACTIONS.includes(op)) return false;`
+     (and its interface test, `test/m/control-plane/admission.test.mjs`, quotes the same shape twice). */
+  { driver: "bio-plane/test/machine-fences.control.mjs",
+    match: "if (GOVERNANCE_ACTIONS",
+    why: "NOT A SUBJECT ANCHOR: arm (8) applies `.replace(\"if (GOVERNANCE_ACTIONS\", …)` to its OWN constant "
+       + "`GOVERN_FENCE`, which holds it once; the needle it then edits the subject with is the whole two-line "
+       + "`GOVERN_FENCE` (the fence's condition and its OPERATOR_TOKEN_CANNOT_GOVERN refusal), exactly once in "
+       + "`src/control-plane/index.mjs`. The fragment is doubled there because R14's D-586 exclusion begins with the "
+       + "same words; a first-occurrence patch of the fragment is never made, so the multiplicity cannot misarm." },
 ];
 
 /* ---------------------------------------------------------------- THE FIGURES */

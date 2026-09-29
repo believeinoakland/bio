@@ -460,14 +460,21 @@ t("FLOORS AGREE: the draft's floors (the project's bar read now) and the contain
 /* ======================================================================= 5. one function */
 console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review copy ---");
 {
-  const idx = codeOf(SRC("index.mjs"));
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the review copy's handler and
+     `reviewAnswer`, with its quartet call, left `src/index.mjs` for `src/control-plane/index.mjs`. `idx` reads the
+     control plane now; the entry's own code is still COUNTED (`entry`), so a third call planted back there cannot
+     hide from the two-site pin. The handler's slice ends where the public ops hand off (`hooks.publicOp(`), the
+     code that follows it in its new home. */
+  const idx = codeOf(SRC("control-plane/index.mjs"));
+  const entry = codeOf(SRC("index.mjs"));
   /* RE-ANCHORED 2026-09-28 by legacy-tests (T8, PUBLICATION #1 J4.6): the container assembly
      (`assembleCaseContainer`) left `index.mjs` for `src/publication/worker.mjs`, where it calls the quartet; the
      review copy's call stays in `index.mjs`. The TWO sites are counted over both files, and the assembly is sliced
      from its own file, up to the next exported function (`publishedRoutes`). */
   const pubWorker = codeOf(SRC("publication/worker.mjs"));
-  const calls = (idx.match(/\binbandQuartet\(/g) || []).length + (pubWorker.match(/\binbandQuartet\(/g) || []).length;
-  t("index.mjs calls `inbandQuartet` at exactly the TWO sites — the container assembly and the review copy",
+  const calls = (idx.match(/\binbandQuartet\(/g) || []).length + (pubWorker.match(/\binbandQuartet\(/g) || []).length
+              + (entry.match(/\binbandQuartet\(/g) || []).length;
+  t("src/ calls `inbandQuartet` at exactly the TWO sites — the container assembly and the review copy",
     calls, 2);
   const asm = pubWorker.slice(pubWorker.indexOf("async function assembleCaseContainer"),
                               pubWorker.indexOf("export async function publishedRoutes"));
@@ -485,7 +492,7 @@ console.log("\n--- 5. ONE FUNCTION: no second hasher over a manifest or a review
      returns through, and the arm asserts the function really holds the quartet call, so it cannot pass by
      slicing the wrong code again. */
   const rcHandler = idx.slice(idx.indexOf('if (op === "reviewcopy" || op === "reviewcomment"'),
-                              idx.indexOf('if (op === "publishedcase" || op === "publishedbytes")'));
+                              idx.indexOf("return hooks.publicOp("));
   const raAt = idx.indexOf("async function reviewAnswer(");
   const rcAnswer = raAt < 0 ? "" : idx.slice(raAt, idx.indexOf("\n}\n", raAt));
   const rcSite = rcHandler + rcAnswer;

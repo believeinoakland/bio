@@ -105,7 +105,12 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
    implementation left behind there is still counted. */
 const BV_SRC = readFileSync(SRC("basis-versions/index.mjs"), "utf8");
 const INQ_SRC = readFileSync(SRC("inquiry/index.mjs"), "utf8");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): fence layers 1 and 2 left
+   `src/index.mjs` with the control plane — the credential stamp for `src/control-plane/index.mjs`, `VERSION_ACTIONS`
+   and `NEEDS` for `src/control-plane/ops.mjs`. INDEX_SRC is the control plane now, both files, so each arm (the
+   TOTALITY read of NEEDS, the walk guard, layers 1 and 2) asks the code where it lives; its floor stands. */
+const INDEX_SRC = readFileSync(SRC("control-plane/index.mjs"), "utf8") + "\n"
+                + readFileSync(SRC("control-plane/ops.mjs"), "utf8");
 const AFF_SRC = readFileSync(SRC("affordances.mjs"), "utf8");
 const CHECKS_SRC = readFileSync(fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url)), "utf8");
 
@@ -338,7 +343,7 @@ const ACT_OP = {
 const VERBS = ["accept", "reject", "consider", "revert", "current", "hide"];
 
 console.log("\n=== PL-2 / IS-2 · the SIXTH state machine over basis versions ===");
-console.log(`  corpus: store.mjs ${STORE_SRC.length} chars, index.mjs ${INDEX_SRC.length}, `
+console.log(`  corpus: store.mjs ${STORE_SRC.length} chars, control-plane ${INDEX_SRC.length}, `
   + `affordances.mjs ${AFF_SRC.length}, bio-checks.mjs ${CHECKS_SRC.length} · `
   + `${VERSION_STATES.length} states, ${Object.keys(VERSION_MACHINE.edges).length} edge rows, `
   + `${VERBS.length} member ops, ${Object.keys(VERSION_ACT_CHECKS).length} refusals in the registry`);
@@ -914,7 +919,7 @@ console.log("\n--- 9. the implementation-count pin, and the three layers of the 
      ICODE.length < INDEX_SRC.length * 0.9, ICODE.includes("const VERSION_ACTIONS"),
      KCODE.length < CHECKS_SRC.length * 0.8, KCODE.includes("export const VERSION_MACHINE")],
     [true, true, true, true, true, true]);
-  console.log(`  corpus: ${CODE.length} code chars in store.mjs + basis-versions + inquiry, ${ICODE.length} in index.mjs, `
+  console.log(`  corpus: ${CODE.length} code chars in store.mjs + basis-versions + inquiry, ${ICODE.length} in control-plane, `
     + `${KCODE.length} in bio-checks.mjs`);
 
   const count = (src, re) => (src.match(re) || []).length;
@@ -973,14 +978,14 @@ console.log("\n--- 9. the implementation-count pin, and the three layers of the 
 
   /* THE THREE LAYERS, EACH WITH ITS OWN ASSERTION. The control breaks each with
      the others held open; these are the three assertions it must make fail. */
-  t("FENCE LAYER 1 (the credential stamp, index.mjs): a machine credential's act is attributed "
+  t("FENCE LAYER 1 (the credential stamp, control-plane/index.mjs): a machine credential's act is attributed "
   + "`token:<class>` and a caller-supplied `author` is overwritten — asserted at the source, because "
   + "the behavioural half is absorbed by layers 2 and 3 when they are whole",
     [/VERSION_ACTIONS\.includes\(op\)[\s\S]{0,200}?searchParams\.set\("author"/.test(ICODE)
      || /\|\| VERSION_ACTIONS\.includes\(op\)\n\s*\|\| op === "provenancechain"\)\n\s*inner\.searchParams\.set\("author"/.test(ICODE),
      ICODE.includes('searchParams.set("author", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`)')],
     [true, true]);
-  t("FENCE LAYER 2 (the endpoint capability, index.mjs NEEDS): all six require `contribute`",
+  t("FENCE LAYER 2 (the endpoint capability, control-plane/ops.mjs NEEDS): all six require `contribute`",
     VERBS.map((v) => new RegExp(`versio\\w*${v}:\\s+"contribute"`).test(ICODE)),
     VERBS.map(() => true));
   t("FENCE LAYER 3 (the transition, basis-versions/index.mjs): the ONE machine-identity refusal is inside the ONE "
