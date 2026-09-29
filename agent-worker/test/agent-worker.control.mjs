@@ -386,20 +386,37 @@ arm({
   },
 });
 
+/* RE-ANCHORED 2026-09-29 BY AGENT-WORKER #4 (T12, N304), AGAINST THE PLANE'S TEXT AS IT STANDS. Three of this
+   section's arms had been NOT AS DECLARED since before T11, each for a cause in `coverage.mjs` rather than in the
+   member: (1) V1 asserted the plane's OPS and CHECKS lines read `(100.0%)`, and they have not since op reach and
+   check naming became REPORTED figures (K153; the clean tree prints 87.7% and 91.0%); (2) V2 asserted `--strict`
+   exits non-zero on the FLEET FLOOR, which N88 (K100 (1)) made reported and no longer gating; (3) V4 asserted no
+   other fleet gate prints, and the clean tree already prints a FLEET FLOOR line of its own (the arm floor). So each
+   arm is now measured against what `--strict` PRINTS ON THE CLEAN TREE, taken once before the first V arm: the
+   plane's figures must be the clean run's, and a gate "fired" only when its line is not the clean run's line. */
+const wantsCoverage = !only.length || only.some((a) => /^V[1-4]$/.test(a));
+const COVERAGE_CLEAN = wantsCoverage ? runCoverageStrict() : null;
+const planeFigures = (out) => (out.match(/^(OPS|CHECKS) {2}.*$/gm) || []).join("\n");
+const fleetGates = (out) => out.match(/^FLEET(?: FLOOR| SURFACE| RULE 2)?: .*$/gm) || [];
+const newGates = (out) => {
+  const clean = new Set(fleetGates(COVERAGE_CLEAN.out));
+  return fleetGates(out).filter((g) => !clean.has(g));
+};
+const planeFiguresHeld = (out) => planeFigures(COVERAGE_CLEAN.out) !== "" && planeFigures(out) === planeFigures(COVERAGE_CLEAN.out);
+
 arm({
   id: "V1", subject: "VF-3'S NAMED CONTROL — HIDE THE FLEET MANIFEST",
   what: "agent-worker/fleet-member.json is renamed away, so the discovery walk cannot see the member",
   mustFail: "`coverage.mjs --strict` must EXIT NON-ZERO, naming the undeclared Worker directory — it must NOT report the pre-FL-2 figure",
-  mustNot: "the plane's own OPS/CHECKS/CONTROLS figures, which have nothing to do with the fleet",
+  mustNot: "the plane's own OPS and CHECKS figures, which have nothing to do with the fleet: they must read exactly as the clean tree's run prints them",
   swapManifest: true,
   run: () => {
     const r = runCoverageStrict();
     const named = /UNACCOUNTED|agent-worker carr|wrangler\.jsonc and no fleet-member\.json/.test(r.out);
-    const floorAlsoFired = /FLEET FLOOR/.test(r.out);
-    const planeHeld = /OPS\s+\d+ declared · \d+ reached through the control plane \(100\.0%\)/.test(r.out)
-      && /CHECKS\s+\d+ in the catalog · \d+ named by an assertion \(100\.0%\)/.test(r.out);
+    const floorAlsoFired = newGates(r.out).some((g) => /^FLEET FLOOR/.test(g));
+    const planeHeld = planeFiguresHeld(r.out);
     return {
-      observed: `exit ${r.code} · undeclared-Worker gate ${named ? "FIRED and NAMED the directory" : "did NOT fire"} · fleet floor ${floorAlsoFired ? "also fired" : "did not fire"} · plane figures ${planeHeld ? "held at 100%" : "MOVED (unexpected)"}`,
+      observed: `exit ${r.code} · undeclared-Worker gate ${named ? "FIRED and NAMED the directory" : "did NOT fire"} · fleet floor ${floorAlsoFired ? "also fired" : "did not fire"} · plane figures ${planeHeld ? "held at the clean run's" : "MOVED (unexpected)"}`,
       asDeclared: r.code !== 0 && named && planeHeld,
     };
   },
@@ -408,7 +425,10 @@ arm({
 arm({
   id: "V2", subject: "THE FLOOR — a whole member DIRECTORY vanishing",
   what: "FLEET_FLOOR.members is raised one above the discovered count (3 -> 4 as of CPDF-10's third member), standing in for a member directory that is gone entirely (the case the undeclared-Worker gate structurally cannot see)",
-  mustFail: "`--strict` must exit non-zero naming FLEET FLOOR — a count with no floor is not a ratchet",
+  /* N88 (K100 (1)): FLEET FLOOR is REPORTED and no longer gates `--strict`, so the arm's teeth are the report
+     naming the lost member, and `--strict`'s exit must be the clean run's — a floor that gated again, or a report
+     that went quiet, is each a change this arm names. */
+  mustFail: "`--strict` must REPORT the FLEET FLOOR naming the member count below its floor — a count with no floor is not a ratchet — and exit as the clean tree does (reported, not gated: N88)",
   mustNot: "the undeclared-Worker gate, which has nothing to say about a directory that is not there",
   file: COVERAGE,
   /* RE-ANCHORED 2026-08-09 BY D-276, AND THE STALENESS IS THE FINDING RATHER
@@ -445,11 +465,12 @@ arm({
   replace: `  members: 4,`,
   run: () => {
     const r = runCoverageStrict();
-    const floor = /FLEET FLOOR: 3 fleet member\(s\) discovered, floor is 4/.test(r.out);
+    const floor = newGates(r.out).some((g) => /^FLEET FLOOR: 3 fleet member\(s\) discovered, floor is 4/.test(g));
     const unaccountedQuiet = !/UNACCOUNTED/.test(r.out);
+    const exitAsClean = r.code === COVERAGE_CLEAN.code;
     return {
-      observed: `exit ${r.code} · floor gate ${floor ? "FIRED" : "did NOT fire"} · undeclared-Worker gate ${unaccountedQuiet ? "silent (as declared)" : "also fired"}`,
-      asDeclared: r.code !== 0 && floor && unaccountedQuiet,
+      observed: `exit ${r.code} (clean ${COVERAGE_CLEAN.code}) · floor report ${floor ? "FIRED and named the members" : "did NOT fire"} · undeclared-Worker gate ${unaccountedQuiet ? "silent (as declared)" : "also fired"}`,
+      asDeclared: exitAsClean && floor && unaccountedQuiet,
     };
   },
 });
@@ -465,7 +486,7 @@ arm({
   run: () => {
     const r = runCoverageStrict();
     const surfaceGate = /FLEET SURFACE: agent-worker/.test(r.out);
-    const floorAlso = /FLEET FLOOR/.test(r.out);
+    const floorAlso = newGates(r.out).some((g) => /^FLEET FLOOR/.test(g));
     return {
       observed: `exit ${r.code} · surfaceless gate ${surfaceGate ? "FIRED" : "did NOT fire"} · floor ${floorAlso ? "also fired (the surface ops fell below it)" : "did not fire"}`,
       asDeclared: r.code !== 0 && surfaceGate,
@@ -477,14 +498,14 @@ arm({
   id: "V4", subject: "FLEET RULE 2 — a member that ASSERTS something",
   what: "the member declares its `run` surface op `mutating: true`",
   mustFail: "`--strict` must exit non-zero naming FLEET RULE 2 — a member returns derived output and writes nothing (PARALLELISM.md)",
-  mustNot: "the floor, the undeclared-Worker gate, or the surfaceless gate",
+  mustNot: "the floor, the undeclared-Worker gate, or the surfaceless gate: none may print a line the clean tree's run does not",
   file: SRC,
   find: `  run:     { method: "POST", mutating: false },`,
   replace: `  run:     { method: "POST", mutating: true },`,
   run: () => {
     const r = runCoverageStrict();
     const rule2 = /FLEET RULE 2: agent-worker\.run/.test(r.out);
-    const othersQuiet = !/FLEET FLOOR|UNACCOUNTED|FLEET SURFACE/.test(r.out);
+    const othersQuiet = !/UNACCOUNTED/.test(r.out) && !newGates(r.out).some((g) => /^FLEET(?: FLOOR| SURFACE)?: /.test(g));
     return {
       observed: `exit ${r.code} · rule-2 gate ${rule2 ? "FIRED" : "did NOT fire"} · other fleet gates ${othersQuiet ? "silent (as declared)" : "also fired"}`,
       asDeclared: r.code !== 0 && rule2 && othersQuiet,
@@ -496,7 +517,7 @@ arm({
   id: "V5", subject: "THE BATTERY ACTUALLY RUNS THE MEMBER'S SUITE",
   what: "the member's suite is made to fail one assertion, to prove the battery's fleet lane carries a failure rather than merely listing it",
   mustFail: "`battery.mjs agent-worker` must exit NON-ZERO and name the member's suite in FAILED",
-  mustNot: "any plane suite — the fleet lane must not disturb the 118",
+  mustNot: "any plane suite — the fleet lane must not disturb the plane's",
   file: join(HERE, "agent-worker.test.mjs"),
   find: `  t("the default bound is 120", bound, 120);`,
   replace: `  t("the default bound is 120", bound, 999);`,
