@@ -40,3 +40,7 @@ N328's `tasks` half: my best reading, and what blocks the rest. The bias half is
   (b) queue provides `counts(hid)` → `{tasks}` (as bias R42) and legacy-store reads it through its existing `queueOf` import. Adds to the known architecture failure (legacy-store's queue imports, 3 today): I would not choose it.
   (c) The read stays by name until op=stats moves up with the store's door (N333, control-plane, top layer), which can read queue's `counts(hid)` directly.
 Best reading: (c) for T13, with queue's `counts(hid)` worded now so N333 (or a later control-plane job) reads it, and (a) worded for next if you want the general form. Until you answer, the `tasks` read stays as it is and I carry on with tests and checks.
+
+## J2 · COMPLETE
+
+N328's bias half done: `#counts` spreads bias `counts(hid)`; bias's five dead purge entries, the `BIAS_TABLES` filter and import removed; retrieval's and run-productions' counts asked once per answer. The `tasks` half unchanged per B2 (K435, N342). `test/m/` whole on the merged tree: 2744 tests, 2722 pass, 0 fail, 22 todo. Old suites: purge 14/0, project-sight 255/0, mint-ledger 26/0, bias 137/1 (its `store.mjs` size floor 222,052, now 221,831: legacy-tests' re-pin). Checks: format 0, architecture 3 (all before this job), coverage 0 of 0, ownership 0. Reported: the plane bundle is stale; `bias_debts.settled_kind` is still added by legacy-store's `ADDITIVE_COLUMNS`. No check rows touched; no UI or affordances hits. Record: `build/jobs/T13/legacy-store.md` on `job/T13/legacy-store`.
