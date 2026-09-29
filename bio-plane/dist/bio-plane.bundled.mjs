@@ -69082,11 +69082,6 @@ var INTENT_CHECKS = Object.freeze({
     where: at6("#aspirationAuthority", "is-aspiration-yours"),
     translation: "A member's own aspiration is declared, revised and retired by that member alone. Nothing was written."
   },
-  GROUP_ASPIRATION_NOT_ADMIN: {
-    check: "C-111.16",
-    where: at6("#aspirationAuthority", "is-group-aspiration-admin"),
-    translation: "An aspiration the whole group holds is declared, revised and retired by an administrator, and the act carries their name and date. Ask an administrator. Nothing was written."
-  },
   NO_LESSON: {
     check: "C-111.17",
     where: at6("refuseNoLesson", "is-retirement-taught"),
@@ -69420,6 +69415,8 @@ function conditionOf(fm) {
 }
 
 // src/intent/index.mjs
+var GROUP_ASPIRATION_ACT = "declaring, revising or retiring an aspiration the whole group holds";
+var GROUP_ASPIRATION_REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the whole group holds in their own name, and the act carries their name and date.";
 var TRIAGE_ACTS = Object.freeze(["adopt", "question", "defer", "dismiss"]);
 var AGEING_SETTING = "intent_ageing_days";
 var AGEING_DEFAULT_DAYS = 30;
@@ -69637,7 +69634,8 @@ var Intent = class {
       return refuseBadScope("an aspiration keeps the scope and owner it was declared with. Nothing was written.");
     return this.#aspirationAuthority(heldFm.scope, heldFm.owner ?? null, author, c.pkg?.actorViewer ?? author);
   }
-  /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an administrator's. */
+  /* R9: a member's aspiration is that member's; a project's, a member joined in it; the group's, an active administrator's
+     (the founder included), anyone else answered through membership's `notAnAdmin` with the next step (N327). */
   #aspirationAuthority(scope, owner, author, viewer) {
     const who2 = this.#memberOf(author);
     if (!ASPIRATION_SCOPES.includes(scope) || scope !== "group" && !str4(owner) || scope === "group" && owner != null)
@@ -69651,7 +69649,7 @@ var Intent = class {
       if (denied) return denied;
     }
     if (scope === "group" && !this.membership.isAdministrator(who2))
-      return refusal12("GROUP_ASPIRATION_NOT_ADMIN", "an aspiration the whole group holds is declared, revised and retired by an active administrator. Nothing was written.");
+      return notAnAdmin(str4(author) || null, GROUP_ASPIRATION_ACT, { remedy: GROUP_ASPIRATION_REMEDY });
     return null;
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
