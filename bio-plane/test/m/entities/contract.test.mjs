@@ -1,8 +1,9 @@
-/* entities' module-level services and its stated read contract at its interface: R35, R36. */
+/* entities' module-level services and its stated read contract at its interface: R35, R36, R37 (and R11, R12, R14 through extraction's noSha). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
-import { noSuchEntity, ENTITY_CHECKS, isEstablished } from "../../../src/entities/index.mjs";
+import { noSuchEntity, noEntity, NO_ENTITY_DETAIL, ENTITY_CHECKS, isEstablished } from "../../../src/entities/index.mjs";
+import { noSha, NO_SHA_DETAIL, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 
 test("R35 the read contract: entities(entity_id key, at the instant R1 answers) and resolutions(capture_sha, bundle_id, ref, entity_id, grade, established), established 1 exactly when R34 holds of the grade", () => {
   const { e, read, rows } = world();
@@ -79,4 +80,80 @@ test("R36 every act of this module answering the condition answers through noSuc
   assert.deepEqual(e.namingDocuments({ entityId: gone, viewer: MACHINE }), noSuchEntity(gone));
   /* negative control: a registered entity is not refused */
   assert.equal(e.addAlias({ entityId: a, alias: "y" }).ok, true);
+});
+
+test("R37 noEntity answers the one refusal: reason and code NO_ENTITY, its own row (C-91.5) with the required translation, the caller's detail or a fixed default; writes nothing, never throws", () => {
+  const row = ENTITY_CHECKS.NO_ENTITY;
+  assert.deepEqual([row.check, row.where], ["C-91.5", "src/entities/index.mjs noEntity > is-entity-named"]);
+  assert.equal(row.translation, "This request is about one registered subject, named by its id, and it names none. "
+    + "Name the subject by its id. Nothing was written.");
+  assert.ok(!/oakland|alameda|legistar/i.test(row.translation), "R31");
+  const a = noEntity("what the id was for");
+  assert.deepEqual(Object.keys(a).sort(), ["check", "code", "detail", "ok", "reason", "translation"]);
+  assert.deepEqual([a.ok, a.reason, a.code, a.check, a.translation, a.detail],
+                   [false, "NO_ENTITY", "NO_ENTITY", row.check, row.translation, "what the id was for"]);
+  /* no sentence, or one that is not a sentence: the fixed default, the same every time */
+  for (const d of [undefined, null, "", "   ", 7, {}, ["x"]]) {
+    assert.doesNotThrow(() => noEntity(d));
+    assert.deepEqual(noEntity(d), { ...a, detail: NO_ENTITY_DETAIL }, String(d));
+  }
+  assert.ok(NO_ENTITY_DETAIL.length > 0);
+  assert.notEqual(ENTITY_CHECKS.NO_ENTITY.check, ENTITY_CHECKS.NO_SUCH_ENTITY.check, "its own row, apart from R36's");
+  const { e, rows } = world();
+  const before = rows(`SELECT (SELECT COUNT(*) FROM entities) + (SELECT COUNT(*) FROM entity_aliases) AS n`)[0].n;
+  noEntity();
+  assert.equal(rows(`SELECT (SELECT COUNT(*) FROM entities) + (SELECT COUNT(*) FROM entity_aliases) AS n`)[0].n, before);
+  assert.equal(e.has(""), false);
+});
+
+test("R37 every act of this module answering a request that names no entity id answers through noEntity: R2, R5, R12, R15, R17 and alias withdrawal, for an id absent, not a string, or empty", () => {
+  const { e, read } = world();
+  read("INFO-1", sha("n37"), [{ kind: "x", key: "1", label: "A" }]);
+  const acts = {
+    addAlias: (id) => e.addAlias({ entityId: id, alias: "x" }),
+    readEntity: (id) => e.readEntity({ entityId: id }),
+    testify: (id) => e.testify({ captureSha: sha("n37"), ref: "x:1", entityId: id, basis: "b" }),
+    concerns: (id) => e.concerns({ entityId: id, viewer: MACHINE }),
+    namingDocuments: (id) => e.namingDocuments({ entityId: id, viewer: MACHINE }),
+    withdrawAlias: (id) => e.withdrawAlias({ entityId: id, alias: "x", reason: "r" }),
+  };
+  for (const [name, act] of Object.entries(acts)) {
+    const answers = [undefined, null, "", 42, { id: "ENT-2026-0001" }].map(act);
+    for (const r of answers) {
+      assert.deepEqual({ ...r, detail: null }, { ...noEntity(), detail: null }, name);
+      assert.equal(typeof r.detail, "string");
+      assert.ok(r.detail.length > 0);
+    }
+    /* each names what the id was for: its own sentence, never the default */
+    assert.notEqual(answers[0].detail, NO_ENTITY_DETAIL, name);
+    assert.deepEqual(answers[0], noEntity(answers[0].detail), name);
+  }
+  /* negative control: a named id is past this refusal */
+  const a = e.createEntity({ kind: "office", label: "A" }).entity_id;
+  for (const [name, act] of Object.entries(acts)) assert.notEqual(act(a).reason, "NO_ENTITY", name);
+});
+
+test("R11 R12 R14 a request naming no capture digest answers through extraction's noSha (its R63), each act's own detail, minting no NO_SHA here", () => {
+  const { e, read } = world();
+  const ent = e.createEntity({ kind: "office", label: "A" }).entity_id;
+  read("INFO-1", sha("ns"), [{ kind: "x", key: "1", label: "A" }]);
+  const acts = {
+    resolve: (s) => e.resolve({ captureSha: s }),
+    testify: (s) => e.testify({ captureSha: s, ref: "x:1", entityId: ent, basis: "b" }),
+    resolutionsFor: (s) => e.resolutionsFor({ captureSha: s, viewer: MACHINE }),
+  };
+  for (const [name, act] of Object.entries(acts)) {
+    const answers = [undefined, null, "", 7].map(act);
+    for (const r of answers) {
+      assert.deepEqual(r, noSha(r.detail), name);
+      assert.deepEqual([r.reason, r.code, r.check], ["NO_SHA", "NO_SHA", EXTRACTION_CHECKS.NO_SHA.check], name);
+    }
+    assert.notEqual(answers[0].detail, NO_SHA_DETAIL, `${name} names what the digest was for`);
+    assert.notEqual(act(sha("ns")).reason, "NO_SHA", `${name}: a named digest is past this refusal`);
+  }
+  /* R11's set form answers each item the single form's way */
+  const set = e.resolve({ items: [{ captureSha: "" }] });
+  assert.deepEqual(set.items[0].reason, "NO_SHA");
+  assert.equal(set.items[0].check, EXTRACTION_CHECKS.NO_SHA.check);
+  assert.ok(!Object.values(ENTITY_CHECKS).some((r) => /NO_SHA/.test(r.where)), "no row of this module's is NO_SHA's");
 });
