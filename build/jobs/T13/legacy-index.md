@@ -1,6 +1,6 @@
 # legacy-index (T13)
 
-**Status** · session_01SbWMHYtC23oJPnXnB8WhqY · depth 2 · WORKING · handled B0
+**Status** · session_01SbWMHYtC23oJPnXnB8WhqY · depth 2 · COMPLETE · handled B0
 
 ## Completion
 
