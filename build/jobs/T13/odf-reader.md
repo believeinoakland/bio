@@ -64,3 +64,7 @@ Two items outside my module, from N30 (details in my record's Completion):
 ## J4 · COMPLETE
 
 N30 applied: R45 (`ODF_REPEAT_EXPANSION_MAX` = 262,144, exported; `over_repeat_bound` answered as over the size guard on all three entries), R16 (hidden rows as `{min, max, visibility}` ranges) and R41's new branch. Every bound test from B1 passes at its bound. J2's two additions (link copies cost a unit; copied text bounded by the COFF-6 figure) are built on my best reading. If you rule otherwise, a CHANGE brings them in line. Marks for you to strike: R16, R41 and R45's `(not yet met: N30)`. Tests: odf-reader 57/57; format-registry and capture 97/97; legacy formats-odf 170/171 (J3). Checks: format, architecture and ownership 0 failures; coverage 45/45. Record: `build/jobs/T13/odf-reader.md`, Completion.
+
+## J5 · COMPLETE
+
+Re B2: tranche/T13 @ aa50db5eca merged. R45 as reworded (K428) is what the code does; its two additions are tested at the interface in repeats.test.mjs (links past the unit cap; copied text past MEASURED_OOXML_TEXT_BOUND_BYTES). After the merge: odf-reader 57/57; format, architecture, ownership 0 failures; coverage 45/45. Marks to strike are unchanged: R16, R41, R45 (N30). Record updated.
