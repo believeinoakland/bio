@@ -6,6 +6,7 @@
    wrapped, so the frame is this module's and the routes stay where they are. */
 import { Store as LegacyStore } from "../store.mjs";
 import { membershipOf } from "../membership/index.mjs";
+import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 
 /* ===== REC-196 — A READ NAMING A DISCOVERABLE PROJECT'S OWN ID IS ANSWERED POSITIONALLY (Membership v2 §7, item
@@ -153,12 +154,23 @@ export async function dispatch(req, store) {
 }
 
 /* K93: the Durable Object class is this module's. Legacy-store's class keeps its construction and its routes; its
-   `fetch` is this module's `dispatch`. The two tables are carried as statics too, where their readers find them. */
+   `fetch` is this module's `dispatch`. The two tables are carried as statics too, where their readers find them.
+   R35 (N348): this module is the composition root. At construction it starts `instance-setup` once per object (its
+   `start` is idempotent on one storage, so a second construction, or a wrapper that also starts it, starts nothing),
+   and instance-setup's routes join the one route map beside legacy-store's, so they pass R26's body read and envelope,
+   R27's existence read and R25's catch like every other route. */
 export class Store extends LegacyStore {
   static PROJECT_NAMING_READS = PROJECT_NAMING_READS;
   static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+  }
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx) });
+    return dispatch(req, {
+      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body) }),
+      membership: () => membershipOf(this.ctx),
+    });
   }
 }
 

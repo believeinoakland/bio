@@ -103,22 +103,32 @@ test("R9 (N172): objective-gap per gap of each visible project the member partic
   assert.equal(asked.length, 50, "no member: every visible project, bounded");
 });
 
-test("R9 (N229): source-modified and source-removed from a monitored document's flagged tick, gated, homed under its ancestors", () => {
-  const w = world({ monitoring: { subjects: () => ({ rows: [{ bundle_id: "INF-M" }, { bundle_id: "INF-R" }, { bundle_id: "INF-Q" }, { bundle_id: "PRJ-H" }] }) } });
-  const md = (status, flag = true) => `---\nbundle_id: X\nsource_status: ${status}\nreeval_pending:\n  flag: ${flag}\n  since: ${iso(NOW - 100)}\n  source: source_status\n---\n# X\n`;
-  const put = (id, text) => w.run(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, 'bundle.md', ?, ?, 'x')`, id, text, text.length);
+test("R9 (N229, N330): source-modified and source-removed per document monitoring.flagged answers the viewer, homed under its ancestors", () => {
+  let asked = null;
+  const w = world({ monitoring: { flagged: (a) => { asked = a; return { ok: true, limit: 200, truncated: true, items: [
+    { bundleId: "INF-M", source_status: "modified", since: iso(NOW - 100000) },
+    { bundleId: "INF-R", source_status: "removed", since: iso(NOW - 200000) },
+    { bundleId: "INF-X", source_status: "modified", since: "not an instant" }] }; } } });
   w.member("alice");
-  for (const b of ["INF-M", "INF-R", "INF-Q"]) w.bundle(b);
-  w.bundle("PRJ-H", "project");
-  put("INF-M", md("modified")); put("INF-R", md("removed")); put("INF-Q", md("unchanged", false)); put("PRJ-H", md("removed"));
+  for (const b of ["INF-M", "INF-R", "INF-X"]) w.bundle(b);
   w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", "INF-M");
   const m = byId(w.feed("alice"));
-  assert.equal(m["FINDING::source-modified::INF-M"].kind, "source-modified");
-  assert.deepEqual(m["FINDING::source-modified::INF-M"].case.ancestors.map((a) => a.id), ["INQ-1"]);
+  assert.deepEqual(asked, { viewer: "member:alice" }, "the viewer is monitoring's to gate by (its R48)");
+  const mod = m["FINDING::source-modified::INF-M"];
+  assert.equal(mod.kind, "source-modified"); assert.deepEqual(mod.subject, { kind: "bundle", id: "INF-M" });
+  assert.deepEqual(mod.case.ancestors.map((a) => a.id), ["INQ-1"]);
+  assert.deepEqual([mod.basis.source, mod.basis.source_status, mod.basis.since], ["monitoring.flagged", "modified", iso(NOW - 100000)]);
+  assert.deepEqual(mod.basis.bound, { limit: 200, truncated: true });
+  assert.deepEqual([mod.age.state, mod.age.ms], ["determined", 100000]);
   assert.equal(m["FINDING::source-removed::INF-R"].kind, "source-removed");
-  assert.equal(m["FINDING::source-modified::INF-Q"], undefined); assert.equal(m["FINDING::source-removed::INF-Q"], undefined);
-  assert.equal(m["FINDING::source-removed::PRJ-H"], undefined, "a hidden document is withheld whole");
-  assert.equal(m["FINDING::source-modified::INF-M"].disposition.scope, "project");
+  assert.equal(m["FINDING::source-modified::INF-X"].age.state, "undetermined");
+  assert.equal(Object.keys(m).filter((id) => /^FINDING::source-(modified|removed)::/.test(id)).length, 3);
+  assert.equal(mod.disposition.scope, "project");
+  // a read monitoring could not make mints nothing
+  const w2 = world({ monitoring: { flagged: () => ({ ok: false, items: [], limit: 200, truncated: false, detail: "x" }) } });
+  assert.ok(!w2.feed(null, "class:admin").items.some((i) => /^source-/.test(i.kind)));
+  // nothing here reads front matter or the reachability table any more (N330)
+  assert.ok(!w.statements.some((q) => /source_reachability|FROM files/.test(q)));
 });
 
 test("R10: governor-holding-host, its documents gathered at most 16, past which the home set states subject_bound", () => {
@@ -163,23 +173,34 @@ test("R10: render-deferred per held or expired render, its reason the code's own
   assert.equal(m["CONDITION::render-deferred::CR-2"].basis.render.state, "expired");
 });
 
-test("R10 (N229): archive-fallback-eligible per address eligible at monitoring's floor; monitoring-recheck-due when overdue past its interval or unscheduled", () => {
+test("R10 (N229, N330): archive-fallback-eligible per address monitoring.archiveEligible answers; monitoring-recheck-due when overdue past its interval or unscheduled", () => {
   const H = 3600000;
+  let askedAt = null;
   const w = world({
-    capture: { sourceReachability: ({ addressNorm }) => ({ fallback_eligible: addressNorm === "https://gone.example/a" }) },
-    monitoring: { floor: () => 2, monitoring: () => ({ ok: true, truncated: false, items: [
+    monitoring: { archiveEligible: (now) => { askedAt = now; return { ok: true, limit: 50, truncated: true, paused: { paused: true, by: "ada" },
+                    eligible: [{ address: "https://gone.example/a", first_failure_since: iso(NOW - 86400000), reachability: { fallback_eligible: true } }] }; },
+                  monitoring: () => ({ ok: true, truncated: false, items: [
       { state: "due", bundle: "INF-1", address: "https://late.example/", due_at: iso(NOW - 3 * H), interval_ms: H, frequency: "hourly" },
       { state: "due", bundle: "INF-2", address: "https://soon.example/", due_at: iso(NOW - H / 2), interval_ms: H, frequency: "hourly" },
       { state: "due", bundle: "INF-3", address: "https://never.example/", due_at: null, frequency: null },
       { state: "unscheduled", bundle: "INF-4", address: null, reason: "no frequency declared" },
       { state: "scheduled", bundle: "INF-5", address: "https://ok.example/", next_at: iso(NOW + H), interval_ms: H }] }) } });
-  for (const b of ["INF-1", "INF-2", "INF-3", "INF-4", "INF-5"]) w.bundle(b);
-  w.run(`INSERT INTO source_reachability VALUES ('https://gone.example/a', 3, ?), ('https://flaky.example/b', 2, ?), ('https://once.example/c', 1, ?)`,
-    iso(NOW - 86400000), iso(NOW - 3600000), iso(NOW - 60));
+  for (const b of ["INF-1", "INF-2", "INF-3", "INF-4", "INF-5", "INF-G"]) w.bundle(b);
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('cg','INF-G','snapshots/x','utf8',?,1)`, iso(NOW));
+  w.run(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, observations) VALUES (?,?,?,?,?,?,1)`,
+    "https://gone.example/a", "https://gone.example/a", "cg", "direct", iso(NOW), iso(NOW));
   const m = byId(w.feed(null, "class:admin"));
+  assert.equal(askedAt, NOW, "asked at the read's own instant");
   const kinds = (k) => Object.keys(m).filter((id) => id.startsWith(`CONDITION::${k}::`)).sort();
   assert.deepEqual(kinds("archive-fallback-eligible"), ["CONDITION::archive-fallback-eligible::https://gone.example/a"]);
+  const a = m["CONDITION::archive-fallback-eligible::https://gone.example/a"];
+  assert.deepEqual(a.subject.bundles, ["INF-G"]);
+  assert.deepEqual([a.basis.source, a.basis.bound, a.basis.paused], ["monitoring.archiveEligible", { limit: 50, truncated: true }, { paused: true, by: "ada" }]);
+  assert.deepEqual(a.basis.reachability, { fallback_eligible: true });
+  assert.equal(a.age.ms, 86400000);
   assert.deepEqual(kinds("monitoring-recheck-due"),
     ["CONDITION::monitoring-recheck-due::INF-4", "CONDITION::monitoring-recheck-due::https://late.example/"]);
   assert.equal(m["CONDITION::monitoring-recheck-due::https://late.example/"].age.ms, 3 * H);
+  const w2 = world({ monitoring: { archiveEligible: () => ({ ok: false, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) } });
+  assert.ok(!w2.feed(null, "class:admin").items.some((i) => i.kind === "archive-fallback-eligible"));
 });

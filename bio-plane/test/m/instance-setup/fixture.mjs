@@ -115,17 +115,32 @@ export async function boot({ st = null, env = {}, prov = null, now = null } = {}
   return { m, st: store, ctx, record, prov: p, started, env };
 }
 
-/* The Durable Object's door for this module, and a `doAnswer` as the control plane's reads it. */
+/* The Durable Object's door for this module, and a `doAnswer` as the control plane's reads it (control-plane R23, R25):
+   `ok: true` is an answer; `ok: false` below 500 is the store's own refusal, `refused` with its `reply`; anything else
+   is a silence, carrying the correlation id of the store's `STORE_INTERNAL_ERROR` when it gave a well-formed one. */
+const CORRELATION_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export const doAnswer = async (res) => {
-  let out = null;
-  try { out = await (await res).json(); } catch { out = null; }
-  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined };
+  let r = null, out = null;
+  try { r = await res; out = await r.json(); } catch { out = null; }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: undefined };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string"
+    && CORRELATION_RE.test(out.correlation) ? out.correlation : undefined;
+  return correlation ? { answered: false, result: undefined, correlation } : { answered: false, result: undefined };
 };
+const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
+/* The plane's two answers for a reply that is no answer: `storeSilent` (502, the correlation carried when given, no key
+   otherwise) and `storeRefusal` (the store's own envelope at its status). `io` hands both, as control-plane does;
+   `ioLegacy` hands no `storeRefusal`, as legacy-index's call sites do today. */
 export const io = {
-  json: (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } }),
-  storeSilent: (op) => new Response(JSON.stringify({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }), { status: 502 }),
+  json,
+  storeSilent: (op, correlation = undefined) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, correlation }, 502),
+  storeRefusal: (out, extra = {}) => json({ ...out.reply.body, ...extra }, out.reply.status),
   doAnswer,
 };
+export const ioLegacy = { json: io.json, storeSilent: io.storeSilent, doAnswer };
 
 /** A stub whose fetch reaches this module's routes, with `extra` answering any other path (`bootstrap`, `stats`, …). */
 export function stubOver(m, extra = {}, { silent = [] } = {}) {

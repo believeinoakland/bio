@@ -8404,21 +8404,21 @@ function validateInto(p, errors) {
       str14(`${at17}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list2(`${at17}.forms`, s.forms).forEach((f8, i) => {
+      list2(`${at17}.forms`, s.forms).forEach((f9, i) => {
         const fa = `${at17}.forms[${i}]`;
-        if (!entry(fa, f8)) return;
-        fields(fa, f8, ["form", "pattern", "normal", "clean", "basis"]);
-        str14(`${fa}.form`, f8.form, "form");
-        if (isStr(f8.form)) {
-          if (names.has(f8.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f8.form}' is named twice in ${name}`);
-          names.add(f8.form);
+        if (!entry(fa, f9)) return;
+        fields(fa, f9, ["form", "pattern", "normal", "clean", "basis"]);
+        str14(`${fa}.form`, f9.form, "form");
+        if (isStr(f9.form)) {
+          if (names.has(f9.form)) err(`${fa}.form`, "DUPLICATE_FORM", `'${f9.form}' is named twice in ${name}`);
+          names.add(f9.form);
         }
-        const re = compile(f8.pattern);
-        if (!re) pattern(`${fa}.pattern`, f8.pattern);
+        const re = compile(f9.pattern);
+        if (!re) pattern(`${fa}.pattern`, f9.pattern);
         const groups = re ? groupCount(re) : Infinity;
-        let normalOk = Array.isArray(f8.normal) && f8.normal.length > 0;
+        let normalOk = Array.isArray(f9.normal) && f9.normal.length > 0;
         if (!normalOk) err(`${fa}.normal`, "NORMAL_INVALID", "normal is a non-empty list of parts");
-        else f8.normal.forEach((part, j) => {
+        else f9.normal.forEach((part, j) => {
           if (typeof part === "string") return;
           const pa = `${fa}.normal[${j}]`;
           if (!isObj(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k)) || own(part, "unpad") && typeof part.unpad !== "boolean" || own(part, "upper") && typeof part.upper !== "boolean" || own(part, "default") && typeof part.default !== "string") {
@@ -8426,16 +8426,16 @@ function validateInto(p, errors) {
             err(pa, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
           }
         });
-        if (own(f8, "clean")) {
-          const c = f8.clean;
+        if (own(f9, "clean")) {
+          const c = f9.clean;
           const bad = !isObj(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k)) || own(c, "strip") && (!Array.isArray(c.strip) || !c.strip.every((x) => compile(x))) || own(c, "spaces") && !["remove", "collapse"].includes(c.spaces) || own(c, "upper") && c.upper !== true;
           if (bad) {
             normalOk = false;
             err(`${fa}.clean`, "NORMAL_INVALID", "clean is {strip?: [pattern], spaces?: remove|collapse, upper?: true}");
           }
         }
-        basis(fa, f8);
-        if (isStr(f8.form) && re && normalOk) spaceForms[name].set(f8.form, f8);
+        basis(fa, f9);
+        if (isStr(f9.form) && re && normalOk) spaceForms[name].set(f9.form, f9);
       });
       if (name === "enactment" && own(s, "kinds")) list2(`${at17}.kinds`, s.kinds).forEach((k, i) => {
         const ka = `${at17}.kinds[${i}]`;
@@ -8467,8 +8467,8 @@ function validateInto(p, errors) {
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
     if (!forms) err(`${at17}.forms`, "VALUE_INVALID", "forms is [a, b]");
-    else forms.forEach((f8, j) => {
-      if (!known.has(f8)) err(`${at17}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f8)}'`);
+    else forms.forEach((f9, j) => {
+      if (!known.has(f9)) err(`${at17}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f9)}'`);
     });
     list2(`${at17}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
@@ -8477,8 +8477,8 @@ function validateInto(p, errors) {
       }
       if (!forms) return;
       pair.forEach((v, n) => {
-        const f8 = known.get(forms[n]);
-        if (f8 && applyForm(f8, v) == null) err(`${at17}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        const f9 = known.get(forms[n]);
+        if (f9 && applyForm(f9, v) == null) err(`${at17}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
     basis(at17, x);
@@ -8781,9 +8781,9 @@ function merge(profiles) {
       if (!givers.length) continue;
       const s = { label: [...new Set(givers.map((p) => p.spaces[space].label))].join("; "), forms: [] };
       const byForm = /* @__PURE__ */ new Map();
-      for (const p of givers) for (const f8 of p.spaces[space].forms || []) {
-        if (!byForm.has(f8.form)) byForm.set(f8.form, []);
-        byForm.get(f8.form).push({ profile: p.id, value: f8 });
+      for (const p of givers) for (const f9 of p.spaces[space].forms || []) {
+        if (!byForm.has(f9.form)) byForm.set(f9.form, []);
+        byForm.get(f9.form).push({ profile: p.id, value: f9 });
       }
       for (const [form, given] of byForm) {
         const vals = given.map((g) => ({ profile: g.profile, value: (({ basis, ...rest }) => rest)(g.value), basis: g.value.basis }));
@@ -8951,11 +8951,11 @@ function merge(profiles) {
       const e = { kind, label: [...new Set(given.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given.flatMap((g) => g.k.laws || []))];
       if (given.some((g) => own(g.k, "laws"))) e.laws = laws;
-      for (const f8 of ["tier", "venue", "template", "advisory"]) {
-        const vals = given.filter((g) => own(g.k, f8)).map((g) => ({ profile: g.profile, value: clone(g.k[f8]), basis: g.k.basis }));
+      for (const f9 of ["tier", "venue", "template", "advisory"]) {
+        const vals = given.filter((g) => own(g.k, f9)).map((g) => ({ profile: g.profile, value: clone(g.k[f9]), basis: g.k.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f8] = f8 !== "venue" ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
-        else conflict(`action_kinds[${kind}].${f8}`, vals, `the active profiles give different ${f8 === "tier" ? "risk tiers" : f8 === "advisory" ? "advisory notes" : `${f8}s`} for ${kind}, so none is given`);
+        if (agree(vals)) e[f9] = f9 !== "venue" ? vals[0].value : { ...vals[0].value, profile: vals[0].profile, bases: vals.map((v) => ({ profile: v.profile, basis: v.value.basis })) };
+        else conflict(`action_kinds[${kind}].${f9}`, vals, `the active profiles give different ${f9 === "tier" ? "risk tiers" : f9 === "advisory" ? "advisory notes" : `${f9}s`} for ${kind}, so none is given`);
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -8974,11 +8974,11 @@ function merge(profiles) {
     for (const given of byRule.values()) {
       const { rule, applies_to } = given[0].d;
       const e = { rule, applies_to };
-      for (const f8 of ["days", "count", "starts", "extension"]) {
-        const vals = given.filter((g) => own(g.d, f8)).map((g) => ({ profile: g.profile, value: clone(g.d[f8]), basis: g.d.basis }));
+      for (const f9 of ["days", "count", "starts", "extension"]) {
+        const vals = given.filter((g) => own(g.d, f9)).map((g) => ({ profile: g.profile, value: clone(g.d[f9]), basis: g.d.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f8] = vals[0].value;
-        else conflict(`deadlines[${rule}/${applies_to}].${f8}`, vals, `the active profiles disagree on the ${f8} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+        if (agree(vals)) e[f9] = vals[0].value;
+        else conflict(`deadlines[${rule}/${applies_to}].${f9}`, vals, `the active profiles disagree on the ${f9} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
       }
       e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
       e.basis = given[0].d.basis;
@@ -9974,13 +9974,13 @@ function instantOrder(a, b) {
   return x - y;
 }
 var EMPTY_STRING_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-function fileDigestOf(f8) {
-  if (f8 && typeof f8.text === "string") return createSha256().update(te.encode(f8.text)).hex();
-  if (f8 && typeof f8.blobSha === "string" && f8.blobSha) return f8.blobSha.toLowerCase();
+function fileDigestOf(f9) {
+  if (f9 && typeof f9.text === "string") return createSha256().update(te.encode(f9.text)).hex();
+  if (f9 && typeof f9.blobSha === "string" && f9.blobSha) return f9.blobSha.toLowerCase();
   return null;
 }
-function inlineBytesOf(f8) {
-  return f8 && typeof f8.text === "string" ? te.encode(f8.text).length : null;
+function inlineBytesOf(f9) {
+  return f9 && typeof f9.text === "string" ? te.encode(f9.text).length : null;
 }
 function censusCap(limit) {
   const asked = limit === void 0 || limit === null || limit === "" ? NaN : Number(limit);
@@ -9993,7 +9993,7 @@ function manifestFiles(filesJson) {
   } catch {
     arr2 = null;
   }
-  return Array.isArray(arr2) ? arr2.filter((f8) => f8 && typeof f8 === "object") : [];
+  return Array.isArray(arr2) ? arr2.filter((f9) => f9 && typeof f9 === "object") : [];
 }
 var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" });
 function mintExhausted(prefix, extra) {
@@ -10388,9 +10388,9 @@ var RecordCore = class _RecordCore {
         written = [];
       }
       if (!Array.isArray(written)) written = [];
-      const writtenPairs = written.map((f8) => typeof f8 === "string" ? { name: f8, sha256: null } : f8);
-      const files = writtenPairs.map((f8) => f8.name);
-      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f8) => f8.name);
+      const writtenPairs = written.map((f9) => typeof f9 === "string" ? { name: f9, sha256: null } : f9);
+      const files = writtenPairs.map((f9) => f9.name);
+      const snapshotted = (snapFiles.get(r.snap_key) || []).map((f9) => f9.name);
       entries.push({
         key: r.snap_key,
         seq: ++seq,
@@ -10618,7 +10618,7 @@ var RecordCore = class _RecordCore {
         if (deficit < 0) out.excess += -deficit;
         const hasCreation = rows.some((r) => r.base === EMPTY_STRING_SHA);
         const outputs = new Set(rows.map((r) => {
-          const md = manifestFiles(r.files_json).find((f8) => f8.name === "bundle.md");
+          const md = manifestFiles(r.files_json).find((f9) => f9.name === "bundle.md");
           return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
         }).filter(Boolean));
         const unanchored = rows.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
@@ -10702,22 +10702,22 @@ var RecordCore = class _RecordCore {
         base,
         author,
         now,
-        JSON.stringify(files.map((f8) => ({ name: f8.path, sha256: f8.sha256 }))),
+        JSON.stringify(files.map((f9) => ({ name: f9.path, sha256: f9.sha256 }))),
         writer,
         operation
       );
       this.#sql.exec(`DELETE FROM files WHERE bundle_id=?`, bundleId);
-      for (const f8 of files)
+      for (const f9 of files)
         this.#sql.exec(
           `INSERT INTO files (bundle_id,path,content,blob_sha,bytes,sha256) VALUES (?,?,?,?,?,?)`,
           bundleId,
-          f8.path,
-          f8.text ?? null,
-          f8.blobSha ?? null,
-          f8.bytes ?? (typeof f8.text === "string" ? te.encode(f8.text).length : 0),
-          f8.sha256
+          f9.path,
+          f9.text ?? null,
+          f9.blobSha ?? null,
+          f9.bytes ?? (typeof f9.text === "string" ? te.encode(f9.text).length : 0),
+          f9.sha256
         );
-      const bundleSha = (files.find((f8) => f8.path === "bundle.md") || files[0] || {}).sha256 ?? "";
+      const bundleSha = (files.find((f9) => f9.path === "bundle.md") || files[0] || {}).sha256 ?? "";
       const given = [
         ["current_state", state],
         ["prior_state", priorState],
@@ -10898,9 +10898,9 @@ var RecordCore = class _RecordCore {
             message: `${module}'s audit check threw on ${id}: ${String(e && e.message || e).slice(0, 200)}`
           }];
         }
-        if (Array.isArray(more)) findings.push(...more.filter((f8) => f8 && typeof f8 === "object"));
+        if (Array.isArray(more)) findings.push(...more.filter((f9) => f9 && typeof f9 === "object"));
       }
-      const errs = findings.filter((f8) => f8.severity === "error");
+      const errs = findings.filter((f9) => f9.severity === "error");
       if (!errs.length) {
         clean++;
         continue;
@@ -15902,7 +15902,7 @@ async function runGate({
     releaseRegistry: releaseRegistry || null,
     sha256: sha2562
   })];
-  const errors = findings.filter((f8) => f8.severity === "error").map((f8) => ({ check: f8.check, detail: f8.message, ...f8.repairs ? { repairs: f8.repairs } : {} }));
+  const errors = findings.filter((f9) => f9.severity === "error").map((f9) => ({ check: f9.check, detail: f9.message, ...f9.repairs ? { repairs: f9.repairs } : {} }));
   for (const r of registers || []) {
     const probe = await hasCapture(r.capture_sha);
     if (!probe.present && probe.parts) {
@@ -15957,7 +15957,7 @@ async function runGate({
     gateVersion: GATE_VERSION,
     ok: errors.length === 0,
     findings: errors,
-    warnings: findings.filter((f8) => f8.severity !== "error").length
+    warnings: findings.filter((f9) => f9.severity !== "error").length
   };
 }
 
@@ -15997,21 +15997,21 @@ var refusal2 = (code, detail, extra) => {
 };
 function digestFiles(files) {
   const disagree = [];
-  const out = files.map((f8) => {
-    const computed = fileDigestOf(f8);
-    if (computed === null) return f8;
-    const supplied2 = f8.sha256;
-    if (supplied2 === void 0 || supplied2 === null) return { ...f8, sha256: computed };
+  const out = files.map((f9) => {
+    const computed = fileDigestOf(f9);
+    if (computed === null) return f9;
+    const supplied2 = f9.sha256;
+    if (supplied2 === void 0 || supplied2 === null) return { ...f9, sha256: computed };
     if (typeof supplied2 !== "string" || supplied2.toLowerCase() !== computed) {
       disagree.push({
-        path: f8.path ?? null,
-        kind: typeof f8.text === "string" ? "inline" : "blob",
+        path: f9.path ?? null,
+        kind: typeof f9.text === "string" ? "inline" : "blob",
         supplied: typeof supplied2 === "string" ? supplied2 : String(supplied2),
         computed
       });
-      return f8;
+      return f9;
     }
-    return supplied2 === computed ? f8 : { ...f8, sha256: computed };
+    return supplied2 === computed ? f9 : { ...f9, sha256: computed };
   });
   return { files: out, disagree };
 }
@@ -16022,24 +16022,24 @@ function samePromotion(entry, want) {
   if (!held.length || held.length !== want.files.length) return false;
   const digestOf2 = (v) => typeof v === "string" && v !== "" ? v.toLowerCase() : null;
   const byName = /* @__PURE__ */ new Map();
-  for (const f8 of held) {
-    const d = digestOf2(f8.sha256);
-    if (typeof f8.name !== "string" || d === null || byName.has(f8.name)) return false;
-    byName.set(f8.name, d);
+  for (const f9 of held) {
+    const d = digestOf2(f9.sha256);
+    if (typeof f9.name !== "string" || d === null || byName.has(f9.name)) return false;
+    byName.set(f9.name, d);
   }
-  for (const f8 of want.files) {
-    const d = f8 ? digestOf2(f8.sha256) : null;
-    if (!f8 || typeof f8.path !== "string" || d === null || byName.get(f8.path) !== d) return false;
-    byName.delete(f8.path);
+  for (const f9 of want.files) {
+    const d = f9 ? digestOf2(f9.sha256) : null;
+    if (!f9 || typeof f9.path !== "string" || d === null || byName.get(f9.path) !== d) return false;
+    byName.delete(f9.path);
   }
   return byName.size === 0;
 }
 function stampGroup(files, slug) {
-  return files.map((f8) => {
-    if (!f8 || f8.path !== "bundle.md" || typeof f8.text !== "string") return f8;
-    const text3 = withProducingGroup(f8.text, slug);
-    if (text3 === f8.text) return f8;
-    return { ...f8, text: text3, bytes: inlineBytesOf({ text: text3 }), sha256: fileDigestOf({ text: text3 }) };
+  return files.map((f9) => {
+    if (!f9 || f9.path !== "bundle.md" || typeof f9.text !== "string") return f9;
+    const text3 = withProducingGroup(f9.text, slug);
+    if (text3 === f9.text) return f9;
+    return { ...f9, text: text3, bytes: inlineBytesOf({ text: text3 }), sha256: fileDigestOf({ text: text3 }) };
   });
 }
 var factUnavailable = (fact, detail) => ({
@@ -16154,7 +16154,7 @@ var Promotion = class {
       let held = false;
       try {
         const e = this.#record.manifestEntry(n.bundleId, n.snapKey);
-        const md = e && Array.isArray(e.files) ? e.files.find((f8) => f8 && f8.name === "bundle.md") : null;
+        const md = e && Array.isArray(e.files) ? e.files.find((f9) => f9 && f9.name === "bundle.md") : null;
         held = !!md && String(e.base) === String(n.base) && md.sha256 === n.bundleSha;
       } catch {
         held = false;
@@ -16273,7 +16273,7 @@ var Promotion = class {
         reason: "BASIS_IN_PAYLOAD",
         detail: "basis legs are read from bundle.md frontmatter, not from the promote payload; remove the basis field"
       };
-    const sentMd = Array.isArray(files) ? files.find((f8) => isObj3(f8) && f8.path === "bundle.md") : null;
+    const sentMd = Array.isArray(files) ? files.find((f9) => isObj3(f9) && f9.path === "bundle.md") : null;
     const sentFm0 = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
     const sentFm = isObj3(sentFm0) ? sentFm0 : null;
     const envelope = isObj3(meta) ? meta : null;
@@ -16325,22 +16325,22 @@ var Promotion = class {
         "PROMOTE_SNAP_KEY_UNSTATED",
         "this request names no snapKey (a non-blank string), so the revision has no name in the history. Nothing was written."
       );
-    const pathless = files.map((f8, i) => isObj3(f8) && typeof f8.path === "string" && f8.path.trim() !== "" ? -1 : i).filter((i) => i >= 0);
+    const pathless = files.map((f9, i) => isObj3(f9) && typeof f9.path === "string" && f9.path.trim() !== "" ? -1 : i).filter((i) => i >= 0);
     if (pathless.length)
       return refusal2(
         "PROMOTED_FILE_PATH_UNSTATED",
         `files entr${pathless.length > 1 ? "ies" : "y"} ${pathless.join(", ")} (counting from 0) name no path (a non-blank string), or are not file objects. Nothing was written.`,
         { entries: pathless }
       );
-    const blobHeld = (f8) => typeof f8.text !== "string" && typeof f8.blobSha === "string" && f8.blobSha !== "";
-    const empty = files.filter((f8) => typeof f8.text !== "string" && !blobHeld(f8)).map((f8) => f8.path);
+    const blobHeld = (f9) => typeof f9.text !== "string" && typeof f9.blobSha === "string" && f9.blobSha !== "";
+    const empty = files.filter((f9) => typeof f9.text !== "string" && !blobHeld(f9)).map((f9) => f9.path);
     if (empty.length)
       return refusal2(
         "PROMOTED_FILE_CONTENT_UNSTATED",
         `${empty.join(", ")}: neither text (a string) nor a blobSha, so the record holds nothing it could digest. Nothing was written.`,
         { paths: empty }
       );
-    const sizeless = files.filter((f8) => blobHeld(f8) && !(Number.isInteger(f8.bytes) && f8.bytes >= 0)).map((f8) => f8.path);
+    const sizeless = files.filter((f9) => blobHeld(f9) && !(Number.isInteger(f9.bytes) && f9.bytes >= 0)).map((f9) => f9.path);
     if (sizeless.length)
       return refusal2(
         "PROMOTED_FILE_BYTES_UNSTATED",
@@ -16380,9 +16380,9 @@ var Promotion = class {
         "the sha256 sent for " + digested.disagree.map((d) => d.path).join(", ") + " is not the SHA-256 of that file's bytes (an inline file's UTF-8 text, or a blob's content address). The record stores a digest only of what it holds. Nothing was written.",
         { paths: digested.disagree.map((d) => d.path), files: digested.disagree }
       );
-    files = digested.files.map((f8) => {
-      const n = inlineBytesOf(f8);
-      return n === null || f8.bytes === n ? f8 : { ...f8, bytes: n };
+    files = digested.files.map((f9) => {
+      const n = inlineBytesOf(f9);
+      return n === null || f9.bytes === n ? f9 : { ...f9, bytes: n };
     });
     let groupStamp = null, createdGroup = null;
     if (base === null) {
@@ -16425,8 +16425,8 @@ var Promotion = class {
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text3 = lines.join("\n");
-        const written = { ...files.find((f8) => f8.path === "bundle.md"), text: text3, bytes: inlineBytesOf({ text: text3 }), sha256: fileDigestOf({ text: text3 }) };
-        files = files.map((f8) => f8.path === "bundle.md" ? written : f8);
+        const written = { ...files.find((f9) => f9.path === "bundle.md"), text: text3, bytes: inlineBytesOf({ text: text3 }), sha256: fileDigestOf({ text: text3 }) };
+        files = files.map((f9) => f9.path === "bundle.md" ? written : f9);
       }
       if (groupStamp) files = stampGroup(files, groupStamp);
       const head = record.head(bundleId);
@@ -16454,7 +16454,7 @@ var Promotion = class {
         writer,
         operation
       })) {
-        const md = held.files.find((f8) => f8 && f8.name === "bundle.md");
+        const md = held.files.find((f9) => f9 && f9.name === "bundle.md");
         return {
           ok: true,
           bundleId,
@@ -16546,7 +16546,7 @@ var Promotion = class {
           `${cut(bundleId, 80)} was produced by '${cut(head.groupId, 40)}' and this revision says '${cut(revisionGroup, 40)}'. A revision changes what a document says, never whose it is. Send it again with the group the record holds, or with none. Nothing was written.`,
           { head_group: cut(head.groupId, 80), revision_group: cut(revisionGroup, 80) }
         );
-      const finalMd = files.find((f8) => f8.path === "bundle.md");
+      const finalMd = files.find((f9) => f9.path === "bundle.md");
       const finalFm0 = finalMd && typeof finalMd.text === "string" ? parseFrontmatter(finalMd.text).data : null;
       const finalFm = isObj3(finalFm0) ? finalFm0 : null;
       if (!replay && finalFm && has(finalFm, "id") && finalFm.id !== null && String(finalFm.id).trim() !== bundleId)
@@ -16568,9 +16568,9 @@ var Promotion = class {
             detail: RETIRE_CITED_DETAIL
           };
       }
-      for (const f8 of files) {
-        const n = inlineBytesOf(f8);
-        if (n !== null && n > INLINE_MAX) return { ok: false, reason: "OVERSIZE_INLINE", path: f8.path, bytes: n };
+      for (const f9 of files) {
+        const n = inlineBytesOf(f9);
+        if (n !== null && n > INLINE_MAX) return { ok: false, reason: "OVERSIZE_INLINE", path: f9.path, bytes: n };
       }
       if (!replay) {
         if (documentType !== null && envelopeType !== null && documentType !== envelopeType)
@@ -16636,7 +16636,7 @@ var Promotion = class {
         }
       }
       if (head && !replay) {
-        const now = new Set(files.map((f8) => f8.path));
+        const now = new Set(files.map((f9) => f9.path));
         const declared = new Set(Array.isArray(pkg.drop) ? pkg.drop : []);
         const dropped = record.livePaths(bundleId).filter((p) => !now.has(p) && !declared.has(p));
         if (dropped.length)
@@ -16827,9 +16827,9 @@ Changes: created as a clone of ${projectId}, recorded as a derived_from referenc
     const carried = [];
     for (const path of record.livePaths(projectId)) {
       if (path === "bundle.md") continue;
-      const f8 = record.readFile(projectId, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = record.readFile(projectId, path);
+      if (!f9) continue;
+      carried.push(typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     const promoted = this.promote({
       base: null,
@@ -17021,9 +17021,9 @@ Changes: state ${head.currentState} to open. Reason: ${why}.
     const carried = [];
     for (const path of record.livePaths(target)) {
       if (path === "bundle.md") continue;
-      const f8 = record.readFile(target, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = record.readFile(target, path);
+      if (!f9) continue;
+      carried.push(typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     const promoted = this.promote({
       bundleId: target,
@@ -19813,7 +19813,7 @@ var PdfDoc = class {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f8) => f8 && f8.t === "name" ? f8.v : null) : [];
+    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f9) => f9 && f9.t === "name" ? f9.v : null) : [];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -20648,9 +20648,9 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     const ref = curFontDict[name];
     const key = ref && ref.t === "ref" ? "r" + ref.n : "n" + scopeTag + name;
     if (fontCache.has(key)) return fontCache.get(key);
-    const f8 = await loadFont(doc, ref);
-    fontCache.set(key, f8);
-    return f8;
+    const f9 = await loadFont(doc, ref);
+    fontCache.set(key, f9);
+    return f9;
   };
   const show = (bytes2) => {
     if (!bytes2 || bytes2.length === 0) return;
@@ -21201,10 +21201,10 @@ function matrixOf(doc, v) {
   return n.every((x) => typeof x === "number" && Number.isFinite(x)) ? n : null;
 }
 function imageFilters(doc, dict) {
-  const f8 = doc.resolve(dict.Filter);
-  if (!f8) return [];
-  if (f8.t === "name") return [f8.v];
-  if (f8.t === "arr") return f8.items.map((x) => nameOf(doc, x)).filter(Boolean);
+  const f9 = doc.resolve(dict.Filter);
+  if (!f9) return [];
+  if (f9.t === "name") return [f9.v];
+  if (f9.t === "arr") return f9.items.map((x) => nameOf(doc, x)).filter(Boolean);
   return [];
 }
 async function decodeContentStreams(doc, contents) {
@@ -21912,8 +21912,8 @@ async function discriminate(bytes2, contentType = null, flavours = CONTAINER_FLA
   signals.push(`container:zip entries=${container2.count}`);
   const opcRows = [];
   const odfRows = [];
-  for (const f8 of Array.isArray(flavours) ? flavours : []) {
-    if (f8 && typeof f8 === "object") ((f8.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f8);
+  for (const f9 of Array.isArray(flavours) ? flavours : []) {
+    if (f9 && typeof f9 === "object") ((f9.partMap ?? "opc") === "odf" ? odfRows : opcRows).push(f9);
   }
   const ctEntry = container2.byName.get(CONTENT_TYPES_PART);
   if (!ctEntry) {
@@ -21933,26 +21933,26 @@ async function discriminate(bytes2, contentType = null, flavours = CONTAINER_FLA
     return { ok: true, format: "undetermined", why: "content_types_unparseable", signals };
   }
   signals.push(`part:${CONTENT_TYPES_PART} parsed (${types2.defaults.size} defaults, ${types2.overrides.size} overrides)`);
-  for (const f8 of opcRows) {
+  for (const f9 of opcRows) {
     let declared = null;
     for (const [part, ct] of types2.overrides) {
-      if (ct === f8.mainContentType) {
+      if (ct === f9.mainContentType) {
         declared = part;
         break;
       }
     }
     if (!declared) {
-      const conv = normalizePartName(f8.conventionalMainPart);
-      if (partContentType(conv, types2) === f8.mainContentType) declared = conv;
+      const conv = normalizePartName(f9.conventionalMainPart);
+      if (partContentType(conv, types2) === f9.mainContentType) declared = conv;
     }
     if (!declared) continue;
     const present = container2.byName.has(declared) || container2.entries.some((e) => normalizePartName(e.name) === declared);
     if (!present) {
-      signals.push(`ct:${f8.mainContentType} declared for ${declared}, but the part is ABSENT`);
-      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f8.flavour, signals };
+      signals.push(`ct:${f9.mainContentType} declared for ${declared}, but the part is ABSENT`);
+      return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f9.flavour, signals };
     }
-    signals.push(`ct:${f8.mainContentType}`, `part:${declared} present`);
-    return { ok: true, format: f8.flavour, mainPart: declared, confidence: "high", signals };
+    signals.push(`ct:${f9.mainContentType}`, `part:${declared} present`);
+    return { ok: true, format: f9.flavour, mainPart: declared, confidence: "high", signals };
   }
   signals.push("opc:no known main content type");
   return { ok: true, format: "undetermined", why: "opc_main_part_unrecognized", signals };
@@ -21980,7 +21980,7 @@ async function discriminateOdf(bytes2, container2, rows, signals) {
     return { ok: true, format: "undetermined", why: `odf_mimetype_unreadable:${read2.why}`, signals };
   }
   const declared = UTF8.decode(read2.bytes);
-  const row2 = rows.find((f8) => f8.mimetype === declared);
+  const row2 = rows.find((f9) => f9.mimetype === declared);
   if (!row2) {
     signals.push(`odf:${ODF_MIMETYPE_PART}=${JSON.stringify(declared)} is no known OpenDocument media type`);
     return { ok: true, format: "undetermined", why: "odf_mimetype_unrecognized", signals };
@@ -22798,11 +22798,11 @@ function splitTopLevel(s, sep) {
   return out;
 }
 function definedNameUnit(formula, sheets) {
-  const f8 = String(formula ?? "").trim();
-  if (!f8) return { why: "empty_reference" };
-  if (/#REF!/i.test(f8)) return { why: "broken_reference" };
-  if (splitTopLevel(f8, ",").length > 1 || /^\(.*\)$/.test(f8)) return { why: "multi_area" };
-  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f8);
+  const f9 = String(formula ?? "").trim();
+  if (!f9) return { why: "empty_reference" };
+  if (/#REF!/i.test(f9)) return { why: "broken_reference" };
+  if (splitTopLevel(f9, ",").length > 1 || /^\(.*\)$/.test(f9)) return { why: "multi_area" };
+  const m = /^(?:'((?:[^']|'')+)'|([^'!\s,()]+))!(.+)$/.exec(f9);
   if (!m) return { why: "not_a_range_reference" };
   const sheetName = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
   if (/\[[^\]]*\]/.test(sheetName)) return { why: "external_workbook" };
@@ -22980,13 +22980,13 @@ function walkSheetXml(xml) {
     r: row2.attrs.r != null ? parseInt(row2.attrs.r, 10) : null,
     hidden: row2.attrs.hidden === "1" || row2.attrs.hidden === "true",
     cells: elements(row2.inner, "c").map((c) => {
-      const f8 = elements(c.inner, "f");
+      const f9 = elements(c.inner, "f");
       const v = elements(c.inner, "v");
       const is = elements(c.inner, "is");
       return {
         cell: c.attrs.r ?? null,
         t: c.attrs.t ?? null,
-        f: f8.length ? decodeXmlEntities2(f8[0].inner) : null,
+        f: f9.length ? decodeXmlEntities2(f9[0].inner) : null,
         v: v.length ? decodeXmlEntities2(v[0].inner) : null,
         is: is.length ? textRuns(is[0].inner) : null
       };
@@ -23998,9 +23998,9 @@ function spendChars(n) {
   }
   meter.chars += n;
 }
-var ODF_ROWS = CONTAINER_FLAVOURS.filter((f8) => f8.partMap === "odf");
+var ODF_ROWS = CONTAINER_FLAVOURS.filter((f9) => f9.partMap === "odf");
 function odfRow(flavour) {
-  const row2 = ODF_ROWS.find((f8) => f8.flavour === flavour);
+  const row2 = ODF_ROWS.find((f9) => f9.flavour === flavour);
   if (!row2) throw new Error(`odf.mjs: no partMap:"odf" row for "${flavour}" in ooxml.mjs`);
   return row2;
 }
@@ -24367,8 +24367,8 @@ async function manifestIntraLinks(bytes2, container2, contentXml, undetermined) 
   }
   const fonts = /* @__PURE__ */ new Set();
   if (contentXml != null) {
-    for (const f8 of elementsNested(contentXml, "font-face-uri")) {
-      const href = f8.attrs.href;
+    for (const f9 of elementsNested(contentXml, "font-face-uri")) {
+      const href = f9.attrs.href;
       if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
     }
   }
@@ -26181,7 +26181,7 @@ function applyRules(text3, rules) {
     }
     if (count) found.push({ rule: rule.key, region: rule.region, label: rule.label, count, bytes: bytes2 });
   }
-  return { text: out, found, bytes: found.reduce((n, f8) => n + f8.bytes, 0) };
+  return { text: out, found, bytes: found.reduce((n, f9) => n + f9.bytes, 0) };
 }
 function applyBoundary(text3, boundary) {
   if (!boundary) return { text: text3, found: [], bytes: 0 };
@@ -26737,10 +26737,10 @@ function selfNaming(text3, re) {
 }
 var FURNITURE_RECURS = 3;
 function alsoSatisfies(ctx, selfKey) {
-  const f8 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
-  if (!f8) return [];
+  const f9 = ctx && typeof ctx.alsoSatisfies === "function" ? ctx.alsoSatisfies : null;
+  if (!f9) return [];
   try {
-    return f8(selfKey) || [];
+    return f9(selfKey) || [];
   } catch {
     return [];
   }
@@ -26825,8 +26825,8 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
   const v = readerView(ctx);
   const sp = v.spaces && v.spaces.enactment;
   if (!sp || typeof sp !== "object") return [];
-  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f8) => f8 && f8.pattern && typeof f8.pattern.re === "string" && vocabRegex(f8.pattern));
-  const forms = formList.map((f8) => vocabPiece(f8.pattern.re));
+  const formList = (Array.isArray(sp.forms) ? sp.forms : []).filter((f9) => f9 && f9.pattern && typeof f9.pattern.re === "string" && vocabRegex(f9.pattern));
+  const forms = formList.map((f9) => vocabPiece(f9.pattern.re));
   const markers = vocabulary(ctx, "enactment_markers").map((e) => e.pattern && typeof e.pattern.re === "string" ? e.pattern.re : null).filter((s) => s && vocabRegex({ re: s }));
   if (!forms.length && !blankNumber) return [];
   const num2 = forms.length ? `(?<num>${forms.map((s) => `(?:${s})`).join("|")})` : "(?<num>(?!))";
@@ -26842,9 +26842,9 @@ function enactmentPatterns(ctx, { blankNumber = false } = {}) {
 }
 function enactmentNumber(forms, text3) {
   if (typeof text3 !== "string" || !text3.trim()) return null;
-  for (const f8 of forms || []) {
+  for (const f9 of forms || []) {
     let t = text3.trim();
-    const c = f8.clean || {};
+    const c = f9.clean || {};
     for (const s of Array.isArray(c.strip) ? c.strip : []) {
       const re2 = vocabRegex(s, (x) => `^(?:${x})`);
       if (re2) t = t.replace(re2, "");
@@ -26852,11 +26852,11 @@ function enactmentNumber(forms, text3) {
     if (c.spaces === "remove") t = t.replace(/\s+/g, "");
     else if (c.spaces === "collapse") t = t.replace(/\s+/g, " ");
     if (c.upper === true) t = t.toUpperCase();
-    const re = vocabRegex(f8.pattern);
+    const re = vocabRegex(f9.pattern);
     const m = re && re.exec(t);
     if (!m) continue;
     let out = "";
-    for (const part of Array.isArray(f8.normal) ? f8.normal : []) {
+    for (const part of Array.isArray(f9.normal) ? f9.normal : []) {
       if (typeof part === "string") {
         out += part;
         continue;
@@ -26927,9 +26927,9 @@ function diffEntities(before, after) {
       continue;
     }
     const moved = [];
-    for (const f8 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
-      if (String(was.facts[f8]) !== String(now.facts[f8]))
-        moved.push({ fact: f8, was: was.facts[f8], now: now.facts[f8] });
+    for (const f9 of /* @__PURE__ */ new Set([...Object.keys(was.facts), ...Object.keys(now.facts)]))
+      if (String(was.facts[f9]) !== String(now.facts[f9]))
+        moved.push({ fact: f9, was: was.facts[f9], now: now.facts[f9] });
     if (moved.length) altered.push({ entity: now, was, moved });
   }
   for (const [k, now] of a) if (!b.has(k)) appeared.push(now);
@@ -27069,38 +27069,38 @@ var meeting_calendar_default = {
       ));
     }
     for (const alt of d.altered) {
-      const f8 = new Map(alt.moved.map((m) => [m.fact, m]));
-      if (f8.has("status")) {
-        const now = f8.get("status").now;
+      const f9 = new Map(alt.moved.map((m) => [m.fact, m]));
+      if (f9.has("status")) {
+        const now = f9.get("status").now;
         events.push(event(
           now === "cancelled" ? "cancelled" : now === "rescheduled" ? "rescheduled" : "status_changed",
           {
             key: alt.entity.key,
             label: alt.entity.label,
-            was: f8.get("status").was,
+            was: f9.get("status").was,
             now,
-            why: `a meeting's status changed from ${f8.get("status").was} to ${now}`
+            why: `a meeting's status changed from ${f9.get("status").was} to ${now}`
           }
         ));
       }
-      if (f8.has("date"))
+      if (f9.has("date"))
         events.push(event("moved", {
           key: alt.entity.key,
           label: alt.entity.label,
-          was: f8.get("date").was,
-          now: f8.get("date").now,
+          was: f9.get("date").was,
+          now: f9.get("date").now,
           why: "a meeting's date changed"
         }));
-      if (f8.has("body"))
+      if (f9.has("body"))
         events.push(event("renamed", {
           key: alt.entity.key,
-          was: f8.get("body").was,
-          now: f8.get("body").now,
+          was: f9.get("body").was,
+          now: f9.get("body").now,
           why: "the body holding a meeting is named differently"
         }));
       for (const kind of ["agenda", "minutes"]) {
-        if (!f8.has(kind)) continue;
-        const { was, now } = f8.get(kind);
+        if (!f9.has(kind)) continue;
+        const { was, now } = f9.get(kind);
         if (!was && now)
           events.push(event(`${kind}_published`, {
             key: alt.entity.key,
@@ -27925,7 +27925,7 @@ var staff_report_default = {
     const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
     const memo = memoHeader(flat);
-    const f8 = memo && memo.fields || {};
+    const f9 = memo && memo.fields || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
     let recommendation = null;
@@ -27988,10 +27988,10 @@ var staff_report_default = {
       );
     return {
       entities,
-      to: f8.to || null,
-      from: f8.from || null,
-      subject: f8.subject || null,
-      date: f8.date || null,
+      to: f9.to || null,
+      from: f9.from || null,
+      subject: f9.subject || null,
+      date: f9.date || null,
       recommendation,
       sections: secs.length,
       signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
@@ -29057,7 +29057,7 @@ function checkChain(chain2) {
         `the ${step.step} step names no engine. What performed a derivation is the fact the chain exists to carry \u2014 a calibration is OF an engine and a version, and neither can be recovered from the word '${step.step}'`
       );
     const mustName = STEP_KINDS[step.step].names || [];
-    const unnamed = mustName.filter((f8) => !(typeof step[f8] === "string" && step[f8].trim()));
+    const unnamed = mustName.filter((f9) => !(typeof step[f9] === "string" && step[f9].trim()));
     if (unnamed.length)
       return refusal4(
         "TEXT_CHAIN_STEP_UNNAMED",
@@ -30258,6 +30258,10 @@ function noSha(detail = null) {
 }
 
 // src/capture/checks.mjs
+var checks_exports7 = {};
+__export(checks_exports7, {
+  CAPTURE_CHECKS: () => CAPTURE_CHECKS
+});
 var at3 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
@@ -30537,15 +30541,15 @@ function deriveMembership(structure, view) {
     },
     files: []
   }));
-  for (const f8 of files) {
-    const p = at17(f8);
+  for (const f9 of files) {
+    const p = at17(f9);
     let g = -1;
     for (let i = 0; i < items.length; i++) {
       if (before(p, at17(items[i]))) break;
       g = i;
     }
-    if (g < 0) unplaced.push({ kind: "file", ...end(f8), why: "above_the_first_item" });
-    else groups[g].files.push(end(f8));
+    if (g < 0) unplaced.push({ kind: "file", ...end(f9), why: "above_the_first_item" });
+    else groups[g].files.push(end(f9));
   }
   return {
     membership: {
@@ -30774,9 +30778,9 @@ function classifyDriveBaseline({ drive, locator, rows, retrievals = [] }) {
   const htmlSaid = format === "html" || declared !== null && HTML_TYPE.test(declared) || kind === "shell";
   const docSaid = !htmlSaid && format !== null && format !== "html" && format !== "undetermined";
   const fetched = (Array.isArray(retrievals) ? retrievals : []).map((r) => r.via && r.via !== "direct" ? { via: r.via, at: r.retrieval_locator || null } : { via: "direct", at: r.retrieval_locator || r.address || null });
-  const fromExport = fetched.some((f8) => f8.via === "direct" && f8.at === drive.exportAddress);
-  const fromPage = fetched.some((f8) => f8.via === "direct" && f8.at && f8.at !== drive.exportAddress);
-  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f8) => f8.via === "direct" && f8.at) || {}).at || null;
+  const fromExport = fetched.some((f9) => f9.via === "direct" && f9.at === drive.exportAddress);
+  const fromPage = fetched.some((f9) => f9.via === "direct" && f9.at && f9.at !== drive.exportAddress);
+  const fetchedAddress = fromExport ? drive.exportAddress : (fetched.find((f9) => f9.via === "direct" && f9.at) || {}).at || null;
   const facts = {
     baseline: {
       sha256: row2.capture?.sha256 || null,
@@ -31191,15 +31195,15 @@ function ocrTextFromMember(res, { calibration = null } = {}) {
       anchored.push(region);
     }
     if (!anchored.length) continue;
-    const f8 = applyConfidenceFloor(anchored, typeof r.confidence_floor === "number" ? r.confidence_floor : null);
-    floored += f8.floored;
-    undetermined += f8.undetermined;
-    kept += f8.regions.filter((x) => x.text != null).length;
+    const f9 = applyConfidenceFloor(anchored, typeof r.confidence_floor === "number" ? r.confidence_floor : null);
+    floored += f9.floored;
+    undetermined += f9.undetermined;
+    kept += f9.regions.filter((x) => x.text != null).length;
     outPages.push({
       page: pageNo,
-      regions: f8.regions,
-      text: f8.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
-      undetermined: f8.regions.filter((x) => x.undetermined).map((x) => ({
+      regions: f9.regions,
+      text: f9.regions.map((x) => x.text).filter((t) => typeof t === "string").join("\n"),
+      undetermined: f9.regions.filter((x) => x.undetermined).map((x) => ({
         page: pageNo,
         reason: "ocr_below_floor",
         font: null,
@@ -32084,7 +32088,7 @@ var Extraction = class {
    *  same `at` (CPDF-19: an ordinary revision re-submits the acquire-time reading, which must not undo the re-read). */
   projectPromotion(c) {
     const { bundleId, files, author } = c || {};
-    const prov = (Array.isArray(files) ? files : []).find((f8) => f8 && f8.path === "data/provenance.json");
+    const prov = (Array.isArray(files) ? files : []).find((f9) => f9 && f9.path === "data/provenance.json");
     if (!prov || typeof prov.text !== "string") return null;
     let docs;
     try {
@@ -32793,8 +32797,8 @@ var Extraction = class {
     if (!row2 || !this.#sees(row2.bundle_id, viewer)) return { held: false };
     let docText = null;
     try {
-      const f8 = this.core && typeof this.core.readFile === "function" ? this.core.readFile(row2.bundle_id, "data/provenance.json") : null;
-      docText = f8 && typeof f8 === "object" ? f8.text ?? f8.content ?? null : typeof f8 === "string" ? f8 : null;
+      const f9 = this.core && typeof this.core.readFile === "function" ? this.core.readFile(row2.bundle_id, "data/provenance.json") : null;
+      docText = f9 && typeof f9 === "object" ? f9.text ?? f9.content ?? null : typeof f9 === "string" ? f9 : null;
     } catch {
       docText = null;
     }
@@ -33909,8 +33913,8 @@ function registerChecks({ files, fm, elided = null }) {
 }
 
 // src/provenance/checks.mjs
-var checks_exports7 = {};
-__export(checks_exports7, {
+var checks_exports8 = {};
+__export(checks_exports8, {
   REGISTER_ENTRY_CHECKS: () => REGISTER_ENTRY_CHECKS
 });
 var REGISTER_ENTRY_CHECKS = {
@@ -34077,7 +34081,7 @@ function observerRef(testimonyId) {
   return `observer:${testimonyId}`;
 }
 function rowUnlessStated(files, row2) {
-  const md = files.find((f8) => f8 && f8.path === "bundle.md");
+  const md = files.find((f9) => f9 && f9.path === "bundle.md");
   const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
   const out = {};
   for (const [k, v] of Object.entries(row2))
@@ -34425,10 +34429,10 @@ var Provenance = class _Provenance {
     if (replay) return null;
     const type = String(promotedType ?? "").toLowerCase();
     if (type !== "information") return null;
-    if (!files.some((f8) => f8 && f8.path === "data/provenance.json")) return null;
+    if (!files.some((f9) => f9 && f9.path === "data/provenance.json")) return null;
     const asImage = (list2) => {
       const img = {};
-      for (const f8 of list2) if (f8 && typeof f8.path === "string") img[f8.path] = typeof f8.text === "string" ? f8.text : { blobSha: f8.blobSha };
+      for (const f9 of list2) if (f9 && typeof f9.path === "string") img[f9.path] = typeof f9.text === "string" ? f9.text : { blobSha: f9.blobSha };
       return img;
     };
     const now = registerChecks({ ...imageForChecks(asImage(files)), fm: isObj4(docFm) ? docFm : imageForChecks(asImage(files)).fm }).filter((x) => x.severity === "error");
@@ -34437,8 +34441,8 @@ var Provenance = class _Provenance {
     if (head) {
       const live = {};
       for (const p of this.#record.livePaths(bundleId) || []) {
-        const f8 = this.#record.readFile(bundleId, p);
-        if (f8) live[p] = typeof f8.text === "string" ? f8.text : { blobSha: f8.blobSha };
+        const f9 = this.#record.readFile(bundleId, p);
+        if (f9) live[p] = typeof f9.text === "string" ? f9.text : { blobSha: f9.blobSha };
       }
       held = new Set(registerChecks(imageForChecks(live)).filter((x) => x.severity === "error").map((x) => `${x.check}\0${x.message}`));
     }
@@ -34558,13 +34562,13 @@ var Provenance = class _Provenance {
    *
    * It reads the live image only (`files`), which is what the audit's `live` class reads too. */
   partsNamed(bundleId, sha) {
-    const f8 = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
-    if (!f8) return { state: "none" };
-    if (typeof f8.text !== "string")
+    const f9 = typeof bundleId === "string" && bundleId ? this.#record.readFile(bundleId, "data/provenance.json") : null;
+    if (!f9) return { state: "none" };
+    if (typeof f9.text !== "string")
       return { state: "unreadable", why: "the bundle's data/provenance.json is held as a blob, which the store cannot read" };
     let reg;
     try {
-      reg = JSON.parse(f8.text);
+      reg = JSON.parse(f9.text);
     } catch {
       return { state: "unreadable", why: "the bundle's data/provenance.json does not parse" };
     }
@@ -34779,10 +34783,10 @@ var Provenance = class _Provenance {
     if (!home)
       return answer([], "no register row names this capture under a bundle that exists, so the record states no attestation for it; a capture registered only by its parts is named by their digests, not the whole's");
     const PATH = "data/provenance.json";
-    const f8 = this.#record.readFile(home.bundleId, PATH);
-    if (!f8) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
-    if (typeof f8.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
-    const reg = safeJson3(f8.text);
+    const f9 = this.#record.readFile(home.bundleId, PATH);
+    if (!f9) return answer([], `its home ${home.bundleId} carries no ${PATH}`);
+    if (typeof f9.text !== "string") return answer([], `its home's ${PATH} is held as a blob, which cannot be read here`);
+    const reg = safeJson3(f9.text);
     if (!isObj4(reg) || !Array.isArray(reg.documents)) return answer([], `its home's ${PATH} cannot be read as a register`);
     const str14 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
     const out = [];
@@ -35394,9 +35398,9 @@ sha256: ${captureSha}
     const carried = [];
     for (const path of this.#record.livePaths(bundleId) || []) {
       if (path === "data/provenance.json") continue;
-      const f8 = this.#record.readFile(bundleId, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, bytes: te4.encode(f8.text).length, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = this.#record.readFile(bundleId, path);
+      if (!f9) continue;
+      carried.push(typeof f9.text === "string" ? { path, text: f9.text, bytes: te4.encode(f9.text).length, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     const promoted = this.#promotion.promote({
       bundleId,
@@ -35757,7 +35761,7 @@ sha256: ${captureSha}
    *  shas travel as one bound JSON array (D-36's ~100-variable ceiling). */
   #testimonyFence(bundleId, files, register2, testimony, viewing = {}) {
     const refusal19 = rowRefusal(TESTIMONY_CHECKS);
-    const prov = Array.isArray(files) ? files.find((f8) => f8 && f8.path === "data/provenance.json") : null;
+    const prov = Array.isArray(files) ? files.find((f9) => f9 && f9.path === "data/provenance.json") : null;
     let docs = [], unreadable = false;
     if (prov) {
       const j = typeof prov.text === "string" ? safeJson3(prov.text) : null;
@@ -36071,8 +36075,8 @@ function provenanceOf(host, deps) {
 }
 
 // src/observation-log/checks.mjs
-var checks_exports8 = {};
-__export(checks_exports8, {
+var checks_exports9 = {};
+__export(checks_exports9, {
   LEAD_CHECKS: () => LEAD_CHECKS2,
   OBSERVATION_CHECKS: () => OBSERVATION_CHECKS,
   OBSERVATION_CHECK_KEYS: () => OBSERVATION_CHECK_KEYS
@@ -38193,10 +38197,10 @@ var Bits = class {
   }
   decode(h) {
     if (this.n < 16) this.fill();
-    const f8 = h.fast[this.peek(h.FAST)];
-    if (f8 >= 0) {
-      this.skip(f8 >> 8);
-      return f8 & 255;
+    const f9 = h.fast[this.peek(h.FAST)];
+    if (f9 >= 0) {
+      this.skip(f9 >> 8);
+      return f9 & 255;
     }
     let code = this.bits(h.FAST), l = h.FAST;
     for (; ; ) {
@@ -40500,9 +40504,9 @@ var NEG = 8192;
 var REFINED = 16384;
 var VISIT = 32768;
 var NBR = 255;
-var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f8) => {
-  let h = ((f8 & W) !== 0) + ((f8 & E) !== 0), v = ((f8 & N) !== 0) + ((f8 & S) !== 0);
-  const d = ((f8 & NW) !== 0) + ((f8 & NE) !== 0) + ((f8 & SW) !== 0) + ((f8 & SE) !== 0);
+var ZC = [0, 1, 2, 3].map((orient) => Uint8Array.from({ length: 256 }, (_, f9) => {
+  let h = ((f9 & W) !== 0) + ((f9 & E) !== 0), v = ((f9 & N) !== 0) + ((f9 & S) !== 0);
+  const d = ((f9 & NW) !== 0) + ((f9 & NE) !== 0) + ((f9 & SW) !== 0) + ((f9 & SE) !== 0);
   if (orient === 1) [h, v] = [v, h];
   if (orient === 3) {
     const hv = h + v;
@@ -40593,8 +40597,8 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
     flags[i + fw - 1] |= NE;
     flags[i + fw + 1] |= NW;
   };
-  const nbr = (f8, y) => vsc && (y & 3) === 3 ? f8 & ~(S | SW | SE | SGN_S) : f8;
-  const scIndex = (f8) => (f8 & N ? 1 : 0) | (f8 & S ? 2 : 0) | (f8 & W ? 4 : 0) | (f8 & E ? 8 : 0) | (f8 & SGN_N ? 16 : 0) | (f8 & SGN_S ? 32 : 0) | (f8 & SGN_W ? 64 : 0) | (f8 & SGN_E ? 128 : 0);
+  const nbr = (f9, y) => vsc && (y & 3) === 3 ? f9 & ~(S | SW | SE | SGN_S) : f9;
+  const scIndex = (f9) => (f9 & N ? 1 : 0) | (f9 & S ? 2 : 0) | (f9 & W ? 4 : 0) | (f9 & E ? 8 : 0) | (f9 & SGN_N ? 16 : 0) | (f9 & SGN_S ? 32 : 0) | (f9 & SGN_W ? 64 : 0) | (f9 & SGN_E ? 128 : 0);
   for (const seg of segs) {
     const raw = lazy && bpno <= lazyFrom - 4 && passtype < 2;
     const mq = raw ? null : new MqDecoder(seg.data, 0, seg.data.length);
@@ -40603,14 +40607,14 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
       const one = 1 << bpno, half = one >> 1, oneplushalf = one | half;
       if (passtype === 0) {
         for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
-          const i = at17(x, y), f8 = nbr(flags[i], y);
-          if (f8 & SIG || !(f8 & NBR)) continue;
-          const bit = raw ? rd.bit() : mq.decode(ctx, zc[f8 & NBR]);
+          const i = at17(x, y), f9 = nbr(flags[i], y);
+          if (f9 & SIG || !(f9 & NBR)) continue;
+          const bit = raw ? rd.bit() : mq.decode(ctx, zc[f9 & NBR]);
           if (bit) {
             let neg;
             if (raw) neg = rd.bit();
             else {
-              const k = scIndex(f8);
+              const k = scIndex(f9);
               neg = mq.decode(ctx, CTX_SC + SC[k]) ^ SPB[k];
             }
             out[y * w + x] = neg ? -oneplushalf : oneplushalf;
@@ -40620,9 +40624,9 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
         }
       } else if (passtype === 1) {
         for (let y0 = 0; y0 < h; y0 += 4) for (let x = 0; x < w; x++) for (let y = y0; y < y0 + 4 && y < h; y++) {
-          const i = at17(x, y), f8 = flags[i];
-          if ((f8 & (SIG | VISIT)) !== SIG) continue;
-          const bit = raw ? rd.bit() : mq.decode(ctx, f8 & REFINED ? CTX_MAG + 2 : nbr(f8, y) & NBR ? CTX_MAG + 1 : CTX_MAG);
+          const i = at17(x, y), f9 = flags[i];
+          if ((f9 & (SIG | VISIT)) !== SIG) continue;
+          const bit = raw ? rd.bit() : mq.decode(ctx, f9 & REFINED ? CTX_MAG + 2 : nbr(f9, y) & NBR ? CTX_MAG + 1 : CTX_MAG);
           const v = out[y * w + x];
           out[y * w + x] = v + (bit ^ (v < 0 ? 1 : 0) ? half : -half);
           flags[i] |= REFINED;
@@ -40633,15 +40637,15 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
           if (y0 + 4 <= h) {
             let quiet = true;
             for (let k = 0; k < 4 && quiet; k++) {
-              const f8 = nbr(flags[at17(x, y0 + k)], y0 + k);
-              if (f8 & (SIG | VISIT | NBR)) quiet = false;
+              const f9 = nbr(flags[at17(x, y0 + k)], y0 + k);
+              if (f9 & (SIG | VISIT | NBR)) quiet = false;
             }
             if (quiet) {
               if (!mq.decode(ctx, CTX_AGG)) continue;
               const k = mq.decode(ctx, CTX_UNI) << 1 | mq.decode(ctx, CTX_UNI);
               y = y0 + k;
-              const f8 = nbr(flags[at17(x, y)], y);
-              const sk = scIndex(f8);
+              const f9 = nbr(flags[at17(x, y)], y);
+              const sk = scIndex(f9);
               const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
               out[y * w + x] = neg ? -oneplushalf : oneplushalf;
               setSig(x, y, neg);
@@ -40649,10 +40653,10 @@ function decodeCodeBlock(w, h, orient, numbps, lazyFrom, cblksty, segs, out, scr
             }
           }
           for (; y < y0 + 4 && y < h; y++) {
-            const i = at17(x, y), f8 = nbr(flags[i], y);
-            if (f8 & (SIG | VISIT)) continue;
-            if (mq.decode(ctx, zc[f8 & NBR])) {
-              const sk = scIndex(f8);
+            const i = at17(x, y), f9 = nbr(flags[i], y);
+            if (f9 & (SIG | VISIT)) continue;
+            if (mq.decode(ctx, zc[f9 & NBR])) {
+              const sk = scIndex(f9);
               const neg = mq.decode(ctx, CTX_SC + SC[sk]) ^ SPB[sk];
               out[y * w + x] = neg ? -oneplushalf : oneplushalf;
               setSig(x, y, neg);
@@ -41082,10 +41086,10 @@ function concat(parts) {
   return out;
 }
 function rintEven(v) {
-  const f8 = Math.floor(v), d = v - f8;
-  if (d < 0.5) return f8;
-  if (d > 0.5) return f8 + 1;
-  return f8 % 2 === 0 ? f8 : f8 + 1;
+  const f9 = Math.floor(v), d = v - f9;
+  if (d < 0.5) return f9;
+  if (d > 0.5) return f9 + 1;
+  return f9 % 2 === 0 ? f9 : f9 + 1;
 }
 function decodeJpx(d) {
   const box = container(d);
@@ -41625,7 +41629,7 @@ async function decodeImage(doc, im, opts) {
   if (last === "CCITTFaxDecode" || last === "CCF") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (filters.slice(0, -1).every((f8) => f8 === "FlateDecode" || f8 === "Fl")) {
+      if (filters.slice(0, -1).every((f9) => f9 === "FlateDecode" || f9 === "Fl")) {
         const st = { ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" } } };
         data = await doc.streamDecoded(st);
       } else return refuse("UNSUPPORTED_FILTER", { filters });
@@ -41675,7 +41679,7 @@ async function decodeImage(doc, im, opts) {
   if (last === "JBIG2Decode") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f8) => f8 === "FlateDecode" || f8 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      if (!filters.slice(0, -1).every((f9) => f9 === "FlateDecode" || f9 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
       data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
     }
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
@@ -41715,7 +41719,7 @@ async function decodeImage(doc, im, opts) {
   if (last === "JPXDecode") {
     let data = doc.streamRawBytes(im.obj);
     if (filters.length > 1) {
-      if (!filters.slice(0, -1).every((f8) => f8 === "FlateDecode" || f8 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
+      if (!filters.slice(0, -1).every((f9) => f9 === "FlateDecode" || f9 === "Fl")) return refuse("UNSUPPORTED_FILTER", { filter: last, filters });
       data = await doc.streamDecoded({ ...im.obj, dict: { ...dict, Filter: { t: "name", v: "FlateDecode" }, DecodeParms: null } });
     }
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
@@ -41751,7 +41755,7 @@ async function decodeImage(doc, im, opts) {
       jpx: { ...out.detail, comps: out.comps, stream_bytes: data.length }
     };
   }
-  if (filters.length === 0 || filters.every((f8) => f8 === "FlateDecode" || f8 === "Fl")) {
+  if (filters.length === 0 || filters.every((f9) => f9 === "FlateDecode" || f9 === "Fl")) {
     const data = await doc.streamDecoded(im.obj);
     if (!data) return refuse("IMAGE_UNREADABLE", { filters });
     const bpc = im.isMask ? 1 : im.bpc ?? 8;
@@ -44349,7 +44353,7 @@ var FIELDS = {
   overdue: { col: "action_clock_overdue", type: "bool", proj: true }
 };
 var CACHED_FIELDS = Object.fromEntries(
-  Object.entries(FIELDS).filter(([, f8]) => f8.asOf).map(([name, f8]) => [f8.col, { field: name, asOf: f8.asOf, authority: f8.authority, why: f8.why }])
+  Object.entries(FIELDS).filter(([, f9]) => f9.asOf).map(([name, f9]) => [f9.col, { field: name, asOf: f9.asOf, authority: f9.authority, why: f9.why }])
 );
 function metaColumnsOf(node, into = /* @__PURE__ */ new Set()) {
   if (!node || typeof node !== "object") return into;
@@ -44366,12 +44370,12 @@ function cachedRoutes(ast, facetList, sortField) {
     (routes[col] ||= /* @__PURE__ */ new Set()).add(route);
   };
   for (const c of cols) mark(c, "filter");
-  for (const f8 of facetList) mark(FIELDS[f8]?.col, "facet");
+  for (const f9 of facetList) mark(FIELDS[f9]?.col, "facet");
   if (sortField && sortField in FIELDS) mark(FIELDS[sortField].col, "sort");
   return routes;
 }
 function cachedNotes(routes, { facets = true, ordered = true } = {}) {
-  const order = Object.values(FIELDS).map((f8) => f8.col);
+  const order = Object.values(FIELDS).map((f9) => f9.col);
   return Object.entries(routes).map(([col, set]) => {
     const via = ["filter", "facet", "sort"].filter((r) => set.has(r) && (r !== "facet" || facets) && (r !== "sort" || ordered));
     return { col, via };
@@ -44992,7 +44996,7 @@ function rowColumns(m) {
 }
 var FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 var SORTABLE = { relevance: null, ...Object.fromEntries(
-  Object.entries(FIELDS).map(([k, f8]) => [k, f8.col])
+  Object.entries(FIELDS).map(([k, f9]) => [k, f9.col])
 ) };
 var DEFAULT_FACETS = [
   "type",
@@ -45007,8 +45011,8 @@ var MEANING_AXIS_CAP = 500;
 var TEXT_PATHS = /\.(md|txt)$/i;
 var TEXT_CAP = 128 * 1024;
 function textOf(bundleId, files) {
-  const list2 = (files || []).map((f8) => ({ path: f8.path, text: typeof f8.text === "string" ? f8.text : typeof f8.content === "string" ? f8.content : null }));
-  const md = list2.find((f8) => f8.path === "bundle.md");
+  const list2 = (files || []).map((f9) => ({ path: f9.path, text: typeof f9.text === "string" ? f9.text : typeof f9.content === "string" ? f9.content : null }));
+  const md = list2.find((f9) => f9.path === "bundle.md");
   let fm = null, prose = "";
   if (md && md.text !== null) {
     let p = null;
@@ -45037,7 +45041,7 @@ function textOf(bundleId, files) {
     bits.push(String(v));
   };
   walk(fm);
-  const others = list2.filter((f8) => f8.path !== "bundle.md" && f8.text !== null && TEXT_PATHS.test(f8.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  const others = list2.filter((f9) => f9.path !== "bundle.md" && f9.text !== null && TEXT_PATHS.test(f9.path)).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
   const cap = (s) => String(s ?? "").slice(0, TEXT_CAP);
   const nested = (block, key) => {
     const b = fm && typeof fm === "object" ? fm[block] : null;
@@ -45045,7 +45049,7 @@ function textOf(bundleId, files) {
   };
   return {
     title: cap(fm && fm.title != null ? String(fm.title) : ""),
-    body: cap([prose, ...others.map((f8) => f8.path + "\n" + f8.text)].join("\n\n")),
+    body: cap([prose, ...others.map((f9) => f9.path + "\n" + f9.text)].join("\n\n")),
     /* The identifier is folded into `meta` so pasting a bundle id into the
        search bar finds the bundle, which is the first thing anyone tries. */
     meta: cap([String(bundleId), ...bits].join(" ")),
@@ -45304,12 +45308,12 @@ function selector(tok2, ctx) {
   if (name === "has") {
     const v = String(tok2.value).toLowerCase();
     if (v in MEANING) return { op: "meaning", arm: v, col: null, cmp: "present", value: null };
-    const f9 = FIELDS[v];
-    if (!f9) {
+    const f10 = FIELDS[v];
+    if (!f10) {
       ctx.warnings.push(`has: unknown field ${JSON.stringify(tok2.value)}`);
       return null;
     }
-    return { op: "meta", col: f9.col, cmp: "present", value: null };
+    return { op: "meta", col: f10.col, cmp: "present", value: null };
   }
   if (name === "sort") {
     applySort(tok2.value, ctx);
@@ -45327,25 +45331,25 @@ function selector(tok2, ctx) {
     return val === null ? { op: "meta", json: "$." + path, cmp: "present", value: null } : { op: "meta", json: "$." + path, cmp: "=", value: val };
   }
   if (name in MEANING) return meaningAtom(name, tok2, ctx);
-  const f8 = FIELDS[name];
-  if (!f8) {
+  const f9 = FIELDS[name];
+  if (!f9) {
     ctx.warnings.push(`unknown field ${JSON.stringify(tok2.field)}; read as free text`);
     return textAtom(null, `${tok2.field} ${tok2.value}`.trim(), true, ctx);
   }
   let raw = String(tok2.value);
-  if (f8.col === "object_type") raw = normalizeType(raw.toLowerCase());
+  if (f9.col === "object_type") raw = normalizeType(raw.toLowerCase());
   const range = raw.split("..");
-  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f8.type === "time" || f8.type === "number")) {
+  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f9.type === "time" || f9.type === "number")) {
     return { op: "and", kids: [
-      { op: "meta", col: f8.col, cmp: ">=", value: coerce(f8, range[0]) },
-      { op: "meta", col: f8.col, cmp: "<=", value: coerce(f8, range[1]) }
+      { op: "meta", col: f9.col, cmp: ">=", value: coerce(f9, range[0]) },
+      { op: "meta", col: f9.col, cmp: "<=", value: coerce(f9, range[1]) }
     ] };
   }
   for (const [lead, cmp] of CMP)
-    if (raw.startsWith(lead)) return { op: "meta", col: f8.col, cmp, value: coerce(f8, raw.slice(lead.length)) };
-  if (raw === "" || raw === "*") return { op: "meta", col: f8.col, cmp: "present", value: null };
-  if (f8.fts) return textAtom(f8.fts, raw, tok2.quoted, ctx);
-  return { op: "meta", col: f8.col, cmp: "=", value: coerce(f8, raw) };
+    if (raw.startsWith(lead)) return { op: "meta", col: f9.col, cmp, value: coerce(f9, raw.slice(lead.length)) };
+  if (raw === "" || raw === "*") return { op: "meta", col: f9.col, cmp: "present", value: null };
+  if (f9.fts) return textAtom(f9.fts, raw, tok2.quoted, ctx);
+  return { op: "meta", col: f9.col, cmp: "=", value: coerce(f9, raw) };
 }
 function meaningAtom(arm, tok2, ctx) {
   const m = MEANING[arm];
@@ -45419,13 +45423,13 @@ function meaningAtom(arm, tok2, ctx) {
       return { op: "meaning", arm, field: subName, col: sub.col, cmp, value: norm(raw.slice(lead.length)) };
   return { op: "meaning", arm, field: subName, col: sub.col, cmp: "=", value: norm(raw) };
 }
-function coerce(f8, v) {
-  if (f8.type === "number") {
+function coerce(f9, v) {
+  if (f9.type === "number") {
     const n = Number(v);
     return Number.isFinite(n) ? n : v;
   }
-  if (f8.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
-  return f8.lower ? String(v).toLowerCase() : f8.upper ? String(v).toUpperCase() : String(v);
+  if (f9.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
+  return f9.lower ? String(v).toLowerCase() : f9.upper ? String(v).toUpperCase() : String(v);
 }
 function applySort(spec, ctx) {
   let s = String(spec || "");
@@ -45515,7 +45519,7 @@ function visibleBm25({ terms, gate, rel }) {
   return { parts, args };
 }
 var ALL = `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL`;
-var PROJ_COLS = new Set(Object.values(FIELDS).filter((f8) => f8.proj).map((f8) => f8.col));
+var PROJ_COLS = new Set(Object.values(FIELDS).filter((f9) => f9.proj).map((f9) => f9.col));
 var allOf = (rel) => rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL` : ALL;
 function keysWhere(rel, where, fromProj) {
   if (!rel) return `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND ${where}`;
@@ -45773,7 +45777,7 @@ SELECT b.bundle_id, b.bundle_sha FROM scope s ${rowJoin}${joinRanked}
 WHERE ${gate.sql}
 ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
-  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f8) => String(f8).toLowerCase()).filter((f8) => f8 in FIELDS);
+  const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS).map((f9) => String(f9).toLowerCase()).filter((f9) => f9 in FIELDS);
   const facets_ = () => {
     if (!facetList.length) return [];
     const out = [];
@@ -45781,10 +45785,10 @@ ORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
       const group = facetList.slice(i, i + MAX_COMPOUND);
       const c = cte(false);
       const arms = group.map((name) => {
-        const f8 = FIELDS[name];
-        return `SELECT '${name}' AS field, ${ref(f8.col)} AS value, count(*) AS n
+        const f9 = FIELDS[name];
+        return `SELECT '${name}' AS field, ${ref(f9.col)} AS value, count(*) AS n
   FROM scope s ${rowJoin}
-  WHERE ${gate.sql} AND ${ref(f8.col)} IS NOT NULL GROUP BY ${ref(f8.col)}`;
+  WHERE ${gate.sql} AND ${ref(f9.col)} IS NOT NULL GROUP BY ${ref(f9.col)}`;
       });
       out.push({
         sql: `${c.sql.replace("hits(fid) AS (", "hits(fid) AS MATERIALIZED (")}
@@ -45984,8 +45988,8 @@ WHERE ${gate.sql}`,
 }
 
 // src/retrieval/checks.mjs
-var checks_exports9 = {};
-__export(checks_exports9, {
+var checks_exports10 = {};
+__export(checks_exports10, {
   MEANING_READ_CHECKS: () => MEANING_READ_CHECKS,
   SELECTION_CHECKS: () => SELECTION_CHECKS
 });
@@ -46717,8 +46721,8 @@ var Frontier = class {
       n
     ), () => recognised);
     const missing = [];
-    for (const [kind, f8] of [["capture", captureFetch], ["reference", referenceFetch], ["entity", entityFetch]])
-      for (const r of f8.rows)
+    for (const [kind, f9] of [["capture", captureFetch], ["reference", referenceFetch], ["entity", entityFetch]])
+      for (const r of f9.rows)
         missing.push({
           subject: r.subject,
           subject_kind: kind,
@@ -47050,7 +47054,7 @@ var Retrieval = class {
     if (this.#stepped || !this.promotion || typeof this.promotion.registerStep !== "function") return false;
     const r = this.promotion.registerStep("retrieval", { project: (c) => {
       const { bundleId, files } = stepContext(c);
-      const md = (files || []).find((f8) => f8 && f8.path === "bundle.md");
+      const md = (files || []).find((f9) => f9 && f9.path === "bundle.md");
       this.#writeProjection(bundleId, md && typeof md.text === "string" ? md.text : null);
       this.#writeText(bundleId, files || []);
       return null;
@@ -47212,7 +47216,7 @@ var Retrieval = class {
     let n = 0, t = 0;
     for (const r of stale) {
       const files = this.#filesOf(r.bundle_id);
-      const md = files.find((f8) => f8.path === "bundle.md");
+      const md = files.find((f9) => f9.path === "bundle.md");
       if (!md || md.text === null) continue;
       if (r.need_proj) {
         this.#writeProjection(r.bundle_id, md.text);
@@ -47390,7 +47394,7 @@ var Retrieval = class {
    *  value, and both forms exclude it; both order by count descending then value ascending. */
   #facetCounts(plan, tally, mode) {
     const use = mode === "groupby" || mode === "scan" ? mode : FACET_MODE_DEFAULT;
-    const out = Object.fromEntries(plan.facetFields.map((f8) => [f8, []]));
+    const out = Object.fromEntries(plan.facetFields.map((f9) => [f9, []]));
     if (!plan.facetFields.length) return out;
     if (use === "groupby") {
       for (const stmt2 of plan.statements.facets())
@@ -47560,7 +47564,7 @@ var Retrieval = class {
    *  of it that drifts; the meaning arms DERIVED from the compiler's registry; and the syntax sentences. */
   searchFields() {
     return {
-      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f8]) => [k, { type: f8.type, freeText: !!f8.fts, column: f8.col }])),
+      fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f9]) => [k, { type: f9.type, freeText: !!f9.fts, column: f9.col }])),
       ftsColumns: FTS_COLUMNS,
       defaultFacets: DEFAULT_FACETS,
       idsMax: IDS_MAX,
@@ -47666,9 +47670,9 @@ var Retrieval = class {
    *  writes nothing, never throws: a figure it cannot read is null, never a zero. */
   counts(hid = null) {
     const h = hid && typeof hid === "object" && typeof hid.sql === "string" ? { sql: hid.sql, args: Array.isArray(hid.args) ? hid.args : [] } : null;
-    const read2 = (f8) => {
+    const read2 = (f9) => {
       try {
-        const n = Number(f8());
+        const n = Number(f9());
         return Number.isFinite(n) ? n : null;
       } catch {
         return null;
@@ -48884,11 +48888,11 @@ var TIMEOUT_WORD = /timed?[ _-]?out|timeout/;
 var SETTLED_WORD = "quiet_excluding_long_lived";
 function waitFiredClass(fired, askedWait) {
   if (!isStr2(fired)) return "undetermined";
-  const f8 = fired.trim().toLowerCase();
-  if (TIMEOUT_WORD.test(f8)) return "timeout";
-  if (f8 === SETTLED_WORD) return "settled";
+  const f9 = fired.trim().toLowerCase();
+  if (TIMEOUT_WORD.test(f9)) return "timeout";
+  if (f9 === SETTLED_WORD) return "settled";
   const until = askedWait && isStr2(askedWait.until) ? askedWait.until.trim().toLowerCase() : null;
-  return until && f8 === until ? "condition" : "undetermined";
+  return until && f9 === until ? "condition" : "undetermined";
 }
 var RENDER_INCOMPLETE_READING = "render may be incomplete (wait timed out)";
 function settledReading(count) {
@@ -51439,7 +51443,7 @@ var Capture = class _Capture {
         sourceCapture
       );
       const pick1 = (k) => {
-        const x = found2.find((f8) => f8.k === k);
+        const x = found2.find((f9) => f9.k === k);
         return x ? {
           capture_sha: x.capture_sha,
           first_retrieved: x.first_retrieved,
@@ -51447,7 +51451,7 @@ var Capture = class _Capture {
           observations: x.observations
         } : null;
       };
-      const count = Number((found2.find((f8) => f8.k === "n") || {}).observations || 0);
+      const count = Number((found2.find((f9) => f9.k === "n") || {}).observations || 0);
       if (!count) {
         tally.offsite++;
         out.push({ ...r, resolution: "offsite", verdict: null, basis: "the record holds no capture of this address" });
@@ -51749,12 +51753,12 @@ var Capture = class _Capture {
     );
     const seq = found.slice(0, cap).reverse();
     const fps = [...new Set(seq.map((o) => o.fingerprint))];
-    const linksOf = new Map(fps.map((f8) => [f8, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f8)?.links || "[]")]));
-    const records = fps.map((f8) => {
-      const mine = seq.filter((o) => o.fingerprint === f8);
+    const linksOf = new Map(fps.map((f9) => [f9, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f9)?.links || "[]")]));
+    const records = fps.map((f9) => {
+      const mine = seq.filter((o) => o.fingerprint === f9);
       return {
-        fingerprint: f8,
-        links: linksOf.get(f8),
+        fingerprint: f9,
+        links: linksOf.get(f9),
         captures: mine.length,
         first_observed: mine.map((o) => o.first_observed).sort()[0],
         last_observed: mine.map((o) => o.last_observed).sort().pop()
@@ -52559,7 +52563,7 @@ function spaces(v) {
   return SPACE_NAMES.map((space) => {
     const s = spaceOf(view, space);
     const label = typeof s.label === "string" && s.label ? s.label : SPACES2[space].label;
-    return { space, label, referent: SPACES2[space].referent, forms: formsOf(view, space).map((f8) => ({ ...f8 })) };
+    return { space, label, referent: SPACES2[space].referent, forms: formsOf(view, space).map((f9) => ({ ...f9 })) };
   });
 }
 function cleaned(form, value) {
@@ -52619,11 +52623,11 @@ function recognise(v, space, value) {
   let rest = raw, kind = null;
   if (space === "enactment") ({ kind, rest } = kindPrefix(view, raw));
   if (!rest) return null;
-  for (const f8 of formsOf(view, space)) {
-    if (typeof f8.form !== "string") continue;
-    const normal = matchForm(f8, rest);
+  for (const f9 of formsOf(view, space)) {
+    if (typeof f9.form !== "string") continue;
+    const normal = matchForm(f9, rest);
     if (normal == null) continue;
-    const out = { space, value: raw, form: f8.form, normal };
+    const out = { space, value: raw, form: f9.form, normal };
     if (space === "enactment") {
       out.kind = kind;
       out.reach = reach(v, normal, kind);
@@ -52648,11 +52652,11 @@ function conflictSays(cs) {
 }
 function floorOf(view, conflicts, kind) {
   const entries = kindsOf(view).filter((k) => k.kind === kind);
-  const floors = entries.map((k) => k.floor).filter((f8) => isObj7(f8) && Number.isFinite(f8.first));
-  const distinct = [...new Set(floors.map((f8) => f8.first))];
+  const floors = entries.map((k) => k.floor).filter((f9) => isObj7(f9) && Number.isFinite(f9.first));
+  const distinct = [...new Set(floors.map((f9) => f9.first))];
   if (distinct.length === 1) {
-    const f8 = floors[0];
-    return { floor: f8.first, system: f8.system, basis: f8.basis };
+    const f9 = floors[0];
+    return { floor: f9.first, system: f9.system, basis: f9.basis };
   }
   const cs = floorConflicts(conflicts, kind);
   if (distinct.length > 1 || cs.length)
@@ -52660,16 +52664,16 @@ function floorOf(view, conflicts, kind) {
   if (!entries.length) return { why: `the active profiles name no enactment kind "${kind}", so no coverage floor is measured for it` };
   return { why: `no coverage floor is measured for ${kind} in the active profiles` };
 }
-var outsideSays = (view, kind, f8) => `a ${kind} below ${systemName(view, f8.system)}'s first (${f8.floor}): OUTSIDE THE RECORD'S REACH, never "not found" \u2014 the record's source holds no ${kind} that old`;
+var outsideSays = (view, kind, f9) => `a ${kind} below ${systemName(view, f9.system)}'s first (${f9.floor}): OUTSIDE THE RECORD'S REACH, never "not found" \u2014 the record's source holds no ${kind} that old`;
 function reach(v, number, kind = null) {
   const { view, conflicts } = viewOf(v);
   const n = typeof number === "number" ? number : typeof number === "string" && /^\s*\d+\s*$/.test(number) ? Number(number) : NaN;
   if (!Number.isFinite(n))
     return { reach: "UNDETERMINED", says: `${JSON.stringify(String(number))} is not a number, so it cannot be compared with a coverage floor` };
   if (typeof kind === "string" && kind) {
-    const f8 = floorOf(view, conflicts, kind);
-    if (f8.floor == null) return { reach: "UNDETERMINED", says: `${f8.why}: whether ${n} is inside the record's reach is undetermined` };
-    return n >= f8.floor ? { reach: "INSIDE", floor: f8.floor, says: `a ${kind} at or above ${systemName(view, f8.system)}'s first (${f8.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f8.floor, says: outsideSays(view, kind, f8) };
+    const f9 = floorOf(view, conflicts, kind);
+    if (f9.floor == null) return { reach: "UNDETERMINED", says: `${f9.why}: whether ${n} is inside the record's reach is undetermined` };
+    return n >= f9.floor ? { reach: "INSIDE", floor: f9.floor, says: `a ${kind} at or above ${systemName(view, f9.system)}'s first (${f9.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f9.floor, says: outsideSays(view, kind, f9) };
   }
   const kinds = [...new Set(kindsOf(view).map((k) => k.kind).filter((k) => typeof k === "string" && k))];
   if (!kinds.length)
@@ -52772,10 +52776,10 @@ var unpadAll = (s) => String(s).replace(/(^|\D)0+(?=\d)/g, "$1");
 function throughCrosswalk(view, space, ra, rb) {
   const walks = arr(view.crosswalks).filter((c) => isObj7(c) && c.space === space && Array.isArray(c.forms) && (c.forms[0] === ra.form && c.forms[1] === rb.form || c.forms[0] === rb.form && c.forms[1] === ra.form));
   if (!walks.length) return null;
-  const formByName = new Map(formsOf(view, space).map((f8) => [f8.form, f8]));
+  const formByName = new Map(formsOf(view, space).map((f9) => [f9.form, f9]));
   const norm = (form, value) => {
-    const f8 = formByName.get(form);
-    return f8 && (typeof value === "string" || typeof value === "number") ? matchForm(f8, String(value)) : null;
+    const f9 = formByName.get(form);
+    return f9 && (typeof value === "string" || typeof value === "number") ? matchForm(f9, String(value)) : null;
   };
   const partners = /* @__PURE__ */ new Set();
   for (const c of walks) {
@@ -52936,8 +52940,8 @@ var WITHDRAWAL_COLUMNS = Object.freeze([
 ]);
 
 // src/entities/checks.mjs
-var checks_exports10 = {};
-__export(checks_exports10, {
+var checks_exports11 = {};
+__export(checks_exports11, {
   ENTITY_CHECKS: () => ENTITY_CHECKS,
   IDSPACE_CHECKS: () => IDSPACE_CHECKS,
   idspaceRefusal: () => idspaceRefusal
@@ -54037,7 +54041,7 @@ var Entities = class _Entities {
     if (!ra || pair && !rb)
       return idspaceRefusal("IDSPACE_VALUE_NOT_IN_SPACE", {
         space: sp,
-        forms: S2.forms.map((f8) => f8.form),
+        forms: S2.forms.map((f9) => f9.form),
         profiles,
         detail: `${!ra ? "a" : "b"} has the shape of no form of the ${S2.label}` + (S2.forms.length ? "" : "; the instance's active jurisdiction profiles give this space no form")
       });
@@ -55856,7 +55860,7 @@ var Connections = class _Connections {
     const bundleId = c.bundleId;
     c.refsReplaced = this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, bundleId);
     this.sql.exec(`DELETE FROM refs WHERE bundle_id=?`, bundleId);
-    const md = (c.files || []).find((f8) => f8.path === "bundle.md");
+    const md = (c.files || []).find((f9) => f9.path === "bundle.md");
     const fmRefs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references ?? [] : [];
     for (const t of Array.isArray(fmRefs) ? fmRefs : []) {
       if (!t || typeof t !== "object" || typeof t.target !== "string") continue;
@@ -56058,9 +56062,9 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     const carried = [];
     for (const path of this.record.livePaths(bundle) || []) {
       if (path === "bundle.md") continue;
-      const f8 = this.record.readFile(bundle, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, bytes: new TextEncoder().encode(f8.text).length, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = this.record.readFile(bundle, path);
+      if (!f9) continue;
+      carried.push(typeof f9.text === "string" ? { path, text: f9.text, bytes: new TextEncoder().encode(f9.text).length, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     const bytes2 = new TextEncoder().encode(text3);
     const fm = parseFrontmatter(text3).data || {};
@@ -56349,12 +56353,12 @@ Changes: links_to edges added to ${add.map((e) => e.to).join(", ")}, each the so
     let stored = 0, pending = 0;
     this.#transact(() => {
       for (const g of m.items || [])
-        for (const f8 of g.files || []) {
+        for (const f9 of g.files || []) {
           const out = this.#storePair(sha, home.bundle_id, {
             item_address: g.item.url,
-            file_address: f8.url,
+            file_address: f9.url,
             item_anchor: g.item.anchor ?? null,
-            file_anchor: f8.anchor ?? null,
+            file_anchor: f9.anchor ?? null,
             system: m.system ?? null
           }, at17);
           if (out === "stored") stored++;
@@ -56973,8 +56977,8 @@ function migrateProgressions(sql) {
 }
 
 // src/progressions/checks.mjs
-var checks_exports11 = {};
-__export(checks_exports11, {
+var checks_exports12 = {};
+__export(checks_exports12, {
   DISPOSITIONS: () => DISPOSITIONS,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
@@ -57824,8 +57828,8 @@ var Progressions = class {
   #withDecisions(inst, byStage = null) {
     if (!inst || inst.ok !== true || !Array.isArray(inst.findings)) return inst;
     const decided = byStage || this.#decisionsByStage(inst.progression_key);
-    const findings = inst.findings.map((f8) => ({ ...f8, disposition: decided.get(f8.stage_key) ?? null }));
-    return { ...inst, findings, open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length };
+    const findings = inst.findings.map((f9) => ({ ...f9, disposition: decided.get(f9.stage_key) ?? null }));
+    return { ...inst, findings, open_finding_count: findings.filter((f9) => !(f9.disposition && f9.disposition.applies)).length };
   }
   /* R13: the whole derivation stands for every reader; only the back-references to bundles the viewer may not see are
      withheld. Capture shas, grades, findings and counts are the same for everyone. */
@@ -58164,17 +58168,17 @@ var Progressions = class {
   #deadlines(inst) {
     const out = [];
     if (!inst || !inst.found || !Array.isArray(inst.findings)) return out;
-    const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
+    const missing = inst.findings.filter((f9) => f9.kind === "missing_predecessor");
     if (!missing.length) return out;
     const within = new Map(this.#rows(
       `SELECT stage_key, within_interval FROM progression_stages WHERE progression_key=?`,
       inst.progression_key
     ).map((r) => [r.stage_key, r.within_interval]));
     const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
-    for (const f8 of missing) {
-      const wi = within.get(f8.stage_key);
-      if (!wi || !f8.after_stage) continue;
-      const anchor = stageByKey.get(f8.after_stage);
+    for (const f9 of missing) {
+      const wi = within.get(f9.stage_key);
+      if (!wi || !f9.after_stage) continue;
+      const anchor = stageByKey.get(f9.after_stage);
       if (!anchor || !anchor.present) continue;
       let anchorMs = null;
       for (const d of anchor.documents || []) {
@@ -58184,7 +58188,7 @@ var Progressions = class {
       if (anchorMs === null) continue;
       const deadline = intervalDeadlineMs(anchorMs, wi);
       if (deadline === null) continue;
-      out.push({ finding: f8, within_interval: wi, predecessor_stage: f8.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
+      out.push({ finding: f9, within_interval: wi, predecessor_stage: f9.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
     }
     return out;
   }
@@ -58193,22 +58197,22 @@ var Progressions = class {
     const out = [];
     for (const d of this.#deadlines(inst)) {
       if (d.deadline_ms >= nowMs) continue;
-      const f8 = d.finding;
+      const f9 = d.finding;
       out.push({
         kind: "overdue_successor",
-        stage_key: f8.stage_key,
-        stage_label: f8.stage_label,
-        required: f8.required,
-        after_stage: f8.after_stage,
-        definition_version: f8.definition_version,
+        stage_key: f9.stage_key,
+        stage_label: f9.stage_label,
+        required: f9.required,
+        after_stage: f9.after_stage,
+        definition_version: f9.definition_version,
         predecessor_stage: d.predecessor_stage,
         predecessor_at: new Date(d.predecessor_ms).toISOString(),
         within_interval: d.within_interval,
         deadline: new Date(d.deadline_ms).toISOString(),
         overdue_by_ms: nowMs - d.deadline_ms,
-        grade: f8.grade,
-        grade_determined: f8.grade_determined,
-        detail: "the '" + f8.stage_key + "' stage is " + f8.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
+        grade: f9.grade,
+        grade_determined: f9.grade_determined,
+        detail: "the '" + f9.stage_key + "' stage is " + f9.required + " required and still absent past its '" + d.within_interval + "' deadline after '" + d.predecessor_stage + "' (" + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = " + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade"
       });
     }
     return out;
@@ -58251,11 +58255,11 @@ var Progressions = class {
     const groups = /* @__PURE__ */ new Map();
     for (const p of this.#pairs()) {
       const inst = this.#assemble(p.progression_key, p.entity_id);
-      const open = (f8) => !aged(inst.progression_key, f8.stage_key);
-      const missing = (inst.findings || []).filter((f8) => f8.kind === "missing_predecessor" && open(f8));
+      const open = (f9) => !aged(inst.progression_key, f9.stage_key);
+      const missing = (inst.findings || []).filter((f9) => f9.kind === "missing_predecessor" && open(f9));
       const overdueF = this.#overdue(inst, now).filter(open);
-      const others = (inst.findings || []).filter((f8) => f8.kind !== "missing_predecessor" && open(f8));
-      const overdueByStage = new Map(overdueF.map((f8) => [f8.stage_key, f8]));
+      const others = (inst.findings || []).filter((f9) => f9.kind !== "missing_predecessor" && open(f9));
+      const overdueByStage = new Map(overdueF.map((f9) => [f9.stage_key, f9]));
       const findings = [...missing, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
@@ -58267,8 +58271,8 @@ var Progressions = class {
         entity_label: entityLabel,
         findings
       });
-      for (const f8 of missing) {
-        const key = inst.progression_key + "::" + f8.stage_key;
+      for (const f9 of missing) {
+        const key = inst.progression_key + "::" + f9.stage_key;
         let g = groups.get(key);
         if (!g) {
           const prior = recorded.get(key) || null;
@@ -58276,9 +58280,9 @@ var Progressions = class {
             key,
             progression_key: inst.progression_key,
             progression_label: inst.label,
-            stage_key: f8.stage_key,
-            stage_label: f8.stage_label,
-            required: f8.required,
+            stage_key: f9.stage_key,
+            stage_label: f9.stage_label,
+            required: f9.required,
             definition_version: inst.definition_version,
             surfaced_by: "machine",
             overdue_count: 0,
@@ -58296,15 +58300,15 @@ var Progressions = class {
           };
           groups.set(key, g);
         }
-        const od = overdueByStage.get(f8.stage_key) || null;
+        const od = overdueByStage.get(f9.stage_key) || null;
         if (od) g.overdue_count += 1;
         g.instances.push({
           entity_id: inst.entity_id,
           entity_label: entityLabel,
           progression_key: inst.progression_key,
           definition_version: inst.definition_version,
-          grade: f8.grade_determined ? f8.grade : null,
-          grade_determined: f8.grade_determined === true,
+          grade: f9.grade_determined ? f9.grade : null,
+          grade_determined: f9.grade_determined === true,
           overdue: !!od,
           deadline: od ? od.deadline : null
         });
@@ -58358,10 +58362,10 @@ var Progressions = class {
       captureSha
     );
     const assembled = /* @__PURE__ */ new Map();
-    const project = (f8) => ({
-      ...f8,
-      established: f8.grade_determined === true && isEstablished(f8.grade),
-      needs_confirmation: f8.grade === "C"
+    const project = (f9) => ({
+      ...f9,
+      established: f9.grade_determined === true && isEstablished(f9.grade),
+      needs_confirmation: f9.grade === "C"
     });
     const instances34 = [];
     for (const r of rows) {
@@ -58379,9 +58383,9 @@ var Progressions = class {
       const inst = a.inst;
       if (!inst || !inst.found) continue;
       const stage = (inst.stages || []).find((s) => s.stage_key === r.stage_key);
-      const missing = inst.findings.filter((f8) => f8.kind === "missing_predecessor");
-      const others = inst.findings.filter((f8) => f8.kind !== "missing_predecessor");
-      const findings = [...missing, ...a.overdue, ...others].map(project).map((f8) => ({ ...f8, disposition: a.decided.get(f8.stage_key) ?? null }));
+      const missing = inst.findings.filter((f9) => f9.kind === "missing_predecessor");
+      const others = inst.findings.filter((f9) => f9.kind !== "missing_predecessor");
+      const findings = [...missing, ...a.overdue, ...others].map(project).map((f9) => ({ ...f9, disposition: a.decided.get(f9.stage_key) ?? null }));
       instances34.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
@@ -58392,7 +58396,7 @@ var Progressions = class {
         stage_label: stage ? stage.label : r.stage_key,
         findings,
         finding_count: findings.length,
-        open_finding_count: findings.filter((f8) => !(f8.disposition && f8.disposition.applies)).length
+        open_finding_count: findings.filter((f9) => !(f9.disposition && f9.disposition.applies)).length
       });
     }
     return { ok: true, capture_sha: captureSha, count: instances34.length, instances: instances34 };
@@ -58526,8 +58530,8 @@ function progressionsOf(host, deps) {
 }
 
 // src/bias/checks.mjs
-var checks_exports12 = {};
-__export(checks_exports12, {
+var checks_exports13 = {};
+__export(checks_exports13, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS2,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -60316,8 +60320,8 @@ CREATE INDEX IF NOT EXISTS contradiction_candidates_run ON contradiction_candida
 `;
 
 // src/contradiction/checks.mjs
-var checks_exports13 = {};
-__export(checks_exports13, {
+var checks_exports14 = {};
+__export(checks_exports14, {
   CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
 });
@@ -61141,17 +61145,17 @@ var Contradiction = class {
       const p = item(i);
       const key = String(p.key ?? "").trim().toUpperCase();
       const a = this.#side(p.a), b = this.#side(p.b);
-      const f8 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
-      if (!f8)
+      const f9 = formed.get(`${key}:${[handle(a), handle(b)].sort().join(" <> ")}`);
+      if (!f9)
         return refusal19(
           "CANDIDATE_PAIR_NOT_FORMED",
           `proposal ${i} names a ${key || "(no key)"} pair the pairing does not form for this viewer now` + (cutKeys.length ? ` (the read was cut at its bound on ${cutKeys.join(", ")}, and a pair past the bound is not formed here)` : ""),
           { run: runId, index: i, cut_keys: cutKeys }
         );
-      const [x, y] = handle(f8.a) <= handle(f8.b) ? [f8.a, f8.b] : [f8.b, f8.a];
+      const [x, y] = handle(f9.a) <= handle(f9.b) ? [f9.a, f9.b] : [f9.b, f9.a];
       rows.push({
-        candidate: sha256HexSync(canonicalJson({ v: 1, key: f8.key, sides: [handle(x), handle(y)] })),
-        key: f8.key,
+        candidate: sha256HexSync(canonicalJson({ v: 1, key: f9.key, sides: [handle(x), handle(y)] })),
+        key: f9.key,
         a: x,
         b: y,
         run: runId,
@@ -61197,8 +61201,8 @@ function contradictionOps(c, url, body) {
 }
 
 // src/ai-runs/checks.mjs
-var checks_exports14 = {};
-__export(checks_exports14, {
+var checks_exports15 = {};
+__export(checks_exports15, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -62151,7 +62155,7 @@ var AiRuns = class _AiRuns {
    * nothing will ever complete). With none registered the wake holds and wakes nothing (R17). */
   registerWaitSource(module, source) {
     const fns = ["tickMs", "holds", "woken", "completions", "markWoken"];
-    if (typeof module !== "string" || !module || !source || fns.some((f8) => typeof source[f8] !== "function"))
+    if (typeof module !== "string" || !module || !source || fns.some((f9) => typeof source[f9] !== "function"))
       return { ok: false, reason: "WAIT_SOURCE_MALFORMED", detail: `a wait source names its module and ${fns.join(", ")}` };
     if (this.#waitSource) return { ok: false, reason: "WAIT_SOURCE_DECLARED", module, declaredBy: this.#waitSource.module };
     this.#waitSource = { module, source };
@@ -64469,8 +64473,8 @@ var CaptureCredentials = class _CaptureCredentials {
   }
   /* ---- who is who (membership) ---- */
   #active(memberId) {
-    const f8 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
-    return !!f8 && f8.status === "active";
+    const f9 = typeof memberId === "string" && memberId !== "" ? this.#members.memberFacts(memberId) : null;
+    return !!f9 && f9.status === "active";
   }
   /* R58: may this member (by id) see this row? The listing asks the same rule in its SQL (`#visibleClause`). */
   #sees(memberId, row2) {
@@ -65178,7 +65182,7 @@ var safeJson10 = (s) => {
 var ROW_FAMILIES2 = [ACT_SHAPE_CHECKS, MACHINE_FENCE_CHECKS, INSTANCE_GROUP_CHECKS, INQUIRY_DISPOSE_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
-  const row2 = ROW_FAMILIES2.map((f8) => f8 && f8[answer.reason]).find((r) => r && r.check);
+  const row2 = ROW_FAMILIES2.map((f9) => f9 && f9[answer.reason]).find((r) => r && r.check);
   return row2 ? { ...answer, check: row2.check, translation: row2.translation } : answer;
 }
 function legCapped(stated, earned, targetId) {
@@ -65291,16 +65295,16 @@ var Inquiry = class _Inquiry {
   /* ---------------------------------------------------------------- facts from later modules (N56, promotion R40) */
   /* A published case's member cannot be divided, re-grouped or set down (R35). Unprovided, it is refused, never false. */
   #caseMemberFact(id) {
-    const f8 = this.promotion.fact("caseMember", id);
-    return f8.ok ? { member: !!f8.value } : { unavailable: f8 };
+    const f9 = this.promotion.fact("caseMember", id);
+    return f9.ok ? { member: !!f9.value } : { unavailable: f9 };
   }
   #caseMember(id) {
-    const f8 = this.#caseMemberFact(id);
-    return f8.unavailable ? true : f8.member;
+    const f9 = this.#caseMemberFact(id);
+    return f9.unavailable ? true : f9.member;
   }
   #publishedRegistry(bundleId, targets) {
-    const f8 = this.promotion.fact("publishedRegistry", bundleId, targets);
-    return f8.ok ? f8.value : null;
+    const f9 = this.promotion.fact("publishedRegistry", bundleId, targets);
+    return f9.ok ? f9.value : null;
   }
   /* ---------------------------------------------------------------- registrations this module offers (K31) */
   /** R21, R25: `reevaluation`'s obligation. `fn({target, cause, since, viewer})` answers the dependents raised. */
@@ -65341,7 +65345,7 @@ var Inquiry = class _Inquiry {
     if (raises === null)
       return { reevaluation_absent: "no module is registered to raise the re-evaluation this act would raise, so none is named here" };
     const failed2 = [];
-    for (const r of raises) for (const f8 of r.failed) if (!failed2.includes(f8)) failed2.push(f8);
+    for (const r of raises) for (const f9 of r.failed) if (!failed2.includes(f9)) failed2.push(f9);
     return { reevaluation: {
       source: cause,
       since,
@@ -65380,7 +65384,7 @@ var Inquiry = class _Inquiry {
    *  inside the promotion's transaction, before the write. */
   check(c) {
     const { pkg, bundleId, files, promotedType } = stepContext(c);
-    const basisMd = Array.isArray(files) ? files.find((f8) => f8 && f8.path === "bundle.md") : null;
+    const basisMd = Array.isArray(files) ? files.find((f9) => f9 && f9.path === "bundle.md") : null;
     const docFm = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
     const isInquiry = promotedType === "inquiry";
     const basisFm = isInquiry ? docFm : null;
@@ -67714,8 +67718,8 @@ function migrateCaptureRequests(sql) {
 }
 
 // src/capture-requests/checks.mjs
-var checks_exports15 = {};
-__export(checks_exports15, {
+var checks_exports16 = {};
+__export(checks_exports16, {
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS
 });
 var CAPTURE_SOURCE_CHECKS = Object.freeze({
@@ -68613,7 +68617,7 @@ var CaptureRequests = class _CaptureRequests {
           "## Review Notes",
           ""
         ].join("\n");
-        const blob = (f8) => f8 && typeof f8.file === "string" && /^[0-9a-f]{64}$/.test(String(f8.sha256 || "")) && Number.isSafeInteger(f8.bytes) ? { path: f8.file, blobSha: f8.sha256, sha256: f8.sha256, bytes: f8.bytes } : null;
+        const blob = (f9) => f9 && typeof f9.file === "string" && /^[0-9a-f]{64}$/.test(String(f9.sha256 || "")) && Number.isSafeInteger(f9.bytes) ? { path: f9.file, blobSha: f9.sha256, sha256: f9.sha256, bytes: f9.bytes } : null;
         const blobs = [
           blob({ file: doc.file, sha256: cap.sha256, bytes: cap.bytes }),
           blob(doc.shell),
@@ -68623,7 +68627,7 @@ var CaptureRequests = class _CaptureRequests {
         const files = [
           { path: "bundle.md", ...enc3(md) },
           { path: "data/provenance.json", ...enc3(JSON.stringify({ documents: [doc] }, null, 2)) },
-          ...blobs.filter((f8) => seen.has(f8.path) ? false : seen.add(f8.path))
+          ...blobs.filter((f9) => seen.has(f9.path) ? false : seen.add(f9.path))
         ];
         const p = promotion.promote({
           bundleId: id,
@@ -69005,8 +69009,8 @@ function captureRequestsOps(c, url, body) {
 }
 
 // src/intent/checks.mjs
-var checks_exports16 = {};
-__export(checks_exports16, {
+var checks_exports17 = {};
+__export(checks_exports17, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal12
 });
@@ -69503,8 +69507,8 @@ var Intent = class {
     if (typeof id !== "string" || !id) return null;
     const head = this.record.head(id);
     if (!head) return null;
-    const f8 = this.record.readFile(id, "bundle.md");
-    const text3 = f8 && typeof f8.text === "string" ? f8.text : null;
+    const f9 = this.record.readFile(id, "bundle.md");
+    const text3 = f9 && typeof f9.text === "string" ? f9.text : null;
     return { id, head, text: text3, fm: parseFm(text3) || {}, type: normalizeType(head.type) };
   }
   /* R23: a project the viewer may see, or the one answer an absent project gets. A viewer who sees the project at
@@ -69561,8 +69565,8 @@ var Intent = class {
   #revise(d, text3, author, viewer, extra = {}) {
     const fm = parseFm(text3) || {};
     const carried = this.record.livePaths(d.id).filter((p) => p !== "bundle.md").map((path) => {
-      const f8 = this.record.readFile(d.id, path);
-      return typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes };
+      const f9 = this.record.readFile(d.id, path);
+      return typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes };
     });
     const member = this.#memberOf(author);
     return this.promotion.promote({
@@ -71225,30 +71229,30 @@ function appendFmRows(text3, key, rowLines) {
   while (i < end2 && /^\s{2,}(- )?\S/.test(lines[i])) i++;
   return [...lines.slice(0, i), ...rowLines, ...lines.slice(i)].join("\n");
 }
-function appendConclusionEntry(text3, inquiryId, f8) {
+function appendConclusionEntry(text3, inquiryId, f9) {
   const lines = text3.split("\n");
   if (lines[0] !== "---") return null;
   const end2 = lines.indexOf("---", 1);
   if (end2 === -1) return null;
   const q6 = quoted;
-  const block = f8.act === "withdrawn" ? [
+  const block = f9.act === "withdrawn" ? [
     `  - inquiry: ${q6(inquiryId)}`,
     `    act: "withdrawn"`,
-    `    withdraws_version: ${q6(f8.version)}`,
-    `    withdraws_at: ${q6(f8.withdrawsAt)}`,
-    `    reason: ${q6(f8.reason)}`,
-    `    at: ${q6(f8.when)}`,
-    `    by: ${q6(f8.who)}`
+    `    withdraws_version: ${q6(f9.version)}`,
+    `    withdraws_at: ${q6(f9.withdrawsAt)}`,
+    `    reason: ${q6(f9.reason)}`,
+    `    at: ${q6(f9.when)}`,
+    `    by: ${q6(f9.who)}`
   ] : [
     `  - inquiry: ${q6(inquiryId)}`,
     `    act: "concluded"`,
-    `    version: ${q6(f8.version)}`,
-    `    claim: ${q6(f8.claim)}`,
-    `    falsifier: ${q6(f8.falsifier)}`,
-    ...f8.noFals ? [`    falsifier_override_by: ${q6(f8.who)}`, `    falsifier_override_at: ${q6(f8.when)}`] : [],
-    ...f8.commentary ? [`    commentary: ${q6(f8.commentary)}`] : [],
-    `    at: ${q6(f8.when)}`,
-    `    by: ${q6(f8.who)}`
+    `    version: ${q6(f9.version)}`,
+    `    claim: ${q6(f9.claim)}`,
+    `    falsifier: ${q6(f9.falsifier)}`,
+    ...f9.noFals ? [`    falsifier_override_by: ${q6(f9.who)}`, `    falsifier_override_at: ${q6(f9.when)}`] : [],
+    ...f9.commentary ? [`    commentary: ${q6(f9.commentary)}`] : [],
+    `    at: ${q6(f9.when)}`,
+    `    by: ${q6(f9.who)}`
   ];
   const at17 = blockAt(lines, end2, "conclusions");
   if (at17 === -1) return [...lines.slice(0, end2), "conclusions:", ...block, ...lines.slice(end2)].join("\n");
@@ -71538,7 +71542,7 @@ function extentLegFields(extent) {
     para: "extent_para",
     run: "extent_run"
   };
-  for (const [f8, k] of Object.entries(FIELD_OF)) if (e[f8] !== void 0 && e[f8] !== null) out[k] = e[f8];
+  for (const [f9, k] of Object.entries(FIELD_OF)) if (e[f9] !== void 0 && e[f9] !== null) out[k] = e[f9];
   return out;
 }
 var safeJson12 = (s) => {
@@ -71604,17 +71608,17 @@ var BasisVersions = class _BasisVersions {
   }
   /* A bundle's live `bundle.md` text, or null. */
   #doc(id) {
-    const f8 = this.record.readFile(id, "bundle.md");
-    return f8 && typeof f8.text === "string" ? f8.text : null;
+    const f9 = this.record.readFile(id, "bundle.md");
+    return f9 && typeof f9.text === "string" ? f9.text : null;
   }
   /* ---- the one write: a new revision of a document through promotion (R14, R15, R18, R19, R27, R28) ---- */
   #repromote({ bundleId, base, text: text3, when, author, meta }) {
     const carried = [];
     for (const path of this.record.livePaths(bundleId) || []) {
       if (path === "bundle.md") continue;
-      const f8 = this.record.readFile(bundleId, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, bytes: new TextEncoder().encode(f8.text).length, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = this.record.readFile(bundleId, path);
+      if (!f9) continue;
+      carried.push(typeof f9.text === "string" ? { path, text: f9.text, bytes: new TextEncoder().encode(f9.text).length, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     const bytes2 = new TextEncoder().encode(text3);
     return this.promotion.promote({
@@ -72756,45 +72760,45 @@ Adopted: reading '${adopted.version}', claim: ${adopted.claim}
   }
   /* The conclusion record's ONE writer (R18, R20, R21), paired with `conclusionRecordOf`, its one reader: it only ever
      appends, then promotes the PROJECT. */
-  #setProjectConclusion(projectRow, inquiryId, f8) {
+  #setProjectConclusion(projectRow, inquiryId, f9) {
     const pid = projectRow.bundle_id;
     const md = this.#doc(pid);
     if (md === null)
       return { ok: false, reason: "NO_DOCUMENT", detail: `${pid} has no readable file, so its conclusion cannot be recorded` };
     const pfm = parseFrontmatter(md).data || {};
-    let text3 = appendConclusionEntry(md, inquiryId, f8);
+    let text3 = appendConclusionEntry(md, inquiryId, f9);
     if (text3 === null)
       return {
         ok: false,
         reason: "UNSPLICEABLE_CONCLUSIONS",
         detail: `${pid}'s conclusions block could not be extended in place`
       };
-    text3 = setScalar(text3, "last_updated", `"${f8.when}"`);
-    text3 = appendSessionLog(text3, f8.act === "withdrawn" ? `### Session ${f8.when} | Conclusion withdrawn | ${f8.who}
+    text3 = setScalar(text3, "last_updated", `"${f9.when}"`);
+    text3 = appendSessionLog(text3, f9.act === "withdrawn" ? `### Session ${f9.when} | Conclusion withdrawn | ${f9.who}
 Trigger: op=withdrawconclusion on ${inquiryId} for ${pid}
-Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f8.version}', concluded ${f8.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
-Reason: ${f8.reason}
-` : `### Session ${f8.when} | Concluded | ${f8.who}
+Changes: this project withdrew its conclusion on ${inquiryId} (reading '${f9.version}', concluded ${f9.withdrawsAt}). The conclusion stays in the record; this project now stands on no conclusion.
+Reason: ${f9.reason}
+` : `### Session ${f9.when} | Concluded | ${f9.who}
 Trigger: op=conclude on ${inquiryId} for ${pid}
-Changes: this project concluded ${inquiryId} on reading '${f8.version}', adopting its claim.
-Claim: ${f8.claim}
-` + (f8.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f8.who} at ${f8.when}
-` : `Falsifier: ${f8.falsifier}
-`) + (f8.commentary ? `Commentary (${f8.who}, not evidence): ${f8.commentary}
+Changes: this project concluded ${inquiryId} on reading '${f9.version}', adopting its claim.
+Claim: ${f9.claim}
+` + (f9.noFals ? `Falsifier: NO FALSIFIER STATED \u2014 recorded by ${f9.who} at ${f9.when}
+` : `Falsifier: ${f9.falsifier}
+`) + (f9.commentary ? `Commentary (${f9.who}, not evidence): ${f9.commentary}
 ` : ""));
     return this.#repromote({
       bundleId: pid,
       base: projectRow.bundle_sha,
       text: text3,
-      when: f8.when,
-      author: f8.who,
+      when: f9.when,
+      author: f9.who,
       meta: {
         object_type: pfm.object_type ?? "project",
         title: pfm.title,
         current_state: pfm.current_state ?? "forming",
         prior_state: pfm.prior_state ?? null,
         created: pfm.created,
-        last_updated: f8.when,
+        last_updated: f9.when,
         criticality: pfm.criticality ?? null
       }
     });
@@ -73623,8 +73627,8 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
 }
 
 // src/strength/checks.mjs
-var checks_exports17 = {};
-__export(checks_exports17, {
+var checks_exports18 = {};
+__export(checks_exports18, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   STRENGTH_BAR_CHECKS: () => STRENGTH_BAR_CHECKS,
   VERSION_STRENGTH_CHECKS: () => VERSION_STRENGTH_CHECKS,
@@ -74665,7 +74669,7 @@ function redactAxis(axis, keep, hidden) {
     touched = true;
     return t ? `${t} ${OUT_OF_VIEW_WORDS}` : OUT_OF_VIEW_WORDS;
   };
-  const seen = (m) => !MEMBER_ID_FIELDS.some((f8) => f8 !== "through" && unseen(m[f8]));
+  const seen = (m) => !MEMBER_ID_FIELDS.some((f9) => f9 !== "through" && unseen(m[f9]));
   const named = (m) => {
     const out2 = { ...m };
     if (unseen(out2.through)) {
@@ -74780,8 +74784,8 @@ function strengthOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const producingGroup = d.producingGroup || (() => {
-      const f8 = promotionOf(host).fact("producingGroup");
-      return f8 && f8.ok ? f8.value || null : null;
+      const f9 = promotionOf(host).fact("producingGroup");
+      return f9 && f9.ok ? f9.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, producingGroup });
     instances17.set(host, s);
@@ -74793,8 +74797,8 @@ function strengthOf(host, deps) {
 }
 
 // src/reevaluation/checks.mjs
-var checks_exports18 = {};
-__export(checks_exports18, {
+var checks_exports19 = {};
+__export(checks_exports19, {
   REEVALUATION_ACT_CHECKS: () => REEVALUATION_ACT_CHECKS,
   REEVAL_POLICY_AGE_DAYS: () => REEVAL_POLICY_AGE_DAYS,
   REEVAL_SOURCES: () => REEVAL_SOURCES,
@@ -75196,8 +75200,8 @@ var Reevaluation = class {
   #registry(ids) {
     const list2 = [...new Set(ids.filter(Boolean))];
     if (!list2.length) return {};
-    const f8 = this.promotion.fact("publishedRegistry", null, list2);
-    return f8 && f8.ok && f8.value && typeof f8.value === "object" ? f8.value : null;
+    const f9 = this.promotion.fact("publishedRegistry", null, list2);
+    return f9 && f9.ok && f9.value && typeof f9.value === "object" ? f9.value : null;
   }
   /* A target's own row, read through record-core: its `bundles` columns (R37) and its prior state (`head`, R41). */
   #targetRow(id) {
@@ -75224,8 +75228,8 @@ var Reevaluation = class {
       if (!p.startsWith("annotations/") || !p.endsWith(".json")) continue;
       let a = null;
       try {
-        const f8 = this.record.readFile(id, p);
-        a = f8 && typeof f8.text === "string" ? JSON.parse(f8.text) : null;
+        const f9 = this.record.readFile(id, p);
+        a = f9 && typeof f9.text === "string" ? JSON.parse(f9.text) : null;
       } catch {
         a = null;
       }
@@ -75374,11 +75378,11 @@ var Reevaluation = class {
     if (!derived) return null;
     const axes = [];
     for (const axis of PAIR_AXES) {
-      const f8 = frozen[axis], d = derived[axis];
-      if (!f8 || !d || f8.state !== "graded" || d.state !== "graded" || !f8.grade || !d.grade) continue;
-      if (!(f8.grade in GRADE_RANK2) || !(d.grade in GRADE_RANK2)) continue;
-      if (GRADE_RANK2[d.grade] < GRADE_RANK2[f8.grade])
-        axes.push({ axis, frozen: { state: f8.state, grade: f8.grade }, derived: { state: d.state, grade: d.grade } });
+      const f9 = frozen[axis], d = derived[axis];
+      if (!f9 || !d || f9.state !== "graded" || d.state !== "graded" || !f9.grade || !d.grade) continue;
+      if (!(f9.grade in GRADE_RANK2) || !(d.grade in GRADE_RANK2)) continue;
+      if (GRADE_RANK2[d.grade] < GRADE_RANK2[f9.grade])
+        axes.push({ axis, frozen: { state: f9.state, grade: f9.grade }, derived: { state: d.state, grade: d.grade } });
     }
     if (!axes.length) return null;
     return {
@@ -76517,7 +76521,7 @@ Changes: reading '${name}' added, in state suggested: leg ${r.ord} pinned to cap
    *  infos are the audit's. */
   check(c) {
     if (!c || c.replay || c.pkg && c.pkg.replay) return null;
-    const md = Array.isArray(c.files) ? c.files.find((f8) => f8 && f8.path === "bundle.md") : null;
+    const md = Array.isArray(c.files) ? c.files.find((f9) => f9 && f9.path === "bundle.md") : null;
     if (!md || typeof md.text !== "string") return null;
     let fm = null;
     try {
@@ -76632,8 +76636,8 @@ function delivererOf(stored) {
 }
 
 // src/publication/checks.mjs
-var checks_exports19 = {};
-__export(checks_exports19, {
+var checks_exports20 = {};
+__export(checks_exports20, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -77674,13 +77678,13 @@ var Publication = class {
   }
   /* A live file's inline text as `{content}` (record-core R13), or null when it is not held inline. */
   #fileText(bundleId, path) {
-    let f8 = null;
+    let f9 = null;
     try {
-      f8 = this.record.readFile(bundleId, path);
+      f9 = this.record.readFile(bundleId, path);
     } catch {
-      f8 = null;
+      f9 = null;
     }
-    return f8 && typeof f8.text === "string" ? { content: f8.text } : null;
+    return f9 && typeof f9.text === "string" ? { content: f9.text } : null;
   }
   #headSha(bundleId) {
     let h = null;
@@ -77694,8 +77698,8 @@ var Publication = class {
   /* The instance's producing group, promotion's fact (legacy-store provides it until instance-setup does); null when
      no module provides it, which the attribution prose states rather than filling. */
   #producingGroup() {
-    const f8 = this.promotion.fact("producingGroup");
-    return f8 && f8.ok ? f8.value ?? null : null;
+    const f9 = this.promotion.fact("producingGroup");
+    return f9 && f9.ok ? f9.value ?? null : null;
   }
   /* ---------------------------------------------------------------- R23: the review provider */
   /** R23 (K240): a later module fills, once at start, the review doors this module and `case-authoring` read:
@@ -77768,7 +77772,7 @@ var Publication = class {
     const { name, module, fn } = this.#evidenceBlock;
     let value;
     try {
-      value = fn({ caseId, edition, findings: findings.map((f8) => f8.bundle_id) });
+      value = fn({ caseId, edition, findings: findings.map((f9) => f9.bundle_id) });
     } catch (e) {
       value = { unavailable: true, detail: `${module} could not compute this block: ${String(e && e.message || e).slice(0, 200)}` };
     }
@@ -79524,12 +79528,12 @@ case_project: ${pid}
       fileCount += files.length;
       return {
         ...b,
-        files: files.map((f8) => ({
-          path: f8.path,
-          sha256: f8.sha256,
-          bytes: f8.bytes,
-          blobSha: f8.blob_sha ?? null,
-          inline: !!f8.inline
+        files: files.map((f9) => ({
+          path: f9.path,
+          sha256: f9.sha256,
+          bytes: f9.bytes,
+          blobSha: f9.blob_sha ?? null,
+          inline: !!f9.inline
         })),
         /* The manifest chain and the base links, so the receiving side can
            re-derive the chain rather than believe it. `history` holds the
@@ -80956,8 +80960,8 @@ function publicationOps(p, url, body) {
 }
 
 // src/standards/checks.mjs
-var checks_exports20 = {};
-__export(checks_exports20, {
+var checks_exports21 = {};
+__export(checks_exports21, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal13
 });
@@ -81246,13 +81250,13 @@ var Standards = class {
       );
     const level = typeof first.level === "string" && first.level ? first.level : "undetermined";
     const differs = [];
-    for (const f8 of ["kind", "issuer"])
-      if (str8(declared[f8]) && str8(declared[f8]) !== first[f8])
+    for (const f9 of ["kind", "issuer"])
+      if (str8(declared[f9]) && str8(declared[f9]) !== first[f9])
         differs.push({
-          field: f8,
-          declared: str8(declared[f8]),
-          source: first[f8],
-          says: `recorded as declared; the matched source says ${f8} '${first[f8]}'`
+          field: f9,
+          declared: str8(declared[f9]),
+          source: first[f9],
+          says: `recorded as declared; the matched source says ${f9} '${first[f9]}'`
         });
     return {
       state: "matched",
@@ -81339,12 +81343,12 @@ var Standards = class {
   }
   /* R1, R10: the one write. The id is allocated, the document promoted and the rows written in one transaction, so a
      refusal anywhere leaves nothing (record-core R32). */
-  #write(f8, author, viewer, proposalId) {
+  #write(f9, author, viewer, proposalId) {
     return this.record.transact(() => {
       const at17 = this.#when();
-      const id = `${this.record.allocId("STD", at17.slice(0, 4)).id}-${f8.kind}`;
-      const source = this.sourceOf(f8.cite, f8);
-      const text3 = standardDoc({ id, ...f8, source, proposal: proposalId, author, at: at17 });
+      const id = `${this.record.allocId("STD", at17.slice(0, 4)).id}-${f9.kind}`;
+      const source = this.sourceOf(f9.cite, f9);
+      const text3 = standardDoc({ id, ...f9, source, proposal: proposalId, author, at: at17 });
       this.#writing = id;
       let r;
       try {
@@ -81354,7 +81358,7 @@ var Standards = class {
           snapKey: `${at17.replace(/[-:]/g, "")}_${rand6(4)}`,
           author,
           files: [{ path: "bundle.md", text: text3 }],
-          meta: { object_type: STANDARD, title: titleOf2(f8.cite), current_state: "recorded", created: at17, last_updated: at17 },
+          meta: { object_type: STANDARD, title: titleOf2(f9.cite), current_state: "recorded", created: at17, last_updated: at17 },
           actorIdentity: author,
           actorViewer: viewer ?? author
         });
@@ -81366,18 +81370,18 @@ var Standards = class {
         `INSERT INTO standards (standard_id, cite, kind, issuer, period_from, period_to, supersedes,
                        source_json, proposal_id, declared_by, declared_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
         id,
-        f8.cite,
-        f8.kind,
-        f8.issuer,
-        f8.period.from,
-        f8.period.to,
-        f8.supersedes,
+        f9.cite,
+        f9.kind,
+        f9.issuer,
+        f9.period.from,
+        f9.period.to,
+        f9.supersedes,
         JSON.stringify(source),
         proposalId,
         author,
         at17
       );
-      f8.texts.forEach((c, i) => this.sql.exec(
+      f9.texts.forEach((c, i) => this.sql.exec(
         `INSERT INTO standard_texts (standard_id, ord, content_id) VALUES (?,?,?)`,
         id,
         i,
@@ -81804,8 +81808,8 @@ function standardsOf(host, deps) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports21 = {};
-__export(checks_exports21, {
+var checks_exports22 = {};
+__export(checks_exports22, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal14
 });
@@ -82307,30 +82311,30 @@ var Conformance = class _Conformance {
       return refusal14("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
     const pins = [], seen = /* @__PURE__ */ new Set();
     for (const item of list2) {
-      const f8 = isObj11(item) ? {
+      const f9 = isObj11(item) ? {
         finding: str9(item.finding ?? item.id),
         version: str9(item.version),
         case: str9(item.case),
         edition: item.edition == null ? null : Number(item.edition)
       } : { finding: str9(item), version: null, case: null, edition: null };
       let items = [];
-      if (f8.finding) {
+      if (f9.finding) {
         let r = null;
         try {
-          r = this.publication.publishedEditionsOf({ finding: f8.finding, version: f8.version, project });
+          r = this.publication.publishedEditionsOf({ finding: f9.finding, version: f9.version, project });
         } catch {
           r = null;
         }
         items = r && r.ok !== false && Array.isArray(r.items) ? r.items : [];
-        items = items.filter((i) => i.project === project && (!f8.case || i.case === f8.case) && (f8.edition == null || i.edition === f8.edition));
+        items = items.filter((i) => i.project === project && (!f9.case || i.case === f9.case) && (f9.edition == null || i.edition === f9.edition));
       }
       if (!items.length)
-        return refusal14("FINDING_NOT_PUBLISHED", `${String(f8.finding ?? "a finding named").slice(0, 80)} is not a finding this project has published in a ratified case edition. A finding published only by another project, or not at all, is not one. Nothing was written.`, { finding: f8.finding });
+        return refusal14("FINDING_NOT_PUBLISHED", `${String(f9.finding ?? "a finding named").slice(0, 80)} is not a finding this project has published in a ratified case edition. A finding published only by another project, or not at all, is not one. Nothing was written.`, { finding: f9.finding });
       const pick2 = items.reduce((best, i) => !best || i.case > best.case || i.case === best.case && i.edition > best.edition ? i : best, null);
-      if (seen.has(f8.finding)) continue;
-      seen.add(f8.finding);
+      if (seen.has(f9.finding)) continue;
+      seen.add(f9.finding);
       pins.push({
-        finding: f8.finding,
+        finding: f9.finding,
         case: pick2.case,
         edition: pick2.edition,
         version_sha: pick2.version_sha ?? null,
@@ -82499,8 +82503,8 @@ var Conformance = class _Conformance {
     if (large) return large;
     const a = this.#actOf(act, pid, supersedes);
     if (!a.ok) return a;
-    const f8 = this.#pinFindings(findings, pid);
-    if (!f8.ok) return f8;
+    const f9 = this.#pinFindings(findings, pid);
+    if (!f9.ok) return f9;
     const s = this.#readStandards(standards, a.act, viewer);
     if (!s.ok) return s;
     const r = this.#readRows(rows, s.standards);
@@ -82523,7 +82527,7 @@ var Conformance = class _Conformance {
     return this.#write({
       project: pid,
       act: a,
-      pins: f8.pins,
+      pins: f9.pins,
       standards: s.standards,
       rows: r.rows,
       questions: qs.questions,
@@ -83002,12 +83006,12 @@ var Conformance = class _Conformance {
           outcome: s.outcome
         })),
         findings: this.#rows(`SELECT finding_id, case_id, edition, version_sha, role FROM determination_findings
-                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).map((f8) => this.membership.inSight(f8.finding_id, viewer) ? {
-          finding: f8.finding_id,
-          case: f8.case_id,
-          edition: Number(f8.edition),
-          version_sha: f8.version_sha,
-          role: f8.role
+                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).map((f9) => this.membership.inSight(f9.finding_id, viewer) ? {
+          finding: f9.finding_id,
+          case: f9.case_id,
+          edition: Number(f9.edition),
+          version_sha: f9.version_sha,
+          role: f9.role
         } : { finding: null, says: UNSEEN }),
         author: r.author,
         at: r.at,
@@ -83716,9 +83720,9 @@ var Actions = class _Actions {
     const out = [];
     for (const path of this.record.livePaths(id) || []) {
       if (path === "bundle.md") continue;
-      const f8 = this.record.readFile(id, path);
-      if (!f8) continue;
-      out.push(typeof f8.text === "string" ? { path, text: f8.text, bytes: new TextEncoder().encode(f8.text).length, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = this.record.readFile(id, path);
+      if (!f9) continue;
+      out.push(typeof f9.text === "string" ? { path, text: f9.text, bytes: new TextEncoder().encode(f9.text).length, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     return out;
   }
@@ -83727,9 +83731,9 @@ var Actions = class _Actions {
     this.record.releaseLease(id, who2);
   }
   #heldFm(id) {
-    const f8 = this.record.readFile(id, "bundle.md");
-    if (!f8 || typeof f8.text !== "string") return null;
-    const fm = parseFrontmatter(f8.text).data;
+    const f9 = this.record.readFile(id, "bundle.md");
+    if (!f9 || typeof f9.text !== "string") return null;
+    const fm = parseFrontmatter(f9.text).data;
     return fm && typeof fm === "object" ? fm : null;
   }
   #visibleAction(id, viewer) {
@@ -84004,7 +84008,7 @@ var Actions = class _Actions {
   /** R1–R3, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
   check(c) {
     const { pkg, meta, author, bundleId, files, head } = c;
-    const md = (files || []).find((f8) => f8 && f8.path === "bundle.md");
+    const md = (files || []).find((f9) => f9 && f9.path === "bundle.md");
     const nextFm = c.docFm && typeof c.docFm === "object" ? c.docFm : md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
     const heldFm = head ? this.#heldFm(bundleId) : null;
     const isAction = normalizeType(meta && meta.object_type) === "action" || nextFm && typeof nextFm === "object" && normalizeType(nextFm.object_type) === "action";
@@ -86066,8 +86070,8 @@ function parseFigure(figure2) {
 }
 function passageHolds(text3, figure2) {
   if (typeof text3 !== "string" || typeof figure2 !== "string") return false;
-  const f8 = fold(figure2);
-  return f8 !== "" && fold(text3).includes(f8);
+  const f9 = fold(figure2);
+  return f9 !== "" && fold(text3).includes(f9);
 }
 var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
 var toPrecision = (x) => Number(x.toPrecision(15));
@@ -86197,8 +86201,8 @@ function migrateConsequences(sql) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports22 = {};
-__export(checks_exports22, {
+var checks_exports23 = {};
+__export(checks_exports23, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at11 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -86758,14 +86762,14 @@ var Consequences = class {
         if (o.figure == null || !String(o.figure).trim()) {
           lacking ||= { code: "not_in_record", why: `operand ${i} states no figure as read` };
         } else {
-          const f8 = parseFigure(o.figure);
-          if (!f8.ok) return basisUnreadable(`operand ${i}: ${f8.why}`, { operand: i });
+          const f9 = parseFigure(o.figure);
+          if (!f9.ok) return basisUnreadable(`operand ${i}: ${f9.why}`, { operand: i });
           const text3 = this.#passageText(o.content);
           if (text3 === null)
             lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
           else if (!passageHolds(text3, o.figure))
             lacking ||= { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` };
-          else Object.assign(o, { number: f8.number, decimals: f8.decimals });
+          else Object.assign(o, { number: f9.number, decimals: f9.decimals });
         }
       }
       operands.push(o);
@@ -87251,8 +87255,8 @@ function migrateFilings(sql) {
 }
 
 // src/filings/checks.mjs
-var checks_exports23 = {};
-__export(checks_exports23, {
+var checks_exports24 = {};
+__export(checks_exports24, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf4
 });
@@ -87662,7 +87666,7 @@ var Filings = class _Filings {
       project: str11(d.project),
       act: isObj13(d.act) ? d.act : {},
       /* K252: conformance names a finding `finding` and a standard `standard`; each is read here under `id`. */
-      findings: (Array.isArray(d.findings) ? d.findings : []).map((f8) => isObj13(f8) ? { ...f8, id: str11(f8.finding) || str11(f8.id) } : f8),
+      findings: (Array.isArray(d.findings) ? d.findings : []).map((f9) => isObj13(f9) ? { ...f9, id: str11(f9.finding) || str11(f9.id) } : f9),
       standards: (Array.isArray(d.standards) ? d.standards : []).map((x) => isObj13(x) ? { ...x, id: str11(x.standard) || str11(x.id) } : x),
       live: d.live !== false && !str11(d.superseded_by),
       superseded_by: str11(d.superseded_by),
@@ -87753,10 +87757,10 @@ var Filings = class _Filings {
         srcs.push(sid);
       }
       out.standards = withheld ? none("a standard the determination names is not one you may see") : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
-      const fs = det.findings.filter((f8) => isObj13(f8) && str11(f8.id));
+      const fs = det.findings.filter((f9) => isObj13(f9) && str11(f9.id));
       out.findings = fs.length !== det.findings.length ? none("a finding the determination rests on is not one you may see") : fs.length ? {
-        value: fs.map((f8) => `${f8.id} (case ${f8.case ?? "undetermined"}, edition ${f8.edition ?? "undetermined"})`).join("; "),
-        source: fs.map((f8) => `${f8.id}@${f8.case ?? "?"}/${f8.edition ?? "?"}`).join(", ")
+        value: fs.map((f9) => `${f9.id} (case ${f9.case ?? "undetermined"}, edition ${f9.edition ?? "undetermined"})`).join("; "),
+        source: fs.map((f9) => `${f9.id}@${f9.case ?? "?"}/${f9.edition ?? "?"}`).join(", ")
       } : none("the determination names no finding");
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
     const gl = action.governing_laws;
@@ -87935,8 +87939,8 @@ ${text3}`;
   }
   /* A draft the viewer may see (through its action and the project it draws on), or null (R6, R7, R19; K316). */
   #draft(id, viewer) {
-    const f8 = str11(id);
-    const d = f8 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f8) : null;
+    const f9 = str11(id);
+    const d = f9 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f9) : null;
     return d && this.#action(d.action_id, viewer) && this.#sees(parse2(d.basis), viewer) ? d : null;
   }
   /* ---------------------------------------------------------------- R6: filingApprove */
@@ -88110,12 +88114,12 @@ ${text3}`;
   }
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
   /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. */
-  #fact(f8, det) {
-    if (!isObj13(f8) || !str11(f8.id))
+  #fact(f9, det) {
+    if (!isObj13(f9) || !str11(f9.id))
       return { finding: null, withheld: "an object you may not see", source: det.id };
-    const source = `${f8.id}@${f8.case ?? "?"}/${f8.edition ?? "?"}`;
-    const text3 = f8.version_sha ? this.#call(() => this.record.textAtSha(f8.id, f8.version_sha)) : null;
-    const base = { finding: f8.id, case: f8.case ?? null, edition: f8.edition ?? null, version_sha: f8.version_sha ?? null, source };
+    const source = `${f9.id}@${f9.case ?? "?"}/${f9.edition ?? "?"}`;
+    const text3 = f9.version_sha ? this.#call(() => this.record.textAtSha(f9.id, f9.version_sha)) : null;
+    const base = { finding: f9.id, case: f9.case ?? null, edition: f9.edition ?? null, version_sha: f9.version_sha ?? null, source };
     if (typeof text3 !== "string")
       return { ...base, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
     let fm = null;
@@ -88210,7 +88214,7 @@ ${text3}`;
   #assemble(a, det, viewer, marking) {
     const v = this.#view();
     const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det.findings.map((f8) => this.#fact(f8, det));
+    const facts = det.findings.map((f9) => this.#fact(f9, det));
     const events = [], undated = [];
     const act = det.act || {};
     const actDay = realDate(act.at) || (isObj13(act.period) ? realDate(act.period.from) : null);
@@ -88220,12 +88224,12 @@ ${text3}`;
       source: det.id,
       ...isObj13(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
     });
-    for (const f8 of facts) {
-      if (!f8.finding) continue;
-      const r = f8.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f8.case, Number(f8.edition)) : null;
+    for (const f9 of facts) {
+      if (!f9.finding) continue;
+      const r = f9.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f9.case, Number(f9.edition)) : null;
       push(
         r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
-        { event: `${f8.finding} published in case ${f8.case} edition ${f8.edition}`, source: f8.source }
+        { event: `${f9.finding} published in case ${f9.case} edition ${f9.edition}`, source: f9.source }
       );
     }
     if (a.state_history === null)
@@ -88251,7 +88255,7 @@ ${text3}`;
       });
     events.sort(byDayThenSource);
     const cites = [];
-    for (const f8 of facts) for (const c of f8.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f8.source });
+    for (const f9 of facts) for (const c of f9.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f9.source });
     for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str11(cid), source: det.id });
     for (const [i, e] of a.correspondence.entries())
       if (str11(e.artifact_sha)) cites.push({ capture_sha: str11(e.artifact_sha), source: `${a.id}#${Number.isInteger(e.ord) ? e.ord : i}` });
@@ -88313,7 +88317,7 @@ ${text3}`;
     return {
       determination: det.id,
       project: det.project,
-      findings: det.findings.filter((f8) => isObj13(f8) && str11(f8.id)).map((f8) => ({ id: f8.id, case: f8.case ?? null, edition: f8.edition ?? null })),
+      findings: det.findings.filter((f9) => isObj13(f9) && str11(f9.id)).map((f9) => ({ id: f9.id, case: f9.case ?? null, edition: f9.edition ?? null })),
       standards: det.standards.map((s) => str11(isObj13(s) ? s.id : s)).filter(Boolean)
     };
   }
@@ -88333,14 +88337,14 @@ ${text3}`;
       determination: basis.determination,
       causes: d.basis_changed.causes ?? []
     });
-    for (const f8 of basis.findings || []) {
-      const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f8.id, project: basis.project || null }));
-      const later = e && e.ok ? e.items.filter((i) => i.case === f8.case && Number(i.edition) > Number(f8.edition)) : [];
+    for (const f9 of basis.findings || []) {
+      const e = this.#call(() => this.publication.publishedEditionsOf({ finding: f9.id, project: basis.project || null }));
+      const later = e && e.ok ? e.items.filter((i) => i.case === f9.case && Number(i.edition) > Number(f9.edition)) : [];
       if (later.length) causes.push({
         cause: "finding_later_edition",
-        finding: f8.id,
-        case: f8.case,
-        edition: f8.edition,
+        finding: f9.id,
+        case: f9.case,
+        edition: f9.edition,
         later: Math.max(...later.map((i) => Number(i.edition)))
       });
     }
@@ -88690,7 +88694,7 @@ ${text3}`;
           },
           ...tier3 ? { tier3: {
             standards: d.standards.filter((s) => isObj13(s) && s.outcome === "noncompliant").map((s) => s.id),
-            factual_basis: d.findings.filter((f8) => isObj13(f8) && str11(f8.id)).map((f8) => ({ finding: f8.id, case: f8.case ?? null, edition: f8.edition ?? null })),
+            factual_basis: d.findings.filter((f9) => isObj13(f9) && str11(f9.id)).map((f9) => ({ finding: f9.id, case: f9.case ?? null, edition: f9.edition ?? null })),
             counsel: COUNSEL_SENTENCE
           } } : {}
         };
@@ -88718,8 +88722,8 @@ ${text3}`;
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, String(caseId ?? ""));
     const seen = /* @__PURE__ */ new Map();
     if (this.conformance && typeof this.conformance.determinationsFor === "function")
-      for (const f8 of Array.isArray(findings) ? findings : []) {
-        const page = this.#call(() => this.conformance.determinationsFor({ finding: f8, live: true, viewer: MACHINE_READER }));
+      for (const f9 of Array.isArray(findings) ? findings : []) {
+        const page = this.#call(() => this.conformance.determinationsFor({ finding: f9, live: true, viewer: MACHINE_READER }));
         for (const it of page && page.ok !== false && Array.isArray(page.items) ? page.items : []) {
           const id = str11(isObj13(it) ? it.id : it);
           if (!id || seen.has(id)) continue;
@@ -88745,26 +88749,26 @@ ${text3}`;
 };
 var instances24 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f8 = instances24.get(host);
-  if (!f8) {
+  let f9 = instances24.get(host);
+  if (!f9) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
-    f8 = new Filings({ ...d, host, storage, record });
-    instances24.set(host, f8);
-    f8.migrate();
+    f9 = new Filings({ ...d, host, storage, record });
+    instances24.set(host, f9);
+    f9.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
-    f8.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f8.evidenceBlock(arg));
+    f9.publication.registerEvidenceBlock("filings", "available_actions", (arg) => f9.evidenceBlock(arg));
   }
-  return f8;
+  return f9;
 }
-function filingsOps(f8, url, body) {
+function filingsOps(f9, url, body) {
   const q6 = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    filingprepare: () => f8.filingPrepare({ action: b.action ?? q6("action"), preparer: q6("author"), viewer: q6("viewer") }),
-    filingapprove: () => f8.filingApprove({ filing: b.filing ?? q6("filing"), text: b.text, author: q6("author"), viewer: q6("viewer") }),
-    filingsent: () => f8.filingRecordSent({
+    filingprepare: () => f9.filingPrepare({ action: b.action ?? q6("action"), preparer: q6("author"), viewer: q6("viewer") }),
+    filingapprove: () => f9.filingApprove({ filing: b.filing ?? q6("filing"), text: b.text, author: q6("author"), viewer: q6("viewer") }),
+    filingsent: () => f9.filingRecordSent({
       filing: b.filing ?? q6("filing"),
       at: b.at ?? q6("at"),
       medium: b.medium ?? null,
@@ -88773,21 +88777,21 @@ function filingsOps(f8, url, body) {
       author: q6("author"),
       viewer: q6("viewer")
     }),
-    counselpacket: () => f8.counselPacket({
+    counselpacket: () => f9.counselPacket({
       action: b.action ?? q6("action"),
       counsel: b.counsel ?? null,
       author: q6("author"),
       viewer: q6("viewer")
     }),
-    counselpacketread: () => f8.counselPacketRead({ id: q6("id"), version: q6("version"), viewer: q6("viewer") }),
-    counselpacketexport: () => f8.counselPacketExport({
+    counselpacketread: () => f9.counselPacketRead({ id: q6("id"), version: q6("version"), viewer: q6("viewer") }),
+    counselpacketexport: () => f9.counselPacketExport({
       id: b.id ?? q6("id"),
       version: b.version ?? q6("version"),
       author: q6("author"),
       viewer: q6("viewer")
     }),
-    filingsfor: () => f8.filingsFor({ action: q6("action"), viewer: q6("viewer") }),
-    theorypropose: () => f8.theoryPropose({
+    filingsfor: () => f9.filingsFor({ action: q6("action"), viewer: q6("viewer") }),
+    theorypropose: () => f9.theoryPropose({
       packet: b.packet ?? null,
       action: b.action ?? null,
       theory: b.theory,
@@ -88797,7 +88801,7 @@ function filingsOps(f8, url, body) {
       proposer: q6("author"),
       viewer: q6("viewer")
     }),
-    availableactions: () => f8.availableActions({ determination: q6("determination"), viewer: q6("viewer") })
+    availableactions: () => f9.availableActions({ determination: q6("determination"), viewer: q6("viewer") })
   };
 }
 
@@ -89038,8 +89042,8 @@ function migrateEscalation(sql) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports24 = {};
-__export(checks_exports24, {
+var checks_exports25 = {};
+__export(checks_exports25, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal15
 });
@@ -89420,8 +89424,8 @@ var Escalation = class {
     }));
   }
   #text(id) {
-    const f8 = this.record.readFile(id, "bundle.md");
-    return f8 && typeof f8.text === "string" ? f8.text : null;
+    const f9 = this.record.readFile(id, "bundle.md");
+    return f9 && typeof f9.text === "string" ? f9.text : null;
   }
   /* An action's ledger as `actions` answers it to this viewer; null when it does not answer one. */
   #ledger(action, viewer) {
@@ -89606,8 +89610,8 @@ var Escalation = class {
           item.oversight = { state: "undetermined", says: "the active profiles do not say whether this office is an oversight or audit body" };
       }
       if (a.stage === 5) {
-        const f8 = this.filings.filingsFor({ action: a.action, viewer });
-        item.filings = f8 && f8.ok !== false ? { drafts: f8.drafts ?? [], packets: f8.packets ?? [] } : null;
+        const f9 = this.filings.filingsFor({ action: a.action, viewer });
+        item.filings = f9 && f9.ok !== false ? { drafts: f9.drafts ?? [], packets: f9.packets ?? [] } : null;
       }
       return item;
     });
@@ -89679,8 +89683,8 @@ var Escalation = class {
     if (next === null)
       return refusal15("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
     const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
-      const f8 = this.record.readFile(e.id, path);
-      return typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes };
+      const f9 = this.record.readFile(e.id, path);
+      return typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes };
     });
     const fm = parseFm2(next) || {};
     const r = this.promotion.promote({
@@ -90204,10 +90208,10 @@ for (const name of [
   "escalationResume",
   "escalationsDue"
 ]) {
-  const f8 = Escalation.prototype[name];
+  const f9 = Escalation.prototype[name];
   Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function(...a) {
     try {
-      return f8.apply(this, a);
+      return f9.apply(this, a);
     } catch (e) {
       if (e instanceof ProviderAbsent) return refuseProviderUnavailable(e.provider);
       throw e;
@@ -90454,8 +90458,8 @@ function cadenceFor(authored, reading) {
       content_type: null,
       why: "the document states no frequency and the fetched document's content type could not be determined"
     };
-  const f8 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
-  if (f8 === void 0 || f8 !== null && !FREQ.includes(f8))
+  const f9 = Object.prototype.hasOwnProperty.call(CONTRACT_FREQUENCY, contract) ? CONTRACT_FREQUENCY[contract] : void 0;
+  if (f9 === void 0 || f9 !== null && !FREQ.includes(f9))
     return {
       frequency: null,
       source: "undetermined",
@@ -90464,11 +90468,11 @@ function cadenceFor(authored, reading) {
       why: `the contract '${contract}' is given no frequency the catalog knows`
     };
   return {
-    frequency: f8,
+    frequency: f9,
     source: "contract",
     contract,
     content_type: contentType,
-    ...f8 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
+    ...f9 === null ? { why: "an unmonitorable document has no check clock: its bytes carry no substance to watch" } : {}
   };
 }
 var DRIVE_SHELLS_LIMIT_DEFAULT = 200;
@@ -90718,8 +90722,8 @@ var Monitoring = class {
      contract (for the cadence), determined whether or not a comparison could be made. */
   async #assess({ baseline, bytes: bytes2, ctx, beforeAt, afterAt, view }) {
     if (!bytes2 || !ctx) return { assessment: null, content: null, basis: "the source served no document to assess" };
-    const asText7 = profilesAsText(ctx.content_type, bytes2.length, false);
-    if (!asText7) return {
+    const asText8 = profilesAsText(ctx.content_type, bytes2.length, false);
+    if (!asText8) return {
       assessment: null,
       content: null,
       basis: "the fetched document is not read as text, and assess reads text documents only"
@@ -91030,24 +91034,24 @@ var Monitoring = class {
             comparedBasis = "the captured baseline recorded no determined evidentiary digest, so the raw bytes were compared";
           else {
             const ct = res.headers.get("content-type");
-            const asText7 = profilesAsText(ct, bytes2.length, false);
+            const asText8 = profilesAsText(ct, bytes2.length, false);
             const headers = {};
             for (const [hk, hv] of res.headers) headers[hk.toLowerCase()] = hv;
             const profCtx = {
               headers,
               locator,
               content_type: ct || null,
-              text: asText7 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "",
+              text: asText8 ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "",
               ...view ? { view } : {}
             };
             const stackId = identify(profCtx);
             const fresh = await substanceDigests(
-              asText7 ? bytes2 : null,
+              asText8 ? bytes2 : null,
               stackId,
               profCtx,
               seen,
               false,
-              asText7 || bytes2.length > ODF_DIGEST_MAX ? null : bytes2
+              asText8 || bytes2.length > ODF_DIGEST_MAX ? null : bytes2
             );
             const bdOver = bd.over || null, freshOver = fresh.over || null;
             if (bdOver !== freshOver)
@@ -91197,7 +91201,7 @@ var Monitoring = class {
     }
     const liveSha = await sha256Hex11(live);
     const stamp2 = checked.replace(/[-:]/g, "") + "_" + [...crypto.getRandomValues(new Uint8Array(4))].map((x) => x.toString(16).padStart(2, "0")).join("");
-    const capCarried = !!(lookAfterPromote && carried.some((f8) => f8.sha256 === monCap.sha256));
+    const capCarried = !!(lookAfterPromote && carried.some((f9) => f9.sha256 === monCap.sha256));
     const promoteWith = async (withCap) => {
       const text22 = withEntry(!monCap ? null : withCap ? `the served bytes were captured as ${monCap.file} (sha256 ${monCap.sha256})` : `the served bytes (sha256 ${monCap.sha256}) were not filed: ${monCap.why}`);
       const addCap = withCap && !capCarried;
@@ -92047,7 +92051,7 @@ var Monitoring = class {
         notDocuments[drive.shape] = (notDocuments[drive.shape] || 0) + 1;
         continue;
       }
-      const f8 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
+      const f9 = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, r.id);
       const base = {
         bundle: r.id,
         locator: r.locator,
@@ -92056,17 +92060,17 @@ var Monitoring = class {
         kind: drive.kind
       };
       let reg = null;
-      if (f8 && typeof f8.content === "string") {
+      if (f9 && typeof f9.content === "string") {
         try {
-          reg = JSON.parse(f8.content);
+          reg = JSON.parse(f9.content);
         } catch {
           reg = null;
         }
-      } else if (f8) {
+      } else if (f9) {
         unreadable.push({ ...base, reason: "the register is not held inline" });
         continue;
       }
-      if (f8 && !reg) {
+      if (f9 && !reg) {
         unreadable.push({ ...base, reason: "the register is not parsable JSON" });
         continue;
       }
@@ -92139,7 +92143,7 @@ var Monitoring = class {
   gatheringCheck(c) {
     const pkg = c && c.pkg ? c.pkg : {};
     const files = Array.isArray(c && c.files) ? c.files : [];
-    const gj = pkg.replay ? null : files.find((f8) => f8.path === "data/gathering.json");
+    const gj = pkg.replay ? null : files.find((f9) => f9.path === "data/gathering.json");
     if (!gj || typeof gj.text !== "string") return null;
     const gf = [];
     checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf);
@@ -92231,10 +92235,10 @@ var Monitoring = class {
       MONITORING_READ_MAX + 1
     );
     let unread = files.length > MONITORING_READ_MAX;
-    for (const f8 of files.slice(0, MONITORING_READ_MAX)) {
+    for (const f9 of files.slice(0, MONITORING_READ_MAX)) {
       let g = null;
       try {
-        g = typeof f8.content === "string" ? JSON.parse(f8.content) : null;
+        g = typeof f9.content === "string" ? JSON.parse(f9.content) : null;
       } catch {
         g = null;
       }
@@ -92243,7 +92247,7 @@ var Monitoring = class {
         if (r && typeof r === "object" && r.status === "open")
           items.push({
             kind: "named-request",
-            bundle: f8.bundle_id,
+            bundle: f9.bundle_id,
             id: r.id ?? null,
             target: r.target?.text ?? null,
             locators: Array.isArray(r.locators) ? r.locators : [],
@@ -92255,7 +92259,7 @@ var Monitoring = class {
         if (w && typeof w === "object" && w.ratified === true)
           items.push({
             kind: "ratified-sweep",
-            bundle: f8.bundle_id,
+            bundle: f9.bundle_id,
             id: w.id ?? null,
             sources: Array.isArray(w.sources) ? w.sources : []
           });
@@ -92431,7 +92435,7 @@ var Monitoring = class {
             break;
           }
           for (const x of r.captures || []) {
-            const mine = (x.findings || []).filter((f8) => (f8.projects || []).includes(project)).map((f8) => f8.bundle_id);
+            const mine = (x.findings || []).filter((f9) => (f9.projects || []).includes(project)).map((f9) => f9.bundle_id);
             if (mine.length) captures.push({ c: x.capture_sha, rests: "finding", findings: mine });
           }
           n++;
@@ -92484,7 +92488,7 @@ var Monitoring = class {
       const e = byBundle.get(c.bundle);
       e.captures.push(c.capture);
       for (const k of c.rests_on || []) e.rests.add(k);
-      for (const f8 of c.findings || []) e.findings.add(f8);
+      for (const f9 of c.findings || []) e.findings.add(f9);
     }
     return [...byBundle.values()].map((b) => ({
       key: `monitoring::${project}::${b.bundle}`,
@@ -92797,8 +92801,8 @@ var Scheduler = class {
     this.#owners = owners;
   }
   #owner(name) {
-    const f8 = this.#owners[name];
-    return typeof f8 === "function" ? f8() : null;
+    const f9 = this.#owners[name];
+    return typeof f9 === "function" ? f9() : null;
   }
   /* ---- R5, R6: this module's own consumers, each calling its owner's services ---- */
   #own() {
@@ -95164,21 +95168,21 @@ var InstanceSetup = class _InstanceSetup {
             detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself` : `the domain serves no ${GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
           } else if (status >= 200 && status < 300) {
             const text3 = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
-            let f8 = null;
+            let f9 = null;
             try {
-              f8 = JSON.parse(text3);
+              f9 = JSON.parse(text3);
             } catch {
-              f8 = null;
+              f9 = null;
             }
-            const isObject = !!f8 && typeof f8 === "object" && !Array.isArray(f8);
-            const inst = isObject && typeof f8.instance === "string" ? instanceAddress(f8.instance) : null;
-            const grp = isObject && typeof f8.group === "string" ? f8.group.trim() : null;
+            const isObject = !!f9 && typeof f9 === "object" && !Array.isArray(f9);
+            const inst = isObject && typeof f9.instance === "string" ? instanceAddress(f9.instance) : null;
+            const grp = isObject && typeof f9.group === "string" ? f9.group.trim() : null;
             if (inst === address && grp === slug) {
               verdict = "verified";
               detail = `the file names this instance (${address}) and its slug (${slug})`;
             } else {
               verdict = "mismatched";
-              detail = !isObject ? "the file is not the JSON object this plane reads ({ instance, group })" : `the file names instance ${JSON.stringify(inst ?? f8.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
+              detail = !isObject ? "the file is not the JSON object this plane reads ({ instance, group })" : `the file names instance ${JSON.stringify(inst ?? f9.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
             }
           } else {
             detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
@@ -95536,6 +95540,11 @@ function instanceSetupStore(Base) {
     }
   };
 }
+function notAnswered(out, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (out && out.refused === true && out.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
+  return storeSilent2(op, out ? out.correlation : void 0);
+}
 var PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "groupidentitypublic"]);
 async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic", doAnswer2) {
   if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: void 0 };
@@ -95548,24 +95557,26 @@ async function publicInstanceGroup(env, storeName, projection = "instancegrouppu
   if (!stub) return { answered: false, result: void 0 };
   return doAnswer2(stub.fetch(`http://do/${projection}`));
 }
-async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, io) {
+  const { json: json5, doAnswer: doAnswer2 } = io;
   if (viewer) {
     const out = await doAnswer2(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
-    if (!out.answered) return storeSilent2("instancegroup");
+    if (!out.answered) return notAnswered(out, "instancegroup", io);
     return json5({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
   }
   const pub = await publicInstanceGroup(env, storeName, "instancegrouppublic", doAnswer2);
-  if (!pub.answered) return storeSilent2("instancegroup");
+  if (!pub.answered) return notAnswered(pub, "instancegroup", io);
   return json5({ ok: true, result: pub.result, store: storeName }, 200);
 }
-async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, io) {
+  const { json: json5, doAnswer: doAnswer2 } = io;
   const out = await doAnswer2(env.STORE.get(env.STORE.idFromName(storeName)).fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
-  if (!out.answered) return storeSilent2("groupidentity");
+  if (!out.answered) return notAnswered(out, "groupidentity", io);
   return json5({ ok: true, result: out.result, store: storeName, ...viewer ? { tokenClass: cls } : {} }, 200);
 }
-async function bootstrapReport(env, fp, { members = false, stub, json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function bootstrapReport(env, fp, { members = false, stub, json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2, storeRefusal: storeRefusal2 }) {
   const out = await doAnswer2(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-  if (!out.answered) return storeSilent2("bootstrap");
+  if (!out.answered) return notAnswered(out, "bootstrap", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   return json5({
     ok: true,
     service: "bio-plane",
@@ -95630,11 +95641,13 @@ async function selftest(env, storeName, { cls = null, viewer = "", scratch = "sc
   return json5(out, out.ok ? 200 : 500);
 }
 var RUNTIME_ASYMMETRY = "a refused subrequest throws and is caught, so the subrequest ceiling is known by having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can report its own death: consumption is measured on every run and the ceiling is found by op=cpuprobe, whose checkpoints survive the kill.";
-async function runtimeOp(stub, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function runtimeOp(stub, io) {
+  const { json: json5, doAnswer: doAnswer2 } = io;
   const obsOut = await doAnswer2(stub.fetch("http://x/runtimeobservations"));
   const probeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
   const limOut = await doAnswer2(stub.fetch("http://x/capturelimit?runtime=subrequests"));
-  if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent2("runtime");
+  const miss = [obsOut, probeOut, limOut].find((o) => !o.answered);
+  if (miss) return notAnswered(miss, "runtime", io);
   return json5({
     ok: true,
     measured: obsOut.result,
@@ -95643,9 +95656,11 @@ async function runtimeOp(stub, { json: json5, storeSilent: storeSilent2, doAnswe
     asymmetry: RUNTIME_ASYMMETRY
   });
 }
-async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {}, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {}, io) {
+  const { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 } = io;
   const beforeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
-  if (!beforeOut.answered || !beforeOut.result) return storeSilent2("cpuprobe");
+  if (!beforeOut.answered) return notAnswered(beforeOut, "cpuprobe", io);
+  if (!beforeOut.result) return storeSilent2("cpuprobe");
   const iters = Math.max(1e5, Number(iterations) || 2e6);
   const budget = Math.max(50, Number(budget_ms) || 2e4);
   const id = typeof run === "string" && run ? run : `${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19)}Z~${crypto.randomUUID().slice(0, 8)}`;
@@ -95655,7 +95670,8 @@ async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = nul
     body: JSON.stringify(body)
   }));
   const started = await post("cpuprobestart", { run: id, iterations: iters, budgetMs: budget });
-  if (!started.answered || !started.result || started.result.recorded !== true) return storeSilent2("cpuprobe");
+  if (!started.answered) return notAnswered(started, "cpuprobe", io);
+  if (!started.result || started.result.recorded !== true) return storeSilent2("cpuprobe");
   let confirmed = 0;
   const UNCONFIRMED = Symbol("unconfirmed");
   let r;
@@ -95678,7 +95694,7 @@ async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = nul
   if (!complete) r = { completed: confirmed, elapsed_ms: null, reason: null };
   if (complete) await post("cpuprobeend", { run: id, completed: r.completed, elapsedMs: r.elapsed_ms, reason: r.reason });
   const afterOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
-  if (!afterOut.answered) return storeSilent2("cpuprobe");
+  if (!afterOut.answered) return notAnswered(afterOut, "cpuprobe", io);
   return json5({
     ok: true,
     run: { ...r, id },
@@ -96071,9 +96087,9 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
        FINDING is the unit of truth: what a member signed is one
        document's bytes, and a case-level signature would be a signature
        over something nobody reviewed. */
-    findings: cs.findings.map((f8) => ({
-      bundle_id: f8.bundle_id,
-      title: f8.title,
+    findings: cs.findings.map((f9) => ({
+      bundle_id: f9.bundle_id,
+      title: f9.title,
       /* CASE-5, AND THIS ONE LINE WAS A FALSE STATEMENT IN A SIGNED-ADJACENT
          ARTIFACT. It read `edition: cs.edition` — the CASE's number,
          written onto every member as though it were the member's. While
@@ -96082,8 +96098,8 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          contradicts, and this is the copy that TRAVELS, so a reader has no
          way to check it against anything. It is the member's own edition,
          off the member's own published row, resolved by the pin. */
-      edition: f8.edition,
-      bundle_sha: f8.bundle_sha,
+      edition: f9.edition,
+      bundle_sha: f9.bundle_sha,
       /* THE PIN AND THE DESIGNATION, INSIDE THE CONTAINER. The design's
          sentence: the CASE artifact freezes its members — *"content by
          hash, version, per-member strength pair, role, the bar, the
@@ -96097,12 +96113,12 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          from the finding's own hash. `role` is the authored designation
          (clause 4): a stranger holding a SUPPORTING member must be able to
          see it was not presented as carrying the case. */
-      version_sha: f8.version_sha ?? null,
-      role: f8.role ?? null,
-      ratified_at: f8.ratified_at,
-      gate_version: f8.gate_version,
-      attestor: f8.attestor,
-      delivered_by: f8.delivered_by,
+      version_sha: f9.version_sha ?? null,
+      role: f9.role ?? null,
+      ratified_at: f9.ratified_at,
+      gate_version: f9.gate_version,
+      attestor: f9.attestor,
+      delivered_by: f9.delivered_by,
       /* CASE-5 CORRECTS `statement`, AND IT IS THE ONE FIELD IN THIS
          ARTIFACT THAT WAS UNREADABLE BY THE READER IT EXISTS FOR.
          `ratifyStatement()` returns a Uint8Array — it is the message fed
@@ -96118,20 +96134,20 @@ async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
          right for `verifySshsig`'s caller two thousand lines up. */
       signature: {
         namespace: NS_RATIFY,
-        statement: new TextDecoder().decode(ratifyStatement(f8.bundle_id, f8.bundle_sha)),
-        armored: f8.sig_armored
+        statement: new TextDecoder().decode(ratifyStatement(f9.bundle_id, f9.bundle_sha)),
+        armored: f9.sig_armored
       },
-      strength: f8.strength,
-      required_strength: f8.required,
-      parts: f8.parts.map((p) => `${f8.bundle_id}/${p.path}`)
+      strength: f9.strength,
+      required_strength: f9.required,
+      parts: f9.parts.map((p) => `${f9.bundle_id}/${p.path}`)
     })),
     /* The parts are NAMESPACED BY FINDING, and that is forced rather than
        chosen: every finding carries a `bundle.md`, so a flat parts[]
        would have two members claiming one path and the archive would say
        two things about one name. */
-    parts: cs.findings.flatMap((f8) => f8.parts.map((p) => ({
-      path: `${f8.bundle_id}/${p.path}`,
-      finding: f8.bundle_id,
+    parts: cs.findings.flatMap((f9) => f9.parts.map((p) => ({
+      path: `${f9.bundle_id}/${p.path}`,
+      finding: f9.bundle_id,
       sha256: p.sha256,
       kind: p.kind,
       bytes: p.bytes ?? null
@@ -96410,9 +96426,9 @@ async function publishedRoutes({ op, url, env, stub }) {
     verification: {
       container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
       manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
-      findings: findings.map((f8) => ({
-        bundle_id: f8.bundle_id,
-        bytes: `op=publishedbytes&sha256=${f8.bundle_sha}`
+      findings: findings.map((f9) => ({
+        bundle_id: f9.bundle_id,
+        bytes: `op=publishedbytes&sha256=${f9.bundle_sha}`
       })),
       detail: "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own bundle sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without this instance's cooperation."
     }
@@ -96420,8 +96436,8 @@ async function publishedRoutes({ op, url, env, stub }) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports25 = {};
-__export(checks_exports25, {
+var checks_exports26 = {};
+__export(checks_exports26, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS2,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY2,
@@ -98007,7 +98023,7 @@ var Ratification = class _Ratification {
      names each finding with its check. */
   check(c) {
     if (!c || c.replay || c.pkg && c.pkg.replay) return null;
-    const md = Array.isArray(c.files) ? c.files.find((f8) => f8 && f8.path === "bundle.md") : null;
+    const md = Array.isArray(c.files) ? c.files.find((f9) => f9 && f9.path === "bundle.md") : null;
     if (!md || typeof md.text !== "string") return null;
     let fm = null;
     try {
@@ -98064,8 +98080,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/citation/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -98363,12 +98379,12 @@ var Citation = class {
      at the top level (N196: a refusal nested one level down reads to the D-240 reader as an answer). It reads one
      file, bounded by the inline bound (1 MiB, promotion R48), and publishes no collection. */
   #document(project, detail) {
-    const f8 = this.record.readFile(project, "bundle.md");
-    if (!f8 || typeof f8.text !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
-    const parsed = parseFrontmatter(f8.text);
+    const f9 = this.record.readFile(project, "bundle.md");
+    if (!f9 || typeof f9.text !== "string") return { ok: false, reason: "NO_BUNDLE_MD", project };
+    const parsed = parseFrontmatter(f9.text);
     if (!parsed.data)
       return { ok: false, reason: "UNPARSEABLE_FRONTMATTER", project, ...detail ? { detail } : {} };
-    return { ok: true, text: f8.text, data: parsed.data };
+    return { ok: true, text: f9.text, data: parsed.data };
   }
   /* Promote the rewritten `bundle.md` over the head, every OTHER live file carried forward untouched: promote writes a
      whole image, so a writer that mentions one file deletes the rest (the default that once destroyed a provenance
@@ -98378,9 +98394,9 @@ var Citation = class {
     const carried = [];
     for (const path of this.record.livePaths(project) || []) {
       if (path === "bundle.md") continue;
-      const f8 = this.record.readFile(project, path);
-      if (!f8) continue;
-      carried.push(typeof f8.text === "string" ? { path, text: f8.text, sha256: f8.sha256 } : { path, blobSha: f8.blobSha, sha256: f8.sha256, bytes: f8.bytes });
+      const f9 = this.record.readFile(project, path);
+      if (!f9) continue;
+      carried.push(typeof f9.text === "string" ? { path, text: f9.text, sha256: f9.sha256 } : { path, blobSha: f9.blobSha, sha256: f9.sha256, bytes: f9.bytes });
     }
     const bytes2 = new TextEncoder().encode(text3);
     return this.promotion.promote({
@@ -99863,9 +99879,9 @@ var CAPTURE_ACTS = [
      guessed anywhere in this file. */
   { id: "attesttext", label: "Attest that this text matches the page image" }
 ];
-var edgesFrom = (f8) => vocabFor(STATES, f8.declared_type ?? f8.object_type)?.edges?.[f8.current_state] || [];
+var edgesFrom = (f9) => vocabFor(STATES, f9.declared_type ?? f9.object_type)?.edges?.[f9.current_state] || [];
 var countOf = (v) => typeof v === "number" && Number.isFinite(v) ? v : Array.isArray(v) ? v.length : null;
-var anyVersionEdgeTo = (f8, to) => (f8.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
+var anyVersionEdgeTo = (f9, to) => (f9.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
 var ACTS = [
   /* S-11 step 5. collected -> verified is the one legal edge; the named-member
      and entry-requirement guards are act-time refusals the store words itself. */
@@ -99874,7 +99890,7 @@ var ACTS = [
     label: "Release (verify)",
     weight: "refuse",
     types: ["information"],
-    applies: (f8, ty) => ty === "information" && edgesFrom(f8).includes("verified")
+    applies: (f9, ty) => ty === "information" && edgesFrom(f9).includes("verified")
   },
   /* S-11 step 4. verified -> retired, AND nothing with a live cites edge: the
      same predicate the store's CITED refusal runs (#citesInto). A severed edge
@@ -99884,7 +99900,7 @@ var ACTS = [
     label: "Retire",
     weight: "refuse",
     types: ["information"],
-    applies: (f8, ty) => ty === "information" && edgesFrom(f8).includes("retired") && !(countOf(f8.cites_in?.confirmed) > 0)
+    applies: (f9, ty) => ty === "information" && edgesFrom(f9).includes("retired") && !(countOf(f9.cites_in?.confirmed) > 0)
   },
   /* S-11 step 3. An inquiry (né focus/problem — the type reaches here through
      normalizeType, so all three spellings land on this arm) may be
@@ -99913,7 +99929,7 @@ var ACTS = [
     label: "Dispose (defer or dismiss)",
     weight: "refuse",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && !f8.case_member && DISPOSITIONS.some((d) => edgesFrom(f8).includes(d))
+    applies: (f9, ty) => ty === "inquiry" && !f9.case_member && DISPOSITIONS.some((d) => edgesFrom(f9).includes(d))
   },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
      its `surfaced` alias, and nothing else. Weight `single`, the first act
@@ -99968,7 +99984,7 @@ var ACTS = [
     label: "Conclude",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && (edgesFrom(f8).includes("concluded") || f8.current_state === "concluded" && f8.concludes_for_project === true)
+    applies: (f9, ty) => ty === "inquiry" && (edgesFrom(f9).includes("concluded") || f9.current_state === "concluded" && f9.concludes_for_project === true)
   },
   /* REC-31. An inquiry the group SET DOWN, whose own machine offers the way
      back to `open`. TWO conditions and no third: the FROM state is in the
@@ -100011,7 +100027,7 @@ var ACTS = [
     label: "Reopen",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f8.current_state) || !!f8.case_member) && edgesFrom(f8).includes("open")
+    applies: (f9, ty) => ty === "inquiry" && (REOPENABLE_FROM.includes(f9.current_state) || !!f9.case_member) && edgesFrom(f9).includes("open")
   },
   /* REC-14. An inquiry whose machine offers the `published` edge — which is
        `concluded` and nothing else, because a material set cannot be asserted
@@ -100132,7 +100148,7 @@ var ACTS = [
     label: "Publish (author the case)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && (f8.current_state === "concluded" || f8.concluded_for_project === true) && (!f8.case_member || f8.edition_warranted_for_project === true) && f8.project_owner !== false
+    applies: (f9, ty) => ty === "inquiry" && (f9.current_state === "concluded" || f9.concluded_for_project === true) && (!f9.case_member || f9.edition_warranted_for_project === true) && f9.project_owner !== false
   },
   /* REC-16. An inquiry whose machine offers the `divided` edge — `open`, its
      `surfaced` alias, and `concluded` — AND WHICH RESTS ON SOMETHING. Weight
@@ -100185,7 +100201,7 @@ var ACTS = [
     weight: "single",
     types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
-    applies: (f8, ty) => ty === "inquiry" && edgesFrom(f8).includes("divided") && !f8.case_member && (f8.basis_legs ?? 0) >= 1 && (f8.rested_on?.working ?? 0) === 0
+    applies: (f9, ty) => ty === "inquiry" && edgesFrom(f9).includes("divided") && !f9.case_member && (f9.basis_legs ?? 0) >= 1 && (f9.rested_on?.working ?? 0) === 0
   },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
        something, and whose record is still working.
@@ -100243,7 +100259,7 @@ var ACTS = [
        would then refuse it. That is a pre-flight disagreeing with the refusal it
        fronts, which is DEC-8's headline failure and the one thing this file
        exists to prevent. `divided` is untouched: it is still a state. */
-    applies: (f8, ty) => ty === "inquiry" && (f8.basis_legs ?? 0) >= 1 && !f8.case_member && f8.current_state !== "divided"
+    applies: (f9, ty) => ty === "inquiry" && (f9.basis_legs ?? 0) >= 1 && !f9.case_member && f9.current_state !== "divided"
   },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
        guards are type-only on both: any information bundle may be cited (cite
@@ -100297,7 +100313,7 @@ var ACTS = [
     label: "Move this action",
     weight: "single",
     types: ["action"],
-    applies: (f8, ty) => ty === "action" && edgesFrom(f8).length > 0
+    applies: (f9, ty) => ty === "action" && edgesFrom(f9).length > 0
   },
   /* REC-24 (d). Recording what was sent, what came back, or that nothing did.
      Published for an action in ANY state, and the breadth is deliberate: the
@@ -100313,7 +100329,7 @@ var ACTS = [
     label: "Record correspondence",
     weight: "single",
     types: ["action"],
-    applies: (f8, ty) => ty === "action"
+    applies: (f9, ty) => ty === "action"
   },
   /* D-149. Stating which laws govern the request, on an action in ANY state, for actioncorrespond's reason:
      the store's own guard is the object's TYPE and nothing else. Weight `single`: one list, one act. */
@@ -100322,7 +100338,7 @@ var ACTS = [
     label: "State governing laws",
     weight: "single",
     types: ["action"],
-    applies: (f8, ty) => ty === "action"
+    applies: (f9, ty) => ty === "action"
   },
   /* REC-214. Revising the risk tier, on an action in ANY state, for actioncorrespond's reason: the store's own
      guard is the object's TYPE and nothing else — a member may re-assess the legal exposure of a resolved action
@@ -100332,7 +100348,7 @@ var ACTS = [
     label: "Revise risk tier",
     weight: "single",
     types: ["action"],
-    applies: (f8, ty) => ty === "action"
+    applies: (f9, ty) => ty === "action"
   },
   /* PL-2 / IS-2 — THE SIX MEMBER OPS OF THE SIXTH STATE MACHINE.
    *
@@ -100389,28 +100405,28 @@ var ACTS = [
     label: "Accept a reading of the evidence",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && anyVersionEdgeTo(f8, "accepted")
+    applies: (f9, ty) => ty === "inquiry" && anyVersionEdgeTo(f9, "accepted")
   },
   {
     id: "versionreject",
     label: "Turn down a reading (with a reason)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && anyVersionEdgeTo(f8, "rejected")
+    applies: (f9, ty) => ty === "inquiry" && anyVersionEdgeTo(f9, "rejected")
   },
   {
     id: "versionconsider",
     label: "Set a reading aside for now (with a reason)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && anyVersionEdgeTo(f8, "considering")
+    applies: (f9, ty) => ty === "inquiry" && anyVersionEdgeTo(f9, "considering")
   },
   {
     id: "versionrevert",
     label: "Put a reading back to where nobody had acted on it",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && anyVersionEdgeTo(f8, "suggested")
+    applies: (f9, ty) => ty === "inquiry" && anyVersionEdgeTo(f9, "suggested")
   },
   /* MAKE-CURRENT is offered when the question holds a reading a member has
      ACCEPTED, which is the store's own entry requirement (current implies
@@ -100422,7 +100438,7 @@ var ACTS = [
     label: "Stand this project on a reading",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && (f8.basis_version_states ?? []).includes("accepted")
+    applies: (f9, ty) => ty === "inquiry" && (f9.basis_version_states ?? []).includes("accepted")
   },
   /* REC-136 / INVESTIGATIVE-SESSION.md §7.1 item 7: a PROJECT withdraws its
      conclusion, and the withdrawal APPENDS — the conclusion stays in the record.
@@ -100437,7 +100453,7 @@ var ACTS = [
     label: "Withdraw this project's conclusion (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && (f8.basis_version_states ?? []).includes("accepted")
+    applies: (f9, ty) => ty === "inquiry" && (f9.basis_version_states ?? []).includes("accepted")
   },
   /* HIDE is offered wherever a reading exists AT ALL, in any state, and that
      breadth is deliberate rather than an omission: the prune offer's whole point
@@ -100451,7 +100467,7 @@ var ACTS = [
     label: "Hide a reading from the display (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && (f8.basis_versions ?? 0) >= 1
+    applies: (f9, ty) => ty === "inquiry" && (f9.basis_versions ?? 0) >= 1
   },
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
      reinstate, and only there. Each of the three edits the project's own document, and the
@@ -100471,7 +100487,7 @@ var ACTS = [
        citable and the store refuses RETIRED_NOT_CITABLE for every caller, so the act is not
        offered on one — offering it would be the pre-flight disagreeing with the refusal it
        fronts (DEC-8). `source_status` is not read: a removed or modified source stays citable. */
-    applies: (f8, ty) => ty === "information" && f8.current_state !== "retired" || ty === "project" && f8.project_participant !== false || ty === "inquiry"
+    applies: (f9, ty) => ty === "information" && f9.current_state !== "retired" || ty === "project" && f9.project_participant !== false || ty === "inquiry"
   },
   /* S-11 step 2: withdrawing a citation without deleting it. From the CITED
        side: some CASE holds a live cites edge to it. From the case's own side:
@@ -100514,7 +100530,7 @@ var ACTS = [
     label: "Sever a citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f8, ty) => (ty === "information" || ty === "inquiry") && (f8.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && countOf(f8.cites_out?.confirmed) > 0 && f8.project_participant !== false
+    applies: (f9, ty) => (ty === "information" || ty === "inquiry") && (f9.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && countOf(f9.cites_out?.confirmed) > 0 && f9.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
        refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
@@ -100540,7 +100556,7 @@ var ACTS = [
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f8, ty) => (ty === "information" || ty === "inquiry") && (f8.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f8.current_state === "retired") || ty === "project" && countOf(f8.cites_out?.severed_reinstatable) > 0 && f8.project_participant !== false
+    applies: (f9, ty) => (ty === "information" || ty === "inquiry") && (f9.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f9.current_state === "retired") || ty === "project" && countOf(f9.cites_out?.severed_reinstatable) > 0 && f9.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -100584,14 +100600,14 @@ var ACTS = [
     label: "Invite a member to this project",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.owner === true
+    applies: (f9, ty) => ty === "project" && f9.roster?.owner === true
   },
   {
     id: "projectjoin",
     label: "Join this project",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && typeof f8.roster?.state === "string" && f8.roster.state !== "joined"
+    applies: (f9, ty) => ty === "project" && typeof f9.roster?.state === "string" && f9.roster.state !== "joined"
   },
   /* N45 (R18): an owner is offered leave only while ANOTHER owner stays committed (has not asked to leave), which is
      when membership R35 accepts it (LAST_COMMITTED_OWNER otherwise). The owner floor alone counted leaving owners too,
@@ -100601,35 +100617,35 @@ var ACTS = [
     label: "Ask to leave this project",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.state === "joined" && (f8.roster?.owner !== true || f8.roster?.other_owner_committed === true)
+    applies: (f9, ty) => ty === "project" && f9.roster?.state === "joined" && (f9.roster?.owner !== true || f9.roster?.other_owner_committed === true)
   },
   {
     id: "projectremove",
     label: "Remove a participant",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.owner === true
+    applies: (f9, ty) => ty === "project" && f9.roster?.owner === true
   },
   {
     id: "projectowneradd",
     label: "Add an owner",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.owner === true
+    applies: (f9, ty) => ty === "project" && f9.roster?.owner === true
   },
   {
     id: "projectownerremove",
     label: "Remove an owner (with a reason)",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.owner === true && f8.roster?.owner_floor_clear === true
+    applies: (f9, ty) => ty === "project" && f9.roster?.owner === true && f9.roster?.owner_floor_clear === true
   },
   {
     id: "projectownerrescue",
     label: "Add an owner to a project whose owners are all inactive (with a reason)",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.roster?.rescue_open === true
+    applies: (f9, ty) => ty === "project" && f9.roster?.rescue_open === true
   },
   /* REC-149 (Membership v2 §7.14): WHETHER THIS PROJECT CAN BE FOUND — an OWNER's recorded act on the project
      that is the TARGET. It asks the PAIR fact `project_target_owner` (`#isProjectOwner(target, caller)`, the one
@@ -100643,7 +100659,7 @@ var ACTS = [
     label: "Choose whether this project can be found",
     weight: "single",
     types: ["project"],
-    applies: (f8, ty) => ty === "project" && f8.project_target_owner === true
+    applies: (f9, ty) => ty === "project" && f9.project_target_owner === true
   }
 ];
 var MACHINE_REFUSALS = {
@@ -100895,18 +100911,18 @@ function priorOf(dispositions, key) {
 function cardinalityGroups(feed) {
   const groups = /* @__PURE__ */ new Map();
   for (const inst of feed && Array.isArray(feed.instances) ? feed.instances : []) {
-    for (const f8 of Array.isArray(inst.findings) ? inst.findings : []) {
-      if (!f8 || f8.kind !== CARDINALITY_EXCEEDED) continue;
-      const key = `${inst.progression_key}::${f8.stage_key}`;
+    for (const f9 of Array.isArray(inst.findings) ? inst.findings : []) {
+      if (!f9 || f9.kind !== CARDINALITY_EXCEEDED) continue;
+      const key = `${inst.progression_key}::${f9.stage_key}`;
       let g = groups.get(key);
       if (!g) {
         g = {
           key,
           progression_key: inst.progression_key,
           progression_label: inst.progression_label,
-          stage_key: f8.stage_key,
-          stage_label: f8.stage_label,
-          cardinality: f8.cardinality,
+          stage_key: f9.stage_key,
+          stage_label: f9.stage_label,
+          cardinality: f9.cardinality,
           definition_version: inst.definition_version,
           instances: []
         };
@@ -100917,9 +100933,9 @@ function cardinalityGroups(feed) {
         entity_label: inst.entity_label ?? null,
         progression_key: inst.progression_key,
         definition_version: inst.definition_version,
-        document_count: f8.document_count,
-        grade: f8.grade_determined === true ? f8.grade : null,
-        grade_determined: f8.grade_determined === true
+        document_count: f9.document_count,
+        grade: f9.grade_determined === true ? f9.grade : null,
+        grade_determined: f9.grade_determined === true
       });
     }
   }
@@ -101185,12 +101201,14 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 `;
 
 // src/queue/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
+  QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
+  checkInboxGrammar: () => checkInboxGrammar2,
   queueRefusal: () => queueRefusal
 });
 var at14 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
@@ -101254,6 +101272,125 @@ var TASK_ACTOR_CHECKS = Object.freeze({
 });
 function queueRefusal(code, row2, extra = {}) {
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, ...extra };
+}
+var QUEUE_INBOX_CHECKS = Object.freeze({
+  INBOX_REFUSED: Object.freeze({
+    check: "C-19.2",
+    where: at14("inboxCheck", "is-inbox-refused"),
+    translation: "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed."
+  })
+});
+function f8(check, severity, message2, repairs) {
+  const out = { check, severity, message: message2 };
+  if (repairs) {
+    out.repairable = true;
+    out.repairs = repairs;
+  }
+  return out;
+}
+function asText7(v) {
+  if (typeof v === "string") return v;
+  return new TextDecoder().decode(v);
+}
+var TASK_ID_RE2 = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+var TASK_KIND_ENUM2 = ["authority-undetermined"];
+var TASK_ROLE_ENUM2 = ["project-manager", "group-admin", "member"];
+var TASK_STATUS_ENUM2 = ["open", "resolved", "forwarded"];
+var TASK_EVENT_ENUM2 = ["created", "forwarded", "resolved", "folded"];
+var MEMBER_ID_RE2 = /^[a-z0-9][a-z0-9-]{1,40}$/;
+function checkInboxGrammar2(ctx, findings) {
+  const raw = ctx.files.get("data/inbox.json");
+  if (!raw) return;
+  let g;
+  try {
+    g = JSON.parse(asText7(raw));
+  } catch {
+    return;
+  }
+  if (typeof g !== "object" || g === null || Array.isArray(g)) {
+    findings.push(f8("C-19.1", "error", "data/inbox.json must be a JSON object"));
+    return;
+  }
+  const tasks = Array.isArray(g.tasks) ? g.tasks : null;
+  if (g.tasks !== void 0 && !tasks) {
+    findings.push(f8("C-19.1", "error", "inbox.json tasks must be an array"));
+    return;
+  }
+  const seen = /* @__PURE__ */ new Set();
+  for (let i = 0; i < (tasks || []).length; i++) {
+    const tk = tasks[i];
+    if (typeof tk !== "object" || tk === null) {
+      findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] is not an object`));
+      continue;
+    }
+    if (!TASK_ID_RE2.test(tk.id || "")) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].id '${tk.id}' does not match the TASK grammar`));
+    else if (seen.has(tk.id)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] repeats id '${tk.id}'`));
+    else seen.add(tk.id);
+    if (!TASK_KIND_ENUM2.includes(tk.kind)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].kind '${tk.kind}' must be one of: ${TASK_KIND_ENUM2.join(", ")}`));
+    const sub = tk.subject;
+    if (!sub || typeof sub !== "object") findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] missing subject block`));
+    else {
+      if (typeof sub.text !== "string" || sub.text.length === 0 || sub.text.length > 200 || /[\r\n]/.test(sub.text)) {
+        findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].subject.text must be a nonempty single-line string under 200 chars`));
+      }
+      if (sub.description !== void 0 && (typeof sub.description !== "string" || sub.description.length > 2e3)) {
+        findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].subject.description must be a string under 2000 chars`));
+      }
+    }
+    if (!BUNDLE_ID_RE.test(tk.refers_to || "")) {
+      findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].refers_to '${String(tk.refers_to).slice(0, 40)}' is not a canonical bundle ID`));
+    } else if (ctx.resolveTarget && !ctx.resolveTarget(tk.refers_to)) {
+      findings.push(f8(
+        "C-19.1",
+        "error",
+        `inbox.json tasks[${i}].refers_to '${tk.refers_to}' does not resolve in the store`,
+        ["re-point the task at the successor bundle", "resolve the task with a reason if its subject is gone"]
+      ));
+    }
+    if (tk.locators !== void 0) {
+      if (!Array.isArray(tk.locators)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].locators must be an array`));
+      else for (let L2 = 0; L2 < tk.locators.length; L2++) {
+        if (!isPublicHttpsLocator(tk.locators[L2])) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].locators[${L2}] '${String(tk.locators[L2]).slice(0, 40)}' is not an https public-host locator`));
+      }
+    }
+    if (tk.assignee !== "unassigned" && !MEMBER_ID_RE2.test(tk.assignee || "")) {
+      findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].assignee '${tk.assignee}' must be a member_id or the literal 'unassigned'`));
+    }
+    if (!TASK_ROLE_ENUM2.includes(tk.assignee_role)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].assignee_role '${tk.assignee_role}' must be one of: ${TASK_ROLE_ENUM2.join(", ")}`));
+    if (!TASK_STATUS_ENUM2.includes(tk.status)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].status '${tk.status}' must be one of: ${TASK_STATUS_ENUM2.join(", ")}`));
+    if (!ISO_TS_RE.test(tk.created || "")) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].created must be an ISO 8601 UTC instant`));
+    if (tk.resolved_at !== void 0 && tk.resolved_at !== null && !ISO_TS_RE.test(tk.resolved_at)) {
+      findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].resolved_at must be an ISO 8601 UTC instant`));
+    }
+    if (tk.status === "resolved" && !ISO_TS_RE.test(tk.resolved_at || "")) {
+      findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}] is resolved but carries no resolved_at instant`));
+    }
+    const hist = tk.history;
+    if (!Array.isArray(hist) || hist.length === 0) {
+      findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history must be a nonempty append-only array`));
+    } else {
+      let prev = "";
+      for (let h = 0; h < hist.length; h++) {
+        const e = hist[h];
+        if (typeof e !== "object" || e === null) {
+          findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is not an object`));
+          continue;
+        }
+        if (!ISO_TS_RE.test(e.at || "")) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].at must be an ISO 8601 UTC instant`));
+        else {
+          if (prev && e.at < prev) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}] is out of chronological order`));
+          prev = e.at;
+        }
+        if (!TASK_EVENT_ENUM2.includes(e.event)) findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].event '${e.event}' must be one of: ${TASK_EVENT_ENUM2.join(", ")}`));
+        if (typeof e.actor !== "string" || e.actor.length === 0 || e.actor.length > 64 || /[\r\n]/.test(e.actor)) {
+          findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history[${h}].actor must be a nonempty single-line string under 64 chars`));
+        }
+      }
+      if (hist[0] && hist[0].event !== "created") {
+        findings.push(f8("C-19.1", "error", `inbox.json tasks[${i}].history does not begin with its creation`));
+      }
+    }
+  }
 }
 
 // src/queue/index.mjs
@@ -102942,8 +103079,8 @@ var Queue = class _Queue {
    * N172, N229 — THE PRODUCERS THE CATALOGUE NAMED WITHOUT ONE (R1, R9, R10).
    *
    * Each reads the fact its owning module already offers and restates none of it: reevaluation's open notices (its
-   * R14), intent's gaps (its R6), monitoring's plan (its R32) and flagged ticks (its R8), and capture's reachability
-   * (its R8) at monitoring's floor. Each is derived on read and writes nothing, like every producer above it, and each
+   * R14), intent's gaps (its R6), monitoring's plan (its R32), its flagged documents (its R48) and the addresses its
+   * next archive tick would find eligible (its R47; N330). Each is derived on read and writes nothing, like every producer above it, and each
    * is bounded, the bound stated where a member could otherwise read a short list as a complete one.
    * ====================================================================== */
   /** A home set made of the named cases themselves (each at depth 0, when this viewer sees it and it is a case) and
@@ -103103,26 +103240,20 @@ var Queue = class _Queue {
     items.truncated = scope.truncated;
     return items;
   }
-  /** `source-modified` and `source-removed` (N229; monitoring R8, R31): one FINDING per monitored document whose
-   *  latest tick flagged `reeval_pending` from its `source_status`, read from the document's own front matter, the
-   *  tick's one write. At most QUEUE_MONITORED_MAX of the documents monitoring checks are read; a document this viewer
-   *  may not see is withheld whole. */
+  /** `source-modified` and `source-removed` (N229, N330; monitoring R48): one FINDING per monitored document this viewer
+   *  may see whose latest tick flagged `reeval_pending` from its `source_status`, read through `monitoring.flagged`,
+   *  which gates by sight inside its read (a hidden document is neither listed nor counted) and bounds it, the bound
+   *  and whether it cut published on each item. Homed under the document's ancestors. */
   #findingsSourceFlagged(viewer, now, identity = null) {
-    const rows = (this.#monitoring.subjects() || {}).rows || [];
-    const ids = [...new Set(rows.map((r) => r.bundle_id).filter((x) => typeof x === "string" && x))].sort();
-    const read2 = ids.slice(0, _Queue.QUEUE_MONITORED_MAX);
-    const visible = this.#bundleRedactor(viewer);
+    const page = this.#monitoring.flagged({ viewer }) || {};
+    const list2 = page.ok !== false && Array.isArray(page.items) ? page.items : [];
     const out = [];
-    for (const id of read2) {
-      if (visible(id) === null) continue;
-      const f8 = this.#record.readFile(id, "bundle.md");
-      if (!f8 || typeof f8.text !== "string") continue;
-      const fm = parseFrontmatter(f8.text).data || {};
-      const rp = fm.reeval_pending && typeof fm.reeval_pending === "object" ? fm.reeval_pending : null;
-      if (!rp || !(rp.flag === true || rp.flag === "true") || rp.source !== "source_status") continue;
-      const removed = fm.source_status === "removed";
+    for (const r of list2) {
+      const id = r && typeof r.bundleId === "string" && r.bundleId ? r.bundleId : null;
+      if (!id) continue;
+      const removed = r.source_status === "removed";
       const kind = removed ? "source-removed" : "source-modified";
-      const sinceMs = Date.parse(rp.since ?? "");
+      const sinceMs = Date.parse(r.since ?? "");
       const title = this.#record.bundleInfo(id);
       const name = title && title.title ? title.title : id;
       out.push({
@@ -103134,14 +103265,14 @@ var Queue = class _Queue {
         summary: removed ? `the source of ${name} no longer serves it` : `the source of ${name} has changed`,
         detail: `a monitoring check found the address this document was captured from ${removed ? "answering that it is gone (404 or 410)" : "serving something other than what was captured"}, and flagged it for a second look. What the change means is not decided here.`,
         basis: {
-          source: "monitoring tick (reeval_pending)",
+          source: "monitoring.flagged",
           bundle_id: id,
-          source_status: fm.source_status ?? null,
-          since: rp.since ?? null,
-          bound: { limit: _Queue.QUEUE_MONITORED_MAX, truncated: ids.length > read2.length },
-          detail: "monitoring's tick records what it saw and never decides what a change means (its R8): this item is that flag, read from the document's own front matter."
+          source_status: r.source_status ?? null,
+          since: r.since ?? null,
+          bound: { limit: page.limit ?? null, truncated: page.truncated === true },
+          detail: "monitoring's tick records what it saw and never decides what a change means (its R8): this item is that flag, as monitoring reads it (its R48)."
         },
-        age: Number.isFinite(sinceMs) ? { state: "determined", since: rp.since, ms: Math.max(0, now - sinceMs) } : {
+        age: Number.isFinite(sinceMs) ? { state: "determined", since: r.since, ms: Math.max(0, now - sinceMs) } : {
           state: "undetermined",
           reason: "unparseable_since",
           detail: "the flag carries no instant this producer can read"
@@ -103167,43 +103298,39 @@ var Queue = class _Queue {
     ).map((r) => r.bundle_id);
     return { ids: ids.slice(0, cap), bounded: ids.length > cap };
   }
-  /** `archive-fallback-eligible` (N229; monitoring R20, R31; capture R8): one CONDITION per address the archive tick
-   *  would find eligible now, read as the tick reads it: the addresses at monitoring's floor of consecutive failures
-   *  (capture R59's read contract), oldest failing run first, at most the tick's own batch, each asked
-   *  `capture.sourceReachability`. The tick stores no list of what it found, so the fact is derived here, on read. */
+  /** `archive-fallback-eligible` (N229, N330; monitoring R47; capture R8): one CONDITION per address
+   *  `monitoring.archiveEligible` answers, what the next archive tick would find eligible (K406 Q2), asked as the tick
+   *  asks and writing nothing. Its bound, whether it cut, and the daemon's pause are published on each item: a pause
+   *  never empties the list, since eligibility is capture's fact about our attempts. */
   #conditionsArchiveEligible(viewer, now, identity = null) {
-    const nowIso = stampInstant("second", now);
-    const rows = this.#rows(
-      `SELECT address_norm, first_failure_since FROM source_reachability WHERE consecutive_failures >= ?
-        ORDER BY first_failure_since, address_norm LIMIT ?`,
-      this.#monitoring.floor(),
-      _Queue.QUEUE_ARCHIVE_READ
-    );
+    const page = this.#monitoring.archiveEligible(now) || {};
+    const list2 = page.ok !== false && Array.isArray(page.eligible) ? page.eligible : [];
     const out = [];
-    for (const r of rows) {
-      const reach2 = this.#capture.sourceReachability({ addressNorm: r.address_norm, now: nowIso });
-      if (!reach2 || reach2.fallback_eligible !== true) continue;
-      const subj = this.#conditionBundlesForAddress(r.address_norm, viewer);
+    for (const r of list2) {
+      const address = r && typeof r.address === "string" && r.address ? r.address : null;
+      if (!address) continue;
+      const subj = this.#conditionBundlesForAddress(address, viewer);
       const sinceMs = Date.parse(r.first_failure_since ?? "");
       out.push({
-        id: `CONDITION::archive-fallback-eligible::${r.address_norm}`,
+        id: `CONDITION::archive-fallback-eligible::${address}`,
         class: "CONDITION",
         kind: "archive-fallback-eligible",
         case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
         subject: {
           kind: "address",
           id: null,
-          address: r.address_norm,
+          address,
           bundles: subj.ids.slice(0, _Queue.QUEUE_OPTION_SUBJECTS_MAX)
         },
-        summary: `${r.address_norm} has stopped answering often enough that its archived copy may be fetched instead`,
+        summary: `${address} has stopped answering often enough that its archived copy may be fetched instead`,
         detail: "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
         basis: {
-          source: "capture.sourceReachability",
-          address: r.address_norm,
-          reachability: reach2,
-          bound: { limit: _Queue.QUEUE_ARCHIVE_READ },
-          detail: "eligibility is capture's rule (its R8), read here as the archive tick reads it; the tick itself fires the fallback, and this item clears when the address answers again."
+          source: "monitoring.archiveEligible",
+          address,
+          reachability: r.reachability ?? null,
+          bound: { limit: page.limit ?? null, truncated: page.truncated === true },
+          paused: page.paused ?? null,
+          detail: "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again."
         },
         age: Number.isFinite(sinceMs) ? { state: "determined", since: r.first_failure_since, ms: Math.max(0, now - sinceMs) } : {
           state: "undetermined",
@@ -103260,13 +103387,11 @@ var Queue = class _Queue {
     }
     return out;
   }
-  /** The bounds the new producers read under (R9, R10): reevaluation's largest page; R9's fifty projects; the
-   *  documents monitoring checks; the archive tick's own batch (monitoring R20). */
+  /** The bounds the new producers read under (R9): reevaluation's largest page; R9's fifty projects. The monitored
+   *  documents and the archive addresses are bounded by monitoring's reads (its R47, R48), which publish their bounds. */
   static QUEUE_NOTICES_MAX = 1e3;
   static QUEUE_OBJECTIVE_GAP_PROJECTS = 50;
   static QUEUE_OBJECTIVE_GAP_PAGE = 200;
-  static QUEUE_MONITORED_MAX = 200;
-  static QUEUE_ARCHIVE_READ = 50;
   /* ======================================================================
    * PL-13 — **WHAT IDENTITY A QUEUE ITEM CAN BE DISPOSITIONED ON, ANSWERED BY
    * THE PLANE AND PUBLISHED, INSTEAD OF BEING GUESSED AT A SURFACE.**
@@ -103917,10 +104042,11 @@ var Queue = class _Queue {
     }
     return out;
   }
-  /** R39: the tasks resolved within the last QUEUE_RESOLVED_WINDOW_DAYS on subjects this viewer sees, newest first,
-   *  at most QUEUE_RESOLVED_MAX, each with who resolved it (its history's `resolved` entry) and when. The settled bias
-   *  debts are the other half of R39, and `bias` offers no read of settlements to a later module yet (QUEUE #2, Q4):
-   *  that half is stated as not read, never as none. */
+  /** R39: the obligations resolved within the last QUEUE_RESOLVED_WINDOW_DAYS on subjects this viewer sees, each with
+   *  who resolved it and when. The tasks, newest first, at most QUEUE_RESOLVED_MAX, each resolved by its history's
+   *  `resolved` entry; and the settled bias debts, read through `bias.settled` (its R44; N326) with the viewer's gate in
+   *  the same window and bound, each resolved by the member who settled it, or null beside its `settled_kind` when no
+   *  member did (the lens moved back, or a re-run discharged it: K444). Null is never read as "nobody". */
   #resolvedLately(viewer, now) {
     const cap = _Queue.QUEUE_RESOLVED_MAX;
     const since = stampInstant("second", now - _Queue.QUEUE_RESOLVED_WINDOW_DAYS * 864e5);
@@ -103945,6 +104071,18 @@ var Queue = class _Queue {
         resolved_at: t.resolved_at ?? (by ? by.at : null)
       };
     });
+    const settled = this.#bias.settled({ gate: viewerPredicate(viewer), since, limit: cap }) || {};
+    const debts = (Array.isArray(settled.debts) ? settled.debts : []).map((d) => ({
+      id: `OBLIGATION::bias-debt::${d.run}`,
+      class: "OBLIGATION",
+      kind: "bias-debt",
+      run: d.run,
+      context: { type: d.context_type ?? null, id: d.context_id ?? null },
+      resolved_by: d.actor ?? null,
+      settled_kind: d.settled_kind ?? null,
+      resolved_at: d.settled_at ?? null,
+      reason: d.reason ?? null
+    }));
     return {
       personal: false,
       window_days: _Queue.QUEUE_RESOLVED_WINDOW_DAYS,
@@ -103954,8 +104092,13 @@ var Queue = class _Queue {
       bound: cap,
       truncated: rows.length > cap,
       bias_debts: {
-        read: false,
-        why: "the settled bias debts are bias's record, and bias offers no read of its settlements to this feed yet; they are not listed here, which is not the same as there being none"
+        read: settled.undetermined !== true,
+        debts,
+        count: debts.length,
+        bound: settled.limit ?? cap,
+        truncated: settled.truncated === true,
+        ...settled.undetermined === true || settled.stated ? { stated: settled.stated ?? null } : {},
+        detail: "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted."
       },
       detail: "obligations that LEFT the list by being resolved, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened."
     };
@@ -104617,11 +104760,11 @@ var Queue = class _Queue {
     };
   }
   /** The C-19.1 grammar, run against a candidate task before it is stored.
-   *  The EXPORTED catalog function, never a copy: a second grammar pretending
-   *  to be the same one is the failure this reuse exists to avoid. */
+   *  R41: the ONE function `checks.mjs` holds, the same one the promotion check and the audit check below run, never a
+   *  copy: a second grammar pretending to be the same one is the failure this reuse exists to avoid. */
   #refuseUngrammatical(task) {
     const findings = [];
-    checkInboxGrammar(
+    checkInboxGrammar2(
       {
         files: /* @__PURE__ */ new Map([["data/inbox.json", JSON.stringify({ tasks: [task] })]]),
         resolveTarget: (id) => this.#record.bundleInfo(id) !== null
@@ -104631,6 +104774,83 @@ var Queue = class _Queue {
     const errs = findings.filter((x) => x.severity === "error");
     return errs.length ? { ok: false, reason: "UNGRAMMATICAL", findings: errs.map((e) => ({ check: e.check, detail: e.message })) } : null;
   }
+  /** R41 (N325): C-19.1 at the WRITE, registered with promotion (its R39), as monitoring registers C-18.5 (its R27).
+   *  A task list is validated where it lands, not only by the audit: a malformed `data/inbox.json` never lands, so
+   *  nobody has to read it to find out it was junk. A replay is historical and not authorship, so it is exempt from
+   *  THIS check and nothing else, and the manifest marks it; a promotion carrying no `data/inbox.json` is not asked. */
+  inboxCheck(c) {
+    const files = Array.isArray(c && c.files) ? c.files : [];
+    const replay = !!(c && (c.replay || c.pkg && c.pkg.replay));
+    const inbox = replay ? null : files.find((f9) => f9 && f9.path === "data/inbox.json");
+    if (!inbox || typeof inbox.text !== "string") return null;
+    const found = [];
+    checkInboxGrammar2({ files: /* @__PURE__ */ new Map([["data/inbox.json", inbox.text]]) }, found);
+    const errs = found.filter((x) => x.severity === "error");
+    if (!errs.length) return null;
+    return {
+      ok: false,
+      reason: "INBOX_REFUSED",
+      code: "INBOX_REFUSED",
+      check: QUEUE_INBOX_CHECKS.INBOX_REFUSED.check,
+      translation: QUEUE_INBOX_CHECKS.INBOX_REFUSED.translation,
+      findings: errs.map((x) => ({ check: x.check, detail: x.message })),
+      detail: `data/inbox.json does not meet the task grammar (C-19.1): ${errs.length} error${errs.length === 1 ? "" : "s"}, each named in findings. Nothing was written.`
+    };
+  }
+  /** R41 (N325): C-19.1 in the audit over one bundle image (record-core R59), as `checkBundle` ran it: each error is a
+   *  C-19.1 finding, a reference resolved against the whole store by the audit's own `resolveTarget`. */
+  audit(image) {
+    const files = image && image.files instanceof Map ? image.files : null;
+    if (!files) return [];
+    const findings = [];
+    checkInboxGrammar2(
+      { files, resolveTarget: typeof image.resolveTarget === "function" ? image.resolveTarget : void 0 },
+      findings
+    );
+    return findings;
+  }
+  /* ------------------------------------------------------------------ the store's counts and the id ledger (R42) */
+  /** R42 (N342; record-core R63): this module's four figures, each a row count with the rows naming a bundle in `hid`
+   *  (the caller's `{sql, args}`, or null) left out: `tasks` by `refers_to`, `findingDispositions` by `project_id`,
+   *  `queueState` by `case_id`; `queueItemMutes` names no bundle and is counted whole. A figure that cannot be read is
+   *  null, never zero. Synchronous; writes nothing; never throws. */
+  counts(hid = null) {
+    const h = hid && typeof hid === "object" && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
+    const c = (t, ...keys) => {
+      try {
+        const conds = h ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${h.sql}`) : [];
+        const args = h ? keys.flatMap(() => h.args) : [];
+        const n = Number(this.#one(
+          `SELECT count(*) AS c FROM ${t}${conds.length ? ` WHERE ${conds.join(" AND ")}` : ""}`,
+          ...args
+        ).c);
+        return Number.isFinite(n) ? n : null;
+      } catch {
+        return null;
+      }
+    };
+    return {
+      tasks: c("tasks", "refers_to"),
+      findingDispositions: c("finding_dispositions", "project_id"),
+      queueState: c("queue_state", "case_id"),
+      queueItemMutes: c("queue_item_mutes")
+    };
+  }
+  static COUNT_KEYS = Object.freeze(["tasks", "findingDispositions", "queueState", "queueItemMutes"]);
+  /** R42 (N342; record-core R40, review's `seedLedger` shape): the opaque minter's ledger learns every TASK id standing
+   *  in a live row, at start and again before this module's first mint, so an id a store minted before the ledger
+   *  existed is never drawn twice, even after a purge deletes the row it stood in. On a store whose ledger table (or
+   *  whose `tasks`) is not yet created it learns nothing and never throws: a throw at construction would take the
+   *  instance down, and the next call learns. */
+  seedLedger() {
+    if (this.#seeded) return;
+    try {
+      this.#record.seedMintLedger([["TASK", "tasks", "id"]]);
+      this.#seeded = true;
+    } catch {
+    }
+  }
+  #seeded = false;
   /** CONSUMER, and the SOLE writer of tasks.
    *
    *  Drains queued events, resolves each capture to the bundle that filed it,
@@ -104673,6 +104893,7 @@ var Queue = class _Queue {
       const route = this.#routeTask(reg.bundle_id);
       const year = at17.slice(0, 4);
       const slug = taskSlug(q6.subject);
+      this.seedLedger();
       const taskId = this.#record.mintOpaqueId(
         "TASK",
         year,
@@ -105046,6 +105267,11 @@ function queueOf(ctx, deps = {}) {
       { name: "queue_item_mutes", keys: [] },
       { name: "finding_dispositions", keys: [] }
     ]);
+    record.registerCounts("queue", [...Queue.COUNT_KEYS], (hid) => q6.counts(hid));
+    q6.seedLedger();
+    record.registerAuditCheck("queue", (image) => q6.audit(image));
+    const promotion = deps && deps.promotion || promotionOf(ctx, { record, ...deps && deps.membership ? { membership: deps.membership } : {} });
+    promotion.registerStep("queue", { check: (c) => q6.inboxCheck(c) });
     if (!deps || deps.start !== false) {
       const scheduler = deps && deps.scheduler || schedulerOf(ctx, deps && deps.env);
       scheduler.register("queue", q6.drainConsumer());
@@ -105299,8 +105525,8 @@ function mintRatio({ minted = 0, cited = 0 } = {}) {
 }
 
 // src/run-productions/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS2,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -105513,7 +105739,7 @@ function suggestionFrontmatter(id, p) {
   };
 }
 function substanceOf(composition) {
-  return String(composition).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f8, i) => i === 3 ? "" : f8).join("	") : ln).join("\n");
+  return String(composition).split("\n").filter((ln) => !/^name\t/.test(ln) && !/^derived_from\t/.test(ln)).map((ln) => ln.startsWith("ground	") ? ln.split("	").map((f9, i) => i === 3 ? "" : f9).join("	") : ln).join("\n");
 }
 var RunProductions = class {
   constructor({
@@ -106372,8 +106598,8 @@ function runProductionsOps(p, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
 });
@@ -107028,8 +107254,8 @@ var CaseAuthoring = class {
   }
   /* The live `bundle.md` text of a held bundle, or null (blob-backed or absent): record-core R13. */
   #liveText(id) {
-    const f8 = this.record.readFile(id, "bundle.md");
-    return f8 && typeof f8.text === "string" ? f8.text : null;
+    const f9 = this.record.readFile(id, "bundle.md");
+    return f9 && typeof f9.text === "string" ? f9.text : null;
   }
   /* ==========================================================================================================
    * op=publish: publishCase (R1–R18)
@@ -108336,8 +108562,8 @@ function caseAuthoringOps(c, url, body) {
 }
 
 // src/review/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at16 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -109091,7 +109317,7 @@ var Review = class {
      with whether its author has chosen an attribution level for this case edition, never the level itself (that is the
      author's to state, in the case document). A draft naming no case has no identity a level can be keyed to. */
   #observations(findings, ident) {
-    const seen = findings.filter((f8) => f8.present).map((f8) => f8.target);
+    const seen = findings.filter((f9) => f9.present).map((f9) => f9.target);
     const r = this.basisVersions.testimonyReach(seen);
     return [.../* @__PURE__ */ new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
       const chosen = ident.caseId ? this.publication.attributionInForce(ident.caseId, ident.edition, obs) : null;
@@ -110906,7 +111132,7 @@ Mitigation: ${mit}
         return Object.prototype.hasOwnProperty.call(fm, "surfaced_by") ? JSON.stringify(fm.surfaced_by) : "absent";
       };
       const heldMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, bundleId);
-      const nextMd = files.find((f8) => f8 && f8.path === "bundle.md");
+      const nextMd = files.find((f9) => f9 && f9.path === "bundle.md");
       const was = surfacedOf(heldMd ? heldMd.content : null);
       const now = surfacedOf(nextMd ? nextMd.text : null);
       const refusal19 = (code, detail, extra) => {
@@ -110922,7 +111148,7 @@ Mitigation: ${mit}
     }
     const extentBad = pkg[TESTIMONY_PATH] ? checkContentExtent2({ kind: "document" }, this.contentContextFor(pkg[TESTIMONY_PATH].captureSha)) : null;
     if (extentBad) return extentBad;
-    const basisMd = files.find((f8) => f8.path === "bundle.md");
+    const basisMd = files.find((f9) => f9.path === "bundle.md");
     const docFmW = basisMd && typeof basisMd.text === "string" ? parseFrontmatter(basisMd.text).data : null;
     const isInquiry = promotedType === "inquiry";
   }
@@ -112561,8 +112787,8 @@ Mitigation: ${mit}
 };
 
 // src/control-plane/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
@@ -113028,8 +113254,15 @@ async function dispatch(req, store) {
 var Store2 = class extends Store {
   static PROJECT_NAMING_READS = PROJECT_NAMING_READS;
   static PROJECT_NAMING_READS_NOT = PROJECT_NAMING_READS_NOT;
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+  }
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx) });
+    return dispatch(req, {
+      routes: (url, body) => ({ ...this.routes(url, body), ...instanceSetupOps(instanceSetupOf(this.ctx, this.env), url, body) }),
+      membership: () => membershipOf(this.ctx)
+    });
   }
 };
 
@@ -113792,7 +114025,7 @@ async function ratifyOp(req, stub, ctx) {
         edition: pub.case?.edition ?? null,
         complete: !!pub.case?.complete,
         awaiting: pub.case?.awaiting ?? [],
-        findings: (pub.case?.findings ?? []).map((f8) => f8.bundle_id),
+        findings: (pub.case?.findings ?? []).map((f9) => f9.bundle_id),
         detail: pub.case?.detail ?? null
       }
     } : {},
@@ -115569,7 +115802,7 @@ async function aiCredentialPresented(url, env) {
   if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex12(t)}`));
-  if (!out.answered) return { silent: "aicredentiallook" };
+  if (!out.answered) return { silent: "aicredentiallook", correlation: out.correlation };
   return { cred: out.result?.found ? out.result.credential : null };
 }
 function aiConfinementDeclaration(confinedTo) {
@@ -115708,7 +115941,7 @@ async function caseReader(url, env, storeName, presentedAi) {
     let cred = presentedAi === void 0 ? void 0 : presentedAi;
     if (cred === void 0) {
       const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex12(t)}`));
-      if (!aOut.answered) return { silent: "aicredentiallook" };
+      if (!aOut.answered) return { silent: "aicredentiallook", correlation: aOut.correlation };
       cred = aOut.result?.found ? aOut.result.credential : null;
     }
     const scoped = cred ? aiTaskScope(cred, "index", OPS2.index) : null;
@@ -115716,7 +115949,7 @@ async function caseReader(url, env, storeName, presentedAi) {
   }
   if (/^[0-9a-f]{64}$/.test(t)) {
     const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-    if (!sOut.answered) return { silent: "session" };
+    if (!sOut.answered) return { silent: "session", correlation: sOut.correlation };
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
     return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
@@ -115729,41 +115962,42 @@ var json4 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), nul
 });
 var MODULE_CHECK_FILES = [
   checks_exports,
-  checks_exports14,
-  checks_exports12,
-  checks_exports5,
   checks_exports15,
-  credentials_exports,
-  checks_exports29,
-  checks_exports26,
-  checks_exports21,
-  themes_exports,
-  checks_exports22,
-  extent_exports,
   checks_exports13,
-  checks_exports31,
-  checks_exports10,
-  checks_exports24,
-  checks_exports6,
-  checks_exports23,
-  inquiry_exports,
+  checks_exports5,
   checks_exports16,
-  checks_exports3,
-  checks_exports8,
-  checks_exports11,
-  checks_exports4,
+  credentials_exports,
   checks_exports7,
-  checks_exports19,
-  checks_exports27,
-  checks_exports25,
-  checks_exports2,
-  checks_exports18,
-  checks_exports9,
   checks_exports30,
-  checks_exports28,
-  skilldoctrine_exports,
+  checks_exports27,
+  checks_exports22,
+  themes_exports,
+  checks_exports23,
+  extent_exports,
+  checks_exports14,
+  checks_exports32,
+  checks_exports11,
+  checks_exports25,
+  checks_exports6,
+  checks_exports24,
+  inquiry_exports,
+  checks_exports17,
+  checks_exports3,
+  checks_exports9,
+  checks_exports12,
+  checks_exports4,
+  checks_exports8,
   checks_exports20,
-  checks_exports17
+  checks_exports28,
+  checks_exports26,
+  checks_exports2,
+  checks_exports19,
+  checks_exports10,
+  checks_exports31,
+  checks_exports29,
+  skilldoctrine_exports,
+  checks_exports21,
+  checks_exports18
 ];
 var DEC49_ROWS = null;
 function dec49Row(code) {
@@ -115956,7 +116190,7 @@ async function migrationReplayOf(env, storeName, b) {
   if (!/^[0-9a-f]{64}$/.test(cap)) return null;
   const registered = Array.isArray(b.register) && b.register.some((r) => r && r.sha256 === cap && r.path === DRIVE_PROVENANCE_PATH);
   if (!registered) return null;
-  const bm = Array.isArray(b.files) ? b.files.find((f8) => f8 && f8.path === "bundle.md" && typeof f8.text === "string") : null;
+  const bm = Array.isArray(b.files) ? b.files.find((f9) => f9 && f9.path === "bundle.md" && typeof f9.text === "string") : null;
   if (!bm) return null;
   const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();
   if (bm.sha256 !== mdSha) return null;
@@ -115976,12 +116210,12 @@ async function migrationReplayOf(env, storeName, b) {
     return null;
   }
   const records = Array.isArray(prov?.promotions) ? prov.promotions : [];
-  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f8) => f8 && f8.name === "bundle.md" && f8.sha256 === mdSha));
+  const match = records.find((p) => p && p.record && typeof p.record === "object" && p.record.target === b.bundleId && Array.isArray(p.record.files) && p.record.files.some((f9) => f9 && f9.name === "bundle.md" && f9.sha256 === mdSha));
   if (!match) return null;
   return { capture: cap, promotion: typeof match.key === "string" ? match.key : null, bundleMdSha: mdSha };
 }
 function promotedTypeOf(b) {
-  const md = Array.isArray(b.files) ? b.files.find((f8) => f8 && f8.path === "bundle.md") : null;
+  const md = Array.isArray(b.files) ? b.files.find((f9) => f9 && f9.path === "bundle.md") : null;
   const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
   const said2 = fm && typeof fm === "object" ? fm.object_type : void 0;
   if (typeof said2 === "string" && said2.trim() !== "") return normalizeType(said2);
@@ -116059,7 +116293,7 @@ function makeFetch(hooks = {}) {
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return unknownNamespace;
     const presentedAi = await aiCredentialPresented(url, env);
-    if (presentedAi.silent) return storeSilent(presentedAi.silent);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent, presentedAi.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
     if (confinedNamespace) return confinedNamespace;
     const pinnedNamespace = pinnedNamespaceGate(url, op, spec);
@@ -116110,7 +116344,7 @@ function makeFetch(hooks = {}) {
           q6.set("secretSha", await sha256Hex12(url.searchParams.get("secret") || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);
-          if (reader.silent) return storeSilent(reader.silent);
+          if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q6.set("viewer", reader.viewer);
         }
         let commentBody = null;
@@ -116145,7 +116379,7 @@ function makeFetch(hooks = {}) {
       if (t && /^[0-9a-f]{64}$/.test(t)) {
         const st = env.STORE.get(env.STORE.idFromName("bio"));
         const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-        if (!sOut.answered) return storeSilent("session");
+        if (!sOut.answered) return storeSilent("session", sOut.correlation);
         const sess = sOut.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
@@ -116530,7 +116764,7 @@ function makeFetch(hooks = {}) {
           b.ownerMemberId = sessMember;
         }
         if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
-          const bm = b.files.find((f8) => f8 && f8.path === "bundle.md" && typeof f8.text === "string");
+          const bm = b.files.find((f9) => f9 && f9.path === "bundle.md" && typeof f9.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";
             const lines = bm.text.split("\n");
@@ -116708,7 +116942,7 @@ function makeFetch(hooks = {}) {
         }) }
       )));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
-      if (!minted.answered) return storeSilent("aicredentialmint");
+      if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
         return json4({ ok: false, ...minted.result || {}, op, store: storeName, tokenClass: cls }, 403);
       return json4({ ok: true, result: {
@@ -116728,7 +116962,7 @@ function makeFetch(hooks = {}) {
       inner.searchParams.set("secretSha", await sha256Hex12(secret));
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
-      if (!issued.answered) return storeSilent("reviewgrant");
+      if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
         return json4({ ok: false, ...issued.result || {}, op, store: storeName, tokenClass: cls }, 403);
       return json4({ ok: true, result: {

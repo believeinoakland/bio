@@ -335,6 +335,75 @@ test("R25: an error thrown in the record store's door is answered STORE_INTERNAL
   }
 });
 
+test("R23, R25 (N349): every silence the door answers itself carries the correlation id doAnswer read from the store's internal error — the credential lookup, caseReader's reads, the session lookup, the mint and the grant — and a 500 without one carries no correlation key", async () => {
+  const corr = crypto.randomUUID();
+  const failed = { ok: false, error: "Error: boom /srv/store.mjs:1", reason: "STORE_INTERNAL_ERROR", correlation: corr };
+  const sites = [
+    ["aicredentiallook", "aicredentiallook", (w) => ({ op: "index", token: w.A.ann })],                              /* the front door */
+    ["aicredentiallook", "aicredentiallook", (w) => ({ op: "reviewcopy", token: w.A.ann, params: { draft: "D1" } })],
+    ["session", "session", (w) => ({ op: "reviewcopy", token: w.S.ann, params: { draft: "D1" } })],                  /* caseReader */
+    ["session", "session", (w) => ({ op: "statementack", token: w.S.ann, params: { draft: "D1" } })],
+    ["session", "session", (w) => ({ op: "index", token: w.S.ann })],                                               /* admission */
+    ["session", "session", (w) => ({ op: "cite", token: w.S.founder, method: "POST", body: {} })],
+    ["aicredentialmint", "aicredentialmint", (w) => ({ op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } })],
+    ["reviewgrant", "reviewgrant", (w) => ({ op: "reviewgrant", token: w.S.founder, method: "POST", body: {} })],
+  ];
+  for (const [route, named, drive] of sites) {
+    for (const [body, carried] of [[failed, corr], [{ ok: false, error: "x" }, undefined],
+                                   [{ ok: false, reason: "STORE_INTERNAL_ERROR" }, undefined], [{ ok: false, reason: "OTHER", correlation: corr }, undefined]]) {
+      const w = world({ answer: (c) => (c.route === route ? reply(body, 500)() : null) });
+      const r = await call(w.env, drive(w));
+      refused(r, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+      assert.equal(r.json.op, named, route);
+      assert.equal(r.json.correlation, carried, `${route} ${JSON.stringify(body)}`);
+      if (carried === undefined) assert.equal("correlation" in r.json, false, route);
+      assert.equal(r.text.includes("boom") || r.text.includes("/srv/"), false, route);
+    }
+  }
+  /* caseReader's own lookup, for a caller that hands it no resolved row: the silence carries the correlation too */
+  for (const [token, route] of [[aik(), "aicredentiallook"], [hex64(), "session"]]) {
+    for (const [body, carried] of [[failed, corr], [{ ok: false }, undefined]]) {
+      const w = world({ answer: (c) => (c.route === route ? reply(body, 500)() : null) });
+      const got = await M.caseReader(new URL(`https://plane.example/api?token=${token}`), w.env, "bio", undefined);
+      assert.deepEqual(got, carried ? { silent: route, correlation: carried } : { silent: route, correlation: undefined }, route);
+    }
+  }
+  /* negative control: an answering store is no silence at any of the sites */
+  const w = world();
+  assert.equal((await call(w.env, { op: "index", token: w.S.ann })).status, 200);
+  /* N339: what the plane hands every module's relay — `doAnswer`, `storeRefusal` and `storeSilent` — answers a refusal at its
+     status with its code and sentence plus what the relay adds, and a no-answer with the correlation */
+  for (const [body, status] of [[{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, 400],
+                                [{ ok: false, reason: "SOME_STORE_REASON", error: "said so" }, 409]]) {
+    const out = await M.doAnswer(reply(body, status)());
+    assert.equal(out.refused, true);
+    const x = M.storeRefusal(out, { op: "knock", store: "bio" });
+    assert.equal(x.status, status);
+    assert.deepEqual(await x.json(), { ...M.dec49Attach(JSON.parse(JSON.stringify(body))), op: "knock", store: "bio" });
+  }
+  const silent = await M.doAnswer(reply(failed, 500)());
+  const sj = await M.storeSilent("knock", silent.correlation).json();
+  assert.deepEqual([sj.reason, sj.op, sj.correlation], ["STORE_DID_NOT_ANSWER", "knock", corr]);
+});
+
+test("R22 (N347): the door reads capture's table — EVIDENCE_NOT_HELD is C-118.1, NO_SUCH_KNOCK C-118.2, the old generic NOT_FOUND nothing; a forwarded NO_SUCH_KNOCK under result gains its row, and an answer already carrying it is unchanged", async () => {
+  const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
+  assert.ok(M.MODULE_CHECK_FILES.some((f) => f.CAPTURE_CHECKS === CAPTURE_CHECKS), "capture's checks.mjs is read");
+  assert.deepEqual(M.dec49Row("EVIDENCE_NOT_HELD"), { check: "C-118.1", translation: CAPTURE_CHECKS.EVIDENCE_NOT_HELD.translation });
+  assert.deepEqual(M.dec49Row("NO_SUCH_KNOCK"), { check: "C-118.2", translation: CAPTURE_CHECKS.NO_SUCH_KNOCK.translation });
+  assert.equal(M.dec49Row("NOT_FOUND"), null);
+  for (const [route, op, token, code] of [["inboxget", "inboxget", "ADMIN_TOKEN", "NO_SUCH_KNOCK"], ["capture", "capture", "ADMIN_TOKEN", "EVIDENCE_NOT_HELD"]]) {
+    const w = world({ answer: (c) => (c.route === route ? reply({ ok: true, result: { ok: false, reason: code } })() : null) });
+    const r = await call(w.env, { op, token: w.env[token], params: { id: "K1", sha256: "0".repeat(64) } });
+    assert.deepEqual([r.json.result.code, r.json.result.check, r.json.result.translation],
+                     [code, CAPTURE_CHECKS[code].check, CAPTURE_CHECKS[code].translation], op);
+  }
+  /* an answer already carrying the fields is unchanged, and the retired code is not decorated */
+  const mine = { ok: false, reason: "NO_SUCH_KNOCK", code: "NO_SUCH_KNOCK", check: "C-0", translation: "mine" };
+  assert.deepEqual(M.dec49Attach({ ok: true, result: { ...mine } }), { ok: true, result: mine });
+  assert.deepEqual(M.dec49Attach({ ok: true, result: { ok: false, reason: "NOT_FOUND" } }), { ok: true, result: { ok: false, reason: "NOT_FOUND" } });
+});
+
 test("R30: no credential, session token, secret or stack appears in any answer — the one minting answer of R19 excepted — a store's stack included", async () => {
   const w = world();
   const secrets = [w.env.ADMIN_TOKEN, w.env.MEMBER_TOKEN, w.env.PROBE_TOKEN, w.env.DAEMON_TOKEN, ...Object.values(w.S), ...Object.values(w.A)];

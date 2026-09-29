@@ -28,6 +28,8 @@ import * as M_BIAS from "../bias/checks.mjs";
 import * as M_CALIBRATION from "../calibration/checks.mjs";
 import * as M_CAPTURE_REQUESTS from "../capture-requests/checks.mjs";
 import * as M_CAPTURE_SOURCES_CREDENTIALS from "../capture-sources/credentials.mjs";
+/* N347 (K440): capture's rows (C-118), readable here since capture renamed its generic `NOT_FOUND` to `EVIDENCE_NOT_HELD`. */
+import * as M_CAPTURE from "../capture/checks.mjs";
 import * as M_CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as M_CITATION from "../citation/checks.mjs";
 import * as M_CONFORMANCE from "../conformance/checks.mjs";
@@ -306,7 +308,8 @@ async function aiCredentialPresented(url, env) {
   if (!t || !AI_TOKEN_SHAPE.test(t)) return { cred: null };
   const st = env.STORE.get(env.STORE.idFromName("bio"));
   const out = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
-  if (!out.answered) return { silent: "aicredentiallook" };
+  /* N349 (R23, R25): the correlation `doAnswer` read from the store's internal error travels with the silence. */
+  if (!out.answered) return { silent: "aicredentiallook", correlation: out.correlation };
   return { cred: out.result?.found ? out.result.credential : null };
 }
 
@@ -682,7 +685,7 @@ async function caseReader(url, env, storeName, presentedAi) {
     let cred = presentedAi === undefined ? undefined : presentedAi;
     if (cred === undefined) {
       const aOut = await doAnswer(st.fetch(`http://do/aicredentiallook?sha=${await sha256Hex(t)}`));
-      if (!aOut.answered) return { silent: "aicredentiallook" };
+      if (!aOut.answered) return { silent: "aicredentiallook", correlation: aOut.correlation };   /* N349 */
       cred = aOut.result?.found ? aOut.result.credential : null;
     }
     const scoped = cred ? aiTaskScope(cred, "index", OPS.index) : null;
@@ -690,7 +693,7 @@ async function caseReader(url, env, storeName, presentedAi) {
   }
   if (/^[0-9a-f]{64}$/.test(t)) {
     const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-    if (!sOut.answered) return { silent: "session" };
+    if (!sOut.answered) return { silent: "session", correlation: sOut.correlation };   /* N349 */
     const sess = sOut.result?.session;
     if (!sess) return { viewer: "" };
     return { viewer: resolveSession(sess).viewer, cls: sess.role === "admin" ? "admin" : "member" };
@@ -774,7 +777,7 @@ const json = (o, status = 200) =>
 /* N272: the catalogue first, then each module file in path order, so a code the catalogue still holds resolves as it
    always has; a code held in two places is the guard's arm A to refuse, not this reader's to choose. */
 const MODULE_CHECK_FILES = [
-  M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CASE_AUTHORING,
+  M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CAPTURE, M_CASE_AUTHORING,
   M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
   M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
   M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_QUEUE, M_RATIFICATION, M_RECORD_CORE, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
@@ -1391,7 +1394,7 @@ export function makeFetch(hooks = {}) {
        below, because the confinement is a property of the row and the gate needs it before anything else runs. A
        request presenting no credential, or one that is not an agent credential, asks the store nothing. */
     const presentedAi = await aiCredentialPresented(url, env);
-    if (presentedAi.silent) return storeSilent(presentedAi.silent);
+    if (presentedAi.silent) return storeSilent(presentedAi.silent, presentedAi.correlation);
     /* D-463: a credential MINTED CONFINED to `scratch` is held to it here — a named `store=` refused by name, an absent
        one set to `scratch` — BEFORE D-461's gate, so a confined caller reaching a bio-pinned public op is told which
        fence stopped it and files nothing in the real record (`confinedNamespaceGate`). */
@@ -1468,7 +1471,7 @@ export function makeFetch(hooks = {}) {
           q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
         } else {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);
-          if (reader.silent) return storeSilent(reader.silent);
+          if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
         }
         let commentBody = null;
@@ -1580,7 +1583,7 @@ export function makeFetch(hooks = {}) {
            a fact about their credential. The record makes no claim about who
            somebody is when it could not look. */
         const sOut = await doAnswer(st.fetch(`http://do/session?t=${t}`));
-        if (!sOut.answered) return storeSilent("session");
+        if (!sOut.answered) return storeSilent("session", sOut.correlation);
         const sess = sOut.result?.session;
         if (sess) {
           const kind = sess.role === "admin" ? "admin" : "member";
@@ -3444,7 +3447,7 @@ export function makeFetch(hooks = {}) {
         { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes,
                                                      confinedTo: confinement.confinedTo }) })));
       if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
-      if (!minted.answered) return storeSilent("aicredentialmint");
+      if (!minted.answered) return storeSilent("aicredentialmint", minted.correlation);
       if (!minted.result || minted.result.ok !== true)
         return json({ ok: false, ...(minted.result || {}), op, store: storeName, tokenClass: cls }, 403);
       return json({ ok: true, result: {
@@ -3475,7 +3478,7 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("secretSha", await sha256Hex(secret));
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
       if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
-      if (!issued.answered) return storeSilent("reviewgrant");
+      if (!issued.answered) return storeSilent("reviewgrant", issued.correlation);
       if (!issued.result || issued.result.ok !== true)
         return json({ ok: false, ...(issued.result || {}), op, store: storeName, tokenClass: cls }, 403);
       return json({ ok: true, result: {
