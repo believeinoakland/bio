@@ -7,7 +7,7 @@ import { fresh, bundle, sha } from "./fixture.mjs";
 import { compareProvenance, readingProvenance } from "../../../src/readingprov.mjs";
 import { canonicalExtent } from "../../../checks/bio-checks.mjs";
 import { CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_UNIT_BOUND, CAPTURE_TEXT_CAPTURE_BOUND, OCCURRENCES_PER_REF,
-         TEXT_SOURCE_LIMIT_MAX, labelTerms, extractionOps } from "../../../src/extraction/index.mjs";
+         TEXT_SOURCE_LIMIT_MAX, labelTerms, extractionOps, noSha } from "../../../src/extraction/index.mjs";
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64), S3 = "3".repeat(64);
 const layer = (tier = 1, extra = {}) => [{ step: "layer", tier, container: "pdf", cap: null, measured_by: "unmeasured", ...extra }];
@@ -216,7 +216,7 @@ test("R23 R26: every distinct reading is kept in arrival order before the row is
 
 test("R27 R45: readingFor refuses NO_SHA, answers found:false for a capture not read, and otherwise the reading, the bundle withheld from a viewer who may not see it, the text provenance or its absence, and at most 16 kept readings", async () => {
   const w = fresh();
-  assert.equal(w.x.readingFor("").reason, "NO_SHA");
+  assert.deepEqual(w.x.readingFor(""), noSha("a reading is read by its capture sha256"), "R63's one answer");
   assert.deepEqual(w.x.readingFor(S1), { ok: true, found: false, capture_sha: S1, reading: null });
   bundle(w.s, "PROJ-1", { type: "project" });
   for (let i = 0; i < 18; i++) w.x.writeReading({ bundleId: "PROJ-1", captureSha: S1, reading: await reading([E("a", String(i))]) });
