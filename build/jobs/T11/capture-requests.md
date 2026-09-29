@@ -24,3 +24,7 @@
 - Layer tests: none are named in `build/manifest.md`.
 
 Size (session_0112zqCL2hpYuLBaQUhUSgZL): test runs 5, module lines 1289
+
+## J1 · REPORT
+
+Found outside my paths: (1) R6's 'not yet met' mark in build/requirements/capture-requests.md is already met (door.test.mjs's two R6 tests on in-process at and a body's at pass); the requirements file is not mine to edit, so the mark still needs striking. (2) bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json) is stale after my change to src/capture-requests/index.mjs; reported, not rebuilt. No C-28 row changed, so nothing for promotion R34 to stamp.
