@@ -1,4 +1,4 @@
-/* ai-runs R11–R14, R31, and R13's notice to bias (R30): the tick, the close and the one exit. */
+/* ai-runs R11–R14, R31 (R45 in state.test.mjs), and R13's notice to bias (R30): the tick, the close and the one exit. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ORG, T0 } from "./world.mjs";
@@ -31,7 +31,7 @@ const relayed = (r, code) => {
   assert.equal(r.translation, AI_RUN_CHECKS[code].translation);
 };
 
-test("R11: the tick's order — absent or invisible {found: false} alike; R5 with nothing appended; R6 over the run's context; not running {ticked: false, status, bound}; R3 over consume", async () => {
+test("R11: the tick's order — absent or invisible {found: false} alike; R5 with nothing appended; R6 over the run's context; not running {ticked: false, status, bound}; R3 over consume; R45 over state", async () => {
   const w = await runWorld();
   const before = w.dump();
   const absent = await tick(w, { run: "R404" });
@@ -51,6 +51,10 @@ test("R11: the tick's order — absent or invisible {found: false} alike; R5 wit
   relayed(await tick(w, { consume: [{ bound: "fetches", amount: 1 }], log: [E.absent] }), "AI_RUN_BOUND_UNKNOWN");
   relayed(await tick(w, { consume: { fetches: -1 }, log: [E.absent] }), "AI_RUN_CONSUME_INVALID");
   relayed(await tick(w, { consume: { mints: 1 } }), "AI_RUN_BOUND_PLANE_COUNTED");
+  /* R45 over the state, after R3 over consume */
+  const big = { s: "x".repeat(262144) };
+  relayed(await tick(w, { consume: { fetches: -1 }, state: big }), "AI_RUN_CONSUME_INVALID");
+  relayed(await tick(w, { consume: { fetches: 1 }, state: big, log: [E.absent] }), "AI_RUN_STATE_TOO_LARGE");
   assert.equal(w.dump(), before, "no refusal appended, spent or extended anything");
   /* not running: stated, after the gates */
   await close(w);

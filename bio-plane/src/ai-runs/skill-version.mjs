@@ -1,10 +1,10 @@
 /* R8 (K82 (4), K86): `checkSkillVersion` and `parseSkillVersion`, held here — ai-runs is earlier in the order than
- * `skills`, whose `skillpack.mjs` wrote them first and re-exports this copy at its job (K78 (3)'s pattern). The
- * refusal is C-22.7, built from its row, which the catalogue holds for `skills` (its R25), named here and never copied. */
-import { AI_RUN_CHECKS } from "../../checks/bio-checks.mjs";
+ * `skills`, whose `skillpack.mjs` wrote them first and re-exports this copy (K78 (3)'s pattern). The refusal is C-22.7,
+ * built from its row in this module's own table (`./checks.mjs`, R35, N289), beside this one minting site. */
+import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
 
 function refusal(key, detail) {
-  const row = AI_RUN_CHECKS[key];
+  const row = AI_RUN_OWN_CHECKS[key];
   return { ok: false, code: key, check: row.check, translation: row.translation, detail };
 }
 

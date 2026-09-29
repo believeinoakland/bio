@@ -27,7 +27,7 @@
  * the same storage, and a test may pass its own. */
 import {
   CAPTURE_REQUEST_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible,
-  civicosUserAgent, isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, parseFrontmatter, createSha256,
+  civicosUserAgent, isPublicHttpsLocator, MACHINE_AUTHOR_PREFIX, normalizeType, createSha256,
 } from "../../checks/bio-checks.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
@@ -36,6 +36,7 @@ import { governorOf } from "../host-governor/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { credentialsOf } from "../capture-sources/credentials.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
+import { inquiryOf } from "../inquiry/index.mjs";
 import { runPrincipalGate } from "../airun.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
 import { CAPTURE_SOURCE_CHECKS } from "./checks.mjs";
@@ -157,7 +158,8 @@ export class CaptureRequests {
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
    *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
    *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default), `promotion` (R38), `order` (R44: the
-   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own). */
+   *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own), `inquiry` (R14: its R44
+   *  `memberUserAgent(id)`). */
   constructor(storage, deps = {}) {
     this.#sql = storage.sql;
     this.#deps = deps;
@@ -690,15 +692,13 @@ export class CaptureRequests {
     try { return !!this.#deps.governor.isHeld(host, nowMs); } catch { return false; }
   }
 
-  /** The member agent RECORDED on the inquiry (its `member_user_agent`), or null: read from the question's own
-   *  `bundle.md` through record-core, and null answered honestly rather than defaulted, because a default here is the
-   *  invented client BOB-3 does not license. */
+  /** R14 (N295, K342): the member agent RECORDED on the inquiry, as inquiry answers it (its R44 `memberUserAgent`: the
+   *  control plane's stamp at the inquiry's creation, else its document's `member_user_agent`), or null: answered
+   *  honestly rather than defaulted, because a default here is the invented client BOB-3 does not license. Inquiry
+   *  is the one reader of that record (K231); this module never reads the document's line itself. */
   #memberAgent(target) {
     try {
-      const f = this.#deps.record.readFile(target, "bundle.md");
-      if (!f || typeof f.text !== "string") return null;
-      const fm = parseFrontmatter(f.text).data || {};
-      const ua = fm.member_user_agent;
+      const ua = this.#deps.inquiry.memberUserAgent(target);
       return typeof ua === "string" && ua.trim() !== "" ? ua.trim() : null;
     } catch { return null; }
   }
@@ -1075,6 +1075,9 @@ export function captureRequestsOf(host, deps = {}) {
                                                   : deps.credentials,
       /* R38 (N141): the one promotion on this storage, through which a requested capture enters the record. */
       promotion: deps.promotion || promotionOf(host, { record }),
+      /* R14 (N295): the member-browser agent is inquiry's R44 answer. Reached when the drain asks, not at creation, so
+         the one inquiry on this host is the one the plane built with its own deps. */
+      inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) },
     };
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);

@@ -94,7 +94,8 @@ test("R12 expired rows are released before selection, so none takes a slot", asy
 
 test("R13 R14 conduct refusals and holds: code, detail and attempts + 1 written, terminal to refused, temporary left requested; each appended LOOKED_INDETERMINATE, governed exactly for our pacing", async () => {
   const w = world().scene();
-  w.bundle("INQ-UA", "inquiry", { md: inquiryMd(null) });
+  /* the document's own line is not inquiry's answer: inquiry records no agent, so none is delegated (R14, N295) */
+  w.bundle("INQ-UA", "inquiry", { md: inquiryMd("Document/1.0") });
   w.run("R-UA", { context: "INQ-UA" });
   w.run("R-HALF", { claude: " " });
   const ask = (over) => w.ask(over).request;
@@ -147,10 +148,11 @@ test("R14 conduct's order: attribution before purpose before agent before rate, 
                    ["CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", "CAPTURE_CONDUCT_NO_PURPOSE", "CAPTURE_CONDUCT_UA_ILLEGIBLE"]);
 });
 
-test("R14 the civicos agent is the catalogue's composer and legible; a recorded member agent is delegated verbatim; no robots.txt is read and a Disallow path is captured (BOB-3)", async () => {
+test("R14 the civicos agent is the catalogue's composer and legible; the member agent inquiry records (its R44 memberUserAgent) is delegated verbatim, never the document's line; no robots.txt is read and a Disallow path is captured (BOB-3)", async () => {
   const UA = "Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0";
   const w = world().scene();
-  w.bundle("INQ-UA", "inquiry", { md: inquiryMd(UA) });
+  w.bundle("INQ-UA", "inquiry", { md: inquiryMd("Document/1.0") });
+  w.agents.set("INQ-UA", UA);
   w.run("R-UA", { context: "INQ-UA" });
   const touched = [];
   const realFetch = globalThis.fetch;
@@ -164,7 +166,8 @@ test("R14 the civicos agent is the catalogue's composer and legible; a recorded 
   } finally { globalThis.fetch = realFetch; }
   assert.deepEqual(touched, [], "no robots.txt, nor anything else, fetched by the drain itself");
   const by = Object.fromEntries(w.capture.calls.map((c) => [c.opts.captureRequest.locator, c.opts.captureRequest]));
-  assert.equal(by["https://m.example.org/x"].agent, UA);
+  assert.equal(by["https://m.example.org/x"].agent, UA, "inquiry's answer, not the document's line");
+  assert.deepEqual(w.asked, ["INQ-UA"], "inquiry is asked for the member-browser row's target only");
   assert.equal(by["https://p.example.org/x"].purpose, "acquire");
   assert.equal(by["https://www.example.gov/private/disallowed/report.pdf"].agent, null);
   const ua = civicosUserAgent(ENV.VERSION, ENV.INSTANCE_NAME, "investigate");

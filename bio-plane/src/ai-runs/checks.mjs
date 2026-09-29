@@ -6,10 +6,11 @@
  * `inquiry`'s, C-66.6 `control-plane`'s). Each row here is an invariant of this module with its test
  * (`test/m/ai-runs/`). */
 
-/* C-22's run rows: C-22.5, .8, .11–.16. The family's history and its reason for being one row per code are in the
- * catalogue's AI_RUN_CHECKS header, which stays with the rows left there. C-22.7 (`checkSkillVersion`'s, R8) is named,
- * not held: `skills` claims the row (its R25) and reads it from the catalogue, so it stays there until BOB rules
- * which module holds it; `./skill-version.mjs` reads it by name. */
+/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18. The family's history and its reason for being one row per code are in
+ * the catalogue's AI_RUN_CHECKS header, which stays with the rows left there. C-22.7 (`checkSkillVersion`'s, R8) is
+ * held here beside its one minting site (R35, K333, N289); `skills` names it by key through this module (its R25). The
+ * catalogue keeps a copy only so the plane boots until this row is read (K350), and it leaves in T12 (N299); this row
+ * wins in `../airun.mjs`' spread. */
 export const AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
      which bound and where it stopped". A close with no bound named is the
@@ -23,6 +24,33 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'The run stopped without saying what stopped it. '
       + 'Not finding something and not finishing the search are different facts, '
       + 'and only one of them licenses a conclusion.',
+  },
+  /* SK-1, 2026-08-08. §11 lists THREE conditions a run is formed under — the
+     bias manifest in force, the launching project's standard pair, and THE
+     SKILL VERSION IT RAN UNDER — because "everything can change at the drop of
+     a hat" and a version is only interpretable against them. SK-1's row makes
+     the recording a REQUIREMENT and not an analogy (the Cerebras/Schulte
+     disclosure standard), and a condition that may be omitted is not recorded:
+     it is recorded by the runs that felt like it.
+
+     REFUSED AT THE OPEN, beside the two principals, for the same reason those
+     are: refusing later would mean a run had already searched under
+     instructions nobody can name. Two ways to fail and ONE code, because they
+     are one fact — the run object cannot say what it ran under. The worse of
+     the two is a version that names no pack: `3` reads as an answer and
+     identifies nothing, which is the blank-principal shape PL-4 measured one
+     field over, arriving on a condition instead of an identity.
+
+     A WHOLE-FUNCTION `where`: `checkSkillVersion` is small, single-purpose, and
+     the only refusal it makes is this one. Moved from the catalogue with its
+     reasons and translation unchanged (N289, K333); its `where` names the site
+     this module holds (`skillpack.mjs`'s copy was deleted by N156). */
+  AI_RUN_SKILL_VERSION_UNNAMED: {
+    check: 'C-22.7',
+    where: 'src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open',
+    translation: 'This run did not say which version of its instructions it was working under. '
+      + 'What a run found can only be read against the instructions it was given, so the record '
+      + 'asks for that version before the run starts rather than guessing at it afterwards.',
   },
   /* PL-18, 2026-08-09 — DEC-63'S GATE, AND IT IS THE ONE ROW IN THIS FAMILY
      THAT IS ABOUT WHO IS ASKING RATHER THAN ABOUT WHAT THE RUN OBJECT SAYS.
@@ -165,6 +193,20 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'The investigation was given a limit on part of its budget without saying how much it may use. '
       + 'A limit of nothing would mean no limit at all, so the investigation was not started. Give it an amount, '
       + 'or leave that part out.',
+  },
+  /* N293 (AGENT-WORKER #2 J1; REC-169's rule, one figure over), R45 — THE RUN'S SCRATCH IS BOUNDED. `state` is the
+     run's resumable work list (R12, DEC-61: never a transcript), and it was stored with no bound on its size: the run's
+     principal could write any amount on every tick, into a row every read of the run publishes whole (R19). The
+     ceiling is `AI_RUN_STATE_MAX_BYTES`, measured as the UTF-8 length of the state's JSON, the bytes the row holds. Its
+     own code and not C-22.13's: the figure there is a budget's; here nothing is wrong with any figure, the work list is
+     simply too large to keep, and the remedy differs (keep less, or keep it elsewhere). A WHOLE-FUNCTION `where`, as
+     C-22.7's: `checkRunState` makes this one refusal and no other; the open and the tick relay it. */
+  AI_RUN_STATE_TOO_LARGE: {
+    check: 'C-22.18',
+    where: 'src/airun.mjs checkRunState, called from src/ai-runs/index.mjs open and tick',
+    translation: 'The investigation tried to keep more working notes than one investigation may hold, so nothing it '
+      + 'sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it '
+      + 'has left to do, not everything it has read.',
   },
 };
 
