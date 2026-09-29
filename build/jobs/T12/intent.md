@@ -64,3 +64,11 @@ Found, from my record's Completion section:
 (4) R22 names NO_SUCH_PROJECT as its only row exception. NO_SUCH_ENTITY (entities R36) is now a second one; the Uses line says so, R22 does not.
 (5) Four unbounded internal reads left in my module, each needing wording like N305's: pursuitOf's walk over every goal document; #ageable's walk over every inquiry and its manifest (R17, R27); R28's conditioned-project walk (J1.2); #heldAspirations passing over retired aspirations without counting them.
 Legacy suites derivation-bounds and meaning-bounds match their parent's output; bounds, gate-reads, hygiene and rung-ladder pass.
+
+## J3 · COMPLETE
+
+N285: setCondition's and declareAspiration's NO_SUCH_ENTITY now answer entities.noSuchEntity(id) byte for byte. refuseNoSuchEntity and row C-111.5 are retired.
+N305: servesOf measures against the first 1,000 held aspirations in force and the first 1,000 conditioned projects, answering context_truncated. proposals with no project reads the first 1,000 projects the viewer may see, answering projects_limit and projects_truncated (my J1.1 reading). pursuitOf reads at most 1,000 named requests, answering requests_limit and requests_truncated. Each has an interface test at the bound and one past it.
+Please strike the Bounds paragraph's 'not yet met: N305' and entities R36's 'not yet met: N285'.
+Results: intent tests 46 of 46 pass. Users' tests: 171 pass and 9 todo, the same as the parent; queue 10 pass. format, architecture, coverage (28 of 28 ids) and ownership: 0 failures.
+The full account is in build/jobs/T12/intent.md, Completion.
