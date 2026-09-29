@@ -28,3 +28,7 @@
 - `node checks/ownership.mjs … ratification tranche/T13`: 1 file changed; legacy-store, legacy-checks and legacy-index 0 lines added or removed; 0 failures.
 
 Size (session_01FW1o1n2eXe6NEXbNnBRoE6): test runs 3, module lines 0 (test lines +12 −2)
+
+## J1 · REPORT
+
+Found in legacy-checks (N251, its T14 half): nothing reads the catalogue's ATTRIBUTION_CHECKS any more. Ratification's R14 test now walks every catalogue row family instead. The only other users of the name (test/mk7-attribution, testify and testimonyaxis tests) define their own local constant. The empty export at bio-checks.mjs:9868 can go, with its header at 9861-9866, which is now stale. No civicos-ui or affordances hits, since no code was added or retired. No generated artifact was made stale (the dist bundles' empty ATTRIBUTION_CHECKS goes with legacy-checks' rebuild).
