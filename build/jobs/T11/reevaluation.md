@@ -13,3 +13,13 @@ R26 (N210), R14's case half: the requirement fixes the registration and who is t
 5. **Absent.** With no `fn` registered, `raiseNotices` answers `case_parts_absent: true` with a sentence, and tells nobody.
 
 Also, not asked but done under one code one site (K231): `onBasisChanged`'s own `LISTENER_MALFORMED`/`LISTENER_DECLARED` move to `membership.listenerRefusal` (R81), as R26's must.
+
+## J2 · QUESTION
+
+Replaces J1 (the whole of it stands, with point 1 changed as below).
+
+**The gap.** A case is not a bundle: it is a row of publication's own `cases` table (layer 8), so this module has no way to list the ratified cases, and R26's `fn({case, edition?})` answers one named case only. R14's case half needs the cases to ask about.
+
+**My best reading, which I am building:** R26's registration carries a second function, `registerCaseParts(module, {parts, cases})`: `parts({case, edition?})` is publication R41 as worded; `cases({after, limit})` → `{cases: [case id], cursor}` answers the cases with a ratified edition in id order after `after`, at most `limit` (1–1,000), viewer-free, from publication's own table. The sweep's case half pages through `cases` with the cursor `case:<last case id>`, one case counting one toward `limit`, and asks `parts` for each. A registration missing either function is `LISTENER_MALFORMED` (through `listenerRefusal`, by passing it a function only when both are). If you would rather keep `fn` alone (for instance `fn({})` answering the list), say which and I will rewire; it touches only the registration. This needs publication R41 (or a new R) worded for `cases`.
+
+Points 2–5 of J1 stand: pinned capture by `record.textAtSha` + `content_hash` + `content.captureFor`; one notice per (case, part, pinned capture, newer capture) in `reevaluation_case_notices`, listed only to the owners told (`membership.projectOwners`) and machines; `keepVersion` closes one, `adoptVersion` refuses it (a new edition is publication's); `case_parts_absent` with none registered.
