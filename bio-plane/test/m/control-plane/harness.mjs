@@ -5,6 +5,7 @@
    stubbed and no shared helper is touched. Every test drives the module at its interface. */
 import { registerHooks } from "node:module";
 import { createHash, randomBytes } from "node:crypto";
+import assert from "node:assert/strict";
 
 registerHooks({
   resolve(spec, ctx, next) {
@@ -129,4 +130,16 @@ export function world(opts = {}) {
   };
   const env = makeEnv({ sessions, creds, answer: opts.answer, omit: opts.omit, group: opts.group });
   return { env, S, A };
+}
+
+/** A refusal as the module answers one: status, `ok:false`, the code as `reason` and `code`, its C-number, a sentence. */
+export function refused(r, status, code, check) {
+  assert.equal(r.status, status, `${code}: ${r.text.slice(0, 300)}`);
+  assert.equal(r.json?.ok, false);
+  assert.equal(r.json.reason, code);
+  assert.equal(r.json.code, code);
+  assert.equal(r.json.check, check);
+  assert.equal(typeof r.json.translation, "string");
+  assert.ok(r.json.translation.length > 0);
+  assert.equal(r.headers.get("access-control-allow-origin"), "*");
 }

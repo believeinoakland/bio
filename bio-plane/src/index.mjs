@@ -975,4 +975,4 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     if (op === "ratify") return ratifyOp(req, stub, { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
 }
 
-export default { fetch: makeFetch({ publicOp, gatedOp }) };
+export default { fetch: makeFetch({ publicOp, gatedOp, publicInstanceGroup }) };

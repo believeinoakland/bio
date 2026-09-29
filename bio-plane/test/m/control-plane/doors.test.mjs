@@ -1,22 +1,12 @@
 /* control-plane: the Worker entry's routing and namespaces (R1–R6). Driven through `makeFetch(hooks)` with a fake env. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { M, O, world, call, opCalls, defaultHooks } from "./harness.mjs";
+import { M, O, world, call, opCalls, defaultHooks, refused } from "./harness.mjs";
 import { SIGN_HTML } from "../../../src/signpage.mjs";
 
 const { OPS } = O;
 const PUBLIC = Object.keys(OPS).filter((k) => OPS[k].classes === null);
 
-export function refused(r, status, code, check) {
-  assert.equal(r.status, status, `${code}: ${r.text.slice(0, 300)}`);
-  assert.equal(r.json?.ok, false);
-  assert.equal(r.json.reason, code);
-  assert.equal(r.json.code, code);
-  assert.equal(r.json.check, check);
-  assert.equal(typeof r.json.translation, "string");
-  assert.ok(r.json.translation.length > 0);
-  assert.equal(r.headers.get("access-control-allow-origin"), "*");
-}
 
 test("routing: OPTIONS answers 204 with access-control-allow-origin *, /version answers VERSION or 0.0.0 as plain text, /sign answers the signing page", async () => {
   const { env } = world();

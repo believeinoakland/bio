@@ -2765,7 +2765,7 @@ const NEEDS = {
    `ACT_GATE` is read only when a request is decorated, after both tables exist. */
 const decorateAct = (a) => decorate(a, ACT_GATE);
 const ACT_GATE = Object.freeze({
-  needs: (id) => NEEDS[id] ?? null,
+  needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
   mode: (id) => SESSION_OPS.member.has(id) ? "session" : SESSION_OPS.admin.has(id) ? "admin-session" : "machine",
 });
 

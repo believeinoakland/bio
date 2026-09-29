@@ -1212,6 +1212,10 @@ async function migrationReplayOf(env, storeName, b) {
 
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler still lives in legacy-index;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
+/* R17: the stamps a caller may never supply, in the query and in a body. */
+const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer"]);
+const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
+                                   "migrationReplay"]);
 export function makeFetch(hooks = {}) {
   return async function fetch(req, env) {
     const url = new URL(req.url);
@@ -1267,13 +1271,13 @@ export function makeFetch(hooks = {}) {
       const pageNamespace = namespaceGate(url);
       if (pageNamespace) return pageNamespace;
       const pageStore = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
-      return new Response(setupPage(await publicInstanceGroup(env, pageStore, "groupidentitypublic")),
+      return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, "groupidentitypublic")),
         { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     }
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
     const op = url.searchParams.get("op") || path.slice(1) || "selftest";
-    const spec = OPS[op];
+    const spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* DEC-49 REGION is-unknown-op
        D-278 (C-69.1). `error` stays "unknown op" BYTE-IDENTICAL and stays the
        FIRST key after `ok`: civicos-ui's `queueAbsent` reads the sentence to tell
@@ -1607,7 +1611,7 @@ export function makeFetch(hooks = {}) {
         session: viaSession,
         member: viaSession ? sessMember : null,
         handle: viaSession ? (sessRights.handle ?? null) : null,
-        administer: viaSession ? !!sessRights.administer : false,
+        administer: viaSession ? !!sessRights.administer : cls === "admin",   /* R18: the root of trust administers */
         rootOfTrust: viaSession ? !!sessRights.rootOfTrust : false,
         capabilities: viaSession ? [...sessCaps].sort() : null,
         vocabulary: Store.CAPABILITIES,
@@ -1627,10 +1631,6 @@ export function makeFetch(hooks = {}) {
     }
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
-    /* An op whose handler still lives in legacy-index answers here; undefined falls through to the forward. */
-    const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
-    if (armed) return armed;
 
     /* A few ops read better at the edge than they do inside the store, so
        the public name and the internal name differ. The map is the only
@@ -1647,6 +1647,8 @@ export function makeFetch(hooks = {}) {
        is the SERVER's stamp and nothing else. Deleted for every op before anything is
        stamped, so a caller naming a member here reads as nobody rather than as them. */
     inner.searchParams.delete("identity");
+    /* R17, R29: EVERY stamp the caller sent is deleted, whether this op declares it or not; the op's own are set below. */
+    for (const k of QUERY_STAMPS) inner.searchParams.delete(k);
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -2523,6 +2525,11 @@ export function makeFetch(hooks = {}) {
               + `session, and the record names who set each one (Publication §7). The credential that asked is the `
               + `operator's \`${cls}\`-class bearer token, which holds no place on the roster. Nothing was changed.` }, 403);
     /* END DEC-49 REGION is-group-identity-session */
+    /* R28: an op whose handler still lives in legacy-index answers here, after the R14 fences; undefined falls
+       through to the forward. */
+    const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
+      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
+    if (armed) return armed;
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -2681,6 +2688,16 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("actor", viaSession ? sessMember : "");
     }
     let passBody = req.method === "POST" ? await req.text() : undefined;
+    /* R17, R29: and every body stamp, for every op; the ops that declare one set it below. */
+    if (passBody) {
+      try {
+        const b0 = JSON.parse(passBody);
+        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && BODY_STAMPS.some((k) => k in b0)) {
+          for (const k of BODY_STAMPS) delete b0[k];
+          passBody = JSON.stringify(b0);
+        }
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
     /* create_projects (section 5) and the 7.1 owner claim, in one place.
      *
      * There is no op that creates a project: a project is created by promoting a
@@ -3387,7 +3404,10 @@ export function makeFetch(hooks = {}) {
       return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
 
     const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
-    const body = await res.json();
+    /* R23, R30: an answer that is not JSON with `ok: true` is a silence, never relayed (a store's stack included). */
+    let body = null;
+    try { body = await res.json(); } catch { body = null; }
+    if (!body || body.ok !== true) return storeSilent(op);
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body?.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
