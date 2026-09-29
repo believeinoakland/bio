@@ -43,3 +43,16 @@
   - ownership: 1 file changed; 0 failures.
 
 Size (session_01SwuSDSpNYMTago2yMckx82): test runs 30 (15 old-battery suites, 2 tranche comparisons, 3 UI checks plus 1 tranche comparison, 4 scratch-driver runs including the control, 2 fleetbundles runs, 3 others), module lines 7,604
+
+## J1 · COMPLETE
+
+N285 (my share) is applied. The full detail is in my record's § Completion.
+- **Change:** the project-scoped proposal dispose answers `NOT_A_DISPOSITION` through `progressions.notADisposition` (R35, C-100.20), byte for byte. My own copy of the condition and its sentence are gone, and so is the unused `DISPOSITIONS` import. `store.mjs` net −9 lines. Both key shapes of `op=proposedispose` now answer one identical refusal.
+- **At the op, a scratch Miniflare driver (not committed):** 47/0 on this branch. On the tranche's store, 8 byte-for-byte arms fail. The file was restored and checked by sha256.
+- **Battery:** the 15 old-battery suites that drive the op are green, except d470-catalog-census 11/2 and machinefences-dec49 88/1. Both are identical on the tranche.
+- **Checks:** format, coverage and ownership 0 failures; architecture shows only the 4 pre-existing failures.
+
+For routing:
+1. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest, from `store.mjs`. `fleetbundles` goes 95/1 → 91/5. For the layer close.
+2. **legacy-tests, `check-refusal-codes`:** this change clears arm G's two-site `NOT_A_DISPOSITION` failure, and the multi-site count drops from 57 to 56. Its other 17 failures are pre-existing floor slack.
+3. **legacy-tests / legacy-ui, `civicos-ui/test/act-proposal.test.mjs:53`:** it mocks the store's retired sentence for this code. The suite stays green because it drives its own mock.
