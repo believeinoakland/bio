@@ -97,3 +97,7 @@ R49's `since`: where each instant is read. My best reading, which I am building 
 3. `forming`: reached whenever the stage is computed, `earned: null`, `since: null` (no evidence earns the ground stage; it is not "skipped").
 4. `closed.since` ("the instant the close was recorded, as the store holds it", K452): the `timestamp` of the newest `state_history` entry with `to_state: closed` in the project's stored document; null when there is none or it is not an instant. The alternative is the `manifest.created` of the commit that first wrote the close, which needs a walk of the document's history; I did not take it.
 5. Reached stages also carry a `why` (every entry has one): a fixed sentence with counts, e.g. "N held questions read have a leg in their basis."
+
+## J2 · REPORT
+
+Found outside publication (record, Found in other modules): (1) stale, not rebuilt (§14): bio-plane/dist/bio-plane.bundled.mjs bundles src/publication/ (not_product; regenerated at the layer close). (2) legacy-index (layer 11): add storeRefusal (control-plane already exports it) to bindPublishedPlane at src/index.mjs:172; all four of publication's relays read it from that one bag, and until then they give the same answer through the fallback json(reply.body, reply.status). It may also stop handing StoreSilent, which publication no longer reads. (3) No hit in civicos-ui/ or affordances' lists for projectstage, stages, STAGE_NEEDS, STAGE_SENTENCES, CLOSED_RECORDED_MAX or relayUnanswered (the UI's 'stages' are progressions').
