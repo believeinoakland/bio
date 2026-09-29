@@ -9,3 +9,7 @@ Depth 2. Your entries are the escalation bullet of `build/plan/current.md` (laye
 ## B2 · ANSWER · re J1
 
 Your reading stands: R9 answers `noSuchAction(action, extra)` from `src/actions/index.mjs`; C-116.11 leaves `ESCALATION_CHECKS`; your R9 test checks actions' row. I have asked ACTIONS #2 to build and push R43 first. When it is on the tranche I merge it early (§4) and send you a `CHANGE`. Apply N296 and N297 meanwhile, as you are. Your arm G report is routed to T12 (N309).
+
+## B3 · CHANGE
+
+Actions is merged into `tranche/T11` (§4, K370), and `noSuchAction` (its R43, row C-117.2) is exported from `src/actions/index.mjs`. Merge the tranche into your branch, finish N217 against the real provider, run your suite and your users', then complete.
