@@ -408,12 +408,17 @@ t("and the refusal for an absent run SAYS that a run begins on a member's act â€
    a perfectly good run and it may not produce readings, because a run's mode is
    one of the conditions it was formed under. KEPT: a check run still opens. */
 const CHECKRUN = "RUN-2026-0914-check";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; scheduler N223, ai-runs R43): a run's open now arms the REAL alarm, which
+   reaps a run whose lease lapsed by the wall clock (this one's, opened at NOW with ten minutes, long since), so the
+   door answered RUN_NOT_RUNNING before it read the mode. The check run is dated a day past the wall clock, as
+   `airun.test.mjs`' runs are; the arm's subject, the mode, is unchanged. */
+const CHECK_AT = new Date(Date.now() + 86400000).toISOString();
 const checkOpened = await post("airunopen", {
   run: CHECKRUN, contextType: "inquiry", contextId: INQ, mode: "check",
   principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
   skillVersion: "investigative-session@1",
   bounds: [{ bound: "mints", allowed: 5, unit: "passages" }],
-  leaseMs: 600000, at: NOW }, RUTH);
+  leaseMs: 600000, at: CHECK_AT }, RUTH);
 t("A RUN IN ANOTHER MODE MAY NOT PRODUCE A READING even with a mints bound declared â€” a run's "
 + "mode is a condition it was formed under and is read back, never widened by the work",
   await (async () => {

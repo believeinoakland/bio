@@ -258,7 +258,15 @@ const inquiryMd = (id, { question = `What does ${id} rest on?`, memberUa = null 
    first's rows, so a version the suite wrote could vanish by the draw rather than the code (`TREE-SHARING.md` §3). A
    per-suite COUNTER cannot repeat. */
 let snapKeySeq = 0;
-const promote = async (id, text, type) => POST(`op=promote&token=${RUTH}`, {
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N290, N295, K342; inquiry R44): the member-browser agent R14 reads is now
+   inquiry's `memberUserAgent`, first of all the control plane's stamp from the creating request's own `User-Agent`
+   header (a creation through a member's session). The harness's client sends `undici` unless told otherwise, so every
+   creation names the agent it arrives under: none (`""`, which the worker reads as no header) for the question that
+   records NO member agent, the member's own browser for INQ_UA. */
+const promoteAs = async (ua, id, text, type) => rP(await (await mf.dispatchFetch(`http://x/api/?op=promote&token=${RUTH}`,
+  { method: "POST", headers: { "User-Agent": ua }, body: JSON.stringify(promoteBody(id, text, type)) })).json());
+const promote = async (id, text, type) => promoteAs("", id, text, type);
+const promoteBody = (id, text, type) => ({
   bundleId: id, base: null,
   snapKey: `${id}-${String(++snapKeySeq).padStart(6, "0")}`,
   files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }],
@@ -272,7 +280,7 @@ const INQ_UA = "INQ-2026-4000-browser-delegated";
 {
   const a = await promote(INQ, inquiryMd(INQ), "inquiry");
   if (!a.ok) throw new Error(`promote ${INQ}: ${JSON.stringify(a).slice(0, 600)}`);
-  const b = await promote(INQ_UA, inquiryMd(INQ_UA, { memberUa: MEMBER_UA }), "inquiry");
+  const b = await promoteAs(MEMBER_UA, INQ_UA, inquiryMd(INQ_UA), "inquiry");
   if (!b.ok) throw new Error(`promote ${INQ_UA}: ${JSON.stringify(b).slice(0, 600)}`);
 }
 
