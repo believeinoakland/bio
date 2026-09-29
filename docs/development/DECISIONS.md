@@ -1268,3 +1268,21 @@ response: **Bob agreed, 2026-09-29.**
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Case_Making_v0_1.md` §CONTRADICTION beside DEC-76.
 owed: carried into the level-2 PRESENT and RESOLVE design DEC-76 owes, and into the UX redesign's substrate (`docs/development/ux-substrate/`); the act of accepting a proposal needs its requirement (an attributed act naming the proposal accepted) in the modules that carry it.
+
+### DEC-78 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 2)
+for: bob
+question: How does a knock become part of the record: what does pulling commit a member to, and how does the capture it becomes state its provenance?
+why it is Bob's: intake doctrine (whether pulling vouches, and how an anonymous source is stated) and the knocker's experience (UX).
+provisional: nothing is blocked; `pulled` is a status only (capture R32) and creates no capture.
+alternative: pulling is the member vouching and becoming the source (Membership v2 §1.2 forbids it); or `pulled` stays a status and the member uploads the material separately, the link to the knock kept by hand.
+recommendation: pulling admits the material with the doorbell as its stated provenance, and vouching stays with release.
+reversal cost: low; nothing is built.
+response: **As recommended, with two corrections of Bob's, 2026-09-29.**
+  1. Pulling ADMITS the knock's material as a capture at `collected`, carrying the knock's receipt (its id, digest, byte count and time received), and commits the member to nothing more. Vouching stays with release.
+  2. A KNOCK HAS A SOURCE. Bob: "A whistleblower is still a source, though unnamed." The record names the source as an unnamed knocker identified by the knock's receipt, never as unattributed or unknown; Intake Doctrine §2a's "NO attributed source" is corrected in place. The same holds for hand-carried material: its source is the person who handed it over, named or unnamed. In both, the member who pulled or brought the material in is on the capture too, as its capturing actor, and is never recorded as its source (Membership v2 §1.2).
+  3. A KNOCKER MAY PROVE CONTINUITY. Bob's proposal: the knocker supplies the same identifier with every knock, proving to the system that the same person submitted them. Recorded with the safeguards that make it hold: the identifier is a SECRET the knocker keeps (an identifier others can see would let them impersonate); the record shows a pseudonym derived from it and states continuity as possession of the same secret, never as identity; it is optional, and a knocker may knock unlinked or with a fresh secret; it is held only as a keyed digest under an instance key, so no row or leak reveals it and the same secret at two groups does not link them; and the doorbell can generate a strong one and show it once on the receipt. The mechanism is BOB's.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §2a (the pulling paragraph, and the corrected sentence).
+still open (Bob's): whether the knock's `note` and `contact` travel into the record. Recommended: the note travels with the capture as the source's own words, labelled as the knocker's and never as evidence of its truth; the contact stays in the doorbell inbox, readable by members and never in the record or any publication, so a whistleblower's way of being reached cannot be published by accident.
+owed: capture's requirements (a doorbell provenance with the knock's receipt; the pull act creating the capture; the knocker secret, its pseudonym and its keyed digest), for Bob's approval; the UX page's open question 2 marked ruled.
