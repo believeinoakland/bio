@@ -23899,7 +23899,7 @@ var EXTRACTION_CHECKS = Object.freeze({
 var at3 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
-  NOT_FOUND: Object.freeze({
+  EVIDENCE_NOT_HELD: Object.freeze({
     check: "C-118.1",
     where: at3("evidenceAbsent", "is-evidence-held"),
     translation: "The record holds no stored copy of a document under this fingerprint."

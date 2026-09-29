@@ -17409,13 +17409,23 @@ async function answerOf(call) {
     return { answered: false };
   }
 }
-async function governorOp(op, url, store) {
+var relayOf = (relay) => relay && typeof relay.doAnswer === "function" && typeof relay.storeRefusal === "function" ? relay : null;
+async function storeCall(relay, call) {
+  if (!relay) return answerOf(call);
+  const out = await relay.doAnswer((async () => call())());
+  if (out && out.refused) return { refused: true, response: relay.storeRefusal(out) };
+  if (!out || !out.answered) return out && out.correlation ? { answered: false, correlation: out.correlation } : { answered: false };
+  return { answered: true, result: out.result };
+}
+var unanswered = (r) => r.refused ? { refused: true, response: r.response } : { silent: true, ...r.correlation ? { correlation: r.correlation } : {} };
+async function governorOp(op, url, store, relay = null) {
   if (op !== "governorstate" && op !== "governorconfig") return null;
+  const rel = relayOf(relay);
   const st = typeof store === "function" ? store() : store;
   const host = url.searchParams.get("host");
   if (op === "governorstate") {
-    const r2 = await answerOf(() => st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
-    return r2.answered ? { status: 200, body: { ok: true, ...r2.result } } : { silent: true };
+    const r2 = await storeCall(rel, () => st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
+    return r2.answered ? { status: 200, body: { ok: true, ...r2.result } } : unanswered(r2);
   }
   if (!host)
     return { status: 400, body: {
@@ -17426,12 +17436,12 @@ async function governorOp(op, url, store) {
   const raw = url.searchParams.get("appetite_per_min");
   const appetite = raw === null || raw === "" ? null : appetiteOf(raw);
   if (raw !== null && raw !== "" && appetite === null) return { status: 400, body: badAppetite(host) };
-  const r = await answerOf(() => st.fetch("http://x/governorconfig", {
+  const r = await storeCall(rel, () => st.fetch("http://x/governorconfig", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ host, appetite_per_min: appetite })
   }));
-  if (!r.answered) return { silent: true };
+  if (!r.answered) return unanswered(r);
   if (r.result && r.result.ok === false) return { status: 400, body: r.result };
   return { status: 200, body: { ok: true, ...r.result } };
 }
@@ -30251,7 +30261,7 @@ function noSha(detail = null) {
 var at3 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
-  NOT_FOUND: Object.freeze({
+  EVIDENCE_NOT_HELD: Object.freeze({
     check: "C-118.1",
     where: at3("evidenceAbsent", "is-evidence-held"),
     translation: "The record holds no stored copy of a document under this fingerprint."
@@ -30264,7 +30274,13 @@ var CAPTURE_CHECKS = Object.freeze({
 });
 
 // src/capture/ops.mjs
-async function linksOp(url, store, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2, viewer }) {
+function relayUnanswered(out, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (out.refused && out.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
+  if (!out.answered) return storeSilent2(op, out.correlation);
+  return null;
+}
+async function linksOp(url, store, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, viewer }) {
   const v = `viewer=${encodeURIComponent(viewer ?? "")}` + ["limit", "after"].map((k) => url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "").join("");
   const address = url.searchParams.get("address");
   const capture = url.searchParams.get("capture");
@@ -30278,7 +30294,8 @@ async function linksOp(url, store, { json: json5, storeSilent: storeSilent2, doA
     reason: "NEED_CAPTURE_OR_ADDRESS",
     detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, or host=<host> for how that host's navigation changed between captures"
   }, 400);
-  if (!r.answered) return storeSilent2("links");
+  const unanswered2 = relayUnanswered(r, "links", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered2) return unanswered2;
   return json5({ ok: true, ...r.result });
 }
 var EVIDENCE_ABSENT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "sha256", "store"]);
@@ -30290,11 +30307,11 @@ function evidenceAbsent(sha, store, extra = null) {
   } catch {
     own2 = [];
   }
-  const row2 = CAPTURE_CHECKS.NOT_FOUND;
+  const row2 = CAPTURE_CHECKS.EVIDENCE_NOT_HELD;
   return { status: 404, body: {
     ok: false,
-    reason: "NOT_FOUND",
-    code: "NOT_FOUND",
+    reason: "EVIDENCE_NOT_HELD",
+    code: "EVIDENCE_NOT_HELD",
     check: row2.check,
     translation: row2.translation,
     sha256: sha ?? null,
@@ -30349,7 +30366,7 @@ async function captureObjectOp(req, url, env, { json: json5, storageAbsent: stor
     }
   });
 }
-async function archiveLookupOp(req, url, store, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function archiveLookupOp(req, url, store, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   const body = req.method === "POST" ? await req.json().catch(() => null) : null;
   const address = body?.address || url.searchParams.get("address");
   const r = await doAnswer2(store.fetch("http://x/archivelookup", {
@@ -30357,10 +30374,21 @@ async function archiveLookupOp(req, url, store, { json: json5, storeSilent: stor
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ address })
   }));
-  if (!r.answered) return storeSilent2("archivelookup");
+  const unanswered2 = relayUnanswered(r, "archivelookup", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered2) return unanswered2;
   return json5(r.result.body, r.result.status);
 }
-async function acquireOp(req, env, store, { json: json5, storeSilent: storeSilent2, storageAbsent: storageAbsent2, doAnswer: doAnswer2, cls, member, sessMember, storeName }) {
+async function acquireOp(req, env, store, {
+  json: json5,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  storageAbsent: storageAbsent2,
+  doAnswer: doAnswer2,
+  cls,
+  member,
+  sessMember,
+  storeName
+}) {
   if (req.method !== "POST") return { response: json5({ ok: false, error: "acquire is a POST" }, 405) };
   if (typeof env.CAPTURES?.put !== "function")
     return { response: storageAbsent2("acquire", "this instance has no evidence storage configured") };
@@ -30371,7 +30399,8 @@ async function acquireOp(req, env, store, { json: json5, storeSilent: storeSilen
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body || {})
   }));
-  if (!r.answered) return { response: storeSilent2("acquire") };
+  const unanswered2 = relayUnanswered(r, "acquire", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered2) return { response: unanswered2 };
   const { status, body: answer } = r.result;
   if (!answer || answer.ok !== true || !answer.document) return { response: json5(answer, status) };
   return { answer };
@@ -30979,7 +31008,7 @@ ${said2}` : b.text,
     }
     for (const u of pages[pages.length - 1].undetermined || []) undetermined.push(u);
   }
-  const unanswered = eligible.filter((p) => !filled.includes(p));
+  const unanswered2 = eligible.filter((p) => !filled.includes(p));
   const document = pages.map((p) => p.text).filter((t) => typeof t === "string" && t.length).join("\n");
   const regions = ocr && Array.isArray(ocr.regions) ? ocr.regions.filter((r) => r && r.source && filled.includes(r.source.page)) : [];
   const text3 = {
@@ -30997,7 +31026,7 @@ ${said2}` : b.text,
     appended,
     refused: refusedWhy.map((r) => r.page),
     refusedWhy,
-    unanswered,
+    unanswered: unanswered2,
     wholesale: false
   };
 }
@@ -31215,7 +31244,7 @@ async function tier3Extend(env, {
   seed = null,
   liveCalibration = null
 }) {
-  let chain2, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
+  let chain2, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered2 = [], loop = null;
   let seeded = [];
   const wanted = !!(i2text && needsTier3(i2text));
   if (wanted) {
@@ -31288,7 +31317,7 @@ async function tier3Extend(env, {
               if (m.filled.length) wiredTier = 3;
               filled = fresh;
               seeded = keptIn;
-              unanswered = m.unanswered || [];
+              unanswered2 = m.unanswered || [];
               ocrNote = withLoopNote(tier3Note(m, built.note, layerPages.filter((p) => !appendedTo.includes(p))), loop);
               if (keptIn.length)
                 ocrNote = `${ocrNote}; ${keptIn.length} of them were transcribed by an earlier reading of this capture and kept, not asked for again`;
@@ -31302,7 +31331,7 @@ async function tier3Extend(env, {
       ocrNote = "this document has no text layer to read and no OCR engine is installed in this instance, so nothing is claimed about what it says";
     }
   }
-  const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered.length > 0);
+  const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered2.length > 0);
   return { i2text, wiredTier, chain: chain2, chainSet, ocrNote, filled, seeded, engine, stillWanting };
 }
 var sheetRangeOf = (u) => {
@@ -48195,7 +48224,7 @@ function knockEmpty() {
     throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
   return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY", check: row2.check, translation: row2.translation };
 }
-async function knockOp(req, env, store, { json: json5, requiredArgument: requiredArgument2, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+async function knockOp(req, env, store, { json: json5, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   if (req.method !== "POST") return json5({ ok: false, error: "knock is a POST" }, 405);
   const raw = await req.arrayBuffer();
   if (raw.byteLength > KNOCK.maxBytes + 4096) return json5(knockEnvelopeTooLarge(), 413);
@@ -48238,7 +48267,8 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
       now: Date.now()
     })
   })));
-  if (!out.answered) return storeSilent2("knock");
+  const unanswered2 = relayUnanswered(out, "knock", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered2) return unanswered2;
   const rec = out.result || {};
   if (!rec.ok) {
     if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
@@ -51139,7 +51169,7 @@ var Capture = class _Capture {
     return { inbox, limit: cap, truncated: truncated3, next: truncated3 ? cursorOf([last.received, last.knock_id]) : null };
   }
   /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
-     (C-118.2), not R63's `NOT_FOUND`; minted here alone, so the read and the resolve answer it identically. */
+     (C-118.2), not R63's `EVIDENCE_NOT_HELD`; minted here alone, so the read and the resolve answer it identically. */
   #noSuchKnock(knockId) {
     const row2 = CAPTURE_CHECKS.NO_SUCH_KNOCK;
     return {
