@@ -344,7 +344,14 @@ layer:
     > third-party co-archive of its locator, below) is sufficient to
     > publish a work product resting on the document (DEC-81, Bob,
     > 2026-09-29); the published case discloses each document's capture
-    > grade and whether it is co-attested.**
+    > grade and whether it is co-attested.** A load-bearing Grade B whose
+    > co-attestation failed may still be published: the ceremony's
+    > pre-flight retries (a timestamp now proves existence by now; a fresh
+    > co-archive whose bytes match corroborates), and if it is still
+    > missing the owner proceeds only by an attributed acknowledgement with
+    > a reason; the case marks the document "self-attested only", and the
+    > capturing member may add a signed account of the capture. It is never
+    > refused outright (DEC-81 item 3).
 
 -   **Grade C, reference only.** A locator and citation without archived
     > bytes. Admissible only for sources that cannot be captured (a
