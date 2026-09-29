@@ -276,8 +276,8 @@ export const DISPATCH_CHECKS = {
   },
   /* D-629 (R25, C-69.3) — THE WORKER DOOR THREW. It had no outermost catch (the platform's own error page); the stack is
      now logged server-side under a CORRELATION id, and the caller receives the code, this sentence and the id, nothing
-     else. Numbered after C-69.2, which D-561 gave `STORE_DID_NOT_ANSWER`. The store's own row (`STORE_INTERNAL_ERROR`)
-     comes with the store's door (N333, K412). THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD: a throw part-way through
+     else. Numbered after C-69.2, which D-561 gave `STORE_DID_NOT_ANSWER`. The store's own row (`STORE_INTERNAL_ERROR`,
+     C-69.4) came with the store's door (N333, K412). THE TRANSLATION CLAIMS NOTHING ABOUT THE RECORD: a throw part-way through
      an op may or may not have left a write behind, and the catch cannot say which. */
   PLANE_INTERNAL_ERROR: {
     check: 'C-69.3',
@@ -286,6 +286,18 @@ export const DISPATCH_CHECKS = {
       + 'in this copy, not a statement about what the record holds or about your request; whether any part of it '
       + 'took effect is not known from here. The administrator can find the details in this copy\'s logs under the '
       + 'reference given with this answer.',
+  },
+  /* D-629 (R25, C-69.4) — THE STORE'S DOOR THREW. Its outermost catch answered `String(e.stack)` for any throw on any op
+     (file paths, line numbers and constraint text, public ops included). It came with the store's door (N333, K412);
+     C-69.3 being PLANE_INTERNAL_ERROR's since T12, it takes the next free number (awaiting stamp, N318). Same posture:
+     the stack is logged under a CORRELATION id, the caller receives the code, this sentence and the id. */
+  STORE_INTERNAL_ERROR: {
+    check: 'C-69.4',
+    where: 'src/control-plane/dispatch.mjs internalAnswer > is-store-internal-error',
+    translation: 'This copy failed inside its own record while carrying out the request, so no answer was produced. '
+      + 'That is a fault in this copy, not a statement about what the record holds or about your request; whether '
+      + 'any part of it took effect is not known from here. The administrator can find the details in this copy\'s '
+      + 'logs under the reference given with this answer.',
   },
 };
 
