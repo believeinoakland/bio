@@ -6,15 +6,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import * as C from "../../../checks/bio-checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../../../src/" + f, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
-const mf = new Miniflare({ modules: true, script: readFileSync(SRC("store.mjs"), "utf8"), modulesRoot: "/",
-  scriptPath: SRC("store.mjs"), compatibilityDate: "2026-07-01",
+/* The plane's exported Store (`src/index.mjs`), which starts instance-setup's registrations (the fact `producingGroup`,
+   K414); a probe beside it relays each request to that Store, as `store.mjs`'s own default fetch does. */
+const PROBE = 'export { Store } from "./index.mjs";\n'
+  + 'export default { fetch: (req, env) => env.STORE.get(env.STORE.idFromName("bio")).fetch(req) };\n';
+const mf = new Miniflare({ modules: true, script: PROBE, modulesRoot: "/",
+  scriptPath: SRC("write-path-probe.mjs"), compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } } });
 test.after(() => mf.dispose());
 const call = async (p, body) => (await (await mf.dispatchFetch("http://x" + p,
