@@ -55,3 +55,7 @@ R22 wording (not blocking; built on my reading): R22 says every refusal intent.m
 ## J2 · REPORT
 
 Found outside intent (record, Found in other modules): (1) stale, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs still carries GROUP_ASPIRATION_NOT_ADMIN / C-111.16 (:69085, :69654). (2) legacy-tests: civicos-ui/check-refusal-codes.mjs (already red on the tranche, same 17 failures before and after) — this change moves rows, census, reach, governedSites, regions, codesChecked, refusalsJudged each -1 and regionLines -4, for the FLOOR re-pin. (3) No suite outside test/m/intent names GROUP_ASPIRATION_NOT_ADMIN; test/fixtures/row-census-1.43.0.jsonl lists C-111.16 as the frozen 1.43.0 census (promotion's stamp). No civicos-ui or affordances hit for GROUP_ASPIRATION_NOT_ADMIN, C-111.16, GROUP_ASPIRATION_ACT or GROUP_ASPIRATION_REMEDY.
+
+## J3 · COMPLETE
+
+N327 applied: R9's group aspiration (declare, revise, retire, and a raw promotion) refuses a non-administrator through membership.notAnAdmin with the fixed act and C-111.16's next step as remedy; machine still first; member and project arms unchanged. C-111.16 retired, awaiting stamp (T15 layer 2). intent 51/51 pass; users monitoring, scheduler, affordances, queue, control-plane 0 fail. format, architecture, coverage (28/28), ownership: 0 failures. Please strike R9's N327 mark. Record: build/jobs/T14/intent.md on job/T14/intent.
