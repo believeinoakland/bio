@@ -328,7 +328,7 @@ import { publicationOf, publicationOps, publicationOwns } from "./publication/in
    this file is — the rule has ONE implementation and this file holds no copy of
    it. `skillpack.mjs` is pure; nothing but the check crosses into the store. */
 import { checkSkillVersion } from "./skillpack.mjs";
-import { biasOf, biasOps, BIAS_TABLES } from "./bias/index.mjs";
+import { biasOf, biasOps } from "./bias/index.mjs";
 import { aiRunsOf, aiRunsOps, hiddenRuns } from "./ai-runs/index.mjs";
 /* REC-63 / DEC-56: the route marker's four door refusals, imported for the same
    reason every other DEC-49 family is — the C-number, the wire code and the
@@ -484,11 +484,10 @@ export class Store extends DurableObject {
       .declarePurge("legacy-store", [
       "refs", "register", "readings", "reading_refs", "reading_ref_terms", "reading_text_source",
       "text_attestations", "resolutions", "progression_instances", "reading_history", "progression_exceptions", "inquiry_basis",
-      "inquiry_exclusions", "bias_statements",
+      "inquiry_exclusions",
       "provenance_route_marks", "case_revision_flags", "content", "transcriptions",
       "transcription_attestations", "lead_shares", "observation_attributions", "theme_placements", "proposed_readings",
       "inquiry_migration_replays", "capture_text",
-      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },
       { name: "bundles_fts", keys: [] },
       { name: "connections", keys: ["a_bundle_id", "b_bundle_id"] },
       { name: "connection_pair_choices", keys: ["a_bundle_id", "b_bundle_id"] },
@@ -502,12 +501,10 @@ export class Store extends DurableObject {
       { name: "link_verdicts", keys: [] }, { name: "links", keys: [] }, { name: "captured_locators", keys: [] }, { name: "site_asset_refs", keys: [] }, { name: "site_assets", keys: [] }, { name: "reuse_verdicts", keys: [] },
       { name: "capture_sessions", keys: [] }, { name: "entity_relations", keys: [] }, { name: "entity_aliases", keys: [] }, { name: "entities", keys: [] }, { name: "progression_stages", keys: [] }, { name: "progression_defs", keys: [] },
       { name: "progression_stage_versions", keys: [] }, { name: "progression_def_versions", keys: [] }, { name: "connection_dirty", keys: [] }, { name: "proposal_dispositions", keys: [] }, { name: "finding_dispositions", keys: [] }, { name: "queue_item_mutes", keys: [] },
-      { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] }, { name: "bias_debts", keys: [] }, { name: "bias_debt_settlements", keys: [] },
-      { name: "bias_debt_sweeps", keys: [] },
+      { name: "observation_log", keys: [] }, { name: "leads", keys: [] }, { name: "themes", keys: [] },
     ].filter((t) => !captureOwns(t) && !extractionOwns(t) && !PROVENANCE_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !PROGRESSIONS_TABLES.some((x) => (x.name || x) === (typeof t === "string" ? t : t.name)))
       .filter((t) => !CONTENT_TABLES.includes(typeof t === "string" ? t : t.name))
-      .filter((t) => !BIAS_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !ENTITIES_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !RETRIEVAL_TABLES.includes(typeof t === "string" ? t : t.name))
       .filter((t) => !observationLogOwns(t))
@@ -2112,9 +2109,11 @@ export class Store extends DurableObject {
     };
     const n = (t, ...keys) => nx(t, null, keys);
     const mon = monitoringOf(this.ctx).counts();
+    /* Each provider's counts asked once per answer, not once per key. */
+    const ret = retrievalOf(this.ctx).counts(hid), prod = runProductionsOf(this.ctx).counts(hid);
     return {
       bundles: n("bundles", "bundle_id"), files: n("files", "bundle_id"), history: n("history", "bundle_id"),
-      refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed: retrievalOf(this.ctx).counts(hid).indexed,
+      refs: n("refs", "bundle_id", "target_id"), register: n("register", "bundle_id"), indexed: ret.indexed,
       /* REC-91 / D-113: the CONTENT-GRAIN TEXT INDEX, reported for exactly the
          reason every other row on this list is -- so a purge can PROVE it took
          the rows rather than assert it.
@@ -2144,8 +2143,8 @@ export class Store extends DurableObject {
         try { this.sql.exec(`INSERT INTO capture_text_fts(capture_text_fts, rank) VALUES('integrity-check', 1)`); return true; }
         catch { return false; }
       })(),
-      selections: retrievalOf(this.ctx).counts(hid).selections,
-      selectionItems: retrievalOf(this.ctx).counts(hid).selectionItems,
+      selections: ret.selections,
+      selectionItems: ret.selectionItems,
       /* Reported so a purge can prove it took them, and so an operator can see
          inbox and reachability depth without a second call. */
       tasks: n("tasks", "refers_to"), taskQueue: n("task_queue"), sourceReachability: n("source_reachability"),
@@ -2227,7 +2226,7 @@ export class Store extends DurableObject {
          here and is deliberately not: it is scoped to a run or a document
          (`op=extractproposals`), and an instance-wide fraction would average
          across projects that have nothing to do with each other. */
-      proposedReadings: runProductionsOf(this.ctx).counts(hid).proposedReadings,
+      proposedReadings: prod.proposedReadings,
       /* IS-6: the investigative runs, their budgets and their observation logs,
          reported so a whole-store purge can PROVE it took them (D-113) and so an
          operator can see how many runs are in flight without opening one. A
@@ -2300,7 +2299,7 @@ export class Store extends DurableObject {
          took them (D-113) and so an operator can see that a run is looping
          against a refusal without opening one. A COUNT AND NOTHING ELSE — the
          same line queueState, aiRuns and basisVersions draw. */
-      suggestRefusals: runProductionsOf(this.ctx).counts(hid).suggestRefusals,
+      suggestRefusals: prod.suggestRefusals,
       /* PL-4 / IS-4: the outbound work list, reported for the same reason and
          with one more of its own — this is the only counter in the store that
          says how much traffic this instance is about to send to somebody else's
@@ -2314,7 +2313,9 @@ export class Store extends DurableObject {
          opening one. A COUNT AND NOTHING ELSE — what a group's declared bias
          SAYS is the group's business and travels with their published work,
          not an operator surface, the same line queueState and aiRuns draw. */
-      biasStatements: n("bias_statements", "bundle_id"), biasAdoptions: n("bias_adoptions", "bundle_id", "scope_id"),
+      /* N328: bias's own `counts(hid)` (its R42), the same subtraction by its statement's bundle and its adoption's
+         bundle or project. */
+      ...biasOf(this.ctx).counts(hid),
       /* REC-63 / DEC-56: the standing route markers, reported so a whole-store
          purge can PROVE it took them (D-113) and so an operator can see that the
          record is carrying doubts at all without having to sweep for them. */
