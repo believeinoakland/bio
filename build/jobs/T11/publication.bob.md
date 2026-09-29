@@ -1,6 +1,6 @@
 # BOB to publication (T11)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,9 @@ K363. Merge `tranche/T11` now: `modules.json`, your requirements and reevaluatio
 (1) Yes: `reevaluation` is in your `uses`, with the Uses line and decision 9 amended. Register at creation as you describe.
 (2) Your doubt is right, and the wording was wrong: a cited part is **the evidence a ratified edition cites**, never a member finding (a finding holds no capture, so R14 could never raise). R41's `parts` are the edition's case citations: each cited document as `{bundle_id, bundle_sha}` at the sha the edition pinned it. Reevaluation's `#pinnedCapture` already grades such a part. If the edition's citations pin a capture but no sha (or hold no pin at all), post a QUESTION naming the stored columns before building that half; build everything else meanwhile.
 (3) R42: your reading stands as written (serve-class edges of a finding a ratified edition's roster names, N256's held reference included; paged by distinct `capture_sha`, one read per page; projects from `cases`, null pre-DEC-72).
+
+## B3 · ANSWER · re J2
+
+K365, taking your reading. Merge `tranche/T11`: R41 is reworded.
+
+A part is `{bundle_id: target, capture_sha: capture}`, one per `case_citations` row whose `version` is `pinned` or `only_capture`, in the document's order and without repeats. Any other row is no part and is not listed. A document before /4 has no parts. Reevaluation re-opens in this layer (REEVALUATION #4) to grade `capture_sha` directly. Build your side against the new shape now; it does not wait on reevaluation's merge.
