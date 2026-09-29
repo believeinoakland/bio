@@ -23,3 +23,7 @@ N304 (B1): the eight arms re-anchored and measured on `tranche/T12` @ `89107afbe
 - A lesson: my first full `agent-worker.control` run was cut by a shell `timeout` mid-arm and left two files armed (restored from git before any further run, verified clean). Arms are run by name, in chunks, never under a kill timer.
 
 Size (session_01DRuQmSgvivEsNW6ej9Jqmf): test runs 25, module lines 54
+
+## J1 · COMPLETE
+
+N304 applied: agent-worker.control V1, V2, V4 re-anchored on a clean-run coverage --strict baseline (K153's reported figures; N88's reported floor), V3 readout with them, V5 held; harness.control G2 re-anchored on ai-runs/index.mjs (#aiRunTerminate moved in T7); F1, G3, G5 held unchanged. Every control driver as declared (agent-worker 20/20, harness 26/26, fanout 10/10, wire-vocabulary 5/5, cascade and versions as declared); suites green; format, architecture, coverage (49/49), ownership 0 failures. The legacy airun failures N304 names do not reproduce on T12 (airun 134/0): nothing for legacy-tests from them. No source or bundle input changed. Record: build/jobs/T12/agent-worker.md.
