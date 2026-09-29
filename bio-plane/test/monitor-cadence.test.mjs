@@ -107,7 +107,8 @@
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { readGitProvenance, reportProvenance, repoPath } from "../scripts/provenance.mjs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { registerDoc, registerFile } from "./register-doc.mjs";
@@ -148,14 +149,22 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
      binding" and "it targets this Worker itself". Gap (a) was that the ticks needed the loopback; they now run in
      process from the scheduler's alarm, so no consumer needs SELF. Replaced by what now holds: no plane source reads
      it (a Worker round-trip re-entering a tick would show here). The binding itself is config, not asserted either way. */
-  const { readdirSync } = await import("node:fs");
+  /* The walk discovers over `src/`, which this suite does not control, so it is GUARDED as the battery's walks are
+     (`scripts/provenance.mjs`, D-238): the sweep reads the whole working tree (an uncommitted reader still counts),
+     and the reach floor is taken over the files in the commit only, the figure another checkout reproduces. */
+  const REPO = fileURLToPath(new URL("../../", import.meta.url));
   const srcFiles = (function walk(d) {
     return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(d + e.name + "/")
       : e.name.endsWith(".mjs") ? [d + e.name] : []);
   })(fileURLToPath(new URL("../src/", import.meta.url)));
   const readsSelf = srcFiles.filter((f) => /\benv\??\.SELF\b|\["SELF"\]/.test(readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "")));
-  t("no plane source reads env.SELF: the monitoring ticks run in process (R23), over a real corpus",
-    [srcFiles.length > 100, readsSelf.map((f) => f.slice(f.indexOf("/src/") + 1))], [true, []]);
+  const PROV = readGitProvenance(REPO);
+  const prov = reportProvenance({ prov: PROV, instrument: "monitor-cadence's SELF sweep", corpus: "bio-plane/src/**/*.mjs",
+    items: srcFiles.map((f) => ({ path: repoPath(REPO, f), what: "source file", counted: 1 })) });
+  const reach = prov.verified ? prov.inCommit.length : srcFiles.length;
+  t(`no plane source reads env.SELF: the monitoring ticks run in process (R23), over a real corpus (${reach} file(s) `
+    + (prov.verified ? `in the commit at ${prov.headSha})` : "UNVERIFIED: git could not answer, the whole working tree)"),
+    [reach > 100, readsSelf.map((f) => f.slice(f.indexOf("/src/") + 1))], [true, []]);
   /* The standing trap: the account pin is what stops a deploy landing in
      whatever account the machine's OAuth session happens to hold. */
   t("account_id is still pinned (this change must not touch it)",
