@@ -35992,6 +35992,21 @@ var ENTITY_CHECKS = Object.freeze({
     check: "C-91.4",
     where: "src/entities/index.mjs noSuchEntity > is-entity-registered",
     translation: "No subject with that id is registered in the record, so nothing can be said about it or attached to it. Register the subject first, or name one that is registered. Nothing was written."
+  }),
+  /* R37 (N285, K275, K343): `NO_ENTITY` is one condition, a request names no entity id, so it is minted at one site,
+     `noEntity` (index.mjs), which this module's R2, R5, R12, R15, R17 and alias withdrawal, connections' R1 and
+     progressions' R6, R9, R14 and R15 answer through; progressions' C-100.9 gives way to it. The next of C-91. */
+  NO_ENTITY: Object.freeze({
+    check: "C-91.5",
+    where: "src/entities/index.mjs noEntity > is-entity-named",
+    translation: "This request is about one registered subject, named by its id, and it names none. Name the subject by its id. Nothing was written."
+  }),
+  /* R1 (N285, K275): the registry's own code for a subject with no readable name, no longer the `NO_LABEL` it
+     shared with progressions and membership, each of which now names its own. */
+  ENTITY_NO_LABEL: Object.freeze({
+    check: "C-91.6",
+    where: "src/entities/index.mjs createEntity > is-entity-labelled",
+    translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written."
   })
 });
 
@@ -51526,6 +51541,18 @@ function noSuchEntity(entityId, extra = null) {
     detail: NO_SUCH_ENTITY_DETAIL
   };
 }
+var NO_ENTITY_DETAIL = "this request is about one registered subject, named by its entity id, and none was named";
+function noEntity(detail = null) {
+  const row2 = ENTITY_CHECKS.NO_ENTITY;
+  return {
+    ok: false,
+    reason: "NO_ENTITY",
+    code: "NO_ENTITY",
+    check: row2.check,
+    translation: row2.translation,
+    detail: typeof detail === "string" && detail.trim() ? detail : NO_ENTITY_DETAIL
+  };
+}
 var cleanLabel = (s) => String(s ?? "").trim().replace(/\s+/g, " ").slice(0, 200);
 function actShapeRefusal(code, detail, extra = {}) {
   const row2 = ACT_SHAPE_CHECKS[code];
@@ -51679,7 +51706,17 @@ var Entities = class _Entities {
         detail: "the subject registry admits a closed kind vocabulary (D-83 reconciles safeguard 4 with the framework's entity axis): one of " + ENTITY_KINDS.join(", ") + ". Introducing a new kind is a doctrine change, not a write."
       };
     const lab = cleanLabel(label);
-    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "an entity needs a canonical label, such as 'City Clerk'" };
+    if (!lab) {
+      const row2 = ENTITY_CHECKS.ENTITY_NO_LABEL;
+      return {
+        ok: false,
+        reason: "ENTITY_NO_LABEL",
+        code: "ENTITY_NO_LABEL",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "an entity needs a canonical label, such as 'City Clerk'"
+      };
+    }
     const extra = Array.isArray(aliases) ? aliases : [];
     const at15 = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
@@ -51713,7 +51750,7 @@ var Entities = class _Entities {
    *  entity, so re-adding it answers ALREADY_ALIASED, saying it is withdrawn: nothing is deleted. */
   addAlias({ entityId, alias, declaredBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "an alias is attached to an entity by its id" };
+      return noEntity("an alias is attached to an entity by its id");
     const norm = normAlias(alias);
     if (!norm) return actShapeRefusal("NO_ALIAS", "an alias needs a name: the one given folds to nothing (it is empty, or only whitespace), so there is nothing a document could be matched by. Nothing was written.");
     if (!this.has(entityId)) return noSuchEntity(entityId);
@@ -51787,7 +51824,7 @@ var Entities = class _Entities {
    *  declared relation it is an end of, oldest first, each with its direction and none with a grade. */
   readEntity({ entityId } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "an entity is read by its id (op=entity&id=ENT-...)" };
+      return noEntity("an entity is read by its id (op=entity&id=ENT-...)");
     const e = this.#one(`SELECT entity_id, kind, label, note, declared_by, at FROM entities WHERE entity_id=?`, entityId);
     if (!e) return { ok: true, found: false, entity_id: entityId, entity: null };
     return { ok: true, found: true, entity: this.#entityView(e) };
@@ -51828,7 +51865,7 @@ var Entities = class _Entities {
    *  by R5, shown as withdrawn with who, when and why. A repeat answers `already: true` and writes nothing. */
   withdrawAlias({ entityId, alias, reason, withdrawnBy = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "an alias is withdrawn from an entity named by its id" };
+      return noEntity("an alias is withdrawn from an entity named by its id");
     const norm = normAlias(alias);
     const why = typeof reason === "string" ? reason.trim().slice(0, WITHDRAW_REASON_MAX) : "";
     if (!why) return {
@@ -52048,7 +52085,7 @@ var Entities = class _Entities {
   }
   #resolveOne({ captureSha, ref = null, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "a resolution is over a captured document, named by its capture sha256" };
+      return noSha("a resolution is over a captured document, named by its capture sha256");
     let refs;
     if (ref != null) {
       if (typeof ref !== "string" || !ref)
@@ -52110,11 +52147,11 @@ var Entities = class _Entities {
    *  must exist; it never lowers a stronger resolution (R10). `resolvedBy` is the control plane's stamp. */
   testify({ captureSha, ref, entityId, basis, resolvedBy = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "testimony is about a captured document, named by its capture sha256" };
+      return noSha("testimony is about a captured document, named by its capture sha256");
     if (typeof ref !== "string" || !ref)
       return { ok: false, reason: "NO_REF", detail: "testimony names the raw reference (kind:key) the document carries" };
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "testimony names the entity the reference concerns, by id" };
+      return noEntity("testimony names the entity the reference concerns, by id");
     const b = typeof basis === "string" ? basis.trim() : "";
     if (!b) return actShapeRefusal("NO_BASIS", "grade D is recorded testimony: it carries the member's stated basis, with an author and a date");
     const rr = this.#one(`SELECT bundle_id FROM reading_refs WHERE capture_sha=? AND ref=? AND seq=0`, captureSha, ref);
@@ -52190,7 +52227,7 @@ var Entities = class _Entities {
    *  more; R32's withholding; R8's `withdrawn_name`. */
   resolutionsFor({ captureSha, limit = null, viewer = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "resolutions are read for a captured document, by its capture sha256" };
+      return noSha("resolutions are read for a captured document, by its capture sha256");
     const cap = this.#clamp(limit);
     const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
                                FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`, captureSha, cap + 1);
@@ -52238,7 +52275,7 @@ var Entities = class _Entities {
    *  bounded over the resolution rows the join reads (`limit`, `resolution_count`, `truncated`). */
   concerns({ entityId, limit = null, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "the reverse index answers by entity id (op=concerns&id=ENT-...)" };
+      return noEntity("the reverse index answers by entity id (op=concerns&id=ENT-...)");
     const keep = this.#redactor(viewer);
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     const cap = this.#clamp(limit);
@@ -52290,11 +52327,7 @@ var Entities = class _Entities {
   /** R17, R18. */
   namingDocuments({ entityId = null, limit = NAMING_LIMIT_DEFAULT, viewer = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return {
-        ok: false,
-        reason: "NO_ENTITY",
-        detail: "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates."
-      };
+      return noEntity("the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.");
     const ent = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, entityId);
     if (!ent) return noSuchEntity(entityId);
     const aliases = this.#rows(`SELECT alias, alias_norm, canonical FROM entity_aliases WHERE entity_id=? AND withdrawn_at IS NULL
@@ -53137,7 +53170,7 @@ var Connections = class _Connections {
    *  member's or the source's (R38), and never runs through a declared relation or a theme (R34, R47). */
   derive({ entityId, assertedBy = "system", limit = null } = {}) {
     if (typeof entityId !== "string" || !entityId)
-      return { ok: false, reason: "NO_ENTITY", detail: "a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)" };
+      return noEntity("a connection is derived among the documents that concern one entity, by its id (op=connect&id=ENT-...)");
     const author = typeof assertedBy === "string" && assertedBy.trim() ? assertedBy.trim() : "system";
     if (author === "member" || author === "source")
       return {
@@ -63494,14 +63527,17 @@ function refusal11(code, detail, extra) {
 // src/progressions/checks.mjs
 var checks_exports21 = {};
 __export(checks_exports21, {
+  DISPOSITIONS: () => DISPOSITIONS2,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
   generic: () => generic,
+  notADisposition: () => notADisposition,
   refusal: () => refusal12
 });
 var at10 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
+var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
 var PROGRESSION_CHECKS = Object.freeze({
-  NO_LABEL: {
+  PROGRESSION_NO_LABEL: {
     check: "C-100.2",
     where: at10("defineProgression", "is-progression-labelled"),
     translation: "A declared flow carries a name a person can read, and this one has none. Give it a name. Nothing was written."
@@ -63536,15 +63572,10 @@ var PROGRESSION_CHECKS = Object.freeze({
     where: at10("defineProgression", "is-progression-order"),
     translation: "One step here says it comes after a step this sequence does not contain, so the order cannot be worked out. Name a step that exists, or leave the ordering off and let it stand on its own."
   },
-  NOT_FOUND: {
+  PROGRESSION_VERSION_NOT_HELD: {
     check: "C-100.8",
     where: at10("readProgression", "is-version-held"),
     translation: "The record holds no such version of this flow. The versions it does hold are named beside this message, and each reads back in full."
-  },
-  NO_ENTITY: {
-    check: "C-100.9",
-    where: at10("#entityNamed", "is-instance-entity"),
-    translation: "An instance of a flow is followed through one registered subject, and this request names none. Name the subject by its id. Nothing was written."
   },
   NO_PLACEMENTS: {
     check: "C-100.10",
@@ -63586,15 +63617,10 @@ var PROGRESSION_CHECKS = Object.freeze({
     where: at10("#reasonStated", "is-reason-stated"),
     translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
   },
-  NO_SHA: {
-    check: "C-100.19",
-    where: at10("captureProgressions", "is-capture-named"),
-    translation: "This read is about one captured document, named by its fingerprint, and none was named."
-  },
   NOT_A_DISPOSITION: {
     check: "C-100.20",
-    where: at10("disposeProposal", "is-disposition-word"),
-    translation: "One of the record's questions is either deferred (set aside for now) or dismissed (declined). Taking it up is a different act, which writes a new focus. Choose deferred or dismissed. Nothing was written."
+    where: "src/progressions/checks.mjs notADisposition > is-disposition-word",
+    translation: "Setting something down means deferring it (set aside for now) or dismissing it (declined); taking it up is a different act. Choose deferred or dismissed. Nothing was written."
   },
   BAD_REASON: {
     check: "C-100.21",
@@ -63627,6 +63653,23 @@ function refusal12(code, detail, extra = {}) {
 function generic(code, detail, extra = {}) {
   if (!GENERIC_CODES.includes(code)) throw new Error(`progressions: ${code} is not a generic code; it answers with its row`);
   return { ok: false, reason: code, code, ...extra, detail };
+}
+var NOT_A_DISPOSITION_DETAIL = "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition";
+function notADisposition(to, extra = null) {
+  if (typeof to === "string" && DISPOSITIONS2.includes(to)) return null;
+  const row2 = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
+  const given = to === void 0 || to === null || typeof to === "string" && !to.trim() ? null : to;
+  return {
+    ...extra && typeof extra === "object" ? extra : {},
+    ok: false,
+    reason: "NOT_A_DISPOSITION",
+    code: "NOT_A_DISPOSITION",
+    check: row2.check,
+    translation: row2.translation,
+    to: given,
+    dispositions: DISPOSITIONS2,
+    detail: NOT_A_DISPOSITION_DETAIL
+  };
 }
 
 // src/publication/checks.mjs
@@ -88087,7 +88130,6 @@ function migrateProgressions(sql) {
 
 // src/progressions/index.mjs
 var STAGE_REQUIREDNESS = Object.freeze(["always", "usually", "sometimes", "never", "unless_exception"]);
-var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
 var DISPOSITION_REASON_MAX = 160;
 var NOTE_MAX4 = 1e3;
 var BASIS_MAX = 4e3;
@@ -88229,15 +88271,11 @@ var Progressions = class {
       );
     return null;
   }
-  /* C-100.9: the request names no entity (`entityId` as the caller sent it). */
+  /* R6, R9, R14, R15 (N285): the request names no entity (`entityId` as the caller sent it; blank is none). An instance
+     is (progression, entity), so such a request says nothing about whose instance it means: entities' one answer (its
+     R37, `noEntity`), minted there. */
   #entityNamed(entityId, detail) {
-    if (!str8(entityId))
-      return refusal12(
-        "NO_ENTITY",
-        detail,
-        {}
-      );
-    return null;
+    return str8(entityId) ? null : noEntity(detail);
   }
   /* C-100.13: the request names no stage. */
   #stageNamed(stageKey, detail, extra = {}) {
@@ -88363,7 +88401,7 @@ var Progressions = class {
     const key = str8(progressionKey);
     if (!str8(label))
       return refusal12(
-        "NO_LABEL",
+        "PROGRESSION_NO_LABEL",
         "a progression definition carries a human label, the name a member reads it by beside its key"
       );
     if (!Array.isArray(stages) || stages.length === 0)
@@ -88521,7 +88559,7 @@ var Progressions = class {
     const want = version == null || version === "" ? cur.version : Number(version);
     if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
       return refusal12(
-        "NOT_FOUND",
+        "PROGRESSION_VERSION_NOT_HELD",
         `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions ` + versions.map((v) => v.version).join(", "),
         {
           progression_key: key,
@@ -89321,10 +89359,7 @@ var Progressions = class {
    *  and its decision, and the instance's `open_finding_count`. */
   captureProgressions({ captureSha, nowMs } = {}) {
     if (typeof captureSha !== "string" || !captureSha)
-      return refusal12(
-        "NO_SHA",
-        "progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)"
-      );
+      return noSha("progression membership is read for a captured document, by its capture sha256 (op=captureprogressions&sha256=...)");
     const now = this.nowMs(nowMs);
     const rows = this.#rows(
       `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
@@ -89397,8 +89432,8 @@ var Progressions = class {
     const unstaged = this.#stageNamed(sk, "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
     if (unstaged) return unstaged;
     const st = str8(to) || str8(state);
-    if (!DISPOSITIONS2.includes(st))
-      return refusal12("NOT_A_DISPOSITION", "a proposal is deferred (parked) or dismissed (declined); adopting one authors a focus (op=promote) and is not a disposition", { to: st || null, dispositions: DISPOSITIONS2 });
+    const undisposed = notADisposition(st);
+    if (undisposed) return undisposed;
     const why = String(reason ?? "").trim();
     const unreasoned = this.#reasonStated(why, "deferring or dismissing the record's own question is recorded with a reason, in the member's own words \u2014 a disposition with no reason ages a finding with no account of why");
     if (unreasoned) return unreasoned;
