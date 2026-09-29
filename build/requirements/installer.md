@@ -51,7 +51,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 **Custody and the release**
 - **R19** The Cloudflare access token, and every credential generated or supplied, never appears in any page, log or error text, except R16's panel. Text from the management API is HTML-escaped.
 - **R20** The plane's limits are carried from the signed release. A release that states none is refused by name, and an older installer still verifies the fleet signature of a release that carries them. *(not yet met: DIST-15; `PLANE_LIMITS` is a constant pinned to the plane's config)*
-- **R21** The install offers the jurisdiction profiles held (`jurisdictions.list`, test profiles excluded), each by name and coverage, with none preselected. The chosen ids, in order, are bound as `JURISDICTION_PROFILES` for the copy to record at its first boot (instance-setup R13). Choosing none is allowed, and the page says what that means. An update never changes them. *(not yet met: N10)*
+- **R21** The install offers the jurisdiction profiles held (`jurisdictions.list`, test profiles excluded), each by name and coverage, with none preselected. The chosen ids, in order, are bound as `JURISDICTION_PROFILES` for the copy to record at its first boot (instance-setup R13). Choosing none is allowed, and the page says what that means. An update never changes them.
 - **R22** Every page names CivicOS and the installing group. Believe in Oakland appears only as the publisher and signer of the release. The installer's own address stays where it runs, and the pages say it is run by the publisher of CivicOS releases (K102). The example name is not a place.
 - **R23** The pages state the prerequisites the install enforces: Workers Paid, and a payment method on the account.
 - **R24** An install never shares another copy's buckets and never overwrites its fleet workers in the same account. *(not yet met: MULTI-INSTANCE-ISOLATION; K102)*
@@ -76,7 +76,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R27** The installer Worker declares no binding of any kind. Its statelessness is structural: there is nowhere to write a token.
 - **R28** Its configuration pins the project's Cloudflare account.
 - **R29** There is one verifier: every signature check goes through `signatures`, and there is no second implementation.
-- **R30** The slug grammar and the member binding names are `instance-setup`'s, imported, never copied. *(not yet met: instance-setup is not extracted; the installer holds copies equal to legacy-store's `GROUP_SLUG_RE` and legacy-index's `FLEET_BINDINGS`, N234)*
+- **R30** The slug grammar and the member binding names are `instance-setup`'s, imported, never copied.
 - **R31** No place is named in this module's behaviour.
 
 ### Satisfies
