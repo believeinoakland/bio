@@ -166,8 +166,34 @@ const t = (label, got, want) => {
    publication, review, actions, monitoring, scheduler) left the store behind delegations and spreads of their routes,
    and op=caseflags, op=actionquotes and the rest of their capped reads left the roster while still capped. The corpus is
    T7's with a third pass of the same re-inliner over T8's modules (`{ modules: T8_MODULES }`, `t8-extracted.mjs`). */
-const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the queue left the store behind ONE spread of its routes
+   (`...queueOps(queueOf(this.ctx), url, body),`), and op=tasks, op=queue and op=taskdrain left the roster while still
+   capped and still driven (the second PIN arm named them). A FOURTH pass of the same re-inliner re-inlines it
+   (`{ modules: { queueOf: "queue" } }`, spelled as the store calls the factory); the re-inliner is not changed.
+   RE-ANCHORED 2026-09-29 (T12 B6 item 2, K414; INSTANCE-SETUP #1): op=groupidentity left the store for instance-setup
+   (`src/setup.mjs`, a FILE the re-inliner cannot read as a module directory), whose `Store` routes
+   `instanceSetupOps` BEFORE the store's own map — no spread or delegation is left in store.mjs to re-inline. So the
+   corpus appends instance-setup's class (`InstanceSetup`, its private methods spelled `#x$instanceSetup` so none
+   shadows a store segment of the same name, the re-inliner's own convention) and its route map as dispatch entries
+   (`m.x(` read as the `this.x(` it is), under one synthetic, uncapped segment. The roster is DIFFED BY NAME at the
+   pin below. */
+const SRC_SETUP = readFileSync(new URL("../src/setup.mjs", import.meta.url), "utf8");
+const setupAppendix = (() => {
+  const L = SRC_SETUP.split("\n");
+  const c0 = L.findIndex((l) => /^export class InstanceSetup \{/.test(l));
+  const c1 = L.findIndex((l, i) => i > c0 && /^\}/.test(l));
+  const priv = (t) => t.replace(/#([A-Za-z_$][\w$]*)/g, (m, n) => `#${n}$instanceSetup`);
+  const cls = c0 < 0 || c1 < 0 ? "" : priv(L.slice(c0 + 1, c1).join("\n"));
+  const f0 = L.findIndex((l) => /^export function instanceSetupOps\(/.test(l));
+  const r0 = f0 < 0 ? -1 : L.findIndex((l, i) => i > f0 && /^  return \{/.test(l));
+  const r1 = r0 < 0 ? -1 : L.findIndex((l, i) => i > r0 && /^  \};/.test(l));
+  const routes = r0 < 0 || r1 < 0 ? "" : L.slice(r0 + 1, r1)
+    .map((l) => "    " + l.replace(/\(\) => m\./, "() => this.")).join("\n");
+  return `\n${cls}\n  instanceSetupRoutes$reinlined(url, body) {\n      const map = {\n${routes}\n      };\n  }\n`;
+})();
+const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
+  { ops: true, privates: true, modules: { queueOf: "queue" } }).text + setupAppendix;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -322,14 +348,20 @@ for (const [op, meth] of [...OPS].sort()) console.log(`    op=${op.padEnd(20)} -
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): `static CASE_FLAGS_LIMIT = 500;` left the store with publication
    (PUBLICATION #1), where it is a module constant (`export const`), outside the class this walk reads; the guard asks
    the same of another of the store's own numeric statics, T5's precedent. */
+/* RE-ANCHORED 2026-09-29 (T12 B6, K414): `static GROUP_DOMAIN_CHECKS_MAX = 20;` left the store with instance-setup,
+   where it is a module constant (`export const`, setup.mjs), outside the class this walk reads; the guard asks the
+   same of another of the store's own numeric statics, T5's and T8's precedent. */
 t("WALK GUARD: block comments are blanked, and a known CODE line SURVIVES it",
-  /static GROUP_DOMAIN_CHECKS_MAX = 20;/.test(CODE), true);
+  /static RELEASE_ACK_MAX = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — the anchor cannot match this item's own comments",
   /buried in its statement/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
   segments(CODE).size > 250, true);
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409): `taskList` is the queue's now (re-inlined above), and its clamp is the
+   queue's `clampLimit(limit, 200, 1000)` where the store wrote `Math.max(1, Math.min(1000, …))`; the segment is read
+   for its own line and still must not run into `taskDrain`. */
 t("WALK GUARD: a segment is bounded by the NEXT method and does not run into it",
-  [/const cap = Math\.max\(1, Math\.min\(1000/.test(segments(CODE).get("taskList")),
+  [/const cap = clampLimit\(limit, 200, 1000\)/.test(segments(CODE).get("taskList")),
    /taskDrain\(\{/.test(segments(CODE).get("taskList"))], [true, false]);
 t("WALK GUARD: the roster is non-trivial", METHODS.size >= 10, true);
 
@@ -785,6 +817,10 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      questions with `limit: Math.min(PROJECT_QUESTIONS_MAX, …)`. Its bites are
      driven at publication's interface (DRIVEN_ELSEWHERE) and its envelope below. The other T12 bounds (publication R38's
      pin cursor, R42, actions R31's entry cursor, intent K391) moved no op on or off this roster. */
+  /* HELD AT 73 on 2026-09-29 (legacy-tests T12, B5–B9; K409, K414): the queue's and instance-setup's extractions took
+     op=tasks, op=queue, op=taskdrain and op=groupidentity off the walk (it printed 69) while all four were still capped
+     and driven; the corpus re-inlines both (see SRC_STORE) and the roster is the same 73 BY NAME, the four back under
+     their own method names (`taskList`, `queueFeed`, `taskDrain`, `groupIdentity`). NO ARRIVAL, NO DEPARTURE. */
   OPS.size, 73);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
@@ -2012,7 +2048,9 @@ t("op=actionquotes: DELTA — 'this is all of them' and 'this is the first QUOTE
    one dated check each. This store records no producing group, so every verdict is `undetermined` ("no slug for
    the file to name") and no fetch leaves the process. WHAT A SILENT CUT WOULD LOSE: the oldest check, read as
    "this is the whole history of the claim". */
-const GI_MAX = Number((/static GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+/* RE-ANCHORED 2026-09-29 (T12 B6 item 2, K414; INSTANCE-SETUP #1): GROUP_DOMAIN_CHECKS_MAX is instance-setup's
+   exported constant (`export const`, src/setup.mjs), read where it is declared. */
+const GI_MAX = Number((/export const GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_SETUP) || [])[1]);
 const giAdd = await POST("op=memberadd&token=adm-r57", { memberId: "gia", cover: "cover for gia", role: "admin",
                                                          capabilities: ["contribute"] });
 const giEn = await POST("op=enroll", { invite: giAdd?.invite, handle: "gia", password: "gia-passphrase-r57" });

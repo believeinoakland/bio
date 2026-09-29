@@ -424,9 +424,14 @@ console.log("\n--- 1. the state is gone from the inquiry machine, and nothing ca
     STATES.inquiry.edges.published, ["open", "surfaced"]);
   /* THE MACHINE IS THE CATALOG'S AND THE PLANE HOLDS NO COPY — the MAP RULE, and
      the one thing that would make every arm above decorative. */
+  /* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the store's two reads of the machine (`vocabFor(STATES,
+     row.object_type)`) left store.mjs with the queue for src/queue/index.mjs, and store.mjs now calls vocabFor
+     nowhere. The claim is read where the reads are — the store and the queue it hosts — and the no-copy half over
+     every plane source file (PLANE_SRC), which is stronger than store.mjs alone. */
+  const QUEUE_SRC = readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
   t("and the plane keeps NO second copy of the inquiry edge table: the store reads it through the "
   + "catalog's own vocabFor",
-    /vocabFor\(STATES,/.test(STORE_SRC) && !/legal:\s*\[\s*["']open["']/.test(STORE_SRC), true);
+    /vocabFor\(STATES,/.test(STORE_SRC + "\n" + QUEUE_SRC) && !/legal:\s*\[\s*["']open["']/.test(PLANE_SRC), true);
 }
 
 /* ===================================================================== 2
