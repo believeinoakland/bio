@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
-import { MACHINE_CLASS_PREFIX, CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
 
 const FIELDS = ["by", "check", "code", "detail", "ok", "reason", "translation"];
 const ROW = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
@@ -63,12 +63,10 @@ test("R84 notAnAdmin: extra adds a caller's own fields and never replaces R84's;
   assert.deepEqual(snapshot(w), before, "writes nothing");
 });
 
-test("R84 its one row is this module's C-96.1, its where naming notAnAdmin; the catalogue's copy is held unchanged beside it for one tranche (K408 (4))", () => {
+test("R84 its one row is this module's C-96.1, its where naming notAnAdmin", () => {
   assert.deepEqual(Object.keys(ROW).sort(), ["check", "translation", "where"]);
   assert.equal(ROW.check, "C-96.1");
   assert.match(ROW.where, /^src\/membership\/index\.mjs notAnAdmin > /);
-  assert.deepEqual([CUSTODIAL_CHECKS.NOT_AN_ADMIN.check, CUSTODIAL_CHECKS.NOT_AN_ADMIN.translation],
-    [ROW.check, ROW.translation], "the two copies agree while both are held");
   assert.ok(Object.isFrozen(ROW));
 });
 

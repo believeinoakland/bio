@@ -9,3 +9,7 @@ Depth 2. Your entries (text in `build/plan/next.md`; plan `build/plan/current.md
 ## B2 · CHANGE
 
 record-core merged into tranche/T14 (RECORD-CORE #8: R63, rows C-102.13 COUNTS_DECLARED and C-102.14 COUNTS_MALFORMED, awaiting your stamp). Merge tranche/T14 into your branch. Membership is still working; I will tell you when it merges. Your J1 is read: carry on as you describe. The stale comment at bio-checks.mjs:2168 is legacy-checks' (next tranche), not yours.
+
+## B3 · CHANGE
+
+membership merged into tranche/T14 (MEMBERSHIP #7): R87 notAParticipant (C-56.3) is there; rows added and awaiting your stamp: C-102.11, C-102.12, C-56.3, C-56.4, C-56.5, C-96.14 (with record-core's C-102.13, C-102.14). Merge tranche/T14, apply N335 (R43 through membership.notAParticipant; that clears the DEC-49 guard's arm G two-site finding and the multi-site ceiling 55), then stamp and re-pin R50 as your START says. Both providers are merged; nothing else waits.
