@@ -12,11 +12,22 @@
  * EXPERTISE_NO_LABEL is new with N285 (K275, K343): R21's no-label refusal was minted as the shared `NO_LABEL`, which
  * progressions and entities mint for conditions of their own; it gets its own code and this row. Membership's
  * expertise acts had no family in the catalogue, so it takes the next free number of C-96, this module's family for
- * the acts on a member's own row (K107 (3), K174). */
+ * the acts on a member's own row (K107 (3), K174).
+ *
+ * NOT_AN_ADMIN moved here with R84 (N324, K275, K403, K408): the stamped caller is not an administrator where the act
+ * is an administrator's, one condition, so it is minted at one site, `notAnAdmin`, which every act refusing it answers
+ * through (this module's and monitoring's R30). The row is C-96.1 unchanged but for its `where`. For one tranche the
+ * catalogue's `CUSTODIAL_CHECKS` copy stays beside it, until legacy-checks' next job removes it (K408 (4)). */
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
 export const MEMBERSHIP_CHECKS = Object.freeze({
+  NOT_AN_ADMIN: Object.freeze({
+    check: 'C-96.1', where: at("notAnAdmin", "is-custodial-admin"),
+    translation: 'Only an active administrator of this group can do that, and the account asking is not '
+      + 'one of them here. The record reads who is asking from the signed-in session, never from the '
+      + 'request. Nothing was changed.',
+  }),
   NO_SUCH_PROJECT: Object.freeze({
     check: 'C-70.5', where: at("noSuchProject", "is-project-seen"),
     translation: 'No project answers to that id here. A project you cannot see is answered exactly as one that does '
