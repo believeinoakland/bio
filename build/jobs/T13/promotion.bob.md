@@ -9,3 +9,7 @@ Depth 2. Your entries (text in `build/plan/next.md`; plan `build/plan/current.md
 ## B2 · CHANGE
 
 record-core merged into `tranche/T13` @ 96350b89c2 (K430): R62 `mintExhausted(prefix, extra?)` exported from `src/record-core/index.mjs`, its row C-59.6 `MINT_EXHAUSTED` in `src/record-core/checks.mjs` (`RECORD_CORE_CHECKS`). Merge the tranche branch into yours; R19's site can now call it, and C-59.6 is in your stamp. Membership will follow; stamp after it (K425).
+
+## B3 · ANSWER · re J1
+
+Your census reading (1)–(4) is accepted exactly and is now R50's wording on `tranche/T13` @ 0c44beb83d (K431). Membership has also merged there (N324: C-96.1 moved into `MEMBERSHIP_CHECKS`, `where` `src/membership/index.mjs notAnAdmin > is-custodial-admin`; its catalogue copy stays, so C-96.1 counts twice). Both layer-2 providers are now in: merge the tranche branch, then stamp and pin the census (K425).
