@@ -2,17 +2,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
-import { ENTITY_KINDS, RELATION_KINDS } from "../../../src/entities/index.mjs";
+import { ENTITY_KINDS, RELATION_KINDS, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 
-test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then NO_LABEL; otherwise ENT-<year>-NNNN with the canonical and each distinct folded alias once, in one transaction", () => {
+test("R1 createEntity refuses NO_KIND, UNKNOWN_KIND naming the closed list, then ENTITY_NO_LABEL with its own row (C-91.6); otherwise ENT-<year>-NNNN with the canonical and each distinct folded alias once, in one transaction", () => {
   const { e, rows } = world();
   assert.equal(e.createEntity({ label: "x" }).reason, "NO_KIND");
   assert.equal(e.createEntity({ kind: "  ", label: "x" }).reason, "NO_KIND");
   const u = e.createEntity({ kind: "theme", label: "x" });
   assert.equal(u.reason, "UNKNOWN_KIND");
   for (const k of ENTITY_KINDS) assert.ok(u.detail.includes(k));
-  assert.equal(e.createEntity({ kind: "office" }).reason, "NO_LABEL");
-  assert.equal(e.createEntity({ kind: "office", label: "   " }).reason, "NO_LABEL");
+  const row = ENTITY_CHECKS.ENTITY_NO_LABEL;
+  assert.deepEqual([row.check, row.where], ["C-91.6", "src/entities/index.mjs createEntity > is-entity-labelled"]);
+  assert.equal(row.translation, "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written.");
+  for (const label of [undefined, null, "", "   ", " \t\n "]) {
+    const nl = e.createEntity({ kind: "office", label });
+    assert.deepEqual([nl.ok, nl.reason, nl.code, nl.check, nl.translation], [false, "ENTITY_NO_LABEL", "ENTITY_NO_LABEL", row.check, row.translation], String(label));
+    assert.equal(typeof nl.detail, "string");
+  }
+  assert.equal(e.createEntity({ label: "" }).reason, "NO_KIND", "the kind is refused first");
   assert.equal(rows(`SELECT COUNT(*) AS n FROM entities`)[0].n, 0, "a refusal writes nothing");
   const r = e.createEntity({ kind: " Office ", label: "  City   Clerk ", note: "n".repeat(3000),
                              aliases: ["city clerk", "Clerk", "CLERK", "   ", "The Clerk"], declaredBy: "member:ann" });

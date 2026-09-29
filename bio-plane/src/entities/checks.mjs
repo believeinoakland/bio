@@ -50,4 +50,21 @@ export const ENTITY_CHECKS = Object.freeze({
     translation: 'No subject with that id is registered in the record, so nothing can be said about it or attached '
       + 'to it. Register the subject first, or name one that is registered. Nothing was written.',
   }),
+  /* R37 (N285, K275, K343): `NO_ENTITY` is one condition, a request names no entity id, so it is minted at one site,
+     `noEntity` (index.mjs), which this module's R2, R5, R12, R15, R17 and alias withdrawal, connections' R1 and
+     progressions' R6, R9, R14 and R15 answer through; progressions' C-100.9 gives way to it. The next of C-91. */
+  NO_ENTITY: Object.freeze({
+    check: 'C-91.5',
+    where: 'src/entities/index.mjs noEntity > is-entity-named',
+    translation: 'This request is about one registered subject, named by its id, and it names none. Name the subject '
+      + 'by its id. Nothing was written.',
+  }),
+  /* R1 (N285, K275): the registry's own code for a subject with no readable name, no longer the `NO_LABEL` it
+     shared with progressions and membership, each of which now names its own. */
+  ENTITY_NO_LABEL: Object.freeze({
+    check: 'C-91.6',
+    where: 'src/entities/index.mjs createEntity > is-entity-labelled',
+    translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. "
+      + 'Nothing was written.',
+  }),
 });
