@@ -18,7 +18,13 @@
 
 **Runs so far** (with the stub): `test/m/consequences/` 24 pass, 0 fail; users: `test/m/filings/` 34/0, `test/m/escalation/` 28/0, `test/m/affordances/catalogue.test.mjs` 26/0, `test/gate-reads.test.mjs` 1/0. Checks: format 0 failures; architecture 0 failures; coverage 14 of 14 ids, 0 failures; ownership 7 files, 0 failures.
 
-**Next step:** on BOB's CHANGE, merge `tranche/T12`, drop the stub, re-run step 5–7.
+**Completion (B2, K400).** Merged `tranche/T12` with conformance's real R19/R20; the local stub is gone (never committed). Nothing in the module changed: it already imported the helpers by name, and R1/R6/R7/R9's tests compare whole answers to the real helpers' own.
+- Entries applied: N309 (R1, R6, R7, R9 through conformance R19/R20; `CONSEQUENCE_NOT_NONCOMPLIANT` C-114.2, `CONSEQUENCE_NOT_A_PARTICIPANT` C-114.3; C-114.1 retired). Deferred: none. R1's mark is BOB's to strike.
+- Found in other modules: as in J1 (promotion N318's `gate.mjs` naming C-114.1/C-114.3; legacy-tests' `check-refusal-codes.mjs` census; stale `bio-plane/dist/bio-plane.bundled.mjs`).
+- Tests (real helpers): `test/m/consequences/` tests 24, pass 24, fail 0, todo 0; users: `test/m/conformance/` 36/0, `test/m/filings/` 34/0, `test/m/escalation/` 28/0, `test/m/affordances/catalogue.test.mjs` 26/0, `test/gate-reads.test.mjs` 1/0. No layer tests are named in the manifest.
+- Checks: format 0 failures; architecture 10 product files, 0 failures; coverage 14 of 14 live ids, 0 failures; ownership 7 files, 0 failures.
+
+Size (session_01UQSjUGxLUNtpem1MJpHfiF): test runs 3, module lines 1100
 
 ## J1 · REPORT
 
