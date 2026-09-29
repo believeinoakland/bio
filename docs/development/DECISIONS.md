@@ -1403,3 +1403,17 @@ response: **As recommended, Bob, 2026-09-29, with his note on the six: "The 6 ju
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
 owed (BOB's): move the 57 from `RUNG_ABSENT` into `RUNGS` in `bio-plane/src/affordances.mjs` and update affordances R27's text (which says 56; the code holds 57); add a required reason to each reasoned act whose requirement does not yet require one (an act whose own authored words serve as its reason counts); publish the consequence statement for the six; regrade `inboxresolve` to reasoned when DEC-78's pull admits material.
+
+### DEC-86 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 8)
+for: bob
+question: Where does a member record why a noncompliant finding is, or is not, significant enough to escalate, given that no significance, severity, priority or score may be stored?
+why it is Bob's: it changes the escalation and conformance requirements and touches Operational Principle 1 (significance is the members' judgement, K12).
+provisional: reasons are recorded once an escalation exists; deciding NOT to escalate leaves no trace, and opening one records no why.
+alternative: record the reasoning in the unbuilt, never-published action plan (S11); or leave it to discussion outside the record.
+recommendation: a required reason when opening an escalation, and a reasoned "decline to escalate" act, both prose only.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escalationopen`, reasoned in DEC-85) requires a written reason: why this breach is worth pursuing. (2) A new act, DECLINE TO ESCALATE, on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now; reasoned, attributed and dated; corrected forward only (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are PROSE ONLY: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere (conformance R8, escalation R19), so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the requirement changes in `escalation` (the required opening reason; the decline act and its read) and `conformance` (a determination shows whether it was escalated, declined or neither), with the decline act's rung (reasoned) in `affordances`, for Bob's approval; the UX page's open question 8 marked ruled.
