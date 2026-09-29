@@ -26,3 +26,7 @@
 **Checks.** `format`: 69 modules, 64 requirements files; 0 failures. `architecture instance-setup`: 12 product files, 40 relative imports; 0 failures. `coverage instance-setup`: 43 of 43 live ids named by a test; 0 failures. `ownership instance-setup tranche/T14`: 4 files changed; legacy-store, legacy-checks, legacy-index 0 lines added, 0 removed; 0 failures.
 
 Size (session_01DPmbhhprRy4e11XMiCZMiE): test runs 8, module lines 2894
+
+## J1 · COMPLETE
+
+R43 (N339, N349) applied: the eight relays answer a store refusal with its status, code and sentence (storeRefusal when handed, else json(body, status)), and a silence with the store's correlation; runtime's three sub-reads too (K444); selftest unchanged. Tests 56/56 in the module, checks 0 failures. legacy-index must hand storeRefusal at index.mjs:260, :276, :386, :632, :639 (listed in the record). Reported: plane-envelope.test.mjs fails 3 lines in the ratify region on the base too (not mine); bio-plane.bundled.mjs made stale, not rebuilt. R43's not-yet-met mark is met. Details in the record's Completion.
