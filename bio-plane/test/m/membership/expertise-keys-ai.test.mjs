@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
-import { Membership } from "../../../src/membership/index.mjs";
+import { Membership, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { AI_CREDENTIAL_CHECKS } from "../../../checks/bio-checks.mjs";
 
 test("R21 expertiseDeclare: the member's own act; refusals; labels normalised", async () => {
@@ -9,7 +9,17 @@ test("R21 expertiseDeclare: the member's own act; refusals; labels normalised", 
   w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
   assert.equal(w.m.expertiseDeclare({ memberId: "nobody", label: "CPA" }).reason, "NO_SUCH_MEMBER");
   assert.equal(w.m.expertiseDeclare({ memberId: "bob", label: "CPA" }).reason, "NOT_ACTIVE");
-  assert.equal(w.m.expertiseDeclare({ memberId: "ann", label: "  \n " }).reason, "NO_LABEL");
+  /* N285: the no-label refusal is its own code with its own row, never the shared NO_LABEL; nothing is written. */
+  const row = { check: "C-96.13", where: "src/membership/index.mjs expertiseDeclare > is-expertise-labelled",
+                translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. "
+                  + "Nothing was written." };
+  assert.deepEqual({ ...MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL }, row);
+  for (const label of [undefined, null, "", "  \n ", "\t\t"]) {
+    const r = w.m.expertiseDeclare({ memberId: "ann", label });
+    assert.deepEqual(r, { ok: false, reason: "EXPERTISE_NO_LABEL", code: "EXPERTISE_NO_LABEL", check: row.check,
+                          translation: row.translation, detail: "a declaration needs a label, such as 'CPA'" });
+  }
+  assert.equal(w.row(`SELECT count(*) AS n FROM member_expertise WHERE member_id='ann'`).n, 0);
   const d = w.m.expertiseDeclare({ memberId: "ann", label: "  Certified   Public\tAccountant " });
   assert.deepEqual([d.ok, d.label, d.state], [true, "Certified Public Accountant", "declared"]);
   assert.equal(w.m.expertiseDeclare({ memberId: "ann", label: "Certified Public Accountant" }).reason, "ALREADY_DECLARED");

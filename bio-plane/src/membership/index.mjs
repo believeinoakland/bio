@@ -1972,7 +1972,15 @@ export class Membership {
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = Membership.#normLabel(label);
-    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "a declaration needs a label, such as 'CPA'" };
+    /* N285 (K275, K343): R21's refusal is its own condition, an expertise declared without a readable name, so it has
+       its own code and its own row (C-96.13), no longer the `NO_LABEL` progressions and entities mint for theirs. */
+    /* DEC-49 REGION is-expertise-labelled */
+    if (!lab) {
+      const row = MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL;
+      return { ok: false, reason: "EXPERTISE_NO_LABEL", code: "EXPERTISE_NO_LABEL", check: row.check,
+               translation: row.translation, detail: "a declaration needs a label, such as 'CPA'" };
+    }
+    /* END DEC-49 REGION is-expertise-labelled */
     const cur = this.#expertiseState(memberId, lab);
     if (cur === "declared" || cur === "confirmed")
       return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
