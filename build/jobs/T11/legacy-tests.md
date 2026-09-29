@@ -1,6 +1,6 @@
 # legacy-tests (T11)
 
-**Status** · session_01YWmQZKPxE1pc82DkFtV5tS · depth 2 · RUNNING until 2026-09-29T05:35:49Z (final plane battery @ 639e2e6381) · handled B7
+**Status** · session_01YWmQZKPxE1pc82DkFtV5tS · depth 2 · RUNNING until 2026-09-29T06:27:38Z (final battery's remaining 220 suites @ 639e2e6381 (container restarted at 150)) · handled B7
 
 ## Progress (working notes; the COMPLETE entry supersedes)
 
