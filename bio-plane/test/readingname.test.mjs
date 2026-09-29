@@ -147,6 +147,11 @@ const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
    in either is still counted. */
 const ENTITIES = fileURLToPath(new URL("../src/entities/index.mjs", import.meta.url));
 const PLANE_TEXT = () => readFileSync(STORE, "utf8") + "\n" + readFileSync(ENTITIES, "utf8");
+/* RE-ANCHORED 2026-09-29 (T12 B6, K414): the two Durable-Object-alone instances (`dmf`, `bmf`) run the store as the
+   plane starts it — the shim beside the suites, legacy-index's `Store` (legacy-store's class started with
+   instance-setup, which registers promotion's `producingGroup` fact) with store.mjs's own default fetch. store.mjs's
+   bare class refuses every creation FACT_UNAVAILABLE (C-102.4). The source pins still read store.mjs (STORE). */
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -159,7 +164,7 @@ const mf = new Miniflare({
    stamps a viewer cannot show: the query plan, and what the store does when no
    stamp arrives at all (projection.test.mjs's precedent). */
 const dmf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: STORE, script: readFileSync(STORE, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: STARTED, script: readFileSync(STARTED, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });
@@ -717,7 +722,7 @@ t("REC-77 GUARD: and it is the population M-4 measured, re-derived rather than t
   [ENTS.length, [...new Set(ENTS.map((e) => e.kind))]], [41, ["legislation"]]);
 
 const bmf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: STORE, script: readFileSync(STORE, "utf8"),
+  modules: true, modulesRoot: "/", scriptPath: STARTED, script: readFileSync(STARTED, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });
@@ -891,9 +896,14 @@ console.log("\n=== REC-77 · THE SWEEP: orderings fixed in advance, over bio-pla
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; CASE-AUTHORING #1 J5): the BASIS_GRADES ordering (publishCase's bar gate,
    `rank = (g) => BASIS_GRADES.indexOf(g)`) left store.mjs with `publishCase` for `src/case-authoring/index.mjs`. The
    sweep reads the store as it stood before that extraction: store.mjs, entities' file and case-authoring's. */
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the queue's class ordering (`Store.QUEUE_CLASSES`, the member's
+   queue ranked by `QUEUE_CLASSES.indexOf`) left store.mjs with the queue for `src/queue/index.mjs`, where it is
+   `Queue.QUEUE_CLASSES`. The sweep reads that file too, and the detector admits the `Queue.` qualifier as it admits
+   `Store.`, so the same ordering is found by its new name rather than lost from the walk. */
 const SWEEP_TEXT = STORE_TEXT + "\n"
-  + readFileSync(fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url)), "utf8");
-const RANKED = [...SWEEP_TEXT.matchAll(/(?:^|[^\w.])((?:Store\.)?#?[A-Z][A-Z_]{2,})\.indexOf\(/gm)]
+  + readFileSync(fileURLToPath(new URL("../src/case-authoring/index.mjs", import.meta.url)), "utf8") + "\n"
+  + readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
+const RANKED = [...SWEEP_TEXT.matchAll(/(?:^|[^\w.])((?:Store\.|Queue\.)?#?[A-Z][A-Z_]{2,})\.indexOf\(/gm)]
   .map((m) => m[1]);
 const ORDER_BY = (STORE_TEXT.match(/ORDER BY/g) || []).length;
 const SORTS = (STORE_TEXT.match(/\.sort\(/g) || []).length;
@@ -926,7 +936,7 @@ t("SWEEP GUARD: the detector found something, so a clean verdict below is a read
    is a RULING and orders WORK, not evidence: it decides which module's listener runs first inside one transaction and
    claims nothing about how well anything corresponds to anything. Pinned by name, so a FIFTH still fails here. */
 t("the fixed-position orderings in store.mjs are exactly the four that can each answer for themselves",
-  [...new Set(RANKED)].sort(), ["BASIS_GRADES", "CORRESPONDENCE_RANK", "MODULE_ORDER", "Store.QUEUE_CLASSES"]);
+  [...new Set(RANKED)].sort(), ["BASIS_GRADES", "CORRESPONDENCE_RANK", "MODULE_ORDER", "Queue.QUEUE_CLASSES"]);
 /* AND THE SWEEP MUST NOT PASS BY CITING ITSELF. The arm above would go on
    passing if this item were reverted, because the constant would still be there
    with the same name. What makes it a finding is that the ONE ordering of

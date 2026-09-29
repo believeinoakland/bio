@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
 import { canonicalExtent } from "../../../src/content/index.mjs";
+import { noSuchDetermination } from "../../../src/conformance/index.mjs";
 
 const S = "STD-2026-0001-law";
 const S2 = "STD-2026-0002-other";
@@ -58,7 +59,8 @@ test("R7: every live part, totals only within one state, unit and currency, labe
   const E = w.determination("CONF-2026-0002-empty", w.P, { [S]: "noncompliant" });
   assert.deepEqual([w.c.consequencesOf({ determination: E, viewer: V("alice") }).parts, w.c.consequencesOf({ determination: E, viewer: V("alice") }).says],
                    [[], "no consequence recorded"]);
-  assert.equal(w.c.consequencesOf({ determination: "CONF-2026-0099-x", viewer: V("alice") }).reason, "NO_SUCH_DETERMINATION");
+  assert.deepEqual(w.c.consequencesOf({ determination: "CONF-2026-0099-x", viewer: V("alice") }),
+                   noSuchDetermination("CONF-2026-0099-x"));
   /* A superseded determination's parts stay readable. */
   w.determinations.get(w.D).superseded_by = "CONF-2026-0003-next";
   assert.equal(w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).parts.length, 8);

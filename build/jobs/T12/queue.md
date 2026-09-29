@@ -1,0 +1,65 @@
+# queue (T12)
+
+**Status** · session_01AA2FMtVLuYJEyYEy7Hivyi · depth 2 · COMPLETE · handled B3
+
+## J1 · QUESTION
+
+Four readings I am building on now; each is carried on unless you answer otherwise.
+
+**Q1 · C-19.1 (`checkInboxGrammar`) stays in legacy-checks this job.** The catalogue's `checkBundle` runs it over every bundle's `data/inbox.json` (bio-checks 4770), so moving it here means a promotion check and an audit check registered by queue in place of that call, a change to the gate's own composition. **Best reading:** the other R35 rows (C-31.1–.3, C-32.10, C-32.11, C-33.27, C-33.44, C-76.1) move to `src/queue/checks.mjs` with their tests; C-19.1 stays where it is, called by queue's drain as today, and is recorded as deferred with this reason.
+
+**Q2 · `archive-fallback-eligible` (R10, N229) has no stored "latest archive tick".** `archiveTick` records nothing about the source (monitoring R20) and keeps no list of what it found eligible. **Best reading:** the producer derives on read what the next tick would find: the addresses at monitoring's floor (capture R59's `source_reachability` read contract, oldest failing run first, at most 50 as the tick reads), each asked `capture.sourceReachability`, one CONDITION per `fallback_eligible` address, homed under the documents captured there.
+
+**Q3 · `source-modified` / `source-removed` (R9, N229).** Monitoring R8 writes `reeval_pending` and `source_status` into the checked document's own front matter. **Best reading:** for each address `monitoring.subjects()` names (the version it checks), at most 200, the producer reads that bundle's `bundle.md` (record-core `readFile`) and mints one FINDING when `reeval_pending.flag` is true with `source: source_status`: `source-removed` when `source_status` is `removed`, else `source-modified`; gated by the viewer's sight of the document (membership `inSight`), homed under its ancestors (R7).
+
+**Q4 · R39's "settled bias debts".** `bias` offers `uncleared` only; nothing answers settlements to a later module. **Best reading:** R39's block carries the resolved tasks now (their `history`'s `resolved` event: who, when), within the last 30 days, at most 64 (as `disposed`), with the bias half stated as not read (`bias_debts: {read: false, why}`) and a `test.todo` naming it; a REPORT asks bias for a `settled({gate, since, limit})` service. R39 stays marked not yet met for that half.
+
+## J2 · REPORT
+
+What this extraction touches outside queue, each for its owner.
+
+1. **Generated artifacts made stale (not rebuilt, mechanics §14).** `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json` (the plane's source moved), `release/bio-plane.bundled.mjs` and `newgroup/src/release.mjs` (both embed the plane), and `agent-worker/dist/agent-worker.bundled.mjs` (it embeds the catalogue, whose rows moved). A scratch esbuild of `src/index.mjs` resolves cleanly.
+2. **promotion (N318) and legacy-tests' census.** Rows left `checks/bio-checks.mjs` for `src/queue/checks.mjs`: the family C-31 (`QUEUE_MINT_CHECKS`), `TASK_ACTOR_CHECKS` (C-76.1), and C-32.10, C-32.11, C-33.27, C-33.44 split out of their families; one row is new, `NO_PROJECT_SCOPE` C-33.50 (R29, D-623). `CATALOG_VERSION` is promotion R34's to stamp; `d470-catalog-census` re-pins.
+3. **control-plane.** `dec49Row`'s `MODULE_CHECK_FILES` (index.mjs 3670) does not read `src/queue/checks.mjs`. Every queue refusal spreads its own code, check and translation at its site, so the wire is unchanged; the list gains it when control-plane owns it (N245). The `op=queue` handler now calls queue's `queueAnswer(r, {gate: ACT_GATE, kinds})` (R17); the stamps, `storeSilent` and the envelope are unchanged.
+4. **legacy-store.** N171's `#counts` half (`bias_statements`, `bias_adoptions` → `bias.counts(hid)`) is a legacy line that uses no queue name, which the ownership check refuses a queue job (§12.2); it is legacy-store's to rewire. `#MINT_LEDGER_LIVE` still names `["TASK", "tasks", "id"]` and `#counts`/purge read `tasks` by name (as the map says, until `op=stats` is re-homed).
+5. **legacy-tests (re-anchor; run in this job).** Behaviour held: `queue` 36/0, `d266scope` 38/0, `d552-instance-disposition` 19/0, `exportnotice` 19/0, `d86-bias-debt` 20/0, `task-fence` 19/0, `task-machine`, `inbox`, `queue-state`, `proposedispose` all pass. Source-anchored failures: `queue-conditions` and `leadslug` import `QUEUE_MINT_CHECKS` from the catalogue (SyntaxError); `peritem` 50/1 (STRUCTURAL `#perItem` in store.mjs); `d125-findingmute` 41/1 (reads store.mjs's minted ids); `current` 63/2 and `severedhomes` 12/2 (STRUCTURAL arms over store.mjs); `fence-e2e` 51/4 (the fence family's rows and sites anchored on store.mjs and the catalogue). Not run, on the map's source-reading list: `machinefences-dec49`, `shadowed-refusals`, `derivation-bounds`, `meaning-bounds`, `gate-reads`, `hygiene` (the schema text moved to `src/queue/schema.mjs`), `plane-envelope`, `bounds`, `opaque-ids`, `task-drain-alarm`, `d280-strengthbar`, `drive`, `nc-m038` and the controls the map names.
+6. **legacy-ui (N301 and the lead).** `civicos-ui/app.html` 24600–24700 renders the lead's `options_grain`, which R18 retires: the lead now offers `cite` and, with a project home, `proposedispose`. `civicos-ui/check-refusal-codes.mjs` 2304–2314 lists `NO_PROJECT_SCOPE` as owed by D-623, now met (C-33.50), and harvests the moved families from the catalogue. `op=queue` now publishes `class_labels` (`FINDING` → "Noticed"). `civicos-ui/test/notifications.*` pin `options_grain`.
+7. **membership.** `activeAdmins()` answers the administrators in roster (rowid) order with no stated order; R23's "earliest active administrator" now rests on that order (it was `ORDER BY created, member_id`). An ordered answer, or `created` in `memberFacts`, would make it stated.
+8. **monitoring (Q2, Q3; K406).** Two producers derive what monitoring does not offer as a read: the addresses the archive tick would find eligible (from `source_reachability` at `floor()`), and a flagged tick (from the document's front matter). A read of each, beside R32's `monitoring()`, would let queue stop reading `source_reachability` and front matter.
+
+## J3 · COMPLETE
+
+**Entries applied.**
+- **The extraction** (map `build/extraction/queue.md`): `op=queue`'s composition, producers and mint; `queueMute`, `queueSnooze` and the re-notify consumer; `proposeDispose`'s set, bridge and project arm; the obligation inbox (`#routeTask` … `taskResolve`) with the drain's cadence; the scheduler registrations and capture's task notice, all now in `src/queue/index.mjs` (`queueOf`, `queueOps`, `queueAnswer`). Tables in `src/queue/schema.mjs` (`schema.mjs` interpolates it), purge declared by queue (R36). Check rows in `src/queue/checks.mjs`. `legacy-store` keeps one import, the factory call, the ops spread and a purge filter; its queue imports and dead helpers left with the code (N13's queue share).
+- **Rewired to services:** membership (gate from `viewerPredicate`, `inSight`, `positionalMember`, `isAdministrator`, `activeAdmins`, `projectOwners`, `memberFacts`, `participation`, `existenceAct`, `projectAuthority`, `noSuchProject`), record-core (`manifestByAuthor` N95, `bundleInfo`, `head`, `readFile`, `mintOpaqueId`, `perItem`), capture R45/R46, provenance `homeOf`, host-governor, capture-requests, connections `edgeSevered`, basis-versions (`projectsDrawingOn`, conclusions, `basisVersions` in place of reading uncontracted columns), ai-runs `runFor` (in place of reading `ai_runs`), publication `exportLog`, progressions, bias `uncleared` (N171's queue share), affordances.
+- **N172:** `newer-capture-affects-reference` catalogued (R1), its producer over `reevaluation.notices` and its door `versionadopt`/`versionkeep` (R12); `objective-gap` over `intent.gaps`, 50 projects, bound published. **N229:** `source-modified`/`source-removed`, `archive-fallback-eligible`, `monitoring-recheck-due` (Q2, Q3 as K406). **N301:** `class_labels`, and no member-facing sentence of queue's calls an item a finding. **R18** (REC-202), **R26**, **R29** (D-623, C-33.50), **R40** met; **R39** met for tasks, the bias half a `test.todo` (N326). **N173:** 40 of 40 ids named at the interface.
+- **Flaws fixed in the module:** a case-mute row naming an OBLIGATION kind suppressed an obligation (R31 says never, even if a row held one); `limit: 0` fell to the default instead of clamping to 1 (R6, R23, R24); stale "store.mjs" pointers in the catalogue's sentences.
+
+**Deferred.** C-19.1 (`checkInboxGrammar`) stays in legacy-checks (Q1, K406, N325). N171's `#counts` half is legacy-store's (J2 item 4). Requirement marks are BOB's (B2).
+
+**Found in other modules:** J2 (REPORT), eight items: stale bundles, the catalogue census, control-plane's `MODULE_CHECK_FILES`, legacy-store's `#counts`, legacy-tests' re-anchors, legacy-ui's `options_grain` and `class_labels`, membership's admin order, monitoring's two reads.
+
+**Tests and checks** (on `job/T12/queue` after merging `tranche/T12` @ ce9f0f7791):
+- `node --test bio-plane/test/m/queue/`: tests 59, pass 58, fail 0, todo 1 (R39's bias half).
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
+- `node checks/architecture.mjs … queue`: 13 product files, 52 relative imports; 0 failures.
+- `node checks/coverage.mjs … queue`: 40 of 40 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs … queue tranche/T12`: legacy-store 6 added, 3,731 removed; legacy-checks 0 added, 131 removed; legacy-index 2 added, 5 removed; 0 failures. The added lines: the `queueOf`/`queueOps`/`queueOwns` import, `.filter((t) => !queueOwns(t))`, `queueOf(ctx, { env })`, `...queueOps(queueOf(this.ctx), url, body)` (store.mjs); the `QUEUE_SCHEMA` import and interpolation (schema.mjs); the `queueAnswer` import and its call in the `op=queue` handler (index.mjs). Ten edited import lines only remove names.
+- Legacy suites run as a check (J2 item 5).
+
+Size (session_01AA2FMtVLuYJEyYEy7Hivyi): test runs 14, module lines 4892
+
+## J4 · COMPLETE
+
+B3 applied, after merging `tranche/T12`. The DEC-49 region `is-dispose-scope` (`src/queue/index.mjs` `#noProjectScope`) now spans the whole refusal site, which is the refusal written out with its code as a string literal and its check and translation read off the C-33.50 row. That makes it 5 lines. The guard (`civicos-ui/check-refusal-codes.mjs`) reads it as `is-dispose-scope 5L (1 judged, 2 code(s) checked)`, and arm C claims every marker in queue.
+
+The guard still fails on two things, neither of them this module's. The first is the FLOOR SLACK ratchet on `regionLines`: it measures 5,495 against a floor of 5,455, so legacy-tests needs to re-pin it after this landing. The second is one unclaimed marker in `src/membership/index.mjs` (`is-listener-registrat…`), which belongs to membership.
+
+Checks:
+- `node --test bio-plane/test/m/queue/`: 58 pass, 0 fail, 1 todo.
+- format: 0 failures.
+- architecture: 0 failures.
+- coverage: 40 of 40 ids named, 0 failures.
+- ownership: 0 lines added to legacy files, 0 failures.
+
+Size (session_01AA2FMtVLuYJEyYEy7Hivyi): test runs 16, module lines 4896

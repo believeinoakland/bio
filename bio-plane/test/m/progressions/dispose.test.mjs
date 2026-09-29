@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, MEMBER } from "./fixture.mjs";
-import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES } from "../../../src/progressions/index.mjs";
+import { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, PROGRESSIONS_TABLES, notADisposition } from "../../../src/progressions/index.mjs";
 
 const X = (w, b = {}) => w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "later", definitionVersion: 1,
                                                decidedBy: "member:alice", ...b });
@@ -40,6 +40,44 @@ test("R21: refusals in order, each writing nothing", () => {
   assert.equal(before.proposal_dispositions, w.snapshot().proposal_dispositions);
   assert.equal(X(w, { reason: "x".repeat(160), definitionVersion: "2" }).ok, true);   // a string holding the number is read
   assert.deepEqual([...DISPOSITIONS], ["deferred", "dismissed"]);
+});
+
+test("R35: notADisposition is the one answer to a word that is no disposition: null for either word, else its full refusal; extra adds and never replaces; writes nothing, never throws", () => {
+  const w = seeded();
+  w.define();
+  const before = w.snapshot();
+  assert.deepEqual([...DISPOSITIONS], ["deferred", "dismissed"]);
+  assert.ok(Object.isFrozen(DISPOSITIONS));
+  for (const word of DISPOSITIONS) assert.equal(notADisposition(word), null, word);
+  const TRANSLATION = "Setting something down means deferring it (set aside for now) or dismissing it (declined); taking it up "
+    + "is a different act. Choose deferred or dismissed. Nothing was written.";
+  const row = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
+  assert.deepEqual(row, { check: "C-100.20", where: "src/progressions/checks.mjs notADisposition > is-disposition-word", translation: TRANSLATION });
+  // every other word, compared exactly (a caller trims first), with `to` as given and null when blank
+  const cases = [["adopted", "adopted"], ["Deferred", "Deferred"], [" deferred", " deferred"], ["dismiss", "dismiss"], [7, 7],
+                 [["deferred"], ["deferred"]], ["", null], ["   ", null], [null, null], [undefined, null]];
+  let detail = null;
+  for (const [to, given] of cases) {
+    const r = notADisposition(to);
+    assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "dispositions", "ok", "reason", "to", "translation"], JSON.stringify(to));
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "NOT_A_DISPOSITION", "NOT_A_DISPOSITION", "C-100.20", TRANSLATION]);
+    assert.deepEqual(r.to, given, JSON.stringify(to));
+    assert.deepEqual([...r.dispositions], ["deferred", "dismissed"]);
+    assert.ok(typeof r.detail === "string" && r.detail.length > 20);
+    if (detail === null) detail = r.detail;
+    assert.equal(r.detail, detail, "one fixed sentence");
+  }
+  // extra adds a caller's fields and never replaces the answer's own
+  const x = notADisposition("adopted", { key: "k", reason: "X", code: "X", check: "X", translation: "X", to: "X", dispositions: [], detail: "X", ok: true });
+  assert.deepEqual(x, { ...notADisposition("adopted"), key: "k" });
+  assert.equal(notADisposition("deferred", { key: "k" }), null);
+  for (const extra of [null, undefined, "str", 5]) assert.deepEqual(notADisposition("no", extra), notADisposition("no"));
+  // R21's refusal is exactly this answer, the word as disposeProposal trimmed it
+  const r = w.p.disposeProposal({ key: "proc::award", to: " adopted ", reason: "r", definitionVersion: 1, decidedBy: "member:alice" });
+  assert.deepEqual(r, notADisposition("adopted"));
+  assert.deepEqual(w.p.disposeProposal({ key: "proc::award", to: "", reason: "r", definitionVersion: 1, decidedBy: "member:alice" }),
+                   notADisposition(null));
+  assert.deepEqual(w.snapshot(), before);
 });
 
 test("R22 R26: one decision per (progression, stage), replaced on re-decision, the decider stamped, the current version; nothing else written", () => {

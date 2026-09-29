@@ -150,7 +150,7 @@ console.log("\n--- an anonymous write is refused (the negative-control subject) 
 /* Release the worker's workerd before standing up the store's, so the two do not
    contend — one live Miniflare at a time. */
 await mfW.dispose();
-const STO = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+const STO = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const mfS = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: STO, script: readFileSync(STO, "utf8"),
   compatibilityDate: "2026-07-01",

@@ -1359,6 +1359,26 @@ reasoning recorded in: this entry; the approved page at `docs/development/ux-sub
 owed: the redesign's workspace and display primitives aligned to the map; the UX page's open question 5 marked ruled.
 
 ### DEC-83 · answered
+raised: 2026-09-29 · BOB #65 (N327: four admin-only refusals converging on membership's `notAnAdmin`, K275)
+for: bob
+question: When refusals of one condition converge on one code, what does a member read: the shared general sentence, or each act's own specific sentence?
+why it is Bob's: UX (the words a member reads).
+provisional: four codes (`ADMIN_ONLY`, `AI_CREDENTIAL_ORG_NOT_ADMIN`, `GROUP_ASPIRATION_NOT_ADMIN`, `BIAS_ADOPTION_NOT_AN_ADMINISTRATOR`) each with its own sentence.
+alternative: keep each code and its sentence (K275's exception for different conditions).
+answer: The message is the standard one, followed by a specific recommendation of what to do next or instead. The shared row's translation is shown first; the act's own fixed remedy sentence is shown after it, as part of what the member reads, never a hidden field. BOB reads this as the pattern for every refusal converged under K275, not only these four.
+decided: 2026-09-29 · Bob
+owed: N327 carried in T14 with membership R84 worded to match; the redesign shows the remedy line after the translation.
+
+### DEC-84 · answered
+raised: 2026-09-29 · BOB #66 (N344: the open points of `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §15; the page https://claude.ai/artifact/Y9mN5sYyoMjyhsfLshVZj8)
+for: bob
+question: The thirteen points DEC-76 and DEC-77 leave open for PRESENT and RESOLVE (§15 points 1–5, 7, 10–14, 16, 17).
+why it is Bob's: doctrine, requirements and UX.
+answer: **All as recommended (Bob, 2026-09-29), with two revised in discussion.** (1) an undetermined candidate is a lead, never a duty; (2) a RECORD duty is an unmutable OBLIGATION for the joined members of every project drawing on either side, leaving only by resolution; (3) REVISED: two projects' different conclusions from different arguments are plurality, each attributed; conclusions that cannot both hold in the same respect carry a tension mark, and the clarifier asks how they differ: a named difference (scope, time, standard, evidence set, a weighing each owns) is recorded on both and clears it; none found makes it a duty on both projects; neither is made to adopt the other's answer; other places outside the detector's keys get a quiet mark with no duty; (4) the question's own conclusion resolves a contradiction inquiry, never one project's stance; (5) the machine recommends only which respects may differ, never which side is wrong nor a GENUINE kind; (7) a stale mark moves nothing by itself: holders get a re-evaluation notice and the mark shows wherever the side does; (10) REVISED: Criteria and Condition are filled as facts from the two sides; Cause is member-authored and published only when evidenced, a hypothesized cause stays in the working inquiry and never contributes to the determination (a hypothesis is a placeholder), published as "cause not established"; Effect from `consequences`; Recommendation limited to a proposed action, never a policy position; (11) an irreconcilable conclusion is disclosed at publication, stated as held irreconcilable, reopened by new evidence; (12) the disclosure reaches one level (the finding's claim and each leg's referent at the pinned bytes), stated as such; (13) a tension found after publication leaves the signed edition as it is, the owning project gets a re-evaluation notice, a later edition discloses or resolves it; publication DISCLOSES, never blocks (DEC-76 item 4 confirmed): an undisclosed open RECORD tension refuses the case, a disclosed one does not; (14) accepting records the proposal accepted, the machine's reason stays the machine's, the member's own words optional and never filled from it; (16) the quick "one of them is wrong" act requires which side and a written reason (a kept decision is always reasoned) and does not ask the error's category; (17) a dismissal gives one fixed reason (same fact at different precision; not about the same matter; a real conflict, not pursued now) with optional words; only the first two count as false conflicts.
+decided: 2026-09-29 · Bob
+owed: N345's requirement changes drafted from the design and these answers, brought to Bob for approval; the design's §15 marked ruled.
+
+### DEC-85 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 6)
 for: bob
 question: What is the one visual treatment and voice of "Undetermined", and how does it differ from "Withheld", "Unrated", "Nobody looked" and "Refused"?
@@ -1372,7 +1392,7 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §U.
 owed: the five treatments and sentence patterns in the redesign; the UX page's open question 6 marked ruled.
 
-### DEC-84 · answered
+### DEC-86 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 7)
 for: bob
 question: How does the rung ladder look and feel, so a member senses an act's weight before acting, especially the attested and irreversible rungs?
@@ -1386,12 +1406,12 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
 owed: the act surfaces in the redesign; BOB's assignment of the acts still graded undetermined (affordances R27); the UX page's open question 7 marked ruled.
 
-### DEC-85 · answered
-raised: 2026-09-29 · the same design session with Bob (following DEC-84: the acts whose rung is undetermined)
+### DEC-87 · answered
+raised: 2026-09-29 · the same design session with Bob (following DEC-86: the acts whose rung is undetermined)
 for: bob
-question: Can the 57 acts graded `undetermined` in `affordances.RUNG_ABSENT` be given rungs from the principles already ruled (affordances R27; DEC-84)?
+question: Can the 57 acts graded `undetermined` in `affordances.RUNG_ABSENT` be given rungs from the principles already ruled (affordances R27; DEC-86)?
 why it is Bob's: the banding logic is UX and doctrine (how heavy an act feels); assigning each act is BOB's detail (P17), put to Bob here at his request.
-provisional: each is treated as reasoned (DEC-84).
+provisional: each is treated as reasoned (DEC-86).
 alternative: leave them to BOB one by one.
 recommendation: three bands, with six judgement calls named.
 reversal cost: low; nothing is built.
@@ -1404,7 +1424,7 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
 owed (BOB's): move the 57 from `RUNG_ABSENT` into `RUNGS` in `bio-plane/src/affordances.mjs` and update affordances R27's text (which says 56; the code holds 57); add a required reason to each reasoned act whose requirement does not yet require one (an act whose own authored words serve as its reason counts); publish the consequence statement for the six; regrade `inboxresolve` to reasoned when DEC-78's pull admits material.
 
-### DEC-86 · answered
+### DEC-88 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 8)
 for: bob
 question: Where does a member record why a noncompliant finding is, or is not, significant enough to escalate, given that no significance, severity, priority or score may be stored?
@@ -1413,7 +1433,7 @@ provisional: reasons are recorded once an escalation exists; deciding NOT to esc
 alternative: record the reasoning in the unbuilt, never-published action plan (S11); or leave it to discussion outside the record.
 recommendation: a required reason when opening an escalation, and a reasoned "decline to escalate" act, both prose only.
 reversal cost: low; nothing is built.
-response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escalationopen`, reasoned in DEC-85) requires a written reason: why this breach is worth pursuing. (2) A new act, DECLINE TO ESCALATE, on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now; reasoned, attributed and dated; corrected forward only (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are PROSE ONLY: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere (conformance R8, escalation R19), so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one.
+response: **As recommended, Bob, 2026-09-29.** (1) Opening an escalation (`escalationopen`, reasoned in DEC-87) requires a written reason: why this breach is worth pursuing. (2) A new act, DECLINE TO ESCALATE, on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now; reasoned, attributed and dated; corrected forward only (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are PROSE ONLY: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere (conformance R8, escalation R19), so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one.
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the requirement changes in `escalation` (the required opening reason; the decline act and its read) and `conformance` (a determination shows whether it was escalated, declined or neither), with the decline act's rung (reasoned) in `affordances`, for Bob's approval; the UX page's open question 8 marked ruled.

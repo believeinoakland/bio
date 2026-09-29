@@ -35,6 +35,7 @@
    (C2) OVER-STRICTNESS, THE PREDICATE'S OWN CONSERVATIVE ARM SEEN THROUGH THIS OP. In src/store.mjs #refEdgeSevered compare `String(entry.status ?? "").trim().toLowerCase()` instead of the raw value, AND make the absent-entry branch `return !entry || …` -> `Severed`, `severed ` and a reference with NO `status:` key all become withdrawals. MUST FAIL: §3's no-status, capitalised and padded arms. MUST NOT FAIL: §2, so the arm measures the fence's WIDTH and not the fixtures.
    (D) THE PROJECTION READ, REVERTED. In src/store.mjs restingOn delete the `.map(...)` that attaches `status` -> the read is status-blind again. MUST FAIL: §6's two restson arms. MUST NOT FAIL: anything else.
    (E) THE SHARED PREDICATE IS SHARED. In src/store.mjs #requiredStrengthFor replace the `#refEdgeSevered` call with an inline re-read of the citing document's `references[]` — a FAITHFUL COPY, identical in behaviour -> the rule has two implementations again. MUST FAIL: §7's structural arm, which counts the call sites off the source. MUST NOT FAIL: any behavioural arm, WHICH IS THE WHOLE POINT: D-267 exists because a rule with four inline implementations grew a fifth reader that did not know the rule existed, and no behavioural arm anywhere can see a faithful copy.
+   RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): (A), (C) and (E) stay retired (M0-25, `#requiredStrengthFor` removed); (B) edits `#routeTask` in src/queue/index.mjs, (C2) connections' `edgeSevered`, (D) inquiry's `restingOn`. RUN 2026-09-29 in a scratch worktree of 6bb9bd7605: BASELINE 35/0 + 14/0; (B) 32/3 + 13/1 and (D) 32/3 + 13/1 AS DECLARED; (C2) NOT AS DECLARED as the driver's own M0-25 note records (its three d280 labels no longer exist; severedhomes' half fired, 13/1); tree whole after; files restored byte-identical.
    (F) OVER-STRICTNESS, and these PASS rather than fail: a live citing project still sets the bar and is still NAMED; a reference with NO `status:` key is live; a `status:` value the catalog does not write is live; the RIGHT word with trailing whitespace is live; a project whose `relates_to` is severed while its `cites` is confirmed is live; a withdrawn project is STILL REACHABLE by `op=backlinks`, which names it and reports the edge as `severed`; and `restson` still LISTS the withdrawn leg rather than dropping it. A fence that refuses correct work is a defect in the fence, and a read that forgot an edge existed is worse than one that kept it.
    (G) BASELINE. Every arm restored, suite re-run, full green.
    ==== RUN 2026-08-10, record-d280. 6 arms, 0 NOT AS DECLARED, 0 restore failures, driver exit 0. Baseline 29/0 here and 14/0 in severedhomes; `src/store.mjs` 1,653,120 bytes restored after EVERY arm, verified by sha256, by CONTENT and by `cmp` twice (per-arm pristine AND pristine-of-record). MEASURED: (A) 22/7 here + 13/1 there — the headline, the standing-sentence arm, the leak arm, the strictest-per-axis arm and the group-fallback arm all come down, and the over-strictness, routing and restson arms all stay GREEN, which is what says this arm measures the bar read and not the predicate; (B) 26/3 + 13/1 — routing and its basis arm only; (C) 28/1 + **14/0**, the ONLY arm that leaves D-267's suite untouched, and the one failure is the other-relation arm with the HEADLINE STILL GREEN, which is the whole argument for a separate over-strictness arm; (C2) 26/3 + 13/1 — the three spelling arms here AND D-267's own over-strictness arm, because the predicate is shared and an arm that widened it while reporting one suite would report half of what it did; (D) 27/2 + 13/1; (E) 27/2 + 13/1 — the structural arms in BOTH suites and NOT ONE behavioural arm anywhere, which is the point: a faithful copy is invisible to behaviour. **THREE DECLARATIONS CAME BACK WRONG ON THE FIRST RUN AND THE ARMS WERE RIGHT** — (A), (B) and (D) each delete a call site and each had declared `severedhomes` wholly green, which is impossible: D-267's caller pin is EXACT and this item corrected it from three to six. The declarations were corrected and the correction is recorded in the driver's header rather than the paragraph being rewritten.
@@ -151,7 +152,12 @@ const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, impor
 const INQUIRY_SRC = moduleSrc("inquiry");
 const REEVAL_SRC = moduleSrc("reevaluation");
 const STRENGTH_SRC = moduleSrc("strength");
-const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC + "\n" + INQUIRY_SRC;
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): `#queueAncestorEdges`, `#routeTask` and `#leadBasisAbsence` left
+   store.mjs with the queue for `src/queue/` (queue asks the predicate through its own one-line delegate
+   `#refEdgeSevered(...a)`, as the store did). The census, the surviving-site pin and SITE (e)'s pin read queue's
+   files; the removed site's absence is asserted over the store AND the queue. */
+const QUEUE_SRC = moduleSrc("queue");
+const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC + "\n" + INQUIRY_SRC + "\n" + QUEUE_SRC;
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
 const mf = withSurfacingRun(new Miniflare({
@@ -716,7 +722,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      and connections' `this.edgeSevered(` (citesInto, formerly the store's #citesInto). */
   const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\(citingId, targetId/g) || []).length;
   const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length;
-  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections and inquiry`);
+  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections, inquiry and queue`);
   t("THE RULE HAS EXACTLY ONE IMPLEMENTATION, and D-280 added no second one — the shape that has "
   + "already absorbed a control in this estate",
     defs, 1);
@@ -746,7 +752,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   t("THE REMOVED SITE IS REALLY REMOVED, asserted off the SOURCE: `#requiredStrengthFor` is gone "
   + "from the plane entirely, so DEC-17's strictest-across-citers composition cannot be reached by "
   + "any door — a removal proved by absence rather than by an op that stopped answering",
-    /#requiredStrengthFor\s*\(/.test(STORE_SRC), false);
+    /#requiredStrengthFor\s*\(/.test(STORE_SRC + "\n" + QUEUE_SRC), false);
   /* RE-ANCHORED (T7; STRENGTH #1 J5): `#projectBar` is strength's `projectBar(projectId)`; the body is read to its
      own closing brace at the method indent, and the predicate is looked for under either spelling. */
   const barBody = /\n  projectBar\(projectId\) \{[\s\S]*?\n  \}\n/.exec(STRENGTH_SRC)?.[0] ?? null;
@@ -761,7 +767,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "as through the op, because an op arm alone cannot tell a confirmation from a fixture that "
   + "happened to agree",
     /* RE-ANCHORED (T7; INQUIRY #1): `restingOn` is inquiry's, and it asks connections' predicate for each row. */
-    [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(STORE_SRC),
+    [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(QUEUE_SRC),
      /\n  restingOn\(targetId\) \{[\s\S]{0,3000}?this\.connections\.edgeSevered\(/.test(INQUIRY_SRC)], [true, true]);
 
   /* ---- THE SITES LEFT UNCHANGED, PINNED SO THE JUDGEMENT IS ENFORCED --------
@@ -814,7 +820,10 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "`absent` would print `LOOKED FOR AND NOT THERE` about a document that WAS there — an "
   + "affirmative false statement about the record, which this project ranks above a narrow "
   + "inference. The count is the honest instrument and the status is not its question",
-    /#leadBasisAbsence\([\s\S]{0,2400}?#refEdgeSevered/.test(STORE_SRC), false);
+    /* RE-ANCHORED 2026-09-29 (K409): the method is queue's now; read there, with its presence asserted beside the
+       pin, since a pin over a file that no longer holds the method would pass over nothing. */
+    [QUEUE_SRC.includes("  #leadBasisAbsence(captureSha) {"),
+     /#leadBasisAbsence\([\s\S]{0,2400}?#refEdgeSevered/.test(QUEUE_SRC)], [true, false]);
   t("SITES (f) `#writeSupersededBy` and `#actionDerived` ARE OUT OF THE CLASS AS MEASURED, and the "
   + "pin is what would notice if that stopped being true: no op in the plane writes a `supersedes` "
   + "or `responds_to` reference carrying a status at all, so the exposure is UNMEASURED rather than "

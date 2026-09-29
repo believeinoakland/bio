@@ -33,6 +33,11 @@
  *      invisible id inside a visible answer is REDACTED to null while the axis
  *      facts stand, IN THE PROSE AS WELL AS IN THE FIELDS, and the derivation
  *      is identical for both readers.
+ *      RE-ANCHORED 2026-09-29 (legacy-tests T12; N303, K360, strength R6, DEC-36): the
+ *      null placeholder is retired. An unseen member is withheld WHOLE (no id,
+ *      no stand-in, no count), the prose ends in one fixed sentence, and only
+ *      `out_of_view: true` says anything was withheld; the axis facts still
+ *      stand identically for both readers.
  *
  * TWO DOORS, ONE STORE. Everything runs against `src/index.mjs`'s real worker.
  * The probe module below adds ONE extra entry — `/probe/<do-path>` — forwarded
@@ -61,7 +66,11 @@ const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
    module function `redactAxis` with its `ID_IN_PROSE`, `#redactor`, `strengthOf`, `#captureBoundsFor`, `#walk`
    reached through `#pairOver`). The source pins in sections 2 and 8 read it there. */
 const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the viewer-stamp list and the OPS table left
+   src/index.mjs for src/control-plane/index.mjs and src/control-plane/ops.mjs; the two source arms read the entry
+   and both, so each still finds its line wherever the control plane keeps it. */
+const INDEX_SRC = ["index.mjs", "control-plane/index.mjs", "control-plane/ops.mjs"]
+  .map((f) => readFileSync(SRC(f), "utf8")).join("\n");
 const QUERY_SRC = readFileSync(SRC("query.mjs"), "utf8");
 
 let pass = 0, fail = 0;
@@ -75,7 +84,7 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
 /* The probe module: the REAL worker, the REAL Store, one extra door. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);
@@ -450,24 +459,37 @@ console.log("\n--- 6. THE BACK-REFERENCE POSTURE: an invisible id redacted, the 
   const theirs = (await pair(dave, HID)).body.result;
   t("the owner sees the leg named: it is the weakest connection and it is the project",
     [mine.connection.grade, mine.connection.weakest?.target_id ?? null], ["D", PROJ]);
-  t("the uninvited member gets the SAME derivation — grade, state, counts, role, all of it",
-    [theirs.connection.grade, theirs.connection.state, theirs.connection.determined,
-     theirs.connection.load_bearing, theirs.connection.population,
-     theirs.connection.weakest?.ord ?? null, theirs.connection.weakest?.role ?? null, theirs.connection.weakest?.grade_source ?? null],
-    [mine.connection.grade, mine.connection.state, mine.connection.determined,
-     mine.connection.load_bearing, mine.connection.population,
-     mine.connection.weakest?.ord ?? null, mine.connection.weakest?.role ?? null, mine.connection.weakest?.grade_source ?? null]);
-  t("and the id ALONE is withheld, redacted to null", theirs.connection.weakest ? theirs.connection.weakest.target_id : "NO WEAKEST NAMED", null);
-  t("the withholding is STATED, without a count",
-    [theirs.connection.out_of_view, "withheld" in theirs.connection], [true, false]);
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; N303, K360, K390, STRENGTH #3 J1, strength R6, DEC-36). The posture this section
+     held — the hidden member KEPT with its id redacted to null, its ord, role and source standing, the counts standing —
+     is the placeholder R6 retired: a null in a member's place, and a count that includes it, each tell the reader that
+     something unseen is there and how much. R6 withholds every member the viewer may not see WHOLE (no id, no title,
+     no state, no placeholder, no count) and states only `out_of_view: true`. So the arms below now assert that: the
+     axis facts (grade, state, determined) identical for both readers; the unseen weakest gone as a KEY, not nulled;
+     the counts withheld because a top-level leg is unseen; the fixed sentence in the prose; the flag on the axis and
+     on the answer. Nothing was loosened: every arm still fails if the secret, a stand-in for it, or its count shows. */
+  t("the uninvited member gets the SAME axis facts — grade, state, determined",
+    [theirs.connection.grade, theirs.connection.state, theirs.connection.determined],
+    [mine.connection.grade, mine.connection.state, mine.connection.determined]);
+  t("and the unseen weakest is withheld WHOLE: no `weakest` key at all, no null stand-in, no ord/role/source left",
+    ["weakest" in theirs.connection, mine.connection.weakest?.target_id ?? null], [false, PROJ]);
+  t("and the counts are withheld, since they count the unseen member (no load_bearing, no population)",
+    [["load_bearing", "population"].filter((k) => k in theirs.connection),
+     ["load_bearing", "population"].filter((k) => k in mine.connection)],
+    [[], ["load_bearing", "population"]]);
+  t("the withholding is STATED, without a count, on the axis and on the answer",
+    [theirs.connection.out_of_view, theirs.out_of_view, "withheld" in theirs.connection], [true, true, false]);
   t("the owner's answer carries no such flag — it names everything it derived over",
-    "out_of_view" in mine.connection, false);
+    ["out_of_view" in mine.connection, "out_of_view" in mine], [false, false]);
   /* THE PROSE, which is REC-14's measured leak shape and is worse here. */
   t("the secret id appears NOWHERE in the uninvited member's whole answer, prose included",
     JSON.stringify(theirs).includes(PROJ), false);
-  t("but the sentence still says what it derived, and says an object was withheld",
-    [/connection D/.test(theirs.connection.detail), /may not see/.test(theirs.connection.detail)],
-    [true, true]);
+  /* RE-ANCHORED 2026-09-29 (N303, strength R6): the prose no longer speaks of "an object you may not see"; a swept
+     string ends in R6's one fixed sentence, whatever was taken, and nothing in it says how much. */
+  t("but the sentence still says what it derived, and ends in the one fixed out-of-view sentence",
+    [/connection D/.test(theirs.connection.detail),
+     theirs.connection.detail.endsWith("Part of what this rests on is out of your view."),
+     /may not see/.test(theirs.connection.detail)],
+    [true, true, false]);
   /* CORRECTED WHILE WRITING, and the correction is the interesting part: this
      assertion first asked for the CAPTURE axis to be byte-equal to the owner's,
      and that is wrong about the derivation rather than about the gate. A leg's
@@ -476,15 +498,20 @@ console.log("\n--- 6. THE BACK-REFERENCE POSTURE: an invisible id redacted, the 
      id is a back-reference exactly as it is on connection. So the right
      assertion is the one the posture actually promises: every derived fact
      identical for both readers, the id alone withheld, on both axes. */
-  t("the CAPTURE axis derives identically too — only the id in its inert-leg list is withheld",
+  /* RE-ANCHORED 2026-09-29 (N303, strength R6): on capture the project leg is an inert member (named in the owner's
+     not_load_bearing); for the uninvited member it now leaves that list whole rather than standing there with a null
+     id, and capture's counts go too, because a top-level leg is unseen. The seen members and the axis facts stand. */
+  t("the CAPTURE axis derives identically too — the unseen member leaves its inert-leg list whole, the counts go",
     [theirs.capture.state, theirs.capture.grade, theirs.capture.weakest?.target_id ?? null,
-     theirs.capture.load_bearing, theirs.capture.population,
+     ["load_bearing", "population"].filter((k) => k in theirs.capture), theirs.capture.out_of_view,
      theirs.capture.not_load_bearing.map((m) => m.target_id)],
     [mine.capture.state, mine.capture.grade, mine.capture.weakest?.target_id ?? null,
-     mine.capture.load_bearing, mine.capture.population,
-     mine.capture.not_load_bearing.map((m) => (m.target_id === PROJ ? null : m.target_id))]);
-  t("and the project leg IS named on capture, inert with its reason standing",
-    theirs.capture.not_load_bearing.filter((m) => m.target_id === null && /connection axis/.test(m.why)).length, 1);
+     [], true,
+     mine.capture.not_load_bearing.map((m) => m.target_id).filter((x) => x !== PROJ)]);
+  t("and the project leg is NOT named on capture: the owner sees it inert, the uninvited member sees no member, no null",
+    [mine.capture.not_load_bearing.filter((m) => m.target_id === PROJ && /connection axis/.test(m.why)).length,
+     theirs.capture.not_load_bearing.filter((m) => m.target_id == null).length],
+    [1, 0]);
   /* An id from SEVERAL LEVELS DOWN, carried only in prose: the inherited-
      undetermined `why` embeds the sub-walk's whole detail. Nothing structured
      in the answer holds it, so the field-only redaction would miss it. */

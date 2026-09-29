@@ -56,8 +56,13 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
 const P = (r) => path.join(REPO, r);
 
-const CHECKS = P("bio-plane/checks/bio-checks.mjs");
-const INDEX  = P("bio-plane/src/index.mjs");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): control-plane extracted the Worker out of
+   `src/index.mjs` into `src/control-plane/index.mjs` (the admission gate, `admissionRow`, D-262's `dec49Decorate`
+   chokepoint and both NOT_CAPABLE sites, byte-identical), and C-38 (ADMISSION_CHECKS, C-38.1's sentence) left the
+   catalogue for `src/control-plane/checks.mjs`. Every anchor below is unchanged and occurs once in its new file; only the
+   two paths and their truncation floors (MIN_BYTES: the new files are 30,666 and 249,225 bytes) moved with the code. */
+const CHECKS = P("bio-plane/src/control-plane/checks.mjs");
+const INDEX  = P("bio-plane/src/control-plane/index.mjs");
 const APP    = P("civicos-ui/app.html");
 const GUARD  = P("civicos-ui/check-refusal-codes.mjs");
 /* D-254: the guard IMPORTS REC-76's verdict reader from here, so ARM 6 — which
@@ -69,7 +74,7 @@ const READER = P("bio-plane/test/verdict-reader.mjs");
    harness mid-turn. */
 const KEEP = path.join(HERE, ".rec79-control-pristine");
 
-const MIN_BYTES = { [CHECKS]: 200000, [INDEX]: 300000, [APP]: 500000, [GUARD]: 60000, [READER]: 20000 };
+const MIN_BYTES = { [CHECKS]: 20000, [INDEX]: 200000, [APP]: 500000, [GUARD]: 60000, [READER]: 20000 };
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";

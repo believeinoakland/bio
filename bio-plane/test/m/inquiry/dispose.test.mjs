@@ -3,7 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
-import { DISPOSITIONS, PROJECTS_DRAWING_MAX } from "../../../src/inquiry/index.mjs";
+import { DISPOSITIONS, PROJECTS_DRAWING_MAX, INQUIRY_MACHINE } from "../../../src/inquiry/index.mjs";
+import { notADisposition, DISPOSITIONS as PROGRESSION_DISPOSITIONS, PROGRESSION_CHECKS } from "../../../src/progressions/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const A = "INFO-2026-0001-a";
@@ -18,8 +19,18 @@ test("R20 refusals in order, each moving nothing and naming every offender", () 
   const heads = () => [w.record.head(Q1).bundleSha, w.record.head(Q2).bundleSha];
   const before = heads();
   assert.deepEqual(DISPOSITIONS, ["deferred", "dismissed"]);
+  assert.equal(DISPOSITIONS, PROGRESSION_DISPOSITIONS, "progressions' one list (its R35), no copy of its own");
   assert.equal(go(w, "h", "bogus").reason, "BAD_TARGET_STATE");
-  assert.equal(go(w, "h", "concluded").reason, "NOT_A_DISPOSITION");
+  /* NOT_A_DISPOSITION for every legal state but the two, answered through progressions' one site (its R35, N285):
+     the whole answer is its answer, with its row C-100.20, and no field of this module's own */
+  const others = INQUIRY_MACHINE.legal.filter((s) => !DISPOSITIONS.includes(s));
+  assert.ok(others.length >= 4, JSON.stringify(others));
+  for (const s of others) {
+    const r = go(w, "h", s);
+    assert.deepEqual(r, notADisposition(s), s);
+    assert.deepEqual([r.reason, r.code, r.check, r.translation, r.to, r.dispositions],
+      ["NOT_A_DISPOSITION", "NOT_A_DISPOSITION", "C-100.20", PROGRESSION_CHECKS.NOT_A_DISPOSITION.translation, s, DISPOSITIONS], s);
+  }
   assert.equal(go(w, "h", "deferred", "  ").reason, "NO_REASON");
   assert.equal(go(w, "h", "deferred", "x".repeat(161)).reason, "BAD_REASON");
   assert.equal(go(w, "h", "deferred", 'a "quote"').reason, "BAD_REASON");

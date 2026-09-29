@@ -180,6 +180,9 @@ import { makePublishingProject, allLoadBearing } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
 import { RATIFY_MACHINE_FENCE_CHECKS } from "../src/ratification/checks.mjs";   /* T8: the ratify rows moved */
 import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (strength R5, K187) */
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): C-32.17 OPERATOR_TOKEN_CANNOT_GOVERN left `MACHINE_FENCE_CHECKS` for
+   control-plane's `OPERATOR_FENCE_CHECKS`, id and translation unchanged; block 3b asks the row where it lives. */
+import { OPERATOR_FENCE_CHECKS } from "../src/control-plane/checks.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const REPO = join(DIR, "..", "..");                  // bio-plane/test -> repo root
@@ -195,7 +198,9 @@ const SRC = (f) => join(DIR, "..", "src", f);
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): eight more left store.mjs with their acts — MACHINE_CANNOT_CORRESPOND,
    _MOVE_ACTION, _SET_LAWS and _SET_RISK_TIER (and the new _STATE_RECORDS_LAW, C-32.20) to actions, MACHINE_CANNOT_PUBLISH
    to case-authoring (`#publishCase`), MACHINE_CANNOT_REVIEW to review — so those modules join the corpus. */
-const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength", "actions", "case-authoring", "review"];
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE left store.mjs with
+   `taskForward` and `taskResolve` for `src/queue/` (rows now queue's QUEUE_MACHINE_CHECKS), so queue joins the corpus. */
+const EXTRACTED = ["promotion", "inquiry", "basis-versions", "strength", "actions", "case-authoring", "review", "queue"];
 const STORE_SRC = [readFileSync(SRC("store.mjs"), "utf8"),
   ...EXTRACTED.flatMap((m) => readdirSync(SRC(m)).filter((f) => f.endsWith(".mjs")).sort()
     .map((f) => readFileSync(SRC(`${m}/${f}`), "utf8")))]
@@ -1004,7 +1009,7 @@ console.log("\n--- 3. the driven set IS the harvested set: a thirteenth fence ca
      three OPERATOR_TOKEN_CANNOT_*) which this equality has never been able to see. Those are block
      3b's, harvested and driven there; the two arms together are the whole plane, and neither claims
      to be. The old wording was the defect this file exists to find, in this file. */
-  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength, actions, case-authoring, review) mints was driven under a COMPLETE payload — the codes "
+  t("EVERY MACHINE_CANNOT_* `src/store.mjs` (with the modules extracted from it: promotion, inquiry, basis-versions, strength, actions, case-authoring, review, queue) mints was driven under a COMPLETE payload — the codes "
   + "`src/index.mjs` mints are block 3b's, and were outside this corpus, not inside it (D-503)",
     HARVEST.filter((c) => !drivenCodes.includes(c)), []);
   t("and nothing was driven that the plane does not mint", drivenCodes.filter((c) => !HARVEST.includes(c)), []);
@@ -1077,7 +1082,12 @@ console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN thro
   /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): op=ratify and op=caseratify left src/index.mjs for the ratification
      module (`ratifyOp`, `caseRatifyOp` in src/ratification/ops.mjs, RATIFICATION J-T8), taking their four fences and
      their rows (RATIFY_MACHINE_FENCE_CHECKS) with them; the Worker's corpus is index.mjs AND that file. */
+  /* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the Worker's doors — the governance fence (OPERATOR_TOKEN_CANNOT_GOVERN)
+     and the `GOVERNANCE_ACTIONS` list among them — left src/index.mjs for `src/control-plane/{index,ops}.mjs`; the
+     Worker's corpus is index.mjs, those two files and ratification's ops. */
   const INDEX_BARE = decomment([readFileSync(SRC("index.mjs"), "utf8"),
+                                readFileSync(SRC("control-plane/index.mjs"), "utf8"),
+                                readFileSync(SRC("control-plane/ops.mjs"), "utf8"),
                                 readFileSync(SRC("ratification/ops.mjs"), "utf8")].join("\n"));
   const INDEX_HARVEST = [...new Set([...INDEX_BARE.matchAll(/"((?:MACHINE|OPERATOR_TOKEN)_CANNOT_[A-Z_]+)"/g)]
     .map((m) => m[1]))].sort();
@@ -1097,7 +1107,7 @@ console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN thro
      so each pin asks the row rather than repeating its words here. */
   /* RE-ANCHORED 2026-09-28 (T8): the four ratify rows are the ratification module's own table now, not the
      catalogue's; the row is asked where it lives. */
-  const FENCE_ROW = (code) => MACHINE_FENCE_CHECKS[code] ?? RATIFY_MACHINE_FENCE_CHECKS[code];
+  const FENCE_ROW = (code) => MACHINE_FENCE_CHECKS[code] ?? RATIFY_MACHINE_FENCE_CHECKS[code] ?? OPERATOR_FENCE_CHECKS[code];
   const catGot = (r, code) => [r && r.check, r && r.translation === FENCE_ROW(code)?.translation];
   const catWant = (code) => [FENCE_ROW(code)?.check, true];
 
@@ -1244,7 +1254,7 @@ console.log("\n--- 3b. D-503 · the five fences src/index.mjs mints, DRIVEN thro
     /* THE ACTS ARE READ OUT OF THE PLANE, never typed: a fourth governance act is
        driven the day it lands rather than the day somebody remembers this list. */
     const GOV = JSON.parse((/const GOVERNANCE_ACTIONS = (\[[^\]]*\]);/.exec(INDEX_BARE) || [])[1] || "null");
-    t("GOVERNANCE_ACTIONS was READ OUT OF src/index.mjs and names op=membercaps — an unparsed list "
+    t("GOVERNANCE_ACTIONS was READ OUT OF the Worker's source (src/control-plane/ops.mjs since K413) and names op=membercaps — an unparsed list "
     + "would drive nothing while reading like a clean arm",
       Array.isArray(GOV) && GOV.length >= 3 && GOV.includes("membercaps"), true);
     const capsOf = async (who) => {

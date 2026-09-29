@@ -25,7 +25,11 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { NAMESPACE_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #1 step 1 and #2 J4 R32): C-78 moved whole from the catalogue to
+   control-plane's table, and `OPS` and the doors from `src/index.mjs` to `src/control-plane/{ops,index}.mjs`. The row
+   is still imported; the corpus is now read from the exported table itself rather than its source text. */
+import { NAMESPACE_CHECKS } from "../src/control-plane/checks.mjs";
+import { OPS } from "../src/control-plane/ops.mjs";
 
 const SRC = (f) => fileURLToPath(new URL(`../src/${f}`, import.meta.url));
 
@@ -70,10 +74,10 @@ t("the family holds NAMESPACE_PINNED with check C-78.2 and a sentence of at leas
   [!!ROW, ROW?.check, (ROW?.translation ?? "").trim().split(/\s+/).length >= 8], [true, "C-78.2", true]);
 
 /* ------------------------------------------------------------------ the corpus, from the OPS table */
-const src = readFileSync(SRC("index.mjs"), "utf8");
-const opsStart = src.indexOf("const OPS = {");
-const PUBLIC = [...src.slice(opsStart).matchAll(/^\s+(\w+):\s*\{\s*classes:\s*null\b[^}]*mutating:\s*(true|false)/gm)]
-  .map((m) => ({ op: m[1], mutating: m[2] === "true" }));
+const src = readFileSync(SRC("control-plane/index.mjs"), "utf8");
+const opsStart = Object.keys(OPS).length;
+const PUBLIC = Object.entries(OPS).filter(([, spec]) => spec.classes === null)
+  .map(([op, spec]) => ({ op, mutating: spec.mutating === true }));
 /* CORRECTED 2026-09-24 by CONDUCT #19 (c19-batch11): + `groupidentity`. REC-164's op reads `store=` itself,
    op=instancegroup's way, and d456-namespace-scope drives it answering from scratch; the two suites met only at the
    union, where this list's three pinned it and d456 went red. The old list was right for the tree it was written on. */

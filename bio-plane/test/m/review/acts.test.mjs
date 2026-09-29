@@ -1,10 +1,11 @@
-/* review: the authoring acts, draft, grant and revoke (R1–R7), at `act`, and the op map's stamps (R22). */
+/* review: the authoring acts, draft, grant and revoke (R1–R7, R27), at `act`, and the op map's stamps (R22). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_DRAFT_FIELDS, REVIEW_RECIPIENT_MAX, REVIEW_DRAFT_MAX, reviewOps,
          caseIdentitySentence } from "../../../src/review/index.mjs";
 import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 
 const row = (code) => REVIEW_COPY_CHECKS[code];
 const refused = (r, code) => {
@@ -278,4 +279,43 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
   const bare = storage();
   assert.doesNotThrow(() => reviewOf({ storage: bare }, { record: { declarePurge() {}, seedMintLedger() { throw new Error("no table"); } },
     membership: {}, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} }));
+});
+
+test("R27: when no free opaque id can be minted, draft's new draft and grant answer MINT_EXHAUSTED through record-core's mintExhausted (its R62, C-59.6; C-87.12 retired), naming the id, writing nothing", () => {
+  const w = standard();
+  w.publishedCase("CASE-2026-0001", P, 1);
+  const d = draft(w, "ann", { caseId: "CASE-2026-0001" });
+  const asked = [];
+  const mint = w.record.mintOpaqueId;
+  /* record-core's minter answering none (its R9: 64 draws in a row all collided) */
+  w.record.mintOpaqueId = (...a) => { asked.push(a[0]); return null; };
+  const before = w.snapshot();
+  /* the draft arm: a new draft, named case or not */
+  const nd = [draft(w, "ann"), draft(w, "ed", { caseId: "CASE-2026-0001", newCase: true })];
+  /* the grant arm */
+  const ng = w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: "R", secretSha: SECRET(1) });
+  /* record-core's one answer, byte for byte: prefix DRAFT or RVG, its row C-59.6 and its translation, nothing added */
+  for (const r of nd) assert.deepEqual(r, mintExhausted("DRAFT"));
+  assert.deepEqual(ng, mintExhausted("RVG"));
+  for (const r of [...nd, ng]) {
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+      [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation]);
+    assert.match(r.detail, /Nothing was written\.$/);
+  }
+  for (const r of nd) assert.match(r.detail, /free draft id/);
+  assert.match(ng.detail, /free grant id/);
+  assert.deepEqual([nd[0].prefix, nd[1].prefix, ng.prefix], ["DRAFT", "DRAFT", "RVG"]);
+  assert.deepEqual(asked, ["DRAFT", "DRAFT", "RVG"]);
+  assert.deepEqual(w.snapshot(), before, "nothing written: no draft, no grant, no minted id");
+  /* an edit in place mints nothing, and is not refused */
+  const e = w.r.act({ act: "draft", author: "ann", draft: d.draftId, statement: "S2", caseId: "CASE-2026-0001" });
+  assert.deepEqual([e.ok, e.edited, asked.length], [true, true, 3]);
+  /* the refusals before the mint still come first */
+  refused(w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: "", secretSha: SECRET(1) }), "REVIEW_NO_RECIPIENT");
+  refused(w.r.act({ act: "draft", author: "ann", project: P, caseId: "CASE-2026-0404" }), "REVIEW_NO_SUCH_CASE");
+  assert.equal(asked.length, 3);
+  /* a minter that answers again: both acts succeed */
+  w.record.mintOpaqueId = mint;
+  assert.equal(draft(w, "ann").ok, true);
+  assert.equal(w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: "R", secretSha: SECRET(1) }).ok, true);
 });

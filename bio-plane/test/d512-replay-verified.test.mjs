@@ -39,7 +39,10 @@ import { join } from "node:path";
 /* The control driver points this at an armed COPY of the sources. */
 const SRC_DIR = process.env.D512_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
-const { SURFACE_CHECKS } = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2 J4 R32): C-66.6 REPLAY_UNVERIFIED left the
+   catalogue's SURFACE_CHECKS, split out to control-plane's `REPLAY_CHECKS` (its site is the control plane's promote
+   stamp block), words and id kept; read from there through the same SRC_DIR the control arms. */
+const { REPLAY_CHECKS: SURFACE_CHECKS } = await import(join(SRC_DIR, "control-plane", "checks.mjs"));
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -120,7 +123,7 @@ const UNVERIFIED = [false, "REPLAY_UNVERIFIED", "REPLAY_UNVERIFIED", "C-66.6", t
 const counters = async () => { const s = await GET(`op=stats&${ADMIN}`); return [s?.bundles, s?.files]; };
 
 console.log("\n--- FIXTURE ---");
-t("FIXTURE: the catalogue carries C-66.6 with a canned translation — a refusal with no sentence behind it must not "
+t("FIXTURE: the catalogue (control-plane's REPLAY_CHECKS since K413) carries C-66.6 with a canned translation — a refusal with no sentence behind it must not "
   + "reach a member (DEC-49)", [U?.check, typeof U?.translation, (U?.translation ?? "").length > 40], ["C-66.6", "string", true]);
 const c0 = await counters();
 t("FIXTURE: the witness reads numbers — a counter that is absent would make every `nothing written` arm vacuous",

@@ -108,9 +108,11 @@
  * identical figures, N1 190/10 and N2 199/1, restored byte-identically.
  */
 import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
-/* DIST-6 reads MEMBER_BINDINGS off the namespace, so a tree without the export fails its PIN by name rather than
-   refusing to link the whole suite. */
+/* The namespace, read for the exports a PIN names (BROWSER_BINDING, PLANE_LIMITS), so a tree without one fails that PIN
+   by name rather than refusing to link the whole suite. */
 import * as NG from "../src/index.mjs";
+/* R30 (N234): the member binding names are instance-setup's; the installer holds no table of its own. */
+import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
@@ -1278,17 +1280,15 @@ async function d116Install(slug, reply) {
    2026-08-10 / 2026-09-10, which forces the order), and answers `op=bootstrap&members=1` the way the plane's
    `memberVersions` does, DERIVED from the bindings the plane was last uploaded with: no binding -> UNBOUND; a binding
    to a member script -> that script's own name and VERSION (so a binding to the wrong worker reads MISNAMED); a binding
-   to nothing -> SILENT. The binding names are read from the PLANE'S SOURCE (`FLEET_BINDINGS`), never restated here.
+   to nothing -> SILENT. The binding names are instance-setup's `FLEET_BINDINGS`, imported (R30), never restated here.
    HOW A LIAR WOULD PASS: a binding named right and pointing anywhere but the member — every arm below asserts each
    binding's TARGET by name, and the fake plane reads such a binding MISNAMED, so the verify step names it too. */
 console.log("\n--- DIST-6: the installed plane is bound to every member installed beside it, on install AND update ---");
-const planeSrcText = readFileSync(new URL("../../bio-plane/src/index.mjs", import.meta.url), "utf8");
-const PLANE_FLEET = (() => { const m = planeSrcText.match(/const FLEET_BINDINGS = (\[[^;]*\]);/);
-  return m ? JSON.parse(m[1]) : []; })();
-t("PIN: the plane's FLEET_BINDINGS was read from its source (three members, else this section tests nothing)",
+const PLANE_FLEET = FLEET_BINDINGS;
+t("PIN: instance-setup's FLEET_BINDINGS names three members (else this section tests nothing)",
   PLANE_FLEET.length, 3);
-t("PIN: the installer binds each member under the SAME name the plane reads it by (bio-plane FLEET_BINDINGS)",
-  Object.fromEntries(PLANE_FLEET), NG.MEMBER_BINDINGS ? { ...NG.MEMBER_BINDINGS } : null);
+t("PIN: the installer exports no member binding table of its own (R30: imported, never copied)",
+  "MEMBER_BINDINGS" in NG, false);
 const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {};";
 const repoSha6 = await shaHex(repoSrc6);
 const sig6 = await signAsset(new TextEncoder().encode(repoSrc6));

@@ -64,7 +64,12 @@ import { MACHINE_FENCE_CHECKS as CATALOGUE_MACHINE_FENCE_CHECKS, AI_CREDENTIAL_C
    MACHINE_FENCE_CHECKS for ratification's own `RATIFY_MACHINE_FENCE_CHECKS`. The machine fences this suite names are
    the union of the two families, read as one. */
 import { RATIFY_MACHINE_FENCE_CHECKS } from "../src/ratification/checks.mjs";
-const MACHINE_FENCE_CHECKS = { ...CATALOGUE_MACHINE_FENCE_CHECKS, ...RATIFY_MACHINE_FENCE_CHECKS };
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2 J4 R32): the agent credential's GATE rows
+   (C-29.6–.10, `AI_BEYOND_TASK_SCOPE` among them) left `AI_CREDENTIAL_CHECKS` for control-plane's `AI_SCOPE_CHECKS`,
+   and the operator fence C-32.17 left `MACHINE_FENCE_CHECKS` for its `OPERATOR_FENCE_CHECKS`, words and ids kept. The
+   scope codes and the machine fences this suite classifies by are the unions, read as one family each. */
+import { AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS } from "../src/control-plane/checks.mjs";
+const MACHINE_FENCE_CHECKS = { ...CATALOGUE_MACHINE_FENCE_CHECKS, ...RATIFY_MACHINE_FENCE_CHECKS, ...OPERATOR_FENCE_CHECKS };
 import { RUNGS } from "../src/affordances.mjs";
 
 if (spawnSync("ssh-keygen", ["-Q"]).error) {
@@ -78,6 +83,10 @@ if (spawnSync("ssh-keygen", ["-Q"]).error) {
 const SRC_DIR = process.env.REC123_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 const IDX_SRC = readFileSync(IDX, "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #1 step 1): `OPS` is `src/control-plane/ops.mjs`'s and the stamps are
+   `src/control-plane/index.mjs`'s now; block 0 reads each where it lives (under REC123_SRC too). */
+const OPS_SRC = readFileSync(join(SRC_DIR, "control-plane", "ops.mjs"), "utf8");
+const CP_SRC = readFileSync(join(SRC_DIR, "control-plane", "index.mjs"), "utf8");
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: IDX_SRC,
   modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
@@ -114,7 +123,7 @@ const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
    suite expects. Four outcomes, and the difference between the middle two is
    the whole item: a scope refusal is passed by a broader scope, a named fence
    is not. */
-const SCOPE_CODES = new Set(Object.keys(AI_CREDENTIAL_CHECKS));
+const SCOPE_CODES = new Set([...Object.keys(AI_CREDENTIAL_CHECKS), ...Object.keys(AI_SCOPE_CHECKS)]);
 const MACHINE_NAMED = new Set([...Object.keys(MACHINE_FENCE_CHECKS), "TEXT_ATTEST_MACHINE"]);
 const verdict = (r, accepted) => {
   const c = codeOf(r);
@@ -130,18 +139,18 @@ try {
 
 /* ======================================================= 0. THE CORPUS OF OPS */
 console.log("\n--- 0. which ops attest or ratify — DERIVED from the plane under three names, never typed ---");
-const opsBody = IDX_SRC.slice(IDX_SRC.indexOf("const OPS = {"), IDX_SRC.indexOf("\n};", IDX_SRC.indexOf("const OPS = {")));
+const opsBody = OPS_SRC.slice(OPS_SRC.indexOf("const OPS = {"), OPS_SRC.indexOf("\n};", OPS_SRC.indexOf("const OPS = {")));
 const OPS = new Map([...opsBody.matchAll(
   /^\s{2}([a-z0-9]+):\s*\{\s*classes:\s*(\[[^\]]*\]|null)[^}]*?mutating:\s*(true|false)/gm)]
   .map((m) => [m[1], { classes: m[2] === "null" ? null : JSON.parse(m[2]), mutating: m[3] === "true" }]));
 /* THE FLOOR, so a parser that silently stopped matching cannot read as a clean
    census: the plane has well over a hundred ops (3.census counts them). */
 t("the OPS table parsed to a real corpus (floor 150), not an empty one", OPS.size >= 150, true);
-console.log(`  corpus: ${OPS.size} ops parsed out of src/index.mjs's OPS table`);
+console.log(`  corpus: ${OPS.size} ops parsed out of src/control-plane/ops.mjs's OPS table`);
 const VERB = /attest|ratif|confirm|endorse|vouch|sign|certif|affirm|witness|accept|countersign|approv|verif/;
 const byName = [...OPS.keys()].filter((o) => VERB.test(o));
 const byRung = Object.entries(RUNGS).filter(([, r]) => r === "attested").map(([o]) => o);
-const byStamp = [...IDX_SRC.matchAll(/if \(op === "([a-z]+)"\)\s*\n\s*inner\.searchParams\.set\("attestor"/g)].map((m) => m[1]);
+const byStamp = [...CP_SRC.matchAll(/if \(op === "([a-z]+)"\)\s*\n\s*inner\.searchParams\.set\("attestor"/g)].map((m) => m[1]);
 console.log(`  by name (${byName.length}): ${byName.join(", ")}`);
 console.log(`  by rung \`attested\` (${byRung.length}): ${byRung.join(", ")}`);
 console.log(`  by a stamped attestor (${byStamp.length}): ${byStamp.join(", ")}`);

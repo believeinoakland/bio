@@ -1,4 +1,4 @@
-/* actions' T11 entries at its interface: R3's and R31's bounds (N237, N277), R8's viewer on `op=promote` (N271), R16's
+/* actions' T11 entries at its interface: R3's and R31's bounds (N237, N277; R31's entry cursor is N311's, `t12.test.mjs`), R8's viewer on `op=promote` (N271), R16's
    release through record-core (N261), R42 `kinds()` and its read op (N231), R43 `noSuchAction` (N217, K275). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -46,40 +46,23 @@ test("R3 an action document holds at most 500 legs and 500 correspondence entrie
     assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, B)[0].n, 0, `${t}: skipped whole, never half-projected`);
 });
 
-test("R31 pendingClocks reads at most 500 actions a page in id order after `after`; `cursor` is the last action read; `truncated` when more follow; no entry is lost across pages", () => {
+test("R31 pendingClocks reads at most 500 actions a page in id order after `after`; `cursor` is the last entry answered when `truncated`, else null; no entry is lost across pages", () => {
   const w = world();
   for (let i = 1; i <= 501; i++) w.promote(id(i), actionMd(id(i), [...CP, "action_kind: other", "clock:", ...CLK("2026-01-01")]));
   const p1 = w.a.pendingClocks({ before: "2026-10-01", viewer: M });
-  assert.deepEqual([p1.items.length, p1.truncated, p1.cursor, p1.actions_limit, p1.limit], [500, true, id(500), 500, 500]);
+  assert.deepEqual([p1.items.length, p1.truncated, p1.cursor, p1.actions_limit, p1.limit], [500, true, `${id(500)}#0`, 500, 500]);
   const p2 = w.a.pendingClocks({ before: "2026-10-01", after: p1.cursor, viewer: M });
-  assert.deepEqual([p2.items.length, p2.truncated, p2.cursor], [1, false, id(501)]);
+  assert.deepEqual([p2.items.length, p2.items[0].action, p2.truncated, p2.cursor], [1, id(501), false, null]);
   /* The seek is the projection's clock: an action whose next pending date is not before `before` is not among the 500
      read, so a page of such actions does not hide one that has an entry. */
   const x = world();
   for (let i = 1; i <= 501; i++)
     x.promote(id(i), actionMd(id(i), [...CP, "action_kind: other", "clock:", ...CLK(i === 501 ? "2026-01-01" : "2026-02-01")]));
   const q1 = x.a.pendingClocks({ before: "2026-01-15", viewer: M });
-  assert.deepEqual([q1.items.map((e) => e.action), q1.truncated, q1.cursor], [[id(501)], false, id(501)]);
+  assert.deepEqual([q1.items.map((e) => e.action), q1.truncated, q1.cursor], [[id(501)], false, null]);
   /* and a page that reads no action says so: no cursor, nothing follows. */
   assert.deepEqual([x.a.pendingClocks({ before: "2026-01-15", viewer: M, after: id(501) }).cursor,
                     x.a.pendingClocks({ before: "2026-01-15", viewer: M, after: id(501) }).truncated], [null, false]);
-});
-
-test("R31 a page never cuts an action: one whose entries would not fit is read whole on the next page", () => {
-  const w = world();
-  w.action(A, ["clock:", ...CLK("2026-09-01")]);
-  const B = "ACTN-2026-0002-b";
-  w.action(B, ["clock:", ...CLK("2026-01-01"), ...CLK("2026-01-02"), ...CLK("2026-01-03")]);
-  const p1 = w.a.pendingClocks({ before: "2026-10-01", limit: 3, viewer: M });
-  assert.deepEqual([p1.items.map((x) => x.action), p1.truncated, p1.cursor], [[A], true, A]);
-  const p2 = w.a.pendingClocks({ before: "2026-10-01", limit: 3, after: p1.cursor, viewer: M });
-  assert.deepEqual([p2.items.map((x) => `${x.action}:${x.ord}`), p2.truncated, p2.cursor], [[`${B}:0`, `${B}:1`, `${B}:2`], false, B]);
-  /* an action holding more entries than a page is answered alone, its first `limit`, and the answer says it cut it. */
-  const p3 = w.a.pendingClocks({ before: "2026-10-01", limit: 2, after: A, viewer: M });
-  assert.deepEqual([p3.items.length, p3.truncated, p3.cursor, p3.cut_inside], [2, true, B, { action: B, entries: 3, answered: 2 }]);
-  /* the seek joins retrieval's projection on bundle_id: an action with no projection row is not read. */
-  w.st.sql.exec(`DELETE FROM bundle_projection WHERE bundle_id=?`, A);
-  assert.deepEqual(w.a.pendingClocks({ before: "2026-10-01", viewer: M }).items.map((x) => x.action), [B, B, B]);
 });
 
 test("R16 actionCorrespond releases its lease through record-core's releaseLease, never a zero-length lease, on every path after taking it", () => {

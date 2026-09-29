@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
+import { noSuchDetermination, determinationSuperseded } from "../../../src/conformance/index.mjs";
 import { consequencesOwns, CONSEQUENCES_TABLES, CONSEQUENCES_CHECKS, AFFECTED_KINDS, UNITS } from "../../../src/consequences/index.mjs";
 
 const S = "STD-2026-0001-law";
@@ -25,12 +26,24 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
 
   /* Each case breaks one thing and everything after it too, so the first refusal named is the one that must win. */
   const bad = { affected: { kind: "planet" }, measure: { unit: "joy" }, period: { from: "x" } };
+  const Ds = w.determination("CONF-2026-0003-old", w.P, { [S]: "noncompliant" }, { superseded_by: "CONF-2026-0004-new" });
+  /* The determination's two conditions are conformance's (its R19, R20): answered through its helpers, exactly. */
+  const theirs = [
+    [{ determination: "CONF-2026-0099-none", standard: "STD-x", author: V("bob"), ...bad },
+     noSuchDetermination("CONF-2026-0099-none")],
+    [{ determination: Ds, standard: S2, author: V("carol"), ...bad }, determinationSuperseded(Ds, "CONF-2026-0004-new")],
+  ];
+  for (const [over, want] of theirs) {
+    const before = w.snapshot();
+    const r = w.c.consequenceRecord({ ...w.base, ...over });
+    assert.deepEqual(r, want, `${want.code} is conformance's answer, whole`);
+    assert.deepEqual(w.snapshot(), before, `${want.code} writes nothing`);
+  }
   const cases = [
-    ["NO_SUCH_DETERMINATION", { determination: "CONF-2026-0099-none", standard: "STD-x", author: V("bob"), ...bad }],
-    ["NOT_NONCOMPLIANT", { standard: S2, author: V("carol"), ...bad }],
-    ["NOT_NONCOMPLIANT", { standard: "STD-2026-0099-unnamed", author: V("carol"), ...bad }],
+    ["CONSEQUENCE_NOT_NONCOMPLIANT", { standard: S2, author: V("carol"), ...bad }],
+    ["CONSEQUENCE_NOT_NONCOMPLIANT", { standard: "STD-2026-0099-unnamed", author: V("carol"), ...bad }],
     /* carol, an administrator, sees the project and has not joined it: seeing is not acting (membership R55). */
-    ["NOT_A_PARTICIPANT", { author: V("carol"), ...bad }],
+    ["CONSEQUENCE_NOT_A_PARTICIPANT", { author: V("carol"), ...bad }],
     ["AFFECTED_UNKNOWN_KIND", { ...bad }],
     ["AFFECTED_INDIVIDUAL", { affected: { kind: "person", description: "a named resident" }, measure: bad.measure, period: bad.period }],
     ["MEASURE_UNKNOWN_UNIT", { measure: bad.measure, period: bad.period }],
@@ -46,16 +59,24 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
                      `${code} carries its own row (DEC-49)`);
     assert.deepEqual(w.snapshot(), before, `${code} writes nothing`);
   }
+  /* One site per code (K275, K380): this module holds no row for conformance's two codes, C-114.1 is not reused, and
+     R1's own two conditions are named for it (C-114.2, C-114.3). */
+  for (const gone of ["NO_SUCH_DETERMINATION", "DETERMINATION_SUPERSEDED", "NOT_NONCOMPLIANT", "NOT_A_PARTICIPANT"])
+    assert.equal(gone in CONSEQUENCES_CHECKS, false, gone);
+  assert.equal(Object.values(CONSEQUENCES_CHECKS).some((r) => r.check === "C-114.1"), false);
+  assert.deepEqual([CONSEQUENCES_CHECKS.CONSEQUENCE_NOT_NONCOMPLIANT.check, CONSEQUENCES_CHECKS.CONSEQUENCE_NOT_A_PARTICIPANT.check],
+                   ["C-114.2", "C-114.3"]);
   /* NO_SUCH_DETERMINATION: an invisible determination is the same answer as an absent one. */
   const Dq = w.determination("CONF-2026-0002-theirs", w.Q, { [S]: "noncompliant" });
   const unseen = w.c.consequenceRecord({ ...w.base, determination: Dq });
   const absent = w.c.consequenceRecord({ ...w.base, determination: "CONF-2026-0098-none" });
-  assert.equal(unseen.reason, "NO_SUCH_DETERMINATION");
-  assert.deepEqual(Object.keys(unseen).sort(), Object.keys(absent).sort());
-  assert.equal(unseen.detail, absent.detail);
-  /* NOT_NONCOMPLIANT: a superseded determination refuses new parts, though its outcome is noncompliant. */
-  const Ds = w.determination("CONF-2026-0003-old", w.P, { [S]: "noncompliant" }, { superseded_by: "CONF-2026-0004-new" });
-  assert.equal(w.c.consequenceRecord({ ...w.base, determination: Ds }).reason, "NOT_NONCOMPLIANT");
+  assert.deepEqual(unseen, noSuchDetermination(Dq));
+  assert.deepEqual({ ...unseen, determination: null }, { ...absent, determination: null });
+  /* DETERMINATION_SUPERSEDED holds though the superseded determination's outcome is noncompliant, and ahead of the
+     standard; a live determination with the same outcome is the negative control. */
+  assert.deepEqual(w.c.consequenceRecord({ ...w.base, determination: Ds }), determinationSuperseded(Ds, "CONF-2026-0004-new"));
+  const Dl = w.determination("CONF-2026-0005-live", w.P, { [S]: "noncompliant" });
+  assert.equal(w.c.consequenceRecord({ ...w.base, determination: Dl }).ok, true);
   /* MEASURE_INVALID's arms: a range bound not finite, a reversed range, a currency on a unit other than money. */
   for (const measure of [{ unit: "count", range: { low: 1, high: NaN } }, { unit: "count", range: { low: 5, high: 2 } },
                          { unit: "time", currency: "USD", value: 3 }, { unit: "money", value: "12" }])
@@ -81,7 +102,7 @@ test("R1 R3 (K171 (9)): a machine's computed part answers no project authority; 
   /* A member who sees the project and has not joined is refused for the same computation: the exemption is the
      machine's alone. */
   assert.equal(w.c.consequenceRecord({ ...w.base, author: V("carol"), measure: { unit: "money" },
-    basis: { op: "sum", operands: [{ content: a, figure: "7,500" }] } }).reason, "NOT_A_PARTICIPANT");
+    basis: { op: "sum", operands: [{ content: a, figure: "7,500" }] } }).reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
   /* R3: an assessment, or an undetermined judgment, is a member's alone; an empty author is a machine's. */
   for (const author of [MACHINE, "", null]) {
     assert.equal(w.c.consequenceRecord({ ...w.base, author }).reason, "MACHINE_CANNOT_ASSESS", `assessed by ${author}`);

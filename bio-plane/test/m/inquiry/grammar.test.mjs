@@ -178,6 +178,6 @@ test("R38 the rows the module mints stay in the catalogue with their ids: C-54.1
   assert.equal(f[0].check, "C-54.1");
 });
 
-/* R31 (MK-5, a leg naming an opinion case element refused by name) is NOT YET MET and deferred by K181: no module
-   defines an opinion element or its id yet, so there is nothing a refusal could name and no test can check one. It is
-   named here so the gap stays visible; its test arrives with the element (case-authoring or publication). */
+/* R31 (MK-5) is NOT YET MET, deferred by K181: no module defines an opinion element or its id yet, so there is
+   nothing a refusal could name. Its test arrives with the element (case-authoring or publication). */
+test.todo("R31 a leg naming an opinion case element is refused by name (not yet met: MK-5; no module defines an opinion element or its id yet, K181)");

@@ -3,9 +3,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scene, V, MACHINE, F, DOC } from "./fixture.mjs";
-import { CONFORMANCE_CHECKS, OUTCOMES, SIGNIFICANCE_KEYS, REASON_MAX, LIMITS } from "../../../src/conformance/index.mjs";
+import { CONFORMANCE_CHECKS, OUTCOMES, SIGNIFICANCE_KEYS, REASON_MAX, LIMITS, noSuchDetermination,
+         determinationSuperseded } from "../../../src/conformance/index.mjs";
 import { noSuchProject } from "../../../src/membership/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
+import { STANDARDS_CHECKS } from "../../../src/standards/checks.mjs";
+import { noSuchStandard } from "../../../src/standards/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -56,8 +59,9 @@ test("R1: refusals in R1's order, each asked only once the ones before it pass",
     if (mend.score === undefined && "score" in mend) delete cur.score;
   }
   assert.equal(w.c.determine(cur).ok, true, "every part mended, the determination is recorded");
-  /* NOT_A_PARTICIPANT sits between the project and the act: an administrator sees the project and has not joined */
-  refused(w.c.determine({ ...bad, author: V("ron"), viewer: V("ron"), project: proj }), "NOT_A_PARTICIPANT");
+  /* DETERMINATION_NOT_A_PARTICIPANT sits between the project and the act: an administrator sees the project and has not
+     joined */
+  refused(w.c.determine({ ...bad, author: V("ron"), viewer: V("ron"), project: proj }), "DETERMINATION_NOT_A_PARTICIPANT");
   /* STANDARD_NOT_IN_FORCE sits between NO_SUCH_STANDARD and ROWS_INCOMPLETE */
   const old = w.standard("Repealed Code 1", { period: { from: "2001-01-01", to: "2010-12-31" } });
   refused(w.c.determine({ ...cur, standards: [{ standard: old, outcome: "compliant" }], rows: [] }), "STANDARD_NOT_IN_FORCE");
@@ -81,14 +85,16 @@ test("R1: NO_SUCH_PROJECT for an absent id, a bundle that is not a project and a
   assert.equal(ex.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
 
-test("R1: NOT_A_PARTICIPANT for an author who has not joined (invited only, an administrator, the founder), translated in one line from membership's", () => {
+test("R1: DETERMINATION_NOT_A_PARTICIPANT (K380's rename, row C-113.3) for an author who has not joined (invited only, an administrator, the founder), translated in one line from membership's", () => {
   const { w, proj, input } = scene();
   w.membership.projectInvite({ projectId: proj, handle: "h_sam", by: "olive", viewer: V("olive") });
   for (const [author, viewer] of [[V("sam"), V("sam")], [V("ron"), V("ron")], ["admin", "admin"]]) {
     const r = nothing(w, () => w.c.determine(input({ author, viewer })));
-    refused(r, "NOT_A_PARTICIPANT");
+    refused(r, "DETERMINATION_NOT_A_PARTICIPANT");
     assert.equal(r.project, proj);
   }
+  assert.equal(CONFORMANCE_CHECKS.DETERMINATION_NOT_A_PARTICIPANT.check, "C-113.3");
+  assert.equal("NOT_A_PARTICIPANT" in CONFORMANCE_CHECKS, false, "the shared name is retired here (K275)");
   /* a participant who asked to leave is still joined (membership R54's joined-or-leaving) */
   w.membership.projectLeave({ projectId: proj, by: "pat", comment: "moving on", viewer: V("pat") });
   assert.equal(w.c.determine(input({ author: V("pat"), viewer: V("pat") })).ok, true);
@@ -174,6 +180,18 @@ test("R1 R3 R14: each standard is one the record holds, read through standards.i
   for (const standard of ["STD-2026-0099-none", F, ""]) {
     const r = nothing(w, () => w.c.determine(input({ standards: [{ standard, outcome: "compliant" }] })));
     refused(r, "NO_SUCH_STANDARD");
+  }
+  /* N309: answered through standards' noSuchStandard (its R17), its one row C-112.10; C-113.9 is retired */
+  assert.equal("NO_SUCH_STANDARD" in CONFORMANCE_CHECKS, false);
+  assert.equal(Object.values(CONFORMANCE_CHECKS).some((r) => r.check === "C-113.9"), false);
+  for (const standard of ["STD-2026-0099-none", F]) {
+    const r = w.c.determine(input({ standards: [{ standard, outcome: "compliant" }] }));
+    assert.deepEqual([r.code, r.check, r.translation, r.standard],
+      ["NO_SUCH_STANDARD", STANDARDS_CHECKS.NO_SUCH_STANDARD.check, STANDARDS_CHECKS.NO_SUCH_STANDARD.translation, standard]);
+    assert.equal(r.check, "C-112.10");
+    assert.deepEqual(r, noSuchStandard(standard), "answered through standards' noSuchStandard (its R17)");
+    const alike = w.c.determine(input({ standards: [{ standard: "STD-2026-0098-none", outcome: "compliant" }] }));
+    assert.deepEqual({ ...r, standard: null }, { ...alike, standard: null }, "one fixed answer, whatever the id");
   }
   const repealed = w.standard("Old Code 3", { period: { from: "2001-01-01", to: "2010-12-31" } });
   const later = w.standard("New Code 4", { period: { from: "2027-01-01", to: "2030-12-31" } });
@@ -330,7 +348,7 @@ test("R6: the determination and every inquiry it opens land together or not at a
     "no row, no manifest entry, no id spent");
 });
 
-test("R7: a determination is never edited; a later one names the act by its id; supersedes names an earlier determination of the same act in the same project, once, with a reason, and both reads name the link", () => {
+test("R7 R19 R20: a determination is never edited; a later one names the act by its id; supersedes names an earlier determination of the same act in the same project, once, with a reason, and both reads name the link", () => {
   const { w, proj, std, input } = scene();
   const first = w.c.determine(input());
   assert.match(first.act.id, /^ACT-2026-\d{4}$/);
@@ -349,7 +367,9 @@ test("R7: a determination is never edited; a later one names the act by its id; 
   const other = w.c.determine(input({ act: { id: twin.act.id }, supersedes: first.id, reason: "the act was misdated" }));
   refused(other, "SUPERSEDES_ANOTHER_ACT");
   assert.deepEqual([other.act, other.predecessor_act], [twin.act.id, first.act.id]);
-  refused(w.c.determine(input({ supersedes: "CONF-2026-0099-determination", reason: "r" })), "NO_SUCH_DETERMINATION");
+  const none = w.c.determine(input({ supersedes: "CONF-2026-0099-determination", reason: "r" }));
+  refused(none, "NO_SUCH_DETERMINATION");
+  assert.deepEqual(none, noSuchDetermination("CONF-2026-0099-determination", { supersedes: "CONF-2026-0099-determination" }));
   /* another project's determination is not one to supersede here */
   const libs = w.project("Libraries", "olive");
   const H = "INQ-2026-0009-lib";
@@ -373,10 +393,13 @@ test("R7: a determination is never edited; a later one names the act by its id; 
                    [true, next.id, false, "noncompliant"]);
   assert.equal(w.text(first.id), firstText, "never edited");
   assert.equal(w.record.head(first.id).rowVersion, 1);
-  /* at most once */
-  const second = w.c.determine(input({ supersedes: first.id, reason: "again" }));
-  refused(second, "ALREADY_SUPERSEDED");
-  assert.equal(second.superseded_by, next.id);
+  /* at most once: a second is DETERMINATION_SUPERSEDED (R20), naming the first and what superseded it; C-113.18 retired */
+  const second = nothing(w, () => w.c.determine(input({ supersedes: first.id, reason: "again" })));
+  refused(second, "DETERMINATION_SUPERSEDED");
+  assert.deepEqual(second, determinationSuperseded(first.id, next.id, { supersedes: first.id }));
+  assert.deepEqual([second.determination, second.superseded_by], [first.id, next.id]);
+  assert.equal("ALREADY_SUPERSEDED" in CONFORMANCE_CHECKS, false);
+  assert.equal(Object.values(CONFORMANCE_CHECKS).some((r) => r.check === "C-113.18"), false);
   assert.equal(proj, next.project);
 });
 

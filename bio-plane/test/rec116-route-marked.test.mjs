@@ -49,6 +49,7 @@ import { registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -331,8 +332,8 @@ t("E: with a recognised member stamp the marked document IS returned — the pos
    recognise, which is exactly the absent-stamp case index.mjs' list exists to
    prevent from ever arriving. */
 const mfStore = new Miniflare({
-  modules: true, script: readFileSync(STORE_SRC, "utf8"),
-  modulesRoot: "/", scriptPath: STORE_SRC,
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });
@@ -454,7 +455,10 @@ t("G: sparse is the normal condition — absence at one level is not evidence of
    ===================================================================== */
 console.log("\n--- A. the op is reachable through the control plane, and is a READ ---");
 
-const registry = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+/* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the control plane's OPS table and its viewer-stamp
+   list left src/index.mjs for src/control-plane/ops.mjs and src/control-plane/index.mjs; the three arms read both. */
+const registry = ["control-plane/ops.mjs", "control-plane/index.mjs"]
+  .map((f) => readFileSync(fileURLToPath(new URL("../src/" + f, import.meta.url)), "utf8")).join("\n");
 t("A: the op is REGISTERED in the control plane's own table", /\bprovenanceroutes:\s*\{/.test(registry), true);
 t("A: as a READ — `mutating: false`. For 39 days the only op over this table was the WRITE",
   /provenanceroutes:\s*\{[^}]*mutating:\s*false/.test(registry), true);

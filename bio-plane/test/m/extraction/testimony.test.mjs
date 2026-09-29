@@ -145,6 +145,3 @@ test("R62: after each R61 write every listener runs in the same transaction, in 
                      textUnits: [{ extent: { kind: "pdf-page", page: 0, rect: null }, text: "words", seq: 0 }] });
   assert.deepEqual(ran, []);
 });
-
-test.todo("R63: noSha(detail?), the one NO_SHA answer with C-100.19's row, is not built: N285 (K347 moved the N285 shared-code cluster to T12); readingFor (R27) still answers its own NO_SHA without code, check or translation");
-test.todo("R31: an absent object answered through capture's evidenceAbsent (its R63) is not built: N285, T12 (K347); op=pdfstructure still answers its own NOT_FOUND 404");

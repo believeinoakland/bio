@@ -200,6 +200,11 @@ const th = await post("thread", { progressionKey:"grant", entityId:eG.entity_id,
   placements:[{ stage:"award", captureSha:gAward }] }, IRIS);
 ok("the award is threaded, so the application stage before it is a missing predecessor", th && th.ok !== false);
 
+/* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12 B3): the queue class FINDING is shown to
+   members as "Noticed" — "noticed item" in the queue, the set-aside ledgers and the decision sentences; "finding" is
+   kept for a concluded question. Every pin of the decision sentences below reads "this noticed item" (the negative
+   pins too, which the old wording would have left passing over nothing); the arms' labels are kept, the controls'
+   anchors. */
 const openPage = async () => {
   $$("#pg-look-key").value = "grant";
   $$("#pg-look-subj").value = "fund:G";
@@ -221,7 +226,7 @@ const p0 = await openPage();
 const b0 = findingBlock(p0, "application");
 ok("the page is painted and the finding is listed with the plane's own words for it",
    p0.length > 500 && b0.length > 0 && b0.includes(U.esc(f0 ? f0.detail : "\u0000")));
-ok("and says no member has decided it", says(b0, /no member has decided this finding/i));
+ok("and says no member has decided it", says(b0, /no member has decided this noticed item/i));
 ok("and no decision is painted for it", !/data-decided-finding=/.test(p0));
 ok("the read is the plane's op=instance, carrying the member's session",
    CALLED.some(c => c.op === "instance" && c.token === IRIS));
@@ -244,15 +249,15 @@ const b1 = findingBlock(p1, "application");
 ok("the finding is STILL LISTED on the page, in the plane's own words for it",
    b1.length > 0 && b1.includes(U.esc(f0 ? f0.detail : "\u0000")));
 ok("THE DECIDED-FINDING ARM: a dismissed finding renders its decision BESIDE it — inside the finding's own block",
-   /data-decided-finding="application"/.test(b1) && says(b1, /a member decided this finding/i));
+   /data-decided-finding="application"/.test(b1) && says(b1, /a member decided this noticed item/i));
 ok("THE DECIDED-FINDING ARM: the decision's state, its author and its instant, all the record's",
    says(b1, new RegExp(`set aside as dismissed by ${d1 && d1.decided_by} on ${d1 && String(d1.at).slice(0, 10)}`, "i")));
 ok("THE DECIDED-FINDING ARM: the member's reason, verbatim", b1.includes(U.esc(REASON)));
 ok("THE DECIDED-FINDING ARM: which version of the declared flow it judged, and that it still stands",
    says(b1, /it judged version 1 of the declared flow/i) && says(b1, /still the one standing/i));
-ok("and it is no longer called undecided", !says(b1, /no member has decided this finding/i));
+ok("and it is no longer called undecided", !says(b1, /no member has decided this noticed item/i));
 ok("the record's own count is said: one finding, none open, one answered by a standing decision",
-   says(p1, /lists 1 finding on this chain; 0 are still open, and 1 is answered by a member's decision that still stands/i));
+   says(p1, /lists 1 noticed item on this chain; 0 are still open, and 1 is answered by a member's decision that still stands/i));
 
 /* ============================================================
    3. after a revision: still listed, still decided, no longer standing

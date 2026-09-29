@@ -192,8 +192,10 @@ t("the current stages are the revised ones",
 t("the version list carries each version's basis",
   (nowDef.versions || []).map((v) => v.basis.stated), [false, true]);
 const missing = await get("progression", "key=procurement&version=7");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; N285, K343, K388, progressions B1, C-100.8): the unheld version is refused under
+   progressions' own code PROGRESSION_VERSION_NOT_HELD (renamed from the shared NOT_FOUND, translation kept). */
 t("a version the record does not hold is refused, naming the versions it holds",
-  [missing.ok, missing.reason, missing.current_version], [false, "NOT_FOUND", 2]);
+  [missing.ok, missing.reason, missing.current_version], [false, "PROGRESSION_VERSION_NOT_HELD", 2]);
 
 console.log("\n--- instance reads now name version 2 ---");
 const inst2 = await get("instance", `key=procurement&id=${eid}`);

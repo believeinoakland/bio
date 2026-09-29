@@ -125,7 +125,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { liveToken, PUBLISHED_TOKEN_HASHES } from "../src/tokens.mjs";
-import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-38 moved whole, words and check ids kept, to control-plane's
+   own table; the catalogue the arms ask is still the admission family, imported. */
+import { ADMISSION_CHECKS } from "../src/control-plane/checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC_PATH = fileURLToPath(new URL("../src/store.mjs", import.meta.url));

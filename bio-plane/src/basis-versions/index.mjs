@@ -17,11 +17,12 @@
  * every promotion with its check (R6) and its projection (R7). `deps`:
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own.
- *   inquiry      `{earned(subject, targetIds), legCapped(stated, earned, targetId), cyclePath(id, targetIds)}`, inquiry's
- *                R13, R14 and cycle read, each through `inquiryOf(host)` unless a test passes its own.
+ *   inquiry      `{earned(subject, targetIds), legCapped(stated, earned, targetId), cyclePath(id, targetIds),
+ *                basisFor(id, {limit})}`, inquiry's R13, R14, cycle read and R16, each through `inquiryOf(host)` unless
+ *                a test passes its own.
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
-import { parseFrontmatter, isMachineIdentity, normalizeType, OBJECT_TYPES, STATES, vocabFor, isBoilerplate,
+import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor, isBoilerplate,
          checkLegExtentGrammar, createSha256, CONTENT_EXTENT_CHECKS, SUGGEST_CHECKS } from "../../checks/bio-checks.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
@@ -52,7 +53,9 @@ export const NARROW_CANDIDATES_MAX = 50;
 export const PROJECTS_DRAWING_MAX = 32;
 /** R37: candidate citers examined at most, per read. */
 export const PROJECTS_DRAWING_EXAMINED = 256;
-/** R38: roots and rows of the testimony walk, and its depth guard. */
+/** R41: inquiries answered per page (default and ceiling). */
+export const PROJECT_QUESTIONS_MAX = 500;
+/** R39: roots and rows of the testimony walk, and its depth guard. */
 export const TESTIMONY_REACH_MAX = 200;
 export const TESTIMONY_REACH_DEPTH = 64;
 /** R12, R16: a reason, conclusion, falsifier or commentary written into the frontmatter (no escapes). */
@@ -80,6 +83,12 @@ function extentLegFields(extent) {
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const isInquiryId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) === "inquiry";
+/* Every stored `object_type` spelling of an inquiry, the declared one and its legacy aliases, for a bounded SQL read. */
+const INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIASES)
+  .filter((t) => LEGACY_TYPE_ALIASES[t] === "inquiry")]);
+/* R13's own test, over a project's parsed document: it holds a `cites` reference to the inquiry not marked `severed`. */
+const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references : []).some((x) =>
+  x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
 
 export class BasisVersions {
   #candidateSource = null;   // R25's extract arm: {module, fn}
@@ -273,7 +282,7 @@ export class BasisVersions {
       .map((r) => ({ version: r.name, ord: r.ord, target: r.target_id, content_id: r.content_id ?? null })) };
   }
 
-  /* ================================================================ reads (R8–R11, R22, R23, R37, R38) */
+  /* ================================================================ reads (R8–R11, R22, R23, R37, R39, R41) */
 
   /** D-235: the collections the record holds for one version, read once for `op=basisversions` and `op=suggest`'s
    *  answer. The ground labels come from the legs this answer carries, the blank label a legless part projects dropped.
@@ -389,12 +398,16 @@ export class BasisVersions {
    *  document, and one that did nothing about the question answer the same empty record. Commentary is labelled
    *  `evidence: false`. */
   conclusionRecordOf(projectId, inquiryId, viewer) {
-    const none = { history: [], stance: null };
     const pid = String(projectId ?? "").trim();
-    if (!pid || !this.#seen(pid, viewer)) return none;
+    if (!pid || !this.#seen(pid, viewer)) return { history: [], stance: null };
     const text = this.#doc(pid);
-    if (text === null) return none;
-    const fm = parseFrontmatter(text).data || {};
+    if (text === null) return { history: [], stance: null };
+    return BasisVersions.#recordIn(parseFrontmatter(text).data || {}, pid, inquiryId);
+  }
+
+  /* R22's one reading of a project's parsed document: its rows for one question, in order, and the stance. Shared by
+     `conclusionRecordOf` (after its sight test) and R41 (viewer-free), so the two cannot read a row differently. */
+  static #recordIn(fm, pid, inquiryId) {
     const rows = Array.isArray(fm.conclusions) ? fm.conclusions : [];
     const s = (v) => (typeof v === "string" ? v : null);
     const want = String(inquiryId ?? "").trim();
@@ -499,11 +512,7 @@ export class BasisVersions {
           if (examined++ >= PROJECTS_DRAWING_EXAMINED) { out.truncated = true; return out; }
           const text = this.#doc(r.pid);
           if (text === null) continue;
-          const fm = parseFrontmatter(text).data || {};
-          const refs = Array.isArray(fm.references) ? fm.references : [];
-          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed"
-                                      && String(x.target ?? "").trim() === inq);
-          if (!draws) continue;
+          if (!drawsOn(parseFrontmatter(text).data || {}, inq)) continue;
           if (out.length === PROJECTS_DRAWING_MAX) { out.truncated = true; return out; }
           out.push({ id: r.pid, title: r.title ?? null, current: this.currentOf(r.pid, inq, viewer) });
         }
@@ -513,7 +522,44 @@ export class BasisVersions {
     return out;
   }
 
-  /** R38 (MK-1 (A), N67): what would carry a member's authored observation into the published record. From each root
+  /** R41 (N300): the inquiries a project draws on, by R13's own test, in id order after `after`, each with whether its
+   *  basis holds a leg (inquiry R16's `basisFor`, limit 1) and the project's stance by R22. Viewer-free: its caller
+   *  (publication R45) fences the project. The candidates are the document's live `cites` targets that the record holds
+   *  as inquiries, read in one bounded statement, one past the page, so `cursor` (the last answered) is set only when
+   *  more follow. `limit` absent, zero or not a number reads as 500, a negative one as 1 (connections R42's reading).
+   *  Writes nothing; never throws: an empty or non-project id, or a project with no document, answers `items: []`. */
+  projectQuestions({ project = null, after = null, limit = null } = {}) {
+    const out = { items: [], cursor: null };
+    try {
+      const pid = String(project ?? "").trim();
+      if (!pid) return out;
+      const p = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+      if (!p || normalizeType(p.object_type) !== "project") return out;
+      const text = this.#doc(pid);
+      if (text === null) return out;
+      const fm = parseFrontmatter(text).data || {};
+      const live = [...new Set((Array.isArray(fm.references) ? fm.references : [])
+        .filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed")
+        .map((x) => String(x.target ?? "").trim()).filter(Boolean))];
+      if (!live.length) return out;
+      const n = Math.floor(Number(limit));
+      const cap = !Number.isFinite(n) || n === 0 ? PROJECT_QUESTIONS_MAX : Math.max(1, Math.min(PROJECT_QUESTIONS_MAX, n));
+      const rows = this.#rows(
+        `SELECT bundle_id FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))
+            AND object_type IN (SELECT value FROM json_each(?)) AND bundle_id > ?
+          ORDER BY bundle_id LIMIT ?`, JSON.stringify(live), INQUIRY_TYPES, String(after ?? ""), cap + 1);
+      for (const r of rows.slice(0, cap)) {
+        const basis = this.inquiry.basisFor(r.bundle_id, { limit: 1 });
+        const { stance } = BasisVersions.#recordIn(fm, pid, r.bundle_id);
+        out.items.push({ inquiry: r.bundle_id, legs: !!basis?.ok && Array.isArray(basis.legs) && basis.legs.length > 0,
+                         stance: stance ? stance.state : "none" });
+      }
+      if (rows.length > cap) out.cursor = out.items[out.items.length - 1].inquiry;
+    } catch { /* never throws: what was read so far stands */ }
+    return out;
+  }
+
+  /** R39 (MK-1 (A), N67): what would carry a member's authored observation into the published record. From each root
    *  the evidence graph is walked through every basis leg AND every version leg (an older reading of the basis is still
    *  bytes a published finding can point at); an observation is a bundle holding an authored register row. `self`
    *  names roots that ARE observations; `via` a finding and the observation it rests on. One bounded statement. */
@@ -719,11 +765,7 @@ export class BasisVersions {
       const denied = this.membership.projectAuthority(projectId, a.identity ?? null, "joined", "versioncurrent");
       if (denied) return denied;
       const ptext = this.#doc(projectId);
-      const pfm = ptext !== null ? (parseFrontmatter(ptext).data || {}) : {};
-      const refs = Array.isArray(pfm.references) ? pfm.references : [];
-      const draws = refs.some((r) => r && typeof r === "object" && r.rel === "cites"
-                                  && r.status !== "severed" && String(r.target ?? "").trim() === target);
-      if (!draws)
+      if (!drawsOn(ptext !== null ? (parseFrontmatter(ptext).data || {}) : {}, target))
         return refuse("VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. `
           + `Cite the question into the project first.`, { target, version: vname, project: projectId });
@@ -915,10 +957,7 @@ export class BasisVersions {
                      + "can check." };
     let want = vname;
     if (pid) {
-      const prefs = Array.isArray(pfm.references) ? pfm.references : [];
-      const draws = prefs.some((x) => x && typeof x === "object" && x.rel === "cites"
-                                   && x.status !== "severed" && String(x.target ?? "").trim() === target);
-      if (!draws)
+      if (!drawsOn(pfm, target))
         return { ok: false, reason: "NO_CLAIM", target, project: pid,
                  detail: `${pid} does not draw on ${target}, so it stands on no reading of it and has no `
                        + "claim to adopt. Cite the question into the project, make a reading current, then "
@@ -1538,14 +1577,18 @@ export function basisVersionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
-    /* inquiry's three services, each the one a test passes or else inquiry's own: the acts ask `cyclePath` unguarded */
+    /* inquiry's four services, each the one a test passes or else inquiry's own: the acts ask `cyclePath` unguarded.
+       inquiry's instance is created here, as before R41, unless the first three are all passed; R41's `basisFor` then
+       reaches it on first use, so a caller passing those three creates none until R41 is asked. */
     const given = d.inquiry || {};
-    const own = ["earned", "legCapped", "cyclePath"].every((k) => typeof given[k] === "function") ? null
+    let own = ["earned", "legCapped", "cyclePath"].every((k) => typeof given[k] === "function") ? null
       : inquiryOf(host, { record, membership, promotion, content });
     const inquiry = {
       earned: typeof given.earned === "function" ? given.earned : (s, t) => own.earned(s, t),
       legCapped: typeof given.legCapped === "function" ? given.legCapped : legCapped,
       cyclePath: typeof given.cyclePath === "function" ? given.cyclePath : (id, t) => own.cyclePath(id, t),
+      basisFor: typeof given.basisFor === "function" ? given.basisFor
+        : (id, o) => (own ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o),
     };
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);

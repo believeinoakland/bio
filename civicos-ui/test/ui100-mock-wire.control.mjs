@@ -112,8 +112,13 @@ import path from "path";
 const ROOT   = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const T      = (n) => path.join(ROOT, "civicos-ui/test", n + ".test.mjs");
 const MODULE = path.join(ROOT, "civicos-ui/test/plane-refusal-wire.mjs");
-const PLANE  = path.join(ROOT, "bio-plane/src/index.mjs");
-const CATLG  = path.join(ROOT, "bio-plane/checks/bio-checks.mjs");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): control-plane extracted the Worker's dispatch
+   out of `bio-plane/src/index.mjs` into `src/control-plane/index.mjs` (the `!spec` line byte-identical, the plane's import of
+   DISPATCH_CHECKS now `import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, …} from "./checks.mjs"`), and C-69
+   (DISPATCH_CHECKS) left the catalogue for `src/control-plane/checks.mjs`. PLANE and CATLG follow the code, each anchor
+   still matching once, and their truncation floors follow the new files' sizes (249,225 and 30,666 bytes). */
+const PLANE  = path.join(ROOT, "bio-plane/src/control-plane/index.mjs");
+const CATLG  = path.join(ROOT, "bio-plane/src/control-plane/checks.mjs");
 const TMP    = path.join(os.tmpdir(), `ui100-mock-wire-control-${process.pid}`);
 
 /* The seven suites UI-100 touches, in the order the report reads them. */
@@ -121,7 +126,7 @@ const SUITES = ["queue", "preauth-vocabulary", "document-structure", "act-propos
                 "auth-surface", "case-frozen-pair", "publishedcase", "refusal-translation-surface"];
 
 const sha = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
-const MIN_BYTES = { [MODULE]: 5000, [PLANE]: 400000, [CATLG]: 300000,
+const MIN_BYTES = { [MODULE]: 5000, [PLANE]: 200000, [CATLG]: 20000,
                     [T("queue")]: 40000, [T("refusal-translation-surface")]: 10000 };
 
 /* THE TALLY, READ FROM EACH SUITE'S OWN FOOT — never a wrapper's exit and never a pipe's. THREE
@@ -198,11 +203,11 @@ const ARMS = [
   { id:"D", files:[CATLG, PLANE, T("refusal-translation-surface")],
     why:"OVER-STRICTNESS: the catalogue family renamed INSIDE the _CHECKS convention, at every site that NAMES it",
     from:[`export const DISPATCH_CHECKS = {`,
-          `         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,`,
-          `import { BASIS_VERSION_CHECKS, DISPATCH_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";`],
+          `import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS,`,
+          `import { DISPATCH_CHECKS } from "../../bio-plane/src/control-plane/checks.mjs";`],
     to:  [`export const DISPATCH_MISS_CHECKS = {`,
-          `         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_MISS_CHECKS as DISPATCH_CHECKS,`,
-          `import { BASIS_VERSION_CHECKS, DISPATCH_MISS_CHECKS as DISPATCH_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";`],
+          `import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_MISS_CHECKS as DISPATCH_CHECKS, BOOTSTRAP_CHECKS,`,
+          `import { DISPATCH_MISS_CHECKS as DISPATCH_CHECKS } from "../../bio-plane/src/control-plane/checks.mjs";`],
     mustFail:[] },
   /* CORRECTED 2026-09-24 MID-RUN, recorded rather than smoothed. This declared every suite
      BUT `publishedcase` — reasoning that `publishedcase` imports only `requiredArgumentWire`

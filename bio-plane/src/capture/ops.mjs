@@ -5,6 +5,7 @@
  * REC-52) are passed in, with the stamps it decided (the caller class, the viewer, the member). `store` is the
  * Durable Object stub the op is scoped to. */
 import { normalizeAddress } from "../subresources.mjs";
+import { CAPTURE_CHECKS } from "./checks.mjs";
 
 /** R27, R29, D-701: op=links. `address=` what points at an address; `capture=` a document's outbound links with their
  *  verdicts; `host=` how a host's navigation changed between captures (R29's per-host read). Every row passes the
@@ -27,9 +28,30 @@ export async function linksOp(url, store, { json, storeSilent, doAnswer, viewer 
   return json({ ok: true, ...r.result });
 }
 
+/* R63 (N285, K275): the fields `evidenceAbsent` fixes, which a caller's `extra` adds beside and never replaces. */
+const EVIDENCE_ABSENT_FIXED = new Set(["ok", "reason", "code", "check", "translation", "sha256", "store"]);
+
+/** R63: THE one answer to one condition, no evidence object is held under a digest, so the code is minted at one site:
+ *  this module's R21 get and extraction's R31 answer through it. Answers `{status: 404, body}`, the body
+ *  `{ok: false, reason: "NOT_FOUND", code, check, translation, sha256, store}` and a caller's `extra` fields beside
+ *  them; the control plane's envelope sends it. It writes nothing and never throws. */
+export function evidenceAbsent(sha, store, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !EVIDENCE_ABSENT_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-evidence-held */
+  const row = CAPTURE_CHECKS.NOT_FOUND;
+  return { status: 404, body: { ok: false, reason: "NOT_FOUND", code: "NOT_FOUND", check: row.check,
+                                translation: row.translation, sha256: sha ?? null, store: store ?? null,
+                                ...Object.fromEntries(own) } };
+  /* END DEC-49 REGION is-evidence-held */
+}
+
 /** R21: op=capture, the evidence store by digest. A put whose body hashes to anything else is refused naming both
- *  digests; an object already held is not rewritten; a get answers the bytes (206 for a range). `key` is the
- *  object key of a digest in this store's namespace. */
+ *  digests; an object already held is not rewritten; a get answers the bytes (206 for a range) or R63's absence.
+ *  `key` is the object key of a digest in this store's namespace. */
 export async function captureObjectOp(req, url, env, { json, storageAbsent, requiredArgument, key, storeName, cls }) {
   if (typeof env.CAPTURES?.get !== "function") return storageAbsent("capture", "R2 is not configured on this instance");
   const sha = (url.searchParams.get("sha256") || "").toLowerCase();
@@ -52,7 +74,7 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
   const wantRange = req.headers.get("range");
   const obj = await env.CAPTURES.get(k, wantRange ? { range: req.headers } : undefined);
   const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
-  if (!obj) return json({ ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls }, 404);
+  if (!obj) { const a = evidenceAbsent(sha, storeName, { tokenClass: cls }); return json(a.body, a.status); }
   return new Response(obj.body, {
     status: wantRange ? 206 : 200,
     headers: { "content-type": "application/octet-stream", "access-control-allow-origin": "*", "x-capture-sha256": sha,

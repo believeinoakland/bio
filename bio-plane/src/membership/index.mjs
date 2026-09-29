@@ -1,6 +1,6 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R83; T9's N123 revocation notice `onRevoked`, N142's `inSight` and
+ * Requirements: build/requirements/membership.md (R1–R85; T13's N324 `notAnAdmin` (R84) and N332's `visibilityOf` (R85); T9's N123 revocation notice `onRevoked`, N142's `inSight` and
  * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
@@ -72,6 +72,30 @@ export function noSuchProject(projectId, extra = null) {
            translation: row.translation, project: projectId ?? null, ...Object.fromEntries(own),
            detail: NO_SUCH_PROJECT_DETAIL };
   /* END DEC-49 REGION is-project-seen */
+}
+
+/* R84 (N324, K275, K403). THE ONE ANSWER TO ONE CONDITION: the stamped caller `by` is not an administrator (R64) where
+   the act is an administrator's. Every act refusing that condition answers through here (R6, R7, R9, R10, R11, R12, R20,
+   R25, R26, and monitoring's R30), so `NOT_AN_ADMIN` is minted at one site and its one row is this module's (C-96.1).
+   Who is admitted stays each act's own rule; this only answers the refusal. `act` is the caller's fixed phrase for its
+   act, never a request's words; the detail is one fixed sentence around it. `extra` adds a caller's own fields beside
+   these and never replaces one of them. Writes nothing and never throws. */
+const NOT_AN_ADMIN_FIXED = new Set(["ok", "reason", "code", "check", "translation", "by", "detail"]);
+export function notAnAdmin(by, act, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NOT_AN_ADMIN_FIXED.has(k));
+  } catch { own = []; }
+  const what = typeof act === "string" && act.trim() ? act.trim().slice(0, 120) : "this act";
+  /* DEC-49 REGION is-custodial-admin */
+  const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
+  return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
+           by: by ?? null, ...Object.fromEntries(own),
+           detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and the plane stamps who is `
+                 + "asking from the signed-in session rather than taking it from the caller. This caller is not one "
+                 + "of the active administrators. Nothing was changed." };
+  /* END DEC-49 REGION is-custodial-admin */
 }
 
 /* R83 (K289): the modules' total order, `build/modules.json`'s ids in the file's order (which is its layer order, K270).
@@ -292,9 +316,7 @@ export class Membership {
                detail: "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the "
                      + "remedy is at the hosting account (section 4.6). Nothing was written." };
     const m = typeof by === "string" && by ? this.#one(`SELECT role, status FROM members WHERE member_id=?`, by) : null;
-    if (!m || m.role !== "admin" || m.status !== "active")
-      return { ok: false, reason: "NOT_AN_ADMIN", by,
-               detail: "resigning administrator status is an active administrator's own act. Nothing was written." };
+    if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");   /* R84 */
     const admins = this.activeAdmins();
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.10 */
     /* DEC-49 REGION is-admin-resign-floor */
@@ -319,9 +341,7 @@ export class Membership {
 
   /* R11: the group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
-    if (!this.isAdministrator(by))
-      return { ok: false, reason: "NOT_AN_ADMIN", by,
-               detail: "the record of who holds hosting access is kept by the administrators (4.8). Nothing was written." };
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");   /* R84 */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.11 */
     /* DEC-49 REGION is-hosting-access-holders — N195: the whole refusal, the holders' reading with it. */
     const h = String(holders ?? "").trim().slice(0, 500);
@@ -978,7 +998,10 @@ export class Membership {
     return this.visibilityOf(bundleId) === "discoverable" ? Membership.SIGHT_EXISTENCE : Membership.SIGHT_NONE;
   }
 
-  /* The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
+  /* R85 (N332, K412): a named service (control-plane R27's existence read calls it), asking no viewer: it states only
+     the setting, and its callers gate what they show by R44. Total: an id the index does not hold, or one that is not
+     a string, reads `hidden`, and nothing it is handed makes it throw.
+     The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
      `project_sight` holds one row per project carrying exactly what `#reindexProjectSight` derived, so this
      predicate and the directory's SQL read THE SAME ROWS instead of two copies of one rule — which is the
      whole of D-497 and the reason the directory can bound its candidates in SQL at all.
@@ -987,8 +1010,9 @@ export class Membership {
      at every promotion, and at every owner's act. This branch is reached only by an id the index does not hold
      — a bundle that is not a project, or one purged between the two reads — and it fails closed. */
   visibilityOf(projectId) {
-    const r = this.#one(`SELECT setting FROM project_sight WHERE project_id=?`, projectId);
-    return r ? r.setting : "hidden";
+    const r = this.#one(`SELECT setting FROM project_sight WHERE project_id=?`,
+      typeof projectId === "string" ? projectId : null);   /* R85: an id that is not a string names no row */
+    return r && r.setting === "discoverable" ? "discoverable" : "hidden";
   }
 
   /* ===== D-497 — THE DERIVATION, AND IT IS THE ONLY PLACE THE RULE IS STATED (Membership v2 §7, item 7.14).
@@ -1972,7 +1996,15 @@ export class Membership {
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = Membership.#normLabel(label);
-    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "a declaration needs a label, such as 'CPA'" };
+    /* N285 (K275, K343): R21's refusal is its own condition, an expertise declared without a readable name, so it has
+       its own code and its own row (C-96.13), no longer the `NO_LABEL` progressions and entities mint for theirs. */
+    /* DEC-49 REGION is-expertise-labelled */
+    if (!lab) {
+      const row = MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL;
+      return { ok: false, reason: "EXPERTISE_NO_LABEL", code: "EXPERTISE_NO_LABEL", check: row.check,
+               translation: row.translation, detail: "a declaration needs a label, such as 'CPA'" };
+    }
+    /* END DEC-49 REGION is-expertise-labelled */
     const cur = this.#expertiseState(memberId, lab);
     if (cur === "declared" || cur === "confirmed")
       return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
@@ -2195,7 +2227,7 @@ export class Membership {
    * plane's STAMP (`CUSTODIAL_ACTIONS` in index.mjs), relayed from the query and never from a body.
    * THREE SHAPES AND THREE ANSWERS, each true of the caller:
    *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
-   *     NOT_AN_ADMIN, by name, D-136's refusal at `memberCaps`;
+   *     NOT_AN_ADMIN, by name, answered through `notAnAdmin` (R84), as at `memberCaps`;
    *   - `class:<cls>` — the operator's bearer, which BOB #22 RULED keeps these acts; the plane's
    *     `machineClasses` decides which classes reach here, and the record names the credential;
    *   - absent — a route with no plane in front of it. Nothing is attributed, and the row records
@@ -2205,14 +2237,7 @@ export class Membership {
     if (by === null || by === undefined || by === "") return null;
     if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
     if (this.activeAdmins().includes(by)) return null;
-    /* D-134 / C-96.1: the canned translation rides beside the detail (DEC-49). */
-    const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);
-    /* DEC-49 REGION is-custodial-admin */
-    return refusal("NOT_AN_ADMIN",
-      `${act} is an administrator's act (4.9), and the plane stamps who is asking from the `
-    + "signed-in session rather than taking it from the caller. This caller is not one of "
-    + "the active administrators.", { by });
-    /* END DEC-49 REGION is-custodial-admin */
+    return notAnAdmin(by, act);   /* R84 (N324): C-96.1 minted at its one site */
   }
 
   /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
@@ -2252,11 +2277,7 @@ export class Membership {
    *  standing cannot use this op to enumerate the roster. */
   memberCaps({ memberId, capabilities, by } = {}) {
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by))
-      return { ok: false, reason: "NOT_AN_ADMIN", by,
-               detail: "setting a member's capabilities is an administrator's act (4.9), and the plane "
-                     + "stamps who is asking from the signed-in session rather than taking it from the "
-                     + "caller. This caller is not one of the active administrators." };
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");   /* R84 */
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     const want = Array.isArray(capabilities) ? capabilities : null;
@@ -2285,7 +2306,7 @@ export class Membership {
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");   /* R84 */
     const now = new Date().toISOString();
     this.sql.exec(`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
       memberId, by, null, now);
@@ -2335,7 +2356,7 @@ export class Membership {
     const admins = this.activeAdmins();
     if (memberId === by) return { ok: false, reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote" };
-    if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "voting to remove an administrator");   /* R84 */
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
 

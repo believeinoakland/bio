@@ -29,10 +29,11 @@ function table() {
   return { left: rows.map((r) => r[0]), right: rows.map((r) => r[1]).filter((c) => c !== "—") };
 }
 
-/* Every C-number any keyed row of the catalogue, or of a family moved to its module (strength, run-productions), carries. */
+/* Every C-number any keyed row of the catalogue, or of a family moved to its module (strength, run-productions,
+   ai-runs: C-22.7 is held only in ai-runs' own AI_RUN_CHECKS since the catalogue's copy left, N299), carries. */
 function keyedNumbers() {
   const out = new Set();
-  for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS, SUGGEST_CHECKS])
+  for (const rows of [...Object.values(catalogue), strength.VERSION_STRENGTH_CHECKS, SUGGEST_CHECKS, AI_RUN_CHECKS])
     if (rows && typeof rows === "object" && !Array.isArray(rows))
       for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
   return out;

@@ -13,6 +13,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS,
          RUNG_ABSENT, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
+import * as actions from "../../../src/actions/index.mjs";
+import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const ADM = "adm-aff", MEM = "mem-aff";
@@ -304,10 +306,31 @@ test("R17: with a target, R13's refusal as given, else the target's type, state,
     }
 });
 
-test.todo("R26: op=affordances publishes as vocabularies.action_kind the kinds this instance's actions accepts at the "
-  + "moment of the call (a profile made active adds its kinds) — not yet met: N231, actions offers no read op answering "
-  + "`kinds()` and the control plane publishes the module-level VOCABULARIES; `vocabulariesFor(kinds)` is met at this "
-  + "module's interface (catalogue.test.mjs)");
+/* R26 (N231): the kinds are asked of the instance's `actions` at the call (its R42), so a profile an administrator
+   makes active (`op=profilesset`) adds its kinds to the next answer, and clearing the profiles takes them away. The
+   profile is chosen from the held, non-test profiles as the one whose view adds kinds, never named here (R25). */
+test("R26: op=affordances publishes as vocabularies.action_kind the kinds this instance's actions accepts at the moment "
+   + "of the call — the product's alone with no profile active, the active profile's added once it is made active — "
+   + "and risk_tiers is actions' own", async () => {
+  const vocab = async (q = "") => (await GET(`op=affordances&token=${W.IRIS}${q}`)).vocabularies;
+  const setProfiles = async (profiles) => must(`profilesset ${JSON.stringify(profiles)}`,
+    await POST(`op=profilesset&token=${W.FOUNDER}`, { profiles }));
+  const adds = listProfiles().filter((p) => !p.test)
+    .map((p) => [p.id, actions.actionKinds(combineProfiles([p.id]).view)])
+    .filter(([, kinds]) => kinds.length > actions.PRODUCT_KINDS.length);
+  assert.ok(adds.length > 0, "a held profile adds kinds, so the instrument sees the call");
+  const [id, kinds] = adds[0];
+  await setProfiles([]);
+  for (const q of ["", `&target=${E(W.ACTN)}`]) {
+    const v = await vocab(q);
+    assert.deepEqual(v.action_kind, [...actions.PRODUCT_KINDS], `none active${q}`);
+    assert.deepEqual(v.risk_tiers, JSON.parse(JSON.stringify(actions.RISK_TIERS)));
+  }
+  await setProfiles([id]);
+  for (const q of ["", `&target=${E(W.ACTN)}`]) assert.deepEqual((await vocab(q)).action_kind, kinds, `active${q}`);
+  await setProfiles([]);
+  assert.deepEqual((await vocab()).action_kind, [...actions.PRODUCT_KINDS], "cleared");
+});
 
 test("R21: every label, prompt, ground and vocabulary op=affordances hands a surface is this module's own value", async () => {
   const r = await GET(`op=affordances&token=${W.IRIS}`);

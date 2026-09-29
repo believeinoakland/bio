@@ -7,8 +7,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, infoMd, V, DAEMON, NOW_MS } from "./fixture.mjs";
 import { monitoringOps, MONITOR_CADENCE_DELAY_MS, MONITOR_TICK_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_BATCH,
-         MONITOR_RANK_READ, MONITOR_VIEWER, SLATE_DATA_BEGIN, SLATE_DATA_END, SLATE_FRAMING_OPEN, SLATE_FRAMING_CLOSE }
+         MONITOR_RANK_READ, MONITOR_VIEWER, SLATE_DATA_BEGIN, SLATE_DATA_END, SLATE_FRAMING_OPEN, SLATE_FRAMING_CLOSE,
+         MONITOR_PAUSE_SETTING, MONITOR_ROOT_OF_TRUST, MONITOR_PAUSE_ACT }
   from "../../../src/monitoring/index.mjs";
+import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 const ADMIN = "class:admin";
@@ -322,6 +324,66 @@ test("R30 an administrator pauses the daemon: monitoring's and the fallback's fe
   assert.equal(w.m.pause({ paused: false, by: ADMIN }).paused, false);
   assert.equal((await w.m.cadenceTick(NOW_MS)).ticked.length, 1);
   assert.equal((await w.m.archiveTick(NOW_MS)).fired.length, 1);
+});
+
+/* The founder claims the instance; `second` is an enrolled administrator and `ann` an ordinary member (membership R64). */
+async function roster(w) {
+  const m = w.membership;
+  await m.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+  for (const [id, role] of [["second", "admin"], ["ann", "member"]]) {
+    const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });
+    assert.equal(a.ok, true, `${id} added: ${JSON.stringify(a).slice(0, 200)}`);
+    const e = await m.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
+    assert.equal(e.ok, true, `${id} enrolled`);
+  }
+  assert.deepEqual(["admin", "second", "ann"].map((x) => m.isAdministrator(x)), [true, true, false]);
+}
+
+test("R30 (N314, N324) a pause or resume asked by a member who is not an administrator is refused NOT_AN_ADMIN through membership.notAnAdmin (its R84, row C-96.1), with nothing written; an administrator and the root of trust pause and resume", async () => {
+  const w = world();
+  await roster(w);
+  const setting = () => w.record.getSetting(MONITOR_PAUSE_SETTING);
+  const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
+  assert.equal(row.check, "C-96.1");
+  const refusedAs = (by) => {
+    const before = JSON.stringify(setting());
+    for (const paused of [true, false, "neither"]) {
+      const r = w.m.pause({ paused, by });
+      /* the one answer membership mints for this act, whole: its code, its row, its fixed sentence, nothing of monitoring's own */
+      assert.deepEqual(r, notAnAdmin(by, MONITOR_PAUSE_ACT), `${by} refused (${paused})`);
+      assert.deepEqual(r, { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check,
+        translation: row.translation, by, detail: r.detail }, `${by} refused (${paused}): R84's shape`);
+      assert.match(r.detail, /^pausing or resuming the monitoring daemon is an administrator's act/);
+      assert.match(r.detail, /Nothing was changed\.$/);
+    }
+    assert.equal(JSON.stringify(setting()), before, `nothing written for ${by}`);
+  };
+  /* a member who is not an administrator, through the service and through the route (the stamp, never the body) */
+  refusedAs("ann");
+  const viaRoute = monitoringOps(w.m, new URL("http://do/monitorpause?actor=ann"), { paused: true, by: "second" }).monitorpause();
+  assert.deepEqual([viaRoute.reason, viaRoute.by], ["NOT_AN_ADMIN", "ann"]);
+  /* a name the roster does not hold, a revoked administrator, and a machine class that is not the root of trust */
+  refusedAs("nobody");
+  refusedAs("class:daemon");
+  refusedAs("class:member");
+  assert.deepEqual(w.m.paused(), { paused: false });
+  /* an enrolled administrator pauses and resumes */
+  assert.deepEqual(w.m.pause({ paused: true, by: "second" }), { ok: true, paused: true, by: "second", at: iso(NOW_MS) });
+  refusedAs("ann");
+  assert.deepEqual(w.m.paused(), { paused: true, by: "second", at: iso(NOW_MS) }, "a refused resume leaves the pause standing");
+  assert.deepEqual(w.m.pause({ paused: false, by: "second" }), { ok: true, paused: false });
+  /* the founder's session and the ADMIN_TOKEN bearer, the root of trust */
+  assert.equal(MONITOR_ROOT_OF_TRUST, ADMIN);
+  assert.deepEqual(w.m.pause({ paused: true, by: "admin" }), { ok: true, paused: true, by: "admin", at: iso(NOW_MS) });
+  assert.deepEqual(w.m.pause({ paused: false, by: ADMIN }), { ok: true, paused: false });
+  /* R64 read at the act: the administrator revoked is refused from then on */
+  w.st.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='second'`);
+  refusedAs("second");
+  /* an instance not yet claimed has no founder: `admin` is not an administrator there, the root's credential is */
+  const u = world();
+  const r = u.m.pause({ paused: true, by: "admin" });
+  assert.equal(r.reason, "NOT_AN_ADMIN");
+  assert.equal(u.m.pause({ paused: true, by: ADMIN }).ok, true);
 });
 
 test("R30 the due slate: every monitored address due, open named request and ratified sweep the viewer may see, as quoted data inside fixed instruction framing", () => {

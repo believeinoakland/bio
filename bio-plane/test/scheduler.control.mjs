@@ -197,8 +197,17 @@ arm("(4)", "THE BOUND. Remove the request's own expiry from the hold's predicate
      `LIMIT ?` (the derivation-bounds ratchet made it bounded), matched zero
      times, and stopped. An arm that did not arm is a finding, and it is
      recorded here rather than quietly re-anchored. */
-  [["cr", `            WHERE state IN ('requested','draining') AND expires > ? GROUP BY run ORDER BY run\`, String(iso))) {`,
-    `            WHERE state IN ('requested','draining') AND ? IS NOT NULL GROUP BY run ORDER BY run\`, String(iso))) {`]],
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; found dead by m025's A10): the wait source's reads became
+     PAGED (`walk(…)` over `run > ?` with `LIMIT ?`, capture-requests' bounded reads), so the query moved under the
+     quote. The arm is the same: the request's own expiry leaves the hold's predicate, its parameter still bound. */
+  /* RE-DECLARED 2026-09-29, NOT AS DECLARED AT ITS FIRST RUN on this tree (suite GREEN): D-523's expiry sweep turns a
+     request past its `expires` to `expired`, so it leaves `state IN ('requested','draining')` and the hold stops
+     anyway — a second layer. The arm holds the sweep open too (capturerequests.control's arm (17) edit), so the
+     predicate's own bound is what is measured; its declaration is unchanged. */
+  [["cr", `               WHERE state IN ('requested','draining') AND expires > ? AND run > ? GROUP BY run ORDER BY run LIMIT ?\`,`,
+    `               WHERE state IN ('requested','draining') AND ? IS NOT NULL AND run > ? GROUP BY run ORDER BY run LIMIT ?\`,`],
+   ["cr", "WHERE state='requested' AND expires <= ? ORDER BY expires, request LIMIT ?`",
+    "WHERE state='requested' AND 0 AND expires <= ? ORDER BY expires, request LIMIT ?`"]],
   ["past the request's OWN expiry the hold stops"],
   ["ONE run was woken, for ONE completion"]);
 
@@ -249,8 +258,9 @@ arm("(9)", "OVER-STRICTNESS: correct work in a spelling the suite did not antici
   + "same rule differently spelled. The suite MUST STAY GREEN. A suite that pins the SQL rather than "
   + "the behaviour is a fence tighter than its rule, which is an undeclared interface change wearing "
   + "the costume of caution.",
-  [["cr", `            WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL ORDER BY run\`)) {`,
-    `            WHERE (state = 'captured' OR state = 'refused' OR state = 'expired') AND run_woken_at IS NULL ORDER BY run\`)) {`]],
+  /* RE-ANCHORED 2026-09-29 (as arm (4)): the paged `woken` read. */
+  [["cr", `               WHERE state IN ('captured','refused','expired') AND run_woken_at IS NULL AND run > ? ORDER BY run LIMIT ?\`,`,
+    `               WHERE (state = 'captured' OR state = 'refused' OR state = 'expired') AND run_woken_at IS NULL AND run > ? ORDER BY run LIMIT ?\`,`]],
   [], [], { mustStayGreen: true });
 
 console.log(`\nFL-4 controls: ${armsRun} arms run, ${armsWrong} NOT as declared.`);

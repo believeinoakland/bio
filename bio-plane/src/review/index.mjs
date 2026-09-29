@@ -35,7 +35,8 @@
  * (R24, K23), and fills publication's review provider (publication R23), because `publication` and `case-authoring`
  * come earlier in the order and call the draft door, the grant door, the live grant and the dead answer back.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership   layer 2: `transact`, `mintOpaqueId`, `seedMintLedger`, `declarePurge`; `isProjectEditor`,
+ *   record, membership   layer 2: `transact`, `mintOpaqueId`, `seedMintLedger`, `declarePurge` (and record-core's
+ *                        module-level `mintExhausted`, its R62; R27); `isProjectEditor`,
  *                        `isProjectOwner`, `projectOwners`, `existenceAct`, `viewerPredicate`.
  *   strength             `projectBar` (its R14; R11's `required_strength`).
  *   basisVersions        `testimonyReach` (its R39; R16).
@@ -52,7 +53,7 @@
  * `created_at`), on record-core R37's terms, which `case-authoring`'s acknowledgements read under `REVIEW_LIST_MAX`;
  * every write to it stays here. */
 
-import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
+import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
@@ -424,8 +425,8 @@ export class Review {
       id = this.record.mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) =>
         !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d)
           || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
-      if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
-                        detail: "the plane could not find a free draft id; nothing was written" };
+      /* R27 (N322, K275): no free opaque id is record-core's one answer (its R62, C-59.6), naming a draft id. */
+      if (!id) return mintExhausted("DRAFT");
       this.sql.exec(`INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
                     id, owning, named, json, who, when, who, when, statementBy);
@@ -461,8 +462,8 @@ export class Review {
     this.seedLedger();
     const id = this.record.mintOpaqueId("RVG", when.slice(0, 4), "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g));
-    if (!id) return { ok: false, reason: "MINT_EXHAUSTED",
-                      detail: "the plane could not find a free grant id; nothing was issued" };
+    /* R27 (N322, K275): record-core's one answer (its R62, C-59.6), naming a grant id. */
+    if (!id) return mintExhausted("RVG");
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, who, when);
     /* D-568: the ROW binds at the internal key; the ANSWER states the edition only where the record holds one. */

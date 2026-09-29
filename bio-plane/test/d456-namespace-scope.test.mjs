@@ -18,16 +18,18 @@
  * class → bio; `store=bio` confines probe (SCOPE_REFUSED, unchanged); `store=scratch` is scratch for everybody. A
  * mutating call naming `scratch` must still WRITE, and write in scratch only.
  *
- * AND THE SWEEP. Every site in `src/index.mjs` that reads the `store` parameter is listed from the source at run time
+ * AND THE SWEEP. Every site in `src/` (the plane's doors, `src/index.mjs` until K413) that reads the `store` parameter is listed from the source at run time
  * and must be one this suite knows the answer for; a new reader appears here BY NAME rather than silently defaulting.
  */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { NAMESPACE_CHECKS, ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-78 and C-38 moved whole, words and check ids kept, from the
+   catalogue to control-plane's own table; the rows are still imported, never typed here. */
+import { NAMESPACE_CHECKS, ADMISSION_CHECKS } from "../src/control-plane/checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL(`../src/${f}`, import.meta.url));
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -209,14 +211,21 @@ for (const c of CALLERS.filter((c) => c.cls !== "none" && c.cls !== "daemon")) {
 }
 
 /* ------------------------------------------------------------------ 4 · the sweep: every reader of `store` */
-console.log("\n--- 4 · every site in src/index.mjs that reads the `store` parameter ---");
+/* WIDENED 2026-09-29 (K413, CONTROL-PLANE #1 step 1): the doors left `src/index.mjs` for `src/control-plane/index.mjs`
+   (the gates, `scopeFor`, the setup page, the unauthenticated block), while legacy-index keeps the instancegroup and
+   groupidentity arms. A sweep of `src/index.mjs` alone would now miss most readers and pass, so it walks every source
+   file under `src/`, each site named `<owner>@<file>:<line>`; the owners it must know are unchanged. */
+console.log("\n--- 4 · every site in src/ that reads the `store` parameter ---");
 {
-  const src = readFileSync(SRC("index.mjs"), "utf8");
-  const lines = src.split("\n");
+  const FILES = readdirSync(SRC(""), { recursive: true }).filter((f) => /\.mjs$/.test(f)).sort();
   const sites = [];
-  lines.forEach((l, i) => { if (/searchParams\.(get|has|getAll)\(\s*["'`]store["'`]\s*\)/.test(l)) sites.push(i + 1); });
+  const byFile = new Map(FILES.map((f) => [f, readFileSync(SRC(f), "utf8").split("\n")]));
+  for (const [f, ls] of byFile)
+    ls.forEach((l, i) => { if (/searchParams\.(get|has|getAll)\(\s*["'`]store["'`]\s*\)/.test(l)) sites.push([f, i + 1]); });
+  const src = readFileSync(SRC("control-plane/index.mjs"), "utf8");
   /* The function each site sits in: the nearest preceding `function <name>(` or `if (op === "<name>")`. */
-  const owner = (n) => {
+  const owner = ([f, n]) => {
+    const lines = byFile.get(f);
     for (let i = n - 1; i >= 0; i--) {
       const f = lines[i].match(/^(?:async\s+)?function\s+(\w+)\s*\(/); if (f) return f[1];
       const o = lines[i].match(/if \(op === "(\w+)"\)/); if (o && i > n - 40) return `op=${o[1]}`;
@@ -229,7 +238,7 @@ console.log("\n--- 4 · every site in src/index.mjs that reads the `store` param
     }
     return "?";
   };
-  const found = sites.map((n) => `${owner(n)}@${n}`);
+  const found = sites.map((st) => `${owner(st)}@${st[0]}:${st[1]}`);
   console.log(`  ${found.length} site(s): ${found.join(", ")}`);
   /* CORRECTED 2026-09-24 by D-461: `pinnedNamespaceGate` is a fifth reader, added on purpose — it refuses
      `store=scratch` on the public ops that always answer from `bio` (C-78.2), and

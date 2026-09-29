@@ -52,7 +52,12 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const F = { store: ROOT + "src/store.mjs" };
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): `#routeTask` (arm B) left the store with the queue
+   for src/queue/index.mjs; the shared predicate (arm C2) is connections' `edgeSevered` (CONNECTIONS #1 R22, T5) and
+   `restingOn` (arm D) is inquiry's (INQUIRY #1, T7), so those two arms had matched nothing since. Each arm makes the
+   same edit where the code now lives; needles counted (exactly one) first. */
+const F = { queue: ROOT + "src/queue/index.mjs", connections: ROOT + "src/connections/index.mjs",
+            inquiry: ROOT + "src/inquiry/index.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -205,7 +210,7 @@ arm("B", "SITE (b) PUT BACK, ALONE. `#routeTask` takes the FIRST citing project 
   + "DECLARED: the routing arm and its basis arm MUST fail. The bar arms and the restson arms MUST "
   + "stay green — armed apart from (A) on purpose, because one confirmation covering for another is "
   + "exactly how a half-fix reads as a whole one.",
-  [["store", `    const cite = [...citeEdges].find(([pid, kinds]) =>
+  [["queue", `    const cite = [...citeEdges].find(([pid, kinds]) =>
       !kinds.every((k) => this.#refEdgeSevered(pid, bundleId, k || null)));`,
               `    const cite = [...citeEdges][0];   /* ARMED (D-280 control B) */`]],
   [{ name: OWN,
@@ -225,7 +230,7 @@ arm("C2", "**THE ARM THIS ITEM EXISTS FOR, HALF TWO**, and it reaches the SHARED
   + "DECLARED: three of this item's over-strictness arms MUST fail AND D-267's own over-strictness "
   + "arms MUST fail with them — the predicate is shared, and an arm that widened it while reporting "
   + "only its own suite would be reporting half of what it did. The HEADLINE MUST STAY GREEN.",
-  [["store", `    return !!entry && entry.status === "severed";   // unrecorded is LIVE`,
+  [["connections", `    return !!entry && entry.status === "severed";`,
               `    return !!entry && String(entry.status ?? "severed").trim().toLowerCase() === "severed";`]],
   [{ name: OWN,
      /* THESE THREE FRAGMENTS ARE STALE AND ARE LEFT LOUD, 2026-09-13, M0-25.
@@ -257,8 +262,8 @@ arm("D", "SITE (d) PUT BACK. `restingOn` stops attaching the status, so the read
   + "withdraw. "
   + "DECLARED: both restson arms MUST fail. Nothing else may — this site publishes rather than "
   + "filters, so nothing downstream of it changes.",
-  [["store", `      .map((d) => ({ ...d,
-        status: this.#refEdgeSevered(d.bundle_id, targetId) ? "severed" : "confirmed" }));`,
+  [["inquiry", `      .map((d) => ({ ...d,
+        status: this.connections.edgeSevered(d.bundle_id, targetId) ? "severed" : "confirmed" }));`,
               `;   /* ARMED (D-280 control D): the status read removed */`]],
   [{ name: OWN,
      mustFail: ["each one now CARRIES ITS STATUS"],

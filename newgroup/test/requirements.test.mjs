@@ -9,8 +9,10 @@ import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, existsSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import worker, { CFG, MEMBER_BINDINGS, PLANE_LIMITS } from "../src/index.mjs";
-import { EXAMPLE_SLUG, PUBLISHER } from "../src/ui.mjs";
+import worker, * as installer from "../src/index.mjs";
+import { CFG, PLANE_LIMITS } from "../src/index.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -26,6 +28,12 @@ const secretsOf = (put) => (put?.meta?.bindings || []).filter((b) => b.type === 
 /* Every page this suite renders, for R19, R22 and R31, which hold over all of them. */
 const PAGES = [];
 const seen = (x) => { PAGES.push(typeof x === "string" ? x : x.page.words); return x; };
+const MEMBERS = FLEET_BINDINGS.map(([m]) => m), BINDINGS = FLEET_BINDINGS.map(([, b]) => b);
+/* R21's choices are `jurisdictions`' data, shown as data: R22 and R31 hold over every other word of every page, so
+   exactly the rendered name and coverage of each choice is taken out before they read a page. */
+const withoutChoices = (page) => page.replace(/<span class="pname">[^<]*<\/span>/g, "")
+  .replace(/<span class="small pcovers">[^<]*<\/span>/g, "")
+  .replace(/<input type="checkbox" name="profile" value="[^"]*">/g, "");
 const INVITATION = readFileSync(new URL("../../bio-plane/public/newgroup/index.html", import.meta.url), "utf8");
 
 /* ------------------------------------------------------------------------------------------------ the routes */
@@ -277,12 +285,12 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
 test("R11 `fleet`: members install only from a reachable repository whose signed fleet statement verifies against an armed key and names the plane just installed; each part hashed; an unknown part type refuses that member; every member left out is named; the install never fails over one", async () => {
   armWith(SIGNER.line);
   const full = seen(await run({ slug: "fleet-all", rel: await release({ version: NEXT }) }));
-  for (const member of Object.keys(MEMBER_BINDINGS)) assert.ok(full.acct.has(member), member);
+  for (const member of MEMBERS) assert.ok(full.acct.has(member), member);
   assert.deepEqual(full.acct.get("agent-worker").find((b) => b.name === "PLANE"), { type: "service", name: "PLANE", service: "fleet-all" });
   assert.match(full.page.label("fleet"), /All 3 capability workers installed and verified/);
   const noneOf = async (why, opts, says, runOpts = {}) => {
     const w = seen(await run({ slug: "fleet-" + why, rel: opts && await release({ version: NEXT, ...opts }), ...runOpts }));
-    for (const member of Object.keys(MEMBER_BINDINGS)) assert.ok(!w.acct.has(member), `${why}: ${member} not installed`);
+    for (const member of MEMBERS) assert.ok(!w.acct.has(member), `${why}: ${member} not installed`);
     assert.match(w.page.label("fleet"), says, why);
     assert.equal(w.page.status("install"), "ok", `${why}: the plane installed`);
     assert.ok(w.page.done, `${why}: the install finished`);
@@ -313,8 +321,8 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
 test("R12 `bind`: the plane bound first to the members already present, then the members installed, then (only when one was added) re-uploaded bound to every member present; a refused re-upload is named and the members stay", async () => {
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT });
-  const RIGHT = Object.fromEntries(Object.entries(MEMBER_BINDINGS).map(([m, b]) => [b, m]));
-  const targets = (bindings) => Object.fromEntries(Object.values(MEMBER_BINDINGS).map((b) => [b, (bindings || []).find((x) => x.name === b)?.service ?? null]));
+  const RIGHT = Object.fromEntries(FLEET_BINDINGS.map(([m, b]) => [b, m]));
+  const targets = (bindings) => Object.fromEntries(BINDINGS.map((b) => [b, (bindings || []).find((x) => x.name === b)?.service ?? null]));
   const fresh = seen(await run({ slug: "bind-fresh", rel }));
   assert.equal(fresh.planePuts.length, 2);
   assert.deepEqual(targets(fresh.planePuts[0].bindings), { AGENT_WORKER: null, PDF_WORKER: null, OCR_WORKER: null }, "act 1: none present");
@@ -323,17 +331,17 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   const puts = fresh.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u) && !c.u.endsWith("bio-plan-probe"))
     .map((c) => c.u.split("/scripts/")[1]);
   assert.equal(puts[0], "bind-fresh"); assert.equal(puts.at(-1), "bind-fresh");
-  assert.deepEqual(puts.slice(1, -1).sort(), Object.keys(MEMBER_BINDINGS).sort(), "act 2 between");
+  assert.deepEqual(puts.slice(1, -1).sort(), MEMBERS.slice().sort(), "act 2 between");
   assert.equal(fresh.planePuts[1].meta.migrations, undefined, "the re-upload takes the update's shape");
   assert.match(fresh.page.label("bind"), /Your copy is connected to/);
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
-  const had = seen(await run({ slug: "bind-had", rel, pre: Object.fromEntries(Object.keys(MEMBER_BINDINGS).map((m) => [m, old])) }));
+  const had = seen(await run({ slug: "bind-had", rel, pre: Object.fromEntries(MEMBERS.map((m) => [m, old])) }));
   assert.equal(had.planePuts.length, 1, "nothing added, no re-upload");
   assert.deepEqual(targets(had.planePuts[0].bindings), RIGHT);
   const bad = seen(await run({ slug: "bind-refused", rel, refuseRePut: true }));
   assert.equal(bad.page.status("bind"), "no");
   assert.match(bad.page.label("bind"), /installed, but connecting your copy to them was refused/);
-  for (const m of Object.keys(MEMBER_BINDINGS)) assert.ok(bad.acct.has(m), `${m} stays installed`);
+  for (const m of MEMBERS) assert.ok(bad.acct.has(m), `${m} stays installed`);
   restoreSigners();
 });
 
@@ -452,8 +460,8 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.deepEqual(refused.acct.get("upd-ref"), planeBase("upd-ref"));
   armWith(SIGNER.line);
   const fl = seen(await run({ slug: "upd-fleet", mode: "update", pre: { "upd-fleet": planeBase("upd-fleet") }, rel: await release({ version: NEXT }) }));
-  for (const member of Object.keys(MEMBER_BINDINGS)) assert.ok(fl.acct.has(member), member);
-  assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => Object.values(MEMBER_BINDINGS).includes(b.name)).length, 3);
+  for (const member of MEMBERS) assert.ok(fl.acct.has(member), member);
+  assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => BINDINGS.includes(b.name)).length, 3);
   assert.equal(fl.page.status("verify"), "ok");
   assert.match(fl.page.done, /Every part of your copy answers/);
   restoreSigners();
@@ -511,7 +519,66 @@ test("R19 the Cloudflare token and every credential appear in no page, log or er
 });
 
 test.todo("R20 the plane's limits are carried from the signed release; a release stating none is refused by name, and an older installer still verifies its fleet signature (not yet met: DIST-15; PLANE_LIMITS is a constant pinned to the plane's config)");
-test.todo("R21 the install offers the held non-test jurisdiction profiles by name and coverage, none preselected, and binds the chosen ids as JURISDICTION_PROFILES; choosing none is allowed and said; an update never changes them (not yet met: N10, which needs instance-setup R13)");
+test("R21 the install offers the held non-test jurisdiction profiles by name and coverage, none preselected, and binds the chosen ids as JURISDICTION_PROFILES; choosing none is allowed and said; an update never changes them", async () => {
+  /* The offer: every held profile but the test ones, each by name and coverage, none checked; and what none means. */
+  const held = jurisdictions.list();
+  const offered = held.filter((p) => !p.test);
+  assert.ok(offered.length > 0 && held.some((p) => p.test), "both kinds are held, so the filter is exercised");
+  assert.deepEqual(PROFILE_CHOICES.map((p) => [p.id, p.name, [...p.covers]]), offered.map((p) => [p.id, p.name, p.covers]));
+  const home = await text("/"), upd = await text("/update");
+  const boxes = [...home.matchAll(/<input type="checkbox" name="profile" value="([^"]*)"([^>]*)>/g)];
+  assert.deepEqual(boxes.map((m) => m[1]), offered.map((p) => p.id));
+  assert.ok(boxes.every((m) => !/checked/.test(m[2])), "none preselected");
+  for (const p of offered) {
+    assert.ok(home.includes(`<span class="pname">${p.name}</span>`), p.id);
+    assert.ok(home.includes(`<span class="small pcovers">covers ${p.covers.join(", ")}</span>`), p.id);
+  }
+  for (const p of held.filter((x) => x.test)) assert.ok(!home.includes(p.id) && !home.includes(p.name), `${p.id} not offered`);
+  assert.ok(home.includes(PROFILES_NONE) && /Choosing none is allowed/.test(PROFILES_NONE));
+  assert.ok(!upd.includes('type="checkbox" name="profile"'), "an update offers no choice");
+  assert.ok(home.includes("profiles:chosen"), "the install page sends the choice");
+  /* /begin refuses, by name, what it cannot bind: a profile not offered (unknown, or a test profile), a repeat, not a
+     list, and any choice on an update. */
+  const ids = offered.map((p) => p.id);
+  const testId = held.find((p) => p.test).id;
+  for (const [profiles, mode, says] of [[["no-such-profile"], "install", /Not a jurisdiction profile this installer offers: "no-such-profile"/],
+      [[testId], "install", new RegExp(`Not a jurisdiction profile this installer offers: "${testId}"`)],
+      [[ids[0], ids[0]], "install", /chosen twice/], [ids[0], "install", /must be a list/], [[7], "install", /offers: 7/],
+      [ids, "update", /An update never changes which jurisdiction profiles/]]) {
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "prof-refused", mode, profiles }) });
+    const j = await r.json();
+    assert.deepEqual([r.status, j.ok], [400, false], JSON.stringify(profiles));
+    assert.match(j.error, says);
+    assert.equal(r.headers.get("set-cookie"), null);
+  }
+  /* The binding: the chosen ids, in the order given, on the install's plane uploads, the step-3 re-upload included,
+     so the copy holds it at its first boot. */
+  const chosen = await begin("prof-chosen", "install", { profiles: ids });
+  assert.equal(chosen.j.ok, true);
+  assert.deepEqual(cookieValue(chosen.cookie).p, ids);
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  const w = seen(await run({ slug: "prof-chosen", rel, cookie: chosen.cookie, state: chosen.state }));
+  restoreSigners();
+  assert.equal(w.planePuts.length, 2, "the install PUT and its step-3 re-PUT");
+  for (const put of w.planePuts) assert.deepEqual(bindingOf(put, "JURISDICTION_PROFILES"), { type: "plain_text", name: "JURISDICTION_PROFILES", text: ids.join(",") });
+  assert.equal(w.acct.get("prof-chosen").filter((b) => b.name === "JURISDICTION_PROFILES").length, 1, "the copy holds it after the act");
+  /* None chosen (an empty list, or none sent) binds nothing, and the install proceeds. */
+  for (const extra of [{ profiles: [] }, {}]) {
+    const b = await begin("prof-none", "install", extra);
+    assert.equal(b.j.ok, true);
+    const n = seen(await run({ slug: "prof-none", cookie: b.cookie, state: b.state }));
+    assert.ok(n.page.done, "the install proceeds");
+    for (const put of n.planePuts) assert.equal(bindingOf(put, "JURISDICTION_PROFILES"), null);
+  }
+  /* An update never sends it, whatever the copy holds. */
+  const held0 = [...planeBase("prof-upd"), { type: "plain_text", name: "JURISDICTION_PROFILES", text: ids.join(",") }];
+  armWith(SIGNER.line);
+  const u = seen(await run({ slug: "prof-upd", mode: "update", pre: { "prof-upd": held0 }, rel: await release({ version: NEXT }) }));
+  restoreSigners();
+  assert.ok(u.planePuts.length >= 1);
+  for (const put of u.planePuts) assert.equal((put.meta.bindings || []).some((b) => b.name === "JURISDICTION_PROFILES"), false);
+});
 
 test("R22 every page names CivicOS and the installing group, by its chosen name once chosen; no page names a third party (K262); the installer's own address stays, and its pages say it is run by the publisher of CivicOS releases; the example name is not a place", async () => {
   const before = { "/": await text("/"), "/update": await text("/update"), "404": await text("/nowhere"), invitation: INVITATION };
@@ -541,7 +608,7 @@ test("R22 every page names CivicOS and the installing group, by its chosen name 
   assert.match(denied.raw, /For the group <b class="mono" id="group">river-keepers<\/b>/);
   /* Over every page rendered anywhere in this suite (K262): no page names a third party. The publisher is said to run
      the installer without being named, and the only trace of its name is the installer's own address, which stays. */
-  for (const page of [...PAGES, ...Object.values(before)]) {
+  for (const page of [...PAGES, ...Object.values(before)].map(withoutChoices)) {
     const rest = page.replace(/newgroup\.believeinoakland\.workers\.dev/g, "");
     assert.equal(/believe in oakland|oakland|biosmoke/i.test(rest), false, rest.match(/.{0,60}(oakland|biosmoke).{0,40}/i)?.[0]);
   }
@@ -664,14 +731,44 @@ test("R29 one verifier: the installer accepts a release signature exactly when s
   restoreSigners();
 });
 
-test.todo("R30 the slug grammar and the member binding names are instance-setup's, imported, never copied (not yet met: instance-setup is not extracted, T8 has no job for it; the installer copies GROUP_SLUG_RE, which legacy-store holds, and FLEET_BINDINGS, which legacy-index holds unexported)");
+test("R30 the slug grammar and the member binding names are instance-setup's, imported, never copied: /begin accepts exactly GROUP_SLUG_RE's slugs (less its own name), the plane is bound under exactly FLEET_BINDINGS' names, and the installer exports no grammar or table of its own", async () => {
+  /* The grammar: every length from 0 to 42, and every printable ASCII character (and two beyond it) at the start, the
+     middle and the end of a slug, each accepted by /begin exactly when GROUP_SLUG_RE accepts it. */
+  const chars = [...Array(95)].map((_, i) => String.fromCharCode(32 + i)).concat(["é", "\u2028"]);
+  const corpus = [...Array(43)].map((_, n) => "a".repeat(n))
+    .concat(chars.flatMap((c) => [c + "bc", "a" + c + "c", "ab" + c]), ["newgroup", "a-b-c", "0-0", "--a", "a--b"]);
+  let accepted = 0;
+  for (const slug of corpus) {
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug }) });
+    const want = GROUP_SLUG_RE.test(slug) && slug !== "newgroup";
+    assert.equal(r.status === 200, want, JSON.stringify(slug));
+    if (want) accepted++;
+  }
+  assert.ok(accepted > 60 && accepted < corpus.length - 60, "the corpus holds both sides of the grammar");
+  /* The binding names: a full install binds the plane to each member under exactly FLEET_BINDINGS' name, and to
+     nothing else but SELF. */
+  assert.ok(FLEET_BINDINGS.length > 0);
+  armWith(SIGNER.line);
+  const w = seen(await run({ slug: "r30-names", rel: await release({ version: NEXT }) }));
+  restoreSigners();
+  const services = w.planePuts.at(-1).bindings.filter((b) => b.type === "service");
+  assert.deepEqual(services.filter((b) => b.name !== "SELF").map((b) => [b.service, b.name]).sort(),
+    FLEET_BINDINGS.map(([m, b]) => [m, b]).sort());
+  /* Never copied: nothing the installer exports is a slug grammar or a member binding table. */
+  const table = JSON.stringify(Object.fromEntries(FLEET_BINDINGS));
+  for (const [name, v] of Object.entries(installer)) {
+    assert.ok(!(v instanceof RegExp), `${name} is a grammar of its own`);
+    assert.ok(!(v && typeof v === "object" && (JSON.stringify(v) === JSON.stringify(FLEET_BINDINGS) || JSON.stringify(v) === table)),
+      `${name} is a binding table of its own`);
+  }
+});
 
 test("R31 no place is named in the installer's behaviour: no page it serves or streams names a place a held profile covers", async () => {
   const places = new Set(jurisdictions.list().flatMap((p) => p.covers).flatMap((c) => c.toLowerCase().split(/\W+/)).filter((x) => x.length > 2));
   assert.ok(places.size > 0);
   const pages = [...PAGES, await text("/"), await text("/update"), await text("/elsewhere"), INVITATION];
   assert.ok(pages.length > 40, "the pages this suite rendered");
-  for (const page of pages) {
+  for (const page of pages.map(withoutChoices)) {
     const words = page.replace(/newgroup\.believeinoakland\.workers\.dev/g, "")
       .toLowerCase().split(/[^a-z]+/);
     assert.deepEqual(words.filter((w) => places.has(w)), [], page.slice(0, 120));

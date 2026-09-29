@@ -72,7 +72,7 @@ export { QUEUE_CONDITION_KINDS };
  * proposalsFeed. If one of those were absent here the fence would refuse it as
  * UNKNOWN rather than as MISCLASSED, which is a weaker and less true answer. */
 export const QUEUE_OBLIGATION_KINDS = {
-  "authority-undetermined":      "authority undetermined at capture (D-98, RULED: created automatically) — LIVE: store.mjs TASK_KINDS",
+  "authority-undetermined":      "authority undetermined at capture (D-98, RULED: created automatically) — LIVE: capture's task kinds, drained by queue",
   /* CORRECTED 2026-08-05 (REC-47 / DEC-46 (d), D-188). This read "blocks a
      transition", which is the PRE-DEC-20 blanket rule and the opposite of the
      doctrine: ordinary bias debt is DISCLOSED and travels; only an uncleared
@@ -82,9 +82,9 @@ export const QUEUE_OBLIGATION_KINDS = {
      exactly why it had to be, since the producer would have been built to the
      sentence. The identical wording in NOTIFICATIONS.md is corrected with it.
      LIVE from 2026-09-23 (D-86): the `bias-debt` consumer on the one alarm raises one item per run whose lens
-     `moved`, read from aiRunRead and never compared again; store.mjs #obligationsBiasDebt serves it on op=queue. */
+     `moved`, read from aiRunRead and never compared again; queue #obligationsBiasDebt serves it on op=queue. */
   "bias-debt":                   "a re-run is owed after a lens change (D-86) — DISCLOSED, never blocking (DEC-20) "
-                              + "— LIVE: store.mjs #biasDebtSweep",
+                              + "— LIVE: bias's debt sweep, served by queue #obligationsBiasDebt",
   "endorsement-owed":            "an endorsement is owed on a pending administrator or owner vote",
   "expertise-confirmation-owed": "an expertise declaration awaits an administrator's confirmation",
   "membership-request":          "a membership request is at the doorbell",
@@ -96,26 +96,26 @@ export const QUEUE_FINDING_KINDS = {
   "overdue_successor":          "a required successor is past its declared deadline (DEC-10) — LIVE: queueFeed's FINDING half",
   /* N107 (K147): progressions R31's finding, aggregated one per (progression, stage) by `queue/proposals.mjs` in its
      own words, because it is not "required and absent". It decides nothing about which document belongs. */
-  "cardinality_exceeded":       "a stage declared to hold at most one document holds more; a finding, which decides "
+  "cardinality_exceeded":       "a stage declared to hold at most one document holds more; noticed, which decides "
                               + "nothing about which of them belongs (framework 8.2) — LIVE: queue/proposals.mjs",
   "temporal-expectation-due":   "a temporal expectation is coming due (framework 8.2, D-73)",
-  "source-modified":            "a monitor tick found the source modified",
-  "source-removed":             "a monitor tick found the source removed (404/410)",
+  "source-modified":            "a monitor tick found the source modified — LIVE: queue #findingsSourceFlagged",
+  "source-removed":             "a monitor tick found the source removed (404/410) — LIVE: queue #findingsSourceFlagged",
   "duplicate-document":         "a duplicate document was detected (D-60)",
   "link-verdict-changed":       "a link verdict was established or changed when a target landed (LINK-FIDELITY 8)",
   "reused-asset-changed":       "a reused asset was later found changed, post-hoc (CAP-4)",
   "assistant-surfaced-focus":   "an assistant surfaced a question (D-78, D-82 — must LOOK derived)",
   "grade-improvable":           "a connection's grade is improvable (D-72)",
-  "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76)",
+  "objective-gap":              "a gap derived from an objective's satisfaction condition (D-76) — LIVE: queue #findingsObjectiveGap",
   "measure-decay":              "a bias statement's measure has decayed (D-87, D-90 — reports, never blocks)",
-  /* D-52, LIVE 2026-09-23: store.mjs #findingsExportPerformed, derived on read from `export_log`
+  /* D-52, LIVE 2026-09-23: queue #findingsExportPerformed, derived on read from `export_log`
      and raised to every administrator and to nobody else (Membership v2 §8.1). */
   "export-performed":           "an export was performed; every administrator is notified (D-52 8.1) "
-                              + "— LIVE: store.mjs #findingsExportPerformed",
+                              + "— LIVE: queue #findingsExportPerformed",
   "audit-finding":              "op=audit found something about the record",
   "register-unbacked":          "a register entry's bytes are unbacked (D-9, D-45)",
   /* PL-15 / D-213, ANSWERED 2026-08-06 by Bob and LIVE from this item:
-     store.mjs #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
+     queue #findingsOutOfInquiryLead. Evidence bearing on inquiry B, met
      while a run was working inquiry A, is CAPTURED — an entry to the store, and
      deliberately NOT an entry to any leg of any claim — and the OBSERVATION
      becomes this item.
@@ -129,11 +129,11 @@ export const QUEUE_FINDING_KINDS = {
      an authored record act carrying its author and its reason. */
   "out-of-inquiry-lead":        "evidence for ANOTHER question was met while working this one: captured, "
                               + "and deliberately not made part of any claim (D-213, DEC-60) "
-                              + "— LIVE: store.mjs #findingsOutOfInquiryLead",
+                              + "— LIVE: queue #findingsOutOfInquiryLead",
   /* PL-13 / IS-3, MINTED 2026-08-09, and BOTH ARRIVE WITH A PRODUCER. The plan
      row named these two slugs; UI-45 asserted them ABSENT so the gap would have
      an alarm on it rather than be a comment, and this is the item that sets the
-     alarm off on purpose. Neither is a word without a generator: see store.mjs
+     alarm off on purpose. Neither is a word without a generator: see queue's
      `#findingsStanceDiverged` and `#findingsVersionFromAnotherTeam`.
 
      THEY EXIST BECAUSE D-216's ANSWER IS **PER-PROJECT** (measured 2026-08-08,
@@ -163,20 +163,26 @@ export const QUEUE_FINDING_KINDS = {
                                 "a project moved what it stands on for a SHARED question and the other "
                               + "projects drawing on it did not: one question, two live readings, "
                               + "refused by nothing (§7, D-216 — per-project stance) "
-                              + "— LIVE: store.mjs #findingsStanceDiverged",
+                              + "— LIVE: queue #findingsStanceDiverged",
   "new-version-arrived-from-another-team":
                                 "a new reading of a question this project draws on was proposed under "
                               + "ANOTHER project's work, so it arrived without anybody here authoring it "
                               + "(§7, D-216 — one question beneath several projects) "
-                              + "— LIVE: store.mjs #findingsVersionFromAnotherTeam",
+                              + "— LIVE: queue #findingsVersionFromAnotherTeam",
   /* REC-124 / INVESTIGATIVE-SESSION.md §7.1 item 3. FINDING for §7's reason:
      another team concluding the question you share is a fact about the work,
      and no member may silence it for the team. */
+  /* N172 (reevaluation R14): a newer capture of something a member's reference is pinned to was graded affected or
+     undetermined; the member adopts the newer version or keeps the earlier one (reevaluation R15). */
+  "newer-capture-affects-reference":
+                                "a newer capture of something your reference is pinned to may change what it says; "
+                              + "adopt the newer version or keep the earlier one (reevaluation R14, R15) "
+                              + "— LIVE: queue #findingsNewerCapture",
   "shared-inquiry-concluded-by-another-project":
                                 "another project drawing on a SHARED question concluded it, adopting "
                               + "the claim of the reading it stands on; nothing this project stands on "
                               + "or concluded has moved (§7.1 — a conclusion is per-project) "
-                              + "— LIVE: store.mjs #findingsConcludedElsewhere",
+                              + "— LIVE: queue #findingsConcludedElsewhere",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before

@@ -37,8 +37,10 @@ const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex")
 
 const MISSING_CALL = "\n      <div class=\"top\">${gradeBadge(f)}</div>\n      ${progFindingDecisionHtml(f)}\n    </div>`;";
 const OVERDUE_CALL = "\n        <div class=\"top\">${gradeBadge(f)}</div>\n        ${progFindingDecisionHtml(f)}\n      </div>`;";
-const NO_KEY = "return `<div class=\"q-gap\">The record did not say whether a member has decided this finding, so nothing is claimed about that here.</div>`;";
-const LEAD_OPEN = "`<b>A member decided this finding: set aside${";
+const NO_KEY = "return `<div class=\"q-gap\">The record did not say whether a member has decided this noticed item, so nothing is claimed about that here.</div>`;";
+/* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12): app.html's decision sentences say
+   "this noticed item" where they said "this finding"; the anchors and arm (C)'s upper-cased lead follow them. */
+const LEAD_OPEN = "`<b>A member decided this noticed item: set aside${";
 const LEAD_CLOSE = "${at ? \" on \" + esc(at) : \"\"}.</b>`\n    + ` It stays listed here";
 
 const ARMS = [
@@ -51,11 +53,11 @@ const ARMS = [
   { name: "(B) a plane that publishes no disposition key is called undecided", declared: "RED",
     names: "THE NOT-KNOWN ARM",
     green: ["THE DECIDED-FINDING ARM"],
-    edits: [{ from: NO_KEY, to: "return `<div class=\"subj-note\">No member has decided this finding: it is an open question on the record.</div>`;" }] },
+    edits: [{ from: NO_KEY, to: "return `<div class=\"subj-note\">No member has decided this noticed item: it is an open question on the record.</div>`;" }] },
   { name: "(C) over-strictness: the decision above the grade line, its lead upper case inside <em>", declared: "GREEN",
     edits: [{ from: MISSING_CALL, to: "\n      ${progFindingDecisionHtml(f)}\n      <div class=\"top\">${gradeBadge(f)}</div>\n    </div>`;" },
             { from: OVERDUE_CALL, to: "\n        ${progFindingDecisionHtml(f)}\n        <div class=\"top\">${gradeBadge(f)}</div>\n      </div>`;" },
-            { from: LEAD_OPEN, to: "`<em>A MEMBER DECIDED THIS FINDING: SET ASIDE${" },
+            { from: LEAD_OPEN, to: "`<em>A MEMBER DECIDED THIS NOTICED ITEM: SET ASIDE${" },
             { from: LEAD_CLOSE, to: LEAD_CLOSE.replace(".</b>", ".</em>") }] },
 ];
 

@@ -1,6 +1,7 @@
 /* The feeds: proposalsFeed (R18) and captureProgressions (R19); a finding reports and never decides (R25); the junction
    check (R32, deferred). */
 import { test } from "node:test";
+import { noSha } from "../../../src/extraction/index.mjs";
 import assert from "node:assert/strict";
 import { seeded, MEMBER, DAY } from "./fixture.mjs";
 
@@ -98,8 +99,13 @@ test("R18 R31: a cardinality finding is an open finding of its instance", async 
 
 test("R19: NO_SHA; every placement of a capture, each instance once, findings with established, needs_confirmation, decision; open count", async () => {
   const w = seeded();
-  assert.equal(w.p.captureProgressions({}).reason, "NO_SHA");
-  assert.equal(w.p.captureProgressions({ captureSha: "" }).reason, "NO_SHA");
+  // N285: a request naming no digest is extraction's one answer (its R63, C-51.6), whatever is missing
+  for (const b of [{}, { captureSha: "" }, { captureSha: null }, { captureSha: 7 }]) {
+    const r = w.p.captureProgressions(b);
+    assert.deepEqual(r, noSha(r.detail), JSON.stringify(b));
+    assert.equal(r.check, "C-51.6");
+    assert.match(r.detail, /capture sha256/);
+  }
   w.define();
   w.entity("ENT-2");
   w.resolve("ENT-2", "sa", "INFO-A", "A");

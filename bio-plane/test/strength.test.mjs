@@ -56,6 +56,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6 (K414): the store as the plane starts it */
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -84,8 +85,8 @@ const REGION = readFileSync(SRC("strength/arithmetic.mjs"), "utf8") + "\n" + STR
 const RETIRED_WORD = "SUS" + "PEND";
 
 const mf = new Miniflare({
-  modules: true, script: STORE_SRC,
-  modulesRoot: "/", scriptPath: SRC("store.mjs"),
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });
@@ -94,9 +95,12 @@ const mf = new Miniflare({
    so it drives a SUBCLASS that adds one raw-insert route and changes nothing
    else. Every method under test is Store's own; the subclass exists because
    REC-11 enforces the DAG at the write and the bound has to be proved against
-   the graph that guard exists to keep out. */
+   the graph that guard exists to keep out.
+   RE-ANCHORED 2026-09-29 (T12 B6, K414): the probe extends legacy-index's `Store` (legacy-store's class started with
+   instance-setup, which registers promotion's `producingGroup` fact); store.mjs's bare class is refused
+   FACT_UNAVAILABLE (C-102.4) at the first promotion. */
 const PROBE_SRC = `
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs";
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);
@@ -417,7 +421,9 @@ console.log("\n--- 4. the walk carries R3's depth bound, and exhaustion is `unde
   for (let i = 7; i >= 0; i--)
     await promote(D(i), inquiryMd(D(i), { refs: [D(i + 1)], legs: [bare(D(i + 1))] }), "inquiry");
 
-  const bound = Number(/QUEUE_ANCESTOR_DEPTH\s*=\s*(\d+)/.exec(STORE_SRC)[1]);
+  /* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): REC-20's QUEUE_ANCESTOR_DEPTH left store.mjs with the queue,
+     and is now `Queue.QUEUE_ANCESTOR_DEPTH` in src/queue/index.mjs; the constant is read where it lives. */
+  const bound = Number(/QUEUE_ANCESTOR_DEPTH\s*=\s*(\d+)/.exec(readFileSync(SRC("queue/index.mjs"), "utf8"))[1]);
   /* RE-ANCHORED 2026-09-28 (T7; STRENGTH #1 J5, strength R2): the walk's bound is now strength's own
      `DEPTH_BOUND = 6` (src/strength/arithmetic.mjs: "equal to the queue's ancestor depth, and this module's own"),
      no longer an import of REC-20's QUEUE_ANCESTOR_DEPTH. What stays pinned: the answer's bound, the queue's constant

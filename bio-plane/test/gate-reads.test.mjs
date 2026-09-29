@@ -77,7 +77,7 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
    Object (`doStub`, as `taskenqueue` and `recordcapturedlocator` are below); the control plane has no route to it. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const PLANTABLE = { cases: ["case_id", "project_id", "opened"],
                     published_cases: ["case_id", "edition", "opened", "ratified_at"],
                     published_case_members: ["case_id", "edition", "ord", "bundle_id", "version_sha", "role"] };
@@ -1118,6 +1118,27 @@ console.log("\n--- T9's reads (standards, conformance, consequences, filings, es
 }
 
 /* ------------------------------------------------------------------------- *
+ *  T13's READ, DRIVEN ON THE HIDDEN PROJECT (2026-09-29, LEGACY-TESTS #11; CONTROL-PLANE #4 N321, publication R44).
+ *  `projectstage` arrived unclassified. As the sections above, it is asked by dave, never invited to carol's project,
+ *  and by carol, who owns it, so its classification below is written from what the plane ANSWERED.
+ * ------------------------------------------------------------------------- */
+console.log("\n--- T13's read (publication's projectstage), driven on the hidden project ---");
+{
+  const flatten = (r, ...ids) => JSON.parse(ids.reduce((s, id) => s.split(id).join("<ASKED>"), JSON.stringify(r)));
+  const ABSENT_PROJ = "PROJ-2026-9999-none";
+  const own = await GET(`op=projectstage&token=${carol}&project=${PROJ}`);
+  t("op=projectstage: the OWNER is answered her project's stage (the arm is live)",
+    [own.body.result?.ok, own.body.result?.project, typeof own.body.result?.stage], [true, PROJ, "string"]);
+  const [sH, sA] = [await GET(`op=projectstage&token=${dave}&project=${PROJ}`),
+                    await GET(`op=projectstage&token=${dave}&project=${ABSENT_PROJ}`)];
+  t("op=projectstage: the hidden project answers dave byte-identically to one that does not exist, the id aside (R44)",
+    flatten(sH, PROJ), flatten(sA, ABSENT_PROJ));
+  t("op=projectstage: that answer is NO_SUCH_PROJECT, with no stage, count or work product in it",
+    [sH.body.result?.ok, sH.body.result?.reason, "stage" in (sH.body.result || {}),
+     "work_products" in (sH.body.result || {})], [false, "NO_SUCH_PROJECT", false, false]);
+}
+
+/* ------------------------------------------------------------------------- *
  *  THE DELIBERATELY UNGATED READS, AND WHY — recorded here rather than in a
  *  document, because a rule that is not in the loop the reader runs is not a
  *  rule. The assertion below is STRUCTURAL: it parses index.mjs's OPS table and
@@ -1136,7 +1157,9 @@ console.log("\n--- T9's reads (standards, conformance, consequences, filings, es
  * ------------------------------------------------------------------------- */
 console.log("\n--- every read op is classified: gated, or ungated for a stated reason ---");
 {
-  const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the OPS table left src/index.mjs for
+     src/control-plane/ops.mjs; the sweep parses it there. */
+  const src = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
   const from = src.indexOf("const OPS");
   const reads = [];
   for (const m of src.slice(from).matchAll(/^\s{2}([a-z0-9_]+):\s*\{([^}]*)\}/gm)) {
@@ -1703,6 +1726,12 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "or its departures (`intent_departures`, read only for that project) are read. Without a project it answers the "
       + "group's and the named member's only, so a PROJECT-scoped aspiration is never listed here but through its own "
       + "project's gate. Stamped fail-closed with INTENT_READS in index.mjs. It writes nothing.",
+    /* CLASSIFIED 2026-09-29 (T13, LEGACY-TESTS #11; CONTROL-PLANE #4 N321): driven in T13's section above. */
+    projectstage: "publication R44: ONE project's stage and its work products' readiness. GATED on the project "
+      + "first: `projectStage` asks membership's `sight` (R44) and answers NO_SUCH_PROJECT at NONE exactly as for a "
+      + "project that is absent or not a project, the id and name only at EXISTENCE (`existenceAct`), and reads its "
+      + "questions, cases and editions only at FULL. The door stamps the fail-closed viewer (control-plane's "
+      + "project-naming reads, `project`), so an unstamped call is answered as NONE. It writes nothing.",
     reevaluationchanges: "reevaluation R9, R20: the pull read — the causes standing on each named FINDING and each named "
       + "PASSAGE's version notice. GATED on both arms: each finding id is asked `#visible` (viewerPredicate over "
       + "`bundles`) and one the viewer may not see answers `{id, absent: true}`, exactly as an id the record does not "
@@ -2029,6 +2058,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "a viewer predicate to filter, so gating it would be a gate over the caller's own input, which "
       + "protects nothing and would make the ungated set harder to read by putting a gate where there "
       + "is nothing behind it.",
+    /* CLASSIFIED 2026-09-29 (T12 legacy-tests; instance-setup R12, R16, K407; its OPS row from CONTROL-PLANE #2, K413):
+       the sweep named it at the merge, as it exists to. */
+    profiles: "READS NO RECORD: op=profiles is instance-setup's `profiles()` (R12), which reads ONE instance "
+      + "setting (record-core's `jurisdiction_profiles`) and the held profile catalogue, and answers each id's "
+      + "name and coverage and the conflicts `combine` reports. It opens no bundle table and names no bundle, "
+      + "so there is no working material for the D-15 predicate to filter; R15 shows the list to members by "
+      + "name. Its write, op=profilesset, is admin-only and refused PROFILES_NOT_ADMIN otherwise (R14).",
   };
 
   const unclassified = reads.filter((op) => !(op in GATED) && !(op in UNGATED));

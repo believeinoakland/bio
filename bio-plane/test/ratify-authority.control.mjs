@@ -47,7 +47,13 @@ const OWNER = "    if (!project || !this.#isProjectOwner(project, signer))";
    now; the arm still patches the PINNED branch only (the evidence branch ends in its own marked line). */
 const FINDING_CALL = "        if (refused) return refused;\n      }\n      /* ===== D-431";
 /* D-431: the outside-a-case block's opening (`Store#publish`). */
-const RESTING = "        const resting = this.publication.ratifiedFindingsRestingOn(bundleId);\n";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; N308, K380, K395, RATIFICATION #4): R5's scope arm now pages publication
+   R38's `ratifiedFindingsRestingOn(id, {after})` into `byProject` and decides `admitted` as it reads, so the one-call
+   `const resting = …(bundleId)` and its `if (!resting.length) {` are gone. The decision "no ratified finding rests on
+   this bundle" is now `if (!byProject.size) {`, opening the same block (its `head` read and the two refusals), in
+   `src/ratification/index.mjs`; both arms that patched it patch that. */
+const RESTING = "        if (!byProject.size) {\n";
+const RESTING_HEAD = "          const head = this.record.head(bundleId);\n";
 
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
@@ -84,7 +90,10 @@ const ARMS = {
   "refuse-every-finding": {
     patches: [["ratification/index.mjs", FINDING_CALL,
                "        refused = refused || { ok: false, reason: \"PROJECT_ACT_NOT_A_PARTICIPANT\" };\n" + FINDING_CALL]],
-    mustFail: ["ALLOWED", "RETRY: the same act by a joined member"],
+    /* DECLARED 2026-09-29 (legacy-tests T12; N256, K283): the suite's "HELD THEN SERVED (N256)" arm, added in T11 after
+       this control was last run, reads the served edge G's PUBLISHED finding holds to its basis information; this arm
+       keeps G's finding unpublished, so it has no edge to serve and the arm goes red with the ALLOWED arms. */
+    mustFail: ["ALLOWED", "RETRY: the same act by a joined member", "HELD THEN SERVED"],
   },
 
   /* THE ASKED-AFTER-THE-RETRY ARM: the finding's questions moved below the idempotent retry
@@ -100,8 +109,12 @@ const ARMS = {
      inquiry no ratified case rests on, so it falls through to the commit. Only the (a) arms may go red
      (the loose inquiry and P's prepared finding publish; iris's second attempt at P is then a retry). */
   "readmit-unpinned-finding": {
-    patches: [["ratification/index.mjs", RESTING + "        if (!resting.length) {\n",
-               RESTING + "        if (!resting.length && normalizeType((this.record.head(bundleId) || {}).type) !== \"inquiry\") {\n"]],
+    /* RE-ANCHORED 2026-09-29 (T12, N308): an inquiry nothing rests on is now marked `admitted`, which skips both the
+       refusal block and the paged authority refusal after it (`if (!admitted)`, which with no resting project would
+       otherwise ask `caseAuthority` of no project), so it falls through to the commit as the one-list arm did. */
+    patches: [["ratification/index.mjs", RESTING + RESTING_HEAD,
+               "        if (!byProject.size && normalizeType((this.record.head(bundleId) || {}).type) === \"inquiry\") admitted = true;\n"
+               + "        if (!byProject.size && !admitted) {\n" + RESTING_HEAD]],
     mustFail: ["OUTSIDE A CASE (a)"],
   },
 
@@ -109,10 +122,16 @@ const ARMS = {
      BASIS legs instead of `Store.publishedGraphEdges`. Every bundle G's finding only REFERENCES is then
      refused C-58.3: the identity arms (behavioural and structural) MUST go red, with the evidence arms over
      those bundles and 8b's two (both referenced only). */
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; N308, K380, K395, publication R38): the paged read names its bundle `id`
+     (`const id = String(bundleId ?? "")`), so the edge test it patches now reads `e.to === id`; the same one line. */
   "rests-on-reads-basis": {
-    patches: [["publication/index.mjs", "if (publishedGraphEdges(fm).some((e) => e.disclosure === \"serve\" && e.to === bundleId))",
-               "if ((Array.isArray(fm.basis) ? fm.basis : []).some((l) => l && l.target === bundleId))"]],
-    mustFail: ["IDENTITY", "EVIDENCE ALLOWED: gus", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED", "ANY OWNER"],
+    patches: [["publication/index.mjs", "if (publishedGraphEdges(fm).some((e) => e.disclosure === \"serve\" && e.to === id))",
+               "if ((Array.isArray(fm.basis) ? fm.basis : []).some((l) => l && l.target === id))"]],
+    /* DECLARED 2026-09-29 (legacy-tests T12; N256, K283): the suite's "HELD THEN SERVED (N256)" arm, added in T11 after
+       this control was last run, reads the finding's served edges as [G3, G's basis information], both published as
+       evidence G's finding rests on; this arm refuses G3 (a reference only), so the arm goes red with the evidence arms. */
+    mustFail: ["IDENTITY", "EVIDENCE ALLOWED: gus", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED", "ANY OWNER",
+               "HELD THEN SERVED"],
   },
 
   /* D-431 — THE LIAR THE ROW NAMES, on the evidence side: refuse every bundle outside a pinned finding.
@@ -120,9 +139,11 @@ const ARMS = {
      the authority arms over evidence (now answered C-58.3 instead of by the case's authority) and the
      graph identity. */
   "refuse-every-evidence": {
-    patches: [["ratification/index.mjs", RESTING + "        if (!resting.length) {\n", RESTING + "        if (true) {\n"]],
+    patches: [["ratification/index.mjs", RESTING + RESTING_HEAD, "        if (true) {\n" + RESTING_HEAD]],
     mustFail: ["EVIDENCE ALLOWED", "EVIDENCE NON-OWNER", "EVIDENCE OUTSIDE ADMINISTRATOR", "EVIDENCE UNINVITED",
-               "IDENTITY (ALLOWED", "ANY OWNER"],
+               "IDENTITY (ALLOWED", "ANY OWNER",
+               /* DECLARED 2026-09-29 (legacy-tests T12; N256): as in rests-on-reads-basis, the evidence it reads is refused. */
+               "HELD THEN SERVED"],
   },
 };
 
@@ -177,3 +198,8 @@ process.exit(bad ? 1 : 0);
    sources were never edited; untouched: YES): baseline 52/0 · readmit-project-bundles 48/4 · type-before-sight 50/2 ·
    refuse-every-finding 42/10 · authority-after-retry 51/1 · readmit-unpinned-finding 48/4 · rests-on-reads-basis 43/9 ·
    refuse-every-evidence 43/9 — every arm AS DECLARED. */
+/* RE-MEASURED 2026-09-29 by legacy-tests (T12), after re-anchoring RESTING and rests-on-reads-basis onto N308's paged
+   read and declaring the N256 arm (run in a scratch git worktree; the driver copies the tree, 179 files under src/
+   hashed before and after and byte-identical; untouched: YES): baseline 53/0 · readmit-project-bundles 49/4 ·
+   type-before-sight 51/2 · refuse-every-finding 42/11 · authority-after-retry 52/1 · readmit-unpinned-finding 49/4 ·
+   rests-on-reads-basis 43/10 · refuse-every-evidence 43/10 — every arm AS DECLARED, exit 0. */

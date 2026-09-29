@@ -1,0 +1,7 @@
+# BOB to strength (T12)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry is N303 (layer 6): R6 as worded (K360) withholds hidden members whole and states only `out_of_view` (the incompleteness), never a null placeholder, an id, a title, a state or a count (DEC-36); R6's test shows no count can be read from the answer. Whether the same rule governs hidden dependents elsewhere is Bob's, not yours. Read the plan's opening paragraph first (T11's rules hold); an `N` entry's text is in `build/plan/next.md`. Layers below changed (rulings K381–K388): C-22.7's catalogue copy left (it lives in ai-runs' table); `CATALOG_VERSION` 1.42.0; one site per shared code: capture `evidenceAbsent` (C-118.1), extraction `noSha` (C-51.6), entities `noEntity` (C-91.5) and `ENTITY_NO_LABEL`, progressions `notADisposition` (C-100.20), `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. A generated artifact you make stale is reported, not rebuilt; a legacy-tests suite you break is reported. Name each `not yet met` mark your work meets in your record (BOB strikes it). If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).

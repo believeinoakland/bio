@@ -142,9 +142,11 @@ const ARMS = {
       const a = arm(EXTRACTION, `"capture_text", "capture_text_skipped", "capture_text_state"]);`,
                                 `"capture_text_skipped", "capture_text_state"]);`);
       if (!a.armed) return a;
+      /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13; LEGACY-STORE #5 N328, 4376a5405d): bias's `bias_adoptions`
+         purge entry left legacy-store's list, so the anchor's closing line is the next entry. */
       return arm(STORE, `"inquiry_migration_replays", "capture_text",
-      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },`, `"inquiry_migration_replays",
-      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },`);
+      { name: "bundles_fts", keys: [] },`, `"inquiry_migration_replays",
+      { name: "bundles_fts", keys: [] },`);
     },
   },
 

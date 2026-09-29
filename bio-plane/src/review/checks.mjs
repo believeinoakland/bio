@@ -1,13 +1,16 @@
-/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23). DEC-49: every refusal
+/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23, R27). DEC-49: every refusal
  * this module answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R23): C-87.1–C-87.11
  * (`REVIEW_COPY_CHECKS`) and C-32.16 (`MACHINE_CANNOT_REVIEW`, split from `MACHINE_FENCE_CHECKS` by number, as strength
- * took C-32.9). Only each `where` moved, to name the region in this module where the refusal is minted. */
+ * took C-32.9). Only each `where` moved, to name the region in this module where the refusal is minted. C-87.12
+ * (`MINT_EXHAUSTED`, R27), added here in T12 (N306, K392), is RETIRED (N322, K275): no free opaque id is one condition
+ * minted by four modules, so its one row is record-core's C-59.6, beside `mintOpaqueId`, and this module answers
+ * through record-core's `mintExhausted` (its R62). The number C-87.12 is not reused. */
 
 const at = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
 
-/* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS,
+/* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS (a twelfth, C-87.12, joined them in T12 and retired into record-core's C-59.6 in T13),
  * which reached a member as machine words (`BIO_Publication_v0_1.md` §6A, §6A.4; DEC-49).
  *
  * WHAT WAS MEASURED, and by which instrument. UI-68 built §6A's surface on 2026-09-23 — an editor drafts,

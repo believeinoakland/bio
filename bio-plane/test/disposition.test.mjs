@@ -28,6 +28,7 @@ import { createHash } from "node:crypto";
 import { checkBundle } from "../checks/bio-checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6 (K414): the store as the plane starts it */
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -37,8 +38,8 @@ const t = (label, got, want) => {
 };
 
 const mf = new Miniflare({
-  modules: true, script: readFileSync(SRC("store.mjs"), "utf8"),
-  modulesRoot: "/", scriptPath: SRC("store.mjs"),
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   /* D-169: a recorded producing group, so a creation goes through the plane's REAL stamp (#stampGroup) the way

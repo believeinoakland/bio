@@ -11,25 +11,46 @@
  * tables have never heard of — exactly the state of an op added tomorrow.
  *
  * WHAT IT CHANGES, AND NOTHING ELSE: one row inserted at the top of `OPS`. The patch must match exactly once
- * or this throws, so a fixture that failed to arm cannot be read as a plane that answered. */
+ * or this throws, so a fixture that failed to arm cannot be read as a plane that answered.
+ *
+ * RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #1 step 1, B8/B10): `OPS` left `src/index.mjs` for
+ * `src/control-plane/ops.mjs`, which the entry reaches by import, so patching the entry's text no longer reaches
+ * the table. The plane is now handed to Miniflare as its explicit module list — the entry's static import graph,
+ * enumerated by esbuild's metafile and nothing bundled — every module's text read from disk at call time (so a
+ * control that patches a file on disk still reaches the plane) and ONLY `ops.mjs` patched, still in memory. */
 import { Miniflare } from "miniflare";
+import { build } from "esbuild";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { resolve, dirname } from "node:path";
 
 export const UNRULED_OP = "rec155unruled";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+const OPS_SRC = fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url));
 const ANCHOR = "const OPS = {\n";
 
 export function unruledOpSource() {
-  const src = readFileSync(SRC, "utf8");
+  const src = readFileSync(OPS_SRC, "utf8");
   const at = src.split(ANCHOR).length - 1;
   if (at !== 1) throw new Error(`unruled-op fixture: anchor ${JSON.stringify(ANCHOR)} matched ${at} times, not 1`);
   return src.replace(ANCHOR, `${ANCHOR}  ${UNRULED_OP}: { classes: ["admin", "member", "probe"], mutating: true },\n`);
 }
 
-export function unruledOpPlane(bindings) {
+/* The entry's static module graph, in the order esbuild met it, the entry first. */
+async function planeModules() {
+  const root = dirname(dirname(SRC));
+  const r = await build({ entryPoints: [SRC], absWorkingDir: root, bundle: true, write: false, metafile: true,
+    format: "esm", platform: "neutral", external: ["cloudflare:*", "node:*"], logLevel: "silent" });
+  const paths = Object.keys(r.metafile.inputs).map((p) => resolve(root, p));
+  if (!paths.includes(OPS_SRC)) throw new Error("unruled-op fixture: the plane no longer imports src/control-plane/ops.mjs");
+  const patched = unruledOpSource();
+  return [SRC, ...paths.filter((p) => p !== SRC)].map((path) =>
+    ({ type: "ESModule", path, contents: path === OPS_SRC ? patched : readFileSync(path, "utf8") }));
+}
+
+export async function unruledOpPlane(bindings) {
   return new Miniflare({
-    modules: true, modulesRoot: "/", scriptPath: SRC, script: unruledOpSource(),
+    modulesRoot: "/", modules: await planeModules(),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     bindings,

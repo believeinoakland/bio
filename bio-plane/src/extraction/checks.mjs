@@ -78,3 +78,30 @@ export const reextractRow = (code) => {
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
+
+/* R63 (N285, K275, K343): "a request names no capture digest" is one condition, so its code is minted at one site,
+   `noSha` below, which this module's R27 and `content`'s R44, `entities`' R11, R12 and R14 and `progressions`' R19
+   answer through. Its row is this module's, the next of its C-51 family (K107 (3)); the translation is the one
+   progressions' C-100.19 carried, which gives way to it. Kept apart from the re-read's `REEXTRACT_CHECKS`, whose five
+   rows are that act's. */
+export const EXTRACTION_CHECKS = Object.freeze({
+  NO_SHA: Object.freeze({
+    check: 'C-51.6',
+    where: 'src/extraction/checks.mjs noSha > is-capture-named',
+    translation: 'This read is about one captured document, named by its fingerprint, and none was named.',
+  }),
+});
+
+/* R63: the caller's sentence when it gives none. */
+export const NO_SHA_DETAIL = "this read is about one captured document, named by its capture sha256, and none was named";
+
+/** R63: THE one answer to one condition, a request names no capture digest (absent, not a string, or empty):
+ *  `{ok: false, reason: "NO_SHA", code, check, translation, detail}`, `detail` the caller's sentence naming what the
+ *  digest was for, else `NO_SHA_DETAIL`. It writes nothing and never throws. */
+export function noSha(detail = null) {
+  /* DEC-49 REGION is-capture-named */
+  const row = EXTRACTION_CHECKS.NO_SHA;
+  return { ok: false, reason: "NO_SHA", code: "NO_SHA", check: row.check, translation: row.translation,
+           detail: typeof detail === "string" && detail.trim() ? detail : NO_SHA_DETAIL };
+  /* END DEC-49 REGION is-capture-named */
+}

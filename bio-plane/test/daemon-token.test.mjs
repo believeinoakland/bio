@@ -65,6 +65,11 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const INDEX_SRC = readFileSync(IDX, "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the control plane left `src/index.mjs` (which still boots the
+   Worker, INDEX_SRC above): `classify()` and `scopeFor()` live in `src/control-plane/index.mjs` and the `OPS` table in
+   `src/control-plane/ops.mjs`. The structural arms read them there; what each asserts is unchanged. */
+const CP_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
+const CP_OPS_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
 const QUERY_SRC = readFileSync(fileURLToPath(new URL("../src/query.mjs", import.meta.url)), "utf8");
 /* REC-46: the compiler itself, so the class-recognition assertion below can ask
    the FUNCTION what it answers instead of asking its source what it says. */
@@ -93,8 +98,8 @@ const DAEMON = "dmn-r33-unattended";
  * item's own negative control breaks, and it is the one that makes "widen by
  * decision, not by drift" a mechanism rather than an intention.
  * ================================================================== */
-const OPS_BLOCK = INDEX_SRC.slice(INDEX_SRC.indexOf("const OPS = {"),
-                                  INDEX_SRC.indexOf("\n};", INDEX_SRC.indexOf("const OPS = {")));
+const OPS_BLOCK = CP_OPS_SRC.slice(CP_OPS_SRC.indexOf("const OPS = {"),
+                                   CP_OPS_SRC.indexOf("\n};", CP_OPS_SRC.indexOf("const OPS = {")));
 const OP_ROWS = [...OPS_BLOCK.matchAll(/^ {2}([a-z]+):\s*\{\s*classes:\s*(null|\[([^\]]*)\]),\s*mutating:\s*(true|false)/gm)]
   .map((m) => ({
     op: m[1],
@@ -143,12 +148,14 @@ t("and neither of the two lost a class it already had — this widening takes no
 console.log("\n--- the four places the class is written, held structurally ---");
 t("classify() recognises DAEMON_TOKEN, and through liveToken like every other class "
   + "(so a published or blank value authenticates nothing)",
-  /token === env\.DAEMON_TOKEN && \(await liveToken\(env\.DAEMON_TOKEN\)\)\) return "daemon"/.test(INDEX_SRC), true);
+  /token === env\.DAEMON_TOKEN && \(await liveToken\(env\.DAEMON_TOKEN\)\)\) return "daemon"/.test(CP_SRC), true);
 {
   /* scopeFor's daemon branch is ABSENT ON PURPOSE and the absence is the
      decision, so it is asserted as an absence rather than left to be noticed. */
-  const body = INDEX_SRC.slice(INDEX_SRC.indexOf("function scopeFor(cls, url)"),
-                               INDEX_SRC.indexOf("const json = (o, status = 200)"));
+  /* RE-ANCHORED 2026-09-29 (K413): in control-plane's file `scopeFor` is followed by D-456's namespace gate, not by
+     `json`, so the slice ends at the function's own closing brace rather than at a neighbour that moved. */
+  const sfAt = CP_SRC.indexOf("function scopeFor(cls, url)");
+  const body = sfAt < 0 ? "" : CP_SRC.slice(sfAt, CP_SRC.indexOf("\n}\n", sfAt) + 2);
   t("scopeFor confines the PROBE class and says so", /cls === "probe"/.test(body), true);
   t("and does NOT confine the daemon class — monitoring writes the REAL record, "
     + "which is exactly why PROBE_TOKEN was not the answer",

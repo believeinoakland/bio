@@ -97,7 +97,11 @@ if (!SCHEMA_SRC.includes("CREATE TABLE IF NOT EXISTS captured_locators"))
    re-inlined (`reinlineLayer3`, `t4-extracted.mjs`) and provenance's module text beside it, so every method this
    suite reads is read where it lives; provenance's `schema.mjs` is not added here (its DDL is in SCHEMA_SRC above). */
 const STORE_CORPUS = reinlineLayer3(STORE_SRC).text + "\n" + readFileSync(SRC("provenance/index.mjs"), "utf8");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the `OPS` table left
+   `src/index.mjs` for `src/control-plane/ops.mjs`, and the viewer stamp and the address normalisation at the seam for
+   `src/control-plane/index.mjs`. The declaration arms (blocks 4 and 15) read OPS_SRC; the stamp and the seam CP_SRC. */
+const OPS_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");
+const CP_SRC = readFileSync(SRC("control-plane/index.mjs"), "utf8");
 
 /* Blank block comments before any structural read. bounds.test.mjs' own reader,
    and for its reason: an anchor that matches PROSE measures the prose, and this
@@ -379,12 +383,12 @@ console.log("\n--- 3. the seek: address EQUALITY, date order, and no text index 
 console.log("\n--- 4. the op, at the control plane ---");
 {
   t("op=versionchain is declared in the OPS table, non-mutating, on the retrieval classes",
-    /versionchain: \{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(decomment(INDEX_SRC)), true);
+    /versionchain: \{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(decomment(OPS_SRC)), true);
   t("its viewer is stamped by the SERVER, so a caller cannot choose whose chain compiles",
-    /\|\| op === "versionchain"/.test(decomment(INDEX_SRC)), true);
+    /\|\| op === "versionchain"/.test(decomment(CP_SRC)), true);
   t("and the address is normalised with the SAME function the capture wrote the row with — a normalisation "
   + "MISS looks exactly like `not captured`, which is the failure hardest to notice",
-    /if \(op === "versionchain"\)\s*\n\s*inner\.searchParams\.set\("address", normalizeAddress\(/.test(decomment(INDEX_SRC)), true);
+    /if \(op === "versionchain"\)\s*\n\s*inner\.searchParams\.set\("address", normalizeAddress\(/.test(decomment(CP_SRC)), true);
   t("the DO dispatch reaches the one method and forwards nothing else",
     /versionchain: \(\) => this\.versionChain\(\{/.test(decomment(STORE_SRC)), true);
 }
@@ -1019,7 +1023,7 @@ console.log("\n--- 15. D-256: every changed-from sentence, classed through the c
 
   /* THE FENCE: admin and probe; probe confined to the scratch namespace. */
   t("op=changedfromaudit is declared admin and probe, non-mutating",
-    /changedfromaudit: \{ classes: \["admin", "probe"\],\s+mutating: false \}/.test(decomment(INDEX_SRC)), true);
+    /changedfromaudit: \{ classes: \["admin", "probe"\],\s+mutating: false \}/.test(decomment(OPS_SRC)), true);
   const asMember = await get("changedfromaudit", "", "mem-pl10");
   t("a member-class credential is refused", asMember?.ok === true || Array.isArray(asMember?.bundles), false);
   const asProbe = await get("changedfromaudit", "", "prb-pl10");

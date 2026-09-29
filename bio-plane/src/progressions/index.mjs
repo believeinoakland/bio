@@ -16,11 +16,13 @@
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R29).
  * `deps`:
  *   record       `recordOf(host)` unless a test passes its own: `transact`, `declarePurge`.
- *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`, R16).
+ *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`, R16); a request naming no
+ *                capture digest is answered by its export `noSha` (R63, R19; N285).
  *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`, R16).
  *   entities     `entitiesOf(host)`: `has(id)` (R7), `readEntity({entityId})` (R5), `strongestByCapture(id)` (R16); the
  *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34), and an
- *                unregistered entity is answered by its export `noSuchEntity` (R36, N208).
+ *                unregistered entity is answered by its export `noSuchEntity` (R36, N208), a request naming none by
+ *                its export `noEntity` (R37, N285).
  *   connections  `weakerGrade(a, b)`, its module-level export (connections R50).
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
@@ -29,20 +31,18 @@
 import { recordOf, perItem } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { extractionOf } from "../extraction/index.mjs";
-import { entitiesOf, gradeRank, isEstablished, noSuchEntity } from "../entities/index.mjs";
+import { extractionOf, noSha } from "../extraction/index.mjs";
+import { entitiesOf, gradeRank, isEstablished, noSuchEntity, noEntity } from "../entities/index.mjs";
 import { weakerGrade } from "../connections/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
-import { refusal, generic } from "./checks.mjs";
+import { refusal, generic, notADisposition } from "./checks.mjs";
 
 export { PROGRESSIONS_SCHEMA, PROGRESSIONS_TABLES } from "./schema.mjs";
-export { PROGRESSION_CHECKS, GENERIC_CODES } from "./checks.mjs";
+export { PROGRESSION_CHECKS, GENERIC_CODES, DISPOSITIONS, notADisposition } from "./checks.mjs";
 
 /** The closed vocabulary of stage requiredness (Framework §8.2). Held here since the extraction (K78 (3)); `affordances`
  *  publishes it and re-exports it from here when its own job runs (N49). */
 export const STAGE_REQUIREDNESS = Object.freeze(["always", "usually", "sometimes", "never", "unless_exception"]);
-/** The two decisions a member may record about a derived question (D-79). Adopting one authors a focus instead. */
-export const DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 /** R21: a reason's bound, the restricted frontmatter grammar's edge reason (160 characters, no quote, backslash or
  *  line break). */
 export const DISPOSITION_REASON_MAX = 160;
@@ -178,15 +178,11 @@ export class Progressions {
     /* END DEC-49 REGION is-progression-declared */
   }
 
-  /* C-100.9: the request names no entity (`entityId` as the caller sent it). */
+  /* R6, R9, R14, R15 (N285): the request names no entity (`entityId` as the caller sent it; blank is none). An instance
+     is (progression, entity), so such a request says nothing about whose instance it means: entities' one answer (its
+     R37, `noEntity`), minted there. */
   #entityNamed(entityId, detail) {
-    /* DEC-49 REGION is-instance-entity */
-    /* an instance is (progression, entity): a request naming no entity says nothing about whose instance it means */
-    if (!str(entityId))
-      return refusal("NO_ENTITY", detail,
-                     {});
-    return null;
-    /* END DEC-49 REGION is-instance-entity */
+    return str(entityId) ? null : noEntity(detail);
   }
 
   /* C-100.13: the request names no stage. */
@@ -295,7 +291,7 @@ export class Progressions {
     const key = str(progressionKey);
     /* DEC-49 REGION is-progression-labelled — C-100.2. */
     if (!str(label))
-      return refusal("NO_LABEL",
+      return refusal("PROGRESSION_NO_LABEL",
         "a progression definition carries a human label, the name a member reads it by beside its key");
     /* END DEC-49 REGION is-progression-labelled */
     /* DEC-49 REGION is-progression-staged — C-100.3. */
@@ -413,7 +409,7 @@ export class Progressions {
     const want = version == null || version === "" ? cur.version : Number(version);
     /* DEC-49 REGION is-version-held — C-100.8. */
     if (!Number.isInteger(want) || !versions.some((v) => v.version === want))
-      return refusal("NOT_FOUND", `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions `
+      return refusal("PROGRESSION_VERSION_NOT_HELD", `'${key}' has no version ${String(version).slice(0, 40)}; it holds versions `
                                  + versions.map((v) => v.version).join(", "),
                      { progression_key: key, version: String(version).slice(0, 40), current_version: cur.version,
                        versions_held: versions.map((v) => v.version) });
@@ -985,12 +981,10 @@ export class Progressions {
    *  assembled once, with its missing, overdue and other findings, each carrying `established`, `needs_confirmation`
    *  and its decision, and the instance's `open_finding_count`. */
   captureProgressions({ captureSha, nowMs } = {}) {
-    /* DEC-49 REGION is-capture-named — C-100.19. */
+    /* R19 (N285): a request naming no digest is extraction's one answer (its R63), minted there */
     if (typeof captureSha !== "string" || !captureSha)
-      return refusal("NO_SHA",
-        "progression membership is read for a captured document, by its capture sha256 "
-        + "(op=captureprogressions&sha256=...)");
-    /* END DEC-49 REGION is-capture-named */
+      return noSha("progression membership is read for a captured document, by its capture sha256 "
+                   + "(op=captureprogressions&sha256=...)");
     const now = this.nowMs(nowMs);
     const rows = this.#rows(
       `SELECT DISTINCT progression_key, entity_id, stage_key FROM progression_instances
@@ -1048,11 +1042,9 @@ export class Progressions {
     const unstaged = this.#stageNamed(sk, "a proposal disposition names the stage it ages (stageKey, or key='progression::stage')");
     if (unstaged) return unstaged;
     const st = str(to) || str(state);
-    /* DEC-49 REGION is-disposition-word — C-100.20. */
-    if (!DISPOSITIONS.includes(st))
-      return refusal("NOT_A_DISPOSITION", "a proposal is deferred (parked) or dismissed (declined); adopting one authors a "
-                                        + "focus (op=promote) and is not a disposition", { to: st || null, dispositions: DISPOSITIONS });
-    /* END DEC-49 REGION is-disposition-word */
+    /* R35: the one answer to a word that is no disposition, minted in `notADisposition` */
+    const undisposed = notADisposition(st);
+    if (undisposed) return undisposed;
     const why = String(reason ?? "").trim();
     const unreasoned = this.#reasonStated(why, "deferring or dismissing the record's own question is recorded with a reason, in the "
                                           + "member's own words — a disposition with no reason ages a finding with no account of why");

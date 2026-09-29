@@ -267,7 +267,9 @@ try {
   t("PROBE_TOKEN is stopped at the control plane on taskforward",
     [probeForwardOp.ok, probeForwardOp.error, probeForwardOp.cls], [false, "forbidden for token class", "probe"]);
 
-  const src = readFileSync(SRC, "utf8");
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the `OPS` table left
+     `src/index.mjs` for `src/control-plane/ops.mjs`; the structural pin reads the class lists there. */
+  const src = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
   const classesOf = (op) => {
     const m = src.match(new RegExp(`^\\s{2}${op}:\\s*\\{\\s*classes:\\s*\\[([^\\]]*)\\]`, "m"));
     if (!m) throw new Error(`no OPS entry for ${op}`);

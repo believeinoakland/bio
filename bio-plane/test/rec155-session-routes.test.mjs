@@ -54,7 +54,9 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-38 moved whole, words and check ids kept, to control-plane's
+   own table; still imported. */
+import { ADMISSION_CHECKS } from "../src/control-plane/checks.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const mf = new Miniflare({

@@ -20,14 +20,14 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          ACT_SHAPE_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_ID_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
-import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA } from "../record-core/index.mjs";
+import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
 import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
 
-export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
+export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
 /* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
@@ -481,8 +481,8 @@ class Promotion {
         const slug = String(promotedTitle ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
           .slice(0, 40).replace(/-+$/, "") || "project";
         bundleId = record.mintOpaqueId("PROJ", year, `-${slug}`, (id) => !!record.bundleInfo(id));
-        if (!bundleId) return { ok: false, reason: "MINT_EXHAUSTED",
-                                detail: "the plane could not find a free project id in the current sequence" };
+        /* N322: no free id is record-core's one answer (its R62, row C-59.6); the transaction rolls back. */
+        if (!bundleId) return mintExhausted("PROJ");
         const lines = projectMd.text.split("\n");
         lines.splice(1, 0, `id: ${bundleId}`);
         const text = lines.join("\n");

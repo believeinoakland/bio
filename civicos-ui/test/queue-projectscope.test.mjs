@@ -393,8 +393,10 @@ ok("selected, the two-home finding ASKS: a picker naming both of its cases",
    !!pk && [A, B].every((p) => new RegExp(`value="${reEsc(esc(p))}"`).test(pk)), String(pk));
 ok("and the picker marks NO case chosen — its only default is the option that chooses nothing",
    !!pk && !/ selected>/.test(pk) && /<option value="">/.test(pk), String(pk));
+/* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12 B3): the queue class FINDING is shown to
+   members as "Noticed", so the bar counts "1 selected noticed item"; the label is kept, the control's anchor. */
 ok("the bar COUNTS the finding held back, so a set sent without it is not read as the whole selection",
-   /data-sethomewait>1 selected finding is filed under more than one case/.test(Q()), Q().slice(Q().indexOf("q-selbar"), Q().indexOf("q-selbar") + 900));
+   /data-sethomewait>1 selected noticed item is filed under more than one case/.test(Q()), Q().slice(Q().indexOf("q-selbar"), Q().indexOf("q-selbar") + 900));
 ok("the bar's dispose control counts only what it would SEND (the one shared-record finding)",
    /Defer or dismiss the selected findings \(1\)/.test(Q()));
 let before = WIRE.length;

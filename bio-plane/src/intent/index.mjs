@@ -28,7 +28,7 @@ import { isMachineIdentity, normalizeType } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { entitiesOf, gradeRank } from "../entities/index.mjs";
+import { entitiesOf, gradeRank, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
@@ -61,10 +61,20 @@ export const REASON_MAX = 160;
  *  GOALS_MAX, TRIAGED_MAX: the goals and triage acts one pursuit record answers (R14); SET_ASIDE_MAX: the proposals
  *  set aside that `proposals` lists beside the open ones, newest first (R16); SERVES_MAX: the subjects one `servesOf`
  *  call answers (R28); ASPIRATIONS_MAX: the held aspirations `aspirationsFor` reads and `contacts` pairs, the first in
- *  id order (R12, R13; N209, K338); CONTACTS_MAX: the pairs `contacts` lists (R13). */
+ *  id order (R12, R13; N209, K338); CONTACTS_MAX: the pairs `contacts` lists (R13). N305 (K367), the internal reads:
+ *  CONTEXT_MAX: the held aspirations in force one `servesOf` call measures against, and the projects it walks for
+ *  those with a condition, each the first in id order (R28; K391); PROJECTS_MAX: the projects `proposals` reads with no project named, the first in id
+ *  order (R15); REQUESTS_MAX: the capture requests one pursuit record reads, in the order the basis names them (R14).
+ *  N323 (K408): GOALS_READ_MAX: the goals one pursuit record reads to find the aspiration's, the first in id order
+ *  whatever aspiration each names (R14); AGEING_READ_MAX: the questions at `surfaced` the ageing reads judge, those whose
+ *  last entry is oldest first (R17, R27). ASPIRATIONS_MAX and CONTEXT_MAX count every aspiration read, held or retired,
+ *  of any scope (R12, R13, R28). */
 export const MEASURE_MAX = 1000, WATCH_LIMIT_MAX = 1000, DEPARTURES_MAX = 1000, GOALS_MAX = 200, TRIAGED_MAX = 1000,
-             SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000;
+             SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000, CONTEXT_MAX = 1000,
+             PROJECTS_MAX = 1000, REQUESTS_MAX = 1000, GOALS_READ_MAX = 1000, AGEING_READ_MAX = 1000;
 
+/* R17, R27: the distinct authors of one question read per statement (`#machineOnly`). */
+const AUTHORS_PAGE = 64;
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -285,9 +295,8 @@ export class Intent {
     if (!def || def.ok === false || !def.found)
       return refuseNoSuchProgression("the condition names a flow the record has not declared. Nothing was written.",
                      { progression: str(c.progression) });
-    if (!this.entities.has(str(c.entity)))
-      return refuseNoSuchEntity("the condition names an entity the record does not hold. Nothing was written.",
-                     { entity: str(c.entity) });
+    /* N285: entities' one answer to this condition (its R36), in place of C-111.5 */
+    if (!this.entities.has(str(c.entity))) return noSuchEntity(str(c.entity));
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     /* DEC-49 REGION is-condition-stage */
@@ -499,8 +508,9 @@ export class Intent {
 
   /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
    *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
-   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. Writes
-   *  nothing; never throws. */
+   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. What it
+   *  measures against is bounded (N305, K391): `context_truncated` says the held aspirations or the projects walked
+   *  for conditions were cut at CONTEXT_MAX. Writes nothing; never throws. */
   servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
     const named = [];
     for (const [kind, list] of [["address", addresses], ["bundle", bundles], ["request", requests]])
@@ -509,7 +519,8 @@ export class Intent {
     const subjects = named.slice(0, SERVES_MAX);
     const empty = (x) => ({ kind: x.kind, id: x.id, gaps: [], aspirations: [] });
     let ctx;
-    try { ctx = this.#servesContext(); } catch { return { ok: true, serves: subjects.map(empty), truncated }; }
+    try { ctx = this.#servesContext(); }
+    catch { return { ok: true, serves: subjects.map(empty), truncated, context_truncated: false }; }
     const serves = subjects.map((x) => {
       try {
         if (!x.id) return empty(x);
@@ -522,15 +533,21 @@ export class Intent {
         return { kind: x.kind, id: x.id, gaps: [...gaps].sort(), aspirations: [...aspirations].sort() };
       } catch { return empty(x); }
     });
-    return { ok: true, serves, truncated };
+    return { ok: true, serves, truncated, context_truncated: ctx.cut };
   }
 
   /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
-     the bundles documenting their short instances, and each held group or project aspiration with what it names. */
+     the bundles documenting their short instances, and each held group or project aspiration with what it names.
+     N305 (K391): of the first CONTEXT_MAX projects in id order, those with a condition; and of the first CONTEXT_MAX
+     aspirations in id order, held or retired and of any scope (N323), the held ones of group or project scope; `cut`
+     says either walk was cut. */
   #servesContext() {
     const gapsByBundle = new Map();
     const all = [];
-    for (const pid of this.#conditioned(PLANE_VIEWER)) {
+    const walked = this.#projectsInOrder(PLANE_VIEWER, CONTEXT_MAX);
+    for (const pid of walked.ids) {
+      const d = this.#doc(pid);
+      if (!d || !conditionOf(d.fm)) continue;
       const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
       if (g.ok) all.push(...g.gaps);
     }
@@ -545,8 +562,8 @@ export class Intent {
               gapsByBundle.get(d.bundle_id).add(g.key);
             }
     }
-    const held = this.#aspirations(PLANE_VIEWER)
-      .filter((a) => a.state === "held" && (a.scope === "group" || a.scope === "project"));
+    const inForce = this.#heldAspirations(PLANE_VIEWER, CONTEXT_MAX);
+    const held = inForce.held.filter((a) => a.scope === "group" || a.scope === "project");
     const departures = new Map(), concerned = new Map(), requestsRead = { rows: null };
     const departed = (project) => {
       if (!departures.has(project)) departures.set(project, this.#departures(project).latest);
@@ -564,6 +581,7 @@ export class Intent {
       `SELECT 1 AS x FROM progression_instances WHERE bundle_id=? AND progression_key IN (SELECT value FROM json_each(?))
        LIMIT 1`, bundleId, JSON.stringify(keys));
     return {
+      cut: walked.truncated || inForce.truncated,
       gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
       /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
          no project is under the group's alone */
@@ -705,8 +723,7 @@ export class Intent {
     const ents = (Array.isArray(entities) ? entities : []).map(str).filter(Boolean);
     const progs = (Array.isArray(progressions) ? progressions : []).map(str).filter(Boolean);
     const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
-    if (badEnt) return refuseNoSuchEntity("the aspiration names an entity the record does not hold. Nothing was written.",
-                               { entity: badEnt });
+    if (badEnt) return noSuchEntity(badEnt);
     const badProg = progs.find((k) => { const d = TOKEN.test(k) && this.progressions.readProgression({ progressionKey: k });
                                         return !d || d.ok === false || !d.found; });
     if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing "
@@ -792,34 +809,21 @@ export class Intent {
     return { ok: true, aspiration, state: "retired", taught: str(taught), author: str(author), at };
   }
 
-  /* Every aspiration document the viewer may see, as R12's terms read it. */
-  #aspirations(viewer) {
+  /* R12, R13, R28 (N209, K338, N323): the first `max` aspirations the viewer may see, in id order, held or retired and
+     of any scope, walked a page at a time and read one past so a cut says so; answers the held ones among them. An
+     aspiration the viewer may not see (a project's, of a project hidden from the viewer) is skipped and never counted,
+     so a cut says nothing of it (DEC-36, K391). */
+  #heldAspirations(viewer, max = ASPIRATIONS_MAX) {
     const out = [];
-    let after = "";
+    let after = "", read = 0, truncated = false;
     for (;;) {
       const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
       for (const id of page.ids) {
         const a = this.#pursuit(id, ASPIRATION, viewer);
-        if (a) out.push(this.#aspirationView(a));
-      }
-      if (page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
-    return out;
-  }
-
-  /* R12, R13 (N209, K338): the first ASPIRATIONS_MAX held aspirations the viewer may see, in id order, walked a page
-     at a time and read one past so a cut says so. */
-  #heldAspirations(viewer) {
-    const out = [];
-    let after = "", truncated = false;
-    for (;;) {
-      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
-      for (const id of page.ids) {
-        const a = this.#pursuit(id, ASPIRATION, viewer);
-        if (!a || a.head.currentState !== "held") continue;
-        if (out.length === ASPIRATIONS_MAX) { truncated = true; break; }
-        out.push(this.#aspirationView(a));
+        if (!a) continue;
+        if (read === max) { truncated = true; break; }
+        read += 1;
+        if (a.head.currentState === "held") out.push(this.#aspirationView(a));
       }
       if (truncated || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
@@ -849,7 +853,8 @@ export class Intent {
   }
 
   /** R12: the aspirations in force for a project, a member, or (neither named) the group, each with its scope. The
-   *  group's less any departure, each departure listed with its reason; no precedence is stated or implied. */
+   *  group's less any departure, each departure listed with its reason; no precedence is stated or implied. Those in
+   *  force are taken among the first ASPIRATIONS_MAX aspirations the viewer may see, held or retired (N323). */
   aspirationsFor({ project = null, member = null, viewer = null } = {}) {
     if (project != null && project !== "") {
       const p = this.#project(project, viewer);
@@ -868,9 +873,10 @@ export class Intent {
              says: "these are held side by side; the record states no order among them and resolves nothing between them" };
   }
 
-  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The first
-   *  ASPIRATIONS_MAX held aspirations in id order are paired, and at most CONTACTS_MAX pairs are listed, in the order of
-   *  their first and then second aspiration's id; `truncated` says either was cut (N209, K338). */
+  /** R13: each pair of held aspirations naming a common entity or progression, with what they share. The held ones
+   *  among R12's read (the first ASPIRATIONS_MAX the viewer may see, in id order, held or retired; N323) are paired, and
+   *  at most CONTACTS_MAX pairs are listed, in the order of their first and then second aspiration's id; `truncated`
+   *  says either was cut (N209, K338). */
   contacts({ viewer = null } = {}) {
     const { held, truncated: cut } = this.#heldAspirations(viewer);
     const pairs = [];
@@ -893,17 +899,21 @@ export class Intent {
   pursuitOf({ aspiration, viewer = null } = {}) {
     const a = this.#pursuit(aspiration, ASPIRATION, viewer);
     if (!a) return refuseNoSuchAspiration("no aspiration answers to that id here.", { aspiration: aspiration ?? null });
-    /* N181: at most GOALS_MAX goals, walked a page at a time and read one past so a cut says so. */
+    /* N323 (K408): the first GOALS_READ_MAX goals held, in id order, whatever aspiration each names, walked a page at a
+       time and read one past so a cut says so (a goal is readable by every member, R23, so the cut hides nothing); of
+       those naming this aspiration, at most GOALS_MAX are answered, read one past (N181). */
     const goals = [];
-    let after = "", goalsSeen = 0;
+    let after = "", read = 0, goalsSeen = 0, goals_read_truncated = false;
     for (;;) {
       const page = this.record.listByType({ type: GOAL, after, limit: 200 });
       for (const id of page.ids) {
+        if (read === GOALS_READ_MAX) { goals_read_truncated = true; break; }
+        read += 1;
         const g = this.#pursuit(id, GOAL, viewer);
         if (g && g.fm.aspiration === aspiration) { goalsSeen += 1; if (goals.length < GOALS_MAX) goals.push(this.#goalView(g, viewer)); }
         if (goalsSeen > GOALS_MAX) break;
       }
-      if (goalsSeen > GOALS_MAX || page.ids.length < 200 || !page.cursor) break;
+      if (goals_read_truncated || goalsSeen > GOALS_MAX || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
     }
     const goals_truncated = goalsSeen > GOALS_MAX;
@@ -919,7 +929,14 @@ export class Intent {
       .map((r) => ({ proposal: r.proposal_key, source: r.source, kind: r.kind, act: r.act, project: r.project_id,
                      inquiry: r.inquiry_id, reason: r.reason, grade: r.grade, basis: safeJson(r.basis_json),
                      author: r.author, at: r.at }));
-    const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
+    /* N305: at most REQUESTS_MAX named requests, in the order the basis names them, read one past so a cut says so. */
+    const named = [];
+    for (const t of triaged) {
+      for (const id of captureRequestsNamed(t.basis)) if (!named.includes(id)) named.push(id);
+      if (named.length > REQUESTS_MAX) break;
+    }
+    const requests_truncated = named.length > REQUESTS_MAX;
+    named.length = Math.min(named.length, REQUESTS_MAX);
     /* capture-requests' one read by key (its R43; N291), under the viewer's sight: a request it answers null for is not
        held, or is one the viewer may not see, and reads so; never a guessed outcome. */
     const byId = named.length ? this.#lazy(this.captureRequests) : null;
@@ -930,8 +947,10 @@ export class Intent {
       return { request: id, outcome: { state: r.state, code: r.code ?? null, capture_sha: r.capture_sha ?? null,
                                        captured_at: r.captured_at ?? null } };
     });
-    return { ok: true, aspiration: this.#aspirationView(a), goals, goals_limit: GOALS_MAX, goals_truncated, triaged,
-             triaged_limit: TRIAGED_MAX, triaged_truncated, capture_requests,
+    return { ok: true, aspiration: this.#aspirationView(a), goals, goals_limit: GOALS_MAX, goals_truncated,
+             goals_read_limit: GOALS_READ_MAX, goals_read_truncated, triaged,
+             triaged_limit: TRIAGED_MAX, triaged_truncated, capture_requests, requests_limit: REQUESTS_MAX,
+             requests_truncated,
              dead_ends: deadEndsOf(a.text), taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null };
   }
 
@@ -955,7 +974,8 @@ export class Intent {
     return { ok: true, kind };
   }
 
-  /* Every proposal from every source, open or not, keyed `<source>::<its key>`. */
+  /* Every proposal from every source, open or not, keyed `<source>::<its key>`; with no project named, the gaps of the
+     first PROJECTS_MAX projects the viewer may see, in id order (N305), `projects_truncated` saying they were cut. */
   #allProposals(project, viewer) {
     const out = [];
     const feed = this.progressions.proposalsFeed(null);
@@ -974,29 +994,31 @@ export class Intent {
                      basis: p.basis ?? null, instances: Array.isArray(p.instances) ? p.instances : [],
                      surfaced_by: p.surfaced_by ?? "machine" });
     }
-    const projects = project ? [project] : this.#conditioned(viewer);
-    for (const pid of projects) {
+    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, PROJECTS_MAX);
+    for (const pid of projects.ids) {
       const g = this.gaps({ project: pid, viewer });
       if (g.ok) for (const gap of g.gaps) out.push({ ...gap, source_key: gap.key.slice("intent::".length) });
     }
-    return out;
+    return { list: out, projects_truncated: projects.truncated };
   }
 
-  /* The projects the viewer may see whose objective states a condition. */
-  #conditioned(viewer) {
-    const out = [];
-    let after = "";
+  /* N305 (K391): the first `max` projects the viewer may see (every project for a null viewer), in id order, walked a
+     page at a time and read one past, so `truncated` says a cut was made. A project the viewer may not see is not
+     counted, so a cut says nothing of it (R23, DEC-36). */
+  #projectsInOrder(viewer, max) {
+    const ids = [];
+    let after = "", truncated = false;
     for (;;) {
       const page = this.record.listByType({ type: "project", after, limit: 200 });
       for (const id of page.ids) {
         if (viewer != null && !this.membership.inSight(id, viewer)) continue;
-        const d = this.#doc(id);
-        if (d && conditionOf(d.fm)) out.push(id);
+        if (ids.length === max) { truncated = true; break; }
+        ids.push(id);
       }
-      if (page.ids.length < 200 || !page.cursor) break;
+      if (truncated || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
     }
-    return out;
+    return { ids, truncated };
   }
 
   /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
@@ -1043,11 +1065,12 @@ export class Intent {
       if (p.refused) return p.refused;
     }
     const all = this.#allProposals(project || null, viewer);
-    const decided = this.#decidedAmong(all.map((p) => p.key));
-    const open = all.filter((p) => !decided.has(p.key));
+    const decided = this.#decidedAmong(all.list.map((p) => p.key));
+    const open = all.list.filter((p) => !decided.has(p.key));
     const aside = this.#setAside(viewer);
     return { ok: true, project: project || null, proposals: open, count: open.length, set_aside: aside.list,
-             set_aside_limit: SET_ASIDE_MAX, set_aside_truncated: aside.truncated };
+             set_aside_limit: SET_ASIDE_MAX, set_aside_truncated: aside.truncated, projects_limit: PROJECTS_MAX,
+             projects_truncated: all.projects_truncated };
   }
 
   /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
@@ -1072,7 +1095,7 @@ export class Intent {
       proj = p.doc;
     }
     const found = this.#isDecided(proposal) ? null
-      : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
+      : this.#allProposals(proj ? proj.id : null, viewer).list.find((p) => p.key === proposal);
     /* DEC-49 REGION is-proposal-open */
     if (!found)
       return refusal("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its "
@@ -1148,13 +1171,14 @@ export class Intent {
 
   /** R17 (called by `scheduler`): a question an assistant surfaced that no member has acted on within the instance's
    *  ageing interval moves to `deferred`, with its reason, through inquiry's dispose act under the plane's actor.
-   *  Nothing is deleted. */
+   *  Nothing is deleted. It judges the questions R27's bounded read takes, answering `limit` and `truncated` (N323). */
   async ageSurfaced(now) {
     const nowMs = this.#instantMs(now);
     const days = this.ageingDays();
     const reason = `surfaced by an assistant; no member acted within ${days} days`;
     const aged = [], refused = [];
-    const due = this.#ageable().filter((x) => x.at <= nowMs).map((x) => x.id);
+    const read = this.#ageable();
+    const due = read.list.filter((x) => x.at <= nowMs).map((x) => x.id);
     const inquiry = this.#lazy(this.inquiryRef), retrieval = this.#lazy(this.retrievalRef);
     for (const id of due) {
       /* One question per selection, so one refused question never holds back another (inquiry R22 moves a set whole). */
@@ -1164,7 +1188,7 @@ export class Intent {
                                   author: PLANE_ACTOR });
       if (r && r.ok) aged.push(id); else refused.push({ id, reason: r ? r.reason : "DISPOSE_FAILED" });
     }
-    return { ok: true, aged, refused, interval_days: days, reason };
+    return { ok: true, aged, refused, interval_days: days, reason, limit: AGEING_READ_MAX, truncated: read.truncated };
   }
 
   /* R17, R27: an instant given as milliseconds or ISO text; none given is the module's clock. */
@@ -1172,35 +1196,52 @@ export class Intent {
     return now == null || now === "" ? Date.parse(this.now()) : Number.isFinite(Number(now)) ? Number(now) : Date.parse(now);
   }
 
-  /* R27: every ageable question (R17 would move it: at `surfaced`, surfaced by a machine, no member's entry in its
-     history) with its ageing instant, its last entry's time plus the ageing interval, in milliseconds. */
+  /* R27 (N323, K408): the first AGEING_READ_MAX questions at `surfaced`, those whose last entry is oldest first (then
+     by id), read one past so `truncated` says more follow; among them alone, each ageable one (R17 would move it:
+     surfaced by a machine, no member's entry) with its ageing instant, its last entry's time plus the ageing interval,
+     in milliseconds. One statement over record-core's `bundles` and `manifest` (its R37 read contract; the manifest's
+     rowid ranks a bundle's entries, R16), so the walk itself is bounded; a question past the read is reached once
+     earlier ones leave `surfaced` or take a newer entry. */
   #ageable() {
     const span = this.ageingDays() * 86400000;
+    const rows = this.#rows(`SELECT id, last FROM (
+                               SELECT b.bundle_id AS id, (SELECT m.created FROM manifest m WHERE m.bundle_id = b.bundle_id
+                                                           ORDER BY m.rowid DESC LIMIT 1) AS last
+                                 FROM bundles b WHERE b.object_type = 'inquiry' AND b.current_state = 'surfaced')
+                             ORDER BY julianday(last), last, id LIMIT ?`, AGEING_READ_MAX + 1);
+    const truncated = rows.length > AGEING_READ_MAX;
     const out = [];
-    let after = "";
-    for (;;) {
-      const page = this.record.listByType({ type: "inquiry", after, limit: 200 });
-      for (const id of page.ids) {
-        const d = this.#doc(id);
-        if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
-        const entries = manifestOf(this.record.readImage(id));
-        if (!entries.length || entries.some((e) => !machine(e.author))) continue;
-        const since = Date.parse(entries[entries.length - 1].created ?? d.fm.created);
-        if (Number.isFinite(since)) out.push({ id, at: since + span });
-      }
-      if (page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
+    for (const { id, last } of rows.slice(0, AGEING_READ_MAX)) {
+      const d = this.#doc(id);
+      if (!d || d.head.currentState !== "surfaced" || d.fm.surfaced_by !== "agent") continue;
+      if (!this.#machineOnly(id)) continue;
+      const since = Date.parse(last ?? d.fm.created);
+      if (Number.isFinite(since)) out.push({ id, at: since + span });
     }
-    return out;
+    return { list: out, truncated };
   }
 
-  /** R27 (for `scheduler`, beside R17 as its tick): the earliest ageing instant of any ageable question, past or not,
-   *  in milliseconds; null when there is none. A question R17 tried and could not move is still ageable, so it stays
+  /* R17, R27: whether a question has entries and every one of them is a machine's (no member acted on it). Its distinct
+     authors are read a page at a time in author order, each statement bounded, stopping at the first member's. */
+  #machineOnly(id) {
+    let after = null, any = false;
+    for (;;) {
+      const page = this.#rows(`SELECT DISTINCT author FROM manifest WHERE bundle_id = ? AND (? IS NULL OR author > ?)
+                               ORDER BY author LIMIT ?`, id, after, after, AUTHORS_PAGE).map((r) => r.author);
+      if (page.some((who) => !machine(who))) return false;
+      any = any || page.length > 0;
+      if (page.length < AUTHORS_PAGE) return any;
+      after = page[page.length - 1];
+    }
+  }
+
+  /** R27 (for `scheduler`, beside R17 as its tick): the earliest ageing instant of any ageable question among the
+   *  bounded read (N323), past or not, in milliseconds; null when there is none. A question R17 tried and could not move is still ageable, so it stays
    *  due and is tried again at a later firing. Writes nothing; never throws. */
   ageDue(now) {
     try {
       let best = null;
-      for (const x of this.#ageable()) if (best === null || x.at < best) best = x.at;
+      for (const x of this.#ageable().list) if (best === null || x.at < best) best = x.at;
       return best;
     } catch { return null; }
   }
@@ -1212,7 +1253,7 @@ export class Intent {
       const nowMs = this.#instantMs(now);
       if (!Number.isFinite(nowMs)) return null;
       let best = null;
-      for (const x of this.#ageable()) if (x.at > nowMs && (best === null || x.at < best)) best = x.at;
+      for (const x of this.#ageable().list) if (x.at > nowMs && (best === null || x.at < best)) best = x.at;
       return best;
     } catch { return null; }
   }
@@ -1248,8 +1289,9 @@ export class Intent {
 }
 
 /* DEC-49: a code several acts answer is minted at one site, its own function here, which builds the refusal whole
-   from its row (D-484's shape); each act relays it with its own detail. `NO_SUCH_PROJECT` is not one of them: it is
-   one condition across modules, answered through membership's `noSuchProject` (its R78; N208, K275). */
+   from its row (D-484's shape); each act relays it with its own detail. `NO_SUCH_PROJECT` and `NO_SUCH_ENTITY` are not
+   among them: each is one condition across modules, answered through membership's `noSuchProject` (its R78; N208,
+   K275) and entities' `noSuchEntity` (its R36; N285). */
 function refuseNoSuchGoal(detail, extra) {
   /* DEC-49 REGION is-goal-held */
   const row = INTENT_CHECKS.NO_SUCH_GOAL;
@@ -1272,14 +1314,6 @@ function refuseNoSuchProgression(detail, extra) {
   return { ok: false, reason: "NO_SUCH_PROGRESSION", code: "NO_SUCH_PROGRESSION", check: row.check,
            translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-named-progression */
-}
-
-function refuseNoSuchEntity(detail, extra) {
-  /* DEC-49 REGION is-named-entity */
-  const row = INTENT_CHECKS.NO_SUCH_ENTITY;
-  return { ok: false, reason: "NO_SUCH_ENTITY", code: "NO_SUCH_ENTITY", check: row.check,
-           translation: row.translation, detail, ...(extra || {}) };
-  /* END DEC-49 REGION is-named-entity */
 }
 
 function refuseNoReason(detail, extra) {
@@ -1357,13 +1391,6 @@ function captureRequestsNamed(basis) {
 }
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
-
-/* record-core's manifest for a bundle, in the order it was recorded (its R16 `seq`). */
-function manifestOf(img) {
-  const raw = img && typeof img["_history/manifest.json"] === "string" ? safeJson(img["_history/manifest.json"]) : null;
-  const entries = raw && Array.isArray(raw.entries) ? raw.entries : [];
-  return [...entries].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
-}
 
 /* R16: the question a proposal opens, in words a member can read; an obstacle reads as such (Suggestions). */
 function questionOf(p) {

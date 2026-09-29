@@ -14,7 +14,10 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const F = { store: ROOT + "src/store.mjs", queuestate: ROOT + "src/queuestate.mjs" };
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): the item mute's read (`#queueItemMutes`) and the
+   mute's class naming (`queueMute`) left src/store.mjs with the queue for src/queue/index.mjs; arms (a) and (c) edit
+   them there, with the same needles. */
+const F = { queue: ROOT + "src/queue/index.mjs", queuestate: ROOT + "src/queuestate.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -83,7 +86,7 @@ arm("a", "KEY THE ITEM MUTE WITHOUT THE MEMBER. `#queueItemMutes` reads every me
   + "DECLARED: the B-FEED arm and D-170's second-member arm MUST fail. The ann-side ACCEPTS arms and "
   + "the no-disposition arm MUST NOT: ann's feed is exactly right, which is why only a second member "
   + "can see this defect.",
-  [["store", "`SELECT item_id FROM queue_item_mutes WHERE member_id=?`, member.trim())) out.add(r.item_id);",
+  [["queue", "`SELECT item_id FROM queue_item_mutes WHERE member_id=?`, member.trim())) out.add(r.item_id);",
              "`SELECT item_id FROM queue_item_mutes WHERE ?<>''`, member.trim())) out.add(r.item_id);"]],
   ["B-FEED: ben's feed STILL carries F", "while ben's feed still carries it"],
   ["ACCEPTS: F is gone from ann's items", "and NO disposition row exists", "op=proposals STILL carries F"]);
@@ -99,7 +102,7 @@ arm("b", "ADMIT OBLIGATION AS PERSONALLY MUTABLE. DECLARED: both OBLIGATION refu
 /* (c) THE OBLIGATION FENCE, naming half: an opaque task id is not asked of `tasks`. */
 arm("c", "DO NOT ASK `tasks` TO NAME AN OPAQUE ID. DECLARED: the by-ITEM obligation arm MUST fail "
   + "(it is refused, but as UNKNOWN_KIND rather than by name). The by-KIND arm MUST NOT.",
-  [["store", "if (cls === null && this.#one(`SELECT id FROM tasks WHERE id=?`, itemId)) cls = \"OBLIGATION\";",
+  [["queue", "if (cls === null && this.#one(`SELECT id FROM tasks WHERE id=?`, itemId)) cls = \"OBLIGATION\";",
              "if (cls === null && false) cls = \"OBLIGATION\";"]],
   ["by ITEM: the task's own id is refused"],
   ["by KIND: refused KIND_NOT_PERSONAL"]);

@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { RATIONALE_MAX, REASON_MAX } from "../../../src/consequences/index.mjs";
+import { determinationSuperseded } from "../../../src/conformance/index.mjs";
 
 const S = "STD-2026-0001-law";
 const DOC = "INFO-2026-0001-budget";
@@ -159,12 +160,13 @@ test("R6: a part is never edited; a revision records a successor with R1's refus
   assert.equal(w.c.consequenceRevise({ id: first.id, reason: "again", author: V("alice") }).reason, "ALREADY_SUPERSEDED");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "", author: V("alice") }).reason, "NO_REASON");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "x".repeat(REASON_MAX + 1), author: V("alice") }).reason, "BAD_REASON");
-  assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", author: V("carol") }).reason, "NOT_A_PARTICIPANT");
+  assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", author: V("carol") }).reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", measure: { unit: "joy" }, author: V("alice") }).reason,
                "MEASURE_UNKNOWN_UNIT");
   assert.equal(w.c.consequenceRevise({ id: "CONS-2026-0999-x", reason: "r", author: V("alice") }).reason, "NO_SUCH_PART");
   w.determinations.get(w.D).superseded_by = "CONF-2026-0009-new";
-  assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", author: V("alice") }).reason, "NOT_NONCOMPLIANT");
+  assert.deepEqual(w.c.consequenceRevise({ id: rev.id, reason: "r", author: V("alice") }),
+                   determinationSuperseded(w.D, "CONF-2026-0009-new"));
   /* Its parts stay readable, not carried forward. */
   assert.equal(w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).parts.length, 1);
 });

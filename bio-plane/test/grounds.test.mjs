@@ -41,7 +41,8 @@
  *      spelling appears nowhere here either.
  *
  *   6. THROUGH THE OP (D-43), byte-equal to the derivation, with the per-ground
- *      breakdown swept by the same redaction as the axis it sits under.
+ *      breakdown swept by the same redaction as the axis it sits under (since
+ *      2026-09-29, strength R6/N303: an unseen member withheld whole, no null).
  *
  *   7. THE FROZEN PAIR FREEZES THE STRUCTURED RESULT (REC-14 clause (e)): a
  *      published case carries the per-branch breakdown in the bytes that get
@@ -96,7 +97,7 @@ const RETIRED_WORD = "SUS" + "PEND";
    the same reason — an append-only history can hold what the write now stops). */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);
@@ -663,20 +664,24 @@ console.log("\n--- 6. through the OP (D-43), byte-equal, with the branches swept
   const theirs = await GET(`op=inquirystrength&token=${DAVE}&id=${HID}`);
   t("the owner sees the branch's weakest leg by name",
     [mine.capture.grade, mine.capture.grounds[0].weakest?.target_id ?? null], ["B", PROJ]);
-  /* Written WITHOUT the `?? fallback` this file uses elsewhere, on purpose: a
-     WITHHELD id is `null` and an ABSENT member is `null` too, so a fallback here
-     would report the two the same and the assertion would pass whether the
-     branch object survived or vanished. The member must still BE there, with
-     its id and nothing else removed. */
-  t("a reader who may not see it gets the id withheld INSIDE THE BRANCH, not only on the axis",
-    [theirs.capture.grounds[0].weakest === null ? "NO MEMBER AT ALL" : theirs.capture.grounds[0].weakest.target_id,
-     theirs.capture.weakest === null ? "NO MEMBER AT ALL" : theirs.capture.weakest.target_id,
-     theirs.capture.grounds[0].weakest?.grade ?? null], [null, null, "B"]);
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; N303, K360, K390, STRENGTH #3 J1, strength R6, DEC-36). This arm held
+     the member THERE with its id nulled (its grade standing beside the null), and threw on the tree R6 now answers
+     with, because the member is gone. That posture was the placeholder R6 retired: a null in a member's place, and a
+     count including it, tell the reader something unseen is there and how much. R6 withholds the unseen member WHOLE:
+     the `weakest` it was loses the KEY, in the branch and on the axis, never a null or a stand-in; the counts go on
+     the axis and on every ground, since a top-level leg is unseen; only `out_of_view: true` says anything was withheld.
+     Still written WITHOUT a `?? fallback`, and still by `in`, so a vanished member and a nulled one read differently
+     and the old placeholder fails here by name. The seen branch keeps its own weakest, by name. */
+  t("a reader who may not see it has the member withheld WHOLE — no `weakest` key INSIDE THE BRANCH nor on the axis",
+    ["weakest" in theirs.capture.grounds[0], "weakest" in theirs.capture,
+     theirs.capture.grounds[1].weakest?.target_id ?? "NO MEMBER AT ALL"], [false, false, CO_CAP]);
   t("every RECORD FACT in the branch stands unchanged — the derivation is the same for both readers",
     [theirs.capture.grade, theirs.capture.grounds.map((x) => [x.ground, x.state, x.grade])],
     ["B", [["quiet", "graded", "B"], ["open", "graded", "C"]]]);
   t("and the answer FLAGS that it names less than the record holds, without counting what was withheld",
-    [theirs.capture.out_of_view ?? null, /\d+ withheld/.test(JSON.stringify(theirs))], [true, false]);
+    [theirs.capture.out_of_view ?? null, theirs.out_of_view ?? null, /\d+ withheld/.test(JSON.stringify(theirs)),
+     [theirs.capture, ...theirs.capture.grounds].some((o) => "load_bearing" in o || "population" in o)],
+    [true, true, false, false]);
   t("no id the reader may not see survives anywhere in the answer, prose included",
     JSON.stringify(theirs).includes(PROJ), false);
   t("the branches reach the caller with their own weakest legs named",

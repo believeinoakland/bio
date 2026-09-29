@@ -267,6 +267,9 @@ test("R21 an escalation is a record object of its own type: an ESC- bundle of ty
 
 test("R17 R20 every refusal this module mints carries its code, its C-116 row and the member's translation, and each row names one site", async () => {
   const { ESCALATION_CHECKS } = await import("../../../src/escalation/index.mjs");
+  const { CONFORMANCE_CHECKS } = await import("../../../src/conformance/index.mjs");
+  const RELAYED = ["NO_SUCH_DETERMINATION", "DETERMINATION_SUPERSEDED"];
+  for (const code of RELAYED) assert.ok(!(code in ESCALATION_CHECKS), code);
   const rows = Object.entries(ESCALATION_CHECKS);
   assert.equal(new Set(rows.map(([, r]) => r.check)).size, rows.length, "one row per code");
   for (const [code, row] of rows) {
@@ -282,7 +285,8 @@ test("R17 R20 every refusal this module mints carries its code, its C-116 row an
     w.esc.escalationAdvance({ id: w.E, to: 6, reason: "r", author: V("bob"), viewer: V("bob") })];
   for (const a of answers) {
     if (a.ok !== false || a.reason === "PROJECT_ACT_NOT_A_PARTICIPANT") continue;
-    const row = ESCALATION_CHECKS[a.reason];
+    /* conformance's own codes (its R19, R20; N309, N312) are relayed with conformance's row, never one of C-116 */
+    const row = RELAYED.includes(a.reason) ? CONFORMANCE_CHECKS[a.reason] : ESCALATION_CHECKS[a.reason];
     assert.ok(row, a.reason);
     assert.deepEqual([a.code, a.check, a.translation], [a.reason, row.check, row.translation], a.reason);
   }

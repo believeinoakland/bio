@@ -779,8 +779,28 @@ export class Ratification {
          case rests on is the same bytes whether or not some project the caller cannot see is preparing a case
          over it — nothing unratified is read, so there is nothing to disclose. */
       if (!pinnedBy.length) {
-        const resting = this.publication.ratifiedFindingsRestingOn(bundleId);
-        if (!resting.length) {
+        /* N308 (K380): what rests on the bundle is read a page of pins at a time (publication R38's cursor), from the
+           start through each `cursor` to null, and no further once a resting finding's project admits the act. A page
+           may answer no finding while its cursor is set. The outcome is the one a whole list gave: admitted when some
+           resting project's owner signed and its member or the founder delivered; else the refusal of the first
+           project in id order, naming every finding of that project that rests on the bundle. */
+        const byProject = new Map();
+        let admitted = false;
+        for (let after = null; ;) {
+          const page = this.publication.ratifiedFindingsRestingOn(bundleId, { after });
+          for (const r of page.findings) {
+            if (!byProject.has(r.project)) {
+              byProject.set(r.project, []);
+              admitted = !this.membership.caseAuthority({ project: r.project, deliveredBy, signer: attestorMember,
+                act: "ratify", subject: bundleId, extra: { bundleId } });
+            }
+            byProject.get(r.project).push(`${r.finding} of case ${r.case_id}`);
+            if (admitted) break;
+          }
+          if (admitted || page.cursor === null || page.cursor === undefined) break;
+          after = page.cursor;
+        }
+        if (!byProject.size) {
           const head = this.record.head(bundleId);
           const refusal = (code, detail) => {
             const row = RATIFY_SCOPE_CHECKS[code];
@@ -801,20 +821,12 @@ export class Ratification {
             + `then an owner of that project may sign this. Nothing was published.`);
           /* END DEC-49 REGION is-ratify-outside-a-case */
         }
-        const byProject = new Map();
-        for (const r of resting) {
-          if (!byProject.has(r.project)) byProject.set(r.project, []);
-          byProject.get(r.project).push(`${r.finding} of case ${r.case_id}`);
-        }
-        let refused = null;
-        for (const pid of [...byProject.keys()].sort()) {
-          const denied = this.membership.caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
+        if (!admitted) {
+          const pid = [...byProject.keys()].sort()[0];
+          return this.membership.caseAuthority({ project: pid, deliveredBy, signer: attestorMember, act: "ratify",
             subject: `${bundleId}, the evidence ${byProject.get(pid).join(", ")} rests on,`,
-            extra: { bundleId } });
-          if (!denied) { refused = null; break; }
-          refused = refused || denied;
+            extra: { bundleId } }); /* D-431 (b) */
         }
-        if (refused) return refused; /* D-431 (b) */
       }
       /* THE COMMIT, through publication (its R22, R35), in this transaction: the finding's edition — from the signed
          bytes, or for a member published under BIO_Publication §3 rule 12 from the ratified case documents pinning

@@ -63,11 +63,17 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { storeCorpus } from "./extracted-sources.mjs";   /* T3 (legacy-tests): the store's corpus with its extracted modules */
 import { fileURLToPath } from "node:url";
-import { MACHINE_FENCE_CHECKS } from "../checks/bio-checks.mjs";
-import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #1 step 1 and #2 J4 R32): C-32.17 left `MACHINE_FENCE_CHECKS` for
+   control-plane's `OPERATOR_FENCE_CHECKS` and C-38 moved whole, words and check ids kept; the fence, the stamp and
+   `classify` moved from `src/index.mjs` to `src/control-plane/index.mjs` (CP_SRC), and `OPS`, `SESSION_OPS`,
+   `GOVERNANCE_ACTIONS` and `CUSTODIAL_ACTIONS` to `src/control-plane/ops.mjs` (OPS_SRC). Every pin reads the file
+   that now holds its subject, its pattern unchanged; the Worker is still booted from `src/index.mjs`. */
+import { OPERATOR_FENCE_CHECKS, ADMISSION_CHECKS } from "../src/control-plane/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const IDX_SRC = readFileSync(IDX, "utf8");
+const CP_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
+const OPS_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -80,7 +86,7 @@ const t = (label, got, want) => {
    thing that makes the two halves impossible to ship apart, so a suite that
    typed its own copy would be grading a list of its own rather than the plane's
    — and a fourth governance verb added tomorrow is driven the day it lands. */
-const govArr = IDX_SRC.match(/const GOVERNANCE_ACTIONS = (\[[^\]]*\])/);
+const govArr = OPS_SRC.match(/const GOVERNANCE_ACTIONS = (\[[^\]]*\])/);
 const OPS3 = govArr ? JSON.parse(govArr[1].replace(/'/g, '"')) : [];
 console.log("\n--- 0. the subject, DERIVED from the source rather than typed ---");
 console.log(`  GOVERNANCE_ACTIONS: ${OPS3.join(", ")}`);
@@ -94,8 +100,8 @@ t("GOVERNANCE_ACTIONS parsed and holds the three ops §4.7 and §4.9 assign to a
  * (which names the bearer classes on purpose) is not mistaken for the guard. */
 console.log("\n--- 1. structure: the fence, the stamp and the reach, pinned at the source ---");
 const region = (name) => {
-  const a = IDX_SRC.indexOf(`/* DEC-49 REGION ${name}`), b = IDX_SRC.indexOf(`/* END DEC-49 REGION ${name} */`);
-  return a < 0 || b < a ? null : IDX_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");
+  const a = CP_SRC.indexOf(`/* DEC-49 REGION ${name}`), b = CP_SRC.indexOf(`/* END DEC-49 REGION ${name} */`);
+  return a < 0 || b < a ? null : CP_SRC.slice(a, b).replace(/\/\*[\s\S]*?\*\//g, "");
 };
 const fence = region("is-operator-governance-act");
 t("STRUCTURE: the operator fence refuses on how the caller ARRIVED — its guard is `!viaSession`, "
@@ -112,7 +118,7 @@ t("STRUCTURE: the operator fence refuses on how the caller ARRIVED — its guard
    this item is that they are two layers and either alone is a half-landing. */
 t("STRUCTURE: the `by` stamp covers the three ops and takes the session's member, never the "
 + "caller's — one expression, set AFTER the caller's parameters were copied",
-  /if \(PROJECT_ACTIONS\.includes\(op\) \|\| GOVERNANCE_ACTIONS\.includes\(op\)[\s\S]{0,120}?inner\.searchParams\.set\("by", viaSession \? sessMember/.test(IDX_SRC),
+  /if \(PROJECT_ACTIONS\.includes\(op\) \|\| GOVERNANCE_ACTIONS\.includes\(op\)[\s\S]{0,120}?inner\.searchParams\.set\("by", viaSession \? sessMember/.test(CP_SRC),
   true);
 /* THE REACH IS PINNED AS **BOTH SETS**, which is this item's one design call and
    the thing `reach-dropped` breaks. `SESSION_OPS.admin` means the FOUNDER'S
@@ -125,11 +131,11 @@ t("STRUCTURE: the `by` stamp covers the three ops and takes the session's member
 t("STRUCTURE: the three reach BOTH session sets, so EVERY administrator can cast and not only the "
 + "founder — and the `admin` spread alone would be the row's own failure mode arrived at one "
 + "administrator instead of zero",
-  (IDX_SRC.match(/\.\.\.GOVERNANCE_ACTIONS,/g) || []).length, 2);
+  (OPS_SRC.match(/\.\.\.GOVERNANCE_ACTIONS,/g) || []).length, 2);
 
 /* ============================================================== 2. FIXTURE */
-const clsStart = IDX_SRC.indexOf("async function classify(token, env) {");
-const clsBody = clsStart < 0 ? "" : IDX_SRC.slice(clsStart, IDX_SRC.indexOf("\n}", clsStart));
+const clsStart = CP_SRC.indexOf("async function classify(token, env) {");
+const clsBody = clsStart < 0 ? "" : CP_SRC.slice(clsStart, CP_SRC.indexOf("\n}", clsStart));
 const BINDINGS = [...clsBody.matchAll(
   /token === env\.([A-Z_]+) && \(await liveToken\(env\.\1\)\)\) return "([a-z]+)"/g)].map((m) => ({ binding: m[1], cls: m[2] }));
 const TOKEN_OF = Object.fromEntries(BINDINGS.map((b) => [b.cls, `${b.cls}-d136-${b.binding.toLowerCase()}`]));
@@ -306,16 +312,16 @@ t("and otto is still only proposed", (await rowOf("otto"))?.status, "proposed");
 /* ============================== 6. THE BEARER CLASSES — D-421's CLASS, C-32.17
  * Driven for EVERY class the OPS row admits, derived from `classify()`. */
 console.log("\n--- 6. no operator bearer token governs (C-32.17, D-421's ruling applied) ---");
-const opsBody = IDX_SRC.slice(IDX_SRC.indexOf("const OPS = {"), IDX_SRC.indexOf("\n};", IDX_SRC.indexOf("const OPS = {")));
+const opsBody = OPS_SRC.slice(OPS_SRC.indexOf("const OPS = {"), OPS_SRC.indexOf("\n};", OPS_SRC.indexOf("const OPS = {")));
 const opClasses = (op) => {
   const m = opsBody.match(new RegExp(`^\\s{2}${op}:\\s*\\{\\s*classes:\\s*(\\[[^\\]]*\\])`, "m"));
   return m ? JSON.parse(m[1]) : null;
 };
-const ROW = MACHINE_FENCE_CHECKS.OPERATOR_TOKEN_CANNOT_GOVERN;
+const ROW = OPERATOR_FENCE_CHECKS.OPERATOR_TOKEN_CANNOT_GOVERN;
 t("the catalogue carries C-32.17 with a canned translation of its own, so the refusal's sentence "
 + "is the record's rather than one typed at the site (DEC-49)",
   [ROW?.check, typeof ROW?.translation === "string" && ROW.translation.trim().split(/\s+/).length >= 20,
-   ROW?.where], ["C-32.17", true, "src/index.mjs fetch > is-operator-governance-act"]);
+   ROW?.where], ["C-32.17", true, "src/control-plane/index.mjs fetch > is-operator-governance-act"]);  /* K413: the site moved */
 
 /* THE PAYLOADS ARE COMPLETE AND CURRENT, which is the only way a refusal proves
    anything: `otto` is a LIVE PROPOSAL at this point in the run, so `adminendorse`
@@ -422,12 +428,12 @@ const STORE_SRC = storeCorpus(["membership"], "latin1");
 /* CORRECTED 2026-09-23 (REC-159), never exempted: the disjunct was `op === "memberadd"`, and REC-159
    widened it to `CUSTODIAL_ACTIONS.includes(op)` — the four §4.9 acts, `memberadd` first among them.
    Still ONE condition and ONE expression; the array is parsed and asserted to hold `memberadd`. */
-const custArr = IDX_SRC.match(/const CUSTODIAL_ACTIONS = (\[[^\]]*\])/);
+const custArr = OPS_SRC.match(/const CUSTODIAL_ACTIONS = (\[[^\]]*\])/);
 const CUST4 = custArr ? JSON.parse(custArr[1]) : [];
 t("STRUCTURE: the `by` stamp names `memberadd` in its OWN disjunct of the ONE condition — "
 + "`CUSTODIAL_ACTIONS`, which holds it (REC-159) — so the expression that stamps the three §4.7/§4.9 "
 + "acts stamps the proposer too, never a second expression that could drift",
-  [/if \(PROJECT_ACTIONS\.includes\(op\) \|\| GOVERNANCE_ACTIONS\.includes\(op\)[^)]*?\|\| CUSTODIAL_ACTIONS\.includes\(op\)\)\s*inner\.searchParams\.set\("by", viaSession \? sessMember/.test(IDX_SRC),
+  [/if \(PROJECT_ACTIONS\.includes\(op\) \|\| GOVERNANCE_ACTIONS\.includes\(op\)[^)]*?\|\| CUSTODIAL_ACTIONS\.includes\(op\)\)\s*inner\.searchParams\.set\("by", viaSession \? sessMember/.test(CP_SRC),
    CUST4.includes("memberadd")],
   [true, true]);
 t("STRUCTURE: the store's `memberadd` relay spreads the body and THEN sets `by` from the query, so a "
@@ -568,7 +574,7 @@ t("the subject, DERIVED from the source: `CUSTODIAL_ACTIONS` holds exactly the f
   [[...CUST4].sort(), CUST4.filter((o) => OPS3.includes(o))],
   [["memberadd", "memberset", "signeradd", "signerset"], []]);
 t("STRUCTURE: the four reach BOTH session sets — spread once into each, like GOVERNANCE_ACTIONS",
-  (IDX_SRC.match(/\.\.\.CUSTODIAL_ACTIONS,/g) || []).length, 2);
+  (OPS_SRC.match(/\.\.\.CUSTODIAL_ACTIONS,/g) || []).length, 2);
 t("STRUCTURE: each of the four rows admits the `member` KIND for a session and bounds a bearer by "
 + "`machineClasses` to the operator's `admin` and `probe`, the classes it held before",
   Object.fromEntries(CUST4.map((o) => [o, [opClasses(o), machineClassesOf(o)]])),

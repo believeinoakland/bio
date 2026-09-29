@@ -120,6 +120,8 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import * as CHECK_CATALOGUE from "../checks/bio-checks.mjs";
+/* K410/K413 (control-plane R19's last sentence, D-586): the acts R14 refuses to every bearer, beyond member reach at the mint. */
+import { GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../src/control-plane/ops.mjs";
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for 3b's widened harvest. */
 import { moduleFiles } from "./extracted-sources.mjs";
 
@@ -127,6 +129,12 @@ const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the control plane left `src/index.mjs` for `src/control-plane/`:
+   `json()` and its `dec49Attach` decoration, the admission gate, the credential and scope judges and the OPS table
+   (`src/control-plane/ops.mjs`). Every source walk below that read index.mjs AS THE CONTROL PLANE reads these two files
+   beside it; the plane's entry keeps what it still holds. */
+const CP_SRC = readFileSync(SRC("control-plane/index.mjs"), "utf8");
+const CP_OPS_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -223,7 +231,23 @@ for (const d of readdirSync(join(DIR, "..", "src"), { withFileTypes: true }).fil
         ALL_ROWS.set(code, { check: row.check ?? null, translation: row.translation, family, where: row.where ?? null });
   }
 }
+/* WIDENED 2026-09-29 (K414, INSTANCE-SETUP #1): instance-setup keeps its families in its one file `src/setup.mjs`
+   (INSTANCE_SETUP_CHECKS: the group slug, name and domain rows that left the catalogue's INSTANCE_GROUP_CHECKS, C-64),
+   not in a `checks.mjs`, so that file is read by the same `_CHECKS` rule. */
+for (const [family, rows] of Object.entries(await import("../src/setup.mjs"))) {
+  if (!/_CHECKS$/.test(family) || !rows || typeof rows !== "object") continue;
+  for (const [code, row] of Object.entries(rows))
+    if (row && typeof row === "object" && typeof row.translation === "string" && row.translation && !ALL_ROWS.has(code))
+      ALL_ROWS.set(code, { check: row.check ?? null, translation: row.translation, family, where: row.where ?? null });
+}
 console.log(`    and ${ALL_ROWS.size - ROWS.size} further translated row(s) in the modules' own families (the fence sections read them)`);
+/* RE-ANCHORED 2026-09-29 (K351/N272, and K409/K413 which moved rows the wire is graded on): `dec49Attach` no longer
+   resolves against the catalogue ALONE — since N272 `dec49Row` reads the catalogue first and then every module's
+   families (`MODULE_CHECK_FILES`, src/control-plane/index.mjs), and T12 moved rows this drive receives out of the
+   catalogue (queue's C-31 and C-76.1, control-plane's C-29.6–.10, C-38, C-69, C-78, …). So the WIRE is graded against
+   `ALL_ROWS` — this file's own harvest of the catalogue and every `src/<module>/checks.mjs`, in the same order and by
+   the same `_CHECKS` rule, never the decorator's own table — and `ROWS` stays the catalogue for section 1's floors and
+   duplicate arm, which are the DEC-49 guard's standard. */
 
 /* HALT ON A BLIND CORPUS, AND THIS LINE WAS EARNED BY THE CONTROL RATHER THAN
    FORESEEN. ARM d (the catalogue harvest made to match nothing) was DECLARED to
@@ -245,9 +269,10 @@ if (FAMILIES.length < 35 || ROWS.size < 288) {
 /* ====================================================================== 2
  * THE OPS — PARSED OUT OF THE PLANE'S OWN TABLE, FLOORED, PRINTED.
  * ==================================================================== */
-console.log("\n--- 2. the op surface, parsed out of `index.mjs`'s OPS table (never typed here) ---");
-const OPS_BLOCK = INDEX_SRC.slice(INDEX_SRC.indexOf("const OPS = {"),
-                                  INDEX_SRC.indexOf("\n};", INDEX_SRC.indexOf("const OPS = {")));
+console.log("\n--- 2. the op surface, parsed out of the control plane's OPS table (never typed here) ---");
+/* RE-ANCHORED 2026-09-29 (K413): the table is `src/control-plane/ops.mjs`'s now; the parse is unchanged. */
+const OPS_BLOCK = CP_OPS_SRC.slice(CP_OPS_SRC.indexOf("const OPS = {"),
+                                   CP_OPS_SRC.indexOf("\n};", CP_OPS_SRC.indexOf("const OPS = {")));
 /* `[a-z0-9]+` and NOT `[a-z]+`: an op name carrying a digit is invisible to the
    narrower spelling, and a walk that silently drops rows is the blind-classifier
    shape this repository names most. Both yields are printed so a collapse shows. */
@@ -260,6 +285,12 @@ const OP_ROWS = [...OPS_BLOCK.matchAll(/^ {2}([a-z0-9]+):\s*\{\s*classes:\s*(nul
 const forClass = (c) => OP_ROWS.filter((r) => r.classes && r.classes.includes(c));
 const MEMBER_OPS = forClass("member");
 const MUTATING_MEMBER_OPS = MEMBER_OPS.filter((r) => r.mutating).map((r) => r.op);
+/* RE-ANCHORED 2026-09-29 (K410, control-plane R19's last sentence, D-586; CONTROL-PLANE #2): an op R14 refuses to every
+   bearer — the governance and group-identity acts, a named administrator's own session acts — counts as beyond member
+   reach at the mint although its row names `member`, so the machine's authored scope is the member-reachable mutating
+   ops LESS those. The drive below still calls them under the machine credential; they answer the gate's refusal. */
+const R14_REFUSED = new Set([...GOVERNANCE_ACTIONS, ...IDENTITY_ACTIONS]);
+const AI_SCOPE_OPS = MUTATING_MEMBER_OPS.filter((op) => !R14_REFUSED.has(op));
 /* D-495: the other two credential classes, harvested by the SAME parse and never typed here.
    `daemon` gets no arm of its own and that is stated rather than implied: all three rows naming
    it (`acquire`, `monitor`, `capturerequestdrain`) also name `admin`, so every one is driven
@@ -326,7 +357,7 @@ const MODULE_DIRS = readdirSync(join(DIR, "..", "src"), { withFileTypes: true })
   .map((e) => e.name).sort();
 const MODULE_BARES = MODULE_DIRS.flatMap(moduleFiles)
   .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")));
-for (const src of [STORE_BARE, decomment(INDEX_SRC), ...MODULE_BARES]) {
+for (const src of [STORE_BARE, decomment(INDEX_SRC), ...MODULE_BARES]) {   /* control-plane/ is a module dir: in MODULE_BARES */
   for (const m of src.matchAll(/\b(?:reason|code)\s*:\s*"([A-Z][A-Z0-9_]{2,})"/g)) {
     const body = enclosingObject(src, m.index);
     if (body === null) { STATIC.unreadable++; continue; }
@@ -389,7 +420,11 @@ const lineOf = (src, at) => src.slice(0, at).split("\n").length;
    ceremonies (`src/ratification/ops.mjs`, RATIFICATION #2 J6), op=monitor (`monitorOp`, MONITORING #1 J3.1),
    extraction's reads (`src/extraction/ops.mjs`) and the governor's op (`src/host-governor/index.mjs`) — is read beside
    capture's for the same reason: the handler left index.mjs, its answers did not leave the control plane. */
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the control plane's own files, `src/control-plane/index.mjs` (json()
+   itself, the admission gate, the credential mint's forwards `declared.error`, `confinement.error`, `scoped.error`) and
+   `ops.mjs`, are read beside index.mjs, each under its own name. */
 const CONTROL_PLANE = [["", INDEX_SRC, INDEX_BARE],
+  ["control-plane/index.mjs:", CP_SRC, decomment(CP_SRC)], ["control-plane/ops.mjs:", CP_OPS_SRC, decomment(CP_OPS_SRC)],
   ...["publication/worker.mjs", "ratification/ops.mjs", "extraction/ops.mjs", "monitoring/index.mjs",
       "host-governor/index.mjs"].map((f) => {
     const src = readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
@@ -492,7 +527,13 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
      control plane's `doAnswer`, handed in by index.mjs (K372 (c)), as `r = out.result`, and forwards the monitor act's
      refusal as `{ ok: false, ...r.body }` at the store's own status, the verdict a literal on each branch (D-240). No
      departure. */
-  ["built", "c", "confinement.error", "declared.error", "facts", "gate", "r", "r.body", "rec",
+  /* CORRECTED 2026-09-29 (K413, CONTROL-PLANE #2; K383, capture's C-118.2), LOOKED AT as this assertion asks, by name:
+     `body` ARRIVED — the control plane's generic store relay (src/control-plane/index.mjs, the `fetch` tail) now answers
+     an inbox read or disposition naming no knock (the store's `NO_SUCH_KNOCK`, C-118.2) at 404 rather than at the
+     store's status, spreading the store's own envelope as the tail always has. Before, the same answer left by the
+     status-variable forward on the next line, which this walk cannot classify; the 404 makes it a named forward. The
+     code, check and translation are the store's, carried under `result`. No departure. */
+  ["body", "built", "c", "confinement.error", "declared.error", "facts", "gate", "r", "r.body", "rec",
    "scoped.error", "storeAbsent", "zip"]);
 
 /* ====================================================================== 3
@@ -514,11 +555,13 @@ t("the DISTINCT SOURCES a refusal is forwarded from are pinned as a SET — a NE
    drive (MACHINE_CANNOT_DECLARE_STANDARD, _DETERMINE, _ADDRESS, _ASSESS, _APPROVE, _FILE, _NAME_COUNSEL, _EXPORT and
    escalation's nine). They never stood in the store, so no re-point found them; each is harvested where it is minted,
    its row asked of every family (`ALL_ROWS`), so none arrives unmeasured. */
+/* RE-POINTED 2026-09-29 (K409, QUEUE #2): MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE left the store with the task
+   acts for `src/queue/` (rows now queue's QUEUE_MACHINE_CHECKS) and are harvested where they went. */
 const FENCE_SOURCES = [STORE_BARE, ...["basis-versions", "inquiry", "case-authoring", "actions", "review",
-  "standards", "conformance", "consequences", "filings", "escalation"].flatMap(moduleFiles)
+  "standards", "conformance", "consequences", "filings", "escalation", "queue"].flatMap(moduleFiles)
   .map((f) => decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")))];
 const FENCES = [...new Set(FENCE_SOURCES.flatMap((b) => [...b.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1])))].sort();
-console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review,standards,conformance,consequences,filings,escalation}/: ${FENCES.length} code(s)`);
+console.log(`    the machine-fence family, harvested from store.mjs + src/{basis-versions,inquiry,case-authoring,actions,review,standards,conformance,consequences,filings,escalation,queue}/: ${FENCES.length} code(s)`);
 /* THE FLOOR MOVED 12 -> 14 BY REC-185, 2026-09-24, FROM THIS LINE'S OWN PRINT ON ITS TREE — AND IT
    WAS FOUND BY A CONTROL COMING BACK GREEN, NOT BY READING IT. Arm (f) of this file's driver drops
    one code out of the harvest and is DECLARED RED. On 2026-09-24 it came back **GREEN, 33/0**. The
@@ -541,6 +584,7 @@ t("the fence harvest found a REAL family and not an empty set — and the floor 
      moved them, and MACHINE_CANNOT_STATE_RECORDS_LAW, actions' T8 fence (RECORDS_LAW_FENCE_CHECKS). */
   /* MOVED 14 -> 31 on 2026-09-28 by legacy-tests T9, FROM THIS LINE'S OWN PRINT: the fourteen, and layer 9's seventeen
      (section 3's re-anchor above). */
+  /* HELD at 31 on 2026-09-29 (K409), from this line's own print: the two task fences re-harvested in src/queue/. */
   FENCES.length >= 31, true);
 t("every harvested fence has a row with a canned translation — the catalogue's or, since T8, its module's own "
 + "family (REC-64's work, and the precondition for asking whether it reaches anybody)",
@@ -595,14 +639,18 @@ const SITES = new Map();                       /* code -> [{ file, line }] */
    store.mjs into `src/<module>/`, taking MACHINE_CANNOT_REOPEN (promotion R21) with them. Each extracted file is
    harvested UNDER ITS OWN NAME, so a row whose `where` still names `src/store.mjs` for a fence that moved is
    reported as exactly that (list 2) rather than as minted nowhere. */
+/* WIDENED 2026-09-29 (K409, K413): queue, where the two task fences went, and the control plane's own files, where
+   OPERATOR_TOKEN_CANNOT_GOVERN went from index.mjs (its row now control-plane's OPERATOR_FENCE_CHECKS). Before this, BOTH
+   sides of 3b lost those three codes at once and the agreement held over their absence. */
 const HARVESTED = [["src/store.mjs", STORE_BARE], ["src/index.mjs", INDEX_BARE],
+  ["src/control-plane/index.mjs", decomment(CP_SRC)], ["src/control-plane/ops.mjs", decomment(CP_OPS_SRC)],
   /* T7 (LEGACY-TESTS #4, 2026-09-28): basis-versions and inquiry, where three catalogued fences and C-25.24's went. */
   /* T8 (legacy-tests, 2026-09-28): case-authoring, actions and review, where six of the store's fences went, and
      ratification, where index.mjs's four ratify fences went (`src/ratification/ops.mjs`). */
   /* T9 (legacy-tests, 2026-09-28): layer 9's five modules, routed by LEGACY-INDEX #6 (K312), where seventeen fences
      are minted with their rows in the modules' own families (section 3's re-anchor). */
   ...["record-core", "membership", "promotion", "basis-versions", "inquiry", "case-authoring", "actions", "review",
-      "ratification", "standards", "conformance", "consequences", "filings", "escalation"].flatMap(moduleFiles).map((f) =>
+      "ratification", "standards", "conformance", "consequences", "filings", "escalation", "queue"].flatMap(moduleFiles).map((f) =>
     [`src/${f}`, decomment(readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"))])];
 for (const [file, bare] of HARVESTED) {
   for (const m of bare.matchAll(FENCE_LITERAL)) {
@@ -681,14 +729,20 @@ t("D-494 · the CATALOGUE and the WIDENED HARVEST agree, BY NAME and not by coun
       "MACHINE_CANNOT_DECLINE -> ESCALATION_CHECKS", "MACHINE_CANNOT_DETERMINE -> CONFORMANCE_CHECKS",
       "MACHINE_CANNOT_END -> ESCALATION_CHECKS", "MACHINE_CANNOT_EVALUATE -> ESCALATION_CHECKS",
       "MACHINE_CANNOT_EXPORT -> FILINGS_CHECKS", "MACHINE_CANNOT_FILE -> FILINGS_CHECKS",
+      /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2), LOOKED AT by name: the two task fences' rows moved with the acts. */
+      "MACHINE_CANNOT_FORWARD -> QUEUE_MACHINE_CHECKS",
       "MACHINE_CANNOT_MOVE_ACTION -> ACTION_FENCE_CHECKS",
       "MACHINE_CANNOT_MOVE_VERSION -> VERSION_ACT_CHECKS", "MACHINE_CANNOT_NAME_COUNSEL -> FILINGS_CHECKS",
       "MACHINE_CANNOT_OPEN -> ESCALATION_CHECKS", "MACHINE_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
-      "MACHINE_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS", "MACHINE_CANNOT_RESUME -> ESCALATION_CHECKS",
+      "MACHINE_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS",
+      "MACHINE_CANNOT_RESOLVE -> QUEUE_MACHINE_CHECKS", "MACHINE_CANNOT_RESUME -> ESCALATION_CHECKS",
       "MACHINE_CANNOT_REVIEW -> REVIEW_COPY_CHECKS",
       "MACHINE_CANNOT_SET_LAWS -> ACTION_FENCE_CHECKS", "MACHINE_CANNOT_SET_RISK_TIER -> ACTION_FENCE_CHECKS",
       "MACHINE_CANNOT_STATE_RECORDS_LAW -> RECORDS_LAW_FENCE_CHECKS", "MACHINE_CANNOT_SUSPEND -> ESCALATION_CHECKS",
       "MACHINE_CANNOT_WRITE_ESCALATION -> ESCALATION_CHECKS",
+      /* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2), LOOKED AT by name: C-32.17 split out of this family for
+         control-plane's OPERATOR_FENCE_CHECKS with the governance fence's site. */
+      "OPERATOR_TOKEN_CANNOT_GOVERN -> OPERATOR_FENCE_CHECKS",
       "OPERATOR_TOKEN_CANNOT_RATIFY -> RATIFY_MACHINE_FENCE_CHECKS",
       "OPERATOR_TOKEN_CANNOT_RATIFY_CASE -> RATIFY_MACHINE_FENCE_CHECKS"] });
 
@@ -761,7 +815,7 @@ await enrol("gus", "admin", ["contribute", "publish"]);
 const minted = await POST(`op=aicredentialmint&token=${RUTH}`, {
   tokenId: "d262-wire-grader", principalKind: "member", principalMember: "ruth",
   taskScope: "D-262's own: grade the refusal a caller RECEIVES against the catalogue",
-  writes: MUTATING_MEMBER_OPS,
+  writes: AI_SCOPE_OPS,
   note: "D-262. A member authored this scope so the credential gate is open and the identity fences "
       + "below are what refuse — the same instrument REC-73 used, pointed at the envelope." });
 if (!minted?.ok) throw new Error(`mint: ${JSON.stringify(minted).slice(0, 600)}`);
@@ -769,7 +823,7 @@ const AI = minted.token;
 t("the machine credential's declared scope was HARVESTED from the OPS table and accepted whole — "
 + "so nothing below is refused by the gate in front of the fence",
   [minted.ok, Array.isArray(minted.credential?.writes) ? minted.credential.writes.length : null],
-  [true, MUTATING_MEMBER_OPS.length]);
+  [true, AI_SCOPE_OPS.length]);
 
 /* --------------------------------------------------------------- the sweep */
 /* Every refusal observed, keyed by code, with the FIRST full envelope seen for
@@ -837,7 +891,7 @@ const NO_CHECK = [];    /* catalogued, but the wire carried no C-number */
 const DIVERGENT = [];   /* the wire carried a translation the catalogue does not hold */
 const CENSUS = [];      /* received with NO catalogue row — REC-64's sweep, reported not gated */
 for (const got of [...OBSERVED.values()].sort((a, b) => a.code.localeCompare(b.code))) {
-  const row = ROWS.get(got.code);
+  const row = ALL_ROWS.get(got.code);   /* RE-ANCHORED 2026-09-29 (N272, K409, K413): the rows the wire is decorated from */
   if (!row) { CENSUS.push(got.code); continue; }
   if (typeof got.translation !== "string" || got.translation === "") BARE.push(got.code);
   else if (got.translation !== row.translation) DIVERGENT.push(got.code);
@@ -929,8 +983,9 @@ t("producer 1 — an op NO MEMBER reaches is refused AI_BEYOND_TASK_SCOPE",
 t("producer 2 — an op the credential DID NOT DECLARE is refused with the SAME code",
   [beyondScope?.reason ?? beyondScope?.code, beyondScope?.ok], ["AI_BEYOND_TASK_SCOPE", false]);
 t("both carry the catalogue's one sentence for that code — one code, one canned translation",
-  [beyondReach?.translation === (ROWS.get("AI_BEYOND_TASK_SCOPE")?.translation ?? null),
-   beyondScope?.translation === (ROWS.get("AI_BEYOND_TASK_SCOPE")?.translation ?? null)], [true, true]);
+  /* RE-ANCHORED 2026-09-29 (K413): C-29.6's row is control-plane's AI_SCOPE_CHECKS now, read through ALL_ROWS. */
+  [beyondReach?.translation === (ALL_ROWS.get("AI_BEYOND_TASK_SCOPE")?.translation ?? null),
+   beyondScope?.translation === (ALL_ROWS.get("AI_BEYOND_TASK_SCOPE")?.translation ?? null)], [true, true]);
 t("AND THE TWO REMAIN DISTINGUISHABLE BY `detail`, which is the only thing that tells a reader "
 + "which producer fired — the canned translation is the same sentence for both BY DESIGN, so if "
 + "`detail` ever collapsed too, the answer would name a condition without naming its cause",
@@ -957,7 +1012,7 @@ t("AND THE TWO REMAIN DISTINGUISHABLE BY `detail`, which is the only thing that 
 console.log("\n--- 6b. op=purge without `confirm`: the coded refusal, through the op (REC-185) ---");
 {
   const wire = (await RAW(`op=purge&token=adm-d262`, {})).body;
-  const row = ROWS.get("REQUIRED_ARGUMENT_MISSING") ?? { check: null, translation: null };
+  const row = ALL_ROWS.get("REQUIRED_ARGUMENT_MISSING") ?? { check: null, translation: null };
   t("op=purge with no `confirm` is REFUSED, and refused with C-61.1's code — minted through the one "
   + "governed `requiredArgument` helper, so the row's `where` still names a single span",
     [wire?.ok, wire?.reason ?? wire?.code], [false, "REQUIRED_ARGUMENT_MISSING"]);
@@ -1103,7 +1158,7 @@ console.log(`    d278-codeless-refusals.test.mjs: ${CLASSLESS_OPS.join(", ")}`);
 /* ---- the grade, for the two new classes ---- */
 const CBARE = [], CNOCHECK = [], CDIVERGENT = [], CCENSUS = [];
 for (const got of [...CLASS_OBSERVED.values()].sort((a, b) => (a.who + a.code).localeCompare(b.who + b.code))) {
-  const row = ROWS.get(got.code);
+  const row = ALL_ROWS.get(got.code);   /* RE-ANCHORED 2026-09-29, as section 4 */
   if (!row) { CCENSUS.push(`${got.code} (${got.who}, via op=${got.op})`); continue; }
   if (typeof got.translation !== "string" || got.translation === "") CBARE.push(`${got.code} (${got.who}, op=${got.op})`);
   else if (got.translation !== row.translation) CDIVERGENT.push(`${got.code} (${got.who}, op=${got.op})`);

@@ -29,7 +29,8 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { checkBundle, deriveInquiryTitle, withProducingGroup } from "../checks/bio-checks.mjs";
@@ -37,6 +38,7 @@ import { checkBundle, deriveInquiryTitle, withProducingGroup } from "../checks/b
 import { docDate } from "./docdates.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -47,8 +49,8 @@ const t = (label, got, want) => {
 
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 const mf = new Miniflare({
-  modules: true, script: STORE_SRC,
-  modulesRoot: "/", scriptPath: SRC("store.mjs"),
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });
@@ -372,19 +374,34 @@ console.log("\n--- 6. the boot normaliser converts pre-REC-10 rows (site 2, exer
     neutered !== STORE_SRC && neutered.includes(RAW_DOOR) && STORE_SRC.includes(ROUTE)
       && neutered.includes("        promote: () => this.promote(body),")
       && !neutered.includes("Object.entries(LEGACY_TYPE_ALIASES))"), true);
-  const mkMf = (src) => new Miniflare({
-    modules: true, script: src, modulesRoot: "/", scriptPath: SRC("store.mjs"),
+  /* RE-ANCHORED 2026-09-29 (T12 B6; K414, INSTANCE-SETUP #1 J5): a store booted as store.mjs's own class is refused
+     FACT_UNAVAILABLE (C-102.4) at its first promotion, since only the plane's `Store` export starts instance-setup. Both
+     builds are therefore the store as the plane starts it (`store-started.mjs`), handed to Miniflare as that entry's
+     static module graph (esbuild's metafile, nothing bundled, every module read from disk) with ONLY store.mjs's text
+     replaced by the build under test, in memory — the neutered patch still reaches the store it patches. */
+  const STORE_PATH = SRC("store.mjs");
+  const startedModules = async (storeText) => {
+    const PLANE = fileURLToPath(new URL("..", import.meta.url));
+    const r = await build({ entryPoints: [STARTED], absWorkingDir: PLANE, bundle: true, write: false, metafile: true,
+      format: "esm", platform: "neutral", external: ["cloudflare:*", "node:*"], logLevel: "silent" });
+    const paths = Object.keys(r.metafile.inputs).map((q) => resolve(PLANE, q));
+    if (!paths.includes(STORE_PATH)) throw new Error("the started store no longer imports src/store.mjs");
+    return [STARTED, ...paths.filter((q) => q !== STARTED)].map((path) =>
+      ({ type: "ESModule", path, contents: path === STORE_PATH ? storeText : readFileSync(path, "utf8") }));
+  };
+  const mkMf = async (src) => new Miniflare({
+    modulesRoot: "/", modules: await startedModules(src),
     compatibilityDate: "2026-07-01", durableObjectsPersist: dir,
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
   });
   const legacy = "PROB-2026-0740-boot";
-  const mf1 = mkMf(neutered);
+  const mf1 = await mkMf(neutered);
   const c1 = callOn(mf1);
   await mkOn(c1)(legacy, focusMd(legacy, { type: "problem", schema: "problem@1" }), "problem");
   t("the neutered build stored the legacy spelling raw",
     (await c1(`/projection?id=${legacy}&viewer=class:member`)).object_type, "problem");
   await mf1.dispose();
-  const mf2 = mkMf(STORE_SRC);
+  const mf2 = await mkMf(STORE_SRC);
   const c2 = callOn(mf2);
   t("one boot under the live build and the row is canonical",
     (await c2(`/projection?id=${legacy}&viewer=class:member`)).object_type, "inquiry");

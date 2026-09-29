@@ -199,7 +199,7 @@ t("UNDETERMINED, stated as null: no chain, a malformed chain, a page no step cov
  * ================================================================== */
 const PROBE = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);

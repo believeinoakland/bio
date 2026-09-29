@@ -258,7 +258,8 @@ test("R19: the justification family names only codes that ask the member for an 
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
     "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
     "ACTION_MOVE_NO_REASON" /* N310: actions R13 */]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
-  for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "NO_LABEL", "NO_CITATION", "NO_BODY", "NO_TITLE"])
+  for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "ENTITY_NO_LABEL", "PROGRESSION_NO_LABEL", "EXPERTISE_NO_LABEL",
+    "NO_SUCH_KNOCK", "NO_SUCH_COMPARISON", "NOT_AN_ADMIN", "NO_CITATION", "NO_BODY", "NO_TITLE"])
     assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
 
@@ -397,4 +398,21 @@ test("R3 R7 R12: layer 9's 22 mutating ops each carry a NON_ACTS reason and thei
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => mutating.includes(op) || LAYER9_READS.includes(op)), []);
+});
+
+/* N321 (T13, K424): `op=projectstage` (publication R44) is a read stamping `viewer`, carried as every project read is:
+   not mutating and with no `NEEDS` row, `op=profiles`' precedent (K416). So it takes no rung (R3 grades the ops that
+   write) and no `NON_ACTS` row (a row for an ungated op reads `stale`, R12), and no registry names it. */
+test("R3 R7 R12: op=projectstage, an ungated read, is named in no registry, and a table carrying it as one leaves "
+   + "nothing unaccounted; carried as mutating or gated, it would be named", () => {
+  const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
+    || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
+  assert.equal(named("projectstage"), false);
+  const row = { op: "projectstage", mutating: false, gated: false };
+  assert.deepEqual(A.unaccounted([row]), A.unaccounted([]));
+  const base = A.unaccounted([]);
+  const r = A.unaccounted([{ ...row, gated: true }]);
+  assert.deepEqual(r.unpublished, ["projectstage"]);
+  assert.deepEqual(A.unaccounted([{ ...row, mutating: true }]).unranked, ["projectstage"]);
+  assert.deepEqual(r.stale, base.stale);
 });

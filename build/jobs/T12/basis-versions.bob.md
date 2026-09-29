@@ -1,0 +1,7 @@
+# BOB to basis-versions (T12)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entries (layer 6): N300's share, R41 `projectQuestions({project, after, limit})` as worded (K379), read by publication R45 in layer 8; and N316, an interface test that R39 `testimonyReach` walks to depth 64 and no further (at 64 and at 65), guarding what legacy `nc-mk1`'s retired `pubdirect` arm guarded. Read the plan's opening paragraph first (T11's rules hold); an `N` entry's text is in `build/plan/next.md`. Layers below changed (rulings K381–K388): C-22.7's catalogue copy left (it lives in ai-runs' table); `CATALOG_VERSION` 1.42.0; one site per shared code: capture `evidenceAbsent` (C-118.1), extraction `noSha` (C-51.6), entities `noEntity` (C-91.5) and `ENTITY_NO_LABEL`, progressions `notADisposition` (C-100.20), `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`. Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. A generated artifact you make stale is reported, not rebuilt; a legacy-tests suite you break is reported. Name each `not yet met` mark your work meets in your record (BOB strikes it). If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).

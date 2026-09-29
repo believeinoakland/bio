@@ -43,7 +43,7 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 
-const SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const script = readFileSync(SRC, "utf8");
 const AT = "2026-07-31T12:00:00Z";
 const BUNDLE = "INFO-2026-0700-sewer-fund-transfers";

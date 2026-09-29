@@ -30,7 +30,7 @@
  *   strength      `inquiryStrength` (R9).
  *   reevaluation  `onBasisChanged` (R10).
  *   publication   `publishedEditionsOf` (R2, R9, R10; its R37).
- *   standards     `standardRead`, `inForce` (R1, R3, R9, R10).
+ *   standards     `standardRead`, `inForce` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`).
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37), through
@@ -44,7 +44,7 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
-import { standardsOf } from "../standards/index.mjs";
+import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle } from "../../checks/bio-checks.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
@@ -174,7 +174,7 @@ export class Conformance {
     const denied = member ? this.membership.projectAuthority(project, author, "joined", "determine") : true;
     /* DEC-49 REGION is-project-joined */
     if (denied)
-      return refusal("NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. "
+      return refusal("DETERMINATION_NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. "
         + "Nothing was written.", { project, author: str(author) });
     /* END DEC-49 REGION is-project-joined */
     return null;
@@ -319,11 +319,8 @@ export class Conformance {
       const outcome = isObj(item) ? item.outcome : undefined;
       let read = null;
       try { read = id ? this.standards.standardRead({ id, viewer }) : null; } catch { read = null; }
-      /* DEC-49 REGION is-standard-held */
-      if (!read || read.ok === false)
-        return refusal("NO_SUCH_STANDARD", `${String(id ?? "a standard named").slice(0, 80)} is not a standard the record `
-          + "holds. Nothing was written.", { standard: id });
-      /* END DEC-49 REGION is-standard-held */
+      /* R1 (standards R17): one answer, standards' own, whatever the read said. */
+      if (!read || read.ok === false) return noSuchStandard(id);
       const answers = Conformance.datesOf(act).map((d) => this.#inForce(id, d));
       const not = answers.find((x) => x.answer === "not_in_force");
       /* DEC-49 REGION is-standard-in-force */
@@ -416,7 +413,7 @@ export class Conformance {
     if (!id) return { ok: true, prev: null };
     const prev = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, id);
     if (!prev || prev.project_id !== project || this.membership.sight(prev.project_id, viewer) !== Membership.SIGHT_FULL)
-      return refuseNoSuchDetermination(id);
+      return noSuchDetermination(id, { supersedes: id });
     /* DEC-49 REGION is-same-act */
     if (act.id && act.id !== prev.act_id)
       return refusal("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. `
@@ -433,12 +430,9 @@ export class Conformance {
       return refusal("BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX} characters. `
         + "Nothing was written.", { supersedes: id, max: REASON_MAX });
     /* END DEC-49 REGION is-reason-stated */
+    /* R7, R20: superseded at most once; the successor is in the same project, which the viewer sees in full. */
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
-    /* DEC-49 REGION is-supersedable */
-    if (by)
-      return refusal("ALREADY_SUPERSEDED", `${id} was superseded by ${by.superseded_by}. Nothing was written.`,
-                     { supersedes: id, superseded_by: by.superseded_by });
-    /* END DEC-49 REGION is-supersedable */
+    if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
     return { ok: true, prev, reason: why };
   }
 
@@ -486,7 +480,7 @@ export class Conformance {
     if (sig) return sig;
     const drew = str(proposal);
     if (drew && !this.#one(`SELECT proposal_id FROM comparison_proposals WHERE proposal_id=? AND project_id=?`, drew, pid))
-      return refuseNoSuchProposal(drew);
+      return refuseNoSuchComparison(drew);
     const sup = this.#supersession(supersedes, reason, a.act, pid, viewer);
     if (!sup.ok) return sup;
     return this.#write({ project: pid, act: a, pins: f.pins, standards: s.standards, rows: r.rows,
@@ -595,7 +589,7 @@ export class Conformance {
    *  `at` or `period` is null as the act states; a standard or finding the viewer may not see is null beside `says`. */
   determinationRead({ id = null, viewer = null } = {}) {
     const r = this.#seen(id, viewer);
-    if (!r) return refuseNoSuchDetermination(id);
+    if (!r) return noSuchDetermination(str(id));
     const did = r.determination_id;
     const rows = this.#rows(`SELECT * FROM determination_rows WHERE determination_id=? ORDER BY ord LIMIT ?`,
                             did, LIMITS.rows);
@@ -802,7 +796,7 @@ export class Conformance {
   /** R12: one proposal, its label and the determinations that drew on it; absent, unseen and another project's alike. */
   comparisonRead({ id = null, viewer = null } = {}) {
     const r = str(id) ? this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, str(id)) : null;
-    if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchProposal(id);
+    if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchComparison(id);
     return { ok: true, proposal: this.#proposalView(r, viewer) };
   }
 
@@ -861,20 +855,54 @@ export class Conformance {
   }
 }
 
-/* R9, R15: the one "no such determination" answer, absent and unseen alike. */
-function refuseNoSuchDetermination(id) {
+/* R19, R20: each code's fixed fields; a caller's `extra` adds its own and never replaces one of these. */
+const NO_SUCH_DETERMINATION_DETAIL = "no determination answers to that id here. One you may not see is answered exactly "
+  + "as one that does not exist, so this is not a hint either way.";
+const DETERMINATION_SUPERSEDED_DETAIL = "that determination has been superseded, and a determination is superseded once "
+  + "and not acted on once superseded. The one that superseded it is the determination to use.";
+const NO_SUCH_DETERMINATION_FIXED = ["ok", "reason", "code", "check", "translation", "determination", "detail"];
+const DETERMINATION_SUPERSEDED_FIXED = [...NO_SUCH_DETERMINATION_FIXED, "superseded_by"];
+const asId = (v) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 200) : null);
+function ownFields(extra, fixed) {
+  try {
+    return extra && typeof extra === "object" && !Array.isArray(extra)
+      ? Object.fromEntries(Object.entries(extra).filter(([k]) => !fixed.includes(k))) : {};
+  } catch { return {}; }
+}
+
+/** R19 (N309, K275): the one answer to "no determination the caller may see answers to `determinationId`", absent and
+ *  unseen alike (R9, R15). Every module that answers this condition answers through it; it writes nothing and never
+ *  throws. `determination` is the id as asked (null when none); `detail` is fixed, the same for every caller. */
+export function noSuchDetermination(determinationId, extra = null) {
+  const own = ownFields(extra, NO_SUCH_DETERMINATION_FIXED);
   /* DEC-49 REGION is-determination-seen */
-  return refusal("NO_SUCH_DETERMINATION", "no determination answers to that id here. One you may not see answers exactly "
-    + "as one that does not exist.", { id: str(id) });
+  const row = CONFORMANCE_CHECKS.NO_SUCH_DETERMINATION;
+  return { ok: false, reason: "NO_SUCH_DETERMINATION", code: "NO_SUCH_DETERMINATION", check: row.check,
+           translation: row.translation, determination: asId(determinationId), ...own,
+           detail: NO_SUCH_DETERMINATION_DETAIL };
   /* END DEC-49 REGION is-determination-seen */
 }
 
-/* R12: the one "no such proposal" answer, absent, unseen and another project's alike. */
-function refuseNoSuchProposal(id) {
-  /* DEC-49 REGION is-proposal-seen */
-  return refusal("NO_SUCH_PROPOSAL", "no comparison answers to that id in this project. One you may not see answers "
+/** R20 (N309, N312, K275): the one answer to "the determination `determinationId` names has been superseded" (not live,
+ *  R10). `superseded_by` is the determination that superseded it, as the caller passes it (null when the caller cannot
+ *  read it). R7's second supersession and every later module's act on a superseded determination answer through it; it
+ *  writes nothing and never throws. */
+export function determinationSuperseded(determinationId, supersededBy = null, extra = null) {
+  const own = ownFields(extra, DETERMINATION_SUPERSEDED_FIXED);
+  /* DEC-49 REGION is-determination-live */
+  const row = CONFORMANCE_CHECKS.DETERMINATION_SUPERSEDED;
+  return { ok: false, reason: "DETERMINATION_SUPERSEDED", code: "DETERMINATION_SUPERSEDED", check: row.check,
+           translation: row.translation, determination: asId(determinationId), superseded_by: asId(supersededBy),
+           ...own, detail: DETERMINATION_SUPERSEDED_DETAIL };
+  /* END DEC-49 REGION is-determination-live */
+}
+
+/* R18: the one "no such comparison" answer, absent, unseen and another project's alike. */
+function refuseNoSuchComparison(id) {
+  /* DEC-49 REGION is-comparison-seen */
+  return refusal("NO_SUCH_COMPARISON", "no comparison answers to that id in this project. One you may not see answers "
     + "exactly as one that does not exist. Nothing was written.", { proposal: str(id) });
-  /* END DEC-49 REGION is-proposal-seen */
+  /* END DEC-49 REGION is-comparison-seen */
 }
 
 /* R17: the determination's own document, the record's word on it, as promotion stores it (history, audit, export). Its

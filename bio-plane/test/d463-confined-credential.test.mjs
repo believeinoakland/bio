@@ -51,7 +51,10 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { NAMESPACE_CHECKS, AI_CREDENTIAL_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #1 step 1 and #2 J4 R32): C-78 moved whole and C-29.10 with the gate's
+   rows (`AI_SCOPE_CHECKS`, split from `AI_CREDENTIAL_CHECKS`) to control-plane's own table, and the gates from
+   `src/index.mjs` to `src/control-plane/index.mjs`; the rows are still imported, and the structure is read there. */
+import { NAMESPACE_CHECKS, AI_SCOPE_CHECKS } from "../src/control-plane/checks.mjs";
 
 const SRC = (f) => fileURLToPath(new URL(`../src/${f}`, import.meta.url));
 const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -96,9 +99,9 @@ try {
 
 /* ------------------------------------------------------------------- 1 · the rows */
 const CONFINED_ROW = NAMESPACE_CHECKS.NAMESPACE_CONFINED;
-const MINT_ROW = AI_CREDENTIAL_CHECKS.AI_CONFINEMENT_NOT_SCRATCH;
+const MINT_ROW = AI_SCOPE_CHECKS.AI_CONFINEMENT_NOT_SCRATCH;
 console.log(`\n--- 1 · the two rows: NAMESPACE_CHECKS ${Object.keys(NAMESPACE_CHECKS).length} row(s), `
-          + `AI_CREDENTIAL_CHECKS ${Object.keys(AI_CREDENTIAL_CHECKS).length} row(s) ---`);
+          + `AI_SCOPE_CHECKS ${Object.keys(AI_SCOPE_CHECKS).length} row(s) ---`);
 t("NAMESPACE_CONFINED is C-78.3, names a REGION in its `where`, and carries a sentence of at least eight words",
   [!!CONFINED_ROW, CONFINED_ROW?.check, / > /.test(CONFINED_ROW?.where ?? ""),
    (CONFINED_ROW?.translation ?? "").trim().split(/\s+/).length >= 8],
@@ -108,7 +111,7 @@ t("AI_CONFINEMENT_NOT_SCRATCH is C-29.10, likewise",
    (MINT_ROW?.translation ?? "").trim().split(/\s+/).length >= 8],
   [true, "C-29.10", true, true]);
 {
-  const src = readFileSync(SRC("index.mjs"), "utf8");
+  const src = readFileSync(SRC("control-plane/index.mjs"), "utf8");
   t("both regions the two `where`s name are declared in the source",
     [CONFINED_ROW, MINT_ROW].map((r) => r.where.split(" > ")[1])
       .filter((r) => !src.includes(`DEC-49 REGION ${r}`)), []);
@@ -330,7 +333,7 @@ console.log("\n--- 7 · a confined credential meeting a bio-PINNED public op is 
 /* ------------------------------------------------------------------- 8 · structure */
 console.log("\n--- 8 · one decider, and it cannot be reached around ---");
 {
-  const src = readFileSync(SRC("index.mjs"), "utf8");
+  const src = readFileSync(SRC("control-plane/index.mjs"), "utf8");
   const g = src.indexOf("const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);");
   t("the confinement gate runs AFTER D-456's unknown-namespace gate and BEFORE D-461's pin, the unauthenticated "
   + "block, `classify` and `scopeFor`'s call site",

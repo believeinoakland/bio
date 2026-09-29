@@ -164,11 +164,17 @@ const STORE_BARE = decomment(STORE_SRC);
    widens to the T8 modules extracted from the store in the same way, each file walked on its own. */
 const T8_EXTRACTED = ["actions", "case-authoring", "review", "publication", "ratification", "monitoring", "scheduler",
                       "standards", "conformance", "consequences", "filings", "escalation"];
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): NO_CASE left with `queueMute`'s case resolver (`#queueCaseFor`)
+   for `src/queue/index.mjs`, so the walk found no site for it. The corpus widens to the queue in the same way, each
+   file walked on its own. */
 const WALKED_BARE = [STORE_BARE, ...[...moduleFiles("membership"), ...moduleFiles("promotion"),
                                     ...moduleFiles("provenance"), ...moduleFiles("capture"), ...moduleFiles("host-governor"),
-                                    ...T8_EXTRACTED.flatMap(moduleFiles)]
+                                    ...T8_EXTRACTED.flatMap(moduleFiles), ...moduleFiles("queue")]
   .map((f) => decomment(readFileSync(SRC(f), "utf8")))];
-const INDEX_BARE = decomment(INDEX_SRC);
+/* RE-ANCHORED 2026-09-29 (T12 B8/B9, K413; CONTROL-PLANE #2): the control plane's dispatch — the author stamp on
+   `provenancechain` among it — left `src/index.mjs` for `src/control-plane/index.mjs`. The structural arm reads the
+   plane's front door as it stood before that extraction: index.mjs AND control-plane's file. */
+const INDEX_BARE = decomment(INDEX_SRC + "\n" + readFileSync(SRC("control-plane/index.mjs"), "utf8"));
 
 /* THE SET, AS A SET. Typed here ONCE and then CONFIRMED against `store.mjs`
    below — the equality that follows a guard, never the equality on its own. It

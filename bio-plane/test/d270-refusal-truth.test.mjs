@@ -70,6 +70,13 @@
    e RED 31/3 · f RED 22/12 · g RED 33/1 · h GREEN 34/0 · i RED 33/1 naming governorconfig · j GREEN 34/0**,
    every restore sha256 MATCH and `cmp` clean (index.mjs 840,734 B; this suite 48,254 B at the run, before this
    paragraph was written).
+   RE-RUN 2026-09-29 BY LEGACY-TESTS (T12, K413) in a scratch worktree at `d3f5329855` + this re-anchor: the gate
+   and `UNATTENDED_BY_DECISION` left `src/index.mjs` for `src/control-plane/{index,ops}.mjs`, so arms b, h, i, j
+   patch `control-plane/index.mjs`, arms c, d `control-plane/ops.mjs`, arm e still `src/index.mjs`, every patch
+   text unchanged. **10/10 AS DECLARED — a GREEN 37/0 · b RED 29/8 armed 3/3 naming governorconfig and
+   rec155unruled · c RED 33/4 naming all seven recorded ops · d RED 36/1 · e RED 34/3 · f RED 24/13 · g RED 36/1 ·
+   h GREEN 37/0 · i RED 36/1 naming governorconfig · j GREEN 37/0**, every restore sha256 MATCH and `cmp` clean
+   (control-plane/index.mjs 249,225 B; ops.mjs 150,211 B; index.mjs 52,507 B; this suite 56,405 B at the run).
    (h) OVER-STRICTNESS, and this file exists to survive it: a REAL site rewritten to spell its code in
        `code` with NO `reason` at all, the row IMPORTED rather than hand-copied, and an extra key the
        grader has never seen. It MUST PASS. A grader that reports correct work as a violation teaches
@@ -146,14 +153,19 @@ import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process an
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { ADMISSION_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #1 step 1 and #2 J4 R32): C-38 moved whole, words and check ids kept,
+   to control-plane's own table (C-61.1 stays in the catalogue with its raiser, legacy-index's `requiredArgument`), and
+   `OPS`, `SESSION_OPS`, the act lists and `UNATTENDED_BY_DECISION` moved from `src/index.mjs` to
+   `src/control-plane/ops.mjs`. Section 2 parses that file now; the Worker is still booted from `src/index.mjs`. */
+import { REQUIRED_ARGUMENT_CHECKS } from "../checks/bio-checks.mjs";
+import { ADMISSION_CHECKS } from "../src/control-plane/checks.mjs";
 import { unruledOpPlane, unruledOpMemberSession, UNRULED_OP } from "./unruled-op-fixture.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const INDEX_SRC = readFileSync(SRC, "utf8");
+const INDEX_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
 
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: SRC, script: INDEX_SRC,
+  modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   /* R2 IS BOUND, and it is not boilerplate here: `op=capture` and
@@ -342,10 +354,14 @@ console.log(`    (c) OMISSION        ${OMITTED.length}: ${OMITTED.join(" ")}`);
 /* ARRIVAL LOOKED AT 2026-09-29 (legacy-tests T11; K372 monitoring R30, K377 legacy-index): `monitorpause`, the
    administrator's pause of the daemon, is routed on `governorconfig`'s cut (the ADMIN_TOKEN bearer and the founder's
    own session, `SESSION_OPS.admin` alone), so it joins this arm by ruling. Still a literal. */
-t("the ROLE-GATED arm is exactly the two ops the FOUNDER'S session alone reaches — `governorconfig`, "
-+ "the operator's (§4.9, BOB #23), and `monitorpause`, the daemon's pause on the same cut (K372) — after REC-159 "
-+ "moved D-270's other four into both sets; pinned as a literal SET so an arrival or a departure is looked at",
-  ROLE_OPS, ["governorconfig", "monitorpause"]);
+/* DEPARTURE LOOKED AT 2026-09-29 (legacy-tests T12; N314, K376 (2) "every administrator in T12", K413 CONTROL-PLANE
+   #1 item 2): `monitorpause` joined BOTH session sets, the `actor` stamped from the session, and monitoring R30 refuses
+   a non-administrator `NOT_AN_ADMIN` (K404) — the roster decides it, as REC-159's four. It is pinned there below, by
+   name. Still a literal. */
+t("the ROLE-GATED arm is exactly the one op the FOUNDER'S session alone reaches — `governorconfig`, "
++ "the operator's (§4.9, BOB #23) — after REC-159 moved D-270's other four and N314 `monitorpause` into both sets; "
++ "pinned as a literal SET so an arrival or a departure is looked at",
+  ROLE_OPS, ["governorconfig"]);
 /* ADDED 2026-09-19 (D-136). THE PIN ABOVE DID ITS JOB AND THIS IS WHAT IT
    CAUGHT. D-136 gave `adminendorse`, `adminremove` and `membercaps` session
    reach, and this suite went red until somebody looked at where they landed —
@@ -369,6 +385,10 @@ t("D-136's three reach BOTH session sets and are therefore in NEITHER role arm �
 t("REC-159's four §4.9 custodial acts reach BOTH session sets and are in NEITHER role arm — the roster "
 + "decides them against a stamped `by` (BIO_Membership_Architecture_v2.md §4.9)",
   ["memberadd", "memberset", "signeradd", "signerset"].filter((o) => !BOTH_SETS.includes(o)), []);
+/* ADDED 2026-09-29 (N314, K376 (2), K413): the daemon's pause left the ROLE arm for both sets, pinned where it went. */
+t("N314's `monitorpause` reaches BOTH session sets and is in NEITHER role arm — monitoring R30 refuses a "
++ "non-administrator NOT_AN_ADMIN against the stamped `actor` (K404)",
+  ["monitorpause"].filter((o) => !BOTH_SETS.includes(o)), []);
 /* ADDED 2026-09-25 (REC-155): §4.10's five, pinned where BOB #19's ruling put them, by name — so a regression
    that dropped one from either set fails HERE, and not only as an omission reappearing below. */
 t("REC-155's five — the provenance pair and the three calibration writes — reach BOTH session sets and are "
@@ -575,7 +595,7 @@ t("every op no session reaches answers with the code its arm calls for, EACH BY 
 t("the OMISSION arm is EMPTY on the real plane, pinned as a literal — §4.10 ruled all seven of its members "
 + "(BOB #19), so an op arriving here is an op nobody ruled on and is meant to be looked at",
   OMITTED, []);
-const fx = unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
+const fx = await unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
                             VERSION: "test" });
 let unruled;
 try {

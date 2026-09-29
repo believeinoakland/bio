@@ -70,7 +70,7 @@ test("R15 formulas: one item per cell carrying table:formula, verbatim, beside t
 
 /* ------------------------------------------------------------------ R16 */
 
-test("R16 hidden rows, columns (repeats expanded) and sheets: one item each per sheet that has any", async () => {
+test("R16 hidden rows and columns as one range per run, never expanded, and hidden sheets: one item each per sheet that has any", async () => {
   const body = table("H", [
     `<table:table-column/><table:table-column table:visibility="collapse" table:number-columns-repeated="2"/><table:table-column table:visibility="filter"/><table:table-column/>`,
     row(cell("r1")),
@@ -81,10 +81,21 @@ test("R16 hidden rows, columns (repeats expanded) and sheets: one item each per 
     row(cell("r9")),
   ].join("")) + table("Shown", row(cell("x"))) + table("Gone", row(cell("y")), 'table:display="false"');
   const s = await S(body);
-  assert.deepEqual(items(s, "hidden-rows"), [{ kind: "hidden-rows", sheet: "H", rows: [2, 4, 5, 6, 7, 8], count: 6, source: null }]);
+  assert.deepEqual(items(s, "hidden-rows"), [{ kind: "hidden-rows", sheet: "H",
+    rows: [{ min: 2, max: 2, visibility: "collapse" }, { min: 4, max: 6, visibility: "filter" }, { min: 7, max: 8, visibility: "collapse" }],
+    count: 3, source: null }]);
   assert.deepEqual(items(s, "hidden-cols"), [{ kind: "hidden-cols", sheet: "H",
     cols: [{ min: 2, max: 3, visibility: "collapse" }, { min: 4, max: 4, visibility: "filter" }], count: 2, source: null }]);
   assert.deepEqual(items(s, "hidden-sheet"), [{ kind: "hidden-sheet", sheet: "Gone", state: "hidden", source: null }]);
+  // a collapsed run of a million empty rows below the content is ONE range, and the sheet still reads
+  const tail = await S(table("T", row(cell("a")) + row(empty(1024), 'table:visibility="collapse" table:number-rows-repeated="1048575"')));
+  assert.deepEqual(items(tail, "hidden-rows"), [{ kind: "hidden-rows", sheet: "T",
+    rows: [{ min: 2, max: 1048576, visibility: "collapse" }], count: 1, source: null }]);
+  // two adjacent hidden rows written as two elements are two ranges, never merged; a sheet with none has no item
+  const two = await S(table("A", row(cell("x"), 'table:visibility="filter"') + row(cell("y"), 'table:visibility="filter"')) + table("B", row(cell("z"))));
+  assert.deepEqual(items(two, "hidden-rows"), [{ kind: "hidden-rows", sheet: "A",
+    rows: [{ min: 1, max: 1, visibility: "filter" }, { min: 2, max: 2, visibility: "filter" }], count: 2, source: null }]);
+  assert.deepEqual(items(two, "hidden-cols"), []);
 });
 
 /* ------------------------------------------------------------------ R17 */
