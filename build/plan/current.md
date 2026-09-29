@@ -4,7 +4,7 @@
 
 Opened by BOB #65, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 8dfc4fb5ca, T12 closed (K423). Cut from `draft-T13.md` re-read against T12's close (K424); its wordings folded before opening (K408, commit 59463bf73d; N332 worded as membership R85). Bob's weekly meter at the opening: asked (18% at T12's close). An `N` entry's text is in `build/plan/next.md`.
 
-**Jobs** · odf-reader: ODF-READER #3 session_012x3jt5MEsquz9cY3RyQESF; record-core: RECORD-CORE #7 session_01GSoeuDnnp3sumTtZuq2WZq; membership: MEMBERSHIP #6 session_01Hc7NnTW3bKEQ3syEqYwTB7; promotion: PROMOTION #14 session_01JwRGiAAQuCSCteSnVJeMBi
+**Jobs** · odf-reader: ODF-READER #3 session_012x3jt5MEsquz9cY3RyQESF; record-core: RECORD-CORE #7 session_01GSoeuDnnp3sumTtZuq2WZq; membership: MEMBERSHIP #6 session_01Hc7NnTW3bKEQ3syEqYwTB7; promotion: PROMOTION #14 session_01JwRGiAAQuCSCteSnVJeMBi; intent: INTENT #5 session_01NeUjSARtJrUvGsQ3fY9FRB
 
 **Rules at the opening.** T12's rules hold (`archive/T12.md`): every job with a long battery runs it in the foreground, in chunks under ten minutes, pushing its record after each. A provider a later job of the same layer needs merges early as it completes (§4). **legacy-tests runs alone, last, after every other job has merged (K420, K427).** After each extraction merge BOB runs `test/m/` whole on the tranche (BOB #64's lesson).
 
