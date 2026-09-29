@@ -37,7 +37,7 @@
 - **installer** (layer 11) · N10 (its share: R21 offers the held non-test profiles and binds `JURISDICTION_PROFILES`). This is ready once T12's instance-setup job meets R13; if it does not, the share waits.
 - **legacy-tests** (layer 11) · N318 (d470's re-pin from the suite's print). N319 (its share, once worded). N238 (meaning-bounds' `caseratify` reader follows publication's held `commitCaseEdition`; this is the first of the instruments N279 waits on). It also re-anchors or retires what T13's layers break.
 
-### Needs wording (BOB, before the opening)
+### Needs wording (BOB, before the opening) — worded in `draft-T13-wordings.md` (K408), folded at the opening
 
 - **N322** (with N250) · record-core: a new Provides entry and R for the helper beside `mintOpaqueId`, with its row; review R27 (C-87.12 retires); case-authoring R7; promotion's mint site; legacy-store's or queue's task mint.
 - **N324** · membership: a new R beside R64 and R78 (`notAnAdmin`, C-96.1's row, which stays in `CUSTODIAL_CHECKS` or moves to membership: BOB's call); monitoring R30 (K403's local site retires).
