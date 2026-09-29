@@ -33,3 +33,7 @@ Size (session_018U5XyRWoqFTg8mE97Ju4Dc): test runs 9, module lines 2409
 ## J1 · QUESTION
 
 R48 'the monitored documents (R32's addresses' documents)': my best reading, which I am building on: every bundle whose projection has monitor_enabled = 1 (every version R15 groups into R32's addresses, not only the version each address checks), since a flag an older version still carries is still an open flag for a member; and a bundle scheduled as itself (R15's lone subject) is included the same way. Visibility is membership's viewerPredicate in the SQL, so a hidden document is never read, listed or counted. The alternative is to list only the current version per address (R32's rows' bundle). Carrying on with my reading.
+
+## J2 · COMPLETE
+
+N330 and N339/N349 applied. R47 archiveEligible(now) and R48 flagged({viewer, limit}) beside R32 (R48 per K472); R49: monitorOp relays a store refusal through storeRefusal (or json(reply.body, reply.status) when not handed) and a silence with out.correlation. legacy-index must hand storeRefusal at src/index.mjs:736 (layer 11). Monitoring tests 71: 65 pass, 6 todo, 0 fail; scheduler 46/48 (2 todo), queue 60/61 (1 todo), 0 fail; format, architecture, coverage (48/48), ownership: 0 failures. Please strike R47, R48, R49's not-yet-met marks. No rows to stamp. REPORT in the record: dist/bio-plane.bundled.mjs is stale; no civicos-ui or affordances hits; no store routes added for R47/R48 (queue reads in process). Record: build/jobs/T14/monitoring.md.
