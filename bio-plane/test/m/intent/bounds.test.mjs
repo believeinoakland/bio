@@ -2,12 +2,14 @@
    record answers at most its bound, says so with `truncated`, and at the bound exactly says nothing was cut. R4
    (MEASURE_MAX), R10 and R12 (DEPARTURES_MAX), R12 and R13 (ASPIRATIONS_MAX, CONTACTS_MAX), R16 (SET_ASIDE_MAX); and
    the internal reads (N305, K367): R28's context (CONTEXT_MAX), `proposals` with no project (PROJECTS_MAX), R14's named
-   capture requests (REQUESTS_MAX). */
+   capture requests (REQUESTS_MAX); and (N323, K408) R12's and R13's read of every aspiration the viewer may see, held or
+   retired (ASPIRATIONS_MAX), R14's read of the goals (GOALS_READ_MAX), and R27's read of the questions at `surfaced`
+   (AGEING_READ_MAX). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MEASURE_MAX, DEPARTURES_MAX, SET_ASIDE_MAX, ASPIRATIONS_MAX, CONTACTS_MAX, CONTEXT_MAX, PROJECTS_MAX,
-         REQUESTS_MAX } from "../../../src/intent/index.mjs";
-import { seeded, V, COND, projMd } from "./fixture.mjs";
+         REQUESTS_MAX, GOALS_MAX, GOALS_READ_MAX, AGEING_READ_MAX } from "../../../src/intent/index.mjs";
+import { seeded, V, COND, projMd, DAY } from "./fixture.mjs";
 
 const declareGroup = (w, n, extra = {}) => Array.from({ length: n }, (_, k) =>
   w.i.declareAspiration({ scope: "group", statement: `Aspiration ${k}`, author: V("alice"), ...extra }).aspiration);
@@ -30,10 +32,10 @@ test("R12 R10 aspirationsFor reads at most 1,000 held aspirations in id order, a
   assert.deepEqual([r.aspirations.length, r.truncated], [1000, true], "the 1,001st is cut, and it says so");
   const sorted = [...ids, extra].sort();
   assert.deepEqual(r.aspirations.map((a) => a.id), sorted.slice(0, 1000), "the first 1,000 in id order");
-  /* a retired aspiration is not held, so it neither counts toward the bound nor is answered */
+  /* N323: a retired aspiration is read and counted toward the bound, and not answered */
   assert.equal(w.i.retireAspiration({ aspiration: sorted[0], taught: "t", author: V("alice") }).ok, true);
   r = w.i.aspirationsFor({ viewer: V("bob") });
-  assert.deepEqual([r.aspirations.length, r.truncated, r.aspirations[0].id], [1000, false, sorted[1]]);
+  assert.deepEqual([r.aspirations.length, r.truncated, r.aspirations[0].id], [999, true, sorted[1]]);
   const Q = w.project("Second", "bob");
   for (const a of [extra, ...ids.slice(0, 1)]) w.i.departFrom({ project: Q, aspiration: a, reason: "r", author: V("bob") });
   assert.equal(w.i.departFrom({ project: w.P, aspiration: extra, reason: "r", author: V("bob") }).ok, true);
@@ -114,23 +116,27 @@ test("R16 proposals lists at most 200 set-aside proposals, newest first (SET_ASI
                    "newest first; the oldest is the one cut");
 });
 
-test("R28 (N305) servesOf measures against at most the first 1,000 held aspirations in force, in id order, member and retired ones not counted, answering context_truncated when cut", () => {
+test("R28 (N305, N323) servesOf reads the first 1,000 aspirations in id order, of any scope and held or retired alike, and measures against the held ones of group or project scope among them, answering context_truncated when the read is cut", () => {
   assert.equal(CONTEXT_MAX, 1000);
   const w = seeded();
   w.entity("ENT-1");
   w.resolve("x-sha", "INFO-X", "ENT-1", "A");                        // a bundle concerning ENT-1, in no project
-  const ids = declareGroup(w, 1000, { entities: ["ENT-1"] });
-  /* neither a member's aspiration nor a retired one is in force for R28, so neither counts toward the bound */
-  w.i.declareAspiration({ scope: "member", owner: "bob", statement: "Mine", entities: ["ENT-1"], author: V("bob") });
+  const ids = declareGroup(w, 998, { entities: ["ENT-1"] });
+  /* a member's aspiration and a retired one are read and counted, and neither is in force for R28 */
+  const mine = w.i.declareAspiration({ scope: "member", owner: "bob", statement: "Mine", entities: ["ENT-1"], author: V("bob") }).aspiration;
   const [old] = declareGroup(w, 1, { entities: ["ENT-1"] });
   assert.equal(w.i.retireAspiration({ aspiration: old, taught: "t", author: V("alice") }).ok, true);
   let r = w.i.servesOf({ bundles: ["INFO-X"] });
-  assert.deepEqual([r.serves[0].aspirations.length, r.context_truncated], [1000, false], "at the bound, nothing is cut");
+  assert.deepEqual([r.serves[0].aspirations.length, r.context_truncated], [998, false], "1,000 read: at the bound, nothing is cut");
   assert.deepEqual(r.serves[0].aspirations, [...ids].sort());
+  assert.ok(!r.serves[0].aspirations.includes(mine) && !r.serves[0].aspirations.includes(old));
+  /* a 1,001st, held and naming ENT-1: past the read, so not measured, and the cut is said */
   const [extra] = declareGroup(w, 1, { entities: ["ENT-1"] });
+  const all = [...ids, mine, old, extra].sort();
+  assert.equal(all.indexOf(extra), 1000, "the new one is the 1,001st in id order");
   r = w.i.servesOf({ bundles: ["INFO-X"] });
   assert.equal(r.context_truncated, true, "the 1,001st is cut, and it says so");
-  assert.deepEqual(r.serves[0].aspirations, [...ids, extra].sort().slice(0, 1000), "the first 1,000 in id order");
+  assert.deepEqual(r.serves[0].aspirations, [...ids].sort(), "the held group ones among the first 1,000 in id order");
   assert.equal(r.truncated, false, "the subjects were not cut");
 });
 
@@ -215,4 +221,132 @@ test("R14 (N305) pursuitOf reads at most 1,000 named capture requests, in the or
   assert.deepEqual([p.capture_requests.length, p.requests_truncated], [1000, true]);
   assert.deepEqual(p.capture_requests.map((c) => c.request), first, "the one named last is the one cut");
   assert.equal(w.calls.requestById.length - calls, 1000, "no more than 1,000 are read");
+});
+
+test("R12 R13 (N323) aspirationsFor and contacts read the first 1,000 aspirations the viewer may see, held or retired and of any scope, each counted: 1,001 retired and then one held answer none held, with truncated", () => {
+  assert.equal(ASPIRATIONS_MAX, 1000);
+  const w = seeded();
+  w.entity("ENT-1");
+  const retired = declareGroup(w, 1001, { entities: ["ENT-1"] });
+  for (const a of retired) assert.equal(w.i.retireAspiration({ aspiration: a, taught: "t", author: V("alice") }).ok, true);
+  /* two held, both past the read in id order, sharing ENT-1: in force and in contact, but not read */
+  const held = declareGroup(w, 2, { entities: ["ENT-1"] });
+  assert.ok(held.every((id) => id > [...retired].sort().at(-1)));
+  let r = w.i.aspirationsFor({ viewer: V("bob") });
+  assert.deepEqual([r.aspirations, r.limit, r.truncated], [[], 1000, true], "none held among the 1,000 read, and the cut is said");
+  let c = w.i.contacts({ viewer: V("bob") });
+  assert.deepEqual([c.contacts, c.truncated], [[], true], "no pair among R12's read; the cut is said");
+  /* at the bound exactly: 998 retired, the two held, 1,000 read, nothing cut, both answered and paired */
+  const v = seeded();
+  v.entity("ENT-1");
+  for (const a of declareGroup(v, 998)) v.i.retireAspiration({ aspiration: a, taught: "t", author: V("alice") });
+  const two = declareGroup(v, 2, { entities: ["ENT-1"] }).sort();
+  r = v.i.aspirationsFor({ viewer: V("bob") });
+  assert.deepEqual([r.aspirations.map((a) => a.id), r.truncated], [two, false]);
+  c = v.i.contacts({ viewer: V("bob") });
+  assert.deepEqual([c.contacts.map((x) => [x.a, x.b]), c.truncated], [[two], false]);
+});
+
+test("R12 R13 (N323, DEC-36, K391) a project aspiration of a project the viewer may not see is skipped and never counted, so the cut says nothing of it", () => {
+  const w = seeded();
+  const hidden = w.project("Sealed", "carol");
+  const group = declareGroup(w, 999);
+  const sealed = w.i.declareAspiration({ scope: "project", owner: hidden, statement: "Sealed", author: V("carol") }).aspiration;
+  const [last] = declareGroup(w, 1);
+  assert.ok(sealed < last, "the hidden one sits inside the first 1,000 in id order");
+  /* bob may see 1,000 of the 1,001: all read, nothing cut, nothing of the hidden one */
+  const bob = w.i.aspirationsFor({ viewer: V("bob") });
+  assert.deepEqual([bob.aspirations.length, bob.truncated], [1000, false]);
+  assert.equal(w.i.contacts({ viewer: V("bob") }).truncated, false);
+  /* carol may see all 1,001: the 1,001st in id order is cut, and it says so */
+  const carol = w.i.aspirationsFor({ viewer: V("carol") });
+  assert.deepEqual([carol.aspirations.length, carol.truncated], [999, true], "the group's 1,000 less the one past the cut");
+  assert.ok(!carol.aspirations.some((a) => a.id === last));
+  assert.equal(w.i.contacts({ viewer: V("carol") }).truncated, true);
+  void group;
+});
+
+test("R14 (N323) pursuitOf finds the aspiration's goals by reading at most the first 1,000 goals held, in id order, whatever aspiration each names: 1,001 under other aspirations and then one under the asked answer no goal, with goals_read_truncated", () => {
+  assert.equal(GOALS_READ_MAX, 1000);
+  assert.equal(GOALS_MAX, 200);
+  const goals = (w, n, aspiration = null) => Array.from({ length: n }, (_, k) =>
+    w.i.declareGoal({ statement: `Goal ${k}`, bounds: "b", aspiration, author: V("bob") }).goal);
+  const w = seeded();
+  const a = w.i.declareAspiration({ scope: "group", statement: "Asked", author: V("alice") }).aspiration;
+  const other = w.i.declareAspiration({ scope: "group", statement: "Other", author: V("alice") }).aspiration;
+  const before = goals(w, 1001, other);
+  const [mine] = goals(w, 1, a);
+  assert.ok(mine > [...before].sort().at(-1), "the asked aspiration's goal is the 1,002nd in id order");
+  let p = w.i.pursuitOf({ aspiration: a, viewer: V("bob") });
+  assert.deepEqual([p.goals, p.goals_read_truncated, p.goals_truncated], [[], true, false], "not reached, and the cut is said");
+  /* at the bound exactly: 999 under another and the asked one's, 1,000 read, found, nothing cut */
+  const v = seeded();
+  const b = v.i.declareAspiration({ scope: "group", statement: "Asked", author: V("alice") }).aspiration;
+  goals(v, 999, null);
+  const [found] = goals(v, 1, b);
+  p = v.i.pursuitOf({ aspiration: b, viewer: V("bob") });
+  assert.deepEqual([p.goals.map((g) => g.id), p.goals_read_truncated], [[found], false]);
+  /* one more goal after it: the read is cut after the asked one's goal, which is still found, and the cut is said */
+  const [late] = goals(v, 1, b);
+  p = v.i.pursuitOf({ aspiration: b, viewer: V("bob") });
+  assert.deepEqual([p.goals.map((g) => g.id), p.goals_read_truncated], [[found], true], `${late} is past the read`);
+});
+
+test("R27 R17 (N323) ageDue, ageWake and ageSurfaced read at most the first 1,000 questions at surfaced, those whose last entry is oldest first, then by id, and judge ageability among those alone: 1,001 human-surfaced questions older than an ageable one leave it unread (null, truncated); an ageable one older than all is aged", async () => {
+  assert.equal(AGEING_READ_MAX, 1000);
+  const w = seeded();
+  const T = Date.parse("2026-09-28T00:00:00Z");
+  const at = (days) => new Date(T - days * DAY).toISOString().replace(/\.\d+Z$/, "Z");
+  const id = (n) => `INQ-2026-${String(n).padStart(4, "0")}`;
+  /* 1,001 questions a member surfaced, at surfaced, 50 days old: never ageable */
+  for (let n = 1000; n <= 2000; n++) w.inquiry(id(n), { created: at(50), surfacedBy: "human", author: V("bob") });
+  /* an ageable question, 40 days old (due 10 days ago), newer than all of them: past the read */
+  w.inquiry(id(3000), { created: at(40) });
+  assert.equal(w.i.ageDue(T), null, "none ageable among the 1,000 read");
+  assert.equal(w.i.ageWake(T - 20 * DAY), null, "nor woken for");
+  let r = await w.i.ageSurfaced(T);
+  assert.deepEqual([r.aged, r.limit, r.truncated], [[], 1000, true], "not reached, and the cut is said");
+  assert.equal(w.fm(id(3000)).current_state, "surfaced");
+  /* the same age as the human ones, and first by id among them: read, and due */
+  w.inquiry(id(100), { created: at(50) });
+  assert.equal(w.i.ageDue(T), T - 20 * DAY, "ties on the last entry are read by id");
+  /* an ageable question older than all of them: read first, and aged */
+  w.inquiry(id(500), { created: at(60) });
+  assert.equal(w.i.ageDue(T), T - 30 * DAY);
+  r = await w.i.ageSurfaced(T);
+  assert.deepEqual([r.aged, r.truncated], [[id(500), id(100)], true]);
+  assert.equal(w.fm(id(500)).current_state, "deferred");
+  /* the two left surfaced; still 1,001 human ones at surfaced, so the 40-day one stays past the read */
+  assert.equal(w.i.ageDue(T), null);
+  /* at the bound exactly: 999 human ones and the 40-day one, 1,000 read, nothing cut, and it is aged */
+  const v = seeded();
+  for (let n = 1000; n <= 1998; n++) v.inquiry(id(n), { created: at(50), surfacedBy: "human", author: V("bob") });
+  v.inquiry(id(3000), { created: at(40) });
+  assert.equal(v.i.ageDue(T), T - 10 * DAY);
+  r = await v.i.ageSurfaced(T);
+  assert.deepEqual([r.aged, r.truncated], [[id(3000)], false]);
+});
+
+test("R27 R17 (N323) a question's authors are judged whole however many there are: past a page of machine authors, one member's entry still makes it unageable", async () => {
+  const w = seeded();
+  const T = Date.parse("2026-09-28T00:00:00Z");
+  const at = (days) => new Date(T - days * DAY).toISOString().replace(/\.\d+Z$/, "Z");
+  const ids = ["INQ-2026-0001", "INQ-2026-0002"];
+  for (const id of ids) {
+    w.inquiry(id, { created: at(40) });
+    /* 70 distinct machine authors, more than one statement reads, sorted before the member's */
+    for (let k = 0; k < 70; k++) {
+      const r = w.revise(id, w.text(id).replace(/\n$/, `\nNote ${k}.\n`), `class:ai-${String(k).padStart(2, "0")}`,
+                           { actorViewer: "class:daemon" });
+      assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
+    }
+  }
+  w.st.sql.exec(`UPDATE manifest SET created=? WHERE bundle_id IN (?, ?)`, at(40), ...ids);
+  assert.equal(w.i.ageDue(T), T - 10 * DAY, "every author a machine's: ageable");
+  /* a member's entry on the second, its name sorted after every machine author's */
+  assert.equal(w.revise(ids[1], w.text(ids[1]).replace(/\n$/, "\nNarrowed.\n"), V("zed")).ok, true);
+  w.st.sql.exec(`UPDATE manifest SET created=? WHERE bundle_id=?`, at(40), ids[1]);
+  assert.ok("member:zed" > "class:ai-69");
+  const r = await w.i.ageSurfaced(T);
+  assert.deepEqual([r.aged, r.truncated], [[ids[0]], false], "the member's entry is found past the first page");
 });
