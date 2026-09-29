@@ -48,3 +48,7 @@ Also noted: the caseReader relays (:259, :275, :340) and N348 wait on control-pl
 - `ownership legacy-index tranche/T14`: 2 files changed; 0 failures.
 
 Size (session_014iCFH2FjXpiLcbqFsozuRm): test runs 1,138, module lines 690
+
+## J2 · COMPLETE
+
+N339's ten relays, host-governor's and caseReader's three now answer a store refusal at its status (storeRefusal) and a silence with the store's correlation (N349). Every module handler named in B1/B3 is handed storeRefusal (and doAnswer/json where missing); StoreSilent is no longer handed to publication. N348: src/index.mjs exports control-plane's Store unwrapped, so control-plane R35's todo can resolve. N349's dead imports are gone (plus liveToken and two orphaned comments), with the esbuild graph unchanged (216 inputs). Uncommitted harness (K475): 15/15 pass; 0/11 on the base. Worker suites (279) against tranche @ 9cd8942b8e: the only difference is fleetbundles, from the stale plane bundle (not_product; BOB regenerates it). Reported for legacy-tests: identity-claims:183 and bounds:175-192 describe the removed wrapper. No rows touched; no civicos-ui hits; civicos-ui's two checkers fail identically on base and branch. Checks: format 0, architecture 0, coverage 0 of 0, ownership 0. Record: build/jobs/T14/legacy-index.md on job/T14/legacy-index.
