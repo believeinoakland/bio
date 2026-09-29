@@ -44,6 +44,19 @@
    factory called with the store's `env` (`aiRunsOf(this.ctx, this.env)`) and a routes function taking no `body`
    (`citationOps(citationOf(this.ctx), url)`); and the factory is named as the STORE imports it (`strengthModule` for
    strength's `strengthOf`). */
+/* WIDENED 2026-09-29 by legacy-tests (LEGACY-TESTS #11, T13; N238, N277), OPT-IN (`{ services: true }`, with `privates`;
+   without it the text is byte-identical to what it was, so `bounds.test.mjs` and every other caller read what they read):
+     (6) a module method's answer taken from a HELD SERVICE of another module of the same pass. A module holds another as a
+         field or getter built by that module's factory (`get publication() { return … publicationOf(…); }`, `this.x =
+         xOf(…)`), and RATIFICATION #2 moved `op=caseratify`'s case-edition state behind one: `ratifyCaseDocument` answers
+         from `const committed = this.publication.commitCaseEdition(…)`, whose answer carries `caseEditionState`'s. So, in
+         every chunk (5) spells, a call `this.<service>.<m>(` in a DELEGATE POSITION (returned, `return this.s.m(…)`;
+         assigned to a local, `const v = this.s.m(…)`; or a returned object's property value, `key: this.s.m(…)`) is
+         spelled `this.#m$<module>Of(` with the held module's method `m` appended under that name, as (5) appends a
+         private; and inside a method appended this way, a call to its own module's PUBLIC method in a delegate position
+         is spelled and appended the same way, transitively (`commitCaseEdition`'s `state: this.caseEditionState(…)`).
+         A call in any other position (a consulted service: `this.membership.caseAuthority(…)` whose answer is tested)
+         is not followed, and a service of a module outside the pass's map is not either. */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -124,7 +137,7 @@ function classMethods(text) {
 
 /** The store's text (as handed in) with each pure T5 delegation re-inlined and, with `{ ops: true }`, each T5 routes
  *  spread expanded; `reinlined` lists every substitution. */
-export function reinlineLayer5(storeText, { ops = false, privates = false, modules = T5_MODULES } = {}) {
+export function reinlineLayer5(storeText, { ops = false, privates = false, services = false, modules = T5_MODULES } = {}) {
   const T5_MODULES = modules;   /* T7: the module map this call re-inlines (T5's unless another is passed) */
   const { OF, DELEGATION, SPREAD } = matchers(modules);
   const texts = Object.fromEntries(Object.entries(T5_MODULES).map(([of, mod]) => [of, moduleText(mod)]));
@@ -135,20 +148,41 @@ export function reinlineLayer5(storeText, { ops = false, privates = false, modul
      them; without the option it is the identity, and nothing below it runs. */
   const classOf = (of, m) => [...classes[of]].find(([, ms]) => ms.has(m))?.[0] || null;
   const privQueue = [], privNamed = new Map();   /* spelled name -> `${of}|${cls}|${m}` */
-  const privName = (of, cls, m) => {
+  const privName = (of, cls, m, svc = false) => {
     const key = `${of}|${cls}|${m}`, base = `#${m.replace(/^#/, "")}$${of}`;
     for (const name of [base, `${base}$${cls}`]) {
       if (privNamed.get(name) === key) return name;
-      if (!privNamed.has(name)) { privNamed.set(name, key); privQueue.push({ name, of, cls, m }); return name; }
+      if (!privNamed.has(name)) { privNamed.set(name, key); privQueue.push({ name, of, cls, m, svc }); return name; }
     }
     return `${base}$${cls}`;
   };
-  const priv = (of, cls, chunk) => !privates ? chunk : chunk.replace(/\bthis\.(#[A-Za-z_$][\w$]*)\(/g, (whole, x) => {
+  /* (6): each module's held services, `field -> factory`, read off its own text; only factories of this pass. */
+  const held = Object.fromEntries(Object.keys(texts).map((of) => {
+    const h = new Map();
+    for (const re of [new RegExp(String.raw`^\s*get\s+([A-Za-z_$][\w$]*)\(\)\s*\{\s*return\b[^;\n]*?\b(${OF})\(`, "gm"),
+                      new RegExp(String.raw`\bthis\.([A-Za-z_$][\w$]*)\s*=\s*(${OF})\(`, "g")])
+      for (const m of texts[of].matchAll(re)) if (!h.has(m[1]) && m[2] !== of) h.set(m[1], m[2]);
+    return [of, h];
+  }));
+  const DELEGATE_AT = String.raw`(return\s+(?:await\s+)?|(?:const|let)\s+[A-Za-z_$][\w$]*\s*=\s*(?:await\s+)?|(?<=[{,]\s*|^\s*)[A-Za-z_$][\w$]*\s*:\s*(?:await\s+)?)`;
+  const SERVICE_CALL = new RegExp(String.raw`${DELEGATE_AT}this\.([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\(`, "gm");
+  const OWN_PUBLIC_CALL = new RegExp(String.raw`${DELEGATE_AT}this\.([A-Za-z_$][\w$]*)\(`, "gm");
+  const svcs = (of, chunk, own) => {
+    let out = chunk.replace(SERVICE_CALL, (whole, lead, f, m) => {
+      const to = held[of] && held[of].get(f);
+      return to && methods[to].has(m) ? `${lead}this.${privName(to, classOf(to, m), m, true)}(` : whole;
+    });
+    if (own) out = out.replace(OWN_PUBLIC_CALL, (whole, lead, m) =>
+      methods[of].has(m) ? `${lead}this.${privName(of, classOf(of, m), m, true)}(` : whole);
+    return out;
+  };
+  const priv = (of, cls, chunk, own = false) => !privates ? chunk : ((c) => services ? svcs(of, c, own) : c)(
+    chunk.replace(/\bthis\.(#[A-Za-z_$][\w$]*)\(/g, (whole, x) => {
     if (x === "#rows" || x === "#one") return whole;
     const own = cls && classes[of].get(cls) && classes[of].get(cls).has(x) ? cls : classOf(of, x);
     return own ? `this.${privName(of, own, x)}(` : whole;
-  });
-  const chunkOf = (of, m) => priv(of, hopClass(methods[of].get(m), texts[of], classes[of]) || classOf(of, m), hop(of, methods[of].get(m)));
+  }));
+  const chunkOf = (of, m, own = false) => priv(of, hopClass(methods[of].get(m), texts[of], classes[of]) || classOf(of, m), hop(of, methods[of].get(m)), own);
   const reinlined = [];
   const fromStore = new Map();   /* store name -> `${of}.${m}` for (1)'s re-inlined delegations */
   let text = storeText.split("\n").map((l) => {
@@ -197,9 +231,9 @@ export function reinlineLayer5(storeText, { ops = false, privates = false, modul
     if (wrapped.length) reinlined.push(`store calls returned as private delegates: ${wrapped.join(", ")}`);
     const add = [];
     for (let i = 0; i < privQueue.length; i++) {
-      const { name, of, cls, m } = privQueue[i];
+      const { name, of, cls, m, svc } = privQueue[i];
       const own = (cls && classes[of].get(cls) && classes[of].get(cls).get(m)) || methods[of].get(m);
-      const body = m.startsWith("#") ? priv(of, cls, own) : chunkOf(of, m);
+      const body = m.startsWith("#") ? priv(of, cls, own, svc) : chunkOf(of, m, svc);
       add.push(`${T5_MODULES[of]}.${cls}.${m} as ${name}`);
       text += "\n" + body.replace(/^( {2}(?:static\s+|async\s+)*(?:\*\s*)?)#?[A-Za-z_$][\w$]*/, `$1${name}`);
     }

@@ -261,7 +261,9 @@ const drive = ({ files = {}, anchor = false, strict = false } = {}) => {
   };
   mkdirSync(join(repo, "bio-plane", "scripts"), { recursive: true });
   for (const f of REAL) copyFileSync(join(SCRIPTS, f), join(repo, "bio-plane", "scripts", f));
-  put("bio-plane/src/index.mjs", opsSrc);
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13; LEGACY-INDEX #9 N338, K442): `coverage.mjs` reads the op table from
+     control-plane's `src/control-plane/ops.mjs`, where it is declared, so the scratch plane plants it there. */
+  put("bio-plane/src/control-plane/ops.mjs", opsSrc);
   put("bio-plane/checks/bio-checks.mjs", checksSrc);
   put("bio-plane/test/tracked.test.mjs", planeSuite(5));
   if (anchor) put("docs/archive/IS-BUILD-PLAN.md", "| VF-1 | the scratch row |\n");

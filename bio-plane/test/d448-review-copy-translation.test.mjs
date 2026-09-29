@@ -91,6 +91,7 @@ import { execFileSync } from "node:child_process";
    `src/review/index.mjs`), and the acts — with their eleven mint sites, their regions and the op map binding `act` —
    into `src/review/index.mjs`. The structural half reads that module now; every claim is the one it made of store.mjs. */
 import { REVIEW_COPY_CHECKS } from "../src/review/checks.mjs";
+import { RECORD_CORE_CHECKS } from "../src/record-core/checks.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const REVIEW_SRC = readFileSync(fileURLToPath(new URL("../src/review/index.mjs", import.meta.url)), "utf8");
@@ -144,7 +145,15 @@ console.log(`  corpus: ${CODES.length} C-87 codes in REVIEW_COPY_CHECKS — ${CO
    can be drawn. The family is now TWELVE, and every arm below that counted eleven counts twelve; the eleven UI-68 codes
    are unchanged. N322 retires C-87.12 into record-core's one row beside `mintOpaqueId` (a later tranche): when it goes,
    this pin goes red again by design, naming the departure. */
-t("the family is the TWELVE codes review's acts can answer (UI-68's eleven and C-87.12), and no fewer", CODES.length, 12);
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13; REVIEW #4 J1, N322, K434; record-core R62): C-87.12 RETIRED. No free
+   opaque id is one condition minted by four modules, so its one row is record-core's C-59.6 and review answers through
+   record-core's `mintExhausted`; the number C-87.12 is not reused. The family is ELEVEN again, UI-68's eleven, and every
+   arm below that counted twelve counts eleven. C-87.12's retirement is `awaiting stamp` (R50's census suite names it). */
+t("the family is the ELEVEN codes review's acts can answer (UI-68's eleven; C-87.12 retired into C-59.6), and no fewer",
+  CODES.length, 11);
+t("C-87.12 is retired: no row of review's table is MINT_EXHAUSTED or holds C-87.12, and record-core's C-59.6 holds the code",
+  [Object.values(REVIEW_COPY_CHECKS).some((r) => r.check === "C-87.12"), "MINT_EXHAUSTED" in REVIEW_COPY_CHECKS,
+   RECORD_CORE_CHECKS.MINT_EXHAUSTED?.check], [false, false, "C-59.6"]);
 t("and its only other row is C-32.16 MACHINE_CANNOT_REVIEW, the fence review took with it",
   Object.entries(REVIEW_COPY_CHECKS).filter(([c]) => !(c in C87)).map(([c, r]) => [c, r.check]),
   [["MACHINE_CANNOT_REVIEW", "C-32.16"]]);
@@ -168,7 +177,7 @@ const NUMBERED = {
   REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5", REVIEW_NO_SUCH_CASE: "C-87.6",
   REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
   REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11",
-  MINT_EXHAUSTED: "C-87.12",   /* REVIEW #3 (N306, K392), 2026-09-29 */
+  /* C-87.12 MINT_EXHAUSTED (REVIEW #3, T12) retired in T13 into record-core's C-59.6 (REVIEW #4, N322). */
 };
 t("the pinned numbering covers every code in the family, and no more",
   Object.keys(NUMBERED).sort().join(","), CODES.slice().sort().join(","));
@@ -183,10 +192,10 @@ for (const [code, row] of Object.entries(C87)) {
 }
 /* No two codes may share a sentence: a copied translation is one code's words on another's condition. */
 const sentences = Object.values(C87).map(r => r.translation);
-t("no two of the twelve share a translation", new Set(sentences).size, 12);
+t("no two of the eleven share a translation", new Set(sentences).size, 11);
 /* Every region name is distinct, or two rows would claim one span. */
-t("no two of the twelve share a `where`",
-  new Set(Object.values(C87).map(r => r.where)).size, 12);
+t("no two of the eleven share a `where`",
+  new Set(Object.values(C87).map(r => r.where)).size, 11);
 
 /* ========================================================================= 2
  * THE ROUTING, PINNED STRUCTURALLY. Each code is minted EXACTLY ONCE, through
@@ -340,9 +349,11 @@ t("REVIEW_NO_SECRET: op=reviewgrant MINTS the secret in the control plane and al
    draws to be taken already, which no caller can arrange through the op; review's own interface suite drives both arms
    with record-core's `mintOpaqueId` answering none (`test/m/review/acts.test.mjs` R27). Here it is pinned structurally
    like the eleven (section 2), and at the code: both of review's mint sites answer a `null` id through the one helper. */
-t("MINT_EXHAUSTED: both of review's mints (a new draft, a grant) answer a null id through `mintExhausted`, and nothing else does",
-  [/if \(!id\) return mintExhausted\("draft"\);/.test(REVIEW_SRC), /if \(!id\) return mintExhausted\("grant"\);/.test(REVIEW_SRC),
-   [...REVIEW_SRC.matchAll(/\bmintExhausted\(/g)].length], [true, true, 3]);
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13; REVIEW #4 J1, N322): both sites now answer through record-core's
+   module-level `mintExhausted` (its R62) by the gated prefix asked, and review mints the code nowhere itself. */
+t("MINT_EXHAUSTED: both of review's mints (a new draft, a grant) answer a null id through record-core's `mintExhausted`, and nothing else does",
+  [/if \(!id\) return mintExhausted\("DRAFT"\);/.test(REVIEW_SRC), /if \(!id\) return mintExhausted\("RVG"\);/.test(REVIEW_SRC),
+   [...REVIEW_SRC.matchAll(/\bmintExhausted\(/g)].length, /"MINT_EXHAUSTED"/.test(REVIEW_SRC)], [true, true, 2, false]);
 
 console.log(`\nd448-review-copy-translation: ${pass} pass, ${fail} fail`);
 await mf.dispose();

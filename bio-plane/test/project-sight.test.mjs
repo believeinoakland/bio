@@ -1107,7 +1107,12 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
     t(`11g000 (T12): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
       routes[witness] !== undefined, true);
   }
-  const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13; CONTROL-PLANE #4 N333, K442): the store's door moved to control-plane,
+     and the two tables with it: they are `export const` in `src/control-plane/dispatch.mjs` (the door's existence read),
+     no longer `static` members of the store. That file imports `cloudflare:workers` through the legacy store, so node
+     cannot import it here; the tables are read from its text exactly as the static ones were, and 11g0 still fails if
+     either does not parse. The routes stay the store's (legacy-store keeps `routes()`). */
+  const table = (name) => { const m = src("control-plane/dispatch.mjs").match(new RegExp(`export const ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));
     return m ? Function(`return (${m[1]});`)() : null; };
   const NAMES = table("PROJECT_NAMING_READS"), NOT = table("PROJECT_NAMING_READS_NOT");
   const IDISH = ["id", "target", "projectId", "project", "bundleId", "bundle", "scopeId", "contextId", "address",

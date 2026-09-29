@@ -648,7 +648,9 @@ const CATALOG_CENSUS = {
      as 1.41.0's row carries its note's. NOT stamped here: the row changes after promotion's layer (N318: C-87.12 added in
      review's own table, C-113.9/.18, C-114.1, C-116.3/.4 retired, renames) — all in module tables, none in the catalogue
      file (whose census and source did not move since f955769afc), and all promotion's next number in T13. */
-  /* MOVED UNDER 1.42.0 (RE-PINNED 2026-09-29 by LEGACY-TESTS #10, T12 layer 11 round 2; K409 QUEUE #2, K413 CONTROL-PLANE
+  /* HISTORY: this declaration was carried as 1.42.0's `moved` field until 1.43.0 stamped the moves (LEGACY-TESTS #11,
+     T13, N318); the row below no longer carries it, and A12 verifies any later one.
+     MOVED UNDER 1.42.0 (RE-PINNED 2026-09-29 by LEGACY-TESTS #10, T12 layer 11 round 2; K409 QUEUE #2, K413 CONTROL-PLANE
      #2, K414 INSTANCE-SETUP #1; BOB B5, B8, B9). The row above is NOT rewritten: it is what the catalogue held when
      1.42.0 was minted. After it, three extractions took THIRTY-SEVEN rows out of the catalogue FILE into their modules'
      own tables, with CATALOG_VERSION unmoved (promotion's to stamp, N318, T13), and the file now prints 359. They
@@ -668,17 +670,18 @@ const CATALOG_CENSUS = {
      module tables, outside this file, and promotion's next stamp with the rest of N318. */
   "1.42.0": { count: 396, digest: "de54b8bd85553c5d588c0b82fdbf0ea48a4bed3fe47d982fd9a8c1e3c5c023fe",
               changed: ["C-113.17"],
-              source: "8ada0f4c65a617f0e120bdfe8359f2b591d039b8a02e2cc3967d8aa27fd90f03",
-              moved: [{ count: 359, digest: "b28a8a91387ef629dab08baa025b766015f33d6a0a71eda9f392d0d6de2d2605",
-                        source: "3a8dae6c959d33b5f83e18dc592c0ccb5b77ecddf1adcd5f8b71c2047dca2a40",
-                        by: "LEGACY-TESTS #10 (T12): K409 QUEUE #2, K413 CONTROL-PLANE #2, K414 INSTANCE-SETUP #1",
-                        into: ["src/queue/checks.mjs", "src/control-plane/checks.mjs", "src/setup.mjs"],
-                        departed: ["C-29.6", "C-29.7", "C-29.8", "C-29.9", "C-29.10",
-                                   "C-31.1", "C-31.2", "C-31.3", "C-32.10", "C-32.11", "C-32.17", "C-33.27", "C-33.44",
-                                   "C-38.1", "C-38.2", "C-38.3", "C-38.4", "C-38.5", "C-38.6", "C-38.7", "C-38.8",
-                                   "C-64.2", "C-64.3", "C-64.4", "C-64.5", "C-64.6", "C-64.7", "C-66.6",
-                                   "C-68.2", "C-68.3", "C-68.4", "C-69.1", "C-69.2", "C-76.1",
-                                   "C-78.1", "C-78.2", "C-78.3"] }] },
+              source: "8ada0f4c65a617f0e120bdfe8359f2b591d039b8a02e2cc3967d8aa27fd90f03" },
+  /* 1.43.0 (PROMOTION #14, T13 layer 2; N318, N319, K425, K431, K432), RECORDED 2026-09-29 by LEGACY-TESTS #11 (T13,
+     last) as PROMOTION #14 J2 printed it and re-measured identical, count, digest AND source, on `tranche/T13` with every
+     T13 job merged (a353b478f3). It REPLACES the `moved` declaration 1.42.0 carried since T12 (the thirty-seven rows
+     queue, control-plane and instance-setup took out of this file, above): 1.43.0 stamps those moves, so the census they
+     left is this version's own and 1.42.0's row is again only what the catalogue held when it was minted. The file did
+     not move since T12's close (359, b28a8a91…, source 3a8dae6c…). Every other row change 1.43.0 stamps (arrivals,
+     departures, renames, C-96.1 held twice) sits in a module's own table, outside this census (R34, R47), and is R50's
+     (`row-census.test.mjs`). No `changed`: no check in this file refuses or admits anything new, and the census alone
+     keeps this row apart from 1.42.0's under A4. */
+  "1.43.0": { count: 359, digest: "b28a8a91387ef629dab08baa025b766015f33d6a0a71eda9f392d0d6de2d2605",
+              source: "3a8dae6c959d33b5f83e18dc592c0ccb5b77ecddf1adcd5f8b71c2047dca2a40" },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -938,9 +941,10 @@ const movedOf = (entry) => (entry && Array.isArray(entry.moved) ? entry.moved : 
    layer 9), N147.
    UPDATED 2026-09-28 (legacy-tests T9): 1.38.0 -> 1.40.0, PROMOTION #9's 1.39.0 (N240) and #10's 1.40.0 (K288).
    UPDATED 2026-09-29 (legacy-tests T11): 1.40.0 -> 1.41.0, PROMOTION #11's N281 (K352).
-   UPDATED 2026-09-29 (LEGACY-TESTS #10, T12): 1.41.0 -> 1.42.0, PROMOTION #12's N302 (K369, K381). */
-t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.42.0)",
-  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.42.0)", "1.42.0"]);
+   UPDATED 2026-09-29 (LEGACY-TESTS #10, T12): 1.41.0 -> 1.42.0, PROMOTION #12's N302 (K369, K381).
+   UPDATED 2026-09-29 (LEGACY-TESTS #11, T13): 1.42.0 -> 1.43.0, PROMOTION #14's N318 (K425, K432). */
+t("(A5) THE STAMP READS THE CATALOGUE'S VERSION — plane-gate/1.0 (bio-checks 1.43.0)",
+  [GATE_VERSION, CATALOG_VERSION], ["plane-gate/1.0 (bio-checks 1.43.0)", "1.43.0"]);
 /* REC-150 side, kept as history — its A5 pin read 1.31.0 on its own branch; ours is kept at c22-batch29 and CONDUCT
    moves this literal with the constant once:
    /* CORRECTED by REC-150 (2026-09-25), never exempted: 1.29.0 -> 1.31.0, because the C-95 family moved the catalogue

@@ -127,8 +127,10 @@ const COMMENT_ARMED = `      return { ok: false, reason: "REVIEW_NO_COMMENT_TEXT
 const C8710 = `    translation: 'Say which grant to withdraw, by the id you were given when it was issued. Nothing was '
       + 'withdrawn. This answer says only that no grant was named; it says nothing about which grants exist.',`;
 
-const SECRET_OPEN = `      /* DEC-49 REGION is-review-secret */`;
-const SECRET_END = `      /* END DEC-49 REGION is-review-secret */`;
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): review's T11 job (N297, e51be546b2) gave the region's opening marker its
+   condition and moved both markers to the method's own indent, so the old needles occurred nowhere and arm (d) threw. */
+const SECRET_OPEN = `    /* DEC-49 REGION is-review-secret — the fingerprint's test and its refusal. */`;
+const SECRET_END = `    /* END DEC-49 REGION is-review-secret */`;
 
 const STATIC_RE = `(?:^|\\\\n)\\\\s*(?:export\\\\s+)?(?:static\\\\s+)?(?:async\\\\s+)?(?:function\\\\s+)?\${esc}\\\\s*\\\\(`;
 const PLAIN_RE = `(?:^|\\\\n)\\\\s*(?:export\\\\s+)?(?:async\\\\s+)?(?:function\\\\s+)?\${esc}\\\\s*\\\\(`;
@@ -192,16 +194,22 @@ const ARMS = {
     files: [STORE],
     label: "(D) OVER-STRICTNESS — is-review-secret's markers re-spelled; everything must stay GREEN",
     apply: () => {
-      edit(STORE, SECRET_OPEN, `      /**   DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
-      edit(STORE, SECRET_END, `      /**   END DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
+      edit(STORE, SECRET_OPEN, `    /**   DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
+      edit(STORE, SECRET_END, `    /**   END DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
     },
     mustFail: [], guardMustPass: true, expectGreen: true,
   },
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #11, T13), measured before the change: review's `noReviewCopy` is a module-level
+     `export function` now (review's extraction), and no row's `where` names a `static` method any more, so with the
+     widening reverted the guard printed the SAME failures, line for line, as without it. The arm's old declaration (a
+     failure naming `#noReviewCopy`) described a subject that is gone. It is kept as what it now measures: the widening
+     is inert on this tree, so reverting it must leave the guard exactly as the baseline leaves it (green once the
+     guard's carried failures, other modules', are paid). */
   e: {
     files: [GUARD],
-    label: "(E) THE RESOLVER WIDENING REVERTED — `functionBody` can no longer see past `static`",
+    label: "(E) THE RESOLVER WIDENING REVERTED — `functionBody` can no longer see past `static`; nothing governed is static, so the guard must not move",
     apply: () => edit(GUARD, STATIC_RE, PLAIN_RE),
-    mustFail: [], guardMustPass: false, guardMustName: "#noReviewCopy", expectGreen: true,
+    mustFail: [], guardMustPass: true, expectGreen: true,
   },
 };
 

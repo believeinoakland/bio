@@ -121,8 +121,13 @@ console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").
    `src/queue/`) and instance-setup's (ce41cfb5d6, -30,089: C-64, the reports and the limits, to `src/setup.mjs`).
    NO_CITATION's `actNoCitation` is still the store's, so this suite's store arms still read a real subject. Still a
    blindness floor at the measured figure, never below it. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #11, T13; K437, K442) from this suite's own CORPUS print: 222,052 -> 213,098
+   characters. LEGACY-STORE #5 (4376a5405d, -221, N328) to 221,831; CONTROL-PLANE #4 (881c24b76e, 4235c62a3d, -8,733,
+   N333: the store's door to `src/control-plane/dispatch.mjs`). `class Store` is still legacy-store's (control-plane's
+   Durable Object extends it), so the store arms still read a real subject. Still a blindness floor at the measured
+   figure, never below it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length >= 222_052 && /class Store\b/.test(store), true);
+  store.length >= 213_098 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;

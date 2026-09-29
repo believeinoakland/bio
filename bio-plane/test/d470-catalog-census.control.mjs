@@ -211,9 +211,14 @@ const ARMS = {
      departed id in 1.42.0's declaration replaced by an id that moved nowhere (C-76.1 -> C-999.1). The declaration's
      count and digest still match the file, so A3 MUST NOT FAIL; A12 MUST FAIL, alone — a departure named that no
      module table holds is a row REMOVED under a stamp that claims it only MOVED. */
-  l: { files: [SUITE], label: "(L) A `moved` DECLARATION NAMING A DEPARTURE THAT MOVED NOWHERE — C-76.1 -> C-999.1 in 1.42.0's departed list",
-       apply: () => edit(SUITE, '"C-68.2", "C-68.3", "C-68.4", "C-69.1", "C-69.2", "C-76.1",',
-                                '"C-68.2", "C-68.3", "C-68.4", "C-69.1", "C-69.2", "C-999.1",'),
+  /* RE-POINTED 2026-09-29 (LEGACY-TESTS #11, T13; N318), not exempted: 1.43.0 stamped T12's moves and 1.42.0's row no
+     longer carries its `moved` declaration, so there is none to corrupt. The arm now PLANTS the shape it was written for
+     on the current version's entry: a declaration whose one departure, C-999.1, moved nowhere (no module table holds
+     it, and census plus departure is not the recorded census). A3 still reads the recorded census and MUST NOT FAIL;
+     A12 MUST FAIL, alone. */
+  l: { files: [SUITE], label: `(L) A \`moved\` DECLARATION NAMING A DEPARTURE THAT MOVED NOWHERE — C-999.1, planted on ${CURRENT_VERSION}'s entry`,
+       apply: () => edit(SUITE, CURRENT_ENTRY, `${CURRENT_ENTRY} moved: [{ count: 1, digest: "${"2".repeat(64)}", `
+         + `source: "${"3".repeat(64)}", by: "arm (l)", into: ["src/queue/checks.mjs"], departed: ["C-999.1"] }],`),
        mustFail: [A12], mustNotFail: except(A12) },
 };
 

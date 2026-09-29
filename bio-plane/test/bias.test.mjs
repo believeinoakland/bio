@@ -322,8 +322,13 @@ t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning ca
    100,000 characters because index.mjs held the op table this suite reads; control-plane moved the table to
    `src/control-plane/ops.mjs` (index.mjs 516,969 -> 52,370), so the floor follows the table: ops.mjs, measured
    149,682. Both still blindness floors at the measured figures, never below them. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #11, T13; LEGACY-STORE #5 J2, K437; CONTROL-PLANE #4 J3, K442, N333): store.mjs
+   222,052 -> 213,098 characters, the measured print. LEGACY-STORE #5 (4376a5405d, -221, N328: `#counts` reads bias
+   `counts(hid)`, bias's dead purge entries gone) to 221,831; CONTROL-PLANE #4 (881c24b76e, 4235c62a3d, -8,733, N333:
+   the store's door moved to `src/control-plane/dispatch.mjs`, legacy-store keeps `routes()`). ops.mjs grew to 149,902;
+   its floor stays at 149,682. Both still blindness floors at the measured figures, never below them. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length >= 222_052, OPS_SRC.length >= 149_682], [true, true]);
+  [STORE_SRC.length >= 213_098, OPS_SRC.length >= 149_682], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
           + `index.mjs ${INDEX_SRC.length}, control-plane/ops.mjs ${OPS_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, `
           + `src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
