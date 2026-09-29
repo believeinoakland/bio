@@ -46,13 +46,13 @@ test("R31: the control plane refuses a malformed digest (required argument) and 
   assert.equal(silent.silent, "pdfstructure");
 });
 
-test("R31 (N285): an absent object is capture's one answer for it (its R63 evidenceAbsent): 404 NOT_FOUND with its row, the store and the caller's class, and no byte read past the miss", async () => {
+test("R31 (N285, N347): an absent object is capture's one answer for it (its R63 evidenceAbsent): 404 EVIDENCE_NOT_HELD with its row, the store and the caller's class, and no byte read past the miss", async () => {
   const { w } = await held(i2([{ page: 0, text: "Plain page" }]));
   const miss = "e".repeat(64);
   for (const [cls, storeName] of [["member", "bio"], ["ai", "ns"], [null, "bio"]]) {
     const a = await w.x.pdfStructure({ sha: miss, cls, storeName });
     assert.deepEqual(a, evidenceAbsent(miss, storeName, { tokenClass: cls }));
-    assert.deepEqual([a.status, a.body.reason, a.body.code, a.body.check, a.body.tokenClass], [404, "NOT_FOUND", "NOT_FOUND", "C-118.1", cls]);
+    assert.deepEqual([a.status, a.body.reason, a.body.code, a.body.check, a.body.tokenClass], [404, "EVIDENCE_NOT_HELD", "EVIDENCE_NOT_HELD", "C-118.1", cls]);
   }
   /* with ocr=1 past its refusals, an object gone from the store answers the same */
   const gone = await hold(w.evidence, "%PDF gone");
@@ -62,10 +62,10 @@ test("R31 (N285): an absent object is capture's one answer for it (its R63 evide
   assert.deepEqual(r, evidenceAbsent(gone, "bio", { tokenClass: "member" }));
 });
 
-test("R31: without ocr it is a read: NOT_FOUND, FORMAT_UNREGISTERED, the entry's own answer for a non-PDF; otherwise the structure with tier 2, its tier and provenance; nothing written, and two reads answer alike", async () => {
+test("R31: without ocr it is a read: EVIDENCE_NOT_HELD, FORMAT_UNREGISTERED, the entry's own answer for a non-PDF; otherwise the structure with tier 2, its tier and provenance; nothing written, and two reads answer alike", async () => {
   const { w, d } = await held(i2([{ page: 0, text: "Plain page" }]));
   const absent = await w.x.pdfStructure({ sha: "e".repeat(64) });
-  assert.deepEqual([absent.status, absent.body.reason], [404, "NOT_FOUND"]);
+  assert.deepEqual([absent.status, absent.body.reason], [404, "EVIDENCE_NOT_HELD"]);
   const had = getFormat("pdf");
   unregisterFormat("pdf");
   try { const u = await w.x.pdfStructure({ sha: d }); assert.deepEqual([u.status, u.body.reason], [501, "FORMAT_UNREGISTERED"]); }
