@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, UNKNOWN_CITE } from "./fixture.mjs";
-import { STANDARDS_CHECKS, PAGE_MAX, IN_FORCE_STATES } from "../../../src/standards/index.mjs";
+import { STANDARDS_CHECKS, PAGE_MAX, IN_FORCE_STATES, noSuchStandard } from "../../../src/standards/index.mjs";
 
 test("R5 standardRead answers R1's fields, R3's source, the declarer and time, both ends of a supersession, and for each text passage its standing and whether a newer capture of its document holds it, moving nothing; STANDARD_NO_ID (N269: coded, R5's NO_ID); an absent id and any id for a viewer naming no member are NO_SUCH_STANDARD, one answer", () => {
   const w = seeded();
@@ -41,7 +41,7 @@ test("R5 standardRead answers R1's fields, R3's source, the declarer and time, b
     }
   assert.equal(STANDARDS_CHECKS.STANDARD_NO_ID.check, "C-112.11");
   /* absent, and any id for a viewer the record admits to nothing: one answer */
-  const strip = (x) => ({ ...x, id: null });
+  const strip = (x) => ({ ...x, id: null, standard: null });
   const absent = w.s.standardRead({ id: "STD-2026-9999-ordinance", viewer: V("carol") });
   assert.equal(absent.reason, "NO_SUCH_STANDARD");
   assert.equal(absent.check, STANDARDS_CHECKS.NO_SUCH_STANDARD.check);
@@ -127,4 +127,42 @@ test("R8 standardsIn lists what its filters admit, in id order, at most 200 a pa
   assert.equal(w.s.standardsIn({ viewer: "nobody" }).count, 0);
   assert.equal(w.s.standardsIn({}).count, 0);
   assert.equal(w.s.standardsIn({ viewer: MACHINE, limit: 1 }).count, 1);
+});
+
+test("R17 noSuchStandard is the one answer to one condition, no standard the caller may read: {ok: false, reason and code NO_SUCH_STANDARD, check and translation its row's (C-112.10, its where naming this function), standard as asked or null, detail one fixed sentence}; extra adds a caller's fields and never replaces these; R5 and R7 answer through it; it writes nothing and never throws", () => {
+  const w = seeded();
+  const r = w.declare();
+  const row = STANDARDS_CHECKS.NO_SUCH_STANDARD;
+  assert.equal(row.check, "C-112.10");
+  assert.match(row.where, /\bnoSuchStandard > is-standard-held$/, "its one row names this function");
+  const before = w.snapshot();
+  const a = noSuchStandard("STD-2026-0001-statute");
+  assert.deepEqual(Object.keys(a).sort(), ["check", "code", "detail", "ok", "reason", "standard", "translation"]);
+  assert.deepEqual([a.ok, a.reason, a.code, a.check, a.translation, a.standard],
+                   [false, "NO_SUCH_STANDARD", "NO_SUCH_STANDARD", row.check, row.translation, "STD-2026-0001-statute"]);
+  assert.equal(typeof a.detail, "string");
+  assert.ok(a.detail.length > 20);
+  /* the id as asked, or null when none; one detail for every caller and every id */
+  for (const id of [undefined, null]) assert.equal(noSuchStandard(id).standard, null);
+  const long = `STD-${"x".repeat(300)}`;
+  assert.equal(noSuchStandard(long).standard, long, "as asked, never cut");
+  for (const id of [undefined, null, "", "STD-X", long]) assert.equal(noSuchStandard(id).detail, a.detail);
+  /* extra adds a caller's own fields and never replaces the fixed ones */
+  const e = noSuchStandard("STD-X", { determination: "DET-1", ok: true, reason: "OTHER", code: "OTHER", check: "C-0",
+                                      translation: "t", standard: "STD-Y", detail: "mine" });
+  assert.deepEqual([e.ok, e.reason, e.code, e.check, e.translation, e.standard, e.detail],
+                   [false, "NO_SUCH_STANDARD", "NO_SUCH_STANDARD", row.check, row.translation, "STD-X", a.detail]);
+  assert.equal(e.determination, "DET-1");
+  /* it never throws, whatever it is handed */
+  const hostile = new Proxy({}, { ownKeys() { throw new Error("no"); } });
+  for (const extra of [null, undefined, 7, "s", [1, 2], hostile, { a: 1 }])
+    for (const id of [null, 7, {}, "STD-X"])
+      assert.doesNotThrow(() => { const x = noSuchStandard(id, extra); assert.equal(x.reason, "NO_SUCH_STANDARD"); });
+  assert.deepEqual(w.snapshot(), before, "it writes nothing");
+  /* R5 and R7 answer through it: the same answer, naming the id also as id */
+  const absent = "STD-2026-9999-ordinance";
+  assert.deepEqual(w.s.standardRead({ id: absent, viewer: V("carol") }), noSuchStandard(absent, { id: absent }));
+  for (const viewer of [null, "nobody", "member:"])
+    assert.deepEqual(w.s.standardRead({ id: r.id, viewer }), noSuchStandard(r.id, { id: r.id }), String(viewer));
+  assert.deepEqual(w.s.inForce(absent, "2020-01-01"), noSuchStandard(absent, { id: absent }));
 });
