@@ -25,10 +25,17 @@ const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
+  /* The plane's shape (K316, K313): `exec` answers a CURSOR (iterable once, `toArray()`, `one()`), never an array, and
+     a LIKE or GLOB pattern longer than workerd's 50 bytes is refused as workerd refuses it. */
+  const cursor = (rows) => { const it = rows[Symbol.iterator]();
+    return { [Symbol.iterator]() { return it; }, next: () => it.next(), toArray: () => [...it],
+             one: () => { const r = it.next(); return r.done ? null : r.value; } }; };
   const sql = {
     exec(q, ...args) {
+      for (const m of String(q).matchAll(/\b(?:LIKE|GLOB)\s+'((?:[^']|'')*)'/gi))
+        if (Buffer.byteLength(m[1]) > 50) throw new Error("LIKE or GLOB pattern too complex");
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -163,12 +170,12 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const w = {
     st, host, record, membership, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act,
     publication: publicationStub,
-    rows: (q, ...x) => st.sql.exec(q, ...x),
-    row: (q, ...x) => st.sql.exec(q, ...x)[0] ?? null,
+    rows: (q, ...x) => [...st.sql.exec(q, ...x)],
+    row: (q, ...x) => [...st.sql.exec(q, ...x)][0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
     fm: (id) => { const t = w.text(id); return t ? parseFrontmatter(t).data : null; },
-    manifest: (id) => st.sql.exec(`SELECT snap_key, writer, operation, author, base FROM manifest WHERE bundle_id=? ORDER BY rowid`, id),
-    looks: () => st.sql.exec(`SELECT * FROM observation_log ORDER BY seq`),
+    manifest: (id) => [...st.sql.exec(`SELECT snap_key, writer, operation, author, base FROM manifest WHERE bundle_id=? ORDER BY rowid`, id)],
+    looks: () => [...st.sql.exec(`SELECT * FROM observation_log ORDER BY seq`)],
     /** Hold `bytes` in the evidence bucket under their digest. */
     hold(bytes) { const s = sha(bytes); bkt.held.set(`bio/captures/${s}`, new Uint8Array(Buffer.from(bytes))); return s; },
     /** Promote `id` with `text` as its bundle.md and `reg` as its provenance register (documents[]), by a member. */

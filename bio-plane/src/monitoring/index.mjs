@@ -2014,7 +2014,11 @@ export class Monitoring {
       files: [{ path: "bundle.md", text, bytes: new TextEncoder().encode(text).length, sha256: await sha256Hex(text) },
               ...carried],
     });
-    if (!r || r.ok !== true) return { ok: false, reason: r?.reason ?? "REFUSED", detail: r?.detail ?? null };
+    /* N297: the promotion's own code, carried with its detail; a promotion that refused naming no code is said in
+       words, never given a bare code of this module's (a code with no canned translation, DEC-49). */
+    if (!r || r.ok !== true)
+      return { ok: false, reason: typeof r?.reason === "string" && r.reason ? r.reason : null,
+               detail: r?.detail ?? (r ? "the promotion refused the mark and named no reason" : "the promotion gave no answer") };
     return { ok: true, ords, dates, revision: r.bundleSha ?? null };
   }
 

@@ -106,6 +106,16 @@ test("R34 a pending clock entry whose date has passed is marked overdue by a mec
   for (const k of Object.keys(fb)) if (k !== "clock" && k !== "last_updated") assert.deepEqual(fa[k], fb[k], k);
   assert.deepEqual(fa.clock.map(({ status, ...rest }) => rest), fb.clock.map(({ status, ...rest }) => rest));
   assert.match(after, /Deadline recheck: the clock entry dated 2026-09-01 passed while pending and is marked overdue/);
+  /* N297: a promotion refusing with no code is said in words, never given a bare code of monitoring's */
+  const P2 = "ACTN-2026-0701-nocode";
+  createAction(w, P2, [["late", "2026-09-02", "pending"]]);
+  const real = w.promotion.promote.bind(w.promotion);
+  w.promotion.promote = (pkg) => (pkg.operation === "deadline-recheck" ? { ok: false } : real(pkg));
+  const nc = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual(nc.failed, [{ action: P2, reason: null, detail: "the promotion refused the mark and named no reason" }]);
+  w.promotion.promote = real;
+  const done = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual(done.marked.map((x) => x.action), [P2]);
   /* nothing further to mark: a second recheck writes nothing */
   const n = w.manifest(ACT).length;
   const again = await w.m.deadlineRecheck(NOW_MS);
