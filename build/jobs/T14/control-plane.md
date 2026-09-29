@@ -45,3 +45,7 @@ Merged `tranche/T14` (legacy-index's N348: `src/index.mjs`:47 `export { Store } 
 Tests and checks: `node --test bio-plane/test/m/control-plane/`: tests 52, pass 52, fail 0, todo 0. `checks/format.mjs` 0 failures; `checks/architecture.mjs control-plane` 0 failures; `checks/coverage.mjs control-plane` 35 of 35, 0 failures; `checks/ownership.mjs control-plane tranche/T14` 0 failures.
 
 Size (session_01LAa14DqmXc5v5eTwUerjPT): test runs 12, module lines 6,161
+
+## J2 · COMPLETE · re B2
+
+B2 done: merged tranche/T14 (index.mjs:47 exports dispatch.mjs' Store). R35's todo is a test: this class with no wrapper starts instance-setup once; its routes answer BAD_JSON and STORE_INTERNAL_ERROR (no stack) in the frame. R35's mark is met: please strike. The one assertion that index.mjs' Store IS dispatch.mjs' Store cannot live in my tests (architecture.mjs refuses importing legacy-index, later in the order); it belongs to legacy-index's tests. control-plane 52/52, 0 todo; format, architecture, coverage 35/35, ownership: 0 failures.
