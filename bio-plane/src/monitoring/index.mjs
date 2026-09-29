@@ -16,7 +16,8 @@
  * with record-core's audit (R42), and registers its proposal source with intent (R33, N170).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `readImage`, `getSetting`, `evidenceStore`, `declarePurge`,
- *                                   `registerAuditCheck`; `inSight`, `viewerPredicate`; `promote`, `registerStep`.
+ *                                   `registerAuditCheck`; `inSight`, `viewerPredicate`, `isAdministrator`,
+ *                                   `notAnAdmin` (R30); `promote`, `registerStep`.
  *   governor, provenance, capture   layer 3: `governorAdmit`/`governorReport` (through `governedFetch`); the receipt
  *                                   writer `recordReceipt`; `reachabilityThresholds`, `sourceReachability`,
  *                                   `recordSourceOutcome`.
@@ -36,7 +37,7 @@
  * (its R29). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { governorOf, governedFetch } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -55,7 +56,7 @@ import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, civicosUserAgent, MONITOR_FREQ,
-         DRIVE_CAPTURE_CHECKS, CUSTODIAL_CHECKS } from "../../checks/bio-checks.mjs";
+         DRIVE_CAPTURE_CHECKS } from "../../checks/bio-checks.mjs";
 import { checkGatheringGrammar } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 
@@ -102,6 +103,8 @@ export const MONITOR_PAUSE_SETTING = "monitoring_paused";
 /** R30 (N314, K380): the root of trust's stamp, the ADMIN_TOKEN bearer's (`class:admin`), an administrator here. The
  *  founder's own session is stamped `admin`, which membership R64 already answers as an administrator once claimed. */
 export const MONITOR_ROOT_OF_TRUST = "class:admin";
+/** R30 (N324): the fixed phrase naming the pause's act in membership R84's `notAnAdmin` refusal. */
+export const MONITOR_PAUSE_ACT = "pausing or resuming the monitoring daemon";
 
 /* ===========================================================   *  REC-26: MONITOR-CADENCE — op=monitor's caller, at each document's own pace.
  *
@@ -1404,8 +1407,9 @@ export class Monitoring {
   /** R30: an administrator pauses the daemon (`paused: true`) or resumes it (`false`). `by` is the control plane's
    *  stamp of who asked (the `actor` it stamps: a member's id for a session, `class:<cls>` for a credential). N314
    *  (K380): the caller's standing is this service's to decide, not the route's: a stamp that is not an administrator
-   *  (membership R64's `isAdministrator`) nor the root of trust (`MONITOR_ROOT_OF_TRUST`) is refused `NOT_AN_ADMIN`,
-   *  membership's code with its row C-96.1, asked before the request's shape, and nothing is written. While paused,
+   *  (membership R64's `isAdministrator`) nor the root of trust (`MONITOR_ROOT_OF_TRUST`) is refused `NOT_AN_ADMIN`
+   *  through membership R84's `notAnAdmin` (N324: the code is minted there, at its one site, with its row C-96.1), asked
+   *  before the request's shape, and nothing is written. While paused,
    *  neither tick fetches anything (monitoring's and the fallback's fetches stop); `op=monitor` asked by a caller still
    *  answers, since a caller naming one bundle is not the daemon. Answers `{ok, paused, by, at}`. */
   pause({ paused = null, by = null } = {}) {
@@ -1414,13 +1418,7 @@ export class Monitoring {
                shape: "the stamped administrator", error: "the pause needs who set it",
                detail: "monitorpause needs 'by', the administrator the control plane stamped, and this request "
                      + "carried none. Nothing was changed." };
-    if (!this.#administers(by)) {
-      const row = CUSTODIAL_CHECKS.NOT_AN_ADMIN;
-      return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
-               by, detail: "pausing or resuming the monitoring daemon is an administrator's act (R30), and the plane "
-                         + "stamps who is asking from the signed-in session rather than taking it from the caller. "
-                         + "This caller is not one of the active administrators. Nothing was changed." };
-    }
+    if (!this.#administers(by)) return notAnAdmin(by, MONITOR_PAUSE_ACT);   /* R30 through membership R84 (N324) */
     if (typeof paused !== "boolean")
       return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "monitorpause", argument: "paused",
                shape: "true or false", error: "the pause needs paused: true or false",
