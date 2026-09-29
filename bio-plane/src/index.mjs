@@ -1,6 +1,6 @@
-import { SCHEMA } from "./schema.mjs";
 import { livefire } from "./livefire.mjs";
-import { setupPage } from "./setup.mjs";
+import { setupPage, publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
+         cpuProbeOp, instanceSetupStore } from "./setup.mjs";
 import { SIGN_HTML } from "./signpage.mjs";
 import { liveToken } from "./tokens.mjs";
 import { GATE_VERSION } from "./gate.mjs";
@@ -120,7 +120,6 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
   return fetchGoverned(target, { userAgent: userAgent(env, purpose, delegated), fetch: (...a) => fetch(...a),
                                  governor: stub ? governorOverStub(stub) : null });
 }
-import { cpuProbe } from "./cpu.mjs";
 import { Store } from "./store.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
@@ -131,7 +130,10 @@ import { linksOp, captureObjectOp, archiveLookupOp, acquireOp } from "./capture/
 import { monitorOp } from "./monitoring/index.mjs";
 import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
-export { Store };
+/* instance-setup (K93; its map §3): legacy-store, earlier, cannot call it, so the Durable Object this file exports
+   is legacy-store's class started with it and routing its ops first. */
+const InstanceStore = instanceSetupStore(Store);
+export { InstanceStore as Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
@@ -140,74 +142,7 @@ import { makeFetch, json, doAnswer, storeSilent, relayAnswer, StoreSilent, STORE
          SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow } from "./control-plane/index.mjs";
 import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs";
 
-/* REC-163 / IC-174 — THE PUBLIC READ OF THE PRODUCING GROUP, ONE READER FOR THE TWO SURFACES THAT SHOW IT TO A
-   STRANGER: op=instancegroup's public arm and the setup page served at `/`. `BIO_Publication_v0_1.md` §7 point 1:
-   the slug is PUBLIC. It asks the store's `instanceGroupPublic`, which selects nothing but the slug through the one
-   reader every stamp uses, so the page, the op and the bytes of every document this store creates name ONE group.
-   Answers `doAnswer`'s `{ answered, result }`, and a silence is the caller's to state AS a silence. An instance with
-   no store binding at all cannot be asked, and that is a silence too: the page it serves must still be served.
 
-   D-596 — WHICH PUBLIC PROJECTION IS THE CALLER'S TO NAME, AND THERE ARE EXACTLY TWO. op=instancegroup's public arm
-   keeps `instancegrouppublic`, the slug and nothing else (REC-163's contract, its key set pinned by group-public's
-   G1/G2/C3/C5). The setup page names `groupidentitypublic`, the projection op=groupidentity answers a stranger
-   (REC-164): the slug, the display name only beside a slug, and a domain only while its latest verdict is `verified`,
-   dated. Both read the slug through the store's one `#producingGroup()` reader, so the page and the op still name
-   ONE group. THE DEFECT: the page read `instancegrouppublic` alone, so it showed the slug and never the name or the
-   verified domain, while op=groupnameset's answer told the administrator every public surface shows the name beside
-   the slug. Any other value is answered as a silence rather than forwarded, so a typo cannot reach a DO path. */
-const PUBLIC_GROUP_PROJECTIONS = ["instancegrouppublic", "groupidentitypublic"];
-async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic") {
-  if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
-  let stub = null;
-  try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
-  if (!stub) return { answered: false, result: undefined };
-  return doAnswer(stub.fetch(`http://do/${projection}`));
-}
-
-
-/* D-116 — EACH FLEET MEMBER'S BUILD, READ BACK THROUGH THE BINDING THIS PLANE ACTUALLY HOLDS.
- *
- * A member versions and rolls out on its own (`BIO_Distribution_v0_1.md` §4 rule 1), and an installer that uploaded
- * one has only Cloudflare's word that it landed — never the member's, and never the PLANE's view of it, which is the
- * one that decides whether a group's PDFs, OCR and assistant do what every description of them says (D-115). So the
- * question is asked where it matters: over `env.<BINDING>`, `GET /version`, the route every member has served since
- * CPDF-9 / FL-2 / CPDF-10. Each answer is the MEMBER'S OWN reply — its `name` and `version` fields, copied — and never
- * this isolate's env.VERSION: a plane that filled these in from its own env would make every member agree for free.
- *
- * States, per member, each a first-class statement rather than a missing key:
- *   SERVING   the member answered through the binding, under its own name, with `version`.
- *   UNBOUND   this plane holds no binding by that name — the member is unreachable FROM HERE whatever the account holds.
- *   SILENT    bound, and it did not answer a readable version within the bound (`why` says what happened).
- *   MISNAMED  something answered through the binding, but under another name — the binding points at the wrong worker.
- * Read only on `op=bootstrap&members=1`, so the anonymous answer a browser polls does not fan out to three workers. */
-const FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
-const MEMBER_VERSION_WAIT_MS = 4000;
-async function memberVersions(env) {
-  const out = {};
-  await Promise.all(FLEET_BINDINGS.map(async ([member, binding]) => {
-    const b = env[binding];
-    if (!b || typeof b.fetch !== "function") { out[member] = { binding, state: "UNBOUND" }; return; }
-    let timer;
-    try {
-      const r = await Promise.race([
-        b.fetch(`https://${member}/version`, { method: "GET" }),
-        new Promise((_, no) => { timer = setTimeout(() => no(new Error(`no answer within ${MEMBER_VERSION_WAIT_MS} ms`)),
-                                                    MEMBER_VERSION_WAIT_MS); }),
-      ]);
-      const j = await r.json().catch(() => null);
-      if (!r.ok || !j || typeof j.version !== "string" || !j.version) {
-        out[member] = { binding, state: "SILENT", why: `answered HTTP ${r.status} without a version` };
-      } else if (j.name !== member) {
-        out[member] = { binding, state: "MISNAMED", name: typeof j.name === "string" ? j.name : null, version: j.version };
-      } else {
-        out[member] = { binding, state: "SERVING", version: j.version };
-      }
-    } catch (e) {
-      out[member] = { binding, state: "SILENT", why: String(e && e.message || e).slice(0, 200) };
-    } finally { clearTimeout(timer); }
-  }));
-  return out;
-}
 
 /* D-270 / C-61: the argument complaint's row reader, `admissionRow`'s shape and
    its refusal to invent — a code with no sentence behind it throws here rather
@@ -346,14 +281,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
         const igReader = await caseReader(url, env, igStore, presentedAi.cred);
         if (igReader.silent) return storeSilent(igReader.silent);
-        if (igReader.viewer) {
-          const igOut = await doAnswer(env.STORE.get(env.STORE.idFromName(igStore)).fetch("http://do/instancegroup"));
-          if (!igOut.answered) return storeSilent("instancegroup");
-          return json({ ok: true, result: igOut.result, store: igStore, tokenClass: igReader.cls }, 200);
-        }
-        const pubOut = await publicInstanceGroup(env, igStore);
-        if (!pubOut.answered) return storeSilent("instancegroup");
-        return json({ ok: true, result: pubOut.result, store: igStore }, 200);
+        return instanceGroupOp(env, igStore, igReader, { json, storeSilent, doAnswer });
       }
 
       /* ===== REC-164: op=groupidentity — THE DISPLAY NAME AND THE VERIFIED DOMAIN, BESIDE THE PUBLIC SLUG =========
@@ -369,11 +297,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
         const giReader = await caseReader(url, env, giStore, presentedAi.cred);
         if (giReader.silent) return storeSilent(giReader.silent);
-        const giOut = await doAnswer(env.STORE.get(env.STORE.idFromName(giStore))
-          .fetch(giReader.viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
-        if (!giOut.answered) return storeSilent("groupidentity");
-        return json({ ok: true, result: giOut.result, store: giStore,
-                      ...(giReader.viewer ? { tokenClass: giReader.cls } : {}) }, 200);
+        return groupIdentityOp(env, giStore, giReader, { json, storeSilent, doAnswer });
       }
 
       /* ============================================================         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
@@ -483,17 +407,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
          `newgroup` both read this op (measured at newgroup/src/index.mjs:364
          and :631), so the false success reached a caller deciding whether an
          instance was ready. */
-      const out = await doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`)));
-      if (!out.answered) return storeSilent("bootstrap");
-      /* D-116 / IC (see INTERFACE-CHANGES.md): THREE BUILDS, EACH READ FROM WHERE IT RUNS. `version` is THIS routing
-         isolate's; `storeVersion` arrives inside `out.result` from the Durable Object's own env (store.mjs, the
-         `bootstrap` route) and is NEVER written here — filling it from `env.VERSION` would make the two agree for
-         free, which is exactly the lie this field exists to prevent. `memberVersions` (on `members=1` only) is each
-         fleet member's own reply through this plane's binding. */
-      return json({ ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
-                    bootstrapConfigured: await liveToken(env.ADMIN_TOKEN), ...out.result,
-                    ...(url.searchParams.get("members") === "1" ? { memberVersions: await memberVersions(env) } : {}) },
-                  200);
+      return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent, doAnswer });
 }
 
 /* The admitted ops whose handlers are still here; undefined for control-plane's generic forward. */
@@ -679,75 +593,8 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     /* selftest reports deployment health as JSON, so "did the deploy work" is a
        link rather than a command. It asserts every binding is present and that
        the store answers, and it never returns a secret. */
-    if (op === "selftest") {
-      /* R2 is optional by design: a new group has nothing over the spill
-         threshold, so everything lives in SQLite and no card is needed.
-         "Not configured" is a first-class healthy state, distinct from
-         "configured and broken", which stays a failure. Fence doctrine
-         survives because the buckets are only ever added as a pair. */
-      const r2Configured = typeof env.CAPTURES?.get === "function"
-                        && typeof env.PUBLISHED?.get === "function";
-      const out = {
-        ok: true, service: "bio-plane", version: env.VERSION || "0.0.0",
-        time: new Date().toISOString(), tokenClass: cls,
-        bindings: {
-          STORE: typeof env.STORE?.idFromName === "function",
-          CAPTURES: typeof env.CAPTURES?.get === "function" ? true : "not configured",
-          PUBLISHED: typeof env.PUBLISHED?.get === "function" ? true : "not configured",
-          ADMIN_TOKEN: await liveToken(env.ADMIN_TOKEN),
-          MEMBER_TOKEN: await liveToken(env.MEMBER_TOKEN),
-          PROBE_TOKEN: await liveToken(env.PROBE_TOKEN),
-          /* REC-33: REPORTED, and deliberately NOT required below. An instance
-             that predates this class runs monitoring on the ADMIN_TOKEN
-             fallback and is HEALTHY; making the binding required would fail
-             every already-installed instance's own health check for holding the
-             posture it shipped with. Absence is a first-class state here, the
-             same way R2's is — and reporting it is what lets an operator SEE
-             whether the fallback is what is carrying their monitoring. */
-          DAEMON_TOKEN: (typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN.length > 0)
-            ? await liveToken(env.DAEMON_TOKEN)
-            : "not configured",
-        },
-        r2Configured,
-        schemaChars: SCHEMA.length,
-      };
-      /* Half a fence is a defect, not an option. */
-      if ((typeof env.CAPTURES?.get === "function") !== (typeof env.PUBLISHED?.get === "function")) {
-        out.ok = false;
-        out.r2 = "MISCONFIGURED: one bucket bound without the other; the fence requires both or neither";
-      }
-      try {
-        /* REC-52: a store that ANSWERED `ok:false` reported `out.store =
-           undefined` and left `out.ok` TRUE — a deployment health check
-           reporting healthy because the failure it was looking for arrived in
-           the one shape it did not read. Only a thrown fetch was caught. */
-        /* REC-131 / IC-148: selftest RELAYS the store's stats — the same answer through a second
-           door, under op=stats' one stamp: `dbBytes` for the admin class only (see op=stats). */
-        const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
-          .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(
-            viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`)}`));
-        if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
-        else out.store = sOut.result;
-      } catch (e) { out.ok = false; out.store = "ERR " + String(e && e.message || e); }
-      if (r2Configured) {
-        try {
-          const key = `${SCRATCH}/selftest-${Date.now()}`;
-          await env.CAPTURES.put(key, "ok");
-          const back = await env.CAPTURES.get(key);
-          out.captures = (await back.text()) === "ok" ? "read-write ok" : "MISMATCH";
-          await env.CAPTURES.delete(key);
-        } catch (e) { out.ok = false; out.captures = "ERR " + String(e && e.message || e); }
-      } else {
-        out.captures = "not configured";
-      }
-      /* Required for health: the store and three live token bindings. R2 is
-         reported but not required. */
-      out.bindingsAllPresent =
-        out.bindings.STORE === true && out.bindings.ADMIN_TOKEN === true
-        && out.bindings.MEMBER_TOKEN === true && out.bindings.PROBE_TOKEN === true;
-      if (!out.bindingsAllPresent) out.ok = false;
-      return json(out, out.ok ? 200 : 500);
-    }
+    if (op === "selftest") return selftest(env, storeName, { cls, scratch: SCRATCH,
+      viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` }, { json, doAnswer });
 
     /* purge is the only destructive op. It refuses unless the caller names the
        store it resolved to, so a purge can never land somewhere the caller did
@@ -806,58 +653,15 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
        being refused, this
        one reports consumption found by measuring, because CPU has no catchable
        refusal to find a ceiling with. */
-    if (op === "runtime") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      /* REC-52: three unchecked reads feeding one `{ok:true}`. A store silence
-         made every one of them `undefined`, `JSON.stringify` dropped all three,
-         and the answer became `{ok:true, asymmetry:"…"}` — a MEASUREMENT op
-         reporting success while carrying no measurement, which is this class at
-         its most literal: an outcome that costs nothing to produce. */
-      const obsOut = await doAnswer(st.fetch("http://x/runtimeobservations"));
-      const probeOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
-      const limOut = await doAnswer(st.fetch("http://x/capturelimit?runtime=subrequests"));
-      if (!obsOut.answered || !probeOut.answered || !limOut.answered) return storeSilent("runtime");
-      const obs = obsOut.result, probe = probeOut.result, lim = limOut.result;
-      return json({ ok: true, measured: obs, cpu_probe: probe, subrequests: lim,
-        asymmetry: "a refused subrequest throws and is caught, so the subrequest ceiling is known by "
-                 + "having hit it. Exceeding the CPU limit TERMINATES the isolate, so no run can "
-                 + "report its own death: consumption is measured on every run and the ceiling is "
-                 + "found by op=cpuprobe, whose checkpoints survive the kill." });
-    }
+    if (op === "runtime") return runtimeOp(env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer });
 
     /* Find the CPU ceiling by walking into it. Each completed step is
        checkpointed durably BEFORE the next begins, so when the isolate is killed
        the trail shows the last step that finished and the ceiling is bracketed.
        Probe class only: it burns compute on purpose and belongs nowhere near a
        member's session. */
-    if (op === "cpuprobe") {
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
-      /* REC-52: `before.highest_completed` threw on an absent result, so this
-         one crashed rather than lied. Converted for the same reason as
-         op=registeraudit — the answer it builds is a CEILING, and a ceiling
-         derived from a starting point nobody read is a number presented as a
-         measurement. */
-      const beforeOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
-      if (!beforeOut.answered || !beforeOut.result) return storeSilent("cpuprobe");
-      const before = beforeOut.result;
-      const iters = Math.max(100000, Number(url.searchParams.get("iterations")) || 2000000);
-      const budget = Math.max(50, Number(url.searchParams.get("budget_ms")) || 20000);
-      const r = await cpuProbe({
-        startStep: before.highest_completed, iterationsPerStep: iters, budgetMs: budget,
-        checkpoint: async (step, elapsed) => {
-          await st.fetch("http://x/recordcpuprobestep", {
-            method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ step, elapsedMs: elapsed, iterations: iters }) });
-        },
-      });
-      const afterOut = await doAnswer(st.fetch("http://x/cpuprobestate"));
-      if (!afterOut.answered) return storeSilent("cpuprobe");
-      const after = afterOut.result;
-      return json({ ok: true, run: r, state: after,
-        note: "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not "
-            + "return, the trail's highest step is the last one that fit and the ceiling lies just "
-            + "above its elapsed_ms." });
-    }
+    if (op === "cpuprobe") return cpuProbeOp(env.STORE.get(env.STORE.idFromName(storeName)),
+      { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, { json, storeSilent, doAnswer });
 
     /* Project a capture's resolved links into edges. Separate from op=links
        because it writes, and the capability gate has to see that. */
@@ -960,4 +764,5 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     if (op === "ratify") return ratifyOp(req, stub, { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
 }
 
-export default { fetch: makeFetch({ publicOp, gatedOp, publicInstanceGroup }) };
+export default { fetch: makeFetch({ publicOp, gatedOp,
+  publicInstanceGroup: (env, storeName, projection) => publicInstanceGroup(env, storeName, projection, doAnswer) }) };

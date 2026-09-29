@@ -10465,11 +10465,7 @@ export const VERSION_NOTICE_CHECKS = {
  *   C-64.1 — a write that must NAME the producing group, on a store recording none, where the request states
  *            none either. The plane will not supply a default: a default is how the wrong producer got into
  *            signed bytes, and UNDETERMINED is first-class. ONE site, a helper, so however many acts need the
- *            refusal it has one smallest span.
- *   C-64.2 — a seed naming something that is not a slug in the installer's own grammar.
- *   C-64.3 — a seed on a store that already records its group. WRITTEN ONCE, because the value is in every
- *            document the record has signed, and a second value would make them name a producer they were
- *            not written under. */
+ *            refusal it has one smallest span. */
 export const INSTANCE_GROUP_CHECKS = {
   GROUP_UNDETERMINED: {
     check: 'C-64.1',
@@ -10478,40 +10474,6 @@ export const INSTANCE_GROUP_CHECKS = {
       + 'record cannot write a document that must name the group that produced it. A copy records its group once: '
       + 'when it is first installed, or by one act of whoever holds its administrator token in the hosting account. '
       + 'Nothing was written.',
-  },
-  GROUP_SLUG_MALFORMED: {
-    check: 'C-64.2',
-    where: 'src/store.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase '
-      + 'letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.',
-  },
-  GROUP_ALREADY_RECORDED: {
-    check: 'C-64.3',
-    where: 'src/store.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'This copy\'s group is already recorded, and it is recorded once: the name travels inside every '
-      + 'document the record has signed, so a second name would make those documents name a producer they were '
-      + 'not written under. Nothing was changed.',
-  },
-  GROUP_IDENTITY_NOT_ADMIN: {
-    check: 'C-64.5',
-    where: 'src/store.mjs #groupIdentityGate > is-group-identity-admin',
-    translation: 'Only one of the group\'s administrators can set the name it shows the public or the web '
-      + 'address it claims. The person signed in here is not one of its active administrators. Nothing was '
-      + 'changed.',
-  },
-  GROUP_DISPLAY_NAME_MALFORMED: {
-    check: 'C-64.6',
-    where: 'src/store.mjs groupNameSet > is-group-display-name',
-    translation: 'A display name is the group\'s own words for itself: some text, at most 120 characters, on '
-      + 'one line. It is always shown beside the group\'s short name and never instead of it. Nothing was '
-      + 'changed.',
-  },
-  GROUP_DOMAIN_MALFORMED: {
-    check: 'C-64.7',
-    where: 'src/store.mjs groupDomainSet > is-group-domain',
-    translation: 'A web address is claimed by its bare domain name, like example.org: no https://, no path and '
-      + 'no port. The claim is then checked by reading a file the domain itself serves, and the public sees '
-      + 'the domain only while that check passes. Nothing was changed.',
   },
 };
 
