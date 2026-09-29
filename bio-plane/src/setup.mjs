@@ -1905,8 +1905,8 @@ export class InstanceSetup {
   }
 
   /** At start, once: the tables; the purge exemptions (R28, R41); the fact `producingGroup` (R1); the scheduler
-   *  consumer `group-domain-recheck` (R9, scheduler R8) and an arm, since this runs after the scheduler's own start
-   *  reconciled; capture's compute listener (R42); and, at the first boot, R2 and R13. */
+   *  consumer `group-domain-recheck` (R9, scheduler R8); capture's compute listener (R42); at the first boot, R2 and R13;
+   *  and last the scheduler's own `start` (its R11), so the reconcile sees this consumer and starts no probe. */
   async start({ firstBoot } = {}) {
     if (this.#started) return { ok: true, started: false, detail: "this module had already started on this storage" };
     this.#started = true;
@@ -1921,7 +1921,9 @@ export class InstanceSetup {
                                             unit: unitOfMetric(m && m.metric) }));
     const first = firstBoot === undefined ? this.#record().isFirstBoot() : firstBoot === true;
     if (first) { out.group = this.#recordGroupAtFirstBoot(); out.profiles = this.#recordProfilesAtFirstBoot(); }
-    try { out.armed = await this.#scheduler().arm(); } catch { out.armed = null; /* the next arm reconciles */ }
+    /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
+       door, which would start the test seam's probe at every boot (K419). */
+    try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
     return out;
   }
 
