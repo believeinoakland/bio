@@ -302,8 +302,8 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    wherever the rows live (R34, R47), read by diffing every row table between f955769afc (1.42.0's stamp) and
    `tranche/T13` after record-core and membership merged (build/plan/t13-stamp-list.md, checked row by row).
    ARRIVED: C-33.50 NO_PROJECT_SCOPE (queue); C-51.6 NO_SHA (extraction); C-59.6 MINT_EXHAUSTED (record-core's R62, N322);
-   C-69.3 PLANE_INTERNAL_ERROR (control-plane); C-87.12 MINT_EXHAUSTED (review, N306; it retires into C-59.6 later in
-   T13); C-91.5 NO_ENTITY, C-91.6 ENTITY_NO_LABEL (entities); C-96.13 EXPERTISE_NO_LABEL (membership, missed by 1.42.0,
+   C-69.3 PLANE_INTERNAL_ERROR (control-plane); C-87.12 MINT_EXHAUSTED (review, N306; it retired into C-59.6 later in
+   T13, K434, and 1.44.0 stamps its departure); C-91.5 NO_ENTITY, C-91.6 ENTITY_NO_LABEL (entities); C-96.13 EXPERTISE_NO_LABEL (membership, missed by 1.42.0,
    K382); C-113.23 DETERMINATION_SUPERSEDED (conformance); C-118.1 NOT_FOUND, C-118.2 NO_SUCH_KNOCK (capture); C-119.1
    PROFILES_NOT_ADMIN, C-119.2 NOT_A_LIST, C-119.3 UNKNOWN_PROFILE, C-119.4 PROFILE_IS_TEST (instance-setup).
    DEPARTED, their ids retired: C-100.9, C-100.19 (progressions); C-111.5 (intent); C-113.9, C-113.18 (conformance);
@@ -318,8 +318,8 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    (N324, `notAnAdmin`), its catalogue copy kept one tranche (K408 (4)), same code and translation.
    Wording only: the `where`s of C-100.20 (and its translation), C-112.10 and C-113.15.
    MINOR, rule 17 moving the stamp for arrivals, departures, renames and moves. ROW_CENSUS (R50, K431) is pinned to this
-   tree: 820 rows. Rows changed after this stamp in T13 (review's C-87.12 retiring, control-plane's C-69.4) are named
-   `awaiting stamp` by their jobs' records, for T14's stamp. */
+   tree: 820 rows. Rows changed after this stamp in T13 (review's C-87.12, retired in T13 (K434); control-plane's C-69.4)
+   were named `awaiting stamp` by their jobs' records, and 1.44.0 stamps both. */
 export const CATALOG_VERSION = "1.43.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the

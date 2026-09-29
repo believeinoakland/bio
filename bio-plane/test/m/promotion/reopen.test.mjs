@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, create, T0 } from "./fixtures.mjs";
-import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
-import { EDGE_REASON_MAX, REOPENABLE_FROM } from "../../../src/promotion/index.mjs";
+import { parseFrontmatter, STATES, vocabFor } from "../../../checks/bio-checks.mjs";
+import { EDGE_REASON_MAX, REOPENABLE_FROM, DISPOSITIONS } from "../../../src/promotion/index.mjs";
 
 const ID = "INQ-2026-0001";
 const inq = (state, extra = {}) => doc({ id: ID, object_type: "inquiry", title: "Where did the fund go?", current_state: state,
@@ -53,8 +53,21 @@ test("R23: NO_TARGET; absent and unseen targets answer NO_SUCH_BUNDLE identicall
   assert.equal(call(p).reason, "NO_DOCUMENT");
 });
 
-test("R24: reopenable from a disposition or as a case member; otherwise NOT_SET_DOWN; an undeclared move is ILLEGAL_TRANSITION", () => {
+test("R51: DISPOSITIONS is the frozen list [deferred, dismissed], and REOPENABLE_FROM is that same frozen array", () => {
+  assert.deepEqual(DISPOSITIONS, ["deferred", "dismissed"]);
+  assert.ok(Object.isFrozen(DISPOSITIONS));
+  /* The same array, not a copy: one list, so the publication and the refusal cannot disagree. */
+  assert.equal(REOPENABLE_FROM, DISPOSITIONS);
+  /* Frozen: no caller can add, remove or change a word, in either spelling. */
+  assert.throws(() => { "use strict"; DISPOSITIONS.push("concluded"); }, TypeError);
+  assert.throws(() => { REOPENABLE_FROM[0] = "open"; }, TypeError);
   assert.deepEqual(REOPENABLE_FROM, ["deferred", "dismissed"]);
+  /* Each word is a state the inquiry table declares, with an edge back to open (R24 reopens from it). */
+  for (const d of DISPOSITIONS) assert.ok((vocabFor(STATES, "inquiry").edges[d] || []).includes("open"), d);
+});
+
+test("R24: reopenable from a disposition (REOPENABLE_FROM, R51) or as a case member; otherwise NOT_SET_DOWN naming the set; an undeclared move is ILLEGAL_TRANSITION", () => {
+  assert.equal(REOPENABLE_FROM, DISPOSITIONS);
   for (const s of REOPENABLE_FROM) assert.equal(call(setup(s).p).ok, true);
   const conc = setup("concluded");
   const r = call(conc.p);
