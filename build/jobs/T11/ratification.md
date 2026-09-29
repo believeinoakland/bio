@@ -1,6 +1,6 @@
 # ratification (T11)
 
-**Status** · session_01TrJPeeGe3xdCv9sCLy1TBh · depth 2 · COMPLETE · handled B1
+**Status** · session_01TrJPeeGe3xdCv9sCLy1TBh · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
