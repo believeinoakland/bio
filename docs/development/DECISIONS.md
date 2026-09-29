@@ -1306,6 +1306,7 @@ response: **As recommended (which K362 and K364, recorded by BOB #61 the same da
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.3.
 owed: carried into N300's wording (T12) and the UX redesign; the UX page's open question 3 marked ruled.
+
 ### DEC-80 · answered
 raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 4)
 for: bob
