@@ -638,9 +638,13 @@ export async function ratifyOp(req, stub, ctx) {
 
        The CLASSIFICATION is made here and enforced in the store:
          - references[]      candidates for a SERVE edge. The store admits one
-                             only if the target is itself published; the rest
-                             are dropped, which is what stops the published
-                             graph naming working material.
+                             only if the target is itself published; a
+                             reference to a target not yet published is HELD
+                             PRIVATELY (its id never enters the published
+                             graph, which is what stops that graph naming
+                             working material) and becomes a SERVE edge when
+                             the target is published (R5, R16; publication
+                             R22, R35; Bob, K283).
          - division_parent   NAME-ONLY, by kind, whatever the target's state.
          - division_siblings A divided parent is TERMINAL and can never be
                              published and a sibling may not be, so R4's
@@ -925,7 +929,9 @@ export async function ratifyOp(req, stub, ctx) {
                      is served at (op=publishedbytes&sha256=<manifest_sha>&format=zip),
                      and `graph` reports what the published edges did: how many the
                      surface may SERVE, how many it may only NAME, and how many
-                     references were dropped for pointing at unpublished material. */
+                     references to material not yet published were held privately
+                     (counts, as publication answers them; a held target's id is never
+                     published, R5). */
                   /* REC-58, 2026-08-05: THIS PICK IS A FENCE AND IS NAMED AS
                      ONE, because it was doing the work with nothing saying
                      so. `pub.case` is `#caseEditionState`'s WHOLE return,
