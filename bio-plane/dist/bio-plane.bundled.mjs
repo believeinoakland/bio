@@ -9819,6 +9819,16 @@ var RECORD_CORE_CHECKS = Object.freeze({
     check: "C-59.6",
     where: at("mintExhausted", "is-mint-exhausted"),
     translation: "The plane could not find a free identifier for this, so nothing was saved and nothing was issued. Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs this instance."
+  }),
+  COUNTS_DECLARED: Object.freeze({
+    check: "C-102.13",
+    where: at("registerCounts", "is-counts-registration"),
+    translation: "A part of this instance tried to report a figure another part already reports, or to register its figures twice, so the second registration was refused and the first still stands. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
+  }),
+  COUNTS_MALFORMED: Object.freeze({
+    check: "C-102.14",
+    where: at("registerCounts", "is-counts-registration"),
+    translation: "A part of this instance tried to register its figures without naming itself, the figures or a function to count them, so nothing was registered. This is a fault in how the instance was built, not in the record, and nothing in the record changed."
   })
 });
 
@@ -10115,6 +10125,8 @@ var RecordCore = class _RecordCore {
   #firstBoot;
   #auditChecks = [];
   // R59: {module, check}, in registration order
+  #countsBy = [];
+  // R63: {module, keys, counts}, in registration order
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
@@ -10744,6 +10756,64 @@ var RecordCore = class _RecordCore {
       const after = this.#one(`SELECT bundle_sha, row_version FROM bundles WHERE bundle_id=?`, bundleId);
       return { bundleSha: after.bundle_sha, rowVersion: after.row_version };
     });
+  }
+  /* ---- the store's counts (R63) ---- */
+  /** R63 (N342, K435; the R59 pattern, with its keys named up front as `declarePurge` names its tables): a module that
+   *  owns tables registers once, at start, the figures it reports and `counts(hid)`, a synchronous function answering
+   *  them, so `op=stats` and purge's proof read every module's figures without calling a later module. Two modules
+   *  never report one key: a key already held, or named twice in one list, is `COUNTS_DECLARED` naming its holder, and
+   *  so is a module's second registration; no module name, no non-empty list of names, or no function is
+   *  `COUNTS_MALFORMED`. A refused registration registers nothing. It writes nothing. */
+  registerCounts(module, keys, counts) {
+    const refuse5 = (code, detail, more) => {
+      const row2 = RECORD_CORE_CHECKS[code];
+      return { ...more, ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail };
+    };
+    if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0 || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
+      return refuse5("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+    let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
+    for (let i = 0; !clash && i < keys.length; i++) {
+      const held = keys.indexOf(keys[i]) < i ? module : this.#countsBy.find((r) => r.keys.includes(keys[i]))?.module;
+      if (held) clash = { key: keys[i], heldBy: held };
+    }
+    if (clash)
+      return refuse5("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+    this.#countsBy.push({ module, keys: [...keys], counts });
+    return { ok: true, module, keys: [...keys] };
+  }
+  /** R63: every registered figure, in registration order, each the number its module's function gave for it, or null
+   *  when that function threw or gave no finite number for it: a figure that could not be read is never zero. `hid`
+   *  (`{sql, args}`, the bundles the caller may not see, or null) is passed to each function as it was given, never
+   *  read here. Each function is asked once per answer. Writes nothing; never throws. */
+  counts(hid = null) {
+    const out = [];
+    for (const { keys, counts } of this.#countsBy) {
+      let got = null;
+      try {
+        got = counts(hid);
+      } catch {
+        got = null;
+      }
+      try {
+        if (got !== null && typeof got === "object" && typeof got.then === "function") {
+          got.then(null, () => {
+          });
+          got = null;
+        }
+      } catch {
+        got = null;
+      }
+      for (const key of keys) {
+        let v = null;
+        try {
+          v = got !== null && typeof got === "object" ? got[key] : null;
+        } catch {
+          v = null;
+        }
+        out.push([key, typeof v === "number" && Number.isFinite(v) ? v : null]);
+      }
+    }
+    return Object.fromEntries(out);
   }
   /* ---- the audit sweep (R18–R20, R45, R59) ---- */
   /** R59 (N51, K130, the K31 pattern): a later module registers, once at start, an audit check that `auditPass`
