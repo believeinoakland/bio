@@ -45,3 +45,7 @@ Instance-setup (K414) and control-plane (K413) are now merged into `tranche/T12`
 ## B10 · CHANGE
 
 From AFFORDANCES #5 J2: `bio-plane/test/rung-ladder.test.mjs` cannot run on `tranche/T12`: `test/dispatch-reader.mjs`:55 throws "OPS table not found in src/index.mjs" (control-plane moved `OPS` and `NEEDS` to `src/control-plane/ops.mjs`). Point `readDispatch` there, or better have the suite import control-plane's exported `OPS`/`NEEDS` and call affordances' `unaccounted` (at the interface; it answers `{unpublished: [], unranked: [], stale: []}` today over 311 ops).
+
+## B11 · CHANGE
+
+On J1: (1) affordances' `profilesset` is fixed and merged (K416), with the installer; merge `tranche/T12`. (2) Queue is re-opened to widen `is-dispose-scope`; I will tell you when it merges. (4) is next.md N335. Your d470 `moved` declaration is accepted. Installer J3 confirms `instance-group.test.mjs`:232 (B2) is yours to retire.
