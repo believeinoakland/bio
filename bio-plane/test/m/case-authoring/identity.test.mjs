@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, readingLines, currentLines } from "./fixture.mjs";
 import { CASE_DERIVATION_CHECKS } from "../../../src/case-authoring/index.mjs";
+import { mintExhausted } from "../../../src/record-core/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -103,13 +104,17 @@ test("R7: the case this act's own unsigned preparation names is found again, so 
   assert.equal(w.publish(B, "bo", [Q], { newCase: true }).ok, true, "B's own new case over the same finding");
 });
 
-test("R7: MINT_EXHAUSTED when the minter finds no free id, and nothing is written", () => {
+test("R7: MINT_EXHAUSTED when the minter finds no free id answers through record-core.mintExhausted (its R62, C-59.6) for a case id, whole, and nothing is published or written", () => {
   const { w, A } = setup({ record: (r) => new Proxy(r, { get: (t, p) => (p === "mintOpaqueId" ? () => null
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) });
   const before = w.snapshot();
   const r = w.publish(A, "alice", [Q]);
-  assert.deepEqual([r.ok, r.reason], [false, "MINT_EXHAUSTED"]);
-  assert.deepEqual(w.snapshot(), before);
+  assert.deepEqual(r, mintExhausted("CASE"), "record-core's one answer, nothing added or reworded");
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", "CASE"]);
+  assert.match(r.detail, /\bcase id\b/);
+  assert.deepEqual(w.snapshot(), before, "no document, no case row, no id spent");
+  assert.equal(w.count("case_documents"), 0);
+  assert.deepEqual(w.publish(A, "alice", [Q], { newCase: true }), mintExhausted("CASE"), "newCase always mints");
 });
 
 test("R8: ALREADY_A_CASE_MEMBER when an edition of this case, or any unsigned preparation, pins a member's current bytes and already records the conclusion this act would record; a finding may serve any number of cases", () => {

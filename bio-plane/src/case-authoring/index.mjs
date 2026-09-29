@@ -46,7 +46,7 @@
  * `case_drafts` (R26); inquiry's `inquiry_basis` (R40); content's `content` (R45); provenance's `register` and
  * `captured_locators` (R48); extraction's `readings` (R58); observation-log's `observation_log` (R29). */
 
-import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
@@ -571,8 +571,8 @@ export class CaseAuthoring {
           || this.#one(`SELECT 1 FROM published_cases WHERE case_id=? LIMIT 1`, id)
           || this.#one(`SELECT 1 FROM case_documents WHERE case_id=? LIMIT 1`, id)
           || this.#one(`SELECT 1 FROM published_case_members WHERE case_id=? LIMIT 1`, id)));
-      if (!theCase) return { ok: false, reason: "MINT_EXHAUSTED",
-                             detail: "the plane could not find a free case id; nothing was published" };
+      /* N322: no free id is record-core's one answer (its R62, C-59.6), never worded here. */
+      if (!theCase) return mintExhausted("CASE");
     }
 
     /* R7 — CASE-2 / DEC-72: A CASE NEVER CHANGES PROJECT. The bar is read from the publishing project at act time, so a
