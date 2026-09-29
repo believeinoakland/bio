@@ -140,14 +140,22 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
  * in for it.
  * ------------------------------------------------------------------ */
 {
-  console.log("\n--- gap (a): env.SELF is bound in the plane's wrangler.jsonc ---");
+  console.log("\n--- gap (a), closed by R23 (K372): the ticks need no SELF binding; the config pins stand ---");
   /* jsonc: strip line comments, then parse. Nothing here needs a real parser. */
   const cfg = JSON.parse(WRANGLER.split("\n").filter((l) => !/^\s*\/\//.test(l)).join("\n"));
   const services = cfg.services || [];
-  const self = services.find((s) => s.binding === "SELF");
-  t("wrangler.jsonc declares a SELF service binding", !!self, true);
-  t("and it targets this Worker itself, which is what makes it a loopback",
-    self && self.service, cfg.name);
+  /* RETIRED 2026-09-29 (T11, legacy-tests; K372 (b), N222; monitoring R23): "wrangler.jsonc declares a SELF service
+     binding" and "it targets this Worker itself". Gap (a) was that the ticks needed the loopback; they now run in
+     process from the scheduler's alarm, so no consumer needs SELF. Replaced by what now holds: no plane source reads
+     it (a Worker round-trip re-entering a tick would show here). The binding itself is config, not asserted either way. */
+  const { readdirSync } = await import("node:fs");
+  const srcFiles = (function walk(d) {
+    return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(d + e.name + "/")
+      : e.name.endsWith(".mjs") ? [d + e.name] : []);
+  })(fileURLToPath(new URL("../src/", import.meta.url)));
+  const readsSelf = srcFiles.filter((f) => /\benv\??\.SELF\b|\["SELF"\]/.test(readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "")));
+  t("no plane source reads env.SELF: the monitoring ticks run in process (R23), over a real corpus",
+    [srcFiles.length > 100, readsSelf.map((f) => f.slice(f.indexOf("/src/") + 1))], [true, []]);
   /* The standing trap: the account pin is what stops a deploy landing in
      whatever account the machine's OAuth session happens to hold. */
   t("account_id is still pinned (this change must not touch it)",
@@ -286,7 +294,8 @@ const pkg = (id, n, frequency) => {
     served = V2;
     const fired = await obj.onAlarm(Date.now());
     const mc = fired.monitorcadence;
-    t("the cadence consumer is configured (SELF binding + daemon token reached the DO)",
+    /* RE-LABELLED 2026-09-29 (K372 (b), R45): configured on every instance, not by a SELF binding and a token. */
+    t("the cadence consumer is configured (R45: on every instance)",
       mc.configured, true);
     t("it found the never-checked document due", mc.candidates, 1);
     t("exactly one document was ticked", mc.ticked.length, 1);
@@ -370,36 +379,70 @@ const pkg = (id, n, frequency) => {
 }
 
 /* ------------------------------------------------------------------ *
- * BLOCK 5 — an instance with NO SELF binding holds no alarm.
+ * BLOCK 5 — an instance with NO SELF binding and NO daemon token.
  *
- * The other half of "no monitoring configured": a monitored document exists,
- * but the binding does not, so both firing consumers are inert. This is the
- * state MACHINE-PROCESSES.md §0 measured on every deployed instance, and the
- * property that makes it SAFE to ship the consumers before the installer
- * provisions the binding.
+ * RE-ANCHORED 2026-09-29 (T11, legacy-tests; K372 (a), (b), N222; monitoring
+ * R23, R30, R45, R24 retired). This block held the "inert unless configured"
+ * property: a monitored document on an unwired instance armed nothing. R45
+ * retired it: asking to be monitored is the group's standing intent, so the
+ * ticks run in process on every instance, and the one way to make monitoring
+ * inert is the administrator's pause (R30). What the old arms checked that
+ * still matters is re-anchored to that: the unwired instance now RUNS and holds
+ * its wake; paused, it runs nothing and fetches nothing, and it never spins the
+ * alarm; resumed, it runs again. (An instance with nothing monitored holding no
+ * alarm stays asserted in block 3, "the reconcile asks for no wake at all".)
  * ------------------------------------------------------------------ */
 {
+  let fetched = 0;
   const mf = new Miniflare({
     modules: true, modulesRoot: "/", scriptPath: SRC, script: SOURCE,
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     r2Buckets: ["CAPTURES", "PUBLISHED"],
-    bindings: { ADMIN_TOKEN: "adm-nb", MEMBER_TOKEN: "mem-nb", PROBE_TOKEN: "prb-nb", VERSION: "test" },
+    /* NO DAEMON_TOKEN; the ADMIN_TOKEN is the operator's, to promote the fixture. */
+    bindings: { ADMIN_TOKEN: "adm-nb", MEMBER_TOKEN: "mem-nb", PROBE_TOKEN: "prb-nb", VERSION: "test",
+                GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0" },
     /* NO serviceBindings: this is an instance the installer has not wired. */
+    outboundService(request) {
+      const u = new URL(request.url);
+      if (u.hostname === "www.oaklandca.gov") { fetched++; return new Response(V1); }
+      return new Response("unscripted", { status: 500 });
+    },
   });
   try {
     const ns = await mf.getDurableObjectNamespace("STORE");
     const obj = ns.get(ns.idFromName("bio"));
-    console.log("\n--- an instance with NO SELF binding holds no alarm, however much it monitors ---");
+    const UNWIRED = "INFO-2026-0804-unwired";
+    console.log("\n--- an instance with NO SELF binding and NO daemon token still monitors (R23, R45) ---");
     const r = await (await mf.dispatchFetch("http://x/api/?op=promote&token=adm-nb",
-      { method: "POST", body: JSON.stringify(pkg("INFO-2026-0804-unwired", "a", "hourly")) })).json();
+      { method: "POST", body: JSON.stringify(pkg(UNWIRED, "a", "hourly")) })).json();
     t("a monitored document is promoted on the unwired instance", r.result.ok, true);
-    const a = await obj.onAlarm(Date.now());
-    t("the cadence consumer is not DUE and does not run, however many documents ask to be monitored",
-      a.monitorcadence, undefined);
-    t("the reconcile asks for no wake", a.nextAt, null);
-    t("and the alarm is cleared: an unwired instance costs nothing on a Free tier",
-      await obj.schedAlarmAt(), null);
+    const T0 = Date.now();
+    const a = await obj.onAlarm(T0);
+    const mc = a.monitorcadence || { ticked: [], failed: [] };
+    t("the cadence consumer is configured and RUNS, in process, with nothing wired",
+      [mc.configured, mc.ticked.map((x) => [x.bundle, x.status]), mc.failed], [true, [[UNWIRED, "unchanged"]], []]);
+    t("and it holds its wake for the document's next check, rather than going inert",
+      [typeof a.nextAt === "number", (await obj.schedAlarmAt()) === a.nextAt], [true, true]);
+
+    console.log("\n--- the administrator's PAUSE is the one way to make it inert (R30, K372 (a)) ---");
+    const DO = async (route, body, qs = "") => (await (await obj.fetch(`http://x/${route}?${qs}`,
+      { method: "POST", body: JSON.stringify(body ?? {}) })).json()).result;
+    const p = await DO("monitorpause", { paused: true }, "actor=admin:mc");
+    t("the pause is taken and stated", [p.ok, p.paused, p.by], [true, true, "admin:mc"]);
+    const before = fetched;
+    const TP = T0 + 2 * 3600000;
+    const paused = await obj.onAlarm(TP);
+    t("paused, the cadence consumer is not DUE and does not run, however overdue the document",
+      paused.monitorcadence, undefined);
+    t("and nothing was fetched", fetched - before, 0);
+    t("a paused instance never spins the alarm: its next look at the pause is one archive interval on",
+      paused.nextAt === null || paused.nextAt - TP >= 3600000, true);
+    const q = await DO("monitorpause", { paused: false }, "actor=admin:mc");
+    t("the pause is lifted", [q.ok, q.paused], [true, false]);
+    const resumed = (await obj.onAlarm(TP + 1000)).monitorcadence || { ticked: [] };
+    t("resumed, the overdue document is checked again",
+      resumed.ticked.map((x) => x.bundle), [UNWIRED]);
   } finally {
     await mf.dispose();
   }

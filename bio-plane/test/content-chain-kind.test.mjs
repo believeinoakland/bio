@@ -50,6 +50,11 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { compile, MEANING } from "../src/query.mjs";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; RETRIEVAL #3, N283, K354; retrieval R61, query-language R25): the projection
+   and its text-index key `fts_id` left `bundles` for retrieval's own `bundle_projection`, so every statement is compiled
+   through the relation retrieval names, as retrieval's own `search` compiles it (`{projection: PROJECTION_RELATION}`). */
+import { PROJECTION_RELATION } from "../src/retrieval/index.mjs";
+const VIA = { projection: PROJECTION_RELATION };
 /* RE-ANCHORED 2026-09-27 (T5-12): the content table's DDL is content's own schema text (R45), not schema.mjs's. */
 import { CONTENT_SCHEMA as SCHEMA } from "../src/content/schema.mjs";
 import { mergedChain, CHAIN_KIND_MIXED } from "../src/textchain.mjs";
@@ -121,7 +126,7 @@ console.log("\n--- 1. the parse is retired, not kept beside the column ---");
   t("query.mjs holds NO json_extract over the chain column anywhere in its code",
     (code.match(/json_extract\(\s*(\w+\.)?chain\b/g) || []), []);
   t("the `chain` sub-field reads the COLUMN", MEANING.content.sub.chain.col, "chain_kind");
-  const st = compile({ q: "content:ocr", viewer: M, facets: [] }).statements.page();
+  const st = compile({ q: "content:ocr", viewer: M, facets: [] }, VIA).statements.page();
   const i = st.sql.indexOf("FROM content");
   /* RE-PINNED 2026-09-27 (T5-12, legacy-tests; K143 (1), content R14, DEC-4): `ocr` is a machine reading, so
      `content:ocr` selects its own kind OR `mixed` (a unit read in more than one step kind): a set membership on the
@@ -130,7 +135,7 @@ console.log("\n--- 1. the parse is retired, not kept beside the column ---");
     [st.sql.slice(i, st.sql.indexOf(")", i) + 1).replace(/\s+/g, " ").trim(), st.args.includes("ocr"),
      st.args.includes("mixed")],
     ["FROM content WHERE chain_kind IN (?, ?)", true, true]);
-  const frag = (q) => { const s = compile({ q, viewer: M, facets: [] }).statements.page().sql;
+  const frag = (q) => { const s = compile({ q, viewer: M, facets: [] }, VIA).statements.page().sql;
     const j = s.indexOf("FROM content"); return s.slice(j, s.indexOf(")", j)).replace(/\s+/g, " ").trim(); };
   t("`content:chain=*` is presence on the column", frag("content:chain=*"), "FROM content WHERE chain_kind IS NOT NULL");
   /* UNDETERMINED STAYS ON `chain`, AND THAT IS A DECISION, not a leftover. It asks
@@ -445,7 +450,7 @@ t("THROUGH THE SEARCH: `content:layer` and `content:ocr` (which reads `mixed` as
 {
   /* THE PLAN, on workerd's engine, for the statement a member actually produces — compiled here and not typed. A
      seek on the index is the evidence the question is answered off the column; the milliseconds are the probe's. */
-  const st = compile({ q: "content:ocr", viewer: M, facets: [] }).statements.page();
+  const st = compile({ q: "content:ocr", viewer: M, facets: [] }, VIA).statements.page();
   const plan = await raw("EXPLAIN QUERY PLAN " + st.sql, ...st.args);
   const lines = (plan.rows || []).map((r) => r.detail).filter((d) => /content/.test(d));
   console.log(`    plan: ${lines.join(" | ") || plan.error}`);

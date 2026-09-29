@@ -100,8 +100,24 @@
  * A matcher grading a guessed spelling read the defect as clean. Both such
  * assertions now ask `ADMISSION_CHECKS` which codes exist instead of guessing,
  * and arm 1 re-run against the corrected suite went from 8 failures to 10.
+ *
+ * RE-ANCHORED 2026-09-29 (T11, legacy-tests; K372 (b), N222; monitoring R23, R45, R24 RETIRED). Monitoring's two
+ * ticks now call `monitor` and capture's `acquire` IN PROCESS and spend NO credential, and `configured()` is true on
+ * every instance: no binding or credential is a condition of monitoring. So the defect this item exists for (a
+ * credential chosen by presence and refused by the gate) can no longer reach monitoring at all, and the RUNS half is
+ * now the stronger claim "monitoring runs WHATEVER the credentials are": arm A and C unchanged (they fire), arm D
+ * (both dead) re-anchored from "refused by name" to "still fires", and a new arm F (nothing bound, no SELF binding)
+ * fires too. The NAMED half (arm B: selftest and livefire still name the dead daemon binding) is unchanged: it is
+ * the instance's report, independent of monitoring. Arm E's monitoring pins are re-anchored to the credential-free
+ * structure (no credential read, no refusal constant, both fires in process); its `src/**` sweep and its pins on
+ * runtime-limits' `unattendedCredential` (still in `src/tokens.mjs`, R26) stand. `control.sh` re-pointed with it.
+ * RUN 2026-09-29 in a scratch worktree (bash; every restore sha256 match and cmp IDENTICAL, 45/0 after each), AS
+ * DECLARED: (1) a live-credential guard in both fires, 38/7: arms D and F and the three monitoring pins, A/B/C green;
+ * (2) R24's presence guard, 40/5: arm F and the three pins, D green (two dead values are still bound); (3) selftest
+ * healed into silence, 44/1: arm B's `false` alone.
  */
-/* NEGATIVE CONTROL: in src/store.mjs make `#monitorToken()` presence-only again (`return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;`, sync, with the three fire sites un-awaited — TWO since capture's K58, 2026-09-27: the capture-request fire spends no credential) -> the denylisted daemon credential is selected and refused on every tick, `fired` is [] and `failed` carries the refusal; this suite FAILS the RUNS arms while the NAMED arms stay green — which is the whole shape. See the run figures in the report below. */
+/* NEGATIVE CONTROL (superseded 2026-09-29, K372: see `control.sh`, whose arm 1 now re-conditions monitoring's fire on a
+   live credential): in src/store.mjs make `#monitorToken()` presence-only again (`return (this.env && (this.env.DAEMON_TOKEN || this.env.ADMIN_TOKEN)) || null;`, sync, with the three fire sites un-awaited — TWO since capture's K58, 2026-09-27: the capture-request fire spends no credential) -> the denylisted daemon credential is selected and refused on every tick, `fired` is [] and `failed` carries the refusal; this suite FAILS the RUNS arms while the NAMED arms stay green — which is the whole shape. See the run figures in the report below. */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process and removes it on exit */
 import { Miniflare } from "miniflare";
@@ -163,7 +179,8 @@ const t = (label, got, want) => {
 /* One instance, built the archive-monitoring suite's way: the SELF binding loops
    back to this same Worker so the tick reaches op=acquire through the real gate,
    and web.archive.org is mocked at the egress. */
-function instance(bindings) {
+/* `self: false` (arm F, K372) binds no SELF: the ticks run in process (R23) and must not need it. */
+function instance(bindings, { self = true } = {}) {
   let MF;
   const mf = new Miniflare({
     modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
@@ -185,7 +202,7 @@ function instance(bindings) {
       INSTANCE_NAME: "d334-fixture",
       ...bindings,
     },
-    serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) },
+    ...(self ? { serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) } } : {}),
     outboundService(request) {
       const u = new URL(request.url);
       if (u.hostname === "web.archive.org" && u.pathname === "/cdx/search/cdx")
@@ -343,25 +360,43 @@ t("and every live fixture really is live, so a green arm is not green by acciden
 {
   const mf = instance({ DAEMON_TOKEN: DEAD_DAEMON, ADMIN_TOKEN: DEAD_ADMIN });
   try {
-    console.log("\n--- arm D (the class): BOTH credentials dead — refused BY NAME, not 401 forever ---");
+    /* RE-ANCHORED 2026-09-29 (K372 (b), N222; monitoring R45, R24 retired): this arm stated the refusal BY NAME
+       (`MONITOR_NO_LIVE_CREDENTIAL`) when both credentials were dead. That refusal left monitoring with R24: the tick
+       spends no credential, so two dead ones no longer stop it. What still matters is that the tick never becomes a
+       401 loop and never leaks a value; the credential-free path's equivalent is that it FIRES. */
+    console.log("\n--- arm D (the class): BOTH credentials dead — monitoring still RUNS, spending none (R45) ---");
     const tick = await driveToTick(mf);
-    t("the document is still recognised as eligible — the defect is credential, not fence",
+    t("the document is still recognised as eligible — the fence is unchanged",
       tick.eligible, [DOCADDR]);
-    t("nothing fired, because nothing could be honestly spent", tick.fired, []);
-    t("and the failure is STATED, one per eligible document",
-      tick.failed.map((f) => f.address), [DOCADDR]);
-    t("naming the condition in words an operator can act on",
-      [/no LIVE monitoring credential/.test(String(tick.failed[0]?.reason)),
-       /denylisted|publication is revocation/i.test(String(tick.failed[0]?.reason))],
-      [true, true]);
-    /* Inverted onto the catalog for the reason arm A records: the refusal must
-       be OURS, decided before the request, and not the GATE's answer to a
-       request we should never have made. An admission code anywhere in this
-       account means the fetch happened. */
-    t("and NOT as the gate's answer to a request that was never worth making",
+    t("the tick is configured though no live credential is bound (R45)", tick.configured, true);
+    t("EXACTLY ONE fallback FIRED, with no live credential to spend (R23)",
+      tick.fired.map((f) => [f.address, f.grade, f.hops]), [[DOCADDR, "C", 2]]);
+    t("and nothing failed", tick.failed, []);
+    /* Inverted onto the catalog for the reason arm A records: an admission code
+       anywhere in this account would mean the tick went through the gate. */
+    t("and no gate answer appears: the tick never went through the gate",
       Object.keys(ADMISSION_CHECKS).filter((code) => JSON.stringify(tick).includes(code)), []);
-    t("the refusal never contains a credential value",
+    t("the tick account never contains a credential value",
       JSON.stringify(tick).includes(DEAD_DAEMON) || JSON.stringify(tick).includes(DEAD_ADMIN), false);
+  } finally { await mf.dispose(); }
+}
+
+/* ---------------------------------------------------------------------------
+ * ARM F — NOTHING BOUND (added 2026-09-29, K372 (b), N222; monitoring R23, R45).
+ * No DAEMON_TOKEN, no ADMIN_TOKEN and no SELF binding: the instance R24 called
+ * "not configured" and left inert. Asking to be monitored is the group's
+ * standing intent, so the tick runs here too, in process.
+ * ------------------------------------------------------------------------ */
+{
+  const mf = instance({}, { self: false });
+  try {
+    console.log("\n--- arm F: no credential and no SELF binding — monitoring still RUNS, in process (R23, R45) ---");
+    const tick = await driveToTick(mf);
+    t("the consumer is configured with nothing bound", tick.configured, true);
+    t("the failing document is a candidate", tick.eligible, [DOCADDR]);
+    t("EXACTLY ONE fallback FIRED, with no credential and no SELF",
+      tick.fired.map((f) => [f.address, f.grade, f.hops]), [[DOCADDR, "C", 2]]);
+    t("and nothing failed", tick.failed, []);
   } finally { await mf.dispose(); }
 }
 
@@ -479,14 +514,18 @@ console.log("\n--- arm E (cont.): the arming predicate cannot leak a credential 
      each is still boolean: the store's `#monitorConfigured()` of `#monitorTokenBound()` (1 caller now, was 2), and
      capture-requests' `configured()` of `unattendedBound` (1 call, boolean by construction). */
   /* RE-ANCHORED 2026-09-28 (T8): the monitor's side is monitoring's `configured()` (R24), the ONE reader of `.bound`. */
-  const callers = (MON_SRC.match(/unattendedCredential\(this\.env\)\.bound/g) || []).length;
+  /* RE-ANCHORED 2026-09-29 (K372 (b), N222; monitoring R45, R24 retired): monitoring's `configured()` is `true` on
+     every instance and reads no binding, so it is no longer a consumer of a presence test. The property kept: no
+     presence predicate over the credentials hands its caller a value, and capture-requests' is still the one, boolean. */
+  const MON_CODE = MON_SRC.replace(/\/\*[\s\S]*?\*\//g, "");
   const CR_SRC = readFileSync(fileURLToPath(new URL("../src/capture-requests/index.mjs", import.meta.url)), "utf8");
-  t("and it is consulted by exactly the two sync `*Configured()` predicates",
-    [callers, /\n  configured\(\) \{[\s\S]{0,200}?unattendedCredential\(this\.env\)\.bound/.test(MON_SRC),
+  t("monitoring consults no credential predicate (R45), and capture-requests' `configured()` is the one presence reader",
+    [(MON_CODE.match(/unattendedCredential|unattendedBound|_TOKEN\b/g) || []).length,
+     /\n  configured\(\) \{ return true; \}/.test(MON_SRC),
      (CR_SRC.match(/\bunattendedBound\(this\.#env\(\)\)/g) || []).length,
      /configured\(\) \{\s*\n\s*try \{ return this\.#deps\.configured \? !!this\.#deps\.configured\(\) : unattendedBound\(this\.#env\(\)\); \}/.test(CR_SRC),
      /export function unattendedBound\(env\) \{\s*\n\s*return !!\(/.test(CR_SRC)],
-    [1, true, 1, true, true]);
+    [0, true, 1, true, true]);
 }
 
 console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structurally ---");
@@ -506,27 +545,43 @@ console.log("\n--- arm E (cont.): the fix is where it is claimed to be, structur
      instanceClaudeToken }` — the gate's own predicate is still imported from tokens.mjs, so the old spelling was
      pinning the SHAPE of the line rather than the property. It now asks that `liveToken` is a named import of
      `./tokens.mjs`, and still fails on a store that re-derives it or imports it from anywhere else. */
-  t("the monitor takes its credential from the GATE'S OWN module rather than re-deriving one",
-    [/import \{[^}]*\bunattendedCredential\b[^}]*\} from "\.\.\/tokens\.mjs";/.test(MON_SRC),
-     /\bliveToken\b/.test(MON_SRC.replace(/\/\*[\s\S]*?\*\//g, ""))], [true, false]);
+  /* RE-ANCHORED 2026-09-29 (K372 (b), N222; monitoring R23, R45): the monitor takes NO credential, so it imports none:
+     not the gate's module and not a re-derived `liveToken`. */
+  const MON_CODE = MON_SRC.replace(/\/\*[\s\S]*?\*\//g, "");
+  t("the monitor takes no credential at all: it imports nothing from tokens.mjs and re-derives no liveness check",
+    [/from "\.\.\/tokens\.mjs"/.test(MON_CODE), /\bliveToken\b/.test(MON_CODE)], [false, false]);
   t("the selection is ASYNC and asks liveToken before selecting the daemon credential",
     /async token\(\) \{\s*\n\s*for \(const k of \["DAEMON_TOKEN", "ADMIN_TOKEN"\]\) \{[\s\S]{0,120}?if \(await liveToken\(v\)\) return v;/.test(uc), true);
   t("and asks it of ADMIN_TOKEN too — the class, not the reported half",
     /\["DAEMON_TOKEN", "ADMIN_TOKEN"\]/.test(uc) && /return null;/.test(uc), true);
-  t("the SYNC arming predicate stays presence-only, so REC-1's scheduler seam is unchanged",
-    /\n  configured\(\) \{[\s\S]{0,200}?unattendedCredential\(this\.env\)\.bound/.test(MON_SRC)
-      && !/\n  configured\(\) \{[^}]*await/.test(MON_SRC), true);
+  /* RE-ANCHORED 2026-09-29 (K372 (b); monitoring R45, R24 retired): the scheduler seam is still SYNC, and its answer
+     is now the constant R45 rules rather than a presence test. */
+  t("the SYNC arming predicate stays synchronous, and answers true on every instance (R45), so REC-1's scheduler seam is unchanged",
+    /\n  configured\(\) \{ return true; \}/.test(MON_SRC) && !/\n  (async )?configured\(\) \{[^}]*await/.test(MON_SRC), true);
   /* MOVED 3 -> 2, 2026-09-27 (T4, legacy-tests; capture T4-4, K58), to the figure this tree prints, and the site that
      DEPARTED is named: `#fireCaptureRequest`, the capture-request drain's fire. It no longer spends a credential at
      all: it no longer loops back through `SELF` to `op=acquire` under a selected token, it calls capture's trusted
      in-process arm (`captureOf(this.ctx).acquire(…, { captureRequest })`) with the draining row's own facts, so
      there is no token to select and none to refuse. The two sites that remain (the archive fallback and the
      monitor's re-check) still await the selection and still state the refusal; the departure is pinned below. */
-  t("and every fire site AWAITS the selection — an un-awaited Promise is a truthy token",
-    (MON_SRC.match(/const token = await unattendedCredential\(this\.env\)\.token\(\);/g) || []).length, 2);
-  t("with the no-live-credential refusal stated once and reused, never spelled three ways",
-    [(MON_SRC.match(/export const MONITOR_NO_LIVE_CREDENTIAL =/g) || []).length,
-     (MON_SRC.match(/reason: MONITOR_NO_LIVE_CREDENTIAL \}/g) || []).length], [1, 2]);
+  /* RE-ANCHORED 2026-09-29 (K372 (b), N222; monitoring R23): the two fire sites that awaited the selection now call in
+     process and select nothing: the cadence fire calls `monitor`, the archive fire capture's `acquire` as the daemon
+     class. Each is read whole, so a token read or a Worker round-trip re-entering either is caught here. */
+  const files0 = () => (function walk(d) {
+    return readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(d + e.name + "/")
+      : e.name.endsWith(".mjs") ? [[e.name, d + e.name]] : []);
+  })(fileURLToPath(new URL("../src/", import.meta.url)));
+  const fireOf = (sig) => { const i = MON_SRC.indexOf(sig); return i < 0 ? "" : MON_SRC.slice(i, MON_SRC.indexOf("\n  }\n", i)); };
+  const fm = fireOf("async #fireMonitorTick(bundleId) {"), fa = fireOf("async #fireArchiveFallback(address) {");
+  t("and both fire sites call IN PROCESS and select no credential — no token, no SELF, no fetch of the plane",
+    [fm.length > 200, /await this\.monitor\(\{ bundleId,/.test(fm),
+     fa.length > 200, /await this\.capture\.acquire\(\{ via: "archive\.org", address \}, \{ cls: "daemon" \}\)/.test(fa),
+     /token|_TOKEN|[Cc]redential|SELF|fetch\(/.test(fm + fa)],
+    [true, true, true, true, false]);
+  /* RETIRED 2026-09-29 (K372 (b): "`MONITOR_NO_LIVE_CREDENTIAL` leaves monitoring"), replaced by its absence: the
+     refusal was stated once and reused while a tick could lack a credential; no tick can now. */
+  t("and the no-live-credential refusal has left the plane with R24",
+    files0().filter(([, p]) => /MONITOR_NO_LIVE_CREDENTIAL/.test(readFileSync(p, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""))).length, 0);
   {
     /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): `#fireCaptureRequest` is capture-
        requests' `#fire(q, verdict)` now, and capture's in-process arm is its injected `capture` (the store hands it

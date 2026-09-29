@@ -205,6 +205,8 @@ t("#monitorToken reads DAEMON_TOKEN FIRST with the ADMIN_TOKEN fallback RETAINED
             /if \(await liveToken\(v\)\) return v;/.test(body)];
   })(),
   [true, true, true, true, true]);
+/* NOTE 2026-09-29 (T11, K372 (b), N222): monitoring no longer spends this selection (its ticks run in process, R23),
+   so the pin above now holds runtime-limits R26's `unattendedCredential` alone; what the ticks spend is block 2b's. */
 t("livefire's token-hygiene sweep knows the new binding's name",
   /names = \["ADMIN_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN", "DAEMON_TOKEN"\]/.test(LIVEFIRE_SRC), true);
 
@@ -299,7 +301,7 @@ const PKG = {
    not). `spentAtSelf` records the credential the unattended consumer actually
    sends over the SELF binding — measured at the wire, never inferred from
    configuration, because "which token the daemon spends" is the whole claim. */
-const build = ({ daemon }) => {
+const build = ({ daemon, admin = true }) => {
   let MF, served = V1;
   const spentAtSelf = [];
   const mf = new Miniflare({
@@ -308,7 +310,8 @@ const build = ({ daemon }) => {
     durableObjects: { STORE: { className: "Store", useSQLite: true } },
     r2Buckets: ["CAPTURES", "PUBLISHED"],
     bindings: {
-      ADMIN_TOKEN: ADMIN, MEMBER_TOKEN: MEMBER, PROBE_TOKEN: PROBE, VERSION: "test",
+      MEMBER_TOKEN: MEMBER, PROBE_TOKEN: PROBE, VERSION: "test",
+      ...(admin ? { ADMIN_TOKEN: ADMIN } : {}),
       ...(daemon ? { DAEMON_TOKEN: DAEMON } : {}),
       GOVERNOR_APPETITE_PER_MIN: "600000", GOVERNOR_SUBRESOURCE_STAGGER_MS: "0",
       /* Pinned far out of the test window: only the hand-driven onAlarm fires. */
@@ -494,9 +497,17 @@ try {
  *
  * The credential is read off the SELF binding at the wire and mapped to its
  * BINDING NAME; no token value is printed by any assertion here.
+ *
+ * RE-ANCHORED 2026-09-29 (T11, legacy-tests; K372 (b), N222; monitoring R23,
+ * R45, R24 retired): the ticks call `monitor` and capture's `acquire` IN
+ * PROCESS and spend no credential, so the wire measurement now finds NOTHING
+ * crossing the SELF binding, whatever is bound. The two arms that asserted which
+ * binding was spent there ("every call ... spent DAEMON_TOKEN / ADMIN_TOKEN")
+ * are that measurement's re-anchor: no call at all. A third instance binds
+ * neither credential (R24's "not configured") and must fire too (R45).
  * ================================================================== */
-const spend = async ({ daemon, expect }) => {
-  const I = build({ daemon });
+const spend = async ({ daemon, admin = true, expect }) => {
+  const I = build({ daemon, admin });
   try {
     const ns = await I.mf.getDurableObjectNamespace("STORE");
     const obj = ns.get(ns.idFromName("bio"));
@@ -516,10 +527,12 @@ const spend = async ({ daemon, expect }) => {
     t(`[${expect}] and it actually FIRED rather than reporting configured and doing nothing`,
       (fired.monitor && Array.isArray(fired.monitor.fired) ? fired.monitor.fired : [])
         .map((f) => [f.address, f.grade]), [[DOCADDR2, "C"]]);
-    t(`[${expect}] every call it made over the SELF binding spent ${expect}`,
-      [...new Set(I.spentAtSelf.map((s) => s.credential))], [expect]);
-    t(`[${expect}] and it reached only ops the class is scoped to`,
-      [...new Set(I.spentAtSelf.map((s) => s.op))].filter((o) => !["monitor", "acquire"].includes(o)), []);
+    /* RE-ANCHORED 2026-09-29 (K372 (b), N222): was "every call it made over the SELF binding spent ${expect}", and
+       "it reached only ops the class is scoped to". In process, nothing is spent and nothing crosses the binding. */
+    t(`[${expect}] it made NO call over the SELF binding: the tick ran in process and spent no credential (R23)`,
+      I.spentAtSelf.map((s) => [s.op, s.credential]), []);
+    t(`[${expect}] and nothing failed for want of one`,
+      fired.monitor && fired.monitor.failed, []);
   } finally { await I.mf.dispose(); }
 };
 
@@ -531,6 +544,9 @@ await spend({ daemon: true, expect: "DAEMON_TOKEN" });
    DIST-1's constraint runs in both directions: the plane must learn the class
    before an installer binds it, and must not inert an instance that has none. */
 await spend({ daemon: false, expect: "ADMIN_TOKEN" });
+/* ADDED 2026-09-29 (K372 (b), N222; monitoring R45): an instance with NEITHER credential bound, which R24 left inert,
+   still runs its monitoring: asking to be monitored is the group's standing intent. */
+await spend({ daemon: false, admin: false, expect: "NO CREDENTIAL" });
 
 /* ================================================================== *
  * BLOCK 3 — AN INSTANCE THAT HAS NOT BEEN UPDATED.
