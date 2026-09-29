@@ -22,6 +22,18 @@
 
 Size (session_01SZn97qkUSZot248omWCcQA): test runs 6, module lines 17
 
+## Completion (B2 CHANGE, K422; PROMOTION #13, restarted)
+
+**Applied** (03869d6d50). `test/m/promotion/write-path.test.mjs` now boots the plane's exported `Store` (N333's layer-2 share): Miniflare runs an inline probe at `src/write-path-probe.mjs` (a virtual path, no file) that re-exports `Store` from `./index.mjs` and relays each request to it, as `store.mjs`'s own default fetch does; `nodejs_compat` added as the plane's other Miniflare suites carry it; the unused `readFileSync` import removed. Nothing else changed. Before the change the suite failed `FACT_UNAVAILABLE producingGroup` (C-102.4), reproduced here.
+
+**Deferred.** Nothing. **Found in other modules.** None. **Stale generated artifacts.** None (a test file only).
+
+**Tests and checks** (on 03869d6d50):
+- `node --test bio-plane/test/m/promotion/`: tests 67, pass 67, fail 0, todo 0.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture promotion`: 16 product files, 58 relative imports (1 naming no tracked file, not judged: the probe's `./index.mjs`, resolved from its virtual path); 0 failures. `coverage promotion`: 49 of 49 live requirement ids named by a test; 0 failures. `ownership promotion tranche/T12`: 1 file changed; legacy-checks and legacy-store 0 lines; 0 failures.
+
+Size (session_01WeEThE5XFsoayhvn9So6tj): test runs 3, module lines 6
+
 ## J1 · REPORT
 
 For other modules (details in my record's Completion):
