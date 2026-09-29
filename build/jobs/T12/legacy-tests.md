@@ -25,3 +25,11 @@ Measured on the merged tree (queue, instance-setup, control-plane in, @ ce41cfb5
 3. Generated artifacts stale (not rebuilt here): `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs` (`checks/bio-checks.mjs` changed); fleetbundles 88/8; 2a's input list unchanged at 148.
 4. N309's renames left `NOT_A_PARTICIPANT` (membership ×3, promotion ×1) and `NOT_PROPOSED` (membership) minted with no row or translation (they had borrowed other modules' rows): owed rows.
 Also a choice made in my module: d470 records the 37 rows that moved out of the catalogue (8 queue, 24 control-plane, 5 instance-setup) as a `moved` declaration under the 1.42.0 row (count 359, digest b28a8a91…, source 3a8dae6c…), with an arm A12 proving departed + current = 1.42.0's census; promotion's T13 stamp (N318) replaces it with a new row.
+
+## J2 · REPORT
+
+Found in other modules while re-anchoring against control-plane (K413), measured on the merged tree:
+1. control-plane: `relayAnswer` (`src/control-plane/index.mjs` ~926) opens the store's reply itself instead of reading it through `doAnswer`, a second envelope reader against REC-52's single chokepoint (the rule N313 applied to monitoring). Behaviour is right; `plane-envelope` Detector A is red (62/2). Fix: route it through `doAnswer`, keeping `r.status`.
+2. skills (carried T10 red, `machinefences-dec49` ARM A4): `machineFences(CATALOGUE)` now also misses `MACHINE_CANNOT_FORWARD` and `_RESOLVE`, which queue took (K409); still one red arm, wider.
+3. membership's unclaimed DEC-49 marker `is-listener-registration` (B12): I read it as covered by N202's listener rows; left.
+4. derivation-bounds' own instrument (legacy-tests', deferred): `capIdentifiers` takes the string literal "cap" in `worseSupersessions`' `cols` as an alias of the cap, so that method's verdict rests on a column name.
