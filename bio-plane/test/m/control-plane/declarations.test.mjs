@@ -1,4 +1,4 @@
-/* control-plane: the declaration tables (R31, R34) and the store's door (R26, R27, not moved here yet). */
+/* control-plane: the declaration tables (R31, R34). The store's door (R26, R27) is `dispatch.test.mjs`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, defaultHooks, cred, aik } from "./harness.mjs";

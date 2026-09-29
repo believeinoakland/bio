@@ -2797,19 +2797,19 @@ const ACT_GATE = Object.freeze({
  * that reaches the gate is an omission today — and sentence (c) STAYS, because
  * it is the answer the plane owes the next op somebody adds without a ruling. */
 const UNATTENDED_BY_DECISION = {
-  purge: "src/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside "
+  purge: "src/control-plane/index.mjs, the admission gate's own doctrine paragraph: 'Everything outside "
        + "SESSION_OPS, purge above all, still requires a machine credential.'",
-  cpuprobe: "src/index.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the "
+  cpuprobe: "src/control-plane/ops.mjs, op=cpuprobe's OPS row: 'Burns compute deliberately to find where the "
           + "runtime cuts it off. Probe and admin only: it belongs nowhere near a member's session.'",
-  capturerequestdrain: "src/index.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY "
+  capturerequestdrain: "src/control-plane/ops.mjs, op=capturerequestdrain's OPS row: 'daemon is here BY "
                      + "DECISION: SWEEP 4b item 1 is the decision DEC-37 required for widening the "
                      + "class by decision, not by drift.'",
-  taskdrain: "src/index.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S — a member "
+  taskdrain: "src/control-plane/ops.mjs, the AI_RUN_ACTIONS note (PL-4): 'the drain is the DAEMON'S — a member "
            + "reaching for it by hand would be a person doing the daemon's job with the daemon's "
            + "conduct rules applied to them.'",
   /* D-436: recorded by the D-436 worker as a PROVISIONAL decision, and stated as one in IC-172 — the seed is
      the root of trust's, as the claim and the export are. The citation is the OPS row's own sentence. */
-  instancegroupseed: "src/index.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE "
+  instancegroupseed: "src/control-plane/ops.mjs, op=instancegroupseed's OPS row (D-436, provisional): 'RECORDING THE "
                    + "INSTANCE'S PRODUCING GROUP IS THE ROOT OF TRUST'S ACT — THE ADMIN_TOKEN CREDENTIAL HELD IN "
                    + "THE HOSTING ACCOUNT, THE CREDENTIAL THE INSTALLER'S OWN CLAIM IS ARMED BY — AND NO SESSION "
                    + "OF ANY ROLE REACHES IT.'",
