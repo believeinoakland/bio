@@ -30,7 +30,10 @@ import { controlPen } from "./pen.mjs";
    copy BESIDE src/index.mjs, an undeclared in-worktree pen the floored nc-* class refuses (pen-sweep). */
 const PEN = controlPen("d463");
 
-const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1): the namespace gates, `scopeFor`, the
+   agent credential's confinement and the setup-page route left `src/index.mjs` for `src/control-plane/index.mjs`; the
+   arms patch that file, their texts unchanged. (The `index.mjs.*` pristine names below are kept.) */
+const SRC = fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./d463-confined-credential.test.mjs", import.meta.url));
 const hash = (b) => createHash("sha256").update(b).digest("hex");
 const PRISTINE = readFileSync(SRC);
