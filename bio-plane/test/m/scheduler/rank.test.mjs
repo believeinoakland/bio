@@ -76,4 +76,4 @@ test("R10: each batch-bounded tick receives the rank with its now, reading inten
   assert.ok(calls.some(([m]) => m === "intent.servesOf"));
 });
 
-test.todo("R10: each batch-bounded tick orders the work it takes by the rank when its due work exceeds its batch (not yet met: monitoring R19/R20, capture-requests R11–R12 and bias R33 state no rank; REPORT to BOB)");
+test.todo("R10: each batch-bounded tick orders the work it takes by the rank when its due work exceeds its batch (not yet met: capture-requests R12 and bias R33 take it since T11 layers 6 and 4; monitoring R19/R20 take it in its own T11 job, N224, and the ordering is each owner's to test)");
