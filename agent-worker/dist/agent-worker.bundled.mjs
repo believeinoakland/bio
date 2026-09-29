@@ -248,10 +248,10 @@ function stopBecause(state) {
 }
 function nextStep(state) {
   const s = state || {};
-  const at3 = String(s.step || FIRST_STEP);
-  const row = CONTROL_FLOW[at3];
-  if (!row) return { step: "close", why: `'${at3}' is not a row in this table`, bound: "completed" };
-  if (at3 === "gate-mode") {
+  const at4 = String(s.step || FIRST_STEP);
+  const row = CONTROL_FLOW[at4];
+  if (!row) return { step: "close", why: `'${at4}' is not a row in this table`, bound: "completed" };
+  if (at4 === "gate-mode") {
     const key = String(s.mode || "");
     const mode = MODES[key];
     if (!mode || !mode.deployed) {
@@ -267,13 +267,13 @@ function nextStep(state) {
     return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
   }
   const stopped = stopBecause(s);
-  if (stopped && at3 !== "close")
+  if (stopped && at4 !== "close")
     return {
       step: "close",
       bound: stopped,
       why: stopped === "completed" ? `${s.pass} of ${s.maxPasses} passes are done; the loop's termination is the table's and not the model's` : `the '${stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where`
     };
-  switch (at3) {
+  switch (at4) {
     case "resume":
       if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
         return {
@@ -328,7 +328,7 @@ function nextStep(state) {
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
-  return { step: "close", why: `'${at3}' has no transition`, bound: "completed" };
+  return { step: "close", why: `'${at4}' has no transition`, bound: "completed" };
 }
 function advance(state, decision) {
   const s = state || {};
@@ -371,9 +371,9 @@ function publishableState(state, limit) {
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  const at3 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
-  const restart = resumableState({ step: at3, pass: full.pass, adjusted: false });
-  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at3 } };
+  const at4 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const restart = resumableState({ step: at4, pass: full.pass, adjusted: false });
+  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at4 } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
@@ -385,15 +385,15 @@ function resumeFrom(published) {
       state: null,
       basis: published == null ? "The run publishes no state it can be read back from, so this segment starts from the resume row" : "The run's published state names no step yet, so this segment starts from the resume row"
     };
-  const at3 = String(p.step);
+  const at4 = String(p.step);
   const pass = Number(p.pass);
-  if (!CONTROL_FLOW.resume.to.includes(at3) || !Number.isInteger(pass) || pass < 0)
+  if (!CONTROL_FLOW.resume.to.includes(at4) || !Number.isInteger(pass) || pass < 0)
     return {
       at: null,
       state: null,
-      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at3).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
+      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at4).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
     };
-  return { at: at3, basis: null, state: {
+  return { at: at4, basis: null, state: {
     pass,
     targets: list(p.targets),
     reports: list(p.reports),
@@ -677,8 +677,8 @@ var deriveInquiryTitle = (question) => {
   if (flat === "") return null;
   if (flat.length <= 120) return flat;
   const cut = flat.slice(0, 120);
-  const at3 = cut.lastIndexOf(" ");
-  return (at3 > 0 ? cut.slice(0, at3) : cut) + "\u2026";
+  const at4 = cut.lastIndexOf(" ");
+  return (at4 > 0 ? cut.slice(0, at4) : cut) + "\u2026";
 };
 var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
@@ -7642,12 +7642,12 @@ function coversSheetCell(e, container) {
   const sheet = sheets.find((x) => x && typeof x.name === "string" && x.name === want);
   if (!sheet)
     return `this capture's workbook holds ${sheets.length} sheet(s) (${sheets.map((x) => x && typeof x.name === "string" ? x.name : "?").slice(0, 12).join(", ")}${sheets.length > 12 ? ", \u2026" : ""}) and the extent names a sheet called '${want.slice(0, 40)}'`;
-  const at3 = a1ToRowCol(e.cell);
-  if (!at3) return null;
-  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at3.row > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at3.row}`;
-  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at3.col > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at3.col}`;
+  const at4 = a1ToRowCol(e.cell);
+  if (!at4) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at4.row > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at4.row}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at4.col > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at4.col}`;
   return null;
 }
 function coversDocPara(e, container) {
@@ -7691,12 +7691,12 @@ function coversDocTable(e, container) {
     return `this capture's document holds ${tables.length} table(s)${tables.length ? ` (0-${tables.length - 1})` : ""} and the extent names table ${e.table}`;
   if (typeof e.cell !== "string" || !e.cell.trim()) return null;
   const t = tables[e.table] || {};
-  const at3 = a1ToRowCol(e.cell);
-  if (!at3) return null;
-  if (Number.isInteger(t.rows) && t.rows > 0 && at3.row > t.rows)
-    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at3.row}`;
-  if (Number.isInteger(t.cols) && t.cols > 0 && at3.col > t.cols)
-    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at3.col}`;
+  const at4 = a1ToRowCol(e.cell);
+  if (!at4) return null;
+  if (Number.isInteger(t.rows) && t.rows > 0 && at4.row > t.rows)
+    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at4.row}`;
+  if (Number.isInteger(t.cols) && t.cols > 0 && at4.col > t.cols)
+    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at4.col}`;
   return null;
 }
 function coversImage(e, container) {
@@ -9362,13 +9362,13 @@ var RecordCore = class _RecordCore {
    *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
    *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     for (const [prefix, table, column] of sources) {
       if (!IDENT.test(String(table)) || !IDENT.test(String(column))) continue;
       const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                       SELECT DISTINCT ${column}, ?, 'live' FROM ${table}
-                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at3, head, head);
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at4, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -9379,7 +9379,7 @@ var RecordCore = class _RecordCore {
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
       ...scopes,
-      at3,
+      at4,
       ...scopes
     );
   }
@@ -9792,10 +9792,10 @@ var RecordCore = class _RecordCore {
     created,
     lastUpdated,
     criticality,
-    at: at3
+    at: at4
   }) {
     return this.transact(() => {
-      const now = at3 ?? (/* @__PURE__ */ new Date()).toISOString();
+      const now = at4 ?? (/* @__PURE__ */ new Date()).toISOString();
       const cur = this.#one(`SELECT row_version FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur)
         for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -10727,10 +10727,10 @@ var Membership = class _Membership {
     this.#revokedListeners.sort((a, b) => rank(a.module) - rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  #announceRevoked(memberId, by, at3) {
+  #announceRevoked(memberId, by, at4) {
     for (const l of this.#revokedListeners) {
       try {
-        const r = l.fn({ memberId, by: by ?? null, at: at3 });
+        const r = l.fn({ memberId, by: by ?? null, at: at4 });
         if (r && typeof r.then === "function") r.then(null, () => {
         });
       } catch {
@@ -10777,7 +10777,7 @@ var Membership = class _Membership {
       const bad = this.visibilitySettingRefusal(visibility, projectId);
       if (bad) return bad;
     }
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     let owner = null;
     if (ownerId) {
       const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
@@ -10791,7 +10791,7 @@ var Membership = class _Membership {
         String(visibility),
         by ?? ownerId ?? "not recorded",
         "chosen at creation",
-        at3
+        at4
       );
     this.reindexProjectSight(projectId);
     return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
@@ -10856,10 +10856,10 @@ var Membership = class _Membership {
         "NO_HOLDERS",
         "name who holds hosting access: the record keeps the group's answer as it was given, and an empty answer records nobody. Nothing was written."
       );
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     const n = note === null || note === void 0 || String(note).trim() === "" ? null : String(note).slice(0, 280);
-    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at3);
-    return { ok: true, holders: h, note: n, recorded_by: by, at: at3 };
+    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at4);
+    return { ok: true, holders: h, note: n, recorded_by: by, at: at4 };
   }
   /* N70: BOUNDED, AND THE BOUND IS PUBLISHED (R48's shape): the history grows with every answer the group records, so
      `limit` is the cap applied (the caller may lower it, never raise it), `truncated` is measured by reading one row
@@ -11647,24 +11647,24 @@ var Membership = class _Membership {
       if (unknown) return unknown;
     }
     const why = reason === null || reason === void 0 || String(reason).trim() === "" ? null : String(reason).slice(0, 280);
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId,
       want,
       by,
       why,
-      at3
+      at4
     );
     this.reindexProjectSight(projectId);
-    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at3) : 0;
+    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at4) : 0;
     return {
       ok: true,
       projectId,
       setting: want,
       set_by: by,
       reason: why,
-      at: at3,
+      at: at4,
       ...want === "hidden" ? { requests_lapsed: lapsed } : {}
     };
   }
@@ -11851,7 +11851,7 @@ var Membership = class _Membership {
   /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
      the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
      answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
-  #closeJoinRequests(projectId, memberId, state, by, comment, at3) {
+  #closeJoinRequests(projectId, memberId, state, by, comment, at4) {
     const before = this.#one(
       `SELECT COUNT(*) AS n FROM project_join_requests
                                WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
@@ -11865,15 +11865,15 @@ var Membership = class _Membership {
       state,
       by,
       comment,
-      at3,
+      at4,
       projectId,
       memberId,
       memberId
     );
     return before;
   }
-  #lapseJoinRequests(projectId, by, at3) {
-    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at3);
+  #lapseJoinRequests(projectId, by, at4) {
+    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at4);
   }
   static #requestComment(comment) {
     return comment === null || comment === void 0 || String(comment).trim() === "" ? null : String(comment).slice(0, 280);
@@ -11919,7 +11919,7 @@ var Membership = class _Membership {
         { asked: open.asked_at }
       );
     const c = _Membership.#requestComment(comment);
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
        VALUES (?,?,?,?,?,'open')`,
@@ -11927,7 +11927,7 @@ var Membership = class _Membership {
       me.member_id,
       shown,
       c,
-      at3
+      at4
     );
     return {
       ok: true,
@@ -11935,7 +11935,7 @@ var Membership = class _Membership {
       name: shown,
       state: "open",
       comment: c,
-      asked: at3,
+      asked: at4,
       detail: "your request is open. The project's owners answer it; until they do it stays open."
     };
   }
@@ -11954,9 +11954,9 @@ var Membership = class _Membership {
         projectId,
         "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."
       );
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at3);
-    return { ok: true, projectId, state: "withdrawn", closed: at3 };
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at4);
+    return { ok: true, projectId, state: "withdrawn", closed: at4 };
   }
   /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
    *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
@@ -12016,7 +12016,7 @@ var Membership = class _Membership {
         { handle: target.handle }
       );
     const c = _Membership.#requestComment(comment);
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     if (want === "grant") {
       this.sql.exec(
         `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
@@ -12024,18 +12024,18 @@ var Membership = class _Membership {
         projectId,
         target.member_id,
         by,
-        at3,
-        at3
+        at4,
+        at4
       );
     }
-    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at3);
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at4);
     return {
       ok: true,
       projectId,
       handle: target.handle,
       state: want === "grant" ? "granted" : "declined",
       comment: c,
-      closed: at3,
+      closed: at4,
       ...want === "grant" ? {
         participation: "invited",
         detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4)."
@@ -12321,7 +12321,7 @@ var Membership = class _Membership {
       detail: "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner."
     };
     const why = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
-    const at3 = (/* @__PURE__ */ new Date()).toISOString();
+    const at4 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     this.sql.exec(
       `INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
@@ -12329,9 +12329,9 @@ var Membership = class _Membership {
       target.member_id,
       by,
       why,
-      at3
+      at4
     );
-    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at3 };
+    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at4 };
   }
   /** 7.10 addition. The sole owner may add a second unilaterally; every addition
    *  past that needs the consensus of ALL existing owners.
@@ -12884,9 +12884,9 @@ var Membership = class _Membership {
     );
   }
   /* R42: a carried ownership decision, kept with its deciders and reasons. */
-  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at3) {
+  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at4) {
     this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
-                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at3);
+                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at4);
   }
   /** The table, computed rather than transcribed, so the code and the document
    *  cannot drift. Exposed as an op because a UI must be able to tell a group
@@ -13535,7 +13535,7 @@ var Membership = class _Membership {
     writes = [],
     note = null,
     confinedTo = null,
-    at: at3 = null
+    at: at4 = null
   } = {}) {
     const refusal4 = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
@@ -13549,7 +13549,7 @@ var Membership = class _Membership {
         ...extra || {}
       };
     };
-    const now = at3 || stampSecond();
+    const now = at4 || stampSecond();
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
@@ -13607,7 +13607,7 @@ var Membership = class _Membership {
   }
   /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
    *  rather than the risk — see C-29.4's note in the catalog. */
-  aiCredentialRevoke({ who = null, tokenId = null, at: at3 = null } = {}) {
+  aiCredentialRevoke({ who = null, tokenId = null, at: at4 = null } = {}) {
     const refusal4 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
       return {
@@ -13620,7 +13620,7 @@ var Membership = class _Membership {
         ...extra || {}
       };
     };
-    const now = at3 || stampSecond();
+    const now = at4 || stampSecond();
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
       return refusal4(
@@ -14586,57 +14586,57 @@ function validateInto(p, errors) {
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
   if (own(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
-    const at3 = `systems[${i}]`;
-    if (!entry(at3, s)) return;
-    fields(at3, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
-    str(`${at3}.origin`, s.origin, "origin");
+    const at4 = `systems[${i}]`;
+    if (!entry(at4, s)) return;
+    fields(at4, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
+    str(`${at4}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
-    str(`${at3}.name`, s.name, "name");
+    str(`${at4}.name`, s.name, "name");
     if (!Array.isArray(s.hosts) || !s.hosts.length || !s.hosts.every((h) => isStr(h) && h === h.toLowerCase()))
-      err(`${at3}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
-    if (own(s, "path")) pattern(`${at3}.path`, s.path);
+      err(`${at4}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
+    if (own(s, "path")) pattern(`${at4}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
-      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at3);
+      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at4);
     }
     if (own(s, "links")) {
       if (!isObj2(s.links) || !own(s.links, "item") || !own(s.links, "file"))
-        err(`${at3}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+        err(`${at4}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
       else {
-        fields(`${at3}.links`, s.links, ["item", "file"]);
-        pattern(`${at3}.links.item`, s.links.item);
-        pattern(`${at3}.links.file`, s.links.file);
+        fields(`${at4}.links`, s.links, ["item", "file"]);
+        pattern(`${at4}.links.item`, s.links.item);
+        pattern(`${at4}.links.file`, s.links.file);
       }
     }
-    if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at3}.republishes`, "VALUE_INVALID", "true or false");
-    if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at3}.provenance_stated`, "VALUE_INVALID", "true or false");
-    basis(at3, s);
+    if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at4}.republishes`, "VALUE_INVALID", "true or false");
+    if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at4}.provenance_stated`, "VALUE_INVALID", "true or false");
+    basis(at4, s);
   });
   if (own(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
-    const at3 = `mixed_hosts[${i}]`;
-    if (!entry(at3, m)) return;
-    fields(at3, m, ["host", "why", "basis"]);
-    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at3}.host`, "VALUE_INVALID", "a lower-case host name");
-    str(`${at3}.why`, m.why, "why");
+    const at4 = `mixed_hosts[${i}]`;
+    if (!entry(at4, m)) return;
+    fields(at4, m, ["host", "why", "basis"]);
+    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at4}.host`, "VALUE_INVALID", "a lower-case host name");
+    str(`${at4}.why`, m.why, "why");
     if (typeof m.host === "string" && noPathHosts.has(m.host))
-      err(`${at3}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
-    basis(at3, m);
+      err(`${at4}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
+    basis(at4, m);
   });
   const spaceForms = {};
   if (own(p, "spaces")) {
     if (!isObj2(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name, s] of Object.entries(p.spaces)) {
-      const at3 = `spaces.${name}`;
+      const at4 = `spaces.${name}`;
       if (!SPACES.includes(name)) {
-        err(at3, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`);
+        err(at4, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`);
         continue;
       }
-      if (!entry(at3, s)) continue;
-      fields(at3, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
-      str(`${at3}.label`, s.label, "label");
+      if (!entry(at4, s)) continue;
+      fields(at4, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
+      str(`${at4}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list3(`${at3}.forms`, s.forms).forEach((f2, i) => {
-        const fa = `${at3}.forms[${i}]`;
+      list3(`${at4}.forms`, s.forms).forEach((f2, i) => {
+        const fa = `${at4}.forms[${i}]`;
         if (!entry(fa, f2)) return;
         fields(fa, f2, ["form", "pattern", "normal", "clean", "basis"]);
         str(`${fa}.form`, f2.form, "form");
@@ -14668,8 +14668,8 @@ function validateInto(p, errors) {
         basis(fa, f2);
         if (isStr(f2.form) && re && normalOk) spaceForms[name].set(f2.form, f2);
       });
-      if (name === "enactment" && own(s, "kinds")) list3(`${at3}.kinds`, s.kinds).forEach((k, i) => {
-        const ka = `${at3}.kinds[${i}]`;
+      if (name === "enactment" && own(s, "kinds")) list3(`${at4}.kinds`, s.kinds).forEach((k, i) => {
+        const ka = `${at4}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
         str(`${ka}.kind`, k.kind, "kind");
@@ -14689,41 +14689,41 @@ function validateInto(p, errors) {
     }
   }
   if (own(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
-    const at3 = `crosswalks[${i}]`;
-    if (!entry(at3, x)) return;
-    fields(at3, x, ["space", "forms", "pairs", "source", "basis"]);
-    if (!SPACES.includes(x.space)) err(`${at3}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
-    if (!own(x, "source") || x.source === "" || x.source == null) err(`${at3}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
-    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at3}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
+    const at4 = `crosswalks[${i}]`;
+    if (!entry(at4, x)) return;
+    fields(at4, x, ["space", "forms", "pairs", "source", "basis"]);
+    if (!SPACES.includes(x.space)) err(`${at4}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
+    if (!own(x, "source") || x.source === "" || x.source == null) err(`${at4}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
+    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at4}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
-    if (!forms) err(`${at3}.forms`, "VALUE_INVALID", "forms is [a, b]");
+    if (!forms) err(`${at4}.forms`, "VALUE_INVALID", "forms is [a, b]");
     else forms.forEach((f2, j) => {
-      if (!known.has(f2)) err(`${at3}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f2)}'`);
+      if (!known.has(f2)) err(`${at4}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f2)}'`);
     });
-    list3(`${at3}.pairs`, x.pairs).forEach((pair, j) => {
+    list3(`${at4}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
-        err(`${at3}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
+        err(`${at4}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
         return;
       }
       if (!forms) return;
       pair.forEach((v, n) => {
         const f2 = known.get(forms[n]);
-        if (f2 && applyForm(f2, v) == null) err(`${at3}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        if (f2 && applyForm(f2, v) == null) err(`${at4}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
-    basis(at3, x);
+    basis(at4, x);
   });
   if (own(p, "vocabulary")) {
     if (!isObj2(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
-      const at3 = `vocabulary.${key}`;
+      const at4 = `vocabulary.${key}`;
       if (!VOCABULARY.includes(key)) {
-        err(at3, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
+        err(at4, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
         continue;
       }
-      list3(at3, entries).forEach((e, i) => {
-        const ea = `${at3}[${i}]`;
+      list3(at4, entries).forEach((e, i) => {
+        const ea = `${at4}[${i}]`;
         if (!entry(ea, e)) return;
         if (key === "codes") {
           fields(ea, e, ["key", "label", "pattern", "basis"]);
@@ -14754,22 +14754,22 @@ function validateInto(p, errors) {
     }
   }
   if (own(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
-    const at3 = `search_terms[${i}]`;
-    if (!entry(at3, t)) return;
-    fields(at3, t, ["term", "basis"]);
-    str(`${at3}.term`, t.term, "term");
-    basis(at3, t);
+    const at4 = `search_terms[${i}]`;
+    if (!entry(at4, t)) return;
+    fields(at4, t, ["term", "basis"]);
+    str(`${at4}.term`, t.term, "term");
+    basis(at4, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
   if (own(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
-    const at3 = `records_laws[${i}]`;
-    if (!entry(at3, l)) return;
-    fields(at3, l, ["level", "name", "citation", "basis"]);
-    if (!LAW_LEVELS2.includes(l.level)) err(`${at3}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS2.join(", ")}`);
-    str(`${at3}.name`, l.name, "name");
-    str(`${at3}.citation`, l.citation, "citation");
+    const at4 = `records_laws[${i}]`;
+    if (!entry(at4, l)) return;
+    fields(at4, l, ["level", "name", "citation", "basis"]);
+    if (!LAW_LEVELS2.includes(l.level)) err(`${at4}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS2.join(", ")}`);
+    str(`${at4}.name`, l.name, "name");
+    str(`${at4}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
-    basis(at3, l);
+    basis(at4, l);
   });
   if (own(p, "locale")) {
     const l = p.locale;
@@ -14782,101 +14782,101 @@ function validateInto(p, errors) {
   }
   const codeKeys = new Set(own(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
-    const at3 = `standard_sources[${i}]`;
-    if (!entry(at3, s)) return;
-    fields(at3, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
-    str(`${at3}.source`, s.source, "source");
-    str(`${at3}.issuer`, s.issuer, "issuer");
+    const at4 = `standard_sources[${i}]`;
+    if (!entry(at4, s)) return;
+    fields(at4, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
+    str(`${at4}.source`, s.source, "source");
+    str(`${at4}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!SOURCE_KINDS.includes(s.kind)) err(`${at3}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
-    if (!LAW_LEVELS2.includes(s.level)) err(`${at3}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS2.join(", ")}`);
-    pattern(`${at3}.cite`, s.cite);
-    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at3}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
-    basis(at3, s);
+    if (!SOURCE_KINDS.includes(s.kind)) err(`${at4}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+    if (!LAW_LEVELS2.includes(s.level)) err(`${at4}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS2.join(", ")}`);
+    pattern(`${at4}.cite`, s.cite);
+    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at4}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    basis(at4, s);
   });
   if (own(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
-    const at3 = `counterparties[${i}]`;
-    if (!entry(at3, c)) return;
-    fields(at3, c, ["role", "body", "level", "elected", "oversight", "basis"]);
-    str(`${at3}.role`, c.role, "role");
-    str(`${at3}.body`, c.body, "body");
-    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at3}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
-    if (typeof c.elected !== "boolean") err(`${at3}.elected`, "VALUE_INVALID", "elected is true or false");
-    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at3}.oversight`, "VALUE_INVALID", "oversight is true or false");
-    basis(at3, c);
+    const at4 = `counterparties[${i}]`;
+    if (!entry(at4, c)) return;
+    fields(at4, c, ["role", "body", "level", "elected", "oversight", "basis"]);
+    str(`${at4}.role`, c.role, "role");
+    str(`${at4}.body`, c.body, "body");
+    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at4}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
+    if (typeof c.elected !== "boolean") err(`${at4}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at4}.oversight`, "VALUE_INVALID", "oversight is true or false");
+    basis(at4, c);
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
   if (own(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
-    const at3 = `action_kinds[${i}]`;
-    if (!entry(at3, k)) return;
-    fields(at3, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
-    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at3}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds.has(k.kind)) err(`${at3}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    const at4 = `action_kinds[${i}]`;
+    if (!entry(at4, k)) return;
+    fields(at4, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at4}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (kinds.has(k.kind)) err(`${at4}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
       kinds.add(k.kind);
       if (k.tier === 3) tier3.add(k.kind);
     }
-    str(`${at3}.label`, k.label, "label");
-    if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at3}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own(k, "laws")) list3(`${at3}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at3}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
+    str(`${at4}.label`, k.label, "label");
+    if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at4}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
+    if (own(k, "laws")) list3(`${at4}.laws`, k.laws).forEach((l, j) => {
+      if (!lawNames.has(l)) err(`${at4}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
     });
     if (own(k, "venue")) {
       const v = k.venue;
-      if (!isObj2(v)) err(`${at3}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
+      if (!isObj2(v)) err(`${at4}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at3}.venue`, v, ["name", "how", "basis"]);
-        str(`${at3}.venue.name`, v.name, "name");
-        if (!VENUE_HOW.includes(v.how)) err(`${at3}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
-        basis(`${at3}.venue`, v);
+        fields(`${at4}.venue`, v, ["name", "how", "basis"]);
+        str(`${at4}.venue.name`, v.name, "name");
+        if (!VENUE_HOW.includes(v.how)) err(`${at4}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        basis(`${at4}.venue`, v);
       }
     }
     if (own(k, "template")) {
-      if (!isStr(k.template)) err(`${at3}.template`, "VALUE_INVALID", "a template is text");
-      if (k.tier === 3) err(`${at3}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+      if (!isStr(k.template)) err(`${at4}.template`, "VALUE_INVALID", "a template is text");
+      if (k.tier === 3) err(`${at4}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
     }
     if (own(k, "advisory")) {
-      if (!isStr(k.advisory)) err(`${at3}.advisory`, "VALUE_INVALID", "an advisory note is text");
-      if (k.tier !== 2) err(`${at3}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
+      if (!isStr(k.advisory)) err(`${at4}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at4}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
-    basis(at3, k);
+    basis(at4, k);
   });
   if (own(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
-    const at3 = `deadlines[${i}]`;
-    if (!entry(at3, d)) return;
-    fields(at3, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
-    str(`${at3}.rule`, d.rule, "rule");
+    const at4 = `deadlines[${i}]`;
+    if (!entry(at4, d)) return;
+    fields(at4, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
+    str(`${at4}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
-      err(`${at3}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
-    if (!isPosInt(d.days)) err(`${at3}.days`, "VALUE_INVALID", "days is a positive integer");
-    if (!COUNTS.includes(d.count)) err(`${at3}.count`, "COUNT_UNKNOWN", "count is calendar or business");
-    if (!STARTS.includes(d.starts)) err(`${at3}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
+      err(`${at4}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
+    if (!isPosInt(d.days)) err(`${at4}.days`, "VALUE_INVALID", "days is a positive integer");
+    if (!COUNTS.includes(d.count)) err(`${at4}.count`, "COUNT_UNKNOWN", "count is calendar or business");
+    if (!STARTS.includes(d.starts)) err(`${at4}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
     if (own(d, "extension")) {
       const x = d.extension;
-      if (!isObj2(x)) err(`${at3}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
+      if (!isObj2(x)) err(`${at4}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
       else {
-        fields(`${at3}.extension`, x, ["days", "count", "when"]);
-        if (!isPosInt(x.days)) err(`${at3}.extension.days`, "VALUE_INVALID", "days is a positive integer");
-        if (!COUNTS.includes(x.count)) err(`${at3}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
-        str(`${at3}.extension.when`, x.when, "when");
+        fields(`${at4}.extension`, x, ["days", "count", "when"]);
+        if (!isPosInt(x.days)) err(`${at4}.extension.days`, "VALUE_INVALID", "days is a positive integer");
+        if (!COUNTS.includes(x.count)) err(`${at4}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
+        str(`${at4}.extension.when`, x.when, "when");
       }
     }
-    str(`${at3}.citation`, d.citation, "citation");
-    basis(at3, d);
+    str(`${at4}.citation`, d.citation, "citation");
+    basis(at4, d);
   });
   if (own(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
-    const at3 = `legal_organisations[${i}]`;
-    if (!entry(at3, o)) return;
-    fields(at3, o, ["name", "evaluates", "contacts", "basis"]);
-    str(`${at3}.name`, o.name, "name");
-    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at3}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
+    const at4 = `legal_organisations[${i}]`;
+    if (!entry(at4, o)) return;
+    fields(at4, o, ["name", "evaluates", "contacts", "basis"]);
+    str(`${at4}.name`, o.name, "name");
+    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at4}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
     else o.evaluates.forEach((k, j) => {
-      if (!tier3.has(k)) err(`${at3}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+      if (!tier3.has(k)) err(`${at4}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
     });
-    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at3}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at4}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else o.contacts.forEach((c, j) => {
-      const ca = `${at3}.contacts[${j}]`;
+      const ca = `${at4}.contacts[${j}]`;
       if (!isObj2(c)) {
         err(ca, "CONTACT_INVALID", "a contact is {how, value}");
         return;
@@ -14885,20 +14885,20 @@ function validateInto(p, errors) {
       if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
-    basis(at3, o);
+    basis(at4, o);
   });
   if (own(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
     list3("holidays", p.holidays).forEach((h, i) => {
-      const at3 = `holidays[${i}]`;
-      if (!entry(at3, h)) return;
-      fields(at3, h, ["year", "days", "basis"]);
-      if (!isYear(h.year)) err(`${at3}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
-      else if (years.has(h.year)) err(`${at3}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
+      const at4 = `holidays[${i}]`;
+      if (!entry(at4, h)) return;
+      fields(at4, h, ["year", "days", "basis"]);
+      if (!isYear(h.year)) err(`${at4}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      else if (years.has(h.year)) err(`${at4}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
       else years.add(h.year);
       const dates = /* @__PURE__ */ new Set();
-      list3(`${at3}.days`, h.days).forEach((d, j) => {
-        const da = `${at3}.days[${j}]`;
+      list3(`${at4}.days`, h.days).forEach((d, j) => {
+        const da = `${at4}.days[${j}]`;
         if (!entry(da, d)) return;
         fields(da, d, ["date", "name"]);
         if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
@@ -14907,7 +14907,7 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str(`${da}.name`, d.name, "name");
       });
-      basis(at3, h);
+      basis(at4, h);
     });
   }
 }
@@ -14941,9 +14941,9 @@ var tag = (e, profile) => ({ ...clone(e), profile, bases: [{ profile, basis: e.b
 function union(into, entries, profile) {
   for (const e of entries || []) {
     const k = canon(e);
-    const at3 = into.find((x) => x.__k === k);
-    if (at3) {
-      if (!at3.bases.some((b) => b.profile === profile && b.basis === e.basis)) at3.bases.push({ profile, basis: e.basis });
+    const at4 = into.find((x) => x.__k === k);
+    if (at4) {
+      if (!at4.bases.some((b) => b.profile === profile && b.basis === e.basis)) at4.bases.push({ profile, basis: e.basis });
     } else into.push(Object.assign(tag(e, profile), { __k: k }));
   }
 }
@@ -14996,7 +14996,7 @@ function combineInner(listIn) {
 }
 function merge(profiles) {
   const conflicts = [];
-  const conflict = (at3, values, says) => conflicts.push({ at: at3, values, says });
+  const conflict = (at4, values, says) => conflicts.push({ at: at4, values, says });
   const view = {
     id: profiles.map((p) => p.id).join("+"),
     name: profiles.map((p) => p.name).join("; "),
@@ -17559,10 +17559,10 @@ async function inflateRaw(u8, limit) {
       chunks.push(value);
     }
     const bytes = new Uint8Array(total);
-    let at3 = 0;
+    let at4 = 0;
     for (const c of chunks) {
-      bytes.set(c, at3);
-      at3 += c.length;
+      bytes.set(c, at4);
+      at4 += c.length;
     }
     return { bytes };
   } catch {
@@ -18322,8 +18322,8 @@ async function docxStructure(parts) {
     const name = normalizePartName(entry.name);
     if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
     const rid = embeddingRids.get(name) ?? null;
-    const at3 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at3 ? docParaRef(at3.para, at3.run) : null;
+    const at4 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at4 ? docParaRef(at4.para, at4.run) : null;
     const read2 = await readPart(parts.bytes, parts.container, name);
     if (!read2.ok) {
       links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read2.why }));
@@ -18361,7 +18361,7 @@ async function docxStructure(parts) {
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
     else {
       for (const c of parsed.comments) {
-        const at3 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        const at4 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
         items.push({
           kind: "comment",
           id: c.id,
@@ -18369,7 +18369,7 @@ async function docxStructure(parts) {
           date: c.date,
           initials: c.initials,
           text: c.text,
-          source: at3 ? docParaRef(at3.para, at3.run) : null
+          source: at4 ? docParaRef(at4.para, at4.run) : null
         });
       }
     }
@@ -20368,17 +20368,17 @@ function odtStructure(parts) {
     const markFor = /* @__PURE__ */ new Map();
     for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
     for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at3 = c.id != null ? markFor.get(c.id) : void 0;
+      const at4 = c.id != null ? markFor.get(c.id) : void 0;
       const item = {
         kind: "tracked-change",
         change: c.change,
         author: c.author,
         date: c.date,
-        source: at3 == null ? null : docParaRef(at3)
+        source: at4 == null ? null : docParaRef(at4)
       };
       if (c.change === "deletion") item.superseded = c.superseded;
       else item.text = c.id != null && inserted.has(c.id) ? inserted.get(c.id) : null;
-      if (at3 === void 0) item.why = "change_region_unmarked_in_body";
+      if (at4 === void 0) item.why = "change_region_unmarked_in_body";
       items.push(item);
     }
     for (const a of walk.annotations) {
@@ -22341,13 +22341,13 @@ var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
 function referential(from, to, relation, why) {
   return { connection: CONNECTION.REFERENTIAL, from, to, relation, why };
 }
-function temporal(from, to, relation, { at: at3, expected_by, why } = {}) {
+function temporal(from, to, relation, { at: at4, expected_by, why } = {}) {
   return {
     connection: CONNECTION.TEMPORAL,
     from,
     to,
     relation,
-    at: at3 || null,
+    at: at4 || null,
     expected_by: expected_by || null,
     why
   };
@@ -23276,13 +23276,13 @@ function memoHeader(flat) {
       for (let c = b + 1; c < hits.length && hits[c].i - hits[a].i <= 250; c++)
         if (!seen.has(hits[c].k)) seen.set(hits[c].k, hits[c].i);
       const all = hits.map((h) => h.i);
-      const at3 = {};
+      const at4 = {};
       for (const [k, i] of seen) {
         const next = all.find((x) => x > i);
         const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
-        at3[k.toLowerCase()] = rest.trim() || null;
+        at4[k.toLowerCase()] = rest.trim() || null;
       }
-      return { fields: at3, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
+      return { fields: at4, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
     }
   }
   return null;
@@ -24958,6 +24958,22 @@ var KNOCK = {
 KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 
+// ../bio-plane/src/capture/checks.mjs
+var at2 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
+var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
+var CAPTURE_CHECKS = Object.freeze({
+  NOT_FOUND: Object.freeze({
+    check: "C-118.1",
+    where: at2("evidenceAbsent", "is-evidence-held"),
+    translation: "The record holds no stored copy of a document under this fingerprint."
+  }),
+  NO_SUCH_KNOCK: Object.freeze({
+    check: "C-118.2",
+    where: inIndex("#noSuchKnock", "is-knock-held"),
+    translation: "No knock in the inbox answers to this id. Nothing was changed."
+  })
+});
+
 // ../bio-plane/src/render.mjs
 var RENDER_NAVIGATION_TIMEOUT_MS = 1e4;
 var RENDER_DEFAULTS = Object.freeze({
@@ -25878,16 +25894,16 @@ var DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
 var GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
 
 // ../bio-plane/src/strength/checks.mjs
-var at2 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
+var at3 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 var VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_NO_INQUIRY: {
     check: "C-30.1",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "This asks how strongly one question is answered, and no question was named. There is no default question here and there must not be one."
   },
   VERSION_STRENGTH_NOT_AN_INQUIRY: {
     check: "C-30.2",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "That is not a question, so there is nothing here to say how strongly it is answered. Only a question carries readings of the evidence, and only a reading has a strength."
   },
   /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
@@ -25896,17 +25912,17 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      thing, which is worse than being asked which was meant. */
   VERSION_STRENGTH_NO_VERSION: {
     check: "C-30.3",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "Say which reading of the evidence to measure, or say which project is asking so that the reading it stands on can be used. There is no default reading, because a strength reported for a reading nobody meant is a number about something else."
   },
   VERSION_STRENGTH_NO_SUCH_VERSION: {
     check: "C-30.4",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "No reading by that name belongs to this question, or this project has not said which reading it stands on. An empty answer here would say the question rests on nothing when the truth is that nobody has pointed at anything yet."
   },
   VERSION_STRENGTH_UNKNOWN_STATE: {
     check: "C-30.5",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "One of the words used to say which readings to count is not one this record knows. The set is closed on purpose: a strength that quietly counted readings nobody recognises would be a number no reader could check."
   },
   /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
@@ -25916,7 +25932,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      state-set line (DEC-40) wherever it renders. */
   VERSION_STRENGTH_STATE_EXCLUDED: {
     check: "C-30.6",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "Nobody has adopted that reading, so it is not what this record answers with. You can still see what it would come to \u2014 ask for it as a what-if by saying which kinds of reading to count \u2014 and the answer will say on its face that that is what it is."
   },
   /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
@@ -25928,7 +25944,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      number is the record claiming something neither population supports. */
   VERSION_STRENGTH_COMPOSED: {
     check: "C-30.7",
-    where: at2("refusePairComposed", "is-pair-composed"),
+    where: at3("refusePairComposed", "is-pair-composed"),
     translation: "This answer tried to report one overall figure for a question, and there is no such figure. How well the documents were captured and how firmly they connect to the subject are two separate measurements over two separate things, and averaging them or picking one would state something neither of them says."
   },
   /* DEC-40 determination 2, and its own negative control: *"a filtered
@@ -25940,12 +25956,12 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      the record's own. */
   VERSION_STRENGTH_UNFILTERED: {
     check: "C-30.8",
-    where: at2("refusePairComposed", "is-pair-composed"),
+    where: at3("refusePairComposed", "is-pair-composed"),
     translation: "This answer did not say which readings it counted, and a strength separated from that is a misreading waiting to happen. Every answer here says on its face whether it is the record's own or a view somebody constructed."
   },
   VERSION_STRENGTH_TOO_MANY_STATES: {
     check: "C-30.9",
-    where: at2("versionStrength", "is-version-strength"),
+    where: at3("versionStrength", "is-version-strength"),
     translation: "More kinds of reading were named than this record has. The bound is said here rather than applied quietly, so nothing is dropped without you being told."
   }
 });
@@ -25954,37 +25970,37 @@ var VERSION_STRENGTH_INERT_SOURCES = ["hunch"];
 var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
   PARTITION_INDEPENDENCE_NO_INQUIRY: {
     check: "C-71.1",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "This asks whether the groups of reasons behind one question share a source, and no question was named. There is no default question here and there must not be one."
   },
   PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
     check: "C-71.2",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "That is not a question you can read here, so it has no reasons to group. Only a question rests on reasons, and a question you may not see answers exactly as one that does not exist."
   },
   PARTITION_INDEPENDENCE_UNREADABLE: {
     check: "C-71.3",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "The grouping of reasons could not be read. Send it as a list of groups, each group a list of the positions of the reasons in it, or as groups each carrying a name and its positions. Every group needs at least one reason and a name no other group has."
   },
   PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
     check: "C-71.4",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "The grouping names a reason this question does not have. It was not dropped quietly, because an answer about groups the question does not hold would be an answer about something else."
   },
   PARTITION_INDEPENDENCE_LEG_TWICE: {
     check: "C-71.5",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "One reason was put in two groups. Each reason belongs to exactly one group, because a reason shared by two groups would make them share a source by construction."
   },
   PARTITION_INDEPENDENCE_NOT_TOTAL: {
     check: "C-71.6",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "Some of this question's reasons are in no group. A grouping covers every reason, as a written reading does, so that what is checked here is what would be written."
   },
   PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
     check: "C-71.7",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
   },
   /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
@@ -25993,31 +26009,31 @@ var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
      strength. */
   PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
     check: "C-71.8",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
   },
   PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
     check: "C-71.9",
-    where: at2("partitionIndependence", "is-partition-independence"),
+    where: at3("partitionIndependence", "is-partition-independence"),
     translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
   }
 });
 var STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: "C-32.9",
-    where: at2("strengthBarSet", "is-machine-strength-bar"),
+    where: at3("strengthBarSet", "is-machine-strength-bar"),
     translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
   },
   STRENGTH_BAR_NOT_ADMIN: {
     check: "C-107.1",
-    where: at2("strengthBarSet", "is-admin-strength-bar"),
+    where: at3("strengthBarSet", "is-admin-strength-bar"),
     translation: "The standard of evidence a new project starts from is set for the whole group, so only an administrator can change it. A project can still declare its own standard in its own document. Nothing was changed."
   },
   /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: "C-107.2",
-    where: at2("strengthBarSet", "is-strength-bar-grade"),
+    where: at3("strengthBarSet", "is-strength-bar-grade"),
     translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
   }
 });
@@ -27383,19 +27399,19 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     segmentStopped
   };
 }
-function planeAnswer(asked, at3) {
-  if (!asked.reached) return { at: at3, silent: asked };
+function planeAnswer(asked, at4) {
+  if (!asked.reached) return { at: at4, silent: asked };
   const envelope = asked.body && typeof asked.body === "object" ? asked.body : {};
   const inner = envelope.result && typeof envelope.result === "object" && !Array.isArray(envelope.result) ? envelope.result : null;
   const said = inner && "ok" in inner ? inner : envelope;
   if (asked.status !== 200 || envelope.ok !== true || said.ok === false)
-    return { at: at3, refused: {
-      at: at3,
+    return { at: at4, refused: {
+      at: at4,
       code: said.reason ?? said.code ?? envelope.reason ?? envelope.code ?? null,
       check: said.check ?? envelope.check ?? null,
       plane: asked.body ?? null
     } };
-  return { at: at3, result: inner ?? envelope };
+  return { at: at4, result: inner ?? envelope };
 }
 var MEANING_OP = "meaningrows";
 var meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) => planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
