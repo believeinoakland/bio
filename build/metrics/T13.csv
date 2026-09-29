@@ -1,2 +1,5 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_012x3jt5MEsquz9cY3RyQESF,job,odf-reader,14101089,241172,142,51399,,12,2258
+session_01GSoeuDnnp3sumTtZuq2WZq,job,record-core,6139917,192490,80,20991,,8,1093
+session_01Hc7NnTW3bKEQ3syEqYwTB7,job,membership,10836417,223734,110,31622,,17,5749
+session_01JwRGiAAQuCSCteSnVJeMBi,job,promotion,16543513,273181,150,32142,,7,37
