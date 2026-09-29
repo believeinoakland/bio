@@ -65225,11 +65225,6 @@ var INTENT_CHECKS = Object.freeze({
     where: at10("refuseNoSuchProgression", "is-named-progression"),
     translation: "The measure names a declared flow the record does not hold. Declare the flow first, or name one that exists. Nothing was written."
   },
-  NO_SUCH_ENTITY: {
-    check: "C-111.5",
-    where: at10("refuseNoSuchEntity", "is-named-entity"),
-    translation: "The measure names an entity the record does not hold. Register it first, or name one that exists. Nothing was written."
-  },
   BAD_STAGE: {
     check: "C-111.6",
     where: at10("#conditionRefusal", "is-condition-stage"),
@@ -96602,6 +96597,9 @@ var SET_ASIDE_MAX = 200;
 var SERVES_MAX = 1e3;
 var ASPIRATIONS_MAX = 1e3;
 var CONTACTS_MAX = 1e3;
+var CONTEXT_MAX = 1e3;
+var PROJECTS_MAX = 1e3;
+var REQUESTS_MAX = 1e3;
 var str12 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -96826,11 +96824,7 @@ var Intent = class {
         "the condition names a flow the record has not declared. Nothing was written.",
         { progression: str12(c.progression) }
       );
-    if (!this.entities.has(str12(c.entity)))
-      return refuseNoSuchEntity(
-        "the condition names an entity the record does not hold. Nothing was written.",
-        { entity: str12(c.entity) }
-      );
+    if (!this.entities.has(str12(c.entity))) return noSuchEntity(str12(c.entity));
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     if (bad.length)
@@ -97120,8 +97114,9 @@ var Intent = class {
    * ===================================================================== */
   /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
    *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
-   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. Writes
-   *  nothing; never throws. */
+   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. What it
+   *  measures against is bounded (N305, K391): `context_truncated` says the held aspirations or the projects walked
+   *  for conditions were cut at CONTEXT_MAX. Writes nothing; never throws. */
   servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
     const named = [];
     for (const [kind, list2] of [["address", addresses], ["bundle", bundles], ["request", requests]])
@@ -97133,7 +97128,7 @@ var Intent = class {
     try {
       ctx = this.#servesContext();
     } catch {
-      return { ok: true, serves: subjects.map(empty), truncated: truncated3 };
+      return { ok: true, serves: subjects.map(empty), truncated: truncated3, context_truncated: false };
     }
     const serves = subjects.map((x) => {
       try {
@@ -97149,14 +97144,19 @@ var Intent = class {
         return empty(x);
       }
     });
-    return { ok: true, serves, truncated: truncated3 };
+    return { ok: true, serves, truncated: truncated3, context_truncated: ctx.cut };
   }
   /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
-     the bundles documenting their short instances, and each held group or project aspiration with what it names. */
+     the bundles documenting their short instances, and each held group or project aspiration with what it names.
+     N305 (K391): of the first CONTEXT_MAX projects in id order, those with a condition, and the first CONTEXT_MAX held
+     aspirations in force in id order; `cut` says either walk was cut. */
   #servesContext() {
     const gapsByBundle = /* @__PURE__ */ new Map();
     const all = [];
-    for (const pid of this.#conditioned(PLANE_VIEWER)) {
+    const walked = this.#projectsInOrder(PLANE_VIEWER, CONTEXT_MAX);
+    for (const pid of walked.ids) {
+      const d = this.#doc(pid);
+      if (!d || !conditionOf(d.fm)) continue;
       const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
       if (g.ok) all.push(...g.gaps);
     }
@@ -97171,7 +97171,8 @@ var Intent = class {
               gapsByBundle.get(d.bundle_id).add(g.key);
             }
     }
-    const held = this.#aspirations(PLANE_VIEWER).filter((a) => a.state === "held" && (a.scope === "group" || a.scope === "project"));
+    const inForce = this.#heldAspirations(PLANE_VIEWER, { scopes: ["group", "project"], max: CONTEXT_MAX });
+    const held = inForce.held;
     const departures = /* @__PURE__ */ new Map(), concerned = /* @__PURE__ */ new Map(), requestsRead = { rows: null };
     const departed = (project) => {
       if (!departures.has(project)) departures.set(project, this.#departures(project).latest);
@@ -97191,6 +97192,7 @@ var Intent = class {
       JSON.stringify(keys)
     );
     return {
+      cut: walked.truncated || inForce.truncated,
       gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
       /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
          no project is under the group's alone */
@@ -97341,10 +97343,7 @@ var Intent = class {
     const ents = (Array.isArray(entities) ? entities : []).map(str12).filter(Boolean);
     const progs = (Array.isArray(progressions) ? progressions : []).map(str12).filter(Boolean);
     const badEnt = ents.find((e) => !TOKEN3.test(e) || !this.entities.has(e));
-    if (badEnt) return refuseNoSuchEntity(
-      "the aspiration names an entity the record does not hold. Nothing was written.",
-      { entity: badEnt }
-    );
+    if (badEnt) return noSuchEntity(badEnt);
     const badProg = progs.find((k) => {
       const d = TOKEN3.test(k) && this.progressions.readProgression({ progressionKey: k });
       return !d || d.ok === false || !d.found;
@@ -97456,24 +97455,10 @@ ${bodyText2(note)}`
     if (!r.ok) return r;
     return { ok: true, aspiration, state: "retired", taught: str12(taught), author: str12(author), at: at15 };
   }
-  /* Every aspiration document the viewer may see, as R12's terms read it. */
-  #aspirations(viewer) {
-    const out = [];
-    let after = "";
-    for (; ; ) {
-      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
-      for (const id of page.ids) {
-        const a = this.#pursuit(id, ASPIRATION, viewer);
-        if (a) out.push(this.#aspirationView(a));
-      }
-      if (page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
-    return out;
-  }
-  /* R12, R13 (N209, K338): the first ASPIRATIONS_MAX held aspirations the viewer may see, in id order, walked a page
-     at a time and read one past so a cut says so. */
-  #heldAspirations(viewer) {
+  /* R12, R13 (N209, K338): the first `max` held aspirations the viewer may see, in id order, walked a page at a time
+     and read one past so a cut says so; `scopes`, when named, keeps only those scopes, before the count (R28's in
+     force, member aspirations aside; N305). */
+  #heldAspirations(viewer, { scopes = null, max = ASPIRATIONS_MAX } = {}) {
     const out = [];
     let after = "", truncated3 = false;
     for (; ; ) {
@@ -97481,7 +97466,8 @@ ${bodyText2(note)}`
       for (const id of page.ids) {
         const a = this.#pursuit(id, ASPIRATION, viewer);
         if (!a || a.head.currentState !== "held") continue;
-        if (out.length === ASPIRATIONS_MAX) {
+        if (scopes && !scopes.includes(a.fm.scope)) continue;
+        if (out.length === max) {
           truncated3 = true;
           break;
         }
@@ -97615,7 +97601,13 @@ ${bodyText2(note)}`
       author: r.author,
       at: r.at
     }));
-    const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
+    const named = [];
+    for (const t of triaged) {
+      for (const id of captureRequestsNamed(t.basis)) if (!named.includes(id)) named.push(id);
+      if (named.length > REQUESTS_MAX) break;
+    }
+    const requests_truncated = named.length > REQUESTS_MAX;
+    named.length = Math.min(named.length, REQUESTS_MAX);
     const byId = named.length ? this.#lazy(this.captureRequests) : null;
     const capture_requests = named.map((id) => {
       let r = null;
@@ -97642,6 +97634,8 @@ ${bodyText2(note)}`
       triaged_limit: TRIAGED_MAX,
       triaged_truncated,
       capture_requests,
+      requests_limit: REQUESTS_MAX,
+      requests_truncated,
       dead_ends: deadEndsOf(a.text),
       taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null
     };
@@ -97659,7 +97653,8 @@ ${bodyText2(note)}`
     this.#sources.set(kind, reader);
     return { ok: true, kind };
   }
-  /* Every proposal from every source, open or not, keyed `<source>::<its key>`. */
+  /* Every proposal from every source, open or not, keyed `<source>::<its key>`; with no project named, the gaps of the
+     first PROJECTS_MAX projects the viewer may see, in id order (N305), `projects_truncated` saying they were cut. */
   #allProposals(project, viewer) {
     const out = [];
     const feed = this.progressions.proposalsFeed(null);
@@ -97701,28 +97696,33 @@ ${bodyText2(note)}`
             surfaced_by: p.surfaced_by ?? "machine"
           });
     }
-    const projects = project ? [project] : this.#conditioned(viewer);
-    for (const pid of projects) {
+    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, PROJECTS_MAX);
+    for (const pid of projects.ids) {
       const g = this.gaps({ project: pid, viewer });
       if (g.ok) for (const gap of g.gaps) out.push({ ...gap, source_key: gap.key.slice("intent::".length) });
     }
-    return out;
+    return { list: out, projects_truncated: projects.truncated };
   }
-  /* The projects the viewer may see whose objective states a condition. */
-  #conditioned(viewer) {
-    const out = [];
-    let after = "";
+  /* N305 (K391): the first `max` projects the viewer may see (every project for a null viewer), in id order, walked a
+     page at a time and read one past, so `truncated` says a cut was made. A project the viewer may not see is not
+     counted, so a cut says nothing of it (R23, DEC-36). */
+  #projectsInOrder(viewer, max) {
+    const ids = [];
+    let after = "", truncated3 = false;
     for (; ; ) {
       const page = this.record.listByType({ type: "project", after, limit: 200 });
       for (const id of page.ids) {
         if (viewer != null && !this.membership.inSight(id, viewer)) continue;
-        const d = this.#doc(id);
-        if (d && conditionOf(d.fm)) out.push(id);
+        if (ids.length === max) {
+          truncated3 = true;
+          break;
+        }
+        ids.push(id);
       }
-      if (page.ids.length < 200 || !page.cursor) break;
+      if (truncated3 || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
     }
-    return out;
+    return { ids, truncated: truncated3 };
   }
   /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
      the key's index (N181 (4)). */
@@ -97774,8 +97774,8 @@ ${bodyText2(note)}`
       if (p.refused) return p.refused;
     }
     const all = this.#allProposals(project || null, viewer);
-    const decided = this.#decidedAmong(all.map((p) => p.key));
-    const open = all.filter((p) => !decided.has(p.key));
+    const decided = this.#decidedAmong(all.list.map((p) => p.key));
+    const open = all.list.filter((p) => !decided.has(p.key));
     const aside = this.#setAside(viewer);
     return {
       ok: true,
@@ -97784,7 +97784,9 @@ ${bodyText2(note)}`
       count: open.length,
       set_aside: aside.list,
       set_aside_limit: SET_ASIDE_MAX,
-      set_aside_truncated: aside.truncated
+      set_aside_truncated: aside.truncated,
+      projects_limit: PROJECTS_MAX,
+      projects_truncated: all.projects_truncated
     };
   }
   /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
@@ -97814,7 +97816,7 @@ ${bodyText2(note)}`
       if (p.refused) return p.refused;
       proj = p.doc;
     }
-    const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
+    const found = this.#isDecided(proposal) ? null : this.#allProposals(proj ? proj.id : null, viewer).list.find((p) => p.key === proposal);
     if (!found)
       return refusal12("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its reason. Nothing was written.", { proposal: typeof proposal === "string" ? proposal : null });
     const why = str12(reason);
@@ -98093,18 +98095,6 @@ function refuseNoSuchProgression(detail, extra) {
     ok: false,
     reason: "NO_SUCH_PROGRESSION",
     code: "NO_SUCH_PROGRESSION",
-    check: row2.check,
-    translation: row2.translation,
-    detail,
-    ...extra || {}
-  };
-}
-function refuseNoSuchEntity(detail, extra) {
-  const row2 = INTENT_CHECKS.NO_SUCH_ENTITY;
-  return {
-    ok: false,
-    reason: "NO_SUCH_ENTITY",
-    code: "NO_SUCH_ENTITY",
     check: row2.check,
     translation: row2.translation,
     detail,
