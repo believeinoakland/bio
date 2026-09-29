@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R1–R85; T13's N324 `notAnAdmin` (R84) and N332's `visibilityOf` (R85); T9's N123 revocation notice `onRevoked`, N142's `inSight` and
+ * Requirements: build/requirements/membership.md (R1–R87; T14's N128 listener rows (R81), N327 `remedy` (R84), N329
+ * `activeAdmins` ordered (R86) and N335 `notAParticipant` (R87); T13's N324 `notAnAdmin` (R84) and N332's `visibilityOf` (R85); T9's N123 revocation notice `onRevoked`, N142's `inSight` and
  * N70's bounds, as MEMBERSHIP #3 proposed them, J2). Extracted from the legacy store (T3-2); the legacy
  * store keeps its public methods as one-line delegations to this class, so every op and every caller answers
  * as before. Design: docs/architecture/BIO_Membership_Architecture_v2.md.
@@ -13,7 +14,7 @@
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity, AI_CREDENTIAL_CHECKS, MEMBER_ID_CHECKS, SIGNER_ENROLMENT_CHECKS,
          CUSTODIAL_CHECKS, PROJECT_AUTHORITY_CHECKS, PROJECT_VISIBILITY_CHECKS, PROJECT_JOIN_REQUEST_CHECKS,
-         CASE_AUTHORITY_CHECKS, REGISTRATION_CHECKS } from "../../checks/bio-checks.mjs";
+         CASE_AUTHORITY_CHECKS } from "../../checks/bio-checks.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
@@ -74,28 +75,60 @@ export function noSuchProject(projectId, extra = null) {
   /* END DEC-49 REGION is-project-seen */
 }
 
-/* R84 (N324, K275, K403). THE ONE ANSWER TO ONE CONDITION: the stamped caller `by` is not an administrator (R64) where
-   the act is an administrator's. Every act refusing that condition answers through here (R6, R7, R9, R10, R11, R12, R20,
-   R25, R26, and monitoring's R30), so `NOT_AN_ADMIN` is minted at one site and its one row is this module's (C-96.1).
-   Who is admitted stays each act's own rule; this only answers the refusal. `act` is the caller's fixed phrase for its
-   act, never a request's words; the detail is one fixed sentence around it. `extra` adds a caller's own fields beside
-   these and never replaces one of them. Writes nothing and never throws. */
-const NOT_AN_ADMIN_FIXED = new Set(["ok", "reason", "code", "check", "translation", "by", "detail"]);
+/* R84 (N324, K275, K403; N327, DEC-83). THE ONE ANSWER TO ONE CONDITION: the stamped caller `by` is not an administrator
+   (R64) where the act is an administrator's. Every act refusing that condition answers through here (R6, R7, R9, R10,
+   R11, R12, R20, R22, R25, R26, R41 and R75, R62; monitoring's R30, intent's R9, bias's R11), so `NOT_AN_ADMIN` is
+   minted at one site and its one row is this module's (C-96.1). Who is admitted stays each act's own rule; this only
+   answers the refusal. `act` is the caller's fixed phrase for its act, never a request's words; the detail is one fixed
+   sentence around it. `extra` adds a caller's own fields beside these and never replaces one of them. An act with a
+   next step or an alternative passes it as `extra.remedy`, one fixed sentence: the answer keeps it as `remedy`, and its
+   member-facing `message` is the row's translation, a space, then the remedy (DEC-83: the standard sentence first, then
+   what to do next or instead). `message` is this function's own, never a caller's; with no remedy there is none.
+   Writes nothing and never throws. */
+const NOT_AN_ADMIN_FIXED = new Set(["ok", "reason", "code", "check", "translation", "by", "detail", "message"]);
 export function notAnAdmin(by, act, extra = null) {
   let own = [];
   try {
     if (extra && typeof extra === "object" && !Array.isArray(extra))
       own = Object.entries(extra).filter(([k]) => !NOT_AN_ADMIN_FIXED.has(k));
   } catch { own = []; }
+  /* A remedy is a sentence: anything else a caller passes under the name adds nothing. */
+  const given = own.find(([k]) => k === "remedy");
+  const remedy = given && typeof given[1] === "string" && given[1].trim() ? given[1].trim().slice(0, 400) : null;
+  own = own.filter(([k]) => k !== "remedy");
   const what = typeof act === "string" && act.trim() ? act.trim().slice(0, 120) : "this act";
   /* DEC-49 REGION is-custodial-admin */
   const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
   return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
            by: by ?? null, ...Object.fromEntries(own),
+           ...(remedy ? { remedy, message: `${row.translation} ${remedy}` } : {}),
            detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and the plane stamps who is `
                  + "asking from the signed-in session rather than taking it from the caller. This caller is not one "
                  + "of the active administrators. Nothing was changed." };
   /* END DEC-49 REGION is-custodial-admin */
+}
+
+/* R87 (N335, K275). THE ONE ANSWER TO ONE CONDITION: the caller `by` holds no participation in the project (Membership
+   Architecture v2 §7.12). `projectLeave` (R35) here and promotion's fork (its R43) answer through it, so
+   `NOT_A_PARTICIPANT` is minted at one site and its one row is this module's (C-56.3). A named TARGET holding none, or
+   one not joined, is a different condition with its own code (R36, R39). `project` is the id as asked (null when none);
+   the detail is one fixed sentence, the same for every caller. `extra` adds a caller's own fields beside these and never
+   replaces one of them. Writes nothing and never throws. */
+const NOT_A_PARTICIPANT_DETAIL = "the caller holds no participation in this project, and this act is taken by one of its "
+  + "participants (Membership Architecture v2 §7). Nothing was changed.";
+const NOT_A_PARTICIPANT_FIXED = new Set(["ok", "reason", "code", "check", "translation", "project", "detail"]);
+export function notAParticipant(projectId, by, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NOT_A_PARTICIPANT_FIXED.has(k));
+  } catch { own = []; }
+  /* DEC-49 REGION is-not-a-participant */
+  const row = MEMBERSHIP_CHECKS.NOT_A_PARTICIPANT;
+  return { ok: false, reason: "NOT_A_PARTICIPANT", code: "NOT_A_PARTICIPANT", check: row.check,
+           translation: row.translation, project: projectId ?? null, ...Object.fromEntries(own),
+           detail: NOT_A_PARTICIPANT_DETAIL };
+  /* END DEC-49 REGION is-not-a-participant */
 }
 
 /* R83 (K289): the modules' total order, `build/modules.json`'s ids in the file's order (which is its layer order, K270).
@@ -128,40 +161,38 @@ const LISTENER_REFUSAL_FIELDS = new Set(["ok", "reason", "code", "detail", "modu
  *  before recording the registration: this module's (R79), promotion's (through its R49) and every later module's.
  *  `held` is what the caller already holds for the slot: a list of `{module}`, or, for a slot that takes one
  *  registration whoever makes it, that one registration or null. Answers the refusal, with `extra` (the caller's own
- *  fields) beside its own and never replacing them, and its row's `check` and `translation` once legacy-checks holds
- *  the row (N206); else null. Writes nothing and never throws. (Promotion's built text, moved as it was, K285.) */
+ *  fields) beside its own and never replacing them, and its row's `check` and `translation` (this module's C-102.11
+ *  and C-102.12, N128); else null. Writes nothing and never throws. (Promotion's built text, moved as it was, K285.) */
 export function listenerRefusal(held, module, fn, extra) {
   const refuse = (code, detail, fields) => {
-    let row = null;
-    try { row = Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code) ? REGISTRATION_CHECKS[code] : null; }
-    catch { row = null; }
-    /* The refusal's own fields are never the caller's, `check` and `translation` included while no row is held: a
-       caller's copy would claim a catalogue row that does not exist. */
+    const row = MEMBERSHIP_CHECKS[code];
+    /* The refusal's own fields, its row's `check` and `translation` among them, are never the caller's. */
     let own = {};
     try {
       if (isObj(extra)) own = Object.fromEntries(Object.entries(extra).filter(([k]) => !LISTENER_REFUSAL_FIELDS.has(k)));
     } catch { own = {}; }
-    return { ...own, ok: false, reason: code, code, detail, ...fields,
-             ...(row ? { check: row.check, translation: row.translation } : {}) };
+    return { ...own, ok: false, reason: code, code, detail, ...fields, check: row.check, translation: row.translation };
   };
   /* DEC-49 REGION is-listener-registration */
+  /* Each code is written once (one site per code, K275), and every branch below answers through these two. */
+  const malformed = (detail) => refuse("LISTENER_MALFORMED", detail, {});
+  const declared = (detail, holder) => refuse("LISTENER_DECLARED", detail, { module: holder });
   try {
     if (typeof module !== "string" || !module || typeof fn !== "function")
-      return refuse("LISTENER_MALFORMED", "a listener names the module that registers it and its function", {});
+      return malformed("a listener names the module that registers it and its function");
     if (Array.isArray(held)) {
       if (held.some((h) => isObj(h) && h.module === module))
-        return refuse("LISTENER_DECLARED", `${module} has already registered its listener`, { module });
+        return declared(`${module} has already registered its listener`, module);
       return null;
     }
     if (isObj(held)) {
       const holder = typeof held.module === "string" ? held.module : null;
-      return refuse("LISTENER_DECLARED", `this listener is already registered${holder ? ` by ${holder}` : ""}, and it `
-                    + `takes one registration`, { module: holder });
+      return declared(`this listener is already registered${holder ? ` by ${holder}` : ""}, and it takes one `
+                      + `registration`, holder);
     }
     return null;
   } catch (e) {
-    return refuse("LISTENER_MALFORMED",
-      `the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`, {});
+    return malformed(`the registration could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`);
   }
   /* END DEC-49 REGION is-listener-registration */
 }
@@ -1697,7 +1728,7 @@ export class Membership {
        answer below is unchanged, and it already says the same thing for an absent id and a hidden one. */
     { const existence = this.existenceAct(projectId, viewer); if (existence) return existence; }
     const p = this.participation(projectId, by);
-    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT" };
+    if (!p) return notAParticipant(projectId, by);   /* R87 (N335): C-56.3 minted at its one site */
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state };
     /* REC-186 (BOB #31's ruling of 2026-09-23 21:37Z on Membership v2 §7.6 and §7.10): THE PROJECT'S ONLY
        OWNER DOES NOT ASK TO LEAVE. An owner's request can be honoured only by the 7.10 removal (7.7 refuses
@@ -1743,7 +1774,17 @@ export class Membership {
     const target = this.#memberByHandle(handle);
     if (!target) return { ok: false, reason: "NO_SUCH_HANDLE", handle };
     const p = this.participation(projectId, target.member_id);
-    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT", handle };
+    /* N335: the NAMED member holds no participation, a different condition from the caller holding none (R87), so it
+       has its own code and row, C-56.4 (`TARGET_NOT_AN_ADMIN`'s precedent). */
+    /* DEC-49 REGION is-remove-target-participant */
+    if (!p) {
+      const row = MEMBERSHIP_CHECKS.TARGET_NOT_A_PARTICIPANT;
+      return { ok: false, reason: "TARGET_NOT_A_PARTICIPANT", code: "TARGET_NOT_A_PARTICIPANT", check: row.check,
+               translation: row.translation, handle,
+               detail: "the member named holds no participation in this project, so there is nobody to remove "
+                     + "(7.7). Nothing was written." };
+    }
+    /* END DEC-49 REGION is-remove-target-participant */
     if (p.owner) return { ok: false, reason: "OWNER",
       detail: "an owner is not removed from a project by this action. Ownership changes by the section "
             + "7.10 process, and removal from the project follows once they are no longer an owner." };
@@ -1778,10 +1819,16 @@ export class Membership {
     const p = this.participation(projectId, target.member_id);
     /* R39: an owner is a JOINED participant with the owner flag. An invited member has not accepted a place in
        the project at all, so making them an owner would also make them joined without their act (the old code did
-       exactly that); one who has asked to leave is on the way out. Both are refused as not (yet) participants. */
-    if (!p || p.state !== "joined") return { ok: false, reason: "NOT_A_PARTICIPANT", handle,
-      ...(p ? { state: p.state } : {}),
-      detail: "an owner is a joined participant with the owner flag, so the member joins the project first" };
+       exactly that); one who has asked to leave is on the way out. Both, and a member with no participation, are
+       refused as not joined: C-56.5, this module's row (N335). */
+    /* DEC-49 REGION is-owner-target-joined */
+    if (!p || p.state !== "joined") {
+      const row = MEMBERSHIP_CHECKS.TARGET_NOT_JOINED;
+      return { ok: false, reason: "TARGET_NOT_JOINED", code: "TARGET_NOT_JOINED", check: row.check,
+               translation: row.translation, handle, ...(p ? { state: p.state } : {}),
+               detail: "an owner is a joined participant with the owner flag, so the member joins the project first" };
+    }
+    /* END DEC-49 REGION is-owner-target-joined */
     if (p.owner) return { ok: false, reason: "ALREADY_AN_OWNER", handle };
 
     const owners = this.projectOwners(projectId);
@@ -1816,10 +1863,12 @@ export class Membership {
    *  Returns the refusal the act answers, byte for byte as it answered before the extraction, or
    *  null. What it leaves to the act is what turns on a PARAMETER (the reason, the handle). */
   rescueRefusal(projectId, by) {
+    /* R84 (N327, DEC-83): the rescue is the single exception to administrators holding no authority over projects,
+       and an administrator's to use; the remedy names who acts instead. */
     if (!this.isAdministrator(by))
-      return { ok: false, reason: "ADMIN_ONLY",
-               detail: "this is the single exception to administrators holding no authority over projects, "
-                     + "and it is an administrator's to use" };
+      return notAnAdmin(by, "adding an owner to a project whose owners are all inactive (7.13)",
+        { remedy: "An active administrator of this group can add the owner; while any owner of the project is active, "
+                + "its owners add one instead." });
     const owners = this.projectOwners(projectId);
     if (!owners.length)
       return { ok: false, reason: "NO_OWNERS",
@@ -1860,7 +1909,7 @@ export class Membership {
    *  to empty a project's ownership one member at a time. */
   projectOwnerRescue({ projectId, handle, by, reason, viewer = null } = {}) {
     const b = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, projectId);
-    /* REC-138 / D-426: sight BEFORE position — so ADMIN_ONLY is said only to a member who can
+    /* REC-138 / D-426: sight BEFORE position — so NOT_AN_ADMIN is said only to a member who can
        already see the project (an invited one); an administrator sees every project (§7.3). */
     { const existence = b ? this.existenceAct(projectId, viewer) : null; if (existence) return existence; }   /* REC-149 */
     if (!b || !this.rosterInSight(projectId, viewer)) return noSuchProject(projectId);
@@ -2018,10 +2067,11 @@ export class Membership {
 
   /** An administrator vouching, INCLUDING for another administrator (4.9). */
   expertiseConfirm({ memberId, label, by, withdraw = false } = {}) {
+    /* R84 (N327, DEC-83). */
     if (!this.isAdministrator(by))
-      return { ok: false, reason: "ADMIN_ONLY",
-               detail: "an administrator confirms a declared license, and may do so for another "
-                     + "administrator: vouching for someone is the same act whoever they are" };
+      return notAnAdmin(by, "confirming or withdrawing a member's declared expertise",
+        { remedy: "An active administrator of this group can confirm it, for any member, another administrator "
+                + "included." });
     const m = this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     const lab = Membership.#normLabel(label);
@@ -2215,8 +2265,12 @@ export class Membership {
    * implied otherwise would be lying. */
   static ROOT_ADMIN = "admin";
 
+  /* R86 (N329): the administrators in a stated order: the founder first once the instance is claimed, then every active
+     member with role `admin` in the order their member rows were created, ties broken by member id (queue R23's
+     "earliest active administrator" is the first after the founder). Writes nothing and never throws. */
   activeAdmins() {
-    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'`)
+    const rows = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
+                              ORDER BY created, member_id`)
       .map((r) => r.member_id);
     const claimed = !!this.#one(`SELECT role FROM credentials WHERE role=?`, Membership.ROOT_ADMIN);
     return claimed ? [Membership.ROOT_ADMIN, ...rows] : rows;
@@ -2304,7 +2358,16 @@ export class Membership {
   async adminEndorse({ memberId, by } = {}) {
     const m = this.#one(`SELECT member_id, status, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
-    if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
+    /* N335: C-96.14, this module's row (K275). */
+    /* DEC-49 REGION is-endorse-proposed */
+    if (m.status !== "proposed") {
+      const row = MEMBERSHIP_CHECKS.NOT_PROPOSED;
+      return { ok: false, reason: "NOT_PROPOSED", code: "NOT_PROPOSED", check: row.check, translation: row.translation,
+               status: m.status,
+               detail: "only a member whose status is 'proposed' is endorsed as an administrator (4.7), and this "
+                     + "member's is not. Nothing was written." };
+    }
+    /* END DEC-49 REGION is-endorse-proposed */
     const admins = this.activeAdmins();
     if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");   /* R84 */
     const now = new Date().toISOString();
@@ -2923,13 +2986,12 @@ export class Membership {
         `a member-scoped credential acts for the member who mints it, and '${String(principalMember).slice(0, 60)}' `
         + `is not '${minter.slice(0, 60)}'. A member cannot authorise an agent in another member's name. Nothing `
         + `was written.`, { principalMember: String(principalMember).slice(0, 60) });
-    /* R62 (Bob, 2026-09-26; C-29.12): an ORGANISATION-scoped credential acts for the whole group, so only an active
-       administrator (the founder included) mints one. */
+    /* R62 (Bob, 2026-09-26): an ORGANISATION-scoped credential acts for the whole group, so only an active
+       administrator (the founder included) mints one; anyone else is answered through R84 (N327, DEC-83), its remedy
+       the member-scoped credential open to every member. */
     if (kind === "organisation" && !this.isAdministrator(minter))
-      return refusal("AI_CREDENTIAL_ORG_NOT_ADMIN",
-        `an organisation-wide AI credential acts for the whole group, so it is minted by an administrator, and `
-        + `'${minter.slice(0, 60)}' is not an active one. A member-scoped credential is open to every member. `
-        + `Nothing was written.`, { who: minter });
+      return notAnAdmin(minter, "minting an organisation-wide AI credential",
+        { remedy: "A member-scoped AI credential, which acts for you alone, is open to every member." });
     const principal = kind === "organisation" ? `${MACHINE_CLASS_PREFIX}ai`
                     : kind === "member" ? `member:${minter}`
                     : null;

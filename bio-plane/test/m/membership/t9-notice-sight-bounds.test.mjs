@@ -4,8 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
-import { Membership, listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
-import { REGISTRATION_CHECKS } from "../../../checks/bio-checks.mjs";
+import { Membership, listenerRefusal, MODULE_ORDER, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { readFile } from "node:fs/promises";
 import { MACHINE_CLASS_PREFIX } from "../../../checks/bio-checks.mjs";
 
@@ -198,11 +197,17 @@ test("R79 listeners are told in the modules' total order (build/modules.json's l
   assert.deepEqual(heard, ["promotion", "capture-sources", "legacy-store", "queue", "unknown-b", "unknown-a"]);
 });
 
-test("R81 listenerRefusal is the one site of LISTENER_MALFORMED and LISTENER_DECLARED: malformed, declared in a list, declared in a one-registration slot naming its holder, else null; extra beside, never replacing; writes nothing, never throws", () => {
+test("R81 listenerRefusal is the one site of LISTENER_MALFORMED and LISTENER_DECLARED, each carrying its row (C-102.11, C-102.12): malformed, declared in a list, declared in a one-registration slot naming its holder, else null; extra beside, never replacing; writes nothing, never throws", () => {
   const fn = () => null;
-  /* Its row's check and translation, once legacy-checks holds the row (N202, N206); none is invented before. */
-  const rowOf = (code) => (Object.prototype.hasOwnProperty.call(REGISTRATION_CHECKS, code)
-    ? { check: REGISTRATION_CHECKS[code].check, translation: REGISTRATION_CHECKS[code].translation } : {});
+  /* Its row's check and translation: this module's C-102.11 and C-102.12 (N128), on every branch. */
+  const ROWS = { LISTENER_MALFORMED: "C-102.11", LISTENER_DECLARED: "C-102.12" };
+  const rowOf = (code) => {
+    const row = MEMBERSHIP_CHECKS[code];
+    assert.equal(row.check, ROWS[code]);
+    assert.equal(row.where, "src/membership/index.mjs listenerRefusal > is-listener-registration");
+    assert.ok(Object.isFrozen(row) && typeof row.translation === "string" && row.translation.length > 40);
+    return row;
+  };
   const shape = (r, code) => {
     assert.deepEqual([r.ok, r.reason, r.code], [false, code, code]);
     assert.equal(typeof r.detail, "string");
@@ -256,5 +261,3 @@ test("R81 listenerRefusal is the one site of LISTENER_MALFORMED and LISTENER_DEC
   assert.doesNotThrow(() => listenerRefusal(list, "a", fn, trap));
   shape(listenerRefusal(list, "a", fn, trap), "LISTENER_DECLARED");
 });
-
-test.todo("R81: LISTENER_MALFORMED and LISTENER_DECLARED carry their rows' check and translation — legacy-checks holds no row for either yet (N202's convergence, N206, T10); the test above asserts the row is carried as soon as the catalogue holds it");

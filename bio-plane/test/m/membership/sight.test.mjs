@@ -93,7 +93,7 @@ test("R61 every act naming a project the caller cannot see answers byte for byte
   ].map((x) => JSON.stringify(x).replaceAll(projectId, "<id>"));
   assert.deepEqual(as("PROJ-H"), as("PROJ-NEVER"));
   // sight before position: an outsider never learns ownership (NOT_THE_OWNER) of a hidden project
-  for (const a of as("PROJ-H")) assert.doesNotMatch(a, /NOT_THE_OWNER|ADMIN_ONLY/);
+  for (const a of as("PROJ-H")) assert.doesNotMatch(a, /NOT_THE_OWNER|NOT_AN_ADMIN|ADMIN_ONLY/);
 });
 
 test("R45 projectVisibilitySet: NOT_A_PROJECT, owners only, two settings; appended with by and reason; hidden lapses requests", async () => {
