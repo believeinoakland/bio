@@ -32,3 +32,7 @@ Size (session_014uYCCRJpRYo3N4vJcfu6tz): test runs 6, module lines 1085
 ## J1 · REPORT
 
 Found beyond my module (record, Completion 'Found'): (1) civicos-ui/app.html:17024 entitycreate probe expects NO_LABEL (now ENTITY_NO_LABEL); affordances.mjs:447 names NO_LABEL only in a comment, no reasoned/*_REFUSALS/NON_ACTS list names it. (2) legacy-tests: bio-plane/test/entityregistry.test.mjs:140 pins NO_LABEL for entitycreate, fails now; d470-catalog-census fails identically before and after. (3) DEC-49 guard 30 -> 29 failures: NO_LABEL multi-site failure gone, NO_ENTITY 8 -> 3 sites (connections, progressions), NO_SHA 5 -> 2 (extraction, progressions), multi-site 68 -> 67; floors to re-pin: rows 788, census 1067, reach 812, governedSites 499, regions 460, regionLines 5490, codesChecked 891, outcomeReturns 262, refusalsJudged 862. (4) Stale, not rebuilt: bio-plane and agent-worker bundles (both list src/entities inputs).
+
+## J2 · COMPLETE
+
+N285 applied: R37 noEntity (C-91.5, R37's translation), the one NO_ENTITY site, used by R2, R5, R12, R15, R17 and alias withdrawal; ENTITY_NO_LABEL (C-91.6, R1's translation); R11, R12, R14 no-digest answers through extraction.noSha, no NO_SHA minted here. R37 holds: connections can build against it (merge early, §4). Strike R37's and R1's 'not yet met: N285'; R36's stays for intent. Tests 41/41; users' m-tests 556 pass 0 fail 6 todo; format, architecture, coverage 37/37, ownership: 0 failures. Record: build/jobs/T12/entities.md, Completion.
