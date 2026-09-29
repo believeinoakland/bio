@@ -8,7 +8,7 @@
  */
 import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
 /* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
-import { FLEET_BINDINGS } from "../src/instance-setup-stub.mjs";
+import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 
 export const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";

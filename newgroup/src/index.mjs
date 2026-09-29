@@ -30,7 +30,7 @@ import { ARMED_SIGNERS } from "./signers.mjs";
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
 /* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. */
-import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./instance-setup-stub.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",

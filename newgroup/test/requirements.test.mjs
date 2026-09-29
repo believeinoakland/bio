@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import worker, * as installer from "../src/index.mjs";
 import { CFG, PLANE_LIMITS } from "../src/index.mjs";
-import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../src/instance-setup-stub.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { EXAMPLE_SLUG, PUBLISHER } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";

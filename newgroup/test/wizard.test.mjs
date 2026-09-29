@@ -112,7 +112,7 @@ import worker, { CFG, ARMED_SIGNERS, reportsBuilds } from "../src/index.mjs";
    by name rather than refusing to link the whole suite. */
 import * as NG from "../src/index.mjs";
 /* R30 (N234): the member binding names are instance-setup's; the installer holds no table of its own. */
-import { FLEET_BINDINGS } from "../src/instance-setup-stub.mjs";
+import { FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
 import { readFileSync } from "node:fs";
 import { fleetStatement, NS_FLEET } from "../../bio-plane/src/sshsig.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";

@@ -392,7 +392,7 @@ plane ${plane.sha256} ${plane.bytes} ${plane.asset}
   return `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset} compat=${m.compat.date}+${m.compat.flags.length ? [...m.compat.flags].sort().join(",") : "-"} services=${renderServices(m.services)} parts=${renderParts(m.parts)}`;
 }).join("\n") + "\n";
 
-// src/instance-setup-stub.mjs
+// ../bio-plane/src/setup-fleet.mjs
 var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
 var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
 
