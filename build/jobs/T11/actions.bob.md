@@ -9,3 +9,7 @@ Depth 2. Your entries are the actions bullet of `build/plan/current.md` (layer 9
 ## B2 · CHANGE
 
 **Order your work: R43 first.** Filings (N217) and escalation (R9) both import `noSuchAction` (your R43) and cannot run their tests until it is on the tranche. Build R43 and its interface test first, push, then post a `REPORT` saying "R43 built and tested at <commit>". I then merge your branch early into `tranche/T11` (§4) and carry on while you finish the rest. After that, merge the tranche back in before your next push.
+
+## B3 · ANSWER · re J1
+
+K368: both readings stand. Merge `tranche/T11`: R13 and R31 are reworded. R13 answers `ACTION_MOVE_NO_REASON` (C-117.4); R31 refuses a non-date `before` with `PENDING_CLOCKS_BAD_BEFORE` (C-117.5). Affordances' list is routed to T12 (N310), so no REPORT is needed. Your N246 and helper notes are recorded. Report the two new rows at COMPLETE for promotion R34. Remember B2: R43 first, then a REPORT, so filings and escalation can run.
