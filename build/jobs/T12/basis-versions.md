@@ -27,3 +27,7 @@
 - `node checks/ownership.mjs … basis-versions tranche/T12`: 4 files; legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_01Q76EbqkwaV8V5uqXQMJ8ct): test runs 14, module lines 2041
+
+## J1 · REPORT
+
+Found beyond my module (record, Completion 'Found'): (1) Stale, not rebuilt: agent-worker and bio-plane bundles (both list src/basis-versions inputs). (2) DEC-49 guard: 26 FAIL lines before and after, the same; floor regionLines 5480 -> 5477 (conclude > is-conclude-claim 54L -> 51L). (3) Legacy suites naming this module's ops/reads: 94 of 97 pass; derivation-bounds, machinefences-dec49, meaning-bounds fail identically on the parent; airun flaked once under concurrency, passes alone.
