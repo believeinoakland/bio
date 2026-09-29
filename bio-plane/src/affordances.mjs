@@ -444,7 +444,8 @@ export const IRREVERSIBLE_CORRECTION_PATH =
  * uses for it.
  *
  * DELIBERATELY NOT IN THIS FAMILY: `NO_TARGET`, `NO_SUCH_*`, `NO_ID`, `NO_KIND`,
- * `NO_LABEL`, `NO_CITATION`, `NO_BODY`, `NO_TITLE`, `NO_BUNDLE_MD`,
+ * `ENTITY_NO_LABEL`, `PROGRESSION_NO_LABEL`, `EXPERTISE_NO_LABEL` (the shared `NO_LABEL`, one code per site since
+ * N285), `NO_CITATION`, `NO_BODY`, `NO_TITLE`, `NO_BUNDLE_MD`,
  * `NO_SIBLING_DISCLOSURE`. Those demand an OBJECT, an IDENTIFIER, EVIDENCE or a
  * well-formed document — none of them is the member saying why. A family that
  * swept them in would have graded nearly every op `reasoned` and the rung would
@@ -2209,8 +2210,9 @@ export const NON_ACTS = {
   signeradd: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   signerset: "signer governance (4.9), every administrator's — bounded by the roster against a stamped `by` (REC-159)",
   governorconfig: "operator tuning of the per-host governor",
-  /* K377 (monitoring R30). */
-  monitorpause: "a machine-directed setting over the instance's own fetching, not an act on an object",
+  /* K377, K404 (monitoring R30, N314): open to member sessions, and refused NOT_AN_ADMIN to a caller who is neither an
+     administrator nor the root of trust. */
+  monitorpause: "an administrator's setting over the instance's own fetching, refused NOT_AN_ADMIN to a member who is not one; not an act on an object",
   /* Task acts: their subject is a TASK row, assignee-fenced by the store
      (NOT_YOURS), published with the task itself via op=tasks. */
   taskforward: "task act, assignee-fenced; travels with the task via op=tasks",
