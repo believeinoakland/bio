@@ -3280,8 +3280,6 @@ export class Store extends DurableObject {
 
   static #numberParam(url, k) { const v = url.searchParams.get(k); return v === null || v === "" ? undefined : Number(v); }
 
-  /* control-plane R26 (K93): the route map, the modules' own maps and legacy-store's routes. The frame that reads the
-     body, finds the route, answers a read naming a discoverable project and catches is control-plane's `dispatch`. */
   routes(url, body) {
       const map = {
         ...membershipOps(membershipOf(this.ctx), url, body, this.env),
