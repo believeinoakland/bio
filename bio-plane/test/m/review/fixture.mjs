@@ -1,5 +1,6 @@
 /* review over record-core, membership and strength (the real ones) on a real SQLite database (node:sqlite) standing in
-   for a Durable Object's storage. What it reads from `publication` (its `cases` and `published_cases` read contract,
+   for a Durable Object's storage, at the plane's shape: `sql.exec` answers a one-pass cursor as workerd does (K316),
+   never an array, so code that indexes or measures an answer instead of iterating it fails here as it would there. What it reads from `publication` (its `cases` and `published_cases` read contract,
    R3 and R5, its R40; `attributionInForce`, R16, its R39), `case-authoring` (`publishCase` run dry, R13;
    `statementAcknowledgements` with its `withheld_stated`, R15) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
    shapes of those modules' Provides, as `reviewOf`'s `deps` take them. Every test drives the module at its interface. */
@@ -18,13 +19,29 @@ export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 export const V = (id) => `member:${id}`;
 export const NOW = "2026-09-28T01:00:00.000Z";
 
+/* workerd's SqlStorageCursor, as far as the plane reads it: iterable once, `next`, `toArray`, `one`. */
+function cursor(rows) {
+  const it = rows[Symbol.iterator]();
+  return {
+    [Symbol.iterator]() { return this; },
+    next: () => it.next(),
+    toArray: () => [...it],
+    one() {
+      const all = [...it];
+      if (all.length !== 1) throw new Error(`Expected exactly one result from SQL query, but got ${all.length}.`);
+      return all[0];
+    },
+  };
+}
+
 export function storage() {
   const db = new DatabaseSync(":memory:");
   let n = 0;
   const sql = {
     exec(q, ...args) {
       const st = db.prepare(q);
-      return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r }))
+                                        : (st.run(...args.map(bind)), []));
     },
   };
   return {
@@ -106,14 +123,14 @@ export function world({ now = NOW } = {}) {
   let bundles = 0;
   const w = {
     st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers,
-    rows: (q, ...a) => st.sql.exec(q, ...a),
-    row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
-    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
+    rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
+    row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
+    count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, to prove a read wrote nothing. */
     snapshot() {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`))
-        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`));
+        out[name] = JSON.stringify(st.sql.exec(`SELECT * FROM "${name}"`).toArray());
       return out;
     },
     /** A bundle row (record-core's `bundles`, its R37) and, when given, its bundle.md (`files.content`). */

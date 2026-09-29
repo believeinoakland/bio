@@ -356,8 +356,9 @@ export class Review {
     if (act === "draft") return this.#draft(who, args);
     if (act === "grant") return this.#grant(who, args);
     if (act === "revoke") return this.#revoke(who, args);
-    /* DEC-49 REGION is-review-unknown-act */
-    return refusal("REVIEW_UNKNOWN_ACT", "the review copy's authoring acts are draft, grant and revoke.", { act });
+    /* DEC-49 REGION is-review-unknown-act — every act but the three above falls through to here, named back. */
+    return refusal("REVIEW_UNKNOWN_ACT",
+             "the review copy's authoring acts are draft, grant and revoke.", { act });
     /* END DEC-49 REGION is-review-unknown-act */
   }
 
@@ -448,11 +449,12 @@ export class Review {
              + `${REVIEW_RECIPIENT_MAX} characters. An addressed act with no addressee is not `
              + `attributed, and the grant is the record of who was handed what.`);
       /* END DEC-49 REGION is-review-recipient */
+    /* DEC-49 REGION is-review-secret — the fingerprint's test and its refusal. */
     const s = String(secretSha ?? "");
     if (!SECRET_SHA.test(s))
-      /* DEC-49 REGION is-review-secret */
-      return refusal("REVIEW_NO_SECRET", "the read secret's fingerprint is set by the control plane and was absent.");
-      /* END DEC-49 REGION is-review-secret */
+      return refusal("REVIEW_NO_SECRET",
+               "the read secret's fingerprint is set by the control plane and was absent.");
+    /* END DEC-49 REGION is-review-secret */
     const when = this.#when();
     const ident = this.draftIdentity(d);
     /* REC-151: OPAQUE, never the RVG counter (Membership v2 §7): a grant is its project owner's alone. */
@@ -477,10 +479,11 @@ export class Review {
     const gid = String(grant ?? "").trim();
     /* An ABSENT argument says nothing about what exists, so it is named as the payload complaint it is rather than
        answered as a grant nobody owns. */
+    /* DEC-49 REGION is-review-grant-named — the absent argument's test and its refusal. */
     if (!gid)
-      /* DEC-49 REGION is-review-grant-named */
-      return refusal("REVIEW_NO_GRANT", "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>.");
-      /* END DEC-49 REGION is-review-grant-named */
+      return refusal("REVIEW_NO_GRANT",
+               "name the grant to withdraw: grant=<the grant id op=reviewgrant answered with>.");
+    /* END DEC-49 REGION is-review-grant-named */
     const g = this.#one(`SELECT g.*, d.project_id FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
                          WHERE g.grant_id=?`, gid);
     if (!g || !this.membership.isProjectOwner(g.project_id, who)) return notReviewOwner("revoke");
