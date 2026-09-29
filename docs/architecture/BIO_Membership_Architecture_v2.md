@@ -102,8 +102,10 @@ being able to reveal who that participant is in the world.
 **1.2 Attribution of consequential acts.** Specific acts must be
 attributable to a specific participant:
 
-- the source of hand-carried material entering the fence, as distinct from
-  anonymous material arriving through the doorbell;
+- the capturing member of hand-carried material entering the fence (its
+  source is whoever handed it over, named or unnamed: DEC-78), as distinct
+  from material arriving through the doorbell, whose source is an unnamed
+  knocker;
 - ratification, the act that moves material from the working corpus into
   the published record.
 
@@ -185,7 +187,8 @@ are the same person" or "this handle is the person we vetted."
 
 **Handle** is chosen by the member at enrolment and must be unique across
 the instance. It is what appears in the record: the author of a promotion,
-the attestor of a ratification, the source of hand-carried material, the
+the attestor of a ratification, the capturing member of hand-carried
+material (never its source, DEC-78), the
 participant list of a project. Members and the public see handles.
 
 **Pairing.** Only administrators see cover and handle together. Whether

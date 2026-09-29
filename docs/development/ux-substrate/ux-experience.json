@@ -8,7 +8,8 @@
    "Act references use the inventory's own names, written 'construct-id: Act name' (docs/development/ux-substrate/ux-substrate.json). Screen inventory, act weights and working names are another worker's job and are not repeated here.",
    "Two words mean two things. RUNG is how heavy an act is (reversible, reasoned, terminal, attested, irreversible). WEIGHT is how an act applied to a set behaves (refuse = all or nothing, report = proceed and say what moved, per-item = each applied or kept with its reason, single = one object). Source: affordances R1-R2; Interaction Constructs, naming collision corrected 2026-08-01.",
    "'Finding' is overloaded: in case-making it is a concluded question; in the queue it is a class of item the record noticed and nobody has judged (inventory contradictions). This file says 'concluded finding' or 'queue finding' where it matters.",
-   "Coverage (useCases) says whether approved module requirements (build/requirements/*.md) hold the use case, not whether it is built."
+   "Coverage (useCases) says whether approved module requirements (build/requirements/*.md) hold the use case, not whether it is built.",
+   "Open questions 1-5 were ruled by Bob on 2026-09-29 (DEC-76 to DEC-82). Each keeps its original context and carries a 'ruled' entry naming its rulings, date and what was decided; the rulings win over that context wherever they differ."
   ],
   "sources": [
    "requirements/README.md (canon index)",
@@ -41,7 +42,8 @@
    "journeys": 10,
    "journeySteps": 66,
    "surfaces": 17,
-   "openQuestions": 30
+   "openQuestions": 30,
+   "openQuestionsRuled": 5
   },
   "useCasesWithoutRequirementCoverage": [
    "UC-003 Assemble what is known about a focus area (Context skill)",
@@ -58,7 +60,8 @@
    "UC-126 Build an action plan: options, dependencies, deadlines, declined options",
    "UC-129 Document pressure against supporters as evidence",
    "UC-148 Learn the principles and start from the starter kit"
-  ]
+  ],
+  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65"
  },
  "audiences": [
   {
@@ -1778,7 +1781,7 @@
    "outcome": "A receipt (knock id, digest, bytes, time); an inbox row; nothing in the record.",
    "coveredByRequirements": "yes",
    "requirementIds": "capture R30-R32, R47-R56",
-   "src": "Intake Doctrine section 2a",
+   "src": "Intake Doctrine section 2a; DEC-78 (a knock has a source: an unnamed knocker identified by its receipt)",
    "basis": "fixed"
   },
   {
@@ -1801,7 +1804,7 @@
    "outcome": "A knock marked pulled, discarded or new, with who and when.",
    "coveredByRequirements": "partial",
    "requirementIds": "capture Provides (inboxList, inboxGet, inboxResolve)",
-   "src": "Intake Doctrine section 2a (how a member moves a knock into the record is not designed)",
+   "src": "Intake Doctrine section 2a; DEC-78 (pulling admits the knock's material as a capture carrying its receipt; vouching stays with release)",
    "basis": "fixed",
    "coverageNote": "What 'pulled' commits a member to, and whether the resulting capture names the doorbell as provenance, is undesigned."
   },
@@ -2032,7 +2035,7 @@
    "outcome": "An attestation recorded; it never reaches Grade A.",
    "coveredByRequirements": "yes",
    "requirementIds": "provenance R32-R34, R49; affordances R5 (ATTEST_FENCE)",
-   "src": "DEC-39; Interaction Constructs section A",
+   "src": "DEC-39; Interaction Constructs section A; DEC-81 (a co-attested Grade B is enough to publish, disclosed on the case)",
    "basis": "fixed"
   },
   {
@@ -2704,7 +2707,7 @@
    "outcome": "Per-axis grades; unrated and undetermined stated; what-ifs labelled.",
    "coveredByRequirements": "yes",
    "requirementIds": "strength R1-R10, R18-R20",
-   "src": "DEC-21, DEC-44; Case Making R1-R2",
+   "src": "DEC-21, DEC-44; Case Making R1-R2; DEC-82 (the workspace shows the strength pair against the bar; measures map)",
    "basis": "fixed"
   },
   {
@@ -2774,7 +2777,7 @@
    "outcome": "A dated, authored conclusion row: a concluded finding for this project.",
    "coveredByRequirements": "yes",
    "requirementIds": "basis-versions R16-R19, R32",
-   "src": "DEC-24 (the member does the concluding); Case Making",
+   "src": "DEC-24 (the member does the concluding); Case Making; DEC-82 (strength shown against the bar where a question is concluded)",
    "basis": "fixed"
   },
   {
@@ -3049,7 +3052,7 @@
    "outcome": "Append-only candidates; nothing shown to a member.",
    "coveredByRequirements": "partial",
    "requirementIds": "contradiction R1-R19",
-   "src": "Case Making 'CONTRADICTION'; CONTRADICTION-IDENTIFY-DESIGN",
+   "src": "Case Making 'CONTRADICTION'; CONTRADICTION-IDENTIFY-DESIGN; DEC-76, DEC-77 (conditional contradiction; WORLD candidates reach members as leads)",
    "basis": "fixed",
    "coverageNote": "IDENTIFY only; PRESENT and RESOLVE are undesigned (contradiction R19)."
   },
@@ -3070,7 +3073,7 @@
    "outcome": "A member's attributed resolution; neither side deleted.",
    "coveredByRequirements": "no",
    "requirementIds": "none",
-   "src": "Case Making 'CONTRADICTION' (PRESENT, RESOLVE)",
+   "src": "Case Making 'CONTRADICTION' (PRESENT, RESOLVE); DEC-76, DEC-77 (resolution kinds; inline tension mark and clarifier, the contradiction inquiry as escalation)",
    "basis": "fixed"
   },
   {
@@ -3091,7 +3094,7 @@
    "outcome": "A question whose conclusion is the discrepancy.",
    "coveredByRequirements": "partial",
    "requirementIds": "inquiry R4-R8 (expressible as an ordinary question)",
-   "src": "Case Making 'CONTRADICTION' (first case expressible today; promotion from a resolved conflict undesigned)",
+   "src": "Case Making 'CONTRADICTION' (first case expressible today); DEC-76 (double-speak or reversal promotes into a finding; obligation against act routes into conformance)",
    "basis": "fixed"
   },
   {
@@ -3754,7 +3757,7 @@
    "outcome": "An unsigned case document with a computed searched section, citations pinned, per-member pairs frozen.",
    "coveredByRequirements": "yes",
    "requirementIds": "case-authoring R1-R18, R22-R26",
-   "src": "DEC-72; Publication sections 2-3",
+   "src": "DEC-72; Publication sections 2-3; DEC-81 (what a published case may rest on; per-document grade disclosed); DEC-76 (unresolved RECORD contradictions disclosed)",
    "basis": "fixed"
   },
   {
@@ -3775,7 +3778,7 @@
    "outcome": "A reference opinion, never a gate.",
    "coveredByRequirements": "no",
    "requirementIds": "none",
-   "src": "Design Requirement 4; Functional Architecture Layer 3 Function 2; Roadmap section 9 skill 7",
+   "src": "Design Requirement 4; Functional Architecture Layer 3 Function 2; Roadmap section 9 skill 7; DEC-79 (work-product readiness: only earnable rungs shown, unearned ones stated)",
    "basis": "fixed",
    "coverageNote": "The compliance skill and the work-product readiness ladder exist in canon only (inFlux)."
   },
@@ -3817,7 +3820,7 @@
    "outcome": "A considered act, not a button in a row.",
    "coveredByRequirements": "partial",
    "requirementIds": "case-authoring R6, R12; ratification R2",
-   "src": "DEC-33 (ceremony deferred; placeholder); Interaction Constructs RULED 2026-08-01",
+   "src": "DEC-80 (ceremony and pre-flight built in the redesign; DEC-33's placeholder retired); DEC-81 (pre-flight retries a failed co-attestation, else an attributed acknowledgement); Interaction Constructs RULED 2026-08-01",
    "basis": "fixed"
   },
   {
@@ -3840,7 +3843,7 @@
    "outcome": "A ratified case edition; signer and deliverer recorded as two facts.",
    "coveredByRequirements": "yes",
    "requirementIds": "ratification R2-R3, R10-R13; membership R56",
-   "src": "Membership v2 section 7; AI Roles rule 4",
+   "src": "Membership v2 section 7; AI Roles rule 4; DEC-80 (the owner signs in the browser with a registered browser-held key)",
    "basis": "fixed"
   },
   {
@@ -4679,7 +4682,7 @@
    "outcome": "A key whose 'attests' is shown truthfully.",
    "coveredByRequirements": "yes",
    "requirementIds": "membership R25-R27, R70",
-   "src": "Membership v2 section 6 (D-158)",
+   "src": "Membership v2 section 6 (D-158); DEC-80 (a browser-held key registered as the owner's attesting key)",
    "basis": "fixed"
   },
   {
@@ -4722,7 +4725,7 @@
    "outcome": "A project, name unique across the instance.",
    "coveredByRequirements": "yes",
    "requirementIds": "promotion R19; membership R31, R71; intent R1",
-   "src": "Membership v2 section 7.1",
+   "src": "Membership v2 section 7.1; DEC-79 (a project shows its stage as stacked bars)",
    "basis": "fixed"
   },
   {
@@ -8325,7 +8328,7 @@
     "UC-069",
     "UC-070"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "Case Making 'CONTRADICTION'; contradiction R19",
    "context": "A contradiction is two things the record holds that cannot both be true. The system already pairs statements worth comparing and lets an AI run label each pair (in the world, in our own record, a difference of precision, unrelated, undetermined), but these 'candidates' are stored out of sight; no member sees them yet.",
    "canonSays": [
@@ -8370,7 +8373,16 @@
     }
    ],
    "recommendation": "The third option, delivered through the first (a Noticed item opening a side-by-side page), with a resolution vocabulary Bob approves; measure false conflicts on real documents before anything reaches members.",
-   "whoDecides": "Bob for the resolution kinds, the promotion to a finding and the irreconcilable pair (doctrine); Design for the side-by-side layout within them."
+   "whoDecides": "Bob for the resolution kinds, the promotion to a finding and the irreconcilable pair (doctrine); Design for the side-by-side layout within them.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-76",
+     "DEC-77"
+    ],
+    "decided": "A contradiction is conditional: two assertions that cannot both hold in the same respect, so resolving one means finding the respect in which they differ, finding the side that is wrong, or recording that the conflict is genuine; a candidate a member takes up becomes an inquiry, whose conclusion records its kind (dissolved, corrected, or genuine, with double-speak promoted to a finding and obligation against act routed into conformance). It is shown inline wherever the two points already sit, through a tension mark and a short 'how do these differ' clarifier, with the dedicated contradiction screen only as the escalation; context may fill in facts and recommend judgements, labelled, but never silently decides."
+   }
   },
   {
    "question": "How does a knock become part of the record: what does 'pulled' commit a member to, and does the capture name the doorbell as its provenance?",
@@ -8379,7 +8391,7 @@
     "UC-012",
     "UC-013"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "Intake Doctrine section 2a",
    "context": "The doorbell lets anyone, with no account, hand the group a file or text (a 'knock'), for example a whistleblower. The knocker gets a receipt; the material sits in a separate doorbell inbox and is not part of the record. A signed-in member reads each knock and marks it 'pulled', 'discarded' or back to 'new'.",
    "canonSays": [
@@ -8425,7 +8437,15 @@
     }
    ],
    "recommendation": "The first option: pulling admits the material with 'doorbell, source unknown' as its stated provenance, and vouching stays with release.",
-   "whoDecides": "Bob: whether pulling vouches and how anonymous provenance is stated are intake doctrine; Design settles the inbox screens afterward."
+   "whoDecides": "Bob: whether pulling vouches and how anonymous provenance is stated are intake doctrine; Design settles the inbox screens afterward.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-78"
+    ],
+    "decided": "Pulling a knock admits its material as a capture at 'collected' carrying the knock's receipt, and commits the member to nothing more; vouching stays with release. The source is recorded as an unnamed knocker identified by the receipt (never 'unknown'), the pulling member is the capturing actor and never the source, a knocker may prove continuity with a secret they keep, and a source's identity is held as a dated history of disclosures, published only with consent."
+   }
   },
   {
    "question": "Does a project show a stage (forming, investigating, matured, closed) and a work-product readiness ladder, and how?",
@@ -8434,7 +8454,7 @@
     "UC-100",
     "UC-142"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "State Rules section 4.3; inventory inFlux",
    "context": "A project is a group's line of work around a stated objective. The canon gives it a stage (forming, investigating, matured, closed) and gives its work product a readiness ladder (draft, internally checked, externally compliant, distributed), so members can see where the work stands.",
    "canonSays": [
@@ -8481,7 +8501,15 @@
     }
    ],
    "recommendation": "The first option for stage, with the ladder shown only for rungs the record can actually earn, each unearned rung stated rather than hidden.",
-   "whoDecides": "Bob confirms whether 'closed' may be an authored act despite K356 (requirement); Design settles the phase-bar layout; BOB words the derivation (N300)."
+   "whoDecides": "Bob confirms whether 'closed' may be an authored act despite K356 (requirement); Design settles the phase-bar layout; BOB words the derivation (N300).",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-79"
+    ],
+    "decided": "As recommended: all four stages shown, 'forming', 'investigating' and 'matured' computed and 'closed' the owner's reasoned act, with only earnable readiness rungs shown and each unearned one stated. Bob set the display: coloured bars that build up one per stage reached, disclosing more on hover (with a focus or tap equivalent) and opening on click to what each stage needs next; each bar is named, and 'closed' shows its reason and never reads as a finished stack."
+   }
   },
   {
    "question": "What are the five steps of the publication ceremony, and what does the placeholder say until it is built?",
@@ -8490,7 +8518,7 @@
     "UC-102",
     "UC-103"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "DEC-33; Publication section 5",
    "context": "Publishing a case is the one act that cannot be taken back; corrections only move forward as new editions. The 'ceremony' is the deliberate screen sequence an owner goes through before signing. Bob deferred it; today the group's operator publishes and members see a placeholder page.",
    "canonSays": [
@@ -8538,7 +8566,16 @@
     }
    ],
    "recommendation": "The first option: design the five steps on paper so the layout carries their weight, and ship the placeholder text DEC-33 describes until the trigger fires.",
-   "whoDecides": "Bob, if the steps become requirements or DEC-33 is reopened; Design for the placeholder wording within DEC-33."
+   "whoDecides": "Bob, if the steps become requirements or DEC-33 is reopened; Design for the placeholder wording within DEC-33.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-80",
+     "DEC-81"
+    ],
+    "decided": "The placeholder is retired: the ceremony and its pre-flight are designed and built in the redesign, its five steps re-derived for DEC-72 (step three discloses any unresolved record contradiction and asks consent for any source identity revealed), and an owner signs in the browser with a registered browser-held key producing the same sshsig signature. A published case may rest on a co-attested Grade B capture, each document's grade and co-attestation disclosed; one whose co-attestation failed may be published only by an attributed acknowledgement and is marked 'self-attested only' (DEC-81)."
+   }
   },
   {
    "question": "Does the project workspace show grades and strength, given the legacy UI hides grades there (UI-16 note) while canon says strength is shown rather than hidden?",
@@ -8547,7 +8584,7 @@
     "UC-053",
     "UC-056"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "Case Making section 4a; legacy app.html (not canon)",
    "context": "Strength is how well a question's answer is supported: a pair (weakest captured document, weakest connection) with testimony beside it, never one score. The project workspace lists the questions and actions inside a project; the old interface deliberately showed no strength there.",
    "canonSays": [
@@ -8594,7 +8631,15 @@
     }
    ],
    "recommendation": "The first option: show the pair per question beside the project's bar, because the bar is the project's own declaration and the canon asks strength to be seen.",
-   "whoDecides": "Design, within Case Making §4a and DEC-44; the old UI note is not canon, so no ruling is needed unless Design proposes hiding strength."
+   "whoDecides": "Design, within Case Making §4a and DEC-44; the old UI note is not canon, so no ruling is needed unless Design proposes hiding strength.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-82"
+    ],
+    "decided": "The project workspace shows strength: each question shows its capture and connection badges (with testimony beside them when an account is part of the answer) and one plain phrase against the project's bar, such as 'Short on connection · bar B/B', 'Undetermined' named with its reason, never one combined score. Every scale follows the measures map Bob approved (letters grade evidence, bars show progress, weights mark acts), docs/development/ux-substrate/measures-map.html, rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni."
+   }
   },
   {
    "question": "What is the one visual treatment and voice of UNDETERMINED, and how does it differ from 'withheld', 'unrated', 'not looked' and 'refused'?",

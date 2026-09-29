@@ -1,6 +1,6 @@
 # BIO Intake Doctrine
 
-**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13); the census of what a pre-fence move left behind is BUILT 2026-09-24 (REC-190: `op=homecensus`, read-only, the first holder stated undetermined).** **§2a ADDED 2026-09-24 (BOB #33): the doorbell, `op=knock`, the one route by which anyone, without an account, hands the group material; it folds BOB #32's ruling of that day that a published limit is a BOUND (D-496).** **AND §8 GAINED THE OTHER HALF OF THE REGISTER'S JOB ON 2026-09-24 (D-476): what a capture may CLAIM about bytes the record already holds. `op=acquire`'s `existed` answered a flat `false` for every MULTI-PART capture -- the claim THESE BYTES ARE NEW, on a question never asked, made on every re-fetch of a parted document the record holds. It now asks the REGISTER by the whole `capture_sha` and answers `true`, or `null` with its stated reason; never that false.** **AND §8 NOW SAYS WHAT THE REGISTER AUDIT MAY CALL A CAPTURE HELD IN PARTS (BOB #33, 2026-09-24 21:17Z; BUILT by D-533): "held in parts, all present" is sound when every named part is present and its digest verified; a missing part is named; an unresolvable row is UNDETERMINED, counted outside `sound`.** **AND THE SAME QUESTION FOR `op=attest` AND THE RATIFY GATE, BUILT 2026-09-24 (D-530): a capture held in parts is never called absent by its whole hash. Attest attests on the plane's own acquisition receipt, refuses CAPTURE_HELD_IN_PARTS (C-89.1) on the register alone, and the gate names a whole-hash row held in parts PLANE_HELD_IN_PARTS.** **AND A WHOLE-HASH ROW HELD IN PARTS NOW RATIFIES AND PUBLISHES (BOB #34, 2026-09-25 00:00Z; BUILT by D-556): the gate admits it when every part the record names is present and verifies, and refuses it by name otherwise (PLANE_PART_MISSING, PLANE_PART_UNVERIFIED); publication copies it part by part and re-verifies each digest at the destination. PLANE_HELD_IN_PARTS stays only for a row whose parts the record does not name.** as of 2026-09-25.
+**Status** · How material enters the record: admission requires provenance never relevance; the intake contract; capture grades; member-original records; independent verifiability; the distribution container; standing intent (named requests and ratified sweeps); release from hold and redaction; naming and criticality; the escalation ladder; the ratification and disposition patterns; creation authority. "Working Document, v1.1, July 2026", "Ratified July 18, 2026 on the operator's word, from draft 0.7", v1.1 minted July 20 — and it carries a v1.2 revision note of July 27, so the content is at v1.2 under a v1.1 header. Partially complete by design: "Sections accrete as the work forces each decision; a section absent here is a decision not yet forced", with §10 open and a named list of sections not yet forced. The caveat: its actor model names a daemon that ran on the retired substrate and is gone; the rules stand, the actor is now the plane's scheduler. **§8 GAINED A STORE-SIDE RULING ON 2026-09-22 (BOB #26, D-179): one capture, one home — the original's; a second registration of held bytes is refused by name — BUILT 2026-09-23 (D-179: `op=promote` refuses it before any write, CAPTURE_HELD_BY_ANOTHER_BUNDLE, C-53.13); the census of what a pre-fence move left behind is BUILT 2026-09-24 (REC-190: `op=homecensus`, read-only, the first holder stated undetermined).** **§2a ADDED 2026-09-24 (BOB #33): the doorbell, `op=knock`, the one route by which anyone, without an account, hands the group material; it folds BOB #32's ruling of that day that a published limit is a BOUND (D-496).** **AND §8 GAINED THE OTHER HALF OF THE REGISTER'S JOB ON 2026-09-24 (D-476): what a capture may CLAIM about bytes the record already holds. `op=acquire`'s `existed` answered a flat `false` for every MULTI-PART capture -- the claim THESE BYTES ARE NEW, on a question never asked, made on every re-fetch of a parted document the record holds. It now asks the REGISTER by the whole `capture_sha` and answers `true`, or `null` with its stated reason; never that false.** **AND §8 NOW SAYS WHAT THE REGISTER AUDIT MAY CALL A CAPTURE HELD IN PARTS (BOB #33, 2026-09-24 21:17Z; BUILT by D-533): "held in parts, all present" is sound when every named part is present and its digest verified; a missing part is named; an unresolvable row is UNDETERMINED, counted outside `sound`.** **AND THE SAME QUESTION FOR `op=attest` AND THE RATIFY GATE, BUILT 2026-09-24 (D-530): a capture held in parts is never called absent by its whole hash. Attest attests on the plane's own acquisition receipt, refuses CAPTURE_HELD_IN_PARTS (C-89.1) on the register alone, and the gate names a whole-hash row held in parts PLANE_HELD_IN_PARTS.** **AND A WHOLE-HASH ROW HELD IN PARTS NOW RATIFIES AND PUBLISHES (BOB #34, 2026-09-25 00:00Z; BUILT by D-556): the gate admits it when every part the record names is present and verifies, and refuses it by name otherwise (PLANE_PART_MISSING, PLANE_PART_UNVERIFIED); publication copies it part by part and re-verifies each digest at the destination. PLANE_HELD_IN_PARTS stays only for a row whose parts the record does not name.** **§2a GAINED DEC-78 (Bob, 2026-09-29): a knock has an unnamed source, named by its receipt; pulling admits it without vouching; a knocker may prove continuity by a secret.** **§3 GAINED DEC-81 (Bob, 2026-09-29): a co-attested Grade B is sufficient to publish; Grade A stays the ceiling and is being researched.** as of 2026-09-29.
 
 **Place in the system** · Owns construct 2 of `BIO_System_Design.md` §3 (intake, capture and provenance) and half of construct 10 (standing intent): "the State Rules specification governs bundle shape; this doctrine governs admission to the store." `BIO_State_Rules_Consistency_v1_5.md` realises it as the intake provenance register, I-18's ratification fence and drafted I-19; `BIO_Membership_Architecture_v2.md` §1 borrows its who-issued/how-captured split; the plane's C-18 rules and the sweep floor cite it.
 
@@ -9,7 +9,7 @@
 - §1 and §5 — "draft position".
 - §1a — the incident procedure is "drafted if ever forced"; the chooses-not-to-hold case is "still deferred".
 - §2 — landing "through the pending queue" is the retired substrate.
-- §2a — how a member moves a knock into the record (what `pulled` commits them to, and whether the capture it becomes names the doorbell as its provenance) is not designed (verified 2026-09-24 by BOB #33: no document names it); and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
+- §2a — how a member moves a knock into the record is RULED (DEC-78, Bob, 2026-09-29: pulling admits at `collected`, the source is an unnamed knocker with its receipt, the puller is the capturing actor, and a knocker may prove continuity by a secret) and NOT BUILT; the note travels with the capture, the contact stays in the inbox); and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
 - §3 — the checker advisory is pending; DEC-39's attest-fence wording, which this section is said to take, is not referenced here.
 - §3c — bag ingestion "built when the first bag is produced or consumed".
 - §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.
@@ -254,8 +254,9 @@ the member are writers like every writer.
 
 The doorbell is the one route into an instance that needs no account, no token and no session: anyone may hand the group material. It
 exists because a group whose purpose is accountability must be reachable by people who will not, or cannot, join it. It is the route
-Membership v2 §1.2 sets against hand-carried material: what comes through it has NO attributed source, and the record says so rather than
-supplying one.
+Membership v2 §1.2 sets against hand-carried material: what comes through it has an UNNAMED source, and the record says so rather than
+supplying a name. **Corrected in place 2026-09-29 (DEC-78, Bob):** this said the doorbell's material has *NO attributed source*; a
+whistleblower is still a source, so the record names the source as an unnamed knocker identified by the knock's receipt, never as none.
 
 **What arrives is material, never an act.** A knock (`POST op=knock`, content as `contentB64` or `contentText`, with an optional `note` of
 up to 2,000 characters and `contact` of up to 300) writes one row in the instance's doorbell inbox and, with evidence storage configured,
@@ -269,6 +270,34 @@ and an oversized one are each refused by name. A store that does not answer is r
 who resolves each knock as `pulled`, `discarded` or back to `new`, recorded with when and by whom (`op=inboxresolve`). A knock is not a
 capture and not a bundle; the §2 contract and the §1a admission rule apply when a member brings its material in, not before. This inbox
 is not the task inbox of `docs/development/INBOX-GRAMMAR.md`, which holds work items for members; they share the word and nothing else.
+
+**Pulling a knock, and who the record names (Bob, 2026-09-29, DEC-78).** Pulling ADMITS the knock's material to the record as a capture at
+`collected` and commits the member to nothing more; vouching for it stays with release, a separate and weightier act. The capture names
+TWO parties and never merges them. Its SOURCE is the knocker, unnamed: *received through the doorbell from an unnamed knocker*, with the
+knock's receipt (its `KNOCK-…` id, digest, byte count and time received), so the record never calls the material unattributed or its
+source unknown. Its CAPTURING ACTOR is the member who pulled it, by handle. Hand-carried material follows the same rule: its source is the
+person who handed it over, named or unnamed as they chose, with when and how it was received as chain-of-custody notes, and the member who
+brought it in is the capturing actor; the member is never recorded as the source of what someone else gave them (Membership v2 §1.2).
+**A knocker may prove continuity.** A knocker who wants several knocks known as one source's gives the same knocker secret with each; the
+record shows a pseudonym derived from it and states continuity as *the same knocker secret was presented*, which proves possession of the
+secret and never identity. The secret is optional (a knocker may knock unlinked, or use a fresh one each time); it is held only as a keyed
+digest under an instance key (as the rate fingerprint is), so neither a row nor a leak reveals it and the same secret used at two groups
+does not link them; and the doorbell can generate a strong one and show it once on the receipt, since a guessable or reused identifier would
+let someone else continue the pseudonym. The mechanism is BOB's; the rule is Bob's.
+**The note travels; the contact does not (DEC-78).** The knock's `note` travels with the capture as the knocker's own words, labelled as
+the knocker's and never as evidence of its truth. The `contact` stays in the doorbell inbox, readable by members and never in the record
+or any publication, so a whistleblower's way of being reached cannot be published by accident.
+
+**A source's identity evolves (Bob, 2026-09-29, DEC-78 item 5).** An unknown source may become a publicly known one: by revealing
+themself to the group or in public, by parts of their identity (an occupation, say) appearing in a whistleblower filing, or by being found
+and exposed by those hostile to their evidence. The record holds a source's identity as a HISTORY of disclosures, each dated and
+attributed, never as one field overwritten, and each capture keeps its source as it stood when the material was received. Five rules
+govern it (Bob, 2026-09-29): the group is never the FIRST to make a source more public (an identity detail is published only with the
+source's consent to that audience, or where it is already public elsewhere, cited); a hostile exposure is recorded as the EXPOSER'S claim
+and the group does not confirm it without the source's consent, since confirming is itself a disclosure; *known to the group, not
+recorded* is a first-class state, and a recorded identity is seen only by named members with every read logged; consent to go public is
+asked at the moment of publishing and stated as permanent, and withdrawing it binds only future publications; and a source's firmer
+identity reaches the findings resting on their material as a re-evaluation notice, never a silent regrade.
 
 **The limit is a BOUND (BOB #32, 2026-09-24, D-496).** A limit the instance publishes is one it holds, not the name of a bucket. The limits
 are 12 knocks per source (a fingerprint of the connecting address, never the address) and 300 per instance, in any 10 minutes, counted in
@@ -296,16 +325,34 @@ because a claim about evidence is only as strong as its weakest named
 layer:
 
 -   **Grade A, evidentiary raw capture.** WACZ web-archive or equivalent
-    > chain-of-custody capture of the source as served. Required before
-    > external distribution of any work product resting on the document
-    > (Tech Arch 7.2); produced by a network-capable agentic session or
-    > the M2' fetch layer where the source permits.
+    > chain-of-custody capture of the source as served; the ceiling for
+    > adversarial or legal use; produced by a network-capable agentic
+    > session or the M2' fetch layer where the source permits. No route
+    > builds one yet; the credible options are documented in
+    > `docs/development/GRADE-A-CAPTURE.md` and DEFERRED (DEC-81 item 4).
+    > **Corrected in place 2026-09-29 (DEC-81, Bob):** this said Grade A
+    > was *required before external distribution of any work product
+    > resting on the document*; no requirement enforced it and no route
+    > can produce A, so a CO-ATTESTED Grade B is now sufficient to publish
+    > (see Grade B).
 
 -   **Grade B, fetched content.** The document bytes as fetched by a
     > capable surface, hashed at receipt, with locator and instant. What
     > the chat surface and the mechanical fetch layer produce.
     > Sufficient for internal work and for verified state; the gap to
     > Grade A is recorded in Provenance Notes, never papered over.
+    > **A CO-ATTESTED Grade B (a trusted timestamp over its digest and a
+    > third-party co-archive of its locator, below) is sufficient to
+    > publish a work product resting on the document (DEC-81, Bob,
+    > 2026-09-29); the published case discloses each document's capture
+    > grade and whether it is co-attested.** A load-bearing Grade B whose
+    > co-attestation failed may still be published: the ceremony's
+    > pre-flight retries (a timestamp now proves existence by now; a fresh
+    > co-archive whose bytes match corroborates), and if it is still
+    > missing the owner proceeds only by an attributed acknowledgement with
+    > a reason; the case marks the document "self-attested only", and the
+    > capturing member may add a signed account of the capture. It is never
+    > refused outright (DEC-81 item 3).
 
 -   **Grade C, reference only.** A locator and citation without archived
     > bytes. Admissible only for sources that cannot be captured (a
