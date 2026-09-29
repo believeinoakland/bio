@@ -2157,12 +2157,41 @@ const TRUNC_RE = /\btruncated\b\s*[:=]\s*([A-Za-z_$][\w$]*)\s*\.\s*length\s*>\s*
    another name, and an instrument that reads only the one spelling is the list-of-spellings
    failure this file's own header was written against. Over-strictness arm (11) is that
    spelling, and it must PASS. */
+/* CORRECTED 2026-09-29 (legacy-tests T12), never exempted: a QUOTED NAME IS NOT AN IDENTIFIER. `mentions` matched the
+   word `cap` inside STRING LITERALS, so calibration's `const cols = (t) => ["calibration_id", …, "cap", …]` — a list of
+   COLUMN names — was read as an alias of the cap, and every row source interpolating `${cols("s")}` then "mentioned the
+   cap" whatever figure it was passed. Found by nc-m038 arm (15), which bound `worseSupersessions`' source to 5000 and
+   came back GREEN. `codeText` blanks the contents of '…' and "…" strings and the TEXT of template literals (keeping each
+   `${…}` expression, which is code), and every cap-mention test below reads it. The arm below the grader pins it. */
+const codeText = (src) => {
+  let out = "", i = 0; const stack = [];
+  while (i < src.length) {
+    const c = src[i], top = stack[stack.length - 1];
+    if (top === "'" || top === '"') {
+      if (c === "\\") { out += "  "; i += 2; continue; }
+      if (c === top) { stack.pop(); out += c; i++; continue; }
+      out += c === "\n" ? c : " "; i++; continue;
+    }
+    if (top === "`") {
+      if (c === "\\") { out += "  "; i += 2; continue; }
+      if (c === "`") { stack.pop(); out += c; i++; continue; }
+      if (c === "$" && src[i + 1] === "{") { stack.push("{"); out += "${"; i += 2; continue; }
+      out += c === "\n" ? c : " "; i++; continue;
+    }
+    if (c === "'" || c === '"' || c === "`") { stack.push(c); out += c; i++; continue; }
+    if (c === "{") { stack.push("{"); out += c; i++; continue; }
+    if (c === "}") { if (top === "{") stack.pop(); out += c; i++; continue; }
+    out += c; i++;
+  }
+  return out;
+};
+const mentionsCode = (expr, ids) => mentions(codeText(expr), ids);
 const capIdentifiers = (body, capId) => {
   const ids = new Set([capId]);
   for (let round = 0; round < 4; round++) {
     const before = ids.size;
     const re = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;]*)/g; let m;
-    while ((m = re.exec(body))) if (mentions(m[2], ids)) ids.add(m[1]);
+    while ((m = re.exec(body))) if (mentionsCode(m[2], ids)) ids.add(m[1]);
     if (ids.size === before) break;
   }
   return ids;
@@ -2499,11 +2528,11 @@ const inMemoryVerdicts = (code) => {
       ).test(body);
       if (againstPage) cut.graded.push(`${label} (measured against the page cut from it)`);
       else if (!cuts.length) cut.violations.push(`${label} (claims a cut this method does not make)`);
-      else if (cuts.some((c) => mentions(c.slice(c.indexOf(",")), ids)))
+      else if (cuts.some((c) => mentionsCode(c.slice(c.indexOf(",")), ids)))
         cut.graded.push(`${label} (cut at the published cap)`);
       else cut.violations.push(`${label} (cut at a bound the published claim does not name)`);
       const origin = sourceOrigin(body, src);
-      if (origin.kind === "CALL" && mentions(origin.rhs, ids))
+      if (origin.kind === "CALL" && mentionsCode(origin.rhs, ids))
         source.graded.push(`${label} (bounded at the source by a CAP-CARRYING CALL; callee not read)`);
       else source.outOfReach.push(`${label} — ${origin.kind}: ${origin.why}`);
     }
@@ -2582,6 +2611,25 @@ t("IN-MEMORY TRUNCATION: and the SOURCE BOUND is reported as TWO rosters, never 
                    ROSTER IN THE SAME EDIT — `TRUNCATION SOURCES` printed 36 graded where it printed 35, with
                    `projectDirectory:projects` named in the list. A fall here with no such arrival anywhere
                    would be the shrunken measurement this pair of arms exists to refuse. */
+
+/* T12 (legacy-tests), 2026-09-29: THE QUOTED-NAME CORRECTION, DRIVEN BOTH WAYS over segments this file constructs. A
+   string literal spelled like the cap (a column list naming `cap`, interpolated into the SQL) must NOT credit a row source
+   passed some other figure; the same source passed `cap + 1` must still be SOURCE GRADED, so the fix did not blind it. */
+{
+  const seg = (arg) => `  ncQuotedCap({ limit } = {}) {
+    const cap = this.#clamp(limit);
+    const cols = (t) => ["id", "cap", "at"].map((c) => \`\${t}.\${c}\`).join(", ");
+    const page = this.#rowsVia(\`SELECT \${cols("s")} FROM t LIMIT ?\`, ${arg});
+    return { rows: page.slice(0, cap), limit: cap, truncated: page.length > cap };
+  }`;
+  const verdict = (arg) => { const v = inMemoryVerdicts(`class Z {\n${seg(arg)}\n  end() { return 1; }\n}`);
+    return [v.source.graded.length, v.source.outOfReach.length, v.cut.graded.length]; };
+  t("T12 QUOTED-NAME CORRECTION: a string literal named like the cap (`\"cap\"` in a column list the SQL interpolates) "
+  + "is NOT an alias of the cap — a row source passed 5000 is OUT OF REACH, and the same source passed `cap + 1` is still "
+  + "SOURCE GRADED; the cut is graded either way",
+    [verdict("5000"), verdict("cap + 1"), [...capIdentifiers('const cols = ["cap"]; const w = cap + 1;', "cap")].sort()],
+    [[0, 1, 1], [1, 0, 1], ["cap", "w"]]);
+}
 
 /* THE OUT-OF-REACH ROSTER, PINNED BY NAME. Same discipline as REC-99's ungraded pin: an EIGHTH
    in-memory figure, or one MIGRATING between the two rosters, must be declared here before it can
