@@ -170,6 +170,28 @@ test("R24: a public op relaying the store's answer answers the store's own statu
   }
 });
 
+test("R24 (REC-52): a relayed store answer is read through the one envelope reader — relayAnswer answers exactly when doAnswer calls the reply answered, with doAnswer's result, at the reply's status", async () => {
+  const bodies = [["<html>", 200], [JSON.stringify({ ok: true, result: { a: 1 } }), 200], [JSON.stringify({ ok: true, result: null }), 201],
+                  [JSON.stringify({ ok: true }), 200], [JSON.stringify({ ok: "true", result: 1 }), 200], [JSON.stringify({ ok: false }), 500],
+                  [JSON.stringify({ ok: 1, result: 2 }), 200], ["", 200], ["null", 200], [JSON.stringify([{ ok: true }]), 200]];
+  for (const [text, status] of bodies) {
+    const mk = () => new Response(text, { status });
+    const read = await M.doAnswer(mk());
+    const r = await M.relayAnswer(mk(), "login");
+    const j = await r.json();
+    if (read.answered) {
+      assert.equal(r.status, status, text);
+      assert.deepEqual(j, JSON.parse(JSON.stringify({ ok: true, result: read.result })), text);
+    } else {
+      assert.equal(r.status, 502, text);
+      assert.deepEqual([j.reason, j.op], ["STORE_DID_NOT_ANSWER", "login"], text);
+    }
+  }
+  /* a stub that rejects, and no reply at all, are silences too */
+  for (const bad of [Promise.reject(new Error("x")), null, undefined])
+    assert.equal((await M.relayAnswer(bad, "enroll")).status, 502);
+});
+
 test("R25: an error thrown in the Worker door is answered PLANE_INTERNAL_ERROR (C-69.3) with a correlation id, never the stack, message, path or line, and the stack is logged under the id", async () => {
   const SECRET = "SQLITE_CONSTRAINT secret-value /srv/plane/src/store.mjs:4242";
   const thrower = () => { throw new Error(SECRET); };

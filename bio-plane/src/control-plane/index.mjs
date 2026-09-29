@@ -924,9 +924,11 @@ function storeSilent(op) {
    is re-wrapped in the envelope the store answers, `{ok: true, result}`, at the store's own status; anything else is
    `storeSilent`, never 200. */
 async function relayAnswer(res, op) {
-  let r = null, out = null;
-  try { r = await res; out = await r.json(); } catch { out = null; }
-  if (!out || out.ok !== true) return storeSilent(op);
+  let r = null;
+  try { r = await res; } catch { r = null; }
+  /* REC-52: the store's envelope is opened by `doAnswer` and nowhere else; only the status is read here. */
+  const out = await doAnswer(r);
+  if (!out.answered) return storeSilent(op);
   return json({ ok: true, result: out.result }, r.status);
 }
 
