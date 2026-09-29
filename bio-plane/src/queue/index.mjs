@@ -3406,8 +3406,12 @@ export class Queue {
      cannot write a decision under a team it was never invited to. */
   /** R29 (D-623): both of the project arm's no-scope refusals answer here, one code with its row (C-33.50). */
   #noProjectScope(extra) {
-    /* DEC-49 REGION is-dispose-scope */
-    return queueRefusal("NO_PROJECT_SCOPE", QUEUE_ACT_CHECKS.NO_PROJECT_SCOPE, extra);
+    /* DEC-49 REGION is-dispose-scope — R29/C-33.50. The whole of the refusal's site: the code is a STRING LITERAL
+       and the check and translation come off its row, so the guard can grade it and a member reads the same
+       sentence from the project arm and from the bridge. */
+    const row = QUEUE_ACT_CHECKS.NO_PROJECT_SCOPE;
+    return { ok: false, reason: "NO_PROJECT_SCOPE", code: "NO_PROJECT_SCOPE",
+             check: row.check, translation: row.translation, ...(extra || {}) };
     /* END DEC-49 REGION is-dispose-scope */
   }
 

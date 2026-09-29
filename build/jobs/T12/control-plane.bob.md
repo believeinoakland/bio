@@ -1,6 +1,6 @@
 # BOB to control-plane (T12)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ For CONTROL-PLANE #2, restarting from the record (J2): your R17 and R28 wording 
 ## B6 · ANSWER · re J3
 
 K412. Q1: revert the store half (the door stays in legacy-store for T12): promotion's layer is closed and its `write-path` suite would stand red on `main`. Keep the rest of the commit; make R26/R27's store half a `test.todo` naming N333, and name the reverted commit in your record so T13 can re-apply it (N333: promotion re-points in layer 2, then you move the door in layer 11). Q2: as you read it; call `visibilityOf`; membership words it (N332). Q3: the edge control-plane → queue is added; merge `tranche/T12` and add the import. Leave requirement marks to me.
+
+## B7 · CHANGE
+
+Re-opened (K418), from LEGACY-TESTS #10 J2 (1): `relayAnswer` (`src/control-plane/index.mjs` ~926) opens the store's reply itself instead of through `doAnswer`, a second envelope reader against REC-52's one chokepoint (the rule N313 applied to monitoring). Route it through `doAnswer`, keeping `r.status`; add an interface test that a relayed answer is read through the one reader. `plane-envelope` Detector A (62/2) is legacy-tests' to confirm green. Merge `tranche/T12` first. If your context is past half its window, post BLOCKED (context) instead. Record completion again.
