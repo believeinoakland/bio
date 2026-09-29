@@ -58,31 +58,36 @@ test("R1 refusals, in order, each writing nothing; a store silence is named, nev
   const silent = (op) => ({ silent: op });
   const reqArg = (op, a) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument: a });
   const req = () => new Request("https://x/api/?op=monitor", { method: "POST", body: JSON.stringify({ bundleId: id }) });
-  const deadStore = { fetch: async () => { throw new Error("gone"); } };
-  assert.deepEqual(await monitorOp(req(), deadStore, { json, storeSilent: silent, requiredArgument: reqArg }), { silent: "monitor" });
-  const notOk = { fetch: async () => new Response(JSON.stringify({ ok: false }), { status: 500 }) };
-  assert.deepEqual(await monitorOp(req(), notOk, { json, storeSilent: silent, requiredArgument: reqArg }), { silent: "monitor" });
-  const noArg = await monitorOp(new Request("https://x/", { method: "POST", body: "{}" }), deadStore,
-                                { json, storeSilent: silent, requiredArgument: reqArg });
-  assert.equal(noArg.s, 400);
-  assert.equal(noArg.b.reason, "REQUIRED_ARGUMENT_MISSING");
-  /* and a store that answers is relayed with its status */
-  const live = { fetch: async (r) => { const u = new URL(r.url); const body = await r.json();
-    return new Response(JSON.stringify({ ok: true, result: await monitoringOps(w.m, u, body).monitor() })); } };
-  const relayed = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, viewer: "nobody", storeName: "s", cls: "daemon" });
-  assert.deepEqual([relayed.s, relayed.b.reason, relayed.b.store, relayed.b.tokenClass], [404, "ABSENT", "s", "daemon"]);
-  /* N278, N247: with the control plane's `doAnswer` handed in (as it hands it to knockOp), the envelope is opened
-     through it and nowhere else, and the verdict is the store's, declared first */
+  /* N278, N247, N313: the control plane's `doAnswer` (its rule, stood in here: `answered` exactly when the envelope
+     says `ok: true`) is handed in, and the envelope is opened through it and nowhere else */
   const opened = [];
   const doAnswer = async (res) => { opened.push(1); let o = null; try { o = await (await res).json(); } catch { o = null; }
     return o && o.ok === true ? { answered: true, result: o.result } : { answered: false, result: undefined }; };
+  const deadStore = { fetch: async () => { throw new Error("gone"); } };
+  assert.deepEqual(await monitorOp(req(), deadStore, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer }), { silent: "monitor" });
+  const notOk = { fetch: async () => new Response(JSON.stringify({ ok: false }), { status: 500 }) };
+  assert.deepEqual(await monitorOp(req(), notOk, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer }), { silent: "monitor" });
+  assert.equal(opened.length, 2, "each envelope was opened by the control plane's rule");
+  const noArg = await monitorOp(new Request("https://x/", { method: "POST", body: "{}" }), deadStore,
+                                { json, storeSilent: silent, requiredArgument: reqArg, doAnswer });
+  assert.equal(noArg.s, 400);
+  assert.equal(noArg.b.reason, "REQUIRED_ARGUMENT_MISSING");
+  /* and a store that answers is relayed with its status, the verdict the store's, declared first */
+  const live = { fetch: async (r) => { const u = new URL(r.url); const body = await r.json();
+    return new Response(JSON.stringify({ ok: true, result: await monitoringOps(w.m, u, body).monitor() })); } };
+  const relayed = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, viewer: "nobody", storeName: "s", cls: "daemon" });
+  assert.deepEqual([relayed.s, relayed.b.ok, relayed.b.reason, relayed.b.store, relayed.b.tokenClass], [404, false, "ABSENT", "s", "daemon"]);
+  assert.equal(Object.keys(relayed.b)[0], "ok", "the verdict is declared first");
   const via = await monitorOp(req(), live, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer, viewer: DAEMON, storeName: "s", cls: "daemon" });
-  assert.deepEqual([opened.length, via.s, via.b.ok, via.b.store], [1, 200, true, "s"]);
+  assert.deepEqual([opened.length, via.s, via.b.ok, via.b.store], [4, 200, true, "s"]);
   assert.equal(Object.keys(via.b)[0], "ok", "the verdict is declared first");
-  const viaDead = await monitorOp(req(), deadStore, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer });
-  assert.deepEqual([opened.length, viaDead], [2, { silent: "monitor" }]);
-  const viaNotOk = await monitorOp(req(), notOk, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer });
-  assert.deepEqual(viaNotOk, { silent: "monitor" });
+  /* N313: this module holds no reading of the envelope of its own: handed no `doAnswer`, it cannot read an answer, so
+     the store is not asked and its answer is named silent, whatever the store would have said */
+  let asked = 0;
+  const counted = { fetch: async (r) => { asked++; return live.fetch(r); } };
+  const manifest = w.manifest(id).length;
+  assert.deepEqual(await monitorOp(req(), counted, { json, storeSilent: silent, requiredArgument: reqArg, viewer: DAEMON }), { silent: "monitor" });
+  assert.deepEqual([asked, w.manifest(id).length], [0, manifest], "the store was not asked and nothing was written");
   /* an envelope that answered with no status is no answer either */
   const bare = { fetch: async () => new Response(JSON.stringify({ ok: true, result: { body: {} } })) };
   assert.deepEqual(await monitorOp(req(), bare, { json, storeSilent: silent, requiredArgument: reqArg, doAnswer }), { silent: "monitor" });
@@ -468,8 +473,10 @@ test("R10 the answer's fields, and a promotion that does not answer is named as 
   const json = (b, s = 200) => ({ b, s });
   const failing = { fetch: async (req) => { try { await monitoringOps(v.m, new URL(req.url), await req.json()).monitor(); }
     catch { return new Response(JSON.stringify({ ok: false }), { status: 500 }); } } };
+  const doAnswer = async (res) => { let o = null; try { o = await (await res).json(); } catch { o = null; }
+    return o && o.ok === true ? { answered: true, result: o.result } : { answered: false, result: undefined }; };
   const out = await monitorOp(new Request("https://x/", { method: "POST", body: JSON.stringify({ bundleId: vid }) }), failing,
-    { json, storeSilent: (op) => ({ silent: op }), requiredArgument: () => ({}), viewer: DAEMON });
+    { json, storeSilent: (op) => ({ silent: op }), requiredArgument: () => ({}), doAnswer, viewer: DAEMON });
   assert.deepEqual(out, { silent: "monitor" });
   assert.ok(V);
 });

@@ -55,7 +55,7 @@ import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, civicosUserAgent, MONITOR_FREQ,
-         DRIVE_CAPTURE_CHECKS } from "../../checks/bio-checks.mjs";
+         DRIVE_CAPTURE_CHECKS, CUSTODIAL_CHECKS } from "../../checks/bio-checks.mjs";
 import { checkGatheringGrammar } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 
@@ -99,6 +99,9 @@ export const MONITOR_TICK_BATCH = 50;     // eligible documents acted on per tic
 export const MONITOR_RANK_READ = 10;
 /** R30: the record-core setting that holds the administrator's pause. */
 export const MONITOR_PAUSE_SETTING = "monitoring_paused";
+/** R30 (N314, K380): the root of trust's stamp, the ADMIN_TOKEN bearer's (`class:admin`), an administrator here. The
+ *  founder's own session is stamped `admin`, which membership R64 already answers as an administrator once claimed. */
+export const MONITOR_ROOT_OF_TRUST = "class:admin";
 
 /* ===========================================================   *  REC-26: MONITOR-CADENCE — op=monitor's caller, at each document's own pace.
  *
@@ -1399,24 +1402,41 @@ export class Monitoring {
   }
 
   /** R30: an administrator pauses the daemon (`paused: true`) or resumes it (`false`). `by` is the control plane's
-   *  stamp of who asked; this service is reached only by the administrator's route. While paused, neither tick fetches
-   *  anything (monitoring's and the fallback's fetches stop); `op=monitor` asked by a caller still answers, since a
-   *  caller naming one bundle is not the daemon. Answers `{ok, paused, by, at}`. */
+   *  stamp of who asked (the `actor` it stamps: a member's id for a session, `class:<cls>` for a credential). N314
+   *  (K380): the caller's standing is this service's to decide, not the route's: a stamp that is not an administrator
+   *  (membership R64's `isAdministrator`) nor the root of trust (`MONITOR_ROOT_OF_TRUST`) is refused `NOT_AN_ADMIN`,
+   *  membership's code with its row C-96.1, asked before the request's shape, and nothing is written. While paused,
+   *  neither tick fetches anything (monitoring's and the fallback's fetches stop); `op=monitor` asked by a caller still
+   *  answers, since a caller naming one bundle is not the daemon. Answers `{ok, paused, by, at}`. */
   pause({ paused = null, by = null } = {}) {
-    if (typeof paused !== "boolean")
-      return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "monitorpause", argument: "paused",
-               shape: "true or false", error: "the pause needs paused: true or false",
-               detail: "monitorpause needs 'paused' in the shape true or false, and this request carried none the "
-                     + "operation could use. Nothing was changed." };
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "monitorpause", argument: "by",
                shape: "the stamped administrator", error: "the pause needs who set it",
                detail: "monitorpause needs 'by', the administrator the control plane stamped, and this request "
                      + "carried none. Nothing was changed." };
+    if (!this.#administers(by)) {
+      const row = CUSTODIAL_CHECKS.NOT_AN_ADMIN;
+      return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
+               by, detail: "pausing or resuming the monitoring daemon is an administrator's act (R30), and the plane "
+                         + "stamps who is asking from the signed-in session rather than taking it from the caller. "
+                         + "This caller is not one of the active administrators. Nothing was changed." };
+    }
+    if (typeof paused !== "boolean")
+      return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op: "monitorpause", argument: "paused",
+               shape: "true or false", error: "the pause needs paused: true or false",
+               detail: "monitorpause needs 'paused' in the shape true or false, and this request carried none the "
+                     + "operation could use. Nothing was changed." };
     const at = stampInstant("second", this.now());
     const r = this.record.setSetting(MONITOR_PAUSE_SETTING, { paused, by, at }, by);
     if (!r || r.ok !== true) return { ok: false, reason: r?.reason ?? "SETTING_UNWRITTEN", detail: r?.detail ?? null };
     return { ok: true, ...this.paused() };
+  }
+
+  /** R30 (N314): an administrator here is one membership R64 names (the founder once claimed, an active member with
+   *  role `admin`) or the root of trust's credential. Any other stamp, another machine class included, is not. */
+  #administers(by) {
+    if (by === MONITOR_ROOT_OF_TRUST) return true;
+    return typeof this.membership.isAdministrator === "function" && this.membership.isAdministrator(by) === true;
   }
 
   /* ================================================================== *
@@ -2094,11 +2114,12 @@ export function monitoringOps(m, url, body) {
  *  argument and the envelope are the control plane's (`json`, `requiredArgument`, `storeSilent`, passed in with the
  *  stamps it decided); the tick runs in the Durable Object's `monitor` service. A store silence is named, never
  *  read as `ABSENT` or as recorded (R1, R10).
- *  N278, N247 (D-240 (e), DETECTOR C): the Durable Object's envelope is opened through the control plane's `doAnswer`
- *  when it hands it in (as it does for `knockOp`; legacy-index's to hand, K372), and the answer's verdict is declared
- *  as a literal before the store's body is spread, so the verdict reader classifies it. Until `doAnswer` is handed,
- *  `openEnvelope` below applies the same rule (`answered` is `ok === true` and nothing else). */
-export async function monitorOp(req, store, { json, storeSilent, requiredArgument, doAnswer = openEnvelope, viewer, actorClass,
+ *  N278, N247 (D-240 (e), DETECTOR C): the Durable Object's envelope is opened through the control plane's `doAnswer`,
+ *  which it hands in (as it does for `knockOp`, K372), and the answer's verdict is declared as a literal before the
+ *  store's body is spread, so the verdict reader classifies it. N313 (K231: one rule, one site): this module holds no
+ *  reading of the envelope of its own; a call that hands no `doAnswer` has no way to read the store's answer, so the
+ *  store is not asked and its answer is named silent. */
+export async function monitorOp(req, store, { json, storeSilent, requiredArgument, doAnswer, viewer, actorClass,
                                               actor, storeName, cls }) {
   if (req.method !== "POST") return json({ ok: false, error: "monitor is a POST" }, 405);
   const body = await req.json().catch(() => null);
@@ -2106,6 +2127,7 @@ export async function monitorOp(req, store, { json, storeSilent, requiredArgumen
   if (typeof bundleId !== "string" || !bundleId)
     return json({ ok: false, ...requiredArgument("monitor", "bundleId",
       "a non-empty string in the POST body", "monitor needs a bundleId") }, 400);
+  if (typeof doAnswer !== "function") return storeSilent("monitor");
   const qs = new URLSearchParams({ viewer: viewer || "", actorClass: actorClass || "machine", actor: actor || "" });
   let out;
   try {
@@ -2119,12 +2141,4 @@ export async function monitorOp(req, store, { json, storeSilent, requiredArgumen
      cannot disagree. */
   if (r.body.ok === true) return json({ ok: true, ...r.body, store: storeName, tokenClass: cls }, r.status);
   return json({ ok: false, ...r.body, store: storeName, tokenClass: cls }, r.status);
-}
-
-/* The Durable Object envelope's reading until the control plane hands in its `doAnswer` (K372): `{answered, result}`,
-   `answered` exactly when the envelope says `ok: true`; a body that is not JSON is no answer. */
-async function openEnvelope(res) {
-  let out = null;
-  try { out = await (await res).json(); } catch { out = null; }
-  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined };
 }
