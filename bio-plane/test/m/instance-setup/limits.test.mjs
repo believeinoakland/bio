@@ -147,7 +147,7 @@ test("R39 a checkpoint the store does not confirm ends the probe: no further ste
   const probe = async (a) => { for (let s = 0; s < 10; s++) { burns += 1; await a.checkpoint(s + 1, (s + 1) * 10); } return { completed: 10, elapsed_ms: 100, reason: "MAX_STEP_REACHED" }; };
   const r = await read(await cpuProbeOp(stubFor(w), { probe }, io));
   assert.equal(burns, 3);
-  assert.deepEqual([r.body.ok, r.body.trail_complete, r.body.last_confirmed_step, r.body.run.reason], [true, false, 2, "CHECKPOINT_UNCONFIRMED"]);
+  assert.deepEqual([r.body.ok, r.body.trail_complete, r.body.last_confirmed_step, r.body.run.completed, r.body.run.reason], [true, false, 2, 2, null]);
   assert.match(r.body.note, /trail is incomplete/);
   assert.match(r.body.note, /last step the store confirmed is 2/);
   const run = r.body.state.runs.find((x) => x.run === r.body.run.id);

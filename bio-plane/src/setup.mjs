@@ -1894,7 +1894,7 @@ export class InstanceSetup {
     if (this.#rows(`PRAGMA table_info(cpu_probe)`).length) {
       const old = this.#rows(`SELECT step, elapsed_ms, iterations, at FROM cpu_probe ORDER BY step`);
       if (old.length && !this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, LEGACY_PROBE_RUN)) {
-        this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'UNRECORDED')`,
+        this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'unrecorded')`,
                        LEGACY_PROBE_RUN, old[0].at, old[0].iterations);
         for (const r of old)
           this.#sql.exec(`INSERT OR IGNORE INTO cpu_probe_steps (run, step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?, ?)`,
@@ -2328,7 +2328,7 @@ export class InstanceSetup {
     const now = at || stampInstant("second", this.#now());
     /* A step with no recorded start (a caller that names no run) belongs to a run whose end is not known either. */
     if (!this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, run))
-      this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'UNRECORDED')`,
+      this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'unrecorded')`,
                      run, now, iterations);
     this.#sql.exec(
       `INSERT INTO cpu_probe_steps (run, step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?, ?)
@@ -2360,7 +2360,7 @@ export class InstanceSetup {
         if (!top || s.elapsed_ms > top.elapsed_ms) top = s;
       }
       const last = own[own.length - 1] || null;
-      const returned = r.ended_at ? true : r.reason === "UNRECORDED" ? null : false;
+      const returned = r.ended_at ? true : r.reason === "unrecorded" ? null : false;
       return { run: r.run, started_at: r.started_at, iterations: r.iterations, budget_ms: r.budget_ms ?? null,
                steps: own, returned,
                ...(r.ended_at ? { ended: { at: r.ended_at, completed: r.completed, elapsed_ms: r.elapsed_ms, reason: r.reason } } : {}),
@@ -2598,9 +2598,11 @@ export async function cpuProbeOp(stub, { iterations = null, budget_ms = null, ru
     });
   } catch (e) {
     if (e !== UNCONFIRMED) throw e;
-    r = { completed: confirmed, elapsed_ms: null, reason: "CHECKPOINT_UNCONFIRMED" };
+    r = null;
   }
-  const complete = r.reason !== "CHECKPOINT_UNCONFIRMED";
+  /* R39: a probe the store stopped confirming returned no result of its own; the trail says how far it got. */
+  const complete = r !== null;
+  if (!complete) r = { completed: confirmed, elapsed_ms: null, reason: null };
   if (complete) await post("cpuprobeend", { run: id, completed: r.completed, elapsedMs: r.elapsed_ms, reason: r.reason });
   const afterOut = await doAnswer(stub.fetch("http://x/cpuprobestate"));
   if (!afterOut.answered) return storeSilent("cpuprobe");
