@@ -10,9 +10,18 @@
 - **entities** (layer 5) · N285 (R37 `noEntity`; `ENTITY_NO_LABEL`). **progressions** (layer 5) · N285 (R35 `notADisposition`; `PROGRESSION_NO_LABEL`, `PROGRESSION_VERSION_NOT_HELD`). **connections** (layer 5) · N285 (R1 through `noEntity`).
 - **inquiry** (layer 6) · N285 (R20 through `notADisposition`). **intent** (layer 7) · N285 (its `NO_SUCH_ENTITY` site, entities R36). **legacy-store** · N285 (its proposal dispose).
 
+### Arising in T11 (BOB #61; each worded or to be worded before T12 opens)
+
+- **legacy-checks** (layer 1) · N299 (C-22.7's catalogue copy leaves). **promotion** (layer 2) · N302 (stamps T11's check-row changes, layers 6–9, K369).
+- **strength** (layer 5) · N303 (R6 withholds hidden members whole, worded K360).
+- **intent** (layer 7) · N305 (internal reads bounded, worded K367).
+- **publication** (layer 8) · N300 (project stage, R44–R47 from `draft-N300.md`, Bob K362/K364: folded when T11 closes); N308 (R38's bound, to word). **review** (layer 8) · N306 (`MINT_EXHAUSTED` rows).
+- **actions** (layer 9) · N311 (R31's entry cursor or R3's clock bound, to word). **conformance**, **escalation**, **membership**, **standards** · N309, N312 (one site per shared code: helpers `noSuchStandard`, the determination codes, `NOT_PROPOSED`, `NOT_A_PARTICIPANT`, to word).
+- **agent-worker** · N304 (control arms re-anchored).
+
 ### Bob's UX rulings (K356)
 
-- N300 (a project's derived stage, placed and worded before T12 opens); N301 (the queue's `FINDING` class shown as **Noticed**, with queue's extraction).
+- N300 (see above); N301 (the queue's `FINDING` class shown as **Noticed**, with queue's extraction).
 
 ### Layer 11
 
