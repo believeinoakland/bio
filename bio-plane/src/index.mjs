@@ -1,15 +1,7 @@
 import { livefire } from "./livefire.mjs";
-import { setupPage, publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
-         cpuProbeOp, instanceSetupStore } from "./setup.mjs";
-import { SIGN_HTML } from "./signpage.mjs";
-import { liveToken } from "./tokens.mjs";
-import { GATE_VERSION } from "./gate.mjs";
-import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
-/* REC-128: who DELIVERED an attested act, read off the SESSION, and its read shape. */
-/* The locator fence, taken from the catalog rather than restated: https only,
-   public hosts only, no credentials in the authority, no bare IPs, no localhost.
-   It is the one bound between a member typing a URL and this Worker fetching it,
-   so it must be the same function the checker uses on the queue. */
+import { publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
+         cpuProbeOp } from "./setup.mjs";
+import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
 /* REC-46 (2026-08-04): the two prefixes this file STAMPS on a machine
    credential now come from the catalog rather than being typed here twenty
    times. This is the trust boundary and the mint, so it is where the value used
@@ -23,19 +15,6 @@ import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
    LITERAL there so the DEC-49 guard's arm C can COMPARE it rather than read past a variable. */
 import { REQUIRED_ARGUMENT_CHECKS, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "./publication/worker.mjs";
-import { publishedGraphEdges } from "./publication/index.mjs";
-import { inbandQuartet } from "./inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
-/* CAP-8: the Google Drive HOST STACK, enacting Bob's ruling of 2026-09-14 — a
-   link to a Drive file KEEPS THE LINK and the harvest is the OpenDocument export.
-   `drive.mjs` is PURE (no fetch, no store, no registry): it reads an address's
-   shape and composes the export address from the file id and the kind, and it
-   builds the hop from what the plane itself derived. Nothing about the hop's
-   three facts — export address, export format, producer — is readable off a
-   request body, and `callerSuppliedHopFacts` makes an attempt to supply one a
-   NAMED refusal rather than a silent drop (D-112). */
-import { odfEvidentiaryDigest, ODF_FORMATS } from "./odf.mjs";
-import { driveHop, callerSuppliedHopFacts,
-         DRIVE_PRODUCER, driveConvertStep } from "./drive.mjs";
 /* REC-19 / DEC-8: the act catalogue and derivation behind op=affordances. The
    catalogue reads the legal-edge table from the check catalogue (exported,
    never copied); `needs` and `mode` are composed HERE from NEEDS and
@@ -46,7 +25,7 @@ import { driveHop, callerSuppliedHopFacts,
 /* N231 (affordances R26, actions R42): the vocabularies are `vocabulariesFor(kinds)`, `action_kind` the kinds this
    instance's `actions` answers at the call (its `actionkinds` route, asked by op=affordances and op=queue below), never a
    copy held here. */
-import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, vocabulariesFor } from "./affordances.mjs";
+import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, vocabulariesFor } from "./affordances.mjs";
 /* REC-48 / DEC-39: op=acquire's `note` is COMPOSED from the enforced capture
    ceiling rather than spelled here. It is not the attest fence and is not
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
@@ -54,67 +33,23 @@ import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, 
    them. N80 (T8): the note is capture's (`acquireGradeNote`, capture's Provides), composed where acquire is. */
 import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
 import { queueAnswer } from "./queue/index.mjs";
-import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
-/* D-64: the render arm's pure half and its renderer seam. */
-import { RENDER_DEFAULTS, completenessReading, keepRenderBodies, renderAllowanceMs,
-         renderConcurrencyCap, renderBlock,
-         renderedAuthority, renderReserveMs, rendererFor } from "./render.mjs";
-/* COFF-1 (I7): the FORMAT registry is the ONLY format dispatch in this file.
-   pdfstructure.mjs is no longer imported here — it is the registry's pdf
-   entry, reached through getFormat("pdf").structure with byte-identical
-   output; the acquire-time subresource guard and the profile's format stamp
-   consult detectFormat. A new format costs one registerFormat() in
-   formats.mjs and NO edit here — the D-70 test, and formats.test.mjs holds
-   the evidence. */
-import { detectFormat, getFormat, readingDialect } from "./formats.mjs";
-import { parseCdx, selectCapture, replayLocator, cdxQuery, archiveHop } from "./cdx.mjs";
-/* docprofile is READ here, never copied. This is the FIRST plane consumer of it
-   (CONSTRUCTS Step 1 / FW-3): op=acquire calls identify() and doctypeFor() to
-   RECORD which host stack and which content type the record thinks it holds, so
-   a judgment can later be found and revised when its recogniser turns out wrong.
-   The package lives outside bio-plane/, which costs the deployed artifact nothing
-   (I4): esbuild inlines it at build, and the miniflare battery resolves it from
-   disk (modulesRoot "/"). profileRecord serialises the stack axis; the doctype
-   axis is added beside it at the call site.
 
-   CONSTRUCTS Step 2 / FW-4 also reads docprofile's `digests()` — the ONE
-   implementation of the three normalisation digests, never a second copy — and
-   `CONFIDENCE` (the single ladder) to gate whether a normalised digest can be
-   trusted to assert two documents are the same substance. */
-import { identify, doctypeFor, profileRecord, digests, CONFIDENCE, readText, CONTRACT } from "../../docprofile/registry.mjs";
-
-/* PL-4: `delegated` is the MEMBER'S OWN BROWSER AGENT and the only caller that
- * may supply one is the capture-request arm, which reads it from a request row
- * the drain has already judged — never from a request body. BOB-3 (DEC-47's
- * access-parity amendment) permits it for publicly available documents because
- * delegating an agent a member actually uses is a member speaking as themselves
- * through a tool they run; SOURCE-ACCESS.md's line is AUTHORSHIP, and a
- * fabricated string invents a client that does not exist. Every other call site
- * passes nothing and gets the honest CivicOS string, which stays the default for
- * all other traffic. */
-async function governedFetch(env, stub, target, purpose, delegated = null) {
-  return fetchGoverned(target, { userAgent: userAgent(env, purpose, delegated), fetch: (...a) => fetch(...a),
-                                 governor: stub ? governorOverStub(stub) : null });
-}
-import { Store } from "./control-plane/dispatch.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
-import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
+import { governorOp } from "./host-governor/index.mjs";
 import { knockOp } from "./capture/doorbell.mjs";
-import { userAgent } from "./capture/acquire.mjs";
 import { linksOp, captureObjectOp, archiveLookupOp, acquireOp } from "./capture/ops.mjs";
 import { monitorOp } from "./monitoring/index.mjs";
 import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
-/* instance-setup (K93; its map §3): legacy-store, earlier, cannot call it, so the Durable Object this file exports
-   is legacy-store's class started with it and routing its ops first. */
-const InstanceStore = instanceSetupStore(Store);
-export { InstanceStore as Store };
+/* N348 (control-plane R35): the Durable Object class is control-plane's, which starts instance-setup and routes its ops
+   inside the store's one frame. */
+export { Store } from "./control-plane/dispatch.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
 // control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.
-import { makeFetch, json, doAnswer, storeSilent, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
+import { makeFetch, json, doAnswer, storeSilent, storeRefusal, relayAnswer, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
          SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow } from "./control-plane/index.mjs";
 import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs";
 
@@ -169,7 +104,7 @@ function storageAbsent(op, error) {
 
 /* D-533: `partsHeld`, the one rule for a capture held in parts, is provenance's (R7; imported above). */
 
-bindPublishedPlane({ json, doAnswer, storeSilent, requiredArgument, StoreSilent, STORE_SILENT_REASON,
+bindPublishedPlane({ json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON,
                     STORE_SILENT_DETAIL, PUBLISHED_STORE });
 
 /* The public ops whose handlers are still here (control-plane R1, R2). */
@@ -211,7 +146,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
            existed are the same answer here, deliberately", a sentence that is
            true of a real absence and false of a silence. */
         const out = await doAnswer(stub.fetch(new Request(`http://do/verify?sha256=${sha}`)));
-        if (!out.answered) return storeSilent("verify");
+        if (out.refused) return storeRefusal(out);
+        if (!out.answered) return storeSilent("verify", out.correlation);
         return json({ ok: true, ...out.result }, 200);
       }
       /* Section 8.2. Anyone, no token, no session, and nothing to withhold.
@@ -232,7 +168,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
            the worst of its three. The WRAPPED envelope is preserved on the
            success path (auth-surface.test.mjs pins that it is not flattened). */
         const out = await doAnswer(stub.fetch(new Request("http://do/publishedmanifest")));
-        if (!out.answered) return storeSilent("publishedmanifest");
+        if (out.refused) return storeRefusal(out);
+        if (!out.answered) return storeSilent("publishedmanifest", out.correlation);
         return json({ ok: true, result: out.result }, 200);
       }
 
@@ -256,8 +193,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         const igStore = heldScope && !heldScope.error ? heldScope.name
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
         const igReader = await caseReader(url, env, igStore, presentedAi.cred);
-        if (igReader.silent) return storeSilent(igReader.silent);
-        return instanceGroupOp(env, igStore, igReader, { json, storeSilent, doAnswer });
+        if (igReader.silent) return storeSilent(igReader.silent, igReader.correlation);
+        return instanceGroupOp(env, igStore, igReader, { json, storeSilent, storeRefusal, doAnswer });
       }
 
       /* ===== REC-164: op=groupidentity — THE DISPLAY NAME AND THE VERIFIED DOMAIN, BESIDE THE PUBLIC SLUG =========
@@ -272,8 +209,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         const giStore = heldScope && !heldScope.error ? heldScope.name
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
         const giReader = await caseReader(url, env, giStore, presentedAi.cred);
-        if (giReader.silent) return storeSilent(giReader.silent);
-        return groupIdentityOp(env, giStore, giReader, { json, storeSilent, doAnswer });
+        if (giReader.silent) return storeSilent(giReader.silent, giReader.correlation);
+        return groupIdentityOp(env, giStore, giReader, { json, storeSilent, storeRefusal, doAnswer });
       }
 
       /* ============================================================         REC-22: THE PUBLIC READ PATH. Anyone, no token, no session, and — the
@@ -314,7 +251,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         if (url.searchParams.get("outstanding") === "1") q.set("outstanding", "1");
         if (url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         const fOut = await doAnswer(stub.fetch(`http://do/caseflags?${q}`));
-        if (!fOut.answered) return storeSilent("caseflags");
+        if (fOut.refused) return storeRefusal(fOut);
+        if (!fOut.answered) return storeSilent("caseflags", fOut.correlation);
         return json({ ok: true, result: fOut.result }, 200);
       }
 
@@ -337,7 +275,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
            and answers everybody else exactly as it answers a case that does not
            exist. */
         const reader = await caseReader(url, env, "bio", presentedAi.cred);
-        if (reader.silent) return storeSilent(reader.silent);
+        if (reader.silent) return storeSilent(reader.silent, reader.correlation);
         /* REC-126 / IC-145: A LIVE GRANT HOLDER is the second party §6A.2's
            precondition admits to an unsigned document. The secret is HASHED HERE
            and only its fingerprint crosses to the store, which judges it through
@@ -348,7 +286,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
           `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}`
           + `&viewer=${encodeURIComponent(reader.viewer)}`
           + (docSecret ? `&secretSha=${docSecret}` : "")));
-        if (!out.answered) return storeSilent("casedocument");
+        if (out.refused) return storeRefusal(out);
+        if (!out.answered) return storeSilent("casedocument", out.correlation);
         const r = out.result;
         /* THE VERDICT IS DECLARED AS A LITERAL, FIRST, rather than inherited
            from the spread. D-240's detector grades a json() site by its first
@@ -375,7 +314,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
          bio/inbox/<sha256> in the working bucket and nowhere else, the way
          probe is confined to scratch. Nothing is read back out except by a
          signed-in member. */
-      if (op === "knock") return knockOp(req, env, stub, { json, requiredArgument, storeSilent, doAnswer });
+      if (op === "knock") return knockOp(req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* REC-52: the same spread as section 7a's. A store silence used to leave
          a `{ok:true}` carrying the service name, the version and the bootstrap
          flag and NOTHING the store knows — an instance answering "here is what
@@ -383,7 +322,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
          `newgroup` both read this op (measured at newgroup/src/index.mjs:364
          and :631), so the false success reached a caller deciding whether an
          instance was ready. */
-      return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent, doAnswer });
+      return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent, storeRefusal, doAnswer });
 }
 
 /* The admitted ops whose handlers are still here; undefined for control-plane's generic forward. */
@@ -421,7 +360,8 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       /* N231 (affordances R26): `action_kind` is the kinds this instance's `actions` accepts at this call (actions
          R42), asked of the store; a silence is stated as one, never answered with the product's kinds (REC-52). */
       const kOut = await doAnswer(st.fetch("http://do/actionkinds"));
-      if (!kOut.answered) return storeSilent("affordances");
+      if (kOut.refused) return storeRefusal(kOut);
+      if (!kOut.answered) return storeSilent("affordances", kOut.correlation);
       const vocabularies = vocabulariesFor(kOut.result?.kinds);
       if (!target) {
         /* No target: the whole catalogue and the vocabularies, the shape a
@@ -479,7 +419,8 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
         `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}`
         + `&identity=${encodeURIComponent(affIdentity)}`
         + `&author=${encodeURIComponent(affAuthor ?? "")}&by=${encodeURIComponent(affBy ?? "")}`));
-      if (!fOut.answered) return storeSilent("affordances");
+      if (fOut.refused) return storeRefusal(fOut);
+      if (!fOut.answered) return storeSilent("affordances", fOut.correlation);
       const facts = fOut.result;
       if (!facts) return storeSilent("affordances");
       if (facts.ok !== true)
@@ -539,12 +480,14 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
          rather than a false success, so it is the milder half of the class and
          it is still the plane inventing a word the store never said. */
       const qOut = await doAnswer(st.fetch(inner.toString()));
-      if (!qOut.answered) return storeSilent("queue");
+      if (qOut.refused) return storeRefusal(qOut);
+      if (!qOut.answered) return storeSilent("queue", qOut.correlation);
       const r = qOut.result;
       if (!r) return storeSilent("queue");
       /* N231 (affordances R26): op=affordances' vocabularies, `action_kind` asked of `actions` at this call. */
       const qkOut = await doAnswer(st.fetch("http://do/actionkinds"));
-      if (!qkOut.answered) return storeSilent("queue");
+      if (qkOut.refused) return storeRefusal(qkOut);
+      if (!qkOut.answered) return storeSilent("queue", qkOut.correlation);
       if (r.ok !== true)
         return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
       return json({ ok: true, result: queueAnswer(r, { gate: ACT_GATE, kinds: qkOut.result?.kinds }).result, store: storeName, tokenClass: cls }, 200);
@@ -559,7 +502,9 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
          true") and an audit that reports on a register it could not read is the
          worst possible place to be one line away from a false clean bill. */
       const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
-      if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
+      if (aOut.refused) return storeRefusal(aOut);
+      if (!aOut.answered) return storeSilent("registeraudit", aOut.correlation);
+      if (!aOut.result) return storeSilent("registeraudit");
       /* R8, R9: provenance's report, each unresolved row probed in the working bucket (D-533's parts included). */
       return json({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function"
         ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) }
@@ -629,7 +574,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
        being refused, this
        one reports consumption found by measuring, because CPU has no catchable
        refusal to find a ceiling with. */
-    if (op === "runtime") return runtimeOp(env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer });
+    if (op === "runtime") return runtimeOp(env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer });
 
     /* Find the CPU ceiling by walking into it. Each completed step is
        checkpointed durably BEFORE the next begins, so when the isolate is killed
@@ -637,7 +582,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
        Probe class only: it burns compute on purpose and belongs nowhere near a
        member's session. */
     if (op === "cpuprobe") return cpuProbeOp(env.STORE.get(env.STORE.idFromName(storeName)),
-      { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, { json, storeSilent, doAnswer });
+      { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") }, { json, storeSilent, storeRefusal, doAnswer });
 
     /* Project a capture's resolved links into edges. Separate from op=links
        because it writes, and the capability gate has to see that. */
@@ -663,16 +608,17 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}`
         + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}`
         + `&identity=${encodeURIComponent(linkIdentity)}`));
-      if (!p.answered) return storeSilent("linkproject");
+      if (p.refused) return storeRefusal(p);
+      if (!p.answered) return storeSilent("linkproject", p.correlation);
       return json({ ok: true, ...p.result });
     }
 
     {
-      const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)));
-      if (g) return g.silent ? storeSilent(op) : json(g.body, g.status);
+      const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { doAnswer, storeRefusal });
+      if (g) return g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json(g.body, g.status);
     }
 
-    if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer,
+    if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer,
       viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}` });
 
     if (op === "capture") return captureObjectOp(req, url, env,
@@ -680,20 +626,20 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
 
     /* R31–R35: op=pdfstructure is extraction's; the control plane stamps who asks. */
     if (op === "pdfstructure") return pdfStructureOp(url, env, env.STORE.get(env.STORE.idFromName(storeName)),
-      { json, storeSilent, storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps,
+      { json, storeSilent, storeRefusal, doAnswer, storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps,
         viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`,
         author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`, storeName });
 
-    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, doAnswer });
+    if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer });
 
     if (op === "acquire") {
       /* K72 (8), (11); N265: the acquisition is capture's service in the Durable Object, and the reading of what it
          filed is extraction's (R1, `acquireReadingOp`). This op forwards to the one, hands the other the filed document,
          and adds only the grade note; it runs no reading of its own. */
       const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent,
-        storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
+        storeRefusal, storageAbsent, doAnswer, cls, member: viaSession, sessMember, storeName });
       if (acquired.response) return acquired.response;
-      const read = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { storeSilent, storeName });
+      const read = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, doAnswer, storeName });
       if (read.response) return read.response;
       return json(Object.assign(read.body, { note: ACQUIRE_GRADE_NOTE }), 200);
     }
@@ -733,11 +679,11 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
     }
 
     /* K372 (N278, N247): `doAnswer` is handed in, as it is to `knockOp`, so the one envelope reader opens monitoring's. */
-    if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
+    if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, storeRefusal, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
 
 
-    if (op === "caseratify") return caseRatifyOp(req, stub, { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights });
-    if (op === "ratify") return ratifyOp(req, stub, { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
+    if (op === "caseratify") return caseRatifyOp(req, stub, { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights });
+    if (op === "ratify") return ratifyOp(req, stub, { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
 }
 
 export default { fetch: makeFetch({ publicOp, gatedOp,
