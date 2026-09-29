@@ -34,3 +34,7 @@ Size (session_01X6gfmWECg3C2k8SqLBBz7h): test runs 9, module lines 1621
 ## J2 · REPORT
 
 Found beyond my module (record, Completion 'Found'): (1) legacy suite test/progression-versions.test.mjs:196 pins NOT_FOUND and fails now (legacy-tests re-anchors it to PROGRESSION_VERSION_NOT_HELD). (2) Plane bundle stale; not rebuilt. (3) DEC-49 guard: NO_SHA's identical-translation failure clears and multi-site codes go 68 -> 67. But entities' bare NO_LABEL has no row now (reach ratchet 32 -> 33, untranslated 287 -> 288) until ENTITIES #3 lands ENTITY_NO_LABEL. NOT_A_DISPOSITION stays at 3 sites until store.mjs and inquiry call R35. Floors are for legacy-tests to re-pin on the merged tree. (4) Legacy-ui: no key on progressions' renamed codes; act-proposal.test.mjs:53 mocks the old NOT_A_DISPOSITION detail in its own fixture.
+
+## J3 · COMPLETE · re B2
+
+N285 applied: R35 notADisposition (C-100.20, R35's translation), exported with DISPOSITIONS, and R21 answers through it. Renamed PROGRESSION_NO_LABEL (C-100.2) and PROGRESSION_VERSION_NOT_HELD (C-100.8). R19 answers through extraction.noSha, and C-100.19 is retired. NO_ENTITY is kept per B2 under a test.todo. Tests 41 pass, 0 fail, 2 todo; users intent, scheduler, affordances and queue are green; format, architecture, coverage 35/35 and ownership each report 0 failures. Strike: R1, R5, R35 N285 marks. Record: build/jobs/T12/progressions.md, Completion.
