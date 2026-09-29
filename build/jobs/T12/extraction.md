@@ -1,6 +1,6 @@
 # extraction (T12)
 
-**Status** · session_01TmNfrLBPpDG6E4MJmw3jdD · depth 2 · WORKING · handled B0
+**Status** · session_01TmNfrLBPpDG6E4MJmw3jdD · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
