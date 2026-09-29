@@ -23,6 +23,7 @@
  *   observationLog                  its one append, `observe`.
  *   intent, actions, escalation     R33 (`watchSet`, `registerSource`), R34/R44 (`pendingClocks`), R35
  *                                   (`escalationsDue`).
+ *   publication                     R33's published-finding half (`restingCapturesOf`, its R42; N230).
  *   env      the instance bindings (`MONITOR_TICK_MS`). No binding or credential is a condition of monitoring (R45):
  *            both ticks call `monitor` and capture's `acquire` in process, from the scheduler's alarm (R23, N222).
  *   now      the instance clock in milliseconds (default: the wall clock).
@@ -45,6 +46,7 @@ import { observationLogOf } from "../observation-log/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { actionsOf } from "../actions/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
+import { publicationOf } from "../publication/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "../drive.mjs";
 import { RENDERED_METHOD, RENDER_TICK_UNDETERMINED } from "../render.mjs";
@@ -326,14 +328,14 @@ export class Monitoring {
 
   constructor({ storage, record, membership, promotion, host = null, env = null, now = null, fetch = null,
                 governor = null, provenance = null, capture = null, observationLog = null, intent = null,
-                actions = null, escalation = null } = {}) {
+                actions = null, escalation = null, publication = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : () => Date.now();
-    this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actions, escalation };
+    this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actions, escalation, publication };
   }
 
   get governor() { return this.#deps.governor ||= governorOf(this.#deps.host, { env: this.env }); }
@@ -343,6 +345,7 @@ export class Monitoring {
   get intent() { return this.#deps.intent === undefined ? null : (this.#deps.intent ||= intentOf(this.#deps.host)); }
   get actions() { return this.#deps.actions ||= actionsOf(this.#deps.host); }
   get escalation() { return this.#deps.escalation ||= escalationOf(this.#deps.host); }
+  get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
   #fetch(u, init) { return (this.#deps.fetch || globalThis.fetch)(u, init); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1848,8 +1851,10 @@ export class Monitoring {
    * What the understanding and action layers rest on (R33–R35, R44)
    * ================================================================== */
 
-  /** R33 (N170): the captures a live objective's condition reads (intent R7's `watchSet`, followed with its cursor),
-   *  and whether each document holding one is monitored. `project` names the objective's project. */
+  /** R33 (N170, N230): the captures a live objective's condition reads (intent R7's `watchSet`) and the captures a
+   *  ratified finding of the project's rests on (publication R42's `restingCapturesOf`), each followed with its cursor
+   *  to the end, and whether each document holding one is monitored. `project` names the objective's or the
+   *  finding's project; each capture says what rests on it (`rests_on`: `objective`, `finding`). */
   watched({ project = null } = {}) {
     const intent = this.intent;
     if (!intent || typeof intent.watchSet !== "function")
@@ -1859,28 +1864,58 @@ export class Monitoring {
     for (;;) {
       const w = intent.watchSet({ project, after });
       if (!w || w.ok === false) return { ok: false, reason: w?.reason ?? "WATCHSET_UNREAD", detail: w?.detail ?? null };
-      for (const c of w.captures || []) captures.push(c);
+      for (const c of w.captures || []) captures.push({ c, rests: "objective" });
       pages++;
       if (!w.cursor || pages > 1000) break;
       after = w.cursor;
     }
+    /* N230: the published-finding half. `restingCapturesOf` answers every resting capture with its findings and their
+       projects; this project's are kept. A publication that cannot be read leaves the objective half standing and says
+       so (`findings_unread`). */
+    let findingsUnread = null;
+    const pub = this.publication;
+    if (!pub || typeof pub.restingCapturesOf !== "function") findingsUnread = "no publication module is present";
+    else {
+      let cursor = null, n = 0;
+      try {
+        for (;;) {
+          const r = pub.restingCapturesOf({ after: cursor });
+          if (!r || r.ok === false) { findingsUnread = r?.reason ?? "RESTING_CAPTURES_UNREAD"; break; }
+          for (const x of r.captures || []) {
+            const mine = (x.findings || []).filter((f) => (f.projects || []).includes(project)).map((f) => f.bundle_id);
+            if (mine.length) captures.push({ c: x.capture_sha, rests: "finding", findings: mine });
+          }
+          n++;
+          if (!r.cursor || n > 1000) break;
+          cursor = r.cursor;
+        }
+      } catch (e) { findingsUnread = String(e && e.message || e).slice(0, 160); }
+    }
     const out = [];
-    const seenSha = new Set();
-    for (const c of captures) {
+    const bySha = new Map();
+    for (const { c, rests, findings } of captures) {
       const sha = typeof c === "string" ? c : c && (c.capture_sha || c.sha256 || c.capture);
-      if (typeof sha !== "string" || seenSha.has(sha)) continue;
-      seenSha.add(sha);
+      if (typeof sha !== "string") continue;
+      if (bySha.has(sha)) {
+        const o = bySha.get(sha);
+        if (!o.rests_on.includes(rests)) o.rests_on.push(rests);
+        if (findings) o.findings = [...new Set([...(o.findings || []), ...findings])];
+        continue;
+      }
       const r = this.#one(`SELECT r.bundle_id AS bundle_id, bp.monitor_enabled AS monitored, bp.source_locator AS locator
                              FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
                              LEFT JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id WHERE r.capture_sha = ?`, sha);
-      out.push({ capture: sha, bundle: r ? r.bundle_id : null, monitored: !!(r && r.monitored === 1),
-                 locator: r ? r.locator ?? null : null });
+      const o = { capture: sha, bundle: r ? r.bundle_id : null, monitored: !!(r && r.monitored === 1),
+                  locator: r ? r.locator ?? null : null, rests_on: [rests], ...(findings ? { findings } : {}) };
+      bySha.set(sha, o);
+      out.push(o);
     }
-    return { ok: true, project, captures: out };
+    return { ok: true, project, captures: out, ...(findingsUnread ? { findings_unread: findingsUnread } : {}) };
   }
 
-  /** R33 (N170, intent R15): monitoring's proposal source. Each document an objective's condition reads that is not
-   *  monitored is proposed for monitoring to the members who own the objective; the daemon never enables it, and a
+  /** R33 (N170, N230, intent R15): monitoring's proposal source. Each document an objective's condition reads, or a
+   *  published finding of the project rests on, that is not monitored is proposed for monitoring to the members who
+   *  own the objective or finding (the project's, through intent's proposals); the daemon never enables it, and a
    *  member's adoption of the proposal is the ratification. */
   proposals({ project = null, viewer = null } = {}) {
     const w = this.watched({ project });
@@ -1889,14 +1924,20 @@ export class Monitoring {
     for (const c of w.captures) {
       if (!c.bundle || c.monitored) continue;
       if (!this.membership.inSight(c.bundle, viewer)) continue;
-      if (!byBundle.has(c.bundle)) byBundle.set(c.bundle, { bundle: c.bundle, locator: c.locator, captures: [] });
-      byBundle.get(c.bundle).captures.push(c.capture);
+      if (!byBundle.has(c.bundle)) byBundle.set(c.bundle, { bundle: c.bundle, locator: c.locator, captures: [], rests: new Set(), findings: new Set() });
+      const e = byBundle.get(c.bundle);
+      e.captures.push(c.capture);
+      for (const k of c.rests_on || []) e.rests.add(k);
+      for (const f of c.findings || []) e.findings.add(f);
     }
     return [...byBundle.values()].map((b) => ({
       key: `monitoring::${project}::${b.bundle}`, source: "monitoring", kind: "monitor-source", grade: null,
-      basis: { project, bundle: b.bundle, locator: b.locator, captures: b.captures,
-               says: "an objective of this project rests on this document, and it is not monitored: a member may "
-                   + "set monitoring.enabled on it; the daemon never enables it" },
+      basis: { project, bundle: b.bundle, locator: b.locator, captures: b.captures, rests_on: [...b.rests],
+               ...(b.findings.size ? { findings: [...b.findings] } : {}),
+               says: `${b.rests.has("objective") && b.rests.has("finding") ? "an objective and a published finding"
+                        : b.rests.has("finding") ? "a published finding" : "an objective"} of this project `
+                   + "rests on this document, and it is not monitored: a member may set monitoring.enabled on it; "
+                   + "the daemon never enables it" },
       instances: [{ bundle: b.bundle, documents: [b.bundle] }], surfaced_by: "machine" }));
   }
 
@@ -2048,8 +2089,13 @@ export function monitoringOps(m, url, body) {
 /** R1–R10 from the Worker (`legacy-index` routes `op=monitor` here, K72 (11)): the method check, the required
  *  argument and the envelope are the control plane's (`json`, `requiredArgument`, `storeSilent`, passed in with the
  *  stamps it decided); the tick runs in the Durable Object's `monitor` service. A store silence is named, never
- *  read as `ABSENT` or as recorded (R1, R10). */
-export async function monitorOp(req, store, { json, storeSilent, requiredArgument, viewer, actorClass, actor, storeName, cls }) {
+ *  read as `ABSENT` or as recorded (R1, R10).
+ *  N278, N247 (D-240 (e), DETECTOR C): the Durable Object's envelope is opened through the control plane's `doAnswer`
+ *  when it hands it in (as it does for `knockOp`; legacy-index's to hand, K372), and the answer's verdict is declared
+ *  as a literal before the store's body is spread, so the verdict reader classifies it. Until `doAnswer` is handed,
+ *  `openEnvelope` below applies the same rule (`answered` is `ok === true` and nothing else). */
+export async function monitorOp(req, store, { json, storeSilent, requiredArgument, doAnswer = openEnvelope, viewer, actorClass,
+                                              actor, storeName, cls }) {
   if (req.method !== "POST") return json({ ok: false, error: "monitor is a POST" }, 405);
   const body = await req.json().catch(() => null);
   const bundleId = body?.bundleId;
@@ -2057,11 +2103,24 @@ export async function monitorOp(req, store, { json, storeSilent, requiredArgumen
     return json({ ok: false, ...requiredArgument("monitor", "bundleId",
       "a non-empty string in the POST body", "monitor needs a bundleId") }, 400);
   const qs = new URLSearchParams({ viewer: viewer || "", actorClass: actorClass || "machine", actor: actor || "" });
-  let out = null;
+  let out;
   try {
-    out = await (await store.fetch(new Request(`http://do/monitor?${qs}`, {
-      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ bundleId }) }))).json();
-  } catch { out = null; }
-  if (!out || out.ok !== true || !out.result || typeof out.result.status !== "number") return storeSilent("monitor");
-  return json({ ...out.result.body, store: storeName, tokenClass: cls }, out.result.status);
+    out = await doAnswer(store.fetch(new Request(`http://do/monitor?${qs}`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ bundleId }) })));
+  } catch { out = { answered: false, result: undefined }; }
+  if (!out.answered) return storeSilent("monitor");
+  const r = out.result;
+  if (!r || typeof r.status !== "number" || !r.body || typeof r.body !== "object") return storeSilent("monitor");
+  /* The verdict first, as a literal on each branch (D-240): the store's `ok` is carried by the spread, so the two
+     cannot disagree. */
+  if (r.body.ok === true) return json({ ok: true, ...r.body, store: storeName, tokenClass: cls }, r.status);
+  return json({ ok: false, ...r.body, store: storeName, tokenClass: cls }, r.status);
+}
+
+/* The Durable Object envelope's reading until the control plane hands in its `doAnswer` (K372): `{answered, result}`,
+   `answered` exactly when the envelope says `ok: true`; a body that is not JSON is no answer. */
+async function openEnvelope(res) {
+  let out = null;
+  try { out = await (await res).json(); } catch { out = null; }
+  return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined };
 }

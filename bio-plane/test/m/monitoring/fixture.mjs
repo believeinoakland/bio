@@ -5,8 +5,8 @@
    the fixture registers, projecting from the document as retrieval does into retrieval's own table
    (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
-   in-memory R2 stand-in; intent, actions and escalation are stand-ins in their Provides' shapes unless a test passes
-   the real one. Every test drives `monitoring` at its interface. */
+   in-memory R2 stand-in; intent, actions, escalation and publication are stand-ins in their Provides' shapes unless a
+   test passes the real one. Every test drives `monitoring` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -107,7 +107,7 @@ export function infoMd(id, locator, { freq = null, enabled = true, lines = [] } 
 }
 
 export function world({ profiles = ["test-port-ellery"], env = null, evidence = true, refuse = [], intent = undefined,
-                        actions = undefined, escalation = undefined, extraColumns = [], realActions = false } = {}) {
+                        actions = undefined, escalation = undefined, publication = undefined, extraColumns = [], realActions = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -155,12 +155,14 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
     conformance: { determinationRead: () => ({ ok: false, reason: "NO_SUCH_DETERMINATION" }), registerStep: () => ({ ok: true }) } }) : undefined;
   const net = network();
   const intentStub = intent === undefined ? stubIntent() : intent;
+  const publicationStub = publication === undefined ? stubPublication() : publication;
   const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
-    governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub,
+    governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub, publication: publicationStub,
     ...(actions !== undefined ? { actions } : act ? { actions: act } : {}), ...(escalation !== undefined ? { escalation } : {}) });
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act,
+    publication: publicationStub,
     rows: (q, ...x) => st.sql.exec(q, ...x),
     row: (q, ...x) => st.sql.exec(q, ...x)[0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
@@ -213,5 +215,21 @@ export function stubIntent(watch = {}) {
                cursor: more ? page[page.length - 1] : null };
     },
     registerSource(kind, reader) { sources.push({ kind, reader }); return { ok: true }; },
+  };
+}
+
+/** publication's R42 (`restingCapturesOf`) as monitoring reaches it. `resting` is `[{capture_sha, findings: [{bundle_id,
+ *  projects}]}]` in capture order; pages of two, with the cursor the last capture answered. */
+export function stubPublication(resting = []) {
+  return {
+    resting, calls: [],
+    restingCapturesOf({ after = null, limit = null } = {}) {
+      this.calls.push({ after, limit });
+      const all = [...this.resting].sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : 1));
+      const rest = all.filter((x) => after == null || x.capture_sha > after);
+      const page = rest.slice(0, 2);
+      const more = rest.length > 2;
+      return { ok: true, captures: page, limit: 2, truncated: more, cursor: more ? page[page.length - 1].capture_sha : null };
+    },
   };
 }
