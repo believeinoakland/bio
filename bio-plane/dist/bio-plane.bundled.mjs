@@ -19633,7 +19633,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
     where: at4("#refuseMachine", "is-determination-member"),
     translation: "Whether a government act complied is a member's judgment. An assistant may prepare the comparison; it may not determine. Sign in as a member. Nothing was written."
   },
-  NOT_A_PARTICIPANT: {
+  DETERMINATION_NOT_A_PARTICIPANT: {
     check: "C-113.3",
     where: at4("#participantRefusal", "is-project-joined"),
     translation: "Only a member who has joined this project records its determinations. Join the project first. Nothing was written."
@@ -19663,11 +19663,6 @@ var CONFORMANCE_CHECKS = Object.freeze({
     where: at4("#readStandards", "is-standard-named"),
     translation: "A determination measures the act against at least one standard the record holds. Name the standards. Nothing was written."
   },
-  NO_SUCH_STANDARD: {
-    check: "C-113.9",
-    where: at4("#readStandards", "is-standard-held"),
-    translation: "A standard named is not one the record holds. Record the standard first, or name one that is held. Nothing was written."
-  },
   STANDARD_NOT_IN_FORCE: {
     check: "C-113.10",
     where: at4("#readStandards", "is-standard-in-force"),
@@ -19695,7 +19690,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   },
   NO_SUCH_DETERMINATION: {
     check: "C-113.15",
-    where: at4("refuseNoSuchDetermination", "is-determination-seen"),
+    where: at4("noSuchDetermination", "is-determination-seen"),
     translation: "No determination answers to that id here. One you cannot see is answered exactly as one that does not exist."
   },
   SUPERSEDES_ANOTHER_ACT: {
@@ -19713,20 +19708,20 @@ var CONFORMANCE_CHECKS = Object.freeze({
     where: at4("#supersession", "is-reason-given"),
     translation: "Superseding a determination says why it is superseded. Give the reason. Nothing was written."
   },
-  ALREADY_SUPERSEDED: {
-    check: "C-113.18",
-    where: at4("#supersession", "is-supersedable"),
-    translation: "That determination has already been superseded, and a determination is superseded once. Supersede the one that replaced it. Nothing was written."
-  },
   PROPOSAL_CANNOT_DETERMINE: {
     check: "C-113.19",
     where: at4("comparisonPropose", "is-proposal-outcomeless"),
     translation: "A comparison sets out rows and questions for members; it never states whether the act complied. Remove the outcome. Nothing was written."
   },
-  NO_SUCH_PROPOSAL: {
+  NO_SUCH_COMPARISON: {
     check: "C-113.20",
-    where: at4("refuseNoSuchProposal", "is-proposal-seen"),
+    where: at4("refuseNoSuchComparison", "is-comparison-seen"),
     translation: "No comparison answers to that id in this project. One you cannot see is answered exactly as one that does not exist. Nothing was written."
+  },
+  DETERMINATION_SUPERSEDED: {
+    check: "C-113.23",
+    where: at4("determinationSuperseded", "is-determination-live"),
+    translation: "That determination has been superseded, and a superseded determination is not acted on or superseded again. Use the determination that replaced it. Nothing was written."
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: "C-113.21",
@@ -35590,9 +35585,8 @@ __export(checks_exports11, {
 var at6 = (fn) => `src/consequences/index.mjs ${fn}`;
 var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at6(fn), translation });
 var CONSEQUENCES_CHECKS = Object.freeze({
-  NO_SUCH_DETERMINATION: row(1, "noSuchDetermination", "A consequence is recorded against a determination you can see. One you may not see is answered exactly as one that does not exist."),
-  NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the live determination found noncompliant. A superseded determination's parts stay readable and are not carried forward."),
-  NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare a computed part and answers no project's authority."),
+  CONSEQUENCE_NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the determination found noncompliant."),
+  CONSEQUENCE_NOT_A_PARTICIPANT: row(3, "#participantRefusal", "Recording a consequence, or whether it has been addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare a computed part and answers no project's authority."),
   AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", "Who or what is affected is a class, a fund, a program, a service, a body or other, with a description."),
   AFFECTED_INDIVIDUAL: row(5, "checkAffected", "People are counted as a class or named in their official role, never singled out: no part names an individual."),
   MEASURE_UNKNOWN_UNIT: row(6, "checkMeasure", "A measure counts money, benefits, services, time or a count."),
@@ -36028,22 +36022,12 @@ var ESCALATION_CHECKS = Object.freeze({
     where: at7("refuseJudgment", "is-no-judgment"),
     translation: "An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach warrants action, and how urgently, is the members' judgment, made with the consequences in front of them. Send the act without it. Nothing was written."
   },
-  NO_SUCH_DETERMINATION: {
-    check: "C-116.3",
-    where: at7("escalationOpen", "is-determination-seen"),
-    translation: "No determination answers to that here. One you may not see is answered exactly as one that does not exist. Nothing was written."
-  },
-  DETERMINATION_SUPERSEDED: {
-    check: "C-116.4",
-    where: at7("escalationOpen", "is-determination-live"),
-    translation: "That determination has been superseded by a later one. An escalation pursues the determination in force: open it on the later one. Nothing was written."
-  },
   NOT_NONCOMPLIANT: {
     check: "C-116.5",
     where: at7("escalationOpen", "is-determination-noncompliant"),
     translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
   },
-  NOT_A_PARTICIPANT: {
+  ESCALATION_NOT_A_PARTICIPANT: {
     check: "C-116.6",
     where: at7("escalationOpen", "is-open-joined"),
     translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
@@ -36158,7 +36142,7 @@ var ESCALATION_CHECKS = Object.freeze({
     where: at7("escalationAdvance", "is-trigger-met"),
     translation: "That stage's trigger is not met in the record yet; what is missing is named. When it is met the stage is proposed, and a member advances it. Nothing was written."
   },
-  NOT_PROPOSED: {
+  EDGE_NOT_PROPOSED: {
     check: "C-116.30",
     where: at7("escalationDecline", "is-edge-proposed"),
     translation: "That stage is not proposed, so there is nothing to decline. Nothing was written."
@@ -83216,7 +83200,7 @@ var STANDARDS_CHECKS = Object.freeze({
   },
   NO_SUCH_STANDARD: {
     check: "C-112.10",
-    where: at14("refuseNoSuchStandard", "is-standard-held"),
+    where: at14("noSuchStandard", "is-standard-held"),
     translation: "No standard answers to that id here. Nothing was written."
   },
   STANDARD_NO_ID: {
@@ -84646,10 +84630,29 @@ function refuseTextUnresolved(contentId) {
     { content_id: contentId === null ? null : String(contentId).slice(0, 80) }
   );
 }
-function refuseNoSuchStandard(id) {
-  const asked = id ? String(id).slice(0, 80) : null;
-  return refusal15("NO_SUCH_STANDARD", "no standard answers to that id here. One your credential may not read is answered exactly as one that does not exist.", { id: asked });
+function noSuchStandard(standardId, extra = null) {
+  let own2 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own2 = Object.entries(extra).filter(([k]) => !NO_SUCH_STANDARD_FIXED.has(k));
+  } catch {
+    own2 = [];
+  }
+  const row2 = STANDARDS_CHECKS.NO_SUCH_STANDARD;
+  return {
+    ok: false,
+    reason: "NO_SUCH_STANDARD",
+    code: "NO_SUCH_STANDARD",
+    check: row2.check,
+    translation: row2.translation,
+    standard: standardId ?? null,
+    ...Object.fromEntries(own2),
+    detail: NO_SUCH_STANDARD_DETAIL
+  };
 }
+var NO_SUCH_STANDARD_DETAIL = "no standard answers to that id here. One your credential may not read is answered exactly as one that does not exist.";
+var NO_SUCH_STANDARD_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "standard", "detail"]);
+var refuseNoSuchStandard = (id) => noSuchStandard(id, { id });
 function refuseNoId(op) {
   return refusal15("STANDARD_NO_ID", `a standard is read by its id, and none was named: ${op} takes id=<standard id>. Nothing was answered.`, { op });
 }
@@ -84785,7 +84788,7 @@ CREATE TABLE IF NOT EXISTS determination_questions (
   PRIMARY KEY (determination_id, ord)
 );
 -- R7: A SUPERSESSION, one row, keyed by the determination superseded, so a
--- second is refused by the key as well as by the act (ALREADY_SUPERSEDED).
+-- second is refused by the key as well as by the act (DETERMINATION_SUPERSEDED, R20).
 CREATE TABLE IF NOT EXISTS determination_supersessions (
   superseded        TEXT PRIMARY KEY,
   superseded_by     TEXT NOT NULL UNIQUE,
@@ -84980,7 +84983,7 @@ var Conformance = class _Conformance {
     const member = this.membership.positionalMember(null, author);
     const denied = member ? this.membership.projectAuthority(project, author, "joined", "determine") : true;
     if (denied)
-      return refusal3("NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. Nothing was written.", { project, author: str8(author) });
+      return refusal3("DETERMINATION_NOT_A_PARTICIPANT", "only a member who has joined the project records its determinations. Nothing was written.", { project, author: str8(author) });
     return null;
   }
   /* The bounds every determination and comparison keeps (LIMITS). */
@@ -85143,8 +85146,7 @@ var Conformance = class _Conformance {
       } catch {
         read2 = null;
       }
-      if (!read2 || read2.ok === false)
-        return refusal3("NO_SUCH_STANDARD", `${String(id ?? "a standard named").slice(0, 80)} is not a standard the record holds. Nothing was written.`, { standard: id });
+      if (!read2 || read2.ok === false) return noSuchStandard(id);
       const answers = _Conformance.datesOf(act).map((d) => this.#inForce(id, d));
       const not = answers.find((x) => x.answer === "not_in_force");
       if (not)
@@ -85238,7 +85240,7 @@ var Conformance = class _Conformance {
     if (!id) return { ok: true, prev: null };
     const prev = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, id);
     if (!prev || prev.project_id !== project || this.membership.sight(prev.project_id, viewer) !== Membership.SIGHT_FULL)
-      return refuseNoSuchDetermination(id);
+      return noSuchDetermination(id, { supersedes: id });
     if (act.id && act.id !== prev.act_id)
       return refusal3("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. Nothing was written.`, { supersedes: id, act: act.id, predecessor_act: prev.act_id });
     const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
@@ -85247,12 +85249,7 @@ var Conformance = class _Conformance {
     if (why === null || why.length > REASON_MAX2)
       return refusal3("BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX2} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX2 });
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
-    if (by)
-      return refusal3(
-        "ALREADY_SUPERSEDED",
-        `${id} was superseded by ${by.superseded_by}. Nothing was written.`,
-        { supersedes: id, superseded_by: by.superseded_by }
-      );
+    if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
     return { ok: true, prev, reason: why };
   }
   /* ===================================================================== *
@@ -85310,7 +85307,7 @@ var Conformance = class _Conformance {
     if (sig) return sig;
     const drew = str8(proposal);
     if (drew && !this.#one(`SELECT proposal_id FROM comparison_proposals WHERE proposal_id=? AND project_id=?`, drew, pid))
-      return refuseNoSuchProposal(drew);
+      return refuseNoSuchComparison(drew);
     const sup = this.#supersession(supersedes, reason, a.act, pid, viewer);
     if (!sup.ok) return sup;
     return this.#write({
@@ -85533,7 +85530,7 @@ var Conformance = class _Conformance {
    *  `at` or `period` is null as the act states; a standard or finding the viewer may not see is null beside `says`. */
   determinationRead({ id = null, viewer = null } = {}) {
     const r = this.#seen(id, viewer);
-    if (!r) return refuseNoSuchDetermination(id);
+    if (!r) return noSuchDetermination(str8(id));
     const did = r.determination_id;
     const rows = this.#rows(
       `SELECT * FROM determination_rows WHERE determination_id=? ORDER BY ord LIMIT ?`,
@@ -85878,7 +85875,7 @@ var Conformance = class _Conformance {
   /** R12: one proposal, its label and the determinations that drew on it; absent, unseen and another project's alike. */
   comparisonRead({ id = null, viewer = null } = {}) {
     const r = str8(id) ? this.#one(`SELECT * FROM comparison_proposals WHERE proposal_id=?`, str8(id)) : null;
-    if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchProposal(id);
+    if (!r || this.membership.sight(r.project_id, viewer) !== Membership.SIGHT_FULL) return refuseNoSuchComparison(id);
     return { ok: true, proposal: this.#proposalView(r, viewer) };
   }
   #proposalView(r, viewer) {
@@ -85947,11 +85944,49 @@ var Conformance = class _Conformance {
     );
   }
 };
-function refuseNoSuchDetermination(id) {
-  return refusal3("NO_SUCH_DETERMINATION", "no determination answers to that id here. One you may not see answers exactly as one that does not exist.", { id: str8(id) });
+var NO_SUCH_DETERMINATION_DETAIL = "no determination answers to that id here. One you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
+var DETERMINATION_SUPERSEDED_DETAIL = "that determination has been superseded, and a determination is superseded once and not acted on once superseded. The one that superseded it is the determination to use.";
+var NO_SUCH_DETERMINATION_FIXED = ["ok", "reason", "code", "check", "translation", "determination", "detail"];
+var DETERMINATION_SUPERSEDED_FIXED = [...NO_SUCH_DETERMINATION_FIXED, "superseded_by"];
+var asId = (v) => typeof v === "string" && v.trim() ? v.trim().slice(0, 200) : null;
+function ownFields(extra, fixed) {
+  try {
+    return extra && typeof extra === "object" && !Array.isArray(extra) ? Object.fromEntries(Object.entries(extra).filter(([k]) => !fixed.includes(k))) : {};
+  } catch {
+    return {};
+  }
 }
-function refuseNoSuchProposal(id) {
-  return refusal3("NO_SUCH_PROPOSAL", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str8(id) });
+function noSuchDetermination(determinationId, extra = null) {
+  const own2 = ownFields(extra, NO_SUCH_DETERMINATION_FIXED);
+  const row2 = CONFORMANCE_CHECKS.NO_SUCH_DETERMINATION;
+  return {
+    ok: false,
+    reason: "NO_SUCH_DETERMINATION",
+    code: "NO_SUCH_DETERMINATION",
+    check: row2.check,
+    translation: row2.translation,
+    determination: asId(determinationId),
+    ...own2,
+    detail: NO_SUCH_DETERMINATION_DETAIL
+  };
+}
+function determinationSuperseded(determinationId, supersededBy = null, extra = null) {
+  const own2 = ownFields(extra, DETERMINATION_SUPERSEDED_FIXED);
+  const row2 = CONFORMANCE_CHECKS.DETERMINATION_SUPERSEDED;
+  return {
+    ok: false,
+    reason: "DETERMINATION_SUPERSEDED",
+    code: "DETERMINATION_SUPERSEDED",
+    check: row2.check,
+    translation: row2.translation,
+    determination: asId(determinationId),
+    superseded_by: asId(supersededBy),
+    ...own2,
+    detail: DETERMINATION_SUPERSEDED_DETAIL
+  };
+}
+function refuseNoSuchComparison(id) {
+  return refusal3("NO_SUCH_COMPARISON", "no comparison answers to that id in this project. One you may not see answers exactly as one that does not exist. Nothing was written.", { proposal: str8(id) });
 }
 function determinationDoc({ id, project, act, pins, standards, rows, questions, sup, proposal, author, at: at15 }) {
   const when = act.at ? `on ${act.at}` : `from ${act.period.from} to ${act.period.to}`;
@@ -86834,18 +86869,12 @@ var Actions = class _Actions {
       }
       if (!d || d.ok === false) continue;
       if (d.live === false || d.superseded_by) {
-        superseded = l.target;
+        superseded ||= { id: l.target, by: d.superseded_by ?? null };
         continue;
       }
       return null;
     }
-    if (superseded)
-      return {
-        ok: false,
-        reason: "DETERMINATION_SUPERSEDED",
-        determination: superseded,
-        detail: `the determination ${superseded} this action rests on has been superseded; rest it on the live one.`
-      };
+    if (superseded) return determinationSuperseded(superseded.id, superseded.by);
     return refuse3(
       "ACTION_NO_DETERMINATION",
       readable ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. None of its legs names one. Nothing was written." : "an action recorded for a breach rests on a conformance determination, and no determination can be read on this instance yet, so none could be found. Nothing was written.",
@@ -88446,37 +88475,45 @@ Changes: responds_to edge added to ${actionId}.
       } : {}
     };
   }
-  /** R31 (N237, N283): every `pending` clock entry dated before `before` across visible actions, at most 500 per page.
-   *  A page reads at most 500 actions, in id order after `after`, and answers each action it reads whole: an action
-   *  whose entries would not all fit is left to the next page, so `cursor`, the last action read, never cuts one. The
-   *  seek is retrieval's projection (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from
-   *  the document, the authority. */
+  /** R31 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
+   *  in (action id, entry position) order after `after`: a previous page's `cursor` (`<action>#<position>`), or an
+   *  action id, read as after all that action's entries. A page reads at most 500 actions and may end inside one;
+   *  `cursor` is the last entry answered when `truncated`, else null, so paging from the start through each `cursor` to
+   *  null reaches every entry, an action holding more than a page among them. The seek is retrieval's projection
+   *  (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from the document, the authority. */
   pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
     const day = String(before ?? "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
       return refuse3("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
     const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
+    const from = after === null || after === void 0 || after === "" ? null : String(after);
+    const at15 = from ? /^(.+)#(\d+)$/.exec(from) : null;
+    const seek = at15 ? { id: at15[1], pos: Number(at15[2]) } : from ? { id: from, pos: Infinity } : null;
     const gate = viewerPredicate(viewer);
     const rows = this.#rows(
       `SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
-      WHERE b.object_type='action' AND (${gate.sql}) ${after ? "AND b.bundle_id>?" : ""}
+      WHERE b.object_type='action' AND (${gate.sql}) ${seek ? "AND b.bundle_id>=?" : ""}
         AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
       ...gate.args,
-      ...after ? [String(after)] : [],
+      ...seek ? [seek.id] : [],
       day,
       PENDING_CLOCKS_ACTIONS_MAX + 1
     );
     const items = [];
     let truncated3 = rows.length > PENDING_CLOCKS_ACTIONS_MAX;
-    let cursor = null;
-    for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
+    let full = false, lastRead = null;
+    read: for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
       const fm = this.#heldFm(r.bundle_id) || {};
       const clock = Array.isArray(fm.clock) ? fm.clock : [];
-      const mine = [];
-      for (let i = 0; i < clock.length; i++) {
+      const skip = seek && r.bundle_id === seek.id ? seek.pos : -1;
+      for (let i = skip + 1; i < clock.length; i++) {
         const e = clock[i];
         if (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) continue;
-        mine.push({
+        if (items.length === max) {
+          full = truncated3 = true;
+          break read;
+        }
+        items.push({
           action: r.bundle_id,
           ord: i,
           date: e.date,
@@ -88485,27 +88522,10 @@ Changes: responds_to edge added to ${actionId}.
           past: e.date < day
         });
       }
-      if (items.length + mine.length > max && items.length) {
-        truncated3 = true;
-        break;
-      }
-      if (mine.length > max) {
-        items.push(...mine.slice(0, max));
-        cursor = r.bundle_id;
-        return {
-          ok: true,
-          before: day,
-          items,
-          limit: max,
-          actions_limit: PENDING_CLOCKS_ACTIONS_MAX,
-          truncated: true,
-          cursor,
-          cut_inside: { action: r.bundle_id, entries: mine.length, answered: max }
-        };
-      }
-      items.push(...mine);
-      cursor = r.bundle_id;
+      lastRead = { id: r.bundle_id, end: Math.max(clock.length - 1, Number.isFinite(skip) ? skip : 0, 0) };
     }
+    const tail = items[items.length - 1];
+    const cursor = !truncated3 ? null : tail && (full || !lastRead || tail.action === lastRead.id) ? `${tail.action}#${tail.ord}` : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
     return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated: truncated3, cursor };
   }
   /* ================================================================ proposals (R19, R28, R32) */
@@ -91565,9 +91585,6 @@ function refuse4(code, detail, extra = {}) {
   };
 }
 var NOTHING = " Nothing was written.";
-function noSuchDetermination(determination, wrote = false) {
-  return refuse4("NO_SUCH_DETERMINATION", `no determination answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { determination: determination ?? null });
-}
 function noSuchPart(id, wrote = false) {
   return refuse4("NO_SUCH_PART", `no consequence part answers to that id here; one you may not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: id ?? null });
 }
@@ -91723,7 +91740,8 @@ var Consequences = class {
     if (viewer === null || viewer === void 0 || !project) return true;
     return this.membership.sight(project, viewer) === "full";
   }
-  /* R1: the determination through conformance's read (its R9), as `{id, project, outcome(standard), live}`; null when
+  /* R1: the determination through conformance's read (its R9), as `{id, project, outcome(standard), live,
+     supersededBy}`; null when
      absent, invisible, or conformance is not here to answer (fail closed). Read through one adapter so the spelling of
      conformance's answer lives in one place. */
   #determination(id, viewer) {
@@ -91751,7 +91769,8 @@ var Consequences = class {
     };
     const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
     const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
-    return { id, project: body.project ?? null, outcome, live };
+    const supersededBy = (Array.isArray(sup) ? sup[0] : isObj11(sup) ? sup.id : sup) ?? null;
+    return { id, project: body.project ?? null, outcome, live, supersededBy: str9(supersededBy) };
   }
   /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
   #part(id, viewer) {
@@ -91835,7 +91854,7 @@ var Consequences = class {
     if (!project) return null;
     const denied = this.membership.projectAuthority(project, str9(author), "joined", act);
     if (!denied) return null;
-    return refuse4("NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str9(author)} has not joined it.${NOTHING}`, { project });
+    return refuse4("CONSEQUENCE_NOT_A_PARTICIPANT", `acting on a consequence is work inside ${project}, and ${str9(author)} has not joined it.${NOTHING}`, { project });
   }
   /* ===================================================================== *
    * R1–R6: RECORDING A PART
@@ -91883,11 +91902,12 @@ var Consequences = class {
     const who2 = viewer ?? (str9(author) || null);
     const byMachine = machine(author);
     const d = this.#determination(determination, who2);
-    if (!d || !this.#seesProject(d.project, who2)) return noSuchDetermination(determination, true);
-    if (!str9(standard) || d.outcome(standard) !== "noncompliant" || !d.live)
+    if (!d || !this.#seesProject(d.project, who2)) return noSuchDetermination(determination ?? null);
+    if (!d.live) return determinationSuperseded(d.id, d.supersededBy);
+    if (!str9(standard) || d.outcome(standard) !== "noncompliant")
       return refuse4(
-        "NOT_NONCOMPLIANT",
-        !d.live ? `${d.id} has been superseded: a consequence is recorded against a live determination, and the parts of the earlier one stay readable, not carried forward. Nothing was written.` : `${d.id}'s outcome for ${str9(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did. Nothing was written.`,
+        "CONSEQUENCE_NOT_NONCOMPLIANT",
+        `${d.id}'s outcome for ${str9(standard) ?? "that standard"} is ${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,
         { determination: d.id, standard: standard ?? null }
       );
     if (!byMachine) {
@@ -92242,7 +92262,7 @@ var Consequences = class {
    *  are undetermined or unproven, in front of the member. */
   consequencesOf({ determination = null, standard = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination);
+    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination ?? null);
     const rows = this.#liveParts(d.id, str9(standard)).filter((r) => this.#seesProject(r.project, viewer));
     const parts = rows.map((r) => this.#answer(r, viewer));
     const groups = /* @__PURE__ */ new Map();
@@ -92309,7 +92329,7 @@ var Consequences = class {
    *  for a superseded determination too (escalation R14). */
   addressed({ determination = null, viewer = null } = {}) {
     const d = this.#determination(determination, viewer);
-    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination);
+    if (!d || !this.#seesProject(d.project, viewer)) return noSuchDetermination(determination ?? null);
     const parts = this.#liveParts(d.id).filter((r) => this.#seesProject(r.project, viewer)).map((r) => {
       const a = this.#addressedOf(r.bundle_id);
       return {
@@ -94703,17 +94723,19 @@ var Escalation = class {
     const judged = refuseJudgment(args);
     if (judged) return judged;
     const d = typeof determination === "string" && determination ? this.conformance.determinationRead({ id: determination, viewer }) : null;
-    if (!d || d.ok === false)
-      return refusal7("NO_SUCH_DETERMINATION", "no determination answers to that id here; one you may not see is answered exactly as one that does not exist.");
-    if (!liveOf(d))
-      return refusal7("DETERMINATION_SUPERSEDED", "that determination has been superseded; an escalation pursues a live determination. Nothing was written.", { superseded_by: d.superseded_by ?? null });
+    if (!d || d.ok === false) return noSuchDetermination(typeof determination === "string" && determination ? determination : null);
+    if (!liveOf(d)) {
+      const by = typeof d.superseded_by === "string" && d.superseded_by ? d.superseded_by : null;
+      const next = by ? this.conformance.determinationRead({ id: by, viewer }) : null;
+      return determinationSuperseded(determination, next && next.ok !== false ? by : null);
+    }
     const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
     if (!pursued.length)
       return refusal7("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
     const project = projectOf(d);
     const fence3 = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
     if (fence3)
-      return refusal7("NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence3.reason });
+      return refusal7("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's project. Nothing was written.", { project, membership: fence3.reason });
     const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
                             ORDER BY escalation_id LIMIT 1`, determination);
     if (held)
@@ -94931,7 +94953,7 @@ var Escalation = class {
     const t = triggers.find((x) => x.to === target);
     if (!t || !t.met)
       return refusal7(
-        "NOT_PROPOSED",
+        "EDGE_NOT_PROPOSED",
         `stage ${target} (${STAGES[target]}) is not proposed: ${t ? t.missing : "no trigger"}. Nothing was written.`,
         { from: e.stage, to: target }
       );
