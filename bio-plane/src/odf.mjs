@@ -157,7 +157,10 @@
  * BEFORE inflation. For ODF the text part is `content.xml` alone. Over the
  * bound the container walk and discrimination still run and text extraction
  * is refused as a STATED text-undetermined carrying the guard's own marker
- * verbatim — the docx.mjs pattern, never a silent truncation.
+ * verbatim — the docx.mjs pattern, never a silent truncation. Under it, the
+ * REPEATS content.xml compresses are expanded within a second bound,
+ * `ODF_REPEAT_EXPANSION_MAX` (R45; see the meter below), and a read that
+ * would cross it is answered the same way with its own marker.
  *
  * This module ASSERTS nothing about meaning (FRAMEWORK's, through I2) and
  * WRITES nothing. Never invent structure: everything unreadable is stated.
@@ -165,7 +168,7 @@
 
 import {
   hasZipMagic, readContainer, readPart, normalizePartName, crc32,
-  discriminate, sizeGuard, declaredTextBytes, IMAGE_MIME_BY_EXT,
+  discriminate, sizeGuard, declaredTextBytes, IMAGE_MIME_BY_EXT, MEASURED_OOXML_TEXT_BOUND_BYTES,
   CONTAINER_FLAVOURS, ODF_MIMETYPE_PART, ODF_MANIFEST_PART, ODF_MIMETYPE_MAX_BYTES,
   withContainerImages,
 } from "./ooxml.mjs";
@@ -185,6 +188,79 @@ function asBytes(x) {
   if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
   if (Array.isArray(x)) { try { return Uint8Array.from(x); } catch { return null; } }
   return null;
+}
+
+/* ------------------------------------------------------------------ *
+ * R45 (N30) — REPEATS ARE EXPANDED WITHIN A BOUND
+ * ------------------------------------------------------------------ */
+
+/* WHY A SECOND BOUND. COFF-6's guard bounds the BYTES of content.xml, but ODF
+ * compresses runs: `table:number-columns-repeated`, `table:number-rows-
+ * repeated` and `<text:s text:c>` each make one short element stand for many.
+ * Expanded without a bound, a few hundred bytes hang the reader or end in
+ * `reader_failed:RangeError` (`text:c="2000000000"`). So every expansion is
+ * paid for, before it is made, from a meter one `content.xml` read owns:
+ *   - one unit per cell given at one address (a carrying cell's column repeat
+ *     times its row's repeat), and one per link a repeated address carries
+ *     after the cell's first (the link at the first address is literal markup);
+ *   - one unit per hidden row range listed (R16);
+ *   - one unit per space a `<text:s text:c>` stands for, each time the text
+ *     holding it is given;
+ *   - and, apart from the units, the CHARACTERS a repeat copies: a repeated
+ *     cell's text at each address after its first counts against COFF-6's own
+ *     figure, so repeats produce no more text than the byte bound admits
+ *     written out (the parity BOB's measurement rests on; J2).
+ * An empty run advanced over, and a figure that only accumulates (R12's
+ * rows/cols, R18's used extent), costs nothing. Past either bound the read
+ * stops and the entry answers as over the size guard, with its own marker.
+ *
+ * THE CAP IS MEASURED (build/plan/draft-T13-wordings.md §5, in git history):
+ * 262,144 = 2^18 sits between the literal carrying cells the 20 MiB bound
+ * admits (338,250 numeric, 255,750 string), and `text()` at that many units
+ * cost 183–646 ms and 78–112 MB of heap in node. */
+export const ODF_REPEAT_EXPANSION_MAX = 262144;
+const REPEAT_TEXT_BOUND_CHARS = MEASURED_OOXML_TEXT_BOUND_BYTES;
+
+/** Thrown out of a metered read the moment it would cross a bound, and caught
+ *  only by `metered` callers, which answer with its marker. */
+class OverRepeatBound extends Error {
+  constructor(marker) { super("over_repeat_bound"); this.marker = marker; }
+}
+
+/* The running read's meter. Every projection that expands anything is
+ * SYNCHRONOUS, so one module-level meter, installed and restored by
+ * `metered`, cannot be shared by two reads at once. */
+let meter = null;
+
+function metered(fn) {
+  const saved = meter;
+  meter = { units: 0, chars: 0 };
+  try { return fn(); } finally { meter = saved; }
+}
+
+/** Pay `n` units before expanding them, or stop the read. `units` in the
+ *  marker is the count reached when it stopped: one past the bound. */
+function spend(n) {
+  if (!meter) throw new Error("odf.mjs: an expansion ran outside a metered read");
+  if (!(n > 0)) return;
+  if (meter.units + n > ODF_REPEAT_EXPANSION_MAX) {
+    throw new OverRepeatBound({ text: "undetermined", why: "over_repeat_bound",
+      units: ODF_REPEAT_EXPANSION_MAX + 1, bound: ODF_REPEAT_EXPANSION_MAX,
+      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units" });
+  }
+  meter.units += n;
+}
+
+/** Pay for `n` characters a repeat copies, or stop the read. */
+function spendChars(n) {
+  if (!meter) throw new Error("odf.mjs: an expansion ran outside a metered read");
+  if (!(n > 0)) return;
+  if (meter.chars + n > REPEAT_TEXT_BOUND_CHARS) {
+    throw new OverRepeatBound({ text: "undetermined", why: "over_repeat_bound",
+      units: REPEAT_TEXT_BOUND_CHARS + 1, bound: REPEAT_TEXT_BOUND_CHARS,
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "repeated_text_chars" });
+  }
+  meter.chars += n;
 }
 
 /* ------------------------------------------------------------------ *
@@ -346,7 +422,9 @@ function stripElement(xml, localName) {
  *  (a run of spaces), `<text:tab>` and `<text:line-break>` honoured, and
  *  every element's markup dropped. ODF encodes repeated spaces as
  *  `<text:s text:c="n"/>` rather than literal runs, so ignoring it would
- *  silently close up gaps in the extracted text. */
+ *  silently close up gaps in the extracted text. Each space is paid for
+ *  before it is made (R45), so `text:c="2000000000"` stops the read rather
+ *  than ending in a RangeError. */
 function visibleText(xml) {
   let out = "";
   let prev = 0;
@@ -360,7 +438,9 @@ function visibleText(xml) {
     const name = localOf(m[1]);
     if (name === "s") {
       const c = parseInt(attrsOf(m[2]).c ?? "1", 10);
-      out += " ".repeat(Number.isFinite(c) && c > 0 ? c : 1);
+      const n = Number.isFinite(c) && c > 0 ? c : 1;
+      spend(n);
+      out += " ".repeat(n);
     } else if (name === "tab") out += "\t";
     else if (name === "line-break") out += "\n";
   }
@@ -618,7 +698,7 @@ async function odfPartsUnguarded(row, bytes) {
   let core = null;
   if (hasMember(container, META_PART)) {
     const read = await readPart(b, container, META_PART);
-    const c = read.ok ? parseOdfMeta(UTF8.decode(read.bytes)) : { ok: false, why: read.why };
+    const c = read.ok ? metaOf(UTF8.decode(read.bytes)) : { ok: false, why: read.why };
     if (c.ok) core = c;
     else undetermined.push({ part: META_PART, why: c.why });
   } else {
@@ -694,6 +774,16 @@ function parseOdfMeta(xml) {
     modified: field("date"),
     title: field("title"),
   };
+}
+
+/** meta.xml read on its OWN meter: its text is expanded like content.xml's
+ *  (`<text:s>` included), so a hostile meta.xml is stated as not read, never
+ *  a failed package — and it never spends content.xml's bound (R45). */
+function metaOf(xml) {
+  try { return metered(() => parseOdfMeta(xml)); } catch (e) {
+    if (e instanceof OverRepeatBound) return { ok: false, why: "over_repeat_bound" };
+    throw e;
+  }
 }
 
 /** The `core-properties` item, field for field the one docx.mjs,
@@ -840,11 +930,20 @@ function officeBody(contentXml, kind) {
   return inner ? inner.inner : null;
 }
 
+/** Why a structure() read no body (R10), for its notes. */
+function bodyNotRead(parts, element) {
+  if (parts.guard) return "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())";
+  if (parts.repeat) return `content.xml not read: its repeats expand past ${parts.repeat.boundName} (stated in evidentiary.undetermined and by text())`;
+  return `content.xml unreadable or carries no <office:${element}>: element references unavailable (stated)`;
+}
+
 /** The two absences above plus whatever parts() could not read, as the
  *  envelope's `undetermined` — and the size-guard marker when it fired. */
 function envelopeUndetermined(parts) {
   const out = [...parts.undetermined];
   if (parts.guard) out.push({ part: CONTENT_PART, why: "over_size_bound", guard: parts.guard });
+  /* R45: the read that crossed the repeat bound, its marker in the guard's place. */
+  if (parts.repeat) out.push({ part: CONTENT_PART, why: "over_repeat_bound", guard: parts.repeat });
   return out;
 }
 
@@ -885,7 +984,7 @@ function countPartitions(links) {
  *  text stream, which is exactly the docx rule (`w:delText` is not in the
  *  text stream; it is the evidentiary superseded wording). An annotation's
  *  own paragraphs are excluded for the same reason at a smaller scale. */
-function walkTextBody(bodyXml) {
+function walkTextBody(bodyXml, { withText = true } = {}) {
   const paragraphs = [];
   const hyperlinks = [];
   const annotations = [];
@@ -946,8 +1045,10 @@ function walkTextBody(bodyXml) {
     if (closing && (name === "p" || name === "h") && inPara) {
       depthInPara--;
       if (depthInPara === 0) {
-        const raw = served.slice(paraStart, m.index);
-        paragraphs.push({ para, text: visibleText(stripElement(raw, "annotation")) });
+        const raw = withText ? served.slice(paraStart, m.index) : "";
+        /* structure() counts paragraphs and never reads their text: it is not
+           expanded there, so a read pays for each space once (R45). */
+        paragraphs.push({ para, text: withText ? visibleText(stripElement(raw, "annotation")) : null });
         inPara = false;
         paraStart = -1;
       }
@@ -1037,14 +1138,12 @@ function odtStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "text");
   if (body == null) {
-    notes.push(parts.guard
-      ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
-      : "content.xml unreadable or carries no <office:text>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "text"));
   }
 
   let paragraphs = null;
   if (body != null) {
-    const walk = walkTextBody(body);
+    const walk = walkTextBody(body, { withText: false });
     paragraphs = walk.paragraphs.length;
 
     for (const h of walk.hyperlinks) {
@@ -1158,10 +1257,10 @@ function odtText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "odt", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true, container: "odt", document: null, paragraphs: [], tables: null,
-      undetermined: [parts.guard],           // the marker VERBATIM, never a truncation
+      undetermined: [parts.guard ?? parts.repeat],           // the marker VERBATIM, never a truncation
       counts: { chars: 0, undetermined: 1 },
     };
   }
@@ -1207,9 +1306,15 @@ function columnName(i) {
  *  ADDRESS cannot be counted off the element index — it must be accumulated
  *  through the repeats, or every reference after the first run of blanks
  *  points at the wrong cell. Trailing repeats are the padding a producer adds
- *  to square the sheet off; a repeat run is expanded only as far as its last
- *  cell that carries anything, so a `repeated="1024"` blank tail costs one
- *  iteration rather than a thousand. */
+ *  to square the sheet off; an empty repeat run is advanced over, never
+ *  expanded, so a `repeated="1024"` blank tail costs one iteration rather
+ *  than a thousand.
+ *
+ *  R45: every expansion is paid for BEFORE it is made — a carrying cell's
+ *  addresses, the copies of its text and links at each address after its
+ *  first, and each hidden row range. R16: a hidden row run is ONE range
+ *  `{min, max, visibility}`, never a number per row, so a collapsed tail of a
+ *  million rows costs one unit. */
 function walkSheet(tableXml) {
   const rows = [];
   const hiddenRows = [];
@@ -1231,8 +1336,16 @@ function walkSheet(tableXml) {
     const rep = parseInt(row.attrs["number-rows-repeated"] ?? "1", 10);
     const nRows = Number.isFinite(rep) && rep > 0 ? rep : 1;
     const vis = row.attrs.visibility;
+    const hidden = vis === "collapse" || vis === "filter";
+    if (hidden) {
+      spend(1);
+      hiddenRows.push({ min: rowIndex + 1, max: rowIndex + nRows, visibility: vis });
+    }
 
     const cells = [];
+    /* What ONE copy of this row costs beyond its cells: the spaces its texts
+       expanded, the characters and the links each cell carries. */
+    let rowSpaces = 0, rowChars = 0, rowLinks = 0;
     let c = 0;
     for (const cell of elementsNested(row.inner, "table-cell")) {
       const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
@@ -1240,39 +1353,56 @@ function walkSheet(tableXml) {
       const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
       /* An empty repeated run holds no content and no reference worth
          emitting; skip it but still advance the address. */
-      const emit = carries ? nCols : 0;
-      for (let k = 0; k < emit; k++) {
-        cells.push({
-          col: c + k,
-          cell: `${columnName(c + k)}${rowIndex + 1}`,
+      if (carries) {
+        /* Read ONCE per element, then given at each address it spans. */
+        const before = meter.units;
+        /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
+           `<text:p>` children, which is the analogue of xlsx's cached <v>. */
+        const display = elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n");
+        const spaces = meter.units - before;
+        const value = cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"]
+          ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null;
+        const hrefs = hrefsIn(cell.inner);
+        const chars = display !== "" ? display.length : (value ?? "").length;
+        spend(nCols);
+        spend(spaces * (nCols - 1));
+        spend(hrefs.length * (nCols - 1));
+        spendChars(chars * (nCols - 1));
+        rowSpaces += spaces * nCols;
+        rowChars += chars * nCols;
+        rowLinks += hrefs.length * nCols;
+        const base = {
           valueType: cell.attrs["value-type"] ?? null,
-          value: cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"]
-            ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null,
+          value,
           formula: cell.attrs.formula ?? null,
-          /* The DISPLAYED form: ODF writes what the sheet shows as the cell's
-             `<text:p>` children, which is the analogue of xlsx's cached <v>. */
-          display: elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n"),
-          hrefs: hrefsIn(cell.inner),
-        });
+          display,
+          hrefs,
+        };
+        for (let k = 0; k < nCols; k++) {
+          cells.push({ col: c + k, cell: `${columnName(c + k)}${rowIndex + 1}`, ...base });
+        }
       }
       c += nCols;
     }
 
-    /* A repeated ROW carries the same cells at each of its addresses. A
-       repeated run of EMPTY rows is the sheet's padding: it is advanced over,
-       not materialised. */
+    /* A repeated ROW carries the same cells at each of its addresses, every
+       copy after the first paid for first. A repeated run of EMPTY rows is
+       the sheet's padding: it is advanced over, not materialised. */
     const materialise = cells.length ? nRows : 0;
+    if (materialise > 1) {
+      const copies = materialise - 1;
+      spend(copies * cells.length);
+      spend(copies * rowSpaces);
+      spend(copies * rowLinks);
+      spendChars(copies * rowChars);
+    }
     for (let k = 0; k < materialise; k++) {
       const r = rowIndex + k;
-      if (vis === "collapse" || vis === "filter") hiddenRows.push(r + 1);
       rows.push({
         r: r + 1,
-        hidden: vis === "collapse" || vis === "filter" ? vis : false,
-        cells: cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` })),
+        hidden: hidden ? vis : false,
+        cells: k === 0 ? cells : cells.map((cell) => ({ ...cell, cell: `${columnName(cell.col)}${r + 1}` })),
       });
-    }
-    if (!materialise && (vis === "collapse" || vis === "filter")) {
-      for (let k = 0; k < nRows; k++) hiddenRows.push(rowIndex + k + 1);
     }
     rowIndex += nRows;
   }
@@ -1314,9 +1444,7 @@ function odsStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "spreadsheet");
   if (body == null) {
-    notes.push(parts.guard
-      ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
-      : "content.xml unreadable or carries no <office:spreadsheet>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "spreadsheet"));
   }
   if (parts.guard) notes.push("text_parts_over_bound");
 
@@ -1493,11 +1621,11 @@ function odsText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "ods", reason: parts?.why ?? "PARTS_ABSENT", part: parts?.part ?? null };
   }
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true, container: "ods", document: null, sheets: [],
       rangeUnits: null, rangeUnitsSkipped: null,   // content.xml not read: not looked, never none
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 },
     };
   }
@@ -1601,7 +1729,7 @@ const ODP_SHAPE_TAGS = new Set([
 /** One page's shapes: index, visible text, and the hrefs each carries. The
  *  `<presentation:notes>` subtree is EXCLUDED — the notes are walked
  *  separately and emitted as their own unit, never merged into slide text. */
-function walkPage(pageXml) {
+function walkPage(pageXml, { withText = true } = {}) {
   const slideOnly = stripElement(pageXml, "notes");
   const shapes = [];
   const RE = tokens();
@@ -1686,7 +1814,7 @@ function walkPage(pageXml) {
          every shape nested in it: a frame's `<draw:text-box>` or table, and
          the paragraphs a custom shape or rectangle holds DIRECTLY (which a
          text-box-only reading dropped). */
-      text: ownShapeText(s.inner),
+      text: withText ? ownShapeText(s.inner) : null,   // structure() emits none, so expands none (R45)
       hrefs: hrefsOf.get(s.shape) ?? [],
     })),
   };
@@ -1750,16 +1878,14 @@ function odpStructure(parts) {
   const items = [];
   const body = officeBody(parts.contentXml, "presentation");
   if (body == null) {
-    notes.push(parts.guard
-      ? "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())"
-      : "content.xml unreadable or carries no <office:presentation>: element references unavailable (stated)");
+    notes.push(bodyNotRead(parts, "presentation"));
   }
   const styles = parts.contentXml ? automaticStyles(parts.contentXml) : { tableDisplay: new Map(), pageVisible: new Map() };
   const deck = body != null ? deckOf(body, styles) : null;
 
   if (deck) {
     for (const page of deck) {
-      const walked = walkPage(page.xml);
+      const walked = walkPage(page.xml, { withText: false });
       for (const s of walked.shapes) {
         for (const href of s.hrefs) links.push(linkRecord(href, slideShapeRef(page.slide, s.shape)));
       }
@@ -1803,11 +1929,11 @@ function odpText(parts) {
   /* COFF-13: `deckLength` is NULL on both branches that did not read the body —
      the deck lives only in content.xml, so a format that has not read it
      cannot answer, and the null is a statement rather than a zero. */
-  if (parts.guard) {
+  if (parts.guard || parts.repeat) {
     return {
       ok: true, container: "odp", document: null, slides: [], speakerNotes: [],
       deckLength: null,
-      undetermined: [parts.guard],
+      undetermined: [parts.guard ?? parts.repeat],
       counts: { chars: 0, notesChars: 0, undetermined: 1 },
     };
   }
@@ -1876,6 +2002,16 @@ function entryFor(row, structureOf, textOf) {
   /* R38: a stated refusal, never an exception, whatever the argument. */
   const failed = (e) => ({ ok: false, container: row.flavour, reason: `reader_failed:${e?.name ?? "Error"}`, part: null });
   const partsOf = async (partsOrBytes) => (isRawBytes(partsOrBytes) ? odfParts(row, partsOrBytes) : partsOrBytes);
+  /* R45: each projection is one content.xml read, on its own meter. The read
+     that would cross the bound stops, and the projection answers as it does
+     over the size guard, content.xml not read and the repeat marker stated;
+     what parts() read outside content.xml (R28–R30) is still answered. */
+  const bounded = (projectionOf, parts) => {
+    try { return metered(() => projectionOf(parts)); } catch (e) {
+      if (!(e instanceof OverRepeatBound)) throw e;
+      return projectionOf({ ...parts, contentXml: null, repeat: e.marker });
+    }
+  };
   return {
     format: row.flavour,
     detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
@@ -1884,7 +2020,7 @@ function entryFor(row, structureOf, textOf) {
        entries do, so detect→structure works uniformly at the registry seam
        while a caller that already paid for parts() does not pay twice. */
     structure: async (partsOrBytes) => {
-      try { return structureOf(await partsOf(partsOrBytes)); } catch (e) { return failed(e); }
+      try { return bounded(structureOf, await partsOf(partsOrBytes)); } catch (e) { return failed(e); }
     },
     /* FW-19 / IC-124: `images` under the package's `Pictures/` directory,
        exhaustive or NULL, through the one enumerator the OOXML entries use.
@@ -1894,7 +2030,7 @@ function entryFor(row, structureOf, textOf) {
     text: async (partsOrBytes) => {
       try {
         const parts = await partsOf(partsOrBytes);
-        return await withContainerImages(textOf(parts), parts, "Pictures/");
+        return await withContainerImages(bounded(textOf, parts), parts, "Pictures/");
       } catch (e) { return failed(e); }
     },
   };

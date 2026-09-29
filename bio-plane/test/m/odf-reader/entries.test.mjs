@@ -303,7 +303,7 @@ test("R40 no jurisdiction: nothing the module exports or emits names a place, sy
 
 /* ------------------------------------------------------------------ R41 */
 
-test("R41 every \"not read\" is stated with the part and why; no absence reads as a zero, an empty list or silence", async () => {
+test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_bound included; no absence reads as a zero, an empty list or silence", async () => {
   for (const f of FLAVOURS) {
     const e = ENTRIES[f];
     const unit = { odt: "paragraphs", ods: "sheets", odp: "slides" }[f];
@@ -329,6 +329,26 @@ test("R41 every \"not read\" is stated with the part and why; no absence reads a
       : [{ reason: "main_part_unreadable", part: "content.xml", why: "crc_mismatch" }]);
     if (f === "odt") assert.equal(tb.tables, null);
     if (f === "odp") assert.equal(tb.deckLength, null);
+    // repeats past ODF_REPEAT_EXPANSION_MAX (R45): the same shapes, with the repeat marker in the guard's place
+    const huge = `<text:p>x<office:annotation><text:p><text:s text:c="2000000000"/></text:p></office:annotation></text:p>`;
+    const repeatBody = {
+      odt: huge + `<text:p><text:s text:c="2000000000"/></text:p>`,   // structure() reads the comment, text() the paragraph
+      ods: `<table:table table:name="S"><table:table-row><table:table-cell office:value-type="string" table:number-columns-repeated="262145"><text:p>v</text:p></table:table-cell></table:table-row></table:table>`,
+      odp: `<draw:page><presentation:notes><draw:frame><draw:text-box>${huge}</draw:text-box></draw:frame></presentation:notes></draw:page>`,
+    }[f];
+    const marker = { text: "undetermined", why: "over_repeat_bound", units: 262145, bound: 262144,
+      boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units" };
+    const sr = await e.structure(pkg(f, { body: repeatBody }));
+    const tr = await e.text(pkg(f, { body: repeatBody }));
+    assert.deepEqual(sr.evidentiary.undetermined.find((u) => u.part === "content.xml"),
+      { part: "content.xml", why: "over_repeat_bound", guard: marker });
+    assert.ok(sr.notes.some((n) => /ODF_REPEAT_EXPANSION_MAX/.test(n)));
+    if (f !== "ods") assert.equal(sr[unit], null, "a count never read is null, never 0");
+    assert.equal(tr.document, null);
+    assert.deepEqual(tr.undetermined, [marker]);
+    if (f === "odt") assert.equal(tr.tables, null);
+    if (f === "ods") assert.deepEqual([tr.rangeUnits, tr.rangeUnitsSkipped], [null, null]);
+    if (f === "odp") assert.equal(tr.deckLength, null);
     // meta.xml absent is said; an empty intra partition is always explained
     const plain = await e.structure(pkg(f));
     assert.ok(plain.evidentiary.undetermined.some((u) => u.part === "meta.xml" && u.why === "part_absent"));
@@ -341,7 +361,7 @@ test("R41 every \"not read\" is stated with the part and why; no absence reads a
 
 test("R43 the module owns no check: it exports readers and constants only, and every element reference it emits is office-readers' own", async () => {
   assert.deepEqual(Object.keys(M).sort(), [
-    "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS",
+    "ODF_EVIDENTIARY_MEASURED", "ODF_EVIDENTIARY_VERSION", "ODF_FORMATS", "ODF_REPEAT_EXPANSION_MAX",
     "ODP_CONTENT_TYPE", "ODP_ROW", "ODS_CONTENT_TYPE", "ODS_ROW", "ODT_CONTENT_TYPE", "ODT_ROW",
     "odfEvidentiaryDigest", "odpEntry", "odsEntry", "odtEntry", "odtNormalisedContentXml",
   ]);
