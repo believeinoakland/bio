@@ -1,7 +1,7 @@
 /* The queue's test world: record-core and membership real, over node:sqlite behind a `sql` that answers as workerd's
    does (a CURSOR, iterable once, with `toArray()` and `one()`, never an array; K316); every other provider a fake in
    the shape its requirements publish, which a test fills. The tables other modules own and this module reads by their
-   read contracts (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34, capture R59) are
+   read contracts (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34) are
    the real schema's where `schema.mjs` holds them, else created here with exactly the contracted columns. */
 import { DatabaseSync } from "node:sqlite";
 import { SCHEMA } from "../../../src/schema.mjs";
@@ -24,7 +24,8 @@ function cursor(rows) {
   return it;
 }
 
-export function world(fakes = {}) {
+/** `bare`: the instance is reached before any table exists (a store's first boot); `w.boot()` then creates them. */
+export function world(fakes = {}, { bare = false } = {}) {
   const db = new DatabaseSync(":memory:");
   const statements = [];
   let sp = 0;
@@ -38,22 +39,24 @@ export function world(fakes = {}) {
   const storage = { sql, transactionSync(fn) { const n = `sp${sp++}`; db.exec(`SAVEPOINT ${n}`);
     try { const r = fn(); db.exec(`RELEASE ${n}`); return r; } catch (e) { db.exec(`ROLLBACK TO ${n}`); db.exec(`RELEASE ${n}`); throw e; } } };
   const host = { storage };
-  for (const t of SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
-  db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
-           CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
-           CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT, target_type TEXT,
-             role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
-           CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT);
-           CREATE TABLE IF NOT EXISTS source_reachability (address_norm TEXT PRIMARY KEY, consecutive_failures INTEGER, first_failure_since TEXT)`);
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
-  record.migrate();
   const membership = membershipOf(host, { record });
-  membership.migrate();
+  const boot = () => {
+    for (const t of SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
+    db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
+             CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
+             CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT, target_type TEXT,
+               role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
+             CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT)`);
+    record.migrate();
+    membership.migrate();
+  };
+  if (!bare) boot();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
   const q = queueOf(host, { record, membership, start: false, now: () => w.now, ...F });
   const w = {
-    db, sql, host, record, membership, q, fakes: F, statements, now: NOW,
+    db, sql, host, record, membership, q, fakes: F, statements, now: NOW, boot,
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
@@ -62,9 +65,9 @@ export function world(fakes = {}) {
                   VALUES (?,?,?,?,?,?,?,?)`).run(id, type, "g", title, st, iso(NOW), iso(NOW), "sha");
       return id;
     },
-    member(id, { role = "member", status = "active" } = {}) {
+    member(id, { role = "member", status = "active", created = iso(NOW) } = {}) {
       db.prepare(`INSERT INTO members (member_id, cover, role, status, created, updated, pairing_published) VALUES (?,?,?,?,?,?,0)`)
-        .run(id, id, role, status, iso(NOW), iso(NOW));
+        .run(id, id, role, status, created, iso(NOW));
       return id;
     },
     join(project, member, { owner = false, state = "joined" } = {}) {
@@ -92,7 +95,7 @@ export function defaultFakes() {
     governor: { governorHolding: () => [] },
     provenance: { homeOf: () => null },
     capture: { liveCaptureSessions: () => [], taskEvents: () => [], taskEventCount: () => 0, taskEventAttempt: () => true,
-               taskEventRemove: () => true, sourceReachability: () => ({ fallback_eligible: false }), on: () => ({ ok: true }) },
+               taskEventRemove: () => true, on: () => ({ ok: true }) },
     captureRequests: { completed: () => ({ requests: [] }), leads: () => ({ requests: [] }), rendersHeld: () => ({ requests: [] }) },
     connections: { edgeSevered: () => false },
     basisVersions: { projectsDrawingOn: () => Object.assign([], { bound: 32, truncated: false }), conclusionOf: () => null,
@@ -100,11 +103,14 @@ export function defaultFakes() {
     progressions: { proposalsFeed: () => ({ instances: [], proposals: [], dispositions: [] }),
                     disposeProposal: (a) => ({ ok: true, scope: "instance", progression_arm: a }) },
     aiRuns: { runFor: () => null },
-    bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }) },
+    bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }),
+            settled: ({ limit }) => ({ debts: [], limit, truncated: false }) },
     publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
     reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
-    monitoring: { subjects: () => ({ rows: [] }), floor: () => 2, monitoring: () => ({ ok: true, items: [], truncated: false }) },
+    monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
+                  flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
+                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
     affordances: { affordanceFacts: () => ({ ok: false }) },
     scheduler: { arm: async () => null, register: () => ({ ok: true }) },
   };
