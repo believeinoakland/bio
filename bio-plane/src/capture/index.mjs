@@ -2,7 +2,7 @@
  * the evidence store by digest, what capture learns about sources and sites (reachability, site assets, links and
  * the host's chrome, capture sessions, the platform's ceiling, the render allowance), the event queue an
  * undetermined capture raises, and the doorbell (`doorbell.mjs`). It writes no bundle: no intake path writes live
- * state (R33). Requirements: build/requirements/capture.md (R1–R62). Extracted from `legacy-store` and
+ * state (R33). Requirements: build/requirements/capture.md (R1–R64). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -362,7 +362,7 @@ export class Capture {
   }
 
   /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
-     (C-118.2), not R63's `NOT_FOUND`; minted here alone, so the read and the resolve answer it identically. */
+     (C-118.2), not R63's `EVIDENCE_NOT_HELD`; minted here alone, so the read and the resolve answer it identically. */
   #noSuchKnock(knockId) {
     /* DEC-49 REGION is-knock-held */
     const row = CAPTURE_CHECKS.NO_SUCH_KNOCK;
