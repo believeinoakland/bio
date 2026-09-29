@@ -1,6 +1,6 @@
 # legacy-index (T14)
 
-**Status** · session_014iCFH2FjXpiLcbqFsozuRm · depth 2 · WORKING · handled B3
+**Status** · session_014iCFH2FjXpiLcbqFsozuRm · depth 2 · RUNNING until 2026-09-29T23:34:19Z (civicos-ui check-mock-envelope on the base, then the worker suites) · handled B3
 
 ## J1 · QUESTION
 
