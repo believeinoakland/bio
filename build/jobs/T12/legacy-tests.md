@@ -1,6 +1,6 @@
 # legacy-tests (T12)
 
-**Status** · session_01VC8CyWDixYCVSWYr62qkej · depth 2 · WORKING · handled B11
+**Status** · session_01VC8CyWDixYCVSWYr62qkej · depth 2 · WORKING · handled B12
 
 ## Progress (working notes; the COMPLETE entry supersedes)
 
