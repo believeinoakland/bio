@@ -110,8 +110,13 @@ console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").
    private delegates and `static ownerMath`, N191's `#hiddenSets` run subtraction, the dead helpers), retrieval
    (99d8a98fd5, -786), strength (bf8416f54b, -355) and run-productions (cbd0805c1c, -212). Still a blindness floor at the
    measured figure, never below it. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12; LEGACY-STORE #4, N285, K404) from this suite's own CORPUS print: 484,830
+   -> 484,250 characters. T11's legacy-store (fe1111225e, N266/N267/N294) grew it +153 to 484,983; T12's LEGACY-STORE #4
+   (9208377da3, -733) took out the scoped proposal dispose's own NOT_A_DISPOSITION literal, its sentence, the
+   `DISPOSITIONS` import and their comments, answering through progressions' `notADisposition` (R35, C-100.20). Still a
+   blindness floor at the measured figure, never below it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length >= 484_830 && /class Store\b/.test(store), true);
+  store.length >= 484_250 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;

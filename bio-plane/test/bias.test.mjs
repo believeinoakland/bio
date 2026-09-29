@@ -306,8 +306,13 @@ t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning ca
    frontmatter/publication/reading helpers), retrieval (99d8a98fd5, -786: R59, R60), strength (bf8416f54b, -355) and
    run-productions (cbd0805c1c, -212). A blindness floor, not a ratchet: an unreadable or truncated store fails it,
    and the next extraction moves it again by name. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12; LEGACY-STORE #4, N285, K404): 484,830 -> 484,250 characters, the
+   measured print. T11's legacy-store (fe1111225e, N266/N267/N294) grew it +153 to 484,983; T12's LEGACY-STORE #4
+   (9208377da3, -733) took out the scoped proposal dispose's own NOT_A_DISPOSITION literal, its sentence, the
+   `DISPOSITIONS` import and their comments, now answered through progressions' `notADisposition` (R35, C-100.20).
+   Still a blindness floor at the measured figure, never below it. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length >= 484_830, INDEX_SRC.length > 100_000], [true, true]);
+  [STORE_SRC.length >= 484_250, INDEX_SRC.length > 100_000], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
           + `index.mjs ${INDEX_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
 

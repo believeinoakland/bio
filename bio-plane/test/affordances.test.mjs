@@ -148,6 +148,9 @@ import { BASIS_GRADES, MACHINE_CLASS_PREFIX,
 import { PRODUCT_KINDS, actionKinds, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS,
          RESOLUTIONS, checkActionExtension } from "../src/actions/index.mjs";
 import { parseFrontmatter } from "../checks/bio-checks.mjs";
+/* 2026-09-29 (LEGACY-TESTS #10, T12; N285, K404): the disposition list's one home and its one refusal (progressions R35). */
+import { DISPOSITIONS as PROGRESSIONS_DISPOSITIONS, notADisposition as PROGRESSIONS_NOT_A_DISPOSITION }
+  from "../src/progressions/index.mjs";
 const ACTIONS_SRC = readFileSync(new URL("../src/actions/index.mjs", import.meta.url), "utf8");
 const ACTIONS_CHECKS_SRC = readFileSync(new URL("../src/actions/checks.mjs", import.meta.url), "utf8");
 /* D-310: the ONE viewer parser, imported so this suite asks the real function
@@ -233,9 +236,29 @@ console.log("\n--- structural: vocabularies and rungs are the enforcing tables, 
    op=queue's options[] are this file's derivation and not a copy of it. The
    old form measured the clause; the rule is about the BINDING and the absence
    of a literal, so it now matches DISPOSITIONS wherever it sits in the list. */
-t("dispose() enforces the PUBLISHED set: store.mjs imports DISPOSITIONS from affordances.mjs and keeps no literal copy",
-  /import \{[^}]*\bDISPOSITIONS\b[^}]*\} from "\.\/affordances\.mjs"/.test(storeSrc)
-    && !/const DISPOSITIONS = \[/.test(storeSrc), true);
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; LEGACY-STORE #4, N285, K404; progressions R35, inquiry R20): the one
+   list is progressions' `DISPOSITIONS` (`src/progressions/checks.mjs`, its R35), re-exported by progressions' index,
+   imported and re-exported by inquiry, and re-exported unchanged by affordances.mjs — so the PUBLISHED set IS that
+   array (identity, the REC-35 pin, not equality). The store's last disposition check, the scoped proposal dispose,
+   no longer imports the list at all: it answers a word outside it through progressions' `notADisposition`, the one
+   site that reads the list and mints NOT_A_DISPOSITION (C-100.20). The intent is unchanged — one published set, and
+   store.mjs keeps no literal copy — so the arm reads where the list now lives: the identity, the store's call to the
+   helper and its absent import and literal, and the helper refusing against exactly the published array. */
+{
+  const TWO_LITERAL = /\[\s*["']deferred["']\s*,\s*["']dismissed["']\s*\]/;
+  const refusedWord = PROGRESSIONS_NOT_A_DISPOSITION("elevated");
+  t("dispose() enforces the PUBLISHED set: it IS progressions' one list, store.mjs answers through its `notADisposition` "
+  + "and keeps no import or literal copy of its own",
+    [DISPOSITIONS === PROGRESSIONS_DISPOSITIONS,
+     /import \{[^}]*\bnotADisposition\b[^}]*\} from "\.\/progressions\/index\.mjs"/s.test(storeSrc),
+     /\bnotADisposition\(/.test(stripComments(storeSrc).replace(/import \{[^}]*\} from "[^"]+";/g, "")),
+     /import \{[^}]*\bDISPOSITIONS\b[^}]*\} from/s.test(storeSrc),
+     /const DISPOSITIONS = /.test(stripComments(storeSrc)),
+     TWO_LITERAL.test(stripComments(storeSrc)),
+     PROGRESSIONS_NOT_A_DISPOSITION("deferred"), PROGRESSIONS_NOT_A_DISPOSITION("dismissed"),
+     [refusedWord?.reason, refusedWord?.dispositions === DISPOSITIONS]],
+    [true, true, true, false, false, false, null, null, ["NOT_A_DISPOSITION", true]]);
+}
 /* RE-ANCHORED 2026-09-28 (T8; affordances R26, actions R10, R40): the array a creation is judged against is actions'
    `actionKinds(view)`, whose answer with no profile active is `PRODUCT_KINDS` — and the module-level publication IS
    that array (identity, the REC-35 pin), not a copy. */
