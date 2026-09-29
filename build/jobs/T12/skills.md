@@ -20,6 +20,6 @@
 - `format`: 69 modules, 64 requirements files; 0 failures.
 - `architecture skills`: 6 product files, 29 relative imports; 0 failures.
 - `coverage skills`: 26 of 26 live requirement ids named by a test; 0 failures.
-- `ownership skills tranche/T12`: see the line below, re-run after commit.
+- `ownership skills tranche/T12`: 3 files changed; legacy-checks 0 added, 0 removed; 0 failures.
 
-Size (session_017ADskrBCe842675giyNPhU): test runs 3, module lines 2188
+Size (session_017ADskrBCe842675giyNPhU): test runs 3, module lines 2190
