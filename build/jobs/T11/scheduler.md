@@ -21,4 +21,4 @@
 - Providers used (their notices now carry the scheduler's listener in the plane): calibration 56 pass 0 fail; ai-runs 49 pass 0 fail; capture-requests 62 pass 0 fail.
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … scheduler`: 0 failures. `checks/coverage.mjs … scheduler`: 20 of 20 live ids named, 0 failures. `checks/ownership.mjs … scheduler tranche/T11`: 0 failures.
 
-Size (session_01LjsX9MK5ewxBsUxpMLKmTd): test runs 5, module lines 367
+Size (session_01LjsX9MK5ewxBsUxpMLKmTd): test runs 5, module lines 366
