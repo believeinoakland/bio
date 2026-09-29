@@ -1,20 +1,21 @@
 {
  "meta": {
   "branch": "claude/gallant-brown-zg0wc1",
-  "commit": "af8c42f022",
+  "commit": "c9a245767f",
   "written": "2026-09-28",
-  "note": "Requirements win over canon. Maturity is as built at the close of T13 (T11-T13 closed; build/plan/archive/T11.md, T12.md, T13.md). T14 is opening: its wordings are folded into the requirement files (K452) and are counted as specified, not built. Layers 9 and 10 are built at the plane with no member surface. Bob's rulings DEC-76 to DEC-91 (docs/development/DECISIONS.md) and K356-K452 (build/rulings.md) are integrated; a ruling that is decided but not in any requirement is marked 'decided, not built'.",
+  "note": "Requirements win over canon. Maturity is as built at the close of T13 (T11-T13 closed; build/plan/archive/T11.md, T12.md, T13.md). T14 is opening: its wordings are folded into the requirement files (K452) and are counted as specified, not built. Layers 9 and 10 are built at the plane with no member surface. Bob's rulings DEC-76 to DEC-92 (docs/development/DECISIONS.md) and K356-K452 (build/rulings.md) are integrated; a ruling that is decided but not in any requirement is marked 'decided, not built'.",
   "enrichedV2": {
    "written": "2026-09-28",
    "repoCommit": "b00bf5ab3f (tranche/T10)",
-   "rungs": "from RUNGS / RUNG_ABSENT in bio-plane/src/affordances.mjs (affordances R2, R3, R27), then Bob's DEC-87 (2026-09-29), which grades the 57 ops the code still lists as undetermined: 26 reversible, 29 reasoned, 2 terminal. The code has not yet moved them (DEC-87 owed, BOB's), so each such act cites DEC-87 as ruled and not yet in the code. 'off-ladder' = the op is not a record act (read, credential, substrate, caller-owned or observational ground; see rungGround). 'undetermined' = a record act with no rung ruled and no op located; DEC-86 treats it as reasoned until BOB assigns it.",
+   "rungs": "from RUNGS / RUNG_ABSENT in bio-plane/src/affordances.mjs (affordances R2, R3, R27), then Bob's DEC-88 (2026-09-29), which grades the 57 ops the code still lists as undetermined: 26 reversible, 29 reasoned, 2 terminal. The code has not yet moved them (DEC-88 owed, BOB's), so each such act cites DEC-88 as ruled and not yet in the code. 'off-ladder' = the op is not a record act (read, credential, substrate, caller-owned or observational ground; see rungGround). 'undetermined' = a record act with no rung ruled and no op located; DEC-87 treats it as reasoned until BOB assigns it. BOB #67's page (tranche/T14 @ ba1980dc38) applied the same DEC-88 grades to 55 acts; this rebuild agrees on every act both weigh, splits 'adopt newer / keep earlier' into its two parts, and also weighs determine (K375), profilesset (K416) and monitorpause (K377) from the code.",
    "surface": "whether civicos-ui/app.html offers the act today, from its SURFACES registry, ACT_FLOW, ROSTER_ACTS and op call sites",
    "frequency": "worker's judgement from the journeys, Interaction Constructs and Case Making",
    "memberWord": "memberWordSrc cites a design doc, requirement or the old UI; proposed: true means the worker's proposal"
   },
-  "updated": "2026-09-29, rebuilt on claude/gallant-brown-zg0wc1 @ af8c42f022 for DEC-76-DEC-91, K356-K452 and the requirement changes since 6faa808405 (T11-T13 built, T14 specified)",
+  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67 · 2026-09-29, rebuilt on claude/gallant-brown-zg0wc1 @ af8c42f022 for DEC-76-DEC-93, K356-K452 and the requirement changes since 6faa808405 (T11-T13 built, T14 specified); reconciled with BOB #67's page (tranche/T14 @ ba1980dc38) and renumbered per K473",
   "snapshotDate": "2026-09-29",
-  "firstWrittenAt": "tranche/T10 @ 6faa808405 (2026-09-28)"
+  "firstWrittenAt": "tranche/T10 @ 6faa808405 (2026-09-28)",
+  "asOf": "claude/gallant-brown-zg0wc1 @ c9a245767f (this rebuild, rulings renumbered per K473) and tranche/T14 @ ba1980dc38 (BOB #67's page: DEC-86-DEC-90 and the action-plan rulings)"
  },
  "constructs": [
   {
@@ -769,20 +770,20 @@
      "who": "joined participant",
      "src": "promotion R41-R44",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades projectfork: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades projectfork: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#project/ workspace, 'Fork this project')",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Set objective's satisfaction condition",
      "who": "joined participant",
      "src": "intent R2",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades objectivecondition: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades objectivecondition: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "once",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Declare the strength bar",
@@ -938,7 +939,7 @@
      "who": "member",
      "src": "provenance R29",
      "rung": "undetermined",
-     "rungSrc": "declareOrigin (provenance R29) has no op in RUNGS or RUNG_ABSENT that could be located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "declareOrigin (provenance R29) has no op in RUNGS or RUNG_ABSENT that could be located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -957,7 +958,7 @@
      "who": "member (document asks to be monitored)",
      "src": "monitoring R14, R45",
      "rung": "undetermined",
-     "rungSrc": "turning monitoring on is a field the document authors (monitoring R14, R45); no op of its own located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "turning monitoring on is a field the document authors (monitoring R14, R45); no op of its own located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none (monitor check is offered, not the switch)",
      "frequency": "occasional"
     }
@@ -969,7 +970,7 @@
     "UNDETERMINED for unrecorded route",
     "capture grade on the one shared A-D scale, with the capture icon; a grade says how easily someone else could check it, never whether it is true (DEC-82)",
     "co-attested (a trusted timestamp and a third-party co-archive) or, once a case discloses it, 'self-attested only' (DEC-81)",
-    "origin mark: Ours, Another group's, Accepted by our group, Not yet evaluated, Flagged (DEC-91, partly ruled)"
+    "origin mark: Ours, Another group's, Accepted by our group, Not yet evaluated, Flagged (DEC-92, partly ruled)"
    ],
    "maturity": "built, gaps",
    "src": "capture Purpose; provenance Purpose, R22-R32; promotion R16, R31; State Rules §4.1; Intake Doctrine §3; DEC-78 item 2; DEC-81"
@@ -1050,10 +1051,10 @@
      "who": "member",
      "src": "capture Provides (inboxList, inboxGet, inboxResolve)",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades inboxresolve: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27); DEC-87 regrades it reasoned once pulling admits material (DEC-78)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades inboxresolve: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27); DEC-88 regrades it reasoned once pulling admits material (DEC-78)",
      "surface": "none",
      "frequency": "weekly",
-     "rungRuled": "DEC-87",
+     "rungRuled": "DEC-88",
      "op": "inboxresolve"
     },
     {
@@ -1061,8 +1062,8 @@
      "who": "member",
      "src": "DEC-78 item 1; Intake Doctrine §2a",
      "rung": "reasoned",
-     "rungRuled": "DEC-87",
-     "rungSrc": "DEC-87: inboxresolve becomes reasoned once DEC-78's pull admits material (owed, BOB's); capture's requirements owed (N345)",
+     "rungRuled": "DEC-88",
+     "rungSrc": "DEC-88: inboxresolve becomes reasoned once DEC-78's pull admits material (owed, BOB's); capture's requirements owed (N345)",
      "note": "commits the member to nothing more; vouching stays with release. The member is the capturing actor, never the source",
      "surface": "none (decided, not built)",
      "frequency": "weekly"
@@ -1138,7 +1139,7 @@
      "who": "member",
      "src": "DEC-78 item 5",
      "rung": "undetermined",
-     "rungSrc": "DEC-78 item 5; requirements owed (N345); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "DEC-78 item 5; requirements owed (N345); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "linking a revealed person to earlier knocks is itself a claim with evidence, the strongest being the same knocker secret",
      "surface": "none (decided, not built)",
      "frequency": "rare"
@@ -1148,7 +1149,7 @@
      "who": "member",
      "src": "DEC-78 item 5(b)",
      "rung": "undetermined",
-     "rungSrc": "DEC-78 item 5(b); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "DEC-78 item 5(b); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "confirming it is itself a disclosure and needs the source's consent",
      "surface": "none (decided, not built)",
      "frequency": "rare"
@@ -1158,7 +1159,7 @@
      "who": "project owner, at publishing",
      "src": "DEC-78 item 5(a), 5(d); DEC-80 item 2",
      "rung": "undetermined",
-     "rungSrc": "DEC-78 item 5(d); part of the ceremony's step three (DEC-80 item 2); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "DEC-78 item 5(d); part of the ceremony's step three (DEC-80 item 2); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "the group is never first to make a source more public; consent is stated as permanent; withdrawing it binds only future publications",
      "surface": "none (decided, not built)",
      "frequency": "rare"
@@ -1210,10 +1211,10 @@
      "src": "provenance R28",
      "op": "testify",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades testify: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades testify: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Choose attribution for a case edition",
@@ -1221,11 +1222,11 @@
      "src": "publication R17",
      "op": "attribute",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades attribute: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades attribute: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87",
-     "friction": "Full dialog stating the effect: the name becomes permanent at publication (DEC-87 item 4)."
+     "rungRuled": "DEC-88",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a name that becomes permanent at publication."
     }
    ],
    "shownAs": [
@@ -1277,10 +1278,10 @@
      "src": "observation-log R14",
      "op": "lead",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades lead: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades lead: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Share to a project",
@@ -1288,11 +1289,11 @@
      "src": "observation-log R16",
      "op": "leadshare",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades leadshare: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades leadshare: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "weekly",
-     "rungRuled": "DEC-87",
-     "friction": "Full dialog stating the effect: a disclosure to a project cannot be un-read (DEC-87 item 4)."
+     "rungRuled": "DEC-88",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a disclosure that cannot be un-read."
     },
     {
      "name": "Record a look",
@@ -1300,10 +1301,10 @@
      "src": "observation-log R17",
      "op": "leadlook",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades leadlook: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades leadlook: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Take it up into a question / set it aside",
@@ -1440,10 +1441,10 @@
      "src": "content Provides (contentMint); run-productions Purpose",
      "op": "contentmint",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades contentmint: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades contentmint: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "daily",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Type a transcription of a part",
@@ -1451,10 +1452,10 @@
      "src": "content R23",
      "op": "transcribe",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades transcribe: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades transcribe: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Attest another member's transcription",
@@ -1462,10 +1463,10 @@
      "src": "content Provides; System Design §3 row 4",
      "op": "transcriptionattest",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades transcriptionattest: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades transcriptionattest: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Attest a capture's text",
@@ -1473,10 +1474,10 @@
      "src": "content Provides",
      "op": "attesttext",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades attesttext: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades attesttext: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Ask if a newer version holds it",
@@ -1527,11 +1528,11 @@
      "src": "entities Provides",
      "op": "entitycreate",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades entitycreate: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades entitycreate: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#subjects)",
      "frequency": "weekly",
-     "rungRuled": "DEC-87",
-     "friction": "Full dialog stating the effect: a person is named in the group's registry (DEC-87 item 4)."
+     "rungRuled": "DEC-88",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a person named in the registry."
     },
     {
      "name": "Add an alias",
@@ -1539,10 +1540,10 @@
      "src": "entities Provides",
      "op": "entityalias",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades entityalias: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades entityalias: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#subjects)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Declare a relation, with justification and citation",
@@ -1560,10 +1561,10 @@
      "src": "entities R9",
      "op": "resolve",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades resolve: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades resolve: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#subjects, resolve references)",
      "frequency": "daily",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Testify a match the recogniser missed (grade D)",
@@ -1571,10 +1572,10 @@
      "src": "entities R12",
      "op": "resolvetestify",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades resolvetestify: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades resolvetestify: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#subjects)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -1631,10 +1632,10 @@
      "src": "connections Provides",
      "op": "connectionchoose",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades connectionchoose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades connectionchoose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (document page, 'what the record knows' panel)",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Declare a theme with its test",
@@ -1642,20 +1643,20 @@
      "src": "connections Provides",
      "op": "themedeclare",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades themedeclare: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades themedeclare: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#themes)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Place / propose / withdraw material in a theme",
      "who": "member; machine proposes",
      "src": "connections Provides",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades themeplace: reversible; themepropose: reversible; RUNGS.themewithdraw = reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades themeplace: reversible; themepropose: reversible; RUNGS.themewithdraw = reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#themes; place and propose)",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -1725,10 +1726,10 @@
      "src": "progressions R1-R4",
      "op": "progressiondefine",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades progressiondefine: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades progressiondefine: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#progressions)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Thread documents into an instance",
@@ -1736,10 +1737,10 @@
      "src": "progressions R6-R8",
      "op": "thread",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades thread: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades thread: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#progressions)",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Discharge a stage lawfully skipped",
@@ -1939,10 +1940,10 @@
      "src": "bias R11",
      "op": "biasadopt",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades biasadopt: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades biasadopt: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "once",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Adopt for the instance",
@@ -1950,10 +1951,10 @@
      "src": "bias R11",
      "op": "biasadopt",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades biasadopt: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades biasadopt: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "once",
-     "rungRuled": "DEC-87",
+     "rungRuled": "DEC-88",
      "note": "refused NOT_AN_ADMIN to others, with a remedy naming a project owner's lens (bias R11; DEC-83; T14, N327)"
     },
     {
@@ -2044,7 +2045,7 @@
      "src": "case-authoring R12",
      "note": "the uncleared-hunch refusal lands with the ceremony's pre-flight (DEC-80 item 3); case-authoring R12 not yet met",
      "rung": "undetermined",
-     "rungSrc": "clearing a hunch has no op of its own in the tables (case-authoring R12: regrade or sever the hunch leg); no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "clearing a hunch has no op of its own in the tables (case-authoring R12: regrade or sever the hunch leg); no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
@@ -2163,7 +2164,7 @@
      "who": "member; assistant surfaces within a run's bound",
      "src": "ai-runs R25-R26; intent R16",
      "rung": "undetermined",
-     "rungSrc": "opening a question has no op of its own in RUNGS or RUNG_ABSENT; it rides promote; no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "opening a question has no op of its own in RUNGS or RUNG_ABSENT; it rides promote; no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "yes (via #add / record; assistant-surfaced ones arrive by run)",
      "frequency": "weekly"
     },
@@ -2240,10 +2241,10 @@
     {
      "name": "Accept another group's published work, with a reason",
      "who": "member",
-     "src": "DEC-91; Roadmap §11 (revised)",
+     "src": "DEC-92; Roadmap §11 (revised)",
      "rung": "reasoned",
-     "rungSrc": "DEC-91: 'a new reasoned act, attributed, with a reason'",
-     "note": "shown as the origin mark 'Accepted by our group'; what accepting commits the group to, and whether it can be withdrawn, are still Bob's (DEC-91 'still open')",
+     "rungSrc": "DEC-92: 'a new reasoned act, attributed, with a reason'",
+     "note": "shown as the origin mark 'Accepted by our group'; what accepting commits the group to, and whether it can be withdrawn, are still Bob's (DEC-92 'still open')",
      "surface": "none (decided, not built; requirements owed in inquiry, publication, affordances)",
      "frequency": "occasional"
     }
@@ -2254,7 +2255,7 @@
     "UNDETERMINED legs named, never floored",
     "a tension mark on a side held in an unresolved record contradiction (DEC-77)",
     "two projects' different conclusions from different arguments are plurality, each attributed; conclusions that cannot both hold in the same respect carry a tension mark, and a named difference recorded on both clears it (DEC-84 (3))",
-    "origin mark on cited work from another group: Another group's, Accepted by our group, Not yet evaluated, Flagged (DEC-91)"
+    "origin mark on cited work from another group: Another group's, Accepted by our group, Not yet evaluated, Flagged (DEC-92)"
    ],
    "maturity": "built",
    "src": "inquiry Purpose, R1-R3, R19-R28, R39; basis-versions R16-R23; promotion R21-R26; Case Making §Naming"
@@ -2485,10 +2486,10 @@
      "who": "AI run (investigate)",
      "src": "run-productions Purpose; basis-versions R28",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades suggest: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades suggest: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (shown on #session/ and #versions/; machine act)",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -2562,11 +2563,11 @@
      "src": "strength R15",
      "op": "strengthbarset",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades strengthbar: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades strengthbar: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "once",
-     "rungRuled": "DEC-87",
-     "friction": "Full dialog stating the effect: a gate on the whole group's publishing (DEC-87 item 4)."
+     "rungRuled": "DEC-88",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a gate on the whole group's work."
     }
    ],
    "shownAs": [
@@ -2699,17 +2700,17 @@
      "src": "contradiction R13-R16",
      "op": "contradictionpropose",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades contradictionpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades contradictionpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Say how the two differ (the clarifier)",
      "who": "joined member",
      "src": "DEC-77 item 1; CONTRADICTION-PRESENT-RESOLVE-DESIGN.md §7",
      "rung": "undetermined",
-     "rungSrc": "its rung is BOB's wording (K447); requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "its rung is BOB's wording (K447); requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "multi-select: different time or occasion, part or scope, meaning, observer or method, not the same subject; with evidence on the screen it resolves in one act, without it the mark softens",
      "surface": "none (decided, not built)",
      "frequency": "weekly"
@@ -2729,7 +2730,7 @@
      "who": "joined member",
      "src": "DEC-76 item 2; DEC-77 item 1",
      "rung": "undetermined",
-     "rungSrc": "requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "both sides become its legs (one supports, one cuts against: K447 point 8); each assumption explored is a sub-inquiry",
      "surface": "none (decided, not built)",
      "frequency": "occasional"
@@ -2739,7 +2740,7 @@
      "who": "joined member",
      "src": "DEC-77 item 3(b); DEC-84 (14)",
      "rung": "undetermined",
-     "rungSrc": "a new act, attributed like any other (DEC-77 item 3(b)); requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "a new act, attributed like any other (DEC-77 item 3(b)); requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "one act; the record keeps which recommendation was accepted; the machine's reason stays the machine's, the member's own words optional and never filled from it",
      "surface": "none (decided, not built)",
      "frequency": "weekly"
@@ -2749,7 +2750,7 @@
      "who": "member",
      "src": "DEC-84 (17); DEC-77 item 1",
      "rung": "undetermined",
-     "rungSrc": "a world lead dismisses in one act (DEC-77 item 1); requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "a world lead dismisses in one act (DEC-77 item 1); requirements owed (N345, not in T14); a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "one fixed reason, optional words; only 'same fact at different precision' and 'not about the same matter' count as false conflicts",
      "surface": "none (decided, not built)",
      "frequency": "weekly"
@@ -2837,10 +2838,10 @@
      "who": "member (own), joined participant (project), administrator (group)",
      "src": "intent R9",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades aspirationdeclare: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades aspirationdeclare: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "once",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Depart from a group aspiration (reason)",
@@ -2857,20 +2858,20 @@
      "who": "member",
      "src": "intent R11",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades aspirationdeadend: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades aspirationdeadend: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Declare / close a goal; link an objective",
      "who": "member",
      "src": "intent R8",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades goaldeclare: reasoned; goallink: reversible; RUNGS.goalclose = reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades goaldeclare: reasoned; goallink: reversible; RUNGS.goalclose = reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -2948,10 +2949,10 @@
      "who": "joined participant (machine refused)",
      "src": "intent R2",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades objectivecondition: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades objectivecondition: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "once",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Read progress and gaps",
@@ -2978,11 +2979,11 @@
      "src": "intent R18",
      "op": "workObjective",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades workobjective: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades workobjective: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87",
-     "friction": "The lightest of the six: the reason field opens in place with the run's budget and scope shown beside it (DEC-87 item 4)."
+     "rungRuled": "DEC-88",
+     "friction": "High friction, the lightest of the six (DEC-88): its reason field opens in place with the run's budget and scope shown beside it."
     }
    ],
    "shownAs": [
@@ -3065,22 +3066,22 @@
      "who": "member",
      "src": "reevaluation R15",
      "rung": "reasoned",
-     "rungSrc": "versionadopt: DEC-87 grades it reasoned (Bob, 2026-09-29); the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "versionadopt: DEC-88 grades it reasoned (Bob, 2026-09-29); the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none (the queue offers both on a newer-capture notice: queue R12, built T12, N172)",
      "frequency": "occasional",
      "op": "versionadopt",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Keep the earlier version",
      "who": "member",
      "src": "reevaluation R15",
      "rung": "reversible",
-     "rungSrc": "versionkeep: DEC-87 grades it reversible (Bob, 2026-09-29); the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "versionkeep: DEC-88 grades it reversible (Bob, 2026-09-29); the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none (the queue offers both on a newer-capture notice: queue R12, built T12, N172)",
      "frequency": "occasional",
      "op": "versionkeep",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Record re-evaluation",
@@ -3208,17 +3209,17 @@
      "src": "case-authoring R19",
      "op": "statementack",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades statementack: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades statementack: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#draft/ and #reviewcopy/)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Add a signed account of how a document was captured",
      "who": "the capturing member",
      "src": "DEC-81 item 3(c)",
      "rung": "undetermined",
-     "rungSrc": "DEC-81 item 3(c); N345; a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "DEC-81 item 3(c); N345; a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none (decided, not built)",
      "frequency": "rare"
     },
@@ -3237,7 +3238,7 @@
      "who": "project owner",
      "src": "DEC-76 item 4; DEC-84 (11)-(13); K447 point 18",
      "rung": "undetermined",
-     "rungSrc": "an attributed acknowledgement in the pattern of NO_FALSIFIER's override (DEC-76 item 4); authored in case-authoring, published by publication (K447 point 18); N345; a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "an attributed acknowledgement in the pattern of NO_FALSIFIER's override (DEC-76 item 4); authored in case-authoring, published by publication (K447 point 18); N345; a new act with no rung ruled, treated as reasoned until BOB assigns it (DEC-87)",
      "note": "an undisclosed open record tension refuses the case; a disclosed one does not. The disclosure reaches one level and says so (DEC-84 (12))",
      "surface": "none (decided, not built)",
      "frequency": "occasional"
@@ -3287,7 +3288,7 @@
     }
    ],
    "shownAs": [
-    "irreversible: reached only through the publication ceremony (DEC-80, DEC-86)",
+    "irreversible: reached only through the publication ceremony (DEC-80, DEC-87)",
     "NOT_PUBLISHED / FINDING_IN_SEVERAL_CASES",
     "strengthUndetermined CASES_DISAGREE (publication R11)",
     "deliverer 'undetermined' when unrecorded"
@@ -3359,10 +3360,10 @@
      "src": "review R3-R4",
      "op": "casedraft",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades casedraft: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades casedraft: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#draft/ review copy editor)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Grant / revoke",
@@ -3394,10 +3395,10 @@
      "src": "review R18",
      "op": "reviewcomment",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades reviewcomment: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades reviewcomment: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#reviewcopy/ and #draft/)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -3464,10 +3465,10 @@
      "src": "standards R1-R4",
      "op": "standardDeclare",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades standarddeclare: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades standarddeclare: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Propose a standard",
@@ -3475,20 +3476,20 @@
      "src": "standards R9",
      "op": "standardPropose",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades standardpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades standardpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Adopt a proposal",
      "who": "member",
      "src": "standards R10",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades standardadopt: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades standardadopt: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Ask what was in force on a date",
@@ -3575,17 +3576,17 @@
      "who": "machine or member",
      "src": "conformance R12",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades comparisonpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades comparisonpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Open a question from an unclear outcome",
      "who": "same act",
      "src": "conformance R6",
      "rung": "undetermined",
-     "rungSrc": "opens a question from an unclear outcome; no op of its own in the tables (conformance R6); no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "opens a question from an unclear outcome; no op of its own in the tables (conformance R6); no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none",
      "frequency": "occasional"
     }
@@ -3594,11 +3595,11 @@
     "frozen vs live strength pair per finding (R9)",
     "basis_changed flag (R10)",
     "disagreement stated beside, not refused (R4)",
-    "whether it was escalated, declined with the member's reason, or neither (DEC-88; conformance requirement owed)",
+    "whether it was escalated, declined with the member's reason, or neither (DEC-89; conformance requirement owed)",
     "an obligation against an act found by a contradiction routes here; a contradiction never records an outcome (DEC-76 item 3)"
    ],
    "maturity": "built, gaps",
-   "src": "conformance Purpose, Terms, R1-R12, R18; DEC-76 item 3; DEC-88"
+   "src": "conformance Purpose, Terms, R1-R12, R18; DEC-76 item 3; DEC-89"
   },
   {
    "id": "consequence",
@@ -3661,10 +3662,10 @@
      "who": "joined member; machine only computes",
      "src": "consequences R1-R4",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades consequencerecord: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades consequencerecord: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Revise",
@@ -3791,12 +3792,12 @@
      "src": "actions R15-R17",
      "op": "actioncorrespond",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades actioncorrespond: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades actioncorrespond: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#action/ page)",
      "frequency": "weekly",
      "urgency": "time-bound",
      "urgencySrc": "a reply or no reply is read against the action's clock (actions R15-R17, R31)",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "State governing laws",
@@ -3804,10 +3805,10 @@
      "src": "actions R18-R19",
      "op": "actionlaws",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades actionlawspropose: reversible; RUNGS.actionlaws = reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades actionlawspropose: reversible; RUNGS.actionlaws = reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#action/ page, laws list)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Set risk tier (reason)",
@@ -3815,17 +3816,17 @@
      "src": "actions R23-R24, R28",
      "op": "actionrisktier",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades actionriskpropose: reversible; RUNGS.actionrisktier = reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades actionriskpropose: reversible; RUNGS.actionrisktier = reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#action/ page)",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Propose a clock entry from a profile deadline",
      "who": "any credential",
      "src": "actions R32",
      "rung": "undetermined",
-     "rungSrc": "clockPropose (actions R32) has no op in RUNGS or RUNG_ABSENT that could be located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "clockPropose (actions R32) has no op in RUNGS or RUNG_ABSENT that could be located; no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
@@ -3908,35 +3909,35 @@
      "src": "filings R1-R5",
      "op": "filingPrepare",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades filingprepare: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades filingprepare: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
      "urgencySrc": "filings serve an action whose clock is running (actions R31)",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Approve",
      "who": "member",
      "src": "filings R6",
      "rung": "terminal",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades filingapprove: terminal. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades filingapprove: terminal. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87",
-     "friction": "Terminal: the full dialog already states what ends (DEC-87 item 4)."
+     "rungRuled": "DEC-88",
+     "friction": "High friction (DEC-88): terminal, so the full dialog stating what it ends is already its own."
     },
     {
      "name": "Record as sent",
      "who": "member",
      "src": "filings R7",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades filingsent: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades filingsent: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
      "urgencySrc": "sending starts the counterparty's clock (actions R15, R31)",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Assemble counsel packet (tier 3)",
@@ -3944,20 +3945,20 @@
      "src": "filings R8-R12",
      "op": "counselPacket",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades counselpacket: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades counselpacket: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Propose a legal theory",
      "who": "any credential",
      "src": "filings R14",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades theorypropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades theorypropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -4058,6 +4059,13 @@
      "act": "end",
      "who": "member; refused unless both exit conditions met",
      "src": "escalation R14"
+    },
+    {
+     "from": "live noncompliant determination",
+     "to": "declined to escalate (not yet built)",
+     "act": "decline to escalate (reason)",
+     "who": "joined member who may open an escalation",
+     "src": "DEC-89"
     }
    ],
    "keyFields": [
@@ -4066,7 +4074,7 @@
     "attached actions",
     "evaluations",
     "exit: compliance / consequences (never composed)",
-    "why the group is pursuing it: the opening reason (DEC-88)"
+    "why the group is pursuing it: the opening reason (DEC-89)"
    ],
    "acts": [
     {
@@ -4075,31 +4083,32 @@
      "src": "escalation R1",
      "op": "escalationOpen",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades escalationopen: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades escalationopen: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87",
-     "note": "decided (DEC-88): must say, in the member's own words, why this breach is worth pursuing; prose only"
+     "rungRuled": "DEC-88",
+     "ruling": "DEC-89: opening requires a written reason, why this breach is worth pursuing; prose only (the requirement change is owed)."
     },
     {
-     "name": "Decline to escalate, saying why not now",
+     "name": "Decline to escalate",
      "who": "any joined member who may open an escalation",
-     "src": "DEC-88",
+     "src": "DEC-89 (Bob, 2026-09-29)",
      "rung": "reasoned",
-     "rungSrc": "DEC-88: reasoned, attributed and dated; corrected forward only",
-     "note": "prose only: no significance, severity, priority, urgency or rank (conformance R8, escalation R19). A later escalation, opened with its own reason, supersedes it and both stay readable. Not the same as declining a proposed stage (escalation R13)",
+     "rungSrc": "DEC-89: reasoned (Bob, 2026-09-29); a new act, not yet in the affordances tables",
      "surface": "none (decided, not built; escalation, conformance and affordances requirements owed)",
-     "frequency": "occasional"
+     "frequency": "occasional",
+     "ruling": "Decided, not yet built (DEC-89): on a live noncompliant determination, records in the member's own words why the group is not pursuing it now; attributed and dated, corrected only forward (a later escalation, opened with its own reason, supersedes it and both stay readable); prose only, never a significance, severity or priority value.",
+     "note": "Not the same as declining a proposed stage (escalation R13)."
     },
     {
      "name": "Attach a breach action (stage 2, 5, 7)",
      "who": "member",
      "src": "escalation R9",
      "rung": "reasoned",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades escalationattach: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades escalationattach: reasoned. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Evaluate a response (complied / partial / denied / none)",
@@ -4138,10 +4147,10 @@
      "who": "member",
      "src": "escalation R14",
      "rung": "terminal",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades escalationend: terminal. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades escalationend: terminal. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     }
    ],
    "shownAs": [
@@ -4149,7 +4158,7 @@
     "exit conditions each met / not met / undetermined (R3)"
    ],
    "maturity": "built, gaps",
-   "src": "escalation Purpose, Terms, R1-R16; layers.md layer 9 ruling 3; DEC-88"
+   "src": "escalation Purpose, Terms, R1-R16; layers.md layer 9 ruling 3; DEC-89"
   },
   {
    "id": "monitoring",
@@ -4247,7 +4256,7 @@
      "who": "owning members",
      "src": "monitoring R33 (not yet met)",
      "rung": "undetermined",
-     "rungSrc": "adopting a watch proposal has no op of its own located (monitoring R33, not yet met); no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "adopting a watch proposal has no op of its own located (monitoring R33, not yet met); no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -4350,12 +4359,12 @@
      "src": "queue R25",
      "op": "taskresolve / taskforward",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades taskresolve: reversible; taskforward: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades taskresolve: reversible; taskforward: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (#queue, one or as a set)",
      "frequency": "daily",
      "urgency": "time-bound",
      "urgencySrc": "an obligation may carry a clock (Interaction Constructs §T)",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Defer / dismiss a finding (set form)",
@@ -4396,7 +4405,7 @@
      "who": "per option",
      "src": "queue R12, R17",
      "rung": "undetermined",
-     "rungSrc": "per option: each option carries its own act's rung (affordances R11); no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "per option: each option carries its own act's rung (affordances R11); no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "yes (#queue, options published per item)",
      "frequency": "daily"
     }
@@ -4474,12 +4483,12 @@
      "src": "ai-runs R9",
      "op": "airunopen",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades airunopen: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades airunopen: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none (app.html shows a running session; cannot open a CHECK run)",
      "frequency": "weekly",
      "urgency": "time-bound",
      "urgencySrc": "a run holds a lease and bounds; it stops when one runs out (ai-runs R4, R10, R15)",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Read the run, its log and lens",
@@ -4496,27 +4505,27 @@
      "who": "run (investigate)",
      "src": "run-productions Purpose",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades suggest: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades suggest: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "yes (results shown on #versions/ and #session/)",
      "frequency": "weekly",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Propose readings of a document",
      "who": "run (extract), within mints",
      "src": "run-productions R10-R11",
      "rung": "reversible",
-     "rungSrc": "DEC-87 (Bob, 2026-09-29) grades extractpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-87 owed; affordances R27)",
+     "rungSrc": "DEC-88 (Bob, 2026-09-29) grades extractpropose: reversible. Ruled; the code still lists it in RUNG_ABSENT until BOB moves it (DEC-88 owed; affordances R27)",
      "surface": "none",
      "frequency": "occasional",
-     "rungRuled": "DEC-87"
+     "rungRuled": "DEC-88"
     },
     {
      "name": "Surface a question",
      "who": "run within surfaces bound",
      "src": "ai-runs R25-R26",
      "rung": "undetermined",
-     "rungSrc": "surfacing a question has no op of its own in the tables (ai-runs R25-R26); no rung ruled, so treated as reasoned until BOB assigns it (DEC-86)",
+     "rungSrc": "surfacing a question has no op of its own in the tables (ai-runs R25-R26); no rung ruled, so treated as reasoned until BOB assigns it (DEC-87)",
      "surface": "yes (surfaced questions listed with the assistant marker)",
      "frequency": "weekly"
     },
@@ -4535,10 +4544,10 @@
     "machine-work label",
     "bias debt when lens moved",
     "terminal rollup of looks",
-    "a panel docked beside the surface it serves, expandable by a divider, docked at the side on wide screens and the bottom on narrow ones, never floating; 'the assistant did this, at <member>'s request' in the one 'Machine work' treatment; a wizard step highlights the real control and never fills or presses it (DEC-89)"
+    "a panel docked beside the surface it serves, expandable by a divider, docked at the side on wide screens and the bottom on narrow ones, never floating; 'the assistant did this, at <member>'s request' in the one 'Machine work' treatment; a wizard step highlights the real control and never fills or presses it (DEC-90)"
    ],
    "maturity": "built, gaps",
-   "src": "ai-runs Purpose, Terms, R9-R44; run-productions Purpose; AI Roles §2-§3; DEC-89"
+   "src": "ai-runs Purpose, Terms, R9-R44; run-productions Purpose; AI Roles §2-§3; DEC-90"
   },
   {
    "id": "capture-request",
@@ -5180,7 +5189,7 @@
    "to": "escalation",
    "verb": "may start, or be declined with a reason",
    "cardinality": "0..1",
-   "src": "escalation Purpose; DEC-88"
+   "src": "escalation Purpose; DEC-89"
   }
  ],
  "roles": [
@@ -5243,13 +5252,13 @@
     "record determinations, consequences, escalation acts",
     "decide project-scoped findings",
     "edit drafts",
-    "open an escalation with a reason, or decline to escalate with a reason (decided, DEC-88)",
+    "open an escalation with a reason, or decline to escalate with a reason (decided, DEC-89)",
     "resolve a tension in our own record (decided, DEC-77, DEC-84)"
    ],
    "cannot": [
     "invite, remove, change visibility, prepare or sign the case (owners only)"
    ],
-   "src": "membership R54-R55, R66; basis-versions R13, R20; intent R2; conformance R1; queue R27; review R2; DEC-88; DEC-84"
+   "src": "membership R54-R55, R66; basis-versions R13, R20; intent R2; conformance R1; queue R27; review R2; DEC-89; DEC-84"
   },
   {
    "name": "Project owner",
@@ -5314,10 +5323,10 @@
     "travel on a member's token",
     "write a member's reason",
     "say which side of a contradiction is wrong, or that a conflict is genuine (DEC-84 (5))",
-    "fill in or press a control for a member (DEC-89)",
-    "flag another group's work (DEC-91)"
+    "fill in or press a control for a member (DEC-90)",
+    "flag another group's work (DEC-92)"
    ],
-   "src": "AI Roles §2-§3; affordances R7; basis-versions R12, R16; actions R1, R5, R23; conformance R1; filings R6-R8; intent R2, R18; ratification R2, R4; DEC-84; DEC-89; DEC-91"
+   "src": "AI Roles §2-§3; affordances R7; basis-versions R12, R16; actions R1, R5, R23; conformance R1; filings R6-R8; intent R2, R18; ratification R2, R4; DEC-84; DEC-90; DEC-92"
   },
   {
    "name": "Daemon / plane (machine)",
@@ -5759,14 +5768,14 @@
   },
   {
    "name": "Undetermined (one component, always 'because…')",
-   "meaning": "what we do not know and why: one component with a fixed mark and a mandatory 'because…' line; first-class, never an error, never a zero, written as a named term. A newcomer meets it first, beside strength against the bar",
-   "src": "DEC-85; Interaction Constructs §U, §M; System Design §1",
+   "meaning": "what we do not know and why: one component with a fixed mark, identical everywhere, and a mandatory 'because…' line; first-class, never an error, never a zero, written as a named term. A newcomer meets it first, beside strength against the bar",
+   "src": "DEC-86; Interaction Constructs §U, §M; System Design §1",
    "where": "legs, strength axes, capture route, risk tier, standard source and in-force, consequences, home sets, deliverer, profiles, a stage the record cannot read"
   },
   {
    "name": "Its four neighbours: Withheld, Unrated, Nobody looked, Refused",
    "meaning": "each visibly different from Undetermined and from each other, each with one fixed sentence pattern of its own, never shared: Withheld (exists, not yours to see; incompleteness only, never what or how many); Unrated (nothing graded yet: rests on nothing); Nobody looked (no one searched there; not the same as looked and absent); Refused (the system declined an act, naming its reason). None is dressed as an error",
-   "src": "DEC-85; Interaction Constructs §U; DEC-36; strength R3; observation-log R1",
+   "src": "DEC-86; Interaction Constructs §U; DEC-36; strength R3; observation-log R1",
    "where": "wherever Undetermined can appear"
   },
   {
@@ -5777,8 +5786,8 @@
   },
   {
    "name": "Strength pair and the bar",
-   "meaning": "the weakest capture and weakest connection, side by side, testimony beside; graded, 'Unrated' or 'Undetermined' with its reason; never one score. In the project workspace each question shows its two badges and one phrase against the bar ('Meets the bar', 'Short on connection', 'Short on capture', 'Unrated'); hover names the weakest document or link and how to raise it",
-   "src": "strength R1-R10; publication R11; DEC-44; DEC-82 (question 5)",
+   "meaning": "the weakest capture and weakest connection, side by side, testimony beside; graded, 'Unrated' or 'Undetermined' with its reason; never one score. In the project workspace each question shows its two badges and one phrase against the bar ('Meets the bar', 'Short on connection', 'Short on capture', 'Unrated'); hover names the weakest document or link and how to raise it; 'Unrated' has its own treatment and fixed sentence, distinct from Undetermined (DEC-86)",
+   "src": "strength R1-R10; publication R11; DEC-44; DEC-82 (question 5); DEC-86",
    "where": "questions, versions, the project workspace, published cases, determinations"
   },
   {
@@ -5789,8 +5798,8 @@
   },
   {
    "name": "Weight marks on acts (rung and friction)",
-   "meaning": "every act's button carries its rung's name and weight pips, so weight is read before the click. Friction follows the rung: reversible inline; reasoned a reason field in place; terminal and attested a full dialog stating what ends or cannot be silently undone, and who signs; irreversible only through the ceremony. An act whose effect cannot be taken back outside the record opens the full dialog whatever its rung. An act with no rung is treated as reasoned",
-   "src": "DEC-86; DEC-87; affordances R2-R3, R27; Interaction Constructs §F",
+   "meaning": "every act's weight: reversible < reasoned < terminal < attested < irreversible. every act's button carries its rung's name and weight pips, so weight is read before the click. Friction follows the rung: reversible inline; reasoned a reason field in place; terminal and attested a full dialog stating what ends or cannot be silently undone, and who signs; irreversible only through the ceremony. An act whose effect cannot be taken back outside the record opens the full dialog whatever its rung. An act with no rung is treated as reasoned",
+   "src": "affordances R2-R3, R27; Interaction Constructs §revised set, §F; DEC-87; DEC-88",
    "where": "every act option"
   },
   {
@@ -5801,8 +5810,8 @@
   },
   {
    "name": "Look states: 'Nobody looked', looked and absent, could not tell, partial, present",
-   "meaning": "which absence is true, at which of four levels; 'Nobody looked' is written as a named term, as Undetermined is",
-   "src": "observation-log R1-R3; skills R19; case-authoring R17; DEC-82; DEC-85",
+   "meaning": "which absence is true, at which of four levels; 'Nobody looked' is written as a named term, as Undetermined is; 'nobody looked' has its own treatment and fixed sentence, never Undetermined's (DEC-86)",
+   "src": "observation-log R1-R3; skills R19; case-authoring R17; DEC-82; DEC-86",
    "where": "frontier, leads, run logs, searched section of a case"
   },
   {
@@ -5814,13 +5823,13 @@
   {
    "name": "'Machine work' label",
    "meaning": "the one treatment shared by every machine output: anything a machine proposed or recommended, never evidence until a member acts; with attribution ('the assistant did this, at <member>'s request'). A recommendation is labelled, shown first with its reason, and accepted in one attributed act the record remembers",
-   "src": "AI Roles §3 rule 3; DEC-77 item 3; DEC-89; filings R5; standards R9",
+   "src": "AI Roles §3 rule 3; DEC-77 item 3; DEC-90; filings R5; standards R9",
    "where": "suggested versions, proposed readings, standards, comparisons, laws, tiers, filings, contradiction labels and recommendations, the assistant panel"
   },
   {
    "name": "Origin mark (partly ruled)",
    "meaning": "who made this, in the same family as 'Machine work': Ours; Another group's (a published edition, signature verified); Accepted by our group (a reasoned act, with its reason); Not yet evaluated; Flagged (only a member's recorded evaluation naming specific issues, never a machine's). Ambient; hover shows the fact behind it; never composed with grades or strength into a trust score. 'Meets standards' waits for an evaluator of incoming work; more is Bob's to decide later",
-   "src": "DEC-91; Roadmap §11 (revised); inquiry R7",
+   "src": "DEC-92; Roadmap §11 (revised); inquiry R7",
    "where": "information from other groups, cited work, documents"
   },
   {
@@ -5843,8 +5852,8 @@
   },
   {
    "name": "Withheld / out of view",
-   "meaning": "something exists you may not see: stated as incompleteness, never identity or count; its one fixed sentence pattern is DEC-85's",
-   "src": "queue R7 (DEC-36); strength R6 (withheld whole, built T12, K360); reevaluation R3; observation-log R13; DEC-85",
+   "meaning": "something exists you may not see: stated as incompleteness, never identity or count; its own treatment and one fixed sentence, never Undetermined's (DEC-86)",
+   "src": "queue R7 (DEC-36); strength R6 (withheld whole, built T12, K360); reevaluation R3; observation-log R13; DEC-86",
    "where": "queue homes, strength members, re-evaluation dependents, observation rows"
   },
   {
@@ -5891,8 +5900,8 @@
   },
   {
    "name": "Refused: the standard sentence, then what to do",
-   "meaning": "every refusal names its reason in plain words before anything runs; where refusals of one condition share a code, the member reads the shared sentence first and then the act's own next step or alternative, as part of what they read",
-   "src": "membership Provides, R84; DEC-83; affordances Purpose (pre-flight, DEC-8); AI Roles §3 rule 10; DEC-85",
+   "meaning": "every refusal names its reason in plain words before anything runs; where refusals of one condition share a code, the member reads the shared sentence first and then the act's own next step or alternative, as part of what they read; 'Refused' has its own treatment and fixed sentence, never Undetermined's (DEC-86)",
+   "src": "membership Provides, R84; DEC-83; affordances Purpose (pre-flight, DEC-8); AI Roles §3 rule 10; DEC-86",
    "where": "every act"
   },
   {
@@ -5930,11 +5939,6 @@
    "ids": "monitoring R28-R29, R31-R35"
   },
   {
-   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; the pilot flow and wizard absent. The docked, expandable panel is decided",
-   "why": "decided, not yet built (DEC-89); deployment order",
-   "ids": "ai-runs R40, R44; AI Roles §2, §8; DEC-89"
-  },
-  {
    "what": "Contradictions: how one is presented and resolved is ruled (conditional; inline tension marks and the clarifier; six forms; resolution kinds; disclose, never block; accepting a recommendation as an act). Nothing shows a candidate to a member yet",
    "why": "decided, not yet built: the design is written and reviewed (N344, K447) and Bob ruled its thirteen points (DEC-84); the requirement changes are owed, for Bob's approval, not in T14",
    "ids": "DEC-76; DEC-77; DEC-84; K447; K450; N345"
@@ -5958,11 +5962,6 @@
    "what": "Leads: the frontier half of look-state words",
    "why": "not yet met (the leads list is built)",
    "ids": "observation-log R20-R21 (D-682's frontier half, retrieval's)"
-  },
-  {
-   "what": "Rungs of the 57 acts graded 'undetermined'",
-   "why": "decided, not yet built: Bob graded them (DEC-87: 26 reversible, 29 reasoned, 2 terminal, six with high friction); BOB moves them into the code, rewords R27 (which says 56) and adds any missing required reason. Nine acts with no op located still have no rung",
-   "ids": "affordances R27; DEC-86; DEC-87"
   },
   {
    "what": "Release and retire of a document have no owning module's requirements (still in legacy-store)",
@@ -5990,14 +5989,9 @@
    "ids": "DEC-78; Intake Doctrine §2a; N345"
   },
   {
-   "what": "Escalation: a required reason to open one, and a reasoned 'decline to escalate' act",
-   "why": "decided, not yet built: escalation, conformance and affordances requirements owed; no plan entry yet",
-   "ids": "DEC-88"
-  },
-  {
    "what": "The origin mark and the act of accepting another group's work",
-   "why": "partly decided (DEC-91); requirements owed in inquiry, publication and affordances; more is Bob's to decide later",
-   "ids": "DEC-91; Roadmap §11"
+   "why": "partly decided (DEC-92); requirements owed in inquiry, publication and affordances; more is Bob's to decide later",
+   "ids": "DEC-92; Roadmap §11"
   },
   {
    "what": "A refusal's shared sentence followed by the act's own next step",
@@ -6006,8 +6000,8 @@
   },
   {
    "what": "Onboarding and starter materials",
-   "why": "deferred by Bob until the redesigned surfaces are built and stable (DEC-90); a newcomer meets strength against the bar and 'Undetermined' first (DEC-82)",
-   "ids": "DEC-90; DEC-82"
+   "why": "deferred by Bob until the redesigned surfaces are built and stable (DEC-91); a newcomer meets strength against the bar and 'Undetermined' first (DEC-82)",
+   "ids": "DEC-91; DEC-82"
   },
   {
    "what": "Member surfaces absent: publish/ratify, start a CHECK run, frontier, bias, transcription, AI readings",
@@ -6021,8 +6015,28 @@
   },
   {
    "what": "Cross-group rerun, regrade under another lens, directory and cross-group discussion",
-   "why": "absent; DEC-91 settles only how another group's work is marked",
-   "ids": "System Design §3 rows 7, 13; DEC-91"
+   "why": "absent; DEC-92 settles only how another group's work is marked",
+   "ids": "System Design §3 rows 7, 13; DEC-92"
+  },
+  {
+   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; assistant pilot flow absent. Its look is decided, not yet built: a panel docked beside the surface it serves (side on wide screens, bottom on narrow ones), expandable, never floating; its text carries the one 'Machine work' treatment, and a wizard step highlights the real control",
+   "why": "deployment order; the panel is decided, not yet built (DEC-90)",
+   "ids": "ai-runs R40, R44; AI Roles §2, §8; DEC-90"
+  },
+  {
+   "what": "Why a breach is, or is not, escalated: decided, not yet built. Opening an escalation requires a written reason, and a new reasoned act, 'decline to escalate', records why a group does not pursue one; both prose only",
+   "why": "decided, not yet built: the escalation and conformance requirement changes (the opening reason, the decline act and its read, and whether a determination was escalated, declined or neither) are owed, for Bob's approval; no plan entry yet",
+   "ids": "DEC-89; conformance R8; escalation R1, R19; DEC-88 (the act's rung)"
+  },
+  {
+   "what": "Action plan: ruled in part. Bob's ten rulings settle what a plan is (opens with an inquiry; one or more related matters, suspected or determined; options in six categories, suggested or added; no catalogue, no budgets; up to three scenarios); the new 'action-plans' module awaits his approval as architecture, and the surface (S11) is designed after",
+   "why": "open: the module and its requirements are not yet approved",
+   "ids": "docs/development/action-design/ACTION-PLAN.md (Bob's rulings 1-10, 2026-09-29); Case Making 'THE ACTION PLAN'; DEC-25"
+  },
+  {
+   "what": "Rungs of the 57 ops graded 'undetermined': decided, not yet in the plane. Bob gave them rungs (26 reversible, 29 reasoned, 2 terminal) and named six judgement calls that carry high friction; friction by rung is ruled",
+   "why": "decided, not yet built: BOB moves the 57 into RUNGS in the affordances module, corrects R27's count, adds a required reason where a reasoned act lacks one, and publishes the consequence statement for the six; R27 says 56 while the code holds 57. Acts with no op located still have no rung and are treated as reasoned (DEC-87)",
+   "ids": "DEC-87; DEC-88; affordances R27 (K102, K264, K309)"
   }
  ],
  "contradictions": [
@@ -6068,11 +6082,11 @@
   },
   {
    "what": "The 57 acts with no rung",
-   "canon": "Interaction Constructs §F (DEC-87): graded 26 reversible, 29 reasoned, 2 terminal",
+   "canon": "Interaction Constructs §F (DEC-88): graded 26 reversible, 29 reasoned, 2 terminal",
    "requirements": "affordances R27 lists them as undetermined (and says 56 while the code holds 57)",
    "status": "decided; requirement and code owed",
-   "resolution": "BOB moves them into RUNGS and rewords R27 (DEC-87 owed)",
-   "src": "Interaction Constructs §F; affordances R27; DEC-87"
+   "resolution": "BOB moves them into RUNGS and rewords R27 (DEC-88 owed)",
+   "src": "Interaction Constructs §F; affordances R27; DEC-88"
   },
   {
    "what": "Pulling a knock",
@@ -6100,11 +6114,11 @@
   },
   {
    "what": "The trust hierarchy",
-   "canon": "Roadmap §11 (revised by DEC-91): an origin mark, and an act of accepting another group's work",
+   "canon": "Roadmap §11 (revised by DEC-92): an origin mark, and an act of accepting another group's work",
    "requirements": "no module produces the mark; nothing records an acceptance",
    "status": "partly decided; requirements owed",
    "resolution": "inquiry, publication and affordances requirements owed; the rest is Bob's later",
-   "src": "Roadmap §11; DEC-91"
+   "src": "Roadmap §11; DEC-92"
   },
   {
    "what": "A project's stage display",
@@ -6142,7 +6156,7 @@
   "build/plan/archive/T8.md, T9.md (status and close)",
   "build/jobs/T8/*.bob.md heads",
   "civicos-ui/app.html (routes only)",
-  "docs/development/DECISIONS.md DEC-76 to DEC-91",
+  "docs/development/DECISIONS.md DEC-76 to DEC-92",
   "build/rulings.md K356-K452",
   "docs/architecture/BIO_Interaction_Constructs_v0_1.md §U, §F, §M",
   "docs/architecture/BIO_Case_Making_v0_1.md §CONTRADICTION",
@@ -6409,7 +6423,7 @@
   },
   {
    "term": "Look",
-   "plain": "A record of whether anyone looked for something and what they found: 'Nobody looked', looked and absent, could not tell, present.",
+   "plain": "A record of whether anyone looked for something and what they found: 'Nobody looked', looked and absent, could not tell, present. 'Nobody looked' has its own look and fixed sentence, distinct from Undetermined ('could not tell', DEC-86).",
    "internalNames": [
     "observation",
     "NEVER_LOOKED",
@@ -6419,7 +6433,7 @@
     "frontier"
    ],
    "avoidConfusionWith": "firsthand observation",
-   "src": "observation-log R1-R3; DEC-85"
+   "src": "observation-log R1-R3; DEC-86"
   },
   {
    "term": "Question",
@@ -6499,13 +6513,13 @@
   },
   {
    "term": "Undetermined",
-   "plain": "What we do not know, and why: one mark that always carries a 'because…' line; never an error or a zero.",
+   "plain": "What we do not know, and why: one mark with a line that always says 'because…', shown the same way everywhere, never as an error or a zero (DEC-86).",
    "internalNames": [
     "undetermined",
     "UNDETERMINED"
    ],
-   "avoidConfusionWith": "Withheld, Unrated, Nobody looked, Refused: four different things, each shown differently (DEC-85)",
-   "src": "DEC-85; Interaction Constructs §U"
+   "avoidConfusionWith": "its four neighbours, each with its own look and its own fixed sentence, never shared (DEC-86): withheld (it exists, you may not see it), unrated (nothing graded yet), nobody looked, refused (the system declined an act)",
+   "src": "DEC-86; Interaction Constructs §U"
   },
   {
    "term": "Lens (declared bias)",
@@ -6644,14 +6658,14 @@
   },
   {
    "term": "Escalation",
-   "plain": "Seven stages of pressing a breach, from documenting it to political accountability.",
+   "plain": "Seven stages of pressing a breach, from documenting it to political accountability. Opening one needs a written reason; a member may instead record why the group declines to escalate (DEC-89, not yet built).",
    "internalNames": [
     "escalation",
     "escalationOpen",
     "stage 1-7"
    ],
    "avoidConfusionWith": "",
-   "src": "escalation R1-R21; DEC-88"
+   "src": "escalation R1-R21; DEC-89"
   },
   {
    "term": "Clock",
@@ -6700,14 +6714,14 @@
   },
   {
    "term": "Rung",
-   "plain": "How heavy an act is: reversible, reasoned, terminal, attested, irreversible. Every button shows its rung's name and weight pips, and friction grows with it.",
+   "plain": "How heavy an act is: reversible, reasoned, terminal, attested, irreversible. Friction follows it: reversible inline, reasoned a reason field in place, terminal and attested a full dialog, irreversible only through the ceremony; every button shows its rung's name and weight pips (DEC-87).",
    "internalNames": [
     "RUNGS",
     "RUNG_LADDER",
     "rung_absence"
    ],
    "avoidConfusionWith": "the path to publication (release, stand behind, ground, conclude, accept, ratify, publish), a sequence of acts (K356)",
-   "src": "affordances R2; K356; DEC-86"
+   "src": "affordances R2; K356; DEC-87"
   },
   {
    "term": "Set weight",
@@ -6722,7 +6736,7 @@
   },
   {
    "term": "Assistant (AI run)",
-   "plain": "A bounded machine session that looks, suggests and asks for captures; it never decides. It appears as a panel docked beside the screen it serves.",
+   "plain": "A bounded machine session that looks, suggests and asks for captures; it never decides. It appears as a panel docked beside the screen it serves, expandable, never floating (DEC-90).",
    "internalNames": [
     "ai-run",
     "airunopen",
@@ -6731,7 +6745,7 @@
     "extract"
    ],
    "avoidConfusionWith": "",
-   "src": "ai-runs Purpose; DEC-89"
+   "src": "ai-runs Purpose; DEC-90"
   },
   {
    "term": "Machine-work label",
@@ -6742,7 +6756,7 @@
     "actor_class: machine"
    ],
    "avoidConfusionWith": "",
-   "src": "AI Roles §3 rule 3; DEC-77; DEC-89"
+   "src": "AI Roles §3 rule 3; DEC-77; DEC-90"
   },
   {
    "term": "Capture request",
@@ -6844,7 +6858,7 @@
     "DEC-36"
    ],
    "avoidConfusionWith": "Undetermined",
-   "src": "DEC-36; DEC-85; strength R6"
+   "src": "DEC-36; DEC-86; strength R6"
   },
   {
    "term": "Unrated",
@@ -6853,7 +6867,7 @@
     "unrated"
    ],
    "avoidConfusionWith": "Undetermined (could not tell)",
-   "src": "strength R3; DEC-85"
+   "src": "strength R3; DEC-86"
   },
   {
    "term": "Refused",
@@ -6865,7 +6879,7 @@
     "NOT_AN_ADMIN"
    ],
    "avoidConfusionWith": "an error",
-   "src": "DEC-83; DEC-85; membership R84"
+   "src": "DEC-83; DEC-86; membership R84"
   },
   {
    "term": "Measures map",
@@ -7009,7 +7023,7 @@
     "(no op yet)"
    ],
    "avoidConfusionWith": "declining a proposed escalation stage (escalationdecline)",
-   "src": "DEC-88"
+   "src": "DEC-89"
   },
   {
    "term": "Origin mark",
@@ -7018,7 +7032,7 @@
     "(no module yet)"
    ],
    "avoidConfusionWith": "a trust score (there is none)",
-   "src": "DEC-91; Roadmap §11"
+   "src": "DEC-92; Roadmap §11"
   },
   {
    "term": "Assistant panel",
@@ -7028,7 +7042,7 @@
     "wizard"
    ],
    "avoidConfusionWith": "",
-   "src": "DEC-89"
+   "src": "DEC-90"
   }
  ],
  "surfaces": [
@@ -7083,7 +7097,7 @@
     "accept another group's work (decided)"
    ],
    "existsInOldUI": "partial",
-   "src": "inquiry, citation, strength R6-R10; app.html #inquiry/ (divide, reopen, narrow not offered); DEC-77; DEC-84; DEC-91"
+   "src": "inquiry, citation, strength R6-R10; app.html #inquiry/ (divide, reopen, narrow not offered); DEC-77; DEC-84; DEC-92"
   },
   {
    "name": "Reading review and acceptance",
@@ -7364,7 +7378,7 @@
     "verify"
    ],
    "existsInOldUI": "yes",
-   "src": "publication R8-R13; app.html #case/, #published; DEC-81; DEC-76 item 4; DEC-91"
+   "src": "publication R8-R13; app.html #case/, #published; DEC-81; DEC-76 item 4; DEC-92"
   },
   {
    "name": "Standards and determinations",
@@ -7440,7 +7454,7 @@
     "decline to escalate (decided)"
    ],
    "existsInOldUI": "no",
-   "src": "escalation R1-R15; DEC-88"
+   "src": "escalation R1-R15; DEC-89"
   },
   {
    "name": "Monitoring",
@@ -7473,7 +7487,7 @@
     "accept or reject suggestions"
    ],
    "existsInOldUI": "partial",
-   "src": "ai-runs R9-R27; run-productions; app.html #session/ (view only); DEC-89"
+   "src": "ai-runs R9-R27; run-productions; app.html #session/ (view only); DEC-90"
   },
   {
    "name": "Group lens (bias)",

@@ -1495,3 +1495,21 @@ response: **MOVED by Bob, 2026-09-29:** "I've started a separate session that wi
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: nothing here; the Actions session owns question 9.
+
+### DEC-94 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 14)
+for: bob
+question: How does the queue avoid nagging (DEC-69) while making sure obligations with clocks are not missed?
+why it is Bob's: where respect ends and a deadline duty begins is doctrine (DEC-69 is his).
+provisional: the queue keeps one standing entry per member and case, re-notifying only on a snooze increment or when something new lands (DEC-10); overdue is to be marked (monitoring R34).
+alternative: treat a clock crossing a threshold such as "due within 3 days" as new; or add an outside channel (email or push).
+recommendation: thresholds as new events in the product; an outside channel left for later.
+reversal cost: low; nothing is built.
+response: **Ruled by Bob, 2026-09-29, refining the recommendation.**
+  1. A DEADLINE REMINDER IS THE MEMBER'S OWN REQUEST, never the system's nagging. It is set up when the action is chosen in the action plan, perhaps by a default the member sees and can change at that moment (nothing preselected unseen, DEC-77); a further reminder is also one the member accepts, perhaps at the system's suggestion. A reminder the member asked for is informing at the act they set it at (DEC-69), and it fires as asked.
+  2. As a deadline nears, the item's POSITION, COLOUR or WORDING may change, as appropriate. That is display, not a notification.
+  3. There remains NO WAY to reach a member who has not opened the product: no email, push or other outside channel.
+  4. OVERDUE is new, and re-notifies once (DEC-10's "something new"). "Due within N days" is NOT new unless the member requested that reminder.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the reminder as a member-set part of choosing an action (actions or the action-plan module, with the Actions session), the queue's display change as a clock nears and the overdue re-notification (queue, monitoring R34), for Bob's approval; the UX page's open question 14 marked ruled.
