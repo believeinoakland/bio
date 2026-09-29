@@ -23,3 +23,7 @@
 - `ownership skills tranche/T12`: 3 files changed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_017ADskrBCe842675giyNPhU): test runs 3, module lines 2190
+
+## J1 · COMPLETE
+
+B1 applied: doctrine.test.mjs R15 keyedNumbers() now also reads ai-runs' AI_RUN_CHECKS (C-22.7's home since N299); skills 31/0, 0 todo. version.test.mjs checked: its line-9 header said the catalogue keeps a copy until T12, and the second R25 test compared against that copy only if one existed, so after N299 it asserted nothing. It now holds that no catalogue family carries AI_RUN_SKILL_VERSION_UNNAMED or a row numbered C-22.7. Module source unchanged, so no generated artifact is stale. format, architecture, coverage 26/26 and ownership all have 0 failures. Deferred: a stale comment in skilldoctrine.mjs about C-2.8 being pinned by the suite. Fixing it alone would stale the agent-worker bundle; the record gives the details. No not-yet-met marks met.
