@@ -5,6 +5,11 @@
 export const BIAS_TABLES = Object.freeze(["bias_statements", "bias_adoptions", "bias_debts", "bias_debt_sweeps",
                                           "bias_debt_settlements"]);
 
+/* R45 (N343): the columns a store created before them lacks, `[table, column, declaration]`, added by `migrate()`
+   before the schema text runs. Never filled for a row already held: a debt settled before `settled_kind` was kept
+   reads its kind as undetermined (R36). */
+export const BIAS_ADDITIVE_COLUMNS = Object.freeze([Object.freeze(["bias_debts", "settled_kind", "TEXT"])]);
+
 export const BIAS_SCHEMA = `-- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of the bundle's own
 -- statements[] frontmatter and never a second authority. Exactly the sense
 -- inquiry_basis is a projection of basis[] (D-21: one place to state a fact),

@@ -379,3 +379,90 @@ test("R43: uncleared answers the open debts the gate admits, newest raised first
   const failed = w.bias.uncleared({ gate: admin });
   assert.deepEqual([failed.debts, failed.undetermined], [[], true], "never throws");
 });
+
+test("R44: settled answers the debts settled at or after since that the gate admits, newest settled first then by run, each with its kind, when, and the settling settlement's actor and reason; a since that is no instant answers none and says so", async () => {
+  const w = await debtWorld({ BIAS_DEBT_BATCH: "500" });
+  const then = w.lens();
+  const wps = { "RUN-1": run(then), "RUN-2": run(then), "RUN-3": run(then),
+                "RUN-4": run(then, { context: { type: "inquiry", id: "INQ-2026-0001-q" }, principal: null }) };
+  w.bias.registerWorkProducts("ai-run", source(wps));
+  w.move("Moved.");
+  await w.bias.biasDebtSweep(NOW);
+  const now = w.lens();
+  /* three acts settle: a member's resolve, a re-run under the lens in force, the lens moving back */
+  assert.equal(w.bias.biasDebtResolve({ run: "RUN-1", reason: "The change does not bear on this finding.", actor: "alice",
+                                        viewer: "member:alice", at: "2026-07-11T00:00:00Z" }).ok, true);
+  wps["RUN-5"] = run(now, { rerunOf: "RUN-2", lens: null });
+  assert.equal((await w.bias.biasDebtRerun({ kind: "ai-run", key: "RUN-5", at: "2026-07-12T00:00:00.700Z" })).discharged, true);
+  w.move(S("s1").text);
+  const back = await w.bias.biasDebtSweep(NOW + 5000);
+  assert.deepEqual(back.cleared, ["RUN-3", "RUN-4"]);
+  const admin = viewerPredicate("admin");
+  const before = w.dump();
+  const all = w.bias.settled({ gate: admin, since: "2026-07-01T00:00:00Z" });
+  assert.deepEqual(all, { limit: 200, truncated: false, since: "2026-07-01T00:00:00Z", debts: [
+    { run: "RUN-2", context_type: "project", context_id: P, settled_kind: "rerun", settled_at: "2026-07-12T00:00:00Z", actor: null, reason: null },
+    { run: "RUN-1", context_type: "project", context_id: P, settled_kind: "resolved", settled_at: "2026-07-11T00:00:00Z", actor: "alice",
+      reason: "The change does not bear on this finding." },
+    { run: "RUN-3", context_type: "project", context_id: P, settled_kind: "lens_returned", settled_at: "2026-07-10T00:00:05Z", actor: null, reason: null },
+    { run: "RUN-4", context_type: "inquiry", context_id: "INQ-2026-0001-q", settled_kind: "lens_returned", settled_at: "2026-07-10T00:00:05Z",
+      actor: null, reason: null }] }, "newest settled first, ties by run; a lens_returned or rerun settlement has no actor and no reason");
+  assert.equal(w.dump(), before, "writes nothing");
+  /* since excludes an earlier settlement, compared as an instant: at or after, in either spelling or as ms */
+  const runs = (a) => w.bias.settled({ gate: admin, ...a }).debts.map((d) => d.run);
+  assert.deepEqual(runs({ since: "2026-07-11T00:00:00Z" }), ["RUN-2", "RUN-1"], "at since is included");
+  assert.deepEqual(runs({ since: "2026-07-11T00:00:00.001Z" }), ["RUN-2"]);
+  assert.deepEqual(runs({ since: "2026-07-10T00:00:05.500Z" }), ["RUN-2", "RUN-1"], "a settlement in the second before since is earlier");
+  assert.deepEqual(runs({ since: Date.parse("2026-07-10T00:00:05Z") }), ["RUN-2", "RUN-1", "RUN-3", "RUN-4"]);
+  assert.deepEqual(runs({ since: "2026-07-13T00:00:00Z" }), []);
+  /* the gate hides a debt on an unseen context: cora is outside the project, and the inquiry's context is no held bundle */
+  assert.deepEqual(runs({ gate: viewerPredicate("member:alice"), since: "2026-07-01T00:00:00Z" }), ["RUN-2", "RUN-1", "RUN-3"]);
+  assert.deepEqual(runs({ gate: viewerPredicate("member:cora"), since: "2026-07-01T00:00:00Z" }), []);
+  assert.deepEqual(runs({ gate: viewerPredicate("nobody"), since: "2026-07-01T00:00:00Z" }), []);
+  for (const gate of [null, {}, { sql: 1, args: [] }, "admin"]) assert.deepEqual(runs({ gate, since: "2026-07-01T00:00:00Z" }), [], String(gate));
+  /* a since that is not an instant answers none, and says so */
+  for (const since of [null, undefined, "", "  ", "soon", NaN, Infinity, {}, ["2026-07-01T00:00:00Z"]]) {
+    const x = w.bias.settled({ gate: admin, since });
+    assert.deepEqual([x.debts, x.truncated, x.since, x.limit], [[], false, null, 200], String(since));
+    assert.match(x.stated, /not an instant/);
+    assert.equal("undetermined" in x, false, "a since that is no instant is not a failed read");
+  }
+  /* a debt settled before the kind was kept: null kind, and no actor or reason attributed to it */
+  w.sql.exec(`UPDATE bias_debts SET settled_kind = NULL WHERE run = 'RUN-1'`);
+  assert.deepEqual(w.bias.settled({ gate: admin, since: "2026-07-11T00:00:00Z" }).debts[1],
+    { run: "RUN-1", context_type: "project", context_id: P, settled_kind: null, settled_at: "2026-07-11T00:00:00Z", actor: null, reason: null });
+  w.sql.exec(`UPDATE bias_debts SET settled_kind = 'resolved' WHERE run = 'RUN-1'`);
+  /* re-raised, a debt is open and not listed; settled again, the latest settlement is the one read */
+  w.move("Moved once more.");
+  await w.bias.biasDebtSweep(NOW + 6000);
+  assert.deepEqual(runs({ since: "2026-07-01T00:00:00Z" }), []);
+  w.bias.biasDebtResolve({ run: "RUN-1", reason: "A second, later judgement.", actor: "ruth", viewer: "member:ruth", at: "2026-07-14T00:00:00Z" });
+  assert.deepEqual(w.bias.settled({ gate: admin, since: "2026-07-01T00:00:00Z" }).debts.map((d) => [d.run, d.actor, d.reason, d.settled_at]),
+    [["RUN-1", "ruth", "A second, later judgement.", "2026-07-14T00:00:00Z"]]);
+  /* never throws: a read that fails answers none, undetermined */
+  w.sql.exec(`ALTER TABLE bias_debts RENAME TO gone`);
+  const failed = w.bias.settled({ gate: admin, since: "2026-07-01T00:00:00Z" });
+  assert.deepEqual([failed.debts, failed.truncated, failed.undetermined], [[], false, true]);
+  assert.match(failed.stated, /could not be read/);
+});
+
+test("R44: at most limit (1–1,000, default 200), truncated measured by reading one more — 201 settlements give truncated", async () => {
+  const w = await debtWorld({ BIAS_DEBT_BATCH: "500" });
+  const then = w.lens();
+  const keys = Array.from({ length: 201 }, (_, i) => `RUN-${String(i).padStart(3, "0")}`);
+  w.bias.registerWorkProducts("ai-run", source(Object.fromEntries(keys.map((k) => [k, run(then)]))));
+  w.move("Moved.");
+  assert.equal((await w.bias.biasDebtSweep(NOW)).raised.length, 201);
+  w.move(S("s1").text);
+  assert.equal((await w.bias.biasDebtSweep(NOW + 1000)).cleared.length, 201);
+  const admin = viewerPredicate("admin");
+  const since = "2026-07-10T00:00:00Z";
+  const d = w.bias.settled({ gate: admin, since });
+  assert.deepEqual([d.limit, d.debts.length, d.truncated], [200, 200, true]);
+  assert.deepEqual(d.debts.map((x) => x.run), keys.slice(0, 200), "one instant: ties broken by run");
+  assert.ok(d.debts.every((x) => x.settled_kind === "lens_returned" && x.actor === null && x.reason === null));
+  assert.deepEqual([w.bias.settled({ gate: admin, since, limit: 201 }).truncated, w.bias.settled({ gate: admin, since, limit: 201 }).debts.length], [false, 201]);
+  assert.deepEqual([w.bias.settled({ gate: admin, since, limit: 1 }).debts.length, w.bias.settled({ gate: admin, since, limit: 1 }).truncated], [1, true]);
+  for (const [limit, cap] of [[5000, 1000], [0, 200], [-3, 200], ["x", 200], [null, 200], ["7", 7], [2.9, 2]])
+    assert.equal(w.bias.settled({ gate: admin, since, limit }).limit, cap, String(limit));
+});
