@@ -145,8 +145,8 @@ import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
 export { Store };
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
-/* T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
-   control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them. */
+// T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
+// control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.
 import { makeFetch, json, doAnswer, storeSilent, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
          SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow } from "./control-plane/index.mjs";
 import { decorateAct } from "./control-plane/ops.mjs";
@@ -973,7 +973,6 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
 
     if (op === "caseratify") return caseRatifyOp(req, stub, { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights });
     if (op === "ratify") return ratifyOp(req, stub, { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
-    return undefined;
 }
 
 export default { fetch: makeFetch({ publicOp, gatedOp }) };
