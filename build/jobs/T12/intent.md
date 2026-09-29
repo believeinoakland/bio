@@ -13,7 +13,7 @@
   - One bounded project walker, `#projectsInOrder`, replaces the unbounded `#conditioned`; R28 and `proposals` both use it. `#heldAspirations` takes a scope filter and a bound. The unbounded `#aspirations` is gone.
 - **Tests.** New in `bounds.test.mjs`, each run at the bound and at one past it:
   - R28's aspiration context, with member and retired aspirations not counted.
-  - R28's project walk: a project with no condition is walked but not measured, and at 1,001 projects the ones past the cut are not measured.
+  - R28's project walk (B3). Of 1,000 projects, 3 have a condition: the first, the 500th and the last in id order. At the bound, all three are measured and nothing is cut. At 1,001 projects, the project past the cut in id order is given a condition and is not measured, and `context_truncated` is true.
   - `proposals`' project read: a project the viewer may not see is not counted; the 1,000th project in id order is read and the 1,001st's gap is not.
   - R14's request read: the first 1,000 read in basis order, a repeat read once, and no more than 1,000 `requestById` calls.
   - In `objective.test.mjs`, a new test "R22 R2 R9 NO_SUCH_ENTITY is entities' one row" covers both sites answering `noSuchEntity(id)` and C-111.5 retired. R2's order test now expects the `noSuchEntity` answer.
@@ -22,7 +22,7 @@
 - intent's Bounds paragraph: `*(not yet met: N305; each read is unbounded)*`.
 - entities R36: `*(not yet met: N285; intent mints its own through refuseNoSuchEntity, C-111.5)*`.
 
-**Deferred** (flaws in my own module that need wording before I can bound them; sent to BOB in J2):
+**Deferred** (flaws in my own module that need wording before I can bound them). In B3, BOB moved all three to next.md as N323 for T13:
 1. `pursuitOf`'s goal walk reads every goal document to find those under the aspiration. `GOALS_MAX` bounds the answer but not the walk.
 2. R17/R27's `#ageable` reads every inquiry document and its manifest on each `ageDue`, `ageWake` and `ageSurfaced` call.
 3. `#heldAspirations` passes over retired aspirations without counting them.
@@ -32,7 +32,7 @@ Each is an internal read like N305's.
 1. **Stale, not rebuilt (§14):** `bio-plane/dist/bio-plane.bundled.mjs`. fleetbundles names `src/intent/checks.mjs` and `src/intent/index.mjs`. No worker bundle takes intent.
 2. **DEC-49 guard** (`civicos-ui/check-refusal-codes.mjs`), this commit against its parent. Failures go from 26 to 25: `INTENT_CHECKS.NO_SUCH_ENTITY` leaves arm G, whose multi-site count goes from 65 to 64. Floors move down, all still above their floors as before: rows 786→785, regions 458→457, regionLines 5477→5472, governedSites 497→496, codesChecked 890→888, refusalsJudged 860→859, outcomeReturns 263→262. The guard's `multiSiteCodes` comment names intent's `refuseNoSuchEntity` as NO_SUCH_ENTITY's second site, and that site is now gone (legacy-tests re-anchors it).
 3. **civicos-ui and affordances' lists:** no hit on `refuseNoSuchEntity` or C-111.5. `app.html` 17026 and 17028 probe entities' own `NO_SUCH_ENTITY`, unchanged.
-4. **R22's wording:** "every refusal this file names gets a catalogue row in this module, except NO_SUCH_PROJECT". `NO_SUCH_ENTITY` is now a second exception (entities R36, N285). The Uses line says so; R22 does not yet.
+4. **R22's wording** (fixed by BOB in B3; merged): "every refusal this file names gets a catalogue row in this module, except NO_SUCH_PROJECT". `NO_SUCH_ENTITY` is now a second exception (entities R36, N285). The Uses line says so; R22 does not yet.
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/intent/`: tests 46, pass 46, fail 0.
@@ -51,7 +51,9 @@ Each is an internal read like N305's.
 - `derivation-bounds` and `meaning-bounds`: the same output as before, apart from corpus counts.
 - format, architecture, coverage (28 of 28 ids) and ownership: 0 failures.
 
-Size (session_01Aqw26aHPhWB2gFJysEPTSZ): test runs 28, module lines 1837
+**After B3:** I merged `tranche/T12` (R22's wording) and rewrote R28's project-walk test so conditioned projects are sparse among the 1,000. Results: intent 46 of 46 pass; format, architecture, coverage (28 of 28 ids) and ownership 0 failures.
+
+Size (session_01Aqw26aHPhWB2gFJysEPTSZ): test runs 29, module lines 1837
 
 ## J1 · QUESTION
 

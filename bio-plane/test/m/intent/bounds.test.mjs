@@ -134,33 +134,33 @@ test("R28 (N305) servesOf measures against at most the first 1,000 held aspirati
   assert.equal(r.truncated, false, "the subjects were not cut");
 });
 
-test("R28 (N305, K391) servesOf walks at most the first 1,000 projects in id order and measures those with a condition, a project stating none counted in the walk, answering context_truncated when the walk is cut", async () => {
-  const w = seeded();                                                 // P states no condition: walked, not measured
+test("R28 (N305, K391) servesOf walks at most the first 1,000 projects in id order and measures those with a condition, sparse among them, answering context_truncated when the walk is cut", async () => {
+  const w = seeded();
   w.entity("ENT-1"); w.entity("ENT-2");
   w.relate("ENT-2", "ENT-1", "member_of");
   w.define();
-  await w.thread("ENT-2", { need: "A" });                             // short (award missing) in every project below
-  const cond = ["objective_condition:", "  progression: proc", "  entity: ENT-1", "  relation: member_of",
-                "  required_grade: B", "  required_stages: [need, award]", "  share: 50"].join("\n");
-  let n = 0;
-  const conditioned = () => {
-    const r = w.promotion.promote({ base: null, snapKey: `c${++n}`, author: V("bob"), ownerMemberId: "bob",
-      files: [{ path: "bundle.md", text: projMd(`C ${n}`).replace("references: []", `references: []\n${cond}`) }],
-      meta: { object_type: "project" } });
-    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-    return r.bundleId;
-  };
-  const projects = Array.from({ length: 999 }, conditioned);           // with P, 1,000 projects
+  await w.thread("ENT-2", { need: "A" });                             // short (award missing) wherever it is measured
+  const condition = { ...COND, relation: "member_of", required: { grade: "B", stages: ["need", "award"] } };
+  const condition_ = (pid) => assert.equal(w.i.setCondition({ project: pid, condition, author: V("bob"), viewer: V("bob") }).ok, true);
   const gapOf = (pid) => `intent::${pid}::proc::ENT-2`;
+  /* 1,000 projects, three of them conditioned: the first, the middle and the last in id order (ids are not in
+     creation order, so they are chosen by sorting) */
+  const plain = Array.from({ length: 999 }, (_, k) => w.project(`Plain ${k}`, "bob"));
+  const ids = [w.P, ...plain].sort();
+  const chosen = [ids[0], ids[500], ids[999]];
+  chosen.forEach(condition_);
   let r = w.i.servesOf({ bundles: ["INFO-ENT-2-need"] });
-  assert.deepEqual([r.serves[0].gaps.length, r.context_truncated], [999, false], "at the bound, nothing is cut");
-  assert.deepEqual(r.serves[0].gaps, projects.map(gapOf).sort());
-  const extra = conditioned();
+  assert.deepEqual([r.serves[0].gaps, r.context_truncated], [chosen.map(gapOf).sort(), false],
+                   "at the bound, the walk reaches the last in id order, and nothing is cut");
+  /* a 1,001st project: the one now past the cut in id order is given a condition too; it is not measured */
+  const after = [...ids, w.project("One more", "bob")].sort();
+  const past = after[1000];
+  condition_(past);
   r = w.i.servesOf({ bundles: ["INFO-ENT-2-need"] });
   assert.equal(r.context_truncated, true, "the 1,001st project is cut, and it says so");
-  const walked = [w.P, ...projects, extra].sort().slice(0, 1000);
-  assert.deepEqual(r.serves[0].gaps, walked.filter((p) => p !== w.P).map(gapOf).sort(),
-                   "the conditioned among the first 1,000 in id order, whichever is past the cut");
+  const inside = [...new Set([...chosen, past])].filter((pid) => after.indexOf(pid) < 1000);
+  assert.deepEqual(r.serves[0].gaps, inside.map(gapOf).sort(), "only the conditioned among the first 1,000 are measured");
+  assert.ok(!r.serves[0].gaps.includes(gapOf(past)), "the one past the cut is not");
 });
 
 test("R15 R16 (N305) proposals with no project named reads at most the first 1,000 projects the viewer may see, in id order, answering projects_limit and projects_truncated; a project it may not see is not counted", async () => {
