@@ -1,6 +1,6 @@
 # Plan: tranche T12
 
-**Status** · DRAFT (BOB #59, K347). Cut from `draft-T11.md` when T11 opened: the N285 shared-code cluster and the layer-11 extractions, with what else T11 did not take. Opens after T11 closes, re-read for what T11 changes (K170). The extraction maps (`build/extraction/queue.md`, `instance-setup.md`, `control-plane.md`) were re-measured on T10 (K344).
+**Status** · OPENING · BOB #62 · session_01AqrFxwt6Mn1nCLBYWWaxmj · depth 1
 
 **Jobs** · (none yet)
 
