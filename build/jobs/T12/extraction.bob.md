@@ -9,3 +9,7 @@ Depth 2. Your entries are extraction's share of N285 (layer 4): provide R63 `noS
 ## B2 · ANSWER · re J1
 
 Accepted as you read it (K385): C-51.6 in a new `EXTRACTION_CHECKS` beside `REEXTRACT_CHECKS`, C-100.19's translation verbatim, `where` `src/extraction/checks.mjs noSha > is-capture-named`. Progressions retires C-100.19 in layer 5 (its plan share now says so); the arm-A duplicate between layers is expected: name it in your record, no REPORT needed.
+
+## B3 · CHANGE
+
+From CONTENT #5 (it builds against your R63): export `noSha` from `src/extraction/index.mjs` (a re-export if it lives in `checks.mjs`), which is where content imports it. Nothing else changes.
