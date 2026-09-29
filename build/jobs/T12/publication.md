@@ -18,3 +18,26 @@ N300 (R44–R46): four points where the wording leaves a choice. I am building o
 2. **The project's `readiness`.** It is `absent` with no work product. Otherwise it is the highest rung any work product has reached. A work product with no rung met reads `none`, and so does the project if all of its work products read `none`. An example: a signed case edition whose members are not all ratified yet, so `published_cases.ratified_at` is null and no unsigned document remains. "Ratified edition" is read as `published_cases.ratified_at` set, as R37, R41 and R43 read it.
 3. **Rule 2's order and `basis`.** Held questions are read page by page (500 each, 2,000 at most). Reading stops at the first question the project has `concluded`, and `basis` names that question. If no held question is concluded, a ratified case edition the project owns meets rule 2: `basis` names the first such case by id, at its first ratified edition. `questions` counts only the questions read. `undetermined` (with `at_least`, `questions.truncated: true`) holds only when the 2,000 cap is reached with more questions left, none of them concluded, and no ratified edition. The concluded stance is taken from R41's `stance` (R22's reading), with no second call per question. `basis` is `{rule, question, case, edition}`.
 4. **Placing R46's `truncated`.** R44 names no key for it, so I answer `work_products` as the list and add `work_products_limit` (200) and `work_products_truncated` beside it. The store op is `projectstage` with `project` and the stamped `viewer` in its query. The Worker route stays legacy-index's (N321).
+
+## J3 · COMPLETE
+
+**Entries applied** (on `job/T12/publication` @ 6773870ede, tranche/T12 merged in, K395/K396 included):
+- **N308 · R38.** `ratifiedFindingsRestingOn(id, {after, limit})` → `{findings, limit, cursor}`. It reads by the pin cursor `<case>#<member>#<sha>`: at most `limit` pins (default and ceiling `RESTING_PINS_MAX` 1,000). Merged early (K395).
+- **N315 · R42.** At most 200 findings per capture (`RESTING_FINDINGS_PER_CAPTURE`) in finding id order, with `findings_truncated` on every capture. At most 10,000 per page (`RESTING_FINDINGS_PER_PAGE`), ending at the last capture answered whole. The per-capture counts are read to 201 in SQL, so findings are read only for the captures that are answered.
+- **N300 · R44–R47.** `projectStage({project, viewer})` and store op `projectstage` (query `project`, stamped `viewer`), as K396 words them. The fence is membership `sight` / `existenceAct` / `noSuchProject`. Held questions come from basis-versions R41 in pages of 500, 2,000 at most, stopping at the first concluded question. Work products come from `cases.project_id` or an unsigned document's `case_project`, at most 200. Each rung is stated by its own condition. Nothing is stored. New exports: `STAGE_QUESTIONS_MAX`, `WORK_PRODUCTS_MAX`, `PROJECT_STAGES`, `CLOSED_REASONS`, `READINESS_RUNGS`. New uses of existing edges: membership `noSuchProject`, basis-versions `PROJECT_QUESTIONS_MAX`.
+
+**Deferred:** none. R30 and R32 stay `test.todo` with their causes (D-246, K102), unchanged.
+
+**Found in other modules and artifacts:**
+- **Ratification.** `src/ratification/index.mjs`:782 still calls `ratifiedFindingsRestingOn(bundleId)` and reads `resting.length` on the tranche. Until ratification's own R5 code merges, `test/ratify-authority.test.mjs` is red on the merged tree (10 FAIL lines, all evidence arms). It was green on tranche/T12 before R38. `test/m/ratification/fixture.mjs`:123's fallback uses the same old call.
+- **Stale bundle (not rebuilt).** `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json` are stale: `fleetbundles.test.mjs` shows 4 bio-plane FAIL lines. Its agent-worker 143-input pin was already red and is legacy-tests' (CAPTURE #6).
+- **derivation-bounds.** Its census ceiling was red on tranche/T12 and is green here, 1/0 (N315 and the bounded work-product reads). legacy-tests should re-measure it on the merged tree.
+- **UI and affordances.** grep of `civicos-ui/` and affordances for `projectstage`, `findings_truncated`, `ratifiedFindingsRestingOn`, `restingCapturesOf`: no hits. No check row was added or changed (nothing for N318).
+
+**Tests and checks** (on the merged tree):
+- publication 75 pass / 0 fail / 2 todo (77).
+- Suites of the modules that use publication: ratification 67/0, case-authoring 39/0, review 29/0, conformance 30/0, filings 34/0, monitoring 51/0/6 todo, reevaluation 49/0, affordances 74/0/1 todo, queue 10/0.
+- caseobject 1/0.
+- format 0 failures; architecture 0 failures; coverage 47 of 47 live ids, 0 failures; ownership 0 failures (after K395's accepted mark edit was restored to the tranche's).
+
+Size (session_01GtUyriTrU5JUMCnTqxaFb9): test runs 34, module lines 5525
