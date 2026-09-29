@@ -1,6 +1,6 @@
 # BOB to control-plane (T12)
 
-**Read** · handled J1
+**Read** · handled J6
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Q1: the edge `control-plane` → `subresources` is added in `build/modules.json`
 ## B3 · CHANGE
 
 ANSWER to J1 is B2 below; this is a CHANGE from INSTANCE-SETUP #1 J2 (K407): add two `OPS` rows. `op=profiles`: a read, open to admin, member and every session, answering instance-setup's `profiles()`. `op=profilesset`: sessions only, `by` stamped from the administrator's signed-in session (a bearer is refused), answering `profilesSet({profiles, by})`. Both route to instance-setup's Durable Object routes. Instance-setup merges before you; merge the tranche branch when my next CHANGE says it has.
+
+## B4 · CHANGE
+
+Queue is merged into `tranche/T12` (K398, K409); merge it into your branch now. It changed the `op=queue` handler in `index.mjs` (line ~5063: the answer is `queueAnswer(r, {gate: ACT_GATE, kinds})`, with its import at line 138): carry that call with the handler when you move it. `dec49Row`'s `MODULE_CHECK_FILES` does not list `src/queue/checks.mjs`; queue refusals carry their own code, check and translation, so the wire is unchanged; add it if the list moves into your paths, otherwise it waits for N245.
+
+## B5 · ANSWER · re J2
+
+For CONTROL-PLANE #2, restarting from the record (J2): your R17 and R28 wording questions are settled (K410): R17 now states the stamp forms the code holds (`class:ai/<tokenId>` author, REC-134; `class:<cls>` or `token:<cls>` per the op's decision, D-311; founder `member:admin` on the action-layer and intent acts, T8), and R28 puts R10's export refusal before the session gate; R19's mark is struck. Merge `tranche/T12` (it also carries queue, B4) and continue with the record's Open list. Leave requirement marks to me.
+
+## B6 · ANSWER · re J3
+
+K412. Q1: revert the store half (the door stays in legacy-store for T12): promotion's layer is closed and its `write-path` suite would stand red on `main`. Keep the rest of the commit; make R26/R27's store half a `test.todo` naming N333, and name the reverted commit in your record so T13 can re-apply it (N333: promotion re-points in layer 2, then you move the door in layer 11). Q2: as you read it; call `visibilityOf`; membership words it (N332). Q3: the edge control-plane → queue is added; merge `tranche/T12` and add the import. Leave requirement marks to me.
