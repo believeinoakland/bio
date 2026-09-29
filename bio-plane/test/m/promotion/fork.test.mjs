@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { makePromotion, doc, T0 } from "./fixtures.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
-import { noSuchProject } from "../../../src/membership/index.mjs";
+import { noSuchProject, notAParticipant } from "../../../src/membership/index.mjs";
 
 const NOW = "2026-09-26T08:00:00.000Z";
 function origin(files = [{ path: "notes.md", text: "kept" }], refs = "[]") {
@@ -48,7 +48,7 @@ test("R42: sight before position — existence answers PROJECT_SEEN_NOT_A_PARTIC
   assert.equal(p.forkProject({ projectId: id, title: "Other", by: "bob" }).ok, true);
 });
 
-test("R43: each refusal by its reason, participation read through membership", () => {
+test("R43: each refusal by its reason, participation read through membership, NOT_A_PARTICIPANT through membership.notAParticipant", () => {
   const { p, membership, record, id } = origin();
   membership.invited.set(id, ["cid"]);
   membership.leaving.set(id, ["lee"]);
@@ -56,7 +56,14 @@ test("R43: each refusal by its reason, participation read through membership", (
   p.promote({ bundleId: info, base: null, snapKey: "i", author: "member:ann", meta: {},
     files: [{ path: "bundle.md", text: doc({ id: info, object_type: "information", title: "I", current_state: "collected", created: T0, last_updated: T0 }) }] });
   assert.equal(p.forkProject({ projectId: info, title: "F", by: "bob" }).reason, "NOT_A_PROJECT");
-  assert.equal(p.forkProject({ projectId: id, title: "F", by: "dee" }).reason, "NOT_A_PARTICIPANT");
+  /* NOT_A_PARTICIPANT is minted once, by membership (its R87, C-56.3): the answer is membership's own, byte for byte,
+     and nothing is written. */
+  const before = record.dump();
+  const none = p.forkProject({ projectId: id, title: "F", by: "dee" });
+  assert.deepEqual(none, notAParticipant(id, "dee"));
+  assert.deepEqual([none.reason, none.code, none.check, none.project], ["NOT_A_PARTICIPANT", "NOT_A_PARTICIPANT", "C-56.3", id]);
+  assert.equal(typeof none.translation, "string");
+  assert.equal(record.dump(), before);
   assert.deepEqual([p.forkProject({ projectId: id, title: "F", by: "cid" }).reason, p.forkProject({ projectId: id, title: "F", by: "cid" }).state], ["NOT_JOINED", "invited"]);
   assert.deepEqual([p.forkProject({ projectId: id, title: "F", by: "lee" }).reason, p.forkProject({ projectId: id, title: "F", by: "lee" }).state], ["NOT_JOINED", "leaving"]);
   assert.equal(p.forkProject({ projectId: id, title: "   ", by: "bob" }).reason, "NO_TITLE");
@@ -68,7 +75,6 @@ test("R43: each refusal by its reason, participation read through membership", (
   assert.equal(blob.p.forkProject({ projectId: blob.id, title: "F", by: "bob" }).reason, "NO_DOCUMENT");
   const odd = origin(undefined, "someScalar");
   assert.equal(odd.p.forkProject({ projectId: odd.id, title: "F", by: "bob" }).reason, "UNSPLICEABLE_REFERENCES");
-  void record;
 });
 
 test("R44: the fork is a creation through promote — minted id, forming, created now, a derived_from edge, carried files, the forker sole owner, visibility read back", () => {

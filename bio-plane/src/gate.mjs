@@ -302,8 +302,8 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    wherever the rows live (R34, R47), read by diffing every row table between f955769afc (1.42.0's stamp) and
    `tranche/T13` after record-core and membership merged (build/plan/t13-stamp-list.md, checked row by row).
    ARRIVED: C-33.50 NO_PROJECT_SCOPE (queue); C-51.6 NO_SHA (extraction); C-59.6 MINT_EXHAUSTED (record-core's R62, N322);
-   C-69.3 PLANE_INTERNAL_ERROR (control-plane); C-87.12 MINT_EXHAUSTED (review, N306; it retires into C-59.6 later in
-   T13); C-91.5 NO_ENTITY, C-91.6 ENTITY_NO_LABEL (entities); C-96.13 EXPERTISE_NO_LABEL (membership, missed by 1.42.0,
+   C-69.3 PLANE_INTERNAL_ERROR (control-plane); C-87.12 MINT_EXHAUSTED (review, N306; it retired into C-59.6 later in
+   T13, K434, and 1.44.0 stamps its departure); C-91.5 NO_ENTITY, C-91.6 ENTITY_NO_LABEL (entities); C-96.13 EXPERTISE_NO_LABEL (membership, missed by 1.42.0,
    K382); C-113.23 DETERMINATION_SUPERSEDED (conformance); C-118.1 NOT_FOUND, C-118.2 NO_SUCH_KNOCK (capture); C-119.1
    PROFILES_NOT_ADMIN, C-119.2 NOT_A_LIST, C-119.3 UNKNOWN_PROFILE, C-119.4 PROFILE_IS_TEST (instance-setup).
    DEPARTED, their ids retired: C-100.9, C-100.19 (progressions); C-111.5 (intent); C-113.9, C-113.18 (conformance);
@@ -318,9 +318,28 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    (N324, `notAnAdmin`), its catalogue copy kept one tranche (K408 (4)), same code and translation.
    Wording only: the `where`s of C-100.20 (and its translation), C-112.10 and C-113.15.
    MINOR, rule 17 moving the stamp for arrivals, departures, renames and moves. ROW_CENSUS (R50, K431) is pinned to this
-   tree: 820 rows. Rows changed after this stamp in T13 (review's C-87.12 retiring, control-plane's C-69.4) are named
-   `awaiting stamp` by their jobs' records, for T14's stamp. */
-export const CATALOG_VERSION = "1.43.0";
+   tree: 820 rows. Rows changed after this stamp in T13 (review's C-87.12, retired in T13 (K434); control-plane's C-69.4)
+   were named `awaiting stamp` by their jobs' records, and 1.44.0 stamps both. */
+/* 1.44.0 (PROMOTION #15, T14 layer 2, 2026-09-29; N318, N341, N350, K425): EVERY ROW CHANGE SINCE 1.43.0, counted
+   wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T14` after record-core and membership
+   merged against 1.43.0's own (`test/fixtures/row-census-1.43.0.jsonl`): nine arrivals, two departures, nothing else.
+   ARRIVED: C-69.4 STORE_INTERNAL_ERROR (control-plane, T13, awaiting this stamp, K442); C-102.13 COUNTS_DECLARED and
+   C-102.14 COUNTS_MALFORMED (record-core's R63, N342); C-102.11 LISTENER_MALFORMED and C-102.12 LISTENER_DECLARED
+   (membership's R81, N128: the codes its `listenerRefusal` minted with no row now carry one); C-56.3 NOT_A_PARTICIPANT,
+   C-56.4 TARGET_NOT_A_PARTICIPANT, C-56.5 TARGET_NOT_JOINED and C-96.14 NOT_PROPOSED (membership, N335: codes minted
+   on other modules' rows now hold their own, and promotion's fork answers NOT_A_PARTICIPANT through membership's
+   `notAParticipant`, R43).
+   DEPARTED: C-87.12 MINT_EXHAUSTED (review, retired into record-core's C-59.6 in T13, K434, awaiting this stamp; the
+   number is not reused); C-96.1's catalogue copy in `CUSTODIAL_CHECKS` (legacy-checks, K408 (4)): C-96.1 NOT_AN_ADMIN
+   is now held once, membership's row, its line unmoved, so the census no longer counts it twice.
+   CHANGED IN WHAT THE GATE RUNS, no row moving: `checkBundle` no longer runs C-19.1's inbox grammar (legacy-checks,
+   N325's share); queue takes it at its own registration. Retired with no row: the catalogue's empty
+   `CASE_DERIVATION_CHECKS` and `ATTRIBUTION_CHECKS` exports (N212, N214, N251).
+   MINOR, rule 17 moving the stamp for arrivals, departures and a changed composition. ROW_CENSUS (R50) is re-pinned to
+   this tree as R50 now words it (N350: lines sort by check, then code, then by the line itself; every fleet member's
+   `scripts/` and `civicos-ui/deploy-ui.mjs` left out): 827 rows. The d470 census, of the catalogue file only, moved
+   with legacy-checks' removal (359 -> 358); its 1.44.0 row is legacy-tests' re-pin. */
+export const CATALOG_VERSION = "1.44.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -411,8 +430,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 /* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
    legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 820,
-  digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 827,
+  digest: "5eae043f703a68fcf9ef26dd02bb6e890fff8d7a553f9db31fc0220518bf45b0" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

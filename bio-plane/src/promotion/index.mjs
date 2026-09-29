@@ -21,7 +21,7 @@ import { parseFrontmatter, normalizeType, vocabFor, STATES, MECHANICAL_FIELD_SET
          PROJECT_VISIBILITY_CHECKS, BIAS_CHECKS, INSTANCE_GROUP_CHECKS, MACHINE_FENCE_CHECKS,
          CUSTODIAL_CHECKS, REGISTRATION_CHECKS, checkCaseDocument } from "../../checks/bio-checks.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
-import { membershipOf, noSuchProject, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
+import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { PROMOTION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
@@ -37,8 +37,11 @@ export { listenerRefusal } from "../membership/index.mjs";
 /** The instance's inline bound (R6, R48): a file held as text is at most 1 MiB of UTF-8. A later module that bounds
  *  what it hands to a promotion reads this constant rather than its own. */
 export const INLINE_MAX = 1024 * 1024;
-/** The dispositions an inquiry is reopened from (R24). */
-export const REOPENABLE_FROM = ["deferred", "dismissed"];
+/** R51 (N340, K275): the decisions a member may record about a question (D-79), frozen, and the one list of them:
+ *  `progressions` re-exports it rather than spelling its own. */
+export const DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
+/** The dispositions an inquiry is reopened from (R24): the same frozen array as DISPOSITIONS (R51), never a copy. */
+export const REOPENABLE_FROM = DISPOSITIONS;
 /** R16: the words `retire` refuses a cited item with, so the two doors give one answer. */
 export const RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects "
   + "pointing at retired material, which C-6.2 treats as an error whose remedy is to "
@@ -851,8 +854,8 @@ class Promotion {
     if (!head || sight !== "FULL") return noSuchProject(projectId);
     if (normalizeType(head.type) !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = membership.participation(projectId, by);
-    if (!p) return { ok: false, reason: "NOT_A_PARTICIPANT",
-      detail: "a project is forked by someone working on it. An uninvited member cannot see that it exists." };
+    /* R43 (N335): no participation is membership's one answer (its R87, row C-56.3). */
+    if (!p) return notAParticipant(projectId, by);
     if (p.state !== "joined") return { ok: false, reason: "NOT_JOINED", state: p.state,
       detail: "an invited member who has not joined sees the project's skeleton only, so there is nothing for them to "
             + "fork. Join it first." };
