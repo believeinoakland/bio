@@ -48,7 +48,31 @@ import { readGitProvenance, repoPath, reportProvenance } from "../../bio-plane/s
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLANE = path.join(HERE, "..", "..", "bio-plane");
 export const INDEX_SRC = fs.readFileSync(path.join(PLANE, "src", "index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): control-plane took the Worker's dispatch out
+   of `src/index.mjs` into `src/control-plane/index.mjs`, and C-69 (DISPATCH_CHECKS) out of the catalogue into
+   `src/control-plane/checks.mjs`. `requiredArgument` and C-61 stay where they were. So the dispatch miss is read at its
+   new site (CONTROL_PLANE_SRC, below), and the row lookup reads the SAME tables the plane's own `dec49Row` reads: the
+   catalogue and every module row file `src/control-plane/index.mjs` lists in `MODULE_CHECK_FILES`, discovered from that
+   list and never typed here. WHY SOURCE TEXT AND NOT THE EXPORT: `src/control-plane/index.mjs` imports
+   `cloudflare:workers` and cannot be loaded by node, and the code is read AT THE SITE THAT MINTS IT on purpose (the
+   mock-wire controls' wide-direction arm deletes the decoration there and requires every importer to die at import). */
+const CONTROL_PLANE_DIR = path.join(PLANE, "src", "control-plane");
+export const CONTROL_PLANE_SRC = fs.readFileSync(path.join(CONTROL_PLANE_DIR, "index.mjs"), "utf8");
 const CATALOGUE = await import(path.join(PLANE, "checks", "bio-checks.mjs"));
+/* The plane's own list: `const MODULE_CHECK_FILES = [ M_…, … ];`, each name resolved through its
+   `import * as M_… from "…";` line. Every listed name must resolve, or the lookup is narrower than the plane's. */
+const ROW_TABLES = await (async () => {
+  const list = /const MODULE_CHECK_FILES = \[([^\]]*)\]/.exec(CONTROL_PLANE_SRC);
+  const names = list ? list[1].split(",").map(x => x.trim()).filter(Boolean) : [];
+  const specs = new Map([...CONTROL_PLANE_SRC.matchAll(/^import \* as (M_[A-Z0-9_]+) from "([^"]+)";/gm)].map(m => [m[1], m[2]]));
+  const out = [];
+  for(const n of names){
+    if(!specs.has(n)) throw new Error(`plane-refusal-wire: MODULE_CHECK_FILES names ${n}, and no \`import * as ${n}\` line resolves it`);
+    out.push(await import(path.join(CONTROL_PLANE_DIR, specs.get(n))));
+  }
+  return { names, modules: out };
+})();
+export const ROW_TABLE_COUNT = ROW_TABLES.modules.length;
 
 /* THE CATALOGUE LOOKUP, DISCOVERING THE FAMILY RATHER THAN NAMING ONE — UI-84's,
    kept verbatim in behaviour and for its reason: a row moved between families by
@@ -57,13 +81,15 @@ const CATALOGUE = await import(path.join(PLANE, "checks", "bio-checks.mjs"));
    GREEN. `_CHECKS` is the reserved suffix the DEC-49 guard harvests on. */
 export function cannedFor(code){
   if(!code) return null;
-  for(const k of Object.keys(CATALOGUE)){
-    const fam = CATALOGUE[k];
-    if(!/_CHECKS$/.test(k) || !fam || typeof fam !== "object") continue;
-    const row = fam[code];
-    if(row && typeof row.translation === "string" && row.translation)
-      return { family:k, check:row.check, translation:row.translation };
-  }
+  /* RE-ANCHORED 2026-09-29 (K413): the catalogue first, then the module tables, as the plane's `dec49Row` reads them. */
+  for(const source of [CATALOGUE, ...ROW_TABLES.modules])
+    for(const k of Object.keys(source)){
+      const fam = source[k];
+      if(!/_CHECKS$/.test(k) || !fam || typeof fam !== "object") continue;
+      const row = fam[code];
+      if(row && typeof row.translation === "string" && row.translation)
+        return { family:k, check:row.check, translation:row.translation };
+    }
   return null;
 }
 
@@ -77,7 +103,7 @@ const unq = (s) => JSON.parse('"' + s + '"');
    and D-278's own region comment at that line says so.
    --------------------------------------------------------------------------- */
 const DISPATCH_LINE = /if \(!spec\) return json\(\{ ok: false, error: "((?:[^"\\]|\\.)*)",[\s\S]{0,240}?\.\.\.dispatchRow\("([A-Z_0-9]+)"\)/
-  .exec(INDEX_SRC);
+  .exec(CONTROL_PLANE_SRC);   /* RE-ANCHORED 2026-09-29 (K413): the `if (!spec)` line is control-plane's now */
 export const UNKNOWN_OP_ERROR = DISPATCH_LINE ? unq(DISPATCH_LINE[1]) : "";
 export const UNKNOWN_OP_CODE  = DISPATCH_LINE ? DISPATCH_LINE[2] : "";
 export const UNKNOWN_OP_CANNED = cannedFor(UNKNOWN_OP_CODE);
@@ -246,7 +272,8 @@ export function requiredArgumentWire(op){
    --------------------------------------------------------------------------- */
 export function assertDerived(){
   const bad = [];
-  if(!UNKNOWN_OP_CODE) bad.push("UNKNOWN_OP code not found at the `if (!spec)` site in index.mjs");
+  if(ROW_TABLE_COUNT < 30) bad.push(`the plane's MODULE_CHECK_FILES list resolved ${ROW_TABLE_COUNT} row table(s), floor 30 (35 on job/T12/legacy-tests @ d3f5329855)`);
+  if(!UNKNOWN_OP_CODE) bad.push("UNKNOWN_OP code not found at the `if (!spec)` site in src/control-plane/index.mjs");
   if(!UNKNOWN_OP_ERROR) bad.push("the dispatch miss's `error` sentence not readable at that site");
   if(!UNKNOWN_OP_CANNED || UNKNOWN_OP_CANNED.translation.length < 40)
     bad.push(`no *_CHECKS family holds a canned translation for ${UNKNOWN_OP_CODE}`);

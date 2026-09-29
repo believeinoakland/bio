@@ -111,13 +111,18 @@ const SUITE  = path.join(ROOT, "civicos-ui/test/preauth-vocabulary.test.mjs");
    break one file's fixture now breaks the class. The DECLARATIONS above are unchanged and
    are still about SUITE, because SUITE is still the only thing this control runs. */
 const MODULE = path.join(ROOT, "civicos-ui/test/plane-refusal-wire.mjs");
-const PLANE  = path.join(ROOT, "bio-plane/src/index.mjs");
-const CATLG  = path.join(ROOT, "bio-plane/checks/bio-checks.mjs");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): control-plane extracted the Worker's dispatch
+   out of `bio-plane/src/index.mjs` into `src/control-plane/index.mjs` (the `!spec` line byte-identical, the plane's import of
+   DISPATCH_CHECKS now `import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, …} from "./checks.mjs"`), and C-69
+   (DISPATCH_CHECKS) left the catalogue for `src/control-plane/checks.mjs`. PLANE and CATLG follow the code, each anchor
+   still matching once, and their truncation floors follow the new files' sizes (249,225 and 30,666 bytes). */
+const PLANE  = path.join(ROOT, "bio-plane/src/control-plane/index.mjs");
+const CATLG  = path.join(ROOT, "bio-plane/src/control-plane/checks.mjs");
 const TMP    = path.join(ROOT, "civicos-ui/test/.ui84-control");   /* INSIDE this worktree: /tmp is shared
    across every session on this machine and a generic name there is an identity nobody owns (WORKER.md). */
 
 const sha = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
-const MIN_BYTES = { [SUITE]: 100000, [PLANE]: 400000, [CATLG]: 300000, [MODULE]: 5000 };
+const MIN_BYTES = { [SUITE]: 100000, [PLANE]: 200000, [CATLG]: 20000, [MODULE]: 5000 };
 
 function runSuite(){
   try{
@@ -152,8 +157,8 @@ const ARMS = [
   { id:"C", why:"OVER-STRICTNESS: the catalogue family renamed; same row, same sentence, the plane still starting",
     edits:[
       { file:CATLG, from:`export const DISPATCH_CHECKS = {`, to:`export const DISPATCH_MISS_CHECKS = {` },
-      { file:PLANE, from:`         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,`,
-        to:`         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_MISS_CHECKS as DISPATCH_CHECKS,` },
+      { file:PLANE, from:`import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS,`,
+        to:`import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_MISS_CHECKS as DISPATCH_CHECKS, BOOTSTRAP_CHECKS,` },
     ] },
   { id:"D", file:PLANE, why:"the WIDE direction: the plane stops decorating the dispatch miss",
     from:`    if (!spec) return json({ ok: false, error: "unknown op", reason: "UNKNOWN_OP", ...dispatchRow("UNKNOWN_OP"),\n                             op }, 400);`,

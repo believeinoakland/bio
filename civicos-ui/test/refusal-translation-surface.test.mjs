@@ -99,7 +99,10 @@ import { webcrypto } from "crypto";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { appScript } from "./extract.mjs";
-import { BASIS_VERSION_CHECKS, DISPATCH_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+import { BASIS_VERSION_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): C-69 (DISPATCH_CHECKS) left the catalogue for
+   control-plane's own table; C-69.1's row and sentence are unchanged. */
+import { DISPATCH_CHECKS } from "../../bio-plane/src/control-plane/checks.mjs";
 
 let n = 0; const fails = [];
 function ok(msg, cond, extra){ n++; if(!cond){ fails.push(msg); console.error("  FAIL", msg, extra == null ? "" : extra); }
