@@ -19,6 +19,7 @@
  *                                    passes its own.
  *   extraction   `extractionOf(host)` unless a test passes its own: `readingOf` (its R30), `unitsOf` (R36),
  *                `capturesReadFor` (R51) and `onReading` (R24), with which this module registers its stale mark.
+ *                `noSha` (its R63), the one `NO_SHA` answer, is imported from the module itself, never from `deps`.
  *   now          the module's clock, an ISO instant (default: the wall clock); a mint or act with no `at` reads it. */
 
 import { isMachineIdentity, normalizeType, OBJECT_TYPES, CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES,
@@ -31,7 +32,7 @@ import { cropImage } from "../../../pdf-worker/src/imagecrop.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { extractionOf } from "../extraction/index.mjs";
+import { extractionOf, noSha } from "../extraction/index.mjs";
 import { CONTENT_SCHEMA, CONTENT_TABLES, migrateContent } from "./schema.mjs";
 import {
   CONTENT_EXTENT_CHECKS, CONTENT_EXTENT_KINDS, checkContentExtent, canonicalExtent, describeExtent, contentIdFor,
@@ -365,10 +366,10 @@ export class Content {
   }
 
   /** Every attestation over a capture, bounded (a diligent group can produce hundreds over one scanned book), plus
-   *  what they mean for a target region (`gradeCeiling`). A null chain on either side is not staleness. */
+   *  what they mean for a target region (`gradeCeiling`). A null chain on either side is not staleness. No digest is
+   *  extraction's one `NO_SHA` answer (its R63; N285, K275): the code is minted there, never here. */
   attestationsFor(captureSha, target = null, viewer = null, limit = null) {
-    if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "attestations are read by a capture sha256" };
+    if (typeof captureSha !== "string" || !captureSha) return noSha("attestations are read by a capture sha256");
     const r = this.extraction.readingOf(captureSha);
     const chain = r ? r.chain ?? null : null;
     const live = chain == null ? null : JSON.stringify(chain);

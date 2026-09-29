@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
+import { noSha } from "../../../src/extraction/index.mjs";
 
 const DOC = "INFO-2026-0001-a";
 
@@ -68,6 +69,29 @@ test("R44: attestationsFor: every attestation over a capture, bounded, stale aga
   assert.deepEqual(w.content.attestationsFor(a.sha, null, V("bo"), 1).truncated, true);
   assert.equal(w.content.attestationsFor(a.sha, null, "nobody").attestations[0].bundle_id, null, "the bundle withheld from a viewer who may not see it");
   assert.equal(w.content.attestationsFor("", null, V("bo")).reason, "NO_SHA");
+});
+
+test("R44 (N285): no digest (absent, not a string, or empty) is extraction's one NO_SHA answer (its R63), field for field, and reads and writes nothing", () => {
+  const w = world();
+  const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 1 });
+  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "document" } });
+  let asked = 0;
+  const orig = w.content.extraction.readingOf;
+  w.content.extraction.readingOf = (s) => { asked++; return orig(s); };
+  const before = w.snapshot();
+  for (const bad of [undefined, null, "", 7, {}, [a.sha], true]) {
+    const r = w.content.attestationsFor(bad, null, V("bo"));
+    assert.deepEqual(r, noSha(r.detail), JSON.stringify(bad) ?? "undefined");
+    assert.deepEqual([r.ok, r.reason, typeof r.code, typeof r.check, typeof r.translation], [false, "NO_SHA", "string", "string", "string"]);
+    assert.match(r.detail, /attestations/, "the detail names what the digest was for");
+  }
+  assert.deepEqual(w.content.attestationsFor(undefined), w.content.attestationsFor(""), "one answer for every shape of absence");
+  assert.equal(asked, 0, "nothing is read for a request that names no capture");
+  assert.deepEqual(w.snapshot(), before, "nothing is written");
+  w.content.extraction.readingOf = orig;
+  /* the negative control: a digest, even one never read, is not this refusal */
+  assert.equal(w.content.attestationsFor(a.sha, null, V("bo")).ok, true);
+  assert.deepEqual([w.content.attestationsFor("0".repeat(64), null, V("bo")).ok, w.content.attestationsFor("0".repeat(64), null, V("bo")).count], [true, 0]);
 });
 
 test("R45: `content`'s columns content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale, minted_by, cited_as and chain_kind are a stated read contract, with the meaning each has", () => {
