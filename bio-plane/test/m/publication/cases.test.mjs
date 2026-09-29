@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, sha, SIG, NOW } from "./fixture.mjs";
-import { CITED_PARTS_MAX, RATIFIED_CASES_MAX, RESTING_CAPTURES_MAX } from "../../../src/publication/index.mjs";
+import { CITED_PARTS_MAX, RATIFIED_CASES_MAX, RESTING_CAPTURES_MAX, RESTING_FINDINGS_PER_CAPTURE,
+         RESTING_FINDINGS_PER_PAGE } from "../../../src/publication/index.mjs";
 
 const F = "INQ-2026-0001", G = "INQ-2026-0002", H = "INQ-2026-0003";
 const DOC1 = "INFO-2026-0001-minutes", DOC2 = "INFO-2026-0002-budget", DOC3 = "INFO-2026-0003-memo",
@@ -179,4 +180,77 @@ test("R42 restingCapturesOf pages by capture after `after`, limit clamped to 1â€
   for (const [asked, got] of [[0, 1000], [-3, 1], [5000, 1000], ["x", 1000], [2.7, 2]])
     assert.equal(w.p.restingCapturesOf({ limit: asked }).limit, got, `limit ${asked}`);
   assert.deepEqual(w.snapshot(), before, "it writes nothing");
+});
+
+/* N315: `n` ratified findings resting on DOC1 (a served edge each, a published edition each, rostered by one ratified
+   case edition of PROJ-1), and `captures` more captures homed on DOC1 beside its own. Written as the rows R22 writes. */
+function crowded(n, captures = 0) {
+  const w = world();
+  w.member("olive");
+  w.doc(DOC1);
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0001', 'PROJ-1', ?)`, NOW);
+  w.st.sql.exec(`INSERT INTO published_cases (case_id, edition, opened, ratified_at) VALUES ('CASE-2026-0001', 1, ?, ?)`, NOW, NOW);
+  const ids = Array.from({ length: n }, (_, i) => `INQ-2026-${String(i + 1).padStart(5, "0")}`);
+  ids.forEach((f, i) => {
+    w.st.sql.exec(`INSERT INTO published_case_members (case_id, edition, ord, bundle_id, version_sha, role)
+                   VALUES ('CASE-2026-0001', 1, ?, ?, ?, 'load_bearing')`, i, f, sha(f));
+    w.st.sql.exec(`INSERT INTO published_bundles (bundle_id, edition, bundle_sha, ratified_at, attestor_key, gate_version, sig_armored)
+                   VALUES (?, 1, ?, ?, 'k', 'g', 's')`, f, sha(f), NOW);
+    w.st.sql.exec(`INSERT INTO published_edges (from_bundle, to_bundle, kind, disclosure, published) VALUES (?, ?, 'cites', 'serve', ?)`,
+                  f, DOC1, NOW);
+  });
+  const extra = Array.from({ length: captures }, (_, i) => sha(`capture ${i}`));
+  for (const c of extra)
+    w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'utf8', 1, ?)`,
+                  c, DOC1, `snapshots/${c}.txt`, NOW);
+  return { w, ids, all: [...extra, captureOf(DOC1)].sort() };
+}
+
+test("R42 each capture answers at most 200 of its resting findings, in finding id order, findings_truncated stating when more rest on it", () => {
+  assert.equal(RESTING_FINDINGS_PER_CAPTURE, 200);
+  /* exactly at the bound: all 200, not truncated */
+  const at = crowded(200);
+  const one = at.w.p.restingCapturesOf({}).captures;
+  assert.equal(one.length, 1);
+  assert.deepEqual(one[0].findings.map((f) => f.bundle_id), at.ids);
+  assert.equal(one[0].findings_truncated, false);
+  assert.deepEqual(one[0].findings[0].projects, ["PROJ-1"]);
+  /* one past it: the first 200 by id, and it says more rest on it */
+  const over = crowded(201);
+  const cut = over.w.p.restingCapturesOf({}).captures[0];
+  assert.deepEqual(cut.findings.map((f) => f.bundle_id), over.ids.slice(0, 200));
+  assert.equal(cut.findings_truncated, true);
+  /* a finding several projects own still counts once toward the bound */
+  over.w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0002', 'PROJ-2', ?)`, NOW);
+  over.w.st.sql.exec(`INSERT INTO published_cases (case_id, edition, opened, ratified_at) VALUES ('CASE-2026-0002', 1, ?, ?)`, NOW, NOW);
+  over.w.st.sql.exec(`INSERT INTO published_case_members (case_id, edition, ord, bundle_id, version_sha, role)
+                      SELECT 'CASE-2026-0002', 1, ord, bundle_id, version_sha, role FROM published_case_members WHERE case_id='CASE-2026-0001'`);
+  const both = over.w.p.restingCapturesOf({}).captures[0];
+  assert.equal(both.findings.length, 200);
+  assert.deepEqual(both.findings[0].projects, ["PROJ-1", "PROJ-2"]);
+  assert.equal(both.findings_truncated, true);
+});
+
+test("R42 a page answers at most 10,000 resting findings, ending at the last capture answered whole, its cursor followed on", () => {
+  assert.equal(RESTING_FINDINGS_PER_PAGE, 10000);
+  /* 51 captures of 200 findings each: 10,200 > 10,000, so the page ends after the 50th */
+  const { w, all } = crowded(200, 50);
+  assert.equal(all.length, 51);
+  const before = w.snapshot();
+  const first = w.p.restingCapturesOf({});
+  assert.equal(first.captures.length, 50);
+  assert.equal(first.captures.reduce((n, c) => n + c.findings.length, 0), 10000);
+  assert.ok(first.captures.every((c) => c.findings.length === 200 && c.findings_truncated === false), "each answered whole");
+  assert.deepEqual([first.truncated, first.cursor], [true, all[49]]);
+  const second = w.p.restingCapturesOf({ after: first.cursor });
+  assert.deepEqual([second.captures.map((c) => c.capture_sha), second.truncated, second.cursor], [[all[50]], false, null]);
+  assert.deepEqual(w.snapshot(), before, "it writes nothing");
+  /* exactly at the bound: 50 captures of 200 is 10,000, one page and no cursor */
+  w.st.sql.exec(`DELETE FROM register WHERE capture_sha=?`, all[50]);
+  const whole = w.p.restingCapturesOf({});
+  assert.deepEqual([whole.captures.length, whole.truncated, whole.cursor], [50, false, null]);
+  w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, 'x', 'utf8', 1, ?)`,
+                all[50], DOC1, NOW);
+  /* a smaller `limit` still bounds the page first */
+  assert.deepEqual(w.p.restingCapturesOf({ limit: 3 }).captures.map((c) => c.capture_sha), all.slice(0, 3));
 });
