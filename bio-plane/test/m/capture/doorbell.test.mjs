@@ -6,6 +6,7 @@ import { fresh, bucket, sha } from "./fixture.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { knockOp, KNOCK } from "../../../src/capture/doorbell.mjs";
 import { KNOCK_CHECKS } from "../../../checks/bio-checks.mjs";
+import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -203,12 +204,37 @@ test("R32: one inbox row with the bounded note and contact and the bytes under b
   assert.ok(b.held.has(`bio/inbox/${sha("hello")}`));
   assert.equal(c.inboxList("new").inbox.length, 1);
   assert.equal(c.inboxGet(k.knockId).item.sha256, sha("hello"));
-  assert.equal(c.inboxGet("KNOCK-none").reason, "NOT_FOUND");
+  assert.equal(c.inboxGet("KNOCK-none").reason, "NO_SUCH_KNOCK");
   assert.equal(c.inboxResolve({ knockId: k.knockId, status: "archived", by: "member:m" }).reason, "BAD_STATUS");
   for (const st of ["pulled", "discarded", "new"]) assert.equal(c.inboxResolve({ knockId: k.knockId, status: st, by: "member:m" }).ok, true);
   const res = rows(`SELECT status, resolved, resolved_by FROM inbox`)[0];
   assert.deepEqual([res.status, res.resolved_by, typeof res.resolved], ["new", "member:m", "string"]);
   assert.equal(c.inboxList("pulled").inbox.length, 0);
+});
+
+test("R32 (K383): a knock id no knock answers to, read or resolved, is NO_SUCH_KNOCK with its own row, the same answer both ways, and nothing is written", async () => {
+  const { c, rows } = setup();
+  const k = await c.knock({ content: "hello", sourceAddress: "6.6.6.6" });
+  const row = CAPTURE_CHECKS.NO_SUCH_KNOCK;
+  assert.deepEqual([row.check, row.translation], ["C-118.2", "No knock in the inbox answers to this id. Nothing was changed."]);
+  assert.match(row.where, /^src\/capture\/index\.mjs #noSuchKnock > /);
+  assert.notEqual(row.check, CAPTURE_CHECKS.NOT_FOUND.check, "not R63's row");
+  const snapshot = () => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
+    .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
+  const before = snapshot();
+  const want = { ok: false, reason: "NO_SUCH_KNOCK", code: "NO_SUCH_KNOCK", check: "C-118.2", translation: row.translation,
+                 knockId: "KNOCK-none" };
+  assert.deepEqual(c.inboxGet("KNOCK-none"), want);
+  for (const st of ["pulled", "discarded", "new"])
+    assert.deepEqual(c.inboxResolve({ knockId: "KNOCK-none", status: st, by: "member:m" }), want, `resolve to ${st}`);
+  for (const bad of [undefined, null, "", 42, {}]) {
+    assert.deepEqual(c.inboxGet(bad), { ...want, knockId: typeof bad === "string" ? bad : null });
+    assert.deepEqual(c.inboxResolve({ knockId: bad, status: "pulled", by: "member:m" }), c.inboxGet(bad));
+  }
+  const ops = captureOps(c, new URL("http://x/inboxget?id=KNOCK-none"), { knockId: "KNOCK-none", status: "pulled", by: "member:m" }, {});
+  assert.deepEqual([ops.inboxget(), ops.inboxresolve()], [want, want], "the routes answer the same");
+  assert.deepEqual(snapshot(), before, "nothing written");
+  assert.equal(c.inboxGet(k.knockId).ok, true, "a held knock is still read");
 });
 
 test("R54: the answer comes only after the bytes are held, and when they cannot be stored the knock fails and leaves no row", async () => {
