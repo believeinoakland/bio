@@ -1,0 +1,171 @@
+/* control-plane: the Durable Object class (R35). Constructed for real over a Durable Object storage at the plane's shape
+   (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), and driven through its `fetch`. The answers
+   "before" are instance-setup's own door (`instanceSetupRoute`), which answered its routes ahead of the frame until
+   N348. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { DatabaseSync } from "node:sqlite";
+import "./harness.mjs";
+const D = await import("../../../src/control-plane/dispatch.mjs");
+const S = await import("../../../src/setup.mjs");
+const { Store: LegacyStore } = await import("../../../src/store.mjs");
+
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+function cursor(rows) {
+  let i = 0;
+  const c = {
+    next() { return i < rows.length ? { done: false, value: rows[i++] } : { done: true, value: undefined }; },
+    [Symbol.iterator]() { return c; },
+    toArray() { const out = rows.slice(i); i = rows.length; return out; },
+    one() { const rest = c.toArray(); if (rest.length !== 1) throw new Error(`expected one row, got ${rest.length}`); return rest[0]; },
+  };
+  return c;
+}
+
+/** One Durable Object's context. `fail(q)` makes a matching statement throw, as a storage that fails. */
+function object() {
+  const db = new DatabaseSync(":memory:");
+  let fail = null;
+  const sql = {
+    exec(q, ...args) {
+      if (fail && fail(q)) throw new Error("SQLITE_IOERR secret-value /srv/plane/src/setup.mjs:4242");
+      const st = db.prepare(q);
+      return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+    },
+    get databaseSize() { return 0; },
+  };
+  const blocked = [];
+  const ctx = {
+    storage: { sql, transactionSync: (fn) => fn(), getAlarm: async () => null, setAlarm: async () => {}, deleteAlarm: async () => {} },
+    id: { equals: () => false, toString: () => "do" },
+    blockConcurrencyWhile(fn) { const p = fn(); blocked.push(p); return p; },
+    waitUntil() {},
+  };
+  return { ctx, env: { STORE: { idFromName: (n) => n } }, blocked, failWith(pred) { fail = pred; } };
+}
+const settle = async (o) => { const out = []; for (const p of o.blocked) out.push(await p); o.blocked.length = 0; return out; };
+const started = (outs) => outs.filter((x) => x && typeof x === "object" && "started" in x);
+
+/* The fourteen instance-setup routes, each driven with a request that exercises it; the stamps are the ones the Worker
+   door sets (R17). Order matters: the writes run before the reads that show them. */
+const DRIVES = [
+  ["instancegroup", "GET"],
+  ["instancegrouppublic", "GET"],
+  ["instancegroupseed?author=token:admin", "POST", { slug: "grp-rivertown" }],
+  ["instancegroup", "GET"],
+  ["instancegrouppublic", "GET"],
+  ["groupnameset?by=admin", "POST", { name: "River Town Watch" }],
+  ["groupdomainset?by=admin&origin=https://plane.example", "POST", { domain: "not a domain" }],
+  ["groupidentity", "GET"],
+  ["groupidentitypublic", "GET"],
+  ["profiles", "GET"],
+  ["profilesset?by=member:nobody", "POST", { profiles: [] }],
+  ["runtimeobservations", "GET"],
+  ["cpuprobestart", "POST", { run: "r1", iterations: 10, budgetMs: 100 }],
+  ["recordcpuprobestep", "POST", { run: "r1", step: 1, elapsedMs: 3, iterations: 10 }],
+  ["cpuprobeend", "POST", { run: "r1", completed: 1, elapsedMs: 4, reason: "done" }],
+  ["cpuprobestate", "GET"],
+  ["instancegroupseed?author=token:admin", "POST", { slug: "grp-other" }],
+];
+const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
+/* Instants differ between two runs; everything else must not. */
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(at|ms|elapsed_ms|recorded_ms)":\d{10,}/g, '"$1":<n>');
+
+test("R35: the class the instance exports is this module's Store: at construction it starts instance-setup once per object, and a second construction on the same storage starts nothing", async () => {
+  assert.ok(D.Store.prototype instanceof LegacyStore);
+  const o = object();
+  const first = new D.Store(o.ctx, o.env);
+  const s1 = started(await settle(o));
+  assert.equal(s1.length, 1, "instance-setup started once by the construction");
+  assert.equal(s1[0].started, true);
+  assert.equal(s1[0].ok, true);
+  /* it started on this object's storage: its tables are there and its read answers from them */
+  const r = await first.fetch(new Request("http://do/instancegroup"));
+  assert.equal(r.status, 200);
+  assert.equal((await r.json()).result.ok, true);
+  /* a second construction on the same storage starts nothing */
+  new D.Store(o.ctx, o.env);
+  const s2 = started(await settle(o));
+  assert.equal(s2.length, 1);
+  assert.equal(s2[0].started, false);
+  /* legacy-index's wrapper around this class, while it still wraps it (K93's interim): one start, not two */
+  const w = object();
+  new (S.instanceSetupStore(D.Store))(w.ctx, w.env);
+  const s3 = started(await settle(w));
+  assert.deepEqual(s3.map((x) => x.started).sort(), [false, true]);
+  /* negative control: a different object's storage starts on its own */
+  const other = object();
+  new D.Store(other.ctx, other.env);
+  assert.equal(started(await settle(other))[0].started, true);
+});
+
+test("R35: instance-setup's fourteen routes are part of R26's route map beside legacy-store's, and each answers as it did through instance-setup's own door", async () => {
+  const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
+  assert.equal(ops.length, 14);
+  assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
+  const now = object(), before = object();
+  const store = new D.Store(now.ctx, now.env);
+  await settle(now);
+  new LegacyStore(before.ctx, before.env);
+  await settle(before);
+  const m = S.instanceSetupOf(before.ctx, before.env);
+  await m.start();
+  for (const drive of DRIVES) {
+    const a = await store.fetch(req(drive));
+    const b = await S.instanceSetupRoute(m, req(drive));
+    const [at, bt] = [await a.text(), await b.text()];
+    assert.equal(a.status, b.status, drive[0]);
+    assert.deepEqual(JSON.parse(mask(at)), JSON.parse(mask(bt)), drive[0]);
+    assert.equal(JSON.parse(at).ok, true, `${drive[0]}: ${at.slice(0, 200)}`);
+  }
+  /* legacy-store's routes answer through the same door, and an unserved route is R26's refusal */
+  const alloc = await store.fetch(new Request("http://do/allocid?prefix=T&year=2026"));
+  assert.deepEqual([alloc.status, (await alloc.json()).ok], [200, true]);
+  const none = await store.fetch(new Request("http://do/nosuchroute"));
+  assert.deepEqual([none.status, await none.json()], [400, { ok: false, error: "unknown op: nosuchroute" }]);
+});
+
+test("R35: an instance-setup route passes R26's body read — a non-JSON POST to instancegroupseed is 400 BAD_JSON and nothing is written; an empty body is null", async () => {
+  const o = object();
+  const store = new D.Store(o.ctx, o.env);
+  await settle(o);
+  for (const bad of ["{", "not json", "{'slug':'grp-x'}"]) {
+    const r = await store.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST", body: bad }));
+    assert.equal(r.status, 400, bad);
+    const j = await r.json();
+    assert.deepEqual([j.ok, j.reason], [false, "BAD_JSON"], bad);
+  }
+  const g = await (await store.fetch(new Request("http://do/instancegroup"))).json();
+  assert.equal(g.result.group, null, "nothing was seeded");
+  /* an empty body is null, and the route answers its own refusal inside the envelope */
+  const e = await store.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST" }));
+  const ej = await e.json();
+  assert.deepEqual([e.status, ej.ok, ej.result.ok], [200, true, false]);
+  /* negative control: a JSON body seeds */
+  const ok = await store.fetch(new Request("http://do/instancegroupseed?author=token:admin", { method: "POST", body: JSON.stringify({ slug: "grp-x" }) }));
+  assert.equal((await ok.json()).result.ok, true);
+});
+
+test("R35: a throwing instance-setup route answers R25's STORE_INTERNAL_ERROR (C-69.4) with a correlation id and no stack, message, path or line", async () => {
+  const o = object();
+  const store = new D.Store(o.ctx, o.env);
+  await settle(o);
+  o.failWith((q) => /instance_group/.test(q));
+  const logged = [], was = console.error;
+  console.error = (...a) => logged.push(a.join(" "));
+  let r, text;
+  try { r = await store.fetch(new Request("http://do/instancegroup")); text = await r.text(); } finally { console.error = was; }
+  assert.equal(r.status, 500);
+  const j = JSON.parse(text);
+  assert.deepEqual([j.ok, j.reason, j.code, j.check], [false, "STORE_INTERNAL_ERROR", "STORE_INTERNAL_ERROR", "C-69.4"]);
+  assert.match(j.correlation, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  assert.equal(/secret-value|setup\.mjs|SQLITE| at /.test(text), false, text);
+  assert.equal(logged.length, 1);
+  assert.deepEqual([JSON.parse(logged[0]).correlation, JSON.parse(logged[0]).op], [j.correlation, "instancegroup"]);
+  /* negative control: before N348, instance-setup's own door answered the stack */
+  const m = S.instanceSetupOf(o.ctx, o.env);
+  const old = await (await S.instanceSetupRoute(m, new Request("http://do/instancegroup"))).text();
+  assert.match(old, /secret-value/);
+});
+
+test.todo("R35: the instance exports this class unwrapped, so no module answers a store route outside the frame — not yet met: legacy-index still exports `instanceSetupStore(Store)`, whose wrapper answers instance-setup's routes first (`src/index.mjs`:111–112), until legacy-index's N348 share exports this module's Store");
