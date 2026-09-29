@@ -67,13 +67,13 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 
 - `legacy-checks`: the C-2.9 row until it moves (R22), `isMachineIdentity`, `ISO_TS_RE`.
 - `record-core`: `recordOf(ctx)`, `transact`, id allocation for aspirations and goals, `declarePurge`.
-- `membership`: `viewerPredicate`, `projectAuthority`, `isAdministrator`, `isProjectEditor`; `noSuchProject` (its R78), through which R2's, R3's and every other act's `NO_SUCH_PROJECT` is answered, in place of C-111.2 (N208, K275). *(not yet met: N208)*
+- `membership`: `viewerPredicate`, `projectAuthority`, `isAdministrator`, `isProjectEditor`; `noSuchProject` (its R78), through which R2's, R3's and every other act's `NO_SUCH_PROJECT` is answered, in place of C-111.2 (N208, K275).
 - `promotion`: `promote`, `registerStep` (R1, R2). *(not declared)*
 - `entities`: `readEntity`, the constitutive relations (R4, R7, R28). *(not declared)* `noSuchEntity` (its R36), R2's `NO_SUCH_ENTITY`, in place of C-111.5 (N285).
 - `provenance`: the captures held at an address (R28). *(not declared)*
 - `progressions`: `readProgression`, `readInstance`, `proposalsFeed`, `disposeProposal` (R4–R6, R15, R16).
 - `retrieval`: `selectionCreate` (one enumerated selection per aged question, owner `plane:intent`, for inquiry's `dispose`; R17; K198).
-- `capture-requests`: `requestById` (its R43: one request's outcome by key, for R14's pursuit; N291) and `bundlesOf` (its R28); `captureRequests` (a request's outcome, for R14's pursuit; K200) until N291. *(not yet met: N291; `pursuitOf` reads the bounded list)*
+- `capture-requests`: `requestById` (its R43: one request's outcome by key, for R14's pursuit; N291) and `bundlesOf` (its R28); `captureRequests` (a request's address, for R28's serving).
 - `inquiry`: the create-at-`surfaced` path and the dispose act (R16, R17).
 - `ai-runs`: opening a run (R18).
 - `content`: nothing any requirement calls. Proposed dropped.
@@ -83,7 +83,7 @@ Terms. An **aspiration** is `{id, scope, owner, statement, entities, progression
 - **R19** Progress is derived, never reported: no service accepts a progress figure, count, share or completion, and nothing stores one (Framework §12 consequence 1; invariant 8).
 - **R20** An assistant proposes at any point and adopts at none: every act that adopts, dismisses, defers, sets a condition, links, declares, departs, closes or retires refuses a machine (§12 "The discovery loop").
 - **R21** Aspirations and goals set priority and never filter evidence: no read here or elsewhere is narrowed, reordered or withheld by one, and a proposal that cuts against a goal is offered on the same terms as one that supports it (Framework invariant 7, §12.2).
-- **R22** C-2.9's objective arm moves here as an invariant with its test (K6); every refusal this file names gets a catalogue row in this module, except `NO_SUCH_PROJECT`, whose one row is membership's (its R78; N208, K275). *(not yet met: N208; C-111.2 stands)*
+- **R22** C-2.9's objective arm moves here as an invariant with its test (K6); every refusal this file names gets a catalogue row in this module, except `NO_SUCH_PROJECT`, whose one row is membership's (its R78; N208, K275).
 - **R23** Every read and act naming a project, goal or aspiration the viewer may not see answers exactly as an absent one.
 - **R24** This module's tables carry the id they are about and are declared to record-core's purge (K23).
 - **R25** No place is named in this module's behaviour or outward text; §12's examples are illustrations only.
