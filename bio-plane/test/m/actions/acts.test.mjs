@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
+import * as actions from "../../../src/actions/index.mjs";
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
@@ -14,9 +15,13 @@ test("R13 R14 actionMove: refusals in order, then one state_history entry and a 
   assert.deepEqual(reasons([mv({ author: MACHINE }), mv({ author: "" }), mv({ reason: "" }), mv({ reason: 'a"b' }),
     mv({ reason: "x".repeat(501) }), mv({ target: "" }), mv({ target: "ACTN-2026-0404-no" }), mv({ to: "flying" }),
     mv({ to: "resolved" })]),
-    ["MACHINE_CANNOT_MOVE_ACTION", "MACHINE_CANNOT_MOVE_ACTION", "NO_REASON", "BAD_REASON", "BAD_REASON", "NO_TARGET",
-     "NO_SUCH_BUNDLE", "BAD_TARGET_STATE", "ILLEGAL_TRANSITION"]);
+    ["MACHINE_CANNOT_MOVE_ACTION", "MACHINE_CANNOT_MOVE_ACTION", "ACTION_MOVE_NO_REASON", "BAD_REASON", "BAD_REASON",
+     "NO_TARGET", "NO_SUCH_BUNDLE", "BAD_TARGET_STATE", "ILLEGAL_TRANSITION"]);
   assert.equal(mv({ author: MACHINE }).check, "C-32.3");
+  /* N217, K275: the move's own condition under its own code and row, never the shared `NO_REASON`. */
+  const nr = mv({ reason: "  " });
+  assert.deepEqual([nr.reason, nr.code, nr.check], ["ACTION_MOVE_NO_REASON", "ACTION_MOVE_NO_REASON", "C-117.4"]);
+  assert.ok(nr.translation.length > 40);
   w.doc("INFO-2026-0001-d");
   assert.equal(mv({ target: "INFO-2026-0001-d" }).reason, "NOT_AN_ACTION");
   const on = mv({});
@@ -82,7 +87,15 @@ test("R18 actionLaws: refusals in order; the whole list replaced, stamped and lo
     L([{ level: "local", citation: "x" }]), L([{ level: "city", citation: "" }]), L([{ level: "city", citation: "a" }, { level: "city", citation: "A" }]),
     L(ok, { target: "ACTN-2026-0404-no" })]),
     ["MACHINE_CANNOT_SET_LAWS", "NO_TARGET", "NO_LAWS", "TOO_MANY_LAWS", "BAD_LAW_LEVEL", "BAD_CITATION", "BAD_CITATION", "NO_SUCH_BUNDLE"]);
-  assert.equal(L([{ level: "local", citation: "x" }]).check, "C-73.3");
+  const lvl = L([{ level: "local", citation: "x" }]);
+  assert.equal(lvl.check, "C-73.3");
+  /* N246: the translation names the levels LAW_LEVELS holds (jurisdictions R31), and no other. */
+  for (const l of actions.LAW_LEVELS) assert.ok(lvl.translation.includes(l), l);
+  assert.deepEqual(lvl.legal, [...actions.LAW_LEVELS]);
+  assert.doesNotMatch(lvl.translation, /\blocal\b|three levels/);
+  const lv = world(); lv.action(A);
+  for (const l of actions.LAW_LEVELS)
+    assert.equal(lv.a.actionLaws({ target: A, laws: [{ level: l, citation: `Code ${l}` }], viewer: M, author: M }).ok, true, `${l} is a level`);
   const set = L(ok);
   assert.deepEqual([set.ok, set.by, set.replaced], [true, M, null]);
   const fm = w.fm(A);
@@ -186,6 +199,10 @@ test("R28 actionRiskPropose: refusals; stored apart and labelled; never the tier
     ["NO_AUTHOR", "NO_TARGET", "BAD_RISK_TIER", "RISK_PROPOSAL_BASIS_REFUSED", "RISK_PROPOSAL_BASIS_REFUSED",
      "RISK_PROPOSAL_BASIS_REFUSED", "NO_SUCH_BUNDLE"]);
   assert.equal(P({ basis: "" }).check, "C-90.6");
+  /* C-90.2 is one condition at the act and at a proposal, answered through one site (N297's guard, arm G). */
+  const bt = P({ tier: 7 });
+  assert.deepEqual([bt.reason, bt.check, bt.translation], ["BAD_RISK_TIER", "C-90.2", actions.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.translation]);
+  assert.equal(actions.RISK_TIER_REVISION_CHECKS.BAD_RISK_TIER.where, "src/actions/index.mjs #badRiskTier > is-bad-risk-tier");
   const before = w.text(A);
   const p = P({});
   assert.deepEqual([p.ok, p.evidence, p.proposal.machine_work, p.risk_tier], [true, false, true, 1]);

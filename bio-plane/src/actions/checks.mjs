@@ -4,7 +4,9 @@
  * the governing-laws reader and arm, the counterparty arm, `respondsToEdgeFindings` (C-6.1's `responds_to` arm), the
  * records-request lifecycle's reader, `consequenceState` (DEC-14), `checkActionExtension` (C-2.10's action arms and
  * C-11.1), and the catalogue rows C-32.3, C-32.4, C-32.18, C-32.19, C-33.3–C-33.9, C-72, C-73, C-90 and C-94. New
- * here: C-32.20 (R5), C-73.6 (R6), C-101 (R7), C-90.6 (R28), C-94.12 (R22) and R33's mechanical clock rule.
+ * here: C-32.20 (R5), C-73.6 (R6), C-101 (R7), C-90.6 (R28), C-94.12 (R22) and R33's mechanical clock rule; in T11,
+ * C-117.2–C-117.6 (N217, N237, K275: `NO_SUCH_ACTION`, `ACTION_TOO_LARGE`, `ACTION_MOVE_NO_REASON`,
+ * `PENDING_CLOCKS_BAD_BEFORE`, `ACTION_NO_DETERMINATION`).
  *
  * WHAT STAYS IN `legacy-checks` FOR NOW, and why: the vocabularies and grammar functions a module later than this one
  * still imports from there (`affordances`: `ACTION_KINDS`, `RISK_TIERS`, `riskTierState`, `LAW_LEVELS`,
@@ -61,21 +63,35 @@ export function kindReadsAsWritten(kind) { return typeof kind === "string" && AC
 /** R4: the longest `law` a records request carries: a citation, never the law's text. */
 export const RECORDS_LAW_MAX = 200;
 
-/** R4, R6: C-2.10's law arm. `law` is stated only on a `records_request`, as a string of at most `RECORDS_LAW_MAX`
- *  characters with no quote, backslash or line break; absent reads undetermined. */
-export function recordsLawFindings(fm, findings) {
-  if (!fm || typeof fm !== "object" || !Object.prototype.hasOwnProperty.call(fm, "law")) return;
+/** R4, R6 (N297, K275): C-2.10's law arm, and the one site that mints `RECORDS_LAW_REFUSED`. `law` is stated only on a
+ *  `records_request`, as a string of at most `RECORDS_LAW_MAX` characters with no quote, backslash or line break;
+ *  absent reads undetermined. Answers null, or the refusal with its row and each finding (`{check, detail, repairs}`):
+ *  the write refuses by it and the audit reports its findings, so the two say one thing. */
+export function recordsLawRefusal(fm) {
+  if (!fm || typeof fm !== "object" || !Object.prototype.hasOwnProperty.call(fm, "law")) return null;
   const law = fm.law;
-  if (law === null || law === undefined || law === "") return;
-  if (fm.action_kind !== "records_request") {
-    findings.push(f("C-2.10", "error", `law is stated on a '${String(fm.action_kind).slice(0, 40)}' action: only a `
-      + "records_request carries the law it is made under (R4)", ["remove law, or make the kind records_request"],
-      "RECORDS_LAW_REFUSED"));
-    return;
-  }
-  if (typeof law !== "string" || !law.trim() || law.length > RECORDS_LAW_MAX || UNWRITABLE.test(law))
-    findings.push(f("C-2.10", "error", `law is not a citation of 1 to ${RECORDS_LAW_MAX} characters with no quote, `
-      + "backslash or line break (R4)", ["state the law by its citation"], "RECORDS_LAW_REFUSED"));
+  if (law === null || law === undefined || law === "") return null;
+  const found = fm.action_kind !== "records_request"
+    ? { message: `law is stated on a '${String(fm.action_kind).slice(0, 40)}' action: only a records_request carries the `
+                 + "law it is made under (R4)", repairs: ["remove law, or make the kind records_request"] }
+    : typeof law !== "string" || !law.trim() || law.length > RECORDS_LAW_MAX || UNWRITABLE.test(law)
+      ? { message: `law is not a citation of 1 to ${RECORDS_LAW_MAX} characters with no quote, backslash or line break `
+                   + "(R4)", repairs: ["state the law by its citation"] }
+      : null;
+  if (!found) return null;
+  const row = GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED;
+  /* DEC-49 REGION is-records-law */
+  return { ok: false, reason: "RECORDS_LAW_REFUSED", code: "RECORDS_LAW_REFUSED", check: row.check, translation: row.translation,
+           detail: `${found.message}. Nothing was written.`,
+           findings: [{ check: "C-2.10", detail: found.message, repairs: found.repairs }] };
+  /* END DEC-49 REGION is-records-law */
+}
+
+/** R4, R6: the law arm's findings, as the audit reports them (R37), read from `recordsLawRefusal`, each carrying its
+ *  code. */
+export function recordsLawFindings(fm, findings) {
+  const r = recordsLawRefusal(fm);
+  if (r) for (const x of r.findings) findings.push(f(x.check, "error", x.detail, x.repairs, r.code));
 }
 
 /** R5: the records law's state as the record can support it: `stated` by a member, `machine_stated` (written by a
@@ -791,8 +807,9 @@ export const GOVERNING_LAW_CHECKS = {
   BAD_LAW_LEVEL: {
     check: 'C-73.3',
     where: 'src/actions/index.mjs #lawEntries > is-laws-entry',
-    translation: 'Each law is stated at one of three levels: federal, state or local. One entry named a level '
-      + 'outside those three, so nothing was written.',
+    /* N246 (R18): the levels are the profile's (`jurisdictions` R31), named here from `LAW_LEVELS` itself. */
+    translation: `Each law is stated at one of its levels: ${LAW_LEVELS.join(', ')}. One entry named a level outside `
+      + 'those, so nothing was written.',
   },
   BAD_CITATION: {
     check: 'C-73.4',
@@ -812,7 +829,7 @@ export const GOVERNING_LAW_CHECKS = {
      states a law, this asks whether what is stated is a citation on a records request at all. */
   RECORDS_LAW_REFUSED: {
     check: 'C-73.6',
-    where: 'src/actions/index.mjs #writeArms > is-promote-records-law',
+    where: 'src/actions/checks.mjs recordsLawRefusal > is-records-law',
     translation: 'The law a records request is made under is named by its citation, a short reference such as a '
       + 'code section, and only a records request carries one. This write stated a law that was too long to be a '
       + 'citation, was not text, or sat on a kind of action that is not a records request. Nothing was written.',
@@ -976,7 +993,7 @@ export const RISK_TIER_REVISION_CHECKS = {
   },
   BAD_RISK_TIER: {
     check: 'C-90.2',
-    where: 'src/actions/index.mjs actionRiskTier > is-risk-tier-act',
+    where: 'src/actions/index.mjs #badRiskTier > is-bad-risk-tier',
     translation: 'A risk tier is 1 (file freely), 2 (file with caution) or 3 (do not file without counsel). The '
       + 'act states one of those three; "not assessed" is what an action reads when nobody has stated one, and '
       + 'is not something to set. Nothing was written.',
@@ -1076,5 +1093,43 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'The one change an automatic re-check may make to an action\'s deadlines is to mark a pending '
       + 'deadline whose date has passed as overdue. This write changed a deadline\'s status in another way, so '
       + 'nothing was written. A member changes a deadline by revising the action.',
+  },
+  /* R43 (N217, K275): the one answer to one condition, that no action the caller may see answers to an id. Minted at one
+     site, `noSuchAction`, which every later module answering that condition calls (filings, escalation); filings'
+     C-115.2 and escalation's C-116.11 give way to it. */
+  NO_SUCH_ACTION: {
+    check: 'C-117.2',
+    where: 'src/actions/index.mjs noSuchAction > is-no-such-action',
+    translation: 'No action answers to that here. An action you may not see is answered exactly as one that does not '
+      + 'exist, so this is not a hint either way.',
+  },
+  /* R3 (N237, K351): the projection reads at most 500 legs and 500 correspondence entries of one action. */
+  ACTION_TOO_LARGE: {
+    check: 'C-117.3',
+    where: 'src/actions/index.mjs #tooLarge > is-action-too-large',
+    translation: 'An action holds at most 500 reasons it rests on and 500 correspondence entries. This write carried '
+      + 'more, so nothing was written. A longer exchange belongs in a new action that names this one.',
+  },
+  /* R13 (N217, K275): a move of an action states why; the condition is this act's own, so the code is too. */
+  ACTION_MOVE_NO_REASON: {
+    check: 'C-117.4',
+    where: 'src/actions/index.mjs actionMove > is-move-reason',
+    translation: 'Moving an action records why, in your own words, and nothing fills the reason in for you. No reason '
+      + 'was given, so the action did not move.',
+  },
+  /* R31: the date the pending-clock read looks before is a date; the condition is this read's own. */
+  PENDING_CLOCKS_BAD_BEFORE: {
+    check: 'C-117.5',
+    where: 'src/actions/index.mjs pendingClocks > is-pending-before',
+    translation: 'The deadlines are listed up to a date written year-month-day, and the date given was not one. '
+      + 'Nothing was read.',
+  },
+  /* R8: an action recorded for a breach rests on a live conformance determination the author may see. */
+  ACTION_NO_DETERMINATION: {
+    check: 'C-117.6',
+    where: 'src/actions/index.mjs #breachRefusal > is-breach-determination',
+    translation: 'An action taken for a breach rests on the group\'s recorded determination that the government '
+      + 'acted out of conformance, and this one names no such determination that you can see, so nothing was '
+      + 'written. Name the determination it rests on.',
   },
 };
