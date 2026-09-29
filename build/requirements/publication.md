@@ -27,7 +27,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 - **R38** `pinnedCaseEditionsOf(id, sha)` answers the ratified case editions whose signed document pins bundle `id` at `sha`, `ratifiedFindingsRestingOn(id)` the ratified findings whose published basis rests on `id`, and `caseClaimsOf(id)` the cases a finding is pinned or prepared into; all bounded and viewer-free, read by `ratification` R5's scope arms (K240). *(not yet met: K240)*
 - **R39** `attributionInForce(caseId, edition, observation)` answers the attribution level in force for that observation in that case edition (R17's statement read at a case edition), read by `review` R16 (K240). *(not yet met: K240)*
 - **R40** The tables `cases` (`case_id`, `project_id`), `published_cases` (`case_id`, `edition`, `completeness`, `bias_acknowledgement`, `ratified_at`), `published_case_members` (`case_id`, `bundle_id`), `published_bundles` (`bundle_id`, `edition`, `bundle_sha`) and `case_documents` (`case_id`, `edition`, `doc_sha`, `text`, `draft_id`, `authored_by`, `authored_at`, `sig_armored`, `ratified_at`) are a stated read contract, on record-core R37's terms: a later module may read them in its own SQL, and every write stays this module's (R21, R22, R24). Read by `case-authoring` (R7, R13) and `review` (R3, R5) (K240).
-- **R41** (N210, N163 (a)) `caseCitedParts({case, edition?})` → `{case, edition, project, parts: [{bundle_id, bundle_sha}], limit, truncated}`: a ratified case edition's cited parts (the latest ratified edition when `edition` is absent), at most 1,000, viewer-free. A cited part is a case member at its pin (`bundle_id` at `bundle_sha`), whose pinned capture `reevaluation` R14 grades; `project` is the case's owning project. This module registers it, with R43, as `reevaluation`'s `registerCaseParts({parts, cases})` (its R26; K359). *(not yet met: N210)*
+- **R41** (N210, N163 (a)) `caseCitedParts({case, edition?})` → `{case, edition, project, parts: [{bundle_id, bundle_sha}], limit, truncated}`: a ratified case edition's cited parts (the latest ratified edition when `edition` is absent), at most 1,000, viewer-free. A cited part is a document the edition cites as evidence (its case citations: each cited document, `bundle_id`, at the `bundle_sha` the edition pinned it at; K363), whose pinned capture `reevaluation` R14 grades; a member finding is never a part, since a finding holds no capture; `project` is the case's owning project. This module registers it, with R43, as `reevaluation`'s `registerCaseParts({parts, cases})` (its R26; K359). *(not yet met: N210)*
 - **R42** (N230) `restingCapturesOf({after, limit})` answers, in capture order after `after`, each capture that a ratified finding's published basis rests on, with those findings and their owning projects. `limit` defaults to 1,000 and is clamped to 1–1,000; `cursor` is the last capture answered when more follow, else null. It is read as the plane and writes nothing (as `intent` R7); `monitoring` R33 follows it. *(not yet met: N230)*
 - **R43** (N210; K359) `ratifiedCases({after, limit})` → `{cases: [case_id], cursor}`: the cases holding at least one ratified edition, in case id order after `after`, at most `limit` (default 1,000, clamped to 1–1,000); `cursor` is the last case answered when more follow, else null. Viewer-free, it writes nothing. *(not yet met: N210)*
 
@@ -77,6 +77,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 - `connections`: the `refs` read (R18).
 - `inquiry`: `exclusionsNaming` (R12).
 - `basis-versions`: `testimonyReach` (the observations an edition reaches, R17).
+- `reevaluation`: `registerCaseParts` (its R26), with which R41 and R43 are registered (N210; K363).
 
 ### Invariants
 
@@ -124,7 +125,7 @@ None: answered by Bob 2026-09-26 (K102).
 6. C-44.2 (`FINDING_IN_SEVERAL_CASES`, raised by `#resolveOneCase`) is this module's; C-44.1, C-44.3–C-44.5 are `case-authoring`'s. C-92.1–C-92.9 are this module's; C-92.10–C-92.12 are `ratification`'s (rows follow their raising handlers, K93 (3)).
 7. The tables stay here; the other two write through R21 and R22.
 8. The review provider is one registration here (R23); `case-authoring` reads its draft door and dead answer through `reviewProvider()`.
-9. `from`: `legacy-store`, `legacy-checks`, `legacy-index`. Uses as above: `intent`, `review`, `bias`, `strength`, `content` and `reevaluation` are not called by this module's code.
+9. `from`: `legacy-store`, `legacy-checks`, `legacy-index`. Uses as above: `intent`, `review`, `bias`, `strength` and `content` are not called by this module's code; `reevaluation` is, only to register R41 and R43 (K363).
 
 ## Old ids (publication's draft → this file)
 
