@@ -257,9 +257,13 @@ const t = (label, got, want) => {
    The corpus is T7's with a third pass of the same re-inliner over T8's modules (`{ modules: T8_MODULES }`,
    `t8-extracted.mjs`); every figure and name below is diffed BY NAME against this suite's print on the T7 close
    (84d078c16a), not re-pinned. */
-const SRC_STORE = reinlineLayer5(reinlineLayer5(
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, B5; K409, QUEUE #2): the queue left the store behind one spread of its routes
+   (`...queueOps(queueOf(this.ctx), url, body),`), so a FOURTH pass of the same re-inliner re-inlines it
+   (`{ modules: { queueOf: "queue" } }`), the re-inliner unchanged — `bounds.test.mjs`'s corpus, the same edit. */
+const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(
   reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
+  { ops: true, privates: true, modules: { queueOf: "queue" } }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own
@@ -852,8 +856,11 @@ console.log(`    EXCLUDED WHILE PUBLISHING A COLLECTION — the returns this rea
    of another of the store's own numeric statics, as `bounds.test.mjs`'s guard does. */
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): `static CASE_FLAGS_LIMIT = 500;` left the store with publication (a module
    `export const` now); the guard asks the same of another of the store's own numeric statics, as `bounds.test.mjs`'s. */
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, B6; K414): `static GROUP_DOMAIN_CHECKS_MAX = 20;` left the store with
+   instance-setup (an `export const` in setup.mjs); the guard asks another of the store's own numeric statics, as
+   `bounds.test.mjs`'s does. */
 t("WALK GUARD: comments are blanked, and a known CODE line SURVIVES it",
-  /static GROUP_DOMAIN_CHECKS_MAX = 20;/.test(CODE), true);
+  /static RELEASE_ACK_MAX = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — this file's subject is named in dozens of comments",
   /the most important entity produces the largest unbounded response/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
@@ -1108,7 +1115,12 @@ t("D-240 (e) THE MIS-READ IS NAMED, NOT ABSORBED — a return excluded while it 
      a code, a check, "Nothing was written") that carries the list of deployed modes. The reader excludes it correctly;
      it is named here because this roster names every excluded return that publishes a list, so a third misread cannot
      hide behind it. The two SUCCESS misreads are unchanged. */
-  ["#conditionHomes[ungrouped:reasons]", "#sessionRights[rootOfTrust:capabilities+member]", "open[started:deployed]"]);
+  /* RE-PINNED 2026-09-29 (legacy-tests T12, B5; K409, QUEUE #2), from this run's print, diffed by name: #conditionHomes
+     MOVED into the queue (re-inlined as `#conditionHomes$queueOf`), the same misread; ONE ARRIVAL, a third SUCCESS
+     misread of the same kind — the queue's new `#resolvedLately` (R39: the obligations resolved lately), whose answer
+     leads with the DATUM `personal: false` beside its `obligations` list. Reached by no dispatched op (e2 below). */
+  ["#conditionHomes$queueOf[ungrouped:reasons]", "#resolvedLately$queueOf[personal:obligations]",
+   "#sessionRights[rootOfTrust:capabilities+member]", "open[started:deployed]"]);
 t("D-240 (e2) AND NEITHER OF THEM IS REACHED BY A DISPATCHED OP, so no ratchet in this file moves on "
 + "their account — asserted rather than assumed, because that is the only reason (e) is a named "
 + "residual instead of a defect this item owes a fix for",
