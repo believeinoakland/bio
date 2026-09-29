@@ -260,10 +260,15 @@ const t = (label, got, want) => {
 /* RE-ANCHORED 2026-09-29 (legacy-tests T12, B5; K409, QUEUE #2): the queue left the store behind one spread of its routes
    (`...queueOps(queueOf(this.ctx), url, body),`), so a FOURTH pass of the same re-inliner re-inlines it
    (`{ modules: { queueOf: "queue" } }`), the re-inliner unchanged — `bounds.test.mjs`'s corpus, the same edit. */
+/* WIDENED 2026-09-29 (LEGACY-TESTS #11, T13; N238, N277): every pass also follows a HELD SERVICE (`{ services: true }`,
+   rule (6) of `t5-extracted.mjs`): a module method whose answer is taken from another module's service it holds
+   (`const committed = this.publication.commitCaseEdition(…)`) reads that service method as a private delegate, and the
+   RETURN-DELEGATE rule below follows it. `bounds.test.mjs` does not pass the option, so its corpus is unchanged. */
+const SVC = { ops: true, privates: true, services: true };
 const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(
-  reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true, privates: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
-  { ops: true, privates: true, modules: { queueOf: "queue" } }).text;
+  reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, SVC).text,
+  { ...SVC, modules: T7_MODULES }).text, { ...SVC, modules: T8_MODULES }).text,
+  { ...SVC, modules: { queueOf: "queue" } }).text;
 
 /* Block and line comments blanked before any anchor is matched. UI-35's class and
    REC-57's redraft: an anchor that matches PROSE measures the prose, and this file's own
@@ -620,6 +625,25 @@ const DELEGATE_DEPTH = 3;
    unchanged. A transaction whose callback is a BLOCK (`() => { … }`) is not this shape: its returns are already in the
    method's own segment. Measured: the widening restores `op=publishcase` and moves no other op. */
 const PRIVATE_CALL = /^(?:await\s+)?(?:this\.#?record\.transact\(\s*\(\s*\)\s*=>\s*)?this\.(#[A-Za-z_$][\w$]*)\s*\(/;
+/* WIDENED 2026-09-29 (LEGACY-TESTS #11, T13; N238, N277), the rule's own premise — a method's published shape is what its
+   RETURNS produce — and no further. Three more ways a return hands back a delegate's answer are followed:
+     (a) `return v || …` or `return v ?? …`, `v` a local assigned from a delegate: whenever it is set, it IS the return;
+     (b) a returned OBJECT whose top-level property value is a delegate call (`state: this.#x(…)`): that answer is
+         published under the key;
+     (c) a returned object whose top-level value reads such a local (`awaiting: committed.awaiting`, `…committed`).
+   Still not followed: a delegate whose answer is only CONSULTED (tested, destructured into a refusal, passed on), which
+   the over-strictness arm below holds. This is what lets the walk see `op=caseratify` through publication's held
+   `commitCaseEdition` (rule (6) of the re-inliner spells it a delegate) down to `caseEditionState`. */
+/* (b)'s value is the delegate's answer WHOLE only when the call's own closing parenthesis ends it: `this.#redactor(v)(id)`
+   publishes what a returned function answers, and `this.#x(a).length` a figure, neither of them `#x`'s answer. */
+const wholeCall = (val, open) => {
+  let depth = 0;
+  for (let i = open; i < val.length; i++) {
+    if (val[i] === "(") depth++;
+    else if (val[i] === ")" && --depth === 0) return val.slice(i + 1).trim() === "";
+  }
+  return false;
+};
 const delegatesOf = (body) => {
   const assigned = new Map();
   const re = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*((?:await\s+)?this\.#[A-Za-z_$][\w$]*\s*\()/g;
@@ -629,6 +653,19 @@ const delegatesOf = (body) => {
     const d = PRIVATE_CALL.exec(expr);
     if (d) out.add(d[1]);
     else if (assigned.has(expr)) out.add(assigned.get(expr));
+    else {
+      const f = /^([A-Za-z_$][\w$]*)\s*(?:\|\||\?\?)/.exec(expr);                          /* (a) */
+      if (f && assigned.has(f[1]) && !["#one", "#rows"].includes(assigned.get(f[1]))) out.add(assigned.get(f[1]));
+    }
+  }
+  /* (b) and (c) never follow the row primitives: `#one`/`#rows` are the ROW SOURCE this walk grades, not a delegate. */
+  const PRIMITIVE = new Set(["#one", "#rows"]);
+  for (const ro of returnObjects(body)) {
+    if (declaresRefusal(ro)) continue;
+    for (const [, v] of topPairs(ro)) {
+      const val = String(v).trim(), d = PRIVATE_CALL.exec(val);                               /* (b) */
+      if (d && !PRIMITIVE.has(d[1]) && wholeCall(val, d[0].length - 1)) out.add(d[1]);
+    }
   }
   return out;
 };
@@ -893,6 +930,32 @@ t("RETURN-DELEGATE OVER-STRICTNESS: a private method merely CONSULTED and not re
 + "followed, and neither is a PUBLIC one — following every `this.#x(` would credit a method with "
 + "the shape of helpers no caller ever sees, and a ceiling that counts non-defects cannot be held",
   [[...delegatesOf(D_FIX.consulted)], [...delegatesOf(D_FIX.publicDel)]], [[], []]);
+/* ADDED 2026-09-29 (LEGACY-TESTS #11, T13; N238, N277): the three widenings, driven the same way, each beside the
+   shape it must NOT follow. */
+const D_WIDE = {
+  fallback:  "  f() {\n    const c = this.#x(1);\n    return c || { ok: false, reason: \"FAILED\" };\n  }",
+  property:  "  g() {\n    return { ok: true, state: this.#x(1) };\n  }",
+  curried:   "  h() {\n    return { ok: true, id: this.#x(1)(2), n: this.#y(1).length };\n  }",
+  field:     "  i() {\n    const c = this.#x(1);\n    return { ok: true, id: c.id };\n  }",
+  refused:   "  j() {\n    return { ok: false, reason: \"NO\", state: this.#x(1) };\n  }",
+  primitive: "  k() {\n    const r = this.#one(`SELECT 1`);\n    return r || { ok: true, rows: this.#rows(`SELECT 1`) };\n  }",
+};
+t("RETURN-DELEGATE (N238): a local's `||`/`??` fallback return, and a returned object's property whose value IS a "
++ "delegate call, are followed — the answer is handed back whole",
+  [[...delegatesOf(D_WIDE.fallback)], [...delegatesOf(D_WIDE.property)]], [["#x"], ["#x"]]);
+t("RETURN-DELEGATE (N238) OVER-STRICTNESS: a call whose answer is used (curried, measured), a local read for one "
++ "field, a refusal's property, and the row primitives `#one`/`#rows` are NOT followed",
+  [D_WIDE.curried, D_WIDE.field, D_WIDE.refused, D_WIDE.primitive].map((x) => [...delegatesOf(x)]), [[], [], [], []]);
+{
+  /* Rule (6) of the re-inliner, driven over the real corpus: the held service is spelled a delegate where its answer is
+     taken, and a consulted service is left as it was. */
+  const rat = segments(SRC_STORE).get("ratifyCaseDocument") || "";
+  t("RETURN-DELEGATE (N238): the re-inliner spells ratification's held `publication` service a delegate where its answer "
+  + "is TAKEN (`const committed = …commitCaseEdition(…)`), and leaves a CONSULTED service (`this.membership."
+  + "caseAuthority(…)`, whose answer is tested) as it was",
+    [/const committed = this\.#commitCaseEdition\$publicationOf\(/.test(rat), /this\.membership\.caseAuthority\(/.test(rat),
+     /this\.publication\.commitCaseEdition\(/.test(rat)], [true, true, false]);
+}
 /* THE TWO MEMBERS THE RULE RESTORED, BY NAME AND BY THE DELEGATE THEY ARE REACHED THROUGH — so a
    rule quietly disarmed fails HERE, naming the op, rather than only moving a number. */
 t("RETURN-DELEGATE: `op=resolve` is on the BARE roster again, reached through `#resolveOne`. D-291 "
@@ -916,7 +979,13 @@ t("RETURN-DELEGATE: `op=caseratify` likewise, reached through `#caseEditionState
   /* legacy-tests T10, 2026-09-28: RE-MEASURED, UNCHANGED — still [false, false] on the merged T10 tree, as on the T9 close;
      no T10 layer touched ratification or publication. Left red, owned as T8 recorded (ratification's held
      `this.publication` service, which neither the re-inliner nor this rule follows). */
-  [BARE_OPS.includes("caseratify"), (DELEGATED.get("ratifyCaseDocument") || []).includes("#caseEditionState")],
+  /* RE-READ 2026-09-29 (LEGACY-TESTS #11, T13; N238 with N277): the reader follows the held service now (rule (6) of the
+     re-inliner, and the RETURN-DELEGATE widenings (a) and (b) above): `ratifyCaseDocument` returns `committed || …`, the
+     answer of publication's `commitCaseEdition`, whose outcome publishes `state: this.caseEditionState(…)`; so the op is
+     read through `#commitCaseEdition$publicationOf` to `#caseEditionState$publicationOf`, publication's unbounded roster
+     scan, and is on the BARE roster again (the ceiling's T13 note). The delegate is named in its module's spelling. */
+  [BARE_OPS.includes("caseratify"), ["#commitCaseEdition$publicationOf", "#caseEditionState$publicationOf"]
+     .every((d) => (DELEGATED.get("ratifyCaseDocument") || []).includes(d))],
   [true, true]);
 
 t("WALK GUARD: the roster is non-trivial and reaches ops through the dispatch",
@@ -1434,7 +1503,20 @@ t("RATCHET: the bare roster is a CEILING, not a target — a NEW read that publi
      arm above stays red). So 37 printed + caseratify = 38, and the FLOOR below stays red naming exactly that loss
      until the reader sees it again. T8's own fix, `pursuit` (INTENT #2, N181), was left inside T8's 43 while the floor
      waited for caseratify; it is taken out here with membership's four, because a ceiling may not carry slack. */
-  BARE_OPS.length <= 38, true);
+  /* RE-PINNED 2026-09-29 (LEGACY-TESTS #11, T13; N238 with N277): 38 -> 40, CEILING AND FLOOR IN ONE EDIT. The walk PRINTS
+     40, DIFFED BY NAME against its own print on this tree before the reader changed (37, a353b478f3):
+       caseratify RETURNS: `caseratify -> ratifyCaseDocument`, T8's lost member, which the 38 already counted, read again
+         through publication's held `commitCaseEdition` (the RETURN-DELEGATE arm naming it is green).
+       TWO ARRIVALS BY THE READER, NOT BY THE PLANE (widening (b): a returned property whose value IS a delegate call):
+         `aliaswithdraw -> withdrawAlias` publishes `resolutions_resting: this.#restingOn(…)`, entities' resting read
+         (the same scan as `op=restson`, bare there already), and `entity -> readEntity` publishes `#entityView`'s
+         aliases and relations off unbounded scans keyed on ONE entity. Both were there before; the reader credited
+         neither (NO_COLLECTION). Both are bounded by one parent row, the judgement this walk states it cannot make;
+         REPORTED to entities' owner rather than absorbed.
+     Every other move of the widening is off the BARE roster and named in the job record: BOUNDED gains
+     `partitionindependence` (strength's `#independenceOf`) and `reading` (extraction's `#readingHistoryOf`); UNJUDGED
+     gains `aicredentialmint`, `aicredentialrevoke`, `casegate` and `goal` (each read off a delegate with no row scan). */
+  BARE_OPS.length <= 40, true);
 /* Guarded BOTH WAYS. A ceiling alone cannot tell "the roster shrank because a
    read was fixed" from "the roster shrank because the reader broke again" —
    which is precisely how this walk spent two days reporting 27. A DROP is not a
@@ -1477,7 +1559,9 @@ t("RATCHET: and a FLOOR beside the ceiling — the roster shrinking without this
      fixes and are out of the figure; caseratify is not a fix and is in it. */
   /* legacy-tests T10, 2026-09-28: RE-MEASURED, NOT MOVED — the walk prints 37 on the merged T10 tree, and the BARE roster
      is byte-identical by name to the T9 close's (ac699662aa): no arrival, no departure. Still red for caseratify alone. */
-  BARE_OPS.length >= 38, true);
+  /* MOVED 38 -> 40, 2026-09-29 (LEGACY-TESTS #11, T13; N238), IN THE SAME EDIT AS ITS CEILING, whose note names the three:
+     caseratify seen again, and `aliaswithdraw` and `entity` credited by the widened reader. */
+  BARE_OPS.length >= 40, true);
 
 /* ==========================================================================
  * REC-70 · REACH — WHAT THIS WALK REACHES, ASSERTED RATHER THAN ASSUMED.
@@ -1594,7 +1678,12 @@ t("REACH: and the residual is NAMED, not merely counted — a bare count is sati
            /* REMOVED 2026-09-28 (T7, legacy-tests; CAPTURE #3 REPORT J2.3, N90): `siteassets->siteAssets` LEFT — the
               read is bounded and paged now (`limit` 200, clamped 1…1000, `truncated`, `next`), so it is no longer a
               scan this walk cannot judge. */
-           "taskdrain->taskDrain",
+           /* REMOVED 2026-09-29 (LEGACY-TESTS #11, T13): `taskdrain->taskDrain` LEFT in T12 and is named now (the arm was
+              red for record-core's pair, so the count hid it). QUEUE #2's extraction (7c2a3d646a, K409) moved the op to
+              queue, and the `task_queue` scan behind it is capture's `taskEvents({ limit: cap })` now, a service queue
+              CONSULTS (`this.#capture`) rather than returns, so the method holds no row scan of its own and reads
+              NO_COLLECTION. The read is bounded at the source (`limit`); the reader does not follow a consulted
+              service, its stated limit (N238's widening follows a service's answer only where it is TAKEN). */
            /* REMOVED 2026-09-28 (legacy-tests T10, B1 (6)): `thread->threadInstance` LEFT, diffed by name against this
               suite's print on the T9 close (ac699662aa): 9 OPAQUE there, 8 here, no arrival. A change in the plane, not
               the reader: the one row scan in `threadInstance`'s own segment was the unbounded `SELECT stage_key FROM
