@@ -27,7 +27,7 @@ import { recordChecks } from "./record-checks.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences } from "./text.mjs";
 import { runCaseGate as runCaseCatalogue } from "../gate.mjs";
 
-export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../gate.mjs";
+export { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../gate.mjs";
 export { PROMOTION_CHECKS } from "./checks.mjs";
 export { recordChecks } from "./record-checks.mjs";
 /* R49 (K285): the one site of LISTENER_MALFORMED and LISTENER_DECLARED is membership's (its R81), re-exported for later
