@@ -1,6 +1,6 @@
 # legacy-index (T11)
 
-**Status** · session_017wnYAQFtWif7k7G5n1MVfL · depth 2 · WORKING · handled B2
+**Status** · session_017wnYAQFtWif7k7G5n1MVfL · depth 2 · COMPLETE · handled B2
 
 **Job** · LEGACY-INDEX #8, session `session_017wnYAQFtWif7k7G5n1MVfL`, branch `job/T11/legacy-index`, the legacy-index bullet of layer 11 (`build/plan/current.md`). A legacy module: it has no requirements file and no `tests` path. Its contract is the bullet, BOB's START (B1) and ANSWER (B2, K376), the N-entries' text in `next.md`, and the Provides of the modules it serves (actions R42, affordances R26, monitoring R30).
 
