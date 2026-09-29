@@ -1,6 +1,6 @@
 # odf-reader — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/odf.mjs`; tests `bio-plane/test/m/odf-reader/`. R29 (D-346) and R36 (D-612) built in T2. No local fact is held here. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/odf.mjs`; tests `bio-plane/test/m/odf-reader/`. R29 (D-346) and R36 (D-612) built in T2. No local fact is held here. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). N30 folded by a drafting worker for BOB #64, 2026-09-29 (T13, K408): R45 (`ODF_REPEAT_EXPANSION_MAX`), R16's hidden rows as ranges, R41's new branch; not yet met.
 
 ## Public
 
@@ -102,9 +102,14 @@ evidentiary, notes}`**
   (verbatim, its OpenFormula `of:` prefix kept), `value` (the cell's displayed text, or, when
   there is none, its raw value attribute). The formula is never collapsed into, or substituted
   for, the cell's displayed text.
-- **R16** `evidentiary.items` carries one `hidden-rows` and one `hidden-cols` item per sheet
-  that has any (row/column numbers from `table:visibility="collapse"|"filter"`, repeats
-  expanded), and one `hidden-sheet` item per hidden sheet.
+- **R16** `evidentiary.items` carries one `{kind:"hidden-rows", sheet, rows:[{min, max,
+  visibility}], count, source:null}` and one `{kind:"hidden-cols", sheet, cols:[{min, max,
+  visibility}], count, source:null}` item per sheet that has any: one range per
+  `<table:table-row>` or `<table:table-column>` whose `table:visibility` is `"collapse"` or
+  `"filter"`, `min` and `max` the first and last row or column number its repeat spans
+  (1-based, inclusive; a repeat is one range, never expanded into numbers), `visibility` that
+  value, `count` the number of ranges; and one `hidden-sheet` item per hidden sheet.
+  *(not yet met: N30)*
 - **R17** `links` carries every `<text:a>`/`<draw:a>` href found inside a cell, located to that
   cell's `sheet-cell` reference; a repeated cell's links are attached at each of its addresses.
 
@@ -215,6 +220,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   result naming why, never an exception the caller must catch.
 
 - **R44** (N27, D-415; K278) `odsEntry.text()` also carries `rangeUnits: [{source: "named-range" | "database-range", name, scope, hidden: false, unit}]`, one per `<table:named-range>` (document-scoped, `scope: null`; or inside a `<table:table>`, `scope` that sheet's name) and `<table:database-range>` (`scope` its sheet) whose address names one rectangle on one sheet of this document, `unit` its `sheet-range` reference from `office-readers`' `rangeUnitFor` (grid `null`, R42); and `rangeUnitsSkipped: [{source, name, ref, why}]` for every other, and for every `<table:named-expression>` (`source: "named-expression"`, `why: "not_a_range_reference"`). `why` is one of `multi_area`, `broken_reference`, `not_a_range_reference`, `whole_row_or_column`, `external_workbook`, `multi_sheet_reference`, `no_such_sheet`, `empty_reference` (`office-readers` R9's vocabulary). `hidden` is `false`: ODF has no hidden flag on a name. Over the guard, or with no readable `<office:spreadsheet>` body, both are `null`, never `[]`: an `.ods` declares its names only in `content.xml`, which was not read (R41).
+- **R45** (N30) Repeats are expanded within a bound: `ODF_REPEAT_EXPANSION_MAX` (262,144, exported) units per `content.xml` read, a unit being one cell given at one address (a carrying cell's `table:number-columns-repeated` and its row's `table:number-rows-repeated` multiplied, R15–R19; a link attached at a repeated address rides on its cell, R17), one hidden row range listed (R16), or one space a `<text:s text:c>` stands for (R11, R19, R24). An empty run advanced over, and every figure that only accumulates (R12's `rows`/`cols`, R18's used extent), costs none. The reader never expands past the bound: the read that would cross it stops, and the entry answers as over the size guard (R10, R13, R20, R27 for `text()`, R10's shape for each `structure()`), with the marker `{text: "undetermined", why: "over_repeat_bound", units, bound, boundName: "ODF_REPEAT_EXPANSION_MAX", metric: "expanded_repeat_units"}` in place of the guard's, `units` the count reached when it stopped (one past the bound). What R28–R30 read from outside `content.xml` is still answered, and `odfEvidentiaryDigest` (R32–R37), which expands nothing, is unaffected. It never ends in `reader_failed` for a repeat's size (R38). *(not yet met: N30)*
 
 ## Private
 
@@ -237,7 +243,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   jurisdiction-specific fact of any kind.
 - **R41** Every "not read" is stated with which part and why; absence is never emitted as a
   zero, an empty list or a silent omission a caller could read as "none present" (R9's
-  `null` guard branches, R28's markers, R33–R35's named refusals).
+  `null` guard branches, R28's markers, R33–R35's named refusals, R45's `over_repeat_bound`). *(not yet met: N30)*
 - **R42** A `.ods` cell's capacity (`rows`/`cols` in R18) is always `null`: OpenDocument fixes
   no maximum table size, so this module never borrows XLSX's grid and never infers a bound
   from the used range.
