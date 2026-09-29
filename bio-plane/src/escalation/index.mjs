@@ -41,7 +41,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
-import { actionsOf, actionFacts } from "../actions/index.mjs";
+import { actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity } from "../../checks/bio-checks.mjs";
@@ -605,11 +605,8 @@ export class Escalation {
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
     const a = typeof action === "string" && action ? this.actions.actionRead({ id: action, viewer }) : null;
-    /* DEC-49 REGION is-action-seen */
-    if (!a || a.ok === false)
-      return refusal("NO_SUCH_ACTION", "no action answers to that id here; one you may not see is answered exactly as one "
-                     + "that does not exist.");
-    /* END DEC-49 REGION is-action-seen */
+    /* actions R43 (N217, K275): the one answer to an action absent, unseen or not an action, minted there. */
+    if (!a || a.ok === false) return noSuchAction(action);
     const legs = Array.isArray(a.legs) ? a.legs : [];
     /* DEC-49 REGION is-breach-action */
     if (a.breach !== true || !legs.some((l) => isObj(l) && l.kind === "rests_on" && l.target === e.determination))
