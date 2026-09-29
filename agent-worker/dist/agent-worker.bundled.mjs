@@ -466,7 +466,6 @@ __export(bio_checks_exports, {
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
   ATTEST_CHECKS: () => ATTEST_CHECKS,
-  ATTRIBUTION_CHECKS: () => ATTRIBUTION_CHECKS,
   BASIS_GRADES: () => BASIS_GRADES,
   BASIS_ROLES: () => BASIS_ROLES,
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
@@ -478,7 +477,6 @@ __export(bio_checks_exports, {
   CAPTURE_UA_MODES: () => CAPTURE_UA_MODES,
   CASE_AUTHORITY_CHECKS: () => CASE_AUTHORITY_CHECKS,
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
-  CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -3724,7 +3722,6 @@ async function checkBundle(input, opts = {}) {
     checkWriteCompleteness(ctx, findings);
     await checkInformationExtension(ctx, findings);
     await checkInfo2Contract(ctx, findings);
-    checkInboxGrammar(ctx, findings);
     checkReferences(ctx, findings);
     checkRecheckCoverage(ctx, findings);
     checkInquiryExtension(ctx, findings);
@@ -5117,7 +5114,6 @@ var AI_CREDENTIAL_CHECKS = {
     translation: "A credential that acts for the whole group is created by one of its administrators, and the account asking is not an active administrator here. Nothing was created. You can create a credential that acts for you alone, or ask an administrator to create this one."
   }
 };
-var CASE_DERIVATION_CHECKS = {};
 var MACHINE_FENCE_CHECKS = {
   MACHINE_CANNOT_RELEASE: {
     check: "C-32.1",
@@ -6626,7 +6622,6 @@ var TRANSCRIBE_CHECKS = {
     translation: "You typed this transcription, so you cannot be the one who attests it. An attestation is a SECOND person checking the text against the page; your own agreement with your own typing costs nothing and proves nothing. Ask another member to check it."
   }
 };
-var ATTRIBUTION_CHECKS = {};
 var TESTIMONY_CHECKS = {
   TESTIMONY_NOT_A_MEMBER: {
     check: "C-53.1",
@@ -6723,11 +6718,6 @@ var SIGNER_ENROLMENT_CHECKS = {
   }
 };
 var CUSTODIAL_CHECKS = {
-  NOT_AN_ADMIN: {
-    check: "C-96.1",
-    where: "src/membership/index.mjs #custodialBar > is-custodial-admin",
-    translation: "Only an active administrator of this group can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed."
-  },
   BAD_MEMBER_ID: {
     check: "C-96.2",
     where: "src/membership/index.mjs memberAdd > is-member-add-id",
