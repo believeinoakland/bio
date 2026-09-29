@@ -6,7 +6,7 @@
 
 **Applied** (N30, on `tranche/T13` at ff11386715):
 - **R45**: `ODF_REPEAT_EXPANSION_MAX` = 262,144 is exported. Each `structure()`/`text()` is one `content.xml` read on its own meter, and every expansion is paid for before it is made: one unit per cell given at an address (column repeat × row repeat), per hidden row range, and per `text:c` space each time its text is given. The read that would cross the bound stops, and the entry answers as over the size guard with the marker `{text, why:"over_repeat_bound", units, bound, boundName:"ODF_REPEAT_EXPANSION_MAX", metric:"expanded_repeat_units"}`, `units` one past the bound. The same shapes apply as for the guard (R10, R13, R20, R27): `evidentiary.undetermined` carries `{part:"content.xml", why:"over_repeat_bound", guard:<marker>}`, and the notes name the bound. `meta.xml`, the manifest's `intra` links and `images` are still answered, and `odfEvidentiaryDigest` is unchanged.
-- **J2, built on my best reading pending BOB's answer:** a link at a repeated address after its cell's first costs one unit, and a repeated cell's text copied at each address after its first counts its characters against `MEASURED_OOXML_TEXT_BOUND_BYTES`. Past that, the marker is the same with `boundName:"MEASURED_OOXML_TEXT_BOUND_BYTES", metric:"repeated_text_chars"`. Without these, 27 copies of a 20 MB cell ended in `RangeError` and a many-link cell repeated could exhaust the heap. If BOB rules otherwise, a `CHANGE` brings it in line (the code is `spend`/`spendChars` in `walkSheet`).
+- **J2, accepted by BOB (B2, K428) and now R45's wording; `tranche/T13` @ aa50db5eca merged:** a link at a repeated address after its cell's first costs one unit, and a repeated cell's text copied at each address after its first counts its characters against `MEASURED_OOXML_TEXT_BOUND_BYTES`. Past that, the marker is the same with `boundName:"MEASURED_OOXML_TEXT_BOUND_BYTES", metric:"repeated_text_chars"`. Without these, 27 copies of a 20 MB cell ended in `RangeError` and a many-link cell repeated could exhaust the heap. Tested at the interface: `repeats.test.mjs` "a link at a repeated address after its cell's first costs a unit" (links past the unit cap) and "the text a repeat copies is bounded by the size guard's own figure" (text past the bound).
 - **R16**: hidden rows are `{min, max, visibility}` ranges, one per `<table:table-row>`, never expanded; `count` counts ranges. A collapsed run of a million empty rows is one range and one unit.
 - **R41**: R45's `over_repeat_bound` is a stated "not read" branch on all three entries, and is tested.
 
@@ -15,7 +15,7 @@
 - `structure()` no longer expands paragraph text (`.odt`) or shape text (`.odp`) it never emits. So each read pays for a space once, and `structure()` does less work.
 - `walkSheet` reads a carrying cell's text and links once per element, not once per repeated column.
 
-**Marks my work meets** (for BOB to strike): R16's `*(not yet met: N30)*`, R45's `*(not yet met: N30)*`, R41's `*(not yet met: N30)*`, and the status line's "N30 … not yet met". R45's wording would need J2's two additions if BOB takes them.
+**Marks my work meets** (for BOB to strike): R16's `*(not yet met: N30)*`, R45's `*(not yet met: N30)*`, R41's `*(not yet met: N30)*`, and the status line's "N30 … not yet met". After the merge: 57/57 tests; format, architecture, ownership 0 failures; coverage 45/45.
 
 **Deferred.** None.
 
@@ -29,7 +29,7 @@
 - Legacy `node test/formats-odf.test.mjs`: 170 pass, 1 fail (above); 171 pass on the base.
 - `node checks/format.mjs`: 69 modules, 64 requirements files, 0 failures. `architecture.mjs … odf-reader`: 9 product files, 34 relative imports, 0 failures. `coverage.mjs … odf-reader`: 45 of 45 live requirement ids named by a test, 0 failures. `ownership.mjs … odf-reader tranche/T13`: 5 files changed, 0 failures.
 
-Size (session_012x3jt5MEsquz9cY3RyQESF): test runs 11, module lines 2258
+Size (session_012x3jt5MEsquz9cY3RyQESF): test runs 12, module lines 2258
 
 ## J1 · QUESTION
 
