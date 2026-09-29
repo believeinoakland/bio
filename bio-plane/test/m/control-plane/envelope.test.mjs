@@ -88,39 +88,49 @@ test("R22: through the door — a forwarded store refusal under result, and the 
   assert.deepEqual([h.status, h.json.check], [403, "C-38.6"]);
 });
 
-test("R23: an answer that is not JSON with ok:true is 502 STORE_DID_NOT_ANSWER (C-69.2) naming the op, never an absence, refusal or success", async () => {
-  /* doAnswer: `answered` is ok === true and nothing else */
+test("R23: an answer that is not JSON carrying a boolean ok is 502 STORE_DID_NOT_ANSWER (C-69.2) naming the op, never an absence, refusal or success; a JSON ok:false is the store's own refusal, relayed with its status, code and sentence (R26's BAD_JSON among them)", async () => {
+  /* doAnswer: `answered` is ok === true and nothing else; `refused` is ok === false below 500; everything else is silence */
   const ans = async (x) => M.doAnswer(x);
-  for (const result of [null, [], {}, 0, "", { ok: false }]) {
-    const a = await ans(new Response(JSON.stringify({ ok: true, result })));
-    assert.deepEqual(a, { answered: true, result });
+  for (const [result, status] of [[null, 200], [[], 200], [{}, 201], [0, 200], ["", 200], [{ ok: false }, 404]]) {
+    const a = await ans(new Response(JSON.stringify({ ok: true, result }), { status }));
+    assert.deepEqual([a.answered, a.refused, a.result, a.reply.status, a.reply.body], [true, undefined, result, status, { ok: true, result }]);
   }
-  for (const bad of [new Response("nope"), new Response(JSON.stringify({ ok: false, error: "e" })), new Response(JSON.stringify({ ok: "true" })),
-                     new Response(JSON.stringify({ result: 1 })), new Response(""), Promise.reject(new Error("x"))])
+  for (const [body, status] of [[{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, 400],
+                                [{ ok: false, error: "unknown op: nosuch" }, 400], [{ ok: false, error: "e" }, 200], [{ ok: false }, 499]]) {
+    const a = await ans(new Response(JSON.stringify(body), { status }));
+    assert.deepEqual(a, { answered: false, refused: true, result: undefined, reply: { status, body } });
+  }
+  for (const bad of [new Response("nope"), new Response(JSON.stringify({ ok: false, error: "Error: boom\n at x" }), { status: 500 }),
+                     new Response(JSON.stringify({ ok: false }), { status: 503 }), new Response(JSON.stringify({ ok: "true" })),
+                     new Response(JSON.stringify({ ok: "false" }), { status: 400 }), new Response(JSON.stringify({ ok: 0 }), { status: 400 }),
+                     new Response(JSON.stringify({ result: 1 })), new Response(JSON.stringify([{ ok: false }]), { status: 400 }),
+                     new Response("null"), new Response(""), Promise.reject(new Error("x")), null, undefined])
     assert.deepEqual(await ans(bad), { answered: false, result: undefined });
   const s = M.storeSilent("verify");
   assert.equal(s.status, 502);
   const sj = await s.json();
   assert.deepEqual([sj.ok, sj.reason, sj.code, sj.check, sj.op], [false, "STORE_DID_NOT_ANSWER", "STORE_DID_NOT_ANSWER", "C-69.2", "verify"]);
   assert.ok(sj.translation && sj.detail);
-  /* through the door, for each read the module makes itself */
+  /* through the door, for every relay the module makes itself */
+  const relays = [
+    ["reviewcopy", (w) => ({ op: "reviewcopy", params: { secret: "s" } }), false],
+    ["reviewcomment", (w) => ({ op: "reviewcomment", params: { secret: "s" }, method: "POST", body: { text: "x" } }), false],
+    ["statementack", (w) => ({ op: "statementack", params: { secret: "s" } }), false],
+    ["casedrafts", (w) => ({ op: "casedrafts", token: w.S.ann }), false],
+    ["aicredentialmint", (w) => ({ op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } }), "member"],
+    ["reviewgrant", (w) => ({ op: "reviewgrant", token: w.S.founder, method: "POST", body: {} }), "admin"],
+    ["claim", (w) => ({ op: "claim", method: "POST", body: { bootstrapToken: w.env.ADMIN_TOKEN, password: "pw" } }), false],
+    /* the generic forward, for reads and acts, every kind of caller */
+    ["index", (w) => ({ op: "index", token: w.env.ADMIN_TOKEN }), ["bio", "admin"]],
+    ["index", (w) => ({ op: "index", token: w.A.ann }), ["bio", "ai"]],
+    ["cite", (w) => ({ op: "cite", token: w.S.ann, method: "POST", body: {} }), ["bio", "member"]],
+    ["monitor", (w) => ({ op: "monitor", token: w.env.DAEMON_TOKEN, method: "POST", body: {} }), ["bio", "daemon"]],
+    ["list", (w) => ({ op: "list", token: w.env.PROBE_TOKEN }), ["scratch", "probe"]],
+  ];
   const failures = [() => new Response("<html>"), reply({ ok: false, error: "Error: boom\n    at Store.fetch (store.mjs:1:1)" }, 500),
-                    reply({ ok: false, reason: "BAD_JSON" }, 400)];
-  for (const bad of failures) {
-    for (const [route, drive] of [
-      ["reviewcopy", (w) => ({ op: "reviewcopy", params: { secret: "s" } })],
-      ["reviewcomment", (w) => ({ op: "reviewcomment", params: { secret: "s" }, method: "POST", body: { text: "x" } })],
-      ["statementack", (w) => ({ op: "statementack", params: { secret: "s" } })],
-      ["casedrafts", (w) => ({ op: "casedrafts", token: w.S.ann })],
-      ["aicredentialmint", (w) => ({ op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } })],
-      ["reviewgrant", (w) => ({ op: "reviewgrant", token: w.S.founder, method: "POST", body: {} })],
-      /* the generic forward, for reads and acts, every kind of caller */
-      ["index", (w) => ({ op: "index", token: w.env.ADMIN_TOKEN })],
-      ["index", (w) => ({ op: "index", token: w.A.ann })],
-      ["cite", (w) => ({ op: "cite", token: w.S.ann, method: "POST", body: {} })],
-      ["monitor", (w) => ({ op: "monitor", token: w.env.DAEMON_TOKEN, method: "POST", body: {} })],
-      ["list", (w) => ({ op: "list", token: w.env.PROBE_TOKEN })],
-    ]) {
+                    reply({ ok: "true", result: {} }), reply({ result: 1 }), () => new Response("")];
+  for (const bad of failures)
+    for (const [route, drive] of relays) {
       const w = world({ answer: (c) => (c.route === route ? bad() : null) });
       const r = await call(w.env, drive(w));
       refused(r, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
@@ -128,7 +138,19 @@ test("R23: an answer that is not JSON with ok:true is 502 STORE_DID_NOT_ANSWER (
       assert.doesNotMatch(r.text, /boom|store\.mjs|at Store/);
       assert.equal("token" in r.json || "secret" in r.json, false);
     }
-  }
+  /* the store's own refusals: relayed at their status with their code and sentence, never read as a silence */
+  const refusals = [[{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, 400],
+                    [{ ok: false, error: "unknown op: nosuch" }, 400], [{ ok: false, reason: "SOME_STORE_REASON", error: "said so" }, 409]];
+  for (const [body, status] of refusals)
+    for (const [route, drive, adds] of relays) {
+      const w = world({ answer: (c) => (c.route === route ? reply(body, status)() : null) });
+      const r = await call(w.env, drive(w));
+      assert.equal(r.status, status, route);
+      const extra = typeof adds === "string" ? { op: route, store: "bio", tokenClass: adds }
+                  : Array.isArray(adds) ? { store: adds[0], tokenClass: adds[1] } : {};
+      assert.deepEqual(r.json, { ...M.dec49Attach(JSON.parse(JSON.stringify(body))), ...extra }, route);
+      assert.notEqual(r.json.reason, "STORE_DID_NOT_ANSWER", route);
+    }
 });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -140,8 +162,8 @@ const quietly = async (fn) => {
 
 test("R24: a public op relaying the store's answer answers the store's own status and its envelope, and R23 (502 STORE_DID_NOT_ANSWER) on a store failure, never 200 — claim through the door, and login, invitelook and enroll through the relay they answer by", async () => {
   const body = { bootstrapToken: null, password: "pw" };
-  const failures = [() => new Response("<html>oops", { status: 200 }), reply({ ok: false, error: "x" }, 200),
-                    reply({ ok: false, error: "x" }, 500), reply({ ok: "true", result: {} }), reply({}, 200),
+  const failures = [() => new Response("<html>oops", { status: 200 }), reply({ ok: false, error: "x" }, 500),
+                    reply({ ok: "true", result: {} }), reply({}, 200), reply({ ok: false, error: "x" }, 503),
                     () => { throw new Error("gone"); }];
   for (const bad of failures) {
     const w = world({ answer: (c) => (c.route === "claim" ? bad() : null) });
@@ -168,11 +190,25 @@ test("R24: a public op relaying the store's answer answers the store's own statu
       assert.deepEqual((await x.json()).result, JSON.parse(JSON.stringify(result)));
     }
   }
+  /* R23: the store's own refusal (ok:false) is relayed at its status with its code and sentence, never 502 */
+  for (const [refusal, status] of [[{ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, 400],
+                                   [{ ok: false, error: "unknown op: claim" }, 400]]) {
+    const w = world({ answer: (c) => (c.route === "claim" ? reply(refusal, status)() : null) });
+    const r = await call(w.env, { op: "claim", method: "POST", body: { ...body, bootstrapToken: w.env.ADMIN_TOKEN } });
+    assert.equal(r.status, status);
+    assert.deepEqual(r.json, M.dec49Attach(JSON.parse(JSON.stringify(refusal))));
+    for (const op of ["login", "invitelook", "enroll"]) {
+      const x = await M.relayAnswer(reply(refusal, status)(), op);
+      assert.equal(x.status, status, op);
+      assert.deepEqual(await x.json(), M.dec49Attach(JSON.parse(JSON.stringify(refusal))));
+    }
+  }
 });
 
 test("R24 (REC-52): a relayed store answer is read through the one envelope reader — relayAnswer answers exactly when doAnswer calls the reply answered, with doAnswer's result, at the reply's status", async () => {
   const bodies = [["<html>", 200], [JSON.stringify({ ok: true, result: { a: 1 } }), 200], [JSON.stringify({ ok: true, result: null }), 201],
                   [JSON.stringify({ ok: true }), 200], [JSON.stringify({ ok: "true", result: 1 }), 200], [JSON.stringify({ ok: false }), 500],
+                  [JSON.stringify({ ok: false, reason: "BAD_JSON", detail: "d" }), 400], [JSON.stringify({ ok: false, error: "e" }), 200],
                   [JSON.stringify({ ok: 1, result: 2 }), 200], ["", 200], ["null", 200], [JSON.stringify([{ ok: true }]), 200]];
   for (const [text, status] of bodies) {
     const mk = () => new Response(text, { status });
@@ -182,6 +218,9 @@ test("R24 (REC-52): a relayed store answer is read through the one envelope read
     if (read.answered) {
       assert.equal(r.status, status, text);
       assert.deepEqual(j, JSON.parse(JSON.stringify({ ok: true, result: read.result })), text);
+    } else if (read.refused) {
+      assert.equal(r.status, read.reply.status, text);
+      assert.deepEqual(j, M.dec49Attach(JSON.parse(JSON.stringify(read.reply.body))), text);
     } else {
       assert.equal(r.status, 502, text);
       assert.deepEqual([j.reason, j.op], ["STORE_DID_NOT_ANSWER", "login"], text);

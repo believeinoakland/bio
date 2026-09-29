@@ -635,6 +635,7 @@ function resolveSession(sess) {
    same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
    silence, stated as one. */
 async function reviewAnswer(out, op) {
+  if (out.refused) return storeRefusal(out);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op);
   const r = out.result;
   if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
@@ -893,13 +894,24 @@ const STORE_SILENT_DETAIL =
 /* Takes the Response (or a promise of one) from a Durable Object stub fetch and
    returns `{ answered, result }`. A body that is not JSON at all is not an
    answer either, which is why the parse is guarded rather than allowed to throw
-   into whatever catch happens to be nearest. */
+   into whatever catch happens to be nearest.
+   R23 (K421): a JSON reply with `ok: false` below 500 is the store's OWN REFUSAL (`BAD_JSON`, `unknown op: <op>`), not
+   a silence: it comes back `refused`, and `reply` (its status and envelope) is what a relay answers with. An `ok: false`
+   at 500 or above is the store's catch, whose `error` is a stack (R30): a silence, never relayed. An answer carries its
+   `reply` too, so a relay keeps the store's status and envelope without opening the reply a second time. */
 async function doAnswer(res) {
-  let out = null;
-  try { out = await (await res).json(); } catch { out = null; }
-  return (out && out.ok === true)
-    ? { answered: true, result: out.result }
-    : { answered: false, result: undefined };
+  let r = null, out = null;
+  try { r = await res; out = await r.json(); } catch { out = null; }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: undefined };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
+  return { answered: false, result: undefined };
+}
+
+/* R23 (K421): the store's own refusal, relayed with its status, code and sentence; `extra` is what the relay adds (R21). */
+function storeRefusal(out, extra = {}) {
+  return json({ ...out.reply.body, ...extra }, out.reply.status);
 }
 
 /* 502 rather than 500: the control plane is intact and reachable — what failed
@@ -921,15 +933,14 @@ function storeSilent(op) {
 /* R23, R24 (D-679): a store answer RELAYED to the caller. `claim`, `login`, `invitelook` and `enroll` answered
    `json(await r.json(), 200)` — the store's envelope at HTTP 200 WITHOUT READING `ok`, so a store that failed told an
    anonymous caller "success" in the status line. An answer (a refusal the store returned inside `ok: true` included)
-   is re-wrapped in the envelope the store answers, `{ok: true, result}`, at the store's own status; anything else is
-   `storeSilent`, never 200. */
+   is re-wrapped in the envelope the store answers, `{ok: true, result}`, at the store's own status; the store's own
+   refusal (R23) is relayed at its status; anything else is `storeSilent`, never 200. */
 async function relayAnswer(res, op) {
-  let r = null;
-  try { r = await res; } catch { r = null; }
-  /* REC-52: the store's envelope is opened by `doAnswer` and nowhere else; only the status is read here. */
-  const out = await doAnswer(r);
+  /* REC-52: the store's envelope is opened by `doAnswer` and nowhere else. */
+  const out = await doAnswer(res);
+  if (out.refused) return storeRefusal(out);
   if (!out.answered) return storeSilent(op);
-  return json({ ok: true, result: out.result }, r.status);
+  return json({ ok: true, result: out.result }, out.reply.status);
 }
 
 /* D-629 / DEC-49 (C-69.3, R25) — THE WORKER'S OUTERMOST CATCH, which it did not have: a throw anywhere in the door
@@ -3422,6 +3433,7 @@ export function makeFetch(hooks = {}) {
       const minted = await doAnswer(stub.fetch(new Request(inner,
         { method: req.method, body: JSON.stringify({ ...asked, writes: declared.writes,
                                                      confinedTo: confinement.confinedTo }) })));
+      if (minted.refused) return storeRefusal(minted, { op, store: storeName, tokenClass: cls });
       if (!minted.answered) return storeSilent("aicredentialmint");
       if (!minted.result || minted.result.ok !== true)
         return json({ ok: false, ...(minted.result || {}), op, store: storeName, tokenClass: cls }, 403);
@@ -3452,6 +3464,7 @@ export function makeFetch(hooks = {}) {
       const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
       inner.searchParams.set("secretSha", await sha256Hex(secret));
       const issued = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+      if (issued.refused) return storeRefusal(issued, { op, store: storeName, tokenClass: cls });
       if (!issued.answered) return storeSilent("reviewgrant");
       if (!issued.result || issued.result.ok !== true)
         return json({ ok: false, ...(issued.result || {}), op, store: storeName, tokenClass: cls }, 403);
@@ -3471,18 +3484,20 @@ export function makeFetch(hooks = {}) {
     if (op === "casedrafts")
       return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
 
-    const res = await stub.fetch(new Request(inner, { method: req.method, body: passBody }));
-    /* R23, R30: an answer that is not JSON with `ok: true` is a silence, never relayed (a store's stack included). */
-    let body = null;
-    try { body = await res.json(); } catch { body = null; }
-    if (!body || body.ok !== true) return storeSilent(op);
+    /* R23 (K421), R30, REC-52: the reply is read through `doAnswer`. The store's own refusal (`BAD_JSON`, an unknown
+       route) is relayed at its status; anything that is not JSON carrying a boolean `ok`, or the store's catch, is a
+       silence, never relayed (a store's stack included). */
+    const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+    if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
+    if (!out.answered) return storeSilent(op);
+    const { body, status } = out.reply;
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
-    if ((op === "inboxget" || op === "inboxresolve") && body?.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
+    if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
-    return json({ ...body, store: storeName, tokenClass: cls }, res.status);
+    return json({ ...body, store: storeName, tokenClass: cls }, status);
   }
 }
-export { json, doAnswer, storeSilent, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE, SCRATCH,
+export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE, SCRATCH,
          NAMESPACES, sha256Hex, fingerprint, classify, scopeFor, caseReader, resolveSession, reviewAnswer, captureKey,
          installationRow, admissionRow, dispatchRow, namespaceRow, machineFenceRow, replayRow, identityFenceRow,
          dec49Row, dec49Attach, MODULE_CHECK_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,
