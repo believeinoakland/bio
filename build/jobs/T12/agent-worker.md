@@ -1,6 +1,6 @@
 # agent-worker (T12)
 
-**Status** · session_01DRuQmSgvivEsNW6ej9Jqmf · depth 2 · WORKING · handled B0
+**Status** · session_01DRuQmSgvivEsNW6ej9Jqmf · depth 2 · RUNNING until 2026-09-29T09:52:44Z (harness.control H1-H9 E1 E2) · handled B0
 
 ## Work
 
