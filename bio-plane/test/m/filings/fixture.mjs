@@ -1,8 +1,9 @@
 /* filings over the modules it uses, every one the real one (K253): record-core, membership, promotion, provenance,
    content, inquiry and publication on publication's own test world, and the layer-9 modules standards, conformance,
    consequences and actions, each through its own factory on the same host. A real SQLite database stands in for a
-   Durable Object's storage. What only a later module or the legacy store fills (the producing group, retrieval's
-   registrations) is a stand-in the test controls. Every test drives `filings` at its interface, and changes the record
+   Durable Object's storage. What only a later module or the legacy store fills (the provider of promotion's fact
+   `producingGroup`, publication's world registering it as legacy-store does; retrieval's registrations) is a stand-in
+   the test controls: filings reads the group through the real promotion's `fact` (R3, N331). Every test drives `filings` at its interface, and changes the record
    only through the acts of the modules that own it. */
 import { createHash } from "node:crypto";
 import { world as publicationWorld, V, NOW } from "../publication/fixture.mjs";
@@ -106,9 +107,9 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const conformance = conformanceOf(w.host, { ...deps, inquiry: w.k, publication: w.p, standards });
   const consequences = consequencesModule(w.host, { ...deps, conformance, provenance: w.prov, inquiry: w.k });
   const actions = actionsOf(w.host, { ...deps, retrieval: null, conformance, now: () => Date.parse(w.clock.now) });
-  const groupRef = { value: group };
-  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content,
-    producingGroup: () => groupRef.value, now, ...(profiles !== undefined ? { profiles: () => profiles } : {}) });
+  /* the value promotion's fact `producingGroup` answers (publication's world registers its provider) */
+  const groupRef = w.groupRef;
+  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content, now, ...(profiles !== undefined ? { profiles: () => profiles } : {}) });
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
   const declare = (over) => {

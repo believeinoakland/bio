@@ -22,7 +22,10 @@
  *   conformance    `determinationRead` (its R9), `determinationsFor` (R11), from `conformanceOf` (K252).
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
- *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`).
+ *   promotion      `fact("producingGroup")` (its R40; R3's `group`, N331), from `promotionOf` on the same host unless given.
+ *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`),
+ *                  or answering promotion's fact as `fact` answers it. Given only by legacy-store until layer 10; absent,
+ *                  the group is read through `promotion.fact("producingGroup")`.
  *   profiles       a function answering the active profiles (ids or profile objects) to combine; default record-core's
  *                  setting `jurisdiction_profiles` (its R26).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
@@ -38,6 +41,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
@@ -122,12 +126,16 @@ export class Filings {
   #deps;
 
   constructor({ storage, record, host = null, membership = null, publication = null, provenance = null, content = null,
-                actions = null, conformance = null, standards = null, consequences = null, producingGroup = null,
-                profiles = null, now = null } = {}) {
+                actions = null, conformance = null, standards = null, consequences = null, promotion = null,
+                producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, provenance, content, actions, conformance, standards, consequences };
-    this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
+    this.#deps = { host, membership, publication, provenance, content, actions, conformance, standards, consequences, promotion };
+    /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
+       function handed in (legacy-store's, until layer 10) is kept and may answer a value, null, or the fact's answer. */
+    this.producingGroup = typeof producingGroup === "function" ? producingGroup
+      : () => (this.promotion && typeof this.promotion.fact === "function" ? this.promotion.fact("producingGroup")
+        : { ok: false, reason: "FACT_UNAVAILABLE", fact: "producingGroup", detail: "no promotion module is reachable here" });
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     for (const m of SERVICES) { const fn = this[m].bind(this); this[m] = (...a) => withRow(fn(...a)); }
@@ -138,6 +146,7 @@ export class Filings {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
+  get promotion() { return this.#deps.promotion ||= (this.#deps.host ? promotionOf(this.#deps.host) : null); }
   /* The layer-9 modules, each its own factory on the same host unless given (K253); with no host, absent, and every
      service that needs one refuses (K248). */
   get standards() { return this.#deps.standards ||= (this.#deps.host ? standardsOf(this.#deps.host) : null); }
@@ -349,10 +358,27 @@ export class Filings {
     out.venue = venue && str(venue.name) ? { value: str(venue.name), source: vsrc }
       : none("the profile gives this kind no venue (or its profiles disagree), so it is undetermined");
     out.venue_how = venue && str(venue.how) ? { value: str(venue.how), source: vsrc } : none("the profile gives no means of filing");
-    const g = str(this.#call(() => this.producingGroup()));
-    out.group = g ? { value: g, source: "setting:producing_group" } : none("no producing group is recorded for this instance");
+    out.group = this.#group();
     out.date = { value: when.slice(0, 10), source: `clock:${when}` };
     return out;
+  }
+
+  /* R3's `group` (N331): promotion's fact `producingGroup` (its R40). While no provider answers (FACT_UNAVAILABLE or
+     FACT_FAILED, or a reader that throws) the group is undetermined, never unrecorded; a provider answering no value
+     says none is recorded. */
+  #group() {
+    const SOURCE = "fact:producingGroup";
+    let g;
+    try { g = this.producingGroup(); }
+    catch { return { why: "the producing group could not be read (its reader failed), so it is undetermined" }; }
+    if (isObj(g) && "ok" in g) {
+      if (g.ok !== true)
+        return { why: `no module answers the fact producingGroup (${g.reason === "FACT_FAILED" ? "its provider failed"
+          : "no provider is registered"}), so the producing group is undetermined` };
+      g = g.value;
+    }
+    const v = str(g);
+    return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded for this instance" };
   }
 
   /** R1–R5: a draft pre-filled from the record into the profile's template for the action's kind. */
