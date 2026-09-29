@@ -1,6 +1,10 @@
-# Draft plan: tranche T14
+# Plan: tranche T14
 
-**Status** · DRAFT · BOB #66, 2026-09-29 (P18). Re-read against T13's close before opening (K424's practice): each entry's code sites checked on the merged tranche, each carried share confirmed still owed. The wordings fold before opening: `draft-T14-wordings.md` (reviewed, K444) and `draft-T14-wordings-2.md` (N342, N343, N347–N349; reviewed, K445) and `draft-T14-wordings-3.md` (N346; reviewed, K448). Re-read against `main` @ 35c0d1bdcc (`t14-reread.md`, K451). An `N` entry's text is in `build/plan/next.md`.
+**Status** · OPEN · BOB #66 · session_01JYHQ5hY1x1mG3gkXoP1uAf · depth 1
+
+Opened by BOB #66, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 5bb688333c, T13 closed (K449). Cut from `draft-T14.md`, re-read against T13's close (K451); its wordings folded before opening (K452). Bob's weekly meter at the opening: 22% (given ~18:55 UTC, T13's last stage). An `N` entry's text is in `build/plan/next.md`.
+
+**Jobs** · 
 
 **Rules at the opening.** T13's rules hold (`archive/T13.md`): long batteries in the foreground, in chunks under ten minutes, the record pushed after each; a provider a later job of its layer needs merges early (§4, K425); legacy-tests runs alone, last (K420, K427); after each extraction merge BOB runs `test/m/` whole on the tranche.
 
