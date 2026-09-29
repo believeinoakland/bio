@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. as of 2026-09-24.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** as of 2026-09-29.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -30,6 +30,7 @@
 - [S · SELECTION-SCOPED ACTION — how any act goes bulk, safely](#s-selection-scoped-action-how-any-act-goes-bulk-safely)
 - [P · THE ASSISTANT — one way in, on every surface](#p-the-assistant-one-way-in-on-every-surface)
 - [U · UNDETERMINED — a display primitive, not an act](#u-undetermined-a-display-primitive-not-an-act)
+- [M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)](#m-the-measures-map-how-every-scale-reads-approved-by-bob-2026-09-29-dec-82)
 - [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
 
 ---
@@ -577,6 +578,30 @@ invented past and never dressed as an error. If it looks like a failure in one s
 and a shrug in another, members learn to ignore it — and the honest gap is precisely
 what this record's trustworthiness rests on. One visual treatment, one voice: *what we
 do not know, and why we do not know it.*
+
+## M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)
+
+Every scale a member meets is placed on one page, `docs/development/ux-substrate/measures-map.html` (rendered at
+https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni), which Bob approved on 2026-09-29 as the reference the redesign designs
+against. What it rules, stated here so the canon carries it without the page:
+
+- **The frame: letters grade evidence, bars show progress, weights mark acts.** No form is borrowed across families: letters
+  only on evidence grades, bars only on progress ladders, weight pips only on acts.
+- **Three sentences a member is taught.** *An answer is only as strong as the weakest thing it depends on* (its strength shows
+  the least trustworthy document copy and the least certain link it depends on, side by side, never merged into one score).
+  *A grade tells you how easily someone else could check it for themselves; it never tells you whether it is true.* *What we
+  don't know is shown, never hidden or guessed:* "Undetermined" and "Nobody looked" are answers, not errors, and are always
+  written as named terms.
+- **Evidence letters.** Every evidence scale (capture, connection, testimony, subject match) shares one A–D scale with one
+  meaning: A is the easiest for someone else to check, D rests on a person's word. **Colour marks the scale, never the value;**
+  each scale also has its own descriptive icon (document, link, speech, person), so colour is never the only signal. Every
+  badge has the same shape. Scales never take disjoint letters.
+- **Progress bars.** Each ladder (project stage, work-product readiness, source identity) has its own colour family and texture
+  (solid, striped, dotted); dashed means "not yet evaluated". Every step is named whether reached or not.
+- **Disclosure.** Every grade and every bar step opens its meaning on hover, focus or tap; a click on a reached bar step shows
+  how it was reached; a click on a grade opens that scale's ladder with the item placed on it.
+- **A newcomer meets two things first:** strength against the project's bar, and "Undetermined". Every other mark appears where
+  it is used, its explanation one hover away (Design Requirement 11).
 
 ## What this changes about how M8 is built
 
