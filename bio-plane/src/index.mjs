@@ -1,6 +1,6 @@
 import { livefire } from "./livefire.mjs";
 import { publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
-         cpuProbeOp, instanceSetupStore } from "./setup.mjs";
+         cpuProbeOp } from "./setup.mjs";
 import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
 /* REC-128: who DELIVERED an attested act, read off the SESSION, and its read shape. */
 /* The locator fence, taken from the catalog rather than restated: https only,
@@ -39,7 +39,6 @@ import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, vocabulari
 import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
 import { queueAnswer } from "./queue/index.mjs";
 
-import { Store } from "./control-plane/dispatch.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governorOp } from "./host-governor/index.mjs";
@@ -48,10 +47,9 @@ import { linksOp, captureObjectOp, archiveLookupOp, acquireOp } from "./capture/
 import { monitorOp } from "./monitoring/index.mjs";
 import { pdfStructureOp, acquireReadingOp } from "./extraction/ops.mjs";
 import { caseRatifyOp, ratifyOp } from "./ratification/ops.mjs";
-/* instance-setup (K93; its map §3): legacy-store, earlier, cannot call it, so the Durable Object this file exports
-   is legacy-store's class started with it and routing its ops first. */
-const InstanceStore = instanceSetupStore(Store);
-export { InstanceStore as Store };
+/* N348 (control-plane R35): the Durable Object class is control-plane's, which starts instance-setup and routes its ops
+   inside the store's one frame. */
+export { Store } from "./control-plane/dispatch.mjs";
 export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
@@ -200,7 +198,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         const igStore = heldScope && !heldScope.error ? heldScope.name
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
         const igReader = await caseReader(url, env, igStore, presentedAi.cred);
-        if (igReader.silent) return storeSilent(igReader.silent);
+        if (igReader.silent) return storeSilent(igReader.silent, igReader.correlation);
         return instanceGroupOp(env, igStore, igReader, { json, storeSilent, storeRefusal, doAnswer });
       }
 
@@ -216,7 +214,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         const giStore = heldScope && !heldScope.error ? heldScope.name
           : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
         const giReader = await caseReader(url, env, giStore, presentedAi.cred);
-        if (giReader.silent) return storeSilent(giReader.silent);
+        if (giReader.silent) return storeSilent(giReader.silent, giReader.correlation);
         return groupIdentityOp(env, giStore, giReader, { json, storeSilent, storeRefusal, doAnswer });
       }
 
@@ -282,7 +280,7 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
            and answers everybody else exactly as it answers a case that does not
            exist. */
         const reader = await caseReader(url, env, "bio", presentedAi.cred);
-        if (reader.silent) return storeSilent(reader.silent);
+        if (reader.silent) return storeSilent(reader.silent, reader.correlation);
         /* REC-126 / IC-145: A LIVE GRANT HOLDER is the second party §6A.2's
            precondition admits to an unsigned document. The secret is HASHED HERE
            and only its fingerprint crosses to the store, which judges it through
@@ -522,7 +520,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
        link rather than a command. It asserts every binding is present and that
        the store answers, and it never returns a secret. */
     if (op === "selftest") return selftest(env, storeName, { cls, scratch: SCRATCH,
-      viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` }, { json, doAnswer, storeRefusal });
+      viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}` }, { json, doAnswer });
 
     /* purge is the only destructive op. It refuses unless the caller names the
        store it resolved to, so a purge can never land somewhere the caller did
