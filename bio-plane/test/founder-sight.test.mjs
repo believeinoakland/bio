@@ -1,6 +1,7 @@
 /* NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/founder-sight.control.mjs` — deliberately NOT a `.test.mjs`, because it EDITS REAL SOURCES while it runs and the battery must not discover it. Re-run in one step from `bio-plane/`: `node test/founder-sight.control.mjs [arm]`. DECLARED BEFORE ARMING, per arm, in the driver's `mustFail` lists; every arm patches a COPY of `src/` (asserting its anchor occurs exactly once) and the real sources are hashed before and after.
    RESULTS, RUN 2026-09-18 in worktree agent-a0f6ffd4522bb36bd (real src/index.mjs 645,037 B sha256 2bc646dcc189…, src/store.mjs 2,525,741 B sha256 ed7f5dacb728…, untouched: YES): (a) baseline 41/0 · (b) no-founder-arm 38/3 · (c) leads-widened 37/4 · (d) positional-from-viewer 37/4 · (e) everyone-admin 39/2 · (h) identity-honoured 39/2 · (i) audit-silent 38/3 — AS DECLARED on the first run. (f) no-reservation 37/4 and (g) prefix-reservation 36/5 came back NOT AS DECLARED on the first run and the DECLARATIONS were corrected, not the subject (the reasons are at each arm in the driver): with no reservation CONTROL 3's own memberadd lands, so §4's not-held audit arm rightly reports it held; with a prefix reservation 6a's anchor is gone and 6b/6c/6e fail downstream of it. Re-run: both AS DECLARED. (j) admin-bytes: base a6bdfcbb vs this tree, 13 admin-token reads (op=audit deliberately excluded — it gains `membership` for every caller), 0 differ — BYTE-IDENTICAL.
    RE-RUN 2026-09-18 after merging origin/main c1ce709a (REC-126) and narrowing the `identity` stamp to IDENTITY_READS (real src/index.mjs 653,993 B sha256 d735e0e0de28…, src/store.mjs 2,552,401 B sha256 46d47c5a503d…, untouched: YES), arm (h)'s anchor re-pointed at the narrowed line: (a) 41/0 · (b) 38/3 · (c) 37/4 · (d) 37/4 · (e) 39/2 · (f) 37/4 · (g) 36/5 · (h) 39/2 · (i) 38/3 — ALL AS DECLARED; (j) admin-bytes against base c1ce709a: 13 reads, 0 differ.
+   RE-RUN 2026-09-29 (legacy-tests T12, K413) in a scratch worktree of job/T12/legacy-tests, the driver's anchors re-pointed where the code now lives (control-plane/index.mjs, membership/index.mjs, observation-log/index.mjs; five real sources hashed, untouched: YES): (a) 41/0 · (b) 38/3 · (c) 37/4 · (d) 37/4 · (e) 39/2 · (f) 37/4 · (g) 36/5 · (i) 38/3 — AS DECLARED; (h) first ran 41/0 NOT AS DECLARED (control-plane R17/R29 also deletes every caller-sent stamp) and was re-armed on both deletions: 39/2 AS DECLARED. (j) admin-bytes NOT RUN to a verdict: its fixture is refused ENVELOPE_TITLE_DISAGREES (C-86.3, D-563) before any read, and its base is now origin/main rather than the pre-REC-132 build, so it no longer measures what it was written for.
  * =========================================================================
  * REC-132 / D-422 / IC-149 — THE FOUNDER IS AN ADMINISTRATOR HERE TOO.
  * Membership Architecture v2 §7, the block BOB #15 designed on 2026-09-18.
@@ -54,6 +55,11 @@ import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.m
 const SRC_DIR = process.env.FOUNDER_SIGHT_SRC || fileURLToPath(new URL("../src", import.meta.url));
 const IDX = join(SRC_DIR, "index.mjs");
 const IDX_SRC = readFileSync(IDX, "utf8");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): `resolveSession` and every session stamp left
+   `src/index.mjs` with the control plane, for `src/control-plane/index.mjs` (read under SRC_DIR, so the control's
+   armed copy is what is read). §0 reads both files, the Worker entry and the control plane: a session look-up or a
+   spelled viewer in either still counts. */
+const CP_SRC = readFileSync(join(SRC_DIR, "control-plane", "index.mjs"), "utf8");
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -65,7 +71,7 @@ const t = (label, got, want) => {
 /* ============================================================ 0. STRUCTURE */
 console.log("\n--- 0. structure — ONE resolver, and no session read spells its own viewer ---");
 {
-  const code = IDX_SRC.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const code = (IDX_SRC + "\n" + CP_SRC).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   t("STRUCTURE: the two places a session token is looked up both resolve it through `resolveSession`",
     (code.match(/(?<!function )resolveSession\(sess\)/g) || []).length, 2);
   t("STRUCTURE: no line of code spells a session viewer as `member:` plus the folded id — every "

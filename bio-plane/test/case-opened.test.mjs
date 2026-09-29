@@ -263,13 +263,15 @@ const has = (text, key) => objectKeys(text).includes(key);
        ratification's `publish` returns)              -> `src/publication/index.mjs`;
      - op=ratify's and op=caseratify's handlers        -> `src/ratification/ops.mjs`;
      - the container manifest (`assembleCaseContainer`) -> `src/publication/worker.mjs`;
-     - `DO_PATH` stays in `src/index.mjs`.
+     - `DO_PATH` stays in `src/index.mjs`. RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): it
+       left with the control plane's forward, and is read in `src/control-plane/index.mjs` (`FILES.controlplane`).
    The region helpers carry their file, so two regions in DIFFERENT files are disjoint by construction and the
    disjointness arms say so rather than comparing line numbers across files. */
 const FILES = {
   store: "bio-plane/src/store.mjs", index: "bio-plane/src/index.mjs",
   authoring: "bio-plane/src/case-authoring/index.mjs", publication: "bio-plane/src/publication/index.mjs",
   ops: "bio-plane/src/ratification/ops.mjs", worker: "bio-plane/src/publication/worker.mjs",
+  controlplane: "bio-plane/src/control-plane/index.mjs",
 };
 const RAW = Object.fromEntries(Object.entries(FILES).map(([k, f]) => [k, read(join(REPO, f))]));
 const SKEL = Object.fromEntries(Object.entries(RAW).map(([k, v]) => [k, skeleton(v)]));
@@ -439,8 +441,9 @@ console.log("\n--- REC-58 · 5. THE ROUTING, WHICH IS THE PART NOBODY RE-CHECKS 
    is the instrument catching its own blind spot rather than the plane changing.
    Boundaries from the skeleton so a commented-out DO_PATH cannot be matched;
    the value from the source so a string can still be read. */
-const doPath = regionAt(INDEX, /const DO_PATH = \{/);
-const rawIndexRegion = (r) => INDEX_SRC.split("\n").slice(r.from - 1, r.to).join("\n");
+/* T12 (K413): `DO_PATH` is the control plane's forward, `src/control-plane/index.mjs`, since CONTROL-PLANE #2. */
+const doPath = regionIn("controlplane", /const DO_PATH = \{/);
+const rawIndexRegion = rawRegion;
 t("REC-58 ROUTING: `op=publish` is an ALIAS for `publishcase` in DO_PATH — so the op whose NAME matches "
 + "the store method that DOES spread is routed away from it, and reaches the authoring act instead",
   [doPath.found, /publish:\s*"publishcase"/.test(rawIndexRegion(doPath))], [true, true]);

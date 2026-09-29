@@ -32,38 +32,44 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "founder-sight.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs"].map((f) => join(PLANE, f));
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12): the sources the arms patch now live in four files — the control plane
+   (K413, CONTROL-PLANE #2), membership (T3) and the observation log (T9's leads) beside the store — and all are hashed. */
+const REAL = ["src/index.mjs", "src/store.mjs", "src/control-plane/index.mjs", "src/membership/index.mjs",
+              "src/observation-log/index.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
   /* The pre-fix resolver: the founder's viewer folds to `member:admin`. */
   "no-founder-arm": {
-    patches: [["index.mjs", "viewer: r === \"admin\" ? \"admin\" : `member:${member}`,", "viewer: `member:${member}`,"]],
+    patches: [["control-plane/index.mjs", "viewer: r === \"admin\" ? \"admin\" : `member:${member}`,", "viewer: `member:${member}`,"]],
     mustFail: ["CONTROL 1: op=list", "op=image — the founder reads", "op=affordances — the founder is answered"],
   },
   /* LIAR 1: the administrator arm widened onto the lead ruling. */
   "leads-widened": {
-    patches: [["store.mjs", "    const who = this.#positionalMember(viewer, identity);\n    if (who == null) return null;",
-               "    if (viewer === \"admin\") return { sql: \"1=1\", args: [] };\n    const who = this.#positionalMember(viewer, identity);\n    if (who == null) return null;"]],
+    /* RE-ANCHORED 2026-09-29 (legacy-tests T12): the lead ruling's fence is the observation log's `leadReach`. */
+    patches: [["observation-log/index.mjs", "    const who = this.membership.positionalMember(viewer, identity);\n    if (who == null) return null;\n    return {",
+               "    if (viewer === \"admin\") return { sql: \"1=1\", args: [] };\n    const who = this.membership.positionalMember(viewer, identity);\n    if (who == null) return null;\n    return {"]],
     mustFail: ["CONTROL 2: the founder CANNOT read", "CONTROL 2, SHARED", "nor can the founder record a look",
                "op=frontier&level=internet — the founder's frontier"],
   },
   /* LIAR 2: positional questions answered from the VISIBILITY half. */
   "positional-from-viewer": {
-    patches: [["store.mjs", "const asked = typeof identity === \"string\" && identity !== \"\" ? identity : viewer;",
+    /* RE-ANCHORED 2026-09-29 (legacy-tests T12): `positionalMember` is membership's (T3). */
+    patches: [["membership/index.mjs", "const asked = typeof identity === \"string\" && identity !== \"\" ? identity : viewer;",
                "const asked = viewer;"]],
     mustFail: ["the founder OWNS NO project", "POSITIONAL: the founder reads ITS OWN lead",
                "POSITIONAL: the founder follows its own lead", "op=frontier&level=internet — the founder's frontier"],
   },
   /* LIAR 3: every session resolved to the administrator viewer. */
   "everyone-admin": {
-    patches: [["index.mjs", "viewer: r === \"admin\" ? \"admin\" : `member:${member}`,", "viewer: \"admin\","]],
+    patches: [["control-plane/index.mjs", "viewer: r === \"admin\" ? \"admin\" : `member:${member}`,", "viewer: \"admin\","]],
     mustFail: ["vera, an ordinary member of no project, does NOT list it", "vera's op=image of it"],
   },
   /* The reservation removed. */
   "no-reservation": {
-    patches: [["store.mjs", "    if (memberId === Store.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"",
+    /* RE-ANCHORED 2026-09-29 (legacy-tests T12): `memberAdd`'s reservation is membership's (T3), as the suite's 6a reads. */
+    patches: [["membership/index.mjs", "    if (memberId === Membership.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"",
                "    if (false)\n      return refusal(\"MEMBER_ID_RESERVED\""]],
     /* DECLARATION CORRECTED after the first run (2026-09-18), the instrument's error and not the
        subject's: with no reservation CONTROL 3's memberadd LANDS, so the same store then holds a
@@ -73,8 +79,8 @@ const ARMS = {
   },
   /* OVER-STRICTNESS: the reservation written as a PREFIX. */
   "prefix-reservation": {
-    patches: [["store.mjs", "    if (memberId === Store.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"",
-               "    if (memberId.startsWith(Store.ROOT_ADMIN))\n      return refusal(\"MEMBER_ID_RESERVED\""]],
+    patches: [["membership/index.mjs", "    if (memberId === Membership.ROOT_ADMIN)\n      return refusal(\"MEMBER_ID_RESERVED\"",
+               "    if (memberId.startsWith(Membership.ROOT_ADMIN))\n      return refusal(\"MEMBER_ID_RESERVED\""]],
     /* DECLARATION CORRECTED after the first run: 6a's anchor is gone, so the legacy build is
        never neutered, refuses `admin` itself, and 6b/6c/6e fail downstream of 6a. */
     mustFail: ["OVER-STRICTNESS: `administrator` is an ordinary id", "6a: the legacy build is ARMED",
@@ -82,8 +88,14 @@ const ARMS = {
   },
   /* A caller-supplied identity honoured (the stamp no longer the server's). */
   "identity-honoured": {
-    patches: [["index.mjs", "    inner.searchParams.delete(\"identity\");", ""],
-              ["index.mjs", "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity",
+    /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2 R17/R29): the control plane now ALSO deletes every
+       caller-sent stamp (`QUERY_STAMPS`, `identity` among them) — a second guard, so the first re-anchored run of this arm
+       ARMED and still refused the spoof (41/0, NOT AS DECLARED). Honouring a caller's `identity` now means dropping it
+       from both deletions; the arm does exactly that, and its declaration is unchanged. */
+    patches: [["control-plane/index.mjs", "    inner.searchParams.delete(\"identity\");", ""],
+              ["control-plane/index.mjs", "for (const k of QUERY_STAMPS) inner.searchParams.delete(k);",
+               "for (const k of QUERY_STAMPS) if (k !== \"identity\") inner.searchParams.delete(k);"],
+              ["control-plane/index.mjs", "      if (IDENTITY_READS.includes(op)) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity",
                "      if (IDENTITY_READS.includes(op) && !inner.searchParams.has(\"identity\")) inner.searchParams.set(\"identity\",\n        viaSession ? sessIdentity"]],
     mustFail: ["a caller-supplied `identity=member:iris` on the member TOKEN", "nor does vera's session become iris"],
   },

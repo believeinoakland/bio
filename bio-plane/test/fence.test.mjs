@@ -27,6 +27,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the `OPS` table left `src/index.mjs` for control-plane's
+   `src/control-plane/ops.mjs`; the two structural walks below read it there. The Worker is still booted from SRC. */
+const OPS_SRC = fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url));
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
@@ -147,7 +150,7 @@ console.log("\n--- D-43: every unauthenticated op must REACH its code, not just 
      that should produce a structured BIO refusal, and the assertion is that a
      BIO answer comes back at all rather than a worker exception or `unknown
      op`. Reachability, not success. */
-  const src = readFileSync(SRC, "utf8");
+  const src = readFileSync(OPS_SRC, "utf8");
   const block = src.slice(src.indexOf("const OPS = {"), src.indexOf("\n};", src.indexOf("const OPS = {")));
   const open = [...block.matchAll(/^\s*([a-z]+):\s*\{\s*classes:\s*null/gm)].map((m) => m[1]);
   t("the module yielded the unauthenticated surface", open.length >= 5, true);
@@ -191,7 +194,7 @@ t("unauthenticated publishedlist is refused", (await j("/api/?op=publishedlist")
    touching it. */
 console.log("\n--- and that holds for every guarded op, read from the module ---");
 {
-  const src = readFileSync(SRC, "utf8");
+  const src = readFileSync(OPS_SRC, "utf8");
   const block = src.slice(src.indexOf("const OPS = {"), src.indexOf("\n};", src.indexOf("const OPS = {")));
   const guarded = [...block.matchAll(/^\s*([a-z]+):\s*\{\s*classes:\s*\[/gm)].map((m) => m[1]);
   t("the module actually yielded a set of guarded ops", guarded.length > 20, true);

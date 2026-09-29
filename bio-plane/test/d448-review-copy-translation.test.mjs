@@ -329,7 +329,9 @@ await wire("a comment that says nothing", "REVIEW_NO_COMMENT_TEXT",
  * first-class and must be STATED).
  * ======================================================================== */
 console.log("\n--- 4. the three the wire does not reach, and why (at the code, not by assumption) ---");
-const IDX_SRC = readFileSync(IDX, "utf8");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): op=reviewgrant's mint left `src/index.mjs` with the
+   control plane; the secret is minted and `secretSha` set in `src/control-plane/index.mjs`, which is read here. */
+const IDX_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
 t("REVIEW_UNKNOWN_ACT: the review module's op map binds `act` as a literal per op, so no caller presents a fourth",
   ["draft", "grant", "revoke"].every(a => REVIEW_SRC.includes(`act: "${a}"`)), true);
 t("REVIEW_NO_SECRET: op=reviewgrant MINTS the secret in the control plane and always sets secretSha",

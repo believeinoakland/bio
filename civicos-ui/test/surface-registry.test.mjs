@@ -240,7 +240,10 @@ async function section(name, fn){
 }
 
 const APP_PATH = new URL("../app.html", import.meta.url).pathname;
-const PLANE_INDEX = new URL("../../bio-plane/src/index.mjs", import.meta.url).pathname;
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): the plane's `OPS` table left
+   `bio-plane/src/index.mjs` for control-plane's declarations, `bio-plane/src/control-plane/ops.mjs`. The op registry
+   is sourced from there, through the same `opsFrom`/`opFailures` path and the same ARM S mutation; nothing else moved. */
+const PLANE_INDEX = new URL("../../bio-plane/src/control-plane/ops.mjs", import.meta.url).pathname;
 const app = fs.readFileSync(APP_PATH, "utf8");
 
 /* ------------------------------------------------------------------ tooling
@@ -556,7 +559,7 @@ const planeSrc = fs.readFileSync(PLANE_INDEX, "utf8");
    hide in. Verified by re-running that same control against this shape. */
 function opsFrom(src){
   const body = tableBody(stripComments(src), /(?:const|let|var)\s+OPS\s*=\s*\{/);
-  if(body == null) throw new Error("OPS table not found in bio-plane/src/index.mjs");
+  if(body == null) throw new Error("OPS table not found in bio-plane/src/control-plane/ops.mjs");
   return new Set(topKeys(body));
 }
 
@@ -674,7 +677,7 @@ await section("ARM S · the sourcing", () => {
 
   /* The plane's source is untouched on disk. Asserted rather than assumed. */
   ok(fs.readFileSync(PLANE_INDEX, "utf8") === planeSrc,
-     "ARM S9: the sourcing arm left bio-plane/src/index.mjs byte-identical");
+     "ARM S9: the sourcing arm left bio-plane/src/control-plane/ops.mjs byte-identical");
 });
 
 /* ============================================================

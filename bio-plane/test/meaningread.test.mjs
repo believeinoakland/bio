@@ -97,6 +97,11 @@ import { INQUIRY_SCHEMA } from "../src/inquiry/schema.mjs";
 const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), ENTITIES_SCHEMA, CONTENT_SCHEMA, EXTRACTION_SCHEMA,
                     INQUIRY_SCHEMA].join("\n");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): the `OPS` table and `RETRIEVAL_READS` left
+   `src/index.mjs` for `src/control-plane/ops.mjs`, and the viewer stamp for `src/control-plane/index.mjs`. Section 14
+   reads each where it lives; its three claims are unchanged. */
+const CP_SRC = readFileSync(SRC("control-plane/index.mjs"), "utf8");
+const CP_OPS_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `op=meaningrows`, its executor and its refusal rows moved to
    retrieval (`src/retrieval/index.mjs`), and the gate is minted only in membership's `viewerPredicate`, which
    query.mjs re-exports (N46 with N37, K75). Sections 3, 5 and 7 read them where they now live. */
@@ -898,11 +903,11 @@ console.log("\n--- 13. an equally correct phrasing must PASS, and the grain is p
 console.log("\n--- 14. the op itself ---");
 {
   t("op=meaningrows is in the OPS table, read-only, fenced to the same classes as op=search",
-    /^\s{2}meaningrows: \{ classes: \["admin", "member", "probe"\],\s+mutating: false \},$/m.test(INDEX_SRC), true);
+    /^\s{2}meaningrows: \{ classes: \["admin", "member", "probe"\],\s+mutating: false \},$/m.test(CP_OPS_SRC), true);
   t("and the viewer is stamped SERVER-SIDE beside op=search's — a gate whose view the caller picks is not a gate",
-    /op === "search" \|\| op === "meaningrows"/.test(INDEX_SRC), true);
+    /op === "search" \|\| op === "meaningrows"/.test(CP_SRC), true);
   t("a member SESSION reaches it (a plane-only op would be unreachable from the browser half)",
-    /RETRIEVAL_READS = \[[^\]]*"meaningrows"/s.test(INDEX_SRC), true);
+    /RETRIEVAL_READS = \[[^\]]*"meaningrows"/s.test(CP_OPS_SRC), true);
   /* A caller-supplied viewer must not be honoured. Driven, not asserted about. */
   const spoof = rP(await (await mf.dispatchFetch(
     `http://x/api/?op=meaningrows&token=${dave}&rows=concerns&q=${encodeURIComponent("has:resolves")}&viewer=${encodeURIComponent("member:carol")}`)).json());
