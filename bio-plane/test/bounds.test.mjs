@@ -773,7 +773,11 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      `LIMIT ?` at cap + 1, `limit` and a measured `truncated` published) — the intended arrival, both DRIVEN below with
      a real bite. `projectOwnerAdd`/`projectOwnerRemove`'s vote read (`#ownerVotes`, LIMIT = the owner count) is no
      op's segment and joins nothing. */
-  OPS.size, 71);
+  /* RE-PINNED 2026-09-29 (legacy-tests T11): 71 -> 72 from this suite's print (`91 carrying a cap, reaching 72 ops`),
+     the roster DIFFED BY NAME against T10's close (777083f36d). NO DEPARTURE. ONE ARRIVAL: op=monitorslate (`slate`,
+     K372, monitoring R30: the due slate, capped at MONITORING_READ_MAX, `limit` and `truncated` published), driven in
+     the loop below with a real bite. */
+  OPS.size, 72);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -858,6 +862,14 @@ for (let i = 1; i <= 3; i++) {
     { path: "data/provenance.json", text: prov, bytes: prov.length, sha256: sha(prov) },
     registerFile(doc, { file: "captures/doc.pdf" }),
   ];
+  /* ADDED 2026-09-29 (legacy-tests T11; K372, monitoring R30): the first document also carries a gathering file with
+     TWO open named requests, so op=monitorslate (the due slate) has something for a cap of 1 to cut. */
+  if (i === 1) {
+    const g = JSON.stringify({ requests: [1, 2].map((k) => ({ id: `GATH-2026-0929-bounds-${k}`,
+      target: { text: `Bounds slate request ${k}` }, locators: [`https://example.gov/slate${k}`],
+      authority: "synthetic", criticality: "supporting", cadence: "weekly", status: "open" })), sweeps: [] });
+    files.push({ path: "data/gathering.json", text: g, bytes: g.length, sha256: sha(g) });
+  }
   const r = await POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57", files,
     register: [{ sha256: capture, path: "captures/doc.pdf", encoding: "binary", bytes: 10 }],
@@ -1440,6 +1452,13 @@ const DRIVEN = [
      `limit` — with `truncated` said beside them, because a member reading "these are the project's drafts" off a
      page silently cut would take a draft past the cut for one that does not exist: the lost-draft defect the op
      exists to remove, reappearing inside it. Its bound is REVIEW_LIST_MAX, the review copy's own list ceiling. */
+  /* ADDED 2026-09-29 (legacy-tests T11; K372, monitoring R30): the due slate, capped at MONITORING_READ_MAX with `limit`
+     and `truncated` published, driven through its control-plane route (LEGACY-INDEX #8, K377: monitoring's read cut,
+     viewer-stamped); the fixture's gathering file holds two open requests. */
+  { op: "monitorslate", bite: 1, whole: 1000,
+    drive: (n) => GET(`op=monitorslate&token=mem-r57&limit=${n}`),
+    more: (a) => a.truncated, says: "`truncated`",
+    lost: "whether the slate a member runs by hand is every request now due or the first N of them" },
   { op: "casedrafts", bite: 1, whole: 500,
     drive: (n) => GET(`op=casedrafts&token=mem-r57&project=${encodeURIComponent(DRAFTS_PROJ)}&limit=${n}`),
     more: (a) => a.truncated === true && a.count < a.total,
@@ -1668,7 +1687,8 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      takes NO `limit` from the caller — its bound is `QUOTES_MAX`, published as
                                      `max` beside `truncated`, so the loop's descriptor (ask for a bite of one,
                                      read the bound back) has nothing to ask for. It is DRIVEN below, in this file,
-                                     with a real bite: one action carrying QUOTES_MAX + 1 quotes. */
+                                     with a real bite: one action carrying QUOTES_MAX + 1 quotes (since T11, N237:
+                                     one office's QUOTES_MAX + 1 quotes across two actions, by counterparty=). */
                                   "actionquotes",
                                   /* D-256: op=changedfromaudit bounds its LISTING under
                                      CHANGED_FROM_AUDIT_LIMIT_MAX (its three totals are always whole).
@@ -1737,7 +1757,15 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      intent arms, not in the loop: op=hostingaccess needs records only an enrolled
                                      ADMINISTRATOR's session writes (R11), and op=memberpairings needs enrolled members
                                      with handles (R19) — both exist only after IC-246's and D-479's enrolments. */
-                                  "hostingaccess", "memberpairings"]);
+                                  "hostingaccess", "memberpairings",
+                                  /* ADDED 2026-09-29 (legacy-tests T11; N236, K361): intent's three the PIN named since T8,
+                                     now each bitten at intent's interface in this loop's shape, in
+                                     `test/m/intent/bounds.test.mjs`: op=objectiveprogress "R4 progress measures at most
+                                     1,000 matched instances (MEASURE_MAX) …", op=aspirations "R12 R10 … the departures in
+                                     force at most 1,000 (DEPARTURES_MAX) …", op=intentproposals "R16 proposals lists at
+                                     most 200 set-aside proposals … (SET_ASIDE_MAX)" — each at its bound with `truncated`
+                                     false and one past it true. Their envelopes stay driven here (`answersByOp`). */
+                                  "objectiveprogress", "aspirations", "intentproposals"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1889,7 +1917,7 @@ t("op=partitionindependence: a partition OVER the bound is REFUSED and the refus
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2.4): `QUOTES_MAX` left the store with actions, where it is
    the module's exported constant; the walk reads `actionQuotes` there through the T8 re-inliner. */
 const QT_MAX = Number((/export const QUOTES_MAX = (\d+);/.exec(readFileSync(new URL("../src/actions/index.mjs", import.meta.url), "utf8")) || [])[1]);
-const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "schema: action@1",
+const quoteAction = (id, n, role = "Bounds Clerk r57") => ["---", `id: ${id}`, "object_type: action", "schema: action@1",
   `title: "Records request ${id}"`, "current_state: active", "prior_state: null",
   `created: "${NOW}"`, `last_updated: "${NOW}"`, "produced_by:", "  mode: assisted", "  capability_tier: session",
   "group: believe-in-oakland", "references: []", "state_history: []", "annotations_open: 0",
@@ -1904,7 +1932,7 @@ const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "sche
   "action_kind: records_request", "risk_tier: undetermined",
   /* CORRECTED 2026-09-28 (T8, legacy-tests; actions R9, C-101.3): a named counterparty is an OFFICE, its role and the
      body it belongs to, and the write now refuses a bare name. The clerk this fixture named is stated as that office. */
-  "counterparty:", "  state: named", "  role: Bounds Clerk r57", "  body: City of Oakland",
+  "counterparty:", "  state: named", `  role: ${role}`, "  body: City of Oakland",
   "correspondence:",
   "  - direction: sent", "    at: 2026-07-03", '    account: "The request."', "    author: r57",
   ...Array.from({ length: n }, (_, i) => ["  - direction: received", "    at: 2026-07-05",
@@ -1912,24 +1940,43 @@ const quoteAction = (id, n) => ["---", `id: ${id}`, "object_type: action", "sche
     `    quote_amount: "${i + 1}"`, '    quote_currency: "USD"', "    quote_answers: 0"]).flat(),
   "---", "", "## Plan", "", "Ask for the ledger.", "", "## Status", "", "## Correspondence", "",
   "## Session Log", "", "## Review Notes", ""].join("\n");
-const QT_BIG = "ACTN-2026-0923-bounds-quotes-many", QT_ONE = "ACTN-2026-0923-bounds-quotes-one";
-for (const [id, n] of [[QT_BIG, QT_MAX + 1], [QT_ONE, 1]]) {
-  const md = quoteAction(id, n);
-  const r = await POST("op=promote&token=mem-r57", {
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; actions R3, N237/K351, C-117.3): an action now holds at most
+   ACTION_LEDGER_MAX correspondence entries, refused past it (`ACTION_TOO_LARGE`), and ACTION_LEDGER_MAX is QUOTES_MAX,
+   so ONE action can no longer carry QUOTES_MAX + 1 quotes: the request= axis cannot be cut (at most
+   ACTION_LEDGER_MAX - 1 quotes answer one sent entry). The bite moves to the axis that still grows past the bound,
+   counterparty=: two actions naming ONE office, the first full to the ledger bound and the second carrying the rest,
+   QUOTES_MAX + 1 quotes in all. The one-past fixture is kept as the proof the request axis is closed. */
+const LEDGER_MAX = Number((/export const ACTION_LEDGER_MAX = (\d+);/.exec(readFileSync(new URL("../src/actions/index.mjs", import.meta.url), "utf8")) || [])[1]);
+const QT_ROLE = "Quotes Clerk r57", QT_CP = `${QT_ROLE}, City of Oakland`;
+const QT_OVER = "ACTN-2026-0923-bounds-quotes-many", QT_ONE = "ACTN-2026-0923-bounds-quotes-one";
+const QT_A = "ACTN-2026-0929-bounds-quotes-a", QT_B = "ACTN-2026-0929-bounds-quotes-b";
+const qtPromote = (id, n, role) => {
+  const md = quoteAction(id, n, role);
+  return POST("op=promote&token=mem-r57", {
     bundleId: id, base: null, snapKey: `${id}-new`, author: "r57",
     files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
     meta: { object_type: "action", group: "believe-in-oakland", current_state: "active",
             created: NOW, last_updated: NOW } });
+};
+const QT_OVER_W = await qtPromote(QT_OVER, QT_MAX + 1);
+for (const [id, n, role] of [[QT_ONE, 1], [QT_A, LEDGER_MAX - 1, QT_ROLE], [QT_B, QT_MAX + 1 - (LEDGER_MAX - 1), QT_ROLE]]) {
+  const r = await qtPromote(id, n, role);
   if (r?.ok !== true) throw new Error(`D-148 fixture promote ${id}: ${JSON.stringify(r).slice(0, 600)}`);
 }
-const QT_BITE = await GET(`op=actionquotes&token=mem-r57&request=${QT_BIG}`);
+const QT_BITE = await GET(`op=actionquotes&token=mem-r57&counterparty=${encodeURIComponent(QT_CP)}`);
 const QT_WHOLE = await GET(`op=actionquotes&token=mem-r57&request=${QT_ONE}`);
+const QT_FULL = await GET(`op=actionquotes&token=mem-r57&request=${QT_A}`);
 t("FIXTURE ARMS THE TRAP: the walk's own reading of QUOTES_MAX is a number, so the fixture is ONE past it",
   Number.isInteger(QT_MAX) && QT_MAX > 0, true);
+t("op=actionquotes: ONE action cannot carry QUOTES_MAX + 1 quotes — the write is refused at actions' ledger bound "
++ "(N237), and a ledger full to that bound answers every quote it holds by request=, uncut",
+  [QT_OVER_W?.ok, QT_OVER_W?.code, QT_OVER_W?.part, LEDGER_MAX <= QT_MAX,
+   QT_FULL.ok, QT_FULL.count, QT_FULL.truncated],
+  [false, "ACTION_TOO_LARGE", "correspondence", true, true, LEDGER_MAX - 1, false]);
 t("op=actionquotes: publishes the bound it APPLIED (`max`), and a cut answer SAYS SO — the first QUOTES_MAX of "
-+ "QUOTES_MAX + 1 quotes, `truncated` true",
-  [QT_BITE.ok, QT_BITE.max, QT_BITE.count, QT_BITE.quotes?.length, QT_BITE.truncated],
-  [true, QT_MAX, QT_MAX, QT_MAX, true]);
++ "QUOTES_MAX + 1 quotes one office sent back across two actions, `truncated` true",
+  [QT_BITE.ok, QT_BITE.by, QT_BITE.max, QT_BITE.count, QT_BITE.quotes?.length, QT_BITE.truncated],
+  [true, "counterparty", QT_MAX, QT_MAX, QT_MAX, true]);
 t("op=actionquotes: a complete answer says the opposite — whether this is every quote the body sent back is "
 + "READABLE, not inferred",
   [QT_WHOLE.ok, QT_WHOLE.max, QT_WHOLE.count, QT_WHOLE.truncated], [true, QT_MAX, 1, false]);
@@ -2137,6 +2184,9 @@ t("op=projectdirectory: THE NEGATED GATE IS READ TOO (D-497) — the OWNER of al
    act (a machine may declare neither). The other three bites need a record this suite cannot afford (MEASURE_MAX + 1
    threaded instances, DEPARTURES_MAX + 1 held group aspirations, SET_ASIDE_MAX + 1 distinct open proposals set aside),
    and no interface test of intent drives them either; so the PIN below still names those three, REPORTED to intent.
+   RE-ANCHORED 2026-09-29 (legacy-tests T11; N236, K361): intent's interface test now bites all three at its bound
+   (`test/m/intent/bounds.test.mjs`), so they join DRIVEN_ELSEWHERE and the PIN no longer names them; the arms below
+   still read each published bound here.
    Intent writes its documents through promotion naming no group of their own (C-64.1), so the copy records the group
    every fixture above names, once — AFTER IC-246's arms, whose verdicts are measured on a store naming none. */
 const INTENT_SRC = readFileSync(new URL("../src/intent/index.mjs", import.meta.url), "utf8");

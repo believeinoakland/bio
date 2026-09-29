@@ -1321,7 +1321,10 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
     name: h[1], body: STORE_BARE.slice(h.index, i + 1 < heads.length ? heads[i + 1].index : STORE_BARE.length) }));
   /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): the modules mint through `refusal(<TABLE>, "CODE", …)` — the row's
      table first — and case-authoring's MACHINE_CANNOT_PUBLISH is spelled so; that spelling is the fourth alternative. */
-  const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefusal\s*\(\s*[A-Z][A-Z0-9_]*\s*,\s*"([A-Z][A-Z0-9_]{2,})")/g;
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T11; CASE-AUTHORING #2, N259/N275, K366): case-authoring mints through each
+     family's own helper, the code its literal first argument (`fenceRefusal("MACHINE_CANNOT_PUBLISH", …)`,
+     `derivationRefusal("CASE_IDENTITY_AMBIGUOUS", …)`); that spelling is the fifth alternative. */
+  const CODE = /(?:reason:\s*"([A-Z][A-Z0-9_]{2,})"|\brefusals?\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefuse\s*\(\s*"([A-Z][A-Z0-9_]{2,})"|\brefusal\s*\(\s*[A-Z][A-Z0-9_]*\s*,\s*"([A-Z][A-Z0-9_]{2,})"|\b[a-z][A-Za-z]*Refusal\s*\(\s*"([A-Z][A-Z0-9_]{2,})")/g;
   /* An IDENTITY guard: the 300 characters in front of the refusal ask WHO the
      caller is rather than WHAT they sent. Deliberately generous — see the
      header's note on which direction this errs in. */
@@ -1400,7 +1403,7 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
   for (const m of methods) {
     const seq = [];
     for (const h of m.body.matchAll(CODE)) {
-      const c = h[1] || h[2] || h[3] || h[4];
+      const c = h[1] || h[2] || h[3] || h[4] || h[5];
       if (!seq.some((s) => s.code === c)) seq.push({ code: c, at: h.index });
     }
     seq.forEach((s, i) => {
@@ -1425,7 +1428,7 @@ console.log("\n--- 4. the sweep: an instrument that proves less than it appears 
       if (call < 0) continue;
       const behind = new Set();
       for (const h of m.body.slice(call).matchAll(CODE)) {
-        const c = h[1] || h[2] || h[3] || h[4];
+        const c = h[1] || h[2] || h[3] || h[4] || h[5];
         if (c !== hr.code) behind.add(c);
       }
       rows.push({ method: `${m.name} -> ${hr.method}`, code: hr.code, shadows: behind.size,

@@ -170,6 +170,20 @@ for (const d of TEST_DIRS) {
   for (const f of readdirSync(abs).sort()) if (f.endsWith(".control.mjs")) drivers.push(`${d}/${f}`);
 }
 for (const f of OFF_CONVENTION) if (existsSync(join(REPO, f))) drivers.push(f);
+/* WIDENED 2026-09-29 (N298, legacy-tests T11): the `nc-*.mjs` HARNESSES. They patch real sources exactly as a
+   `*.control.mjs` does, and this walk never enrolled one: `nc-rec91.mjs`'s seven anchors were dead from T5 to T11
+   while A4 read 26/0. Three blind spots, each closed here: the walk (this line), the corpus (`IS_DRIVER`, else a
+   harness's own `find` literal scores its anchor present), and the shape (`arm(FILE, "<anchor>", …)`, below). A
+   harness's own probe (`nc-*.probe.mjs`) is a subject, not a driver, and stays in the corpus. */
+/* They are graded for ANCHORS only (A4, A5, A7, A9): the label (L), tally (T) and roster (A8) halves read `drivers`
+   as before, and this widening does not claim them. */
+const IS_HARNESS = (f) => /^nc-[^.]+\.mjs$/.test(f);
+const harnesses = [];
+for (const d of TEST_DIRS) {
+  const abs = join(REPO, d);
+  if (!existsSync(abs)) continue;
+  for (const f of readdirSync(abs).sort()) if (IS_HARNESS(f)) harnesses.push(`${d}/${f}`);
+}
 
 /* ---------------------------------------------------------------- THE CORPUS
    Everything a driver plausibly quotes. The control drivers THEMSELVES are
@@ -189,7 +203,7 @@ for (const f of OFF_CONVENTION) if (existsSync(join(REPO, f))) drivers.push(f);
    in the arm's `find` AND its `replace` and every anchor would score present no
    matter what its subject held (measured: 96 "duplicated" against a self-including
    corpus, 3 against this one). */
-const IS_DRIVER = (p) => /\.control\.mjs$|-controls\.mjs$|m025-arm-(census|anchor-witness)/.test(p);
+const IS_DRIVER = (p) => /\.control\.mjs$|-controls\.mjs$|m025-arm-(census|anchor-witness)|(^|\/)nc-[^./]+\.mjs$/.test(p);
 function walk(dir, out = []) {
   if (!existsSync(dir)) return out;
   for (const e of readdirSync(dir)) {
@@ -257,11 +271,18 @@ const PATTERNS = [
      moved the reach from 30 drivers to more, and the figure is printed below
      rather than claimed here. */
   ["edit(…)",      new RegExp(String.raw`\bedit\w*\(\s*\w+\s*,\s*(${LIT})\s*,`, "g")],
+  /* ADDED 2026-09-29 (N298): the `nc-rec94.mjs` harness shape, `arm(FILE, "<anchor>", "<replacement>")` — the
+     same call as `edit(…)` under another name. A title-first `arm("…", …)` does not match (its first argument is
+     a literal, not a name). */
+  ["arm(FILE, …)", new RegExp(String.raw`\barm\(\s*[A-Za-z_$][\w$]*\s*,\s*(${LIT})\s*,`, "g")],
 ];
 
 function unquote(s) {
   const q = s[0], body = s.slice(1, -1);
-  if (q === "`") return body.replace(/\\`/g, "`").replace(/\\\\/g, "\\").replace(/\\n/g, "\n");
+  /* ONE PASS OVER THE ESCAPES (N298): the chained replaces turned `\\\\n` (a quoted backslash-n, which is what a
+     driver writes to match a `"\\n"` in its subject) into a real newline, so that anchor read ZERO — measured on
+     `nc-cpdf18.mjs`'s textpin arm. */
+  if (q === "`") return body.replace(/\\([\s\S])/g, (_, c) => (c === "n" ? "\n" : c === "t" ? "\t" : c));
   try { return JSON.parse(q === "'" ? `"${body.replace(/\\'/g, "'").replace(/"/g, '\\"')}"` : s); }
   catch { return null; }
 }
@@ -310,7 +331,7 @@ const NAMED_MULTI = [
 console.log("\n--- the estate, and what this suite can read of it ---");
 
 const prov = readGitProvenance(REPO);
-const disc = classifyDiscovered(prov, drivers.map((d) => ({ path: d, what: "control driver", counted: 1 })));
+const disc = classifyDiscovered(prov, [...drivers, ...harnesses].map((d) => ({ path: d, what: "control driver", counted: 1 })));
 console.log(`  provenance: ${disc.verified ? `VERIFIED at ${disc.headSha}` : "UNVERIFIED (git could not answer)"}`
   + ` · ${disc.accounted - disc.off.length} of ${disc.accounted} driver(s) are in the commit at HEAD`
   + `${disc.off.length ? ` · NOT IN ANY COMMIT: ${disc.off.map((r) => `${r.path} (${r.state})`).join(", ")}` : ""}`);
@@ -322,6 +343,7 @@ console.log(`  provenance: ${disc.verified ? `VERIFIED at ${disc.headSha}` : "UN
    deposited here would otherwise be graded, and a failure nobody else can
    reproduce is worse than a miss. It is NAMED in the line above either way. */
 const graded = disc.verified ? drivers.filter((d) => disc.inCommit.includes(d)) : drivers;
+const gradedHarnesses = disc.verified ? harnesses.filter((d) => disc.inCommit.includes(d)) : harnesses;
 
 const anchors = [];
 const silentDrivers = [];
@@ -330,6 +352,14 @@ for (const d of graded) {
   if (!got.length) { silentDrivers.push(d); continue; }
   for (const a of got) anchors.push({ driver: d, ...a });
 }
+/* N298: the harnesses' anchors join the same set (A4, A5, A7); their silent half is counted, not listed. */
+const silentHarnesses = [];
+for (const d of gradedHarnesses) {
+  const got = extract(readFileSync(join(REPO, d), "utf8"));
+  if (!got.length) { silentHarnesses.push(d); continue; }
+  for (const a of got) anchors.push({ driver: d, harness: true, ...a });
+}
+const harnessAnchors = anchors.filter((a) => a.harness).length;
 
 for (const a of anchors) {
   a.where = [];
@@ -346,7 +376,8 @@ console.log(`  drivers: ${drivers.length} found (${TEST_DIRS.length} test dirs; 
 console.log(`  corpus:  ${corpus.size} candidate subject file(s) — the \`*.control.mjs\` / \`*-controls.mjs\` set EXCLUDED (an`);
 console.log(`           arm's anchor sits in its own \`find\` AND its \`replace\`, so an unexcluded corpus scores every`);
 console.log(`           anchor present whatever its subject holds); PROBES KEPT IN, because a probe is a subject`);
-console.log(`  anchors: ${anchors.length} literal anchor(s) read from ${graded.length - silentDrivers.length} of ${graded.length} drivers (${reachPct}%)`);
+console.log(`  anchors: ${anchors.length} literal anchor(s) read from ${graded.length - silentDrivers.length} of ${graded.length} drivers (${reachPct}%)`
+  + ` and ${gradedHarnesses.length - silentHarnesses.length} of ${gradedHarnesses.length} \`nc-*.mjs\` harnesses (${harnessAnchors} of them; N298)`);
 console.log(`  THE BLIND HALF, NAMED RATHER THAN LEFT AS A SILENCE — ${silentDrivers.length} driver(s) yield no literal anchor to this`);
 console.log(`  matcher (their anchors are interpolated, computed, or written in an eighth shape). The census`);
 console.log(`  \`test/m025-arm-census.mjs\` is what covers them, by RUNNING them:`);
@@ -359,8 +390,10 @@ t(`A1 the driver walk reaches the estate rather than a corner of it (${drivers.l
   drivers.length >= 80, true);
 t(`A2 the subject corpus is real and floored (${corpus.size} file(s), floor 300)`,
   corpus.size >= 300, true);
-t(`A3 the extractor actually read anchors, from more than one driver (${anchors.length} anchor(s) from ${graded.length - silentDrivers.length} driver(s), floors 100 and 20)`,
-  [anchors.length >= 100, graded.length - silentDrivers.length >= 20], [true, true]);
+t(`A9 the harness walk reaches the \`nc-*.mjs\` estate and reads anchors from it (${gradedHarnesses.length} harness(es), ${harnessAnchors} anchor(s) from ${gradedHarnesses.length - silentHarnesses.length}; floors 90, 200 and 40; N298)`,
+  [gradedHarnesses.length >= 90, harnessAnchors >= 200, gradedHarnesses.length - silentHarnesses.length >= 40], [true, true, true]);
+t(`A3 the extractor actually read anchors, from more than one driver (${anchors.length - harnessAnchors} anchor(s) from ${graded.length - silentDrivers.length} driver(s), floors 100 and 20)`,
+  [anchors.length - harnessAnchors >= 100, graded.length - silentDrivers.length >= 20], [true, true]);
 
 console.log("\n--- every anchor still exists in something a driver could be quoting ---");
 
@@ -386,7 +419,7 @@ console.log("\n--- every anchor still exists in something a driver could be quot
    deaths is visible rather than silent, and A7 floors it against the opposite
    failure: a rescue rule that rescues everything. */
 const driverText = new Map();
-for (const d of graded) { try { driverText.set(d, readFileSync(join(REPO, d), "utf8")); } catch { /* named by the floor */ } }
+for (const d of [...graded, ...gradedHarnesses]) { try { driverText.set(d, readFileSync(join(REPO, d), "utf8")); } catch { /* named by the floor */ } }
 const onDriver = [];
 for (const a of anchors) {
   if (a.hits !== 0) continue;
@@ -407,10 +440,24 @@ if (onDriver.length) {
 /* THE ARM THIS SUITE EXISTS FOR. A zero is unambiguous: the literal the driver
    will search for is in no candidate subject, so the arm cannot arm. This is the
    D-276 class and it is the half that cost a month. */
-const deadAnchors = anchors.filter((a) => a.hits === 0 && !onDriver.includes(a))
+/* THE HARNESSES' DEAD ANCHORS, NAMED BY HARNESS AND COUNT (N298). Widening the walk to `nc-*.mjs` found 28 dead
+   anchors in 15 harnesses beside `nc-rec91.mjs`, each a line the T3-T10 extractions moved without its quote. N57's
+   sweep (T11, legacy-tests) re-derived all fifteen, so the list is EMPTY and every harness is held to zero; it stays
+   as the one place a dead anchor may be named, by harness and exact count (one more is A4's finding, one fewer is
+   A4b's stale naming). `nc-m040.mjs` is the one the header names: its anchor quotes the fixture the harness WRITES
+   at run time, which lives in its own (excluded) source. */
+const NAMED_DEAD_HARNESS = {};
+const NAMED_WRITTEN = { "bio-plane/test/nc-m040.mjs": 1 };
+const dead = anchors.filter((a) => a.hits === 0 && !onDriver.includes(a));
+const deadBy = {};
+for (const a of dead) deadBy[a.driver] = (deadBy[a.driver] || 0) + 1;
+const namedDead = { ...NAMED_DEAD_HARNESS, ...NAMED_WRITTEN };
+const deadAnchors = dead.filter((a) => !(a.harness && (deadBy[a.driver] || 0) === namedDead[a.driver]))
   .map((a) => `${a.driver} [${a.shape}] ${JSON.stringify(a.lit.length > 90 ? a.lit.slice(0, 90) + "…" : a.lit)}`);
-t(`A4 no arm's anchor has gone to ZERO — the D-276 class, which is a line CHANGED IN PLACE under a quote that was not moved with it (${deadAnchors.length} found)`,
+t(`A4 no arm's anchor has gone to ZERO — the D-276 class, which is a line CHANGED IN PLACE under a quote that was not moved with it (${deadAnchors.length} found; ${dead.length - deadAnchors.length} named by harness, N57)`,
   deadAnchors, []);
+t(`A4b and every harness named dead is still dead by exactly its count — a re-derived harness leaves the list (N298)`,
+  Object.entries(namedDead).filter(([d, n]) => (deadBy[d] || 0) !== n).map(([d, n]) => `${d}: named ${n}, found ${deadBy[d] || 0}`), []);
 t(`A7 and the driver-on-driver rescue has not become a blanket amnesty — it rescues a MINORITY of anchors and each is named above (${onDriver.length} rescued of ${anchors.length} anchor(s); ceiling: a tenth of the set)`,
   onDriver.length * 10 <= anchors.length, true);
 

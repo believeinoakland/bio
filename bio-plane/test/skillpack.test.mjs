@@ -47,10 +47,13 @@ import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as CATALOGUE from "../checks/bio-checks.mjs";
-import { AI_RUN_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; N289, K348, K350, ai-runs R35): C-22.7's row is held in ai-runs' own
+   table beside `checkSkillVersion`, and the catalogue's copy is interim (leaves in T12, N299). E2 reads the row from
+   ai-runs' table; E8 reads every C-22 row the plane resolves, `airun.mjs`' AI_RUN_CHECKS (catalogue rows + ai-runs'). */
+import { AI_RUN_OWN_CHECKS } from "../src/ai-runs/checks.mjs";
 /* T3 (legacy-tests), 2026-09-26: the store's corpus with the extracted modules, for BLOCK H's harvest. */
 import { storeCorpus } from "./extracted-sources.mjs";
-import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS } from "../src/airun.mjs";
+import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "../src/airun.mjs";
 import { SKILL_PACK_ID, DOCTRINE_EDITION, OBJECTIVE, BOUNDARY, FOUR_LEVEL_RULE,
          SEARCH_COMPLETENESS, AUTHORED_SOURCES, SOURCING, ABSENCE_ANSWER_SHAPE,
          machineFences, memberOnlyActs, renderPack, packVersion,
@@ -464,7 +467,8 @@ const run = async () => {
 
   t("ARM E2: and the refusal carries the DEC-49 canned translation read from the ONE row, not a "
     + "sentence composed at the site",
-    none?.translation, AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED.translation);
+    [none?.translation, typeof AI_RUN_OWN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED?.translation],
+    [AI_RUN_OWN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED?.translation, "string"]);
 
   const bare = await POST(`op=airunopen&token=${TOK}`, {
     run: "AIRUN-2026-0808-sk1-bare", contextType: "inquiry", contextId: BUNDLE,
@@ -517,9 +521,9 @@ const run = async () => {
      asked it of `skillpack.mjs`. A hand copy agrees at zero cost, measured five
      times in this repository. */
   t("ARM E8: src/skillpack.mjs holds NO second copy of any C-22 translation — the code, the "
-    + "C-number and the sentence are ONE row in the catalogue",
-    Object.keys(AI_RUN_CHECKS)
-      .filter((c) => PACK_SRC.includes(AI_RUN_CHECKS[c].translation.slice(0, 40))), []);
+    + "C-number and the sentence are ONE row (the catalogue's, or ai-runs' own table's, R35)",
+    [Object.keys(AI_RUN_CHECKS).length > 0, Object.keys(AI_RUN_CHECKS)
+      .filter((c) => PACK_SRC.includes(AI_RUN_CHECKS[c].translation.slice(0, 40)))], [true, []]);
 
   /* ==========================================================================
      BLOCK F — THE AUTHORED LAYER CANNOT DRIFT SILENTLY EITHER.

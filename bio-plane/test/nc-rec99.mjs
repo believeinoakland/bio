@@ -20,8 +20,16 @@ const PEN = controlPen("rec99");
 /* M0-182: a pristine copy is named for its subject's BASENAME inside the pen, never beside the subject. */
 const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
-const STORE = new URL("../src/store.mjs", import.meta.url).pathname;
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): `resolutionsForCapture` and `documentsConcerning` left
+   `store.mjs` for entities (`resolutionsFor`, its R14, and `documentsConcerning`, in `src/entities/index.mjs`, whose
+   cap is `#clamp`'s), and `connectionsFor`'s entity arm for connections (`src/connections/index.mjs`). Arm (7)'s
+   figure is READ from the suite at arm time (it was 103; the census is re-pinned by name as modules move, so a typed
+   figure dies at each re-pin). NOT RUN: the baseline refuses to arm unless derivation-bounds is clean, and it is
+   red on other modules' reads (64/10 at 84dee21913). */
+const STORE = new URL("../src/entities/index.mjs", import.meta.url).pathname;
+const CONNECTIONS = new URL("../src/connections/index.mjs", import.meta.url).pathname;
 const SUITE = new URL("./derivation-bounds.test.mjs", import.meta.url).pathname;
+const SCAN_FIGURE = (/const SCANNING_MEASURED_2026_09_15 = (\d+);/.exec(readFileSync(SUITE, "utf8")) || [])[1] ?? "UNREAD";
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const size = (p) => readFileSync(p).length;
 
@@ -45,8 +53,8 @@ const run = (name) => {
 const ARMS = [
   ["(7) THE RATCHET'S OWN FIGURE RAISED BY ONE BY HAND (103 -> 104) — the arm that proves the "
  + "census is GRADED rather than reported", SUITE,
-    "const SCANNING_MEASURED_2026_09_15 = 103;",
-    "const SCANNING_MEASURED_2026_09_15 = 104;",
+    `const SCANNING_MEASURED_2026_09_15 = ${SCAN_FIGURE};`,
+    `const SCANNING_MEASURED_2026_09_15 = ${Number(SCAN_FIGURE) + 1};`,
     "MUST FAIL: the CENSUS FLOOR, naming the count. MUST NOT: the ceiling, the truncation arms, "
   + "the class ratchet, anything live."],
 
@@ -65,9 +73,9 @@ const ARMS = [
 
   ["(9b) THE SAME ON `connectionsFor`'s ENTITY ARM — the read D-224's k(k-1)/2 curve was raised "
  + "for, and the arm that proves a method assigning its scan in TWO branches is graded on BOTH",
-    STORE,
-    "`SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha LIMIT ?`, entityId, cap + 1);",
-    "`SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha`, entityId);",
+    CONNECTIONS,
+    "`SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha LIMIT ?`,\n                        entityId, cap + 1);",
+    "`SELECT * FROM connections WHERE entity_id=? ORDER BY grade, a_capture_sha, b_capture_sha`,\n                        entityId);",
     "MUST FAIL: the TRUNCATION SOURCE arm NAMING `connectionsFor`, plus the census CEILING. MUST "
   + "NOT: the capture arm's own grading, which is untouched and must stay graded."],
 
@@ -113,8 +121,8 @@ for (const [label, file, find, replace, declared] of ARMS) {
   /* arm (11) needs the alias to exist as well as be used */
   let patched = before.replace(find, replace);
   if (tag === "11") patched = patched.replace(
-    "const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));\n    /* cap + 1 is asked",
-    "const cap = Math.max(1, Math.min(Number(limit) || Store.#MEANING_LIMIT_DEFAULT, Store.#MEANING_LIMIT_MAX));\n    const window = cap + 1;\n    /* cap + 1 is asked");
+    "    const cap = this.#clamp(limit);\n    const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade",
+    "    const cap = this.#clamp(limit);\n    const window = cap + 1;\n    const rows = this.#rows(`SELECT capture_sha, bundle_id, ref, entity_id, grade");
   writeFileSync(file, patched);
   armed++;
 

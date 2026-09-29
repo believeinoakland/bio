@@ -812,9 +812,14 @@ await block("fixture", async () => {
 /* THE SIX RUNS, one per answer this field can honestly give, plus the matrix
    run. Every one opened through `op=airunopen` — the write path is SK-1's and
    is not touched by this item; what changes is what comes back out. */
+/* RE-ANCHORED 2026-09-29 (legacy-tests T11; scheduler N223, ai-runs R43): a run's open now ARMS the one alarm, whose
+   reconcile reads the reaper's wake, so a run dated `NOW` (2026-08-08) with a 10-minute lease was reaped by the REAL
+   alarm (T4 and A3b read `stopped`; P's close found the run already ended on `lease`). The lease reaches a week past
+   the wall clock, observation-log's KL_LEASE precedent (T8); what each arm reads is unchanged. */
+const RUN_LEASE = Math.max(600000, Date.now() - Date.parse(NOW) + 7 * 86400000);
 const open = async (over) => await POST("airunopen", {
   contextType: "project", contextId: PROJECT, principalClaude: "instance",
-  skillVersion: "investigative-session@1", biasManifest: null, at: NOW, leaseMs: 600000, ...over });
+  skillVersion: "investigative-session@1", biasManifest: null, at: NOW, leaseMs: RUN_LEASE, ...over });
 
 const R = {
   bar:        "RUN-2026-0808-bar-declared",

@@ -472,19 +472,22 @@ armOn({
 
 armOn({
   id: "T1", subject: "TALLY DECAY — a declared arm count moved while every anchor stayed perfectly live",
-  what: "`casesign.control.mjs`'s head declaration is decayed from five arms to four. NOT ONE ANCHOR MOVES, "
+  what: "`casesign.control.mjs`'s head declaration is decayed from nine arms to eight. NOT ONE ANCHOR MOVES, "
       + "which is the whole point of the row: this is invisible to the witness, to a re-anchoring pass, and "
       + "to the driver's own run — it announces nothing until something holds the declaration against the run",
   mustFail: "the census, by name — `TALLY NOT AS DECLARED` naming casesign with both numbers — and its exit "
          + "status, because a figure nobody can falsify trains every session to trust it",
   mustNot: "the driver itself (it arms and runs exactly as before — the anchors are untouched), and the census "
          + "must not report a STALE ARM, since nothing about this arm is an anchor",
+  /* RE-DERIVED 2026-09-29 (T11, legacy-tests; N298): casesign grew REC-130's four arms (e)-(h), so it announces ten
+     (nine and the baseline), and its head now declares nine. The decay is the same one count, nine to eight, and the
+     census must name it with both numbers (8 declared, 10 announced). */
   edits: [[CASESIGN_DRIVER,
-    `/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, re-runnable in`,
-    `/* CASE-5b's NEGATIVE CONTROL DRIVER — four arms plus a baseline, re-runnable in`]],
+    `/* CASE-5b's NEGATIVE CONTROL DRIVER — nine arms plus a baseline (CASE-5b's five and REC-130's`,
+    `/* CASE-5b's NEGATIVE CONTROL DRIVER — eight arms plus a baseline (CASE-5b's five and REC-130's`]],
   run: () => runProcess(CENSUS, ["--only", "casesign.control.mjs"], "T1"),
   expect: (r) => {
-    const named = /casesign\.control\.mjs[\s\S]{0,200}?DECLARES 4 plus a baseline[\s\S]{0,80}?ANNOUNCED 6/.test(r.out);
+    const named = /casesign\.control\.mjs[\s\S]{0,200}?DECLARES 8 plus a baseline[\s\S]{0,80}?ANNOUNCED 10/.test(r.out);
     console.log(`    census named it with both numbers: ${named} · reported a STALE ARM as well: ${/drivers with a STALE arm : [1-9]/.test(r.out)}`);
     return r.code !== 0 && /TALLY NOT AS DECLARED/.test(r.out) && named
       && /drivers with a STALE arm : 0/.test(r.out) && /tally NOT AS DECLARED : 1/.test(r.out);

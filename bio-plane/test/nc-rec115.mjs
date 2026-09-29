@@ -54,10 +54,12 @@ const PEN = controlPen("rec115");
 const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const QUERY = fileURLToPath(new URL("../src/query.mjs", import.meta.url));
-const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): `axisSays` left `store.mjs` for retrieval's
+   `src/retrieval/levels.mjs` (the four-level statement, retrieval R13); the name STORE points there. */
+const STORE = fileURLToPath(new URL("../src/retrieval/levels.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./passage-arm.test.mjs", import.meta.url));
 const UISUITE = fileURLToPath(new URL("../../civicos-ui/test/passage-surface.test.mjs", import.meta.url));
-const MIN_BYTES = { [QUERY]: 60000, [STORE]: 500000 };
+const MIN_BYTES = { [QUERY]: 60000, [STORE]: 5000 };
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
 /* THE REVERT, and it is the ONE variable this item moved. */
@@ -71,8 +73,8 @@ const UNSTRIP = [QUERY,
    the AXIS sentence specifically — the non-axis ternary carries nearly the same
    words and the exactly-once guard is what holds the two apart. */
 const BLIND = [STORE,
-  `      if (documents === 0)\n        return "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT "`,
-  `      if (false)\n        return "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT "`];
+  `    if (documents === 0)\n      return "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT "`,
+  `    if (false)\n      return "nothing matched, and no document was in scope to match in — this is an empty DOCUMENT "`];
 
 /* Each arm: [[edit, …], declared]. */
 const ARMS = {
@@ -96,7 +98,12 @@ const ARMS = {
     + "S1010, S1012 and S1013 MUST STILL FAIL, because they assert the NUMBER against an "
     + "independently-derived count and against `captures_counted`, which this arm cannot move. "
     + "If S102/S103 went green here the section would be satisfiable by silencing, and the item "
-    + "would be closed by prose. S108 held open."],
+    + "would be closed by prose. S108 held open. RE-MEASURED 2026-09-29 (T11, legacy-tests; N298) on "
+    + "retrieval's `levels.mjs`: S102, S103, S1010, S1012, S1013 FAIL as declared, and the liar now ALSO "
+    + "loses S106, S108 and S85 (the true zero): `axisSays`' `documents === 0` branch is the only place "
+    + "the axis states an empty DOCUMENT level, so silencing it falls a true zero through to the "
+    + "coverage sentences. The liar no longer silences every sentence assertion (S104, S107, S109 pass); "
+    + "S108 is broken by the arm itself, not held open, and the surface stays green."],
 };
 
 const runOne = (suite, foot) => {
@@ -126,7 +133,7 @@ const report = (label) => {
 const want = process.argv[2] || "all";
 console.log(`REC-115 negative control · ${new Date().toISOString()}`);
 console.log(`query.mjs ${statSync(QUERY).size} bytes · sha ${sha(QUERY).slice(0, 16)}`);
-console.log(`store.mjs ${statSync(STORE).size} bytes · sha ${sha(STORE).slice(0, 16)}`);
+console.log(`levels.mjs ${statSync(STORE).size} bytes · sha ${sha(STORE).slice(0, 16)}`);
 
 console.log("\n  --- opening baseline ---");
 report("BASELINE");
@@ -142,6 +149,9 @@ for (const [name, [edits, declared]] of Object.entries(ARMS)) {
     if (statSync(pristine).size < MIN_BYTES[file])
       throw new Error(`REFUSED: pristine copy for ${name}/${file} is ${statSync(pristine).size} bytes, under the floor`);
     const n = before.split(anchor).length - 1;
+    /* N298: an arm whose SECOND anchor was dead threw here with its first edit still written (measured: query.mjs
+       left armed in a scratch worktree). Every edit already staged is restored before refusing. */
+    if (n !== 1) for (const [f, p] of staged) copyFileSync(p, f);
     if (n !== 1) throw new Error(`REFUSED: arm ${name}'s anchor in ${file} occurs ${n} times, not once — an `
       + `arm that patches zero sites or two is a finding about the arm, not about the subject`);
     writeFileSync(file, before.replace(anchor, repl));

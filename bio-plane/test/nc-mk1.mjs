@@ -43,6 +43,11 @@ const CHECKS = join(PLANE, "checks/bio-checks.mjs");
    at op=caseratify, C-58.2 D-431 in the committer); the old one-line anchors matched nothing since MK-7. */
 const PROV = join(PLANE, "src/provenance/index.mjs");
 const REGCHECKS = join(PLANE, "src/provenance/register-checks.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): three more homes. The capture axis's authored skip is
+   inquiry's (`src/inquiry/index.mjs`); the op=ratify and op=caseratify attribution fences (C-92.12, C-92.10) are
+   ratification's ops (`src/ratification/ops.mjs`, K240/K241); `pubdirect` is retired (see its note). */
+const INQUIRY = join(PLANE, "src/inquiry/index.mjs");
+const RATOPS = join(PLANE, "src/ratification/ops.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -129,12 +134,12 @@ const ARMS = {
                               "    if (!who)\n      return refusal(\"TESTIMONY_NOT_A_MEMBER\","]]),
   },
   axis: {
-    files: [STORE],
+    files: [INQUIRY],
     why: "the capture axis counts an authored observation as a capture again — captureBound(null) passes the fetch ceiling through",
     mustFail: ["the CAPTURE axis earns NO letter for the observation",
                "a leg citing the observation and claiming capture"],
     mustPass: "CONTRAST: the member-UPLOADED document earns the fetch ceiling",
-    patch: () => arm([[STORE, "      if (r.authored === 1) { e.authored++; continue; }",
+    patch: () => arm([[INQUIRY, "      if (r.authored === 1) { e.authored++; continue; }",
                               "      if (false) { e.authored++; continue; }"]]),
   },
   extractrow: {
@@ -156,7 +161,7 @@ const ARMS = {
                              "  return `${words}`;"]]),
   },
   pubbundle: {
-    files: [INDEX],
+    files: [RATOPS],
     why: "(A) the fence at op=ratify for the OBSERVATION ITSELF removed — its words, provenance document and the observer's handle cross into the published record",
     /* DECLARATION CORRECTED 2026-09-19 by the D-431 worker, after the arm came back NOT AS DECLARED (55/1) on
        D-431's tree: "NOTHING of it is published" now STAYS GREEN, because with C-53.10 disarmed the observation
@@ -167,8 +172,8 @@ const ARMS = {
     mustPass: "the cited-finding and case refusals (separate arms of the fence)",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): MK-7's C-92.12, the fence op=ratify now holds for an
        observation in §4.1's form (the suite's label names it); C-53.10 is left for the pre-MK-6 form. */
-    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n",
-                              "      if (false && facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n"]]),
+    patch: () => arm([[RATOPS, "    if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n",
+                               "    if (false && facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n"]]),
   },
   /* `pubcited` — RETIRED 2026-09-27 (T5-12, legacy-tests). Its subject, a testimony-specific refusal at op=ratify for a
      FINDING resting on an observation (C-53.11), was narrowed BY DESIGN in MK-7 to an observation written before MK-6
@@ -178,36 +183,42 @@ const ARMS = {
      here reaches a pre-MK-6 observation, so no arm of this suite can see it; and arming C-58.2 would attack D-431's
      rule, not this fence. Its body, verbatim, is in git history before this date. */
   pubcase: {
-    files: [INDEX],
+    files: [RATOPS],
     why: "(A) the fence at op=caseratify removed — a case over a finding resting on an observation publishes",
     mustFail: ["op=caseratify on a CASE whose finding rests on the observation"],
     mustPass: "both op=ratify refusals",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): MK-7's C-92.10, the gate op=caseratify now holds for a case
        reaching an observation in §4.1's form (the suite's label names it). */
-    patch: () => arm([[INDEX, "      if (unchosen.length)\n        return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\",",
-                              "      if (false)\n        return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\","]]),
+    patch: () => arm([[RATOPS, "    if (unchosen.length)\n      return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\",",
+                               "    if (false)\n      return json({ ok: false, reason: \"ATTRIBUTION_UNCHOSEN\","]]),
   },
-  pubdirect: {
-    files: [STORE],
-    why: "(A) the walk made DIRECT-ONLY — a finding resting on the observation THROUGH another finding is no longer seen",
-    mustFail: ["THROUGH ANOTHER FINDING"],
-    mustPass: "the direct finding's refusal and the case refusal (both direct)",
-    patch: () => arm([[STORE, "          WHERE r.depth < 64)", "          WHERE r.depth < 1)"]]),
-  },
+  /* `pubdirect` — RETIRED 2026-09-29 (T11, legacy-tests; N298, N57), on `pubcited`'s grounds. Its subject was the
+     op=ratify fence seeing a finding that rests on the observation THROUGH another finding (C-53.11's transitive
+     walk). MK-7 lifted that fence for an observation in §4.1's form and D-431's C-58.2 answers instead (the suite's
+     "THROUGH ANOTHER FINDING" label now pins RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE), which reads no walk.
+     Re-anchored on the walk's new home (basis-versions R39 `testimonyReach`, `TESTIMONY_REACH_DEPTH` 64 -> 1) it
+     ARMED and came back GREEN, 58/0: no assertion of testify's suite now reaches a transitive rest (op=caseratify's
+     C-92.10 arm, r4, is over a direct one). Reported, not re-aimed: the walk's depth is unguarded by this suite.
+     Its body is in git history before this date. */
   pubover: {
-    files: [INDEX],
+    files: [RATOPS],
     why: "(A) THE OVER-STRICTNESS DIRECTION: the fence refuses EVERY ratification — an ordinary document and its finding stop publishing",
     mustFail: ["OVER-STRICTNESS: a finding resting on an ORDINARY document"],
     mustPass: "\"op=ratify on the OBSERVATION ITSELF\" — the refusal the fence exists for still fires",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-92.12's line (pubbundle's), made to refuse everything. */
-    patch: () => arm([[INDEX, "      if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n",
-                              "      if (true)\n"]]),
+    patch: () => arm([[RATOPS, "    if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)\n",
+                               "    if (true)\n"]]),
   },
   c181: {
     files: [REGCHECKS],
     why: "C-18.1's authored arm removed: the catalogue holds an authored document to the ordinary A/B/C grade rule",
-    mustFail: ["THE WHOLE CATALOGUE over the bundle op=testify wrote", "an authored document carrying a capture grade is an error"],
-    mustPass: "the origin half of C-18.1 (a separate statement) and every store fence",
+    /* RE-MEASURED 2026-09-29 (T11, legacy-tests; N298, N57): C-18.1 is provenance's register check, and the
+       register checks now run on op=testify's OWN write (measured), so the arm refuses the testimony itself:
+       13/18, "op=testify lands" first and every later arm that rests on the observation after it, then the suite
+       throws (no provenance document). The catalogue arms it declared are never reached. The rule is MORE
+       load-bearing than declared, and the declaration follows the measurement. */
+    mustFail: ["op=testify lands", "the suite threw"],
+    mustPass: "nothing downstream of the testimony — it never lands",
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): C-18.1 is provenance's register check. */
     patch: () => arm([[REGCHECKS, "      if (d.authored === true) {\n        if (cap.grade !== undefined",
                                   "      if (false) {\n        if (cap.grade !== undefined"]]),

@@ -466,16 +466,22 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
        the plane may never produce.
        AND `H` IS DATED BACK, so the 24-hour TTL it carries falls inside this
        suite's window — that expiry is the BOUND on the hold, and an arm below
-       drives it INDEPENDENTLY of the reaper. */
+       drives it INDEPENDENTLY of the reaper.
+       RE-ANCHORED 2026-09-29 (T11, legacy-tests; N188 (3), capture-requests R6 as K333 read it): `H` can no longer be
+       dated back. R6 takes the stated instant `at` only from an IN-PROCESS caller and "the op never reads `at` from a
+       body", so every request filed through op=capturerequest expires at its own filing + 24 h (N188 (3)'s per-request
+       clock, built). The bound is reached instead by driving the virtual clock forward to `H`'s real expiry, in steps
+       shorter than the lease the hold grants, and `H2` is filed a clear second later so the two expire apart. The
+       cool-off is reported long enough to outlast the walk. */
     const A = "https://www.oaklandca.gov/files/assets/fl4-a.pdf";
     const H = "https://www.cooling-off.example.gov/fl4-held.pdf";
-    const H_TTL_LEFT = 30000;
-    await DO("governorreport", { host: "www.cooling-off.example.gov", status: 429, retry_after_ms: 86400000 });
+    const CR_TTL = 86400000;   /* capture-requests R6: expires is the request's own instant + 24 h */
+    await DO("governorreport", { host: "www.cooling-off.example.gov", status: 429, retry_after_ms: 3 * CR_TTL });
     const rqA = await POST(`op=capturerequest&token=${RUTH}`,
       { target: INQ, run: RUN, purpose: "investigate", address: A, at: iso(T0) });
     if (rqA?.ok !== true) throw new Error(`capturerequest A: ${JSON.stringify(rqA)}`);
     const rqH = await POST(`op=capturerequest&token=${RUTH}`,
-      { target: INQ, run: RUN, purpose: "investigate", address: H, at: iso(T0 - 86400000 + H_TTL_LEFT) });
+      { target: INQ, run: RUN, purpose: "investigate", address: H });
     if (rqH?.ok !== true) throw new Error(`capturerequest H: ${JSON.stringify(rqH)}`);
 
     /* A SECOND RUN THAT HAS RECEIVED NOTHING AT ALL, AND IT EXISTS BECAUSE THE
@@ -497,8 +503,11 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
       bounds: [{ bound: "fetches", allowed: 50, unit: "requests" }],
       at: iso(T0), leaseMs: LEASE });
     if (opened2?.started !== true) throw new Error(`airunopen 2: ${JSON.stringify(opened2)}`);
+    /* N188 (3): the instants are second-grained, so a wait over two seconds is what puts a whole second between H's
+       expiry plus the one-second step below and H2's. */
+    await new Promise((r) => setTimeout(r, 2100));
     const rqH2 = await POST(`op=capturerequest&token=${RUTH}`,
-      { target: INQ, run: RUN2, purpose: "investigate", address: H2, at: iso(T0) });
+      { target: INQ, run: RUN2, purpose: "investigate", address: H2 });
     if (rqH2?.ok !== true) throw new Error(`capturerequest H2: ${JSON.stringify(rqH2)}`);
     const run2Of = async () => ((await GET(`op=airun&token=${RUTH}&run=${RUN2}`)) || {}).session || {};
 
@@ -613,11 +622,22 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
        the run had died could not produce this answer. */
     const hRow = await reqOf(rqH.request);
     console.log(`    held request: state=${hRow.state} expires in T0+${Date.parse(hRow.expires) - T0}ms · run lease T0+${Date.parse(after.expires) - T0}ms`);
+    /* RE-ANCHORED 2026-09-29 (N188 (3), R6): the expiry is the request's OWN instant + 24 h, read off its own row. */
     t("the outstanding request is still queued and carries its own expiry",
-      [hRow.state, within(Date.parse(hRow.expires) - T0, H_TTL_LEFT)], ["requested", true]);
-    const PAST = Date.parse(hRow.expires) + 1000;
+      [hRow.state, Date.parse(hRow.expires) - Date.parse(hRow.requested_at)], ["requested", CR_TTL]);
+    /* THE WALK TO H's EXPIRY (N188 (3)): each alarm is under the lease the hold grants, so the hold, and only the hold,
+       carries both runs across the 24 hours; RUN2's H2 expires a second or more after H. */
+    const HEXP = Date.parse(hRow.expires), STEP = 2700000;
+    let walked = 0, v = T0 + 20000 + STEP;
+    for (; v < HEXP; v += STEP, walked++) await obj.onAlarm(v);
+    const heldNow = await runOf();
+    const h2Row = await (async () => ((await GET(`op=capturerequests&token=adm-fl4&run=${RUN2}`)) || {})
+      .requests?.find((q) => q.request === rqH2.request) || {})();
+    t("the walk reached H's expiry on the hold alone: both runs still running, H2 expiring after H",
+      [walked > 20, heldNow.status, (await run2Of()).status, Date.parse(h2Row.expires) > HEXP], [true, "running", "running", true]);
+    const PAST = HEXP + 1000;
     t("that instant is past the request's expiry and INSIDE the run's held lease — the arm is independent",
-      [PAST > Date.parse(hRow.expires), PAST < Date.parse(after.expires)], [true, true]);
+      [PAST > HEXP, PAST < Date.parse(heldNow.expires), PAST < Date.parse(h2Row.expires)], [true, true, true]);
     const r4 = await obj.onAlarm(PAST);
     /* SCOPED TO THIS RUN BY NAME. The second run's own request is dated
        normally and is still well inside its TTL, so it is STILL held here — and
@@ -629,11 +649,15 @@ const FAST = 1_000_000, SLOW = 2_500_000;   // far larger than the test's wall-t
       [[RUN2], "running"]);
 
     /* AND THEN THE RUN DIES HONESTLY. Nothing renews the lease once the daemon
-       owes nothing, so the reaper takes it at the lease and NAMES that bound. */
-    const r5 = await obj.onAlarm(Date.parse(after.expires) + 1000);
+       owes nothing, so the reaper takes it at the lease and NAMES that bound.
+       RE-ANCHORED 2026-09-29 (N188 (3)): the lease is read after the walk, not at T0 + 20 s; and since RUN2's hold now
+       ends seconds after RUN's rather than a day later, both lapse by this instant, so the reaper's account is read
+       for THIS run by name (the scoping the hold arm above already uses) rather than as a bare count. */
+    const r5 = await obj.onAlarm(Date.parse((await runOf()).expires) + 1000);
     const dead = await runOf();
     t("with nothing left to wait for, the reaper takes the run and names the bound",
-      [r5.airunreap?.lapsed ?? 0, dead.status, dead.condition?.bound], [1, "stopped", "lease"]);
+      [(r5.airunreap?.reaped || []).filter((x) => x.run === RUN).map((x) => [x.terminated, x.bound]),
+       dead.status, dead.condition?.bound], [[[true, "lease"]], "stopped", "lease"]);
     t("and the wake consumer holds nothing for a run that has ENDED — a hold follows the run's own "
     + "status and not merely its requests",
       [(r5.airunwake?.holds || []).some((h) => h.run === RUN), r5.airunwake?.woken ?? 0], [false, 0]);

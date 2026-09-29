@@ -339,10 +339,13 @@ console.log(`    (c) OMISSION        ${OMITTED.length}: ${OMITTED.join(" ")}`);
    by name. `governorconfig` stays: it is the OPERATOR's act, RULED by BOB #23 (§4.9), and the one op
    the founder's session alone reaches. What its refusal SAYS was REC-162's item (2026-09-25): the founder's session, graded in
    §5. Still a literal. */
-t("the ROLE-GATED arm is exactly the one op the FOUNDER'S session alone reaches — `governorconfig`, "
-+ "the operator's (§4.9, BOB #23) — after REC-159 moved D-270's other four into both sets; pinned as "
-+ "a literal SET so an arrival or a departure is looked at",
-  ROLE_OPS, ["governorconfig"]);
+/* ARRIVAL LOOKED AT 2026-09-29 (legacy-tests T11; K372 monitoring R30, K377 legacy-index): `monitorpause`, the
+   administrator's pause of the daemon, is routed on `governorconfig`'s cut (the ADMIN_TOKEN bearer and the founder's
+   own session, `SESSION_OPS.admin` alone), so it joins this arm by ruling. Still a literal. */
+t("the ROLE-GATED arm is exactly the two ops the FOUNDER'S session alone reaches — `governorconfig`, "
++ "the operator's (§4.9, BOB #23), and `monitorpause`, the daemon's pause on the same cut (K372) — after REC-159 "
++ "moved D-270's other four into both sets; pinned as a literal SET so an arrival or a departure is looked at",
+  ROLE_OPS, ["governorconfig", "monitorpause"]);
 /* ADDED 2026-09-19 (D-136). THE PIN ABOVE DID ITS JOB AND THIS IS WHAT IT
    CAUGHT. D-136 gave `adminendorse`, `adminremove` and `membercaps` session
    reach, and this suite went red until somebody looked at where they landed —

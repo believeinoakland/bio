@@ -40,8 +40,13 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("rec100");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
-const AIRUN = join(PLANE, "src/airun.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): C-22.10's check (`checkObservation`'s PRESENT-referent
+   rule and `observationReferentFault`) left `airun.mjs` for observation-log's `vocabulary.mjs` (C-22.17 is
+   observation-log's, K182 (3)), and the rollup writer and `op=airunlog`'s referent translation left `store.mjs`
+   for ai-runs (`src/ai-runs/index.mjs`). The names STORE and AIRUN now point at those homes; every arm patches the
+   line it always patched. */
+const STORE = join(PLANE, "src/ai-runs/index.mjs");
+const AIRUN = join(PLANE, "src/observation-log/vocabulary.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 10000;
 const AW = join(REPO, "agent-worker");
@@ -75,6 +80,9 @@ function arm(file, find, replace) {
   return { armed: true, matches: n };
 }
 
+/* N298: measured at 84dee21913 the baseline is NOT green, and not by this harness: `scheduler` is 47/4 on the four
+   capture-requests clock arms (N188, owned by capture-requests), none of them REC-100's. The arms are judged BY NAME,
+   so they still read; the baseline row reports the four as they are. */
 const BASELINE = { why: "nothing armed", files: [AIRUN, STORE, AW_HARNESS, AW_INDEX], mustFail: [], mustNotFail: [],
                    patch: () => ({ armed: false, matches: 0 }) };
 
@@ -85,7 +93,9 @@ const ARMS = {
   carveout: {
     why: "restore C-22.10's `run` carve-out — a bare `run` PRESENT is admitted again",
     files: [AIRUN],
-    mustFail: ["observation-log: B17", "observation-log: I2b"],
+    /* RE-MEASURED 2026-09-29 (T11, legacy-tests; N298, N57): `I2b` is REC-113's coverage label now; the carve-out's
+       second red is L2b (a new bare `run` PRESENT at the tick), with L4 beside it. */
+    mustFail: ["observation-log: B17", "observation-log: L2b"],
     mustNotFail: ["observation-log: K3", "observation-log: K4", "observation-log: K6"],
     patch: () => arm(AIRUN,
       "  if (state === \"PRESENT\" && (e.result_ref == null || String(e.result_ref) === \"\"))",
@@ -98,7 +108,8 @@ const ARMS = {
   noreferent: {
     why: "the rollup writers carry NO referent (the pre-ruling shape) with the carve-out still deleted",
     files: [STORE],
-    mustFail: ["observation-log: I3", "observation-log: K3:", "observation-log: K4",
+    /* RE-MEASURED (N298): the close's own label is L3 now (it was I3); everything else as declared. */
+    mustFail: ["observation-log: L3", "observation-log: K3:", "observation-log: K4",
                "observation-log: K6d", "airun: ARM K5c", "scheduler: REC-100"],
     mustNotFail: ["observation-log: K2", "observation-log: K1a"],
     patch: () => arm(STORE,
@@ -197,7 +208,7 @@ const ARMS = {
        (I3, K3, K4, K6d; `airun` K5; the scheduler's wake). Over-strictness on
        this arm is not a cosmetic refusal, it is REC-100's 2026-09-16 finding
        again. Declared in full now. */
-    mustFail: ["observation-log: K1a", "observation-log: I3", "observation-log: K3:",
+    mustFail: ["observation-log: K1a", "observation-log: L3", "observation-log: K3:",   /* I3 -> L3 (N298) */
                "observation-log: K4", "observation-log: K6d", "airun: ARM K5:", "scheduler: REC-100"],
     mustNotFail: [],
     patch: () => arm(AIRUN, "  if (!r || r.found !== true || String(r.seq) !== ref) return \"unresolved\";",
@@ -208,17 +219,21 @@ const ARMS = {
   "aw-steplog": {
     why: "agent-worker's stepLog writes the model's PRESENT verbatim again (REC-100's (1) reverted)",
     files: [AW_HARNESS], suites: AW_SUITES,
-    mustFail: ["aw:harness: R1:", "aw:harness: R1b", "aw:harness: A8 (REC-100)"],
-    mustNotFail: ["aw:harness: R2:", "aw:harness: R2b"],
+    /* RE-MEASURED (N298): harness section R's labels are REC100-1, REC100-1b, REC100-2, REC100-2b now. */
+    mustFail: ["aw:harness: REC100-1:", "aw:harness: REC100-1b", "aw:harness: A8 (REC-100)"],
+    mustNotFail: ["aw:harness: REC100-2:", "aw:harness: REC100-2b"],
     patch: () => arm(AW_HARNESS,
-      '    state:   judgedPresent ? "LOOKED_INDETERMINATE" : (s.observed || "NEVER_LOOKED"),',
-      '    state:   s.observed || "NEVER_LOOKED",'),
+      /* RE-ANCHORED (N298): the line lost its `|| "NEVER_LOOKED"` fallback; the revert is the verbatim state. */
+      '    state:   judgedPresent ? "LOOKED_INDETERMINATE" : s.observed,',
+      '    state:   s.observed,'),
   },
   "aw-refused": {
     why: "agent-worker never reads refused[] and counts a tick logged off the envelope (REC-100's (2) reverted)",
     files: [AW_INDEX], suites: AW_SUITES,
-    mustFail: ["aw:harness: R2:", "aw:harness: R2b"],
-    mustNotFail: ["aw:harness: R1:"],
+    /* RE-MEASURED (N298): labels as `aw-steplog`'s; REC100-1b goes red here too (it asserts `logged` against what
+       the record holds, which this arm's `logged += 1` moves), so only REC100-1 is held open. */
+    mustFail: ["aw:harness: REC100-2:", "aw:harness: REC100-2b"],
+    mustNotFail: ["aw:harness: REC100-1:"],
     /* BOTH HALVES OF THE OLD SITE ARE RESTORED, and that is a correction the
        first run forced: arming only `refusedEntries = []` left `logged` counted
        from the plane's `appended`, so the arm was half the old behaviour, and
@@ -250,7 +265,9 @@ for (const name of names) {
   console.log(`  MUST FAIL     ${a.mustFail.length ? a.mustFail.join(" | ") : "(nothing)"}`);
   console.log(`  MUST NOT FAIL ${a.mustNotFail.length ? a.mustNotFail.join(" | ") : "(nothing named)"}`);
   const saved = a.files.map((f) => {
-    const dest = join(SAFE, `${name}.${f.split("/").pop()}`);
+    /* N298: named by the REPO-RELATIVE path, not the basename — the re-anchor put two `index.mjs` files (ai-runs'
+       and agent-worker's) in the baseline's list, and a basename pen restored one over the other (measured, dry). */
+    const dest = join(SAFE, `${name}.${f.replace(REPO + "/", "").replaceAll("/", "__")}`);
     copyFileSync(f, dest);
     return { f, dest, sha: sha(f), bytes: statSync(f).size };
   });

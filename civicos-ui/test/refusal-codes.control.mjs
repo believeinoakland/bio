@@ -371,8 +371,15 @@ arm("(f)", [
    ACTUAL `promote`, and the ACTUAL two rows — because the item exists precisely
    because a span behaved differently on the real file than anyone expected.
    ================================================================ */
-const FREEZE_ANCHOR = `        for (const v of offered) {
-          const prior = this.#one(`;
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, basis-versions R7, promotion K31): (r1)'s loop left
+   `store.mjs #promoteChecks` for basis-versions' registered promotion step, `check(c)` in
+   `src/basis-versions/index.mjs` (4-space indent; `pkg` is still in scope there), and its row's `where` reads
+   `src/basis-versions/index.mjs check > basis-version-freeze`. Only (r1) follows it here; the arm is NOT RUN (the
+   guard is red, N279/K317), so its expected line below is derived from that `where`, not measured. */
+const FREEZE_ANCHOR = `    for (const v of offered) {
+      const prior = this.#one(`;
+const FREEZE_FILE = path.join(PLANE, "src", "basis-versions", "index.mjs");
+const FREEZE_FN = "check";
 const REGION_MARK = `/* DEC-49 REGION basis-version-freeze`;
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; promotion K31, legacy-checks' re-pointing): `promote` moved out of
    `store.mjs` into `src/promotion/` (T3), and the checks it ran — these two regions and `bias-set-refusal` among them
@@ -385,14 +392,14 @@ const PROMOTE_FN = "#promoteChecks";
 
 console.log("\n(r1) THE TEETH INSIDE THE NARROWED REGION — REC-71's whole point: narrowing must not blind the guard");
 arm("(r1)", [{
-  file: F.store,
+  file: FREEZE_FILE,
   from: FREEZE_ANCHOR,
-  to: `        if (pkg.__rec71_control__) return { ok: false, detail: "a refusal nobody gave a code" };
+  to: `    if (pkg.__rec71_control__) return { ok: false, detail: "a refusal nobody gave a code" };
 ${FREEZE_ANCHOR}`,
 }], guard, r => ({
   ok: r.exit === 1
-      && /src\/store\.mjs:\d+ \(in #promoteChecks > basis-version-freeze\) returns a CODELESS REFUSAL/.test(r.out),
-  what: `the guard exits 1 naming src/store.mjs, the LINE, ${PROMOTE_FN} AND the region`,
+      && /src\/basis-versions\/index\.mjs:\d+ \(in check > basis-version-freeze\) returns a CODELESS REFUSAL/.test(r.out),
+  what: `the guard exits 1 naming src/basis-versions/index.mjs, the LINE, ${FREEZE_FN} AND the region`,
 }));
 
 console.log("\n(r2) THE FIX IS THE FIX — put the WHOLE-FUNCTION `where` back and the 32 conscripted refusals RETURN");

@@ -53,8 +53,10 @@ function runSuite(key) {
     { cwd: PLANE, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const out = `${r.stdout || ""}${r.stderr || ""}`;
   const m = /(\d+) pass, (\d+) fail/.exec(out);
+  /* N298: a suite that died before its tally names the throw as a failing line, so an arm may declare it. */
+  const threw = m ? [] : [`THREW BEFORE THE FOOT: ${(/^\w*Error[^\n]*/m.exec(out) || ["(no error line)"])[0]}`];
   return { key, pass: m ? +m[1] : -1, fail: m ? +m[2] : -1, exit: r.status,
-           failing: out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()) };
+           failing: [...out.split("\n").filter((l) => l.includes("FAIL  ")).map((l) => l.trim()), ...threw] };
 }
 function arm(file, find, replace) {
   const src = readFileSync(file, "utf8");
@@ -83,8 +85,15 @@ const ARMS = {
   droprect: {
     files: [PDFS],
     why: "the producer drops the rect from the reference: the row mints at page grain and its crop is refused BY NAME",
-    mustFail: [P0, CROP_ROW],
-    mustNotFail: [NC_ROW, NOPAINT, COUNTS, TEXT],
+    /* RE-MEASURED 2026-09-29 (T11, legacy-tests; N298, N57): the arm arms, and the suite now DIES before any
+       assertion — "TypeError: Cannot read properties of null (reading '0') at clipRect", from
+       `markImagesUnread`. pdf-reader R34 (D-665, K279) made the image-unread marker the FIRST in-process reader
+       of every placement's rect, so a rect-less placement ends the extraction before a row is minted or cropped.
+       R16 requires the rect, so the throw is the arm forging a contract break upstream, not a product defect;
+       the row's crop refusal (RECT_REQUIRED) is no longer reachable from this producer patch. Declared as
+       measured. */
+    mustFail: ["THREW BEFORE THE FOOT: TypeError"],
+    mustNotFail: [],
     patch: () => arm(PDFS, "return { kind: \"image\", ref: `an image on page ${page + 1}`, page, rect, ...extra };",
                            "return { kind: \"image\", ref: `an image on page ${page + 1}`, page, rect: null, ...extra };"),
   },
@@ -123,8 +132,10 @@ const ARMS = {
        threshold from -100 to -50 (no advance on these fixtures falls between).
        Each perturbed a path the pinned inputs do not reach. The line-break
        emission below is on the path EVERY text line takes. */
-    patch: () => arm(PDFS, `        pieces.push("\\n"); // a new text line`,
-                           `        pieces.push("\\n "); // a new text line`),
+    /* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): D-481/D-502 moved the line-break emission into
+       `breakLine()`, the one push every text line takes; the perturbation is the same. */
+    patch: () => arm(PDFS, `    pieces.push("\\n"); boxes.push(null);`,
+                           `    pieces.push("\\n "); boxes.push(null);`),
   },
 };
 
