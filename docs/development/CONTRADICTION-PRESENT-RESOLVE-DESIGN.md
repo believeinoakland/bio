@@ -1,6 +1,6 @@
 # Contradiction — PRESENT and RESOLVE: how a member meets a candidate, and how resolving it records its kind
 
-**Status** · DRAFT · written by a worker for BOB #66, 2026-09-29 (N344; K439); REVIEWED by BOB #66 (K447): its reading of DEC-76 and DEC-77 and its module placement checked; §15 points 6, 8, 9, 15 and 18 ruled by BOB as recommended; the other thirteen are Bob's and open. Its requirement changes (§14) are N345's, drafted after Bob rules §15.
+**Status** · DRAFT · written by a worker for BOB #66, 2026-09-29 (N344; K439); REVIEWED by BOB #66 (K447): its reading of DEC-76 and DEC-77 and its module placement checked; §15 points 6, 8, 9, 15 and 18 ruled by BOB as recommended; the other thirteen RULED by Bob as DEC-84 (2026-09-29): all as recommended, points 3 and 10 as revised there; DEC-84 governs where it and §15 differ. Its requirement changes (§14) are N345's, drafted after Bob rules §15.
 
 It continues `CONTRADICTION-IDENTIFY-DESIGN.md` §9 item 4. It rests on two rulings of Bob's of 2026-09-29: DEC-76 (a contradiction is conditional; a taken-up candidate becomes an inquiry whose conclusion records its kind; three families of kind; an unresolved RECORD contradiction is disclosed at publication) and DEC-77 (inline by default; six presentation forms; context recommends and never silently decides; the attributed act of accepting a proposal; its acceptance rate measured). Both are folded into `BIO_Case_Making_v0_1.md` §CONTRADICTION. This document decides only mechanism beneath them. Where it needs a choice the rulings do not make, it says so in §15 and does not make it. The screens themselves are the UX redesign's; this document says what the plane must hold and answer so that they can be built, and never what they look like. Every module, table and service it names as existing was read on `tranche/T13` on 2026-09-29.
 
@@ -265,7 +265,7 @@ Each item is in outline, for BOB to draft. **Every item below is a change of mea
 - **`affordances`**: the new acts placed on the ladder (proposed: `dismiss`, `clarify`, `takeUp` and `resolve` at `reasoned`; `op=contradictionrecommend` in `RUNG_ABSENT` as machine work, like `op=contradictionpropose`). This part is not a change of meaning (BOB's).
 - **`basis-versions`**: only if §15 point 4 makes the contradiction inquiry's conclusion a project's.
 
-## 15. Open points
+## 15. Open points (ruled: K447 for BOB's, DEC-84 for Bob's)
 
 Each is left undecided by DEC-76 and DEC-77. Each names whose it is and recommends.
 
