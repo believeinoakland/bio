@@ -317,7 +317,7 @@ test("R49 one rule: on every step of the four-stage walk `stages` is produced wi
   oneRule(stage());
 });
 
-test("R49 K448: withdrawing the earning conclusion moves matured's `since` to the evidence that earns it then, or unreaches it", () => {
+test("R49 K448 K469: `since` is the instant of the evidence `earned` names; withdrawing the earning conclusion moves both to the evidence that earns it then, or unreaches it", () => {
   const { w, proj, write, stage } = setup();
   w.doc(DOC);
   w.inquiry(Q1, { legs: [{ target: DOC }] });
@@ -325,7 +325,10 @@ test("R49 K448: withdrawing the earning conclusion moves matured's `since` to th
   const c1 = { inquiry: Q1, at: "2026-09-20T00:00:00Z" }, c2 = { inquiry: Q2, at: "2026-09-24T00:00:00Z" };
   write({ cites: [Q1, Q2], conclusions: [c1, c2] });
   assert.equal(at(oneRule(stage()), "matured").since, "2026-09-20T00:00:00Z");
-  /* the earliest conclusion withdrawn: the later one earns it now */
+  /* `since` never comes from other evidence than `earned` names: Q2's earlier conclusion does not lend its instant */
+  write({ cites: [Q1, Q2], conclusions: [{ inquiry: Q1, at: "2026-09-27T00:00:00Z" }, c2] });
+  assert.deepEqual([at(oneRule(stage()), "matured").earned, at(stage(), "matured").since], [{ question: Q1 }, "2026-09-27T00:00:00Z"]);
+  /* the earning conclusion withdrawn: the one that earns it then, with its own instant */
   write({ cites: [Q1, Q2], conclusions: [c1, c2, { inquiry: Q1, act: "withdrawn", at: "2026-09-25T00:00:00Z" }] });
   let s = oneRule(stage());
   assert.deepEqual([s.stage, at(s, "matured").earned, at(s, "matured").since], ["matured", { question: Q2 }, "2026-09-24T00:00:00Z"]);
@@ -335,8 +338,8 @@ test("R49 K448: withdrawing the earning conclusion moves matured's `since` to th
   s = oneRule(stage());
   assert.deepEqual([s.stage, at(s, "matured").reached, at(s, "matured").since, at(s, "investigating").since],
                    ["investigating", false, null, null]);
-  /* a ratified case edition (at NOW) beside a conclusion: the earliest of the two halves earns it; the conclusion
-     withdrawn, the edition's own instant */
+  /* a ratified case edition (at NOW) beside a concluded question: the conclusion earns it (R45's basis), with its
+     instant; the conclusion withdrawn, the case edition earns it, with its ratification's instant */
   aCase(w, proj, "CASE-2026-0001", { sign: true, finding: "INQ-2026-0003" });
   write({ cites: [Q1, Q2], conclusions: [c2] });
   s = oneRule(stage());

@@ -1258,10 +1258,10 @@ export class Publication {
   }
 
   /* R45: the held questions read in pages of 500, at most 2,000, stopping once rule 2 is met. Counts into `questions`;
-     answers the first legged and first concluded question read, every one read with a leg or concluded (R49's
-     `since`), whether more follow the last page read, and whether a read failed (the counts then stand as read). */
+     answers the first legged and first concluded question read, every one read with a leg (R49's `since`), whether
+     more follow the last page read, and whether a read failed (the counts then stand as read). */
   #readHeld(pid, questions) {
-    const r = { concluded: null, legged: null, leggedIds: [], concludedIds: [], more: false, failed: false };
+    const r = { concluded: null, legged: null, leggedIds: [], more: false, failed: false };
     let after = null;
     try {
       while (questions.read < STAGE_QUESTIONS_MAX) {
@@ -1271,7 +1271,7 @@ export class Publication {
         for (const q of items) {
           questions.read++;
           if (q.legs) { questions.with_legs++; r.legged ??= q.inquiry; r.leggedIds.push(q.inquiry); }
-          if (q.stance === "concluded") { questions.concluded++; r.concluded ??= q.inquiry; r.concludedIds.push(q.inquiry); }
+          if (q.stance === "concluded") { questions.concluded++; r.concluded ??= q.inquiry; }
         }
         r.more = !!(page && page.cursor) && items.length > 0;
         if (r.concluded || !r.more) break;
@@ -1303,7 +1303,9 @@ export class Publication {
     const sinceOf = {
       forming: () => null,
       investigating: () => this.#earliestLeg(read.leggedIds),
-      matured: () => earliestInstant([...this.#conclusionInstants(pid, read.concludedIds, viewer), work.first_ratified_at]),
+      /* the instant of the evidence `earned` names, and only that (K469): its current conclusion, else its ratification */
+      matured: () => earnedOf.matured.question ? this.#conclusionInstant(pid, earnedOf.matured.question, viewer)
+                                               : earliestInstant([work.first_ratified_at]),
     };
     const computedStages = COMPUTED_STAGES.map((stage, i) => {
       if (undetermined && i > top)
@@ -1341,16 +1343,11 @@ export class Publication {
     return earliestInstant(at);
   }
 
-  /* R49: the instant of each current conclusion among the held questions read that the project concluded
-     (basis-versions R22 `conclusionOf`). */
-  #conclusionInstants(pid, ids, viewer) {
-    const at = [];
-    for (const id of ids) {
-      let c = null;
-      try { c = this.basisVersions.conclusionOf(pid, id, viewer); } catch { c = null; }
-      if (c) at.push(c.at);
-    }
-    return at;
+  /* R49: the instant of the project's current conclusion of one held question (basis-versions R22 `conclusionOf`). */
+  #conclusionInstant(pid, id, viewer) {
+    let c = null;
+    try { c = this.basisVersions.conclusionOf(pid, id, viewer); } catch { c = null; }
+    return c ? earliestInstant([c.at]) : null;
   }
 
   /* R46: the project's work products. A work product is a case the project owns: its `cases` row (written at the first
@@ -1397,12 +1394,13 @@ export class Publication {
                                JOIN cases k ON k.case_id=c.case_id
                               WHERE k.project_id=? AND c.ratified_at IS NOT NULL
                               GROUP BY c.case_id ORDER BY c.case_id LIMIT 1`, pid);
-    const earliest = this.#one(`SELECT MIN(c.ratified_at) AS at FROM published_cases c JOIN cases k ON k.case_id=c.case_id
-                                 WHERE k.project_id=? AND c.ratified_at IS NOT NULL`, pid) || {};
+    /* R49: when that edition was ratified, the instant `matured.since` states when it earns the stage */
+    const firstAt = first ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`,
+                                      first.case_id, first.edition) : null;
     return { items, truncated, published_editions: Number(all.n) || 0,
              readiness: !items.length ? "absent" : top < 0 ? "none" : READINESS_RUNGS[top],
              first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null,
-             first_ratified_at: earliest.at ?? null };
+             first_ratified_at: firstAt ? firstAt.ratified_at ?? null : null };
   }
 
   /* ---------------------------------------------------------------- moved from the store */
