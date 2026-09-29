@@ -75,6 +75,8 @@ export const RATIFIED_CASES_MAX = 1000;
 /* A caller's page size: a whole number of rows, floored, clamped to 1–max, the default when absent or not a number. */
 const pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
 
+/* R41 (C-41.15's vocabulary): the citation versions that name the capture a case edition cited. */
+const CITATION_NAMES_CAPTURE = Object.freeze(["pinned", "only_capture"]);
 /* CPDF-10: a column this module WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 /* A value written into a case document's front matter on one line: line breaks folded, quotes and backslashes made
@@ -966,13 +968,17 @@ export class Publication {
 
   /* ---------------------------------------------------------------- R41, R43: a case's cited parts, for reevaluation */
 
-  /** R41 (N210, N163 (a)): a ratified case edition's cited parts, the latest ratified edition when `edition` is absent:
-   *  `{case, edition, project, parts: [{bundle_id, bundle_sha}], limit, truncated}`, at most CITED_PARTS_MAX, in the
-   *  roster's own order, viewer-free. A cited part is a case member at its pin (`bundle_id` at the `version_sha` the
-   *  case froze), whose pinned capture `reevaluation` R14 grades; a member rostered with no pin (before CASE-3) has none
-   *  to grade and is not a part. `project` is the case's owning project, null for a case older than DEC-72. Registered
-   *  with R43 as reevaluation's `registerCaseParts` (its R26; K359). A case with no ratified edition (or not that one)
-   *  answers `NO_SUCH_CASE_EDITION`; no case named, `NO_ID`. Writes nothing. */
+  /** R41 (N210, N163 (a); K363): a ratified case edition's cited parts, the latest ratified edition when `edition` is
+   *  absent: `{case, edition, project, parts: [{bundle_id, capture_sha}], limit, truncated}`, at most CITED_PARTS_MAX,
+   *  viewer-free. A cited part is a document the edition cites as evidence: a row of its SIGNED document's
+   *  `case_citations` (`{target, version, capture}`, C-41.15) whose version names the capture it was pinned to
+   *  (`pinned`, `only_capture`), once per (document, capture), in the document's order; `reevaluation` R14 grades that
+   *  capture. A row naming no capture (`undetermined`, `no_capture`, `no_bytes`) has nothing to grade and is no part,
+   *  and neither is a member finding (it holds no capture). A document older than /4 signed no citations: no parts.
+   *  THE PART'S SHAPE IS OPEN (J2): the edition pins a capture, never the cited document's `bundle_sha`. `project` is
+   *  the case's owning project, null for a case older than DEC-72. Registered with R43 as reevaluation's
+   *  `registerCaseParts` (its R26). A case with no ratified edition (or not that one) answers `NO_SUCH_CASE_EDITION`;
+   *  no case named, `NO_ID`. Writes nothing. */
   caseCitedParts({ case: caseArg = null, caseId = null, edition = null } = {}) {
     const id = str(caseArg ?? caseId);
     if (!id) return { ok: false, reason: "NO_ID", detail: "caseCitedParts names a case" };
@@ -987,15 +993,22 @@ export class Publication {
                detail: "no ratified edition of that case answers here, so it cites nothing yet" };
     const ed = Number(row.edition);
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
-    const parts = this.#rows(
-      `SELECT bundle_id, version_sha FROM published_case_members
-        WHERE case_id=? AND edition=? AND version_sha IS NOT NULL ORDER BY ord, bundle_id LIMIT ?`,
-      id, ed, CITED_PARTS_MAX + 1);
+    /* The signed bytes, and nothing else: an unsigned re-authoring of the same edition cannot reach here. */
+    const doc = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`, id, ed);
+    const signed = doc ? signedCitations(doc.text) : { state: "undetermined", rows: null };
+    const seen = new Set(), parts = [];
+    for (const c of Array.isArray(signed.rows) ? signed.rows : []) {
+      const target = c && typeof c.target === "string" ? c.target.trim() : "";
+      const capture = c && typeof c.capture === "string" ? c.capture.trim().toLowerCase() : "";
+      if (!target || !CITATION_NAMES_CAPTURE.includes(c.version) || !/^[0-9a-f]{64}$/.test(capture)) continue;
+      const k = `${target}\u0000${capture}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      parts.push({ bundle_id: target, capture_sha: capture });
+    }
     const truncated = parts.length > CITED_PARTS_MAX;
-    if (truncated) parts.length = CITED_PARTS_MAX;
     return { ok: true, case: id, edition: ed, project: owner ? owner.project_id ?? null : null,
-             parts: parts.map((m) => ({ bundle_id: m.bundle_id, bundle_sha: m.version_sha })),
-             limit: CITED_PARTS_MAX, truncated };
+             parts: parts.slice(0, CITED_PARTS_MAX), limit: CITED_PARTS_MAX, truncated };
   }
 
   /** R43 (N210; K359): the cases holding at least one ratified edition, in case id order after `after`, at most `limit`

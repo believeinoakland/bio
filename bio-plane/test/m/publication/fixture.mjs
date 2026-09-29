@@ -225,7 +225,7 @@ export function world({ group = "test-group", workerd = false } = {}) {
 /** A case document (`bio-case-document/4` unless `format`): the facts this module reads from it. `roles`:
  *  [{target, version_sha, edition?, role?}]; `strength`: [{target, axis, state, grade}]; `excluded`: [{target,
  *  description, reason}]; `attributions`: [{observation, level, shown, chosen_at_edition}] (a run is written only when
- *  given); `citations`: rows for /4's `case_citations`. */
+ *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given). */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], format = "bio-case-document/4",
                                            excludes = "Nothing else.", ack = false } = {}) {
@@ -244,7 +244,8 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
       `    level: ${r.level ?? "null"}`, `    shown: ${r.shown == null ? "null" : `"${r.shown}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])] : []),
     ...(citations.length ? ["case_citations:", ...citations.flatMap((c) => [`  - target: ${c.target}`,
-      `    version: ${c.version}`])] : ["case_citations: []"]),
+      `    version: ${c.version}`, ...(c.capture !== undefined ? [`    capture: ${c.capture ?? "null"}`] : [])])]
+      : ["case_citations: []"]),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),

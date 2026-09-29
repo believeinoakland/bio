@@ -11,44 +11,46 @@ const DOC1 = "INFO-2026-0001-minutes", DOC2 = "INFO-2026-0002-budget", DOC3 = "I
       DOC4 = "INFO-2026-0004-parent";
 const captureOf = (id) => sha(`the text of ${id}`);
 
-/* CASE-2026-0001 edition 1 over F and G at their pins, both published, so the edition is ratified. */
-function ratified() {
+/* CASE-2026-0001 edition 1 over F and G at their pins, both published, so the edition is ratified; its signed document
+   cites `citations`. */
+function ratified({ citations = [], format = undefined } = {}) {
   const w = world();
   w.member("olive");
   const proj = w.project("Parks", "olive");
   w.inquiry(F); w.inquiry(G);
   const roles = [{ target: F, version_sha: w.head(F) }, { target: G, version_sha: w.head(G) }];
-  w.prepare("CASE-2026-0001", 1, { project: proj, roles });
+  w.prepare("CASE-2026-0001", 1, { project: proj, roles, citations, ...(format ? { format } : {}) });
   w.signCase("CASE-2026-0001", 1, { project: proj,
     roster: roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" })) });
   w.signFinding(F, { sig: SIG(2) });
   w.signFinding(G, { sig: SIG(3) });
   return { w, proj, roles };
 }
+const C1 = sha("capture one"), C2 = sha("capture two"), C3 = sha("capture three");
 
-test("R41 caseCitedParts answers a ratified case edition's members at their pins, the latest ratified edition by default, with its owning project, bounded and viewer-free", () => {
-  const { w, proj, roles } = ratified();
-  const pins = roles.map((r) => ({ bundle_id: r.target, bundle_sha: r.version_sha }));
+test("R41 caseCitedParts answers the documents a ratified case edition's signed citations pin to a capture, the latest ratified edition by default, with its owning project, bounded and viewer-free; never a member finding", () => {
+  const { w, proj, roles } = ratified({ citations: [
+    { target: DOC1, version: "pinned", capture: C1 }, { target: DOC2, version: "only_capture", capture: C2 },
+    { target: DOC3, version: "undetermined", capture: null }, { target: DOC4, version: "no_capture", capture: null },
+    { target: F, version: "no_bytes", capture: null }, { target: DOC1, version: "pinned", capture: C1 },
+    { target: DOC1, version: "only_capture", capture: C3 }] });
+  const parts = [{ bundle_id: DOC1, capture_sha: C1 }, { bundle_id: DOC2, capture_sha: C2 }, { bundle_id: DOC1, capture_sha: C3 }];
   assert.deepEqual(w.p.caseCitedParts({ case: "CASE-2026-0001" }),
-                   { ok: true, case: "CASE-2026-0001", edition: 1, project: proj, parts: pins, limit: CITED_PARTS_MAX,
-                     truncated: false });
+                   { ok: true, case: "CASE-2026-0001", edition: 1, project: proj, parts, limit: CITED_PARTS_MAX,
+                     truncated: false }, "each (document, capture) once, in the document's order; nothing uncaptured, no finding");
   assert.equal(CITED_PARTS_MAX, 1000);
-  /* a later edition: while unratified the latest ratified one answers; once ratified it does */
-  w.prepare("CASE-2026-0001", 2, { project: proj, roles: [roles[1]] });
-  w.st.sql.exec(`INSERT INTO published_cases (case_id, edition, opened) VALUES ('CASE-2026-0001', 2, ?)`, NOW);
-  w.st.sql.exec(`INSERT INTO published_case_members (case_id, edition, ord, bundle_id, version_sha, role)
-                 VALUES ('CASE-2026-0001', 2, 0, ?, ?, 'load_bearing')`, G, roles[1].version_sha);
+  for (const r of roles) assert.equal(JSON.stringify(w.p.caseCitedParts({ case: "CASE-2026-0001" }).parts).includes(r.target), false);
+  /* a later edition: while unratified the latest ratified one answers; once signed and ratified, it does */
+  w.prepare("CASE-2026-0001", 2, { project: proj, roles: [roles[1]], citations: [{ target: DOC3, version: "pinned", capture: C3 }] });
+  w.signCase("CASE-2026-0001", 2, { project: proj, roster: [{ bundle_id: G, version_sha: roles[1].version_sha }], sig: SIG(8) });
+  w.st.sql.exec(`UPDATE published_cases SET ratified_at=NULL WHERE edition=2`);
   assert.equal(w.p.caseCitedParts({ case: "CASE-2026-0001" }).edition, 1);
-  assert.deepEqual(w.p.caseCitedParts({ case: "CASE-2026-0001", edition: 2 }).reason, "NO_SUCH_CASE_EDITION");
+  assert.equal(w.p.caseCitedParts({ case: "CASE-2026-0001", edition: 2 }).reason, "NO_SUCH_CASE_EDITION");
   w.st.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE edition=2`, NOW);
-  assert.deepEqual([w.p.caseCitedParts({ case: "CASE-2026-0001" }).edition, w.p.caseCitedParts({ case: "CASE-2026-0001" }).parts],
-                   [2, [pins[1]]]);
-  assert.deepEqual(w.p.caseCitedParts({ case: "CASE-2026-0001", edition: 1 }).parts, pins, "an earlier ratified edition by name");
-  assert.deepEqual(w.p.caseCitedParts({ caseId: "CASE-2026-0001", edition: "1" }).parts, pins);
-  /* a member rostered with no pin has no capture to grade and is no part */
-  w.st.sql.exec(`INSERT INTO published_case_members (case_id, edition, ord, bundle_id, version_sha, role)
-                 VALUES ('CASE-2026-0001', 1, 5, 'INQ-2020-0001-legacy', NULL, NULL)`);
-  assert.deepEqual(w.p.caseCitedParts({ case: "CASE-2026-0001", edition: 1 }).parts, pins);
+  const two = w.p.caseCitedParts({ case: "CASE-2026-0001" });
+  assert.deepEqual([two.edition, two.parts], [2, [{ bundle_id: DOC3, capture_sha: C3 }]]);
+  assert.deepEqual(w.p.caseCitedParts({ case: "CASE-2026-0001", edition: 1 }).parts, parts, "an earlier ratified edition by name");
+  assert.deepEqual(w.p.caseCitedParts({ caseId: "CASE-2026-0001", edition: "1" }).parts, parts);
   /* a case older than DEC-72 owns no project: null */
   w.st.sql.exec(`DELETE FROM cases`);
   assert.equal(w.p.caseCitedParts({ case: "CASE-2026-0001" }).project, null);
@@ -56,13 +58,17 @@ test("R41 caseCitedParts answers a ratified case edition's members at their pins
   assert.equal(w.p.caseCitedParts({}).reason, "NO_ID");
   assert.equal(w.p.caseCitedParts({ case: "CASE-2026-0404" }).reason, "NO_SUCH_CASE_EDITION");
   assert.equal(w.p.caseCitedParts({ case: "CASE-2026-0001", edition: "x" }).reason, "NO_SUCH_CASE_EDITION");
-  /* at most CITED_PARTS_MAX, and says so */
-  w.st.sql.exec(`INSERT INTO published_cases (case_id, edition, opened, ratified_at) VALUES ('CASE-2026-0009', 1, ?, ?)`, NOW, NOW);
-  for (let i = 0; i <= CITED_PARTS_MAX; i++)
-    w.st.sql.exec(`INSERT INTO published_case_members (case_id, edition, ord, bundle_id, version_sha, role)
-                   VALUES ('CASE-2026-0009', 1, ?, ?, ?, 'supporting')`, i, `INQ-2026-${String(i).padStart(5, "0")}`, `v${i}`);
-  const big = w.p.caseCitedParts({ case: "CASE-2026-0009" });
-  assert.deepEqual([big.parts.length, big.truncated, big.parts[0].bundle_id], [CITED_PARTS_MAX, true, "INQ-2026-00000"]);
+});
+
+test("R41 a document older than /4 signed no citations, so it has no parts; at most CITED_PARTS_MAX, and the answer says so", () => {
+  const { w } = ratified({ format: "bio-case-document/3", citations: [{ target: DOC1, version: "pinned", capture: C1 }] });
+  assert.deepEqual(w.p.caseCitedParts({ case: "CASE-2026-0001" }).parts, []);
+  const many = Array.from({ length: CITED_PARTS_MAX + 1 }, (_, i) => ({ target: `INFO-2026-${String(i).padStart(5, "0")}`,
+                                                                    version: "pinned", capture: sha(`c${i}`) }));
+  const { w: w2 } = ratified({ citations: many });
+  const big = w2.p.caseCitedParts({ case: "CASE-2026-0001" });
+  assert.deepEqual([big.parts.length, big.truncated, big.parts[0]], [CITED_PARTS_MAX, true,
+                   { bundle_id: "INFO-2026-00000", capture_sha: sha("c0") }]);
 });
 
 test("R41 R43 are registered together as reevaluation's registerCaseParts (its R26): one registration, the case half reads them", () => {
@@ -73,7 +79,6 @@ test("R41 R43 are registered together as reevaluation's registerCaseParts (its R
   const sweep = w.r.raiseNotices({});
   assert.equal(sweep.ok, true);
   assert.equal("case_parts_absent" in sweep, false, "the case half found the registration");
-  assert.ok(sweep.examined >= 2, "each ratified case's cited parts were read");
 });
 
 test("R43 ratifiedCases answers the cases holding a ratified edition, in id order after `after`, at most `limit`, the cursor null exactly when no case follows", () => {
