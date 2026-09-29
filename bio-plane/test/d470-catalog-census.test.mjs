@@ -648,9 +648,37 @@ const CATALOG_CENSUS = {
      as 1.41.0's row carries its note's. NOT stamped here: the row changes after promotion's layer (N318: C-87.12 added in
      review's own table, C-113.9/.18, C-114.1, C-116.3/.4 retired, renames) — all in module tables, none in the catalogue
      file (whose census and source did not move since f955769afc), and all promotion's next number in T13. */
+  /* MOVED UNDER 1.42.0 (RE-PINNED 2026-09-29 by LEGACY-TESTS #10, T12 layer 11 round 2; K409 QUEUE #2, K413 CONTROL-PLANE
+     #2, K414 INSTANCE-SETUP #1; BOB B5, B8, B9). The row above is NOT rewritten: it is what the catalogue held when
+     1.42.0 was minted. After it, three extractions took THIRTY-SEVEN rows out of the catalogue FILE into their modules'
+     own tables, with CATALOG_VERSION unmoved (promotion's to stamp, N318, T13), and the file now prints 359. They
+     MOVED rather than left: each keeps its C-number and its code key in the table it went to, which (A12) imports and
+     checks, and the file's census plus the departed ids is 1.42.0's census exactly (digest and count), so nothing
+     arrived and nothing else left. No function of the catalogue changed (its exported functions are identical from
+     6641ad6462 to ce41cfb5d6; the file's diff is those rows and their comments). Figures are THIS SUITE'S OWN PRINT on
+     `job/T12/legacy-tests` @ ce41cfb5d6; the departures were read by running this census over a git archive of
+     6641ad6462 (which prints 1.42.0's 396, de54b8bd…) against the tree.
+       queue (K409, `src/queue/checks.mjs`): C-31.1–.3 (QUEUE_MINT_CHECKS), C-76.1 (TASK_ACTOR_CHECKS), C-32.10, C-32.11
+         (now QUEUE_MACHINE_CHECKS), C-33.27, C-33.44 (now QUEUE_ACT_CHECKS);
+       control-plane (K413, `src/control-plane/checks.mjs`): C-38.1–.8 (ADMISSION_CHECKS), C-78.1–.3 (NAMESPACE_CHECKS),
+         C-69.1, C-69.2 (DISPATCH_CHECKS), C-68.2–.4 (now BOOTSTRAP_CHECKS), C-29.6–.10 (now AI_SCOPE_CHECKS), C-32.17
+         (now OPERATOR_FENCE_CHECKS), C-64.4 (now GROUP_IDENTITY_FENCE_CHECKS), C-66.6 (now REPLAY_CHECKS);
+       instance-setup (K414, `src/setup.mjs`): C-64.2, C-64.3, C-64.5, C-64.6, C-64.7 (now INSTANCE_SETUP_CHECKS).
+     Every moved row's `where` names its new home, and C-33.44's translation was reworded by queue (N301): both are in
+     module tables, outside this file, and promotion's next stamp with the rest of N318. */
   "1.42.0": { count: 396, digest: "de54b8bd85553c5d588c0b82fdbf0ea48a4bed3fe47d982fd9a8c1e3c5c023fe",
               changed: ["C-113.17"],
-              source: "8ada0f4c65a617f0e120bdfe8359f2b591d039b8a02e2cc3967d8aa27fd90f03" },
+              source: "8ada0f4c65a617f0e120bdfe8359f2b591d039b8a02e2cc3967d8aa27fd90f03",
+              moved: [{ count: 359, digest: "b28a8a91387ef629dab08baa025b766015f33d6a0a71eda9f392d0d6de2d2605",
+                        source: "3a8dae6c959d33b5f83e18dc592c0ccb5b77ecddf1adcd5f8b71c2047dca2a40",
+                        by: "LEGACY-TESTS #10 (T12): K409 QUEUE #2, K413 CONTROL-PLANE #2, K414 INSTANCE-SETUP #1",
+                        into: ["src/queue/checks.mjs", "src/control-plane/checks.mjs", "src/setup.mjs"],
+                        departed: ["C-29.6", "C-29.7", "C-29.8", "C-29.9", "C-29.10",
+                                   "C-31.1", "C-31.2", "C-31.3", "C-32.10", "C-32.11", "C-32.17", "C-33.27", "C-33.44",
+                                   "C-38.1", "C-38.2", "C-38.3", "C-38.4", "C-38.5", "C-38.6", "C-38.7", "C-38.8",
+                                   "C-64.2", "C-64.3", "C-64.4", "C-64.5", "C-64.6", "C-64.7", "C-66.6",
+                                   "C-68.2", "C-68.3", "C-68.4", "C-69.1", "C-69.2", "C-76.1",
+                                   "C-78.1", "C-78.2", "C-78.3"] }] },
 };
 
 /* The computed emission spellings this suite accounts for, each with the
@@ -713,8 +741,13 @@ say(`  the stamp: ${GATE_VERSION}`);
    print reads 394: 1.38.0's 395 less C-18.5, below), and the literal-site floor 45 -> 43, compared by name against T7's
    45: C-11.1 left with `checkActionExtension`'s clock arm for actions (1.38.0), and C-18.5 with monitoring's extraction
    (5501b53e10, after 1.38.0, under the unmoved stamp that A3 and A9 name). */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K409, K413, K414): the count floor 390 -> 359, this suite's print
+   on ce41cfb5d6: thirty-seven rows MOVED to queue's, control-plane's and instance-setup's own tables under 1.42.0 (named
+   in 1.42.0's `moved` declaration and verified by A12). The literal-site floor (43) and the table floor (40; 44 now,
+   five whole families having left: QUEUE_MINT_CHECKS, TASK_ACTOR_CHECKS, ADMISSION_CHECKS, NAMESPACE_CHECKS,
+   DISPATCH_CHECKS) are unmoved. */
 t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
-  [count >= 390, tables.size >= 40, literal.size >= 43], [true, true, true]);
+  [count >= 359, tables.size >= 40, literal.size >= 43], [true, true, true]);
 
 /* (A2) EVERY EMISSION SITE RESOLVES. A computed site is not scored zero: it is
    named here or it fails. */
@@ -726,9 +759,20 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
 }
 
 /* (A3) THE CENSUS PIN — the arm the row is for. */
+/* MOVED, NOT CHANGED (LEGACY-TESTS #10, T12, 2026-09-29). A version's entry may carry `moved` declarations: a census
+   the file reached under that SAME version only because rows left it for a module's own table (an extraction), which
+   changes where a row is written and not what any check refuses or admits. A3 admits such a census, and A9 its source,
+   ONLY through a declaration that A12 verifies whole: its ids plus the measured census ARE the version's recorded census
+   (so nothing arrived and nothing else left), and every departed id is declared, under a row table, in one of the files
+   it names. A row REMOVED (in no table) or ADDED still turns A3 red, and so does any census no declaration names. */
+const movedOf = (entry) => (entry && Array.isArray(entry.moved) ? entry.moved : []);
 {
   const recorded = CATALOG_CENSUS[CATALOG_VERSION] || null;
-  if (!recorded) {
+  const movedHere = movedOf(recorded).find((m) => m && m.digest === digest && m.count === count) || null;
+  if (movedHere) {
+    console.log(`          ${CATALOG_VERSION}'s census is its declared MOVED census (${movedHere.departed.length} rows to `
+              + `${movedHere.into.join(", ")}, by ${movedHere.by}); A12 verifies the declaration.`);
+  } else if (!recorded) {
     console.log(`          CATALOG_VERSION ${CATALOG_VERSION} has NO recorded census. Record one:`);
     console.log(`            "${CATALOG_VERSION}": { count: ${count}, digest: "${digest}" },`);
   } else if (recorded.digest !== digest) {
@@ -737,8 +781,41 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
     console.log(`          MOVE CATALOG_VERSION (MINOR) in src/gate.mjs and record the new census here:`);
     console.log(`            "<new version>": { count: ${count}, digest: "${digest}" },`);
   }
+  const admittedCensus = movedHere || recorded;
   t("(A3) THE CENSUS PIN: the catalogue's census is the one recorded for CATALOG_VERSION",
-    recorded ? { count: recorded.count, digest: recorded.digest } : null, { count, digest });
+    admittedCensus ? { count: admittedCensus.count, digest: admittedCensus.digest } : null, { count, digest });
+}
+
+/* (A12) EVERY `moved` DECLARATION IS VERIFIED, not trusted: the departed ids are disjoint from the measured census
+   (for the declaration A3 admitted), the two together are the version's recorded census to the digest and the count,
+   and each departed id is a `check` in a row table exported by one of the files the declaration names. */
+{
+  const problems = [];
+  const tablesIn = async (f) => declaredTables(await import(join(DIR, "..", f)));
+  for (const [v, e] of Object.entries(CATALOG_CENSUS)) {
+    for (const m of movedOf(e)) {
+      const departed = Array.isArray(m.departed) ? m.departed : [];
+      if (!(m.count >= 1) || !/^[a-f0-9]{64}$/.test(m.digest || "") || !/^[a-f0-9]{64}$/.test(m.source || "")
+          || !m.by || !Array.isArray(m.into) || !m.into.length || !departed.length) {
+        problems.push(`${v}: a \`moved\` declaration must carry count, digest, source, by, into and departed — got ${JSON.stringify(m).slice(0, 200)}`);
+        continue;
+      }
+      if (m.count + departed.length !== e.count) problems.push(`${v}: moved ${m.count} + ${departed.length} departed is not ${e.count}`);
+      if (v === CATALOG_VERSION && m.digest === digest) {
+        const overlap = departed.filter((id) => census.has(id));
+        if (overlap.length) problems.push(`${v}: departed ids still in the catalogue file: ${overlap.join(", ")}`);
+        if (digestOf(new Set([...census, ...departed])) !== e.digest)
+          problems.push(`${v}: the measured census plus the departed ids is NOT ${v}'s recorded census — something else moved`);
+      }
+      const homes = new Set();
+      for (const f of m.into) for (const ids of (await tablesIn(f)).values()) for (const id of ids) homes.add(id);
+      const homeless = departed.filter((id) => !homes.has(id));
+      if (homeless.length) problems.push(`${v}: departed ids in no row table of ${m.into.join(", ")} (removed, not moved): ${homeless.join(", ")}`);
+    }
+  }
+  for (const p of problems) console.log(`          ${p}`);
+  t("(A12) EVERY MOVED DECLARATION HOLDS — its rows left the file for a module's own table, and nothing else moved",
+    problems, []);
 }
 
 /* (A4) ONE VERSION, ONE CATALOGUE — this row's defect inverted.
@@ -784,7 +861,8 @@ t("(A1) THE CENSUS IS NON-EMPTY AND FLOORED — both sources contributed",
       if (!d || d.behaviour !== "unchanged" || !/^[a-f0-9]{64}$/.test(d.source || "") || !d.by)
         problems.push(`${CATALOG_VERSION}: an \`unchanged\` declaration must be { source: <sha256>, behaviour: "unchanged", by: <id> } — got ${JSON.stringify(d)}`);
     }
-    const admitted = [recorded.source, ...declared.filter((d) => d && d.behaviour === "unchanged").map((d) => d.source)];
+    const admitted = [recorded.source, ...declared.filter((d) => d && d.behaviour === "unchanged").map((d) => d.source),
+                      ...movedOf(recorded).filter((m) => m && m.digest === digest).map((m) => m.source)];
     if (!recorded.source) {
       problems.push(`${CATALOG_VERSION} records NO source digest`);
       console.log(`          CATALOG_VERSION ${CATALOG_VERSION} pins no source. Add to its entry:  source: "${sourceDigest}"`);

@@ -280,7 +280,10 @@ try {
   t("set_acts publishes the four ops under per-item with the store's bound", sets, [
     ["proposedispose", "per-item", "items", 100], ["resolve", "per-item", "items", 100],
     ["taskforward", "per-item", "items", 100], ["taskresolve", "per-item", "items", 100]]);
-  const store = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): the three set acts' owner, and so the `#perItem` that looks up the
+     published groups and hands them to record-core, left store.mjs with the queue for `src/queue/index.mjs`. The
+     structural pin below reads the lookup there; the mechanism it hands to is still record-core's. */
+  const queueSrc = readFileSync(fileURLToPath(new URL("../src/queue/index.mjs", import.meta.url)), "utf8");
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests; record-core REPORT 5, T5-1): the per-item mechanism left the store
      for record-core's `perItem` (src/record-core/index.mjs); the store's `#perItem` is now its caller, passing the
      act's published groups. The two STRUCTURAL pins read the mechanism where it lives and the call where it is. */
@@ -546,7 +549,7 @@ try {
      narrowing and the item's body (`items` removed, `delete b.items` for the old `items: undefined`) are
      record-core's. */
   t("STRUCTURAL: `#perItem` narrows the shared body by that published array and by nothing else",
-    [/const a = PER_ITEM_ACTS\.find\(\(x\) => x\.id === act\);\s*return perItem\(act, body, stamped, one, \{ itemKeys: a && a\.item_keys, sharedKeys: a && a\.shared_keys \}\);/.test(store),
+    [/const a = PER_ITEM_ACTS\.find\(\(x\) => x\.id === act\);\s*return perItem\(act, body, stamped, one, \{ itemKeys: a && a\.item_keys, sharedKeys: a && a\.shared_keys \}\);/.test(queueSrc),
      /const b = \{ \.\.\.sharedFor\(it\), \.\.\.it, \.\.\.stamped \};\s*delete b\.items;[^\n]*\n\s*r = one\(b\);/.test(core)],
     [true, true]);
 } finally {

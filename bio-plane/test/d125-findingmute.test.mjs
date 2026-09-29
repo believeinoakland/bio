@@ -30,7 +30,7 @@
  * drive every FINDING producer — the key is the item's published id, whatever
  * produced it, so one progression-stage finding and one condition stand for the
  * class; the id shapes of the other producers are read by `itemClassOf`, held
- * directly below over every live id shape in store.mjs.
+ * directly below over every live id shape in the queue's producers (store.mjs's until K409).
  */
 import { withSurfacingRun } from "./surfacing-run.mjs";   /* REC-171: a deploy token's questions are surfaced inside a run it holds */
 import "./stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
@@ -43,7 +43,11 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
 import { itemClassOf, mutedAsItem, MUTE_REFUSAL_DETAIL } from "../src/queuestate.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
-const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "latin1");
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): every FINDING/CONDITION producer left store.mjs with the queue
+   (store.mjs now mints none); the live id shapes are queue's, in `src/queue/index.mjs` and the progression-finding
+   producer `src/queue/proposals.mjs`. The corpus is read over both, with the same floor. */
+const QUEUE_SRC = ["index.mjs", "proposals.mjs"].map((f) =>
+  readFileSync(fileURLToPath(new URL(`../src/queue/${f}`, import.meta.url)), "latin1")).join("\n");
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
@@ -132,8 +136,8 @@ const doPost = async (op, body) => (await obj.fetch(`http://x/${op}`,
 
 /* ============================ the ID → CLASS reader, held directly ========= */
 console.log("\n--- the item's class is its id's own first segment, over every live id shape ---");
-const shapes = [...STORE_SRC.matchAll(/id: `((?:FINDING|CONDITION)::[^`]*)`/g)].map((m) => m[1]);
-t("store.mjs mints a non-trivial set of FINDING/CONDITION item ids (the corpus this reader is held over)",
+const shapes = [...QUEUE_SRC.matchAll(/id: `((?:FINDING|CONDITION)::[^`]*)`/g)].map((m) => m[1]);
+t("the queue mints a non-trivial set of FINDING/CONDITION item ids (the corpus this reader is held over)",
   shapes.length >= 8, true);
 t("every one of them classifies by its prefix, so the item form can name any producer's item",
   shapes.filter((s) => itemClassOf(s.replace(/\$\{[^}]*\}/g, "x")) !== s.split("::")[0]), []);

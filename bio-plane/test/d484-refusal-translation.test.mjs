@@ -115,8 +115,14 @@ console.log(`\nCORPUS: src/store.mjs ${store.length} bytes, ${store.split("\n").
    (9208377da3, -733) took out the scoped proposal dispose's own NOT_A_DISPOSITION literal, its sentence, the
    `DISPOSITIONS` import and their comments, answering through progressions' `notADisposition` (R35, C-100.20). Still a
    blindness floor at the measured figure, never below it. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K409 QUEUE #2, K414 INSTANCE-SETUP #1) from this suite's own
+   CORPUS print: 484,250 -> 222,052 characters. Measured at each merge into this branch: queue's extraction (74443d6d9e,
+   -232,109: the feed, its producers and mint, the personal half, the dispose dispatch and the obligation inbox, to
+   `src/queue/`) and instance-setup's (ce41cfb5d6, -30,089: C-64, the reports and the limits, to `src/setup.mjs`).
+   NO_CITATION's `actNoCitation` is still the store's, so this suite's store arms still read a real subject. Still a
+   blindness floor at the measured figure, never below it. */
 t("the corpus is non-empty and is the plane's store (floored, so an unreadable file cannot pass)",
-  store.length >= 484_250 && /class Store\b/.test(store), true);
+  store.length >= 222_052 && /class Store\b/.test(store), true);
 
 const ROW_BASIS = ACT_SHAPE_CHECKS.NO_BASIS;
 const ROW_CITE = ACT_SHAPE_CHECKS.NO_CITATION;

@@ -151,7 +151,12 @@ const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, impor
 const INQUIRY_SRC = moduleSrc("inquiry");
 const REEVAL_SRC = moduleSrc("reevaluation");
 const STRENGTH_SRC = moduleSrc("strength");
-const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC + "\n" + INQUIRY_SRC;
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): `#queueAncestorEdges`, `#routeTask` and `#leadBasisAbsence` left
+   store.mjs with the queue for `src/queue/` (queue asks the predicate through its own one-line delegate
+   `#refEdgeSevered(...a)`, as the store did). The census, the surviving-site pin and SITE (e)'s pin read queue's
+   files; the removed site's absence is asserted over the store AND the queue. */
+const QUEUE_SRC = moduleSrc("queue");
+const SEVERANCE_SRC = STORE_SRC + "\n" + CONNECTIONS_SRC + "\n" + INQUIRY_SRC + "\n" + QUEUE_SRC;
 const INDEX_SRC = readFileSync(IDX, "utf8");
 
 const mf = withSurfacingRun(new Miniflare({
@@ -716,7 +721,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
      and connections' `this.edgeSevered(` (citesInto, formerly the store's #citesInto). */
   const defs = (SEVERANCE_SRC.match(/(?:#refEdgeSevered|\bedgeSevered)\(citingId, targetId/g) || []).length;
   const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connections\.edgeSevered)\(/g) || []).length;
-  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections and inquiry`);
+  console.log(`  severance predicate: ${defs} definition(s), ${calls} call site(s) over store, connections, inquiry and queue`);
   t("THE RULE HAS EXACTLY ONE IMPLEMENTATION, and D-280 added no second one — the shape that has "
   + "already absorbed a control in this estate",
     defs, 1);
@@ -746,7 +751,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   t("THE REMOVED SITE IS REALLY REMOVED, asserted off the SOURCE: `#requiredStrengthFor` is gone "
   + "from the plane entirely, so DEC-17's strictest-across-citers composition cannot be reached by "
   + "any door — a removal proved by absence rather than by an op that stopped answering",
-    /#requiredStrengthFor\s*\(/.test(STORE_SRC), false);
+    /#requiredStrengthFor\s*\(/.test(STORE_SRC + "\n" + QUEUE_SRC), false);
   /* RE-ANCHORED (T7; STRENGTH #1 J5): `#projectBar` is strength's `projectBar(projectId)`; the body is read to its
      own closing brace at the method indent, and the predicate is looked for under either spelling. */
   const barBody = /\n  projectBar\(projectId\) \{[\s\S]*?\n  \}\n/.exec(STRENGTH_SRC)?.[0] ?? null;
@@ -761,7 +766,7 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "as through the op, because an op arm alone cannot tell a confirmation from a fixture that "
   + "happened to agree",
     /* RE-ANCHORED (T7; INQUIRY #1): `restingOn` is inquiry's, and it asks connections' predicate for each row. */
-    [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(STORE_SRC),
+    [/#routeTask[\s\S]{0,4000}?this\.#refEdgeSevered\(pid, bundleId/.test(QUEUE_SRC),
      /\n  restingOn\(targetId\) \{[\s\S]{0,3000}?this\.connections\.edgeSevered\(/.test(INQUIRY_SRC)], [true, true]);
 
   /* ---- THE SITES LEFT UNCHANGED, PINNED SO THE JUDGEMENT IS ENFORCED --------
@@ -814,7 +819,10 @@ console.log("\n--- 7. one predicate, its callers counted, and the untouched site
   + "`absent` would print `LOOKED FOR AND NOT THERE` about a document that WAS there — an "
   + "affirmative false statement about the record, which this project ranks above a narrow "
   + "inference. The count is the honest instrument and the status is not its question",
-    /#leadBasisAbsence\([\s\S]{0,2400}?#refEdgeSevered/.test(STORE_SRC), false);
+    /* RE-ANCHORED 2026-09-29 (K409): the method is queue's now; read there, with its presence asserted beside the
+       pin, since a pin over a file that no longer holds the method would pass over nothing. */
+    [QUEUE_SRC.includes("  #leadBasisAbsence(captureSha) {"),
+     /#leadBasisAbsence\([\s\S]{0,2400}?#refEdgeSevered/.test(QUEUE_SRC)], [true, false]);
   t("SITES (f) `#writeSupersededBy` and `#actionDerived` ARE OUT OF THE CLASS AS MEASURED, and the "
   + "pin is what would notice if that stopped being true: no op in the plane writes a `supersedes` "
   + "or `responds_to` reference carrying a status at all, so the exposure is UNMEASURED rather than "

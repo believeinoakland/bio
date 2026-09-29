@@ -201,8 +201,20 @@ function tableKeys(src, name) {
 }
 const indexSrc = readFileSync(IDX, "utf8");
 const storeSrc = readFileSync(STORE_SRC, "utf8");
-const needsKeys = tableKeys(indexSrc, "NEEDS");
-const opsKeys = tableKeys(indexSrc, "OPS");
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K413, CONTROL-PLANE #2; BOB B10): the two tables left
+   index.mjs for `src/control-plane/ops.mjs`. They are still read out of the SOURCE there, and the read is held
+   against the tables control-plane EXPORTS, so a reader that lost a key (or the file's shape) fails by name. */
+const OPS_SRC = readFileSync(new URL("../src/control-plane/ops.mjs", import.meta.url), "utf8");
+const needsKeys = tableKeys(OPS_SRC, "NEEDS");
+const opsKeys = tableKeys(OPS_SRC, "OPS");
+{
+  const { OPS: OPS_TABLE, NEEDS: NEEDS_TABLE } = await import("../src/control-plane/ops.mjs");
+  t("the source read of NEEDS and OPS is the whole of control-plane's exported tables, key for key",
+    [needsKeys.length > 100, opsKeys.length > 200,
+     JSON.stringify([...needsKeys].sort()) === JSON.stringify(Object.keys(NEEDS_TABLE).sort()),
+     JSON.stringify([...opsKeys].sort()) === JSON.stringify(Object.keys(OPS_TABLE).sort())],
+    [true, true, true, true]);
+}
 
 console.log("\n--- structural: the derivation is TOTAL over NEEDS (the drift guard) ---");
 t("every op in NEEDS is a published act or a named NON_ACT — an op in neither is UNPUBLISHED and fails here by name",
@@ -247,14 +259,19 @@ console.log("\n--- structural: vocabularies and rungs are the enforcing tables, 
 {
   const TWO_LITERAL = /\[\s*["']deferred["']\s*,\s*["']dismissed["']\s*\]/;
   const refusedWord = PROGRESSIONS_NOT_A_DISPOSITION("elevated");
-  t("dispose() enforces the PUBLISHED set: it IS progressions' one list, store.mjs answers through its `notADisposition` "
-  + "and keeps no import or literal copy of its own",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K409, QUEUE #2): the scoped proposal dispose — the store's
+     last disposition check — left store.mjs with the dispose dispatch for `src/queue/index.mjs` (`proposeDispose`),
+     which imports progressions' `notADisposition` and answers through it. The import and the call are read there;
+     "no import or literal copy of its own" is asked of BOTH files, the store it left and the queue it went to. */
+  const queueSrc = readFileSync(new URL("../src/queue/index.mjs", import.meta.url), "utf8");
+  t("dispose() enforces the PUBLISHED set: it IS progressions' one list, the queue's dispose answers through its "
+  + "`notADisposition`, and neither the queue nor the store keeps an import or literal copy of its own",
     [DISPOSITIONS === PROGRESSIONS_DISPOSITIONS,
-     /import \{[^}]*\bnotADisposition\b[^}]*\} from "\.\/progressions\/index\.mjs"/s.test(storeSrc),
-     /\bnotADisposition\(/.test(stripComments(storeSrc).replace(/import \{[^}]*\} from "[^"]+";/g, "")),
-     /import \{[^}]*\bDISPOSITIONS\b[^}]*\} from/s.test(storeSrc),
-     /const DISPOSITIONS = /.test(stripComments(storeSrc)),
-     TWO_LITERAL.test(stripComments(storeSrc)),
+     /import \{[^}]*\bnotADisposition\b[^}]*\} from "\.\.\/progressions\/index\.mjs"/s.test(queueSrc),
+     /\bnotADisposition\(/.test(stripComments(queueSrc).replace(/import \{[^}]*\} from "[^"]+";/g, "")),
+     /import \{[^}]*\bDISPOSITIONS\b[^}]*\} from/s.test(storeSrc + queueSrc),
+     /const DISPOSITIONS = /.test(stripComments(storeSrc) + stripComments(queueSrc)),
+     TWO_LITERAL.test(stripComments(storeSrc) + stripComments(queueSrc)),
      PROGRESSIONS_NOT_A_DISPOSITION("deferred"), PROGRESSIONS_NOT_A_DISPOSITION("dismissed"),
      [refusedWord?.reason, refusedWord?.dispositions === DISPOSITIONS]],
     [true, true, true, false, false, false, null, null, ["NOT_A_DISPOSITION", true]]);
@@ -297,10 +314,24 @@ t("the three intent vocabularies published by op=affordances ARE the arrays, not
   [VOCABULARIES.entity_kinds === ENTITY_KINDS,
    VOCABULARIES.relation_kinds === RELATION_KINDS,
    VOCABULARIES.stage_requiredness === STAGE_REQUIREDNESS], [true, true, true]);
-t("the store ENFORCES the published arrays: store.mjs imports all three from affordances.mjs and keeps no literal copy",
-  [/import \{[^}]*\bENTITY_KINDS\b[^}]*\} from "\.\/affordances\.mjs"/s.test(storeSrc),
-   /import \{[^}]*\bRELATION_KINDS\b[^}]*\} from "\.\/affordances\.mjs"/s.test(storeSrc),
-   /import \{[^}]*\bSTAGE_REQUIREDNESS\b[^}]*\} from "\.\/affordances\.mjs"/s.test(storeSrc),
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K409, QUEUE #2): this read "store.mjs imports all three
+   from affordances.mjs". That import was DEAD once entities (ENTITY_KINDS, RELATION_KINDS: `entityCreate`,
+   `relationDeclare`) and progressions (STAGE_REQUIREDNESS: `progressionDefine`) took the enforcing code, and queue's
+   extraction removed it. The enforcers now DEFINE the arrays and affordances.mjs imports them from there, so the
+   direction flipped (the REC-11 shape): the pin is that the published value IS the enforcing module's own export
+   (identity), that affordances.mjs takes it by import, and that the store still keeps no literal copy. */
+const { ENTITY_KINDS: ENTITIES_ENTITY_KINDS, RELATION_KINDS: ENTITIES_RELATION_KINDS } =
+  await import("../src/entities/index.mjs");
+const { STAGE_REQUIREDNESS: PROGRESSIONS_STAGE_REQUIREDNESS } = await import("../src/progressions/index.mjs");
+const affImportSrc = readFileSync(new URL("../src/affordances.mjs", import.meta.url), "utf8");
+t("the ENFORCERS' arrays ARE the published ones: entities and progressions define them, affordances.mjs imports them, "
++ "and the store keeps no literal copy",
+  [ENTITY_KINDS === ENTITIES_ENTITY_KINDS && RELATION_KINDS === ENTITIES_RELATION_KINDS
+     && /import \{[^}]*\bENTITY_KINDS\b[^}]*\bRELATION_KINDS\b[^}]*\} from "\.\/entities\/index\.mjs"/s.test(affImportSrc),
+   STAGE_REQUIREDNESS === PROGRESSIONS_STAGE_REQUIREDNESS
+     && /import \{[^}]*\bSTAGE_REQUIREDNESS\b[^}]*\} from "\.\/progressions\/index\.mjs"/s.test(affImportSrc),
+   /\bENTITY_KINDS\.includes\(/.test(readFileSync(new URL("../src/entities/index.mjs", import.meta.url), "utf8"))
+     && /\bSTAGE_REQUIREDNESS\.includes\(/.test(readFileSync(new URL("../src/progressions/index.mjs", import.meta.url), "utf8")),
    /static\s+#ENTITY_KINDS\s*=\s*new Set\(\[/.test(storeSrc),
    /static\s+#RELATION_KINDS\s*=\s*new Set\(\[/.test(storeSrc),
    /static\s+#REQUIREDNESS\s*=\s*new Set\(\[/.test(storeSrc)],

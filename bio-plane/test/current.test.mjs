@@ -104,7 +104,10 @@ import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): op=queue's feed — both slugs' producers, their wiring into the
+   FINDING half, and `#dispositionOf`'s per-class answers — left store.mjs for `src/queue/index.mjs`. The two
+   STRUCTURAL arms that read them read them there; what they assert is unchanged. */
+const QUEUE_SRC = readFileSync(SRC("queue/index.mjs"), "utf8");
 /* WIDENED 2026-09-28 (BASIS-VERSIONS #1 J4.1, K4): each extracted module now owns its tables in its own
    `src/<module>/schema.mjs`, so "the whole schema source" is schema.mjs AND every module's schema. */
 const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"),
@@ -462,16 +465,16 @@ const accept = async (version, target = INQ) =>
        argument, `identity` (the queue's D-310 owner fact asks WHO, not what the caller sees), so
        the call is matched with or without it — the property (the producer is CALLED with the
        feed's own viewer and clock) is unchanged. */
-    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now(?:, identity)?\\)`).test(STORE_SRC);
-    const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(STORE_SRC);
-    const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(STORE_SRC);
-    const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(STORE_SRC));
+    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now(?:, identity)?\\)`).test(QUEUE_SRC);
+    const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(QUEUE_SRC);
+    const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(QUEUE_SRC);
+    const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(QUEUE_SRC));
     return call && (direct || viaLocal);
   };
   t("both slugs have a NAMED PRODUCER wired into queueFeed's FINDING half — a kind with no "
   + "generator is a word, and this record has shipped one of those before",
-    [/#findingsStanceDiverged\s*\(viewer, now(?:, identity)?\)/.test(STORE_SRC),
-     /#findingsVersionFromAnotherTeam\s*\(viewer, now(?:, identity)?\)/.test(STORE_SRC),
+    [/#findingsStanceDiverged\s*\(viewer, now(?:, identity)?\)/.test(QUEUE_SRC),
+     /#findingsVersionFromAnotherTeam\s*\(viewer, now(?:, identity)?\)/.test(QUEUE_SRC),
      wiredIntoItems("findingsStanceDiverged"),
      wiredIntoItems("findingsVersionFromAnotherTeam")],
     [true, true, true, true]);
@@ -872,11 +875,11 @@ const beforeShaA = await shaOf(A);
        and the pin is now on the CHOICE rather than on the one answer: the source must still name
        `taskresolve` as the default AND must name the bias-debt kind's own door, so a third kind
        added without one lands here as a failure instead of quietly inheriting a door it has not got. */
-    [/an_obligation_is_resolved_not_disposed/.test(STORE_SRC),
-     /\? "biasdebtresolve" : "taskresolve"/.test(STORE_SRC),
-     /item\.kind === "bias-debt"/.test(STORE_SRC),
-     /a_condition_is_acknowledged_or_muted/.test(STORE_SRC),
-     /instead: "queuemute"/.test(STORE_SRC),
+    [/an_obligation_is_resolved_not_disposed/.test(QUEUE_SRC),
+     /\? "biasdebtresolve" : "taskresolve"/.test(QUEUE_SRC),
+     /item\.kind === "bias-debt"/.test(QUEUE_SRC),
+     /a_condition_is_acknowledged_or_muted/.test(QUEUE_SRC),
+     /instead: "queuemute"/.test(QUEUE_SRC),
      ITEMS(q).filter((i) => i.class !== "FINDING").length], [true, true, true, true, true, 0]);
 
   /* THE PUBLICATION IS A MEASUREMENT OF THE ACT, IN BOTH DIRECTIONS. A claim

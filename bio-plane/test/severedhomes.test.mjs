@@ -111,7 +111,11 @@ const CONNECTIONS_SRC = readdirSync(fileURLToPath(new URL("../src/connections/",
 const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, import.meta.url)))
   .filter((f) => f.endsWith(".mjs")).sort()
   .map((f) => readFileSync(fileURLToPath(new URL(`../src/${m}/${f}`, import.meta.url)), "utf8")).join("\n");
-const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation")].join("\n");
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): `#queueAncestorEdges` and `#routeTask` left store.mjs with the
+   queue for `src/queue/index.mjs`, where each calls queue's own one-line delegate `this.#refEdgeSevered(` (to
+   connections' `edgeSevered`). The census reads queue's files too; the walk's `consider` pin reads it there. */
+const QUEUE_SRC = moduleSrc("queue");
+const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation"), QUEUE_SRC].join("\n");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -504,6 +508,10 @@ const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connect
    DRAWN_ON_BY_SEVERAL_PROJECTS), which asks the same predicate rather than copying it. The others moved without
    changing: `#citesInto` is connections' `citesInto`, `#restsOnLive` and `restingOn` inquiry's, and
    `#queueAncestorEdges` and `#routeTask` are still the store's. */
+/* CORRECTED 2026-09-29 (LEGACY-TESTS T12; K409, QUEUE #2), SIX STAYS SIX, NO ARRIVAL AND NO DEPARTURE: `#queueAncestorEdges`
+   and `#routeTask` MOVED with the queue to `src/queue/index.mjs` and still ask the ONE predicate, through queue's
+   delegate `#refEdgeSevered(...a)` (a delegate, like the store's, and neither a definition nor a call). The store's
+   own delegate now has no caller. */
 t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `citesInto`, "
 + "`restsOnLive`, `#queueAncestorEdges`, D-280's two surviving sites `#routeTask` and "
 + "`restingOn`, and inquiry R39's `projectsDrawingOn`; REC-160's `reevaluations` now reads the status "
@@ -515,8 +523,8 @@ t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `citesI
 t("STRUCTURAL: and the walk no longer performs a raw unconfirmed read of either projection — both "
 + "edge kinds go through `consider`, so a future edge kind added to this method inherits the "
 + "confirmation instead of quietly reopening the defect",
-  [/consider\(r\.bundle_id, null\)/.test(STORE_SRC),
-   /consider\(r\.bundle_id, "cites"\)/.test(STORE_SRC)], [true, true]);
+  [/consider\(r\.bundle_id, null\)/.test(QUEUE_SRC),
+   /consider\(r\.bundle_id, "cites"\)/.test(QUEUE_SRC)], [true, true]);
 
 } catch (e) {
   /* M0-134: A THROW IS A FAILURE, COUNTED AND PRINTED. Without this clause the `finally` below ran,

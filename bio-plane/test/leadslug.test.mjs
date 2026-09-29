@@ -75,13 +75,18 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, classOfKind } from "../src/queuestate.mjs";
-import { CAPTURE_REQUEST_CHECKS, QUEUE_MINT_CHECKS } from "../checks/bio-checks.mjs";
+import { CAPTURE_REQUEST_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): the mint's family C-31 left the catalogue for queue's own row file,
+   and the mint itself (its governed region and the mute loop it precedes) left store.mjs for `src/queue/index.mjs`;
+   block 7 reads both there as QUEUE_SRC. The per-bundle purge's call into capture-requests stays the store's (9c). */
+import { QUEUE_MINT_CHECKS } from "../src/queue/checks.mjs";
 /* T4 (legacy-tests; capture R20): the co-attestation services, from their one definition. */
 import { TSA_ENDPOINTS, ARCHIVE_SAVE_BASE } from "../src/tsa.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+const QUEUE_SRC = readFileSync(SRC("queue/index.mjs"), "utf8");
 /* RE-POINTED 2026-09-28 (LEGACY-TESTS #4, CAPTURE-REQUESTS #1 REPORT J2.5): the `capture_requests` table, its additive
    columns and its per-bundle purge arm left the store with CAPTURE-REQUESTS #1 — the CREATE TABLE literal and
    `CAPTURE_REQUESTS_ADDITIVE` to `src/capture-requests/schema.mjs`, the lead's purge to its `clearLead` (R35), which the
@@ -646,9 +651,17 @@ console.log("\n--- 6. a real basis and a real options[], with the inquiry-grain 
     g(lead, "age.state"), "determined");
   t("options[] is REAL — acts this record can actually perform, on inquiry B",
     (g(lead, "options") || []).length > 0, true);
-  t("and the grain gap is DECLARED on the item rather than hidden behind an empty array: the acts a "
-  + "member would most want here are at INQUIRY grain and do not exist yet (D-222)",
-    [g(lead, "options_grain.offered"), g(lead, "options_grain.missing")], ["document", "inquiry"]);
+  /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2; queue R18, REC-202): this arm pinned the DECLARED grain gap
+     (`options_grain: {offered: document, missing: inquiry}`, D-222) — the honest answer while the inquiry-grain acts
+     did not exist. Queue R18 closed the gap: the lead now OFFERS them on inquiry B, take it up (`cite`) and, where the
+     item has a project home and so an available project-scoped disposition (R12, R27), set it aside
+     (`proposedispose`), and the declaration of a missing grain retired with the gap. The property kept is the one
+     the old arm stood for: the item says truthfully what a member can do from it. CAROL's lead is homed under PROJ_B,
+     so both acts are offered and no grain is declared missing. */
+  t("R18: the lead offers the INQUIRY-GRAIN acts on inquiry B — take it up (`cite`) and, with a project home, set "
+  + "it aside (`proposedispose`) — and no longer declares a missing grain (REC-202 closed D-222's gap)",
+    [(g(lead, "options") || []).map((o) => o.id), g(lead, "disposition.available"), "options_grain" in lead],
+    [["cite", "proposedispose"], true, false]);
   /* THE SIBLING PRODUCER STILL FIRES. PL-4's `#conditionsCaptureRequested` walks
      the SAME table and files on `target`. Two producers, one table, two homes,
      and a surface assuming one producer per kind reads the second as a
@@ -673,8 +686,8 @@ console.log("\n--- 7. the mint refuses an unknown kind, and the fence covers EVE
   /* THE SWEEP, ASSERTED STRUCTURALLY. The old fence read
      `it.class === "CONDITION" && classOfKind(...)`, so it judged one class of
      three. The new one judges the kind of EVERY item, whatever its class. */
-  const region = STORE_SRC.slice(STORE_SRC.indexOf("DEC-49 REGION is-queue-mint"),
-                                 STORE_SRC.indexOf("END DEC-49 REGION is-queue-mint"));
+  const region = QUEUE_SRC.slice(QUEUE_SRC.indexOf("DEC-49 REGION is-queue-mint"),
+                                 QUEUE_SRC.indexOf("END DEC-49 REGION is-queue-mint"));
   t("the mint's governed region exists and is a REGION rather than the whole of queueFeed — a "
   + "whole-function `where` conscripts refusals that arrive later (REC-71)",
     region.length > 200, true);
@@ -722,8 +735,9 @@ console.log("\n--- 7. the mint refuses an unknown kind, and the fence covers EVE
   t("the mint runs BEFORE the personal mute loop: an item a member muted must still be validated, "
   + "because what a producer MINTS is a different question from what survives one member's "
   + "preferences — and the misclassed FINDING is exactly the item a mute could have hidden",
-    STORE_SRC.indexOf("DEC-49 REGION is-queue-mint")
-      < STORE_SRC.indexOf("const mutes = this.#queueMutes(me);"), true);
+    QUEUE_SRC.indexOf("DEC-49 REGION is-queue-mint") > 0
+      && QUEUE_SRC.indexOf("DEC-49 REGION is-queue-mint")
+      < QUEUE_SRC.indexOf("const mutes = this.#queueMutes(me);"), true);
 }
 
 /* ====================================================================== 8
