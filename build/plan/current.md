@@ -59,7 +59,7 @@ Opened by BOB #66, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 5bb688333c, T
 
 ## Last: legacy-tests (K420, K427)
 
-- **legacy-tests** · the re-anchors each wording names and the re-read widened (`t14-reread.md`: N327's eight suites; N325's two; N335's `projects.test.mjs`:193; C-96.1's `d134-custodial-refusals.test.mjs`; C-29.12 accepted by name while nothing mints it; N347's `pdfstructure-op.test.mjs`:126 and the `check-refusal-codes` re-pin); N353 (REC-171's fixture); the d470 re-pin after legacy-checks' removals, the census suite over promotion's new stamp, and whatever T14's layers break, each named with its owner.
+- **legacy-tests** · K457 first: retire each old suite whose subject is extracted and covered by its module's tests, re-anchoring only what no module test guards; then the re-anchors each wording names and the re-read widened (`t14-reread.md`: N327's eight suites; N325's two; N335's `projects.test.mjs`:193; C-96.1's `d134-custodial-refusals.test.mjs`; C-29.12 accepted by name while nothing mints it; N347's `pdfstructure-op.test.mjs`:126 and the `check-refusal-codes` re-pin); N353 (REC-171's fixture); the d470 re-pin after legacy-checks' removals, the census suite over promotion's new stamp, and whatever T14's layers break, each named with its owner.
 
 ## Not in T14
 

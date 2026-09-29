@@ -230,6 +230,7 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
   - **Each candidate.** Its key and the sentence saying why its sides were paired (R11's table), both sides verbatim with their source, stated date, doctype and capture, the label and reason labelled machine work, the weight, the state (R26), its resolution and the member who made it, the standing recommendations (R37) labelled machine work, the reach of a duty (R24) and `default_question` (the stated default R35 may take).
   - **Filters and page.** `label`, `weight` and `state` filter. The page is at most 50 (a non-number is 50), with `truncated` observed by reading one past, and `cursor` the last id.
   - **Empty answers.** An empty answer names its level, never a bare empty list: `none_judged` (no visible candidate names it) or `none_shown` (visible candidates held, each `not_shown`, counted per label as `not_shown: {precision, unrelated}`). Whether the pairing forms pairs there is `pairs`' answer (R11). A candidate the viewer may not see is neither a level nor counted.
+  - **Between projects** (**CHANGE OF MEANING**, DEC-85). A conflict between projects (R49) also carries, for each party of which the viewer is a joined participant, that project's `opted_in`, `asked_by_another`, `revealed`, the revealed `parties` and the relayed `responses`, as R50 words them for a notice. A candidate the viewer sees half is never answered here; R50 answers it.
 
   It writes nothing and never throws. *(not yet met: N345)*
 - **R26** — **CHANGE OF MEANING.** A candidate's **state** is derived at every read and never stored in place (R17):
@@ -250,6 +251,7 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
   - `held_irreconcilable`: resolved `irreconcilable`, with the inquiry.
   - `lead`: an open lead.
   - `plurality`: an open K5 candidate before `no_difference`.
+  - `unseen_conflict` (**CHANGE OF MEANING**, DEC-85): a conflict between projects that the viewer sees half, on the side they may see, when they are a joined participant of a party reached through that side (R49). It carries the candidate, the weight and that project, and nothing of the other side.
 
   Each mark carries its candidate. A stale side still resolves, and says it was corrected. Every surface that shows a side reads this, so no surface holds a copy of the rule. More than 200 referents is `TENSIONS_TOO_MANY` (C-60.3). It writes nothing and never throws. *(not yet met: N345)*
 
@@ -263,7 +265,7 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
     - the content row of each document leg of its basis there;
     - for each inquiry leg, an accepted, unhidden, claimed version of that inquiry.
   - **Each candidate.** Both sides, its state, its explanation if any, its inquiry if any, and `depth: 1`. The answer states that deeper findings disclose their own when published.
-  - **Sides the caller cannot see.** Every candidate is answered, because a publisher must see every tension on what they publish. A side in a bundle the stated `viewer` may not see (when one is passed) answers as `{hidden: true}` with no id, text, project or source.
+  - **Sides the caller cannot see** (**CHANGE OF MEANING**, DEC-85; replaces the `{hidden: true}` answer). Every candidate is answered, because a publisher must see every tension on what they publish. A candidate with a side in a bundle the stated `viewer` may not see (when one is passed; R10, which a reveal never widens) answers `unseen_other_side: true` with its seen side only. Nothing of the other side is answered: no id, text, kind, bundle, source, project or members. Its explanation and its inquiry are withheld too, since either may quote that side. `case-authoring` highlights it (its R31, R33).
   - **Bound and failure.** At most 200 candidates per finding, with `truncated`. A read that fails answers `undetermined: true`. It writes nothing and never throws. *(not yet met: N345)*
 
 ### New: the member's acts
@@ -371,6 +373,77 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 - **R40** — **CHANGE OF MEANING** (DEC-76 item 3, DEC-84 item 17). `dismissalMeasure({since?})` answers dismissed leads counted by reason, by key and by label, and `false_conflicts`: the count of `same_fact_different_precision` and `not_same_matter`. `real_conflict_not_pursued` is never counted as one. It carries no id, and never throws. *(not yet met: N345)*
 - **R41** — **WORDING** (K447 (6)). `sha256(RECOMMEND_PROMPT)` equals `RECOMMEND_PROMPT_SHA256`: the digest under which the blind fixture of dissolved pairs was measured and recorded in `MEASUREMENTS.md`. The prompt changes only with a new measurement that moves the digest in the same change. *(not yet met: N345)*
 
+### New: a conflict with a side the member cannot see (DEC-85, as Bob clarified it in K456)
+
+- **R49** — **CHANGE OF MEANING.** **Parties and the half-seen conflict.**
+  - A candidate's **parties** are the projects R24's reach names through each of its sides: the projects drawing on that side, at most 32 per side, with `parties_truncated` stated. A project reached through both sides is a party through both.
+  - A **conflict between projects** is a candidate of weight `duty` or `plurality` whose state is `open`, `explained_not_shown` or `taken_up`. A lead is not one: the machine's uncertainty creates no obligation (DEC-84 item 1), and telling of it would say that an unseen record exists on a machine's guess.
+  - A viewer **sees it half** when they may see exactly one of its sides (R10).
+
+  It is derived at every read, never stored. *(not yet met: N345)*
+
+**conflictNotices({project, after?, limit?, viewer})** (`op=contradictionnotices`)
+- **R50** — **CHANGE OF MEANING.** The notice to a project's members, on their own side.
+  - **Refusals, in order:** `membership`'s existence answer (its R77); `NO_SUCH_PROJECT` through its R78; a viewer who is not a joined participant (joined or leaving, its R54), through its `notAParticipant` (R87, C-56.3).
+  - **Which conflicts.** Each conflict between projects of which `project` is a party, that the viewer sees half, where the side they may see is one through which `project` is a party.
+  - **Each notice** carries:
+    - the candidate's id, `project`, the weight and the state (without the explanation or the inquiry);
+    - that one side verbatim, with its source, stated date, doctype and capture;
+    - one fixed sentence: "Something this project rests on is in conflict with a record you cannot see. Neither that record nor who holds it is shown. Your project can ask to resolve it. If every project holding a side asks, the projects are named to each other's members, and you can respond.";
+    - `opted_in`: this project's opt-in (R51: the member, the instant, the words), or null;
+    - `asked_by_another`: true when another party has opted in. It never says which, or how many;
+    - `revealed` (R52), and once revealed `parties`: the opted-in projects' ids and names;
+    - `responses`, the relay (R54).
+  - **Withheld, always:** the other side, its kind, bundle, source, project and members; the key and its pairing sentence; the label's reason (the machine's words describe both sides); and the number of parties. Before R52, no other party is named.
+  - **Page.** At most 50 in candidate id order after `after` (a non-number is 50), with `truncated` observed by reading one past, and `cursor` the last id. A conflict the viewer sees whole is not a notice: R25 answers it.
+
+  It writes nothing and never throws. *(not yet met: N345)*
+
+**optIn({candidate, project, words?, viewer, author})** (`op=contradictionoptin`)
+- **R51** — **CHANGE OF MEANING.** A project says it would like to resolve the conflict.
+  - **Refusals, in order:**
+    - an empty or machine `author` is `MACHINE_CANNOT_ACT_ON_CANDIDATE` (C-93.10);
+    - no candidate is `NO_CANDIDATE` (C-93.8);
+    - `project`: R50's three refusals, in its order;
+    - a candidate that is absent, or of which the viewer may see neither side, is `NO_SUCH_CANDIDATE` (C-93.9), the same answer;
+    - a `project` that is not a party through a side the viewer may see is `NOT_A_PARTY` (C-93.34);
+    - a candidate that is not a conflict between projects (a lead, or `not_shown`) is `NOT_A_PROJECT_CONFLICT` (C-93.35);
+    - one `dismissed` or `resolved` is `CANDIDATE_CLOSED` (C-93.11);
+    - `words` over 500 characters is `WORDS_MALFORMED` (C-93.33).
+  - **What it writes.** Otherwise one row: the candidate, the project, the author, the instant and the words. It is the project's act, taken by any of its joined participants. A project already opted in answers `already: true` with the first opt-in, and writes nothing.
+  - **Never withdrawn.** Once the other parties have been told, they cannot be untold.
+  - **What the other parties learn** before R52 is only `asked_by_another` (R50). This project is never named to them. *(not yet met: N345)*
+- **R52** — **CHANGE OF MEANING.** **The reveal.**
+  - **When.** The opt-in that leaves every party of the candidate opted in, with neither side's parties truncated, appends in the same act one `revealed` row naming the parties at that instant.
+  - **What it reveals.** From then on the opted-in projects are revealed to each other. Each joined participant of one sees the others' ids and names on this conflict's notice (R50) and in R25, and receives their responses (R54). Nothing else of them is revealed: not their members, their sides, or anything inside them. `membership` R44 is not widened.
+  - **Later parties.** A party that arrives after the reveal gets a notice. It joins the revealed set when it opts in.
+  - **Truncated parties.** With either side's parties truncated, the reveal is undetermined, and the notice says so. No reveal is recorded until the parties are read whole.
+  - **What it never widens:** what a candidate shows (R10), who may act on it (R30), and what a published case names (`case-authoring` R33). *(not yet met: N345)*
+
+**respond({candidate, project, text, disclose?, viewer, author})** (`op=contradictionrespond`)
+- **R53** — **CHANGE OF MEANING.** A member responds to the notice, sharing only what they choose.
+  - **Refusals, in order:**
+    - R51's first seven, in its order (through C-93.11);
+    - a `project` that has not opted in is `RESPONSE_BEFORE_OPT_IN` (C-93.36);
+    - a blank `text` is `RESPONSE_NO_TEXT` (C-93.37);
+    - a `text` over 2,000 characters is `WORDS_MALFORMED` (C-93.33);
+    - a malformed `disclose` is `DISCLOSURE_MALFORMED` (C-93.38): a key other than `cover` and `email`; a `cover` that is neither `true` nor a string; an `email` that is not one address of at most 254 characters;
+    - a disclosure of someone else's is `DISCLOSURE_NOT_YOURS` (C-93.39): a `cover` string other than the author's own cover (`membership` R68), or an `email` another member has already disclosed as theirs in a response.
+  - **What it writes.** Otherwise one row: the candidate, the project, the author, the instant, the text, and each disclosure chosen:
+    - `cover`: the author's own, as `membership` holds it. `cover: true` fills it from R68. The plane never takes a cover it did not read for this author.
+    - `email`: as the member stated it, marked `stated, not verified`, since `membership` holds no email address.
+
+    Neither is required, and none is ever filled in.
+  - **Never relayed:** the responder's handle and member id, and anything they did not choose. *(not yet met: N345)*
+
+**conflictResponses({candidate, project, after?, limit?, viewer})** (`op=contradictionresponses`)
+- **R54** — **CHANGE OF MEANING.** **The relay, and the read.**
+  - **The relay.** Once revealed (R52), each response is relayed to the joined participants of every other opted-in party, as its text, the disclosures its responder chose, the responder's project (revealed) and its instant. Nothing else is relayed. A response made before the reveal is relayed from the reveal. Nothing is relayed before it.
+  - **In the notice.** R50's `responses` for `project` are the relayed responses of other parties made after this project's own latest response (every one since the reveal when it has none), at most 20, newest first, with `responses_truncated`. `queue` carries them as the next notification the project's members receive (its R47).
+  - **The read.** Refusals: R50's three for the project; `NO_CANDIDATE` (C-93.8); `NO_SUCH_CANDIDATE` (C-93.9) for a candidate absent, one of which the viewer may see neither side, or one of which `project` is not a party. Otherwise it answers this project's own responses, each with its author as attributed, and, once revealed, the other parties' as relayed, in the order written, at most 50 a page after `after`, with `truncated` observed by reading one past and `cursor`.
+
+  It writes nothing and never throws. *(not yet met: N345)*
+
 ### Invariants
 
 - **R42** — **CHANGE OF MEANING.** `contradiction_acts` and `contradiction_recommendations` are append-only. A candidate's state, weight and marks are derived at the read from the candidate, those rows and the inquiry's document (R24, R26, R27). Nothing is copied that could disagree. *(not yet met: N345)*
@@ -385,6 +458,8 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 - **R46** — **WORDING** (DEC-24, DEC-84 item 5). A machine credential holds no act of R31–R36, and R37 recommends only coordinates. *(not yet met: N345)*
 - **R47** — **WORDING.** `contradiction_acts` and `contradiction_recommendations` are declared to record-core's purge by both sides' bundles, as R22 (K23). *(not yet met: N345)*
 - **R48** — **WORDING** (DEC-77 item 1). No key pairs an aspiration: aspirations are in contact, never in contradiction. *(not yet met: N345)*
+- **R55** — **CHANGE OF MEANING** (DEC-85). Nothing answered to a viewer who sees a conflict half names or counts its other side, that side's kind, bundle, source, project or members, or the number of parties. The two exceptions are the opted-in projects after R52 and what a responder chose to disclose (R53). The machine's reason and a member's explanation are never answered to such a viewer. *(not yet met: N345)*
+- **R42, R47** — **WORDING.** Each gains `contradiction_optins` and `contradiction_responses` (with the `revealed` rows, held in `contradiction_optins`): append-only (R42), and declared to purge by both sides' bundles and by `project_id` (R47).
 
 ### Uses — WORDING
 
