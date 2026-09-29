@@ -1357,3 +1357,17 @@ decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; the approved page at `docs/development/ux-substrate/measures-map.html` (rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni); folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §M.
   QUESTION 5 ITSELF, decided against the map (Bob, 2026-09-29, as recommended): the project workspace SHOWS strength. Each question in the list shows its two strength badges (capture and connection, in the map's colours and icons, with a testimony badge beside them when an account is part of the answer), one plain phrase against the project's bar ("Meets the bar", "Short on connection", "Short on capture", or "Unrated": rests on nothing yet), and "Undetermined" named with its reason, never a blank; e.g. `[capture B] [connection C]  Short on connection · bar B/B`. It never shows one combined badge or score (DEC-44). Hovering a badge names the weakest document or link and how to raise it; a click opens the question's page with that leg highlighted. The old interface's grade-free workspace (UI-16's note) was an interface choice, not canon, and is superseded.
 owed: the redesign's workspace and display primitives aligned to the map; the UX page's open question 5 marked ruled.
+
+### DEC-83 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 6)
+for: bob
+question: What is the one visual treatment and voice of "Undetermined", and how does it differ from "Withheld", "Unrated", "Nobody looked" and "Refused"?
+why it is Bob's: UX (Interaction Constructs §U sets the principle; its treatment was open).
+provisional: the old interface used one tinted badge for both undetermined and no-grade-yet, so the two looked alike.
+alternative: one neutral "gap" family with a colour-free text label per kind (calmer, but the differences rest on reading and are easier to miss).
+recommendation: one Undetermined component that always carries its reason, and four visibly different neighbours with fixed wording.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.** "Undetermined" is one component with a fixed mark and a mandatory "because…" line. "Withheld", "Unrated", "Nobody looked" and "Refused" each have their own visibly distinct treatment and one fixed sentence pattern, never shared. None is dressed as an error; all are written as named terms (DEC-82). The exact marks and wording are the redesign's, within this rule.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §U.
+owed: the five treatments and sentence patterns in the redesign; the UX page's open question 6 marked ruled.
