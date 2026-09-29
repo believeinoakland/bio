@@ -54,6 +54,10 @@ const F = {
      `declarePurge`'s, the draining read's `render` is the fire's since `captureRequestDraining` was retired, and the
      expiry sweep now takes every held row, not only renders — D-583). The two queue producers stay the store's. */
   cr: ROOT + "src/capture-requests/index.mjs",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K409, QUEUE #2): `#queueConditions` and its two producers
+     (`#conditionsCaptureRequested`, `#conditionsRenderDeferred`) left `src/store.mjs` for `src/queue/index.mjs`;
+     arms (8) and (19) remove the same spread line there. Found dead by m025's A10. */
+  queue: ROOT + "src/queue/index.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -203,8 +207,10 @@ arm("(5) CONDUCT 3 — RATE (C-28.9), the other rules HELD OPEN. "
      fetch did not land", which is our own politeness reported as the source
      failing. That distinction is the whole of D-104. */
   [["cr", `    if (this.#hostHeld(q.host, nowMs))`, `    if (false)`]],
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #10, T12 round 3), NOT AS DECLARED at its run on this tree: the run's log
+     now reads GOVERNED from the governor one layer down as well (the finding above, arriving on the log too), so that
+     assertion stayed green; the arm still fails where the drain's own rule is the only one: the HELD answer, by name. */
   ["a request to a host in cool-off is HELD by name",
-   "and the run's log says so in the record's own vocabulary",
    "EVERY code in the family was DRIVEN out of the plane"],
   ["and the DRAIN turns it away by name",
    "OVER-STRICTNESS ARM: with the member's own agent RECORDED"]);
@@ -267,7 +273,7 @@ arm("(8) THE COMPLETION NOTIFICATION. §4 requires the run waiting on a capture 
   + "notification is the EXISTING catalogued kind with a different subscriber rather than an invented "
   + "channel. Unregister the producer and a completed capture is silent: the run waits on something "
   + "that already happened, which is the failure mode a notification exists to prevent.",
-  [["store", `      ...this.#conditionsCaptureRequested(viewer, now, identity),\n`, ``]] /* RE-ANCHORED 2026-09-18 by REC-132: the generators gained `identity` */,
+  [["queue", `      ...this.#conditionsCaptureRequested(viewer, now, identity),\n`, ``]] /* RE-ANCHORED 2026-09-18 by REC-132: the generators gained `identity` */,
   ["a completed request surfaces as an item on the EXISTING catalogued kind"],
   ["a request that can name only ONE principal is refused at the drain BY NAME"]);
 
@@ -395,7 +401,7 @@ arm("(18) THE FIRST DRAFT'S SWEEP — C-83 codes only. A render whose code the R
 arm("(19) THE CONDITION KIND ABSENT — remove the producer from `#queueConditions`. The row still holds and "
   + "still expires correctly, and no member is told a render waits or how it ended: the silence the "
   + "ruling forbids, with the record otherwise right.",
-  [["store", "      ...this.#conditionsRenderDeferred(viewer, now, identity),\n", ""]],
+  [["queue", "      ...this.#conditionsRenderDeferred(viewer, now, identity),\n", ""]],
   ["D-523 WHILE HELD: op=queue SHOWS the deferred render",
    "and op=queue does not DROP it"],
   ["AT EXPIRY THE DRAIN RELEASES IT",

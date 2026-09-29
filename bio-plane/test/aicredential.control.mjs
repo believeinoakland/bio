@@ -43,6 +43,12 @@ const F = {
   index: ROOT + "src/index.mjs",
   query: ROOT + "src/query.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413 CONTROL-PLANE #2, membership R57-R59): the gate's
+     scope check (arm 2), the member-reach floor (arm 3) and the viewer stamp (arm 5) left `src/index.mjs` for
+     `src/control-plane/index.mjs` (`cp`); the mint's identity refusal (arm 4) left `src/store.mjs` for
+     `src/membership/index.mjs` (`membership`). Found dead by m025's A10. `index` and `store` stay under restore. */
+  cp: ROOT + "src/control-plane/index.mjs",
+  membership: ROOT + "src/membership/index.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -158,7 +164,7 @@ arm("(2) D-199 (2) — THE SCOPE IS A ROW, NOT A CONSTANT. Make the gate compare
   + "credential still passes, because that list happens to be its scope — which is exactly why this "
   + "arm exists: only the credential whose RECORD says something different can tell the two apart, "
   + "and a suite without that arm would have been green over a settings row.",
-  [["index", `  if (spec.mutating && !cred.writes.includes(op))`,
+  [["cp", `  if (spec.mutating && !cred.writes.includes(op))`,
               `  if (spec.mutating && !["suggest", "capturerequest"].includes(op))`]],
   ["a credential whose RECORD declares op=versionreject is admitted by the gate",
    "an agent whose record declares op=airunopen opens its own run"],
@@ -172,7 +178,9 @@ arm("(3) PL-4's DELEGATED CONSTRAINT — THE FENCE IS A SHAPE. Make the member-r
   + "purge and export. The AI would then be able to make the plane fetch on its own timing, which is "
   + "the spine PL-4's own arm (1) protects, arriving through the credential instead of through the "
   + "row state.",
-  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member");`,
+  /* RE-ANCHORED 2026-09-29: REC-159 added the `machineClasses` clause to the floor's return, so the needle takes
+     both lines and the arm still makes the whole floor answer true. */
+  [["cp", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses);`,
               `  return true;`]],
   [/* M0-25, 2026-09-13: THE NUMBER IS OUT OF THIS FRAGMENT ON PURPOSE. It read
      "every one of the 26 ops …", and the SUITE composes that label as
@@ -198,14 +206,18 @@ arm("(4) D-199 (3) — *IF AN AGENT CAN REQUEST A BROADER TOKEN, THE SCOPING IS 
   + "self-extension the determination exists to prevent. Note what does NOT save it: the class ACL "
   + "keeps probe out, and admin and member tokens sail straight through, so the ACL was never the "
   + "fence here.",
-  [["store", `    if (!who || isMachineIdentity(who))\n      return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",`,
+  [["membership", `    if (!who || isMachineIdentity(who))\n      return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",`,
               `    if (false && (!who || isMachineIdentity(who)))\n      return refusal("AI_CREDENTIAL_MINT_NOT_A_MEMBER",`]],
   ["the MEMBER_TOKEN machine credential is refused BY NAME",
    "and so is the ADMIN_TOKEN root-of-trust credential",
    "the AGENT holding it is refused anyway, by the STORE",
-   "no broader credential was written",
    "every code this family allocates was DRIVEN out of the plane"],
-  ["a machine credential cannot withdraw one either"]);
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #10, T12 round 3), NOT AS DECLARED AT ITS FIRST RUN on this tree: "no
+     broader credential was written" STAYED GREEN, because the agent's grab asks for an ORGANISATION key and the
+     mint refuses that to anyone but an administrator (AI_CREDENTIAL_ORG_NOT_ADMIN, C-29.12) — the `got` of every
+     refusal above. A second layer under this one, not a defect; the assertion is held open here, named. */
+  ["a machine credential cannot withdraw one either",
+   "no broader credential was written"]);
 
 /* ============ (5) THE STATED VIEWER ==================================== */
 
@@ -215,8 +227,10 @@ arm("(5) D-199 (4) IS A MEASUREMENT, NOT A LABEL. Stamp `class:ai` for every age
   + "credential is attributable to Anna while it saw everything the group has — the gap between what "
   + "the record claims about itself and what the code enforces, which is the failure mode this "
   + "project is built to refuse.",
-  [["index", `        : cls === "ai" ? aiCred.principal\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`,
-              `        : cls === "ai" ? \`\${MACHINE_CLASS_PREFIX}ai\`\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`]],
+  /* RE-ANCHORED 2026-09-29: in the control plane the same two lines close FOUR stamps (viewer, identity, the
+     positional identity, calibrate's), so the needle takes the viewer's own first line to stay unique. */
+  [["cp", `        viaSession ? sessViewer\n        : cls === "ai" ? aiCred.principal\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`,
+           `        viaSession ? sessViewer\n        : cls === "ai" ? \`\${MACHINE_CLASS_PREFIX}ai\`\n        : \`\${MACHINE_CLASS_PREFIX}\${cls}\`);`]],
   ["and NOT to a credential whose principal is ANNA, who was never invited"],
   ["Ruth's project is visible to the ORGANISATION-scoped credential",
    "while the shared evidence corpus is visible to all three"]);

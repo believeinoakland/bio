@@ -554,14 +554,10 @@ const resolvedDrivers = new Set(resolved.map((r) => r.driver)).size;
    N298 shape (`NAMED_DEAD_HARNESS`): each is an arm whose file moved under it (T4-T12 extractions) and whose
    driver was never re-run. One more is A10's finding; one fewer is A10b's stale naming. Owed: a re-anchor of each
    driver, run as declared (legacy-tests). */
-const NAMED_DEAD_RESOLVED = {
-  "bio-plane/test/aicredential.control.mjs": 3,
-  "bio-plane/test/capturerequests.control.mjs": 2,
-  "bio-plane/test/fence-e2e.control.mjs": 1,
-  "bio-plane/test/scheduler.control.mjs": 2,
-  "bio-plane/test/shadowed-refusals.control.mjs": 1,
-  "bio-plane/test/strengthpair.control.mjs": 14,
-};
+/* EMPTIED 2026-09-29 (LEGACY-TESTS #10, T12 round 3): all six were re-anchored and run as declared the same day
+   (aicredential 3, capturerequests 2, fence-e2e 1, scheduler 2, shadowed-refusals 1, strengthpair 14), so every
+   F-mapped driver is held to exactly once. It stays as the one place a dead edit may be named. */
+const NAMED_DEAD_RESOLVED = {};
 const offBy = {};
 for (const r of resolved) if (r.n !== 1) offBy[r.driver] = (offBy[r.driver] || 0) + 1;
 console.log(`\n--- A10 · the resolved subject: ${resolved.length} edit tuple(s) in ${resolvedDrivers} driver(s) of the \`F\`-map shape ---`);

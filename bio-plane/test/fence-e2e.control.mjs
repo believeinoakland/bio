@@ -51,6 +51,9 @@ const F = {
   bv:     ROOT + "src/basis-versions/index.mjs",
   /* ADDED 2026-09-28 (LEGACY-TESTS #4): the capture-conduct gate arm (2) edits is capture's `acquire` now. */
   acquire: ROOT + "src/capture/acquire.mjs",
+  /* ADDED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): `aiReachesAsMember`, arm (3)'s
+     subject, left `src/index.mjs` for the control plane. Found dead by m025's A10. */
+  cp:     ROOT + "src/control-plane/index.mjs",
   agent:  ROOT + "../agent-worker/src/index.mjs",
   suite:  SUITE,
 };
@@ -58,7 +61,9 @@ const F = {
    numbers are deliberately far below the real sizes — this guards emptiness and
    truncation, not growth, and a ratchet on source size is not this item's
    subject. */
-const MIN_BYTES = { checks: 100000, index: 100000, store: 400000, bv: 20000, acquire: 5000, agent: 5000, suite: 10000 };
+/* FLOORS MOVED 2026-09-29 (LEGACY-TESTS #10, T12 round 3): the extractions left `src/store.mjs` at ~222 KB and
+   `src/index.mjs` at ~52 KB, under the old 400,000/500,000 and 100,000, so the pristine check refused to start. */
+const MIN_BYTES = { checks: 100000, index: 20000, cp: 100000, store: 150000, bv: 20000, acquire: 5000, agent: 5000, suite: 10000 };
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = {}, ORIGINAL_SHA = {};
@@ -211,7 +216,7 @@ arm("(3)", "**THE CREDENTIAL-SHAPE LAYER, ALONE.** `aiReachesAsMember` returns t
   /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): REC-159 added a second line to `aiReachesAsMember`'s return
      (`&& !Array.isArray(spec.machineClasses)`), so the one-line anchor ended at a `;` that is no longer there and
      occurred zero times (already on tranche/T6). The arm is the same: the whole return is made true. */
-  [["index", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses);`,
+  [["cp", `  return !!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses);`,
              `  return true || (!!spec && Array.isArray(spec.classes) && spec.classes.includes("member")\n    && !Array.isArray(spec.machineClasses));`]],
   ["it is the MEMBER-FLOOR branch that answers", "the DECLARATION is refused at the mint too"],
   ["1. accept (op=versionaccept)", "2. make-current (op=versioncurrent)",
