@@ -127,8 +127,10 @@ const COMMENT_ARMED = `      return { ok: false, reason: "REVIEW_NO_COMMENT_TEXT
 const C8710 = `    translation: 'Say which grant to withdraw, by the id you were given when it was issued. Nothing was '
       + 'withdrawn. This answer says only that no grant was named; it says nothing about which grants exist.',`;
 
-const SECRET_OPEN = `      /* DEC-49 REGION is-review-secret */`;
-const SECRET_END = `      /* END DEC-49 REGION is-review-secret */`;
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): review's T11 job (N297, e51be546b2) gave the region's opening marker its
+   condition and moved both markers to the method's own indent, so the old needles occurred nowhere and arm (d) threw. */
+const SECRET_OPEN = `    /* DEC-49 REGION is-review-secret — the fingerprint's test and its refusal. */`;
+const SECRET_END = `    /* END DEC-49 REGION is-review-secret */`;
 
 const STATIC_RE = `(?:^|\\\\n)\\\\s*(?:export\\\\s+)?(?:static\\\\s+)?(?:async\\\\s+)?(?:function\\\\s+)?\${esc}\\\\s*\\\\(`;
 const PLAIN_RE = `(?:^|\\\\n)\\\\s*(?:export\\\\s+)?(?:async\\\\s+)?(?:function\\\\s+)?\${esc}\\\\s*\\\\(`;
@@ -192,8 +194,8 @@ const ARMS = {
     files: [STORE],
     label: "(D) OVER-STRICTNESS — is-review-secret's markers re-spelled; everything must stay GREEN",
     apply: () => {
-      edit(STORE, SECRET_OPEN, `      /**   DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
-      edit(STORE, SECRET_END, `      /**   END DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
+      edit(STORE, SECRET_OPEN, `    /**   DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
+      edit(STORE, SECRET_END, `    /**   END DEC-49 REGION is-review-secret  (re-spelled by a control arm)  **/`);
     },
     mustFail: [], guardMustPass: true, expectGreen: true,
   },
