@@ -36,26 +36,104 @@ test("R6: NO_ID; an absent or invisible id is NO_SUCH_BUNDLE, one answer; NOT_AN
   assert.equal(doc.object_type, "information");
 });
 
-test("R6, R22: ids the viewer may not see are nulled in members and replaced in prose, out_of_view set; record facts stand", () => {
+/* Every id field a named member may carry, and every list of named members an axis or a ground holds. */
+const ID_FIELDS = ["bundle_id", "target_id", "inherited_from", "through"];
+const membersOf = (axis) => [axis, ...(axis.grounds ?? [])].flatMap((p) =>
+  [...(p.weakest !== undefined ? [p.weakest] : []), ...(p.not_load_bearing ?? []), ...(p.undetermined_at ?? [])]);
+
+test("R6, R22: a member the viewer may not see is withheld whole, fields and prose; out_of_view says only that; record facts stand", () => {
   const w = projected();
   const machine = w.s.inquiryStrength({ id: INQ, viewer: MACHINE });
   assert.equal(machine.ok, true);
   assert.equal(machine.out_of_view, undefined);
-  assert.equal(machine.connection.out_of_view, undefined, "a viewer who sees everything gets the derivation verbatim");
-  assert.deepEqual(machine.connection, w.s.strengthOf(INQ).connection);
+  for (const axis of STRENGTH_AXES) {
+    assert.equal(machine[axis].out_of_view, undefined, "a viewer who sees everything gets the derivation verbatim");
+    assert.deepEqual(machine[axis], w.s.strengthOf(INQ)[axis]);
+  }
   const carol = w.s.inquiryStrength({ id: INQ, viewer: "member:carol" });
   assert.equal(carol.ok, true);
+  assert.equal(carol.out_of_view, true);
   const c = carol.connection;
   assert.equal(c.out_of_view, true);
   assert.equal(c.grade, machine.connection.grade, "the grade does not change with the reader");
   assert.equal(c.state, machine.connection.state);
-  const hidden = JSON.stringify(c);
-  assert.ok(!hidden.includes(PROJ), "the project is named nowhere, fields or prose");
-  assert.match(hidden, /an object you may not see/);
-  assert.equal(c.weakest.through, null);
+  const all = JSON.stringify(carol);
+  assert.ok(!all.includes(PROJ), "the project is named nowhere, fields or prose");
+  assert.doesNotMatch(all, /may not see|withheld|\bhidden\b/, "no placeholder stands where it was");
+  /* The seen leg through which the unseen one was reached stays, with no `through` key at all. */
+  assert.equal(c.weakest.target_id, "INQ-2026-0002-a");
+  assert.ok(!("through" in c.weakest));
+  assert.equal(machine.connection.weakest.through, PROJ);
+  assert.match(c.detail, /^connection C — /);
+  assert.match(c.detail, /Part of what this rests on is out of your view\.$/);
+  for (const m of membersOf(c)) for (const f of ID_FIELDS) assert.notEqual(m?.[f], null, `no null ${f}`);
   const alice = w.s.inquiryStrength({ id: INQ, viewer: "member:alice" });
   assert.ok(JSON.stringify(alice.connection).includes(PROJ), "a participant sees the project");
+  assert.equal(alice.out_of_view, undefined);
   for (const axis of STRENGTH_AXES) assert.ok(axis in carol);
+});
+
+/* Legs to projects carol may not see, in every place a member is named: the weakest, a ground's weakest, the not
+   load-bearing list, and a load-bearing member no list names. `n` copies of each unseen leg. */
+function hiddenWorld(n) {
+  const w = world();
+  w.member("alice");
+  w.member("carol");
+  w.bundle("INFO-2026-0001-a");
+  w.bundle("INFO-2026-0002-a");
+  const legs = [{ target: "INFO-2026-0001-a", grade: "C", axis: "connection", source: "resolution" },
+                { target: "INFO-2026-0002-a", grade: "B", axis: "connection", source: "resolution", ground: "seen" }];
+  for (let k = 0; k < n; k++) {
+    const p = (i) => `PROJ-2026-00${i}${k}-hid`;
+    for (const i of [1, 2, 3, 4]) w.project(p(i), ["alice"]);
+    legs.push({ target: p(1), grade: "D", axis: "connection", source: "resolution" },
+              { target: p(2), grade: "A", axis: "connection", source: "resolution" },
+              { target: p(3) },
+              { target: p(4), grade: "D", axis: "connection", source: "resolution", ground: "unseen" });
+  }
+  w.inquiry(INQ, legs);
+  return w;
+}
+
+test("R6: no count of what is withheld can be read from the answer: one unseen leg of each kind and three answer alike", () => {
+  const one = hiddenWorld(1), three = hiddenWorld(3);
+  const all1 = one.s.strengthOf(INQ), all3 = three.s.strengthOf(INQ);
+  assert.notEqual(all1.connection.population, all3.connection.population, "the record's own counts differ");
+  const a = one.s.inquiryStrength({ id: INQ, viewer: "member:carol" });
+  const b = three.s.inquiryStrength({ id: INQ, viewer: "member:carol" });
+  assert.deepEqual(a, b, "the same answer, byte for byte, whatever the number withheld");
+  assert.equal(a.out_of_view, true);
+  for (const axis of STRENGTH_AXES) {
+    const x = a[axis];
+    assert.equal(x.out_of_view, true);
+    assert.equal(x.grade, all1[axis].grade, "the grade stands");
+    assert.equal(x.state, all1[axis].state);
+    for (const p of [x, ...(x.grounds ?? [])]) {
+      assert.ok(!("load_bearing" in p) && !("population" in p), "no count");
+      assert.ok(p.weakest === null || !("weakest" in p) || p.weakest.target_id.startsWith("INFO-"),
+                "the weakest is named only when seen");
+    }
+    for (const m of membersOf(x)) {
+      if (m == null) continue;
+      for (const f of ID_FIELDS) if (f in m) assert.ok(m[f] && !m[f].startsWith("PROJ-"), `${f} is seen`);
+    }
+  }
+  const text = JSON.stringify(a);
+  assert.doesNotMatch(text, /PROJ-/);
+  assert.doesNotMatch(text, /may not see|withheld|\bhidden\b/);
+  /* The axis's weakest (a D on an unseen project) is withheld, its grade standing; the seen ground keeps its own. */
+  assert.equal(a.connection.grade, "D");
+  assert.ok(!("weakest" in a.connection));
+  assert.match(a.connection.detail, /^connection D — no stronger than the weakest connection it rests on\. /,
+               "the sentence still says what it derived");
+  const g = Object.fromEntries(a.connection.grounds.map((x) => [x.ground, x]));
+  assert.equal(g.seen.weakest.target_id, "INFO-2026-0002-a");
+  assert.ok(!("weakest" in g.unseen));
+  assert.deepEqual(a.connection.grounds.flatMap((x) => x.not_load_bearing), [], "the ungraded unseen leg is in no list");
+  /* A participant sees every member and every count. */
+  const alice = three.s.inquiryStrength({ id: INQ, viewer: "member:alice" });
+  assert.equal(alice.out_of_view, undefined);
+  assert.deepEqual(alice.connection, all3.connection);
 });
 
 test("R6: computed on read, never from a cache: a raised leg below shows at once", () => {

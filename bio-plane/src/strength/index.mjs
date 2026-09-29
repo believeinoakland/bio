@@ -67,9 +67,11 @@ export const CANDIDATE_ERROR_MAX = 200;
 /* R10: every spelling this record has reached for when it meant "the strength". The guard fails on the NAME, before
    anybody reasons about the value; `pair` is checked separately, by totality. */
 const PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"]);
-/* R6: the fields of a named member that hold a bundle id; `ord`, `role`, `grade`, `grade_source`, `via` and `axis`
-   are record facts and are never touched. */
+/* R6: the fields of a named member that hold a bundle id; a member naming an unseen one in any but `through` is
+   withheld whole. */
 const MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
+/* R6 (DEC-36): the one sentence a swept prose string ends in, the same whatever and however much was withheld. */
+const OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
 /* R6: a bundle id as it appears in a sentence, derived from the catalogue's own pattern by dropping its anchors, so
    the two cannot come to disagree about what a bundle id looks like. */
 const ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
@@ -290,10 +292,11 @@ export class Strength {
              capture: pair.capture, connection: pair.connection, testimony: pair.testimony };
   }
 
-  /** R6 (REC-34): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole, byte for
-   *  byte as one that does not exist; an id named inside a visible answer is a back-reference and is redacted to null
-   *  while every record fact stands (a derivation that changed with its reader would claim different things to
-   *  different people). Computed on read, never from the cache (R13). */
+  /** R6 (REC-34, N303): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole,
+   *  byte for byte as one that does not exist. Inside a visible answer, every member the viewer may not see is withheld
+   *  whole, in the members and the prose, with no id, title, state, placeholder or count, and `out_of_view: true`
+   *  states only that something was (DEC-36); every record fact about the axes stands (a derivation that changed with
+   *  its reader would claim different things to different people). Computed on read, never from the cache (R13). */
   inquiryStrength({ id = null, viewer = null } = {}) {
     if (!id) return { ok: false, reason: "NO_ID",
       detail: "the derived pair is asked of one inquiry: pass id=<bundle id>" };
@@ -309,10 +312,11 @@ export class Strength {
     const s = this.strengthOf(id);
     if (!s.ok) return s;
     const keep = this.#redactor(viewer);
-    return { ok: true, target: id, depth_bound: s.depth_bound,
-             capture: redactAxis(s.capture, keep),
-             connection: redactAxis(s.connection, keep),
-             testimony: redactAxis(s.testimony, keep) };
+    /* A top-level leg to an unseen target is a member of every axis's population, named in a list or not. */
+    const hidden = this.#legsOf(id).some((l) => l.target_id && keep(l.target_id) === null);
+    const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep, hidden)]));
+    const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
+    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ...(withheld ? { out_of_view: true } : {}) };
   }
 
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
@@ -838,42 +842,67 @@ function distinctParts(legs) {
   return new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size;
 }
 
-/* R6: one axis object with the ids the viewer may not see withheld and every record fact left as derived. The prose is
-   swept too, because a `why` can carry an id from several levels down that no field of this answer holds. Returns the
-   original object when nothing is withheld, and no count of what was: the count is the leak. */
-function redactAxis(axis, keep) {
-  let touched = false;
-  const member = (m) => {
-    let out = m;
-    for (const f of MEMBER_ID_FIELDS) {
-      if (m[f] == null || keep(m[f]) !== null) continue;
-      if (out === m) out = { ...m };
-      out[f] = null;
-      touched = true;
-    }
+/* R6 (N303, DEC-36): one axis object with every member the viewer may not see WITHHELD WHOLE, in the members and the
+   prose alike, and every record fact about the axis left as derived. A member is unseen when a bundle it is the leg of,
+   points at or inherits from is one the viewer may not see: it leaves every list it was in, and a `weakest` it was
+   loses the key, never a null or a stand-in. A seen member's `through` naming an unseen leg loses the key the same way.
+   Prose is swept too, because a `why` or `detail` can carry an id from several levels down that no field of this answer
+   holds: an unseen id leaves a list that still names a seen one, `(through …)` and `, which is …` go, and a sentence still naming one is
+   dropped; a swept string then ends in one fixed sentence, whatever was taken. The counts (`load_bearing`,
+   `population`) count unseen members too, so they go whenever anything is withheld (`hidden`, which also covers a
+   load-bearing member no list names). Nothing says how much was withheld: `out_of_view: true` states only that
+   something was. Returns the original object when nothing is withheld. */
+function redactAxis(axis, keep, hidden) {
+  let touched = !!hidden;
+  const unseen = (id) => id != null && keep(id) === null;
+  const prose = (v) => {
+    if (typeof v !== "string") return v;
+    let hit = false;
+    const gone = (id) => { if (!unseen(id)) return false; hit = true; return true; };
+    const id = ID_IN_PROSE.source;
+    /* A list keeps its seen ids; one left with none keeps them all, and its sentence goes below. */
+    let t = v.replace(new RegExp(`\\s*\\(through (${id})\\)`, "g"), (m, x) => gone(x) ? "" : m)
+      .replace(new RegExp(`, which is (${id})`, "g"), (m, x) => gone(x) ? "" : m)
+      .replace(new RegExp(`(?:${id})(?:, (?:${id}))+`, "g"), (run) => {
+        const ids = run.split(", ");
+        const kept = ids.filter((x) => !unseen(x));
+        if (!kept.length || kept.length === ids.length) return run;
+        hit = true;
+        return kept.join(", ");
+      });
+    const still = (x) => [...x.matchAll(new RegExp(id, "g"))].some((m) => gone(m[0]));
+    t = t.split(/(?<=[.:])\s+/).filter((x) => !still(x)).join(" ");
+    if (!hit) return v;
+    touched = true;
+    return t ? `${t} ${OUT_OF_VIEW_WORDS}` : OUT_OF_VIEW_WORDS;
+  };
+  const seen = (m) => !MEMBER_ID_FIELDS.some((f) => f !== "through" && unseen(m[f]));
+  const named = (m) => {
+    const out = { ...m };
+    if (unseen(out.through)) { delete out.through; touched = true; }
+    if (out.why != null) out.why = prose(out.why);
     return out;
   };
-  const prose = (v) => typeof v !== "string" ? v : v.replace(ID_IN_PROSE, (m) => {
-    if (keep(m) !== null) return m;
+  const list = (ms) => (ms ?? []).flatMap((m) => {
+    if (seen(m)) return [named(m)];
     touched = true;
-    return "an object you may not see";
+    return [];
   });
-  const named = (m) => {
-    const r = member(m);
-    const w = prose(r.why ?? null);
-    if (w === (r.why ?? null)) return r;
-    return { ...r, why: w };
+  const withWeakest = (o, w) => {
+    if (!w) return { ...o, weakest: w };
+    if (seen(w)) return { ...o, weakest: named(w) };
+    touched = true;
+    const { weakest, ...rest } = o;
+    return rest;
   };
-  const out = { ...axis,
-    weakest: axis.weakest ? named(axis.weakest) : axis.weakest,
-    not_load_bearing: (axis.not_load_bearing ?? []).map(named),
-    ...(axis.undetermined_at ? { undetermined_at: axis.undetermined_at.map(named) } : {}),
+  const uncounted = (o) => { if (!hidden) return o; const { load_bearing, population, ...rest } = o; return rest; };
+  const part = (o) => uncounted(withWeakest({ ...o,
+    not_load_bearing: list(o.not_load_bearing),
+    ...(o.undetermined_at ? { undetermined_at: list(o.undetermined_at) } : {}) }, o.weakest));
+  const out = { ...part(axis),
     /* REC-42: each ground names its own weakest, inert and unfinished members, so it gets the same sweep; the ground
        label is authored on the visible subject itself and is a record fact. */
-    ...(axis.grounds ? { grounds: axis.grounds.map((g) => ({ ...g,
-          weakest: g.weakest ? named(g.weakest) : g.weakest,
-          not_load_bearing: (g.not_load_bearing ?? []).map(named),
-          ...(g.undetermined_at ? { undetermined_at: g.undetermined_at.map(named) } : {}) })) } : {}),
+    ...(axis.grounds ? { grounds: axis.grounds.map(part) } : {}),
     detail: prose(axis.detail) };
   return touched ? { ...out, out_of_view: true } : axis;
 }
