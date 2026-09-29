@@ -31,3 +31,6 @@
 
 Size (session_01SbWMHYtC23oJPnXnB8WhqY): test runs 26, module lines 3,358
 
+## J1 · COMPLETE
+
+N338 and N334's legacy-index share done. coverage.mjs reads OPS from src/control-plane/ops.mjs (311 ops, the exported table's count); it no longer throws, --strict exits 0, owed-controls Part A green (A1 included). Nine dead catalogue imports gone from src/index.mjs (N334's eight and EARNED_CAPTURE_CEILING). Reported for legacy-tests: three suites plant OPS in a scratch bio-plane/src/index.mjs and are red until their fixtures move to src/control-plane/ops.mjs: owed-controls Part B (11), coverage-provenance, m051-driver-census. Stale: the plane bundle (not_product). Deferred, offered as a next entry: the other dead imports in src/index.mjs (listed in the record). Checks: format 0, architecture 0, coverage 0 of 0, ownership 0. No check rows touched; no UI or affordances hits. Record: build/jobs/T13/legacy-index.md on job/T13/legacy-index.
