@@ -7,12 +7,12 @@
   "enrichedV2": {
    "written": "2026-09-28",
    "repoCommit": "b00bf5ab3f (tranche/T10)",
-   "rungs": "from RUNGS / RUNG_ABSENT in bio-plane/src/affordances.mjs (affordances R2, R3, R27). 'off-ladder' = the op is not a record act (read, credential, substrate, caller-owned or observational ground; see rungGround). 'undetermined' = a record act with no rung yet (R27) or no op located.",
+   "rungs": "from RUNGS / RUNG_ABSENT in bio-plane/src/affordances.mjs (affordances R2, R3, R27). 'off-ladder' = the op is not a record act (read, credential, substrate, caller-owned or observational ground; see rungGround). 'undetermined' = a record act with no rung yet (R27) or no op located. Updated 2026-09-29 (BOB #67): the 57 acts graded 'undetermined' carry the rungs Bob gave them in DEC-88; the plane still lists them in RUNG_ABSENT until BOB moves them (affordances R27).",
    "surface": "whether civicos-ui/app.html offers the act today, from its SURFACES registry, ACT_FLOW, ROSTER_ACTS and op call sites",
    "frequency": "worker's judgement from the journeys, Interaction Constructs and Case Making",
    "memberWord": "memberWordSrc cites a design doc, requirement or the old UI; proposed: true means the worker's proposal"
   },
-  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65"
+  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67"
  },
  "constructs": [
   {
@@ -729,8 +729,8 @@
      "name": "Fork a project",
      "who": "joined participant",
      "src": "promotion R41-R44",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.projectfork (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: projectfork = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#project/ workspace, 'Fork this project')",
      "frequency": "occasional"
     },
@@ -738,8 +738,8 @@
      "name": "Set objective's satisfaction condition",
      "who": "joined participant",
      "src": "intent R2",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.objectivecondition (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: objectivecondition = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "once"
     },
@@ -957,8 +957,8 @@
      "name": "List / read / resolve inbox",
      "who": "member",
      "src": "capture Provides (inboxList, inboxGet, inboxResolve)",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.inboxresolve (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: inboxresolve = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "weekly"
     }
@@ -1011,8 +1011,8 @@
      "who": "member (never a machine)",
      "src": "provenance R28",
      "op": "testify",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.testify (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: testify = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "weekly"
     },
@@ -1021,10 +1021,11 @@
      "who": "its author",
      "src": "publication R17",
      "op": "attribute",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.attribute (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: attribute = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
-     "frequency": "occasional"
+     "frequency": "occasional",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a name that becomes permanent at publication."
     }
    ],
    "shownAs": [
@@ -1075,8 +1076,8 @@
      "who": "member",
      "src": "observation-log R14",
      "op": "lead",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.lead (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: lead = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "weekly"
     },
@@ -1085,18 +1086,19 @@
      "who": "the lead's author, joined in that project",
      "src": "observation-log R16",
      "op": "leadshare",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.leadshare (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: leadshare = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
-     "frequency": "weekly"
+     "frequency": "weekly",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a disclosure that cannot be un-read."
     },
     {
      "name": "Record a look",
      "who": "member who can read it",
      "src": "observation-log R17",
      "op": "leadlook",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.leadlook (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: leadlook = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "weekly"
     },
@@ -1234,8 +1236,8 @@
      "who": "member; machine within a run's mints bound, labelled",
      "src": "content Provides (contentMint); run-productions Purpose",
      "op": "contentmint",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.contentmint (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: contentmint = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "daily"
     },
@@ -1244,8 +1246,8 @@
      "who": "member",
      "src": "content R23",
      "op": "transcribe",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.transcribe (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: transcribe = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -1254,8 +1256,8 @@
      "who": "a second member (not the typist)",
      "src": "content Provides; System Design §3 row 4",
      "op": "transcriptionattest",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.transcriptionattest (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: transcriptionattest = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -1264,8 +1266,8 @@
      "who": "member",
      "src": "content Provides",
      "op": "attesttext",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.attesttext (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: attesttext = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -1317,18 +1319,19 @@
      "who": "member",
      "src": "entities Provides",
      "op": "entitycreate",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.entitycreate (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: entitycreate = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#subjects)",
-     "frequency": "weekly"
+     "frequency": "weekly",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a person named in the registry."
     },
     {
      "name": "Add an alias",
      "who": "member",
      "src": "entities Provides",
      "op": "entityalias",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.entityalias (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: entityalias = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#subjects)",
      "frequency": "occasional"
     },
@@ -1347,8 +1350,8 @@
      "who": "member (set form)",
      "src": "entities R9",
      "op": "resolve",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.resolve (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: resolve = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#subjects, resolve references)",
      "frequency": "daily"
     },
@@ -1357,8 +1360,8 @@
      "who": "member",
      "src": "entities R12",
      "op": "resolvetestify",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.resolvetestify (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: resolvetestify = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#subjects)",
      "frequency": "occasional"
     }
@@ -1416,8 +1419,8 @@
      "who": "member",
      "src": "connections Provides",
      "op": "connectionchoose",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.connectionchoose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: connectionchoose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (document page, 'what the record knows' panel)",
      "frequency": "weekly"
     },
@@ -1426,8 +1429,8 @@
      "who": "member",
      "src": "connections Provides",
      "op": "themedeclare",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.themedeclare (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: themedeclare = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#themes)",
      "frequency": "occasional"
     },
@@ -1436,7 +1439,7 @@
      "who": "member; machine proposes",
      "src": "connections Provides",
      "rung": "reasoned",
-     "rungSrc": "RUNG_ABSENT.themeplace (ground undetermined; awaits BOB's regrade, affordances R27); RUNG_ABSENT.themepropose (ground undetermined; awaits BOB's regrade, affordances R27); RUNGS.themewithdraw = reasoned (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: themeplace undetermined, themepropose undetermined, themewithdraw reasoned",
+     "rungSrc": "DEC-88: themeplace = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27); DEC-88: themepropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27); RUNGS.themewithdraw = reasoned (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: themeplace reversible, themepropose reversible, themewithdraw reasoned",
      "surface": "yes (#themes; place and propose)",
      "frequency": "weekly"
     }
@@ -1507,8 +1510,8 @@
      "who": "member",
      "src": "progressions R1-R4",
      "op": "progressiondefine",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.progressiondefine (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: progressiondefine = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#progressions)",
      "frequency": "occasional"
     },
@@ -1517,8 +1520,8 @@
      "who": "member",
      "src": "progressions R6-R8",
      "op": "thread",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.thread (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: thread = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#progressions)",
      "frequency": "weekly"
     },
@@ -1719,8 +1722,8 @@
      "who": "project owner",
      "src": "bias R11",
      "op": "biasadopt",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.biasadopt (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: biasadopt = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "once"
     },
@@ -1729,8 +1732,8 @@
      "who": "administrator",
      "src": "bias R11",
      "op": "biasadopt",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.biasadopt (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: biasadopt = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "once"
     },
@@ -2249,8 +2252,8 @@
      "name": "Suggest a version",
      "who": "AI run (investigate)",
      "src": "run-productions Purpose; basis-versions R28",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.suggest (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: suggest = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (shown on #session/ and #versions/; machine act)",
      "frequency": "weekly"
     }
@@ -2325,10 +2328,11 @@
      "who": "active administrator",
      "src": "strength R15",
      "op": "strengthbarset",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.strengthbar (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: strengthbar = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
-     "frequency": "once"
+     "frequency": "once",
+     "friction": "High friction (DEC-88): opens the full dialog stating its effect, a gate on the whole group's work."
     }
    ],
    "shownAs": [
@@ -2377,8 +2381,8 @@
      "who": "AI run's principal",
      "src": "contradiction R13-R16",
      "op": "contradictionpropose",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.contradictionpropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: contradictionpropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     }
@@ -2450,8 +2454,8 @@
      "name": "Declare an aspiration",
      "who": "member (own), joined participant (project), administrator (group)",
      "src": "intent R9",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.aspirationdeclare (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: aspirationdeclare = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "once"
     },
@@ -2469,8 +2473,8 @@
      "name": "Record a dead end",
      "who": "member",
      "src": "intent R11",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.aspirationdeadend (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: aspirationdeadend = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -2479,7 +2483,7 @@
      "who": "member",
      "src": "intent R8",
      "rung": "reasoned",
-     "rungSrc": "RUNG_ABSENT.goaldeclare (ground undetermined; awaits BOB's regrade, affordances R27); RUNGS.goalclose = reasoned; RUNG_ABSENT.goallink (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: goaldeclare undetermined, goalclose reasoned, goallink undetermined",
+     "rungSrc": "DEC-88: goaldeclare = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27); RUNGS.goalclose = reasoned; DEC-88: goallink = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: goaldeclare reasoned, goalclose reasoned, goallink reversible",
      "surface": "none",
      "frequency": "occasional"
     }
@@ -2558,8 +2562,8 @@
      "name": "Set the condition",
      "who": "joined participant (machine refused)",
      "src": "intent R2",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.objectivecondition (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: objectivecondition = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "once"
     },
@@ -2587,10 +2591,11 @@
      "who": "member only",
      "src": "intent R18",
      "op": "workObjective",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.workobjective (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: workobjective = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
-     "frequency": "occasional"
+     "frequency": "occasional",
+     "friction": "High friction, the lightest of the six (DEC-88): its reason field opens in place with the run's budget and scope shown beside it."
     }
    ],
    "shownAs": [
@@ -2672,8 +2677,8 @@
      "name": "Adopt newer / keep earlier",
      "who": "member",
      "src": "reevaluation R15",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.versionadopt (ground undetermined; awaits BOB's regrade, affordances R27); RUNG_ABSENT.versionkeep (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: versionadopt = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27); DEC-88: versionkeep = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: versionadopt reasoned, versionkeep reversible",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -2799,8 +2804,8 @@
      "who": "member / review recipient",
      "src": "case-authoring R19",
      "op": "statementack",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.statementack (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: statementack = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#draft/ and #reviewcopy/)",
      "frequency": "occasional"
     },
@@ -2919,8 +2924,8 @@
      "who": "project editor",
      "src": "review R3-R4",
      "op": "casedraft",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.casedraft (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: casedraft = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#draft/ review copy editor)",
      "frequency": "occasional"
     },
@@ -2953,8 +2958,8 @@
      "who": "same doors",
      "src": "review R18",
      "op": "reviewcomment",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.reviewcomment (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: reviewcomment = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#reviewcopy/ and #draft/)",
      "frequency": "occasional"
     }
@@ -3022,8 +3027,8 @@
      "who": "member (machine refused)",
      "src": "standards R1-R4",
      "op": "standardDeclare",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.standarddeclare (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: standarddeclare = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3032,8 +3037,8 @@
      "who": "member or machine",
      "src": "standards R9",
      "op": "standardPropose",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.standardpropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: standardpropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3041,8 +3046,8 @@
      "name": "Adopt a proposal",
      "who": "member",
      "src": "standards R10",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.standardadopt (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: standardadopt = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3130,8 +3135,8 @@
      "name": "Propose a comparison",
      "who": "machine or member",
      "src": "conformance R12",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.comparisonpropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: comparisonpropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3213,8 +3218,8 @@
      "name": "Record a consequence part",
      "who": "joined member; machine only computes",
      "src": "consequences R1-R4",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.consequencerecord (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: consequencerecord = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3342,8 +3347,8 @@
      "who": "member",
      "src": "actions R15-R17",
      "op": "actioncorrespond",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.actioncorrespond (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: actioncorrespond = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#action/ page)",
      "frequency": "weekly",
      "urgency": "time-bound",
@@ -3355,7 +3360,7 @@
      "src": "actions R18-R19",
      "op": "actionlaws",
      "rung": "reversible",
-     "rungSrc": "RUNGS.actionlaws = reversible; RUNG_ABSENT.actionlawspropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: actionlaws reversible, actionlawspropose undetermined",
+     "rungSrc": "RUNGS.actionlaws = reversible; DEC-88: actionlawspropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#action/ page, laws list)",
      "frequency": "occasional"
     },
@@ -3365,7 +3370,7 @@
      "src": "actions R23-R24, R28",
      "op": "actionrisktier",
      "rung": "reasoned",
-     "rungSrc": "RUNGS.actionrisktier = reasoned; RUNG_ABSENT.actionriskpropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: actionrisktier reasoned, actionriskpropose undetermined",
+     "rungSrc": "RUNGS.actionrisktier = reasoned; DEC-88: actionriskpropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3); mixed: actionrisktier reasoned, actionriskpropose reversible",
      "surface": "yes (#action/ page)",
      "frequency": "occasional"
     },
@@ -3456,8 +3461,8 @@
      "who": "any credential",
      "src": "filings R1-R5",
      "op": "filingPrepare",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.filingprepare (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: filingprepare = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
@@ -3467,17 +3472,18 @@
      "name": "Approve",
      "who": "member",
      "src": "filings R6",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.filingapprove (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "terminal",
+     "rungSrc": "DEC-88: filingapprove = terminal (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
-     "frequency": "occasional"
+     "frequency": "occasional",
+     "friction": "High friction (DEC-88): terminal, so the full dialog stating what it ends is already its own."
     },
     {
      "name": "Record as sent",
      "who": "member",
      "src": "filings R7",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.filingsent (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: filingsent = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional",
      "urgency": "time-bound",
@@ -3488,8 +3494,8 @@
      "who": "member names counsel",
      "src": "filings R8-R12",
      "op": "counselPacket",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.counselpacket (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: counselpacket = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3497,8 +3503,8 @@
      "name": "Propose a legal theory",
      "who": "any credential",
      "src": "filings R14",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.theorypropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: theorypropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     }
@@ -3601,6 +3607,13 @@
      "act": "end",
      "who": "member; refused unless both exit conditions met",
      "src": "escalation R14"
+    },
+    {
+     "from": "live noncompliant determination",
+     "to": "declined to escalate (not yet built)",
+     "act": "decline to escalate (reason)",
+     "who": "joined member who may open an escalation",
+     "src": "DEC-89"
     }
    ],
    "keyFields": [
@@ -3616,17 +3629,28 @@
      "who": "joined member",
      "src": "escalation R1",
      "op": "escalationOpen",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.escalationopen (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: escalationopen = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
-     "frequency": "occasional"
+     "frequency": "occasional",
+     "ruling": "DEC-89: opening requires a written reason, why this breach is worth pursuing; prose only (the requirement change is owed)."
+    },
+    {
+     "name": "Decline to escalate",
+     "who": "any joined member who may open an escalation",
+     "src": "DEC-89 (Bob, 2026-09-29)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-89: reasoned (Bob, 2026-09-29); a new act, not yet in the affordances tables",
+     "surface": "none (decided, not yet built)",
+     "frequency": "occasional",
+     "ruling": "Decided, not yet built (DEC-89): on a live noncompliant determination, records in the member's own words why the group is not pursuing it now; attributed and dated, corrected only forward (a later escalation, opened with its own reason, supersedes it and both stay readable); prose only, never a significance, severity or priority value."
     },
     {
      "name": "Attach a breach action (stage 2, 5, 7)",
      "who": "member",
      "src": "escalation R9",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.escalationattach (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reasoned",
+     "rungSrc": "DEC-88: escalationattach = reasoned (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -3666,8 +3690,8 @@
      "name": "End",
      "who": "member",
      "src": "escalation R14",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.escalationend (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "terminal",
+     "rungSrc": "DEC-88: escalationend = terminal (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     }
@@ -3872,8 +3896,8 @@
      "who": "see transitions",
      "src": "queue R25",
      "op": "taskresolve / taskforward",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.taskresolve (ground undetermined; awaits BOB's regrade, affordances R27); RUNG_ABSENT.taskforward (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: taskresolve = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27); DEC-88: taskforward = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (#queue, one or as a set)",
      "frequency": "daily",
      "urgency": "time-bound",
@@ -3995,8 +4019,8 @@
      "who": "member via an ai credential",
      "src": "ai-runs R9",
      "op": "airunopen",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.airunopen (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: airunopen = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none (app.html shows a running session; cannot open a CHECK run)",
      "frequency": "weekly",
      "urgency": "time-bound",
@@ -4016,8 +4040,8 @@
      "name": "Suggest basis versions",
      "who": "run (investigate)",
      "src": "run-productions Purpose",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.suggest (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: suggest = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "yes (results shown on #versions/ and #session/)",
      "frequency": "weekly"
     },
@@ -4025,8 +4049,8 @@
      "name": "Propose readings of a document",
      "who": "run (extract), within mints",
      "src": "run-productions R10-R11",
-     "rung": "undetermined",
-     "rungSrc": "RUNG_ABSENT.extractpropose (ground undetermined; awaits BOB's regrade, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
+     "rung": "reversible",
+     "rungSrc": "DEC-88: extractpropose = reversible (Bob, 2026-09-29; the plane still lists it in RUNG_ABSENT until BOB moves it, affordances R27) (bio-plane/src/affordances.mjs; affordances R2-R3)",
      "surface": "none",
      "frequency": "occasional"
     },
@@ -5201,8 +5225,8 @@
  "displayPrimitives": [
   {
    "name": "UNDETERMINED",
-   "meaning": "what we do not know and why; first-class, never an error, one treatment everywhere",
-   "src": "Interaction Constructs §U; System Design §1",
+   "meaning": "what we do not know and why: one component with a fixed mark and a mandatory 'because…' line, identical everywhere, first-class, never dressed as an error (DEC-86)",
+   "src": "Interaction Constructs §U; System Design §1; DEC-86",
    "where": "legs, strength axes, capture route, risk tier, standard source and in-force, consequences, home sets, deliverer, profiles"
   },
   {
@@ -5213,14 +5237,14 @@
   },
   {
    "name": "Strength pair",
-   "meaning": "weakest capture and weakest connection, testimony beside; graded / unrated / undetermined; no single score",
-   "src": "strength R1-R10; publication R11",
+   "meaning": "weakest capture and weakest connection, testimony beside; graded / unrated / undetermined; no single score; 'unrated' has its own treatment and fixed sentence, distinct from Undetermined (DEC-86)",
+   "src": "strength R1-R10; publication R11; DEC-86",
    "where": "questions, versions, published cases, determinations"
   },
   {
    "name": "Rung ladder",
-   "meaning": "every act's weight: reversible < reasoned < terminal < attested < irreversible",
-   "src": "affordances R2-R3, R27; Interaction Constructs §revised set",
+   "meaning": "every act's weight: reversible < reasoned < terminal < attested < irreversible; friction follows the rung and every act's button shows its rung's name and weight mark; an unset rung is treated as reasoned (DEC-87)",
+   "src": "affordances R2-R3, R27; Interaction Constructs §revised set; DEC-87, DEC-88",
    "where": "every act option"
   },
   {
@@ -5231,8 +5255,8 @@
   },
   {
    "name": "Look states: NEVER_LOOKED ('nobody looked'), LOOKED_ABSENT, LOOKED_INDETERMINATE, partial, PRESENT",
-   "meaning": "which absence is true, at which of four levels",
-   "src": "observation-log R1-R3; skills R19; case-authoring R17",
+   "meaning": "which absence is true, at which of four levels; 'nobody looked' has its own treatment and fixed sentence, never Undetermined's (DEC-86)",
+   "src": "observation-log R1-R3; skills R19; case-authoring R17; DEC-86",
    "where": "frontier, leads, run logs, searched section of a case"
   },
   {
@@ -5243,8 +5267,8 @@
   },
   {
    "name": "Machine-work label / proposal label",
-   "meaning": "marks anything a machine proposed; never evidence until a member acts",
-   "src": "AI Roles §3 rule 3; filings R5; standards R9",
+   "meaning": "marks anything a machine proposed; never evidence until a member acts; the assistant panel's text carries the same treatment (DEC-90)",
+   "src": "AI Roles §3 rule 3; filings R5; standards R9; DEC-90",
    "where": "suggested versions, proposed readings, standards, comparisons, laws, tiers, filings, contradictions"
   },
   {
@@ -5255,8 +5279,8 @@
   },
   {
    "name": "Withheld / out of view",
-   "meaning": "something exists you may not see: stated as incompleteness, never identity or count",
-   "src": "queue R7 (DEC-36); strength R6; reevaluation R3; observation-log R13",
+   "meaning": "something exists you may not see: stated as incompleteness, never identity or count; its own treatment and fixed sentence, never Undetermined's (DEC-86)",
+   "src": "queue R7 (DEC-36); strength R6; reevaluation R3; observation-log R13; DEC-86",
    "where": "queue homes, strength members, re-evaluation dependents, observation rows"
   },
   {
@@ -5303,8 +5327,8 @@
   },
   {
    "name": "Refusal with reason and translation",
-   "meaning": "every refusal names its reason in plain words before anything runs",
-   "src": "membership Provides; affordances Purpose (pre-flight, DEC-8); AI Roles §3 rule 10",
+   "meaning": "every refusal names its reason in plain words before anything runs; 'refused' has its own treatment and fixed sentence, never Undetermined's (DEC-86)",
+   "src": "membership Provides; affordances Purpose (pre-flight, DEC-8); AI Roles §3 rule 10; DEC-86",
    "where": "every act"
   },
   {
@@ -5347,9 +5371,9 @@
    "ids": "monitoring R23, R28-R35, R45; N222, N230"
   },
   {
-   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; assistant pilot flow absent",
+   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; assistant pilot flow absent. Its look is decided, not yet built: a panel docked beside the surface it serves (side on wide screens, bottom on narrow ones), expandable, never floating",
    "why": "deployment order",
-   "ids": "ai-runs R40, R44; AI Roles §2, §8"
+   "ids": "ai-runs R40, R44; AI Roles §2, §8; DEC-90"
   },
   {
    "what": "Contradictions: decided, not yet built. How a contradiction is presented and resolved is ruled (conditional contradiction, resolution kinds, inline tension marks, six presentation forms); nothing yet shows a candidate to a member",
@@ -5360,6 +5384,16 @@
    "what": "Layer 9 (standards to escalation) built in T8 but requirement files still carry 'not yet met: new module' marks; fixes pending",
    "why": "stale marks; T11 fixes incl. a member session unable to record a breach action through promote",
    "ids": "T8 archive close; N233, N246, N257, N261, N271, N269, N220"
+  },
+  {
+   "what": "Why a breach is, or is not, escalated: decided, not yet built. Opening an escalation requires a written reason, and a new reasoned act, 'decline to escalate', records why a group does not pursue one; both prose only",
+   "why": "decided, not yet built: the escalation and conformance requirement changes (the opening reason, the decline act and its read, and whether a determination was escalated, declined or neither) are owed, for Bob's approval",
+   "ids": "DEC-89; conformance R8; escalation R1, R19"
+  },
+  {
+   "what": "Action plan: ruled in part. Bob's ten rulings settle what a plan is (opens with an inquiry; one or more related matters, suspected or determined; options in six categories, suggested or added; no catalogue, no budgets; up to three scenarios); the new 'action-plans' module awaits his approval as architecture, and the surface (S11) is designed after",
+   "why": "open: the module and its requirements are not yet approved",
+   "ids": "docs/development/action-design/ACTION-PLAN.md (Bob's rulings 1-10, 2026-09-29); Case Making 'THE ACTION PLAN'; DEC-25"
   },
   {
    "what": "Action kinds offered from jurisdiction profiles not yet live in affordances vocabularies",
@@ -5397,9 +5431,9 @@
    "ids": "instance-setup R13, R16; N10"
   },
   {
-   "what": "Rungs of 57 ops graded 'undetermined' to be reassigned (incl. versionaccept, resolve, forward, action acts)",
-   "why": "R27 rule",
-   "ids": "affordances R27 (K102, K264, K309)"
+   "what": "Rungs of the 57 ops graded 'undetermined': decided, not yet in the plane. Bob gave them rungs (26 reversible, 29 reasoned, 2 terminal) and named six judgement calls that carry high friction; friction by rung is ruled",
+   "why": "decided, not yet built: BOB moves the 57 into RUNGS in the affordances module, corrects R27's count, adds a required reason where a reasoned act lacks one, and publishes the consequence statement for the six",
+   "ids": "DEC-87; DEC-88; affordances R27 (K102, K264, K309)"
   },
   {
    "what": "Release and retire of a document have no owning module's requirements (still in legacy-store)",
@@ -5745,7 +5779,7 @@
   },
   {
    "term": "Look",
-   "plain": "A record of whether anyone looked for something and what they found: never looked, absent, could not tell, present.",
+   "plain": "A record of whether anyone looked for something and what they found: never looked, absent, could not tell, present. 'Nobody looked' has its own look and fixed sentence, distinct from Undetermined ('could not tell', DEC-86).",
    "internalNames": [
     "observation",
     "NEVER_LOOKED",
@@ -5831,13 +5865,12 @@
   },
   {
    "term": "Undetermined",
-   "plain": "What we do not know and why; shown the same way everywhere, never as an error or a zero.",
+   "plain": "What we do not know and why: one mark with a line that always says 'because…', shown the same way everywhere, never as an error or a zero (DEC-86).",
    "internalNames": [
     "undetermined",
-    "UNDETERMINED",
-    "unrated"
+    "UNDETERMINED"
    ],
-   "avoidConfusionWith": ""
+   "avoidConfusionWith": "its four neighbours, each with its own look and its own fixed sentence, never shared (DEC-86): withheld (it exists, you may not see it), unrated (nothing graded yet), nobody looked, refused (the system declined an act)"
   },
   {
    "term": "Lens (declared bias)",
@@ -5974,7 +6007,7 @@
   },
   {
    "term": "Escalation",
-   "plain": "Seven stages of pressing a breach, from documenting it to political accountability.",
+   "plain": "Seven stages of pressing a breach, from documenting it to political accountability. Opening one needs a written reason; a member may instead record why the group declines to escalate (DEC-89, not yet built).",
    "internalNames": [
     "escalation",
     "escalationOpen",
@@ -6028,7 +6061,7 @@
   },
   {
    "term": "Rung",
-   "plain": "How heavy an act is: reversible, reasoned, terminal, attested, irreversible.",
+   "plain": "How heavy an act is: reversible, reasoned, terminal, attested, irreversible. Friction follows it: reversible inline, reasoned a reason field in place, terminal and attested a full dialog, irreversible only through the ceremony; every button shows its rung (DEC-87).",
    "internalNames": [
     "RUNGS",
     "RUNG_LADDER",
@@ -6049,7 +6082,7 @@
   },
   {
    "term": "Assistant (AI run)",
-   "plain": "A bounded machine session that looks, suggests and asks for captures; it never decides.",
+   "plain": "A bounded machine session that looks, suggests and asks for captures; it never decides. It appears as a panel docked beside the screen it serves, never floating (DEC-90).",
    "internalNames": [
     "ai-run",
     "airunopen",

@@ -119,6 +119,9 @@ def statechips(states):
         out.append(f'<li><span class="mw">{e(w or s["name"])}{tag}</span><span class="st">{e(s["name"])}</span><span class="sm">{e(s.get("meaning"))}</span></li>')
     return '<ol class="states">' + "".join(out) + "</ol>"
 
+def actnotes(a):
+    return "".join("<div class=note>" + e(a[k]) + "</div>" for k in ("friction", "ruling") if a.get(k))
+
 def rungpill(r):
     k = r or "undetermined"
     return f'<span class="rung r-{e(k)}">{e(RUNG_WORD.get(k, k))}</span>'
@@ -126,7 +129,7 @@ def rungpill(r):
 def card(c):
     m, mlab = MAT.get(c["maturity"], ("gaps", c["maturity"]))
     acts = "".join(
-        f'<tr><td>{e(a["name"])}{(" <code>" + e(a["op"]) + "</code>") if a.get("op") else ""}{("<div class=note>" + e(a["note"]) + "</div>") if a.get("note") else ""}</td>'
+        f'<tr><td>{e(a["name"])}{(" <code>" + e(a["op"]) + "</code>") if a.get("op") else ""}{("<div class=note>" + e(a["note"]) + "</div>") if a.get("note") else ""}{actnotes(a)}</td>'
         f'<td>{e(a.get("who"))}</td><td>{rungpill(a.get("rung"))}</td><td>{e(a.get("frequency"))}{(" · <b>time-bound</b>") if a.get("urgency") == "time-bound" else ""}</td>'
         f'<td>{e(a.get("surface"))}</td><td>{src(a.get("src"))}</td></tr>' for a in c.get("acts", []))
     rels = [r for r in d["relationships"] if c["id"] in (r["from"], r["to"])]
@@ -150,8 +153,10 @@ wsec = ""
 for r in RUNG_ORDER:
     rows = [(c, a) for c, a in allacts if (a.get("rung") or "undetermined") == r]
     if not rows: continue
-    body = "".join(f'<tr><td>{e(a["name"])}</td><td><a href="#c-{e(c["id"])}">{e(short(c["id"]))}</a></td><td>{e(a.get("frequency"))}{(" · <b>time-bound</b>") if a.get("urgency") == "time-bound" else ""}</td><td>{e(a.get("surface"))}</td><td>{src(a.get("rungSrc") or a.get("rungGround"))}</td></tr>' for c, a in rows)
+    body = "".join(f'<tr><td>{e(a["name"])}{actnotes(a)}</td><td><a href="#c-{e(c["id"])}">{e(short(c["id"]))}</a></td><td>{e(a.get("frequency"))}{(" · <b>time-bound</b>") if a.get("urgency") == "time-bound" else ""}</td><td>{e(a.get("surface"))}</td><td>{src(a.get("rungSrc") or a.get("rungGround"))}</td></tr>' for c, a in rows)
     wsec += f'<details class="wgrp"{" open" if r in ("irreversible","attested","terminal") else ""}><summary>{rungpill(r)} <b>{len(rows)}</b> acts</summary><div class=tw><table><thead><tr><th>Act</th><th>On</th><th>How often</th><th>In the old interface</th><th class=srccol>Why this weight</th></tr></thead><tbody>{body}</tbody></table></div></details>'
+n_undet = sum(1 for _, a in allacts if (a.get("rung") or "undetermined") == "undetermined")
+six = "".join(f'<li><b>{e(a["name"])}</b> (<a href="#c-{e(c["id"])}">{e(short(c["id"]))}</a>, {e(RUNG_WORD.get(a.get("rung"), a.get("rung")))}): {e(a["friction"].removeprefix("High friction (DEC-88): "))}</li>' for c, a in allacts if a.get("friction"))
 n_none = sum(1 for _, a in allacts if str(a.get("surface", "")).startswith("none"))
 
 # ---------- surfaces ----------
@@ -183,14 +188,15 @@ def oq_item(n, q):
         k = "askb" if who.startswith("Bob") else "open"
         tag = ' <span class="pill ' + k + '">' + ("Bob" if k == "askb" else "Design") + '</span>'
     rd = q.get("ruled")
-    if rd: tag += ' <span class="pill built">Ruled</span>'
+    part = bool(rd and rd.get("partial"))
+    if rd: tag += ' <span class="pill gaps">Ruled in part</span>' if part else ' <span class="pill built">Ruled</span>'
     head = '<summary id="oq' + str(n) + '"><span class="oqn">' + str(n) + '</span> <b>' + e(q.get("question")) + '</b>' + tag + '</summary>'
     body = ""
-    if rd: body += f'<p class="rec"><b>Ruled by {e(rd.get("by", "Bob"))}, {e(rd.get("date"))} ({e(", ".join(rd.get("rulings", [])))}):</b> {linkify(rd.get("decided"))}</p><p class="note">What follows is the question as it stood before the ruling; the ruling wins wherever they differ.</p>'
+    if rd: body += ruledp(rd) + '<p class="note">What follows is the question as it stood before the ruling; the ruling wins wherever they differ.</p>'
     body += f'<div>{bl(q.get("whyItMatters"))}</div>'
     if q.get("context"): body += f'<h4>Context</h4><p>{e(q["context"])}</p>'
     if q.get("canonSays"): body += '<h4>What the canon says</h4><ul class="bl">' + "".join(f'<li><b>{e(c.get("source"))}</b>: {e(c.get("says"))}</li>' for c in q["canonSays"]) + '</ul>'
-    if q.get("whyOpen"): body += f'<h4>{"Why it was open" if rd else "Why it is open"}</h4><p>{e(q["whyOpen"])}</p>'
+    if q.get("whyOpen"): body += f'<h4>{"Why it was open" if rd and not part else "Why it is open"}</h4><p>{e(q["whyOpen"])}</p>'
     if q.get("todayInOldUI"): body += f'<h4>In the old interface today</h4><p>{e(q["todayInOldUI"])}</p>'
     if q.get("options"): body += '<h4>Ways to close it</h4><ol class="opts">' + "".join(f'<li><b>{e(o.get("option"))}</b><div class=note>{e(o.get("tradeoffs"))}</div></li>' for o in q["options"]) + '</ol>'
     if q.get("recommendation"): body += f'<p class="rec"><b>Recommendation:</b> {e(q["recommendation"])}</p>'
@@ -199,13 +205,22 @@ def oq_item(n, q):
     body += f'<div class=note>Related: {e(", ".join(map(str, rel)))}{"; " if rel else ""}use cases {e(", ".join(q.get("relatedUseCases") or []))}</div>'
     if q.get("whereTheCanonStops"): body += f'<div class=note>Where the canon stops: {bl(q.get("whereTheCanonStops"))}</div>'
     return f'<li><details class="oqd">{head}<div class="cbody">{body}</div></details></li>'
+def ruledp(rd):
+    lab = "Ruled in part by" if rd.get("partial") else "Ruled by"
+    out = f'<p class="rec"><b>{lab} {e(rd.get("by", "Bob"))}, {e(rd.get("date"))} ({e(", ".join(rd.get("rulings", [])))}):</b> {linkify(rd.get("decided"))}</p>'
+    if rd.get("stillOpen"): out += f'<p class="rec"><b>Still open:</b> {linkify(rd["stillOpen"])}</p>'
+    return out
 def linkify(t):
     return re.sub(r'(https://claude\.ai/artifact/[A-Za-z0-9]+)', r'<a href="\1">\1</a>', e(t))
 oq = "".join(oq_item(i + 1, q) for i, q in enumerate(x.get("openQuestions", [])))
 oqs = x.get("openQuestions", [])
-oq_ruled = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled")]
+oq_ruled = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled") and not q["ruled"].get("partial")]
+oq_part = [(i + 1, q) for i, q in enumerate(oqs) if q.get("ruled") and q["ruled"].get("partial")]
 oq_open_n = len(oqs) - len(oq_ruled)
-ruledq = "".join(f'<article class="q bob"><h3><a href="#oq{n}">Open question {n}</a>: {e(q.get("question"))}</h3><p class="rec"><b>Ruled by {e(q["ruled"].get("by", "Bob"))}, {e(q["ruled"].get("date"))} ({e(", ".join(q["ruled"].get("rulings", [])))}):</b> {linkify(q["ruled"].get("decided"))}</p></article>' for n, q in oq_ruled)
+def nlist(ns):
+    ns = [str(n) for n in ns]
+    return ns[0] if len(ns) == 1 else ", ".join(ns[:-1]) + " and " + ns[-1]
+ruledq = "".join(f'<article class="q bob"><h3><a href="#oq{n}">Open question {n}</a>: {e(q.get("question"))}</h3>{ruledp(q["ruled"])}</article>' for n, q in sorted(oq_ruled + oq_part, key=lambda t: t[0]))
 
 gl = "".join(f'<tr><th scope=row>{e(g["term"])}</th><td>{e(g["plain"])}</td><td><code>{e(g.get("internalNames"))}</code></td><td>{e(g.get("avoidConfusionWith"))}</td></tr>' for g in d["glossary"])
 prims = "".join(f'<div class="prim"><h4>{e(p["name"])}</h4><p>{e(p["meaning"])}</p><p class="where"><b>Where:</b> {e(p.get("where"))}</p>{src(p.get("src"))}</div>' for p in d["displayPrimitives"])
@@ -232,6 +247,7 @@ if x:
 
 focus = "".join(f'<figure class="fig"><figcaption><h3>{e(t)}</h3><p>{e(p)}</p></figcaption><div class="diagram"><pre class="mermaid">{e(focused(ids))}</pre></div></figure>' for t, p, ids in GROUPS)
 
+part_note = (" (" + ("question " if len(oq_part) == 1 else "questions ") + nlist(n for n, _ in oq_part) + ' among them, ruled in part and marked <span class="pill gaps">Ruled in part</span>)') if oq_part else ""
 exp_block = ""
 if x:
     exp_block = f'''
@@ -245,7 +261,7 @@ if x:
 <p>The long paths through the work, as the person taking each step meets it: what they know at that moment, what they decide, what can go wrong, how long it takes, who they hand it to, and where trust is at risk.</p>
 {jx}
 <h2 id="open">Open questions for the design</h2>
-<p><b>{oq_open_n}</b> of {len(oqs)} still open; <b>{len(oq_ruled)}</b> ruled by Bob, marked <span class="pill built">Ruled</span> with the ruling at the top of each (and listed under <a href="#bob">Bob's rulings</a>).</p>
+<p><b>{oq_open_n}</b> of {len(oqs)} still open{part_note}; <b>{len(oq_ruled)}</b> ruled by Bob, marked <span class="pill built">Ruled</span>, with the ruling at the top of each (and listed under <a href="#bob">Bob's rulings</a>).</p>
 <p>What the canon leaves open. Open each question for its context, what the canon says, why it is still open, what the old interface does, the ways to close it and a recommendation. Each is marked <span class=\"pill askb\">Bob</span> where closing it is a decision of policy, doctrine, requirements or UX principle, or <span class=\"pill open\">Design</span> where the designer settles it within the canon.</p>
 <ol class="oq">{oq}</ol>'''
 
@@ -336,11 +352,11 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h1>The UX substrate</h1>
 <p class="lede">What a CivicOS member sees and works with, as the approved requirements define it, and everything a designer needs to build its experience on: who uses it, for what, what they meet at each step, and what each screen must and must never do.</p>
 <div class="readme">
-<div><b>Part 1 · Overview</b>For Bob: what the product is to a member, in plain words and a few diagrams, your three rulings on its words, and your rulings on the design's first open questions.</div>
+<div><b>Part 1 · Overview</b>For Bob: what the product is to a member, in plain words and a few diagrams, your three rulings on its words, and your rulings on the design's open questions.</div>
 <div><b>Part 2 · Design inputs</b>For the UX work: audiences, use cases, the experience step by step, screens and their rules, how heavy each act is, and the words. Each line is marked <span class="pill fixed">Fixed</span> by the canon or <span class="pill open">Open</span> for design.</div>
 <div><b>Part 3 · Reference</b>Every construct with its lifecycle and acts, who may act, what is still changing. Turn on “Show sources” to see the requirement behind each line.</div>
 </div>
-<div class="stats"><span class="pill built">{cnt["built"]} built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"]} not built</span><span class="pill askb">{len(BOBQ) + len(oq_ruled)} ruled by Bob</span>{f'<span class="pill open">{oq_open_n} open questions</span>' if x else ""}{f'<span class="pill open">{fixed_open}</span>' if fixed_open else ""}</div>
+<div class="stats"><span class="pill built">{cnt["built"]} built</span><span class="pill gaps">{cnt["built, gaps"]} built, with gaps</span><span class="pill spec">{cnt["specified, not built"]} not built</span><span class="pill askb">{len(BOBQ) + len(oq_ruled)} ruled by Bob</span>{f'<span class="pill open">{oq_open_n} open questions</span>' if x else ""}{f'<span class="pill gaps">{len(oq_part)} ruled in part</span>' if oq_part else ""}{f'<span class="pill open">{fixed_open}</span>' if fixed_open else ""}</div>
 </header>
 <nav class="bar" aria-label="Sections"><a href="#overview">Overview</a><a href="#bob">Bob's rulings</a>{'<a href="#audiences">Audiences</a><a href="#usecases">Use cases</a><a href="#experience">Experience</a>' if x else ""}<a href="#screens">Screens</a><a href="#weights">Act weights</a><a href="#words">Words</a>{'<a href="#open">Open questions</a>' if x else ""}<a href="#constructs">Constructs</a><a href="#roles">Who may act</a><a href="#flux">In flux</a>
 <label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label></nav>
@@ -358,7 +374,7 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h2 id="bob">Bob's rulings</h2>
 <p>The design documents and the requirements disagreed on these, and each changes what members read. Bob ruled all three on 2026-09-29, as recommended. The other differences I found are mine to settle and are listed under “In flux”.</p>
 {bobq}
-{('<h3 style="margin-top:22px">The design’s open questions ruled</h3><p>Bob ruled open questions ' + ", ".join(str(n) for n, _ in oq_ruled) + ' on 2026-09-29. Each is kept, with its context, under <a href="#open">Open questions</a>.</p>' + ruledq) if oq_ruled else ""}
+{('<h3 style="margin-top:22px">The design’s open questions ruled</h3><p>Bob ruled open questions ' + nlist(n for n, _ in oq_ruled) + (', and ' + ("question " if len(oq_part) == 1 else "questions ") + nlist(n for n, _ in oq_part) + ' in part,' if oq_part else '') + ' on 2026-09-29. Each is kept, with its context, under <a href="#open">Open questions</a>.</p>' + ruledq) if oq_ruled or oq_part else ""}
 
 <p class="part">Part 2 · Design inputs</p>
 {exp_block}
@@ -368,7 +384,12 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <h3 style="margin-top:22px">Every screen the requirements imply</h3>
 <div class="tw"><table><thead><tr><th>Screen</th><th>Today</th><th>Shows</th><th class=srccol>Source</th></tr></thead><tbody>{surf_tbl}</tbody></table></div>
 <h2 id="weights">How heavy each act is</h2>
-<p>Every act carries a weight. It decides how much friction the act deserves: a confirmation, a reason box, a signature. Weights come from the affordances module. <b>Weight not yet set</b> marks acts still waiting to be graded, which T11 and later settle; the design should expect those weights to arrive.</p>
+<p>Every act carries a weight, its rung, and the rung decides how much friction the act gets (Bob, 2026-09-29, DEC-87). Friction is kept as low as possible so the tool fades and the work stays in focus, yet a heavier act slows the member down, even for a moment, before it is taken.</p>
+<ul class="bl"><li>{rungpill("reversible")} happens inline.</li><li>{rungpill("reasoned")} opens a reason field in place.</li><li>{rungpill("terminal")} and {rungpill("attested")} open a full dialog stating what ends or cannot be silently undone, and who signs.</li><li>{rungpill("irreversible")} only through the publication ceremony (DEC-80).</li></ul>
+<p>Every act's button shows its rung's name and weight mark (DEC-82). Weights come from the affordances module. Bob gave the 57 acts that had none their rungs on 2026-09-29 (DEC-88), and they are shown here at those rungs; the module takes them up when BOB moves them. <b>{n_undet}</b> acts here still show {rungpill("undetermined")}, mostly because no operation of their own has been located; each is treated as needing a stated reason until BOB assigns it.</p>
+<p>Six acts are judgement calls that carry high friction whatever their rung, because friction follows the consequence in the world, and a heavy consequence is not a new rung (DEC-88):</p>
+<ul class="bl">{six}</ul>
+<p>An act that is decided but not yet built, such as “Decline to escalate” (DEC-89), is listed at its rung and marked as not yet built.</p>
 {wsec}
 <h2 id="words">Words</h2>
 <p>The product's own terms, in plain words, with the internal names behind them and the words they are easily confused with. Each state in Part 3 shows its member-facing word first. {props} of those are working names proposed from the definitions, marked <span class="pill open">working name</span>, for the design to settle.</p>

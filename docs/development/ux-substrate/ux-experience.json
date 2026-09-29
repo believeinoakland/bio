@@ -9,7 +9,7 @@
    "Two words mean two things. RUNG is how heavy an act is (reversible, reasoned, terminal, attested, irreversible). WEIGHT is how an act applied to a set behaves (refuse = all or nothing, report = proceed and say what moved, per-item = each applied or kept with its reason, single = one object). Source: affordances R1-R2; Interaction Constructs, naming collision corrected 2026-08-01.",
    "'Finding' is overloaded: in case-making it is a concluded question; in the queue it is a class of item the record noticed and nobody has judged (inventory contradictions). This file says 'concluded finding' or 'queue finding' where it matters.",
    "Coverage (useCases) says whether approved module requirements (build/requirements/*.md) hold the use case, not whether it is built.",
-   "Open questions 1-5 were ruled by Bob on 2026-09-29 (DEC-76 to DEC-82). Each keeps its original context and carries a 'ruled' entry naming its rulings, date and what was decided; the rulings win over that context wherever they differ."
+   "Open questions 1-8 and 10 were ruled by Bob on 2026-09-29 (DEC-76 to DEC-82, DEC-86 to DEC-90); question 9 was ruled in part (Bob's action-plan rulings 1-10, docs/development/action-design/ACTION-PLAN.md) and stays open until the action-plans module is approved. Each keeps its original context and carries a 'ruled' entry naming its rulings, date and what was decided (and, for question 9, what is still open); the rulings win over that context wherever they differ."
   ],
   "sources": [
    "requirements/README.md (canon index)",
@@ -43,7 +43,8 @@
    "journeySteps": 66,
    "surfaces": 17,
    "openQuestions": 30,
-   "openQuestionsRuled": 5
+   "openQuestionsRuled": 9,
+   "openQuestionsRuledInPart": 1
   },
   "useCasesWithoutRequirementCoverage": [
    "UC-003 Assemble what is known about a focus area (Context skill)",
@@ -61,7 +62,7 @@
    "UC-129 Document pressure against supporters as evidence",
    "UC-148 Learn the principles and start from the starter kit"
   ],
-  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65"
+  "updated": "2026-09-29 for DEC-76–DEC-82, by BOB #65 · updated 2026-09-29 for DEC-86–DEC-90 and the action-plan rulings, by BOB #67"
  },
  "audiences": [
   {
@@ -1691,7 +1692,7 @@
    "outcome": "Four levels (internet, documents, content, meaning) with look states and missing causes.",
    "coveredByRequirements": "yes",
    "requirementIds": "retrieval R36-R50; observation-log R1-R13",
-   "src": "OBSERVATION-LOG-DESIGN sections 5-6",
+   "src": "OBSERVATION-LOG-DESIGN sections 5-6; DEC-86 ('nobody looked' has its own treatment, distinct from Undetermined)",
    "basis": "fixed"
   },
   {
@@ -1989,7 +1990,7 @@
    "outcome": "The document moves collected to verified with a signed release.",
    "coveredByRequirements": "partial",
    "requirementIds": "affordances R1-R2 (weight refuse, rung reasoned)",
-   "src": "UI-KICKOFF 'Who this is for' item 2; Interaction Constructs section J",
+   "src": "UI-KICKOFF 'Who this is for' item 2; Interaction Constructs section J; DEC-87 (friction follows the rung)",
    "basis": "fixed",
    "coverageNote": "No approved module owns release's Provides (inventory; inFlux)."
   },
@@ -2707,7 +2708,7 @@
    "outcome": "Per-axis grades; unrated and undetermined stated; what-ifs labelled.",
    "coveredByRequirements": "yes",
    "requirementIds": "strength R1-R10, R18-R20",
-   "src": "DEC-21, DEC-44; Case Making R1-R2; DEC-82 (the workspace shows the strength pair against the bar; measures map)",
+   "src": "DEC-21, DEC-44; Case Making R1-R2; DEC-82 (the workspace shows the strength pair against the bar; measures map); DEC-86 (Undetermined and 'unrated' each have their own treatment)",
    "basis": "fixed"
   },
   {
@@ -3027,7 +3028,7 @@
    "outcome": "A member's act to open (or not open) an escalation; no significance field anywhere.",
    "coveredByRequirements": "partial",
    "requirementIds": "conformance R8; consequences R11; escalation R1, R19",
-   "src": "Functional Architecture Layer 2 Function 4",
+   "src": "Functional Architecture Layer 2 Function 4; DEC-89 (a required reason to open an escalation; 'decline to escalate', not yet built)",
    "basis": "fixed",
    "coverageNote": "Requirements forbid storing significance, severity or scores; the judgment is expressed only by acting. Where the member records why is open."
   },
@@ -3440,7 +3441,7 @@
    "outcome": "A bounded, attributed run; modes not deployed are refused.",
    "coveredByRequirements": "yes",
    "requirementIds": "ai-runs R9-R14, R40, R44",
-   "src": "DEC-24 (CHECK first, DEC-55)",
+   "src": "DEC-24 (CHECK first, DEC-55); DEC-90 (the assistant panel docks beside the surface)",
    "basis": "fixed"
   },
   {
@@ -3600,7 +3601,7 @@
    "outcome": "Proposals, confirmations, acts that still run their four beats.",
    "coveredByRequirements": "no",
    "requirementIds": "none",
-   "src": "DEC-27; Interaction Constructs section P (THE ASSISTANT); ASSISTANT-PILOT",
+   "src": "DEC-27; Interaction Constructs section P (THE ASSISTANT); ASSISTANT-PILOT; DEC-90 (the assistant panel docks beside the surface; a wizard step highlights, never fills)",
    "basis": "fixed"
   },
   {
@@ -3843,7 +3844,7 @@
    "outcome": "A ratified case edition; signer and deliverer recorded as two facts.",
    "coveredByRequirements": "yes",
    "requirementIds": "ratification R2-R3, R10-R13; membership R56",
-   "src": "Membership v2 section 7; AI Roles rule 4; DEC-80 (the owner signs in the browser with a registered browser-held key)",
+   "src": "Membership v2 section 7; AI Roles rule 4; DEC-80 (the owner signs in the browser with a registered browser-held key); DEC-87 (an irreversible act only through the ceremony)",
    "basis": "fixed"
   },
   {
@@ -4022,7 +4023,7 @@
    "outcome": "Stage 1, documentation.",
    "coveredByRequirements": "yes",
    "requirementIds": "escalation R1, R4, R17-R21",
-   "src": "Design Requirement 7",
+   "src": "Design Requirement 7; DEC-89 (opening requires a written reason)",
    "basis": "fixed"
   },
   {
@@ -4359,7 +4360,7 @@
    "outcome": "A plan (S11) that holds candidate steps; hypothetical premises are hunch debt.",
    "coveredByRequirements": "no",
    "requirementIds": "none",
-   "src": "Case Making 'THE ACTION PLAN' sections 1-6b; DEC-25 (plan never published, provisional)",
+   "src": "Case Making 'THE ACTION PLAN' sections 1-6b; DEC-25 (plan never published, provisional); Bob's action-plan rulings 1-10, 2026-09-29 (docs/development/action-design/ACTION-PLAN.md; the action-plans module awaits approval)",
    "basis": "fixed"
   },
   {
@@ -6278,7 +6279,7 @@
      "src": "affordances R5 (DEC-32 clause 1)"
     }
    ],
-   "src": "Interaction Constructs; affordances"
+   "src": "Interaction Constructs; affordances; DEC-87, DEC-88 (friction by rung)"
   },
   {
    "surface": "Question workspace (the inquiry page)",
@@ -7320,7 +7321,7 @@
      "basis": "open"
     }
    ],
-   "src": "standards; conformance; consequences; actions; escalation"
+   "src": "standards; conformance; consequences; actions; escalation; DEC-89 (opening reason; decline to escalate)"
   },
   {
    "surface": "Filing and counsel packet",
@@ -7949,7 +7950,7 @@
      "basis": "open"
     }
    ],
-   "src": "Interaction Constructs section P; AI Roles; ai-runs"
+   "src": "Interaction Constructs section P; AI Roles; ai-runs; DEC-90 (a docked panel, never floating)"
   },
   {
    "surface": "Published case (as the public reads it)",
@@ -8648,7 +8649,7 @@
     "UC-008",
     "UC-053"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "Interaction Constructs section U",
    "context": "'Undetermined' is the system's honest 'we do not know, and here is why': an unchecked link, an unstated document date, an incomputable strength. It appears in many unrelated places. Nearby states mean different things: withheld (exists, not yours to see), unrated (nothing graded yet), never looked (nobody searched), refused (the system declined an act).",
    "canonSays": [
@@ -8690,7 +8691,15 @@
     }
    ],
    "recommendation": "The first option: one undetermined component that always carries its reason, and four visibly different neighbours with fixed wording.",
-   "whoDecides": "Design: §U already sets the principle; the treatment and wording are the designer's within it."
+   "whoDecides": "Design: §U already sets the principle; the treatment and wording are the designer's within it.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-86"
+    ],
+    "decided": "As recommended: 'Undetermined' is one component with a fixed mark and a line that always says 'because…', the same everywhere. 'Withheld', 'Unrated', 'Nobody looked' and 'Refused' each have their own visibly different treatment and one fixed sentence pattern, never shared with each other or with Undetermined. None is dressed as an error, and all are written as named terms (DEC-82). The exact marks and wording are the redesign's, within this rule."
+   }
   },
   {
    "question": "How does the rung ladder look and feel so a member senses weight before acting, especially the attested and irreversible rungs?",
@@ -8699,7 +8708,7 @@
     "UC-021",
     "UC-103"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "Interaction Constructs revision 0.2",
    "context": "Every act carries a 'rung' naming its weight: reversible, reasoned (needs a written reason), terminal, attested (signed, cannot be undone silently) and irreversible (publishing). The aim is that a member feels how heavy an act is before taking it, so dismissing a note and publishing a case never feel like the same click.",
    "canonSays": [
@@ -8741,7 +8750,16 @@
     }
    ],
    "recommendation": "The first option, with the rung's name on the button, and an undetermined-rung act treated as reasoned until BOB assigns it.",
-   "whoDecides": "Design, within Interaction Constructs rev. 0.2 and K356; BOB assigns the 57 missing rungs (affordances R27)."
+   "whoDecides": "Design, within Interaction Constructs rev. 0.2 and K356; BOB assigns the 57 missing rungs (affordances R27).",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-87",
+     "DEC-88"
+    ],
+    "decided": "As recommended, with the principle in Bob's words: friction is kept as low as possible so the tool fades and the work stays in focus, while members still feel the weight of their work and the finality of some steps; cues rich in information show state, relationships, context, progression and the acts available; everything is self-evident to newcomers and intuitive to experienced members; and a heavier act slows the member down, even for a moment. Friction follows the rung: a reversible act happens inline; a reasoned act opens a reason field in place; a terminal or attested act opens a full dialog stating what ends or cannot be silently undone, and who signs; an irreversible act goes only through the ceremony (DEC-80). Every act's button shows its rung's name and weight mark, and an act whose rung is not yet set is treated as reasoned. Bob then gave the 57 acts that had no rung their rungs (26 reversible, 29 reasoned, 2 terminal, DEC-88) and named six judgement calls that carry high friction: choosing a person's attribution, sharing a lead, registering a subject and setting the group's strength bar open the full dialog stating their effect; approving a filing is terminal and has it already; having the assistant work an objective, the lightest of the six, opens its reason field in place with the run's budget and scope beside it. The rung names stay as they are: a heavy consequence is not a new rung."
+   }
   },
   {
    "question": "Where does a member record why something is (or is not) significant enough to escalate, given no significance field is allowed?",
@@ -8750,7 +8768,7 @@
     "UC-067",
     "UC-111"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "Functional Architecture Layer 2 Function 4; conformance R8",
    "context": "Once a group finds that a government body broke a rule, it must decide whether it is worth pursuing (escalating): a report two days late may not be; a $52.6 million unauthorised transfer is. No significance, severity or priority score may be stored, so the judgement exists only as acts on an escalation.",
    "canonSays": [
@@ -8792,7 +8810,15 @@
     }
    ],
    "recommendation": "The first option: a required reason when opening and a reasoned decline act, both prose only, so the judgement is kept without becoming a score.",
-   "whoDecides": "Bob: adding a decline act and a required reason changes the escalation and conformance requirements and touches Operational Principle 1."
+   "whoDecides": "Bob: adding a decline act and a required reason changes the escalation and conformance requirements and touches Operational Principle 1.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-89"
+    ],
+    "decided": "As recommended: opening an escalation requires a written reason, why this breach is worth pursuing; and a new act, 'decline to escalate', on a live noncompliant determination records in the member's own words why the group is not pursuing it now, reasoned, attributed and dated, and corrected only forward (a later escalation, opened with its own reason, supersedes it, and both stay readable). Both are prose only: no field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere, so the judgement is kept without becoming a score. Any joined member who may open an escalation may decline one. The changes to the escalation and conformance requirements are owed, for Bob's approval."
+   }
   },
   {
    "question": "What does the action plan surface (S11) look like: options, dependencies, deadlines, resources, outcome branches, declined options, and support status on every element?",
@@ -8847,7 +8873,18 @@
     }
    ],
    "recommendation": "The second option first (an outline with support status on every line), with a graph view added later; a module requirement must be written before design goes deep.",
-   "whoDecides": "Bob: a plan needs requirements and a module (scope and tranche are his); Design settles the layout once he does."
+   "whoDecides": "Bob: a plan needs requirements and a module (scope and tranche are his); Design settles the layout once he does.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "partial": true,
+    "rulings": [
+     "action-plan rulings 1–10",
+     "docs/development/action-design/ACTION-PLAN.md"
+    ],
+    "decided": "A plan may open as soon as an inquiry begins, before anything is published or determined, and is not tied to a publication; one publication may give rise to several plans. A plan addresses one or more related matters, each either suspected (an open inquiry) or determined (a noncompliant, compliant or unclear determination), so it may start from a success story or a records campaign as well as a breach. Options are suggested by the assistant, labelled as the machine's, or added by a member, directly or through the assistant; each option is bound to the matters it serves and falls in one of six categories: mitigation, legal, awareness, journalistic, grassroots or other. Lobbying is an option only to enforce or restore an existing requirement. There is no catalogue of response options and no budgets: neither money nor licensed resources are costed, and a plan is not a project-management system. An option left unticked is undecided; declining is an explicit act that records a short reason, so the options not taken stay visible. A plan holds up to three scenarios, each laying the chosen options out over time in phases, with checkpoints and conditions that a member judges; the system reminds once at each checkpoint and never judges. Options show collapsed as their summary, expanding to their detail, and the list sorts by category, date, matter and disposition.",
+    "stillOpen": "The new 'action-plans' module that would hold all this awaits Bob's approval as architecture; the surface (S11) is designed once it is approved."
+   }
   },
   {
    "question": "What does the assistant dialog look like on each surface, and how is 'the machine did the looking, you do the concluding' made felt?",
@@ -8856,7 +8893,7 @@
     "UC-085",
     "UC-092"
    ],
-   "basis": "open",
+   "basis": "ruled",
    "whereTheCanonStops": "DEC-27; ASSISTANT-PILOT",
    "context": "The assistant is a text or voice box available on every screen. A member can ask it to find something, help with a task, create something, or take an act. It may search, gather and check, but it never concludes, authors a reason or signs; for multi-step work it acts as a guide that opens the right screen and waits while the member acts.",
    "canonSays": [
@@ -8899,7 +8936,15 @@
     }
    ],
    "recommendation": "The first option: a docked panel with one visible 'machine work' treatment shared with every other machine output, and acts always performed on the real surface.",
-   "whoDecides": "Design, within DEC-24, DEC-27 and ASSISTANT-PILOT; Bob only if the pilot's read-only scope or its order is to change."
+   "whoDecides": "Design, within DEC-24, DEC-27 and ASSISTANT-PILOT; Bob only if the pilot's read-only scope or its order is to change.",
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-90"
+    ],
+    "decided": "As recommended: the assistant is a panel docked beside the surface it serves, and it never floats. Its text carries the one 'machine work' treatment every machine output shares, with attribution ('the assistant did this, at <member>'s request'); a wizard step highlights the real control and never fills or presses it, and the member performs every act on the real surface. Two refinements: the panel expands (a draggable divider and an 'expand' control let it take most of the window while some of the member's surface stays visible; it shrinks back by itself when a wizard step needs the member to act; its size is remembered, and one click restores the default), and it docks by screen shape, at the side on wide screens and at the bottom on narrow ones, with the member free to switch edges and the choice remembered."
+   }
   },
   {
    "question": "What does a newcomer learn first, and how do starter materials and onboarding fit a first session?",
