@@ -22,3 +22,7 @@
 - `checks/ownership.mjs ratification tranche/T11`: 4 files changed; legacy-store, legacy-checks, legacy-index 0 lines added, 0 removed; 0 failures.
 
 Size (session_01TrJPeeGe3xdCv9sCLy1TBh): test runs 3, module lines 3039
+
+## J1 · COMPLETE
+
+N256 (my share) applied: R5's held reference stated and tested live (a reference to unpublished evidence never enters the published graph); R16's end-to-end arm written in full as a test.todo, failing today only because publication's publishEdges drops the reference; drop its .todo once publication's N256 share merges (send me a CHANGE and I will). Tests 67: 66 pass, 0 fail, 1 todo. format, architecture, coverage (16/16), ownership: 0 failures. Nothing stale, nothing new to report. Record: build/jobs/T11/ratification.md.
