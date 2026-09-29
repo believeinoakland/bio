@@ -30,6 +30,6 @@
 **Tests and checks** (on `job/T14/control-plane` after merging `tranche/T14` @ 3e58d4b942):
 - `node --test bio-plane/test/m/control-plane/`: tests 52, pass 51, fail 0, todo 1 (R35's export, above). New: `store-class.test.mjs` (R35: construction once per object and with the wrapper; the fourteen routes answering as through instance-setup's own door; BAD_JSON; STORE_INTERNAL_ERROR with a correlation and no stack); `envelope.test.mjs` "R23, R25 (N349)" (every silence site, with and without a correlation; the three functions handed to other relays) and "R22 (N347)". Each new test was run against the pre-change source and failed there.
 - `node --test bio-plane/test/m/instance-setup/ bio-plane/test/m/capture/`: tests 128, pass 128, fail 0.
-- `checks/format.mjs`, `checks/architecture.mjs control-plane`, `checks/coverage.mjs control-plane`, `checks/ownership.mjs control-plane tranche/T14`: results below, after the commit.
+- `checks/format.mjs`: 69 modules, 0 failures. `checks/architecture.mjs control-plane`: 12 product files, 75 relative imports, 0 failures. `checks/coverage.mjs control-plane`: 35 of 35 live ids named by a test, 0 failures. `checks/ownership.mjs control-plane tranche/T14`: legacy-index, legacy-store, legacy-checks 0 lines added or removed, 0 failures.
 
 Size (session_01LAa14DqmXc5v5eTwUerjPT): test runs 9, module lines 6,161
