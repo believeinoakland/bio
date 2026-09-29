@@ -558,13 +558,30 @@ function refuseTextUnresolved(contentId) {
   /* END DEC-49 REGION is-standard-text-held */
 }
 
-function refuseNoSuchStandard(id) {
+/** R17 (N309, K231, K275): THE answer to one condition, no standard the caller may read answers to `standardId`
+ *  (absent, or any id for a viewer naming no member, answered alike). The code is minted here and nowhere else: R5 and
+ *  R7 answer through it, and so does every later module answering this condition (`conformance` R1). `standard` is the
+ *  id as asked (null when none) and `detail` one fixed sentence; `extra` adds a caller's own fields and never replaces
+ *  these. It writes nothing and never throws. */
+export function noSuchStandard(standardId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_STANDARD_FIXED.has(k));
+  } catch { own = []; }
   /* DEC-49 REGION is-standard-held */
-  const asked = id ? String(id).slice(0, 80) : null;
-  return refusal("NO_SUCH_STANDARD", "no standard answers to that id here. One your credential may not read is answered "
-                 + "exactly as one that does not exist.", { id: asked });
+  const row = STANDARDS_CHECKS.NO_SUCH_STANDARD;
+  return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", check: row.check,
+           translation: row.translation, standard: standardId ?? null, ...Object.fromEntries(own),
+           detail: NO_SUCH_STANDARD_DETAIL };
   /* END DEC-49 REGION is-standard-held */
 }
+const NO_SUCH_STANDARD_DETAIL = "no standard answers to that id here. One your credential may not read is answered "
+  + "exactly as one that does not exist.";
+const NO_SUCH_STANDARD_FIXED = new Set(["ok", "reason", "code", "check", "translation", "standard", "detail"]);
+
+/* R5, R7: this module's own answer, through R17, naming the id also as `id` (the field its readers key on, filings R14). */
+const refuseNoSuchStandard = (id) => noSuchStandard(id, { id });
 
 /* R5, R7: a read that names no standard (N269: its own coded row, never a codeless `NO_ID`; K275). */
 function refuseNoId(op) {
