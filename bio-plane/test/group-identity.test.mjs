@@ -41,7 +41,14 @@ const SRC_DIR = process.env.GROUP_IDENTITY_SRC || join(PLANE, "src");
 const IDX = join(SRC_DIR, "index.mjs");
 const STORE_SRC = readFileSync(join(SRC_DIR, "store.mjs"), "latin1");
 const CHECKS = await import(join(SRC_DIR, "..", "checks", "bio-checks.mjs"));
-const ROWS = CHECKS.INSTANCE_GROUP_CHECKS;
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414 INSTANCE-SETUP #1 J5, K413 CONTROL-PLANE #2 J4 R32): C-64 is split
+   three ways, words and check ids kept — C-64.1 stays in the catalogue's `INSTANCE_GROUP_CHECKS`, C-64.4 (the bearer
+   fence) is control-plane's `GROUP_IDENTITY_FENCE_CHECKS`, and C-64.2, .3, .5, .6, .7 are instance-setup's
+   `INSTANCE_SETUP_CHECKS`. The family this suite reads is their union, each imported from SRC_DIR so an armed copy
+   is still what is read. */
+const CP_CHECKS = await import(pathToFileURL(join(SRC_DIR, "control-plane", "checks.mjs")).href);
+const SETUP = await import(pathToFileURL(join(SRC_DIR, "setup.mjs")).href);
+const ROWS = { ...CHECKS.INSTANCE_GROUP_CHECKS, ...SETUP.INSTANCE_SETUP_CHECKS, ...CP_CHECKS.GROUP_IDENTITY_FENCE_CHECKS };
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -222,31 +229,40 @@ try {
     + "holds names either display name — a population over every file, floored so an empty store cannot pass it",
     [tx?.ok, texts.length > 0, texts.some((x) => x.includes(`group: ${SLUG}`)),
      texts.filter((x) => x.includes("Oak Town Civic Watch")).length], [true, true, true, 0]);
-  /* The block's bounds are ASCII anchors: this file is read as latin1 (store.mjs holds a stray byte), so a banner
-     with an em dash never matches — which the first run of this arm measured, floored at blockAt. */
-  const blockAt = STORE_SRC.indexOf("static GROUP_DISPLAY_NAME_MAX");
-  /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the block's end anchor, the REC-175 banner that followed it, left
-     store.mjs with `#fileDigestOf` (now record-core's, src/record-core/index.mjs). The block's own last member,
-     `static GROUP_DOMAIN_CHECKS_MAX` (declared below its method, IC-246), is the end now: the same span, the four
-     readers the census found before (two SELECTs, two INSERTs) and no new one. And since T5 moved code into
-     src/<module>/, the census also walks every module file: a reader there would be outside the block too. */
-  const blockEnd = STORE_SRC.indexOf("\n", STORE_SRC.indexOf("static GROUP_DOMAIN_CHECKS_MAX", blockAt));
-  const lines = STORE_SRC.split("\n");
-  let off = 0; const inside = [], outside = [];
-  for (const [i, l] of lines.entries()) {
-    if (/group_identity_history/.test(l) && !/^\s*(\*|\/\*|--)/.test(l))
-      (off > blockAt && off < blockEnd ? inside : outside).push(i + 1);
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5 "the display name and verified domain (R5–R11)
+     … left `store.mjs`, `schema.mjs` … for `bio-plane/src/setup.mjs`"): the REC-164 block is instance-setup's now,
+     the section of `InstanceSetup` from its REC-164 banner to the next banner, and store.mjs holds no reader of the
+     table at all. The census walks store.mjs, setup.mjs and every module file, as before. Two setup.mjs lines name the
+     table WITHOUT reading it — `INSTANCE_SETUP_TABLES` and the `CREATE TABLE` in `INSTANCE_SETUP_SCHEMA`, the module's
+     own declaration of it (R28), which the census never walked while it was `schema.mjs`'s — and they are NAMED as
+     declarations and printed, not counted as readers. The bounds are ASCII anchors, the file read as latin1, as before. */
+  const SETUP_SRC = readFileSync(join(SRC_DIR, "setup.mjs"), "latin1");
+  const blockAt = SETUP_SRC.indexOf("\n   * REC-164 ");
+  const blockEnd = SETUP_SRC.indexOf("\n  /* =====", SETUP_SRC.indexOf("\n  groupIdentity() {", blockAt));
+  const schemaAt = SETUP_SRC.indexOf("export const INSTANCE_SETUP_SCHEMA = `");
+  const schemaEnd = SETUP_SRC.indexOf("\n`;", schemaAt);
+  const statement = (l) => /group_identity_history/.test(l) && !/^\s*(\*|\/\*|--)/.test(l);
+  const inside = [], outside = [], declared = [];
+  STORE_SRC.split("\n").forEach((l, i) => { if (statement(l)) outside.push(`store.mjs:${i + 1}`); });
+  let off = 0;
+  for (const [i, l] of SETUP_SRC.split("\n").entries()) {
+    if (statement(l)) {
+      if (off > blockAt && off < blockEnd) inside.push(i + 1);
+      else if ((off > schemaAt && off < schemaEnd) || /^export const INSTANCE_SETUP_TABLES = /.test(l)) declared.push(`setup.mjs:${i + 1}`);
+      else outside.push(`setup.mjs:${i + 1}`);
+    }
     off += l.length + 1;
   }
   for (const d of readdirSync(SRC_DIR, { withFileTypes: true }).filter((e) => e.isDirectory()))
     for (const f of readdirSync(join(SRC_DIR, d.name)).filter((f) => f.endsWith(".mjs")))
       readFileSync(join(SRC_DIR, d.name, f), "latin1").split("\n").forEach((l, i) => {
-        if (/group_identity_history/.test(l) && !/^\s*(\*|\/\*|--)/.test(l)) outside.push(`${d.name}/${f}:${i + 1}`);
+        if (statement(l)) outside.push(`${d.name}/${f}:${i + 1}`);
       });
-  console.log(`  census: ${inside.length} statement line(s) inside the block, ${outside.length} outside`);
-  t("B2: every statement in store.mjs that reads the identity history sits inside the REC-164 block, so no stamp, "
-    + "composer or signer reads the display name (a census of the one table that holds it)",
-    [blockAt > 0, blockEnd > blockAt, inside.length >= 3, outside], [true, true, true, []]);
+  console.log(`  census: ${inside.length} statement line(s) inside the block, ${outside.length} outside, `
+    + `declarations ${JSON.stringify(declared)}`);
+  t("B2: every statement that reads the identity history sits inside the REC-164 block (instance-setup's, K414), so "
+    + "no stamp, composer or signer reads the display name (a census of the one table that holds it)",
+    [blockAt > 0, blockEnd > blockAt, inside.length >= 3, outside, declared.length], [true, true, true, [], 2]);
 
   console.log("\n--- D. a domain is a claim, shown only while verified ---");
   const d1 = await POST(`op=groupdomainset&${RUTH}${S}`, { domain: "nofile.example" });

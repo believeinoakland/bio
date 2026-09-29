@@ -7,6 +7,7 @@
    (6) THE PIN ON THE ONE PUBLISHED TOKEN THIS PACK NAMES. Rename the machine mode where the plane mints it, in `src/index.mjs decorateAct` -> 45 pass, 1 FAIL: A10. Nothing else in the battery yields that value (A9 measures ZERO machine-reachable acts), so without this pin the boundary's meaning could be renamed with nothing to notice.
    (7) THE AUTHORED LAYER. Change one word of `OBJECTIVE` -> 45 pass, 1 FAIL: F1 names the sentence that is no longer in the document it is quoted from. The slowest-drifting layer still cannot drift silently.
    (8) THE INSTRUMENT ITSELF. Neuter this suite's comment stripper so `literalsOf` reads no literals -> 44 pass, 2 FAIL: B0 (the stripper's own fixture) and B3 (the scanner over a hand copy that must trip it), while B2a/B2b pass VACUOUSLY over an empty corpus — which is the shape of every walk that has gone blind while reporting green.
+   RE-RUN 2026-09-29 by legacy-tests (T12) in a scratch worktree at `d3f5329855` + this re-anchor (arms 1-2 edit `src/ai-runs/index.mjs`, arm 6 `src/control-plane/ops.mjs`'s `ACT_GATE.mode`, K413/N53): baseline 49/0 · (1) 44/5 · (2) 43/6 · (3) 45/4 · (4) 45/4 · (5) 45/4 · (6) 48/1, A10 · (7) 48/1 · (8) 47/2 · (4b) reproduced — 9 arms run, 0 WRONG, every restore verified by sha256 and content.
    (9) OVER-STRICTNESS, IN-SUITE: ARM E5 offers two correct skill versions phrased unlike anything this item wrote — `civic-check-doctrine@2026-08-01+deadbeefdeadbeef` and `some-other-pack@7.2.1` — and both are ACCEPTED and recorded verbatim. ARM F5 is the second in-suite instrument control: the same normaliser and search over a sentence that is NOT in the document must MISS. */
 /* SK-1 — THE DOCTRINE PACK, VERSIONED.
  *
@@ -62,6 +63,12 @@ import { SKILL_PACK_ID, DOCTRINE_EDITION, OBJECTIVE, BOUNDARY, FOUR_LEVEL_RULE,
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const PACK_SRC = readFileSync(fileURLToPath(new URL("../src/skillpack.mjs", import.meta.url)), "utf8");
 const INDEX_SRC = readFileSync(IDX, "utf8");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; N53, K413 CONTROL-PLANE #1 step 1 and #2 item 5): `decorateAct`, `ACT_GATE`
+   and the op tables left `src/index.mjs` for `src/control-plane/ops.mjs`, and the doors (with the fences the control
+   plane mints) for `src/control-plane/index.mjs`. A10 asks the gate AT ITS INTERFACE (control-plane R34: `ACT_GATE.mode`
+   answers `machine` for an op no session set holds); BLOCK H's harvest reads the control plane's file beside index.mjs. */
+import { OPS as CP_OPS, SESSION_OPS as CP_SESSION_OPS, ACT_GATE } from "../src/control-plane/ops.mjs";
+const CP_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
 const STORE_SRC = readFileSync(fileURLToPath(new URL("../src/store.mjs", import.meta.url)), "utf8");
 const DOC = (rel) => readFileSync(fileURLToPath(new URL("../../" + rel, import.meta.url)), "utf8");
 
@@ -274,12 +281,14 @@ const run = async () => {
      currently yielded by no act, so nothing else in the battery would notice it
      being renamed — and the day an act becomes machine-reachable, a pack built
      on a stale spelling would call it a member's act. */
-  const decorate = INDEX_SRC.slice(INDEX_SRC.indexOf("const decorateAct"),
-                                  INDEX_SRC.indexOf("const decorateAct") + 500);
-  t("ARM A10: and the token is PINNED to where the plane computes it — index.mjs's decorateAct "
-    + "still spells the machine mode this way, so a rename there fails HERE rather than silently "
-    + "emptying the boundary",
-    [decorate.length > 0, /:\s*"machine"/.test(decorate)], [true, true]);
+  /* RE-ANCHORED 2026-09-29 (N53, K413): the pin read index.mjs's `decorateAct` text for a `"machine"` literal; the
+     decoration's gate is control-plane's exported `ACT_GATE` now, so the token is asked of the gate itself, over
+     the ops no session set holds (derived from the tables, never typed), and must be the spelling the pack reads. */
+  const machineOnly = Object.keys(CP_OPS).filter((o) => !CP_SESSION_OPS.member.has(o) && !CP_SESSION_OPS.admin.has(o));
+  t("ARM A10: and the token is PINNED to where the plane computes it — control-plane's `ACT_GATE.mode` (R34), "
+    + "which `decorateAct` decorates every published act with, answers the machine mode in this spelling for every "
+    + "op no session set holds, so a rename there fails HERE rather than silently emptying the boundary",
+    [machineOnly.length > 0, [...new Set(machineOnly.map((o) => ACT_GATE.mode(o)))]], [true, ["machine"]]);
 
   /* ==========================================================================
      BLOCK B — THE SOURCING ARM. NOTHING IS TYPED. THIS IS THE ITEM.
@@ -639,8 +648,11 @@ const run = async () => {
      MACHINE_CANNOT_MOVE_VERSION moved from store.mjs to `src/basis-versions/`, MACHINE_CANNOT_DIVIDE and
      MACHINE_CANNOT_GROUND to `src/inquiry/`, MACHINE_CANNOT_DECLARE to `src/strength/`; the plane's source is widened
      to them as T3's was, so a fence the pack renders is counted where the plane now mints it. */
-  for (const src of [storeCorpus(["record-core", "membership", "promotion", "basis-versions", "inquiry", "strength"]),
-                     INDEX_SRC])
+  /* WIDENED 2026-09-29 (T12, legacy-tests; K409, K413): + queue (MACHINE_CANNOT_FORWARD, _RESOLVE left the store with
+     QUEUE #2) and the control plane's doors (`src/control-plane/index.mjs`, which took index.mjs's fence sites). */
+  for (const src of [storeCorpus(["record-core", "membership", "promotion", "basis-versions", "inquiry", "strength",
+                                  "queue"]),
+                     INDEX_SRC, CP_SRC])
     for (const m of src.matchAll(/["'`](MACHINE_CANNOT_[A-Z0-9_]+)["'`]/g)) mintedInSource.add(m[1]);
   const rendered = new Set(fences.map((f) => f.code));
   const uncanned = [...mintedInSource].filter((c) => !rendered.has(c));

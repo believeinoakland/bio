@@ -98,7 +98,8 @@ import { fileURLToPath } from "node:url";
    above DETECTOR A, and `verdict-reader.mjs`'s own header. */
 import { verdictOf, readerDrift } from "./verdict-reader.mjs";
 /* D-561: C-69.2 and C-98, read from the rows, never a hand copy. */
-import { DISPATCH_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-69 moved whole to control-plane's own table. */
+import { DISPATCH_CHECKS } from "../src/control-plane/checks.mjs";
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): C-98's rows moved with the published reads into
    publication's own family. */
 import { PUBLISHED_READ_CHECKS } from "../src/publication/checks.mjs";
@@ -115,8 +116,13 @@ import { governedFetch, governorOverStub } from "../src/host-governor/index.mjs"
    opened by a handler-region mark (`handlerRegion`) so no guard in one file can vouch for a spread in another.
    Two more Worker halves left index.mjs in T6–T8 and are read for the same reason: op=knock's (`capture/doorbell.mjs`,
    `knockOp`) and op=monitor's (`monitoring/index.mjs`, `monitorOp`, MONITORING #1 J3.1). */
-const WORKER_FILES = ["index.mjs", "ratification/ops.mjs", "publication/worker.mjs", "capture/doorbell.mjs",
-                      "monitoring/index.mjs"];
+/* WIDENED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1): the doors left index.mjs for
+   `src/control-plane/index.mjs` — `doAnswer`, `storeSilent`, `makeFetch` with the forward, the review door, admission,
+   `whoami`, the session gate and the claim — while legacy-index keeps the arms of modules not yet extracted
+   (`publicOp`, `gatedOp`). So the control plane's file is read second, and every detector asks of it what it asked
+   of index.mjs. */
+const WORKER_FILES = ["index.mjs", "control-plane/index.mjs", "ratification/ops.mjs", "publication/worker.mjs",
+                      "capture/doorbell.mjs", "monitoring/index.mjs"];
 const SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const FILE_MARK = (f) => `\nif (op === "__file ${f}") {}\n`;
 const RAW = WORKER_FILES.map((f, i) => (i ? FILE_MARK(f) : "")

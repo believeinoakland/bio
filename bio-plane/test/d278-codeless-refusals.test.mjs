@@ -55,7 +55,13 @@ import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process an
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { INSTALLATION_CHECKS, DISPATCH_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): the dispatch rows C-69 moved whole and claim's C-68.2–.4
+   were split out of `INSTALLATION_CHECKS` (which keeps C-68.1, capture's and legacy-index's `storageAbsent`) into
+   control-plane's `BOOTSTRAP_CHECKS`, words and check ids kept. `INSTALLATION_CHECKS` below is the union of the two,
+   so every arm grades the same five rows by the same names; still imported, never typed. */
+import { INSTALLATION_CHECKS as CATALOGUE_INSTALLATION_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "../checks/bio-checks.mjs";
+import { BOOTSTRAP_CHECKS, DISPATCH_CHECKS } from "../src/control-plane/checks.mjs";
+const INSTALLATION_CHECKS = { ...CATALOGUE_INSTALLATION_CHECKS, ...BOOTSTRAP_CHECKS };
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const INDEX_SRC = readFileSync(SRC, "utf8");
@@ -238,9 +244,14 @@ t("and a refused claim claimed nothing — the right token still claims afterwar
  * ==================================================================== */
 console.log("\n--- 6. the rows' `where` resolve ---");
 const regionOf = (where) => (String(where).match(/> ([a-z0-9-]+)$/) || [])[1];
-t("every new row's `where` names a DEC-49 REGION present, opened and closed, in src/index.mjs",
-  ROWS.map(([c, r]) => [c, regionOf(r.where)]).filter(([, reg]) => !reg
-    || !INDEX_SRC.includes(`DEC-49 REGION ${reg}`) || !INDEX_SRC.includes(`END DEC-49 REGION ${reg}`)).map(([c]) => c), []);
+/* RE-ANCHORED 2026-09-29 (K413): the rows' sites are in `src/index.mjs` (C-68.1) and `src/control-plane/index.mjs`
+   (C-68.2–.4, C-69), so each `where` is resolved in the FILE IT NAMES, never in a file chosen here. */
+const whereSrc = (where) => { const f = String(where).split(" ")[0];
+  try { return /^src\/[\w/.-]+\.mjs$/.test(f) ? readFileSync(fileURLToPath(new URL(`../${f}`, import.meta.url)), "utf8") : ""; }
+  catch { return ""; } };
+t("every new row's `where` names a DEC-49 REGION present, opened and closed, in the source file the `where` names",
+  ROWS.map(([c, r]) => [c, regionOf(r.where), whereSrc(r.where)]).filter(([, reg, src]) => !reg
+    || !src.includes(`DEC-49 REGION ${reg}`) || !src.includes(`END DEC-49 REGION ${reg}`)).map(([c]) => c), []);
 
 console.log(`\n${fail === 0 ? "OK" : "FAILED"}  ${pass} pass, ${fail} fail`);
 } finally {

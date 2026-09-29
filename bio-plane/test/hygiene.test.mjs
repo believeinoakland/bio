@@ -126,6 +126,10 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT } from "../src/publication/schem
 import { publicationOwns } from "../src/publication/index.mjs";
 import { REVIEW_TABLES } from "../src/review/schema.mjs";
 import { STANDARDS_TABLES } from "../src/standards/schema.mjs";
+/* T12 (legacy-tests; K414, INSTANCE-SETUP #1 J5, R28/R41): instance-setup creates its own six tables (its
+   `INSTANCE_SETUP_SCHEMA`, run by its `migrate`) and declares all six EXEMPT to record-core
+   (`declarePurge("instance-setup", [], { exempt: [...INSTANCE_SETUP_TABLES] })`), read here as imported. */
+import { INSTANCE_SETUP_TABLES } from "../src/setup.mjs";
 /* M0-9: the negative-control register's detector, imported from the instrument
    itself rather than reimplemented here — a second copy would agree with the
    first at zero cost and prove nothing about what coverage.mjs actually reads. */
@@ -467,7 +471,15 @@ console.log("\n--- the served page template is intact ---");
   const src = readFileSync(join(DIR, "..", "src", "setup.mjs"), "utf8");
   const open = src.indexOf("export const SETUP_HTML = `");
   t("setup.mjs still exports one template literal", open > -1, true);
-  const body = src.slice(open + "export const SETUP_HTML = `".length, src.lastIndexOf("`;"));
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5): the page's literal ended the file, so this
+     read to the file's LAST backtick; instance-setup's code now follows it in setup.mjs (the producing group, the
+     identity, the limits, their schema literal), so reading to the last backtick swept that code in (312 backticks,
+     51 interpolations, none of them the page's). The literal is read to its own end, the closing `</html>` followed
+     by the backtick that ends it; a stray backtick inside still counts, because the end is found by the page's own
+     last line and not by the first backtick. */
+  const close = src.indexOf("</html>`;", open);
+  t("and the page literal is closed by its own `</html>` line", close > open, true);
+  const body = src.slice(open + "export const SETUP_HTML = `".length, close + "</html>".length);
   let ticks = 0, interps = 0, i = 0;
   while (i < body.length) {
     if (body[i] === "\\") { i += 2; continue; }
@@ -485,7 +497,11 @@ console.log("\n--- the served page template is intact ---");
      would drift from it. AND THE ARM NOW PRINTS ITS COUNT: it failed reading `want
      true / got false`, naming neither the figure nor the ceiling, so a reader had to
      go to the source to learn what had moved. */
-  t(`interpolations are few and deliberate (${interps} of 6)`, interps <= 6, true);
+  /* 6 -> 7, 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5, N235 / its R24), moved from the figure this arm
+     PRINTED ("7 of 6") and not by adding to the number: the counterparty form's level chooser injects
+     `COUNTERPARTY_LEVELS_OPTIONS`, built from jurisdictions' `COUNTERPARTY_LEVELS`, for the reason the other six are
+     injected — a page that typed its own copy of the levels would drift from them. */
+  t(`interpolations are few and deliberate (${interps} of 7)`, interps <= 7, true);
 
   /* The strongest check available without a browser: the module loads, and the
      script it serves parses as JavaScript. */
@@ -777,8 +793,15 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
      The prose that caught it is DELIBERATELY LEFT IN schema.mjs rather than
      reworded around, so this anchor has a live fixture in the corpus instead of
      a rule nobody exercises. */
-  const schemaTables = [...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\(/g)].map((m) => m[1]);
-  t("schema.mjs declares tables to check", schemaTables.length > 0, true);
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5, "its tables are created by its own
+     `migrate`, out of `schema.mjs`"): the legacy literal's last own tables — the producing group, the identity, the
+     runtime measurements — left it for instance-setup's `INSTANCE_SETUP_SCHEMA` in `src/setup.mjs`, a TOP-LEVEL file the
+     module walk below does not reach. So the floor is asked of the two literals together, schema.mjs's (now all
+     interpolations of module DDL) and instance-setup's, with the same anchored pattern. */
+  const setupSchema = readFileSync(join(fileURLToPath(new URL("../src", import.meta.url)), "setup.mjs"), "utf8");
+  const schemaTables = [...new Set([...schema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\(/g),
+    ...setupSchema.matchAll(/CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\(/g)].map((m) => m[1]))];
+  t(`schema.mjs and instance-setup's schema declare tables to check (${schemaTables.length})`, schemaTables.length > 0, true);
 
   /* D-137. Eight tables are created BY HAND in the DO constructor rather than in
      the schema literal, so a check that read only schema.mjs had a blind spot
@@ -907,7 +930,8 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
   const fromModules = [...RecordCore.OWN_TABLES, ...MEMBERSHIP_PROJECT_TABLES, ...CAPTURE_PURGED_TABLES, ...provDecl.tables,
                        ...fromT5, ...fromT7, ...fromT8];
   const moduleExempt = [...RecordCore.EXEMPT_TABLES, ...MEMBERSHIP_EXEMPT_TABLES, ...CAPTURE_EXEMPT_TABLES,
-                        ...provDecl.exempt, ...exemptT5, ...PUBLICATION_EXEMPT.map(named)];
+                        ...provDecl.exempt, ...exemptT5, ...PUBLICATION_EXEMPT.map(named),
+                        ...INSTANCE_SETUP_TABLES];   /* T12: instance-setup's six, declared exempt (R28, R41) */
   const fromDeletes = [...purgeSrc.matchAll(/DELETE FROM\s+(\w+)/g)].map((m) => m[1]);
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): legacy-store's list is read as TEXT, and since T5 the store filters
      it at run time by every extracted owner's list (`.filter((t) => !BIAS_TABLES.includes(…))`, `!extractionOwns(t)`,
@@ -949,16 +973,14 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     credentials:         "operator/member auth; a data purge must not delete logins and lock the instance out",
     sessions:             "bearer login sessions; auth state, not corpus-derived",
     bootstrap:            "one-row claim state; whether the instance has been claimed, not corpus data",
-    /* D-436. The instance's PRODUCING GROUP, bootstrap's one-row family: which group this copy belongs to, written
-       once and named in the signed bytes of every document it writes. A purge that cleared it would leave every
-       later creation refused or — worse — decided by whatever the next caller claimed. `instance-group.test.mjs`
-       drives a whole-store purge and reads the value back unchanged. */
-    instance_group:       "the instance's producing-group slug (D-436): identity, recorded once at the store's first boot or by the root of trust's one seed, named in the signed bytes of every document the store writes; not derived from the corpus",
-    /* REC-164, instance_group's reasoning exactly: the group's public identity beside its slug, set by an administrator's
-       act (Publication §7 points 2 and 3). A purge of the corpus is not a retraction of what the group calls itself or
-       of the domain it claimed, and the dated histories ARE the record of who set each one. */
-    group_identity_history: "the group's display name and domain claim with their dated histories (REC-164): identity set by an administrator's act, not derived from the corpus",
-    group_domain_checks:  "every dated verdict on the group's claimed domain (REC-164): what the verifier read, not derived from the corpus",
+    /* MOVED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5, R28/R41): `instance_group` (D-436),
+       `group_identity_history` and `group_domain_checks` (REC-164) — and below `runtime_observations` and the CPU
+       probe's trail — are instance-setup's tables now, created by its own `migrate` and declared EXEMPT to record-core
+       by the module itself, on the reasons these entries gave (identity, and measurements of the runtime, not derived
+       from the corpus). A stated exemption is the owner's to make, so they are read from its declaration
+       (`INSTANCE_SETUP_TABLES`, in `moduleExempt` above) and no longer typed here; each is still checked to name a real
+       table and not to be purged. `instance-group.test.mjs` W9 still drives a whole-store purge and reads the group
+       back unchanged. */
     members:              "the roster; membership is identity, not derived from captured documents",
     signers:              "registered signing keys; identity, not corpus-derived",
     /* PL-11 / IS-5 / D-199 (2). The `ai` credential's DECLARED TASK SCOPE, and
@@ -1024,7 +1046,7 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     inbox:                "quarantined public intake; inbound submissions awaiting review, explicitly not the record and not corpus-derived",
     knock_rate:           "fixed-window knock rate accounting; transient, self-pruning as windows pass",
     capture_limits:       "measured per-runtime subrequest ceiling; a capability fact, relearned by being refused, not corpus-derived",
-    runtime_observations: "measured CPU cost; a capability fact, not corpus-derived",
+    /* runtime_observations: moved to instance-setup's declaration (T12, K414; see the note above). */
     /* D-64: the instance's daily render allowance and its deferrals, an operational
        budget in runtime_observations' family — no bundle_id, nothing corpus-derived. */
     render_allowance:     "the daily render allowance spent and the renders deferred (D-64); an operational budget, not corpus-derived",
@@ -1051,7 +1073,9 @@ console.log("\n--- every table is purged or explicitly exempt (D-113 / D-137) --
     calibrations:         "dated fidelity measurements of derivation ENGINES (CPDF-13/D-183): a capability fact carrying no bundle_id, unrecomputable from captured bytes, and what the published projection's transcription grades rest on",
     calibration_subjects: "which engines this instance can probe, and when one last ran; standing configuration of a capability, not corpus-derived",
     calibration_signals:  "observed vendor announcements (CPDF-13 clause e); somebody else's claim about their own product, kept attributed, and able only to bring the next probe forward — never derived from a captured document",
-    cpu_probe:            "stepped CPU-probe checkpoints; transient instrumentation, not corpus-derived",
+    /* cpu_probe: RETIRED 2026-09-29 (T12; K407's reading of instance-setup R38–R40): the probe's trail is now one run
+       per id, `cpu_probe_runs` and `cpu_probe_steps` (the old trail migrated as run `legacy`), both declared exempt by
+       instance-setup; the table this entry named no longer exists. */
     host_governor:        "per-host token-bucket governor state; transient pacing, not corpus-derived",
     /* The three DO-constructor tables a purge must not touch (D-137). The other
        five hand-created tables are PURGED: bundles_fts, selections and
@@ -2677,6 +2701,11 @@ console.log("\n--- what these walks counted, and whether any of it is in no comm
     "bio-plane/test/caselifecycle.test.mjs",      // src/, "nothing deletes a flag" (a ceiling at zero)
     "bio-plane/test/casepin.test.mjs",            // src/, "no second version table" (a ceiling at zero)
     "bio-plane/test/multicase.test.mjs",          // src/, no other builder of its query class (a ceiling at zero)
+    /* ADDED 2026-09-29 (T12, legacy-tests), T7's reason: control-plane's extraction (K413) moved the doors that read
+       `store=` out of `src/index.mjs` into `src/control-plane/index.mjs`, so D-456's §4 sweep now walks `src/` to find
+       every reader where it lives. It asserts every reader is NAMED (a ceiling at zero unnamed); its one count,
+       `>= 4` readers, is a reach guard fixed well below the tree's 12 and never moved to a print. */
+    "bio-plane/test/d456-namespace-scope.test.mjs", // src/, every reader of `store=` named (a ceiling at zero)
   ];
   const newlyUnguarded = unguarded.filter((f) => !CLASS_NAMED_UNGUARDED.includes(f));
   const goneFromList = CLASS_NAMED_UNGUARDED.filter((f) => !unguarded.includes(f) && !guarded.some((g) => g.file === f));

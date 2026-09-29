@@ -44,7 +44,9 @@ import "./sandbox.mjs"; /* D-186: owns $TMPDIR for this process and removes it o
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { ADMISSION_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-38 moved whole, words and check ids kept, from the
+   catalogue to control-plane's own table; the row is still imported, never copied. */
+import { ADMISSION_CHECKS } from "../src/control-plane/checks.mjs";
 import { unruledOpPlane, unruledOpMemberSession, UNRULED_OP } from "./unruled-op-fixture.mjs";
 
 const SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -209,7 +211,7 @@ console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RA
      driven through `unruled-op-fixture.mjs` — the real gate and the real row over ONE op the real tables
      have never heard of, built in memory — and `op=provenanceroute` is asserted at its NEW answer below,
      so this re-pointing is a MOVE and a revert of REC-155 fails here by name. */
-  const fx = unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
+  const fx = await unruledOpPlane({ ADMIN_TOKEN: "t-admin-1", MEMBER_TOKEN: "t-member-1", PROBE_TOKEN: "t-probe-1",
                               VERSION: "test" });
   let r, m;
   try {
@@ -231,10 +233,13 @@ console.log("\n--- C-38.8 · AN OMISSION, STATED AS ONE AND GIVEN NO INVENTED RA
     /no recorded decision/i.test(r.translation || ""), true);
   /* The fixture op has a row and no handler, so the bearer passing admission is shown POSITIVELY — it reaches
      dispatch and meets `unknown op` — rather than by the absence of one code, which a refusal of any other
-     kind would also satisfy. */
+     kind would also satisfy.
+     RE-ANCHORED 2026-09-29 (K413, control-plane R23, CONTROL-PLANE #1 item 6), NEVER EXEMPTED: the forward no longer
+     relays the store's `{ok: false, error: "unknown op: …"}`; a store answer that is not `ok: true` is R23's 502
+     `STORE_DID_NOT_ANSWER` naming the op. Still positive: that answer exists only past admission, at the forward. */
   t("NEGATIVE CONTROL: the same op is NOT refused admission to the machine credential — it passes the gate "
-  + "and reaches dispatch, where a row with no handler is an unknown op",
-    [m.reason ?? null, /^unknown op: /.test(String(m.error))], [null, true]);
+  + "and reaches the store's forward, where a row with no handler answers R23's STORE_DID_NOT_ANSWER naming the op",
+    [m.reason ?? null, m.check ?? null, m.op ?? null], ["STORE_DID_NOT_ANSWER", "C-69.2", UNRULED_OP]);
   /* REC-155: THE OP THIS ARM DROVE UNTIL §4.10, AT ITS NEW ANSWER. `cai` holds no capability, and
      `provenanceroute` NEEDS `contribute` — so passing the SESSION gate is shown by meeting the
      CAPABILITY gate behind it, by name, rather than any session-gate code. */

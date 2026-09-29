@@ -28,7 +28,7 @@
  *       seeded by the root of trust with a slug of its own. F1 pins that the fixture really is asymmetric before
  *       any page is read; without it every page arm would pass over a copy that reads one store.
  *   (c) A REFUSAL THAT IS MERELY AN ERROR. C1..C3 judge the unknown-namespace refusal by CODE, by C-NUMBER and by
- *       the catalogue's own sentence, IMPORTED from `checks/bio-checks.mjs` and never typed here, and they also
+ *       the catalogue's own sentence, IMPORTED from `src/control-plane/checks.mjs` (the catalogue until K413) and never typed here, and they also
  *       assert the body names NEITHER slug — a 400 that leaked the record's group would pass a status check.
  *   (d) A GATE THAT SWALLOWS EVERYTHING. B1 drives `/?store=bio`, the named-and-valid case, and demands the page,
  *       not a refusal; control arm C is that liar.
@@ -48,7 +48,9 @@ import "./sandbox.mjs";               /* D-186: owns $TMPDIR for this process an
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { NAMESPACE_CHECKS } from "../checks/bio-checks.mjs";
+/* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #2 J4 R32): C-78 moved whole, words and check ids kept, to control-plane's
+   own table; still imported, never typed here. */
+import { NAMESPACE_CHECKS } from "../src/control-plane/checks.mjs";
 import { stripComments } from "../scripts/walkfloor.mjs";
 
 const SRC = (f) => fileURLToPath(new URL(`../src/${f}`, import.meta.url));
@@ -114,9 +116,12 @@ try {
 /* ======================================================================= 0 · the route corpus, ahead of the gates */
 console.log("\n--- 0 · the routes that answer BEFORE the op front door, and which of them address a store ---");
 {
-  const raw = readFileSync(SRC("index.mjs"), "utf8");
+  /* RE-POINTED 2026-09-29 (K413, CONTROL-PLANE #1 step 1): the Worker's `fetch` left `src/index.mjs` for
+     control-plane's `makeFetch(hooks)`, whose inner `fetch(req, env)` holds the same pre-gate routes, and the page's
+     read reaches legacy-index's `publicInstanceGroup` through the hook of that name (`hooks.publicInstanceGroup`). */
+  const raw = readFileSync(SRC("control-plane/index.mjs"), "utf8");
   const code = stripComments(raw);                                   /* M0-155's lexer: a comment is not code */
-  const open = code.indexOf("export default {\n  async fetch(req, env) {");
+  const open = code.indexOf("  async function fetch(req, env) {\n", code.indexOf("export function makeFetch(hooks"));
   const gate = code.indexOf("const path = url.pathname.replace(", open);   /* no regex in the anchor: the lexer blanks regex literals too */
   const span = open >= 0 && gate > open ? code.slice(open, gate) : "";
   const routes = [...span.matchAll(/url\.pathname === "([^"]*)"/g)].map((m) => m[1]);
@@ -132,7 +137,7 @@ console.log("\n--- 0 · the routes that answer BEFORE the op front door, and whi
        read a third argument naming the public projection the page reads (`groupidentitypublic`). What this row asserts
        is that the page's read is given the namespace the route decided — `pageStore` as its second argument — not
        how many arguments follow it, so the pin asks exactly that. */
-    [opens, /setupPage\(await publicInstanceGroup\(env, pageStore[,)]/.test(span)], [["publicInstanceGroup"], true]);
+    [opens, /setupPage\(await (?:hooks\.)?publicInstanceGroup\(env, pageStore[,)]/.test(span)], [["publicInstanceGroup"], true]);
   t("R3: and that one read takes no namespace LITERAL any more — the defect was `publicInstanceGroup(env, \"bio\")` "
     + "written into the route (floored on the span, so an empty read cannot pass this for free)",
     [span.length > 500, /publicInstanceGroup\(env, "bio"\)/.test(span)], [true, false]);

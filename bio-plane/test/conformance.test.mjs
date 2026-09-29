@@ -32,6 +32,8 @@ import { registerChecks } from "../src/provenance/index.mjs";
    catalogue's `checkBundle` for actions' `checkActionExtension`, which actions registers with record-core's audit and
    with promotion; `legacy-checks` no longer runs the action arm. The intake's action bytes are judged by both. */
 import { checkActionExtension } from "../src/actions/checks.mjs";
+/* T12 (legacy-tests; N235): the counterparty levels the intake page offers, read from their one home. */
+import { COUNTERPARTY_LEVELS } from "../../jurisdictions/index.mjs";
 
 /* D-436 (IC-172): the setup page no longer names a producing group — the plane writes it into every creation from the
    store's one recorded value — so the page's bytes are judged below AS THE PLANE HOLDS THEM, through the catalogue's
@@ -261,8 +263,17 @@ console.log("\n--- the intake form writes conformant bundles ---");
       t("...and no counterparty block reaches the document on that path at all",
         /counterparty/.test(text), false);
       for (const [label, act, pin] of [
-        ["a NAMED counterparty the member wrote",
-         { counterparty: { state: "named", name: "City Clerk" } }, /name: "City Clerk"/],
+        /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5, N235 / its R24; actions R9): a named
+           counterparty is an OFFICE — its role and its body, and a level when the member states one — and `mdFor`
+           writes `{state: named, role, body, level?}`, never the bare `name` actions R9 refuses on a creation. The
+           member's answer is driven in that shape, once without a level and once with one read from jurisdictions'
+           `COUNTERPARTY_LEVELS` (the page's own vocabulary, never typed here). */
+        ["a NAMED counterparty the member wrote (an office: role and body)",
+         { counterparty: { state: "named", role: "City Clerk", body: "City of Oakland" } },
+         /role: "City Clerk"\n  body: "City of Oakland"/],
+        ["a NAMED counterparty the member wrote with its level",
+         { counterparty: { state: "named", role: "City Clerk", body: "City of Oakland", level: COUNTERPARTY_LEVELS[2] } },
+         new RegExp(`role: "City Clerk"\\n  body: "City of Oakland"\\n  level: ${COUNTERPARTY_LEVELS[2]}`)],
         ["an UNDETERMINED counterparty with the basis the member wrote",
          { counterparty: { state: "undetermined",
             basis: "Which office holds the records has not been established; the records index would settle it." } },

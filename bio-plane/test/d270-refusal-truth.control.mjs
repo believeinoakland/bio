@@ -25,13 +25,20 @@ import { dirname, join } from "node:path";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = join(DIR, "..", "src", "index.mjs");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1): the session gate (`sessionOpGate`, arms
+   b, h, i, j) moved to `src/control-plane/index.mjs` and `UNATTENDED_BY_DECISION` (arms c, d) to
+   `src/control-plane/ops.mjs`; `requiredArgument` (arm e) stays in `src/index.mjs`. Each arm names the file it
+   patches, every patch text unchanged, and each file keeps its own pristine copy and byte floor. */
+const CP = join(DIR, "..", "src", "control-plane", "index.mjs");
+const OPS = join(DIR, "..", "src", "control-plane", "ops.mjs");
 const SUITE = join(DIR, "d270-refusal-truth.test.mjs");
+const LABEL = { [SRC]: "index", [CP]: "cp-index", [OPS]: "cp-ops", [SUITE]: "suite" };
 const WORK = join(DIR, ".d270-control");           /* inside this worktree, never /tmp */
 rmSync(WORK, { recursive: true, force: true });
 mkdirSync(WORK, { recursive: true });
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const MIN_BYTES = { [SRC]: 400000, [SUITE]: 8000 };
+const MIN_BYTES = { [SRC]: 40000, [CP]: 200000, [OPS]: 100000, [SUITE]: 8000 };  /* index.mjs was 400000 until K413 */
 
 /* THE ARMS, DECLARED BEFORE ANY OF THEM IS ARMED. `expect` is what MUST happen.
    `patch` returns [newText, occurrencesReplaced] so the driver can tell an arm
@@ -61,14 +68,14 @@ const ARMS = [
   /* CORRECTED 2026-09-25 (REC-155), a third time and for the same reason: §4.10 (BOB #19) put
      `provenanceroute` in BOTH session sets, so the gate returns early for it and the collapse changes
      nothing it is told — and the real plane's omission arm is now EMPTY. Sentence (c) is driven through
-     `unruled-op-fixture.mjs`, which reads THIS file's patched `src/index.mjs` from disk, so the fixture op
+     `unruled-op-fixture.mjs`, which reads the patched sources from disk (`src/control-plane/` since K413), so the fixture op
      `rec155unruled` replaces it: still two ops, from two different arms. */
   /* CORRECTED 2026-09-25 (REC-162): the ROLE outcome became TWO returns, one per set that can hold the
      op (the founder's session, a member's own), so the collapse now disarms both guards and the
      declaration: armedExpect 3, the same two names. */
   /* COMPOSED 2026-09-25 at c22-batch29's union of REC-155 and REC-162: REC-155's fixture op `rec155unruled`
      replaces `provenanceroute` (now in both session sets) and REC-162's split ROLE outcome arms three sites. */
-  { id: "b", file: SRC, expect: "RED", armedExpect: 3, mustName: ["governorconfig", "rec155unruled"],
+  { id: "b", file: CP, expect: "RED", armedExpect: 3, mustName: ["governorconfig", "rec155unruled"],
     what: "THE SPLIT COLLAPSED — sessionOpGate's three outcomes reduced to the single "
         + "MACHINE_CREDENTIAL_REQUIRED `main` sent before D-270. This is the arm the row's "
         + "accepts-when demands: it proves the suite grades the DISTINCTION, not a code's presence.",
@@ -84,7 +91,7 @@ const ARMS = [
 
   /* WIDENED 2026-09-25 (REC-155): §4.10 recorded `livefire` and `reproject`, so emptying the record must
      name them too. WIDENED 2026-09-28 (T7, K199): `reevaluationraise` is recorded too. */
-  { id: "c", file: SRC, expect: "RED", mustName: ["purge", "cpuprobe", "taskdrain", "capturerequestdrain",
+  { id: "c", file: OPS, expect: "RED", mustName: ["purge", "cpuprobe", "taskdrain", "capturerequestdrain",
                                                   "livefire", "reproject", "reevaluationraise"],
     what: "THE DECLARATION EMPTIED — UNATTENDED_BY_DECISION made empty, so the four ops with a "
         + "recorded decision are told it is an omission. THE ARM FOR BOB'S RULE ITSELF: the plane "
@@ -103,7 +110,7 @@ const ARMS = [
       return [out, n];
     } },
 
-  { id: "d", file: SRC, expect: "RED", mustName: ["adminendorse"],
+  { id: "d", file: OPS, expect: "RED", mustName: ["adminendorse"],
     what: "THE DECLARATION INVENTED — `adminendorse` added to UNATTENDED_BY_DECISION with a "
         + "plausible-looking citation. MUST FAIL. THIS IS THE ARM IN THE DIRECTION THAT MATTERS: "
         + "D-136 exists because §4.7's vote IS meant to be cast by a person, so a rationale "
@@ -149,7 +156,7 @@ const ARMS = [
       return [out, n];
     } },
 
-  { id: "h", file: SRC, expect: "GREEN",
+  { id: "h", file: CP, expect: "GREEN",
     what: "OVER-STRICTNESS, and this file exists to survive it: a REAL site (the omission arm) "
         + "rewritten to spell its code in `code` with NO `reason` at all, the row read from the "
         + "catalogue rather than hand-copied, and an extra key the grader has never seen. IT MUST "
@@ -170,7 +177,7 @@ const ARMS = [
     } },
 
   /* REC-162 (2026-09-25), DECLARED BEFORE ARMING. */
-  { id: "i", file: SRC, expect: "RED", mustName: ["governorconfig"],
+  { id: "i", file: CP, expect: "RED", mustName: ["governorconfig"],
     what: "THE ROW'S OWN CONTROL — the ADMINISTRATOR sentence restored for a founder-only op: the "
         + "founder's-session return's `error` put back to 'reserved to an administrator of this group'. "
         + "MUST FAIL naming governorconfig at §5's session-naming assertion, and nowhere else.",
@@ -181,7 +188,7 @@ const ARMS = [
       return [out, n];
     } },
 
-  { id: "j", file: SRC, expect: "GREEN",
+  { id: "j", file: CP, expect: "GREEN",
     what: "OVER-STRICTNESS for REC-162 — the founder's-session `detail` rewritten in words the suite "
         + "never saw, still true, still naming no role. MUST PASS: the suite grades the sentence and "
         + "`reachedBy`, not one spelling of the explanation.",
@@ -210,7 +217,7 @@ const results = [];
 for (const arm of ARMS) {
   let armed = null, pristinePath = null;
   if (arm.file) {
-    pristinePath = join(WORK, `pristine-arm-${arm.id}-${arm.file === SRC ? "index" : "suite"}.mjs`);
+    pristinePath = join(WORK, `pristine-arm-${arm.id}-${LABEL[arm.file]}.mjs`);
     writeFileSync(pristinePath, readFileSync(arm.file));
     const before = readFileSync(arm.file, "utf8");
     const [after, n] = arm.patch(before);
