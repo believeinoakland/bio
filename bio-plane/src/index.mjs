@@ -2,11 +2,6 @@ import { livefire } from "./livefire.mjs";
 import { publicInstanceGroup, instanceGroupOp, groupIdentityOp, bootstrapReport, selftest, runtimeOp,
          cpuProbeOp } from "./setup.mjs";
 import { caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
-/* REC-128: who DELIVERED an attested act, read off the SESSION, and its read shape. */
-/* The locator fence, taken from the catalog rather than restated: https only,
-   public hosts only, no credentials in the authority, no bare IPs, no localhost.
-   It is the one bound between a member typing a URL and this Worker fetching it,
-   so it must be the same function the checker uses on the queue. */
 /* REC-46 (2026-08-04): the two prefixes this file STAMPS on a machine
    credential now come from the catalog rather than being typed here twenty
    times. This is the trust boundary and the mint, so it is where the value used
