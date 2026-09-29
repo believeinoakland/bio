@@ -1,6 +1,6 @@
 # inquiry (T12)
 
-**Status** · session_01SF3BCxa5TAs5uVuri45pJU · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01SF3BCxa5TAs5uVuri45pJU · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
