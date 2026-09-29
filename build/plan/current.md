@@ -65,5 +65,6 @@ Opened by BOB #59, 2026-09-28 (PROCESS-MECHANICS §5), from `draft-T11.md` (BOB 
 
 ### Layer 11
 
+- **affordances** · N310 (added K370, P10's provided-service exception: actions R13's code is now `ACTION_MOVE_NO_REASON`, so `JUSTIFICATION_REFUSALS` names it; with it, `determine` graded `reasoned`, conformance N233).
 - **legacy-index** · N231 (its share); N247 (its share); N272.
 - **legacy-tests** · re-anchor or retire what T11's layers break; N279; N298.
