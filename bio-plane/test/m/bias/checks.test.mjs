@@ -83,10 +83,11 @@ test("R7: C-26.7 an adopted set whose What This Does Not Enforce section is abse
   for (const state of ["draft", "proposed"]) assert.ok(!errs(clean({ current_state: state }), null).includes("C-26.7"), state);
 });
 
-test("R29: every C-26 row, C-26.1–C-26.20, is here with its check, where and translation; C-26.12 is the catalogue's own row", () => {
+test("R29: every C-26 row, C-26.1–C-26.19, is here with its check, where and translation; C-26.12 is the catalogue's own row; C-26.20 is retired and its number not reused (N327)", () => {
   const rows = Object.entries(BIAS_CHECKS);
   const ids = rows.map(([, r]) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1]));
-  assert.deepEqual(ids, Array.from({ length: 20 }, (_, i) => `C-26.${i + 1}`));
+  assert.deepEqual(ids, Array.from({ length: 19 }, (_, i) => `C-26.${i + 1}`));
+  assert.equal("BIAS_ADOPTION_NOT_AN_ADMINISTRATOR" in BIAS_CHECKS, false, "C-26.20's code is gone with its row");
   for (const [code, r] of rows) {
     assert.ok(typeof r.where === "string" && r.where.length > 10, code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 40, code);

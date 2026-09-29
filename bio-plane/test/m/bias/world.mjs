@@ -76,7 +76,13 @@ export function world(opts = {}) {
     catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
   } };
   run(sql, RECORD_SCHEMA);
-  run(sql, BIAS_SCHEMA);
+  /* `biasSchema`: absent or true, this module's schema text as it stands; "legacy", as a store created before
+     `bias_debts.settled_kind` held it (R45); "none", none of this module's tables (a store `migrate()` finds bare). */
+  if (opts.biasSchema === "legacy") {
+    const older = BIAS_SCHEMA.replace(/,\n\s*settled_kind\s+TEXT[^\n]*\n/, "\n");
+    if (older === BIAS_SCHEMA) throw new Error("world: the schema text no longer declares settled_kind where expected");
+    run(sql, older);
+  } else if (opts.biasSchema !== "none") run(sql, BIAS_SCHEMA);
   db.exec(`CREATE TABLE ai_runs (run TEXT PRIMARY KEY)`);   // another module's table, for "nothing else was written"
   const ctx = { storage };
   const record = recordOf(ctx);
