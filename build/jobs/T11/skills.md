@@ -38,3 +38,7 @@ N289 applied: R25's test reads C-22.7's row through ai-runs (airun.mjs AI_RUN_CH
 - `node checks/ownership.mjs … skills tranche/T11`: 2 files changed; legacy-checks 0 added, 0 removed; 0 failures.
 
 Size (session_01WHkeSYJXikezjTzJkizuXW): test runs 5, module lines 1496
+
+## J2 · COMPLETE · re B2
+
+B2 done: merged tranche/T11; R25's todo is now a test (row's where at src/ai-runs/skill-version.mjs checkSkillVersion; a distinct object from the catalogue's interim copy, same number and translation). Tests 31 pass, 0 fail, 0 todo; format, architecture, coverage 26/26, ownership: 0 failures. No source line changed. R21's stale mark stays reported (J1).
