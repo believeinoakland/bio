@@ -392,6 +392,10 @@ plane ${plane.sha256} ${plane.bytes} ${plane.asset}
   return `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset} compat=${m.compat.date}+${m.compat.flags.length ? [...m.compat.flags].sort().join(",") : "-"} services=${renderServices(m.services)} parts=${renderParts(m.parts)}`;
 }).join("\n") + "\n";
 
+// src/instance-setup-stub.mjs
+var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
+var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+
 // src/index.mjs
 var CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -482,8 +486,7 @@ var esc = (s) => String(s ?? "").replace(
   /[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]
 );
-var SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-var slugOk = (s) => typeof s === "string" && SLUG_RE.test(s) && s !== "newgroup";
+var slugOk = (s) => typeof s === "string" && GROUP_SLUG_RE.test(s) && s !== "newgroup";
 var readCookie = (req, name) => {
   const raw = req.headers.get("cookie") || "";
   for (const part of raw.split(/;\s*/)) {
@@ -585,15 +588,11 @@ function uploadForm(meta, source) {
 }
 var selfBinding = (slug) => ({ type: "service", name: "SELF", service: slug });
 var BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" });
-var MEMBER_BINDINGS = Object.freeze({
-  "agent-worker": "AGENT_WORKER",
-  "pdf-worker": "PDF_WORKER",
-  "ocr-worker": "OCR_WORKER"
-});
-var memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS).filter(([member]) => members.includes(member)).map(([member, name]) => ({ type: "service", name, service: member }));
+var BINDING_OF = new Map(FLEET_BINDINGS);
+var memberBindings = (members = []) => [...BINDING_OF].filter(([member]) => members.includes(member)).map(([member, name]) => ({ type: "service", name, service: member }));
 async function membersPresent(token, acct) {
   const present = [];
-  for (const member of Object.keys(MEMBER_BINDINGS)) {
+  for (const member of BINDING_OF.keys()) {
     try {
       if (await scriptExists(token, acct, member)) present.push(member);
     } catch {
@@ -643,7 +642,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       /* DIST-11 (IC-252): the Browser Rendering binding D-64's render arm looks for. On every Workers tier, so an
          install is never refused over it; the plane reports it as a binding whose in-plane driver is not built. */
       BROWSER_BINDING,
-      /* DIST-6: the members this account already holds (none on a fresh account — see MEMBER_BINDINGS). */
+      /* DIST-6: the members this account already holds (none on a fresh account — see BINDING_OF). */
       ...memberBindings(opts.members)
     ],
     /* SQLite backend is the irreversible choice, made correctly, once. */
@@ -685,7 +684,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          refusal cannot also cost the copy its members. An update never passes it. */
       ...opts.noSelf ? [] : [selfBinding(slug)],
       /* DIST-6: the fleet members, by the same healing shape as SELF — an update of a copy installed without them
-         gains them (step 3 of the order at MEMBER_BINDINGS), and one that has them keeps them (step 1). */
+         gains them (step 3 of the order at BINDING_OF), and one that has them keeps them (step 1). */
       ...memberBindings(opts.members),
       /* DIST-11: restated on every update, because `browser` is not in keep_bindings below — an update that did not
          name it would DROP it from a copy that holds it, and one installed before DIST-11 gains it here. */
@@ -829,7 +828,7 @@ async function installFleet(emit, token, acct, slug, release) {
   return { done, left };
 }
 async function bindMembers(emit, token, acct, slug, release, already, fleet, opts) {
-  const want = Object.keys(MEMBER_BINDINGS).filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
+  const want = [...BINDING_OF.keys()].filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
   const added = want.filter((m) => !already.includes(m));
   if (added.length === 0) return { bound: already, unbound: [] };
   emit.step("bind", "Connecting your copy to its capability workers");
@@ -898,7 +897,7 @@ var BUILD_FIELDS = ["storeVersion", "memberVersions"];
 function reportsBuilds(source) {
   return typeof source === "string" && BUILD_FIELDS.every((f) => new RegExp("\\b" + f + "\\b").test(source));
 }
-var failedLags = (failed = []) => failed.filter((l) => l && l.member in MEMBER_BINDINGS).map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${MEMBER_BINDINGS[l.member]} connection to use (${l.why})`);
+var failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member)).map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${BINDING_OF.get(l.member)} connection to use (${l.why})`);
 function servingVerdict(j, want, installed, capable, failed = []) {
   const lags = [];
   if (!j || typeof j !== "object") {
@@ -1432,7 +1431,6 @@ export {
   BROWSER_BINDING,
   CFG,
   INSTANCE_AI_BINDING,
-  MEMBER_BINDINGS,
   PLANE_LIMITS,
   index_default as default,
   instanceAiOk,

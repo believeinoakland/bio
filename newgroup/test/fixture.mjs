@@ -6,7 +6,9 @@
  * `op=bootstrap` the way a plane does, derived from what was uploaded. A streamed progress page is parsed back into
  * the steps, the refusal and the final panel it emits.
  */
-import worker, { CFG, ARMED_SIGNERS, MEMBER_BINDINGS } from "../src/index.mjs";
+import worker, { CFG, ARMED_SIGNERS } from "../src/index.mjs";
+/* The member binding names are instance-setup's (installer R30); the installer holds no table of its own. */
+import { FLEET_BINDINGS } from "../src/instance-setup-stub.mjs";
 import { fleetStatement, NS_FLEET, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 
 export const TOK = "TOKEN-THAT-MUST-NEVER-APPEAR-IN-OUTPUT";
@@ -112,7 +114,7 @@ export const WASM = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x
 
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it
    over another set, tamper with a member's bytes, name an unknown part type, or leave the fleet out. */
-export async function release({ version, src = CAPABLE_SRC, members = Object.keys(MEMBER_BINDINGS), sig = "good",
+export async function release({ version, src = CAPABLE_SRC, members = FLEET_BINDINGS.map(([m]) => m), sig = "good",
   fleet = true, fleetSig = "good", tamper = null, badType = null, missing = null, signedMembers = null } = {}) {
   const planeSha = await sha(src);
   const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(MEMBER_SRC),
@@ -152,7 +154,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
   const membersOf = () => {
     const pb = acct.get(slug) || [];
-    return Object.fromEntries(Object.entries(MEMBER_BINDINGS).map(([member, binding]) => {
+    return Object.fromEntries(FLEET_BINDINGS.map(([member, binding]) => {
       const b = pb.find((x) => x.type === "service" && x.name === binding);
       if (!b) return [member, { binding, state: "UNBOUND" }];
       if (!acct.has(b.service)) return [member, { binding, state: "SILENT" }];

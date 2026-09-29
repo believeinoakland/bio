@@ -29,6 +29,8 @@ import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
+/* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. */
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./instance-setup-stub.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -151,8 +153,7 @@ const html = (s, status = 200, headers = {}) =>
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-const slugOk = (s) => typeof s === "string" && SLUG_RE.test(s) && s !== "newgroup";
+const slugOk = (s) => typeof s === "string" && GROUP_SLUG_RE.test(s) && s !== "newgroup";
 
 const readCookie = (req, name) => {
   const raw = req.headers.get("cookie") || "";
@@ -278,10 +279,10 @@ export const BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" 
  * Until DIST-6 both upload paths below bound the plane its buckets, its secrets and SELF and NOTHING ELSE, so on a
  * group's own copy `installFleet` uploaded pdf-worker, ocr-worker and agent-worker and the plane could reach none of
  * them: tier-2/3 extraction and the assistant member did nothing there (found by D-116's worker, 2026-09-23; D-116's
- * verify step read each member UNBOUND). The binding NAMES are the plane's own (`FLEET_BINDINGS` in
- * `bio-plane/src/index.mjs` — the wizard suite pins the two tables equal, read from the plane's source); the TARGET is
- * the script name `installFleet` uploads each member under (`m.member`), never the plane's slug and never a name in a
- * file. A member absent from this table (a release naming a member the plane does not call) is uploaded and not bound.
+ * verify step read each member UNBOUND). The binding NAMES are the plane's own, instance-setup's `FLEET_BINDINGS`,
+ * imported (R30); the TARGET is the script name `installFleet` uploads each member under (`m.member`), never the
+ * plane's slug and never a name in a file. A member absent from that list (a release naming a member the plane does not
+ * call) is uploaded and not bound.
  *
  * THE ORDER, and the evidence it rests on. Cloudflare REFUSES an upload whose service binding names a worker that does
  * not exist — measured here, not read in a vendor page: `tools/deploy-fleet.mjs` records the refusal
@@ -296,9 +297,8 @@ export const BROWSER_BINDING = Object.freeze({ type: "browser", name: "BROWSER" 
  * Step 1 binding what already exists is what keeps an UPDATE from un-binding a working copy's members for the
  * duration of the update, or for good when the fleet step cannot run (the repository unreachable): `service` is not
  * in `keep_bindings`, so a member not restated in a PUT is a member dropped. */
-export const MEMBER_BINDINGS = Object.freeze({ "agent-worker": "AGENT_WORKER", "pdf-worker": "PDF_WORKER",
-                                               "ocr-worker": "OCR_WORKER" });
-const memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS)
+const BINDING_OF = new Map(FLEET_BINDINGS);
+const memberBindings = (members = []) => [...BINDING_OF]
   .filter(([member]) => members.includes(member))
   .map(([member, name]) => ({ type: "service", name, service: member }));
 
@@ -307,7 +307,7 @@ const memberBindings = (members = []) => Object.entries(MEMBER_BINDINGS)
    step 3 binds whatever step 2 then uploads. */
 async function membersPresent(token, acct) {
   const present = [];
-  for (const member of Object.keys(MEMBER_BINDINGS)) {
+  for (const member of BINDING_OF.keys()) {
     try { if (await scriptExists(token, acct, member)) present.push(member); } catch { /* unestablished: not bound */ }
   }
   return present;
@@ -383,7 +383,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       /* DIST-11 (IC-252): the Browser Rendering binding D-64's render arm looks for. On every Workers tier, so an
          install is never refused over it; the plane reports it as a binding whose in-plane driver is not built. */
       BROWSER_BINDING,
-      /* DIST-6: the members this account already holds (none on a fresh account — see MEMBER_BINDINGS). */
+      /* DIST-6: the members this account already holds (none on a fresh account — see BINDING_OF). */
       ...memberBindings(opts.members),
     ],
     /* SQLite backend is the irreversible choice, made correctly, once. */
@@ -433,7 +433,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          refusal cannot also cost the copy its members. An update never passes it. */
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
       /* DIST-6: the fleet members, by the same healing shape as SELF — an update of a copy installed without them
-         gains them (step 3 of the order at MEMBER_BINDINGS), and one that has them keeps them (step 1). */
+         gains them (step 3 of the order at BINDING_OF), and one that has them keeps them (step 1). */
       ...memberBindings(opts.members),
       /* DIST-11: restated on every update, because `browser` is not in keep_bindings below — an update that did not
          name it would DROP it from a copy that holds it, and one installed before DIST-11 gains it here. */
@@ -602,7 +602,7 @@ async function installFleet(emit, token, acct, slug, release) {
   return { done, left };
 }
 
-/* DIST-6, step 3 of the order at MEMBER_BINDINGS: RE-PUT the plane bound to every bindable member now present — those
+/* DIST-6, step 3 of the order at BINDING_OF: RE-PUT the plane bound to every bindable member now present — those
    bound at step 1 and those `installFleet` just uploaded. The re-PUT takes the UPDATE's shape on both paths (no
    `migrations`, the group's passwords and the Durable Object kept by `keep_bindings`), because that is the shape
    already proven against an existing script on every update; an install's own shape would restate its `v1` migration
@@ -610,7 +610,7 @@ async function installFleet(emit, token, acct, slug, release) {
    no PUT. A refusal DEGRADES, never fails the act: the members stay installed, the step is marked, and the verify step
    names each member the plane cannot reach (servingVerdict) — never a success over it. */
 async function bindMembers(emit, token, acct, slug, release, already, fleet, opts) {
-  const want = Object.keys(MEMBER_BINDINGS)
+  const want = [...BINDING_OF.keys()]
     .filter((m) => already.includes(m) || (fleet?.done || []).includes(m));
   const added = want.filter((m) => !already.includes(m));
   if (added.length === 0) return { bound: already, unbound: [] };
@@ -690,8 +690,8 @@ export function reportsBuilds(source) {
    failed is named here whatever the plane answers, because the plane's own reading of it (UNBOUND, or a previous
    build) cannot say that THIS act tried and failed — and on a release that cannot report members it is the only
    place the failure reaches the verdict. A member the plane does not bind is named at the fleet step and not here. */
-const failedLags = (failed = []) => failed.filter((l) => l && l.member in MEMBER_BINDINGS)
-  .map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${MEMBER_BINDINGS[l.member]}`
+const failedLags = (failed = []) => failed.filter((l) => l && BINDING_OF.has(l.member))
+  .map((l) => `the capability worker ${l.member} could not be installed, so your copy has no ${BINDING_OF.get(l.member)}`
     + ` connection to use (${l.why})`);
 
 function servingVerdict(j, want, installed, capable, failed = []) {
@@ -924,7 +924,7 @@ async function runInstall(emit, code, saved) {
                     ...(instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}) };
   emit.ok("gen");
 
-  /* DIST-6, step 1: bind only the members this account already holds (see MEMBER_BINDINGS for the order). */
+  /* DIST-6, step 1: bind only the members this account already holds (see BINDING_OF for the order). */
   const present = await membersPresent(token, acct.id);
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");

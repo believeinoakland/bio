@@ -9,7 +9,9 @@ import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, existsSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import worker, { CFG, MEMBER_BINDINGS, PLANE_LIMITS } from "../src/index.mjs";
+import worker, * as installer from "../src/index.mjs";
+import { CFG, PLANE_LIMITS } from "../src/index.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../src/instance-setup-stub.mjs";
 import { EXAMPLE_SLUG, PUBLISHER } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
@@ -26,6 +28,7 @@ const secretsOf = (put) => (put?.meta?.bindings || []).filter((b) => b.type === 
 /* Every page this suite renders, for R19, R22 and R31, which hold over all of them. */
 const PAGES = [];
 const seen = (x) => { PAGES.push(typeof x === "string" ? x : x.page.words); return x; };
+const MEMBERS = FLEET_BINDINGS.map(([m]) => m), BINDINGS = FLEET_BINDINGS.map(([, b]) => b);
 const INVITATION = readFileSync(new URL("../../bio-plane/public/newgroup/index.html", import.meta.url), "utf8");
 
 /* ------------------------------------------------------------------------------------------------ the routes */
@@ -277,12 +280,12 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
 test("R11 `fleet`: members install only from a reachable repository whose signed fleet statement verifies against an armed key and names the plane just installed; each part hashed; an unknown part type refuses that member; every member left out is named; the install never fails over one", async () => {
   armWith(SIGNER.line);
   const full = seen(await run({ slug: "fleet-all", rel: await release({ version: NEXT }) }));
-  for (const member of Object.keys(MEMBER_BINDINGS)) assert.ok(full.acct.has(member), member);
+  for (const member of MEMBERS) assert.ok(full.acct.has(member), member);
   assert.deepEqual(full.acct.get("agent-worker").find((b) => b.name === "PLANE"), { type: "service", name: "PLANE", service: "fleet-all" });
   assert.match(full.page.label("fleet"), /All 3 capability workers installed and verified/);
   const noneOf = async (why, opts, says, runOpts = {}) => {
     const w = seen(await run({ slug: "fleet-" + why, rel: opts && await release({ version: NEXT, ...opts }), ...runOpts }));
-    for (const member of Object.keys(MEMBER_BINDINGS)) assert.ok(!w.acct.has(member), `${why}: ${member} not installed`);
+    for (const member of MEMBERS) assert.ok(!w.acct.has(member), `${why}: ${member} not installed`);
     assert.match(w.page.label("fleet"), says, why);
     assert.equal(w.page.status("install"), "ok", `${why}: the plane installed`);
     assert.ok(w.page.done, `${why}: the install finished`);
@@ -313,8 +316,8 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
 test("R12 `bind`: the plane bound first to the members already present, then the members installed, then (only when one was added) re-uploaded bound to every member present; a refused re-upload is named and the members stay", async () => {
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT });
-  const RIGHT = Object.fromEntries(Object.entries(MEMBER_BINDINGS).map(([m, b]) => [b, m]));
-  const targets = (bindings) => Object.fromEntries(Object.values(MEMBER_BINDINGS).map((b) => [b, (bindings || []).find((x) => x.name === b)?.service ?? null]));
+  const RIGHT = Object.fromEntries(FLEET_BINDINGS.map(([m, b]) => [b, m]));
+  const targets = (bindings) => Object.fromEntries(BINDINGS.map((b) => [b, (bindings || []).find((x) => x.name === b)?.service ?? null]));
   const fresh = seen(await run({ slug: "bind-fresh", rel }));
   assert.equal(fresh.planePuts.length, 2);
   assert.deepEqual(targets(fresh.planePuts[0].bindings), { AGENT_WORKER: null, PDF_WORKER: null, OCR_WORKER: null }, "act 1: none present");
@@ -323,17 +326,17 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   const puts = fresh.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u) && !c.u.endsWith("bio-plan-probe"))
     .map((c) => c.u.split("/scripts/")[1]);
   assert.equal(puts[0], "bind-fresh"); assert.equal(puts.at(-1), "bind-fresh");
-  assert.deepEqual(puts.slice(1, -1).sort(), Object.keys(MEMBER_BINDINGS).sort(), "act 2 between");
+  assert.deepEqual(puts.slice(1, -1).sort(), MEMBERS.slice().sort(), "act 2 between");
   assert.equal(fresh.planePuts[1].meta.migrations, undefined, "the re-upload takes the update's shape");
   assert.match(fresh.page.label("bind"), /Your copy is connected to/);
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
-  const had = seen(await run({ slug: "bind-had", rel, pre: Object.fromEntries(Object.keys(MEMBER_BINDINGS).map((m) => [m, old])) }));
+  const had = seen(await run({ slug: "bind-had", rel, pre: Object.fromEntries(MEMBERS.map((m) => [m, old])) }));
   assert.equal(had.planePuts.length, 1, "nothing added, no re-upload");
   assert.deepEqual(targets(had.planePuts[0].bindings), RIGHT);
   const bad = seen(await run({ slug: "bind-refused", rel, refuseRePut: true }));
   assert.equal(bad.page.status("bind"), "no");
   assert.match(bad.page.label("bind"), /installed, but connecting your copy to them was refused/);
-  for (const m of Object.keys(MEMBER_BINDINGS)) assert.ok(bad.acct.has(m), `${m} stays installed`);
+  for (const m of MEMBERS) assert.ok(bad.acct.has(m), `${m} stays installed`);
   restoreSigners();
 });
 
@@ -452,8 +455,8 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.deepEqual(refused.acct.get("upd-ref"), planeBase("upd-ref"));
   armWith(SIGNER.line);
   const fl = seen(await run({ slug: "upd-fleet", mode: "update", pre: { "upd-fleet": planeBase("upd-fleet") }, rel: await release({ version: NEXT }) }));
-  for (const member of Object.keys(MEMBER_BINDINGS)) assert.ok(fl.acct.has(member), member);
-  assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => Object.values(MEMBER_BINDINGS).includes(b.name)).length, 3);
+  for (const member of MEMBERS) assert.ok(fl.acct.has(member), member);
+  assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => BINDINGS.includes(b.name)).length, 3);
   assert.equal(fl.page.status("verify"), "ok");
   assert.match(fl.page.done, /Every part of your copy answers/);
   restoreSigners();
@@ -664,7 +667,37 @@ test("R29 one verifier: the installer accepts a release signature exactly when s
   restoreSigners();
 });
 
-test.todo("R30 the slug grammar and the member binding names are instance-setup's, imported, never copied (not yet met: instance-setup is not extracted, T8 has no job for it; the installer copies GROUP_SLUG_RE, which legacy-store holds, and FLEET_BINDINGS, which legacy-index holds unexported)");
+test("R30 the slug grammar and the member binding names are instance-setup's, imported, never copied: /begin accepts exactly GROUP_SLUG_RE's slugs (less its own name), the plane is bound under exactly FLEET_BINDINGS' names, and the installer exports no grammar or table of its own", async () => {
+  /* The grammar: every length from 0 to 42, and every printable ASCII character (and two beyond it) at the start, the
+     middle and the end of a slug, each accepted by /begin exactly when GROUP_SLUG_RE accepts it. */
+  const chars = [...Array(95)].map((_, i) => String.fromCharCode(32 + i)).concat(["é", "\u2028"]);
+  const corpus = [...Array(43)].map((_, n) => "a".repeat(n))
+    .concat(chars.flatMap((c) => [c + "bc", "a" + c + "c", "ab" + c]), ["newgroup", "a-b-c", "0-0", "--a", "a--b"]);
+  let accepted = 0;
+  for (const slug of corpus) {
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug }) });
+    const want = GROUP_SLUG_RE.test(slug) && slug !== "newgroup";
+    assert.equal(r.status === 200, want, JSON.stringify(slug));
+    if (want) accepted++;
+  }
+  assert.ok(accepted > 60 && accepted < corpus.length - 60, "the corpus holds both sides of the grammar");
+  /* The binding names: a full install binds the plane to each member under exactly FLEET_BINDINGS' name, and to
+     nothing else but SELF. */
+  assert.ok(FLEET_BINDINGS.length > 0);
+  armWith(SIGNER.line);
+  const w = seen(await run({ slug: "r30-names", rel: await release({ version: NEXT }) }));
+  restoreSigners();
+  const services = w.planePuts.at(-1).bindings.filter((b) => b.type === "service");
+  assert.deepEqual(services.filter((b) => b.name !== "SELF").map((b) => [b.service, b.name]).sort(),
+    FLEET_BINDINGS.map(([m, b]) => [m, b]).sort());
+  /* Never copied: nothing the installer exports is a slug grammar or a member binding table. */
+  const table = JSON.stringify(Object.fromEntries(FLEET_BINDINGS));
+  for (const [name, v] of Object.entries(installer)) {
+    assert.ok(!(v instanceof RegExp), `${name} is a grammar of its own`);
+    assert.ok(!(v && typeof v === "object" && (JSON.stringify(v) === JSON.stringify(FLEET_BINDINGS) || JSON.stringify(v) === table)),
+      `${name} is a binding table of its own`);
+  }
+});
 
 test("R31 no place is named in the installer's behaviour: no page it serves or streams names a place a held profile covers", async () => {
   const places = new Set(jurisdictions.list().flatMap((p) => p.covers).flatMap((c) => c.toLowerCase().split(/\W+/)).filter((x) => x.length > 2));
