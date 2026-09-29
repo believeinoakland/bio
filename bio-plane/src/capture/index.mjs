@@ -12,6 +12,7 @@
  * module registers a listener (R44, R55; `on`). */
 import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
 import { KNOCK } from "./doorbell.mjs";
+import { CAPTURE_CHECKS } from "./checks.mjs";
 import { acquire, archiveLookup } from "./acquire.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "./acquire.mjs";
 import { recordOf } from "../record-core/index.mjs";
@@ -360,14 +361,26 @@ export class Capture {
     return { inbox, limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
   }
 
+  /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
+     (C-118.2), not R63's `NOT_FOUND`; minted here alone, so the read and the resolve answer it identically. */
+  #noSuchKnock(knockId) {
+    /* DEC-49 REGION is-knock-held */
+    const row = CAPTURE_CHECKS.NO_SUCH_KNOCK;
+    return { ok: false, reason: "NO_SUCH_KNOCK", code: "NO_SUCH_KNOCK", check: row.check, translation: row.translation,
+             knockId: typeof knockId === "string" ? knockId : null };
+    /* END DEC-49 REGION is-knock-held */
+  }
+
   inboxGet(knockId) {
+    if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
     const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status FROM inbox WHERE knock_id=?`, knockId);
-    return r ? { ok: true, item: r } : { ok: false, reason: "NOT_FOUND" };
+    return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
   }
 
   inboxResolve({ knockId, status, by } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    if (!this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId)) return { ok: false, reason: "NOT_FOUND" };
+    if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
+      return this.#noSuchKnock(knockId);
     this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
                    status, new Date().toISOString(), by ?? null, knockId);
     return { ok: true, knockId, status };
