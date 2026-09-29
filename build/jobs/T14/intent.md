@@ -47,3 +47,7 @@
 - `ownership intent tranche/T14`: 0 failures, with legacy-checks and legacy-store 0 lines added and 0 removed.
 
 Size (session_01FqpsV7C2NPXUooqgeT942u): test runs 10, module lines 1864
+
+## J1 · QUESTION
+
+R22 wording (not blocking; built on my reading): R22 says every refusal intent.md names gets a row in this module except NO_SUCH_PROJECT and NO_SUCH_ENTITY. R9 now names NOT_AN_ADMIN, whose one row is membership's C-96.1 (R84), and R2 already names PROJECT_ACT_NOT_A_PARTICIPANT, also membership's. My reading: R22's exceptions gain both (N327 for NOT_AN_ADMIN), and the code follows R84 (no intent row for either). Nothing to change in code if you agree.
