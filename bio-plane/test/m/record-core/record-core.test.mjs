@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { checkBundle, PER_ITEM_CHECKS } from "../../../checks/bio-checks.mjs";
 import { recordOf, RecordCore, RECORD_SCHEMA, stampInstant, instantOrder, PER_ITEM_MAX, perItem, EMPTY_STRING_SHA, fileDigestOf,
-         inlineBytesOf } from "../../../src/record-core/index.mjs";
+         inlineBytesOf, mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 import { storage, bucket } from "./storage.mjs";
 
 const fresh = (opts) => { const s = storage(); const rc = recordOf({ storage: s }, opts); rc.migrate(); return { s, rc }; };
@@ -1327,3 +1327,73 @@ test("R40 R28: seedMintLedger learns live ids under the plane's 50-byte LIKE/GLO
   // the fixture holds workerd's cap: a pattern over 50 bytes is refused, as on the plane
   assert.throws(() => s.sql.exec(`SELECT 1 FROM live WHERE id GLOB ?`, "Y".repeat(51)), /pattern too complex/);
 });
+
+/* ---- T13: R62 `mintExhausted`, its row C-59.6 (N322, N250) ---- */
+
+const MINT_EXHAUSTED_TRANSLATION = 'The plane could not find a free identifier for this, so nothing was saved and nothing was '
+  + 'issued. Identifiers are drawn at random so that none of them says how many others exist, and every '
+  + 'one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs '
+  + 'this instance.';
+
+test("R62: mintExhausted is the one answer when mintOpaqueId answers null: MINT_EXHAUSTED under its row C-59.6, one fixed detail per gated prefix", () => {
+  const row = RECORD_CORE_CHECKS.MINT_EXHAUSTED;
+  assert.deepEqual({ ...row }, { check: "C-59.6", where: "src/record-core/index.mjs mintExhausted > is-mint-exhausted",
+                                 translation: MINT_EXHAUSTED_TRANSLATION },
+                   "its one row is this module's, its where naming this function, with review's C-87.12 translation");
+  assert.ok(Object.isFrozen(RECORD_CORE_CHECKS) && Object.isFrozen(row));
+  const names = { PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" };
+  assert.deepEqual(Object.keys(names), RecordCore.GATED_ID_PREFIXES, "every prefix of R3's set");
+  const details = new Set();
+  for (const [p, what] of Object.entries(names)) {
+    const r = mintExhausted(p);
+    assert.deepEqual(r, { ok: false, reason: "MINT_EXHAUSTED", code: "MINT_EXHAUSTED", check: "C-59.6", translation: MINT_EXHAUSTED_TRANSLATION,
+                          prefix: p, detail: `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.` });
+    assert.deepEqual(mintExhausted(p), r, "the same answer for every caller, every time");
+    assert.deepEqual(mintExhausted(p, undefined), r);
+    assert.ok(!/\d/.test(r.detail), "the detail names no count and no id");
+    details.add(r.detail);
+  }
+  assert.equal(details.size, 5, "one sentence per prefix");
+  // the condition: exactly when mintOpaqueId answers null (R9), and the store is left as the refused act left it
+  const { s, rc } = fresh();
+  for (const p of RecordCore.GATED_ID_PREFIXES) {
+    const before = dump(s);
+    const r = rc.transact(() => {
+      const id = rc.mintOpaqueId(p, "2026", p === "PROJ" || p === "TASK" ? "-slug" : "", () => true);
+      assert.equal(id, null);
+      return id ? { ok: true, id } : mintExhausted(p);
+    });
+    assert.deepEqual(r, mintExhausted(p));
+    assert.deepEqual(dump(s), before, "a refused act that answers through it has written nothing");
+  }
+});
+
+test("R62: mintExhausted's extra adds a caller's own fields and never replaces its own; it writes nothing and never throws", () => {
+  const own = mintExhausted("CASE");
+  const r = mintExhausted("CASE", { draftId: "DRAFT-2026-0001", op: "publish", ok: true, reason: "X", code: "Y", check: "C-0.0",
+                                     translation: "t", prefix: "PROJ", detail: "mine" });
+  assert.deepEqual(r, { ...own, draftId: "DRAFT-2026-0001", op: "publish" }, "a caller's own fields beside, never over, the answer's");
+  // it writes nothing: a store it could reach is unchanged, and it holds none of its own
+  const { s } = fresh();
+  const before = dump(s);
+  for (const p of [...RecordCore.GATED_ID_PREFIXES, "INFO"]) mintExhausted(p, { a: 1 });
+  assert.deepEqual(dump(s), before);
+  // never throws: any prefix, any extra
+  const hostile = new Proxy({}, { ownKeys() { throw new Error("keys"); } });
+  const getter = Object.defineProperty({}, "boom", { enumerable: true, get() { throw new Error("get"); } });
+  for (const p of ["INFO", "", "proj", "PROJ-X", undefined, null, 7, {}, ["CASE"]])
+    for (const extra of [undefined, null, "str", 5, [1, 2], hostile, getter, { x: 1 }]) {
+      let a;
+      assert.doesNotThrow(() => { a = mintExhausted(p, extra); }, `${String(p)} / ${typeof extra}`);
+      assert.deepEqual([a.ok, a.reason, a.code, a.check, a.translation], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", MINT_EXHAUSTED_TRANSLATION]);
+      assert.equal(typeof a.prefix, "string");
+      assert.equal(a.detail, "the plane could not find a free id: every one it drew was already taken. Nothing was written.",
+                   "a prefix outside R3's set names no object");
+    }
+  assert.equal(mintExhausted("INFO", { x: 1 }).x, 1);
+  assert.equal(mintExhausted("INFO").prefix, "INFO");
+  assert.equal(mintExhausted(["CASE"]).prefix, "", "only a string names a prefix");
+});
+
+test.todo("R62: every act of any module that answers no free opaque id answers through mintExhausted: promotion R19 (T13 layer 2), "
+  + "case-authoring R7 and review R27 with C-87.12's retirement (layer 8), queue R23 (layer 11) — each changes in its own job (N322)");
