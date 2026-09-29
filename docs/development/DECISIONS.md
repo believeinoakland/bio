@@ -1481,3 +1481,17 @@ still open (Bob's, later): the rest of question 12, which Bob will take up later
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Complete_Roadmap_v5.md` §11.
 owed: the acceptance act and the origin mark's requirements (inquiry, publication, affordances), for Bob's approval; the UX page's open question 12 marked partly ruled.
+
+### DEC-92 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 9)
+for: bob
+question: What does the action plan surface (S11) look like: options, dependencies, deadlines, resources, outcome branches, declined options, and support status on every element?
+why it is Bob's: a plan needs requirements and a module; scope and tranche are his.
+provisional: the plan surface is undesigned and unbuilt.
+alternative: decide it in this design session.
+recommendation: none taken here.
+reversal cost: none.
+response: **MOVED by Bob, 2026-09-29:** "I've started a separate session that will be used for work related to Actions." Question 9 stays open and is decided in that session, which was given the rulings that bear on Actions (DEC-81, DEC-86, DEC-87, DEC-88).
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: nothing here; the Actions session owns question 9.
