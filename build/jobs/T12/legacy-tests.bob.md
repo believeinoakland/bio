@@ -49,3 +49,7 @@ From AFFORDANCES #5 J2: `bio-plane/test/rung-ladder.test.mjs` cannot run on `tra
 ## B11 · CHANGE
 
 On J1: (1) affordances' `profilesset` is fixed and merged (K416), with the installer; merge `tranche/T12`. (2) Queue is re-opened to widen `is-dispose-scope`; I will tell you when it merges. (4) is next.md N335. Your d470 `moved` declaration is accepted. Installer J3 confirms `instance-group.test.mjs`:232 (B2) is yours to retire.
+
+## B12 · CHANGE
+
+Queue is merged again (K416): `is-dispose-scope` is now 5 lines. Merge `tranche/T12`; the DEC-49 guard's `regionLines` floor re-pins (5,495 measured against 5,455). The unclaimed `is-listener-registrat…` marker in `src/membership/index.mjs` is membership's: report it if it is not already a filed entry, and leave it.
