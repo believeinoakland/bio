@@ -2,7 +2,8 @@
    observation-log, host-governor, capture-sources' credentials) on a real SQLite database (node:sqlite)
    standing in for a Durable Object's storage at its shape (a cursor, workerd's pattern cap; below). `capture`'s in-process arm is a stand-in the test scripts (K61: a test may pass its
    own instance), recording exactly what it was handed; ai-runs' run sight (`runFor`) is a table of runs the test
-   writes. Every test drives `capture-requests` at its interface. */
+   writes; inquiry's `memberUserAgent` (its R44) answers the agents the test records, noting each id asked (a
+   plane-created inquiry's stamp is driven in plane.test.mjs). Every test drives `capture-requests` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -143,15 +144,18 @@ export function world({ env = ENV, configured, credentials = true, group = "test
     return { run: r.run, status: r.status, principal_plane: r.principal_plane, principal_claude: r.principal_claude,
              context_type: "inquiry", context_id: r.context };
   } };
+  /* inquiry R44 as a stand-in: the agent it recorded for an inquiry, or null, and every id the drain asked it about. */
+  const agents = new Map(), asked = [];
+  const inquiry = { memberUserAgent: (id) => { asked.push(id); return agents.has(id) ? agents.get(id) : null; } };
   const waitRegs = [];
   const aiRuns = { registerWaitSource: (module, source) => { waitRegs.push({ module, source }); return { ok: true }; } };
   const cr = captureRequestsOf(host, { record, observations: obs, governor, capture, credentials: creds, runs: runSight,
-                                       env, now, storeName: "bio", aiRuns, promotion,
+                                       env, now, storeName: "bio", aiRuns, promotion, inquiry,
                                        ...(configured !== undefined ? { configured } : {}),
                                        ...(order !== undefined ? { order } : {}) });
   cr.migrate();
   const w = {
-    st, host, record, membership, promotion, obs, governor, creds, capture, runs, cr, clock, waitRegs,
+    st, host, record, membership, promotion, obs, governor, creds, capture, runs, cr, clock, waitRegs, agents, asked,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     req: (id) => st.sql.exec(`SELECT * FROM capture_requests WHERE request=?`, id).toArray()[0] ?? null,

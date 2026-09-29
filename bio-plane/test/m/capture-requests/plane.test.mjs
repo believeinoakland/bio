@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
-const SEEN = [];
+const SEEN = [], AGENTS = new Map();
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: join(SRC, "index.mjs"),
   script: readFileSync(join(SRC, "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
@@ -23,6 +23,7 @@ const mf = new Miniflare({
               CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000" },
   outboundService(request) {
     SEEN.push(request.url);
+    AGENTS.set(request.url, request.headers.get("User-Agent"));
     if (new URL(request.url).host === "down.example.org") return new Response("unavailable", { status: 503 });
     if (new URL(request.url).host === "up.example.org")
       return new Response(new TextEncoder().encode(`%PDF-1.4 a document of its own at ${request.url}`), { headers: { "content-type": "application/pdf" } });
@@ -32,13 +33,14 @@ const mf = new Miniflare({
 after(() => mf.dispose());
 
 const unwrap = (r) => (r && typeof r === "object" && "result" in r ? r.result : r);
-const call = async (op, tok, body) => {
+const call = async (op, tok, body, headers = {}) => {
   const r = await mf.dispatchFetch(`http://x/api/?op=${op}&token=${tok}`,
-    body === undefined ? {} : { method: "POST", body: JSON.stringify(body) });
+    body === undefined ? { headers } : { method: "POST", body: JSON.stringify(body), headers });
   return { status: r.status, body: unwrap(await r.json()) };
 };
 const forbidden = (r) => r.status === 403 && r.body && r.body.reason === "CLASS_FORBIDDEN";
 
+const MEMBER_UA = "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0";
 let setup = null;
 async function world() {
   if (setup) return setup;
@@ -50,18 +52,24 @@ async function world() {
   const RUTH = await enrol("ruth", "admin", ["contribute", "publish"]);
   await enrol("sam", "admin", ["contribute"]);
   const NOCON = await enrol("nocon", "member", []);
-  const md = ["---", "id: INQ-2026-9000-cr", "object_type: inquiry", "schema: inquiry@1", 'title: "What?"',
+  const md = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", 'title: "What?"',
     "current_state: open", "prior_state: null", 'created: "2026-07-01T00:00:00Z"', 'last_updated: "2026-07-01T00:00:00Z"',
     "produced_by:", "  mode: agent", "  capability_tier: high", "group: g", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "surfaced_by: agent", 'disposition_reason: ""', "---", "", "## Question", "", "What?", "",
     "## What It Rests On", "", "## Conclusion", "", "## What Would Falsify This", "", "## Session Log", "",
     "## Review Notes", ""].join("\n");
-  const p = (await call("promote", RUTH, { bundleId: "INQ-2026-9000-cr", base: null, snapKey: "INQ-2026-9000-cr-000001",
-    files: [{ path: "bundle.md", text: md, bytes: md.length, sha256: sha(md) }], register: [],
-    meta: { object_type: "inquiry", group: "g", current_state: "open", created: "2026-07-01T00:00:00Z",
-            last_updated: "2026-07-01T00:00:00Z" } })).body;
-  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  const create = async (id, headers) => {
+    const text = md(id);
+    const p = (await call("promote", RUTH, { bundleId: id, base: null, snapKey: `${id}-000001`,
+      files: [{ path: "bundle.md", text, bytes: text.length, sha256: sha(text) }], register: [],
+      meta: { object_type: "inquiry", group: "g", current_state: "open", created: "2026-07-01T00:00:00Z",
+              last_updated: "2026-07-01T00:00:00Z" } }, headers)).body;
+    assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  };
+  await create("INQ-2026-9000-cr");
+  /* N295: an inquiry created through a member's session, whose browser agent the control plane stamps (inquiry R44) */
+  await create("INQ-2026-9001-ua", { "User-Agent": MEMBER_UA });
   const run = (await call("airunopen", RUTH, { run: "RUN-CR-1", contextType: "inquiry", contextId: "INQ-2026-9000-cr",
     label: "cr", mode: "check", principalClaude: "project", principalClaudeRef: "g/claude",
     skillVersion: "investigative-session@1", biasManifest: null, bounds: [{ bound: "fetches", allowed: 5, unit: "requests" }],
@@ -135,4 +143,16 @@ test("R19 R42 R38 in the plane: a source's 503 holds the row under CAPTURE_FETCH
   assert.ok(got, JSON.stringify(d).slice(0, 600));
   assert.equal(got.promoted && got.promoted.ok, true, String(JSON.stringify(got)));
   assert.match(got.promoted.bundle_id, /^INFO-\d{4}-\d{4}-requested$/);
+});
+
+test("R14 in the plane (N295): a member-browser request under an inquiry created through a member's session is fetched with the agent the control plane stamped and inquiry records (its R44), not refused CAPTURE_CONDUCT_UA_UNRECORDED", async () => {
+  const { RUTH } = await world();
+  const address = "https://up.example.org/member-browser.pdf";
+  const a = (await call("capturerequest", RUTH, { run: "RUN-CR-1", address, target: "INQ-2026-9001-ua",
+                                                purpose: "investigate", ua_mode: "member-browser" })).body;
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
+  assert.equal([...d.refused, ...d.held].find((x) => x.request === a.request), undefined, JSON.stringify(d).slice(0, 600));
+  assert.ok(d.captured.find((c) => c.request === a.request), JSON.stringify(d).slice(0, 600));
+  assert.equal(AGENTS.get(address), MEMBER_UA, "the member's own agent left the instance, verbatim");
 });
