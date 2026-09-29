@@ -17,3 +17,7 @@ From LEGACY-UI #1 J1 (N301, merged at the layer close): the queue class FINDING 
 ## B4 · CHANGE
 
 Correction to B3: do NOT merge `job/T12/legacy-ui`. I have merged it into the tranche branch; merge `tranche/T12` into yours instead, then re-anchor the pins B3 lists.
+
+## B5 · CHANGE
+
+Queue is merged into `tranche/T12` (K409); merge it. Its re-anchors (QUEUE #2 J2 (5)): `queue-conditions` and `leadslug` import `QUEUE_MINT_CHECKS` from the catalogue (it is now `bio-plane/src/queue/checks.mjs`); `peritem` 50/1, `d125-findingmute` 41/1, `current` 63/2, `severedhomes` 12/2 and `fence-e2e` 51/4 anchor on store.mjs or the catalogue; and the map's source-reading list, not yet run: `machinefences-dec49`, `shadowed-refusals`, `derivation-bounds`, `meaning-bounds`, `gate-reads`, `hygiene` (schema text now in `src/queue/schema.mjs`), `plane-envelope`, `bounds`, `opaque-ids`, `task-drain-alarm`, `d280-strengthbar`, `drive`, `nc-m038`. Census: rows moved to queue (C-31 family, C-76.1, C-32.10, C-32.11, C-33.27, C-33.44) and one new row C-33.50 `NO_PROJECT_SCOPE` (D-623 now met: `check-refusal-codes.mjs` 2304–2314); `d470` re-pins. `civicos-ui/test/notifications.*` pin `options_grain`, which queue R18 retires.
