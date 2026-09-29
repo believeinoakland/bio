@@ -15747,9 +15747,23 @@ function queueEntryControlsHtml(it){
        is worse than none. The test is a PROPERTY of the item rather than a list
        of kinds, so a finding kind nobody has written yet is judged correctly the
        day it arrives. */
-    if(!notifDispositionKeyed(it)) return notifNoDispositionHtml(it);
+    if(!notifDispositionKeyed(it)){
+      /* An item whose decision goes through ANOTHER published door (a notice decided by
+         op=versionadopt / versionkeep) is not told it has none: its options above are the door. */
+      const d = it.disposition || null;
+      return (d && d.available === true) ? "" : notifNoDispositionHtml(it);
+    }
     const key = queueFindingKey(it);
     if(!key || !canProposalAct()) return "";
+    /* D-266 / queue R18: a project-scoped finding is set aside for ONE case's feed. Adopting makes the
+       record's question a shared one and is not its act (the lead's own take-up, `cite`, is among the
+       options above), so it draws Defer and Dismiss only, and they send (project, finding). */
+    if(queueIsProjectScoped(it))
+      return `<div class="q-entry-acts">`
+        + queueSelTickHtml(it)
+        + `<button class="btn ghost" data-prop-defer="${esc(key)}" onclick="openProposalAct('${esc(key)}','deferred')">Defer&hellip;</button>`
+        + `<button class="btn ghost" data-prop-dismiss="${esc(key)}" onclick="openProposalAct('${esc(key)}','dismissed')">Dismiss&hellip;</button>`
+        + `</div>`;
     return `<div class="q-entry-acts">`
       + queueSelTickHtml(it)
       + `<button class="btn" data-prop-adopt="${esc(key)}" onclick="openProposalAdopt('${esc(key)}')">Adopt — make it a question</button>`
@@ -15858,16 +15872,28 @@ function queueFindingAsProposal(it){
     /* REC-211: carried so the single act sends the same version the set act does, from the same
        published block — two send paths reading one field rather than two answers. */
     definition_version: queueDispositionVersion(it),
+    /* D-266 / queue R18: a project-scoped finding (the out-of-inquiry lead among them) is decided in the
+       act's (project, finding) shape, for a case the record publishes as its home; carried here so the
+       single act sends that shape, as the set act does, and never the instance-wide `key`. */
+    scoped: queueIsProjectScoped(it),
+    finding: (it && it.disposition && it.disposition.finding) || String((it && it.id) || ""),
+    homes: queueFindingHomes(it),
+    item: it,
     /* The producer's own sentence, so the act dialog quotes the record rather
        than a sentence this browser composed. */
     summary: it.summary || null };
 }
 
 /* N301 (K356): the queue class `FINDING` keeps its code and meaning and is shown to members as
-   Noticed, in every label and heading; "finding" is reserved for a concluded question. Every other
-   class is shown as the record names it. */
+   Noticed, in every label and heading; "finding" is reserved for a concluded question. The words are
+   the record's own: `op=queue` publishes `class_labels`, read verbatim. A plane that publishes none
+   (one built before queue's extraction) still shows FINDING as Noticed, and every other class as its
+   code. */
 function queueClassLabel(cls){
   const c = String(cls || "");
+  const d = (typeof queueData === "function") ? queueData() : null;
+  const labels = (d && d.class_labels && typeof d.class_labels === "object") ? d.class_labels : null;
+  if(labels && typeof labels[c] === "string" && labels[c].trim()) return labels[c].trim();
   return c.toUpperCase() === "FINDING" ? "Noticed" : c;
 }
 function queueItemHtml(it){
@@ -18587,7 +18613,9 @@ let PROP_ACT = null;   // { key, proposal, to, reason, refusal, busy }
 function openProposalAct(key, to){
   const p = PROPOSALS_LAST.find(x => x.key === key);
   if(!p) return;
-  PROP_ACT = { key, proposal:p, to: to || dispositions()[0] || "", reason:"", refusal:null, busy:false };
+  PROP_ACT = { key, proposal:p, to: to || dispositions()[0] || "", reason:"", refusal:null, busy:false,
+               /* D-266: the case a project-scoped decision is for — its one home, or the member's pick. */
+               project: (p.scoped && p.homes.length === 1) ? p.homes[0] : "" };
   $("#dlg-wrap").classList.remove("hidden");
   proposalActPaint();
 }
@@ -18595,6 +18623,25 @@ function proposalActChoose(to){
   if(!PROP_ACT) return;
   PROP_ACT.to = to; PROP_ACT.refusal = null;
   proposalActPaint();
+}
+function proposalActProject(v){
+  if(!PROP_ACT) return;
+  PROP_ACT.project = (PROP_ACT.proposal.homes || []).includes(v) ? v : ""; PROP_ACT.refusal = null;
+  proposalActPaint();
+}
+/* D-266: WHOSE decision a project-scoped one is, in the dialog. One home is said; several are asked, and
+   none is chosen until the member chooses (a surface that defaulted one would choose whose judgment the
+   record carries). */
+function proposalActHomeHtml(){
+  const p = PROP_ACT && PROP_ACT.proposal;
+  if(!p || !p.scoped) return "";
+  if(p.homes.length === 1)
+    return `<p class="subj-note" data-pa-home>Recorded as the case ${esc(queueCaseName(p.item, p.homes[0]))}&rsquo;s own decision; it governs no other case.</p>`;
+  return `<h3 class="cx-h">For which case</h3>
+     <p class="subj-note">This is filed under ${p.homes.length} cases, and deciding it is one case&rsquo;s own act.</p>
+     <select data-pa-home onchange="proposalActProject(this.value)"><option value="">Choose which case this is for&hellip;</option>`
+    + p.homes.map(h => `<option value="${esc(h)}"${PROP_ACT.project === h ? " selected" : ""}>${esc(queueCaseName(p.item, h))}</option>`).join("")
+    + `</select>`;
 }
 function proposalActAuthor(v){
   if(!PROP_ACT) return;
@@ -18611,7 +18658,7 @@ function proposalActPaint(){
     </label>`).join("");
   /* ABSENT, never present-and-greyed, and it judges nothing about the record:
      it appears once the member has supplied what the act takes. */
-  const commit = (to && PROP_ACT.reason.trim())
+  const commit = (to && PROP_ACT.reason.trim() && (!PROP_ACT.proposal.scoped || PROP_ACT.project))
     ? `<div class="intent-pf"><button class="btn" id="pa-go" onclick="doProposalDispose()"${PROP_ACT.busy?" disabled":""}>${esc(disposeVerb(to))}</button></div>` : "";
   box.innerHTML =
     `<h2 id="pa-h">${esc(disposeVerb(to))} this proposal</h2>
@@ -18624,6 +18671,7 @@ function proposalActPaint(){
      <p class="subj-note">In your words, and required. Nothing is drafted or suggested here, and no length rule is copied onto this page &mdash; if the record will not take what you wrote, the record says so in its own words.</p>
      <textarea class="txt" id="pa-reason" rows="2"
        onchange="proposalActAuthor(this.value)" onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+     ${proposalActHomeHtml()}
      ${weightLadderHtml("reasoned", `Deferring or dismissing a proposal is <b>reasoned</b>: it is kept and returnable, so it can be undone — but it never happens silently, because it carries a reason that goes on the record as your own words.`)}
      ${PROP_ACT.refusal?`<div class="intent-pf">${citeRefusalHtml(PROP_ACT.refusal)}</div>`:""}
      ${commit}
@@ -18645,6 +18693,7 @@ async function doProposalDispose(){
      nothing — because the control that calls it does not exist yet, and a
      sentence here would be a refusal composed on the surface. */
   if(!PROP_ACT || PROP_ACT.busy || !PROP_ACT.to || !PROP_ACT.reason.trim()) return;
+  if(PROP_ACT.proposal.scoped && !PROP_ACT.project) return;
   const key = PROP_ACT.key, to = PROP_ACT.to, reason = PROP_ACT.reason.trim();
   PROP_ACT.busy = true; PROP_ACT.refusal = null; proposalActPaint();
   try{
@@ -18652,9 +18701,12 @@ async function doProposalDispose(){
        was opened on (op=proposals publishes it; a finding opened from the queue carries it through
        queueFindingAsProposal). Never the current version fetched now — that is precisely the
        substitution BOB #32 ruled against, and it would make this page the thing that hid a revision. */
-    const out = await recPostR("proposedispose", { key, to, reason,
-      definitionVersion: (PROP_ACT.proposal && Number.isInteger(PROP_ACT.proposal.definition_version))
-        ? PROP_ACT.proposal.definition_version : null });
+    /* D-266: a project-scoped finding goes in the act's (project, finding) shape, never `key`. */
+    const out = await recPostR("proposedispose", PROP_ACT.proposal.scoped
+      ? { project: PROP_ACT.project, finding: PROP_ACT.proposal.finding, to, reason }
+      : { key, to, reason,
+          definitionVersion: (PROP_ACT.proposal && Number.isInteger(PROP_ACT.proposal.definition_version))
+            ? PROP_ACT.proposal.definition_version : null });
     if(!PROP_ACT || PROP_ACT.key !== key) return;
     PROP_ACT.busy = false;
     if(out && out.ok === false){ PROP_ACT.refusal = out; proposalActPaint(); return { refused:true, reason: out.reason }; }
@@ -24607,9 +24659,12 @@ try{ window.addEventListener("hashchange", ()=>{ if(!ACER_HASH_LOCK) acceptCerem
    ---- (1) `options_grain` IS PART OF THE CONTRACT, NOT DECORATION
 
    PL-15's delegation names this by name. `op=queue`'s out-of-inquiry lead
-   carries `options[]` at DOCUMENT grain and declares, on the item, that the acts
-   a member would most naturally want are at INQUIRY grain and do not exist
-   (D-222). The plane declared the gap rather than hiding it behind an empty
+   carried `options[]` at DOCUMENT grain and declared, on the item, that the acts
+   a member would most naturally want were at INQUIRY grain and did not exist
+   (D-222). Since queue R18 (T12) the lead offers those acts itself (`cite`, and
+   with a project home `proposedispose`) and carries no `options_grain`; the
+   stance and version items still declare theirs, and this renders whatever
+   item carries one. The plane declared the gap rather than hiding it behind an empty
    array; a surface that then rendered only the array would put the gap back.
    *"An empty-looking action row with no explanation is how a member concludes
    the lead is broken."*
@@ -24768,7 +24823,7 @@ function notifBasisEntryHtml(it){
    silent "no" that would withdraw a control a member legitimately has. */
 function notifDispositionKeyed(it){
   const d = (it && it.disposition) || null;
-  if(d && typeof d.available === "boolean") return d.available;
+  if(d && typeof d.available === "boolean") return d.available === true && d.op === "proposedispose";
   const b = (it && it.basis) || {};
   const pk = typeof b.progression_key === "string" ? b.progression_key.trim() : "";
   const sk = typeof b.stage_key === "string" ? b.stage_key.trim() : "";
