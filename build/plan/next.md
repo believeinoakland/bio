@@ -1,10 +1,6 @@
 # Plan: next tranche
 
-**Status** · Entries awaiting the tranche they join (PROCESS-MECHANICS §5), grouped by module, modules by layer. T12 (opened by BOB #62, 2026-09-29) carries the entries its plan names, N299–N316 among them; an entry it carries only in part stays here for the shares it does not carry.
-
-## Carried by T12
-
-`build/plan/current.md` names the entries T12 carries and each one's share.
+**Status** · Entries awaiting the tranche they join (PROCESS-MECHANICS §5), grouped by module, modules by layer. T13 (opened by BOB #65, 2026-09-29) carries the entries its plan names (`current.md`); an entry it carries only in part stays here for the shares it does not carry. Entries T12 carried in full moved to `archive/next-applied.md` (K424).
 
 ## Later layers
 
