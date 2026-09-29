@@ -30,7 +30,7 @@
  *   strength      `inquiryStrength` (R9).
  *   reevaluation  `onBasisChanged` (R10).
  *   publication   `publishedEditionsOf` (R2, R9, R10; its R37).
- *   standards     `standardRead`, `inForce` (R1, R3, R9, R10).
+ *   standards     `standardRead`, `inForce` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`).
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37), through
@@ -44,27 +44,12 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
-import * as standardsModule from "../standards/index.mjs";
+import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle } from "../../checks/bio-checks.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
 
 export { CONFORMANCE_CHECKS } from "./checks.mjs";
-
-/* R1's `NO_SUCH_STANDARD` answers through standards' `noSuchStandard` (its R17, N309); until that helper is merged into
-   this branch, a local stand-in answers its worded shape with standards' own row (C-112.10), so no row of this module
-   carries the code. Removed when BOB's CHANGE brings the helper. */
-const noSuchStandard = typeof standardsModule.noSuchStandard === "function" ? standardsModule.noSuchStandard
-  : (standardId, extra = null) => {
-    const row = standardsModule.STANDARDS_CHECKS.NO_SUCH_STANDARD;
-    const own = extra && typeof extra === "object" && !Array.isArray(extra)
-      ? Object.entries(extra).filter(([k]) => !["ok", "reason", "code", "check", "translation", "standard", "detail"]
-        .includes(k)) : [];
-    return { ok: false, reason: "NO_SUCH_STANDARD", code: "NO_SUCH_STANDARD", check: row.check,
-             translation: row.translation, standard: standardId ?? null, ...Object.fromEntries(own),
-             detail: "no standard answers to that id here. One your credential may not read is answered exactly as one "
-               + "that does not exist." };
-  };
 export { CONFORMANCE_SCHEMA, CONFORMANCE_TABLES } from "./schema.mjs";
 
 /** R1, R4: the three outcomes, each given per standard by the member. */
@@ -147,7 +132,7 @@ export class Conformance {
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
-  get standards() { return this.#deps.standards ||= standardsModule.standardsOf(this.#deps.host); }
+  get standards() { return this.#deps.standards ||= standardsOf(this.#deps.host); }
 
   migrate() { migrateConformance(this.sql); }
 
