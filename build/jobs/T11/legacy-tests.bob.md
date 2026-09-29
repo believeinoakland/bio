@@ -21,3 +21,7 @@ From LEGACY-INDEX #8 (K377), for `gate-reads.test` "EVERY read op is classified"
 ## B5 · CHANGE
 
 Legacy-index is merged into `tranche/T11` (§4): merge it before re-anchoring `gate-reads` (`actionkinds`, `monitorslate`) and `refusal-wire` (B4). Affordances' `monitorpause` entry follows shortly; I will send a CHANGE when it merges.
+
+## B6 · CHANGE
+
+Affordances' `monitorpause` entry (`NON_ACTS`, `RUNG_ABSENT` under `credential`) is merged into `tranche/T11`. Merge the tranche before your final re-anchors; `rung-ladder`'s only red arm left is escalationresume's (B3).
