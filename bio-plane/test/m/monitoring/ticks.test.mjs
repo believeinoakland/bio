@@ -202,7 +202,7 @@ test("R24 configured means a self binding and a bound daemon or administrator cr
   await w.m.cadenceTick(NOW_MS);
   assert.equal(w.m.env.SELF.calls.at(-1).token, LIVE + "-admin");
   Object.assign(w.m.env, { DAEMON_TOKEN: dead, ADMIN_TOKEN: deadToo });
-  w.st.sql.exec(`UPDATE bundles SET monitor_last_checked=NULL`);
+  w.st.sql.exec(`UPDATE bundle_projection SET monitor_last_checked=NULL`);
   const t = await w.m.cadenceTick(NOW_MS + 2 * HOUR);
   assert.equal(t.configured, true, "bound, so configured");
   assert.deepEqual(t.failed.map((f) => f.reason), [MONITOR_NO_LIVE_CREDENTIAL]);

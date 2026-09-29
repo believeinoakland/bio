@@ -2,7 +2,8 @@
    membership, promotion, provenance, observation-log, capture), on a real SQLite database (node:sqlite) standing in
    for a Durable Object's storage. What stands in, and why: retrieval's projection of the four monitoring columns
    (`monitor_enabled`, `monitor_frequency`, `monitor_last_checked`, `source_locator`, K75 (3)) is a promotion step
-   the fixture registers, projecting from the document as retrieval does; the host governor records every call and
+   the fixture registers, projecting from the document as retrieval does into retrieval's own table
+   (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
    in-memory R2 stand-in; intent, actions and escalation are stand-ins in their Provides' shapes unless a test passes
    the real one. Every test drives `monitoring` at its interface. */
@@ -17,6 +18,7 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { monitoringOf } from "../../../src/monitoring/index.mjs";
 import { actionsOf, actionFacts } from "../../../src/actions/index.mjs";
 import { parseFrontmatter } from "../../../checks/bio-checks.mjs";
+import { PROJECTION_SCHEMA, PROJECTION_TABLE } from "../../../src/retrieval/schema.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 /** A Durable Object's storage over an in-memory SQLite database. */
@@ -110,9 +112,9 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  /* retrieval's projection columns this module reads (K75 (3)). */
-  for (const c of ["monitor_enabled INTEGER", "monitor_frequency TEXT", "monitor_last_checked TEXT", "source_locator TEXT",
-                   ...(realActions ? ["action_clock_next TEXT"] : []), ...extraColumns]) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
+  /* retrieval's projection table (R61), as its `migrate()` creates it; after it none of those columns is on `bundles`. */
+  for (const s of PROJECTION_SCHEMA) st.db.exec(s);
+  for (const c of extraColumns) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { ms: NOW_MS };
   const bkt = evidence ? bucket() : null;
   const record = recordOf(host, { evidence: bkt, evidencePrefix: "bio/captures/" });
@@ -136,12 +138,15 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
     let fm = null;
     try { fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null; } catch { fm = null; }
     const mon = fm && fm.monitoring && typeof fm.monitoring === "object" ? fm.monitoring : {};
-    st.sql.exec(`UPDATE bundles SET monitor_enabled=?, monitor_frequency=?, monitor_last_checked=?, source_locator=? WHERE bundle_id=?`,
-      mon.enabled === true ? 1 : 0, typeof mon.frequency === "string" ? mon.frequency : null,
+    st.sql.exec(`INSERT INTO ${PROJECTION_TABLE} (bundle_id, monitor_enabled, monitor_frequency, monitor_last_checked, source_locator)
+                 VALUES (?, ?, ?, ?, ?) ON CONFLICT(bundle_id) DO UPDATE SET monitor_enabled=excluded.monitor_enabled,
+                 monitor_frequency=excluded.monitor_frequency, monitor_last_checked=excluded.monitor_last_checked,
+                 source_locator=excluded.source_locator`,
+      c.bundleId, mon.enabled === true ? 1 : 0, typeof mon.frequency === "string" ? mon.frequency : null,
       typeof mon.last_checked === "string" ? mon.last_checked : null,
-      fm && fm.source && typeof fm.source.locator === "string" ? fm.source.locator : null, c.bundleId);
-    /* and, with the real actions module, its clock column from its R12 facts (retrieval R53) */
-    if (realActions) st.sql.exec(`UPDATE bundles SET action_clock_next=? WHERE bundle_id=?`,
+      fm && fm.source && typeof fm.source.locator === "string" ? fm.source.locator : null);
+    /* and, with the real actions module, its clock column from its R12 facts (retrieval R53), on the projection row */
+    if (realActions) st.sql.exec(`UPDATE ${PROJECTION_TABLE} SET action_clock_next=? WHERE bundle_id=?`,
       actionFacts(md && md.text, clock.ms).clock_next, c.bundleId);
     return null;
   } });

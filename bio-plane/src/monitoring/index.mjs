@@ -28,7 +28,8 @@
  *   fetch    the network (default: the global `fetch`, read at each call).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` and `files` (R37); retrieval's projection columns
- * `monitor_enabled`, `monitor_frequency`, `monitor_last_checked`, `source_locator` (K75 (3)); provenance's `register`
+ * `monitor_enabled`, `monitor_frequency`, `monitor_last_checked`, `source_locator` (K75 (3)), in its own table
+ * `bundle_projection` joined on `bundle_id` (retrieval R61, N283; an unprojected bundle has no row); provenance's `register`
  * and `captured_locators` (R48); capture's `source_reachability` (its R59, N166); observation-log's `observation_log`
  * (its R29). */
 
@@ -43,6 +44,7 @@ import { observationLogOf } from "../observation-log/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { actionsOf } from "../actions/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
+import { PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { unattendedCredential } from "../tokens.mjs";
 import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "../drive.mjs";
 import { RENDERED_METHOD, RENDER_TICK_UNDETERMINED } from "../render.mjs";
@@ -1126,20 +1128,23 @@ export class Monitoring {
    *  addresses, the type readings), grouped in memory — no read per row. */
   subjects() {
     const bundles = this.#rows(
-      `SELECT bundle_id, monitor_frequency, monitor_last_checked, source_locator
-         FROM bundles WHERE monitor_enabled = 1`);
+      `SELECT b.bundle_id AS bundle_id, bp.monitor_frequency AS monitor_frequency,
+              bp.monitor_last_checked AS monitor_last_checked, bp.source_locator AS source_locator
+         FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
+        WHERE bp.monitor_enabled = 1`);
     const chain = this.#rows(
       `SELECT cl.address_norm AS address_norm, cl.capture_sha AS capture_sha,
               MIN(cl.first_retrieved) AS first_retrieved, MIN(cl.address) AS address,
-              r.bundle_id AS bundle_id, b.monitor_enabled AS monitor_enabled
+              r.bundle_id AS bundle_id, bp.monitor_enabled AS monitor_enabled
          FROM captured_locators cl
          JOIN register r ON r.capture_sha = cl.capture_sha
          JOIN bundles b ON b.bundle_id = r.bundle_id
+         LEFT JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
         WHERE cl.address_norm IN (
                 SELECT cl2.address_norm FROM captured_locators cl2
                   JOIN register r2 ON r2.capture_sha = cl2.capture_sha
-                  JOIN bundles b2 ON b2.bundle_id = r2.bundle_id
-                 WHERE b2.monitor_enabled = 1)
+                  JOIN ${PROJECTION_TABLE} bp2 ON bp2.bundle_id = r2.bundle_id
+                 WHERE bp2.monitor_enabled = 1)
         GROUP BY cl.address_norm, cl.capture_sha, r.bundle_id
         ORDER BY cl.address_norm, MIN(cl.first_retrieved), cl.capture_sha, r.bundle_id`);
     const types = new Map(), typesRaw = new Map();
@@ -1587,10 +1592,10 @@ export class Monitoring {
     const asked = Number(limit);
     const cap = Number.isFinite(asked) && asked > 0
       ? Math.min(DRIVE_SHELLS_LIMIT_MAX, Math.floor(asked)) : DRIVE_SHELLS_LIMIT_DEFAULT;
-    const where = [`b.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...(after ? [`b.bundle_id > ?`] : [])];
+    const where = [`bp.source_locator LIKE '%google.com/%'`, `(${gate.sql})`, ...(after ? [`b.bundle_id > ?`] : [])];
     const raw = this.#rows(
-      `SELECT b.bundle_id AS id, b.source_locator AS locator, b.monitor_enabled AS monitored
-         FROM bundles b WHERE ${where.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`,
+      `SELECT b.bundle_id AS id, bp.source_locator AS locator, bp.monitor_enabled AS monitored
+         FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id WHERE ${where.join(" AND ")} ORDER BY b.bundle_id LIMIT ?`,
       ...gate.args, ...(after ? [after] : []), cap + 1);
     /* One row past the bound, so `truncated` says MORE EXIST rather than "the page happened to be full". */
     const truncated = raw.length > cap;
@@ -1748,8 +1753,9 @@ export class Monitoring {
       const sha = typeof c === "string" ? c : c && (c.capture_sha || c.sha256 || c.capture);
       if (typeof sha !== "string" || seenSha.has(sha)) continue;
       seenSha.add(sha);
-      const r = this.#one(`SELECT r.bundle_id AS bundle_id, b.monitor_enabled AS monitored, b.source_locator AS locator
-                             FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, sha);
+      const r = this.#one(`SELECT r.bundle_id AS bundle_id, bp.monitor_enabled AS monitored, bp.source_locator AS locator
+                             FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+                             LEFT JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id WHERE r.capture_sha = ?`, sha);
       out.push({ capture: sha, bundle: r ? r.bundle_id : null, monitored: !!(r && r.monitored === 1),
                  locator: r ? r.locator ?? null : null });
     }
