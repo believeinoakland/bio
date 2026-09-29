@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
+import { noSuchDetermination } from "../../../src/conformance/index.mjs";
 
 const S = "STD-2026-0001-law";
 const DOC = "INFO-2026-0001-doc";
@@ -33,7 +34,7 @@ test("R9: addressedRecord's refusals, with a negative control", () => {
   const cases = [
     ["MACHINE_CANNOT_ADDRESS", { author: MACHINE }], ["MACHINE_CANNOT_ADDRESS", { author: "" }],
     ["NO_SUCH_PART", { id: "CONS-2026-0999-fund" }], ["NO_SUCH_PART", { author: V("bob") }],
-    ["NOT_A_PARTICIPANT", { author: V("carol") }],
+    ["CONSEQUENCE_NOT_A_PARTICIPANT", { author: V("carol") }],
     ["ADDRESSED_UNKNOWN_STATE", { state: "partly" }],
     ["NO_REASON", { reason: " " }],
     ["ADDRESSED_NO_EVIDENCE", { evidence: [] }], ["ADDRESSED_NO_EVIDENCE", { evidence: null }],
@@ -132,5 +133,7 @@ test("R9: addressedRecord is accepted on a superseded determination's parts, and
   assert.equal(w.mark(p).ok, true);
   const o = w.overall();
   assert.deepEqual([o.state, o.parts.map((x) => x.id)], ["addressed", [p]]);
-  assert.equal(w.c.addressed({ determination: "CONF-2026-0099-x", viewer: V("alice") }).reason, "NO_SUCH_DETERMINATION");
+  /* An absent determination is conformance's one answer (its R19), minted there, never here. */
+  assert.deepEqual(w.c.addressed({ determination: "CONF-2026-0099-x", viewer: V("alice") }),
+                   noSuchDetermination("CONF-2026-0099-x"));
 });
