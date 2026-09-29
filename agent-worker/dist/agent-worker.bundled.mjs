@@ -248,10 +248,10 @@ function stopBecause(state) {
 }
 function nextStep(state) {
   const s = state || {};
-  const at5 = String(s.step || FIRST_STEP);
-  const row = CONTROL_FLOW[at5];
-  if (!row) return { step: "close", why: `'${at5}' is not a row in this table`, bound: "completed" };
-  if (at5 === "gate-mode") {
+  const at6 = String(s.step || FIRST_STEP);
+  const row = CONTROL_FLOW[at6];
+  if (!row) return { step: "close", why: `'${at6}' is not a row in this table`, bound: "completed" };
+  if (at6 === "gate-mode") {
     const key = String(s.mode || "");
     const mode = MODES[key];
     if (!mode || !mode.deployed) {
@@ -267,13 +267,13 @@ function nextStep(state) {
     return { step: "resume", why: "the mode is deployed; read this run's own log before doing anything else" };
   }
   const stopped = stopBecause(s);
-  if (stopped && at5 !== "close")
+  if (stopped && at6 !== "close")
     return {
       step: "close",
       bound: stopped,
       why: stopped === "completed" ? `${s.pass} of ${s.maxPasses} passes are done; the loop's termination is the table's and not the model's` : `the '${stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where`
     };
-  switch (at5) {
+  switch (at6) {
     case "resume":
       if (typeof s.resumeAt === "string" && CONTROL_FLOW.resume.to.includes(s.resumeAt))
         return {
@@ -328,7 +328,7 @@ function nextStep(state) {
     case "close":
       return { step: "close", why: "terminal", bound: s.bound || "completed" };
   }
-  return { step: "close", why: `'${at5}' has no transition`, bound: "completed" };
+  return { step: "close", why: `'${at6}' has no transition`, bound: "completed" };
 }
 function advance(state, decision) {
   const s = state || {};
@@ -371,9 +371,9 @@ function publishableState(state, limit) {
   const bytes = stateBytes(full);
   const ceiling = Number(limit);
   if (!(Number.isFinite(ceiling) && ceiling > 0) || bytes <= ceiling) return { state: full, bytes, restarted: null };
-  const at5 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
-  const restart = resumableState({ step: at5, pass: full.pass, adjusted: false });
-  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at5 } };
+  const at6 = STATE_RESTART_STEPS.includes(full.step) ? full.step : "plan";
+  const restart = resumableState({ step: at6, pass: full.pass, adjusted: false });
+  return { state: restart, bytes: stateBytes(restart), restarted: { bytes, limit: ceiling, at: at6 } };
 }
 var list = (v) => Array.isArray(v) ? v : [];
 var record = (v) => v && typeof v === "object" && !Array.isArray(v) ? v : null;
@@ -385,15 +385,15 @@ function resumeFrom(published) {
       state: null,
       basis: published == null ? "The run publishes no state it can be read back from, so this segment starts from the resume row" : "The run's published state names no step yet, so this segment starts from the resume row"
     };
-  const at5 = String(p.step);
+  const at6 = String(p.step);
   const pass = Number(p.pass);
-  if (!CONTROL_FLOW.resume.to.includes(at5) || !Number.isInteger(pass) || pass < 0)
+  if (!CONTROL_FLOW.resume.to.includes(at6) || !Number.isInteger(pass) || pass < 0)
     return {
       at: null,
       state: null,
-      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at5).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
+      basis: `UNDETERMINED: the run's published state names step ${JSON.stringify(at6).slice(0, 60)} at pass ${JSON.stringify(p.pass ?? null).slice(0, 20)}, which is not a place this table continues from, so this segment starts the pass over rather than guess where the last one stopped`
     };
-  return { at: at5, basis: null, state: {
+  return { at: at6, basis: null, state: {
     pass,
     targets: list(p.targets),
     reports: list(p.reports),
@@ -672,8 +672,8 @@ var deriveInquiryTitle = (question) => {
   if (flat === "") return null;
   if (flat.length <= 120) return flat;
   const cut = flat.slice(0, 120);
-  const at5 = cut.lastIndexOf(" ");
-  return (at5 > 0 ? cut.slice(0, at5) : cut) + "\u2026";
+  const at6 = cut.lastIndexOf(" ");
+  return (at6 > 0 ? cut.slice(0, at6) : cut) + "\u2026";
 };
 var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
@@ -7288,12 +7288,12 @@ function coversSheetCell(e, container) {
   const sheet = sheets.find((x) => x && typeof x.name === "string" && x.name === want);
   if (!sheet)
     return `this capture's workbook holds ${sheets.length} sheet(s) (${sheets.map((x) => x && typeof x.name === "string" ? x.name : "?").slice(0, 12).join(", ")}${sheets.length > 12 ? ", \u2026" : ""}) and the extent names a sheet called '${want.slice(0, 40)}'`;
-  const at5 = a1ToRowCol(e.cell);
-  if (!at5) return null;
-  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at5.row > sheet.rows)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at5.row}`;
-  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at5.col > sheet.cols)
-    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at5.col}`;
+  const at6 = a1ToRowCol(e.cell);
+  if (!at6) return null;
+  if (Number.isInteger(sheet.rows) && sheet.rows > 0 && at6.row > sheet.rows)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.rows} row(s) (1-${sheet.rows}) and the extent names row ${at6.row}`;
+  if (Number.isInteger(sheet.cols) && sheet.cols > 0 && at6.col > sheet.cols)
+    return `sheet '${want.slice(0, 40)}' of this capture holds ${sheet.cols} column(s) and the extent names column ${at6.col}`;
   return null;
 }
 function coversDocPara(e, container) {
@@ -7337,12 +7337,12 @@ function coversDocTable(e, container) {
     return `this capture's document holds ${tables.length} table(s)${tables.length ? ` (0-${tables.length - 1})` : ""} and the extent names table ${e.table}`;
   if (typeof e.cell !== "string" || !e.cell.trim()) return null;
   const t = tables[e.table] || {};
-  const at5 = a1ToRowCol(e.cell);
-  if (!at5) return null;
-  if (Number.isInteger(t.rows) && t.rows > 0 && at5.row > t.rows)
-    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at5.row}`;
-  if (Number.isInteger(t.cols) && t.cols > 0 && at5.col > t.cols)
-    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at5.col}`;
+  const at6 = a1ToRowCol(e.cell);
+  if (!at6) return null;
+  if (Number.isInteger(t.rows) && t.rows > 0 && at6.row > t.rows)
+    return `table ${e.table} of this capture holds ${t.rows} row(s) (1-${t.rows}) and the extent names row ${at6.row}`;
+  if (Number.isInteger(t.cols) && t.cols > 0 && at6.col > t.cols)
+    return `table ${e.table} of this capture holds ${t.cols} column(s) and the extent names column ${at6.col}`;
   return null;
 }
 function coversImage(e, container) {
@@ -8830,6 +8830,16 @@ function subsessionTools(contract) {
   ];
 }
 
+// ../bio-plane/src/record-core/checks.mjs
+var at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
+var RECORD_CORE_CHECKS = Object.freeze({
+  MINT_EXHAUSTED: Object.freeze({
+    check: "C-59.6",
+    where: at("mintExhausted", "is-mint-exhausted"),
+    translation: "The plane could not find a free identifier for this, so nothing was saved and nothing was issued. Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs this instance."
+  })
+});
+
 // ../bio-plane/src/record-core/index.mjs
 var IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 var REFUSED = Symbol("record-core-refusal");
@@ -8857,6 +8867,7 @@ function manifestFiles(filesJson) {
   }
   return Array.isArray(arr) ? arr.filter((f2) => f2 && typeof f2 === "object") : [];
 }
+var MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task" });
 var RecordCore = class _RecordCore {
   /** R3/R27, C-59.5 (Membership v2 §7, "A MINTED ID CARRIES NO COUNT"): THE PREFIXES WHOSE OBJECTS A READ
    *  WITHHOLDS FROM SOME CALLER. Their ids are minted opaque by the act that creates them and never from
@@ -9001,13 +9012,13 @@ var RecordCore = class _RecordCore {
    *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
    *  prefix is the caller's, of any length and any characters. */
   seedMintLedger(sources = []) {
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     for (const [prefix, table, column] of sources) {
       if (!IDENT.test(String(table)) || !IDENT.test(String(column))) continue;
       const head = `${prefix}-`;
       this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                       SELECT DISTINCT ${column}, ?, 'live' FROM ${table}
-                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at5, head, head);
+                       WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at6, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
@@ -9018,7 +9029,7 @@ var RecordCore = class _RecordCore {
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
       ...scopes,
-      at5,
+      at6,
       ...scopes
     );
   }
@@ -9431,10 +9442,10 @@ var RecordCore = class _RecordCore {
     created,
     lastUpdated,
     criticality,
-    at: at5
+    at: at6
   }) {
     return this.transact(() => {
-      const now = at5 ?? (/* @__PURE__ */ new Date()).toISOString();
+      const now = at6 ?? (/* @__PURE__ */ new Date()).toISOString();
       const cur = this.#one(`SELECT row_version FROM bundles WHERE bundle_id=?`, bundleId);
       if (cur)
         for (const r of this.#rows(`SELECT path, content, blob_sha, sha256 FROM files WHERE bundle_id=?`, bundleId))
@@ -10100,16 +10111,21 @@ var MEMBERSHIP_PROJECT_TABLES = [
 ];
 
 // ../bio-plane/src/membership/checks.mjs
-var at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
+var at2 = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 var MEMBERSHIP_CHECKS = Object.freeze({
+  NOT_AN_ADMIN: Object.freeze({
+    check: "C-96.1",
+    where: at2("notAnAdmin", "is-custodial-admin"),
+    translation: "Only an active administrator of this group can do that, and the account asking is not one of them here. The record reads who is asking from the signed-in session, never from the request. Nothing was changed."
+  }),
   NO_SUCH_PROJECT: Object.freeze({
     check: "C-70.5",
-    where: at("noSuchProject", "is-project-seen"),
+    where: at2("noSuchProject", "is-project-seen"),
     translation: "No project answers to that id here. A project you cannot see is answered exactly as one that does not exist, so this is not a hint either way."
   }),
   EXPERTISE_NO_LABEL: Object.freeze({
     check: "C-96.13",
-    where: at("expertiseDeclare", "is-expertise-labelled"),
+    where: at2("expertiseDeclare", "is-expertise-labelled"),
     translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. Nothing was written."
   })
 });
@@ -10156,6 +10172,28 @@ function noSuchProject(projectId, extra = null) {
     project: projectId ?? null,
     ...Object.fromEntries(own2),
     detail: NO_SUCH_PROJECT_DETAIL
+  };
+}
+var NOT_AN_ADMIN_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "by", "detail"]);
+function notAnAdmin(by, act, extra = null) {
+  let own2 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own2 = Object.entries(extra).filter(([k]) => !NOT_AN_ADMIN_FIXED.has(k));
+  } catch {
+    own2 = [];
+  }
+  const what = typeof act === "string" && act.trim() ? act.trim().slice(0, 120) : "this act";
+  const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
+  return {
+    ok: false,
+    reason: "NOT_AN_ADMIN",
+    code: "NOT_AN_ADMIN",
+    check: row.check,
+    translation: row.translation,
+    by: by ?? null,
+    ...Object.fromEntries(own2),
+    detail: `${what} is an administrator's act (Membership Architecture v2 \xA74.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators. Nothing was changed.`
   };
 }
 var MODULE_ORDER = Object.freeze([
@@ -10366,10 +10404,10 @@ var Membership = class _Membership {
     this.#revokedListeners.sort((a, b) => rank(a.module) - rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  #announceRevoked(memberId, by, at5) {
+  #announceRevoked(memberId, by, at6) {
     for (const l of this.#revokedListeners) {
       try {
-        const r = l.fn({ memberId, by: by ?? null, at: at5 });
+        const r = l.fn({ memberId, by: by ?? null, at: at6 });
         if (r && typeof r.then === "function") r.then(null, () => {
         });
       } catch {
@@ -10416,7 +10454,7 @@ var Membership = class _Membership {
       const bad = this.visibilitySettingRefusal(visibility, projectId);
       if (bad) return bad;
     }
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     let owner = null;
     if (ownerId) {
       const claimed = this.projectClaimOwner({ projectId, memberId: ownerId });
@@ -10430,7 +10468,7 @@ var Membership = class _Membership {
         String(visibility),
         by ?? ownerId ?? "not recorded",
         "chosen at creation",
-        at5
+        at6
       );
     this.reindexProjectSight(projectId);
     return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
@@ -10446,13 +10484,7 @@ var Membership = class _Membership {
         detail: "the founding administrator holds ADMIN_TOKEN and does not resign inside the application; the remedy is at the hosting account (section 4.6). Nothing was written."
       };
     const m = typeof by === "string" && by ? this.#one(`SELECT role, status FROM members WHERE member_id=?`, by) : null;
-    if (!m || m.role !== "admin" || m.status !== "active")
-      return {
-        ok: false,
-        reason: "NOT_AN_ADMIN",
-        by,
-        detail: "resigning administrator status is an active administrator's own act. Nothing was written."
-      };
+    if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");
     const admins = this.activeAdmins();
     const refusal5 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
     if (admins.length <= 2)
@@ -10481,13 +10513,7 @@ var Membership = class _Membership {
   }
   /* R11: the group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
-    if (!this.isAdministrator(by))
-      return {
-        ok: false,
-        reason: "NOT_AN_ADMIN",
-        by,
-        detail: "the record of who holds hosting access is kept by the administrators (4.8). Nothing was written."
-      };
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");
     const refusal5 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
     const h = String(holders ?? "").trim().slice(0, 500);
     if (!h)
@@ -10495,10 +10521,10 @@ var Membership = class _Membership {
         "NO_HOLDERS",
         "name who holds hosting access: the record keeps the group's answer as it was given, and an empty answer records nobody. Nothing was written."
       );
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     const n = note === null || note === void 0 || String(note).trim() === "" ? null : String(note).slice(0, 280);
-    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at5);
-    return { ok: true, holders: h, note: n, recorded_by: by, at: at5 };
+    this.sql.exec(`INSERT INTO hosting_access (holders, note, recorded_by, at) VALUES (?,?,?,?)`, h, n, by, at6);
+    return { ok: true, holders: h, note: n, recorded_by: by, at: at6 };
   }
   /* N70: BOUNDED, AND THE BOUND IS PUBLISHED (R48's shape): the history grows with every answer the group records, so
      `limit` is the cap applied (the caller may lower it, never raise it), `truncated` is measured by reading one row
@@ -11145,7 +11171,10 @@ var Membership = class _Membership {
     if (!b || b.object_type !== "project") return _Membership.SIGHT_NONE;
     return this.visibilityOf(bundleId) === "discoverable" ? _Membership.SIGHT_EXISTENCE : _Membership.SIGHT_NONE;
   }
-  /* The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
+  /* R85 (N332, K412): a named service (control-plane R27's existence read calls it), asking no viewer: it states only
+     the setting, and its callers gate what they show by R44. Total: an id the index does not hold, or one that is not
+     a string, reads `hidden`, and nothing it is handed makes it throw.
+     The CURRENT setting, READ FROM THE SIGHT INDEX (D-497) rather than recomputed from the act log here.
      `project_sight` holds one row per project carrying exactly what `#reindexProjectSight` derived, so this
      predicate and the directory's SQL read THE SAME ROWS instead of two copies of one rule — which is the
      whole of D-497 and the reason the directory can bound its candidates in SQL at all.
@@ -11154,8 +11183,11 @@ var Membership = class _Membership {
      at every promotion, and at every owner's act. This branch is reached only by an id the index does not hold
      — a bundle that is not a project, or one purged between the two reads — and it fails closed. */
   visibilityOf(projectId) {
-    const r = this.#one(`SELECT setting FROM project_sight WHERE project_id=?`, projectId);
-    return r ? r.setting : "hidden";
+    const r = this.#one(
+      `SELECT setting FROM project_sight WHERE project_id=?`,
+      typeof projectId === "string" ? projectId : null
+    );
+    return r && r.setting === "discoverable" ? "discoverable" : "hidden";
   }
   /* ===== D-497 — THE DERIVATION, AND IT IS THE ONLY PLACE THE RULE IS STATED (Membership v2 §7, item 7.14).
    *
@@ -11286,24 +11318,24 @@ var Membership = class _Membership {
       if (unknown) return unknown;
     }
     const why = reason === null || reason === void 0 || String(reason).trim() === "" ? null : String(reason).slice(0, 280);
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`,
       projectId,
       want,
       by,
       why,
-      at5
+      at6
     );
     this.reindexProjectSight(projectId);
-    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at5) : 0;
+    const lapsed = want === "hidden" ? this.#lapseJoinRequests(projectId, by, at6) : 0;
     return {
       ok: true,
       projectId,
       setting: want,
       set_by: by,
       reason: why,
-      at: at5,
+      at: at6,
       ...want === "hidden" ? { requests_lapsed: lapsed } : {}
     };
   }
@@ -11490,7 +11522,7 @@ var Membership = class _Membership {
   /* THE ONE STATEMENT THAT CLOSES A REQUEST. Every terminal state is written here, and only an OPEN row moves:
      the `WHERE state='open'` is what makes the closing fields write-once, so an answered request cannot be
      answered twice and a withdrawn one cannot then be granted. Returns the number of rows closed. */
-  #closeJoinRequests(projectId, memberId, state, by, comment, at5) {
+  #closeJoinRequests(projectId, memberId, state, by, comment, at6) {
     const before = this.#one(
       `SELECT COUNT(*) AS n FROM project_join_requests
                                WHERE project_id=? AND (? IS NULL OR member_id=?) AND state='open'`,
@@ -11504,15 +11536,15 @@ var Membership = class _Membership {
       state,
       by,
       comment,
-      at5,
+      at6,
       projectId,
       memberId,
       memberId
     );
     return before;
   }
-  #lapseJoinRequests(projectId, by, at5) {
-    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at5);
+  #lapseJoinRequests(projectId, by, at6) {
+    return this.#closeJoinRequests(projectId, null, "lapsed", by, null, at6);
   }
   static #requestComment(comment) {
     return comment === null || comment === void 0 || String(comment).trim() === "" ? null : String(comment).slice(0, 280);
@@ -11558,7 +11590,7 @@ var Membership = class _Membership {
         { asked: open.asked_at }
       );
     const c = _Membership.#requestComment(comment);
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT INTO project_join_requests (project_id, member_id, project_name, comment, asked_at, state)
        VALUES (?,?,?,?,?,'open')`,
@@ -11566,7 +11598,7 @@ var Membership = class _Membership {
       me.member_id,
       shown,
       c,
-      at5
+      at6
     );
     return {
       ok: true,
@@ -11574,7 +11606,7 @@ var Membership = class _Membership {
       name: shown,
       state: "open",
       comment: c,
-      asked: at5,
+      asked: at6,
       detail: "your request is open. The project's owners answer it; until they do it stays open."
     };
   }
@@ -11593,9 +11625,9 @@ var Membership = class _Membership {
         projectId,
         "you have no open request to join a project by that id, so there is nothing to withdraw. This answer is the same whatever that id names. Nothing was written."
       );
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
-    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at5);
-    return { ok: true, projectId, state: "withdrawn", closed: at5 };
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
+    this.#closeJoinRequests(projectId, me.member_id, "withdrawn", me.member_id, null, at6);
+    return { ok: true, projectId, state: "withdrawn", closed: at6 };
   }
   /** REC-150 — AN OWNER ANSWERS (§7.14 "Who answers"). Sight before position, as every roster act: a member at
    *  EXISTENCE gets C-70.1, a caller who cannot see the project the absent answer, and only then is ownership
@@ -11655,7 +11687,7 @@ var Membership = class _Membership {
         { handle: target.handle }
       );
     const c = _Membership.#requestComment(comment);
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     if (want === "grant") {
       this.sql.exec(
         `INSERT INTO project_participants (project_id,member_id,state,owner,invited_by,created,updated)
@@ -11663,18 +11695,18 @@ var Membership = class _Membership {
         projectId,
         target.member_id,
         by,
-        at5,
-        at5
+        at6,
+        at6
       );
     }
-    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at5);
+    this.#closeJoinRequests(projectId, target.member_id, want === "grant" ? "granted" : "declined", by, c, at6);
     return {
       ok: true,
       projectId,
       handle: target.handle,
       state: want === "grant" ? "granted" : "declined",
       comment: c,
-      closed: at5,
+      closed: at6,
       ...want === "grant" ? {
         participation: "invited",
         detail: "granted as an invitation: the member is INVITED, and joins by the checkbox (\xA77.4)."
@@ -11960,7 +11992,7 @@ var Membership = class _Membership {
       detail: "an owner is not removed from a project by this action. Ownership changes by the section 7.10 process, and removal from the project follows once they are no longer an owner."
     };
     const why = comment === null || comment === void 0 ? null : String(comment).slice(0, 280);
-    const at5 = (/* @__PURE__ */ new Date()).toISOString();
+    const at6 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id=?`, projectId, target.member_id);
     this.sql.exec(
       `INSERT INTO project_removals (project_id, member_id, removed_by, comment, at) VALUES (?,?,?,?,?)`,
@@ -11968,9 +12000,9 @@ var Membership = class _Membership {
       target.member_id,
       by,
       why,
-      at5
+      at6
     );
-    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at5 };
+    return { ok: true, projectId, handle, removed: true, comment: why, by, at: at6 };
   }
   /** 7.10 addition. The sole owner may add a second unilaterally; every addition
    *  past that needs the consensus of ALL existing owners.
@@ -12523,9 +12555,9 @@ var Membership = class _Membership {
     );
   }
   /* R42: a carried ownership decision, kept with its deciders and reasons. */
-  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at5) {
+  #recordOwnerDecision(projectId, kind, target, deciders, reasons, at6) {
     this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
-                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at5);
+                   VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at6);
   }
   /** The table, computed rather than transcribed, so the code and the document
    *  cannot drift. Exposed as an op because a UI must be able to tell a group
@@ -12561,7 +12593,7 @@ var Membership = class _Membership {
    * plane's STAMP (`CUSTODIAL_ACTIONS` in index.mjs), relayed from the query and never from a body.
    * THREE SHAPES AND THREE ANSWERS, each true of the caller:
    *   - a member's id — a signed-in session: admitted only if they are an ACTIVE administrator, else
-   *     NOT_AN_ADMIN, by name, D-136's refusal at `memberCaps`;
+   *     NOT_AN_ADMIN, by name, answered through `notAnAdmin` (R84), as at `memberCaps`;
    *   - `class:<cls>` — the operator's bearer, which BOB #22 RULED keeps these acts; the plane's
    *     `machineClasses` decides which classes reach here, and the record names the credential;
    *   - absent — a route with no plane in front of it. Nothing is attributed, and the row records
@@ -12571,12 +12603,7 @@ var Membership = class _Membership {
     if (by === null || by === void 0 || by === "") return null;
     if (String(by).startsWith(MACHINE_CLASS_PREFIX)) return null;
     if (this.activeAdmins().includes(by)) return null;
-    const refusal5 = (code, detail, extra) => _Membership.#custodialRefusal(code, detail, extra);
-    return refusal5(
-      "NOT_AN_ADMIN",
-      `${act} is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.`,
-      { by }
-    );
+    return notAnAdmin(by, act);
   }
   /* D-134 / DEC-49 — THE CUSTODIAL ACTS' REFUSALS, BUILT FROM C-96's ROWS. `reason` AND `code` carry the
    * same literal, `#leadRefusal`'s precedent: every existing caller reads `reason`, the guard and the
@@ -12625,13 +12652,7 @@ var Membership = class _Membership {
    *  standing cannot use this op to enumerate the roster. */
   memberCaps({ memberId, capabilities, by } = {}) {
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by))
-      return {
-        ok: false,
-        reason: "NOT_AN_ADMIN",
-        by,
-        detail: "setting a member's capabilities is an administrator's act (4.9), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators."
-      };
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "setting a member's capabilities");
     const m = this.#one(`SELECT member_id, role FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     const want = Array.isArray(capabilities) ? capabilities : null;
@@ -12661,7 +12682,7 @@ var Membership = class _Membership {
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     if (m.status !== "proposed") return { ok: false, reason: "NOT_PROPOSED", status: m.status };
     const admins = this.activeAdmins();
-    if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "endorsing a proposed administrator");
     const now = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(
       `INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,?,?)`,
@@ -12715,7 +12736,7 @@ var Membership = class _Membership {
       reason: "TARGET_CANNOT_VOTE",
       detail: "the target is counted in the denominator but does not vote"
     };
-    if (!by || !admins.includes(by)) return { ok: false, reason: "NOT_AN_ADMIN", by };
+    if (!by || !admins.includes(by)) return notAnAdmin(by, "voting to remove an administrator");
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "removals are recorded with a reason" };
     const math = _Membership.adminMath(admins.length);
@@ -13174,7 +13195,7 @@ var Membership = class _Membership {
     writes = [],
     note = null,
     confinedTo = null,
-    at: at5 = null
+    at: at6 = null
   } = {}) {
     const refusal5 = (code, detail, extra) => {
       const row = AI_CREDENTIAL_CHECKS[code];
@@ -13188,7 +13209,7 @@ var Membership = class _Membership {
         ...extra || {}
       };
     };
-    const now = at5 || stampSecond();
+    const now = at6 || stampSecond();
     const id = String(tokenId ?? "").trim();
     const kind = String(principalKind ?? "").trim().toLowerCase();
     if (!who || isMachineIdentity(who))
@@ -13246,7 +13267,7 @@ var Membership = class _Membership {
   }
   /** op=aicredentialrevoke. Also a member act, and the reason is `revoked_by`
    *  rather than the risk — see C-29.4's note in the catalog. */
-  aiCredentialRevoke({ who = null, tokenId = null, at: at5 = null } = {}) {
+  aiCredentialRevoke({ who = null, tokenId = null, at: at6 = null } = {}) {
     const refusal5 = (code, detail, extra) => {
       const row2 = AI_CREDENTIAL_CHECKS[code];
       return {
@@ -13259,7 +13280,7 @@ var Membership = class _Membership {
         ...extra || {}
       };
     };
-    const now = at5 || stampSecond();
+    const now = at6 || stampSecond();
     const id = String(tokenId ?? "").trim();
     if (!who || isMachineIdentity(who))
       return refusal5(
@@ -13394,8 +13415,13 @@ var TSA_ENDPOINTS = Object.freeze([
 var te2 = new TextEncoder();
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.42.0";
+var CATALOG_VERSION = "1.43.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
+var ROW_CENSUS = Object.freeze({
+  version: CATALOG_VERSION,
+  rows: 820,
+  digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d"
+});
 var te3 = new TextEncoder();
 
 // ../bio-plane/src/promotion/index.mjs
@@ -14225,57 +14251,57 @@ function validateInto(p, errors) {
   const origins = /* @__PURE__ */ new Set();
   const noPathHosts = /* @__PURE__ */ new Map();
   if (own(p, "systems")) list3("systems", p.systems).forEach((s, i) => {
-    const at5 = `systems[${i}]`;
-    if (!entry(at5, s)) return;
-    fields(at5, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
-    str(`${at5}.origin`, s.origin, "origin");
+    const at6 = `systems[${i}]`;
+    if (!entry(at6, s)) return;
+    fields(at6, s, ["origin", "name", "hosts", "path", "links", "republishes", "provenance_stated", "basis"]);
+    str(`${at6}.origin`, s.origin, "origin");
     if (isStr(s.origin)) origins.add(s.origin);
-    str(`${at5}.name`, s.name, "name");
+    str(`${at6}.name`, s.name, "name");
     if (!Array.isArray(s.hosts) || !s.hosts.length || !s.hosts.every((h) => isStr(h) && h === h.toLowerCase()))
-      err(`${at5}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
-    if (own(s, "path")) pattern(`${at5}.path`, s.path);
+      err(`${at6}.hosts`, "VALUE_INVALID", "hosts is a non-empty list of lower-case host names");
+    if (own(s, "path")) pattern(`${at6}.path`, s.path);
     else if (Array.isArray(s.hosts)) {
-      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at5);
+      for (const h of s.hosts) if (typeof h === "string") noPathHosts.set(h, at6);
     }
     if (own(s, "links")) {
       if (!isObj2(s.links) || !own(s.links, "item") || !own(s.links, "file"))
-        err(`${at5}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
+        err(`${at6}.links`, "VALUE_INVALID", "links is {item, file}, two patterns");
       else {
-        fields(`${at5}.links`, s.links, ["item", "file"]);
-        pattern(`${at5}.links.item`, s.links.item);
-        pattern(`${at5}.links.file`, s.links.file);
+        fields(`${at6}.links`, s.links, ["item", "file"]);
+        pattern(`${at6}.links.item`, s.links.item);
+        pattern(`${at6}.links.file`, s.links.file);
       }
     }
-    if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at5}.republishes`, "VALUE_INVALID", "true or false");
-    if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at5}.provenance_stated`, "VALUE_INVALID", "true or false");
-    basis(at5, s);
+    if (own(s, "republishes") && typeof s.republishes !== "boolean") err(`${at6}.republishes`, "VALUE_INVALID", "true or false");
+    if (own(s, "provenance_stated") && typeof s.provenance_stated !== "boolean") err(`${at6}.provenance_stated`, "VALUE_INVALID", "true or false");
+    basis(at6, s);
   });
   if (own(p, "mixed_hosts")) list3("mixed_hosts", p.mixed_hosts).forEach((m, i) => {
-    const at5 = `mixed_hosts[${i}]`;
-    if (!entry(at5, m)) return;
-    fields(at5, m, ["host", "why", "basis"]);
-    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at5}.host`, "VALUE_INVALID", "a lower-case host name");
-    str(`${at5}.why`, m.why, "why");
+    const at6 = `mixed_hosts[${i}]`;
+    if (!entry(at6, m)) return;
+    fields(at6, m, ["host", "why", "basis"]);
+    if (!isStr(m.host) || m.host !== m.host.toLowerCase()) err(`${at6}.host`, "VALUE_INVALID", "a lower-case host name");
+    str(`${at6}.why`, m.why, "why");
     if (typeof m.host === "string" && noPathHosts.has(m.host))
-      err(`${at5}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
-    basis(at5, m);
+      err(`${at6}.host`, "HOST_CONFLICT", `${m.host} is mixed and also in ${noPathHosts.get(m.host)}, which has no path`);
+    basis(at6, m);
   });
   const spaceForms = {};
   if (own(p, "spaces")) {
     if (!isObj2(p.spaces)) err("spaces", "VALUE_INVALID", "spaces is an object keyed by space");
     else for (const [name, s] of Object.entries(p.spaces)) {
-      const at5 = `spaces.${name}`;
+      const at6 = `spaces.${name}`;
       if (!SPACES.includes(name)) {
-        err(at5, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`);
+        err(at6, "UNKNOWN_SPACE", `'${name}' is not one of ${SPACES.join(", ")}`);
         continue;
       }
-      if (!entry(at5, s)) continue;
-      fields(at5, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
-      str(`${at5}.label`, s.label, "label");
+      if (!entry(at6, s)) continue;
+      fields(at6, s, name === "enactment" ? ["label", "forms", "kinds"] : ["label", "forms"]);
+      str(`${at6}.label`, s.label, "label");
       const names = /* @__PURE__ */ new Set();
       spaceForms[name] = /* @__PURE__ */ new Map();
-      list3(`${at5}.forms`, s.forms).forEach((f2, i) => {
-        const fa = `${at5}.forms[${i}]`;
+      list3(`${at6}.forms`, s.forms).forEach((f2, i) => {
+        const fa = `${at6}.forms[${i}]`;
         if (!entry(fa, f2)) return;
         fields(fa, f2, ["form", "pattern", "normal", "clean", "basis"]);
         str(`${fa}.form`, f2.form, "form");
@@ -14307,8 +14333,8 @@ function validateInto(p, errors) {
         basis(fa, f2);
         if (isStr(f2.form) && re && normalOk) spaceForms[name].set(f2.form, f2);
       });
-      if (name === "enactment" && own(s, "kinds")) list3(`${at5}.kinds`, s.kinds).forEach((k, i) => {
-        const ka = `${at5}.kinds[${i}]`;
+      if (name === "enactment" && own(s, "kinds")) list3(`${at6}.kinds`, s.kinds).forEach((k, i) => {
+        const ka = `${at6}.kinds[${i}]`;
         if (!entry(ka, k)) return;
         fields(ka, k, ["kind", "prefix", "floor", "basis"]);
         str(`${ka}.kind`, k.kind, "kind");
@@ -14328,41 +14354,41 @@ function validateInto(p, errors) {
     }
   }
   if (own(p, "crosswalks")) list3("crosswalks", p.crosswalks).forEach((x, i) => {
-    const at5 = `crosswalks[${i}]`;
-    if (!entry(at5, x)) return;
-    fields(at5, x, ["space", "forms", "pairs", "source", "basis"]);
-    if (!SPACES.includes(x.space)) err(`${at5}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
-    if (!own(x, "source") || x.source === "" || x.source == null) err(`${at5}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
-    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at5}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
+    const at6 = `crosswalks[${i}]`;
+    if (!entry(at6, x)) return;
+    fields(at6, x, ["space", "forms", "pairs", "source", "basis"]);
+    if (!SPACES.includes(x.space)) err(`${at6}.space`, "UNKNOWN_SPACE", `'${String(x.space)}' is not a space`);
+    if (!own(x, "source") || x.source === "" || x.source == null) err(`${at6}.source`, "CROSSWALK_UNSOURCED", "a crosswalk names the content hash of its capture");
+    else if (typeof x.source !== "string" || !HEX64.test(x.source)) err(`${at6}.source`, "VALUE_INVALID", "source is 64 hexadecimal characters");
     const known = spaceForms[x.space] || /* @__PURE__ */ new Map();
     const forms = Array.isArray(x.forms) && x.forms.length === 2 ? x.forms : null;
-    if (!forms) err(`${at5}.forms`, "VALUE_INVALID", "forms is [a, b]");
+    if (!forms) err(`${at6}.forms`, "VALUE_INVALID", "forms is [a, b]");
     else forms.forEach((f2, j) => {
-      if (!known.has(f2)) err(`${at5}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f2)}'`);
+      if (!known.has(f2)) err(`${at6}.forms[${j}]`, "CROSSWALK_FORM_UNKNOWN", `the space has no form '${String(f2)}'`);
     });
-    list3(`${at5}.pairs`, x.pairs).forEach((pair, j) => {
+    list3(`${at6}.pairs`, x.pairs).forEach((pair, j) => {
       if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((v) => typeof v === "string")) {
-        err(`${at5}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
+        err(`${at6}.pairs[${j}]`, "VALUE_INVALID", "a pair is [value in form a, value in form b]");
         return;
       }
       if (!forms) return;
       pair.forEach((v, n) => {
         const f2 = known.get(forms[n]);
-        if (f2 && applyForm(f2, v) == null) err(`${at5}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
+        if (f2 && applyForm(f2, v) == null) err(`${at6}.pairs[${j}][${n}]`, "CROSSWALK_VALUE_INVALID", `'${v}' is not a value in form '${forms[n]}'`);
       });
     });
-    basis(at5, x);
+    basis(at6, x);
   });
   if (own(p, "vocabulary")) {
     if (!isObj2(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
-      const at5 = `vocabulary.${key}`;
+      const at6 = `vocabulary.${key}`;
       if (!VOCABULARY.includes(key)) {
-        err(at5, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
+        err(at6, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`);
         continue;
       }
-      list3(at5, entries).forEach((e, i) => {
-        const ea = `${at5}[${i}]`;
+      list3(at6, entries).forEach((e, i) => {
+        const ea = `${at6}[${i}]`;
         if (!entry(ea, e)) return;
         if (key === "codes") {
           fields(ea, e, ["key", "label", "pattern", "basis"]);
@@ -14393,22 +14419,22 @@ function validateInto(p, errors) {
     }
   }
   if (own(p, "search_terms")) list3("search_terms", p.search_terms).forEach((t, i) => {
-    const at5 = `search_terms[${i}]`;
-    if (!entry(at5, t)) return;
-    fields(at5, t, ["term", "basis"]);
-    str(`${at5}.term`, t.term, "term");
-    basis(at5, t);
+    const at6 = `search_terms[${i}]`;
+    if (!entry(at6, t)) return;
+    fields(at6, t, ["term", "basis"]);
+    str(`${at6}.term`, t.term, "term");
+    basis(at6, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
   if (own(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
-    const at5 = `records_laws[${i}]`;
-    if (!entry(at5, l)) return;
-    fields(at5, l, ["level", "name", "citation", "basis"]);
-    if (!LAW_LEVELS2.includes(l.level)) err(`${at5}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS2.join(", ")}`);
-    str(`${at5}.name`, l.name, "name");
-    str(`${at5}.citation`, l.citation, "citation");
+    const at6 = `records_laws[${i}]`;
+    if (!entry(at6, l)) return;
+    fields(at6, l, ["level", "name", "citation", "basis"]);
+    if (!LAW_LEVELS2.includes(l.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS2.join(", ")}`);
+    str(`${at6}.name`, l.name, "name");
+    str(`${at6}.citation`, l.citation, "citation");
     if (isStr(l.name)) lawNames.add(l.name);
-    basis(at5, l);
+    basis(at6, l);
   });
   if (own(p, "locale")) {
     const l = p.locale;
@@ -14421,101 +14447,101 @@ function validateInto(p, errors) {
   }
   const codeKeys = new Set(own(p, "vocabulary") && isObj2(p.vocabulary) && Array.isArray(p.vocabulary.codes) ? p.vocabulary.codes.filter(isObj2).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list3("standard_sources", p.standard_sources).forEach((s, i) => {
-    const at5 = `standard_sources[${i}]`;
-    if (!entry(at5, s)) return;
-    fields(at5, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
-    str(`${at5}.source`, s.source, "source");
-    str(`${at5}.issuer`, s.issuer, "issuer");
+    const at6 = `standard_sources[${i}]`;
+    if (!entry(at6, s)) return;
+    fields(at6, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
+    str(`${at6}.source`, s.source, "source");
+    str(`${at6}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!SOURCE_KINDS.includes(s.kind)) err(`${at5}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
-    if (!LAW_LEVELS2.includes(s.level)) err(`${at5}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS2.join(", ")}`);
-    pattern(`${at5}.cite`, s.cite);
-    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at5}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
-    basis(at5, s);
+    if (!SOURCE_KINDS.includes(s.kind)) err(`${at6}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+    if (!LAW_LEVELS2.includes(s.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS2.join(", ")}`);
+    pattern(`${at6}.cite`, s.cite);
+    if (own(s, "code") && !codeKeys.has(s.code)) err(`${at6}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    basis(at6, s);
   });
   if (own(p, "counterparties")) list3("counterparties", p.counterparties).forEach((c, i) => {
-    const at5 = `counterparties[${i}]`;
-    if (!entry(at5, c)) return;
-    fields(at5, c, ["role", "body", "level", "elected", "oversight", "basis"]);
-    str(`${at5}.role`, c.role, "role");
-    str(`${at5}.body`, c.body, "body");
-    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at5}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
-    if (typeof c.elected !== "boolean") err(`${at5}.elected`, "VALUE_INVALID", "elected is true or false");
-    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at5}.oversight`, "VALUE_INVALID", "oversight is true or false");
-    basis(at5, c);
+    const at6 = `counterparties[${i}]`;
+    if (!entry(at6, c)) return;
+    fields(at6, c, ["role", "body", "level", "elected", "oversight", "basis"]);
+    str(`${at6}.role`, c.role, "role");
+    str(`${at6}.body`, c.body, "body");
+    if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at6}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
+    if (typeof c.elected !== "boolean") err(`${at6}.elected`, "VALUE_INVALID", "elected is true or false");
+    if (own(c, "oversight") && typeof c.oversight !== "boolean") err(`${at6}.oversight`, "VALUE_INVALID", "oversight is true or false");
+    basis(at6, c);
   });
   const kinds = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
   if (own(p, "action_kinds")) list3("action_kinds", p.action_kinds).forEach((k, i) => {
-    const at5 = `action_kinds[${i}]`;
-    if (!entry(at5, k)) return;
-    fields(at5, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
-    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at5}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds.has(k.kind)) err(`${at5}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    const at6 = `action_kinds[${i}]`;
+    if (!entry(at6, k)) return;
+    fields(at6, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at6}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (kinds.has(k.kind)) err(`${at6}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
       kinds.add(k.kind);
       if (k.tier === 3) tier3.add(k.kind);
     }
-    str(`${at5}.label`, k.label, "label");
-    if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at5}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
-    if (own(k, "laws")) list3(`${at5}.laws`, k.laws).forEach((l, j) => {
-      if (!lawNames.has(l)) err(`${at5}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
+    str(`${at6}.label`, k.label, "label");
+    if (own(k, "tier") && !TIERS.includes(k.tier)) err(`${at6}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
+    if (own(k, "laws")) list3(`${at6}.laws`, k.laws).forEach((l, j) => {
+      if (!lawNames.has(l)) err(`${at6}.laws[${j}]`, "LAW_UNKNOWN", `no records_laws or standard_sources entry is named '${String(l)}'`);
     });
     if (own(k, "venue")) {
       const v = k.venue;
-      if (!isObj2(v)) err(`${at5}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
+      if (!isObj2(v)) err(`${at6}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at5}.venue`, v, ["name", "how", "basis"]);
-        str(`${at5}.venue.name`, v.name, "name");
-        if (!VENUE_HOW.includes(v.how)) err(`${at5}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
-        basis(`${at5}.venue`, v);
+        fields(`${at6}.venue`, v, ["name", "how", "basis"]);
+        str(`${at6}.venue.name`, v.name, "name");
+        if (!VENUE_HOW.includes(v.how)) err(`${at6}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
+        basis(`${at6}.venue`, v);
       }
     }
     if (own(k, "template")) {
-      if (!isStr(k.template)) err(`${at5}.template`, "VALUE_INVALID", "a template is text");
-      if (k.tier === 3) err(`${at5}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
+      if (!isStr(k.template)) err(`${at6}.template`, "VALUE_INVALID", "a template is text");
+      if (k.tier === 3) err(`${at6}.template`, "TEMPLATE_TIER3", "a Tier 3 kind has no template");
     }
     if (own(k, "advisory")) {
-      if (!isStr(k.advisory)) err(`${at5}.advisory`, "VALUE_INVALID", "an advisory note is text");
-      if (k.tier !== 2) err(`${at5}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
+      if (!isStr(k.advisory)) err(`${at6}.advisory`, "VALUE_INVALID", "an advisory note is text");
+      if (k.tier !== 2) err(`${at6}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
     }
-    basis(at5, k);
+    basis(at6, k);
   });
   if (own(p, "deadlines")) list3("deadlines", p.deadlines).forEach((d, i) => {
-    const at5 = `deadlines[${i}]`;
-    if (!entry(at5, d)) return;
-    fields(at5, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
-    str(`${at5}.rule`, d.rule, "rule");
+    const at6 = `deadlines[${i}]`;
+    if (!entry(at6, d)) return;
+    fields(at6, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
+    str(`${at6}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
-      err(`${at5}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
-    if (!isPosInt(d.days)) err(`${at5}.days`, "VALUE_INVALID", "days is a positive integer");
-    if (!COUNTS.includes(d.count)) err(`${at5}.count`, "COUNT_UNKNOWN", "count is calendar or business");
-    if (!STARTS.includes(d.starts)) err(`${at5}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
+      err(`${at6}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
+    if (!isPosInt(d.days)) err(`${at6}.days`, "VALUE_INVALID", "days is a positive integer");
+    if (!COUNTS.includes(d.count)) err(`${at6}.count`, "COUNT_UNKNOWN", "count is calendar or business");
+    if (!STARTS.includes(d.starts)) err(`${at6}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
     if (own(d, "extension")) {
       const x = d.extension;
-      if (!isObj2(x)) err(`${at5}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
+      if (!isObj2(x)) err(`${at6}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
       else {
-        fields(`${at5}.extension`, x, ["days", "count", "when"]);
-        if (!isPosInt(x.days)) err(`${at5}.extension.days`, "VALUE_INVALID", "days is a positive integer");
-        if (!COUNTS.includes(x.count)) err(`${at5}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
-        str(`${at5}.extension.when`, x.when, "when");
+        fields(`${at6}.extension`, x, ["days", "count", "when"]);
+        if (!isPosInt(x.days)) err(`${at6}.extension.days`, "VALUE_INVALID", "days is a positive integer");
+        if (!COUNTS.includes(x.count)) err(`${at6}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
+        str(`${at6}.extension.when`, x.when, "when");
       }
     }
-    str(`${at5}.citation`, d.citation, "citation");
-    basis(at5, d);
+    str(`${at6}.citation`, d.citation, "citation");
+    basis(at6, d);
   });
   if (own(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
-    const at5 = `legal_organisations[${i}]`;
-    if (!entry(at5, o)) return;
-    fields(at5, o, ["name", "evaluates", "contacts", "basis"]);
-    str(`${at5}.name`, o.name, "name");
-    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at5}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
+    const at6 = `legal_organisations[${i}]`;
+    if (!entry(at6, o)) return;
+    fields(at6, o, ["name", "evaluates", "contacts", "basis"]);
+    str(`${at6}.name`, o.name, "name");
+    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at6}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
     else o.evaluates.forEach((k, j) => {
-      if (!tier3.has(k)) err(`${at5}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+      if (!tier3.has(k)) err(`${at6}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
     });
-    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at5}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
+    if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at6}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else o.contacts.forEach((c, j) => {
-      const ca = `${at5}.contacts[${j}]`;
+      const ca = `${at6}.contacts[${j}]`;
       if (!isObj2(c)) {
         err(ca, "CONTACT_INVALID", "a contact is {how, value}");
         return;
@@ -14524,20 +14550,20 @@ function validateInto(p, errors) {
       if (!CONTACT_HOW.includes(c.how)) err(`${ca}.how`, "CONTACT_INVALID", `how is one of ${CONTACT_HOW.join(", ")}`);
       if (!isStr(c.value)) err(`${ca}.value`, "CONTACT_INVALID", "the value is a non-empty string");
     });
-    basis(at5, o);
+    basis(at6, o);
   });
   if (own(p, "holidays")) {
     const years = /* @__PURE__ */ new Set();
     list3("holidays", p.holidays).forEach((h, i) => {
-      const at5 = `holidays[${i}]`;
-      if (!entry(at5, h)) return;
-      fields(at5, h, ["year", "days", "basis"]);
-      if (!isYear(h.year)) err(`${at5}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
-      else if (years.has(h.year)) err(`${at5}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
+      const at6 = `holidays[${i}]`;
+      if (!entry(at6, h)) return;
+      fields(at6, h, ["year", "days", "basis"]);
+      if (!isYear(h.year)) err(`${at6}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
+      else if (years.has(h.year)) err(`${at6}.year`, "HOLIDAY_INVALID", `${h.year} is listed twice`);
       else years.add(h.year);
       const dates = /* @__PURE__ */ new Set();
-      list3(`${at5}.days`, h.days).forEach((d, j) => {
-        const da = `${at5}.days[${j}]`;
+      list3(`${at6}.days`, h.days).forEach((d, j) => {
+        const da = `${at6}.days[${j}]`;
         if (!entry(da, d)) return;
         fields(da, d, ["date", "name"]);
         if (!isDate(d.date)) err(`${da}.date`, "HOLIDAY_INVALID", "a date is a real YYYY-MM-DD");
@@ -14546,7 +14572,7 @@ function validateInto(p, errors) {
         else dates.add(d.date);
         str(`${da}.name`, d.name, "name");
       });
-      basis(at5, h);
+      basis(at6, h);
     });
   }
 }
@@ -14580,9 +14606,9 @@ var tag = (e, profile) => ({ ...clone(e), profile, bases: [{ profile, basis: e.b
 function union(into, entries, profile) {
   for (const e of entries || []) {
     const k = canon(e);
-    const at5 = into.find((x) => x.__k === k);
-    if (at5) {
-      if (!at5.bases.some((b) => b.profile === profile && b.basis === e.basis)) at5.bases.push({ profile, basis: e.basis });
+    const at6 = into.find((x) => x.__k === k);
+    if (at6) {
+      if (!at6.bases.some((b) => b.profile === profile && b.basis === e.basis)) at6.bases.push({ profile, basis: e.basis });
     } else into.push(Object.assign(tag(e, profile), { __k: k }));
   }
 }
@@ -14635,7 +14661,7 @@ function combineInner(listIn) {
 }
 function merge(profiles) {
   const conflicts = [];
-  const conflict = (at5, values, says) => conflicts.push({ at: at5, values, says });
+  const conflict = (at6, values, says) => conflicts.push({ at: at6, values, says });
   const view = {
     id: profiles.map((p) => p.id).join("+"),
     name: profiles.map((p) => p.name).join("; "),
@@ -17198,10 +17224,10 @@ async function inflateRaw(u8, limit) {
       chunks.push(value);
     }
     const bytes = new Uint8Array(total);
-    let at5 = 0;
+    let at6 = 0;
     for (const c of chunks) {
-      bytes.set(c, at5);
-      at5 += c.length;
+      bytes.set(c, at6);
+      at6 += c.length;
     }
     return { bytes };
   } catch {
@@ -17961,8 +17987,8 @@ async function docxStructure(parts) {
     const name = normalizePartName(entry.name);
     if (!name.startsWith(EMBEDDINGS_DIR) || name === EMBEDDINGS_DIR) continue;
     const rid = embeddingRids.get(name) ?? null;
-    const at5 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
-    const source = at5 ? docParaRef(at5.para, at5.run) : null;
+    const at6 = rid != null && walk ? walk.ridUsage.get(rid) ?? null : null;
+    const source = at6 ? docParaRef(at6.para, at6.run) : null;
     const read2 = await readPart(parts.bytes, parts.container, name);
     if (!read2.ok) {
       links.push(undeterminedRecord2(source, "embedded_part_unreadable", { part: name, detail: read2.why }));
@@ -18000,7 +18026,7 @@ async function docxStructure(parts) {
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
     else {
       for (const c of parsed.comments) {
-        const at5 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
+        const at6 = walk && c.id != null ? walk.commentRefs.get(c.id) ?? null : null;
         items.push({
           kind: "comment",
           id: c.id,
@@ -18008,7 +18034,7 @@ async function docxStructure(parts) {
           date: c.date,
           initials: c.initials,
           text: c.text,
-          source: at5 ? docParaRef(at5.para, at5.run) : null
+          source: at6 ? docParaRef(at6.para, at6.run) : null
         });
       }
     }
@@ -20071,17 +20097,17 @@ function odtStructure(parts) {
     const markFor = /* @__PURE__ */ new Map();
     for (const mk of walk.marks) if (!markFor.has(mk.id)) markFor.set(mk.id, mk.para);
     for (const c of parseTrackedChanges(parts.contentXml)) {
-      const at5 = c.id != null ? markFor.get(c.id) : void 0;
+      const at6 = c.id != null ? markFor.get(c.id) : void 0;
       const item = {
         kind: "tracked-change",
         change: c.change,
         author: c.author,
         date: c.date,
-        source: at5 == null ? null : docParaRef(at5)
+        source: at6 == null ? null : docParaRef(at6)
       };
       if (c.change === "deletion") item.superseded = c.superseded;
       else item.text = c.id != null && inserted.has(c.id) ? inserted.get(c.id) : null;
-      if (at5 === void 0) item.why = "change_region_unmarked_in_body";
+      if (at6 === void 0) item.why = "change_region_unmarked_in_body";
       items.push(item);
     }
     for (const a of walk.annotations) {
@@ -22073,13 +22099,13 @@ var CONNECTION = { REFERENTIAL: "referential", TEMPORAL: "temporal" };
 function referential(from, to, relation, why) {
   return { connection: CONNECTION.REFERENTIAL, from, to, relation, why };
 }
-function temporal(from, to, relation, { at: at5, expected_by, why } = {}) {
+function temporal(from, to, relation, { at: at6, expected_by, why } = {}) {
   return {
     connection: CONNECTION.TEMPORAL,
     from,
     to,
     relation,
-    at: at5 || null,
+    at: at6 || null,
     expected_by: expected_by || null,
     why
   };
@@ -23008,13 +23034,13 @@ function memoHeader(flat) {
       for (let c = b + 1; c < hits.length && hits[c].i - hits[a].i <= 250; c++)
         if (!seen.has(hits[c].k)) seen.set(hits[c].k, hits[c].i);
       const all = hits.map((h) => h.i);
-      const at5 = {};
+      const at6 = {};
       for (const [k, i] of seen) {
         const next = all.find((x) => x > i);
         const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
-        at5[k.toLowerCase()] = rest.trim() || null;
+        at6[k.toLowerCase()] = rest.trim() || null;
       }
-      return { fields: at5, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
+      return { fields: at6, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
     }
   }
   return null;
@@ -23736,12 +23762,12 @@ var EXTRACTION_CHECKS = Object.freeze({
 });
 
 // ../bio-plane/src/capture/checks.mjs
-var at2 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
+var at3 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
   NOT_FOUND: Object.freeze({
     check: "C-118.1",
-    where: at2("evidenceAbsent", "is-evidence-held"),
+    where: at3("evidenceAbsent", "is-evidence-held"),
     translation: "The record holds no stored copy of a document under this fingerprint."
   }),
   NO_SUCH_KNOCK: Object.freeze({
@@ -25615,87 +25641,87 @@ var CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.
 var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/progressions/checks.mjs
-var at3 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
+var at4 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",
-    where: at3("defineProgression", "is-progression-labelled"),
+    where: at4("defineProgression", "is-progression-labelled"),
     translation: "A declared flow carries a name a person can read, and this one has none. Give it a name. Nothing was written."
   },
   NO_STAGES: {
     check: "C-100.3",
-    where: at3("defineProgression", "is-progression-staged"),
+    where: at4("defineProgression", "is-progression-staged"),
     translation: "A declared flow is its steps in order, and this one names no step. Name at least one step. Nothing was written."
   },
   NO_STAGE_KEY: {
     check: "C-100.4",
-    where: at3("defineProgression", "is-stage-keyed"),
+    where: at4("defineProgression", "is-stage-keyed"),
     translation: "One step of this flow has no key, so nothing could later be placed at it or found missing from it. Give every step a key. Nothing was written."
   },
   DUPLICATE_STAGE: {
     check: "C-100.5",
-    where: at3("defineProgression", "is-stage-unique"),
+    where: at4("defineProgression", "is-stage-unique"),
     translation: "Two steps of this flow share one key, so a document placed at that key could belong to either. Give each step its own key. Nothing was written."
   },
   NO_CARDINALITY: {
     check: "C-100.6",
-    where: at3("defineProgression", "is-stage-counted"),
+    where: at4("defineProgression", "is-stage-counted"),
     translation: "One step does not say how many documents it may hold (exactly one, at most one, or any number), so the record could not tell a step holding too many from one holding the usual set. Say how many. Nothing was written."
   },
   BAD_REQUIRED: {
     check: "C-100.7",
-    where: at3("defineProgression", "is-stage-required"),
+    where: at4("defineProgression", "is-stage-required"),
     translation: "One step does not say how firmly it is expected, in one of the five words the record understands (always, usually, sometimes, never, unless an exception is recorded). Use one of them. Nothing was written."
   },
   UNKNOWN_AFTER: {
     check: "C-33.26",
-    where: at3("defineProgression", "is-progression-order"),
+    where: at4("defineProgression", "is-progression-order"),
     translation: "One step here says it comes after a step this sequence does not contain, so the order cannot be worked out. Name a step that exists, or leave the ordering off and let it stand on its own."
   },
   PROGRESSION_VERSION_NOT_HELD: {
     check: "C-100.8",
-    where: at3("readProgression", "is-version-held"),
+    where: at4("readProgression", "is-version-held"),
     translation: "The record holds no such version of this flow. The versions it does hold are named beside this message, and each reads back in full."
   },
   NO_PLACEMENTS: {
     check: "C-100.10",
-    where: at3("threadInstance", "is-thread-placed"),
+    where: at4("threadInstance", "is-thread-placed"),
     translation: "Threading places documents at the steps of a flow, and this request places none. Name at least one step and the document that fills it. Nothing was written."
   },
   NO_SUCH_PROGRESSION: {
     check: "C-100.11",
-    where: at3("#declared", "is-progression-declared"),
+    where: at4("#declared", "is-progression-declared"),
     translation: "No flow of that key has been declared, so there is nothing to place documents in or to decide about. Declare the flow first. Nothing was written."
   },
   NO_STAGE: {
     check: "C-100.13",
-    where: at3("#stageNamed", "is-stage-named"),
+    where: at4("#stageNamed", "is-stage-named"),
     translation: "This request does not say which step of the flow it is about. Name the step. Nothing was written."
   },
   BAD_STAGE: {
     check: "C-100.14",
-    where: at3("#stageOf", "is-stage-of-progression"),
+    where: at4("#stageOf", "is-stage-of-progression"),
     translation: "The step named here is not a step of this flow as it is declared now. Name one of its steps. Nothing was written."
   },
   NO_CAPTURE: {
     check: "C-100.15",
-    where: at3("#documentNamed", "is-document-named"),
+    where: at4("#documentNamed", "is-document-named"),
     translation: "A step is filled by a captured document, named by its fingerprint, and this request names none. Name the document. Nothing was written."
   },
   DUPLICATE_PLACEMENT: {
     check: "C-100.16",
-    where: at3("threadInstance", "is-placement-unique"),
+    where: at4("threadInstance", "is-placement-unique"),
     translation: "The same document is placed at the same step twice in this request. Place it once. Nothing was written."
   },
   NOT_CONCERNED: {
     check: "C-100.17",
-    where: at3("#concerned", "is-document-concerned"),
+    where: at4("#concerned", "is-document-concerned"),
     translation: "The record does not show this document concerning the subject this instance follows, so it cannot be placed in it or excuse one of its steps. Resolve the document to the subject first, or use it in the instance of the subject it does concern. Nothing was written."
   },
   NO_REASON: {
     check: "C-100.18",
-    where: at3("#reasonStated", "is-reason-stated"),
+    where: at4("#reasonStated", "is-reason-stated"),
     translation: "This act is recorded with a reason, in your own words, and none was given. A decision or an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was written."
   },
   NOT_A_DISPOSITION: {
@@ -25705,22 +25731,22 @@ var PROGRESSION_CHECKS = Object.freeze({
   },
   BAD_REASON: {
     check: "C-100.21",
-    where: at3("disposeProposal", "is-reason-bounded"),
+    where: at4("disposeProposal", "is-reason-bounded"),
     translation: "The reason is too long or contains a quotation mark, a backslash or a line break, which the record cannot keep as written. Shorten it to one plain line. Nothing was written."
   },
   NO_DECIDER: {
     check: "C-100.22",
-    where: at3("disposeProposal", "is-decider-stamped"),
+    where: at4("disposeProposal", "is-decider-stamped"),
     translation: "A decision is recorded under the member who took it, and this request reached the record without one. Sign in and decide again. Nothing was written."
   },
   NO_DEFINITION_VERSION: {
     check: "C-33.42",
-    where: at3("disposeProposal", "is-dispose-version-named"),
+    where: at4("disposeProposal", "is-dispose-version-named"),
     translation: "Setting aside one of the record's own questions is a decision about the way a body is said to work \u2014 and that description is written down, dated, and rewritten when the group learns better. This request does not say which of those versions you were reading when you decided, so the record cannot say what you actually judged. Open the question again and send the version shown beside it. Nothing was recorded."
   },
   DEFINITION_MOVED: {
     check: "C-33.43",
-    where: at3("disposeProposal", "is-dispose-version-current"),
+    where: at4("disposeProposal", "is-dispose-version-current"),
     translation: "The version of the declared flow this decision names is not the one standing now. Rather than file your decision against a description you did not read, the record keeps it out and asks you to look again: read the question against the version in force and decide again. The answer may well be the same one, and it will then be yours. Both versions are named beside this message, the earlier one still reads back in full, and nothing was recorded."
   }
 });
@@ -25766,16 +25792,16 @@ var DOCUMENT_AXES = Object.freeze(["capture", "testimony"]);
 var GRADE_RANK = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
 
 // ../bio-plane/src/strength/checks.mjs
-var at4 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
+var at5 = (fn, region) => `src/strength/index.mjs ${fn} > ${region}`;
 var VERSION_STRENGTH_CHECKS = Object.freeze({
   VERSION_STRENGTH_NO_INQUIRY: {
     check: "C-30.1",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "This asks how strongly one question is answered, and no question was named. There is no default question here and there must not be one."
   },
   VERSION_STRENGTH_NOT_AN_INQUIRY: {
     check: "C-30.2",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "That is not a question, so there is nothing here to say how strongly it is answered. Only a question carries readings of the evidence, and only a reading has a strength."
   },
   /* THE FOUR BEATS' FIRST BEAT, one altitude down from PL-2's acts and for the
@@ -25784,17 +25810,17 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      thing, which is worse than being asked which was meant. */
   VERSION_STRENGTH_NO_VERSION: {
     check: "C-30.3",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "Say which reading of the evidence to measure, or say which project is asking so that the reading it stands on can be used. There is no default reading, because a strength reported for a reading nobody meant is a number about something else."
   },
   VERSION_STRENGTH_NO_SUCH_VERSION: {
     check: "C-30.4",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "No reading by that name belongs to this question, or this project has not said which reading it stands on. An empty answer here would say the question rests on nothing when the truth is that nobody has pointed at anything yet."
   },
   VERSION_STRENGTH_UNKNOWN_STATE: {
     check: "C-30.5",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "One of the words used to say which readings to count is not one this record knows. The set is closed on purpose: a strength that quietly counted readings nobody recognises would be a number no reader could check."
   },
   /* §6 rule 6, and it is the mechanism rather than a nicety: *"Exploring an
@@ -25804,7 +25830,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      state-set line (DEC-40) wherever it renders. */
   VERSION_STRENGTH_STATE_EXCLUDED: {
     check: "C-30.6",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "Nobody has adopted that reading, so it is not what this record answers with. You can still see what it would come to \u2014 ask for it as a what-if by saying which kinds of reading to count \u2014 and the answer will say on its face that that is what it is."
   },
   /* DEC-44 determination 1, at the version altitude: *"A case does NOT compose a
@@ -25816,7 +25842,7 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      number is the record claiming something neither population supports. */
   VERSION_STRENGTH_COMPOSED: {
     check: "C-30.7",
-    where: at4("refusePairComposed", "is-pair-composed"),
+    where: at5("refusePairComposed", "is-pair-composed"),
     translation: "This answer tried to report one overall figure for a question, and there is no such figure. How well the documents were captured and how firmly they connect to the subject are two separate measurements over two separate things, and averaging them or picking one would state something neither of them says."
   },
   /* DEC-40 determination 2, and its own negative control: *"a filtered
@@ -25828,12 +25854,12 @@ var VERSION_STRENGTH_CHECKS = Object.freeze({
      the record's own. */
   VERSION_STRENGTH_UNFILTERED: {
     check: "C-30.8",
-    where: at4("refusePairComposed", "is-pair-composed"),
+    where: at5("refusePairComposed", "is-pair-composed"),
     translation: "This answer did not say which readings it counted, and a strength separated from that is a misreading waiting to happen. Every answer here says on its face whether it is the record's own or a view somebody constructed."
   },
   VERSION_STRENGTH_TOO_MANY_STATES: {
     check: "C-30.9",
-    where: at4("versionStrength", "is-version-strength"),
+    where: at5("versionStrength", "is-version-strength"),
     translation: "More kinds of reading were named than this record has. The bound is said here rather than applied quietly, so nothing is dropped without you being told."
   }
 });
@@ -25842,37 +25868,37 @@ var VERSION_STRENGTH_INERT_SOURCES = ["hunch"];
 var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
   PARTITION_INDEPENDENCE_NO_INQUIRY: {
     check: "C-71.1",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "This asks whether the groups of reasons behind one question share a source, and no question was named. There is no default question here and there must not be one."
   },
   PARTITION_INDEPENDENCE_NOT_AN_INQUIRY: {
     check: "C-71.2",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "That is not a question you can read here, so it has no reasons to group. Only a question rests on reasons, and a question you may not see answers exactly as one that does not exist."
   },
   PARTITION_INDEPENDENCE_UNREADABLE: {
     check: "C-71.3",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "The grouping of reasons could not be read. Send it as a list of groups, each group a list of the positions of the reasons in it, or as groups each carrying a name and its positions. Every group needs at least one reason and a name no other group has."
   },
   PARTITION_INDEPENDENCE_UNKNOWN_LEG: {
     check: "C-71.4",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "The grouping names a reason this question does not have. It was not dropped quietly, because an answer about groups the question does not hold would be an answer about something else."
   },
   PARTITION_INDEPENDENCE_LEG_TWICE: {
     check: "C-71.5",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "One reason was put in two groups. Each reason belongs to exactly one group, because a reason shared by two groups would make them share a source by construction."
   },
   PARTITION_INDEPENDENCE_NOT_TOTAL: {
     check: "C-71.6",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "Some of this question's reasons are in no group. A grouping covers every reason, as a written reading does, so that what is checked here is what would be written."
   },
   PARTITION_INDEPENDENCE_TOO_MANY_LEGS: {
     check: "C-71.7",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "This question rests on more reasons than a written reading may hold, so a grouping of all of them could not be written and is not checked. The bound is said here rather than applied quietly."
   },
   /* REC-192 — THE VERSION ARM (BOB #31, 2026-09-23 22:22Z): the same read over a WRITTEN reading's
@@ -25881,31 +25907,31 @@ var PARTITION_INDEPENDENCE_CHECKS = Object.freeze({
      strength. */
   PARTITION_INDEPENDENCE_TWO_SUBJECTS: {
     check: "C-71.8",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "Both a written reading and a proposed grouping were named. This answers for one of them at a time, and which one was meant is not something to guess, so name only the one you want."
   },
   PARTITION_INDEPENDENCE_NO_SUCH_VERSION: {
     check: "C-71.9",
-    where: at4("partitionIndependence", "is-partition-independence"),
+    where: at5("partitionIndependence", "is-partition-independence"),
     translation: "No reading by that name belongs to this question, so there are no written groups of it to check. Nothing was substituted for it."
   }
 });
 var STRENGTH_BAR_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE: {
     check: "C-32.9",
-    where: at4("strengthBarSet", "is-machine-strength-bar"),
+    where: at5("strengthBarSet", "is-machine-strength-bar"),
     translation: "How much evidence this group requires of itself is the group's own declaration about the standard it works to, and everything filed afterwards is measured against it. An automated credential cannot set that bar for the people it works for. Sign in to change it."
   },
   STRENGTH_BAR_NOT_ADMIN: {
     check: "C-107.1",
-    where: at4("strengthBarSet", "is-admin-strength-bar"),
+    where: at5("strengthBarSet", "is-admin-strength-bar"),
     translation: "The standard of evidence a new project starts from is set for the whole group, so only an administrator can change it. A project can still declare its own standard in its own document. Nothing was changed."
   },
   /* N208 (K275): this module's own condition, a bar letter outside the grades, with its own row; intent's grade
      refusal is `CONDITION_BAD_GRADE`, another condition (K238). */
   BAD_GRADE: {
     check: "C-107.2",
-    where: at4("strengthBarSet", "is-strength-bar-grade"),
+    where: at5("strengthBarSet", "is-strength-bar-grade"),
     translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
   }
 });
@@ -27271,19 +27297,19 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     segmentStopped
   };
 }
-function planeAnswer(asked, at5) {
-  if (!asked.reached) return { at: at5, silent: asked };
+function planeAnswer(asked, at6) {
+  if (!asked.reached) return { at: at6, silent: asked };
   const envelope = asked.body && typeof asked.body === "object" ? asked.body : {};
   const inner = envelope.result && typeof envelope.result === "object" && !Array.isArray(envelope.result) ? envelope.result : null;
   const said = inner && "ok" in inner ? inner : envelope;
   if (asked.status !== 200 || envelope.ok !== true || said.ok === false)
-    return { at: at5, refused: {
-      at: at5,
+    return { at: at6, refused: {
+      at: at6,
       code: said.reason ?? said.code ?? envelope.reason ?? envelope.code ?? null,
       check: said.check ?? envelope.check ?? null,
       plane: asked.body ?? null
     } };
-  return { at: at5, result: inner ?? envelope };
+  return { at: at6, result: inner ?? envelope };
 }
 var MEANING_OP = "meaningrows";
 var meaningRead = async (call, { q = "", rows, limit = 50, ids = null } = {}) => planeAnswer(await call(MEANING_OP, { q, rows, limit }, ids ? { ids } : null), MEANING_OP);
