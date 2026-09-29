@@ -21,3 +21,7 @@
 - No layer tests are named in `build/manifest.md`.
 
 Size (session_01WHkeSYJXikezjTzJkizuXW): test runs 3, module lines 1496
+
+## J1 · COMPLETE
+
+N289 applied: R25's test reads C-22.7's row through ai-runs (airun.mjs AI_RUN_CHECKS, translationOf), never the catalogue; no source line changed (SKILL_CHECKS already selects it from ai-runs). R25's last clause (row held in ai-runs' own table, where src/ai-runs/skill-version.mjs) is a test.todo naming ai-runs R35: tell me when ai-runs is merged and I merge tranche/T11 and make it a test. Tests 31: 30 pass, 0 fail, 1 todo; format, architecture, coverage (26/26), ownership: 0 failures. Report: R21's not-yet-met mark (bullet and Status line) is stale, met since T7; yours to strike. No catalogue row changed. Record: build/jobs/T11/skills.md on job/T11/skills.
