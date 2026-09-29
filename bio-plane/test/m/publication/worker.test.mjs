@@ -3,7 +3,7 @@
    Durable Object is played by this module's own ops over the real store side. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, SIG, NOW, sha } from "./fixture.mjs";
+import { planeWorld as world, V, SIG, NOW, sha } from "./fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer, publishedStoreAbsent, noPublishedPart,
          publishedObjectMissing } from "../../../src/publication/worker.mjs";
@@ -97,7 +97,9 @@ test("R13 publishedbytes answers bytes by hash only, and each failure by its gov
   assert.deepEqual([ub.reason, ub.check, ub.translation], ["NO_PUBLISHED_STORE", "C-68.5", rowOf("NO_PUBLISHED_STORE").translation]);
   assert.deepEqual(publishedStoreAbsent({ PUBLISHED: { get() {} } }), null);
   assert.deepEqual(publishedObjectMissing().check, "C-98.2");
-  assert.equal(noPublishedPart("x").status, 404);
+  /* N297: the governed site answers the refusal itself (the verdict reader judges it); its one caller wraps it, 404 */
+  assert.deepEqual(noPublishedPart("x"), { ...noneBody, sha256: "x" });
+  assert.equal(noPublishedPart("x").ok, false);
   /* a part asked as a container (C-98.3) */
   env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(text));
   const notc = await call(w, env, "publishedbytes", { sha256: pin, format: "zip" });
