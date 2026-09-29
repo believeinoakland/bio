@@ -66,3 +66,7 @@
 - `ownership bias tranche/T14`: 9 files changed; legacy-store and legacy-checks 0 lines added, 0 removed; 0 failures.
 
 Size (session_01FxFMrSi4LKTy8hY2B34bNu): test runs 12, module lines 1803
+
+## J1 · REPORT
+
+Found outside bias (record, Found in other modules): (1) stale, not rebuilt: agent-worker/dist/agent-worker.bundled.mjs (fleetbundles fails on src/bias/{checks,index,schema}.mjs) and bio-plane/dist/bio-plane.bundled.mjs. (2) legacy-tests: bio-plane/test/bias.test.mjs fails two arms, both expected: 'TWENTY refusals are allocated' (:581, now 19) and 'K102: an ORDINARY member's instance adoption is refused BY NAME' (:867, now NOT_AN_ADMIN / C-96.1 with remedy). (3) civicos-ui/check-refusal-codes.mjs pins rows/census/reach (:573, :656, :742) move with C-26.20's departure. No other civicos-ui or affordances hit. (4) legacy-store at layer 10 (N343): call biasOf(ctx).migrate() in the boot after the schema pass; drop settled_kind from ADDITIVE_COLUMNS (store.mjs:733).
