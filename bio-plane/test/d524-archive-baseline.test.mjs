@@ -117,6 +117,26 @@ const bundleMd = (id, locator) => [
   "## Session Log", "", "### Session 1", "", "Captured.", "", "## Review Notes", "",
 ].join("\n");
 
+/* CORRECTED 2026-09-29 (legacy-tests T12), never exempted: this suite made THREE archive acquires, each two grants on
+   web.archive.org (the CDX lookup and the replay), against the governor's burst of 3 at the Archive's own figure of
+   24 a minute, which acquire configures for that host on first contact (capture's acquire.mjs, since T4, K72 (12)) and
+   which outranks the instance binding (host-governor R3). So the third acquire was admitted or refused
+   HOST_COOLING_OFF by how much wall time the arms between happened to take: 19/0 on a slow run, a TypeError on
+   `am.document` on a fast one (measured alone 2026-09-29: 3 of 5 runs threw, the refusal naming `retry_in_ms`).
+   That is a bet on the clock, not a T12 break and not a product defect: the governor refusing a burst is its job.
+   An archive acquire here now does what a caller is told to do, waiting out the published `retry_in_ms` and asking
+   again, at most three times, so every arm below still measures the baseline it names and nothing about the
+   refusal is loosened; a refusal still standing after three waits reaches the arms and fails them by name. */
+const acquireArchive = async (address) => {
+  let a = null;
+  for (let i = 0; i < 4; i++) {
+    a = await P("acquire", { via: "archive.org", address, authority: "City Clerk" });
+    if (a?.reason !== "HOST_COOLING_OFF" || i === 3) break;
+    await new Promise((res) => setTimeout(res, Math.min(10_000, Number(a.retry_in_ms) || 1000) + 50));
+  }
+  return a;
+};
+
 let seq = 0;
 const promoted = async (locator, docs, capDoc) => {
   const id = `INFO-2026-${String(9500 + ++seq)}-d524-archive`;
@@ -163,7 +183,7 @@ try {
   liveDown = false;
 
   console.log("\n--- D-524: an archive-sourced capture, filed as the caller files it ---");
-  const acq = await P("acquire", { via: "archive.org", address: DOCADDR, authority: "City Clerk" });
+  const acq = await acquireArchive(DOCADDR);
   const doc = acq.document || null;
   if (!doc) console.log(`    ACQUIRE ANSWERED NO DOCUMENT: ${JSON.stringify(acq).slice(0, 400)}`);
   t("acquire captured the Archive's bytes", doc?.capture?.sha256, BODY_SHA);
@@ -207,7 +227,7 @@ try {
        `normalizeAddress`'s form, so the baseline must be found. */
     const M = "https://www.oaklandca.gov/d524/minutes.pdf";
     t("the second document is eligible", await eligible(M), true);
-    const am = await P("acquire", { via: "archive.org", address: M, authority: "City Clerk" });
+    const am = await acquireArchive(M);
     const B = await promoted("https://WWW.OaklandCA.gov:443/d524/minutes.pdf#page=2", [am.document], am.document);
     t("the differently-spelled bundle promoted", B.promoted, true);
     const mb = await P("monitor", { bundleId: B.id });
@@ -222,7 +242,7 @@ try {
        document keeps no baseline, and says so. */
     const O = "https://www.oaklandca.gov/d524/other.pdf";
     t("the third document is eligible", await eligible(O), true);
-    const ao = await P("acquire", { via: "archive.org", address: O, authority: "City Clerk" });
+    const ao = await acquireArchive(O);
     const C = await promoted("https://www.oaklandca.gov/d524/elsewhere.pdf", [ao.document], ao.document);
     t("the mismatched bundle promoted", C.promoted, true);
     const mc = await P("monitor", { bundleId: C.id });

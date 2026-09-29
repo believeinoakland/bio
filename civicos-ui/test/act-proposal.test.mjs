@@ -39,6 +39,8 @@ import { appScript } from "./extract.mjs";
 /* The catalog, so what ADOPT writes is pinned to the type and first state the
    plane itself would accept rather than to a literal in this file (UI-10). */
 import { STATES } from "../../bio-plane/checks/bio-checks.mjs";
+/* 2026-09-29 (legacy-tests T12; progressions R35): NOT_A_DISPOSITION's one answer, read from its one site. */
+import { notADisposition, PROGRESSION_CHECKS } from "../../bio-plane/src/progressions/checks.mjs";
 import { unknownOpWire } from "./plane-refusal-wire.mjs";   /* UI-100: the dispatch miss is DERIVED from index.mjs and the DEC-49
       catalogue, never typed — see that module's header. */
 
@@ -49,9 +51,15 @@ function ok(msg, cond){ n++; if(!cond){ fails.push(msg); console.error("  FAIL",
    bio-plane/src/store.mjs `proposeDispose()`. Added 2026-08-05 (UI-22): the
    suite pins THESE SENTENCES, because a suite that pinned only the reason code
    would pass an invented one — the arm-(d) instrument UI-12 named. */
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; N285, K275, K388, progressions R35, C-100.20): the store no longer words
+   NOT_A_DISPOSITION — `proposeDispose()` answers through progressions' `notADisposition`, the one site of the code, and
+   the sentence it retired ("a proposal is deferred (parked) …") is gone from the plane. The fixture now answers with
+   R35's own refusal, READ from progressions (its row C-100.20 and translation, its fixed detail), never retyped here,
+   so a changed sentence moves this suite with it. NO_REASON and BAD_REASON are still the store's own sentences. */
+const NOT_A_DISPOSITION_WIRE = notADisposition(null);
 const PROP_WORDS = {
-  NOT_A_DISPOSITION: "a proposal is deferred (parked) or dismissed (declined); adopting one authors a "
-                   + "focus (op=promote) and is not a disposition",
+  NOT_A_DISPOSITION: PROGRESSION_CHECKS.NOT_A_DISPOSITION.translation,
+  NOT_A_DISPOSITION_DETAIL: NOT_A_DISPOSITION_WIRE.detail,
   NO_REASON: "deferring or dismissing the record's own question is recorded with a reason, in the "
            + "member's own words — a disposition with no reason ages a finding with no account of why",
   BAD_REASON: "a reason is at most 160 characters and cannot contain a quote, a backslash, or a "
@@ -94,8 +102,10 @@ function makePlane(opts){
       const to = body && body.to;
       const reason = String((body&&body.reason)||"").trim();
       const REF = x => ({ ok:false, json:async()=>({ ok:true, result:x }) });
-      if(!["deferred","dismissed"].includes(to))
-        return REF({ ok:false, reason:"NOT_A_DISPOSITION", to, detail:PROP_WORDS.NOT_A_DISPOSITION });
+      /* 2026-09-29 (legacy-tests T12; progressions R35): the store trims the word and answers `notADisposition`'s
+         refusal whole; the fixture does the same by calling it, rather than composing a copy. */
+      const undisposed = notADisposition(typeof to === "string" ? to.trim() : "");
+      if(undisposed) return REF(undisposed);
       if(!reason) return REF({ ok:false, reason:"NO_REASON", detail:PROP_WORDS.NO_REASON });
       if(reason.length > 160 || /["\\\r\n]/.test(reason))
         return REF({ ok:false, reason:"BAD_REASON", detail:PROP_WORDS.BAD_REASON });

@@ -505,7 +505,11 @@ t("the contact came through", list.find((r) => r.knock_id === k1.knockId).contac
 const got = (await A.GET(`op=inboxget&token=mem-door&id=${k1.knockId}`)).result;
 t("a member can read one knock", got.ok, true);
 t("bytes over the R2 line are not inlined", got.item.in_r2, 1);
-t("unknown knock id says so", (await A.GET("op=inboxget&token=mem-door&id=KNOCK-nope")).result.reason, "NOT_FOUND");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K383, capture R32, C-118.2): an unknown knock id is capture's own
+   NO_SUCH_KNOCK (row CAPTURE_CHECKS.NO_SUCH_KNOCK), no longer the bare NOT_FOUND it shared with evidence absence
+   (K275). Asserted at the plane's answer; the Worker's 404 for it is the control plane's mapping (K398), not this arm's. */
+const noKnock = (await A.GET("op=inboxget&token=mem-door&id=KNOCK-nope")).result;
+t("unknown knock id says so", [noKnock.reason, noKnock.check], ["NO_SUCH_KNOCK", "C-118.2"]);
 
 const res = await A.POST("op=inboxresolve&token=mem-door", { knockId: k1.knockId, status: "pulled" });
 t("a member can disposition it", res.result.status, "pulled");

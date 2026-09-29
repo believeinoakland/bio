@@ -137,7 +137,9 @@ t("and carries no grade on the entity view either", Object.keys(proxyOnMaga).som
 
 console.log("\n--- the registry refuses the malformed, fail-closed ---");
 t("an unknown kind is refused", [rP(await post("entitycreate", { kind: "banana", label: "x" })).reason], ["UNKNOWN_KIND"]);
-t("a label-less entity is refused", [rP(await post("entitycreate", { kind: "source", label: "  " })).reason], ["NO_LABEL"]);
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; N285, K387, entities R1): createEntity refuses a missing label with its own
+   code ENTITY_NO_LABEL (row C-91.6); entities no longer mints the bare NO_LABEL it shared with progressions. */
+t("a label-less entity is refused", [rP(await post("entitycreate", { kind: "source", label: "  " })).reason], ["ENTITY_NO_LABEL"]);
 t("an un-justified relation is refused (justified like a pattern statement)",
   rP(await post("relationdeclare", { fromEntity: maga.entity_id, toEntity: trump.entity_id, relation: "proxy_for", citation: "c" })).reason,
   "NO_JUSTIFICATION");
