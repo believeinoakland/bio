@@ -24,3 +24,7 @@
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture filings`: 11 product files, 41 relative imports; 0 failures. `coverage filings`: 21 of 21 live requirement ids named by a test; 0 failures. `ownership filings tranche/T14`: 0 failures.
 
 Size (session_01QEMxsybb9kSQtmW1ZhLQSx): test runs 7, module lines 1407
+
+## J1 · COMPLETE
+
+N331 applied: R3 reads the producing group through promotion.fact("producingGroup") (default promotionOf(host)); FACT_UNAVAILABLE/FACT_FAILED leave group unfilled as undetermined, never unrecorded; a handed-in producingGroup (legacy-store's) still works. Filings tests 35/35; escalation 29/29; affordances catalogue 27/27; format, architecture, coverage (21/21), ownership: 0 failures. Please strike R3's not-yet-met mark (N331). No rows to stamp. REPORT in the record: legacy-store's handed-in closure (store.mjs:585) collapses FACT_UNAVAILABLE to null (reads as unrecorded) until layer 10; dist/bio-plane.bundled.mjs is stale. Record: build/jobs/T14/filings.md.
