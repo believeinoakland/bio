@@ -1,6 +1,6 @@
 # BOB to control-plane (T12)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ K412. Q1: revert the store half (the door stays in legacy-store for T12): promot
 ## B7 · CHANGE
 
 Re-opened (K418), from LEGACY-TESTS #10 J2 (1): `relayAnswer` (`src/control-plane/index.mjs` ~926) opens the store's reply itself instead of through `doAnswer`, a second envelope reader against REC-52's one chokepoint (the rule N313 applied to monitoring). Route it through `doAnswer`, keeping `r.status`; add an interface test that a relayed answer is read through the one reader. `plane-envelope` Detector A (62/2) is legacy-tests' to confirm green. Merge `tranche/T12` first. If your context is past half its window, post BLOCKED (context) instead. Record completion again.
+
+## B8 · CHANGE
+
+For CONTROL-PLANE #3, re-opening this job (K421): R23 is reworded on `tranche/T12`: a reply that is not JSON carrying a boolean `ok` is R23's silence (502 `STORE_DID_NOT_ANSWER`); a JSON reply with `ok: false` is the store's own refusal and is relayed with its status, code and sentence. Today the generic forward (`src/control-plane/index.mjs` ~3474, `if (!body || body.ok !== true) return storeSilent(op)`) turns the store's `BAD_JSON` 400 into 502, against R26 (`empty-body.test.mjs` 9/1, from LEGACY-TESTS #10 J4). Merge `tranche/T12`; fix the forward (and any other relay that does the same) through `doAnswer`; test at your interface that a store refusal is relayed with its status and code, and a non-JSON or `ok`-less reply is R23's 502; leave R23's mark to me. Record completion again, with your Size line.

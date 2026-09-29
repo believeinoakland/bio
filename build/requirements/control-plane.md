@@ -54,7 +54,7 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 **The envelope**
 - **R21** Every answer is JSON with `access-control-allow-origin: *`. A forwarded answer is the handler's, with `store` and `tokenClass` added and its HTTP status kept.
 - **R22** A refusal (`ok: false`, at the top level or in `result`) whose `reason` or `code` has a catalogue row gains `code`, `check` and `translation` where absent. Only those two levels are decorated.
-- **R23** A store answer that is not JSON with `ok: true` means the store did not answer. It is refused 502 `STORE_DID_NOT_ANSWER` (C-69.2), naming the op, and is never read as an absence, a refusal or a success.
+- **R23** A store answer that is not JSON carrying a boolean `ok` means the store did not answer. It is refused 502 `STORE_DID_NOT_ANSWER` (C-69.2), naming the op, and is never read as an absence, a refusal or a success. A JSON answer with `ok: false` is the store's own refusal, relayed with its status, code and sentence (R26's `BAD_JSON` among them). *(not yet met: K421; the generic forward turns every `ok: false` into R23's silence)*
 - **R24** A public op relaying the store's answer answers the store's own status, and answers R23 on a store failure, never 200.
 - **R25** An error thrown anywhere in either door is answered with a named internal-error code (`PLANE_INTERNAL_ERROR` in the Worker, `STORE_INTERNAL_ERROR` in the store) and a correlation id. It never carries the stack, the message, a path or a line, and the stack is logged server-side under the correlation id. *(not yet met: D-629; `Store.fetch` answers `String(e.stack)` today)*
 
