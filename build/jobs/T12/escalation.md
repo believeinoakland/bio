@@ -1,6 +1,6 @@
 # escalation (T12)
 
-**Status** · session_01Tt8xQRrVDzqdXdqgxzdFMT · depth 2 · WORKING · handled B1
+**Status** · session_01Tt8xQRrVDzqdXdqgxzdFMT · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Work
 
