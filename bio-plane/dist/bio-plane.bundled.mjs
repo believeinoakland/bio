@@ -32217,7 +32217,10 @@ CREATE TABLE IF NOT EXISTS composed_readings (
 // src/extraction/checks.mjs
 var checks_exports10 = {};
 __export(checks_exports10, {
+  EXTRACTION_CHECKS: () => EXTRACTION_CHECKS,
+  NO_SHA_DETAIL: () => NO_SHA_DETAIL,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
+  noSha: () => noSha,
   reextractRow: () => reextractRow
 });
 var REEXTRACT_CHECKS = {
@@ -32269,6 +32272,168 @@ var reextractRow = (code) => {
     throw new Error(`reextractRow: ${code} has no REEXTRACT_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row2.check, translation: row2.translation };
 };
+var EXTRACTION_CHECKS = Object.freeze({
+  NO_SHA: Object.freeze({
+    check: "C-51.6",
+    where: "src/extraction/checks.mjs noSha > is-capture-named",
+    translation: "This read is about one captured document, named by its fingerprint, and none was named."
+  })
+});
+var NO_SHA_DETAIL = "this read is about one captured document, named by its capture sha256, and none was named";
+function noSha(detail = null) {
+  const row2 = EXTRACTION_CHECKS.NO_SHA;
+  return {
+    ok: false,
+    reason: "NO_SHA",
+    code: "NO_SHA",
+    check: row2.check,
+    translation: row2.translation,
+    detail: typeof detail === "string" && detail.trim() ? detail : NO_SHA_DETAIL
+  };
+}
+
+// src/capture/checks.mjs
+var at5 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
+var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
+var CAPTURE_CHECKS = Object.freeze({
+  NOT_FOUND: Object.freeze({
+    check: "C-118.1",
+    where: at5("evidenceAbsent", "is-evidence-held"),
+    translation: "The record holds no stored copy of a document under this fingerprint."
+  }),
+  NO_SUCH_KNOCK: Object.freeze({
+    check: "C-118.2",
+    where: inIndex("#noSuchKnock", "is-knock-held"),
+    translation: "No knock in the inbox answers to this id. Nothing was changed."
+  })
+});
+
+// src/capture/ops.mjs
+async function linksOp(url, store, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2, viewer }) {
+  const v = `viewer=${encodeURIComponent(viewer ?? "")}` + ["limit", "after"].map((k) => url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "").join("");
+  const address = url.searchParams.get("address");
+  const capture = url.searchParams.get("capture");
+  const host = url.searchParams.get("host");
+  let r;
+  if (address) r = await doAnswer2(store.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`));
+  else if (host) r = await doAnswer2(store.fetch(`http://x/navchanges?host=${encodeURIComponent(host)}&${v}`));
+  else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await doAnswer2(store.fetch(`http://x/resolvelinks?capture=${capture}&${v}`));
+  else return json5({
+    ok: false,
+    reason: "NEED_CAPTURE_OR_ADDRESS",
+    detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, or host=<host> for how that host's navigation changed between captures"
+  }, 400);
+  if (!r.answered) return storeSilent2("links");
+  return json5({ ok: true, ...r.result });
+}
+var EVIDENCE_ABSENT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "sha256", "store"]);
+function evidenceAbsent(sha, store, extra = null) {
+  let own2 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own2 = Object.entries(extra).filter(([k]) => !EVIDENCE_ABSENT_FIXED.has(k));
+  } catch {
+    own2 = [];
+  }
+  const row2 = CAPTURE_CHECKS.NOT_FOUND;
+  return { status: 404, body: {
+    ok: false,
+    reason: "NOT_FOUND",
+    code: "NOT_FOUND",
+    check: row2.check,
+    translation: row2.translation,
+    sha256: sha ?? null,
+    store: store ?? null,
+    ...Object.fromEntries(own2)
+  } };
+}
+async function captureObjectOp(req, url, env, { json: json5, storageAbsent: storageAbsent2, requiredArgument: requiredArgument2, key, storeName, cls }) {
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2("capture", "R2 is not configured on this instance");
+  const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha))
+    return json5({ ok: false, ...requiredArgument2(
+      "capture",
+      "sha256",
+      "<64 lowercase hex>",
+      "capture requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const k = key(sha);
+  if (req.method === "PUT" || req.method === "POST") {
+    const body = new Uint8Array(await req.arrayBuffer());
+    const d = await crypto.subtle.digest("SHA-256", body);
+    const digest = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    if (digest !== sha)
+      return json5({
+        ok: false,
+        reason: "INTEGRITY",
+        detail: "body hash does not match the sha256 parameter",
+        expected: sha,
+        got: digest,
+        store: storeName,
+        tokenClass: cls
+      }, 400);
+    const existing = await env.CAPTURES.head(k);
+    if (existing) return json5({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
+    await env.CAPTURES.put(k, body, { sha256: d });
+    return json5({ ok: true, sha256: sha, bytes: body.length, existed: false, store: storeName, tokenClass: cls });
+  }
+  const wantRange = req.headers.get("range");
+  const obj = await env.CAPTURES.get(k, wantRange ? { range: req.headers } : void 0);
+  const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
+  if (!obj) {
+    const a = evidenceAbsent(sha, storeName, { tokenClass: cls });
+    return json5(a.body, a.status);
+  }
+  return new Response(obj.body, {
+    status: wantRange ? 206 : 200,
+    headers: {
+      "content-type": "application/octet-stream",
+      "access-control-allow-origin": "*",
+      "x-capture-sha256": sha,
+      ...dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}
+    }
+  });
+}
+async function archiveLookupOp(req, url, store, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
+  const body = req.method === "POST" ? await req.json().catch(() => null) : null;
+  const address = body?.address || url.searchParams.get("address");
+  const r = await doAnswer2(store.fetch("http://x/archivelookup", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ address })
+  }));
+  if (!r.answered) return storeSilent2("archivelookup");
+  return json5(r.result.body, r.result.status);
+}
+async function acquireOp(req, env, store, { json: json5, storeSilent: storeSilent2, storageAbsent: storageAbsent2, doAnswer: doAnswer2, cls, member, sessMember, storeName }) {
+  if (req.method !== "POST") return { response: json5({ ok: false, error: "acquire is a POST" }, 405) };
+  if (typeof env.CAPTURES?.put !== "function")
+    return { response: storageAbsent2("acquire", "this instance has no evidence storage configured") };
+  const body = await req.json().catch(() => null);
+  const q6 = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
+  const r = await doAnswer2(store.fetch(`http://x/acquire?${q6}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body || {})
+  }));
+  if (!r.answered) return { response: storeSilent2("acquire") };
+  const { status, body: answer } = r.result;
+  if (!answer || answer.ok !== true || !answer.document) return { response: json5(answer, status) };
+  return { answer };
+}
+function withReading(answer, { reading, textUnits, textUnitsOverBound }) {
+  const { file, locator, retrieved, profile, ...rest } = answer.document;
+  return { ...answer, document: {
+    file,
+    locator,
+    retrieved,
+    profile,
+    reading,
+    ...textUnits ? { text_units: textUnits } : {},
+    ...textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {},
+    ...rest
+  } };
+}
 
 // src/extraction/drift.mjs
 function driftObligations(supersessions, bound) {
@@ -34371,10 +34536,9 @@ var Extraction = class {
     });
   }
   /* ---- reading the record (R27–R30, R36, R37) ---- */
-  /** R27 (`op=reading`). */
+  /** R27 (`op=reading`): a request naming no digest answers R63's `noSha`. */
   readingFor(captureSha, viewer = null) {
-    if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "a reading is read by its capture sha256" };
+    if (typeof captureSha !== "string" || !captureSha) return noSha("a reading is read by its capture sha256");
     const row2 = this.#one(
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
               origin, asserted_by, asserted_standing, justification
@@ -34737,7 +34901,7 @@ var Extraction = class {
     }
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const obj = ev ? await ev.get(sha) : null;
-    if (!obj) return { status: 404, body: { ok: false, reason: "NOT_FOUND", sha256: sha, store: storeName, tokenClass: cls } };
+    if (!obj) return evidenceAbsent(sha, storeName, { tokenClass: cls });
     const bytes2 = new Uint8Array(await obj.arrayBuffer());
     const pdfEntry = getFormat("pdf");
     if (!pdfEntry || typeof pdfEntry.structure !== "function")
@@ -35423,8 +35587,8 @@ var checks_exports11 = {};
 __export(checks_exports11, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
-var at5 = (fn) => `src/consequences/index.mjs ${fn}`;
-var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at5(fn), translation });
+var at6 = (fn) => `src/consequences/index.mjs ${fn}`;
+var row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at6(fn), translation });
 var CONSEQUENCES_CHECKS = Object.freeze({
   NO_SUCH_DETERMINATION: row(1, "noSuchDetermination", "A consequence is recorded against a determination you can see. One you may not see is answered exactly as one that does not exist."),
   NOT_NONCOMPLIANT: row(2, "#record", "A consequence is what a breach did: it is recorded against a standard the live determination found noncompliant. A superseded determination's parts stay readable and are not carried forward."),
@@ -35837,221 +36001,221 @@ __export(checks_exports14, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal7
 });
-var at6 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
+var at7 = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 var ESCALATION_CHECKS = Object.freeze({
   MACHINE_CANNOT_OPEN: {
     check: "C-116.1",
-    where: at6("escalationOpen", "is-open-member"),
+    where: at7("escalationOpen", "is-open-member"),
     translation: "Opening an escalation is a member's act. An assistant may point out a breach worth pursuing; it may not open one. Sign in as a member. Nothing was written."
   },
   ESCALATION_CARRIES_NO_JUDGMENT: {
     check: "C-116.2",
-    where: at6("refuseJudgment", "is-no-judgment"),
+    where: at7("refuseJudgment", "is-no-judgment"),
     translation: "An escalation records no significance, severity, priority, urgency, rank or score. Whether a breach warrants action, and how urgently, is the members' judgment, made with the consequences in front of them. Send the act without it. Nothing was written."
   },
   NO_SUCH_DETERMINATION: {
     check: "C-116.3",
-    where: at6("escalationOpen", "is-determination-seen"),
+    where: at7("escalationOpen", "is-determination-seen"),
     translation: "No determination answers to that here. One you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   DETERMINATION_SUPERSEDED: {
     check: "C-116.4",
-    where: at6("escalationOpen", "is-determination-live"),
+    where: at7("escalationOpen", "is-determination-live"),
     translation: "That determination has been superseded by a later one. An escalation pursues the determination in force: open it on the later one. Nothing was written."
   },
   NOT_NONCOMPLIANT: {
     check: "C-116.5",
-    where: at6("escalationOpen", "is-determination-noncompliant"),
+    where: at7("escalationOpen", "is-determination-noncompliant"),
     translation: "That determination finds no standard breached, so there is nothing to escalate. Nothing was written."
   },
   NOT_A_PARTICIPANT: {
     check: "C-116.6",
-    where: at6("escalationOpen", "is-open-joined"),
+    where: at7("escalationOpen", "is-open-joined"),
     translation: "An escalation is opened by a member who has joined the project that made the determination. Join the project first. Nothing was written."
   },
   ALREADY_OPEN: {
     check: "C-116.7",
-    where: at6("escalationOpen", "is-one-escalation"),
+    where: at7("escalationOpen", "is-one-escalation"),
     translation: "This determination already has an escalation that has not ended; there is one at a time. Work in that one. Nothing was written."
   },
   NO_SUCH_ESCALATION: {
     check: "C-116.8",
-    where: at6("refuseNoSuchEscalation", "is-escalation-seen"),
+    where: at7("refuseNoSuchEscalation", "is-escalation-seen"),
     translation: "No escalation answers to that here. One in a project you may not see is answered exactly as one that does not exist. Nothing was written."
   },
   MACHINE_CANNOT_ATTACH: {
     check: "C-116.9",
-    where: at6("escalationAttach", "is-attach-member"),
+    where: at7("escalationAttach", "is-attach-member"),
     translation: "Attaching an action to an escalation is a member's act. An assistant may prepare the action; it may not attach it. Nothing was written."
   },
   ESCALATION_ENDED: {
     check: "C-116.10",
-    where: at6("refuseEnded", "is-escalation-ended"),
+    where: at7("refuseEnded", "is-escalation-ended"),
     translation: "This escalation has ended: compliance was restored and the consequences addressed. An ended escalation is never reopened; a new breach is a new determination. Nothing was written."
   },
   NOT_A_BREACH_ACTION: {
     check: "C-116.12",
-    where: at6("escalationAttach", "is-breach-action"),
+    where: at7("escalationAttach", "is-breach-action"),
     translation: "An escalation's acts are actions recorded for the breach: the action states that it is one and rests on the escalation's determination. Record it so, then attach it. Nothing was written."
   },
   STAGE_TAKES_NO_ACTION: {
     check: "C-116.13",
-    where: at6("escalationAttach", "is-attaching-stage"),
+    where: at7("escalationAttach", "is-attaching-stage"),
     translation: "Actions are attached at notification, legal tools and political accountability. The escalation's stage now takes none. Nothing was written."
   },
   ALREADY_ATTACHED: {
     check: "C-116.14",
-    where: at6("escalationAttach", "is-attached-once"),
+    where: at7("escalationAttach", "is-attached-once"),
     translation: "That action is already attached to an escalation. An action belongs to one escalation, at one stage. Nothing was written."
   },
   NOT_ACCOUNTABILITY: {
     check: "C-116.15",
-    where: at6("escalationAttach", "is-accountability-purpose"),
+    where: at7("escalationAttach", "is-accountability-purpose"),
     translation: "An act of political accountability states its purpose: asking an elected office to act on the breach, an oversight request, an audit request, testimony, or legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not among them. Nothing was written."
   },
   NOT_THE_BREACH: {
     check: "C-116.16",
-    where: at6("escalationAttach", "is-pursued-standard"),
+    where: at7("escalationAttach", "is-pursued-standard"),
     translation: "An act of political accountability names the requirement it seeks enforced, from the standards this escalation pursues, and no other. Nothing was written."
   },
   COUNTERPARTY_NOT_ELECTED: {
     check: "C-116.17",
-    where: at6("escalationAttach", "is-elected-office"),
+    where: at7("escalationAttach", "is-elected-office"),
     translation: "An official request asks an elected office to act. The jurisdiction profile marks the office this action is addressed to as not elected. Address it to an elected office. Nothing was written."
   },
   COUNTERPARTY_NOT_OVERSIGHT: {
     check: "C-116.18",
-    where: at6("escalationAttach", "is-oversight-office"),
+    where: at7("escalationAttach", "is-oversight-office"),
     translation: "An oversight or audit request goes to an oversight or audit body. The jurisdiction profile marks the office this action is addressed to as not one. Nothing was written."
   },
   MACHINE_CANNOT_EVALUATE: {
     check: "C-116.19",
-    where: at6("escalationEvaluate", "is-evaluate-member"),
+    where: at7("escalationEvaluate", "is-evaluate-member"),
     translation: "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written."
   },
   NOT_IN_EVALUATION: {
     check: "C-116.20",
-    where: at6("escalationEvaluate", "is-evaluation-stage"),
+    where: at7("escalationEvaluate", "is-evaluation-stage"),
     translation: "A response is evaluated at the response-evaluation stage, and this escalation is at another. Nothing was written."
   },
   READING_UNKNOWN: {
     check: "C-116.21",
-    where: at6("escalationEvaluate", "is-reading-known"),
+    where: at7("escalationEvaluate", "is-reading-known"),
     translation: "A reading of a response is one of: complied, partial, denied, or none (nothing came back in time). Nothing was written."
   },
   NO_SUCH_RESPONSE: {
     check: "C-116.22",
-    where: at6("refuseNoSuchResponse", "is-named-response"),
+    where: at7("refuseNoSuchResponse", "is-named-response"),
     translation: "The evaluation names the reply it reads: a received entry of an action attached to this escalation. Nothing was written."
   },
   RESPONSE_FOR_NONE: {
     check: "C-116.23",
-    where: at6("escalationEvaluate", "is-none-unnamed"),
+    where: at7("escalationEvaluate", "is-none-unnamed"),
     translation: "A reading of none says nothing came back in time, so it names no reply. Nothing was written."
   },
   NO_REASON: {
     check: "C-116.24",
-    where: at6("refuseReason", "is-reason-given"),
+    where: at7("refuseReason", "is-reason-given"),
     translation: "This act needs a reason, in your own words, of up to 2,000 characters. Nothing was written."
   },
   MACHINE_CANNOT_ADVANCE: {
     check: "C-116.25",
-    where: at6("#edgeArgs", "is-edge-member"),
+    where: at7("#edgeArgs", "is-edge-member"),
     translation: "Moving an escalation to its next stage is a member's act. The protocol proposes a stage when its trigger is met; a member advances it. Nothing was written."
   },
   MACHINE_CANNOT_DECLINE: {
     check: "C-116.26",
-    where: at6("#edgeArgs", "is-edge-member"),
+    where: at7("#edgeArgs", "is-edge-member"),
     translation: "Choosing not to move an escalation now is a member's act, with the member's reason. Nothing was written."
   },
   NOT_OPEN: {
     check: "C-116.27",
-    where: at6("#edgeArgs", "is-edge-open"),
+    where: at7("#edgeArgs", "is-edge-open"),
     translation: "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written."
   },
   ILLEGAL_STAGE: {
     check: "C-116.28",
-    where: at6("#edgeArgs", "is-edge-legal"),
+    where: at7("#edgeArgs", "is-edge-legal"),
     translation: "The escalation cannot move from its stage to that one. The stages it can move to are listed. Nothing was written."
   },
   TRIGGER_NOT_MET: {
     check: "C-116.29",
-    where: at6("escalationAdvance", "is-trigger-met"),
+    where: at7("escalationAdvance", "is-trigger-met"),
     translation: "That stage's trigger is not met in the record yet; what is missing is named. When it is met the stage is proposed, and a member advances it. Nothing was written."
   },
   NOT_PROPOSED: {
     check: "C-116.30",
-    where: at6("escalationDecline", "is-edge-proposed"),
+    where: at7("escalationDecline", "is-edge-proposed"),
     translation: "That stage is not proposed, so there is nothing to decline. Nothing was written."
   },
   MACHINE_CANNOT_END: {
     check: "C-116.31",
-    where: at6("escalationEnd", "is-end-member"),
+    where: at7("escalationEnd", "is-end-member"),
     translation: "Ending an escalation is a member's act, and only once compliance is restored and the consequences are addressed. Nothing was written."
   },
   ALREADY_ENDED: {
     check: "C-116.32",
-    where: at6("escalationEnd", "is-end-once"),
+    where: at7("escalationEnd", "is-end-once"),
     translation: "This escalation has already ended. Nothing was written."
   },
   COMPLIANCE_NOT_RESTORED: {
     check: "C-116.33",
-    where: at6("escalationEnd", "is-compliance-restored"),
+    where: at7("escalationEnd", "is-compliance-restored"),
     translation: "An escalation ends only when compliance is restored: for every standard it pursues, a later determination of the same act finds the government compliant. The standards still lacking one are named. Nothing was written."
   },
   CONSEQUENCES_NOT_ADDRESSED: {
     check: "C-116.34",
-    where: at6("escalationEnd", "is-consequences-addressed"),
+    where: at7("escalationEnd", "is-consequences-addressed"),
     translation: "An escalation ends only when the consequences of the breach are addressed, and a recorded consequence is not. Nothing was written."
   },
   CONSEQUENCES_UNDETERMINED: {
     check: "C-116.35",
-    where: at6("escalationEnd", "is-consequences-determined"),
+    where: at7("escalationEnd", "is-consequences-determined"),
     translation: "Whether the consequences of the breach are addressed is undetermined: none is recorded, or one is undetermined or unproven. If the group judges the breach had no consequence, record that as an assessed consequence and address it. Nothing was written."
   },
   MACHINE_CANNOT_SUSPEND: {
     check: "C-116.36",
-    where: at6("escalationSuspend", "is-suspend-member"),
+    where: at7("escalationSuspend", "is-suspend-member"),
     translation: "Suspending an escalation is a member's act, with a reason. Nothing was written."
   },
   ALREADY_SUSPENDED: {
     check: "C-116.37",
-    where: at6("escalationSuspend", "is-suspend-once"),
+    where: at7("escalationSuspend", "is-suspend-once"),
     translation: "This escalation is already suspended. Nothing was written."
   },
   MACHINE_CANNOT_RESUME: {
     check: "C-116.38",
-    where: at6("escalationResume", "is-resume-member"),
+    where: at7("escalationResume", "is-resume-member"),
     translation: "Resuming an escalation is a member's act. Nothing was written."
   },
   NOT_SUSPENDED: {
     check: "C-116.39",
-    where: at6("escalationResume", "is-resume-suspended"),
+    where: at7("escalationResume", "is-resume-suspended"),
     translation: "This escalation is not suspended, so there is nothing to resume. Nothing was written."
   },
   MACHINE_CANNOT_WRITE_ESCALATION: {
     check: "C-116.40",
-    where: at6("check", "is-escalation-member"),
+    where: at7("check", "is-escalation-member"),
     translation: "An escalation's record is written by members' acts only. An automated credential cannot write it. Nothing was written."
   },
   ESCALATION_BY_ACT_ONLY: {
     check: "C-116.41",
-    where: at6("check", "is-escalation-act"),
+    where: at7("check", "is-escalation-act"),
     translation: "An escalation changes only through its own acts (open, attach, evaluate, advance, decline, suspend, resume, end), so its history and what is read from it never disagree. Nothing was written."
   },
   ESCALATION_HISTORY_REWRITTEN: {
     check: "C-116.42",
-    where: at6("check", "is-escalation-append-only"),
+    where: at7("check", "is-escalation-append-only"),
     translation: "An escalation's history is never edited; each act adds to it. Nothing was written."
   },
   UNSPLICEABLE_ESCALATION: {
     check: "C-116.43",
-    where: at6("#append", "is-escalation-spliceable"),
+    where: at7("#append", "is-escalation-spliceable"),
     translation: "The escalation's record cannot be extended in place. Nothing was written."
   },
   PROVIDER_UNAVAILABLE: {
     check: "C-116.44",
-    where: at6("refuseProviderUnavailable", "is-provider-present"),
+    where: at7("refuseProviderUnavailable", "is-provider-present"),
     translation: "Part of the record this answer depends on cannot be read on this instance yet, so nothing is answered in its place. Nothing was written."
   }
 });
@@ -36066,136 +36230,136 @@ __export(checks_exports15, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf
 });
-var at7 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
+var at8 = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 var FILINGS_CHECKS = Object.freeze({
   FILING_NO_PREPARER: {
     check: "C-115.1",
-    where: at7("filingPrepare", "is-filing-prepare"),
+    where: at8("filingPrepare", "is-filing-prepare"),
     translation: "Nobody is named as the one preparing this draft. Every draft names who prepared it."
   },
   ACTION_CLOSED: {
     check: "C-115.3",
-    where: at7("filingPrepare", "is-filing-prepare"),
+    where: at8("filingPrepare", "is-filing-prepare"),
     translation: "The action is resolved or abandoned, so nothing is prepared for it."
   },
   FILING_TIER_UNDETERMINED: {
     check: "C-115.4",
-    where: at7("filingPrepare", "is-filing-prepare"),
+    where: at8("filingPrepare", "is-filing-prepare"),
     translation: "The action's risk tier has not been stated, and an unstated tier is never read as the lowest. A member states the tier first."
   },
   TIER3_COUNSEL_PACKET: {
     check: "C-115.5",
-    where: at7("filingPrepare", "is-filing-prepare"),
+    where: at8("filingPrepare", "is-filing-prepare"),
     translation: "This action's governing tier is 3: no filing is prepared for it. The group names counsel, and a counsel packet is assembled for counsel's review instead."
   },
   KIND_NO_TEMPLATE: {
     check: "C-115.6",
-    where: at7("filingPrepare", "is-filing-prepare"),
+    where: at8("filingPrepare", "is-filing-prepare"),
     translation: "The jurisdiction profile holds no template for this kind of action (or its profiles disagree on one), so there is nothing to pre-fill."
   },
   MACHINE_CANNOT_APPROVE: {
     check: "C-115.7",
-    where: at7("filingApprove", "is-filing-approve"),
+    where: at8("filingApprove", "is-filing-approve"),
     translation: "Only a named member can approve a filing. A machine may prepare the words; it never approves them."
   },
   NO_SUCH_FILING: {
     check: "C-115.8",
-    where: at7("#noFiling", "is-no-such-filing"),
+    where: at8("#noFiling", "is-no-such-filing"),
     translation: "There is no draft by that id that you can read here. A draft of an action you may not see answers exactly as one that does not exist."
   },
   ALREADY_APPROVED: {
     check: "C-115.9",
-    where: at7("filingApprove", "is-filing-approve"),
+    where: at8("filingApprove", "is-filing-approve"),
     translation: "This draft has already been approved, and an approval stands as recorded. Prepare a new draft to approve another text."
   },
   FILING_STALE: {
     check: "C-115.10",
-    where: at7("filingApprove", "is-filing-approve"),
+    where: at8("filingApprove", "is-filing-approve"),
     translation: "Something the draft was prepared from has changed since, as named. Prepare the draft again so it says what the record says now."
   },
   STILL_UNFILLED: {
     check: "C-115.11",
-    where: at7("filingApprove", "is-filing-approve"),
+    where: at8("filingApprove", "is-filing-approve"),
     translation: "The text still holds a blank the record could not fill, marked UNFILLED. A member writes it in before the text can be approved."
   },
   TEXT_UNWRITABLE: {
     check: "C-115.12",
-    where: at7("filingApprove", "is-filing-approve"),
+    where: at8("filingApprove", "is-filing-approve"),
     translation: "The text is empty, too long, or not readable as text, so it cannot be recorded as approved."
   },
   MACHINE_CANNOT_FILE: {
     check: "C-115.13",
-    where: at7("filingRecordSent", "is-filing-sent"),
+    where: at8("filingRecordSent", "is-filing-sent"),
     translation: "Only a named member can record that a filing was sent. The instance sends nothing itself."
   },
   NOT_APPROVED: {
     check: "C-115.14",
-    where: at7("filingRecordSent", "is-filing-sent"),
+    where: at8("filingRecordSent", "is-filing-sent"),
     translation: "A member approves the draft before it is recorded as sent."
   },
   ALREADY_SENT: {
     check: "C-115.15",
-    where: at7("filingRecordSent", "is-filing-sent"),
+    where: at8("filingRecordSent", "is-filing-sent"),
     translation: "This draft is already recorded as sent, and that record stands."
   },
   MACHINE_CANNOT_NAME_COUNSEL: {
     check: "C-115.16",
-    where: at7("counselPacket", "is-counsel-packet"),
+    where: at8("counselPacket", "is-counsel-packet"),
     translation: "Only a named member can name the group's counsel and assemble a packet for them."
   },
   NOT_TIER3: {
     check: "C-115.17",
-    where: at7("counselPacket", "is-counsel-packet"),
+    where: at8("counselPacket", "is-counsel-packet"),
     translation: "A counsel packet is assembled only for an action whose governing tier is 3. A Tier 1 or 2 action is prepared as a filing."
   },
   NO_COUNSEL: {
     check: "C-115.18",
-    where: at7("counselPacket", "is-counsel-packet"),
+    where: at8("counselPacket", "is-counsel-packet"),
     translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional."
   },
   NO_DETERMINATION: {
     check: "C-115.19",
-    where: at7("counselPacket", "is-counsel-packet"),
+    where: at8("counselPacket", "is-counsel-packet"),
     translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel."
   },
   NO_SUCH_PACKET: {
     check: "C-115.20",
-    where: at7("#noPacket", "is-no-such-packet"),
+    where: at8("#noPacket", "is-no-such-packet"),
     translation: "There is no counsel packet by that id and version that you can read here. A packet for an action you may not see answers exactly as one that does not exist."
   },
   MACHINE_CANNOT_EXPORT: {
     check: "C-115.21",
-    where: at7("counselPacketExport", "is-packet-export"),
+    where: at8("counselPacketExport", "is-packet-export"),
     translation: "Only a named member can hand a counsel packet to counsel."
   },
   NO_THEORY: {
     check: "C-115.22",
-    where: at7("theoryPropose", "is-theory-propose"),
+    where: at8("theoryPropose", "is-theory-propose"),
     translation: "State the candidate theory, and any remedy, in words that are not too long."
   },
   THEORY_NO_STANDARDS: {
     check: "C-115.23",
-    where: at7("theoryPropose", "is-theory-propose"),
+    where: at8("theoryPropose", "is-theory-propose"),
     translation: "A candidate theory names the standards it rests on."
   },
   THEORY_STANDARD_UNREADABLE: {
     check: "C-115.24",
-    where: at7("theoryPropose", "is-theory-propose"),
+    where: at8("theoryPropose", "is-theory-propose"),
     translation: "The standards the theory names cannot be read here, so the proposal is not recorded."
   },
   THEORY_WHY_REFUSED: {
     check: "C-115.25",
-    where: at7("theoryPropose", "is-theory-propose"),
+    where: at8("theoryPropose", "is-theory-propose"),
     translation: "Say why the theory is proposed, in at most 1,000 characters."
   },
   DETERMINATION_UNREADABLE: {
     check: "C-115.26",
-    where: at7("availableActions", "is-available-actions"),
+    where: at8("availableActions", "is-available-actions"),
     translation: "No determination can be read here, so the actions available against its offices cannot be listed."
   },
   THEORY_NO_PROPOSER: {
     check: "C-115.27",
-    where: at7("theoryPropose", "is-theory-propose"),
+    where: at8("theoryPropose", "is-theory-propose"),
     translation: "Nobody is named as the one proposing this theory. Every proposal names who made it."
   }
 });
@@ -45071,10 +45235,10 @@ var Content = class {
     return rd ? rd.bundle_id : null;
   }
   /** Every attestation over a capture, bounded (a diligent group can produce hundreds over one scanned book), plus
-   *  what they mean for a target region (`gradeCeiling`). A null chain on either side is not staleness. */
+   *  what they mean for a target region (`gradeCeiling`). A null chain on either side is not staleness. No digest is
+   *  extraction's one `NO_SHA` answer (its R63; N285, K275): the code is minted there, never here. */
   attestationsFor(captureSha, target = null, viewer = null, limit = null) {
-    if (typeof captureSha !== "string" || !captureSha)
-      return { ok: false, reason: "NO_SHA", detail: "attestations are read by a capture sha256" };
+    if (typeof captureSha !== "string" || !captureSha) return noSha("attestations are read by a capture sha256");
     const r = this.extraction.readingOf(captureSha);
     const chain2 = r ? r.chain ?? null : null;
     const live = chain2 == null ? null : JSON.stringify(chain2);
@@ -46336,22 +46500,6 @@ async function knockOp(req, env, store, { json: json5, requiredArgument: require
     received: "Your material is in the group's inbox awaiting member review."
   }, 200);
 }
-
-// src/capture/checks.mjs
-var at8 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
-var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
-var CAPTURE_CHECKS = Object.freeze({
-  NOT_FOUND: Object.freeze({
-    check: "C-118.1",
-    where: at8("evidenceAbsent", "is-evidence-held"),
-    translation: "The record holds no stored copy of a document under this fingerprint."
-  }),
-  NO_SUCH_KNOCK: Object.freeze({
-    check: "C-118.2",
-    where: inIndex("#noSuchKnock", "is-knock-held"),
-    translation: "No knock in the inbox answers to this id. Nothing was changed."
-  })
-});
 
 // src/cdx.mjs
 var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
@@ -110635,133 +110783,6 @@ Mitigation: ${mit}
     }
   }
 };
-
-// src/capture/ops.mjs
-async function linksOp(url, store, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2, viewer }) {
-  const v = `viewer=${encodeURIComponent(viewer ?? "")}` + ["limit", "after"].map((k) => url.searchParams.get(k) ? `&${k}=${encodeURIComponent(url.searchParams.get(k))}` : "").join("");
-  const address = url.searchParams.get("address");
-  const capture = url.searchParams.get("capture");
-  const host = url.searchParams.get("host");
-  let r;
-  if (address) r = await doAnswer2(store.fetch(`http://x/linksto?address=${encodeURIComponent(normalizeAddress(address))}&${v}`));
-  else if (host) r = await doAnswer2(store.fetch(`http://x/navchanges?host=${encodeURIComponent(host)}&${v}`));
-  else if (/^[0-9a-f]{64}$/.test(capture || "")) r = await doAnswer2(store.fetch(`http://x/resolvelinks?capture=${capture}&${v}`));
-  else return json5({
-    ok: false,
-    reason: "NEED_CAPTURE_OR_ADDRESS",
-    detail: "pass capture=<sha256> for a document's outbound links, address=<url> for what points at it, or host=<host> for how that host's navigation changed between captures"
-  }, 400);
-  if (!r.answered) return storeSilent2("links");
-  return json5({ ok: true, ...r.result });
-}
-var EVIDENCE_ABSENT_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "sha256", "store"]);
-function evidenceAbsent(sha, store, extra = null) {
-  let own2 = [];
-  try {
-    if (extra && typeof extra === "object" && !Array.isArray(extra))
-      own2 = Object.entries(extra).filter(([k]) => !EVIDENCE_ABSENT_FIXED.has(k));
-  } catch {
-    own2 = [];
-  }
-  const row2 = CAPTURE_CHECKS.NOT_FOUND;
-  return { status: 404, body: {
-    ok: false,
-    reason: "NOT_FOUND",
-    code: "NOT_FOUND",
-    check: row2.check,
-    translation: row2.translation,
-    sha256: sha ?? null,
-    store: store ?? null,
-    ...Object.fromEntries(own2)
-  } };
-}
-async function captureObjectOp(req, url, env, { json: json5, storageAbsent: storageAbsent2, requiredArgument: requiredArgument2, key, storeName, cls }) {
-  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2("capture", "R2 is not configured on this instance");
-  const sha = (url.searchParams.get("sha256") || "").toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha))
-    return json5({ ok: false, ...requiredArgument2(
-      "capture",
-      "sha256",
-      "<64 lowercase hex>",
-      "capture requires sha256=<64 lowercase hex>"
-    ) }, 400);
-  const k = key(sha);
-  if (req.method === "PUT" || req.method === "POST") {
-    const body = new Uint8Array(await req.arrayBuffer());
-    const d = await crypto.subtle.digest("SHA-256", body);
-    const digest = [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, "0")).join("");
-    if (digest !== sha)
-      return json5({
-        ok: false,
-        reason: "INTEGRITY",
-        detail: "body hash does not match the sha256 parameter",
-        expected: sha,
-        got: digest,
-        store: storeName,
-        tokenClass: cls
-      }, 400);
-    const existing = await env.CAPTURES.head(k);
-    if (existing) return json5({ ok: true, sha256: sha, bytes: existing.size, existed: true, store: storeName, tokenClass: cls });
-    await env.CAPTURES.put(k, body, { sha256: d });
-    return json5({ ok: true, sha256: sha, bytes: body.length, existed: false, store: storeName, tokenClass: cls });
-  }
-  const wantRange = req.headers.get("range");
-  const obj = await env.CAPTURES.get(k, wantRange ? { range: req.headers } : void 0);
-  const dl = (url.searchParams.get("dl") || "").replace(/[^\w.\- ]/g, "").slice(0, 120);
-  if (!obj) {
-    const a = evidenceAbsent(sha, storeName, { tokenClass: cls });
-    return json5(a.body, a.status);
-  }
-  return new Response(obj.body, {
-    status: wantRange ? 206 : 200,
-    headers: {
-      "content-type": "application/octet-stream",
-      "access-control-allow-origin": "*",
-      "x-capture-sha256": sha,
-      ...dl ? { "content-disposition": `attachment; filename="${dl}"` } : {}
-    }
-  });
-}
-async function archiveLookupOp(req, url, store, { json: json5, storeSilent: storeSilent2, doAnswer: doAnswer2 }) {
-  const body = req.method === "POST" ? await req.json().catch(() => null) : null;
-  const address = body?.address || url.searchParams.get("address");
-  const r = await doAnswer2(store.fetch("http://x/archivelookup", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ address })
-  }));
-  if (!r.answered) return storeSilent2("archivelookup");
-  return json5(r.result.body, r.result.status);
-}
-async function acquireOp(req, env, store, { json: json5, storeSilent: storeSilent2, storageAbsent: storageAbsent2, doAnswer: doAnswer2, cls, member, sessMember, storeName }) {
-  if (req.method !== "POST") return { response: json5({ ok: false, error: "acquire is a POST" }, 405) };
-  if (typeof env.CAPTURES?.put !== "function")
-    return { response: storageAbsent2("acquire", "this instance has no evidence storage configured") };
-  const body = await req.json().catch(() => null);
-  const q6 = new URLSearchParams({ cls: cls || "", member: member ? "1" : "0", sessMember: sessMember || "", store: storeName || "bio" });
-  const r = await doAnswer2(store.fetch(`http://x/acquire?${q6}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body || {})
-  }));
-  if (!r.answered) return { response: storeSilent2("acquire") };
-  const { status, body: answer } = r.result;
-  if (!answer || answer.ok !== true || !answer.document) return { response: json5(answer, status) };
-  return { answer };
-}
-function withReading(answer, { reading, textUnits, textUnitsOverBound }) {
-  const { file, locator, retrieved, profile, ...rest } = answer.document;
-  return { ...answer, document: {
-    file,
-    locator,
-    retrieved,
-    profile,
-    reading,
-    ...textUnits ? { text_units: textUnits } : {},
-    ...textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {},
-    ...rest
-  } };
-}
 
 // src/extraction/ops.mjs
 async function ask(store, path, init) {

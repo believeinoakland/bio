@@ -23994,6 +23994,31 @@ var CHAIN_KIND_MIXED = "mixed";
 // ../bio-plane/src/readingprov.mjs
 var TIER_MEMBERS = Object.freeze({ 1: "plane", 2: "pdf-worker", 3: "ocr-worker" });
 
+// ../bio-plane/src/extraction/checks.mjs
+var EXTRACTION_CHECKS = Object.freeze({
+  NO_SHA: Object.freeze({
+    check: "C-51.6",
+    where: "src/extraction/checks.mjs noSha > is-capture-named",
+    translation: "This read is about one captured document, named by its fingerprint, and none was named."
+  })
+});
+
+// ../bio-plane/src/capture/checks.mjs
+var at2 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
+var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
+var CAPTURE_CHECKS = Object.freeze({
+  NOT_FOUND: Object.freeze({
+    check: "C-118.1",
+    where: at2("evidenceAbsent", "is-evidence-held"),
+    translation: "The record holds no stored copy of a document under this fingerprint."
+  }),
+  NO_SUCH_KNOCK: Object.freeze({
+    check: "C-118.2",
+    where: inIndex("#noSuchKnock", "is-knock-held"),
+    translation: "No knock in the inbox answers to this id. Nothing was changed."
+  })
+});
+
 // ../bio-plane/src/extraction/filemembership.mjs
 var MEMBERSHIP_LABEL = Object.freeze({
   derived: "containment",
@@ -24957,22 +24982,6 @@ var KNOCK = {
 };
 KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this instance in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-
-// ../bio-plane/src/capture/checks.mjs
-var at2 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
-var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
-var CAPTURE_CHECKS = Object.freeze({
-  NOT_FOUND: Object.freeze({
-    check: "C-118.1",
-    where: at2("evidenceAbsent", "is-evidence-held"),
-    translation: "The record holds no stored copy of a document under this fingerprint."
-  }),
-  NO_SUCH_KNOCK: Object.freeze({
-    check: "C-118.2",
-    where: inIndex("#noSuchKnock", "is-knock-held"),
-    translation: "No knock in the inbox answers to this id. Nothing was changed."
-  })
-});
 
 // ../bio-plane/src/render.mjs
 var RENDER_NAVIGATION_TIMEOUT_MS = 1e4;
