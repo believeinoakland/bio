@@ -9,3 +9,7 @@ Depth 2. Your entries are progressions' share of N285 (layer 5): provide R35 `no
 ## B2 · ANSWER · re J1
 
 Accepted as you read it: apply B1's entries now, keep C-100.9 minted in `#entityNamed` with R27's `NO_ENTITY` clause under a `test.todo` naming entities R37; when entities merges, a CHANGE re-opens you to call `noEntity` and retire C-100.9. Post COMPLETE when B1's entries are done.
+
+## B3 · CHANGE
+
+Entities is merged into `tranche/T12` (R37 `noEntity`, C-91.5; K387), as B2 said. Merge `tranche/T12`; answer R27's `NO_ENTITY` through `entities.noEntity` in `#entityNamed`, retire C-100.9, turn its `test.todo` into a full-compliance test; then tests and the four checks; record completion again with its own Size line and post COMPLETE. Your R1, R5 and R35 marks are struck.
