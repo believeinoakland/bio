@@ -81,6 +81,65 @@ test("R5: anything else crosses only as the evidence a ratified case's pinned fi
   assert.equal(inq.publish(Q).ok, true, "an inquiry a pinned finding rests on crosses as evidence");
 });
 
+/* N308: publication R38 answers a page of at most 1,000 pins with a cursor; the scope arm reads from the start through
+   each cursor to null, and no further once a resting finding's project admits the act. */
+const restingReads = (w) => w.calls.filter((c) => c[0] === "ratifiedFindingsRestingOn").map((c) => c[2]?.after ?? null);
+const spread = (n, at) => Array.from({ length: n }, (_, i) => at[i] ?? null);
+
+test("R5: over more pins than one page holds, the scope arm reads every page through each cursor to null", () => {
+  const { w, P, P2, publish } = setup();
+  /* 2,500 pins: P2's finding on the first page (alice is no owner of P2), P's on the third (alice owns P) */
+  w.pub.resting.set(DOC, spread(2500, { 10: { case_id: "CASE-2026-0002", finding: "INQ-2026-0002-b", project: P2 },
+                                         2400: { case_id: "CASE-2026-0001", finding: Q, project: P } }));
+  assert.equal(publish(DOC).ok, true, "admitted by the project whose finding rests on the bundle on the last page");
+  const reads = restingReads(w);
+  assert.equal(reads.length, 3);
+  assert.equal(reads[0], null, "from the start");
+  assert.ok(reads[1] && reads[2] && reads[1] !== reads[2], "then through each cursor the previous page answered");
+  /* every pin read and none resting: C-58.3 for evidence, C-58.2 for a finding, as with no pin at all */
+  const none = setup();
+  none.w.pub.resting.set(DOC, spread(2001, {}));
+  none.w.pub.resting.set(Q, spread(1001, {}));
+  assert.equal(none.publish(DOC).check, "C-58.3");
+  assert.equal(none.publish(Q).check, "C-58.2");
+  assert.deepEqual(restingReads(none.w).length, 5, "three pages for the evidence, two for the finding");
+  assert.equal(edits(none.w), 0);
+});
+
+test("R5: the scope arm reads no further once a resting finding's project admits the act", () => {
+  const { w, P, P2, publish } = setup();
+  const list = spread(2500, { 5: { case_id: "CASE-2026-0001", finding: Q, project: P },
+                              1500: { case_id: "CASE-2026-0002", finding: "INQ-2026-0002-b", project: P2 } });
+  w.pub.resting.set(DOC, list);
+  assert.equal(publish(DOC).ok, true, "alice owns P, whose finding rests on the bundle on the first page");
+  assert.deepEqual(restingReads(w), [null], "one page read");
+  const other = setup();
+  other.w.pub.resting.set(DOC, list.map((f) => f && { ...f, project: f.project === P ? other.P : other.P2 }));
+  assert.equal(other.publish(DOC, { attestorMember: "carol", deliveredBy: "founder" }).ok, true, "carol owns P2");
+  assert.equal(restingReads(other.w).length, 2, "P refused on the first page, P2 admitted on the second, no third read");
+});
+
+test("R5: with no resting project admitting, the refusal is the one the whole list gave: the first project in id order, naming its every finding", () => {
+  const paged = setup();
+  const f = [{ case_id: "CASE-2026-0002", finding: "INQ-2026-0002-b", project: paged.P2 },
+             { case_id: "CASE-2026-0001", finding: Q, project: paged.P },
+             { case_id: "CASE-2026-0003", finding: "INQ-2026-0003-c", project: paged.P },
+             { case_id: "CASE-2026-0004", finding: "INQ-2026-0004-d", project: paged.P2 }];
+  const eve = { attestorMember: "eve", deliveredBy: "founder" };
+  paged.w.pub.resting.set(DOC, f);
+  const b = paged.publish(DOC, eve);
+  paged.w.calls.length = 0;
+  paged.w.pub.resting.set(DOC, spread(3000, { 3: f[0], 1200: f[1], 2300: f[2], 2999: f[3] }));
+  const a = paged.publish(DOC, eve);
+  assert.equal(a.reason, "CASE_SIGNER_NOT_AN_OWNER");
+  assert.equal(a.project, [paged.P, paged.P2].sort()[0]);
+  for (const x of f.filter((y) => y.project === a.project))
+    assert.ok(a.detail.includes(`${x.finding} of case ${x.case_id}`), x.finding);
+  assert.deepEqual(a, b, "the same refusal as one page answering every finding");
+  assert.equal(restingReads(paged.w).length, 3);
+  assert.equal(edits(paged.w), 0);
+});
+
 test("R5, R12: the commit hands publication the signed edition, the pins, the signer and the deliverer each from its own source; a retry is idempotent", () => {
   const { w, P, publish, caseOf } = setup();
   caseOf("CASE-2026-0001", P);
