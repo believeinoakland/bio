@@ -2,51 +2,19 @@
    script run in a sandbox with a small document stand-in, driven by the ops it calls. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { webcrypto } from "node:crypto";
 import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
 import { STATES, HEADINGS, deriveInquiryTitle } from "../../../checks/bio-checks.mjs";
 import { RISK_TIERS, riskTierState } from "../../../src/actions/checks.mjs";
 import { COUNTERPARTY_LEVELS } from "../../../../jurisdictions/index.mjs";
+import { pageOver } from "./fixture.mjs";
 
-const SCRIPT = SETUP_HTML.slice(SETUP_HTML.lastIndexOf("<script>") + 8, SETUP_HTML.lastIndexOf("</script>"));
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => { for (let i = 0; i < 20; i++) await tick(); };
 
-/* The page's script over a document stand-in: every `$(selector)` is one element, kept; `answer(op, body)` scripts
-   what each op returns; `calls` records every op the page sent, with its method and body. */
+/* The page's script over the fixture's document stand-in, driven by the ops it calls: `answer(op, body)` scripts what
+   each op returns; `calls` records every op the page sent, with its method and body. */
 function load({ hash = "", answer = () => ({ ok: true }), session = null } = {}) {
-  const els = new Map();
   const calls = [];
-  let replaced = 0;
-  const mk = (sel) => ({
-    sel, listeners: {}, textContent: "", innerHTML: "", value: "", style: {}, hidden: false, dataset: {}, checked: false,
-    disabled: false, options: [],
-    classList: { add() {}, remove() {}, contains() { return false; } },
-    addEventListener(t, f) { (this.listeners[t] ||= []).push(f); },
-    async fire(t = "click") { for (const f of this.listeners[t] || []) await f(); },
-  });
-  const el = (sel) => { if (!els.has(sel)) els.set(sel, mk(sel)); return els.get(sel); };
-  el("#n-type").options = ["information", "inquiry", "project", "action"].map((value) => ({ value, hidden: false }));
-  el("#n-type").value = "information";
-  const picks = new Map();
-  const document = {
-    querySelector(s) {
-      if (s === "input[name=n-risk]:checked") return [...els.values()].find((e) => /^#n-risk-/.test(e.sel) && e.checked) || null;
-      return el(s);
-    },
-    querySelectorAll(s) {
-      if (s === "#pf-choices .pf-pick")
-        return [...el("#pf-choices").innerHTML.matchAll(/class="pf-pick" value="([^"]*)"/g)].map((m) => {
-          if (!picks.has(m[1])) picks.set(m[1], { ...mk(`pick:${m[1]}`), value: m[1] });
-          return picks.get(m[1]);
-        });
-      /* a list of selectors: each bare id in it is its element */
-      return s.split(",").map((x) => x.trim()).filter((x) => /^#[\w-]+$/.test(x)).map((x) => el(x));
-    },
-    getElementById: (id) => el("#" + id), addEventListener() {}, createElement: () => mk("new"),
-    body: { appendChild() {}, removeChild() {} },
-  };
-  const store = new Map(session ? [["bio-session", JSON.stringify(session)]] : []);
   const fetch = async (url, init) => {
     const u = new URL(url, "https://copy.example");
     const op = u.searchParams.get("op") || u.pathname.slice(1);
@@ -55,19 +23,7 @@ function load({ hash = "", answer = () => ({ ok: true }), session = null } = {})
     const out = await answer(op, body, u);
     return { ok: true, status: 200, json: async () => out };
   };
-  const sandbox = {
-    document, fetch, URLSearchParams, console, JSON, Date, RegExp, String, Number, Object, Array, Set, Map, Promise,
-    crypto: webcrypto, setTimeout, TextEncoder, encodeURIComponent, decodeURIComponent,
-    location: { hash, pathname: "/", origin: "https://copy.example" },
-    history: { replaceState() { replaced += 1; sandbox.location.hash = ""; } },
-    sessionStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) },
-    navigator: { clipboard: { writeText: async () => {} } },
-  };
-  sandbox.window = sandbox;
-  const ui = new Function(...Object.keys(sandbox), SCRIPT + `
-;return { mdFor, historyOrder, FIRST_STATE, HEADINGS, RISK_TIERS, riskTierState, SETTABLE_TIERS, deriveInquiryTitle,
-          profilesWarning, openProfiles, panel, chosenRiskTier, openBundle };`)(...Object.values(sandbox));
-  return { ui, el, calls, sandbox, replaced: () => replaced, picks };
+  return { ...pageOver({ html: SETUP_HTML, hash, session, fetch }), calls };
 }
 
 test("R20 setupPage returns the page with one group line from one read: recorded (name · slug · group instance, domain with its date only when dated), none, unread; every value escaped", () => {
