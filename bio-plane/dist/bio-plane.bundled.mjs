@@ -71686,7 +71686,21 @@ var EDITIONS_OF_MAX = 500;
 var CITED_PARTS_MAX = 1e3;
 var RESTING_CAPTURES_MAX = 1e3;
 var RATIFIED_CASES_MAX = 1e3;
+var RESTING_FINDINGS_PER_CAPTURE = 200;
+var RESTING_FINDINGS_PER_PAGE = 1e4;
+var STAGE_QUESTIONS_MAX = 2e3;
+var WORK_PRODUCTS_MAX = 200;
+var PROJECT_STAGES = Object.freeze(["forming", "investigating", "matured", "closed"]);
+var CLOSED_REASONS = Object.freeze(["resolved", "superseded", "abandoned"]);
+var READINESS_RUNGS = Object.freeze(["draft", "internally_checked", "externally_compliant", "distributed"]);
+var RESTING_PINS_MAX = 1e3;
 var pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
+function pinCursor(after) {
+  const s = typeof after === "string" ? after : "";
+  const i = s.indexOf("#"), j = s.lastIndexOf("#");
+  if (i < 0 || j === i) return [s, "\u{10FFFF}", ""];
+  return [s.slice(0, i), s.slice(i + 1, j), s.slice(j + 1)];
+}
 var CITATION_NAMES_CAPTURE2 = Object.freeze(["pinned", "only_capture"]);
 var safeJson10 = (s) => {
   try {
@@ -72511,6 +72525,9 @@ var Publication = class {
    *  findings and each one's owning projects: `{captures: [{capture_sha, findings: [{bundle_id, projects}]}], limit,
    *  truncated, cursor}`. `limit` defaults to RESTING_CAPTURES_MAX and is clamped to 1–RESTING_CAPTURES_MAX; `cursor`
    *  is the last capture answered when more follow, else null, so `monitoring` R33 follows it to the end (as intent R7).
+   *  N315 (K380): each capture answers at most RESTING_FINDINGS_PER_CAPTURE of its findings, in finding id order, and
+   *  `findings_truncated`, true when more rest on it; a page answers at most RESTING_FINDINGS_PER_PAGE findings in all,
+   *  ending early (its `cursor` the last capture answered whole) rather than exceed it.
    *  Read as the plane: viewer-free, and it writes nothing.
    *  THE SOURCE ROWS, CONFIRMED (the R42 note): what a finding RESTS ON is its `serve`-class edge set (D-431,
    *  `publishedGraphEdges`), which the published graph holds as `published_edges` rows of disclosure `serve`, and, for
@@ -72532,18 +72549,40 @@ var Publication = class {
     const held = `FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
         JOIN rests x ON x.target=r.bundle_id JOIN ratified f ON f.finding=x.finding`;
     const page = this.#rows(
-      `${rests} SELECT DISTINCT r.capture_sha ${held} WHERE r.capture_sha > ? ORDER BY r.capture_sha LIMIT ?`,
+      `${rests}, caps(capture_sha) AS (
+          SELECT DISTINCT r.capture_sha ${held} WHERE r.capture_sha > ? ORDER BY r.capture_sha LIMIT ?)
+       SELECT k.capture_sha, (SELECT COUNT(*) FROM (SELECT DISTINCT f.finding ${held}
+                                WHERE r.capture_sha=k.capture_sha LIMIT ?)) AS n
+         FROM caps k ORDER BY k.capture_sha`,
       typeof after === "string" ? after : "",
-      cap + 1
+      cap + 1,
+      RESTING_FINDINGS_PER_CAPTURE + 1
     );
-    const truncated3 = page.length > cap;
-    const shas = page.slice(0, cap).map((r) => r.capture_sha);
-    const by = new Map(shas.map((c) => [c, /* @__PURE__ */ new Map()]));
-    if (shas.length)
+    let truncated3 = page.length > cap;
+    if (truncated3) page.length = cap;
+    const answered = [];
+    let total = 0;
+    for (const c of page) {
+      const n = Math.min(Number(c.n) || 0, RESTING_FINDINGS_PER_CAPTURE);
+      if (total + n > RESTING_FINDINGS_PER_PAGE) {
+        truncated3 = true;
+        break;
+      }
+      total += n;
+      answered.push({ capture_sha: c.capture_sha, cut: Number(c.n) > RESTING_FINDINGS_PER_CAPTURE });
+    }
+    const by = new Map(answered.map((c) => [c.capture_sha, /* @__PURE__ */ new Map()]));
+    if (answered.length)
       for (const r of this.#rows(
-        `${rests} SELECT DISTINCT r.capture_sha, f.finding, f.project ${held}
-          WHERE r.capture_sha IN (SELECT value FROM json_each(?)) ORDER BY r.capture_sha, f.finding, f.project`,
-        JSON.stringify(shas)
+        `${rests}, picked(capture_sha, finding) AS (
+            SELECT capture_sha, finding FROM (
+              SELECT DISTINCT r.capture_sha, f.finding, DENSE_RANK() OVER (PARTITION BY r.capture_sha ORDER BY f.finding) AS nth
+                ${held} WHERE r.capture_sha IN (SELECT value FROM json_each(?))) WHERE nth <= ?)
+         SELECT DISTINCT r.capture_sha, f.finding, f.project ${held}
+           JOIN picked q ON q.capture_sha=r.capture_sha AND q.finding=f.finding
+          ORDER BY r.capture_sha, f.finding, f.project`,
+        JSON.stringify(answered.map((c) => c.capture_sha)),
+        RESTING_FINDINGS_PER_CAPTURE
       )) {
         const fs = by.get(r.capture_sha);
         if (!fs) continue;
@@ -72552,13 +72591,184 @@ var Publication = class {
       }
     return {
       ok: true,
-      captures: shas.map((c) => ({
-        capture_sha: c,
-        findings: [...by.get(c)].map(([bundle_id, projects]) => ({ bundle_id, projects }))
+      captures: answered.map((c) => ({
+        capture_sha: c.capture_sha,
+        findings: [...by.get(c.capture_sha)].map(([bundle_id, projects]) => ({ bundle_id, projects })),
+        findings_truncated: c.cut
       })),
       limit: cap,
       truncated: truncated3,
-      cursor: truncated3 ? shas[shas.length - 1] : null
+      cursor: truncated3 && answered.length ? answered[answered.length - 1].capture_sha : null
+    };
+  }
+  /* ---------------------------------------------------------------- R44–R47: a project's stage */
+  /** R44–R47 (N300; K356, K362, K364, K379): a project's stage and its work products' readiness, derived afresh at every
+   *  read from the record and never stored (R47): the project's own document (rule 1's recorded close), the questions
+   *  it holds (basis-versions R41 `projectQuestions`, whose stance is R22's `conclusionOf` reading) and the cases it
+   *  owns and has published. Fenced by membership R44's sight: `NO_ID` for no project; absent, not a project and no
+   *  sight are one answer, membership's `noSuchProject` (R29); existence only is membership's C-70.1 through
+   *  `existenceAct`; only FULL sight is answered. Writes nothing; never throws (a part it cannot read is stated
+   *  undetermined, R28). */
+  projectStage({ project = null, viewer = null } = {}) {
+    const pid = str5(project);
+    if (!pid) return { ok: false, reason: "NO_ID", detail: "projectStage names a project" };
+    let row2 = null;
+    try {
+      row2 = this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid);
+    } catch {
+      row2 = null;
+    }
+    if (!row2 || row2.object_type !== "project") return noSuchProject(pid);
+    let sight = "none";
+    try {
+      sight = this.membership.sight(pid, viewer);
+    } catch {
+      sight = "none";
+    }
+    if (sight === "existence") {
+      let seen = null;
+      try {
+        seen = this.membership.existenceAct(pid, viewer);
+      } catch {
+        seen = null;
+      }
+      return seen || noSuchProject(pid);
+    }
+    if (sight !== "full") return noSuchProject(pid);
+    const work = this.#workProducts(pid);
+    const out = {
+      ok: true,
+      project: pid,
+      stage: null,
+      closed_reason: null,
+      questions: { read: 0, with_legs: 0, concluded: 0, truncated: false },
+      published_editions: work.published_editions,
+      work_products: work.items,
+      work_products_limit: WORK_PRODUCTS_MAX,
+      work_products_truncated: work.truncated,
+      readiness: work.readiness,
+      basis: null
+    };
+    const text3 = this.#fileText(pid, "bundle.md");
+    if (!text3) return {
+      ...out,
+      stage: "undetermined",
+      detail: "the project's own document could not be read, so whether its owner closed it is undetermined"
+    };
+    const fm = parseFrontmatter(text3.content).data || {};
+    if (fm.current_state === "closed" && CLOSED_REASONS.includes(fm.closed_reason))
+      return {
+        ...out,
+        stage: "closed",
+        closed_reason: fm.closed_reason,
+        basis: { rule: "closed", question: null, case: null, edition: null }
+      };
+    let after = null, concluded = null, legged = null, more = false;
+    try {
+      while (out.questions.read < STAGE_QUESTIONS_MAX) {
+        const page = this.basisVersions.projectQuestions({
+          project: pid,
+          after,
+          limit: Math.min(PROJECT_QUESTIONS_MAX, STAGE_QUESTIONS_MAX - out.questions.read)
+        });
+        const items = page && Array.isArray(page.items) ? page.items : [];
+        for (const q6 of items) {
+          out.questions.read++;
+          if (q6.legs) {
+            out.questions.with_legs++;
+            legged ??= q6.inquiry;
+          }
+          if (q6.stance === "concluded") {
+            out.questions.concluded++;
+            concluded ??= q6.inquiry;
+          }
+        }
+        more = !!(page && page.cursor) && items.length > 0;
+        if (concluded || !more) break;
+        after = page.cursor;
+      }
+    } catch {
+      return {
+        ...out,
+        stage: "undetermined",
+        at_least: legged ? "investigating" : "forming",
+        questions: { ...out.questions, truncated: true },
+        detail: "the questions this project holds could not all be read, so its stage is undetermined"
+      };
+    }
+    if (concluded)
+      return { ...out, stage: "matured", basis: { rule: "matured", question: concluded, case: null, edition: null } };
+    if (work.first_ratified)
+      return { ...out, stage: "matured", basis: { rule: "matured", question: null, ...work.first_ratified } };
+    if (more) {
+      return {
+        ...out,
+        stage: "undetermined",
+        at_least: legged ? "investigating" : "forming",
+        questions: { ...out.questions, truncated: true },
+        detail: `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of those read is concluded and it has published no case, so whether it has matured is undetermined; it is at least as far as stated`
+      };
+    }
+    if (legged)
+      return { ...out, stage: "investigating", basis: { rule: "investigating", question: legged, case: null, edition: null } };
+    return { ...out, stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
+  }
+  /* R46: the project's work products. A work product is a case the project owns: its `cases` row (written at the first
+     edition's signature), or, for a case not yet signed, the `case_project` its unsigned document names (R21; so a case
+     prepared and never signed is the project's draft). Each rung is stated by its own condition. */
+  #workProducts(pid) {
+    const ids = this.#rows(
+      `SELECT case_id FROM (
+         SELECT case_id FROM cases WHERE project_id=?
+         UNION SELECT d.case_id FROM case_documents d
+          WHERE d.sig_armored IS NULL AND instr(d.text, ?) > 0
+            AND NOT EXISTS (SELECT 1 FROM cases k WHERE k.case_id=d.case_id))
+        ORDER BY case_id LIMIT ?`,
+      pid,
+      `
+case_project: ${pid}
+`,
+      WORK_PRODUCTS_MAX + 1
+    ).map((r) => r.case_id);
+    const truncated3 = ids.length > WORK_PRODUCTS_MAX;
+    if (truncated3) ids.length = WORK_PRODUCTS_MAX;
+    const items = [];
+    for (const id of ids) {
+      const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
+      if (!owned) {
+        const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND sig_armored IS NULL AND instr(text, ?) > 0
+                              ORDER BY edition LIMIT 1`, id, `
+case_project: ${pid}
+`);
+        if (!d || String((parseFrontmatter(d.text).data || {}).case_project ?? "").trim() !== pid) continue;
+      }
+      const drafted = !!this.#one(`SELECT 1 AS d FROM case_documents WHERE case_id=? AND sig_armored IS NULL LIMIT 1`, id);
+      const ed = this.#one(`SELECT COUNT(*) AS n, MAX(edition) AS latest FROM published_cases
+                             WHERE case_id=? AND ratified_at IS NOT NULL`, id) || {};
+      const editions = Number(ed.n) || 0;
+      const notEvaluated = { met: false, why: "no evaluation is recorded" };
+      const rungs = {
+        draft: drafted ? { met: true } : { met: false, why: "no unsigned case document of this case is stored" },
+        internally_checked: notEvaluated,
+        externally_compliant: notEvaluated,
+        distributed: editions ? { met: true } : { met: false, why: "no edition of this case is ratified" }
+      };
+      const readiness = [...READINESS_RUNGS].reverse().find((r) => rungs[r].met) ?? "none";
+      items.push({ case: id, readiness, editions, latest_edition: editions ? Number(ed.latest) : null, rungs });
+    }
+    const top2 = items.reduce((m, w) => Math.max(m, READINESS_RUNGS.indexOf(w.readiness)), -1);
+    const all = this.#one(`SELECT COUNT(*) AS n FROM published_cases c JOIN cases k ON k.case_id=c.case_id
+                            WHERE k.project_id=? AND c.ratified_at IS NOT NULL`, pid) || {};
+    const first = this.#one(`SELECT c.case_id, MIN(c.edition) AS edition FROM published_cases c
+                               JOIN cases k ON k.case_id=c.case_id
+                              WHERE k.project_id=? AND c.ratified_at IS NOT NULL
+                              GROUP BY c.case_id ORDER BY c.case_id LIMIT 1`, pid);
+    return {
+      items,
+      truncated: truncated3,
+      published_editions: Number(all.n) || 0,
+      readiness: !items.length ? "absent" : top2 < 0 ? "none" : READINESS_RUNGS[top2],
+      first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null
     };
   }
   /* ---------------------------------------------------------------- moved from the store */
@@ -74546,27 +74756,44 @@ var Publication = class {
      table is a projection of today's document and would be a second edge set). The bytes are read from the
      live file when it is still at the pin and from `history` when the finding has moved since. PINNED BYTES
      THIS STORE CANNOT READ rest on nothing here: the question is then undeterminable, and admitting a
-     bundle on an undetermined answer is the direction this defect runs in. The rows are a roster, bounded
-     by the cases ever ratified, and never a walk of the corpus. */
-  ratifiedFindingsRestingOn(bundleId) {
+     bundle on an undetermined answer is the direction this defect runs in.
+     R38 (N308, K380): PAGED BY THE PIN. One call reads at most `limit` pins (a ratified case edition's member with a
+     pinned sha, other than `id`; the editions of one case pinning one sha are one pin), in case id, member id and
+     pinned sha order after `after`, and `cursor` is the last pin read (`<case>#<member>#<sha>`) when more follow, else
+     null. A page may answer no finding while `cursor` is set; a caller follows it to null, so nothing is decided on
+     part of the pins (a truncated list would change who may sign, K380). */
+  ratifiedFindingsRestingOn(bundleId, { after = null, limit = null } = {}) {
+    const id = String(bundleId ?? "");
+    const cap = pageOf(limit, RESTING_PINS_MAX);
+    const [aCase, aMember, aSha] = pinCursor(after);
     const pins = this.#rows(
       `SELECT DISTINCT m.case_id, m.bundle_id, m.version_sha, cs.project_id
          FROM published_case_members m
          JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
          LEFT JOIN cases cs ON cs.case_id=m.case_id
         WHERE m.version_sha IS NOT NULL AND m.bundle_id<>?
-        ORDER BY m.case_id, m.bundle_id`,
-      bundleId
+          AND (m.case_id>? OR (m.case_id=? AND (m.bundle_id>? OR (m.bundle_id=? AND m.version_sha>?))))
+        ORDER BY m.case_id, m.bundle_id, m.version_sha LIMIT ?`,
+      id,
+      aCase,
+      aCase,
+      aMember,
+      aMember,
+      aSha,
+      cap + 1
     );
-    const out = [];
+    const more = pins.length > cap;
+    if (more) pins.length = cap;
+    const findings = [];
     for (const p of pins) {
-      const at15 = { content: this.record.textAtSha(p.bundle_id, p.version_sha) };
-      if (!at15 || typeof at15.content !== "string") continue;
-      const fm = parseFrontmatter(at15.content).data || {};
-      if (publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === bundleId))
-        out.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
+      const text3 = this.record.textAtSha(p.bundle_id, p.version_sha);
+      if (typeof text3 !== "string") continue;
+      const fm = parseFrontmatter(text3).data || {};
+      if (publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === id))
+        findings.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
     }
-    return out;
+    const last = pins[pins.length - 1];
+    return { findings, limit: cap, cursor: more ? `${last.case_id}#${last.bundle_id}#${last.version_sha}` : null };
   }
   pinnedCaseEditionsOf(bundleId, bundleSha) {
     const rels = this.#rows(
@@ -74804,7 +75031,9 @@ function publicationOps(p, url, body) {
     verify: () => p.verifySha((q6("sha256") || "").toLowerCase()),
     publishedlist: () => p.publishedList(),
     /* D-734: internal, the signed text behind a published case-document hash; the control plane re-hashes it. */
-    publishedcasedoctext: () => p.publishedCaseDocumentText((q6("sha256") || "").toLowerCase())
+    publishedcasedoctext: () => p.publishedCaseDocumentText((q6("sha256") || "").toLowerCase()),
+    /* R44 (N300): the viewer the control plane stamps; the route is legacy-index's (N321). */
+    projectstage: () => p.projectStage({ project: q6("project"), viewer: q6("viewer") })
   };
 }
 
@@ -75643,6 +75872,14 @@ var REVIEW_COPY_CHECKS = Object.freeze({
     check: "C-87.11",
     where: at13("comment", "is-review-comment-text"),
     translation: "A comment has to say something, and at most 4000 characters of it. Nothing was recorded. What you have written is still yours to send once it is within that length."
+  },
+  /* N306 (K392, R27): the draft act's new draft and the grant act each mint an opaque id, and when no free one can be
+     drawn both answer this ONE row, minted by one helper (as `notReviewOwner` is), its detail naming which id it could
+     not mint. Nothing is written. Next.md N322 retires it into the one row beside record-core's `mintOpaqueId`. */
+  MINT_EXHAUSTED: {
+    check: "C-87.12",
+    where: at13("mintExhausted", "is-review-mint-exhausted"),
+    translation: "The plane could not find a free identifier for this, so nothing was saved and nothing was issued. Identifiers are drawn at random so that none of them says how many others exist, and every one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs this instance."
   }
 });
 
@@ -89287,8 +89524,29 @@ var Ratification = class _Ratification {
         if (refused) return refused;
       }
       if (!pinnedBy.length) {
-        const resting = this.publication.ratifiedFindingsRestingOn(bundleId);
-        if (!resting.length) {
+        const byProject = /* @__PURE__ */ new Map();
+        let admitted = false;
+        for (let after = null; ; ) {
+          const page = this.publication.ratifiedFindingsRestingOn(bundleId, { after });
+          for (const r of page.findings) {
+            if (!byProject.has(r.project)) {
+              byProject.set(r.project, []);
+              admitted = !this.membership.caseAuthority({
+                project: r.project,
+                deliveredBy,
+                signer: attestorMember,
+                act: "ratify",
+                subject: bundleId,
+                extra: { bundleId }
+              });
+            }
+            byProject.get(r.project).push(`${r.finding} of case ${r.case_id}`);
+            if (admitted) break;
+          }
+          if (admitted || page.cursor === null || page.cursor === void 0) break;
+          after = page.cursor;
+        }
+        if (!byProject.size) {
           const head = this.record.head(bundleId);
           const refusal18 = (code, detail) => {
             const row2 = RATIFY_SCOPE_CHECKS[code];
@@ -89304,14 +89562,9 @@ var Ratification = class _Ratification {
             `no finding of a RATIFIED case rests on ${bundleId}, and anything that is not a finding crosses only as the evidence a ratified case's finding rests on (BIO_Publication_v0_1.md \xA73 rule 2). Cite it from a finding, publish that finding's case and have an owner sign the case document (op=caseratify); then an owner of that project may sign this. Nothing was published.`
           );
         }
-        const byProject = /* @__PURE__ */ new Map();
-        for (const r of resting) {
-          if (!byProject.has(r.project)) byProject.set(r.project, []);
-          byProject.get(r.project).push(`${r.finding} of case ${r.case_id}`);
-        }
-        let refused = null;
-        for (const pid of [...byProject.keys()].sort()) {
-          const denied = this.membership.caseAuthority({
+        if (!admitted) {
+          const pid = [...byProject.keys()].sort()[0];
+          return this.membership.caseAuthority({
             project: pid,
             deliveredBy,
             signer: attestorMember,
@@ -89319,13 +89572,7 @@ var Ratification = class _Ratification {
             subject: `${bundleId}, the evidence ${byProject.get(pid).join(", ")} rests on,`,
             extra: { bundleId }
           });
-          if (!denied) {
-            refused = null;
-            break;
-          }
-          refused = refused || denied;
         }
-        if (refused) return refused;
       }
       return this.publication.commitEdition({
         bundleId,
@@ -103402,6 +103649,12 @@ function notReviewOwner(act) {
     `${AUTHORITY[act]} A project, draft or grant you hold no such authority over is answered exactly as one that does not exist.`
   );
 }
+function mintExhausted(what) {
+  return refusal17(
+    "MINT_EXHAUSTED",
+    `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.`
+  );
+}
 function statedEdition(ident, newCase) {
   return ident.caseId || newCase ? ident.edition : null;
 }
@@ -103670,11 +103923,7 @@ var Review = class {
     } else {
       this.seedLedger();
       id = this.record.mintOpaqueId("DRAFT", when.slice(0, 4), "", (d) => !!(this.#one(`SELECT 1 FROM case_drafts WHERE draft_id=?`, d) || this.#one(`SELECT 1 FROM review_grants WHERE draft_id=? LIMIT 1`, d)));
-      if (!id) return {
-        ok: false,
-        reason: "MINT_EXHAUSTED",
-        detail: "the plane could not find a free draft id; nothing was written"
-      };
+      if (!id) return mintExhausted("draft");
       this.sql.exec(
         `INSERT INTO case_drafts (draft_id,project_id,case_id,params,created_by,created_at,
                      updated_by,updated_at,statement_by) VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -103726,11 +103975,7 @@ var Review = class {
       "",
       (g) => !!this.#one(`SELECT 1 FROM review_grants WHERE grant_id=?`, g)
     );
-    if (!id) return {
-      ok: false,
-      reason: "MINT_EXHAUSTED",
-      detail: "the plane could not find a free grant id; nothing was issued"
-    };
+    if (!id) return mintExhausted("grant");
     this.sql.exec(`INSERT INTO review_grants (grant_id,draft_id,case_id,edition,recipient,secret_sha,issued_by,issued_at)
                    VALUES (?,?,?,?,?,?,?,?)`, id, d.draft_id, ident.caseId, ident.edition, to, s, who2, when);
     const newCase = !!JSON.parse(d.params).newCase;
