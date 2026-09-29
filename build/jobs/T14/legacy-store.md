@@ -34,3 +34,7 @@
 - `ownership legacy-store tranche/T14`: 2 files changed; 0 failures.
 
 Size (session_01Dx3FYgfzfhAU44B9xY9RCc): test runs 20, module lines 3,226
+
+## J1 · COMPLETE
+
+N331's line, N342's share and N343 applied in store.mjs: filingsOf built without producingGroup; #counts ends with ...recordOf(this.ctx).counts(hid) after its literal keys (queue's four reads and the TASK row stay until T15); the boot calls biasOf(this.ctx).migrate() and ADDITIVE_COLUMNS drops bias_debts' settled_kind. Proven by a scratch probe on the plane: op=stats (admin, member, direct) and purge (one, all) byte-identical before and after in keys, order and figures; a probe registration of tasks keeps its place; an older store gains settled_kind at boot, and with bias's migrate() disabled it does not. test/m/ whole: 2799 tests, 2784 pass, 0 fail, 15 todo. Old suites: purge 14/0, stats-disclosure 36/0, mint-ledger 26/0, migrate 49/0, rec207 37/0, d86 20/0; project-sight 254/1 (same on the tranche); bias 135/3 (136/2 on the tranche; the third is its store.mjs size floor, now 212,573, legacy-tests' re-pin). Checks: format 0, architecture 3 (all before this job), coverage 0 of 0, ownership 0. Reported: the plane bundle is stale; no check rows touched; no UI or affordances hits beyond two comments on instance-setup's producingGroup. Record: build/jobs/T14/legacy-store.md on job/T14/legacy-store.
