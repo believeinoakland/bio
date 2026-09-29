@@ -8,21 +8,27 @@
  * row). `NO_BASIS` (C-33.40) and `NO_CITATION` (C-33.41) are shared act rows and stay in the catalogue, where the other
  * acts reach them; this module answers them from there (`actRefusal`).
  *
- * ONE CODE, ONE SITE (K231, N118, N242, T10). Each row's `where` names one function and one marked region that wraps
- * the whole refusal; a code this module answers from several acts is minted in one private helper of `Progressions`,
- * which each act calls. What left C-100 in T10, its ids retired and never reused: `NO_SUCH_ENTITY` (C-100.12) is
- * entities' one answer (its R36, `noSuchEntity`), `LISTENER_DECLARED` (C-100.23) membership's (its R81,
- * `listenerRefusal`), and `NO_KEY` (C-100.1), which many modules mint for one condition, is answered as the catalogue's
- * generic code under its REC-64 rule (R27; K163, K329), with no row (`GENERIC_CODES`, `generic`). N118's other five
- * (`NO_LABEL`, `NOT_FOUND`, `NO_ENTITY`, `NO_SHA`, `NOT_A_DISPOSITION`) keep their rows while the member surface receives
- * them, so no member meets one untranslated (K329); whether each is renamed or provided as one helper is N285. */
+ * ONE CODE, ONE SITE (K231, N118, N242, T10; K275, N285, T12). Each row's `where` names one function and one marked
+ * region that wraps the whole refusal; a code this module answers from several acts is minted in one private helper of
+ * `Progressions`, which each act calls. What left C-100, its ids retired and never reused: `NO_SUCH_ENTITY` (C-100.12)
+ * is entities' one answer (its R36, `noSuchEntity`), `LISTENER_DECLARED` (C-100.23) membership's (its R81,
+ * `listenerRefusal`), `NO_SHA` (C-100.19) extraction's (its R63, `noSha`, C-51.6, which carries C-100.19's translation),
+ * and `NO_KEY` (C-100.1), which many modules mint for one condition, is answered as the catalogue's generic code under
+ * its REC-64 rule (R27; K163, K329), with no row (`GENERIC_CODES`, `generic`). N285 renamed this module's own
+ * `NO_LABEL` and `NOT_FOUND` to `PROGRESSION_NO_LABEL` (C-100.2) and `PROGRESSION_VERSION_NOT_HELD` (C-100.8), each
+ * keeping its translation; `NOT_A_DISPOSITION` (C-100.20) is one condition several modules answer, so its one site is
+ * `notADisposition` below (R35), which `inquiry` and `legacy-store` call too. */
 
 import { ACT_SHAPE_CHECKS } from "../../checks/bio-checks.mjs";
 
 const at = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
 
+/** The two decisions a member may record about a derived question (D-79), the one list (R35). Adopting one authors a
+ *  focus instead. */
+export const DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
+
 export const PROGRESSION_CHECKS = Object.freeze({
-  NO_LABEL: {
+  PROGRESSION_NO_LABEL: {
     check: 'C-100.2', where: at("defineProgression", "is-progression-labelled"),
     translation: 'A declared flow carries a name a person can read, and this one has none. Give it a name. '
       + 'Nothing was written.',
@@ -60,7 +66,7 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'order cannot be worked out. Name a step that exists, or leave the ordering off and let it '
       + 'stand on its own.',
   },
-  NOT_FOUND: {
+  PROGRESSION_VERSION_NOT_HELD: {
     check: 'C-100.8', where: at("readProgression", "is-version-held"),
     translation: 'The record holds no such version of this flow. The versions it does hold are named '
       + 'beside this message, and each reads back in full.',
@@ -112,15 +118,10 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'an excused step with no reason leaves nobody able to say why later. Give the reason. Nothing was '
       + 'written.',
   },
-  NO_SHA: {
-    check: 'C-100.19', where: at("captureProgressions", "is-capture-named"),
-    translation: 'This read is about one captured document, named by its fingerprint, and none was named.',
-  },
   NOT_A_DISPOSITION: {
-    check: 'C-100.20', where: at("disposeProposal", "is-disposition-word"),
-    translation: 'One of the record\'s questions is either deferred (set aside for now) or dismissed '
-      + '(declined). Taking it up is a different act, which writes a new focus. Choose deferred or '
-      + 'dismissed. Nothing was written.',
+    check: 'C-100.20', where: 'src/progressions/checks.mjs notADisposition > is-disposition-word',
+    translation: 'Setting something down means deferring it (set aside for now) or dismissing it (declined); taking '
+      + 'it up is a different act. Choose deferred or dismissed. Nothing was written.',
   },
   BAD_REASON: {
     check: 'C-100.21', where: at("disposeProposal", "is-reason-bounded"),
@@ -169,4 +170,24 @@ export function refusal(code, detail, extra = {}) {
 export function generic(code, detail, extra = {}) {
   if (!GENERIC_CODES.includes(code)) throw new Error(`progressions: ${code} is not a generic code; it answers with its row`);
   return { ok: false, reason: code, code, ...extra, detail };
+}
+
+/* R35: the fixed sentence `notADisposition` answers with, true at every site that calls it. */
+const NOT_A_DISPOSITION_DETAIL = "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up "
+  + "is a different act and is not a disposition";
+
+/** R35 (N285, K275): THE one answer to one condition, a disposition word other than `deferred` or `dismissed`
+ *  (`DISPOSITIONS`, compared exactly: a caller trims by its own rule first). `null` for either word; else
+ *  `{ok: false, reason: "NOT_A_DISPOSITION", code, check, translation, to, dispositions, detail}`, `to` the word as
+ *  given (null when blank). `extra` adds a caller's fields and never replaces these. It writes nothing and never
+ *  throws. */
+export function notADisposition(to, extra = null) {
+  /* DEC-49 REGION is-disposition-word */
+  if (typeof to === "string" && DISPOSITIONS.includes(to)) return null;
+  const row = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
+  const given = to === undefined || to === null || (typeof to === "string" && !to.trim()) ? null : to;
+  return { ...(extra && typeof extra === "object" ? extra : {}),
+           ok: false, reason: "NOT_A_DISPOSITION", code: "NOT_A_DISPOSITION", check: row.check, translation: row.translation,
+           to: given, dispositions: DISPOSITIONS, detail: NOT_A_DISPOSITION_DETAIL };
+  /* END DEC-49 REGION is-disposition-word */
 }

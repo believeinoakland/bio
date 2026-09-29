@@ -6,6 +6,7 @@ import { world, seeded, MEMBER } from "./fixture.mjs";
 import { PROGRESSION_CHECKS, GENERIC_CODES, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
 import { ACT_SHAPE_CHECKS } from "../../../checks/bio-checks.mjs";
 import { noSuchEntity } from "../../../src/entities/index.mjs";
+import { noSha, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 
 const S = (o = {}) => ({ key: "a", cardinality: "1", required: "always", ...o });
@@ -16,7 +17,7 @@ test("R1: refusals in order, each writing nothing; a bad stage refuses the whole
   const d = (b) => w.p.defineProgression({ declaredBy: "member:alice", ...b });
   assert.equal(d({}).reason, "NO_KEY");
   assert.equal(d({ progressionKey: "  " , label: "x", stages: [S()] }).reason, "NO_KEY");
-  assert.equal(d({ progressionKey: "k", stages: [S()] }).reason, "NO_LABEL");
+  assert.equal(d({ progressionKey: "k", stages: [S()] }).reason, "PROGRESSION_NO_LABEL");
   assert.equal(d({ progressionKey: "k", label: "L" }).reason, "NO_STAGES");
   assert.equal(d({ progressionKey: "k", label: "L", stages: [] }).reason, "NO_STAGES");
   assert.equal(d({ progressionKey: "k", label: "L", stages: [S(), S({ key: "" })] }).reason, "NO_STAGE_KEY");
@@ -121,7 +122,7 @@ test("R4: a definition declared before versions were kept is first written as ve
   assert.equal(v1.basis.stated, false);
 });
 
-test("R5: NO_KEY; an undeclared key is found:false; a read names versions, current and basis; NOT_FOUND names the versions held", () => {
+test("R5: NO_KEY; an undeclared key is found:false; a read names versions, current and basis; PROGRESSION_VERSION_NOT_HELD names the versions held", () => {
   const w = world();
   assert.equal(w.p.readProgression({}).reason, "NO_KEY");
   assert.deepEqual(w.p.readProgression({ progressionKey: "none" }), { ok: true, progression_key: "none", found: false, stages: [] });
@@ -136,7 +137,8 @@ test("R5: NO_KEY; an undeclared key is found:false; a read names versions, curre
   assert.deepEqual(r.versions.map((v) => [v.version, v.declared_by, typeof v.at, v.basis.stated]), [[1, "member:alice", "string", false]]);
   for (const bad of [7, "x", 0]) {
     const nf = w.p.readProgression({ progressionKey: "proc", version: bad });
-    assert.equal(nf.reason, "NOT_FOUND");
+    assert.equal(nf.reason, "PROGRESSION_VERSION_NOT_HELD");
+    assert.equal(nf.check, "C-100.8");
     assert.deepEqual(nf.versions_held, [1]);
     assert.match(nf.detail, /holds versions 1/);
   }
@@ -144,7 +146,7 @@ test("R5: NO_KEY; an undeclared key is found:false; a read names versions, curre
 
 test("R27 R28: every refusal this module answers carries its code with its row and translation, or is one it answers from its owner or as a generic code", async () => {
   // C-100 and the three moved rows: one function and one marked region each (N118, N242), ids unique, a translation
-  const kept = ["NO_LABEL", "NOT_FOUND", "NO_ENTITY", "NO_SHA", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
+  const kept = ["PROGRESSION_NO_LABEL", "PROGRESSION_VERSION_NOT_HELD", "NO_ENTITY", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
     "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_STAGE", "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED",
     "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED"];
   assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...kept].sort());
@@ -155,11 +157,18 @@ test("R27 R28: every refusal this module answers carries its code with its row a
     assert.ok(!ids.has(row.check), `${c}: ${row.check} used twice`);
     ids.add(row.check);
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, c);
-    assert.match(row.where, /^src\/progressions\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, c);   // one function, one region
+    // one function, one region; R35's shared answer is its own exported function in checks.mjs
+    assert.match(row.where, c === "NOT_A_DISPOSITION" ? /^src\/progressions\/checks\.mjs notADisposition > is-disposition-word$/
+                                                      : /^src\/progressions\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, c);
   }
   // the ids of the rows that left C-100 in T10 are retired, never reused
-  for (const retired of ["C-100.1", "C-100.12", "C-100.23"])
+  for (const retired of ["C-100.1", "C-100.12", "C-100.19", "C-100.23"])
     assert.ok(!ids.has(retired), retired);
+  // N285: the renamed codes keep their ids; the old names and the retired NO_SHA row are gone
+  assert.equal(PROGRESSION_CHECKS.PROGRESSION_NO_LABEL.check, "C-100.2");
+  assert.equal(PROGRESSION_CHECKS.PROGRESSION_VERSION_NOT_HELD.check, "C-100.8");
+  assert.equal(PROGRESSION_CHECKS.NOT_A_DISPOSITION.check, "C-100.20");
+  for (const gone of ["NO_LABEL", "NOT_FOUND", "NO_SHA"]) assert.equal(PROGRESSION_CHECKS[gone], undefined, gone);
   // the generic code (N118): no row of this module's
   assert.deepEqual([...GENERIC_CODES], ["NO_KEY"]);
   for (const c of GENERIC_CODES) assert.equal(PROGRESSION_CHECKS[c], undefined, c);
@@ -207,6 +216,10 @@ test("R27 R28: every refusal this module answers carries its code with its row a
       const row = PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code];
       assert.deepEqual([r.check, r.translation], [row.check, row.translation], r.code);
     } else if (r.code === "NO_SUCH_ENTITY") assert.deepEqual(r, noSuchEntity("ENT-9"));          // entities R36 (N208)
+    else if (r.code === "NO_SHA") {                                                              // extraction R63 (N285)
+      assert.deepEqual(r, noSha(r.detail));
+      assert.equal(r.check, EXTRACTION_CHECKS.NO_SHA.check);
+    }
     else if (r.code === "LISTENER_DECLARED") assert.deepEqual(r, listenerRefusal([{ module: "scheduler" }], "scheduler", f));
     else if (r.code === "LISTENER_MALFORMED") assert.deepEqual(r, listenerRefusal([], "", f));   // membership R81 (N202)
     else {
@@ -217,8 +230,10 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   }
   // the drive reached every code: each row, each generic code, the shared act rows and the owners' answers
   assert.deepEqual([...seen].sort(), [...kept, ...GENERIC_CODES, "NO_BASIS", "NO_CITATION", "NO_SUCH_ENTITY",
-                                      "LISTENER_DECLARED", "LISTENER_MALFORMED"].sort());
+                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA"].sort());
 });
+
+test.todo("R27: NO_ENTITY carries entities' row through its noEntity (R37) in place of C-100.9 -- not yet met: entities R37 is not yet on tranche/T12 (N285; PROGRESSIONS #3 J1)");
 
 test("R30: no place is named in this module's outward text", () => {
   const texts = Object.values(PROGRESSION_CHECKS).map((r) => r.translation).join("\n");
