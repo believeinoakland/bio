@@ -7,10 +7,10 @@
  * Routing, authentication and the response envelope stay the control plane's. What it decided is passed in (`ctx`):
  * the caller class (`cls`), the minted agent credential (`aiCred`), whether the caller arrived through a member's own
  * session (`viaSession`) with its viewer and session row (`sessViewer`, `sessRights`), the store's name and bindings,
- * and its helpers — `json`, `doAnswer`, `storeSilent`, `STORE_SILENT_REASON`/`_DETAIL`, `captureKey`, and two services
- * of modules this one does not use directly: publication's container assembly (`assembleCaseContainer`) and bias's
- * gate arm (`withBiasChecks`). `stub` is the Durable Object stub the op is scoped to. The legacy code's comments moved
- * with it. */
+ * and its helpers — `json`, `doAnswer`, `storeSilent`, `storeRefusal` (when the caller hands it), `STORE_SILENT_REASON`/
+ * `_DETAIL`, `captureKey`, and two services of modules this one does not use directly: publication's container assembly
+ * (`assembleCaseContainer`) and bias's gate arm (`withBiasChecks`). `stub` is the Durable Object stub the op is scoped
+ * to. The legacy code's comments moved with it. */
 
 import { runGate } from "../gate.mjs";
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
@@ -22,14 +22,26 @@ import { parseFrontmatter, normalizeType, isMachineIdentity, isPublicHttpsLocato
          MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
 import { rowOf, isCaseMemberBytes, completenessFields, withCaseMemberChecks } from "./checks.mjs";
 
+/* R17 (N339, N349; control-plane R23, R25, R30; K421, K444): ONE RULE FOR EVERY RELAY, the sub-reads inside a longer
+   act included. A reply `doAnswer` reads as the store's OWN REFUSAL (`refused`: `ok: false` below 500, such as
+   `BAD_JSON` or an unknown op) is relayed with the store's status, code and sentence, through the caller's
+   `storeRefusal` when it hands one, else as the same answer composed here (`json(reply.body, reply.status)`, which is
+   what `storeRefusal` answers). Only a reply that is no answer is `storeSilent(op, correlation)`, carrying the
+   correlation id `doAnswer` read from the store's own internal error when it gave one. Each site asks the two in that
+   order, `refused` and then `answered`, in its own two lines. */
+function storeRefused(out, { json, storeRefusal }) {
+  return typeof storeRefusal === "function" ? storeRefusal(out) : json(out.reply.body, out.reply.status);
+}
+
   /* THE SIGNATURE, AND THE COMMIT. Same order of operations as `op=ratify`,
      deliberately: verify everything, run the catalog, then commit. What is
      different is the SUBJECT — this act commits the CASE's own assertions, out
      of the case document, which is the signature those facts had nowhere to
      move to before this item. */
 export async function caseRatifyOp(req, stub, ctx) {
-  const { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession,
+  const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights } = ctx;
+  const relay = { json, storeRefusal };
   const op = "caseratify";
     /* DEC-49 REGION is-machine-ratify-case — REC-123 / C-32.13. The fence alone,
        FIRST and before the payload is read, so it is the FENCE that answers a
@@ -89,7 +101,8 @@ export async function caseRatifyOp(req, stub, ctx) {
        its whole block: BEFORE the commit a silence refuses the act outright,
        because nothing has been written and 502's sentence — nothing here is a
        statement about the record — is exactly true. */
-    if (!factsOut.answered) return storeSilent("caseratify/facts");
+    if (factsOut.refused) return storeRefused(factsOut, relay);
+    if (!factsOut.answered) return storeSilent("caseratify/facts", factsOut.correlation);
     const facts = factsOut.result;
     if (!facts.ok) return json({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
 
@@ -173,7 +186,8 @@ export async function caseRatifyOp(req, stub, ctx) {
       `http://do/casegate?viewer=${encodeURIComponent(sessViewer)}`,
       { method: "POST", body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition),
                                                docSha: facts.doc.doc_sha }) }));
-    if (!gateOut.answered) return storeSilent("caseratify/gate");
+    if (gateOut.refused) return storeRefused(gateOut, relay);
+    if (!gateOut.answered) return storeSilent("caseratify/gate", gateOut.correlation);
     const gate = gateOut.result || {};
     if (gate.reason && !Array.isArray(gate.findings))
       return json({ ok: false, ...gate, store: storeName, tokenClass: cls }, gate.reason === "CASE_RATIFY_STALE" ? 409 : 404);
@@ -204,7 +218,8 @@ export async function caseRatifyOp(req, stub, ctx) {
         attestorMember: attestor?.member_id ?? null, gateVersion: gate.gateVersion,
         deliveredBy,
       }) }));
-    if (!out.answered) return storeSilent("caseratify/commit");
+    if (out.refused) return storeRefused(out, relay);
+    if (!out.answered) return storeSilent("caseratify/commit", out.correlation);
     const answered = out.result;
     const { completedCase, ...r } = answered || {};
     if (!answered || !r.ok)
@@ -250,8 +265,9 @@ export async function caseRatifyOp(req, stub, ctx) {
      commit the published rows, then copy bytes to the published bucket.
      A failure mid-copy leaves rows that a re-ratification converges. */
 export async function ratifyOp(req, stub, ctx) {
-  const { env, json, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer,
-          sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL } = ctx;
+  const { env, json, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession,
+          sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL } = ctx;
+  const relay = { json, storeRefusal };
   const op = "ratify";
     /* DEC-49 REGION is-machine-ratify-bundle — REC-123 / C-32.12. The fence alone, first,
        for `caseratify`'s reason above. Driven: before this, an `ai` credential whose
@@ -345,7 +361,8 @@ export async function ratifyOp(req, stub, ctx) {
        published registry, the earned registry and the signer set. A gate that
        cannot see the record cannot confirm anything, and a 500 with a stack
        trace tells a publisher nothing they can act on. */
-    if (!factsOut.answered) return storeSilent("ratify/gatefacts");
+    if (factsOut.refused) return storeRefused(factsOut, relay);
+    if (!factsOut.answered) return storeSilent("ratify/gatefacts", factsOut.correlation);
     const facts = factsOut.result;
     if (!facts.ok) return json({ ...facts, store: storeName, tokenClass: cls }, 404);
     /* DEC-49 REGION is-ratify-project-bundle — REC-140 / C-58.1. BIO_Publication_v0_1.md
@@ -424,7 +441,8 @@ export async function ratifyOp(req, stub, ctx) {
        a publisher told their document is empty when the plane simply failed to
        read it. Same shape as `do/list` below, one field earlier. */
     const imgOut = await doAnswer(stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
-    if (!imgOut.answered) return storeSilent("ratify/image");
+    if (imgOut.refused) return storeRefused(imgOut, relay);
+    if (!imgOut.answered) return storeSilent("ratify/image", imgOut.correlation);
     const image = imgOut.result;
     const r2 = typeof env.CAPTURES?.head === "function";
     /* The catalog resolves references against the whole store, so it needs
@@ -448,7 +466,8 @@ export async function ratifyOp(req, stub, ctx) {
        REC-52's arm (f) measured and what `doAnswer` refuses to do by defining
        `answered` as `ok === true` and nothing else. */
     const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
-    if (!listOut.answered) return storeSilent("ratify/list");
+    if (listOut.refused) return storeRefused(listOut, relay);
+    if (!listOut.answered) return storeSilent("ratify/list", listOut.correlation);
     const known = new Set((listOut.result || []).map((b) => b.bundle_id));
     /* D-556: the parts of each whole-hash row the gate admitted as HELD IN PARTS, as the record names them,
        keyed by the whole hash. Publication copies exactly these, part by part. */
@@ -697,7 +716,8 @@ export async function ratifyOp(req, stub, ctx) {
         edges,
         shas: shas.map(({ text, ...s }) => s),
       }) })));
-    if (!pubOut.answered) return storeSilent("ratify/publish");
+    if (pubOut.refused) return storeRefused(pubOut, relay);
+    if (!pubOut.answered) return storeSilent("ratify/publish", pubOut.correlation);
     const pub = pubOut.result;
     if (!pub?.ok)
       return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
