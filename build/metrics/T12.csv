@@ -2,3 +2,4 @@ session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_l
 session_01Lgrtne4zgRLXB6tnapw7eW,job,legacy-checks,2912200,80787,62,9379,,5,12301
 session_014cnQoDew2TTTD4pKeceZ77,job,membership,5199152,112309,90,16439,,9,5572
 session_01SZn97qkUSZot248omWCcQA,job,promotion,6179068,168892,83,16050,,6,17
+session_0195mhRMLSwyJgRodhjV2CEg,job,capture,12619434,164958,169,36475,,14,3075
