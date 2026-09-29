@@ -47,11 +47,12 @@
  * no backing is still forbidden, and every rung below is asserted against the
  * enforcement or the document that gives it.
  *
- * TOTALITY, AND THE DRIFT GUARD. Every op in index.mjs's NEEDS table is either
- * an ACT here or named in NON_ACTS with the reason it is not object-directed.
- * The affordances suite parses NEEDS out of the source and fails NAMING the op
- * if one is in neither set, so an op added to NEEDS cannot ship unpublished and
- * unexplained — that is the item's negative control, and it is structural.
+ * TOTALITY, AND THE DRIFT GUARD. Every op in the control plane's NEEDS table is
+ * either an ACT here or named in NON_ACTS with the reason it is not
+ * object-directed. `unaccounted(opTable)` below (R12) answers, NAMING the op,
+ * any that is in neither set; a suite holding the control plane's tables
+ * (`rung-ladder`, legacy-tests') calls it, so an op added to NEEDS cannot ship
+ * unpublished and unexplained.
  *
  * SCOPE. The acts published are the OBJECT-DIRECTED ones: the ops whose subject
  * is a bundle in a given state — the selection-backed set the S-10/S-11 ladder

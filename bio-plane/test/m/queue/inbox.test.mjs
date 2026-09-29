@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, NOW, iso } from "./world.mjs";
 import { queueOps, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS } from "../../../src/queue/index.mjs";
+import { mintExhausted } from "../../../src/record-core/index.mjs";
 
 const DOC = "INFO-2026-0001-doc", PRJ = "PROJ-2026-0001-team", DOC2 = "INFO-2026-0002-other", DOC3 = "INFO-2026-0003-third";
 
@@ -56,6 +57,39 @@ test("R23: drain takes queued events in order; unfiled waits, a live task folds,
   assert.equal(w3.queue.length, 0); assert.equal(w3.all(`SELECT count(*) c FROM tasks`)[0].c, 0);
   // limit 1–500, default 50
   for (const [asked, got] of [[0, 1], [9999, 500], [null, 50]]) assert.equal(inbox().q.taskDrain({ limit: asked }).limit, got);
+});
+
+test("R23 (N322): an exhausted task id space keeps the event, its waiting entry carrying record-core R62's code, check and detail", () => {
+  const w = inbox([ev("a3")]);
+  w.bundle(DOC2);
+  // every id the drain could draw for this event is taken, so record-core's mint answers null (its R9)
+  const ins = w.db.prepare(`INSERT INTO tasks (id, kind, refers_to, subject_text, assignee, assignee_role, status, created, resolved_at, history)
+                            VALUES (?, 'authority-undetermined', ?, 'x', 'unassigned', 'group-admin', 'resolved', ?, ?, '[]')`);
+  w.db.exec("BEGIN");
+  for (let i = 0; i < 10000; i++) ins.run(`TASK-2026-${String(i).padStart(4, "0")}-subject`, DOC2, iso(NOW), iso(NOW));
+  w.db.exec("COMMIT");
+  const before = w.all(`SELECT count(*) c FROM tasks`)[0].c;
+  const r = w.q.taskDrain({ actor: "alarm", now: iso(NOW) });
+  const ex = mintExhausted("TASK");
+  assert.deepEqual([r.drained, r.created, r.folded, r.refused, r.remaining], [0, [], [], [], 1]);
+  assert.deepEqual(r.waiting, [{ captureSha: "a3", attempts: 0, code: "MINT_EXHAUSTED", check: ex.check, detail: ex.detail }]);
+  assert.equal(ex.check, "C-59.6");
+  assert.equal(w.queue.length, 1, "the event is kept, not dropped");
+  assert.equal(w.all(`SELECT count(*) c FROM tasks`)[0].c, before, "no task is written");
+});
+
+test("R23, R25: an act given no instant stamps the instance's clock, not the wall's", () => {
+  const w = inbox([ev("a3")]);
+  w.member("alice"); w.bundle(DOC2);
+  w.now = Date.parse("2031-03-04T05:06:07Z");
+  const r = w.q.taskDrain({ actor: "alarm" });
+  assert.match(r.created[0].id, /^TASK-2031-\d{4}-subject$/);
+  assert.deepEqual(JSON.parse(w.all(`SELECT history FROM tasks`)[0].history)[0].at, "2031-03-04T05:06:07Z");
+  const id = r.created[0].id;
+  w.now += 1000;
+  assert.equal(w.q.taskForward({ id, to: "alice", actor: "alice" }).at, "2031-03-04T05:06:08Z");
+  w.now += 1000;
+  assert.equal(w.q.taskResolve({ id, actor: "alice" }).resolved_at, "2031-03-04T05:06:09Z");
 });
 
 test("R23: the task-drain consumer is due every firing, wakes at the delay while events wait (backstop after an idle tick), and drains", async () => {
