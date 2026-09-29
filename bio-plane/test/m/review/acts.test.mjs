@@ -5,6 +5,7 @@ import { standard, P, Q, V, SECRET, NOW } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_DRAFT_FIELDS, REVIEW_RECIPIENT_MAX, REVIEW_DRAFT_MAX, reviewOps,
          caseIdentitySentence } from "../../../src/review/index.mjs";
 import { PROJECT_VISIBILITY_CHECKS } from "../../../checks/bio-checks.mjs";
+import { mintExhausted, RECORD_CORE_CHECKS } from "../../../src/record-core/index.mjs";
 
 const row = (code) => REVIEW_COPY_CHECKS[code];
 const refused = (r, code) => {
@@ -280,7 +281,7 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
     membership: {}, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} }));
 });
 
-test("R27: when no free opaque id can be minted, draft's new draft and grant answer MINT_EXHAUSTED (C-87.12), naming the id, writing nothing", () => {
+test("R27: when no free opaque id can be minted, draft's new draft and grant answer MINT_EXHAUSTED through record-core's mintExhausted (its R62, C-59.6; C-87.12 retired), naming the id, writing nothing", () => {
   const w = standard();
   w.publishedCase("CASE-2026-0001", P, 1);
   const d = draft(w, "ann", { caseId: "CASE-2026-0001" });
@@ -293,14 +294,17 @@ test("R27: when no free opaque id can be minted, draft's new draft and grant ans
   const nd = [draft(w, "ann"), draft(w, "ed", { caseId: "CASE-2026-0001", newCase: true })];
   /* the grant arm */
   const ng = w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: "R", secretSha: SECRET(1) });
+  /* record-core's one answer, byte for byte: prefix DRAFT or RVG, its row C-59.6 and its translation, nothing added */
+  for (const r of nd) assert.deepEqual(r, mintExhausted("DRAFT"));
+  assert.deepEqual(ng, mintExhausted("RVG"));
   for (const r of [...nd, ng]) {
-    refused(r, "MINT_EXHAUSTED");
-    assert.equal(r.check, "C-87.12");
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+      [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation]);
     assert.match(r.detail, /Nothing was written\.$/);
   }
   for (const r of nd) assert.match(r.detail, /free draft id/);
   assert.match(ng.detail, /free grant id/);
-  assert.equal(ng.detail.replace("grant", "draft"), nd[0].detail, "one answer, the id it could not mint named");
+  assert.deepEqual([nd[0].prefix, nd[1].prefix, ng.prefix], ["DRAFT", "DRAFT", "RVG"]);
   assert.deepEqual(asked, ["DRAFT", "DRAFT", "RVG"]);
   assert.deepEqual(w.snapshot(), before, "nothing written: no draft, no grant, no minted id");
   /* an edit in place mints nothing, and is not refused */
