@@ -1,5 +1,5 @@
 /* host-governor — the per-host request governor (layer 3; D-95). Requirements: build/requirements/host-governor.md
-   (R1–R26). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
+   (R1–R27). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
 
    Our APPETITE is a configured constant because it is ours. Their CAPACITY is discovered by being refused and
    recorded, the pattern capture_limits proved. The governor lives in the Durable Object because the object
@@ -320,8 +320,10 @@ export async function governedFetch(target, { userAgent = null, fetch: doFetch =
   return { res };
 }
 
-/* The Worker's side of a store call: `{answered, result}`, a body that is not a JSON `ok: true` answer being no
-   answer at all. */
+/* The Worker's side of a store call when the caller hands no relay (legacy-index's call today, `src/index.mjs`:671):
+   `{answered, result}`, a body that is not a JSON `ok: true` answer being no answer at all. It tells a store refusal
+   from a silence not at all, which is why R27 reads through the plane's `doAnswer` whenever the caller hands it; this
+   path goes when legacy-index hands the relay (layer 11). */
 async function answerOf(call) {
   try {
     const out = await (await call()).json();
@@ -329,19 +331,43 @@ async function answerOf(call) {
   } catch { return { answered: false }; }
 }
 
-/** R18, R19: the handlers of `op=governorstate` and `op=governorconfig` (the control plane keeps their declarations,
- *  routing and envelope; K93 (3)). `store` is the Durable Object's stub, or a function answering it. Answers `null`
- *  for any other op; `{silent: true}` when the store does not answer, which the control plane reports as silence,
- *  never as an empty `{ok: true}`; else `{status, body}`. */
-export async function governorOp(op, url, store) {
+/* R27 (N339, N349; K421, K445): the relay the control plane hands, as `capture`'s handlers take it: `doAnswer`, the one
+   reader of the store's envelope (`control-plane` R23, R25), and `storeRefusal`, which relays the store's own refusal
+   at its status. `null` when either is missing, so the call falls back to `answerOf`. */
+const relayOf = (relay) =>
+  relay && typeof relay.doAnswer === "function" && typeof relay.storeRefusal === "function" ? relay : null;
+
+/* One store call, read through the relay when handed. A call that throws before it answers is handed to `doAnswer`
+   as a rejected reply, so it reads it as the silence it is. */
+async function storeCall(relay, call) {
+  if (!relay) return answerOf(call);
+  const out = await relay.doAnswer((async () => call())());
+  if (out && out.refused) return { refused: true, response: relay.storeRefusal(out) };
+  if (!out || !out.answered) return out && out.correlation ? { answered: false, correlation: out.correlation } : { answered: false };
+  return { answered: true, result: out.result };
+}
+
+/* R18, R19, R27: what a store call that did not answer with an answer comes back as. */
+const unanswered = (r) => (r.refused ? { refused: true, response: r.response }
+                                     : { silent: true, ...(r.correlation ? { correlation: r.correlation } : {}) });
+
+/** R18, R19, R27: the handlers of `op=governorstate` and `op=governorconfig` (the control plane keeps their
+ *  declarations, routing and envelope; K93 (3)). `store` is the Durable Object's stub, or a function answering it;
+ *  `relay` is `{doAnswer, storeRefusal}` from the control plane (R27), optional so a caller that hands none keeps
+ *  working. Answers `null` for any other op; `{refused: true, response}` when the store refused (the response is
+ *  `storeRefusal`'s, the store's status, code and sentence; only with a relay); `{silent: true, correlation?}` when
+ *  the store gave no answer, which the control plane reports as `storeSilent(op, correlation)`, never as an empty
+ *  `{ok: true}`, the correlation present only when the store named one; else `{status, body}`. */
+export async function governorOp(op, url, store, relay = null) {
   if (op !== "governorstate" && op !== "governorconfig") return null;
+  const rel = relayOf(relay);
   const st = typeof store === "function" ? store() : store;
   const host = url.searchParams.get("host");
   if (op === "governorstate") {
     /* D-103: which hosts the governor is holding and why. An empty `{ok:true}` here would read as "the governor is
        holding nothing", which is a claim about what the instance is doing to other people's servers (REC-52). */
-    const r = await answerOf(() => st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
-    return r.answered ? { status: 200, body: { ok: true, ...r.result } } : { silent: true };
+    const r = await storeCall(rel, () => st.fetch(`http://x/governorstate${host ? `?host=${encodeURIComponent(host)}` : ""}`));
+    return r.answered ? { status: 200, body: { ok: true, ...r.result } } : unanswered(r);
   }
   /* D-103: set a host's appetite. A host is required so a fat-fingered global change is impossible. */
   if (!host)
@@ -352,10 +378,11 @@ export async function governorOp(op, url, store) {
   if (raw !== null && raw !== "" && appetite === null) return { status: 400, body: badAppetite(host) };
   /* REC-52: an operator sets a host's appetite, the store never records it, and a plane answering `{ok:true}` would
      leave the operator believing a courtesy limit is in force on somebody else's server when none is. */
-  const r = await answerOf(() => st.fetch("http://x/governorconfig", {
+  const r = await storeCall(rel, () => st.fetch("http://x/governorconfig", {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ host, appetite_per_min: appetite }) }));
-  if (!r.answered) return { silent: true };
+  if (!r.answered) return unanswered(r);
+  /* R12 inside the store's answer (`ok: true` carrying the governor's own `BAD_APPETITE`): an answer, relayed at 400. */
   if (r.result && r.result.ok === false) return { status: 400, body: r.result };
   return { status: 200, body: { ok: true, ...r.result } };
 }
