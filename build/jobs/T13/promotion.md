@@ -14,7 +14,7 @@ On tranche/T13 today (before record-core and membership) this gives 818 rows, di
 ## Completion
 
 **Entries applied.**
-- N322: R19's no-free-id refusal answers through record-core's `mintExhausted("PROJ")` (its R62, row C-59.6), so it carries its code, check, translation and prefix. The transaction rolls back and nothing is written. `forkProject` reaches the same answer through `promote`. R19's mark struck. Commit 5a1f0db988's parent (the N322 commit).
+- N322: R19's no-free-id refusal answers through record-core's `mintExhausted("PROJ")` (its R62, row C-59.6), so it carries its code, check, translation and prefix. The transaction rolls back and nothing is written. `forkProject` reaches the same answer through `promote`. R19's mark struck. Commit 3b8594cbc1.
 - N318: `CATALOG_VERSION` 1.42.0 -> 1.43.0 (`gate.mjs`). I diffed every exported row table between f955769afc and `tranche/T13` after record-core (K430) and membership merged, and checked the stamp list row by row. Every row the list names is in the stamp. The note above the constant names each arrival, departure, rename and move.
 - N319: `ROW_CENSUS` = `{version: "1.43.0", rows: 820, digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d"}`, frozen, beside the version. It is computed as R50 now words it (K431; my J1). The same figure comes out whether every product file is imported or only files that literally hold a `check: 'C-…'` row. R34's and R50's marks struck; tests pin R50's shape and `version === CATALOG_VERSION`.
 
