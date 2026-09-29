@@ -505,6 +505,88 @@ const staleNamings = NAMED_MULTI.filter((n) =>
 t(`A6 and the named list has not gone stale — every deliberate multiplicity is still there and still multiple (${staleNamings.length} stale)`,
   staleNamings, []);
 
+/* ==================================================================== A10
+   THE RESOLVED SUBJECT, FOR THE ONE SHAPE THAT CAN BE RESOLVED WITHOUT RUNNING A DRIVER. ADDED 2026-09-29
+   (LEGACY-TESTS #10, T12 round 3; K413), and found the way this file's widenings always are — by a driver it could
+   not see. `machine-fences.control.mjs` arms (8) and (10) were DEAD from K413 until this round: their needles still
+   existed (A4 counts the whole corpus, so it saw them live in `src/control-plane/`), but the file the arms WROTE,
+   `F.index`, was `src/index.mjs`, which no longer held either. And arm (8)'s needle is a CONCATENATION
+   (`const GOVERN_FENCE = '…' + '…';`), which the extractor above never reads at all. The header's "it does not
+   resolve an arm's subject" was the gap, both times.
+   THE SHAPE: a driver that declares `const ROOT = fileURLToPath(new URL("..", import.meta.url));` and a
+   `const F = { key: ROOT + "<path>", … }` map, and arms by edit tuples `["key", NEEDLE, …]`, NEEDLE a literal or a
+   `const NAME = LIT (+ LIT)*;` of the same driver. For those, the subject IS resolvable statically, and every
+   such driver's `edit()` refuses unless the needle occurs EXACTLY ONCE in F[key] — so that is the assertion. A
+   driver in any other shape is not graded here (the census covers it) and the reach is PRINTED and floored. */
+function resolvedTuples(src, driverDir) {
+  if (!/^const ROOT = fileURLToPath\(new URL\("\.\.", import\.meta\.url\)\);$/m.test(src)) return null;
+  const fm = /^const F = \{([\s\S]*?)^\};/m.exec(src);
+  if (!fm) return null;
+  const F = {};
+  for (const m of fm[1].matchAll(new RegExp(String.raw`^\s*(\w+)\s*:\s*ROOT\s*\+\s*(${LIT})\s*,`, "gm"))) {
+    const rel = unquote(m[2]);
+    if (rel !== null) F[m[1]] = join(dirname(driverDir), rel);
+  }
+  const C = {};
+  for (const m of src.matchAll(new RegExp(String.raw`^const ([A-Z_][A-Z0-9_]*) =\s*(${LIT}(?:\s*\+\s*${LIT})*)\s*;`, "gm"))) {
+    const parts = [...m[2].matchAll(new RegExp(LIT, "g"))].map((x) => unquote(x[0]));
+    if (!parts.some((x) => x === null || x.includes("${"))) C[m[1]] = parts.join("");
+  }
+  const out = [];
+  for (const m of src.matchAll(new RegExp(String.raw`\[\s*"(\w+)"\s*,\s*(${LIT}|[A-Z_][A-Z0-9_]*)\s*,`, "g"))) {
+    if (!(m[1] in F)) continue;
+    const named = /^[A-Z_]/.test(m[2]);
+    const needle = named ? C[m[2]] : unquote(m[2]);
+    if (needle == null || needle.includes("${")) continue;
+    out.push({ key: m[1], file: F[m[1]], via: named ? m[2] : "literal", needle });
+  }
+  return out;
+}
+const countIn = (file, needle) => existsSync(file) ? readFileSync(file, "utf8").split(needle).length - 1 : 0;
+const resolved = [];
+for (const d of graded) {
+  const tuples = resolvedTuples(driverText.get(d) ?? readFileSync(join(REPO, d), "utf8"), join(REPO, dirname(d)));
+  if (!tuples) continue;
+  for (const tp of tuples) resolved.push({ driver: d, ...tp, n: countIn(tp.file, tp.needle) });
+}
+const resolvedDrivers = new Set(resolved.map((r) => r.driver)).size;
+/* FOUND BY THIS ARM ON ITS FIRST RUN, 2026-09-29, and NAMED BY DRIVER AND EXACT COUNT rather than smoothed — the
+   N298 shape (`NAMED_DEAD_HARNESS`): each is an arm whose file moved under it (T4-T12 extractions) and whose
+   driver was never re-run. One more is A10's finding; one fewer is A10b's stale naming. Owed: a re-anchor of each
+   driver, run as declared (legacy-tests). */
+const NAMED_DEAD_RESOLVED = {
+  "bio-plane/test/aicredential.control.mjs": 3,
+  "bio-plane/test/capturerequests.control.mjs": 2,
+  "bio-plane/test/fence-e2e.control.mjs": 1,
+  "bio-plane/test/scheduler.control.mjs": 2,
+  "bio-plane/test/shadowed-refusals.control.mjs": 1,
+  "bio-plane/test/strengthpair.control.mjs": 14,
+};
+const offBy = {};
+for (const r of resolved) if (r.n !== 1) offBy[r.driver] = (offBy[r.driver] || 0) + 1;
+console.log(`\n--- A10 · the resolved subject: ${resolved.length} edit tuple(s) in ${resolvedDrivers} driver(s) of the \`F\`-map shape ---`);
+for (const r of resolved.filter((x) => x.n !== 1))
+  console.log(`    ${r.driver} ["${r.key}", ${r.via}] occurs ${r.n}× in ${repoPath(REPO, r.file)}`
+    + `${NAMED_DEAD_RESOLVED[r.driver] === offBy[r.driver] ? "  (named)" : ""}`);
+t(`A10 the F-map shape was actually resolved — a resolver that reads nothing passes every tree (${resolved.length} tuple(s) in ${resolvedDrivers} driver(s), floors 100 and 10)`,
+  [resolved.length >= 100, resolvedDrivers >= 10], [true, true]);
+t(`A10 every edit tuple's needle occurs EXACTLY ONCE in the file its key resolves to — an arm aimed at a file its line has left cannot arm, and the corpus-wide count of A4 cannot see it (${Object.entries(offBy).filter(([d, n]) => NAMED_DEAD_RESOLVED[d] !== n).length} driver(s) unnamed)`,
+  resolved.filter((r) => r.n !== 1 && NAMED_DEAD_RESOLVED[r.driver] !== offBy[r.driver])
+    .map((r) => `${r.driver} ["${r.key}", ${r.via}] ×${r.n} in ${repoPath(REPO, r.file)}`), []);
+t(`A10b and every driver named dead is still dead by exactly its count — a re-anchored driver leaves the list`,
+  Object.entries(NAMED_DEAD_RESOLVED).filter(([d, n]) => (offBy[d] || 0) !== n)
+    .map(([d, n]) => `${d}: named ${n}, found ${offBy[d] || 0}`), []);
+{
+  /* THE RESOLVER, DRIVEN OVER A FIXTURE WITH A KNOWN ANSWER: a concatenated constant is folded, a key resolves
+     against the driver's parent directory, and an unknown key is not graded. */
+  const FIX = 'const ROOT = fileURLToPath(new URL("..", import.meta.url));\nconst F = {\n  idx: ROOT + "src/x.mjs",\n};\n'
+    + "const NEEDLE =\n  '  if (a) {\\n'\n+ '    return b;';\n"
+    + 'arm("t", [["idx", NEEDLE, "y"]], []);\narm("u", [["nokey", "  z(q);", ""]], []);\n';
+  const got = resolvedTuples(FIX, "/repo/pkg/test") || [];
+  t("S11 the resolver folds a concatenated constant, resolves its key to the driver's parent, and grades no unknown key",
+    got.map((g) => [g.key, g.file, g.via, g.needle]), [["idx", "/repo/pkg/src/x.mjs", "NEEDLE", "  if (a) {\n    return b;"]]);
+}
+
 /* ==================================================================== M0-78
    A8 · THE REGISTERED ARM ROSTER, PINNED BY NAME — THE ARM AGAINST DELETING THE
    ARM. Every check M0-78 adds asks whether an arm MEASURED anything. None of

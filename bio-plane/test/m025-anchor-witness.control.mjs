@@ -54,7 +54,9 @@ const FANOUT_SRC = join(ROOT, "agent-worker/src/subsession.mjs");
 const QUERY_SRC = join(ROOT, "bio-plane/src/query.mjs");
 const WORK = join(ROOT, "bio-plane/test/.m025-anchor-harness");
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const MIN_BYTES = { [WITNESS]: 8_000, [AGENT_SRC]: 20_000, [FANOUT_SRC]: 3_000, [QUERY_SRC]: 10_000 };
+/* ADDED 2026-09-29 (LEGACY-TESTS #10, T12 round 3): arm A10's subject, the witness's resolved-subject check. */
+const MF_DRIVER = join(ROOT, "bio-plane/test/machine-fences.control.mjs");
+const MIN_BYTES = { [WITNESS]: 8_000, [AGENT_SRC]: 20_000, [FANOUT_SRC]: 3_000, [QUERY_SRC]: 10_000, [MF_DRIVER]: 10_000 };
 
 const only = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
@@ -275,6 +277,28 @@ arm({
       && got.split("bio-plane/").length - 1 === 1;
     console.log(`    A4's finding list holds ONLY this driver's own anchor: ${onlyOwn}`);
     return r.ran && f.includes("A6") && f.includes("A4") && !f.includes("A5") && onlyOwn;
+  },
+});
+
+arm({
+  id: "A10", subject: "THE RESOLVED SUBJECT — an arm aimed at a file its line has LEFT (K413's machine-fences, put back)",
+  what: "`machine-fences.control.mjs` arm (10)'s key is put back to `index` (`src/index.mjs`), which is what it read "
+      + "from K413 until 2026-09-29: the needle `const GOVERNANCE_ACTIONS = [...]` still exists in the estate "
+      + "(`src/control-plane/ops.mjs`), so A4's corpus-wide count calls it live, and the arm cannot arm",
+  mustFail: "A10, NAMING machine-fences.control.mjs, the key and the file the key resolves to",
+  mustNot: "A5, A10b. A4 FAILS, but ONLY on this driver's own anchor: the arm's `find` quotes the line it re-spells, "
+         + "so it consumes itself (A5's arm, above, records the same irreducible shape) — while the needle the "
+         + "machine-fences arm quotes is alive in ops.mjs, which is exactly why A4 could not see this. MEASURED at the "
+         + "first run (30/2, [A4, A10]) and declared from it, 2026-09-29",
+  edits: [[MF_DRIVER,
+    `  [["ops", 'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];',`,
+    `  [["index", 'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];',`]],
+  expect: (r, f) => {
+    const got = (r.out.split("FAIL  A4")[1] || "").split("\n").find((l) => l.includes("got  ")) || "";
+    const onlyOwn = /m025-anchor-witness\.control\.mjs/.test(got) && got.split("bio-plane/").length - 1 === 1;
+    console.log(`    A4's finding list holds ONLY this driver's own anchor: ${onlyOwn}`);
+    return r.ran && f.includes("A10") && f.includes("A4") && onlyOwn && !f.includes("A5") && !f.includes("A10b")
+      && /machine-fences\.control\.mjs \["index", literal\] occurs 0× in bio-plane\/src\/index\.mjs/.test(r.out);
   },
 });
 
@@ -520,7 +544,7 @@ console.log(`byte count printed and a per-file minimum guarded.`);
 {
   const dirty = spawnSync("git", ["status", "--porcelain", "--untracked-files=no"], { cwd: ROOT, encoding: "utf8" });
   const lines = (dirty.stdout || "").trim().split("\n").filter(Boolean);
-  const touched = [WITNESS, AGENT_SRC, FANOUT_SRC, QUERY_SRC,
+  const touched = [WITNESS, AGENT_SRC, FANOUT_SRC, QUERY_SRC, MF_DRIVER,
                    AICRED_DRIVER, DECAY_MOD, CASEPIN_DRIVER, CASESIGN_DRIVER, STORE_SRC, PUB_SRC]
     .map((p) => p.slice(ROOT.length));
   const stillDirty = lines.filter((l) => touched.some((p) => l.includes(p)));
