@@ -1,6 +1,6 @@
 # progressions (T12)
 
-**Status** · session_01X6gfmWECg3C2k8SqLBBz7h · depth 2 · WORKING · handled B2
+**Status** · session_01X6gfmWECg3C2k8SqLBBz7h · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
