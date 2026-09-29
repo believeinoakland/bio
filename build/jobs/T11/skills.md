@@ -25,3 +25,16 @@ Size (session_01WHkeSYJXikezjTzJkizuXW): test runs 3, module lines 1496
 ## J1 · COMPLETE
 
 N289 applied: R25's test reads C-22.7's row through ai-runs (airun.mjs AI_RUN_CHECKS, translationOf), never the catalogue; no source line changed (SKILL_CHECKS already selects it from ai-runs). R25's last clause (row held in ai-runs' own table, where src/ai-runs/skill-version.mjs) is a test.todo naming ai-runs R35: tell me when ai-runs is merged and I merge tranche/T11 and make it a test. Tests 31: 30 pass, 0 fail, 1 todo; format, architecture, coverage (26/26), ownership: 0 failures. Report: R21's not-yet-met mark (bullet and Status line) is stale, met since T7; yours to strike. No catalogue row changed. Record: build/jobs/T11/skills.md on job/T11/skills.
+
+## Completion (B2)
+
+**B2 applied.** Merged `tranche/T11` (ai-runs merged, AI-RUNS #4 J1). R25's `test.todo` is now a test: C-22.7's row, read through ai-runs, has its `where` at ai-runs' minting site (`src/ai-runs/skill-version.mjs checkSkillVersion`, …), and is a distinct object from the catalogue's interim copy (N299), which says the same number and translation (that arm is skipped once T12 removes the copy). No source line changed. R21's stale mark stands reported (J1).
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/skills/`: tests 31, pass 31, fail 0, todo 0.
+- `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures.
+- `node checks/architecture.mjs … skills`: 6 product files, 29 relative imports; 0 failures.
+- `node checks/coverage.mjs … skills`: 26 of 26 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs … skills tranche/T11`: 2 files changed; legacy-checks 0 added, 0 removed; 0 failures.
+
+Size (session_01WHkeSYJXikezjTzJkizuXW): test runs 5, module lines 1496

@@ -79,4 +79,11 @@ test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, n
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
 
-test.todo("R25 C-22.7's row is held in ai-runs' own table with its one minting site, its where naming src/ai-runs/skill-version.mjs checkSkillVersion: waits on ai-runs R35 (N289), running beside this job in layer 6");
+test("R25 C-22.7's row is held in ai-runs' own table with its one minting site, a row distinct from the catalogue's interim copy", () => {
+  assert.ok(ROW.where.startsWith("src/ai-runs/skill-version.mjs checkSkillVersion"), `ai-runs' minting site: ${ROW.where}`);
+  const copy = catalogue.AI_RUN_CHECKS?.AI_RUN_SKILL_VERSION_UNNAMED;
+  if (copy) {
+    assert.notEqual(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, copy, "the row named here is ai-runs', not the catalogue's copy");
+    assert.deepEqual([copy.check, copy.translation], [ROW.check, ROW.translation], "the interim copy (N299) says the same");
+  }
+});
