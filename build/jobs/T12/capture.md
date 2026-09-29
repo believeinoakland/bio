@@ -24,3 +24,7 @@
 - Also: `bio-plane/test/refusal-wire.test.mjs` 42 pass, 0 fail; `bio-plane/test/fleetbundles.test.mjs` all PASS; `pdfstructure-op.test.mjs` 28/1 (item 3).
 
 Size (session_0195mhRMLSwyJgRodhjV2CEg): test runs 9, module lines 3053
+
+## J1 · REPORT
+
+Found beyond my module (record, Completion 'Found'): (1) plane bundle bio-plane/dist/bio-plane.bundled.mjs stale (src/capture/ops.mjs is an input; src/capture/checks.mjs new); fleet bundles unaffected. (2) capture's own inboxGet/inboxResolve answer an unknown knock as a bare NOT_FOUND with no row, a different condition under the same code (K275): R32 needs a code and row worded (e.g. NO_SUCH_KNOCK); not changed without it. (3) legacy bio-plane/test/pdfstructure-op.test.mjs 'identical to op=capture's own 404 body' fails 28/1 (29/0 on tranche/T12) until extraction's R31 answers through evidenceAbsent in layer 4 (N285); then it passes again. (4) DEC-49 guard: no new failure kind; ratchets moved by this job's one family/row/region: families 99->100, rows 783->784, governedSites 494->495, regions 455->456, regionLines 5462->5468, refusalsJudged 857->858, outcomeReturns 257->258, codesChecked 881->883 (legacy-tests' re-pin). (5) R63's 'not yet met: N285' mark can be struck.
