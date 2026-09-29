@@ -10,13 +10,17 @@
  *
  * NO_SUCH_KNOCK is new with K383: the inbox answered an unknown knock id with the bare `NOT_FOUND`, a different condition
  * under R63's code (K275); R32 words it as its own code, with the next row of C-118, minted at one site, `#noSuchKnock`
- * (`src/capture/index.mjs`), which the inbox's read and resolve both answer through. */
+ * (`src/capture/index.mjs`), which the inbox's read and resolve both answer through.
+ *
+ * C-118.1's code was `NOT_FOUND` until N347 (K440): a generic word any module could mint, so the door could not read
+ * this table without lending the row to them. It is `EVIDENCE_NOT_HELD` (R63's own words); the row keeps its number and
+ * its translation. */
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
 
 export const CAPTURE_CHECKS = Object.freeze({
-  NOT_FOUND: Object.freeze({
+  EVIDENCE_NOT_HELD: Object.freeze({
     check: 'C-118.1', where: at("evidenceAbsent", "is-evidence-held"),
     translation: 'The record holds no stored copy of a document under this fingerprint.',
   }),

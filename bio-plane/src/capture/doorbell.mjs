@@ -5,6 +5,7 @@
  * `requiredArgument`, the store-silence refusal and the Durable Object envelope's reader (`doAnswer`, N247) are the
  * control plane's, passed in by the caller. */
 import { KNOCK_CHECKS } from "../../checks/bio-checks.mjs";
+import { relayUnanswered } from "./ops.mjs";
 
 /* R31, R49, R50. The limits the instance runs, and D-496's published sentences BUILT FROM THEM, so the words and
    the numbers cannot drift apart (BOB #32: a published limit is a BOUND). "Estimated by a sliding window" because
@@ -60,10 +61,10 @@ export function knockEmpty() {
   /* END DEC-49 REGION is-knock-empty */
 }
 
-/** op=knock (R30–R32, R47–R54). `store` is the Durable Object stub; `json`, `requiredArgument`, `storeSilent` and
- *  `doAnswer` (the one reader of a Durable Object's envelope, N247) are the control plane's. The refusals are tried
- *  in R53's order and the first that applies answers. */
-export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, doAnswer }) {
+/** op=knock (R30–R32, R47–R54, R64). `store` is the Durable Object stub; `json`, `requiredArgument`, `storeSilent`,
+ *  `storeRefusal` and `doAnswer` (the one reader of a Durable Object's envelope, N247) are the control plane's. The
+ *  refusals are tried in R53's order and the first that applies answers. */
+export async function knockOp(req, env, store, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
   if (req.method !== "POST") return json({ ok: false, error: "knock is a POST" }, 405);
   const raw = await req.arrayBuffer();
   if (raw.byteLength > KNOCK.maxBytes + 4096) return json(knockEnvelopeTooLarge(), 413);
@@ -92,8 +93,9 @@ export async function knockOp(req, env, store, { json, requiredArgument, storeSi
                            /* D-487: the window's instant is the control plane's, read once, as it always was. */
                            now: Date.now() }) })));
   /* REC-52: a store that did not answer is silence, never a rate refusal: 429 would tell a stranger they knocked
-     too often when nobody counted. */
-  if (!out.answered) return storeSilent("knock");
+     too often when nobody counted. R64: the store's own refusal is relayed at its status, never as that silence. */
+  const unanswered = relayUnanswered(out, "knock", { json, storeSilent, storeRefusal });
+  if (unanswered) return unanswered;
   const rec = out.result || {};
   if (!rec.ok) {
     if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")

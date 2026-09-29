@@ -49,7 +49,7 @@ test("R21: op=capture puts by digest, refuses a body hashing to anything else na
   assert.equal(await got.text(), bytes);
   assert.equal((await call("GET", `sha256=${d}`, null, { range: "bytes=0-3" })).status, 206);
   const nf = await call("GET", `sha256=${sha("none")}`);
-  assert.deepEqual([nf.status, (await nf.json()).reason], [404, "NOT_FOUND"]);
+  assert.deepEqual([nf.status, (await nf.json()).reason], [404, "EVIDENCE_NOT_HELD"]);
   const absent = await captureObjectOp(new Request("https://p/?op=capture"), new URL(`https://p/?op=capture&sha256=${d}`), {}, h);
   assert.deepEqual([absent.status, (await absent.json()).reason], [503, "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
 });

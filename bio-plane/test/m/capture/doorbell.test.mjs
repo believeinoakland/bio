@@ -218,7 +218,7 @@ test("R32 (K383): a knock id no knock answers to, read or resolved, is NO_SUCH_K
   const row = CAPTURE_CHECKS.NO_SUCH_KNOCK;
   assert.deepEqual([row.check, row.translation], ["C-118.2", "No knock in the inbox answers to this id. Nothing was changed."]);
   assert.match(row.where, /^src\/capture\/index\.mjs #noSuchKnock > /);
-  assert.notEqual(row.check, CAPTURE_CHECKS.NOT_FOUND.check, "not R63's row");
+  assert.notEqual(row.check, CAPTURE_CHECKS.EVIDENCE_NOT_HELD.check, "not R63's row");
   const snapshot = () => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
     .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
   const before = snapshot();
