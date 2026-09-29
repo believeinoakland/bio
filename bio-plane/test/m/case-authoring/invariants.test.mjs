@@ -6,7 +6,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { world, V, AUTHORED } from "./fixture.mjs";
 import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
          STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES } from "../../../src/case-authoring/index.mjs";
-import { MACHINE_FENCE_CHECKS, CASE_DERIVATION_CHECKS as CATALOGUE_C44 } from "../../../checks/bio-checks.mjs";
+import { MACHINE_FENCE_CHECKS } from "../../../checks/bio-checks.mjs";
 import * as CATALOGUE from "../../../checks/bio-checks.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -84,8 +84,20 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, "a member's sentence");
     assert.ok(!/[A-Z]{2,}_[A-Z_]+/.test(row.translation), "no code in a member's words");
   }
-  /* the rows left the catalogue: one row per code, here */
-  for (const k of Object.keys(CASE_DERIVATION_CHECKS)) assert.equal(k in CATALOGUE_C44, false, k);
+  /* the rows left the catalogue: one row per code, here. Asked of every row family the catalogue exports, by code and
+     by check id, so the answer does not depend on which (possibly emptied, possibly removed) family once held them. */
+  const moved = [...Object.entries(CASE_DERIVATION_CHECKS), ...Object.entries(STATEMENT_ACK_CHECKS)];
+  const codes = new Set(moved.map(([k]) => k)), ids = new Set(moved.map(([, v]) => v.check));
+  const held = [];
+  let families = 0;
+  for (const [name, family] of Object.entries(CATALOGUE)) {
+    if (!family || typeof family !== "object" || Array.isArray(family)) continue;
+    const rows = Object.entries(family).filter(([, v]) => v && typeof v === "object" && typeof v.check === "string");
+    if (rows.length) families += 1;
+    for (const [k, v] of rows) if (codes.has(k) || ids.has(v.check)) held.push(`${name}.${k} (${v.check})`);
+  }
+  assert.ok(families > 10, "the walk reached the catalogue's row families");
+  assert.deepEqual(held, [], "no row of the catalogue holds a moved code or check id");
   assert.equal("STATEMENT_ACK_CHECKS" in CATALOGUE, false);
   /* the machine fence answers with the catalogue's C-32.6 row */
   assert.equal(MACHINE_FENCE_CHECKS.MACHINE_CANNOT_PUBLISH.check, "C-32.6");
