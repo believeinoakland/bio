@@ -1,5 +1,7 @@
 # N345 (contradiction): requirement changes for Bob's approval (a worker for BOB #66, 2026-09-29)
 
+**Status** · APPROVED by Bob 2026-09-29 (K455), with DEC-85 (a conflict with a side the member cannot see) to be folded into this draft before a tranche carries it.
+
 **Status** · DRAFT, not folded. Read on `tranche/T13` @ f77ec838e9 (= `main`). Scope: the contradiction PRESENT and RESOLVE part of N345 only. N345's DEC-78 (capture, a source's disclosure history), DEC-80 (the ceremony) and DEC-81 (grade disclosure) parts are drafted separately.
 
 **Sources, read whole:**
