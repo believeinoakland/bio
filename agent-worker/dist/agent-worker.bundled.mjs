@@ -13548,17 +13548,18 @@ var TSA_ENDPOINTS = Object.freeze([
 var te2 = new TextEncoder();
 
 // ../bio-plane/src/gate.mjs
-var CATALOG_VERSION = "1.43.0";
+var CATALOG_VERSION = "1.44.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 820,
-  digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d"
+  rows: 827,
+  digest: "5eae043f703a68fcf9ef26dd02bb6e890fff8d7a553f9db31fc0220518bf45b0"
 });
 var te3 = new TextEncoder();
 
 // ../bio-plane/src/promotion/index.mjs
 var INLINE_MAX = 1024 * 1024;
+var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
 
 // ../bio-plane/src/provenance/register-checks.mjs
 var CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
@@ -25775,7 +25776,7 @@ var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/progressions/checks.mjs
 var at4 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
-var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
+var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",

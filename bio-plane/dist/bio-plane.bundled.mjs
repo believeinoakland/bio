@@ -15811,12 +15811,12 @@ function spliceReferences(text3, additions) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.43.0";
+var CATALOG_VERSION = "1.44.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 820,
-  digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d"
+  rows: 827,
+  digest: "5eae043f703a68fcf9ef26dd02bb6e890fff8d7a553f9db31fc0220518bf45b0"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -15963,7 +15963,8 @@ async function runGate({
 
 // src/promotion/index.mjs
 var INLINE_MAX = 1024 * 1024;
-var REOPENABLE_FROM = ["deferred", "dismissed"];
+var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
+var REOPENABLE_FROM = DISPOSITIONS;
 var RETIRE_CITED_DETAIL = "these are still cited by live edges. Retiring them would leave those Projects pointing at retired material, which C-6.2 treats as an error whose remedy is to sever the edge with a reason. Sever first, then retire.";
 var EDGE_REASON_MAX = 160;
 var isObj3 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -16789,11 +16790,7 @@ var Promotion = class {
     if (!head || sight !== "FULL") return noSuchProject(projectId);
     if (normalizeType(head.type) !== "project") return { ok: false, reason: "NOT_A_PROJECT" };
     const p = membership.participation(projectId, by);
-    if (!p) return {
-      ok: false,
-      reason: "NOT_A_PARTICIPANT",
-      detail: "a project is forked by someone working on it. An uninvited member cannot see that it exists."
-    };
+    if (!p) return notAParticipant(projectId, by);
     if (p.state !== "joined") return {
       ok: false,
       reason: "NOT_JOINED",
@@ -56948,7 +56945,7 @@ function migrateProgressions(sql) {
 // src/progressions/checks.mjs
 var checks_exports11 = {};
 __export(checks_exports11, {
-  DISPOSITIONS: () => DISPOSITIONS,
+  DISPOSITIONS: () => DISPOSITIONS2,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
   generic: () => generic,
@@ -56956,7 +56953,7 @@ __export(checks_exports11, {
   refusal: () => refusal8
 });
 var at4 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
-var DISPOSITIONS = Object.freeze(["deferred", "dismissed"]);
+var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",
@@ -57077,7 +57074,7 @@ function generic(code, detail, extra = {}) {
 }
 var NOT_A_DISPOSITION_DETAIL = "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition";
 function notADisposition(to, extra = null) {
-  if (typeof to === "string" && DISPOSITIONS.includes(to)) return null;
+  if (typeof to === "string" && DISPOSITIONS2.includes(to)) return null;
   const row2 = PROGRESSION_CHECKS.NOT_A_DISPOSITION;
   const given = to === void 0 || to === null || typeof to === "string" && !to.trim() ? null : to;
   return {
@@ -57088,7 +57085,7 @@ function notADisposition(to, extra = null) {
     check: row2.check,
     translation: row2.translation,
     to: given,
-    dispositions: DISPOSITIONS,
+    dispositions: DISPOSITIONS2,
     detail: NOT_A_DISPOSITION_DETAIL
   };
 }
@@ -64609,7 +64606,7 @@ var CaptureCredentials = class _CaptureCredentials {
 var inquiry_exports = {};
 __export(inquiry_exports, {
   BASIS_ROLES: () => BASIS_ROLES,
-  DISPOSITIONS: () => DISPOSITIONS,
+  DISPOSITIONS: () => DISPOSITIONS2,
   EARNED_TARGETS_MAX: () => EARNED_TARGETS_MAX,
   EDGE_REASON_MAX: () => EDGE_REASON_MAX2,
   GROUND_LABEL_RE: () => GROUND_LABEL_RE,
@@ -98849,7 +98846,7 @@ var VOCABULARIES = {
      `op=actionlaws` keeps no copy — `actions'` array (jurisdictions', which it re-exports), which the act's
      refusal (BAD_LAW_LEVEL) and C-2.10 read. */
   law_levels: LAW_LEVELS2,
-  dispositions: DISPOSITIONS,
+  dispositions: DISPOSITIONS2,
   /* REC-14 / DEC-13. Published so a ceremony surface never keeps its own copy
      of the three positions. WHICH position a group takes gates NOTHING —
      nothing in the plane reads it, and a group that deliberately gave no notice
@@ -99502,7 +99499,7 @@ var ACTS = [
     label: "Dispose (defer or dismiss)",
     weight: "refuse",
     types: ["inquiry"],
-    applies: (f8, ty) => ty === "inquiry" && !f8.case_member && DISPOSITIONS.some((d) => edgesFrom(f8).includes(d))
+    applies: (f8, ty) => ty === "inquiry" && !f8.case_member && DISPOSITIONS2.some((d) => edgesFrom(f8).includes(d))
   },
   /* REC-13. An inquiry whose machine offers the `concluded` edge — `open`, and
      its `surfaced` alias, and nothing else. Weight `single`, the first act
