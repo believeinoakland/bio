@@ -32,3 +32,20 @@ Found beyond my module (record, Completion 'Found'): (1) plane bundle bio-plane/
 ## J2 · COMPLETE
 
 N285 applied: R63 evidenceAbsent(sha, store, extra?) in src/capture/ops.mjs answers {status: 404, body: {ok:false, reason/code NOT_FOUND, check C-118.1, translation, sha256, store, ...extra}}; row CAPTURE_CHECKS.NOT_FOUND in the new src/capture/checks.mjs (C-118, next free family); R21's get answers through it. Tests 69/69; format, architecture, coverage (63/63), ownership: 0 failures. Record: build/jobs/T12/capture.md on job/T12/capture @ bcd0ffc9f8+.
+
+## Completion (B2, K383)
+
+**Applied.** Merged `tranche/T12` first (f955973a80). R32's unknown knock id: `inboxGet` and `inboxResolve` answer through one private helper, `#noSuchKnock` (`src/capture/index.mjs`), `{ok: false, reason/code "NO_SUCH_KNOCK", check "C-118.2", translation, knockId}`, the same answer for the read and for a resolve to any valid status, nothing written; an id that is not a non-empty string is answered the same without a query (`knockId: null`). Row `CAPTURE_CHECKS.NO_SUCH_KNOCK`, C-118.2, `where` `src/capture/index.mjs #noSuchKnock > is-knock-held`, translation "No knock in the inbox answers to this id. Nothing was changed." `BAD_STATUS` is still tried first (unchanged order).
+
+**Found (reported to BOB).**
+1. **The 404 does not reach the wire from this module.** `inboxget`/`inboxresolve` go through the Durable Object's generic route, which always answers 200 `{ok: true, result}`, and the control plane passes that status through (`src/index.mjs` ~7120); a store answer carries no status. The status is the control plane's per-op mapping, as it maps `NO_REVIEW_COPY` and `NO_SUCH_BUNDLE` to 404 (`src/index.mjs` ~3513, ~4999): legacy-index maps `NO_SUCH_KNOCK` to 404 for these two ops, or R32's "404" is reworded. Everything else in R32's clause is tested at capture's interface.
+2. Legacy `bio-plane/test/doorbell.test.mjs` "unknown knock id says so" (line 508) pins `result.reason === "NOT_FOUND"`: now 71 pass, 1 fail. It reads `NO_SUCH_KNOCK` now (legacy-tests). No UI keys on the inbox's old code (`setup.mjs`'s inbox view, civicos-ui, affordances: none).
+3. DEC-49 guard, whole job against `tranche/T12` @ f955973a80's tree: families 99→100, rows 783→785, census 1065→1066, reach 810→811, governedSites 494→496, regions 455→457, regionLines 5462→5473, codesChecked 881→885, outcomeReturns 257→259, refusalsJudged 857→859 (bodyLines, exempt, 7268→7279); arm G's `NOT_FOUND` 7 → 5 sites (the inbox's two gone); no new failure kind.
+4. Still standing from J1: the plane bundle is stale (`src/capture/index.mjs` and `ops.mjs` are inputs); `pdfstructure-op.test.mjs` 28/1 until extraction's R31 lands.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/capture/`: tests 70, pass 70, fail 0 (new: "R32 (K383)").
+- format: 69 modules, 64 requirements files; 0 failures. architecture: 13 product files, 54 relative imports; 0 failures. coverage: 63 of 63 live ids named; 0 failures. ownership (tranche/T12): legacy-store 0/0, legacy-index 0/0; 0 failures.
+- Legacy `test/doorbell.test.mjs`: 71 pass, 1 fail (item 2).
+
+Size (session_0195mhRMLSwyJgRodhjV2CEg, B2): test runs 5, module lines 3075
