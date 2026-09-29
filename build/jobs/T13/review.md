@@ -38,4 +38,4 @@
 - `coverage`: 27 of 27 live requirement ids named by a test, 0 failures.
 - `ownership` (against `tranche/T13`): 5 files, legacy-store and legacy-checks 0 lines added or removed, 0 failures.
 
-Size (session_01P7YNYC4HwY5uqrXFyjyZpM): test runs 7, module lines 1009
+Size (session_01P7YNYC4HwY5uqrXFyjyZpM): test runs 7, module lines 1010
