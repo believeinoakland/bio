@@ -975,7 +975,8 @@ export class Publication {
    *  (`pinned`, `only_capture`), once per (document, capture), in the document's order; `reevaluation` R14 grades that
    *  capture. A row naming no capture (`undetermined`, `no_capture`, `no_bytes`) has nothing to grade and is no part,
    *  and neither is a member finding (it holds no capture). A document older than /4 signed no citations: no parts.
-   *  THE PART'S SHAPE IS OPEN (J2): the edition pins a capture, never the cited document's `bundle_sha`. `project` is
+   *  The part is the capture, not a `bundle_sha`: the edition pins a capture, never the cited document's version
+   *  (K365). `project` is
    *  the case's owning project, null for a case older than DEC-72. Registered with R43 as reevaluation's
    *  `registerCaseParts` (its R26). A case with no ratified edition (or not that one) answers `NO_SUCH_CASE_EDITION`;
    *  no case named, `NO_ID`. Writes nothing. */
