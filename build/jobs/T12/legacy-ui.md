@@ -70,3 +70,7 @@ I merged `tranche/T12` into this branch (queue merged, K409).
 **Found for BOB:** the `member-respect` and `bound-sweep` re-anchoring above, for legacy-tests. No code was added or retired, and nothing generated is stale.
 
 Size (session_01BSC2Ek4hARuMbaqzmitcK9): test runs 9, module lines 132
+
+## J2 · COMPLETE · re B2
+
+B2 applied (record: 'Completion after B2'). Merged tranche/T12. Lead's options_grain: renderer draws only where an item carries one (stance/version still do); comment updated. class_labels read verbatim (fallback Noticed for FINDING on an older plane). Found and fixed in my module: per-item Defer/Dismiss on a project-scoped finding (the lead among them) sent the instance-wide key, which the plane refuses; they now send (project, finding) with the case named or asked (no default), and draw no Adopt. notifDispositionKeyed now requires disposition.op === proposedispose, so queue R12's newer-capture notice no longer gets three refused controls. Smoke on the real-plane fixture: 11/11. UI battery: same 10 files red before/after my edits (assertion-level identical); new since the merge and legacy-tests' to re-anchor: member-respect ARM 4d (reads proposeDispose/taskResolve/taskForward/queuemute in store.mjs, which queue moved), bound-sweep (3 delta walks). Checks: 0 failures.
