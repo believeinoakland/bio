@@ -462,7 +462,6 @@ __export(bio_checks_exports, {
   ACTION_KINDS: () => ACTION_KINDS,
   ACTOR_CLASSES: () => ACTOR_CLASSES,
   ACT_SHAPE_CHECKS: () => ACT_SHAPE_CHECKS,
-  ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_CREDENTIAL_CHECKS: () => AI_CREDENTIAL_CHECKS,
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   ANN_ID_RE: () => ANN_ID_RE,
@@ -506,7 +505,6 @@ __export(bio_checks_exports, {
   CORRESPONDENCE_STAGES: () => CORRESPONDENCE_STAGES,
   CUSTODIAL_CHECKS: () => CUSTODIAL_CHECKS,
   DECISION_STAGES: () => DECISION_STAGES,
-  DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   EARNED_CAPTURE_CEILING: () => EARNED_CAPTURE_CEILING,
   EARNED_GRADE_SOURCES: () => EARNED_GRADE_SOURCES,
@@ -537,7 +535,6 @@ __export(bio_checks_exports, {
   MECHANICAL_FIELD_SETS: () => MECHANICAL_FIELD_SETS,
   MEMBER_ID_CHECKS: () => MEMBER_ID_CHECKS,
   MONITOR_FREQ: () => MONITOR_FREQ,
-  NAMESPACE_CHECKS: () => NAMESPACE_CHECKS,
   NARROW_CHECKS: () => NARROW_CHECKS,
   NON_MEMBER_AUTHORS: () => NON_MEMBER_AUTHORS,
   OBJECT_TYPES: () => OBJECT_TYPES,
@@ -550,7 +547,6 @@ __export(bio_checks_exports, {
   PROMOTED_TYPE_CHECKS: () => PROMOTED_TYPE_CHECKS,
   PROPOSAL_STATES: () => PROPOSAL_STATES,
   PROVENANCE_ACT_CHECKS: () => PROVENANCE_ACT_CHECKS,
-  QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   QUOTE_KEYS: () => QUOTE_KEYS,
   REGISTRATION_CHECKS: () => REGISTRATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
@@ -570,7 +566,6 @@ __export(bio_checks_exports, {
   SUGGEST_KINDS: () => SUGGEST_KINDS,
   SUGGEST_LEVELS: () => SUGGEST_LEVELS,
   SURFACE_CHECKS: () => SURFACE_CHECKS,
-  TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   TESTIMONY_CHECKS: () => TESTIMONY_CHECKS,
   TESTIMONY_GRADE: () => TESTIMONY_GRADE,
   TEXT_CHAIN_CHECKS: () => TEXT_CHAIN_CHECKS,
@@ -5104,55 +5099,6 @@ var AI_CREDENTIAL_CHECKS = {
     where: "src/membership/index.mjs aiCredentialRevoke > is-ai-credential-revoke",
     translation: "There is no agent credential by that name on this instance, so nothing was withdrawn. Being told that plainly matters more than it looks: believing you have taken an authority away when you have not is the worse of the two outcomes."
   },
-  /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
-  /* D-199 (1)'s shape, reused from `scopeFor`: CLASS plus SCOPE, enforced at the
-     gate BY REFUSING. It is one code because it answers one question — is this
-     op within what the record declared for this credential — and the two ways
-     of failing it (outside the member-reach floor, or not among the declared
-     writes) are the same answer to the caller. */
-  AI_BEYOND_TASK_SCOPE: {
-    check: "C-29.6",
-    where: "src/index.mjs aiTaskScope > is-ai-task-scope",
-    translation: "This credential was created for a particular piece of work and that is not part of it. What an agent may do here is written down on the record by the member who set it up, so widening it means somebody amending that entry, not the agent asking again."
-  },
-  AI_CREDENTIAL_REVOKED: {
-    check: "C-29.7",
-    where: "src/index.mjs aiTaskScope > is-ai-task-scope",
-    translation: "This agent credential has been withdrawn by a member of the group, so it no longer reaches anything here. The record keeps the entry and the date rather than deleting it, so what it did while it was live remains readable."
-  },
-  /* ---- THE DECLARATION. WHAT MAY BE AUTHORED IN THE FIRST PLACE. ---- */
-  /* A scope naming something that is not an op is not a narrower scope: it is a
-     sentence in the record that nothing enforces, which is precisely what
-     D-199 (2) moved the scope out of a settings row to avoid. */
-  AI_SCOPE_UNKNOWN_OP: {
-    check: "C-29.8",
-    where: "src/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
-    translation: "The list of things this credential may change names something this instance does not do. An entry nothing recognises would sit in the record looking like a permission while meaning nothing, so it is refused rather than stored."
-  },
-  /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
-     forbidden ops — a property of the op: can a MEMBER reach it. The unattended
-     verbs carry no member class by construction, so they are outside every
-     scope anybody can write, today and after the next op lands. */
-  AI_SCOPE_BEYOND_MEMBER_REACH: {
-    check: "C-29.9",
-    where: "src/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
-    translation: "An agent may only be given things a member of this group could hand to it, and this is not one of them. The background worker's own jobs, and the acts a member performs only from their own signed-in session, are outside what anybody can hand to an agent, so this cannot be written into a credential at all."
-  },
-  /* D-463 (C-29.10) — THE CONFINEMENT, JUDGED BEFORE IT ENTERS THE RECORD.
-     A credential may be minted confined to the scratch namespace for its whole life, and to NOTHING ELSE.
-     `bio` is refused with the rest, and that is the decision rather than an omission: `bio` is where every
-     unconfined credential already lands, so a row saying "confined to bio" would be a sentence in the record
-     that reads like a fence and constrains nothing — D-199 (2)'s complaint about a settings row, arriving as
-     a column. The value is matched EXACTLY — nothing trimmed, nothing case-folded — on D-456's rule one layer in,
-     because a Durable Object name is an exact string and folding it would be the code guessing what a member meant.
-     ABSENT (the field omitted, or null) is the ONLY silence, and it is the case every caller written before this item
-     is in; a PRESENT empty string is a value and is refused with the rest, because an empty `store=` is one of the
-     values D-456 measured addressing the real record. */
-  AI_CONFINEMENT_NOT_SCRATCH: {
-    check: "C-29.10",
-    where: "src/index.mjs aiConfinementDeclaration > is-ai-confinement-declaration",
-    translation: "A credential can be confined to the scratch area and to nothing else, spelt exactly. Leaving the confinement out altogether makes an ordinary credential that reaches the record itself; naming the record itself is not a confinement, so it is refused rather than written down as one. Nothing was created."
-  },
   /* ---- WHO A CREDENTIAL MAY ACT FOR (T4, legacy-checks, N44, 2026-09-27). ---- */
   /* Membership R29: a member-scoped credential's principal is the member who mints it. Naming another member
      would let one member hand an agent another's sight and put acts in another's name. Until this row the
@@ -5169,23 +5115,6 @@ var AI_CREDENTIAL_CHECKS = {
     check: "C-29.12",
     where: "src/membership/index.mjs aiCredentialMint > is-ai-credential-mint",
     translation: "A credential that acts for the whole group is created by one of its administrators, and the account asking is not an active administrator here. Nothing was created. You can create a credential that acts for you alone, or ask an administrator to create this one."
-  }
-};
-var QUEUE_MINT_CHECKS = {
-  NO_CLASS: {
-    check: "C-31.1",
-    where: "src/store.mjs queueFeed > is-queue-mint",
-    translation: "Your list could not be assembled: something on it does not say what sort of item it is, and showing it without that would put an entry in front of you that nobody can act on. Nothing has been lost and nothing about the record has changed \u2014 this is a fault on our side, not something you did."
-  },
-  NO_SUCH_KIND: {
-    check: "C-31.2",
-    where: "src/store.mjs queueFeed > is-queue-mint",
-    translation: "Your list could not be assembled: something on it is described in a word this record does not know, so there is no sentence to show you in place of it. Rather than showing you a line you could not read, the list refuses whole. Nothing has been lost."
-  },
-  KIND_MISCLASSED: {
-    check: "C-31.3",
-    where: "src/store.mjs queueFeed > is-queue-mint",
-    translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
   }
 };
 var CASE_DERIVATION_CHECKS = {};
@@ -5219,55 +5148,9 @@ var MACHINE_FENCE_CHECKS = {
     check: "C-32.8",
     where: "src/inquiry/index.mjs #ground > is-machine-ground",
     translation: "Grounding says some of the reasons behind an answer are strong enough to carry it on their own, and it is the one act here that makes a finding stronger rather than weaker. That decision needs a person behind it, and the credential that asked is an automated one. Sign in to ground it."
-  },
-  MACHINE_CANNOT_FORWARD: {
-    check: "C-32.10",
-    where: "src/store.mjs taskForward > is-machine-forward",
-    translation: "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it."
-  },
-  MACHINE_CANNOT_RESOLVE: {
-    check: "C-32.11",
-    where: "src/store.mjs taskResolve > is-machine-resolve",
-    translation: "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one \u2014 it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it."
-  },
-  /* D-136 / C-32.17 — D-421's RULING APPLIED TO SECTION 4 GOVERNANCE, and it is
-     the same doctrine rather than a new one: *the credential that delivers an
-     act decides when the record changes, and the record names the actor.* A
-     §4.7 vote is C-32.14's shape with the member's signature replaced by a
-     roster position — an act the record attributes to a named administrator,
-     which a bearer token held in the hosting account cannot be.
-     ONE ROW FOR THE THREE OPS, on C-32.16's precedent rather than C-32.14's: the
-     endorsement, the removal vote and the capability edit enter through ONE
-     region and are refused by ONE predicate, so three rows would be one rule with
-     three homes. The op is named in the answer, so a caller still learns which
-     verb was refused, and the class is named in `tokenClass`, so an operator
-     learns which of its credentials asked.
-     THE PREDICATE IS `!viaSession` — how the caller ARRIVED, not which token it
-     held — so it covers ADMIN, MEMBER and PROBE today and any binding added
-     tomorrow, and no class list appears at the site to go stale. */
-  OPERATOR_TOKEN_CANNOT_GOVERN: {
-    check: "C-32.17",
-    where: "src/index.mjs fetch > is-operator-governance-act",
-    translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for this copy, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
   }
 };
 var ACT_SHAPE_CHECKS = {
-  /* REC-205, 2026-09-24 — A CLASS THAT IS NOT DISPOSED AT ALL, and it is a MEMBER-FACING refusal from
-     the day the queue lets a selection carry one. D-126's per-item weight means a member ticks items and
-     applies one handler; NOTIFICATIONS.md's "MARKED AS HANDLED" section says the scope differs by class,
-     so a CONDITION is muted and an OBLIGATION is resolved and neither is DISPOSED. Before this row the act
-     answered NO_SUCH_PROGRESSION and told the member to define a progression — true of the key it read and
-     useless about what they clicked, the same fault IC-60's bridge exists to have fixed one door over.
-     THE TRANSLATION NAMES THE ACT THAT DOES REACH IT rather than only refusing, because the member is
-     holding a selection and the next move is the whole question. It does NOT say the item is gone: under
-     the per-item weight the rest of the selection was handled and this one stays in the list, which is the
-     fact a member re-reading their queue needs. Numbered inside this family (C-33.x) on REC-211's own
-     precedent two rows down — C-33.42 and C-33.43 were added to it without minting a top-level C. */
-  CLASS_NOT_DISPOSED: {
-    check: "C-33.44",
-    where: "src/store.mjs proposeDispose > is-dispose-class",
-    translation: "This is not something the record disposes of. Deferring and dismissing are decisions about a FINDING \u2014 the record's own question \u2014 and this item is a different kind of thing: a CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work a named person owes and leaves every list when it is resolved. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
-  },
   NO_CONCLUSION: {
     check: "C-33.1",
     where: "src/basis-versions/index.mjs conclude > is-conclude-answer",
@@ -5412,11 +5295,6 @@ var ACT_SHAPE_CHECKS = {
     check: "C-33.25",
     where: "src/entities/index.mjs addAlias > is-alias-named",
     translation: "Another name for something needs to actually be a name. This one is empty once the spacing and punctuation are taken off, so there would be nothing for anybody to search on later."
-  },
-  KIND_NOT_PERSONAL: {
-    check: "C-33.27",
-    where: "src/store.mjs queueMute > is-mute-class",
-    translation: "Setting this aside would be a change everybody sees rather than a private choice of yours, and that is a decision the group takes together rather than one this control makes. The kinds you can quiet for yourself are listed beside the refusal."
   },
   LAST_OWNER: {
     check: "C-33.28",
@@ -5622,130 +5500,6 @@ var TEXT_CHAIN_CHECKS = {
     translation: `This says how faithful a member's own typing of the page is. Nobody grades their own transcription: what a member typed stays "not yet determined" until a different member checks it against the page and says it matches.`
   }
 };
-var ADMISSION_CHECKS = {
-  /* Absent identity, and it is the FIRST thing a stranger meets. It says what to
-     do rather than what happened, because a person reading this has not yet done
-     anything wrong — they have simply not said who they are. */
-  NOT_AUTHENTICATED: {
-    check: "C-38.1",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "Nothing in this request said who you are. Sign in, or send a credential this instance issued, and try again."
-  },
-  /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
-     sentence: this is not a rung on a ladder the caller can climb. A credential
-     is issued for a purpose and this is not that purpose, so the honest advice
-     is to use the right one rather than to ask for this one to be widened. */
-  CLASS_FORBIDDEN: {
-    check: "C-38.2",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "The credential you sent is not one this operation accepts. Credentials here are issued for a particular purpose, and widening this one is not the way through: use the credential meant for this work."
-  },
-  /* The mirror of the row above, and it exists separately because the two are
-       opposite facts about the caller. This one is a PERSON asking for something
-       only an unattended writer does; the row above is a credential of the wrong
-       kind entirely. One refusal covering both would tell neither caller anything
-       they could act on — DEC-49's own argument, and PL-18's.
-  
-       **NARROWED 2026-09-19 BY D-270, AND THE `where` MOVED WITH THE SITE.** This
-       row is a DESIGN CLAIM — it tells a person that a verb is not for people —
-       and BOB #17 ruled that the plane may make it ONLY where such a decision is
-       recorded. Until D-270 this one sentence answered THREE different facts and
-       was FALSE for two of them: it went to five ops an administrator's own
-       browser performs, and to ops whose OPS rows say in as many words that they
-       are a named member's judgement. The site is now `sessionOpGate`, which
-       sends this row only for an op named in `UNATTENDED_BY_DECISION`, and the
-       refusal carries the citation in `recorded`, so the claim and its warrant
-       travel together. The rule's home is
-       `docs/architecture/BIO_Membership_Architecture_v2.md` §4 (the §4.7 block). */
-  MACHINE_CREDENTIAL_REQUIRED: {
-    check: "C-38.3",
-    where: "src/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. This instance holds a recorded decision to that effect and names it beside this message."
-  },
-  /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
-     OUTCOMES, and the one the plane could ALWAYS have said: it is about the
-     CALLER rather than about the design, so it needs no recorded decision to be
-     sayable. Five ops — `governorconfig`, `memberadd`, `memberset`, `signeradd`,
-     `signerset` — were answered with the row above, which told a member to go
-     and find a machine credential for an act an administrator performs from
-     their own browser. There is no such credential to find. This sentence names
-     the person to ask instead, because that is the action actually available.
-     CORRECTED 2026-09-25 by REC-162 (Membership v2 §4.9, BOB #23): it read "but an
-     administrator of this group, and this session is not one … ask an administrator".
-     After REC-159 the one op it answers is `governorconfig`, which the FOUNDER'S session
-     alone reaches — an enrolled administrator holds a member's session and was told they
-     were not an administrator. The sentence now names the SESSION, as the refusal's own
-     `reachedBy` does. */
-  SESSION_ROLE_CANNOT_REACH_OP: {
-    check: "C-38.7",
-    where: "src/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "A signed-in person does perform this operation, but from a different session than this one, and this refusal names which. Where it names the founder's session, being an administrator of this group does not reach it: every enrolled member, an administrator included, signs in with a member's session. No machine credential is needed and finding one is not the way through: ask the person who holds the session it names."
-  },
-  /* D-270 / BOB #17's THIRD SENTENCE, and it exists because the other two would
-       otherwise have to cover a case neither is true of.
-  
-       **THE ARGUMENT, AND IT IS THIS ROW'S WHOLE REASON.** A false rationale
-       SUPPRESSES ITS OWN BUG REPORT: a member told that an absence is a DECISION
-       will not report it as a gap, so the sentence recruits the one person who
-       could have caught it into believing there is nothing to catch. The measured
-       case is D-136's — `adminendorse`, `adminremove` and `membercaps` WERE
-       reachable by no session, and Membership Architecture §4.7 assigns that very
-       vote to a person. **D-136 LANDED 2026-09-19 and discharged that case**: the
-       three now hold `SESSION_OPS.admin` reach and a server-stamped `by`, so an
-       administrator's session reaches them and a member's gets the ROLE sentence,
-       not this one. The receipt stays in the past tense because it is the ARGUMENT
-       for this row rather than a roster of its members — the gap was reported only
-       because the plane declined to call it a decision, and deleting the evidence
-       once the gap closes is how a rule outlives the reason it was made. `docs/archive/research/CAPABILITIES.md` (F-4) recorded
-       independently that the old sentence told an administrator the act §4.9
-       assigns them needs a credential §4.8 says somebody else holds, and that
-       there is no action a member can take from it.
-  
-       SO THIS ROW STATES THE FACT AND INVENTS NO RATIONALE. It says what is true
-       — no session route exists — and says plainly that the record holds no
-       decision explaining it, which is an INVITATION to report the gap rather
-       than a wall in front of it. A refusal may state only what the system can
-       support. */
-  SESSION_ROUTE_NOT_RECORDED: {
-    check: "C-38.8",
-    where: "src/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "No signed-in session reaches this operation, and this instance holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
-  },
-  /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
-     ENOUGH, and the translation says so, because a member refused here will
-     otherwise read it as a bug in their own permissions. The security property
-     is the point and a person who cannot get in deserves to know it is
-     deliberate. */
-  ROOT_OF_TRUST_REQUIRED: {
-    check: "C-38.4",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "This needs the administrator token itself, not a signed-in session \u2014 and that includes the founder's own browser. A session is derived from a password; the root of trust is the token held in the hosting account. The published record needs no credential at all."
-  },
-  /* **THE LIVE DEFECT THIS ROW CLOSES, and it is why REC-79 chose this family.**
-     `civicos-ui/app.html` hand-authored a sentence for this code:
-     *"This credential cannot write to the record. Capturing needs a member
-     holding contribute."* But this refusal is PLANE-WIDE — it is minted for
-     whatever capability the op needed, and `create_projects` and `publish` are
-     not `contribute`. So a surface had invented capture-specific wording for a
-     refusal that is not about capture, and a member denied for `create_projects`
-     was told about contributing. **That is precisely the drift a canned
-     translation exists to stop** (found by PL-18; DEC-49's own argument for
-     option (b) is that thirteen surfaces would otherwise each invent wording).
-     The sentence here names no capability, because the plane already sends the
-     one that was needed in `needs` and the surface renders that. */
-  NOT_CAPABLE: {
-    check: "C-38.5",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "Your account does not hold the capability this needs. Capabilities are granted by an administrator, so ask one rather than looking for another route to the same thing."
-  },
-  /* A credential that MAY act, but not HERE. Distinct from every row above,
-     which are all about whether the caller may act at all. */
-  SCOPE_REFUSED: {
-    check: "C-38.6",
-    where: "src/index.mjs fetch > is-admission",
-    translation: "That credential is allowed to act, but not on the part of the record this request named. It is confined to its own namespace and this request reached outside it."
-  }
-};
 var REQUIRED_ARGUMENT_CHECKS = {
   /* NOTHING WAS CHANGED, and the sentence says so first. A caller who cannot
      tell a refused request from a half-applied one has to go and look, and this
@@ -5761,21 +5515,6 @@ var INSTALLATION_CHECKS = {
     check: "C-68.1",
     where: "src/index.mjs storageAbsent > is-storage-absent",
     translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
-  },
-  BOOTSTRAP_CREDENTIAL_UNSET: {
-    check: "C-68.2",
-    where: "src/index.mjs fetch > is-bootstrap-claim",
-    translation: "This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed."
-  },
-  BOOTSTRAP_CREDENTIAL_PUBLISHED: {
-    check: "C-68.3",
-    where: "src/index.mjs fetch > is-bootstrap-claim",
-    translation: "This copy's administrator token is a value published in the project's public repository, so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a fresh one in the hosting account. Nothing was changed."
-  },
-  BOOTSTRAP_CREDENTIAL_MISMATCH: {
-    check: "C-68.4",
-    where: "src/index.mjs fetch > is-bootstrap-claim",
-    translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
   }
 };
 var RENDER_CAPTURE_CHECKS = {
@@ -5854,50 +5593,6 @@ var RENDER_CAPTURE_CHECKS = {
     check: "C-83.8",
     where: "src/capture/acquire.mjs acquire > is-render-admit",
     translation: "This instance is already rendering as many pages at once as it allows, so this render is waiting for one of them to finish. Nothing was fetched and nothing was filed in its place. A scheduled capture asks again on its own; try again in a minute."
-  }
-};
-var NAMESPACE_CHECKS = {
-  NAMESPACE_UNKNOWN: {
-    check: "C-78.1",
-    where: "src/index.mjs namespaceGate > is-namespace-gate",
-    translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
-  },
-  /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
-     Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
-     them, a knock, WROTE there. The sentence says nothing happened first and names no remedy but the true one. */
-  NAMESPACE_PINNED: {
-    check: "C-78.2",
-    where: "src/index.mjs pinnedNamespaceGate > is-pinned-namespace-gate",
-    translation: "This request asked for the scratch area, but this operation only ever answers from the record itself and has no scratch version, so nothing was read or changed. To use it, leave the scratch area out of the request, knowing it then reaches the real record."
-  },
-  /* D-463 (C-78.3): the credential itself is confined to the scratch area for its whole life, and this request
-     named a different part of the record. C-78.1 and C-78.2 are both properties of the REQUEST — a name that
-     does not exist, an operation that has no scratch version; this one is a property of the CALLER, which is
-     why it is a third row and not a widening of either. Confinement is by REFUSAL and never by silent
-     redirection when a store is NAMED (`scopeFor`'s rule for the probe class, and D-456's for everyone): a
-     caller who believes it addressed the record must be told it did not. An ABSENT `store=` is not a refusal —
-     the credential's own confinement is its default, which is the whole point of minting one. */
-  NAMESPACE_CONFINED: {
-    check: "C-78.3",
-    where: "src/index.mjs confinedNamespaceGate > is-confined-namespace-gate",
-    translation: "The credential used for this request can only ever reach the scratch area kept apart for testing, and this request asked for a different part of the record, so nothing was read or changed. Leave the part out of the request and it reaches scratch, which is the only place this credential goes."
-  }
-};
-var DISPATCH_CHECKS = {
-  UNKNOWN_OP: {
-    check: "C-69.1",
-    where: "src/index.mjs fetch > is-unknown-op",
-    translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
-  },
-  /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
-     `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
-     and until D-561 the code reached them bare. It is a fact about the EXCHANGE, never about the record, and the
-     sentence says only that. It does NOT say "nothing was changed": `storeSilent` also answers a write whose store
-     went silent, and whether that write took effect is exactly what a silence cannot say. */
-  STORE_DID_NOT_ANSWER: {
-    check: "C-69.2",
-    where: "src/index.mjs storeSilent > is-store-silent",
-    translation: "This copy of the record could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
   }
 };
 var KNOCK_CHECKS = {
@@ -7221,23 +6916,6 @@ var SURFACE_CHECKS = {
     check: "C-66.5",
     where: "src/store.mjs #promoteChecks > is-promote-surfaced-by, reached from op=promote through the step legacy-store registers with promotion (K31)",
     translation: "This revision changes who surfaced the question, a member or an assistant. That is recorded once, when the question is opened, and a later edit cannot rewrite it. Nothing was saved. Keep the value the current version carries and save the revision again."
-  },
-  /* D-512 (INVESTIGATIVE-SESSION.md §11 item 5, "`replay` IS THE SERVER'S WORD, NEVER THE CALLER'S", BOB #33's
-     STEP (2)): `replay` exempts a promotion from every shape fence `promote` has, because a replay re-states the
-     record's own past verbatim. D-511 (step 1) removed the flag from every caller but the ADMIN class with no
-     session; this is the end state. A promotion of ANY type and ANY revision that asserts a replay names its
-     drive-provenance capture, and `op=promote` verifies it against what the record HOLDS — the capture registered
-     by this promotion, its bytes read back and hashed, and one preserved promotion record naming this bundle and
-     listing this revision's `bundle.md` SHA-256 — never against the request's own claim (CLAUDE.md §5). Measured
-     before this existed (`9f8b69e6`, `risk-tier.test.mjs` §8 arm (δ)): the admin deploy token sending `replay: true`
-     with no provenance landed `risk_tier: 1` on an action nobody assessed. Asked in `op=promote`'s stamp block
-     BEFORE the store is called, so nothing is written. The admin is refused rather than downgraded to an ordinary
-     promotion, because the one honest sender (`migrate.mjs`) carries the past verbatim and an ordinary creation is
-     rewritten on the way in. */
-  REPLAY_UNVERIFIED: {
-    check: "C-66.6",
-    where: "src/index.mjs fetch > is-promote-replay-verified",
-    translation: "This save says it is a replay of the record's own history, and the plane could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved."
   }
 };
 var PROJECT_ID_CHECKS = {
@@ -7286,38 +6964,6 @@ var INSTANCE_GROUP_CHECKS = {
     check: "C-64.1",
     where: "src/inquiry/index.mjs #groupUndetermined > is-group-undetermined",
     translation: "This copy has not recorded which group it belongs to, and nothing in this request says, so the record cannot write a document that must name the group that produced it. A copy records its group once: when it is first installed, or by one act of whoever holds its administrator token in the hosting account. Nothing was written."
-  },
-  GROUP_SLUG_MALFORMED: {
-    check: "C-64.2",
-    where: "src/store.mjs instanceGroupSeed > is-instance-group-seed",
-    translation: "A group is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded."
-  },
-  GROUP_ALREADY_RECORDED: {
-    check: "C-64.3",
-    where: "src/store.mjs instanceGroupSeed > is-instance-group-seed",
-    translation: "This copy's group is already recorded, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed."
-  },
-  /* REC-164 — BIO_Publication_v0_1.md §7 points 2 and 3: the display name and the domain are set by an
-     administrator's own signed-in session, and the record names who set each one. */
-  GROUP_IDENTITY_NEEDS_SESSION: {
-    check: "C-64.4",
-    where: "src/index.mjs fetch > is-group-identity-session",
-    translation: "The name this group shows the public, and the web address it claims, are set by one of its administrators, and the record names who set each one. The credential that asked here is one of the operator's access tokens for this copy, not a person, so it cannot be that administrator. Sign in as the administrator and set it from there. Nothing was changed."
-  },
-  GROUP_IDENTITY_NOT_ADMIN: {
-    check: "C-64.5",
-    where: "src/store.mjs #groupIdentityGate > is-group-identity-admin",
-    translation: "Only one of the group's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed."
-  },
-  GROUP_DISPLAY_NAME_MALFORMED: {
-    check: "C-64.6",
-    where: "src/store.mjs groupNameSet > is-group-display-name",
-    translation: "A display name is the group's own words for itself: some text, at most 120 characters, on one line. It is always shown beside the group's short name and never instead of it. Nothing was changed."
-  },
-  GROUP_DOMAIN_MALFORMED: {
-    check: "C-64.7",
-    where: "src/store.mjs groupDomainSet > is-group-domain",
-    translation: "A web address is claimed by its bare domain name, like example.org: no https://, no path and no port. The claim is then checked by reading a file the domain itself serves, and the public sees the domain only while that check passes. Nothing was changed."
   }
 };
 function withProducingGroup(text, slug) {
@@ -7743,13 +7389,6 @@ function coversImagePlacement(e, container) {
   const listed = onPage.slice(0, 6).map((x) => `[${norm(x.rect).join(", ")}]`).join(" ");
   return `page ${e.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
 }
-var TASK_ACTOR_CHECKS = {
-  NOT_YOURS: {
-    check: "C-76.1",
-    where: "src/store.mjs #refuseNotYours > is-task-actor-fence",
-    translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
-  }
-};
 var PER_ITEM_CHECKS = {
   SET_NO_ITEMS: {
     check: "C-75.1",
