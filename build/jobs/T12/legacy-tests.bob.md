@@ -53,3 +53,7 @@ On J1: (1) affordances' `profilesset` is fixed and merged (K416), with the insta
 ## B12 · CHANGE
 
 Queue is merged again (K416): `is-dispose-scope` is now 5 lines. Merge `tranche/T12`; the DEC-49 guard's `regionLines` floor re-pins (5,495 measured against 5,455). The unclaimed `is-listener-registrat…` marker in `src/membership/index.mjs` is membership's: report it if it is not already a filed entry, and leave it.
+
+## B13 · CHANGE
+
+Control-plane is merged again (K418): `relayAnswer` now reads through `doAnswer`. Merge `tranche/T12`; `plane-envelope` (it imports `DISPATCH_CHECKS` from the catalogue, now control-plane's, B8) should then load and its Detector A go green: confirm it.
