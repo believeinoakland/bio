@@ -42,6 +42,14 @@ const SIGHT_LINE = "if (!p || !this.#inSight(p.bundle_id, viewer)) return Store.
 const EXISTENCE_ONLY_ACCESSOR = ["membership/index.mjs", "  #existenceOnly(projectId) {\n",
   "  existenceOnlyForControl(projectId) { return this.#existenceOnly(projectId); }\n  #existenceOnly(projectId) {\n"];
 /* REC-196: §11's reads, by the label each carries, so an arm can demand every one of them by name. */
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the store's door moved to `control-plane/dispatch.mjs` (N333,
+   881c24b76e), where `existenceRead` asks `membership.visibilityOf`, which answers `hidden` for a non-project as well —
+   so `rec196-hidden-too`'s prefilter ("any project the sight index holds") reads membership's private `#one` through
+   this second one-line accessor, added by that arm alone (it changes no behaviour: nothing else calls it). */
+const EXISTENCE_ONLY_AND_INDEX_ACCESSOR = ["membership/index.mjs", "  #existenceOnly(projectId) {\n",
+  "  existenceOnlyForControl(projectId) { return this.#existenceOnly(projectId); }\n"
+  + "  inSightIndexForControl(projectId) { return !!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=?`, projectId); }\n"
+  + "  #existenceOnly(projectId) {\n"];
 const REC196_READS = ["image", "file", "projection", "excludedby", "backlinks", "reevaluations", "inquirystrength",
   "earnedbasis", "partitionindependence", "narrowcandidates", "versionnotice", "basisversions", "versionstrength",
   "strengthbarof", "extractproposals", "capturerequests", "tasks", "biasmanifest", "airuns", "casedrafts",
@@ -52,10 +60,13 @@ const ARMS = {
   /* THE BRIEF'S CONTROL 1: ONE act's distinguishing answer restored — `cite` resolves its project with
      the bare lookup again, every other act held open. Only cite's two arms may go red. */
   "cite-distinguishing": {
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): citation's T10 (ae1ca284b7, N196) answers `#citingObject`'s
+       refusal AT THE TOP LEVEL (`if (!obj.ok) return obj;`) rather than as `obj.refusal`; the same call, taken out the
+       same way. */
     /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): `cite`, `sever` and `reinstate` are citation's (`src/citation/
        index.mjs`), and the one sight gate is `#citingObject`, which both share. The arm takes `cite`'s call of it
        out and keeps its existence answer (C-70.1) — sight dropped, nothing else — so `sever`/`reinstate` keep theirs. */
-    patches: [["citation/index.mjs", "    const obj = this.#citingObject(project, viewer);\n    if (obj.refusal) return obj.refusal;\n"
+    patches: [["citation/index.mjs", "    const obj = this.#citingObject(project, viewer);\n    if (!obj.ok) return obj;\n"
                + "    const p = obj.head;\n    /* Through normalizeType",
                "    const p = typeof project === \"string\" && project ? this.record.head(project) : null;\n"
                + "    if (p) { const existence = this.membership.existenceAct(project, viewer); if (existence) return existence; }\n"
@@ -67,9 +78,10 @@ const ARMS = {
      the sight gate. The gate is still there; C-56.1 now answers first, so sever's and reinstate's
      answers disclose the project, and the C-56-discloses arms must say so. */
   "position-first": {
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): citation's T10 (ae1ca284b7, N196): `if (!obj.ok) return obj;`. */
     /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): `#edgeTransition` is citation's; its sight gate is its call of
        `#citingObject`, taken out (existence kept) and asked AFTER the position check instead. */
-    patches: [["citation/index.mjs", "    const obj = this.#citingObject(project, viewer);\n    if (obj.refusal) return obj.refusal;\n"
+    patches: [["citation/index.mjs", "    const obj = this.#citingObject(project, viewer);\n    if (!obj.ok) return obj;\n"
                + "    const p = obj.head;\n    if (p.type !== \"project\")\n      return { ok: false, reason: \"NOT_A_PROJECT\", project, got: p.type,\n"
                + "               detail: \"cites lives on the citing object",
                "    const p = typeof project === \"string\" && project ? this.record.head(project) : null;\n"
@@ -93,9 +105,11 @@ const ARMS = {
      store call, and the founder's session) are spared, so the founder's two arms stay green here and
      the declaration relies on the members' arms. */
   "not-found-to-everyone": {
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): membership T9 (c22c907613, N142) made `inSight` total — its
+       first line now refuses any id that is not a non-empty string; the lie is inserted after it, unchanged. */
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the one sight predicate is membership's `inSight`. */
-    patches: [["membership/index.mjs", "  inSight(bundleId, viewer) {\n    if (!bundleId) return false;\n    const g = viewerPredicate(viewer);",
-               "  inSight(bundleId, viewer) {\n    if (!bundleId) return false;\n"
+    patches: [["membership/index.mjs", "  inSight(bundleId, viewer) {\n    if (typeof bundleId !== \"string\" || !bundleId) return false;\n    const g = viewerPredicate(viewer);",
+               "  inSight(bundleId, viewer) {\n    if (typeof bundleId !== \"string\" || !bundleId) return false;\n"
                + "    if (String(viewer ?? \"\").startsWith(\"member:\")\n"
                + "        && this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, bundleId)?.object_type === \"project\") return false;\n"
                + "    const g = viewerPredicate(viewer);"]],
@@ -135,7 +149,9 @@ const ARMS = {
   "roster-stamp-dropped": {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): N85 (membership, K124) put `memberpairings` into the same
        stamp list between the two lines; the arm still drops PROJECT_ACTIONS alone. */
-    patches: [["index.mjs", "        || PROJECT_ACTIONS.includes(op)\n        /* N85's other half",
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the Worker's stamps moved from legacy-index to the control
+       plane (cc81048f65, T12): `control-plane/index.mjs`, the same two lines. */
+    patches: [["control-plane/index.mjs", "        || PROJECT_ACTIONS.includes(op)\n        /* N85's other half",
                "        /* N85's other half"]],
     /* §1's and §2's labels ONLY, so a SEES-NO-ROLE or JOINED arm that went red would be UNDECLARED. */
     mustFail: ["raw (status, content type, body): op=projectinvite", "UNSIGHTED: op=projectinvite",
@@ -148,7 +164,10 @@ const ARMS = {
   /* THE PROMOTE STAMP DROPPED: `actorIdentity` still arrives, `actorViewer` does not, so the revision
      arm fails CLOSED for every stamped caller — machine credentials included. */
   "promote-stamp-dropped": {
-    patches: [["index.mjs", "        delete b.actorViewer;\n        b.actorViewer = viaSession ? sessViewer",
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the promote stamp is the control plane's (cc81048f65, T12).
+       ARMED and still NOT AS DECLARED (0/1: the suite throws SURFACE_NO_RUN in REC-171's `surfacing-run.mjs`
+       fixture before any arm) — PRE-EXISTING, D-447's finding (2) in the suite's header, unchanged; not re-declared. */
+    patches: [["control-plane/index.mjs", "        delete b.actorViewer;\n        b.actorViewer = viaSession ? sessViewer",
                "        delete b.actorViewer;\n        if (false) b.actorViewer = viaSession ? sessViewer"]],
     mustFail: ["olga — op=promote", "the FOUNDER's session", "JOINED: iris revises", "the ADMIN token still revises it"],
   },
@@ -191,7 +210,11 @@ const ARMS = {
      The hidden creation and revision then move vera's stats by name, and the EXACT arm reads a zero difference. The
      searchindexcheck and selectionlist arms must NOT fail — they are the next two arms' subjects. */
   "stats-whole-store": {
-    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = null && gate && gate.scope !== "member"\n`]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): legacy-store T10 (892b92d95a, N191) renamed `#hiddenSets` to
+       `#hiddenBundles` and moved D-486's RUN subtraction out of it to ai-runs' R42 (`hiddenRuns`); `#counts` still
+       takes `hid` from it and hands it to retrieval's and run-productions' `counts(hid)`. The arm neuters that `hid`
+       at its source, as before. */
+    patches: [["store.mjs", `    return gate && gate.scope !== "member"\n`, `    return null && gate && gate.scope !== "member"\n`]],
     /* DECLARATION EXTENDED 2026-09-24 BY D-486, never exempted: this arm breaks `op=stats` for EVERY key, and
        §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
        "failed but not declared" — an arm whose declaration is stale reads as a control that surprised its
@@ -202,28 +225,39 @@ const ARMS = {
        so every §10 arm goes red here — while `stats-stamp-dropped` below, which drops the stamp on
        `op=stats` alone, leaves §10 entirely green because `op=queue` carries its own. The asymmetry
        is what says the coupling is the predicate and not the door. */
+    /* DECLARATION NARROWED 2026-09-29 (LEGACY-TESTS #11, T13), MEASURED, NOT TO MAKE IT PASS — and the narrowing is a
+       FINDING about the tree rather than about this arm. The two couplings the extensions above recorded are GONE:
+       D-486's run subtraction is ai-runs' R42 (`hiddenRuns`, 892b92d95a), no longer derived from this `hid`, so §9's
+       FIVE, its aiRunLog EXACT and the TALLY stay green; and D-480's candidate walk is queue's, which spells its OWN
+       `#hiddenBundles` (7c2a3d646a) — a second copy of the same complement, textually identical — so §10 stays green
+       too. "The two fixes share ONE spelling of the sight rule" no longer holds: store, queue and retrieval
+       (`hiddenSet`) each spell the complement of `viewerPredicate`, and this arm can reach only the store's. Measured
+       on the armed copy: 251/4 — §8's headline (vera's `bundles, files, history, refs, indexed, selections,
+       selectionItems, projectParticipants` moved), its op=stats digest, its bundles EXACT, and §9's op=stats digest
+       (still declared: `#counts`' `aiRuns` key counts `ai_runs` by `context_id` through THIS `hid`, so the hidden run
+       moves it; the document frontier half of that arm stayed byte-identical). */
     mustFail: ["A HIDDEN CREATION AND REVISION MOVE NO KEY of vera's op=stats", "MOVE NOTHING: op=stats (status",
                "EXACT: the ADMIN token's bundles less vera's",
-               "A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE", "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
-               "EXACT: the ADMIN token's aiRunLog less vera's",
-               "THE TALLY — D-486's OWN SUBJECT",
-               "A HIDDEN PROJECT'S CITATIONS MOVE NOTHING", "A HIDDEN PROJECT'S CITATIONS TAKE NO SLOT",
-               "the bound is the plane's own published figure", "THE PAGE IS EXACTLY FULL",
-               "A TARGET VERA CANNOT SEE TAKES NO SLOT", "STILL LIVE: a target she CAN see DOES take a slot",
-               "STILL LIVE: crowding vera CAN see does reach her"],
+               "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier"],
   },
   /* D-464: `op=searchindexcheck`'s `indexed` over the whole text index again (M-122's second leak). */
   "indexcheck-whole-index": {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=searchindexcheck is retrieval's. */
-    patches: [["retrieval/index.mjs", "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE rowid NOT IN\n",
-               "indexed: this.#one(`SELECT count(*) c FROM bundles_fts WHERE 1=1 OR rowid NOT IN\n"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): retrieval T10 (3d5dacebe7, N106/N171) counts `indexed` through
+       one `#indexedCount(hid)`, shared with `counts(hid)` (op=stats' `indexed`); the arm hands op=searchindexcheck's
+       call alone no set, so ONLY that reader counts the whole index again. */
+    patches: [["retrieval/index.mjs", "indexed: this.#indexedCount(hiddenSet(gate)),",
+               "indexed: this.#indexedCount(null),"]],
     mustFail: ["MOVE NOTHING: op=searchindexcheck (status", "MOVE NOTHING: op=searchindexcheck&limit=1 (status",
                "still a parity check over what she can see"],
   },
   /* D-464: `op=selectionlist`'s `bytes` over every selection row again — iris's selection of the hidden project moves it. */
   "selectionbytes-whole": {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): op=selectionlist is retrieval's. */
-    patches: [["retrieval/index.mjs", `        const hide = g && g.scope !== "member";`, `        const hide = false && g;`]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): retrieval T10 (3d5dacebe7) spells the bytes' subtraction as
+       `hiddenSet(viewerPredicate(viewer))`, the module's one complement; the arm takes no set, as before. */
+    patches: [["retrieval/index.mjs", "        const hid = viewer === undefined ? null : hiddenSet(viewerPredicate(viewer));",
+               "        const hid = null;"]],
     mustFail: ["MOVE NOTHING: op=selectionlist (status"],
   },
   /* D-464: the control plane's viewer stamp on op=stats dropped. A viewer NEVER SENT is the store's direct-internal
@@ -233,7 +267,8 @@ const ARMS = {
      then corrected because it zeroed the counters four store-level suites read off the DO route directly; the arm
      was re-declared for the store as landed. */
   "stats-stamp-dropped": {
-    patches: [["index.mjs", `        || op === "stats"\n`, ``]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the stamp list is the control plane's (cc81048f65, T12). */
+    patches: [["control-plane/index.mjs", `        || op === "stats"\n`, ``]],
     /* DECLARATION EXTENDED 2026-09-24 BY D-486, never exempted: this arm breaks `op=stats` for EVERY key, and
        §9 now reads two of its keys, so §9's arms go red too. They are DECLARED rather than left as
        "failed but not declared" — an arm whose declaration is stale reads as a control that surprised its
@@ -248,7 +283,8 @@ const ARMS = {
   /* D-464 OVER-STRICTNESS: the subtraction taken for EVERY sent viewer, unfiltered ones included — correct work in a
      spelling the suite did not anticipate (an unfiltered gate's complement is empty). Nothing may fail. */
   "subtract-for-everyone": {
-    patches: [["store.mjs", `    const hid = gate && gate.scope !== "member"\n`, `    const hid = gate\n`]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#hiddenSets` is legacy-store's `#hiddenBundles` (892b92d95a). */
+    patches: [["store.mjs", `    return gate && gate.scope !== "member"\n`, `    return gate\n`]],
     mustFail: [],
   },
 
@@ -291,7 +327,9 @@ const ARMS = {
                "THE TALLY — D-486's OWN SUBJECT"],
   },
   "d486-stats-airunlog-unsubtracted": {
-    patches: [["store.mjs", "      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runRows ? ` AND ${runRows.sql}` : \"\"}`,\n                          ...(runRows ? runRows.args : [])).c,",
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): legacy-store T10 (892b92d95a, N191) takes the key through ai-runs'
+       R42 tail (`runTail`); the arm drops the tail and its args from this ONE key. */
+    patches: [["store.mjs", "      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'${runTail.sql}`, ...runTail.args).c,",
                "      aiRunLog: this.#one(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`).c,"]],
     mustFail: ["A HIDDEN PROJECT'S RUN MOVES NONE OF VERA'S FIVE",
                "A HIDDEN PROJECT'S RUN MOVES NOTHING AT ALL in op=stats and in the DOCUMENT frontier",
@@ -309,8 +347,10 @@ const ARMS = {
   /* D-486 OVER-STRICTNESS: the same predicate in its De Morgan spelling — correct work in a form the
      suite did not anticipate. Nothing may fail. */
   "d486-predicate-de-morgan": {
-    patches: [["store.mjs", "`NOT (authority_kind = 'run' AND COALESCE(authority, '') IN ${hidRuns.sql})`",
-               "`(authority_kind <> 'run' OR COALESCE(authority, '') NOT IN ${hidRuns.sql})`"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the run predicate is ai-runs' R42 `hiddenRuns` now (892b92d95a,
+       N191), spelled over the runs IN sight (`NOT IN ${inSight}`) rather than the hidden ones; its De Morgan spelling. */
+    patches: [["ai-runs/index.mjs", "` AND NOT (authority_kind = 'run' AND COALESCE(authority, '') NOT IN ${inSight})`",
+               "` AND (authority_kind <> 'run' OR COALESCE(authority, '') IN ${inSight})`"]],
     mustFail: [],
   },
 
@@ -331,7 +371,9 @@ const ARMS = {
      long for that reason and not because the arm is blunt. The TARGET arm is the attribution: it
      fails ONE assertion, and the citer arms either side of it stay green. */
   "d480-citers-ungated": {
-    patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#queueSharedInquiryCandidates` is queue's (7c2a3d646a, T12), with
+       queue's own `#hiddenBundles`; the same two lines. */
+    patches: [["queue/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
     /* DECLARATION CORRECTED AFTER THE FIRST RUN, AND THE ARM WAS RIGHT WHILE THE DECLARATION WAS
        WRONG. Two of §10's arms read `truncOf(...).every((x) => x === false)`, which is TRUE OVER AN
        EMPTY ARRAY, so with vera's item crowded off her page entirely they PASSED over a feed with
@@ -345,13 +387,17 @@ const ARMS = {
                "STILL LIVE: crowding vera CAN see does reach her"],
   },
   "d480-targets-ungated": {
-    patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#queueSharedInquiryCandidates` is queue's (7c2a3d646a, T12), with
+       queue's own `#hiddenBundles`; the same two lines. */
+    patches: [["queue/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args, ...hid.args] : [];", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql}` : \"\";\n    const args = hid ? [...hid.args] : [];"]],
     mustFail: ["A TARGET VERA CANNOT SEE TAKES NO SLOT"],
   },
   /* D-480 OVER-STRICTNESS: the same subtraction in a spelling the suite did not anticipate — the
      negation outside the membership test rather than inside it. Nothing may fail. */
   "d480-not-in-inverted": {
-    patches: [["store.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";", "    const where = hid ? ` AND NOT (rf.bundle_id IN ${hid.sql}) AND NOT (rf.target_id IN ${hid.sql})` : \"\";"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `#queueSharedInquiryCandidates` is queue's (7c2a3d646a, T12), with
+       queue's own `#hiddenBundles`; the same two lines. */
+    patches: [["queue/index.mjs", "    const where = hid ? ` AND rf.bundle_id NOT IN ${hid.sql} AND rf.target_id NOT IN ${hid.sql}` : \"\";", "    const where = hid ? ` AND NOT (rf.bundle_id IN ${hid.sql}) AND NOT (rf.target_id IN ${hid.sql})` : \"\";"]],
     mustFail: [],
   },
 
@@ -359,16 +405,21 @@ const ARMS = {
      again (the pre-dispatch check disarmed, every read held open). Each of §11's 24 reads must fail 11b BY NAME,
      and 11c with them (the absent answers carry keys a C-70.1 does not). Nothing else may fail. */
   "rec196-existence-read-dropped": {
-    patches: [["store.mjs", "      const existence = this.#existenceRead(op, url, body);", "      const existence = null;"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the pre-dispatch check is the control plane's `dispatch`
+       (`control-plane/dispatch.mjs`, N333, 881c24b76e), calling the exported `existenceRead`. */
+    patches: [["control-plane/dispatch.mjs", "    const existence = existenceRead(() => store.membership(), op, url, body);", "    const existence = null;"]],
     mustFail: [...REC196_READS.map((n) => `11b: AT EXISTENCE, op=${n} naming`), "11c:"],
   },
   /* REC-196 LIAR 2: positional for a HIDDEN project too — every project the caller cannot fully see answers C-70.1.
      §11e's 24 hidden-equals-absent arms must fail by name. */
   "rec196-hidden-too": {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#existenceOnly` is membership's; reached by the accessor. */
-    patches: [EXISTENCE_ONLY_ACCESSOR, ["store.mjs",
-      "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;\n        const existence = this.#existenceAct(id, viewer);",
-      "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=?`, id)) continue;\n        const existence = this.#inSight(id, viewer) ? null : membershipOf(this.ctx).existenceOnlyForControl(id);"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the loop is `existenceRead` in `control-plane/dispatch.mjs`
+       (N333, 881c24b76e); its prefilter is `membership.visibilityOf(id) === "discoverable"` and its answer
+       `membership.existenceAct`. The same liar: any project the sight index holds, not in FULL sight, answers C-70.1. */
+    patches: [EXISTENCE_ONLY_AND_INDEX_ACCESSOR, ["control-plane/dispatch.mjs",
+      "      if (membership.visibilityOf(id) !== \"discoverable\") continue;\n      const existence = membership.existenceAct(id, viewer);",
+      "      if (!membership.inSightIndexForControl(id)) continue;\n      const existence = membership.inSight(id, viewer) ? null : membership.existenceOnlyForControl(id);"]],
     mustFail: [...REC196_READS.map((n) => `11e: HIDDEN = ABSENT, raw: op=${n} naming`),
       /* EXTENDED after the first run (2026-09-25), never exempted: the arm ALSO failed ten of REC-138's own
          hidden-equals-absent READ arms earlier in the suite (projectparticipants, image, file, affordances, …) —
@@ -378,8 +429,9 @@ const ARMS = {
   /* REC-196 LIAR 3: positional to EVERYBODY — the owner included. 11f and 11f+ must fail. */
   "rec196-to-everyone": {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): `#existenceOnly` is membership's; reached by the accessor. */
-    patches: [EXISTENCE_ONLY_ACCESSOR, ["store.mjs", "        const existence = this.#existenceAct(id, viewer);\n        if (existence) return existence;",
-               "        const existence = membershipOf(this.ctx).existenceOnlyForControl(id);\n        if (existence) return existence;"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): `existenceRead` in `control-plane/dispatch.mjs` (N333). */
+    patches: [EXISTENCE_ONLY_ACCESSOR, ["control-plane/dispatch.mjs", "      const existence = membership.existenceAct(id, viewer);\n      if (existence) return existence;",
+               "      const existence = membership.existenceOnlyForControl(id);\n      if (existence) return existence;"]],
     /* EXTENDED 2026-09-25 by REC-197, never exempted: §12's 12b and 12h+ read a DISCOVERABLE project back
        through its OWNER's `op=projectvisibility` — a read naming the project's own id, which this arm answers
        C-70.1 for everybody. A second witness to the same liar, by name. */
@@ -387,19 +439,26 @@ const ARMS = {
   },
   /* REC-196 LIAR 4: the table one read short. The sweep must name it, and its own 11b must fail. */
   "rec196-table-short": {
-    patches: [["store.mjs", ` projectvisibility: ["projectId"], projectparticipants: ["projectId"],`, ` projectvisibility: ["projectId"],`]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the table is `export const PROJECT_NAMING_READS` in
+       `control-plane/dispatch.mjs` (N333, 881c24b76e), which §11g now reads (923d1ff9e8). */
+    patches: [["control-plane/dispatch.mjs", ` projectvisibility: ["projectId"], projectparticipants: ["projectId"],`, ` projectvisibility: ["projectId"],`]],
     mustFail: ["11g: every read carrying", "11b: AT EXISTENCE, op=projectparticipants naming"],
   },
   /* REC-196: the control plane's viewer stamp on the roster read dropped — the store cannot ask sight without it. */
   "rec196-roster-viewer-unstamped": {
-    patches: [["index.mjs", `                                "projectvisibility", "projectdirectory",\n`,
-               `                                "projectvisibility", "projectdirectory"];\n                                void [\n`]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the stamp list is `REC30_VIEWER_READS` in `control-plane/index.mjs`
+       (cc81048f65, T12), and REC-150's `projectrequests` and N321's `projectstage` now follow `projectparticipants` in
+       it. The first spelling cut the list after `projectdirectory`, which would now unstamp those two as well — a
+       second variable; the arm removes `projectparticipants` alone. */
+    patches: [["control-plane/index.mjs", `                                "projectparticipants",\n`, ``]],
     mustFail: ["11b: AT EXISTENCE, op=projectparticipants naming"],
   },
   /* REC-196 OVER-STRICTNESS: the same answer without the index prefilter (`#existenceAct` asked of every named id).
      Nothing may fail. */
   "rec196-no-prefilter": {
-    patches: [["store.mjs", "        if (!this.#one(`SELECT 1 AS x FROM project_sight WHERE project_id=? AND setting='discoverable'`, id)) continue;\n", ""]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): the prefilter is `existenceRead`'s `visibilityOf` line in
+       `control-plane/dispatch.mjs` (N333, 881c24b76e). */
+    patches: [["control-plane/dispatch.mjs", "      if (membership.visibilityOf(id) !== \"discoverable\") continue;\n", ""]],
     mustFail: [],
   },
 
@@ -452,8 +511,11 @@ const ARMS = {
   "sight-via-redactor": {
     /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the store's `#inSight` is a delegation to membership's one
        predicate now; the arm answers it through the store's other spelling, `#bundleRedactor`, as before. */
-    patches: [["store.mjs", "  #inSight(...a) { return membershipOf(this.ctx).inSight(...a); }",
-               "  #inSight(bundleId, viewer) { return this.#bundleRedactor(viewer)(bundleId) !== null; }"]],
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #11, T13): legacy-store's delegation is `#viewerSees` since T10 (892b92d95a,
+       N268 deleted the dead `#inSight`); it is what op=image and op=file ask. The arm answers IT through
+       `#bundleRedactor`, the store's other spelling, as before. */
+    patches: [["store.mjs", "  #viewerSees(...a) { return membershipOf(this.ctx).inSight(...a); }",
+               "  #viewerSees(bundleId, viewer) { return this.#bundleRedactor(viewer)(bundleId) !== null; }"]],
     mustFail: [],
   },
 };
