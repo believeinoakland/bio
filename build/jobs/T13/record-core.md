@@ -15,7 +15,7 @@
 
 **Deferred.** None.
 
-**Found in other modules and artifacts (reported to BOB, J2):**
+**Found in other modules and artifacts (reported to BOB, J1):**
 - **control-plane**: `MODULE_CHECK_FILES` (`src/control-plane/index.mjs`:775) lists every module's `checks.mjs` for `dec49Row`, and record-core's new file is not in it. The helper spreads its own row, so the wire is complete today. A `dec49Row("MINT_EXHAUSTED")` lookup finds review's C-87.12 until review retires it, and then finds nothing until the list gains `M_RECORD_CORE`.
 - **legacy-tests** (`civicos-ui/check-refusal-codes.mjs`, the DEC-49 guard): on `tranche/T13` it fails 4 checks, none of them mine. With this change it fails 13. The 9 new failures:
   - (1) `REVIEW_COPY_CHECKS.MINT_EXHAUSTED and RECORD_CORE_CHECKS.MINT_EXHAUSTED carry the IDENTICAL translation`. This is R62's own wording (the translation is C-87.12's), and it clears when review retires C-87.12 (layer 8).
