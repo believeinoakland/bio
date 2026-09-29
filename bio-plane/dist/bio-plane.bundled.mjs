@@ -77450,6 +77450,55 @@ var STAGE_QUESTIONS_MAX = 2e3;
 var WORK_PRODUCTS_MAX = 200;
 var PROJECT_STAGES = Object.freeze(["forming", "investigating", "matured", "closed"]);
 var CLOSED_REASONS = Object.freeze(["resolved", "superseded", "abandoned"]);
+var COMPUTED_STAGES = PROJECT_STAGES.slice(0, 3);
+var CLOSED_RECORDED_MAX = 40;
+var STAGE_NEEDS = Object.freeze({
+  investigating: Object.freeze(["held_question_with_leg"]),
+  matured: Object.freeze(["concluded_held_question", "ratified_case_edition"])
+});
+var STAGE_SENTENCES = Object.freeze({
+  forming_reached: "every project starts forming; this stage needs nothing from the record",
+  investigating_reached: "{with_legs} of the {read} held questions read have at least one leg in their basis",
+  investigating_skipped: "reached because a later stage is reached; none of the {read} held questions read has a leg in its basis",
+  investigating_none_held: "the project holds no question yet; a held question with a leg in its basis reaches this stage",
+  investigating_no_leg: "the project holds {read} questions and none has a leg in its basis; a leg on any one of them reaches this stage",
+  matured_reached: "the project has concluded {concluded} of the {read} held questions read and owns {editions} ratified case editions",
+  matured_not_reached: "the project has concluded none of the {read} held questions read and owns no ratified case edition; concluding one of them, or a ratified case edition of a case it owns, reaches this stage",
+  closed_project: "the project is closed, so no further stage is needed; a reopening is the owner's act",
+  closed_reached: "the owner recorded the close with its reason; a reopening is the owner's act",
+  closed_not_recorded: "a close is the owner's recorded act with its reason (resolved, superseded or abandoned), not a stage the record grows into",
+  closed_unrecognised: "the document records a close, but its reason is not resolved, superseded or abandoned, so the close is not read"
+});
+var fillCounts = (sentence, n) => sentence.replace(/\{(read|with_legs|concluded|editions)\}/g, (_, k) => String(n[k]));
+function stageWhy(stage, reached, earned, n) {
+  const key = stage === "forming" ? "forming_reached" : stage === "investigating" ? reached ? earned ? "investigating_reached" : "investigating_skipped" : n.read ? "investigating_no_leg" : "investigating_none_held" : reached ? "matured_reached" : "matured_not_reached";
+  return fillCounts(STAGE_SENTENCES[key], n);
+}
+function stageNeeds(stage, n) {
+  const have = {
+    held_question_with_leg: n.with_legs,
+    concluded_held_question: n.concluded,
+    ratified_case_edition: n.editions
+  };
+  return { any_of: STAGE_NEEDS[stage].map((condition) => ({ condition, have: have[condition] })) };
+}
+function earliestInstant(list2) {
+  let best = null;
+  for (const v of list2) {
+    if (typeof v !== "string" || !Number.isFinite(Date.parse(v))) continue;
+    if (best === null || instantOrder(v, best) < 0) best = v;
+  }
+  return best;
+}
+function closedSince(fm) {
+  const hist = Array.isArray(fm && fm.state_history) ? fm.state_history : [];
+  for (let i = hist.length - 1; i >= 0; i--) {
+    const e = hist[i];
+    if (e && typeof e === "object" && e.to_state === "closed")
+      return typeof e.timestamp === "string" && Number.isFinite(Date.parse(e.timestamp)) ? e.timestamp : null;
+  }
+  return null;
+}
 var READINESS_RUNGS = Object.freeze(["draft", "internally_checked", "externally_compliant", "distributed"]);
 var RESTING_PINS_MAX = 1e3;
 var pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
@@ -78360,13 +78409,13 @@ var Publication = class {
     };
   }
   /* ---------------------------------------------------------------- R44–R47: a project's stage */
-  /** R44–R47 (N300; K356, K362, K364, K379): a project's stage and its work products' readiness, derived afresh at every
-   *  read from the record and never stored (R47): the project's own document (rule 1's recorded close), the questions
-   *  it holds (basis-versions R41 `projectQuestions`, whose stance is R22's `conclusionOf` reading) and the cases it
-   *  owns and has published. Fenced by membership R44's sight: `NO_ID` for no project; absent, not a project and no
-   *  sight are one answer, membership's `noSuchProject` (R29); existence only is membership's C-70.1 through
-   *  `existenceAct`; only FULL sight is answered. Writes nothing; never throws (a part it cannot read is stated
-   *  undetermined, R28). */
+  /** R44–R47, R49 (N300, N346; K356, K362, K364, K379, K448, K452): a project's stage, what each stage has earned and
+   *  still needs (`stages`), and its work products' readiness, derived afresh at every read from the record and never
+   *  stored (R47): the project's own document (rule 1's recorded close), the questions it holds (basis-versions R41
+   *  `projectQuestions`, whose stance is R22's `conclusionOf` reading) and the cases it owns and has published. Fenced
+   *  by membership R44's sight: `NO_ID` for no project; absent, not a project and no sight are one answer, membership's
+   *  `noSuchProject` (R29); existence only is membership's C-70.1 through `existenceAct`; only FULL sight is answered.
+   *  Writes nothing; never throws (a part it cannot read is stated undetermined, R28). */
   projectStage({ project = null, viewer = null } = {}) {
     const pid = str7(project);
     if (!pid) return { ok: false, reason: "NO_ID", detail: "projectStage names a project" };
@@ -78408,68 +78457,173 @@ var Publication = class {
       basis: null
     };
     const text3 = this.#fileText(pid, "bundle.md");
-    if (!text3) return {
-      ...out,
-      stage: "undetermined",
-      detail: "the project's own document could not be read, so whether its owner closed it is undetermined"
-    };
+    if (!text3) {
+      const detail = "the project's own document could not be read, so whether its owner closed it is undetermined";
+      return { ...out, stage: "undetermined", detail, stages: this.#stages({ unread: detail }) };
+    }
     const fm = parseFrontmatter(text3.content).data || {};
-    if (fm.current_state === "closed" && CLOSED_REASONS.includes(fm.closed_reason))
+    const closeRecorded = fm.current_state === "closed";
+    const closed = closeRecorded && CLOSED_REASONS.includes(fm.closed_reason);
+    const read2 = this.#readHeld(pid, out.questions);
+    let computed;
+    if (read2.concluded)
+      computed = { stage: "matured", basis: { rule: "matured", question: read2.concluded, case: null, edition: null } };
+    else if (work.first_ratified)
+      computed = { stage: "matured", basis: { rule: "matured", question: null, ...work.first_ratified } };
+    else if (read2.failed || read2.more)
+      computed = {
+        stage: "undetermined",
+        at_least: read2.legged ? "investigating" : "forming",
+        detail: read2.failed ? "the questions this project holds could not all be read, so its stage is undetermined" : `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of those read is concluded and it has published no case, so whether it has matured is undetermined; it is at least as far as stated`
+      };
+    else if (read2.legged)
+      computed = { stage: "investigating", basis: { rule: "investigating", question: read2.legged, case: null, edition: null } };
+    else computed = { stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
+    const questions = computed.stage === "undetermined" ? { ...out.questions, truncated: true } : out.questions;
+    const stages = this.#stages({ computed, read: read2, work, questions, viewer, pid, fm, closeRecorded, closed });
+    if (closed)
       return {
         ...out,
+        questions,
         stage: "closed",
         closed_reason: fm.closed_reason,
-        basis: { rule: "closed", question: null, case: null, edition: null }
+        basis: { rule: "closed", question: null, case: null, edition: null },
+        stages
       };
-    let after = null, concluded = null, legged = null, more = false;
+    if (computed.stage === "undetermined")
+      return { ...out, questions, stage: "undetermined", at_least: computed.at_least, detail: computed.detail, stages };
+    return { ...out, questions, stage: computed.stage, basis: computed.basis, stages };
+  }
+  /* R45: the held questions read in pages of 500, at most 2,000, stopping once rule 2 is met. Counts into `questions`;
+     answers the first legged and first concluded question read, every one read with a leg (R49's `since`), whether
+     more follow the last page read, and whether a read failed (the counts then stand as read). */
+  #readHeld(pid, questions) {
+    const r = { concluded: null, legged: null, leggedIds: [], more: false, failed: false };
+    let after = null;
     try {
-      while (out.questions.read < STAGE_QUESTIONS_MAX) {
+      while (questions.read < STAGE_QUESTIONS_MAX) {
         const page = this.basisVersions.projectQuestions({
           project: pid,
           after,
-          limit: Math.min(PROJECT_QUESTIONS_MAX, STAGE_QUESTIONS_MAX - out.questions.read)
+          limit: Math.min(PROJECT_QUESTIONS_MAX, STAGE_QUESTIONS_MAX - questions.read)
         });
         const items = page && Array.isArray(page.items) ? page.items : [];
         for (const q6 of items) {
-          out.questions.read++;
+          questions.read++;
           if (q6.legs) {
-            out.questions.with_legs++;
-            legged ??= q6.inquiry;
+            questions.with_legs++;
+            r.legged ??= q6.inquiry;
+            r.leggedIds.push(q6.inquiry);
           }
           if (q6.stance === "concluded") {
-            out.questions.concluded++;
-            concluded ??= q6.inquiry;
+            questions.concluded++;
+            r.concluded ??= q6.inquiry;
           }
         }
-        more = !!(page && page.cursor) && items.length > 0;
-        if (concluded || !more) break;
+        r.more = !!(page && page.cursor) && items.length > 0;
+        if (r.concluded || !r.more) break;
         after = page.cursor;
       }
     } catch {
-      return {
-        ...out,
-        stage: "undetermined",
-        at_least: legged ? "investigating" : "forming",
-        questions: { ...out.questions, truncated: true },
-        detail: "the questions this project holds could not all be read, so its stage is undetermined"
-      };
+      r.failed = true;
     }
-    if (concluded)
-      return { ...out, stage: "matured", basis: { rule: "matured", question: concluded, case: null, edition: null } };
-    if (work.first_ratified)
-      return { ...out, stage: "matured", basis: { rule: "matured", question: null, ...work.first_ratified } };
-    if (more) {
-      return {
-        ...out,
-        stage: "undetermined",
-        at_least: legged ? "investigating" : "forming",
-        questions: { ...out.questions, truncated: true },
-        detail: `this project holds more than the ${STAGE_QUESTIONS_MAX} questions one read examines, none of those read is concluded and it has published no case, so whether it has matured is undetermined; it is at least as far as stated`
+    return r;
+  }
+  /* R49: the four stages, each `{stage, reached, earned, since, needs, why}`, from the one evaluation `projectStage`
+     made (`computed`, the rules-2–4 decision; rule 1's `closed`), never from a second reading of the record. `unread`
+     is the detail when the project's own document could not be read: every stage is then undetermined. */
+  #stages({
+    unread = null,
+    computed = null,
+    read: read2 = null,
+    work = null,
+    questions = null,
+    viewer = null,
+    pid = null,
+    fm = null,
+    closeRecorded = false,
+    closed = false
+  }) {
+    if (unread !== null)
+      return PROJECT_STAGES.map((stage) => ({ stage, reached: null, earned: null, since: null, needs: null, why: unread }));
+    const n = {
+      read: questions.read,
+      with_legs: questions.with_legs,
+      concluded: questions.concluded,
+      editions: work.published_editions
+    };
+    const undetermined = computed.stage === "undetermined";
+    const top2 = COMPUTED_STAGES.indexOf(undetermined ? computed.at_least : computed.stage);
+    const earnedOf = {
+      forming: null,
+      investigating: read2.legged ? { question: read2.legged } : null,
+      matured: computed.stage === "matured" ? computed.basis.question ? { question: computed.basis.question } : { case: computed.basis.case, edition: computed.basis.edition } : null
+    };
+    const sinceOf = {
+      forming: () => null,
+      investigating: () => this.#earliestLeg(read2.leggedIds),
+      /* the instant of the evidence `earned` names, and only that (K469): its current conclusion, else its ratification */
+      matured: () => earnedOf.matured.question ? this.#conclusionInstant(pid, earnedOf.matured.question, viewer) : earliestInstant([work.first_ratified_at])
+    };
+    const computedStages = COMPUTED_STAGES.map((stage, i) => {
+      if (undetermined && i > top2)
+        return { stage, reached: null, earned: null, since: null, needs: null, why: computed.detail };
+      const reached = i <= top2;
+      const earned = reached ? earnedOf[stage] : null;
+      const since = earned ? sinceOf[stage]() : null;
+      if (reached) return { stage, reached, earned, since, needs: null, why: stageWhy(stage, true, earned, n) };
+      if (closed) return { stage, reached, earned: null, since: null, needs: null, why: STAGE_SENTENCES.closed_project };
+      return { stage, reached, earned: null, since: null, needs: stageNeeds(stage, n), why: stageWhy(stage, false, null, n) };
+    });
+    let closedStage;
+    if (closed)
+      closedStage = {
+        stage: "closed",
+        reached: true,
+        earned: { closed_reason: fm.closed_reason },
+        since: closedSince(fm),
+        needs: null,
+        why: STAGE_SENTENCES.closed_reached
       };
+    else if (undetermined)
+      closedStage = { stage: "closed", reached: null, earned: null, since: null, needs: null, why: computed.detail };
+    else
+      closedStage = {
+        stage: "closed",
+        reached: false,
+        earned: null,
+        since: null,
+        needs: null,
+        why: closeRecorded ? STAGE_SENTENCES.closed_unrecognised : STAGE_SENTENCES.closed_not_recorded
+      };
+    if (closeRecorded && !closed)
+      closedStage.recorded = fm.closed_reason == null ? null : String(fm.closed_reason).slice(0, CLOSED_RECORDED_MAX);
+    return [...computedStages, closedStage];
+  }
+  /* R49: the earliest recorded instant among the legs of the held questions read with a leg (inquiry R16's `basisFor`,
+     each leg's `at`); null when none carries one or the legs cannot be read. */
+  #earliestLeg(ids) {
+    const at17 = [];
+    for (const id of ids) {
+      let b = null;
+      try {
+        b = this.inquiry.basisFor(id);
+      } catch {
+        b = null;
+      }
+      if (b && b.ok && Array.isArray(b.legs)) for (const l of b.legs) at17.push(l && l.at);
     }
-    if (legged)
-      return { ...out, stage: "investigating", basis: { rule: "investigating", question: legged, case: null, edition: null } };
-    return { ...out, stage: "forming", basis: { rule: "forming", question: null, case: null, edition: null } };
+    return earliestInstant(at17);
+  }
+  /* R49: the instant of the project's current conclusion of one held question (basis-versions R22 `conclusionOf`). */
+  #conclusionInstant(pid, id, viewer) {
+    let c = null;
+    try {
+      c = this.basisVersions.conclusionOf(pid, id, viewer);
+    } catch {
+      c = null;
+    }
+    return c ? earliestInstant([c.at]) : null;
   }
   /* R46: the project's work products. A work product is a case the project owns: its `cases` row (written at the first
      edition's signature), or, for a case not yet signed, the `case_project` its unsigned document names (R21; so a case
@@ -78521,12 +78675,18 @@ case_project: ${pid}
                                JOIN cases k ON k.case_id=c.case_id
                               WHERE k.project_id=? AND c.ratified_at IS NOT NULL
                               GROUP BY c.case_id ORDER BY c.case_id LIMIT 1`, pid);
+    const firstAt = first ? this.#one(
+      `SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`,
+      first.case_id,
+      first.edition
+    ) : null;
     return {
       items,
       truncated: truncated3,
       published_editions: Number(all.n) || 0,
       readiness: !items.length ? "absent" : top2 < 0 ? "none" : READINESS_RUNGS[top2],
-      first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null
+      first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null,
+      first_ratified_at: firstAt ? firstAt.ratified_at ?? null : null
     };
   }
   /* ---------------------------------------------------------------- moved from the store */
@@ -95607,21 +95767,34 @@ var PLANE_KEYS = [
   "doAnswer",
   "storeSilent",
   "requiredArgument",
-  "StoreSilent",
   "STORE_SILENT_REASON",
   "STORE_SILENT_DETAIL",
   "PUBLISHED_STORE"
 ];
+var PLANE_OPTIONAL = ["storeRefusal"];
 function bindPublishedPlane(helpers) {
   const missing = PLANE_KEYS.filter((k) => !helpers || helpers[k] === void 0);
   if (missing.length) throw new Error(`bindPublishedPlane: missing ${missing.join(", ")}`);
-  PLANE = Object.freeze(Object.fromEntries(PLANE_KEYS.map((k) => [k, helpers[k]])));
+  PLANE = Object.freeze(Object.fromEntries([...PLANE_KEYS, ...PLANE_OPTIONAL].filter((k) => helpers[k] !== void 0).map((k) => [k, helpers[k]])));
   return PLANE;
 }
 function plane() {
   if (!PLANE) throw new Error("publication/worker.mjs: the control plane has not bound its helpers (bindPublishedPlane)");
   return PLANE;
 }
+function relayUnanswered2(out, op) {
+  const P = plane();
+  if (out && out.refused && out.reply)
+    return typeof P.storeRefusal === "function" ? P.storeRefusal(out) : P.json(out.reply.body, out.reply.status);
+  return P.storeSilent(op, out ? out.correlation : void 0);
+}
+var Unanswered = class extends Error {
+  constructor(op, out) {
+    super(`the store did not answer ${op}`);
+    this.op = op;
+    this.out = out;
+  }
+};
 function publishedStoreAbsent(env) {
   if (typeof env.PUBLISHED?.get === "function") return null;
   const row2 = rowOf3("NO_PUBLISHED_STORE");
@@ -95902,12 +96075,12 @@ async function publishedRoutes({ op, url, env, stub }) {
         "publishedbytes requires sha256=<64 lowercase hex>. This surface answers BY HASH and never by path, so there is nothing to walk."
       ) }, 400);
     const vOut = await P.doAnswer(stub.fetch(`http://do/verify?sha256=${shaParam}`));
-    if (!vOut.answered) return P.storeSilent("publishedbytes");
+    if (!vOut.answered) return relayUnanswered2(vOut, "publishedbytes");
     const v = vOut.result;
     if (!v || !v.published) return P.json(noPublishedPart(shaParam), 404);
     if (v.matches.some((m) => m.kind === "case_document") && (url.searchParams.get("format") || "") !== "zip") {
       const dOut = await P.doAnswer(stub.fetch(`http://do/publishedcasedoctext?sha256=${shaParam}`));
-      if (!dOut.answered) return P.storeSilent("publishedbytes");
+      if (!dOut.answered) return relayUnanswered2(dOut, "publishedbytes");
       const d = dOut.result || {};
       const docBytes = d.found && typeof d.text === "string" ? new TextEncoder().encode(d.text) : null;
       const docSha = docBytes ? [...new Uint8Array(await crypto.subtle.digest("SHA-256", docBytes))].map((x) => x.toString(16).padStart(2, "0")).join("") : null;
@@ -96003,7 +96176,7 @@ async function publishedRoutes({ op, url, env, stub }) {
   if (url.searchParams.get("caseId")) q6.set("caseId", url.searchParams.get("caseId"));
   if (/^[0-9a-f]{64}$/.test(shaParam)) q6.set("sha256", shaParam);
   const cOut = await P.doAnswer(stub.fetch(`http://do/publishedcase?${q6}`));
-  if (!cOut.answered) return P.storeSilent("publishedcase");
+  if (!cOut.answered) return relayUnanswered2(cOut, "publishedcase");
   const c = cOut.result;
   if (!c) return P.storeSilent("publishedcase");
   if (!c.ok) return P.json({ ok: false, ...c }, 404);
@@ -96062,7 +96235,7 @@ async function publishedRoutes({ op, url, env, stub }) {
       const rtOut = await P.doAnswer(stub.fetch(
         `http://do/publishedtargets?ids=${encodeURIComponent(ids.join(","))}`
       ));
-      if (!rtOut.answered) throw new P.StoreSilent("publishedcase/publishedtargets");
+      if (!rtOut.answered) throw new Unanswered("publishedcase/publishedtargets", rtOut);
       const rt = rtOut.result;
       registry = rt && rt.registry || {};
     }
@@ -96104,7 +96277,7 @@ async function publishedRoutes({ op, url, env, stub }) {
   try {
     for (const fnd of c.findings || []) findings.push(await renderFinding(fnd));
   } catch (e) {
-    if (e instanceof P.StoreSilent) return P.storeSilent(e.op);
+    if (e instanceof Unanswered) return relayUnanswered2(e.out, e.op);
     throw e;
   }
   return P.json({
@@ -112837,12 +113010,16 @@ async function acquireReadingOp(answer, store, { json: json5 = jsonAnswer, store
 }
 
 // src/ratification/ops.mjs
+function storeRefused(out, { json: json5, storeRefusal: storeRefusal2 }) {
+  return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
+}
 async function caseRatifyOp(req, stub, ctx) {
   const {
     env,
     json: json5,
     doAnswer: doAnswer2,
     storeSilent: storeSilent2,
+    storeRefusal: storeRefusal2,
     assembleCaseContainer: assembleCaseContainer2,
     storeName,
     cls,
@@ -112851,6 +113028,7 @@ async function caseRatifyOp(req, stub, ctx) {
     sessViewer,
     sessRights
   } = ctx;
+  const relay = { json: json5, storeRefusal: storeRefusal2 };
   const op = "caseratify";
   if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
     return json5({
@@ -112880,7 +113058,8 @@ async function caseRatifyOp(req, stub, ctx) {
   const factsOut = await doAnswer2(stub.fetch(
     `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}&edition=${encodeURIComponent(String(body.edition))}&viewer=${encodeURIComponent(sessViewer)}`
   ));
-  if (!factsOut.answered) return storeSilent2("caseratify/facts");
+  if (factsOut.refused) return storeRefused(factsOut, relay);
+  if (!factsOut.answered) return storeSilent2("caseratify/facts", factsOut.correlation);
   const facts = factsOut.result;
   if (!facts.ok) return json5({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
   const attr2 = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
@@ -112970,7 +113149,8 @@ async function caseRatifyOp(req, stub, ctx) {
       docSha: facts.doc.doc_sha
     }) }
   ));
-  if (!gateOut.answered) return storeSilent2("caseratify/gate");
+  if (gateOut.refused) return storeRefused(gateOut, relay);
+  if (!gateOut.answered) return storeSilent2("caseratify/gate", gateOut.correlation);
   const gate = gateOut.result || {};
   if (gate.reason && !Array.isArray(gate.findings))
     return json5({ ok: false, ...gate, store: storeName, tokenClass: cls }, gate.reason === "CASE_RATIFY_STALE" ? 409 : 404);
@@ -112997,7 +113177,8 @@ async function caseRatifyOp(req, stub, ctx) {
       deliveredBy
     })
   }));
-  if (!out.answered) return storeSilent2("caseratify/commit");
+  if (out.refused) return storeRefused(out, relay);
+  if (!out.answered) return storeSilent2("caseratify/commit", out.correlation);
   const answered = out.result;
   const { completedCase, ...r } = answered || {};
   if (!answered || !r.ok)
@@ -113035,6 +113216,7 @@ async function ratifyOp(req, stub, ctx) {
     json: json5,
     doAnswer: doAnswer2,
     storeSilent: storeSilent2,
+    storeRefusal: storeRefusal2,
     assembleCaseContainer: assembleCaseContainer2,
     storeName,
     cls,
@@ -113047,6 +113229,7 @@ async function ratifyOp(req, stub, ctx) {
     STORE_SILENT_REASON: STORE_SILENT_REASON2,
     STORE_SILENT_DETAIL: STORE_SILENT_DETAIL2
   } = ctx;
+  const relay = { json: json5, storeRefusal: storeRefusal2 };
   const op = "ratify";
   if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
     return json5({
@@ -113071,7 +113254,8 @@ async function ratifyOp(req, stub, ctx) {
     return json5({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
   const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
   const factsOut = await doAnswer2(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
-  if (!factsOut.answered) return storeSilent2("ratify/gatefacts");
+  if (factsOut.refused) return storeRefused(factsOut, relay);
+  if (!factsOut.answered) return storeSilent2("ratify/gatefacts", factsOut.correlation);
   const facts = factsOut.result;
   if (!facts.ok) return json5({ ...facts, store: storeName, tokenClass: cls }, 404);
   if (normalizeType(facts.row.object_type) === "project")
@@ -113151,11 +113335,13 @@ async function ratifyOp(req, stub, ctx) {
     }, 403);
   const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
   const imgOut = await doAnswer2(stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
-  if (!imgOut.answered) return storeSilent2("ratify/image");
+  if (imgOut.refused) return storeRefused(imgOut, relay);
+  if (!imgOut.answered) return storeSilent2("ratify/image", imgOut.correlation);
   const image = imgOut.result;
   const r2 = typeof env.CAPTURES?.head === "function";
   const listOut = await doAnswer2(stub.fetch(`http://do/list?viewer=${ratViewer}`));
-  if (!listOut.answered) return storeSilent2("ratify/list");
+  if (listOut.refused) return storeRefused(listOut, relay);
+  if (!listOut.answered) return storeSilent2("ratify/list", listOut.correlation);
   const known = new Set((listOut.result || []).map((b) => b.bundle_id));
   const partedRows = /* @__PURE__ */ new Map();
   const gate = withCaseMemberChecks(image, withBiasChecks2(image, withRegisterChecks(image, await runGate({
@@ -113283,7 +113469,8 @@ async function ratifyOp(req, stub, ctx) {
       shas: shas.map(({ text: text3, ...s }) => s)
     })
   })));
-  if (!pubOut.answered) return storeSilent2("ratify/publish");
+  if (pubOut.refused) return storeRefused(pubOut, relay);
+  if (!pubOut.answered) return storeSilent2("ratify/publish", pubOut.correlation);
   const pub = pubOut.result;
   if (!pub?.ok)
     return json5(
