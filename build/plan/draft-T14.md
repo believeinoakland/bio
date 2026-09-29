@@ -59,4 +59,4 @@
 
 ## Not in T14
 
-Bob's first: N344 (the PRESENT/RESOLVE design, BOB's to write), N345 (requirement changes for Bob's approval), N346 (publication's wording for DEC-79's display), N317, N303's remainder, N320. T15 owes: legacy-checks C-29.12 (N327) and N325's export; legacy-store N342's drop; instance-setup N348's wrapper; promotion's stamp of C-118.1's key. Waiting as in T13's plan.
+Bob's first: N344 (the PRESENT/RESOLVE design, BOB's to write), N345 (requirement changes for Bob's approval), N317, N303's remainder, N320. T15 owes: legacy-checks C-29.12 (N327) and N325's export; legacy-store N342's drop; instance-setup N348's wrapper; promotion's stamp of C-118.1's key. Waiting as in T13's plan.
