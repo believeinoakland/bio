@@ -9,7 +9,7 @@
 - §1 and §5 — "draft position".
 - §1a — the incident procedure is "drafted if ever forced"; the chooses-not-to-hold case is "still deferred".
 - §2 — landing "through the pending queue" is the retired substrate.
-- §2a — how a member moves a knock into the record is RULED (DEC-78, Bob, 2026-09-29: pulling admits at `collected`, the source is an unnamed knocker with its receipt, the puller is the capturing actor, and a knocker may prove continuity by a secret) and NOT BUILT (the note travels with the capture, the contact stays in the inbox); and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
+- §2a — how a member moves a knock into the record is RULED (DEC-78, Bob, 2026-09-29: pulling admits at `collected`, the source is an unnamed knocker with its receipt, the puller is the capturing actor, and a knocker may prove continuity by a secret) and NOT BUILT; the note travels with the capture, the contact stays in the inbox); and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
 - §3 — the checker advisory is pending; DEC-39's attest-fence wording, which this section is said to take, is not referenced here.
 - §3c — bag ingestion "built when the first bag is produced or consumed".
 - §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.

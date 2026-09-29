@@ -20,7 +20,7 @@
 - [2. The objects](#2-the-objects)
 - [3. The rules, stated once](#3-the-rules-stated-once)
 - [4. What is built](#4-what-is-built)
-- [5. The ceremony, deferred on a trigger](#5-the-ceremony-deferred-on-a-trigger)
+- [5. The ceremony, undeferred (DEC-80)](#5-the-ceremony-undeferred-dec-80)
 - [6. Audiences and output acts](#6-audiences-and-output-acts)
 - [6A. The review copy — an addressed act that never leaves the instance](#6a-the-review-copy-an-addressed-act-that-never-leaves-the-instance)
   - [6A.1 The two determinations Bob overruled, kept because the correction is the design](#6a1-the-two-determinations-bob-overruled-kept-because-the-correction-is-the-design)
@@ -284,12 +284,12 @@ precision nobody asserted.
 - **The surfaces**: O2, the published case (UI-18); the public verification surface (UI-35/36/37/40 — including the correction that a plane refusal must never render as a substantive negative); the DEC-33 placeholder entry point (UI-17a).
 - **The case arc** (CASE-1 … CASE-6, CASE-5b): a case as a production, its flags, its roles, its document and its ceremony of signing — all landed.
 
-## 5. The ceremony, deferred on a trigger
+## 5. The ceremony, undeferred (DEC-80)
 
 Bob, 2026-08-03: *"The publication process is very involved. Defer anything related to the process, though create a placeholder surface"* (DEC-33). Deferred: UI-17 (the five-step ceremony) and REC-15 (the preflight that refuses `UNCLEARED_HUNCH` and `BELOW_PROJECT_STRENGTH` before any signature exists). Not deferred, and since landed: editions, the published reads, the published case surface. The re-entry condition as recorded: *"the chain through UI-18 has landed and a group needs to publish without its operator."* UI-18 has landed. The second clause is not met, by measurement: the only instances the record names are the project's own and the smoke instance, both operator-run. Decided 2026-09-14 by BOB #11 at Bob's delegation: the ceremony is designed inside Program B when Bob turns to the member surfaces, and REC-15 and UI-17 reopen then or when a sovereign group is installed, whichever comes first — no further ruling is needed. Until then a member reaches the placeholder and is told, once, what is not yet there (DEC-69).
 
 **THE TRIGGER HAS FIRED, AND THE PLACEHOLDER IS RETIRED (Bob, 2026-09-29, DEC-80).** Bob has turned to the member surfaces (the UX
-redesign), which is the condition above. The ceremony is designed and built in the redesign, and no placeholder of any sort remains. Its
+redesign), which is the condition above. The ceremony is designed and built in the redesign, and no placeholder of any sort remains once it ships. Its
 five steps, first named in archived research, are re-derived for DEC-72 (a case is a production of a project, signed by its owner, each
 finding crossing by its own signature): **what becomes permanent** (the edition, the findings it pins and the evidence that crosses,
 corrected only by a later edition); **what this rests on** (each finding's role and strength pair against the project's bar); **what you
@@ -610,7 +610,7 @@ Evidence packages are classified in three tiers — file freely; file with cauti
 | --- | --- |
 | one-way publication, editions, the bar on the project, the fence on the chain, bias public, per-axis inheritance, right of reply as declaration | RULED and BUILT |
 | the case as a production, its document, its signing ceremony, the published projection, the public verify surface | BUILT (CASE arc; UI-18, UI-35–40) |
-| the ceremony (UI-17) and the preflight (REC-15) | UNDEFERRED (DEC-80, 2026-09-29): designed and built in the UX redesign, the placeholder retired, browser signing; NOT BUILT |
+| the ceremony (UI-17) and the preflight (REC-15) | UNDEFERRED (DEC-80, 2026-09-29): designed and built in the UX redesign, the placeholder retired when it ships, browser signing; NOT BUILT |
 | attribution levels; off-the-record sources | RULED 2026-09-14; no surface (Program B) |
 | the catalogue of standards by audience and output act | OWED (§5.5 of the D-164 study); does not exist |
 | certification and persistence divergences | unmade |

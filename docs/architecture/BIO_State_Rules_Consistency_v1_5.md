@@ -873,7 +873,7 @@ the three-tier risk classification and snapshots archived primary-source
 evidence into distributions/dist-NNNN/.
 
 **How a project's stage is shown (Bob, 2026-09-29: K356, K362 and K364, and DEC-79 for the display).** `forming`, `investigating` and
-`matured` are always computed from the questions the project holds and what it has published, never set by hand; `closed` stays the
+`matured` are always computed from the questions the project holds and what it has published (publication R44–R47, N300), never set by hand; `closed` stays the
 owner's recorded act with its judged reason (K362). Each readiness rung shows by its own evidence, `internally_checked` and
 `externally_compliant` reading *not yet evaluated* until the evaluations exist, never inferred (K364). The stage is shown as COLOURED BARS
 that stack as the project advances, one bar per stage reached, so a glance senses where the work stands in little space. Hovering (or
