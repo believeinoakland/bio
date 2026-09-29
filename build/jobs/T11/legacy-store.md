@@ -42,3 +42,10 @@
   - ownership: 2 files changed; 0 failures.
 
 Size (session_01JVGpG2wpwFQ4tzDwuNQZaq): test runs 16 (2 whole batteries, 2 targeted batteries, 12 Miniflare driver runs), module lines 7,613
+
+## J1 · REPORT
+
+For routing; full detail is in my record's § Completion.
+1. **Merge order:** this branch calls monitoring's `counts()` (R46, N266), which is not merged yet. Merge MONITORING #3 first, or `op=stats` and `op=purge` throw.
+2. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` and its manifest, from `store.mjs` (fleetbundles 96/0 → 92/4), for the layer close (§14).
+3. **K365, a finding:** on the tranche, review's and filings' factories already build `publicationOf` during construction as a side effect, so the alarm-first `case_parts_absent` could not occur there. The explicit construction now makes it independent of those side effects. With none of the three, the Durable Object does not boot ("no such table: cases").
