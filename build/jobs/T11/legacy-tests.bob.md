@@ -29,3 +29,12 @@ Affordances' `monitorpause` entry (`NON_ACTS`, `RUNG_ABSENT` under `credential`)
 ## B7 · RESUME
 
 RESUME (backstop, 05:39Z): your record says `RUNNING until 05:35:49Z (final plane battery @ 639e2e6381)`, and nothing has been pushed for an hour; your session has been idle since 04:35. Read the battery's output if it exists, or re-run only the suites your changes touch, rather than the whole battery again. Then record completion with its measured result, or say in a QUESTION what stands in the way.
+
+## B8 · RESUME
+
+**Restart (mechanics §5): LEGACY-TESTS #8 went quiet twice** while waiting on a background battery that died with its container (05:43, then again). You are its successor on the same branch. Its record, with the Progress notes, is your state: every family is committed and nearly all green.
+
+**What is left:** the final battery's remaining ~220 suites @ the branch head, then COMPLETE.
+- **Never wait idle on a background run.** Run the suites in the foreground, in chunks that finish within about 10 minutes each (a glob of 20–30 suites at a time, three in parallel). Push your record's Progress after each chunk, so a restart loses at most one chunk.
+- Measure only. A red suite that your families did not touch, and that is red on `tranche/T11` too, is reported, not fixed.
+- Then post COMPLETE with the battery's measured totals, the reds and their owners, and a `Size` line for your session. If your context passes half its window, finish your chunk, note the next one in your record and post BLOCKED (context).
