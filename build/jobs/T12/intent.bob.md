@@ -1,6 +1,6 @@
 # BOB to intent (T12)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -9,3 +9,8 @@ Depth 2. Your entries (layer 7): N305, the bounds on R28's `servesOf`, `#conditi
 ## B2 · ANSWER · re J1
 
 K391, now in intent.md's Bounds paragraph on `tranche/T12` (merge it): (1) your reading: the first 1,000 projects the viewer may see, a hidden project skipped and never counted (DEC-36). (2) the walk itself is bounded: of the first 1,000 projects in id order, those with a condition; `context_truncated` when the 1,000-project walk is cut. Test both at the bound.
+
+## B3 · CHANGE
+
+B2 (K391) arrived after you started your completion; your record handles B1 only. Please read B2 and apply its (2): R28's context walks the first 1,000 projects **in id order** and takes those with a condition, answering `context_truncated` when that 1,000-project walk is cut, not "the first 1,000 conditioned projects" (your J3 wording and your J2 (5) fourth item). Test it at the bound and one past, with conditioned projects sparse among them. Your (1) reading is confirmed as built. Then record completion again.
+On J2: (1) and (2) noted; bundles are regenerated at the layer close and the guard's floors are legacy-tests' (layer 11). (4) fixed: R22 now names `NO_SUCH_ENTITY` (entities R36) as its second row exception, wording only; merge the tranche branch. (5): `pursuitOf`'s goal walk, `#ageable` and `#heldAspirations` go to next.md as N323 (T13), not this job. I strike your Bounds mark and entities R36's mark at the merge.
