@@ -1,8 +1,9 @@
-/* observation-log: the writers other modules' events drive (R5, R6, R7, R8). */
+/* observation-log: the writers other modules' events drive (R5, R6, R7, R8): provenance's receipt, extraction's reading
+   notice (its R24) and index notice (its R62), and the meaning-level notices. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha } from "./fixture.mjs";
-import { contentObservationsFor, CAPTURE_TEXT_UNIT_CONTAINERS, observationLogOf, OBSERVATION_LOG_MODULE }
+import { contentObservationsFor, CAPTURE_TEXT_UNIT_CONTAINERS, INDEX_NOTICE_UNIT_CONTAINERS, observationLogOf, OBSERVATION_LOG_MODULE }
   from "../../../src/observation-log/index.mjs";
 import { CAPTURE_TEXT_CAPTURE_UNIT_BOUND } from "../../../src/extraction/index.mjs";
 
@@ -170,6 +171,81 @@ test("R6 R7 R8 registered on extraction's reading notice: the index row, the con
   assert.equal(observationLogOf(w.host), w.obs);
   assert.equal(w.obs.listenTo(w.ex), true);
   assert.equal(w.ex.listeners.filter((l) => l.module === OBSERVATION_LOG_MODULE).length, 1);
+});
+
+test("R7 the index notice (extraction R62): one derive row per indexed authored observation, by R7's rule — PRESENT, partial with its bound, LOOKED_ABSENT with no text, LOOKED_INDETERMINATE naming a container with no unit arm; its referent the capture; no content row and no reader run", () => {
+  const w = world();
+  assert.deepEqual(w.ex.indexListeners.map((l) => l.module), [OBSERVATION_LOG_MODULE], "registered beside onReading");
+  const c = sha("I asked the clerk and was told the minutes were not kept");
+  const fire = (over = {}) => w.ex.fireIndexed({ bundleId: "INFO-2026-0001", captureSha: c, author: "member:alice", container: "document",
+    indexed: indexed({ offered: 1, written: 1, bytes: 57 }), ...over }).find((o) => o.module === OBSERVATION_LOG_MODULE).answer;
+  const row = () => w.log().at(-1);
+  // every unit stored: PRESENT, the referent the reading (the capture), the member who wrote it
+  assert.deepEqual(fire(), { observed: { written: 1, state: "PRESENT" } });
+  assert.equal(w.count("observation_log"), 1, "one row: no content row (R6) and no reader run (R8), because no reader ran");
+  assert.deepEqual([row().level, row().authority_kind, row().authority, row().subject_kind, row().subject, row().state, row().bound,
+                    row().result_kind, row().result_ref, row().actor_class, row().actor],
+    ["content", "derive", "INFO-2026-0001", "capture", c, "PRESENT", null, "reading", c, "member", "member:alice"]);
+  assert.match(row().detail, /^1 unit\(s\) indexed, 57 B/);
+  // stored to a bound: partial with the bound that stopped it
+  assert.deepEqual(fire({ indexed: indexed({ offered: 2, written: 1, over_bound: 1 }) }).observed.state, "partial");
+  assert.deepEqual([row().result_kind, row().result_ref], ["reading", c]);
+  assert.match(row().bound, /per-capture text bound/);
+  // a unit stored to the per-unit cap is said
+  fire({ indexed: indexed({ offered: 1, written: 1, truncated: 1 }) });
+  assert.deepEqual([row().state, row().result_ref], ["PRESENT", c]);
+  assert.match(row().detail, /1 unit\(s\) stored to the per-unit cap/);
+  // words holding no glyph offered no unit (extraction R22): no text, LOOKED_ABSENT, saying why and naming no extraction row
+  assert.deepEqual(fire({ indexed: indexed({ offered: 0, written: 0, bytes: 0 }) }).observed.state, "LOOKED_ABSENT");
+  assert.deepEqual([row().state, row().condition, row().bound, row().result_kind, row().result_ref], ["LOOKED_ABSENT", null, null, null, null]);
+  assert.match(row().detail, /holds no character/);
+  assert.doesNotMatch(row().detail, /extraction observation|PDF/, "no reader ran, so no extraction row is pointed at");
+  assert.equal(fire({ indexed: null }).observed.state, "LOOKED_ABSENT", "an index answer carrying nothing is no text");
+  // a container with no unit arm: LOOKED_INDETERMINATE naming it, even with text
+  assert.equal(fire({ container: "pdf-page" }).observed.state, "LOOKED_INDETERMINATE");
+  assert.deepEqual([row().result_kind, row().result_ref], [null, null]);
+  assert.match(row().bound, /a pdf-page extent has no indexing unit arm/);
+  fire({ container: undefined });
+  assert.deepEqual([row().state], ["LOOKED_INDETERMINATE"]);
+  assert.match(row().bound, /did not say which container/);
+  assert.deepEqual([...INDEX_NOTICE_UNIT_CONTAINERS], ["document"]);
+  // who looked is derived from the author, never guessed
+  fire({ author: null });
+  assert.deepEqual([row().actor_class, row().actor], ["plane", null]);
+  fire({ author: "class:ai/tok-1" });
+  assert.deepEqual([row().actor_class, row().actor], ["machine", "class:ai/tok-1"]);
+  // every row is the index's and never a content row
+  assert.ok(w.log().every((r) => r.level === "content" && r.authority_kind === "derive" && r.result_kind !== "content"));
+  // a notice naming no capture has no subject and writes nothing
+  const n = w.count("observation_log");
+  assert.deepEqual(fire({ captureSha: null }).observed.written, 0);
+  assert.equal(w.count("observation_log"), n);
+  // the index row never reads as an extraction: the next reading of the capture is still its first extraction (R6)
+  w.obs.observeExtraction("INFO-2026-0001", c, reading());
+  assert.match(w.log().at(-1).detail, /^first extraction; /);
+  // the module listens once
+  assert.equal(w.obs.listenTo(w.ex), true);
+  assert.equal(w.ex.indexListeners.length, 1);
+});
+
+test("R7 through extraction itself: indexTestimony's write (extraction R61) raises the index notice and this module records the index row in the same transaction; words with no glyph record LOOKED_ABSENT; a call naming no capture records nothing", () => {
+  const w = world({ extraction: "module" });
+  const [c] = w.doc("INFO-2026-0001", ["an authored observation"]);
+  const words = "I asked the clerk for the minutes and was told they were not kept.";
+  const out = w.record.transact(() => w.ex.indexTestimony({ bundleId: "INFO-2026-0001", captureSha: c, words, author: "member:alice" }));
+  assert.deepEqual([out.offered, out.written], [1, 1]);
+  assert.deepEqual(w.log().map((r) => [r.level, r.authority_kind, r.authority, r.subject, r.state, r.result_kind, r.result_ref, r.actor]),
+    [["content", "derive", "INFO-2026-0001", c, "PRESENT", "reading", c, "member:alice"]]);
+  assert.match(w.log()[0].detail, new RegExp(`^1 unit\\(s\\) indexed, ${Buffer.byteLength(words)} B`));
+  // words holding no glyph index nothing: the look is still recorded, as no text
+  const [d] = w.doc("INFO-2026-0002", ["another"]);
+  assert.equal(w.record.transact(() => w.ex.indexTestimony({ bundleId: "INFO-2026-0002", captureSha: d, words: " \n\t ", author: "member:alice" })).written, 0);
+  assert.deepEqual([w.log().at(-1).subject, w.log().at(-1).state, w.log().at(-1).result_ref], [d, "LOOKED_ABSENT", null]);
+  // a call naming no capture writes nothing and raises no notice
+  assert.equal(w.ex.indexTestimony({ bundleId: "INFO-2026-0001", captureSha: null, words }).written, 0);
+  assert.equal(w.count("observation_log"), 2);
+  // the reading notice is still this module's too
+  assert.equal(w.obs.listenTo(w.ex), true);
 });
 
 test("R8 the meaning level: the reader run per capture (PRESENT with the count, LOOKED_ABSENT, LOOKED_INDETERMINATE when no reader is registered); per resolution attempt; per connection derivation with its count, documents and truncation", () => {

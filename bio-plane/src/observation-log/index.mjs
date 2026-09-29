@@ -7,7 +7,8 @@
  *
  * `observationLogOf(ctx)` answers the one instance per Durable Object storage (K61). It reaches `record-core` and
  * `membership` through their factories, declares its tables to purge (R23, K23), and registers its writers with
- * `provenance` (the receipt, R5) and `extraction` (the reading notice, R6–R8) on the same `ctx` (K31).
+ * `provenance` (the receipt, R5) and `extraction` (the reading notice, R6–R8, and the index notice, R7) on the same
+ * `ctx` (K31).
  * `entities.onResolveAttempt` and `connections`' derivation notice are registered by `attachMeaning` once those
  * modules are extracted; until then the legacy store calls `observeResolutionAttempt` and
  * `observeConnectionDerivation` where they fire. */
@@ -51,6 +52,11 @@ export { OBSERVATION_LOG_SCHEMA, OBSERVATION_LOG_TABLES, observationLogOwns } fr
  * range (its R16, N108, K179). So a workbook's `indexed` row reads indexed, not
  * "no unit arm" (N134). */
 export const CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
+
+/* R7 (N294, K343): the containers extraction's INDEX NOTICE (its R62) can name with a unit arm. A member's authored
+ * observation is indexed as ONE unit at extent `{kind: "document"}` (its R61), so `document` is its arm; any other
+ * container the notice names is one this record cannot address a passage of, and reads LOOKED_INDETERMINATE naming it. */
+export const INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(new Set(["document"]));
 
 /* op=leadread's bound: `op=frontier`'s 200/2000 pair, and for its reason: the population is looks at ONE subject. */
 export const LEAD_READ_LIMIT_DEFAULT = 200;
@@ -119,6 +125,7 @@ export class ObservationLog {
     this.now = typeof now === "function" ? now : () => Date.now();
     this.resolvers = new Map();
     this.listening = false;
+    this.indexListening = false;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -231,13 +238,20 @@ export class ObservationLog {
     return refused ? { ...refused, ok: false } : { written: true };
   }
 
-  /** Registers `onReadingNotice` with extraction's reading notice (its R24) once; the factory does it when it is given
-   *  extraction, and a host that creates this module before extraction calls it after. Answers whether it is listening. */
+  /** Registers `onReadingNotice` with extraction's reading notice (its R24) and `onIndexNotice` with its index notice
+   *  (its R62), each once; the factory does it when it is given extraction, and a host that creates this module before
+   *  extraction calls it after. Answers whether it is listening to both. */
   listenTo(extraction) {
-    if (this.listening || !extraction || typeof extraction.onReading !== "function") return this.listening;
-    const r = extraction.onReading(OBSERVATION_LOG_MODULE, (e) => this.onReadingNotice(e));
-    this.listening = !(r && r.ok === false);
-    return this.listening;
+    if (!extraction) return this.listening && this.indexListening;
+    if (!this.listening && typeof extraction.onReading === "function") {
+      const r = extraction.onReading(OBSERVATION_LOG_MODULE, (e) => this.onReadingNotice(e));
+      this.listening = !(r && r.ok === false);
+    }
+    if (!this.indexListening && typeof extraction.onIndexed === "function") {
+      const r = extraction.onIndexed(OBSERVATION_LOG_MODULE, (e) => this.onIndexNotice(e));
+      this.indexListening = !(r && r.ok === false);
+    }
+    return this.listening && this.indexListening;
   }
 
   /** R6–R8 — extraction's reading notice (its R24), registered as this module's listener: the index row (R7), the
@@ -254,6 +268,43 @@ export class ObservationLog {
     this.observeReaderRun(e.bundleId, e.captureSha, e.reading, { author: e.author });
     return { observed: { written: ex.written ?? 0, states: ex.states || [], reextraction: !!ex.reextraction,
                          refused: Array.isArray(ex.refused) ? ex.refused.length : 0, unclassified: ex.unclassified ?? null } };
+  }
+
+  /** R7 (N294, K343) — extraction's INDEX NOTICE (its R62), registered as this module's listener: a member's authored
+   *  observation indexed with no reading (its R61), whose text is the words. ONE `derive` row per capture, by the same
+   *  rule as the reading's (`observeIndexed`), the referent the capture. No reader ran, so NOTHING ELSE is written here:
+   *  no content row (R6) and no reader run (R8), which would record acts nobody performed.
+   *
+   *  "There was no text" is READ OFF THE INDEX'S OWN ANSWER: `offered` counts the units holding a glyph (extraction
+   *  R22), so words holding none offered nothing. THIS LISTENER THROWS WHEN THE ROW IS REFUSED, which fails the whole
+   *  index write (extraction R62: an index with no index observation would read NOBODY LOOKED). A notice naming no
+   *  capture has no subject to write under and writes nothing. */
+  onIndexNotice(e) {
+    const x = e && typeof e === "object" ? e : {};
+    if (typeof x.captureSha !== "string" || !x.captureSha)
+      return { observed: { written: 0, state: null, why: "the index notice named no capture, so there is no subject to record a look at" } };
+    const container = typeof x.container === "string" && x.container ? x.container : null;
+    const armed = INDEX_NOTICE_UNIT_CONTAINERS.has(container);
+    const ix = x.indexed && typeof x.indexed === "object" ? x.indexed : null;
+    const refused = this.observeIndexed(x.bundleId, x.captureSha, ix, {
+      author: x.author ?? null, hadText: !!ix && Number(ix.offered) > 0, unitArm: armed,
+      armReason: armed ? null : container
+        ? `an authored observation indexed at a ${container} extent has no indexing unit arm: its one unit is the `
+          + "whole document (extraction R61)"
+        : "the index notice did not say which container the authored observation was indexed as, so it has no unit "
+          + "arm to name",
+      noTextDetail: "the authored observation holds no character, so there is nothing to index. No reader ran over it "
+                  + "(an authored observation is its own text), so there is no extraction to say more" });
+    if (refused) {
+      const err = new Error(`observation-log: the index observation of ${x.captureSha} was refused ${refused.check} `
+                          + `(${refused.code}): ${refused.detail}`);
+      err.refusal = refused;
+      throw err;
+    }
+    const row = this.#one(
+      `SELECT state FROM observation_log WHERE level = 'content' AND subject_kind = 'capture' AND subject = ?
+          AND authority_kind = 'derive' ORDER BY seq DESC LIMIT 1`, x.captureSha);
+    return { observed: { written: 1, state: row ? row.state : null } };
   }
 
   /** R6 — REC-94 / IC-95, THE CONTENT-LEVEL WRITER (§4.2). ONE ROW PER EXTRACTION ATTEMPT PER CAPTURE PER TIER,
@@ -295,14 +346,16 @@ export class ObservationLog {
    *  that produced no unit carrying text is `LOOKED_ABSENT` too, never `PRESENT` over zero units. The referent is the
    *  READING (`result_kind: "reading"`, the capture), never a content row: indexing mints nothing (§4.5). REC-111: the
    *  bound names the unit bound or the byte bound, whichever the unit count shows bit. */
-  observeIndexed(bundleId, captureSha, result, { author = null, hadText = false, unitArm = true, armReason = null } = {}) {
+  observeIndexed(bundleId, captureSha, result, { author = null, hadText = false, unitArm = true, armReason = null,
+                                                 noTextDetail = null } = {}) {
     const { actorClass, actor } = actorOf(author);
     const r = result || { written: 0, bytes: 0, truncated: 0, over_bound: 0, unaddressable: 0, offered: 0 };
     let state, bound = null, detail;
     if (!hadText) {
       state = "LOOKED_ABSENT";
-      detail = "no text was extracted from this capture, so there is nothing to index. "
-             + "WHY there is no text is on this capture's extraction observation, not on this one";
+      /* The caller that knows why there is no text says so (the index notice, R7); the reading's says where to look. */
+      detail = noTextDetail || ("no text was extracted from this capture, so there is nothing to index. "
+             + "WHY there is no text is on this capture's extraction observation, not on this one");
     } else if (!unitArm) {
       state = "LOOKED_INDETERMINATE";
       bound = armReason || "this container has no indexing unit arm";
@@ -879,7 +932,7 @@ const instances = new WeakMap();
 
 /** The one observation-log instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on
  *  the first call only. At creation it declares its tables to purge (R23) and registers its writers with provenance's
- *  receipt (R5) and extraction's reading notice (R6–R8). */
+ *  receipt (R5) and extraction's reading notice (R6–R8) and index notice (R7). */
 export function observationLogOf(host, deps) {
   let o = instances.get(host);
   if (!o) {
