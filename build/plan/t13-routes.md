@@ -9,3 +9,4 @@
 - Layer 2 close (K432): `fleetbundles.test.mjs` 2a's agent-worker input list is 149 now (record-core's `src/record-core/checks.mjs` joined; K384's pattern).
 - INTENT #5 J1 (K433): `meaning-bounds` (red on the base): `op=pursuit` now lists `goals_read_limit` and `goals_read_truncated`.
 - REVIEW #4 J1, CASE-AUTHORING #3 J1 (K434): `d448` re-pins review's C-87 family 12 → 11; the DEC-49 guard 16 → 13 on review's branch (the identical-translation pair gone); `check-refusal-codes.mjs`:3781's `MINT_EXHAUSTED` note (case-authoring, review and promotion now answer through C-59.6). C-87.12 retired, `awaiting stamp` for R50's suite.
+- MONITORING #5 J1 (K436): the DEC-49 guard's arm G: `NOT_AN_ADMIN` is declared in `MULTI_SITE_CLOSED` but has one mint site now (membership's `notAnAdmin`): drop it from the multi-site list; the K403 notes at `check-refusal-codes.mjs`:638 and :1468 are stale.
