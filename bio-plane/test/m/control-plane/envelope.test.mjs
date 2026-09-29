@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUERY_STAMPS } from "./harness.mjs";
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
+import * as CP_CHECKS from "../../../src/control-plane/checks.mjs";
 
 const { OPS, UNATTENDED_BY_DECISION } = O;
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
@@ -166,7 +167,9 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
   const { env, S, A } = w;
   const got = {};
-  const note = (r) => { if (r.json?.ok === false && r.json.code) { got[r.json.code] = r.json.check; assert.ok(r.json.translation, r.json.code); } };
+  const note = (r) => { if (r.json?.ok === false && r.json.code) { got[r.json.code] = r.json.check; assert.ok(r.json.translation, r.json.code);
+                                                                    sentences[r.json.code] = r.json.translation; } };
+  const sentences = {};
   const d = async (req) => note(await call(env, { method: "POST", body: {}, ...req }));
   await d({ op: "index" });                                                     /* C-38.1 */
   await d({ op: "index", token: env.DAEMON_TOKEN });                            /* C-38.2 */
@@ -209,6 +212,15 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
     BOOTSTRAP_CREDENTIAL_UNSET: "C-68.2", BOOTSTRAP_CREDENTIAL_PUBLISHED: "C-68.3", BOOTSTRAP_CREDENTIAL_MISMATCH: "C-68.4",
     REPLAY_UNVERIFIED: "C-66.6",
   });
+  /* the rows are the module's own (K6): its check families hold exactly these, and the wire carries each row's words */
+  const own = {};
+  for (const [fam, rows] of Object.entries(CP_CHECKS)) if (/_CHECKS$/.test(fam))
+    for (const [code, row] of Object.entries(rows)) { assert.equal(own[code], undefined, code); own[code] = row; }
+  assert.deepEqual(Object.fromEntries(Object.entries(own).map(([c, r]) => [c, r.check])), got);
+  for (const [code, row] of Object.entries(own)) {
+    assert.equal(sentences[code], row.translation, code);
+    assert.match(row.where, /^src\/control-plane\/index\.mjs \S+ > is-[a-z-]+$/, code);
+  }
 });
 
 test.todo("R32 the two internal-error rows R25 adds (not yet met: D-629 — R25's PLANE_INTERNAL_ERROR and "

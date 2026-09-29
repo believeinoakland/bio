@@ -3,9 +3,12 @@
    extraction (T12, K3, K93). An op's own handler is its module's: `makeFetch(hooks)` takes the arms that still live in
    legacy-index (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones) and routes to them, so
    routing is one place while the arms still live there (the map's §3). */
-import { parseFrontmatter, createSha256, normalizeType, AI_CREDENTIAL_CHECKS, ADMISSION_CHECKS,
-         INSTALLATION_CHECKS, DISPATCH_CHECKS, NAMESPACE_CHECKS,
+import { parseFrontmatter, createSha256, normalizeType, INSTALLATION_CHECKS,
          MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../../checks/bio-checks.mjs";
+/* R32: the doors' own rows (`checks.mjs`). */
+import { ADMISSION_CHECKS, NAMESPACE_CHECKS, DISPATCH_CHECKS, BOOTSTRAP_CHECKS, AI_SCOPE_CHECKS, OPERATOR_FENCE_CHECKS,
+         GROUP_IDENTITY_FENCE_CHECKS, REPLAY_CHECKS } from "./checks.mjs";
+import * as M_CONTROL_PLANE from "./checks.mjs";
 /* D-262: THE WHOLE CATALOGUE, AS A NAMESPACE AND NOT A LIST. `dec49Attach`
    below resolves a refusal code against every DEC-49 family the catalogue
    exports, and it finds those families BY THE `_CHECKS` SUFFIX — the same rule
@@ -307,7 +310,7 @@ async function aiCredentialPresented(url, env) {
 
 function aiConfinementDeclaration(confinedTo) {
   const refusal = (code, detail, extra) => {
-    const row = AI_CREDENTIAL_CHECKS[code];
+    const row = AI_SCOPE_CHECKS[code];
     return { error: { reason: code, code, check: row.check, translation: row.translation,
                       detail, ...(extra || {}) } };
   };
@@ -424,7 +427,7 @@ function aiReachesAsMember(spec, op) {
  * checking that site at all. */
 function aiScopeDeclaration(writes) {
   const refusal = (code, detail, extra) => {
-    const row = AI_CREDENTIAL_CHECKS[code];
+    const row = AI_SCOPE_CHECKS[code];
     return { error: { reason: code, code, check: row.check, translation: row.translation,
                       detail, ...(extra || {}) } };
   };
@@ -487,7 +490,7 @@ function aiScopeDeclaration(writes) {
  * exception list in it is a list. */
 function aiTaskScope(cred, op, spec) {
   const refusal = (code, detail, extra) => {
-    const row = AI_CREDENTIAL_CHECKS[code];
+    const row = AI_SCOPE_CHECKS[code];
     return { error: { reason: code, code, check: row.check, translation: row.translation,
                       detail, ...(extra || {}) } };
   };
@@ -769,7 +772,7 @@ const json = (o, status = 200) =>
    always has; a code held in two places is the guard's arm A to refuse, not this reader's to choose. */
 const MODULE_CHECK_FILES = [
   M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CASE_AUTHORING,
-  M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_ENTITIES,
+  M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_CONTROL_PLANE, M_ENTITIES,
   M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
   M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_RATIFICATION, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
   M_SKILLDOCTRINE, M_STANDARDS, M_STRENGTH];
@@ -930,27 +933,27 @@ function storeSilent(op) {
 /* REC-123: the C-32 row for a machine fence that lives in THIS file (op=ratify,
    op=caseratify). Same shape and same refusal-to-invent as `reextractRow`. */
 const machineFenceRow = (code) => {
-  const row = CHECK_CATALOGUE.MACHINE_FENCE_CHECKS[code];
+  const row = OPERATOR_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`machineFenceRow: ${code} has no MACHINE_FENCE_CHECKS row with a canned translation `
+    throw new Error(`machineFenceRow: ${code} has no OPERATOR_FENCE_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
 
 /* D-512: C-66.6's row — a replay the plane could not verify — on `identityFenceRow`'s shape and its refusal to invent. */
 const replayRow = (code) => {
-  const row = CHECK_CATALOGUE.SURFACE_CHECKS[code];
+  const row = REPLAY_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`replayRow: ${code} has no SURFACE_CHECKS row with a canned translation `
+    throw new Error(`replayRow: ${code} has no REPLAY_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
 
 /* REC-164: C-64.4's row, the fence's canned sentence taken from the one catalogue family that holds it. */
 const identityFenceRow = (code) => {
-  const row = CHECK_CATALOGUE.INSTANCE_GROUP_CHECKS[code];
+  const row = GROUP_IDENTITY_FENCE_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`identityFenceRow: ${code} has no INSTANCE_GROUP_CHECKS row with a canned translation `
+    throw new Error(`identityFenceRow: ${code} has no GROUP_IDENTITY_FENCE_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);
   return { code, check: row.check, translation: row.translation };
 };
@@ -975,8 +978,10 @@ const namespaceRow = (code) => {
 
 /* D-278 / C-68 and C-69: the same reader again, one per family, and the same
    refusal to invent. */
+/* C-68.2–.4 are this module's (R15); C-68.1, `storageAbsent`'s, is still read from the catalogue for legacy-index's
+   raiser until capture holds it (the map's §2). */
 const installationRow = (code) => {
-  const row = INSTALLATION_CHECKS[code];
+  const row = BOOTSTRAP_CHECKS[code] ?? INSTALLATION_CHECKS[code];
   if (!row || typeof row.translation !== "string" || !row.translation)
     throw new Error(`installationRow: ${code} has no INSTALLATION_CHECKS row with a canned translation `
                   + `(DEC-49). A code with no sentence behind it must not reach a member.`);

@@ -29,23 +29,11 @@ import { parseFrontmatter, createSha256, normalizeType,
             arm's DEC-49 row. Both live in the catalog so the Durable Object's
             drain and this control plane cannot disagree about what was sent. */
          civicosUserAgent, CAPTURE_REQUEST_CHECKS,
-         /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The four this
-            file enforces are the REACH ones, and they are here rather than in
-            the store because the OPS table below is the only thing that knows
-            what an op is or which classes may call it. */
-         AI_CREDENTIAL_CHECKS,
-         /* REC-79 / C-38: the ADMISSION GATE's DEC-49 rows — every refusal a
-            caller meets before their op runs. Four of the six carried no code at
-            all until REC-79, so the gate every caller passes through was outside
-            the rule governing everything behind it. */
-         ADMISSION_CHECKS,
          /* D-270 / C-61: the argument complaint's row. Named rather than reached
             through the namespace below, because it is used AS A VALUE at the one
             governed site — the code is a STRING LITERAL there so the DEC-49
             guard's arm C can COMPARE it rather than read past a variable. */
-         REQUIRED_ARGUMENT_CHECKS, INSTALLATION_CHECKS, DISPATCH_CHECKS,
-         /* D-456 / C-78: a `store=` naming no namespace, refused at the front door. */
-         NAMESPACE_CHECKS,
+         REQUIRED_ARGUMENT_CHECKS,
          /* CAP-8 / C-48: the Google Drive host stack's DEC-49 rows. Every one is
             a NAMING — a folder, a kind the address does not carry, a shape this
             recogniser does not read, the application shell, an export that could
