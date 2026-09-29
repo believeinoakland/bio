@@ -25,3 +25,7 @@ Size (session_01B7kiVs24JbVTE4P4CTC88x): test runs 5, module lines 2713
 ## J1 · REPORT
 
 Two findings outside my paths. (1) build/requirements/affordances.md: R2's `reasoned` list does not name `determine`, and R27's "57 ops graded `undetermined`" (naming the action acts) predates it; with N310 the code and tests grade `determine` `reasoned` (conformance R7 refuses an absent supersession reason NO_REASON; a first determination asks none, K212). Your wording. (2) Legacy bio-plane/test/rung-ladder.test.mjs fails at file level, identically before and after my change (checked by stashing): legacy-tests' to re-anchor. No generated artifact other than the plane bundle (not_product, rebuilt at your layer close) takes affordances.mjs as input.
+
+## J2 · COMPLETE
+
+N310 applied: JUSTIFICATION_REFUSALS names ACTION_MOVE_NO_REASON (actions R13); determine graded reasoned, its R19 backing driven at conformance's interface. Module tests 74 pass, 0 fail, 1 todo (R26, N231); queue 10/10; format, architecture, coverage (27/27), ownership: 0 failures. Record has the detail; findings in J2.
