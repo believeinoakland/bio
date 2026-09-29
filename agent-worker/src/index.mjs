@@ -126,9 +126,8 @@ import {
 } from "./harness.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS ai-runs' (its R45), read from its own file and never copied.
- * A namespace import, so this member loads while ai-runs has not yet exported it: until then the plane measures no
- * state and none is cut. `airun.mjs` is already in this bundle through `skills`' `skillpack.mjs`. */
-import * as AI_RUNS from "../../bio-plane/src/airun.mjs";
+ * `airun.mjs` is already in this bundle through `skills`' `skillpack.mjs`. */
+import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/airun.mjs";
 
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS, ALSO IN THEIR OWN FILE AND ALSO
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
@@ -558,7 +557,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
        step's trace says so (the answer's keys are R28's). */
     let published = null;
     if (CONTROL_FLOW.resume.to.includes(after.step)) {
-      published = publishableState(after, AI_RUNS.AI_RUN_STATE_MAX_BYTES);
+      published = publishableState(after, AI_RUN_STATE_MAX_BYTES);
       if (published.restarted) {
         const last = trace[trace.length - 1];
         last.note = (last.note ? `${last.note}; ` : "")

@@ -56,9 +56,6 @@ const t = (label, got, want) => {
   console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
   ok ? pass++ : fail++;
 };
-/* An id, or a part of one, that does not hold yet: named with its cause, never a red test or a pin of today's code. */
-let todos = 0;
-const todo = (label) => { console.log(`  TODO  ${label}`); todos++; };
 const section = (s) => console.log(`\n--- ${s} ---`);
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
@@ -921,10 +918,7 @@ section("R49 · the state a tick publishes stays within ai-runs' AI_RUN_STATE_MA
 
   /* THROUGH THE OP, at the plane's ceiling: a mock that refuses as ai-runs R45 does receives no state it refuses. */
   const CEILING = AI_RUNS.AI_RUN_STATE_MAX_BYTES;
-  if (!(Number(CEILING) > 0)) {
-    todo("R49: through the op, every published state within ai-runs' AI_RUN_STATE_MAX_BYTES — not yet met: ai-runs "
-      + "R45 (N293) does not export AI_RUN_STATE_MAX_BYTES from bio-plane/src/airun.mjs yet");
-  } else {
+  {
     t("R49: the ceiling the member applies is ai-runs' own, the figure its R45 provides", CEILING, LIMIT);
     await reset(mf, { target: "INQ-R49", stateMax: CEILING });
     const r = await runOp(mf, { ...base, judgements: [{ targets: [] }, { reports: [] }, { candidates: big(80) }, {}] });
@@ -1318,5 +1312,5 @@ section("R47 · reachable only through the plane's service binding");
 }
 
 await mf.dispose();
-console.log(`\nrequirements: ${pass} passed, ${fail} failed${todos ? `, ${todos} todo` : ""}`);
+console.log(`\nrequirements: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
