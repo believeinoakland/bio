@@ -8,9 +8,9 @@ import assert from "node:assert/strict";
 import { world, serve, sha, infoMd, V, DAEMON, NOW_MS } from "./fixture.mjs";
 import { monitoringOps, MONITOR_CADENCE_DELAY_MS, MONITOR_TICK_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_BATCH,
          MONITOR_RANK_READ, MONITOR_VIEWER, SLATE_DATA_BEGIN, SLATE_DATA_END, SLATE_FRAMING_OPEN, SLATE_FRAMING_CLOSE,
-         MONITOR_PAUSE_SETTING, MONITOR_ROOT_OF_TRUST }
+         MONITOR_PAUSE_SETTING, MONITOR_ROOT_OF_TRUST, MONITOR_PAUSE_ACT }
   from "../../../src/monitoring/index.mjs";
-import { CUSTODIAL_CHECKS } from "../../../checks/bio-checks.mjs";
+import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const HOUR = 3600000, DAY = 24 * HOUR;
 const ADMIN = "class:admin";
@@ -339,17 +339,22 @@ async function roster(w) {
   assert.deepEqual(["admin", "second", "ann"].map((x) => m.isAdministrator(x)), [true, true, false]);
 }
 
-test("R30 (N314) a pause or resume asked by a member who is not an administrator is refused NOT_AN_ADMIN, membership's code, with nothing written; an administrator and the root of trust pause and resume", async () => {
+test("R30 (N314, N324) a pause or resume asked by a member who is not an administrator is refused NOT_AN_ADMIN through membership.notAnAdmin (its R84, row C-96.1), with nothing written; an administrator and the root of trust pause and resume", async () => {
   const w = world();
   await roster(w);
   const setting = () => w.record.getSetting(MONITOR_PAUSE_SETTING);
+  const row = MEMBERSHIP_CHECKS.NOT_AN_ADMIN;
+  assert.equal(row.check, "C-96.1");
   const refusedAs = (by) => {
     const before = JSON.stringify(setting());
     for (const paused of [true, false, "neither"]) {
       const r = w.m.pause({ paused, by });
-      assert.deepEqual(r, { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: CUSTODIAL_CHECKS.NOT_AN_ADMIN.check,
-        translation: CUSTODIAL_CHECKS.NOT_AN_ADMIN.translation, by, detail: r.detail }, `${by} refused (${paused})`);
-      assert.equal(typeof r.detail, "string");
+      /* the one answer membership mints for this act, whole: its code, its row, its fixed sentence, nothing of monitoring's own */
+      assert.deepEqual(r, notAnAdmin(by, MONITOR_PAUSE_ACT), `${by} refused (${paused})`);
+      assert.deepEqual(r, { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check,
+        translation: row.translation, by, detail: r.detail }, `${by} refused (${paused}): R84's shape`);
+      assert.match(r.detail, /^pausing or resuming the monitoring daemon is an administrator's act/);
+      assert.match(r.detail, /Nothing was changed\.$/);
     }
     assert.equal(JSON.stringify(setting()), before, `nothing written for ${by}`);
   };
