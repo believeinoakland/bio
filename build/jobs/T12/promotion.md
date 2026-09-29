@@ -1,6 +1,6 @@
 # promotion (T12)
 
-**Status** · session_01WeEThE5XFsoayhvn9So6tj · depth 2 · WORKING · handled B1
+**Status** · session_01WeEThE5XFsoayhvn9So6tj · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
