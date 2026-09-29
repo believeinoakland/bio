@@ -33,3 +33,7 @@ Found in other modules while re-anchoring against control-plane (K413), measured
 2. skills (carried T10 red, `machinefences-dec49` ARM A4): `machineFences(CATALOGUE)` now also misses `MACHINE_CANNOT_FORWARD` and `_RESOLVE`, which queue took (K409); still one red arm, wider.
 3. membership's unclaimed DEC-49 marker `is-listener-registration` (B12): I read it as covered by N202's listener rows; left.
 4. derivation-bounds' own instrument (legacy-tests', deferred): `capIdentifiers` takes the string literal "cap" in `worseSupersessions`' `cols` as an alias of the cap, so that method's verdict rests on a column name.
+
+## J3 · REPORT
+
+Found in instance-setup (or scheduler, if the seam is ruled its), after B6's store-started shim: `scheduler.test.mjs` 52/0 → 49/3. Instance-setup's `start` (`src/setup.mjs`:1924) calls `scheduler.arm()`; with `SCHED_PROBE` bound, `arm` creates the test probe at boot (`src/scheduler/index.mjs` 275–280, `#probeState(now, true)`), whereas scheduler's own `start` (284–287) is written to start no probe. So the probe is anchored at boot, not at the suite's `schedProbeArm(BASE)`: three arms (lines 162, 191, 198) are off by the gap (139–203 ms). Left red rather than re-anchored to what reads as a defect: boot should not arm the probe. Also for affordances: instance-setup's new read op `profiles` (gate-reads classifies it ungated: R12/R16, one setting, no bundle), which instance-setup's J5 point 6 already routes.
