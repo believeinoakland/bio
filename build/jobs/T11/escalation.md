@@ -1,6 +1,6 @@
 # escalation (T11)
 
-**Status** · session_01CE181yr6UPtvYZGABsN4KC · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01CE181yr6UPtvYZGABsN4KC · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
