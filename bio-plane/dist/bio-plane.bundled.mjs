@@ -11935,7 +11935,7 @@ async function recordChecks({ folderName, files, releaseRegistry = null, sha256:
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.41.0";
+var CATALOG_VERSION = "1.42.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -15576,6 +15576,11 @@ var MEMBERSHIP_CHECKS = Object.freeze({
     check: "C-70.5",
     where: at("noSuchProject", "is-project-seen"),
     translation: "No project answers to that id here. A project you cannot see is answered exactly as one that does not exist, so this is not a hint either way."
+  }),
+  EXPERTISE_NO_LABEL: Object.freeze({
+    check: "C-96.13",
+    where: at("expertiseDeclare", "is-expertise-labelled"),
+    translation: "An expertise is declared by a name a person can read, such as 'CPA', and this one has none. Nothing was written."
   })
 });
 
@@ -17749,7 +17754,17 @@ var Membership = class _Membership {
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     if (m.status !== "active") return { ok: false, reason: "NOT_ACTIVE" };
     const lab = _Membership.#normLabel(label);
-    if (!lab) return { ok: false, reason: "NO_LABEL", detail: "a declaration needs a label, such as 'CPA'" };
+    if (!lab) {
+      const row2 = MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL;
+      return {
+        ok: false,
+        reason: "EXPERTISE_NO_LABEL",
+        code: "EXPERTISE_NO_LABEL",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "a declaration needs a label, such as 'CPA'"
+      };
+    }
     const cur = this.#expertiseState(memberId, lab);
     if (cur === "declared" || cur === "confirmed")
       return { ok: false, reason: "ALREADY_DECLARED", label: lab, state: cur };
