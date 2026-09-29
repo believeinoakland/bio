@@ -33,3 +33,7 @@
 - `ownership queue tranche/T13`: 4 files changed; legacy-store, legacy-checks, legacy-index 0 lines added, 0 removed; 0 failures.
 
 Size (session_01PQNFqfP7kPh56cqLi4WAzf): test runs 5, module lines 4,899
+
+## J1 · COMPLETE
+
+N322 applied: R23's exhausted TASK mint keeps the event and its waiting entry carries record-core mintExhausted("TASK")'s code, check (C-59.6) and detail. Also, in my module: the inbox acts and the project arm of proposeDispose stamp the instance clock (deps.now / BIO_NOW_MS) when given no instant. test/m/queue 60 pass 0 fail 1 todo (R39 bias half); test/m 2724 pass 0 fail; format, architecture, coverage, ownership 0 failures. For you: strike R23's N322 marks in queue.md (outside my paths); record-core.md still marks R62 not yet met; bio-plane dist bundle stale. No check row changed. Details in my record's Completion.
