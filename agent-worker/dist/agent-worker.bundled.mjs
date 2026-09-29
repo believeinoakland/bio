@@ -25776,7 +25776,6 @@ var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/progressions/checks.mjs
 var at4 = (fn, region) => `src/progressions/index.mjs ${fn} > ${region}`;
-var DISPOSITIONS2 = Object.freeze(["deferred", "dismissed"]);
 var PROGRESSION_CHECKS = Object.freeze({
   PROGRESSION_NO_LABEL: {
     check: "C-100.2",
@@ -26246,13 +26245,9 @@ var BIAS_CHECKS2 = {
     where: "src/bias/index.mjs biasDebtResolve > is-bias-debt-resolve-subject, reached from op=biasdebtresolve",
     translation: "Nothing was added, because this one has already been settled \u2014 by the lens moving back, by a re-run under the lens now in force, or by a member who gave their reason. What settled it is on the record and is not overwritten. If the lens changes again, the obligation is raised again as a new one."
   },
-  /* K102 (R11): an instance-scope adoption is an administrator's act ("Admins define instance bias"); the adoption
-  stays signed by its author. */
-  BIAS_ADOPTION_NOT_AN_ADMINISTRATOR: {
-    check: "C-26.20",
-    where: "src/bias/index.mjs biasAdopt, reached from op=biasadopt",
-    translation: "Nothing was adopted. A lens over the whole instance is set by its administrators, and you are not one. A project's owners set a lens over that project's work: ask an administrator to adopt this set for the instance, or adopt it for a project you own."
-  },
+  /* C-26.20 (BIAS_ADOPTION_NOT_AN_ADMINISTRATOR) is RETIRED and its number is not reused (N327, DEC-83): an
+     instance-scope adoption by a non-administrator is membership's one condition, answered `NOT_AN_ADMIN` through
+     `membership.notAnAdmin` (its R84, C-96.1), this row's next step riding as its `remedy` (R11). */
   BIAS_ILLEGAL_TRANSITION: BIAS_CHECKS.BIAS_ILLEGAL_TRANSITION
 };
 
@@ -26264,6 +26259,7 @@ var BIAS_TABLES = Object.freeze([
   "bias_debt_sweeps",
   "bias_debt_settlements"
 ]);
+var BIAS_ADDITIVE_COLUMNS = Object.freeze([Object.freeze(["bias_debts", "settled_kind", "TEXT"])]);
 
 // ../bio-plane/src/bias/index.mjs
 var enc = new TextEncoder();
