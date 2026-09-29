@@ -68,7 +68,7 @@ Checks (process repository): format 0 failures; architecture 9 files, 59 imports
 
 Found in other modules (nothing of theirs changed): (1) promotion's `test/m/promotion/write-path.test.mjs` is red on `tranche/T12`: its promotion is refused `FACT_UNAVAILABLE` (C-102.4) for the fact `producingGroup`, which no module provides in that suite's Worker. (2) The modules' handlers that are handed `doAnswer` (instance-setup, capture, ratification, extraction, monitoring) answer every non-answer with `storeSilent`; where one relays a caller's body, a store refusal still reaches its caller as R23's 502. They can test `out.refused` and answer `storeRefusal` (exported). No generated artifact is made stale beyond those named in J4.
 
-Size (session_011nRiF6A26Vj9uVFBYoYwpF): test runs 10, module lines 5,923
+Size (session_011nRiF6A26Vj9uVFBYoYwpF): test runs 10, module lines 5,927
 
 ## J1 · QUESTION
 
