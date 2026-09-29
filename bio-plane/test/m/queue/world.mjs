@@ -1,0 +1,114 @@
+/* The queue's test world: record-core and membership real, over node:sqlite behind a `sql` that answers as workerd's
+   does (a CURSOR, iterable once, with `toArray()` and `one()`, never an array; K316); every other provider a fake in
+   the shape its requirements publish, which a test fills. The tables other modules own and this module reads by their
+   read contracts (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34, capture R59) are
+   the real schema's where `schema.mjs` holds them, else created here with exactly the contracted columns. */
+import { DatabaseSync } from "node:sqlite";
+import { SCHEMA } from "../../../src/schema.mjs";
+import { recordOf } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
+import { queueOf } from "../../../src/queue/index.mjs";
+
+export const NOW = Date.parse("2026-09-01T00:00:00Z");
+export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+
+/** A workerd-shaped cursor over rows: iterable once, `toArray()`, `one()`. */
+function cursor(rows) {
+  let used = false;
+  const it = {
+    [Symbol.iterator]() { if (used) throw new Error("a cursor is iterable once"); used = true; return rows[Symbol.iterator](); },
+    toArray() { return [...it]; },
+    one() { const a = [...it]; if (a.length !== 1) throw new Error("one(): not exactly one row"); return a[0]; },
+  };
+  return it;
+}
+
+export function world(fakes = {}) {
+  const db = new DatabaseSync(":memory:");
+  const statements = [];
+  let sp = 0;
+  const sql = { exec(q, ...a) {
+    statements.push(q);
+    for (const m of q.matchAll(/(?:LIKE|GLOB)\s+'([^']*)'/gi)) if (m[1].length > 50) throw new Error("LIKE/GLOB over 50 bytes (K313)");
+    const st = db.prepare(q);
+    if (st.columns().length) return cursor(st.all(...a.map(bind)).map((r) => ({ ...r })));
+    st.run(...a.map(bind)); return cursor([]);
+  } };
+  const storage = { sql, transactionSync(fn) { const n = `sp${sp++}`; db.exec(`SAVEPOINT ${n}`);
+    try { const r = fn(); db.exec(`RELEASE ${n}`); return r; } catch (e) { db.exec(`ROLLBACK TO ${n}`); db.exec(`RELEASE ${n}`); throw e; } } };
+  const host = { storage };
+  for (const t of SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) db.exec(t);
+  db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
+           CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
+           CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT, target_type TEXT,
+             role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
+           CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT);
+           CREATE TABLE IF NOT EXISTS source_reachability (address_norm TEXT PRIMARY KEY, consecutive_failures INTEGER, first_failure_since TEXT)`);
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  const F = defaultFakes();
+  for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
+  const q = queueOf(host, { record, membership, start: false, now: () => w.now, ...F });
+  const w = {
+    db, sql, host, record, membership, q, fakes: F, statements, now: NOW,
+    run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
+    all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
+    bundle(id, type = "information", { title = id, state = null } = {}) {
+      const st = state || ({ inquiry: "open", project: "active", information: "collected" }[type] || "collected");
+      db.prepare(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+                  VALUES (?,?,?,?,?,?,?,?)`).run(id, type, "g", title, st, iso(NOW), iso(NOW), "sha");
+      return id;
+    },
+    member(id, { role = "member", status = "active" } = {}) {
+      db.prepare(`INSERT INTO members (member_id, cover, role, status, created, updated, pairing_published) VALUES (?,?,?,?,?,?,0)`)
+        .run(id, id, role, status, iso(NOW), iso(NOW));
+      return id;
+    },
+    join(project, member, { owner = false, state = "joined" } = {}) {
+      db.prepare(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?,?,?,?,?,?)`)
+        .run(project, member, state, owner ? 1 : 0, iso(NOW), iso(NOW));
+    },
+    cite(from, to, kind = "cites") { db.prepare(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?,?,?)`).run(from, to, kind); },
+    leg(inquiry, target, ord = 0) { db.prepare(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id) VALUES (?,?,?,?)`).run(inquiry, ord, "supports", target); },
+    task(id, refersTo, { kind = "authority-undetermined", assignee = "unassigned", role = "group-admin", status = "open",
+                         created = iso(NOW - 3600000), resolvedAt = null, history = null } = {}) {
+      db.prepare(`INSERT INTO tasks (id, kind, refers_to, subject_text, assignee, assignee_role, status, created, resolved_at, history)
+                  VALUES (?,?,?,?,?,?,?,?,?,?)`).run(id, kind, refersTo, `about ${refersTo}`, assignee, role, status, created,
+        resolvedAt, JSON.stringify(history || [{ at: created, event: "created", actor: "alarm" }]));
+    },
+    feed(member = null, viewer = member ? `member:${member}` : "class:admin", limit = null) {
+      return q.queueFeed({ member, viewer, limit });
+    },
+  };
+  return w;
+}
+
+/** Every provider the feed and the acts reach, answering nothing until a test says otherwise. */
+export function defaultFakes() {
+  return {
+    governor: { governorHolding: () => [] },
+    provenance: { homeOf: () => null },
+    capture: { liveCaptureSessions: () => [], taskEvents: () => [], taskEventCount: () => 0, taskEventAttempt: () => true,
+               taskEventRemove: () => true, sourceReachability: () => ({ fallback_eligible: false }), on: () => ({ ok: true }) },
+    captureRequests: { completed: () => ({ requests: [] }), leads: () => ({ requests: [] }), rendersHeld: () => ({ requests: [] }) },
+    connections: { edgeSevered: () => false },
+    basisVersions: { projectsDrawingOn: () => Object.assign([], { bound: 32, truncated: false }), conclusionOf: () => null,
+                     conclusionRecordOf: () => ({ stance: null }), basisVersions: () => ({ ok: true, versions: [], truncated: false }) },
+    progressions: { proposalsFeed: () => ({ instances: [], proposals: [], dispositions: [] }),
+                    disposeProposal: (a) => ({ ok: true, scope: "instance", progression_arm: a }) },
+    aiRuns: { runFor: () => null },
+    bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }) },
+    publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
+    reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }) },
+    intent: { gaps: () => ({ ok: true, gaps: [] }) },
+    monitoring: { subjects: () => ({ rows: [] }), floor: () => 2, monitoring: () => ({ ok: true, items: [], truncated: false }) },
+    affordances: { affordanceFacts: () => ({ ok: false }) },
+    scheduler: { arm: async () => null, register: () => ({ ok: true }) },
+  };
+}
+
+/** The items of a feed by id. */
+export const byId = (feed) => Object.fromEntries((feed.items || []).map((i) => [i.id, i]));
