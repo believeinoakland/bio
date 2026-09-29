@@ -121,7 +121,7 @@ async function governedFetch(env, stub, target, purpose, delegated = null) {
                                  governor: stub ? governorOverStub(stub) : null });
 }
 import { cpuProbe } from "./cpu.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./control-plane/dispatch.mjs";
 import { attest, attestStatus, registerAuditReport } from "./provenance/index.mjs";
 import { withBiasChecks } from "./bias/index.mjs";
 import { governedFetch as fetchGoverned, governorOverStub, governorOp } from "./host-governor/index.mjs";
@@ -136,7 +136,7 @@ export { PUBLISHED_TOKEN_HASHES, liveToken } from "./tokens.mjs";
 
 // T12 (control-plane's extraction, K3, K93): the op declarations, the doors, the gates, the stamps and the envelope are
 // control-plane's. What stays here is the arms whose modules have not taken them yet; control-plane routes to them.
-import { makeFetch, json, doAnswer, storeSilent, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
+import { makeFetch, json, doAnswer, storeSilent, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
          SCRATCH, sha256Hex, classify, scopeFor, caseReader, captureKey, installationRow } from "./control-plane/index.mjs";
 import { decorateAct, ACT_GATE } from "./control-plane/ops.mjs";
 
@@ -267,19 +267,19 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         const body = await req.json().catch(() => ({}));
         const r = await stub.fetch(new Request("http://do/login", {
           method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) }));
-        return json(await r.json(), 200);
+        return relayAnswer(r, "login");   /* control-plane R24 (D-679) */
       }
       if (op === "invitelook") {
         const body = await req.json().catch(() => ({}));
         const r = await invStub.fetch(new Request("http://do/invitelook", {
           method: "POST", body: JSON.stringify(body) }));
-        return json(await r.json(), 200);
+        return relayAnswer(r, "invitelook");   /* control-plane R24 (D-679) */
       }
       if (op === "enroll") {
         const body = await req.json().catch(() => ({}));
         const r = await invStub.fetch(new Request("http://do/enroll", {
           method: "POST", body: JSON.stringify(body) }));
-        return json(await r.json(), 200);
+        return relayAnswer(r, "enroll");   /* control-plane R24 (D-679) */
       }
       /* 7a. Anyone, no token, no session. The DO consults only the
          published projection. */

@@ -910,11 +910,51 @@ async function doAnswer(res) {
    the same code for the three post-commit sub-reports in `ratify` and `recordcasemanifest` — the SAME condition
    (the store did not answer), stated inside an answer rather than refused; the DEC-49 guard's arm G declares the two
    spellings one condition by name. The wire only GAINS `code`, `check` and `translation`. */
-function storeSilent(op) {
+/* R25: when the store's failure was its own named internal error, the silence carries that error's correlation id, so
+   an operator can find the logged stack; nothing else of the store's envelope is relayed. */
+function storeSilent(op, failed = null) {
+  const correlation = failed && failed.reason === "STORE_INTERNAL_ERROR" && typeof failed.correlation === "string"
+    && /^[0-9a-f-]{36}$/.test(failed.correlation) ? failed.correlation : undefined;
   /* DEC-49 REGION is-store-silent */
   return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", ...dispatchRow("STORE_DID_NOT_ANSWER"),
-                op, detail: STORE_SILENT_DETAIL }, 502);
+                op, detail: STORE_SILENT_DETAIL, correlation }, 502);
   /* END DEC-49 REGION is-store-silent */
+}
+
+/* R23, R24 (D-679): a store answer RELAYED to the caller. `claim`, `login`, `invitelook` and `enroll` answered
+   `json(await r.json(), 200)` — the store's envelope at HTTP 200 WITHOUT READING `ok`, so a store that failed told an
+   anonymous caller "success" in the status line. An answer (a refusal the store returned inside `ok: true` included)
+   is re-wrapped in the envelope the store answers, `{ok: true, result}`, at the store's own status; anything else is
+   `storeSilent`, never 200. */
+async function relayAnswer(res, op) {
+  let r = null, out = null;
+  try { r = await res; out = await r.json(); } catch { out = null; }
+  if (!out || out.ok !== true) return storeSilent(op, out);
+  return json({ ok: true, result: out.result }, r.status);
+}
+
+/* D-629 / DEC-49 (C-69.4, R25) — THE WORKER'S OUTERMOST CATCH, which it did not have: a throw anywhere in the door
+   reached the Workers runtime as an uncaught exception (the platform's own error page), no BIO answer at all. A throw
+   is logged server-side with its stack under a CORRELATION id, and the caller receives the code, the canned
+   translation and the id — no stack, no message, no path. A named refusal is RETURNED, never thrown, so none passes
+   through here. */
+function planeInternalError(e, req) {
+  const correlation = crypto.randomUUID();
+  let op = "";
+  try { const u = new URL(req.url); op = u.searchParams.get("op") || u.pathname; } catch { /* no op to name */ }
+  const answer = planeInternalAnswer(correlation);
+  /* The log line names the code by READING the answer, never by a second literal. */
+  try {
+    console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op).slice(0, 200),
+                                   stack: String(e && e.stack || e) }));
+  } catch { /* a log that cannot be written never changes what the caller is told */ }
+  return json(answer, 500);
+}
+function planeInternalAnswer(correlation) {
+  /* DEC-49 REGION is-plane-internal-error */
+  return { ok: false, error: "internal error", reason: "PLANE_INTERNAL_ERROR", ...dispatchRow("PLANE_INTERNAL_ERROR"),
+           correlation };
+  /* END DEC-49 REGION is-plane-internal-error */
 }
 
 /* THE ADMISSION GATE'S DEC-49 FIELDS, read from the ONE row (REC-79 / C-38).
@@ -1254,7 +1294,11 @@ const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor
 const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
                                    "migrationReplay"]);
 export function makeFetch(hooks = {}) {
-  return async function fetch(req, env) {
+  /* R25: the door's one outermost catch. */
+  return async function planeDoor(req, env) {
+    try { return await fetch(req, env); } catch (e) { return planeInternalError(e, req); }
+  };
+  async function fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
@@ -1371,9 +1415,8 @@ export function makeFetch(hooks = {}) {
           return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
             error: "bootstrap credential does not match" }, 403);
         /* END DEC-49 REGION is-bootstrap-claim */
-        const r = await stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
-          method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) }));
-        return json(await r.json(), 200);
+        return relayAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
+          method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) })), "claim");
       }
       /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT (R20) ====== */
       /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT ======
@@ -3433,14 +3476,14 @@ export function makeFetch(hooks = {}) {
     /* R23, R30: an answer that is not JSON with `ok: true` is a silence, never relayed (a store's stack included). */
     let body = null;
     try { body = await res.json(); } catch { body = null; }
-    if (!body || body.ok !== true) return storeSilent(op);
+    if (!body || body.ok !== true) return storeSilent(op, body);
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body?.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
     return json({ ...body, store: storeName, tokenClass: cls }, res.status);
-  };
+  }
 }
-export { json, doAnswer, storeSilent, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE, SCRATCH,
+export { json, doAnswer, storeSilent, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE, SCRATCH,
          NAMESPACES, sha256Hex, fingerprint, classify, scopeFor, caseReader, resolveSession, reviewAnswer, captureKey,
          installationRow, admissionRow, dispatchRow, namespaceRow, machineFenceRow, replayRow, identityFenceRow,
          dec49Row, dec49Attach, MODULE_CHECK_FILES, sessionOpGate, migrationReplayOf, DRIVE_PROVENANCE_PATH,

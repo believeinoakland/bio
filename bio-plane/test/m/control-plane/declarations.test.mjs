@@ -75,11 +75,3 @@ test("R34: ACT_GATE is {needs(id), mode(id)} read from NEEDS and SESSION_OPS for
   finally { SESSION_OPS.member.add(a.id); }
   assert.equal(decorateAct(a).mode, "session");
 });
-
-test.todo("R26 the store's dispatch door: an empty POST body is null, a non-JSON body 400 BAD_JSON, an unserved route "
-  + "400 `unknown op: <op>`, answers {ok:true, result}, routes from the modules' own maps (not yet met: the store's "
-  + "`dispatch` door has not moved into this module — Store.fetch is still legacy-store's)");
-
-test.todo("R27 a read naming a project (PROJECT_NAMING_READS) with a stamped viewer and a discoverable project is answered "
-  + "by membership.existenceAct first (C-70.1), and the reads naming none are listed with the reason (not yet met: the "
-  + "store's dispatch door, where this runs, has not moved into this module — Store.fetch is still legacy-store's)");

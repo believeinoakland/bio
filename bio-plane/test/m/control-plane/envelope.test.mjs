@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUERY_STAMPS } from "./harness.mjs";
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
 import * as CP_CHECKS from "../../../src/control-plane/checks.mjs";
+const D = await import("../../../src/control-plane/dispatch.mjs");
 
 const { OPS, UNATTENDED_BY_DECISION } = O;
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
@@ -131,13 +132,103 @@ test("R23: an answer that is not JSON with ok:true is 502 STORE_DID_NOT_ANSWER (
   }
 });
 
-test.todo("R24 a public op relaying the store's answer answers the store's own status, and R23 on a store failure, never 200 "
-  + "(not yet met: D-679 — claim, login, invitelook and enroll read the store answer without its `ok`; claim's is this "
-  + "module's, control-plane/index.mjs:1335)");
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const quietly = async (fn) => {
+  const logged = [], was = console.error;
+  console.error = (...a) => logged.push(a.join(" "));
+  try { return { value: await fn(), logged }; } finally { console.error = was; }
+};
 
-test.todo("R25 an error thrown in either door is answered with a named internal-error code (PLANE_INTERNAL_ERROR / "
-  + "STORE_INTERNAL_ERROR) and a correlation id, never the stack, message, path or line (not yet met: D-629 — no such code "
-  + "exists; the store's catch answers String(e.stack), and a throw in the Worker door escapes fetch unanswered)");
+test("R24: a public op relaying the store's answer answers the store's own status and its envelope, and R23 (502 STORE_DID_NOT_ANSWER) on a store failure, never 200 — claim through the door, and login, invitelook and enroll through the relay they answer by", async () => {
+  const body = { bootstrapToken: null, password: "pw" };
+  const failures = [() => new Response("<html>oops", { status: 200 }), reply({ ok: false, error: "x" }, 200),
+                    reply({ ok: false, error: "x" }, 500), reply({ ok: "true", result: {} }), reply({}, 200),
+                    () => { throw new Error("gone"); }];
+  for (const bad of failures) {
+    const w = world({ answer: (c) => (c.route === "claim" ? bad() : null) });
+    const r = await call(w.env, { op: "claim", method: "POST", body: { ...body, bootstrapToken: w.env.ADMIN_TOKEN } });
+    refused(r, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+    assert.equal(r.json.op, "claim");
+    for (const op of ["claim", "login", "invitelook", "enroll"]) {
+      const x = await M.relayAnswer(Promise.resolve().then(bad), op);
+      assert.equal(x.status, 502, op);
+      const j = await x.json();
+      assert.deepEqual([j.reason, j.op], ["STORE_DID_NOT_ANSWER", op]);
+    }
+  }
+  /* an answer — a refusal the store returned inside ok:true included — is its envelope, at the store's status */
+  for (const [result, status] of [[{ ok: true, claimed: true }, 200], [{ ok: false, reason: "WRONG_PASSWORD" }, 200],
+                                  [{ ok: true, session: "s" }, 201]]) {
+    const w = world({ answer: (c) => (c.route === "claim" ? reply({ ok: true, result }, status)() : null) });
+    const r = await call(w.env, { op: "claim", method: "POST", body: { ...body, bootstrapToken: w.env.ADMIN_TOKEN } });
+    assert.equal(r.status, status);
+    assert.deepEqual([r.json.ok, r.json.result.ok, r.json.result.reason], [true, result.ok, result.reason]);
+    for (const op of ["login", "invitelook", "enroll"]) {
+      const x = await M.relayAnswer(reply({ ok: true, result }, status)(), op);
+      assert.equal(x.status, status, op);
+      assert.deepEqual((await x.json()).result, JSON.parse(JSON.stringify(result)));
+    }
+  }
+});
+
+test("R25: an error thrown in either door is answered with its named internal-error code and a correlation id (PLANE_INTERNAL_ERROR C-69.4 in the Worker, STORE_INTERNAL_ERROR C-69.3 in the store), never the stack, message, path or line, and the stack is logged under the id", async () => {
+  const SECRET = "SQLITE_CONSTRAINT secret-value /srv/plane/src/store.mjs:4242";
+  const thrower = () => { throw new Error(SECRET); };
+  /* the Worker: a throw anywhere in the door — a module's handler, a store stub that throws, a request it cannot read */
+  const w0 = world();
+  for (const [label, drive] of [
+    ["gated hook", (w) => call(w.env, { op: "index", token: w.env.ADMIN_TOKEN,
+      hooks: { publicOp: async () => M.json({}), gatedOp: thrower } })],
+    ["public hook", (w) => call(w.env, { op: "knock", method: "POST", body: {},
+      hooks: { publicOp: thrower, gatedOp: async () => undefined } })],
+    ["store stub", (w) => { w.env.STORE.get = thrower; return call(w.env, { op: "index", token: w.env.ADMIN_TOKEN }); }],
+    ["page read", (w) => call(w.env, { path: "/", method: "GET",
+      hooks: { publicInstanceGroup: thrower, publicOp: async () => M.json({}), gatedOp: async () => undefined } })]]) {
+    const w = world();
+    const { value: r, logged } = await quietly(() => drive(w));
+    refused(r, 500, "PLANE_INTERNAL_ERROR", "C-69.4");
+    assert.match(r.json.correlation, UUID, label);
+    assert.equal(r.text.includes("secret-value") || r.text.includes("store.mjs") || r.text.includes("SQLITE"), false, label);
+    assert.equal(r.text.includes(" at "), false, label);
+    assert.equal(logged.length, 1, label);
+    const line = JSON.parse(logged[0]);
+    assert.deepEqual([line.event, line.correlation], ["PLANE_INTERNAL_ERROR", r.json.correlation], label);
+    assert.match(line.stack, /secret-value/, label);
+  }
+  /* each throw gets its own id */
+  const two = [];
+  for (let i = 0; i < 2; i++) two.push((await quietly(() => call(w0.env, { op: "index", token: w0.S.ann,
+    hooks: { publicOp: async () => M.json({}), gatedOp: thrower } }))).value.json.correlation);
+  assert.match(two[0], UUID);
+  assert.notEqual(two[0], two[1]);
+  /* the store: dispatch's catch, for a route that throws (and for the route map itself throwing) */
+  for (const routes of [() => ({ boom: thrower }), thrower]) {
+    const { value: res, logged } = await quietly(() => D.dispatch(new Request("http://do/boom", { method: "POST", body: "{}" }),
+      { routes, membership: () => { throw new Error("not asked"); } }));
+    assert.equal(res.status, 500);
+    const text = await res.text();
+    const j = JSON.parse(text);
+    assert.deepEqual([j.ok, j.reason, j.code, j.check], [false, "STORE_INTERNAL_ERROR", "STORE_INTERNAL_ERROR", "C-69.3"]);
+    assert.equal(j.translation, CP_CHECKS.DISPATCH_CHECKS.STORE_INTERNAL_ERROR.translation);
+    assert.match(j.correlation, UUID);
+    assert.equal(text.includes("secret-value") || text.includes("store.mjs") || text.includes(" at "), false);
+    const line = JSON.parse(logged[0]);
+    assert.deepEqual([line.event, line.correlation, line.op], ["STORE_INTERNAL_ERROR", j.correlation, "boom"]);
+    assert.match(line.stack, /secret-value/);
+  }
+  /* the Worker relays the store's failure as R23's silence, carrying the store's correlation id and nothing else of it */
+  const corr = crypto.randomUUID();
+  const w = world({ answer: (c) => (c.route === "index" ? reply({ ok: false, error: SECRET, reason: "STORE_INTERNAL_ERROR", correlation: corr }, 500)() : null) });
+  const r = await call(w.env, { op: "index", token: w.env.ADMIN_TOKEN });
+  refused(r, 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+  assert.equal(r.json.correlation, corr);
+  assert.equal(r.text.includes("secret-value"), false);
+  /* negative controls: a correlation not from the store's own code, or not an id, is not carried */
+  for (const bad of [{ ok: false, correlation: corr }, { ok: false, reason: "STORE_INTERNAL_ERROR", correlation: "x<script>" }]) {
+    const v = world({ answer: (c) => (c.route === "index" ? reply(bad, 500)() : null) });
+    assert.equal((await call(v.env, { op: "index", token: v.env.ADMIN_TOKEN })).json.correlation, undefined);
+  }
+});
 
 test("R30: no credential, session token, secret or stack appears in any answer — the one minting answer of R19 excepted — a store's stack included", async () => {
   const w = world();
@@ -163,7 +254,7 @@ test("R30: no credential, session token, secret or stack appears in any answer �
   assert.equal(later.text.includes(minted), false);
 });
 
-test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.2, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
+test("R32: each check the module raises carries its C-number on the wire — C-38.1–.8, C-69.1–.4, C-78.1–.3, C-29.6–.10, C-32.17, C-64.4, C-68.2–.4, C-66.6", async () => {
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
   const { env, S, A } = w;
   const got = {};
@@ -201,10 +292,16 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   try { await d({ op: "claim", body: { bootstrapToken: env.ADMIN_TOKEN } }); } finally { PUBLISHED_TOKEN_HASHES.delete(sha(env.ADMIN_TOKEN)); } /* C-68.3 */
   env.CAPTURES = { get: async () => null };
   await d({ op: "promote", token: env.ADMIN_TOKEN, body: { replay: true, provenanceCapture: "0".repeat(64) } });  /* C-66.6 */
+  const { value: pie } = await quietly(() => call(env, { op: "index", token: env.ADMIN_TOKEN,
+    hooks: { publicOp: async () => M.json({}), gatedOp: () => { throw new Error("x"); } } }));
+  note(pie);                                                                    /* C-69.4 */
+  const { value: sie } = await quietly(() => D.dispatch(new Request("http://do/x"), { routes: () => ({ x: () => { throw new Error("x"); } }) }));
+  const sj = await sie.json();
+  got[sj.code] = sj.check; sentences[sj.code] = sj.translation;                 /* C-69.3 */
   assert.deepEqual(got, {
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
     NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7", SESSION_ROUTE_NOT_RECORDED: "C-38.8",
-    UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2",
+    UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", STORE_INTERNAL_ERROR: "C-69.3", PLANE_INTERNAL_ERROR: "C-69.4",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",
@@ -219,12 +316,9 @@ test("R32: each check the module raises carries its C-number on the wire — C-3
   assert.deepEqual(Object.fromEntries(Object.entries(own).map(([c, r]) => [c, r.check])), got);
   for (const [code, row] of Object.entries(own)) {
     assert.equal(sentences[code], row.translation, code);
-    assert.match(row.where, /^src\/control-plane\/index\.mjs \S+ > is-[a-z-]+$/, code);
+    assert.match(row.where, /^src\/control-plane\/(index|dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
   }
 });
-
-test.todo("R32 the two internal-error rows R25 adds (not yet met: D-629 — R25's PLANE_INTERNAL_ERROR and "
-  + "STORE_INTERNAL_ERROR rows do not exist yet; every other row of R32 is driven on the wire above)");
 
 test("R33: no place is named in this module's answers", async () => {
   const PLACES = /\b(oakland|alameda|berkeley|california|san francisco|bay area|emeryville|contra costa)\b/i;
