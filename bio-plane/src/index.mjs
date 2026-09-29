@@ -89,6 +89,7 @@ import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, 
    doctrine, so its two grade letters come from the same place the refusal reads
    them. N80 (T8): the note is capture's (`acquireGradeNote`, capture's Provides), composed where acquire is. */
 import { ACQUIRE_GRADE_NOTE } from "./capture/index.mjs";
+import { queueAnswer } from "./queue/index.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "./subresources.mjs";
 /* D-64: the render arm's pure half and its renderer seam. */
 import { RENDER_DEFAULTS, completenessReading, keepRenderBodies, renderAllowanceMs,
@@ -668,11 +669,7 @@ async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessVie
       if (!qkOut.answered) return storeSilent("queue");
       if (r.ok !== true)
         return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
-      return json({ ok: true, result: {
-        ...r,
-        items: r.items.map((i) => ({ ...i, options: (i.options || []).map(decorateAct) })),
-        vocabularies: vocabulariesFor(qkOut.result?.kinds),
-      }, store: storeName, tokenClass: cls }, 200);
+      return json({ ok: true, result: queueAnswer(r, { gate: ACT_GATE, kinds: qkOut.result?.kinds }).result, store: storeName, tokenClass: cls }, 200);
     }
 
     if (op === "registeraudit") {
