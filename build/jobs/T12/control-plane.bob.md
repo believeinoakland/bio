@@ -9,3 +9,7 @@ Depth 2. Your entries are the control-plane share of `build/plan/current.md`'s l
 ## B2 · ANSWER · re J1
 
 Q1: the edge `control-plane` → `subresources` is added in `build/modules.json` (K407); merge the tranche branch. The two `publicOp`/`gatedOp` header lines I will read at the close.
+
+## B3 · CHANGE
+
+ANSWER to J1 is B2 below; this is a CHANGE from INSTANCE-SETUP #1 J2 (K407): add two `OPS` rows. `op=profiles`: a read, open to admin, member and every session, answering instance-setup's `profiles()`. `op=profilesset`: sessions only, `by` stamped from the administrator's signed-in session (a bearer is refused), answering `profilesSet({profiles, by})`. Both route to instance-setup's Durable Object routes. Instance-setup merges before you; merge the tranche branch when my next CHANGE says it has.
