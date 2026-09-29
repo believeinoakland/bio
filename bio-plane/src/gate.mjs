@@ -281,7 +281,24 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    table): 397, sha256 e1c688c5…, behaviour source 9927c1ad… (its own print on this tree after K350's restore), so its
    1.41.0 row, legacy-tests', names `changed: ["C-22.1", "C-22.17"]` to stand apart from 1.40.0's (A4); A3 and A5 are
    that re-pin's. */
-export const CATALOG_VERSION = "1.41.0";
+/* 1.42.0 (PROMOTION #12, T12 layer 2, 2026-09-29; N302, K369, K381): EIGHT ARRIVALS, FOUR DEPARTURES, ONE CHANGED,
+   counted wherever the rows live (R34, R47). After 1.41.0 was minted (7702929d29), T11's layer 6–9 jobs and T12's layer
+   1 moved these, and nothing re-stamped them; read from each table as merged on `tranche/T12`. ARRIVED: C-22.18
+   AI_RUN_STATE_TOO_LARGE, ai-runs' `AI_RUN_CHECKS`; C-112.11 STANDARD_NO_ID, standards'; C-113.22 NO_REASON,
+   conformance's; C-117.2 NO_SUCH_ACTION, C-117.3 ACTION_TOO_LARGE, C-117.4 ACTION_MOVE_NO_REASON, C-117.5
+   PENDING_CLOCKS_BAD_BEFORE and C-117.6 ACTION_NO_DETERMINATION, actions'. DEPARTED, their ids retired: conformance's
+   C-113.2 and intent's C-111.2 (NO_SUCH_PROJECT, answered through membership's C-70.5), filings' C-115.2 and
+   escalation's C-116.11 (NO_SUCH_ACTION, answered through actions' C-117.2). CHANGED: C-113.17 BAD_REASON, which also
+   answered an absent supersession reason until C-113.22 took it, now refuses one condition. MOVED, NOT CHANGED: C-22.7
+   AI_RUN_SKILL_VERSION_UNNAMED left the catalogue's `AI_RUN_CHECKS` (N299, K381) and is held once, in ai-runs' table,
+   its `where` now `src/ai-runs/skill-version.mjs checkSkillVersion`; code, condition and translation unmoved. Wording
+   only, what is refused or admitted unmoved: the `where`s of C-73.6, C-90.2, C-113.12, case-authoring's C-44.1 and
+   C-44.3–C-44.5, and consequences' C-114.1, C-114.3 and C-114.12–C-114.17; the translations of C-73.3 (the levels named
+   from `LAW_LEVELS`), C-113.17, C-114.3, C-114.10, C-114.12 and C-114.17. MINOR, rule 17 moving the stamp for
+   arrivals, departures and a changed check. T12's later row changes (N306, K380) are the next number's (N318). The
+   d470 census, of the catalogue file only, moved with C-22.7's copy: 397 -> 396, sha256 de54b8bd…, behaviour source
+   8ada0f4c… (its own print on this tree); its 1.42.0 row, and A3, A5 and A9, are legacy-tests' re-pin. */
+export const CATALOG_VERSION = "1.42.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
