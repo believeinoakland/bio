@@ -59,6 +59,9 @@ const STORE = join(PLANE, "src/store.mjs");
    content (`src/content/index.mjs` `#rowFor` and its leg refusals, T5 layer 5), their text unchanged; arms rowid,
    crossdoc and inquirypart arm them there. The version-leg writer (vwriter) stays in the store. */
 const CONTENT = join(PLANE, "src/content/index.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): the version-leg writer left the store too, for
+   basis-versions' R7 write (`src/basis-versions/index.mjs`); vwriter hands its INSERT null there. */
+const BASISV = join(PLANE, "src/basis-versions/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // both files are hundreds of KB; a restore over a stub must fail loudly.
 
@@ -160,7 +163,7 @@ const ARMS = {
     patch: () => arm(CONTENT, '        if (e0.kind !== "document" || named)', "        if (false)"),
   },
   vwriter: {
-    files: [STORE],
+    files: [BASISV],
     why: "THE ARM'S OWN ARM — the version-leg writer disabled: the INSERT is handed null instead of the resolved row",
     mustFail: ["EVERY version leg carries a content_id, and NONE is null",
                "the page leg resolves to the SAME row a basis leg citing that passage got",
@@ -168,9 +171,9 @@ const ARMS = {
                "a version leg NAMING its row is taken at its word",
                "its information legs resolve to document rows and its inquiry leg to none"],
     mustPass: "every refusal — the refusals run BEFORE the projection and are a different mechanism from the writer",
-    patch: () => arm(STORE,
-      "              vContentId);\n          }",
-      "              null);\n          }"),
+    patch: () => arm(BASISV,
+      "l.note, l.at, l.ground, vContentId);",
+      "l.note, l.at, l.ground, null);"),
   },
   overstrict: {
     files: [CHECKS],

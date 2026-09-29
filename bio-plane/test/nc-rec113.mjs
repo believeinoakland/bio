@@ -46,15 +46,18 @@ const PEN = controlPen("rec113");
 const penPath = (f, suffix) => `${PEN}/${f.split("/").pop()}.${suffix}`;
 
 const ROOT   = fileURLToPath(new URL("../..", import.meta.url));
-const STORE  = `${ROOT}bio-plane/src/store.mjs`;
-const AIRUN  = `${ROOT}bio-plane/src/airun.mjs`;
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): `op=airunlog`'s read (the projection and the per-row
+   `coverage`) left `store.mjs` for ai-runs (`src/ai-runs/index.mjs`), and `observationCoverage` left `airun.mjs` for
+   observation-log's `vocabulary.mjs`. The names STORE and AIRUN now point there. */
+const STORE  = `${ROOT}bio-plane/src/ai-runs/index.mjs`;
+const AIRUN  = `${ROOT}bio-plane/src/observation-log/vocabulary.mjs`;
 const SUITE  = `${ROOT}bio-plane/test/observation-log.test.mjs`;
 const IDENT  = `${ROOT}bio-plane/test/rec113-identity.mjs`;
 const PRE    = process.env.REC113_PRECHANGE || "/tmp/rec113-pristine-agent-ab3bf809046a052e6";
 
 /* FLOORS, so a truncated or emptied file cannot be restored "successfully".
    MEASURED on this tree 2026-09-17, not recalled. */
-const FLOOR = { [STORE]: 2_000_000, [AIRUN]: 100_000 };
+const FLOOR = { [STORE]: 80_000, [AIRUN]: 100_000 };   /* N298: re-measured 166,122 and 110,104 B */
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 
@@ -93,8 +96,12 @@ const ARMS = {
        this is the measurement that says they are load-bearing rather than
        decorative — a suite built only around the undetermined case would have
        passed over a read that projected nothing. */
-    mustFail:    ["I2", "I2c"],
-    mustNotFail: ["I2b", "I2d", "I2e", "I2f"],
+    /* RE-MEASURED 2026-09-29 (T11, legacy-tests; N298, N57): the suite's section I2 is L2 now, label for label, except
+       that L2b is REC-100's refusal of a NEW bare `run` PRESENT (its read-back half moved to K6) and reads no
+       coverage. Every arm below measured exactly its relabelled set; the extra reds (L4, K3b, K3c, K4, K6c, K6d) are
+       REC-100's rollup rows, which read the same projection and statement. */
+    mustFail:    ["L2", "L2c"],
+    mustNotFail: ["L2b", "L2d", "L2e", "L2f"],
     note: "I2e/I2f are PURE — they drive `observationCoverage` and `checkObservation` "
         + "directly and never touch the read, so they must survive this arm. I2b/I2d "
         + "survive for a DIFFERENT and more interesting reason: see the correction above.",
@@ -108,8 +115,8 @@ const ARMS = {
     file: STORE,
     find: `                        coverage: observationCoverage({ state: e.state, resultRef: e.result_ref }) }));`,
     repl: `                        coverage: undefined }));`,
-    mustFail:    ["I2", "I2b", "I2c", "I2d"],
-    mustNotFail: ["I2e", "I2f"],
+    mustFail:    ["L2", "L2c", "L2d"],   /* I2b's read-back half is K6's now (N298) */
+    mustNotFail: ["L2e", "L2f"],
   },
 
   /* (d) THE COSTLY DIRECTION, ARM ONE: manufacture an unknown. Drop the state
@@ -121,8 +128,8 @@ const ARMS = {
     find: `  if (state === "PRESENT") return OBSERVATION_COVERAGE_UNDETERMINED;
   return "none_owed";`,
     repl: `  return OBSERVATION_COVERAGE_UNDETERMINED;`,
-    mustFail:    ["I2d", "I2e"],
-    mustNotFail: ["I2", "I2b", "I2c", "I2f"],
+    mustFail:    ["L2d", "L2e"],
+    mustNotFail: ["L2", "L2b", "L2c", "L2f"],
     note: "I2/I2b/I2c must SURVIVE: a backed row still reads `backed` and a bare PRESENT "
         + "still reads `undetermined` under this mutation. An arm that reddened everything "
         + "would not have isolated the variable.",
@@ -133,12 +140,11 @@ const ARMS = {
          CAN back. The identity driver's own must-fail arm is here too. */
   blind: {
     file: AIRUN,
-    find: `  const named = resultRef != null && String(resultRef) !== "";
-  if (named) return "backed";`,
-    repl: `  const named = false;
-  if (named) return "backed";`,
-    mustFail:    ["I2", "I2c", "I2e"],
-    mustNotFail: ["I2b", "I2f"],
+    /* RE-ANCHORED (N298): a comment now stands between the two lines; the arm patches the first alone. */
+    find: `  const named = resultRef != null && String(resultRef) !== "";`,
+    repl: `  const named = false;`,
+    mustFail:    ["L2", "L2c", "L2e"],
+    mustNotFail: ["L2b", "L2f"],
     identityMustFail: true,
   },
 };

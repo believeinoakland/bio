@@ -37,7 +37,12 @@ const SAFE = controlPen("rec86");
 mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): `op=narrow` and its candidates left `store.mjs` for
+   basis-versions (`src/basis-versions/index.mjs`, the narrowing act writing through its own `appendVersion`); the name
+   STORE points there and every arm patches the line it always patched. `inplace` now names the composed version
+   after the SOURCE reading (the act no longer splices frontmatter rows itself), and `unlabelled` takes the module's
+   `mintLabel`. */
+const STORE = join(PLANE, "src/basis-versions/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;
 
@@ -79,11 +84,8 @@ const ARMS = {
        landing; the refusals that do not are the ones that must stay green. */
     mustPass: "the refusals that do not depend on a landed narrowing — a machine, no part, a stray field, id-and-extent, a malformed extent, a later copy, an absent question/reading/leg",
     patch: () => arm(STORE,
-      "    let text = Store.#appendFmRows(src.text, \"basis_versions\", [vRow.join(\"\\n\")]);",
-      "    const __swap = (r) => r.split(q(nameWritten)).join(q(src.vname));\n"
-      + "    gRows.splice(0, gRows.length, ...gRows.map(__swap));\n"
-      + "    lRows.splice(0, lRows.length, ...lRows.map(__swap));\n"
-      + "    let text = Store.#appendFmRows(src.text, \"basis_versions\", [__swap(vRow.join(\"\\n\"))]);"),
+      "    const version = { name: nameWritten, description,",
+      "    const version = { name: src.vname, description,"),
   },
   wider: {
     files: [STORE],
@@ -132,8 +134,8 @@ const ARMS = {
     mustFail: ["EVERY candidate is labelled machine work"],
     mustPass: "the act and its refusals — the label is a property of the READ",
     patch: () => arm(STORE,
-      "             content_id: null, mint: Store.#mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: true,",
-      "             content_id: null, mint: Store.#mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: false,"),
+      "             content_id: null, mint: mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: true,",
+      "             content_id: null, mint: mintLabel(CONTENT_MINTED_BY_PLANE), machine_work: false,"),
   },
   overstrict: {
     files: [CHECKS],

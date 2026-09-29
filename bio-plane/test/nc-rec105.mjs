@@ -29,7 +29,13 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { controlPen } from "./pen.mjs";
 
 const ARM = (process.argv[2] || "none").toLowerCase();
-const STORE = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): the walk and its bound map left `store.mjs` for strength
+   (`src/strength/index.mjs`: `#captureBoundsFor`, `#walk`; its R1, K329), and the cap rule for inquiry's module-level
+   `legCapped` (`src/inquiry/index.mjs`, its R14), which strength's walk calls. Each arm now names its FILE; the
+   restore machinery is unchanged, applied to that file. Arm (e)'s spelling uses inquiry's own imported
+   `BASIS_GRADES`. */
+const STRENGTH = fileURLToPath(new URL("../src/strength/index.mjs", import.meta.url));
+const INQUIRY = fileURLToPath(new URL("../src/inquiry/index.mjs", import.meta.url));
 const SUITE = fileURLToPath(new URL("./inquirystrength.test.mjs", import.meta.url));
 const PEN = `${controlPen("rec105")}/`;
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -44,8 +50,9 @@ const ARMS = {
         + "letter exactly as it did before this item. This is the arm that proves the gap was "
         + "REAL rather than the fix being decorative, and it is also this item's one-line "
         + "reversal if IC-102 is rejected.",
-    find: "  #captureBoundsFor(bundleId, bound) {\n    const targets = new Set();",
-    with: "  #captureBoundsFor(bundleId, bound) {\n    if (true) return null;\n    const targets = new Set();",
+    file: STRENGTH,
+    find: "  #captureBoundsFor(bundleId, bound, topLegs = null) {\n    const targets = new Set();",
+    with: "  #captureBoundsFor(bundleId, bound, topLegs = null) {\n    if (true) return null;\n    const targets = new Set();",
     /* FINDING, 2026-09-15, RECORDED RATHER THAN SMOOTHED. This arm's first
        declaration ALSO named "and the leg it is sent to check is the ACTUAL
        one, two levels down", and that assertion did NOT fail. The arm is right
@@ -72,8 +79,9 @@ const ARMS = {
         + "a letter at or under the ceiling alone is removed, so the earned entry OVERWRITES "
         + "the member's own letter in BOTH directions — which raises a weaker account to the "
         + "maximum and is the overclaiming direction this whole item exists to close.",
-    find: "    if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;",
-    with: "    if (false) return null;",
+    file: INQUIRY,
+    find: "  if (GRADE_RANK[stated] <= GRADE_RANK[earned.grade]) return null;",
+    with: "  if (false) return null;",
     /* FINDING, 2026-09-15, AND IT IS THE MOST USEFUL THING THIS DRIVER FOUND.
        This arm's first declaration named "a publisher-typed document's leg is
        byte-identical to the DO-internal derivation" as a must-fail. IT DID NOT
@@ -115,8 +123,9 @@ const ARMS = {
        surgical; the mis-armed run is kept here in words because "the arm did
        not arm as declared" is a finding about the instrument and this driver's
        whole point is that those get recorded rather than tidied away. */
-    find: "    if (earned.grade == null)\n      return { grade: null,",
-    with: "    if (earned.grade == null) return null;\n    if (false)\n      return { grade: null,",
+    file: INQUIRY,
+    find: "  if (earned.grade == null)\n    return { grade: null,",
+    with: "  if (earned.grade == null) return null;\n  if (false)\n    return { grade: null,",
     mustFail: ["the walk moved from a graded axis to an UNRATED one", "and the empty level travels with it"],
     mustPass: ["AND THE WALK CHANGED ITS ANSWER", "the two reads agree AFTER the bound moved",
                "a publisher-typed document's leg is byte-identical",
@@ -127,8 +136,9 @@ const ARMS = {
         + "beneath it is not, so an inquiry resting on a bounded one INHERITS the uncorrected "
         + "letter while the inquiry beneath answers the corrected one — D-373's own drift, one "
         + "hop down, inside a single answer. This arm is why section 8e exists.",
-    find: "      const sub = this.#strengthWalk(leg.target_id, depth + 1, bound, null, captureBounds);",
-    with: "      const sub = this.#strengthWalk(leg.target_id, depth + 1, bound, null, null);",
+    file: STRENGTH,
+    find: "      const sub = this.#walk(leg.target_id, depth + 1, bound, null, captureBounds);",
+    with: "      const sub = this.#walk(leg.target_id, depth + 1, bound, null, null);",
     mustFail: ["an inquiry resting on the bounded one INHERITS"],
     mustPass: ["AND THE WALK CHANGED ITS ANSWER", "the two reads agree AFTER the bound moved",
                "the walk moved from a graded axis to an UNRATED one",
@@ -140,8 +150,9 @@ const ARMS = {
         + "`#GRADE_RANK` (where a LARGER number is). Correct work in a spelling this item did "
         + "not anticipate must PASS — a suite that only recognises its own idiom is a fence "
         + "tighter than its rule.",
-    find: "    if (Store.#GRADE_RANK[stated] <= Store.#GRADE_RANK[earned.grade]) return null;",
-    with: "    if (BASIS_GRADES.indexOf(stated) >= BASIS_GRADES.indexOf(earned.grade)) return null;",
+    file: INQUIRY,
+    find: "  if (GRADE_RANK[stated] <= GRADE_RANK[earned.grade]) return null;",
+    with: "  if (BASIS_GRADES.indexOf(stated) >= BASIS_GRADES.indexOf(earned.grade)) return null;",
     mustFail: [],
     mustPass: ["AND THE WALK CHANGED ITS ANSWER", "the two reads agree AFTER the bound moved",
                "a publisher-typed document's leg is byte-identical",
@@ -164,10 +175,12 @@ const runSuite = () => {
 };
 
 mkdirSync(PEN, { recursive: true });
+/* N298: the subject is the arm's own file (the baseline reads strength's, which it never writes). */
+const STORE = ARM === "none" ? STRENGTH : (ARMS[ARM] || {}).file || STRENGTH;
 const pristine = readFileSync(STORE, "utf8");
 /* UNIQUELY NAMED PER ARM. A shared `pristine.mjs` is how one arm's damage gets
    restored as another arm's baseline. */
-const copy = `${PEN}store.pristine.${ARM}.mjs`;
+const copy = `${PEN}${STORE.split("/").slice(-2).join("__")}.pristine.${ARM}.mjs`;
 writeFileSync(copy, pristine);
 const beforeSha = sha(pristine);
 /* BYTES, NOT STRING LENGTH. `store.mjs` is full of multi-byte characters, so a
@@ -177,8 +190,8 @@ const beforeSha = sha(pristine);
    instrument crying wolf at exactly the moment it must be believed. */
 const beforeBytes = statSync(STORE).size;
 console.log(`REC-105 NC · arm ${ARM}`);
-console.log(`  pristine store.mjs: ${beforeBytes} bytes on disk · sha256 ${beforeSha.slice(0, 16)}`);
-if (beforeBytes < 100000) { console.error("FLOOR: pristine store.mjs is implausibly small — refusing"); process.exit(3); }
+console.log(`  pristine ${STORE.split("/").slice(-2).join("/")}: ${beforeBytes} bytes on disk · sha256 ${beforeSha.slice(0, 16)}`);
+if (beforeBytes < 40000) { console.error("FLOOR: the pristine subject is implausibly small — refusing"); process.exit(3); }
 
 let armed = false;
 if (ARM !== "none") {
@@ -209,7 +222,7 @@ console.log(`  restored: ${bytes} bytes on disk (was ${beforeBytes}) · sha256 $
   + ` · byte-identical by sha256: ${afterSha === beforeSha ? "YES" : "NO"}`
   + ` · by cmp: ${cmpOk ? "YES" : "NO"}`
   + ` · size unchanged: ${bytes === beforeBytes ? "YES" : "NO"}`);
-if (afterSha !== beforeSha || !cmpOk || bytes !== beforeBytes || bytes < 100000) {
+if (afterSha !== beforeSha || !cmpOk || bytes !== beforeBytes || bytes < 40000) {
   console.error("RESTORE FAILED — the tree is NOT as it was. Stop and fix this before believing anything above.");
   process.exit(5);
 }

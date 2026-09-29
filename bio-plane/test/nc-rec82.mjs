@@ -44,7 +44,14 @@ const SAFE = controlPen("rec82");
 mkdirSync(SAFE, { recursive: true });
 
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): the content row left `store.mjs` for content (its R3 address
+   `contentIdFor` in `src/content/extent.mjs`, the stale sweep `markStale` in `src/content/index.mjs`), and the
+   carry-forward went with the basis projection to inquiry (`src/inquiry/index.mjs`, REC-82's `priorContent`). The
+   catalogue's page-set and chain arms gained a `ctx.known !== false` gate and a `bytes` exemption (FW-19), so their
+   anchors take the lines as they now read. */
+const CONTENT_EXTENT = join(PLANE, "src/content/extent.mjs");
+const CONTENT = join(PLANE, "src/content/index.mjs");
+const INQUIRY = join(PLANE, "src/inquiry/index.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const MIN_BYTES = 20000;   // both files are hundreds of KB; a restore over a stub must fail loudly.
 
@@ -84,8 +91,8 @@ const ARMS = {
     mustFail: ["an extent outside the capture's page set is REFUSED BY NAME"],
     mustPass: "every other refusal",
     patch: () => arm(CHECKS,
-      "if (Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)",
-      "if (false)"),
+      "    if (ctx.known !== false\n        && Number.isInteger(ctx.pageCount) && ctx.pageCount > 0 && e.page >= ctx.pageCount)",
+      "    if (false)"),
   },
   nochain: {
     files: [CHECKS],
@@ -93,8 +100,8 @@ const ARMS = {
     mustFail: ["an extent with no extraction chain is REFUSED"],
     mustPass: "every other refusal, and the over-strictness arm",
     patch: () => arm(CHECKS,
-      `if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))`,
-      `if (false)`),
+      `      && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))`,
+      `      && false)`),
   },
   dom: {
     files: [CHECKS],
@@ -106,7 +113,7 @@ const ARMS = {
       "  if (false && e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)"),
   },
   stale: {
-    files: [STORE],
+    files: [CONTENT],
     why: "neuter the stale sweep's UPDATE, so a re-extraction marks nothing",
     mustFail: ["the rows minted against the OLD chain now read stale",
                "the edge still RESOLVES and says the document has since been re-read"],
@@ -120,29 +127,35 @@ const ARMS = {
        NOT ARM IS A FINDING, which is why the match count is printed and why the
        verdict is computed rather than eyeballed; without it this arm would have
        been recorded as green. */
-    patch: () => arm(STORE,
-      "    if (n) this.sql.exec(\n      `UPDATE content SET stale=1",
-      "    if (false) this.sql.exec(\n      `UPDATE content SET stale=1"),
+    patch: () => arm(CONTENT,
+      "    this.sql.exec(`UPDATE content SET stale=1 WHERE",
+      "    if (false) this.sql.exec(`UPDATE content SET stale=1 WHERE"),
   },
   address: {
-    files: [CHECKS],
+    files: [CONTENT_EXTENT, CHECKS],
     why: "THE ARM'S OWN ARM — make the content address ignore the extent, so every passage of one capture collides",
     mustFail: ["but a DIFFERENT page is a different row",
                "a page leg mints its own row, distinct from the document row"],
     mustPass: "nothing in particular — this arm exists to show the dedup assertion CAN fail, because a dedup true for every input is true for no reason",
-    patch: () => arm(CHECKS,
-      "    extent: canonicalExtent(extent),",
-      "    extent: 'CONSTANT',"),
+    /* RE-MEASURED 2026-09-29 (N298): the address is computed in TWO places now — content's `contentIdFor` (R3, what
+       the store mints with) and the catalogue's, which the suite's pure dedup assertion imports. Patched in content
+       alone the minting arms went red and "but a DIFFERENT page is a different row" stayed green (50/10), so the arm
+       takes the extent out of both: one address, two copies of its function. */
+    patch: () => {
+      const a = arm(CONTENT_EXTENT, "    extent: canonicalExtent(extent),", "    extent: 'CONSTANT',");
+      if (!a.armed) return a;
+      return arm(CHECKS, "    extent: canonicalExtent(extent),", "    extent: 'CONSTANT',");
+    },
   },
   carry: {
-    files: [STORE],
+    files: [INQUIRY],
     why: "neuter the carry-forward, so a re-promotion re-mints from the LIVE chain and silently re-points an authored citation (Bob's 5.8)",
     mustFail: ["the citation still points at the row it was authored against, carried not re-minted",
                "and re-projecting minted no new row"],
     mustPass: "every refusal, and the stale arm's not-deleted half",
-    patch: () => arm(STORE,
-      "            const carried = priorContent.get(`${leg.target}\\u0000${canonicalExtent(ext)}`);",
-      "            const carried = null;"),
+    patch: () => arm(INQUIRY,
+      "            if (held) { rowId = held; carriedRow = true; }",
+      "            if (false) { rowId = held; carriedRow = true; }"),
   },
   overstrict: {
     files: [CHECKS],
@@ -150,8 +163,8 @@ const ARMS = {
     mustFail: ["a whole-document leg on an UNREAD capture mints — the row is a referent, not a claim"],
     mustPass: "every refusal above — the arm must break correct work and nothing else",
     patch: () => arm(CHECKS,
-      `if (e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))`,
-      `if (!(Array.isArray(ctx.chain) && ctx.chain.length))`),
+      `      && e.kind !== 'document' && !(Array.isArray(ctx.chain) && ctx.chain.length))`,
+      `      && !(Array.isArray(ctx.chain) && ctx.chain.length))`),
   },
 };
 

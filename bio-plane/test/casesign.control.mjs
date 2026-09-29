@@ -1,8 +1,13 @@
-/* CASE-5b's NEGATIVE CONTROL DRIVER — five arms plus a baseline, and REC-130's four
- * (e)-(h) at the foot of the table, re-runnable in one step:
+/* CASE-5b's NEGATIVE CONTROL DRIVER — nine arms plus a baseline (CASE-5b's five and REC-130's
+ * four, (e)-(h) at the foot of the table), re-runnable in one step:
  *
  *     node test/casesign.control.mjs            # every arm, in order
  *     node test/casesign.control.mjs a          # one arm
+ *
+ * THE TALLY RE-STATED 2026-09-29 (T11, legacy-tests; N298): the head read "five arms plus a baseline, and REC-130's
+ * four", which the census's tally reader (D-333) takes as FIVE while the driver runs and announces TEN (a, b, 2b,
+ * c, d; e-h; the baseline), so the census reported this driver NOT AS DECLARED on an unmodified tree. The count
+ * is now the one the arm table holds.
  *
  * DELIBERATELY NOT A `.test.mjs`, for the reason `d249-port.control.mjs` states:
  * it EDITS REAL SOURCES, and a file the battery discovers must never be one that

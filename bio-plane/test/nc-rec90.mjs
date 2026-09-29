@@ -43,12 +43,14 @@ const REPO = join(PLANE, "..");
 const SAFE = controlPen("rec90");
 mkdirSync(SAFE, { recursive: true });
 
-const STORE = join(PLANE, "src/store.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): the four-level statement left `store.mjs` for retrieval's
+   `src/retrieval/levels.mjs` (retrieval R13); `levelsblind` patches NOBODY_LOOKED there. */
+const LEVELS = join(PLANE, "src/retrieval/levels.mjs");
 const QUERY = join(PLANE, "src/query.mjs");
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 /* `query.mjs` is ~1,500 lines and `store.mjs` is over a megabyte; a restore over
    a stub must fail loudly rather than quietly measure the next arm on rubble. */
-const MIN_BYTES = 20000;
+const MIN_BYTES = 10000;   /* N298: 20000 -> 10000, `levels.mjs` is 11,826 B */
 
 /* The subject: this item's own suite, run alone. Captured to a FILE and not a
    pipe — D-282: a suite that calls process.exit() discards unflushed PIPE writes,
@@ -134,7 +136,7 @@ const ARMS = {
       ``),
   },
   levelsblind: {
-    files: [STORE],
+    files: [LEVELS],
     why: "answer the level this read CANNOT see as a COUNTED zero instead of UNDETERMINED. A level "
        + "omitted or zeroed reads as a level with nothing in it, and 'we looked and found nothing' "
        + "becomes indistinguishable from 'nobody has looked yet' — CLAUDE.md's sparse rule, and the "
@@ -143,9 +145,9 @@ const ARMS = {
     mustFail: ["the level this read CANNOT reach is named as UNDETERMINED and says what does reach it"],
     mustPass: "the other three levels and both empty-answer sentences — the arm must break the "
             + "UNDETERMINED statement and not the tally",
-    patch: () => arm(STORE,
-      `    const NOBODY_LOOKED = {\n      state: "UNDETERMINED",`,
-      `    const NOBODY_LOOKED = {\n      state: "COUNTED", documents: 0,`),
+    patch: () => arm(LEVELS,
+      `  const NOBODY_LOOKED = {\n    state: "UNDETERMINED",`,
+      `  const NOBODY_LOOKED = {\n    state: "COUNTED", documents: 0,`),
   },
   gateloss: {
     files: [QUERY],
@@ -158,9 +160,12 @@ const ARMS = {
                "a document in scope holding NO content row answers ZERO rows"],
     mustPass: "the compile-time arms of sections 1, 2 and 3 — they never reach the store, so an arm "
             + "that took them down would be breaking the compiler rather than the gate",
+    /* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): the levels tally's FROM now joins through `${rowJoin}`
+       (REC-115's arm-set scope), so the gate's WHERE is taken on that line, with its bound args, so the
+       statement fails on no bind count and only the gate is missing. */
     patch: () => arm(QUERY,
-      `                  + \`\\nFROM scope s JOIN bundles b ON b.fts_id = s.fid\\nWHERE \${gate.sql}\`,`,
-      `                  + \`\\nFROM scope s JOIN bundles b ON b.fts_id = s.fid\\nWHERE 1=1\`,`),
+      `                  + \`\\nFROM scope s \${rowJoin}\\nWHERE \${gate.sql}\`,\n               args: [...lc.args, ...gate.args] };`,
+      `                  + \`\\nFROM scope s \${rowJoin}\\nWHERE 1=1\`,\n               args: [...lc.args] };`),
   },
   qualified: {
     files: [QUERY],

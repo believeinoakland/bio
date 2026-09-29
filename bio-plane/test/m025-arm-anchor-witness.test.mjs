@@ -279,7 +279,10 @@ const PATTERNS = [
 
 function unquote(s) {
   const q = s[0], body = s.slice(1, -1);
-  if (q === "`") return body.replace(/\\`/g, "`").replace(/\\\\/g, "\\").replace(/\\n/g, "\n");
+  /* ONE PASS OVER THE ESCAPES (N298): the chained replaces turned `\\\\n` (a quoted backslash-n, which is what a
+     driver writes to match a `"\\n"` in its subject) into a real newline, so that anchor read ZERO — measured on
+     `nc-cpdf18.mjs`'s textpin arm. */
+  if (q === "`") return body.replace(/\\([\s\S])/g, (_, c) => (c === "n" ? "\n" : c === "t" ? "\t" : c));
   try { return JSON.parse(q === "'" ? `"${body.replace(/\\'/g, "'").replace(/"/g, '\\"')}"` : s); }
   catch { return null; }
 }
@@ -438,18 +441,12 @@ if (onDriver.length) {
    will search for is in no candidate subject, so the arm cannot arm. This is the
    D-276 class and it is the half that cost a month. */
 /* THE HARNESSES' DEAD ANCHORS, NAMED BY HARNESS AND COUNT (N298). Widening the walk to `nc-*.mjs` found 28 dead
-   anchors in 16 harnesses beside `nc-rec91.mjs` (re-derived by N298 and NOT named here), each a line the T3-T10
-   extractions moved out of `store.mjs` / `index.mjs` without its quote; re-deriving them is N57's sweep of the
-   controls, deferred. Pinned EXACTLY: one more dead anchor in a named harness is a finding (A4), one fewer is a
-   stale naming (A4b), and a harness not named here is held to zero. `nc-m040.mjs` is the one the header names:
-   its anchor quotes the fixture the harness WRITES at run time, which lives in its own (excluded) source. */
-const NAMED_DEAD_HARNESS = {
-  "bio-plane/test/nc-cpdf18.mjs": 1, "bio-plane/test/nc-d162.mjs": 1, "bio-plane/test/nc-mk1.mjs": 4,
-  "bio-plane/test/nc-mk4.mjs": 2, "bio-plane/test/nc-rec100.mjs": 1, "bio-plane/test/nc-rec105.mjs": 5,
-  "bio-plane/test/nc-rec113.mjs": 1, "bio-plane/test/nc-rec115.mjs": 1, "bio-plane/test/nc-rec64.mjs": 2,
-  "bio-plane/test/nc-rec82.mjs": 4, "bio-plane/test/nc-rec84.mjs": 1, "bio-plane/test/nc-rec86.mjs": 2,
-  "bio-plane/test/nc-rec90.mjs": 1, "bio-plane/test/nc-rec99.mjs": 1, "bio-plane/test/nc-sk7.mjs": 1,
-};
+   anchors in 15 harnesses beside `nc-rec91.mjs`, each a line the T3-T10 extractions moved without its quote. N57's
+   sweep (T11, legacy-tests) re-derived all fifteen, so the list is EMPTY and every harness is held to zero; it stays
+   as the one place a dead anchor may be named, by harness and exact count (one more is A4's finding, one fewer is
+   A4b's stale naming). `nc-m040.mjs` is the one the header names: its anchor quotes the fixture the harness WRITES
+   at run time, which lives in its own (excluded) source. */
+const NAMED_DEAD_HARNESS = {};
 const NAMED_WRITTEN = { "bio-plane/test/nc-m040.mjs": 1 };
 const dead = anchors.filter((a) => a.hits === 0 && !onDriver.includes(a));
 const deadBy = {};

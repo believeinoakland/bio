@@ -52,6 +52,9 @@ const STORE = join(PLANE, "src/store.mjs");
    store keeps the `attesttext` dispatch (now also stamping `viewer`, K134) and `earnedBasisRegistry`, which asks
    content's `standings`. Arm (c) arms content; (b) and (d) stay on the store, re-spelled to the calls as they are. */
 const CONTENT = join(PLANE, "src/content/index.mjs");
+/* RE-ANCHORED 2026-09-29 (T11, legacy-tests; N298, N57): `earnedBasisRegistry` left the store for inquiry
+   (`src/inquiry/index.mjs`, reaching content through its injected `this.content`); arm (d) patches it there. */
+const INQUIRY = join(PLANE, "src/inquiry/index.mjs");
 const INDEX = join(PLANE, "src/index.mjs");
 const CHECKS = join(PLANE, "checks/bio-checks.mjs");
 /* The SURFACE. Outside `bio-plane/` — the first file this harness arms that is,
@@ -179,7 +182,7 @@ const ARMS = {
      that name them are bases of legs members authored. Make it answer over every
      row in the store and a passage nobody cited is suddenly in a finding. */
   finding: {
-    files: [STORE],
+    files: [INQUIRY],
     why: "make `earnedBasisRegistry` answer its content block over EVERY content row of the cited "
        + "documents rather than over the ids the caller named — the ordinary way a new reader "
        + "widens an answer, and the way 5.7's *part of a finding only when a member cites it* "
@@ -187,9 +190,9 @@ const ARMS = {
     mustFail: ["AND IT IS ABSENT FROM THE FINDING"],
     mustPass: "everything else — the row is still minted, still labelled, still unattestable; this "
             + "arm moves ONE property, which is what makes the failure attributable",
-    patch: () => arm(STORE,
-      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = contentOf(this.ctx).standings(contentIds, out.earned.connection);`,
-      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = contentOf(this.ctx).standings(\n        this.#rows(\`SELECT content_id FROM content\`).map((r) => r.content_id),\n        out.earned.connection);`),
+    patch: () => arm(INQUIRY,
+      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = this.content.standings(contentIds, out.earned.connection);`,
+      `    if (Array.isArray(contentIds) && contentIds.length)\n      out.earned.content = this.content.standings(\n        this.#rows(\`SELECT content_id FROM content\`).map((r) => r.content_id),\n        out.earned.connection);`),
   },
 
   /* ARM (e). THE OVER-STRICTNESS DIRECTION, and its HELD-OPEN half is the whole
