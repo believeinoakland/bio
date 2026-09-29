@@ -1513,3 +1513,20 @@ response: **Ruled by Bob, 2026-09-29, refining the recommendation.**
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry.
 owed: the reminder as a member-set part of choosing an action (actions or the action-plan module, with the Actions session), the queue's display change as a clock nears and the overdue re-notification (queue, monitoring R34), for Bob's approval; the UX page's open question 14 marked ruled.
+
+### DEC-95 · answered
+raised: 2026-09-29 · the same design session with Bob (the UX canon's open question 13, which Bob extended to what happens to captures afterwards)
+for: bob
+question: How is a member told a capture's grade at the moment of capture, and, as Bob added, how are the many captures nobody has yet released or set aside handled, and may the system suggest that a held capture relates to a member's work?
+why it is Bob's: UX; the suggestion touches DEC-77's rule that context supports and never silently decides, and DEC-94's rule against nagging.
+provisional: DEC-51 and DEC-39 settle the substance (the whole grade note at completion; co-attestation answers "when did these bytes exist?").
+alternative: no backlog view and no suggestions; or suggestions pushed as notifications.
+recommendation: as below.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29.**
+  1. THE GRADE NOTE: shown whole, once, when a capture completes (DEC-51); for a capture that completes later and unattended (a bulk capture, or one the assistant requested), the note is attached to the completed capture and to its queue item.
+  2. HELD CAPTURES: a list of captures still at "collected" (neither released nor set aside), per member and per project, sortable by age, source and possible relevance; age is shown, never notified (DEC-94); a member may release, set aside or keep holding several at once, each item's outcome stated.
+  3. SUGGESTING THAT A HELD CAPTURE RELATES TO A MEMBER'S WORK, under six guards: (a) it appears where the member already works, never as a notification (e.g. one quiet line on a question's page, "3 held captures may bear on this question", opened by a click); (b) it is labelled "Machine work" and states its reason (e.g. "names the same ordinance number"), and linking or releasing stays the member's act; (c) a dismissal is remembered, and the same capture is not suggested for the same question again unless something new connects them; (d) it never appears during a heavy act such as the ceremony or a signing dialog; (e) a member may turn it off for themselves; (f) its acceptance rate is measured (DEC-77).
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry.
+owed: the held-captures list and bulk triage (capture, affordances), the relevance suggestion as labelled machine work with its dismissal memory and per-member switch (run-productions or retrieval, as BOB places it), and the unattended grade note (capture, queue), for Bob's approval; the UX page's open question 13 marked ruled.

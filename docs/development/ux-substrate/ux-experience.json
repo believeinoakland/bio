@@ -9939,6 +9939,15 @@
      "DEC-81"
     ],
     "note": "The substance is settled: DEC-51 (the grade note shown whole at the moment of capture), DEC-39 (what co-attestation is worth) and DEC-81 (a co-attested Grade B is enough to publish, the case discloses each document's grade and whether it is co-attested, and Grade A is deferred). Only presentation remains, which is Design's."
+   },
+   "ruled": {
+    "date": "2026-09-29",
+    "by": "Bob",
+    "rulings": [
+     "DEC-95"
+    ],
+    "status": "ruled",
+    "decided": "As recommended, and extended by Bob to what happens after capture. The whole grade note is shown once when a capture completes; a capture that completes later and unattended carries the note on the completed capture and its queue item. Captures still held (neither released nor set aside) are listed per member and per project, sortable by age, source and possible relevance, their age shown and never notified, and triaged several at a time. The system may suggest that a held capture bears on a member's work under six guards: shown where the member works, never as a notification; labelled machine work with its reason; a dismissal remembered; never during a heavy act; switchable off per member; its acceptance rate measured."
    }
   },
   {
