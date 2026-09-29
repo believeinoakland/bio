@@ -29,3 +29,7 @@
 - `ownership` (vs tranche/T13): legacy-store and legacy-checks 0 lines added; 0 failures.
 
 Size (session_01UycqMHEcrUKuRXZ9RLdPm5): test runs 5, module lines 6
+
+## J1 · COMPLETE
+
+N322 applied: R7's no-free-case-id answer is now record-core.mintExhausted('CASE') whole (C-59.6), nothing written. N251 share applied: invariants.test.mjs no longer imports the catalogue's CASE_DERIVATION_CHECKS; R29 asserts the moved codes' absence by walking every catalogue row family (by code and check id), with a negative control. Please strike R7's (not yet met: N322) and its Status-line mention. No check rows added, moved or retired. One stale note for legacy-tests: civicos-ui/check-refusal-codes.mjs:3781 still says case-authoring mints MINT_EXHAUSTED row-less. Tests: case-authoring 39/39; review 30/30; control-plane 40 pass, 0 fail, 3 todo (existing). format, architecture, coverage (30/30), ownership: 0 failures. Record: build/jobs/T13/case-authoring.md, Completion.
