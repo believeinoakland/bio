@@ -68,3 +68,13 @@ Grep hits for the code I changed (none needs a change for this job):
 - `ownership promotion tranche/T14`: 6 files; legacy-checks and legacy-store 0 lines; 1 failure, `build/requirements/promotion.md`: the four `not yet met` marks, struck as START asked.
 
 Size (session_0133sVWEYMsdWzBRbtncwygV): test runs 12, module lines 79
+
+## J2 · COMPLETE
+
+N335, N340, N341, N350 and the stamp are applied on job/T14/promotion (8793901944, 872f6d4bd8, and the record after them).
+- CATALOG_VERSION is 1.44.0: 9 rows arrived and 2 departed since 1.43.0, and C-19.1 left checkBundle.
+- ROW_CENSUS is {1.44.0, 827, 5eae043f...}.
+- R43 answers through membership.notAParticipant.
+- DISPOSITIONS is frozen, and REOPENABLE_FROM is the same array.
+- Promotion tests: 70 pass, 0 fail. format, architecture and coverage (51/51): 0 failures. ownership: 1 failure, the four requirement marks struck as START asked.
+- Re-pins for legacy-tests (d470 1.44.0: 358/0586303a..., row-census fixture and tie-break) and the two stale bundles are listed in my record's Completion.
