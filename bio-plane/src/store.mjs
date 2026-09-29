@@ -106,7 +106,6 @@ import { parseFrontmatter, MECHANICAL_FIELD_SETS,
          /* And the catalog's OWN canonical serializer, used for F10's
             idempotence key rather than a second one written here. */
          canonicalJson,
-         civicosUserAgent,
          /* PL-11 / IS-5 / D-199: the ai credential's DEC-49 rows. The MINT's
             three and the REVOKE's two live here; the gate's four live in
             index.mjs, because what a scope may REACH is a question only the OPS
@@ -394,7 +393,6 @@ import { PROJECT_ID_CHECKS } from "../checks/bio-checks.mjs";
 import { PROMOTED_TYPE_CHECKS } from "../checks/bio-checks.mjs";
 /* D-436 / C-64: the instance's producing group, recorded once and never a literal — and the ONE definition of how it
    is written into a document's bytes, which the suites judging a composer's bytes call too. */
-import { INSTANCE_GROUP_CHECKS, withProducingGroup } from "../checks/bio-checks.mjs";
 /* MK-1 / D-184 / IC-133: the authored bundle's refusals (C-53). */
 import { TESTIMONY_CHECKS } from "../checks/bio-checks.mjs";
 /* MK-2 / IC-142: the one letter a testimony is worth, composed from the
@@ -570,7 +568,6 @@ export class Store extends DurableObject {
        derivation (its R8) and its derivation statement with connections (R3, R5) until observation-log does. */
     connectionsOf(ctx, { env }).onDerived("legacy-store", (e) => observationLogOf(ctx).observeConnectionDerivation(e));
     connectionsOf(ctx).registerDerivationProvider("legacy-store", (id, o) => observationLogOf(ctx).derivationStatementFor(id, o));
-    promotion.registerFact("producingGroup", "legacy-store", () => this.#producingGroup());
     /* inquiry (K31, K61): its check and projection join promotion before legacy-store's step; strength R28 here. */
     ratificationOf(ctx);   /* ratification (K61): its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
     strengthModule(ctx);   /* strength (K61): reaches inquiry and basis-versions itself, and registers its pair (R17) */
@@ -588,7 +585,7 @@ export class Store extends DurableObject {
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
     filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences,
-                     producingGroup: () => this.#producingGroup() });
+                     producingGroup: () => { const f = promotion.fact("producingGroup"); return f.ok ? f.value : null; } });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
@@ -601,25 +598,13 @@ export class Store extends DurableObject {
     captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
       runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
     capture.on("observation", "legacy-store", ({ row, at }) => this.#observe(row, at));
-    capture.on("compute", "legacy-store", (m) => this.recordRuntimeObservation({ metric: m.metric, ms: m.value, detail: m.detail }));
     const scheduler = schedulerOf(ctx, env);
     queueOf(ctx, { env });   /* queue (K61): its tables' purge, its two consumers and capture's task notice (R22, R23, R36) */
-    scheduler.register("legacy-store", { name: "group-domain-recheck", key: "groupdomain",
-        due:  ()    => this.#groupDomainWake(),
-        wake: ()    => this.#groupDomainWake(),
-        tick: ()    => this.#groupDomainTick() });
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
   }
 
   #migrate() {
-    /* D-436: THE STORE'S FIRST BOOT, witnessed BEFORE anything below creates or alters a table — storage that has
-       never held this schema has no `bundles` table. It is the one moment the producing group is recorded from the
-       installer's binding; `#recordGroupAtFirstBoot` (after the schema pass) says why, and no later boot reads it.
-       Asked through `PRAGMA table_info`, the form this function already runs against every live store at every boot
-       (the DROP loop below), rather than through a catalogue read nothing else in the plane makes: a statement that
-       threw here would throw inside blockConcurrencyWhile, and that bricks the Durable Object. */
-    const firstBoot = recordOf(this.ctx).isFirstBoot();
     const bare = (this.env.SCHEMA || SCHEMA_TEXT || "").split("\n").filter(l => !l.trim().startsWith("--")).join("\n");
     /* Some tables are DERIVED: regenerable by scan, never authoritative, holding
        nothing a member wrote. When one of those changes shape, recreating it is
@@ -778,10 +763,6 @@ export class Store extends DurableObject {
     contradictionOf(this.ctx).migrate();   /* contradiction's table and its purge declaration (R22) */
     progressionsOf(this.ctx).migrate();   /* progressions' tables and REC-184's column (R29) */
     intentOf(this.ctx).migrate();   /* intent's tables (R24) */
-
-    /* D-436: immediately after the schema pass, so the table exists and nothing later in this function can throw
-       between the store's birth and the record of whose store it is. */
-    if (firstBoot) this.#recordGroupAtFirstBoot();
 
     /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
     addColumns();
@@ -2524,362 +2505,6 @@ export class Store extends DurableObject {
 
   setPassword(...a) { return membershipOf(this.ctx).setPassword(...a); }
 
-  /* =====================================================================
-   * D-436 / IC-172 — THE PRODUCING GROUP, ONE RECORDED VALUE FOR THE WHOLE INSTANCE.
-   *
-   * State Rules v1.5 §3.1: every bundle.md carries `group`, the producing group's slug, and it travels with
-   * every distributed copy — so it is in the SIGNED bytes. This file used to write one literal slug there,
-   * through eighteen `fm.group ||` fallbacks, two trimmed-argument defaults and three unconditional stamps
-   * (testify's bytes and meta, and a fork's meta): true of one instance and false of every instance `newgroup`
-   * installs. Now there is ONE value, the `instance_group` row, and every default and every stamp reads it
-   * through `#producingGroup()`. Nothing in this file names a group of its own.
-   *
-   * DECISION (a), PROVISIONAL (D-436), WHERE IT COMES FROM. It is written ONCE, at the store's FIRST BOOT — the
-   * `#migrate` pass that found no `bundles` table, i.e. storage that has never held this schema. On that boot and
-   * on no other, the slug the installer bound as INSTANCE_NAME is recorded: the worker name the group chose
-   * (D-102), which `newgroup` binds in the SAME upload that creates the worker, so it is present before the
-   * store can boot at all. It is checked against the installer's own slug grammar first, and a missing or
-   * malformed name records NOTHING — the store then says so (`instanceGroup`), because an invented value in
-   * signed bytes is the defect this closes.
-   *   NEVER A DEPLOY-TIME VARIABLE AS ITS SOURCE. INSTANCE_NAME is the channel the slug ARRIVES by, read at one
-   *   moment; every later boot ignores it, and nothing else in the plane reads it for this. So a redeploy that
-   *   moves the binding moves nothing already recorded, and nothing written afterwards.
-   *   WHY THE FIRST BOOT AND NOT op=claim, the plane's other first-run act. The scratch namespace is a Durable
-   *   Object of its own that no claim ever reaches; the root of trust can write before anyone claims; and a
-   *   claim is RE-ARMED by rotating ADMIN_TOKEN, so "the first claim" would need a witness of its own. The
-   *   store's birth is witnessed by the schema itself. The alternative — the slug carried in op=claim's body —
-   *   would take it from whoever opens the setup page rather than from the installer.
-   *
-   * DECISION (b), PROVISIONAL, A STORE THAT PREDATES THE VALUE. A store that already held the schema when this
-   * table arrived records NOTHING at boot, even with INSTANCE_NAME bound: this project's own instance is named
-   * for its worker and not its group, and a sovereign store installed earlier holds documents already stamped
-   * with the old literal — the binding and the record can disagree, and choosing between them is a person's
-   * act, not a boot's. It is recorded ONCE by the root of trust (`instanceGroupSeed`, op=instancegroupseed),
-   * and refused a second time. The documents already written are not rewritten: their bytes are signed.
-   *
-   * DECISION (c), PROVISIONAL, NOTHING RECORDED. A write that must name the producing group is never given a
-   * default. `promote` keeps a caller's OWN statement of its group (the document's `group:`, else its meta)
-   * exactly as before — the caller's words, not the plane's — and refuses GROUP_UNDETERMINED (C-64.1) when
-   * neither states one; a document the plane composes itself (`testify`), a division whose parent names no
-   * group, and the group default bar with no group named are refused the same way.
-   * ===================================================================== */
-
-  /* The installer's slug grammar, `newgroup/src/index.mjs`'s SLUG_RE, byte for byte. instance-group.test.mjs
-     pins the two sources equal, so neither can move alone. */
-  static GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-
-  /** THE ONE READER: the recorded slug, or null when this store records none. Every default and every stamp
-   *  asks here, and it reads the store and nothing else — never `this.env`. */
-  #producingGroup() {
-    const r = this.#one(`SELECT slug FROM instance_group WHERE id=1`);
-    return r && typeof r.slug === "string" && r.slug ? r.slug : null;
-  }
-
-  /* DECISION (a)'s write, called by `#migrate` only when it found no `bundles` table before the schema ran. */
-  #recordGroupAtFirstBoot() {
-    const slug = String((this.env && this.env.INSTANCE_NAME) ?? "").trim();
-    if (!Store.GROUP_SLUG_RE.test(slug)) return;
-    this.sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
-                   VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`,
-                  slug, new Date().toISOString());
-  }
-
-  /* What a store recording no group SAYS, in ONE copy: the credentialed read and the public read (REC-163) both answer
-     with it, so the two cannot come to mean different things by "none recorded". The words are D-436's, unchanged. */
-  static NO_GROUP_RECORDED = "no producing group is recorded for this store. A store records it once: at its first boot, "
-    + "from the slug its installer bound, or — on a store that already held documents when the value "
-    + "arrived — by one act of the root of trust (op=instancegroupseed). Until then a write that must "
-    + "name its producing group is given no default: a caller's own statement of its group is kept "
-    + "as the caller's, and a write stating none is refused.";
-
-  /** op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
-  instanceGroup() {
-    const r = this.#one(`SELECT slug, recorded_at, source, recorded_by FROM instance_group WHERE id=1`);
-    if (r) return { ok: true, group: r.slug, recorded_at: r.recorded_at, source: r.source,
-                    recorded_by: r.recorded_by ?? null };
-    return { ok: true, group: null, recorded_at: null, source: null, recorded_by: null,
-             detail: Store.NO_GROUP_RECORDED };
-  }
-
-  /** REC-163 / IC-174 — op=instancegroup's PUBLIC projection, and the setup page's read of whose record this is.
-   *  `BIO_Publication_v0_1.md` §7 point 1 (BOB #24, 2026-09-21): THE SLUG IS PUBLIC — it travels in every published
-   *  bundle's signed `group` and names the worker, so a stranger reading it learns nothing the group has not already
-   *  published or served. That justification holds for the SLUG and for nothing else in the row: when the value was
-   *  recorded, by which act and by whom are not published anywhere, and §7 does not rule them public. So this reads
-   *  the slug through `#producingGroup()` — THE ONE READER every stamp uses, so the page, the op and the bytes of
-   *  every document this store creates cannot name three different groups — and selects nothing else: a later edit
-   *  of the control plane cannot spread a provenance field onto the public wire, because none arrives there. With
-   *  nothing recorded it says so, in the credentialed read's own words. */
-  instanceGroupPublic() {
-    const slug = this.#producingGroup();
-    return slug ? { ok: true, group: slug } : { ok: true, group: null, detail: Store.NO_GROUP_RECORDED };
-  }
-
-  /** op=instancegroupseed: DECISION (b), the root of trust's one act. The control plane stamps `author`. */
-  instanceGroupSeed({ slug = null, author = null } = {}) {
-    const refusal = (code, detail, extra) => {
-      const row = INSTANCE_GROUP_CHECKS[code];
-      return { ok: false, reason: code, code, check: row.check, translation: row.translation,
-               detail, ...(extra || {}) };
-    };
-    const s = typeof slug === "string" ? slug.trim() : "";
-    /* DEC-49 REGION is-instance-group-seed */
-    if (!Store.GROUP_SLUG_RE.test(s))
-      return refusal("GROUP_SLUG_MALFORMED",
-        `${s ? `'${s.slice(0, 60)}' is not` : "the request names no slug, and a group is recorded as"} a slug in the `
-        + `installer's grammar (3 to 40 of a-z, 0-9 and '-', beginning and ending with a letter or digit). `
-        + `Nothing was recorded.`);
-    const held = this.#one(`SELECT slug, recorded_at, source FROM instance_group WHERE id=1`);
-    if (held)
-      return refusal("GROUP_ALREADY_RECORDED",
-        `this store has recorded its producing group since ${held.recorded_at} (${held.source}), and it is `
-        + `recorded once. Nothing was changed.`,
-        { group: held.slug, recorded_at: held.recorded_at, source: held.source });
-    /* END DEC-49 REGION is-instance-group-seed */
-    const at = new Date().toISOString();
-    const who = typeof author === "string" && author.trim() ? author.trim() : null;
-    this.sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
-                   VALUES (1, ?, ?, 'seed', ?) ON CONFLICT(id) DO NOTHING`, s, at, who);
-    return { ok: true, group: s, recorded_at: at, source: "seed", recorded_by: who,
-             note: "every document this store writes from now on names this group. Documents already written are "
-                 + "NOT rewritten: whatever group their bytes name is what they were signed under." };
-  }
-
-  /* =====================================================================
-   * REC-164 — THE PUBLISHING GROUP'S DISPLAY NAME AND ITS VERIFIED DOMAIN. `BIO_Publication_v0_1.md` §7 points 2
-   * and 3 (BOB #24, 2026-09-21), resting on point 1's public slug (REC-163).
-   *
-   * TWO DURABLE VALUES, EACH WITH A DATED HISTORY (`group_identity_history`): the value is the latest row for its
-   * field, and nothing updates or deletes a row. Each is set by an ADMINISTRATOR'S SESSION ACT, and `by` is the
-   * control plane's stamp, read here from the query and asked of the live roster — a bearer is refused before this
-   * (C-64.4), and a caller's own `by` is overwritten there, so a member naming an administrator is still themselves.
-   *
-   * THE DISPLAY NAME is presentation only: it is written into no signed bytes (nothing here reaches a document), it
-   * needs no verification because it asserts only what the group calls itself, and the public read shows it WITH the
-   * slug and never without one (§7 point 2: a name that imitates another body cannot stand alone as an identity).
-   *
-   * THE DOMAIN is a CLAIM. It is shown publicly only while the latest verdict on the current claim is `verified`.
-   * The verifier fetches `https://<domain>/.well-known/civicos-group.json` through the per-host governor and reads
-   * whether it names THIS instance's address and slug. It runs at the set act AND on the reconciling alarm
-   * (`group-domain-recheck`), because a check made once at set time certifies a file the domain can change the next
-   * minute — the row's own liar. Its verdicts: `verified`, `absent` (no file at that domain), `mismatched` (a file
-   * that names another instance or another group, or that this plane cannot read as the format) and a FOURTH,
-   * `undetermined`: the governor holding the host, a fetch that did not complete, an answer that is neither the file
-   * nor its absence, or no slug recorded to compare with. None of those says anything about the domain, so none is
-   * recorded as `absent`, and none shows the domain publicly (DESIGN GAP, reported: §7 names three verdicts).
-   * ===================================================================== */
-  static GROUP_DISPLAY_NAME_MAX = 120;
-  /* A bare lowercase host name with at least one dot, labels of 1-63 letters, digits and hyphens: no scheme, path,
-     port or IP literal. The last label must begin with a letter, which is what excludes a dotted-quad. */
-  static GROUP_DOMAIN_RE = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-  static GROUP_WELL_KNOWN_PATH = "/.well-known/civicos-group.json";
-  static GROUP_WELL_KNOWN_MAX_BYTES = 16384;
-  static GROUP_DOMAIN_RECHECK_MS = 86_400_000;   // chosen, not measured: once a day
-
-  #groupDomainRecheckMs() {
-    const v = Number(this.env && this.env.GROUP_DOMAIN_RECHECK_MS);
-    return Number.isFinite(v) && v > 0 ? v : Store.GROUP_DOMAIN_RECHECK_MS;
-  }
-
-  #groupIdentityRefusal(code, detail, extra) {
-    const row = INSTANCE_GROUP_CHECKS[code];
-    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
-  }
-
-  /* WHO MAY SET EITHER VALUE: an active administrator, named by the control plane's stamp. Asked before anything is
-     read or validated, so a caller with no standing learns nothing about what is recorded. */
-  #groupIdentityGate(by) {
-    const refusal = (code, detail) => this.#groupIdentityRefusal(code, detail, { by: by ?? null });
-    /* DEC-49 REGION is-group-identity-admin */
-    if (!by || !this.#activeAdmins().includes(by))
-      return refusal("GROUP_IDENTITY_NOT_ADMIN",
-        "setting the group's display name or claiming its domain is an administrator's act (Publication §7), and "
-        + "the plane stamps who is asking from the signed-in session rather than taking it from the caller. This "
-        + "caller is not one of the active administrators.");
-    /* END DEC-49 REGION is-group-identity-admin */
-    return null;
-  }
-
-  #groupIdentityCurrent(field) {
-    return this.#one(`SELECT value, set_at, set_by, instance_address FROM group_identity_history
-                      WHERE field=? ORDER BY seq DESC LIMIT 1`, field) || null;
-  }
-  #groupIdentityHistory(field) {
-    return this.#rows(`SELECT value, set_at, set_by FROM group_identity_history WHERE field=? ORDER BY seq`, field)
-      .map((r) => ({ value: r.value, set_at: r.set_at, set_by: r.set_by }));
-  }
-  #groupDomainLatestCheck(domain) {
-    const r = this.#one(`SELECT domain, verdict, checked_at, trigger, status, detail FROM group_domain_checks
-                         WHERE domain=? ORDER BY seq DESC LIMIT 1`, domain);
-    return r ? { ...r } : null;
-  }
-
-  /** op=groupnameset — §7 point 2. `by` is the control plane's stamp. */
-  groupNameSet({ name = null, by = null } = {}) {
-    const gate = this.#groupIdentityGate(by);
-    if (gate) return gate;
-    const refusal = (code, detail) => this.#groupIdentityRefusal(code, detail);
-    const s = typeof name === "string" ? name.trim() : "";
-    /* DEC-49 REGION is-group-display-name */
-    if (!s || s.length > Store.GROUP_DISPLAY_NAME_MAX || /[\u0000-\u001f\u007f]/.test(s))
-      return refusal("GROUP_DISPLAY_NAME_MALFORMED",
-        `${s ? `a name of ${s.length} characters` : "the request names no display name, and it is set as"} `
-        + `one line of 1 to ${Store.GROUP_DISPLAY_NAME_MAX} characters with no control characters. Nothing was set.`);
-    /* END DEC-49 REGION is-group-display-name */
-    const at = new Date().toISOString();
-    this.sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by) VALUES ('display_name', ?, ?, ?)`,
-                  s, at, by);
-    return { ok: true, display_name: s, set_at: at, set_by: by,
-             history: this.#groupIdentityHistory("display_name"),
-             note: "presentation only: no signed bytes carry it, and every public surface shows it beside the slug." };
-  }
-
-  /** op=groupdomainset — §7 point 3. `by` and `origin` are the control plane's stamps: `origin` is the address the
-   *  administrator's session reached, which the domain's well-known file must name. The claim is recorded and then
-   *  checked at once; the alarm re-checks it. */
-  async groupDomainSet({ domain = null, by = null, origin = null } = {}) {
-    const gate = this.#groupIdentityGate(by);
-    if (gate) return gate;
-    const refusal = (code, detail) => this.#groupIdentityRefusal(code, detail);
-    const d = typeof domain === "string" ? domain.trim().toLowerCase().replace(/\.$/, "") : "";
-    /* DEC-49 REGION is-group-domain */
-    if (!Store.GROUP_DOMAIN_RE.test(d))
-      return refusal("GROUP_DOMAIN_MALFORMED",
-        `${d ? `'${d.slice(0, 80)}' is not` : "the request names no domain, and one is claimed as"} a bare host `
-        + `name (letters, digits, hyphens and dots, with no scheme, path, port or IP address). Nothing was recorded.`);
-    /* END DEC-49 REGION is-group-domain */
-    const address = Store.#instanceAddress(origin);
-    const at = new Date().toISOString();
-    this.sql.exec(`INSERT INTO group_identity_history (field, value, set_at, set_by, instance_address)
-                   VALUES ('domain', ?, ?, ?, ?)`, d, at, by, address);
-    const check = await this.#checkGroupDomain("set");
-    try { await this.#armScheduler(); } catch { /* the check above stands; the next arm reconciles */ }
-    return { ok: true, domain: d, set_at: at, set_by: by, instance_address: address, check,
-             shown_publicly: check && check.verdict === "verified",
-             history: this.#groupIdentityHistory("domain") };
-  }
-
-  /* The instance's own address as the control plane stamped it: an origin, lowercased, no trailing slash. */
-  static #instanceAddress(origin) {
-    try {
-      const u = new URL(String(origin ?? ""));
-      return (u.protocol === "https:" || u.protocol === "http:") ? `${u.protocol}//${u.host}`.toLowerCase() : null;
-    } catch { return null; }
-  }
-
-  /** THE VERIFIER: one governed fetch of the current claim's well-known file, and one dated verdict. */
-  async #checkGroupDomain(trigger) {
-    const cur = this.#groupIdentityCurrent("domain");
-    if (!cur) return null;
-    const domain = cur.value;
-    const slug = this.#producingGroup();
-    const address = cur.instance_address || null;
-    let verdict = "undetermined", status = null, detail;
-    if (!slug || !address) {
-      detail = !slug ? "this store records no producing group, so there is no slug for the file to name"
-                     : "the claim carries no instance address for the file to name";
-    } else {
-      const g = this.governorAdmit({ host: domain });
-      if (!g.admitted) {
-        detail = `the per-host governor held ${domain} (${g.reason}); this says nothing about the domain`;
-      } else {
-        if (g.wait_ms) await new Promise((s) => setTimeout(s, g.wait_ms));
-        let res = null;
-        try {
-          res = await fetch(`https://${domain}${Store.GROUP_WELL_KNOWN_PATH}`, { redirect: "manual",
-            headers: { "user-agent": civicosUserAgent(this.env && this.env.VERSION,
-                                                      this.env && this.env.INSTANCE_NAME, "group-domain") } });
-        } catch { res = null; }
-        if (!res) {
-          detail = "the fetch did not complete, and this plane did not record why";
-        } else {
-          status = res.status;
-          try { this.governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
-          if (status === 404 || status === 410 || (status >= 300 && status < 400)) {
-            verdict = "absent";
-            detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself`
-                                  : `the domain serves no ${Store.GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
-          } else if (status >= 200 && status < 300) {
-            const text = (await res.text().catch(() => "")).slice(0, Store.GROUP_WELL_KNOWN_MAX_BYTES);
-            let f = null;
-            try { f = JSON.parse(text); } catch { f = null; }
-            const inst = f && typeof f.instance === "string" ? Store.#instanceAddress(f.instance) : null;
-            const grp = f && typeof f.group === "string" ? f.group.trim() : null;
-            if (inst === address && grp === slug) {
-              verdict = "verified";
-              detail = `the file names this instance (${address}) and its slug (${slug})`;
-            } else {
-              verdict = "mismatched";
-              detail = !f || typeof f !== "object"
-                ? "the file is not the JSON object this plane reads ({ instance, group })"
-                : `the file names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
-                  + `${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
-            }
-          } else {
-            detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
-          }
-        }
-      }
-    }
-    const at = new Date().toISOString();
-    this.sql.exec(`INSERT INTO group_domain_checks (domain, verdict, checked_at, trigger, status, detail)
-                   VALUES (?, ?, ?, ?, ?, ?)`, domain, verdict, at, trigger, status, detail);
-    return { domain, verdict, checked_at: at, trigger, status, detail };
-  }
-
-  /* The alarm consumer's two halves: the next re-check is due one interval after the current claim's last verdict,
-     and an instance claiming no domain holds no wake. */
-  #groupDomainWake() {
-    const cur = this.#groupIdentityCurrent("domain");
-    if (!cur) return null;
-    const last = this.#groupDomainLatestCheck(cur.value);
-    const from = Date.parse((last && last.checked_at) || cur.set_at);
-    return (Number.isFinite(from) ? from : 0) + this.#groupDomainRecheckMs();
-  }
-  async #groupDomainTick() {
-    return { groupdomain: await this.#checkGroupDomain("alarm") };
-  }
-
-  /** op=groupidentity, PUBLIC projection: the slug, the display name only beside a slug, and the domain only while
-   *  the latest verdict on the current claim is `verified`. */
-  groupIdentityPublic() {
-    const slug = this.#producingGroup();
-    const name = this.#groupIdentityCurrent("display_name");
-    const dom = this.#groupIdentityCurrent("domain");
-    const last = dom ? this.#groupDomainLatestCheck(dom.value) : null;
-    /* THE VERDICT GATE: the one line that decides whether a claimed domain reaches a stranger. */
-    const verified = !!(slug && dom && last && last.verdict === "verified");
-    return { ok: true, group: slug,
-             display_name: slug && name ? name.value : null,
-             domain: verified ? dom.value : null,
-             domain_verified_at: verified ? last.checked_at : null,
-             ...(slug ? {} : { detail: Store.NO_GROUP_RECORDED }) };
-  }
-
-  /** op=groupidentity for a credentialed reader: the public projection, and the claim, its state and both histories. */
-  groupIdentity() {
-    const pub = this.groupIdentityPublic();
-    /* IC-246: the check log, NEWEST FIRST, cut at a NAMED bound and the cut PUBLISHED. It was a bare `LIMIT 20`: a
-       reader could not tell twenty checks from twenty of many (the bounds sweep's PIN named it). Read at `max + 1`
-       so `truncated` is measured, never inferred from the count equalling the bound. Kept IN this method, not a
-       helper, so the bounds walk (which reads the dispatched method's segment) still sees the cap. */
-    const max = Store.GROUP_DOMAIN_CHECKS_MAX;
-    const checks = this.#rows(`SELECT domain, verdict, checked_at, trigger, status, detail
-                                 FROM group_domain_checks ORDER BY seq DESC LIMIT ?`, max + 1);
-    const dom = this.#groupIdentityCurrent("domain");
-    return { ...pub,
-             display_name_recorded: this.#groupIdentityCurrent("display_name")?.value ?? null,
-             display_name_history: this.#groupIdentityHistory("display_name"),
-             domain_claim: dom ? { domain: dom.value, set_at: dom.set_at, set_by: dom.set_by,
-                                   instance_address: dom.instance_address ?? null,
-                                   latest: this.#groupDomainLatestCheck(dom.value) } : null,
-             domain_history: this.#groupIdentityHistory("domain"),
-             domain_checks: checks.slice(0, max).map((r) => ({ ...r })),
-             domain_checks_limit: max, domain_checks_truncated: checks.length > max };
-  }
-  /* IC-246: declared BELOW its method, on REC-116's finding (`bounds.test.mjs`'s segmenter credits a constant to the
-     method above it). The figure the old literal carried. */
-  static GROUP_DOMAIN_CHECKS_MAX = 20;
 
 
 
@@ -3177,63 +2802,6 @@ export class Store extends DurableObject {
   recordSourceOutcome(...a) { return captureOf(this.ctx).recordSourceOutcome(...a); }
   sourceReachability(...a) { return captureOf(this.ctx).sourceReachability(...a); }
 
-  /* ------------------------------------------------------------------ *
-   * Measured runtime cost
-   * ------------------------------------------------------------------ */
-
-  /** Record what a run cost. peak is kept alongside last because the peak is the
-   *  run that will die first and a mean would hide it. */
-  recordRuntimeObservation({ metric, ms, detail = null, at = null }) {
-    if (!metric || typeof ms !== "number" || !Number.isFinite(ms)) return { recorded: false };
-    const now = at || stampInstant("second");
-    const cur = [...this.sql.exec(`SELECT * FROM runtime_observations WHERE metric = ?`, metric)][0] || null;
-    if (!cur) {
-      this.sql.exec(
-        `INSERT INTO runtime_observations (metric, peak_ms, peak_at, peak_detail, last_ms, last_at, samples, total_ms)
-         VALUES (?, ?, ?, ?, ?, ?, 1, ?)`, metric, ms, now, detail, ms, now, ms);
-      return { metric, peak_ms: ms, last_ms: ms, samples: 1, new_peak: true };
-    }
-    const isPeak = ms > cur.peak_ms;
-    this.sql.exec(
-      `UPDATE runtime_observations SET last_ms = ?, last_at = ?, samples = samples + 1, total_ms = total_ms + ?
-       ${isPeak ? ", peak_ms = ?, peak_at = ?, peak_detail = ?" : ""} WHERE metric = ?`,
-      ...(isPeak ? [ms, now, ms, ms, now, detail, metric] : [ms, now, ms, metric]));
-    return { metric, peak_ms: isPeak ? ms : cur.peak_ms, last_ms: ms,
-             samples: cur.samples + 1, new_peak: isPeak };
-  }
-
-  runtimeObservations() {
-    const rows = [...this.sql.exec(`SELECT * FROM runtime_observations ORDER BY metric`)];
-    return { metrics: rows.map((r) => ({ ...r, mean_ms: r.samples ? r.total_ms / r.samples : null })),
-      note: "measured wall time across synchronous compute segments, not billed CPU time. peak_ms is "
-          + "the run that would die first if a ceiling were near; a mean would hide it." };
-  }
-
-  /** Where the stepped probe got to, and therefore what is known about the
-   *  ceiling. A gap between the highest completed step and the next one is the
-   *  interval the ceiling lies in; no gap means the probe has never been cut off
-   *  and the ceiling is above everything tried. */
-  cpuProbeState() {
-    const rows = [...this.sql.exec(`SELECT * FROM cpu_probe ORDER BY step`)];
-    const top = rows[rows.length - 1] || null;
-    return { steps: rows.length, highest_completed: top ? top.step : 0,
-      elapsed_at_highest_ms: top ? top.elapsed_ms : 0,
-      rows,
-      note: rows.length
-        ? "the isolate completed every step listed. If a later probe was killed, the ceiling lies "
-        + "above elapsed_at_highest_ms and below whatever the next step would have cost."
-        : "the probe has never run, so nothing is known about the ceiling by measurement" };
-  }
-
-  recordCpuProbeStep({ step, elapsedMs, iterations, at = null }) {
-    const now = at || stampInstant("second");
-    this.sql.exec(
-      `INSERT INTO cpu_probe (step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?)
-       ON CONFLICT(step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
-      step, elapsedMs, iterations, now);
-    return { step, elapsed_ms: elapsedMs };
-  }
-
   /* D-95, the per-host request governor: `host-governor`'s (T4-1). These delegate, so the object's RPC callers and
      this file's own callers reach the one instance on this ctx (K61, K63). */
   governorAdmit(...a) { return governorOf(this.ctx).governorAdmit(...a); }
@@ -3520,12 +3088,8 @@ export class Store extends DurableObject {
            reads them by entity or by capture; progressiondefine authors an ordered stage
            set (both example progressions expressible as rows); progression reads one. */
         ...queueOps(queueOf(this.ctx), url, body),
-        recordruntime: () => this.recordRuntimeObservation(body || {}),
         /* D-64: the daily render allowance. `renderadmit` takes a render or records
            a DEFERRAL; `renderspend` adds the browser time a render reported. */
-        runtimeobservations: () => this.runtimeObservations(),
-        cpuprobestate: () => this.cpuProbeState(),
-        recordcpuprobestep: () => this.recordCpuProbeStep(body || {}),
         recordcapturedlocator: () => this.recordCapturedLocator(body || {}),
         /* PL-10 / D-220: the version chain. `address` arrives ALREADY NORMALISED
            — the control plane runs it through `normalizeAddress`, the same
@@ -3626,21 +3190,6 @@ export class Store extends DurableObject {
                                                       by: url.searchParams.get("by") }),
         stats: () => this.stats({ capacity: url.searchParams.get("capacity") === "1",
                                    viewer: url.searchParams.has("viewer") ? url.searchParams.get("viewer") : undefined }),
-        /* D-436 / IC-172: the producing group. The seed's `author` is the control plane's stamp, read from the
-           query AFTER the body is spread, so a body naming its own recorder is overwritten rather than honoured. */
-        instancegroup: () => this.instanceGroup(),
-        /* REC-163 / IC-174: the PUBLIC projection — the slug, or the statement that none is recorded, and nothing
-           else (Publication §7 point 1). Read by the control plane for a caller holding no credential, and for the
-           setup page it serves at `/`. */
-        instancegrouppublic: () => this.instanceGroupPublic(),
-        instancegroupseed: () => this.instanceGroupSeed({ ...(body || {}), author: url.searchParams.get("author") }),
-        /* REC-164 / Publication §7 points 2 and 3. `by` and `origin` are the control plane's stamps, read from the
-           query AFTER the body is spread, so a body naming its own setter or its own address is overwritten. */
-        groupnameset: () => this.groupNameSet({ ...(body || {}), by: url.searchParams.get("by") }),
-        groupdomainset: () => this.groupDomainSet({ ...(body || {}), by: url.searchParams.get("by"),
-                                                    origin: url.searchParams.get("origin") }),
-        groupidentity: () => this.groupIdentity(),
-        groupidentitypublic: () => this.groupIdentityPublic(),
         retire: () => this.retire({ handle: url.searchParams.get("handle"),
           reason: url.searchParams.get("reason"),
           viewer: url.searchParams.get("viewer"), owner: url.searchParams.get("owner"),

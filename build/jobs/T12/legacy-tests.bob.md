@@ -33,3 +33,15 @@ Leave the installer's `wizard.test.mjs` to the installer. Run the long batteries
 ## B7 · CHANGE
 
 Two more re-anchors, from LEGACY-UI #1 J2 (merged into `tranche/T12` again; merge it): `member-respect` ARM 4d reads `proposeDispose`, `taskResolve`, `taskForward` and `queuemute` in `store.mjs`, which queue moved to `bio-plane/src/queue/index.mjs`; `bound-sweep` (3 delta walks). Also legacy-ui now sends `(project, finding)` for a project-scoped finding's Defer/Dismiss and draws no controls for queue R12's newer-capture notice.
+
+## B8 · CHANGE
+
+From CONTROL-PLANE #2 J4 (merges when it completes; I will tell you). Suites importing families that moved from the catalogue to `bio-plane/src/control-plane/checks.mjs` (C-38.1–.8, C-78.1–.3, C-69.1–.4, C-68.2–.4, C-29.6–.10, C-32.17, C-64.4, C-66.6): `admission-gate`, `d456-namespace-scope`, `d461-pinned-namespace`, `d475-page-namespace`, `d463-confined-credential`, `d270-refusal-truth` (+control), `adminvote`, `rec155-session-routes`, `d334-monitor-credential`, `d278-codeless-refusals`, `plane-envelope`, `d470-catalog-census` (count and digest), `aicredential`, `machine-attest`, `fence-e2e`, `refusal-wire` (+control), `group-identity`, `instance-group`, `machinefences-dec49`, `rec179-surfaced-by`, `d85-surface-run`, `rec171-surface-token`, `rec173-migration-replay`, `risk-tier`, `d512-replay-verified` (C-66.6); civicos-ui `check-refusal-codes.mjs` floors, `test/admission-translation`, `refusal-partition.control`, `refusal-translation-surface`, `ui84-mock-wire.control`, `ui100-mock-wire.control`. N53: `skillpack.test.mjs` A10 and BLOCK H, `skillpack.control.mjs`, `skillsequencing.test.mjs` read `src/index.mjs`'s text for `decorateAct` and the `MACHINE_CANNOT_*` corpus (now `src/control-plane/`). The store's door stays in `store.mjs` this tranche (K412), so suites running `store.mjs` as their script need only instance-setup's shim (B6).
+
+## B9 · CHANGE
+
+Instance-setup (K414) and control-plane (K413) are now merged into `tranche/T12`, with queue and legacy-ui: merge it and re-anchor against that tree (B5–B8). New since B6, from INSTANCE-SETUP #1 J6: `d475-page-namespace` and `d456-namespace-scope` die on import (`NAMESPACE_CHECKS`, `ADMISSION_CHECKS` left the catalogue for control-plane); `group-identity`'s six A1 arms follow C-64.4 to control-plane; the full list of store-booting suites is in `build/jobs/T12/instance-setup.md` (J5).
+
+## B10 · CHANGE
+
+From AFFORDANCES #5 J2: `bio-plane/test/rung-ladder.test.mjs` cannot run on `tranche/T12`: `test/dispatch-reader.mjs`:55 throws "OPS table not found in src/index.mjs" (control-plane moved `OPS` and `NEEDS` to `src/control-plane/ops.mjs`). Point `readDispatch` there, or better have the suite import control-plane's exported `OPS`/`NEEDS` and call affordances' `unaccounted` (at the interface; it answers `{unpublished: [], unranked: [], stale: []}` today over 311 ops).

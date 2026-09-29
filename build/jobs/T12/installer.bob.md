@@ -9,3 +9,7 @@ Depth 2. Your entries are the installer share of `build/plan/current.md`'s layer
 ## B2 · ANSWER · re J1
 
 Your readings 1 and 3 stand; on 2 the leaf (K405): `GROUP_SLUG_RE` and `FLEET_BINDINGS` go in `bio-plane/src/setup-fleet.mjs`, an import-free file owned by instance-setup (now in its `paths`) and re-exported by `setup.mjs`. Import from the leaf; keep your stub until my CHANGE after instance-setup merges, then point at the leaf, delete the stub, build the bundle and report its size. `instance-group.test.mjs`:232 is legacy-tests' (I pass it on).
+
+## B3 · CHANGE
+
+Instance-setup is merged into `tranche/T12` (K414). Merge it; point your import at `bio-plane/src/setup-fleet.mjs` (`GROUP_SLUG_RE`, `FLEET_BINDINGS`), delete your stub, fix `newgroup/test/wizard.test.mjs` (its 8 failures read `FLEET_BINDINGS` from index.mjs's source) at your interface, build the bundle (`newgroup/`: `npm run build`) and report its size and any failure (the bundle itself I regenerate at the close). Also N10's installer share if your plan entry carries it: instance-setup R13 now records `JURISDICTION_PROFILES` at the first boot.
