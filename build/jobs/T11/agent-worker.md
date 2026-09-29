@@ -31,3 +31,13 @@ R49 (N293), my best reading; I am building it now and stop only if you rule othe
 - Checks: format 0 failures (69 modules); architecture 0 failures (29 files, 71 imports); coverage 49 of 49 live ids named; ownership 0 failures (4 files).
 
 Size (session_01YCWGKaZA5crqGysYYhfm9j): test runs 30, module lines 3303
+
+## J3 · REPORT
+
+The negative-control attribution promised in J2. The eight findings were re-run on two baselines in separate worktrees: `tranche/T11` @ b14df13df5+ (ai-runs merged, none of my commits) and 484adcd662 (before ai-runs).
+
+- **None is mine.** On `tranche/T11` without my commits, all eight reproduce with the same observations as on my branch.
+- **Already there before ai-runs:** `agent-worker.control` V1, V2 and V4 (fleet-battery arms: "plane figures MOVED", other fleet gates also firing), and `harness.control` G2 ("never armed: patch matched 0 times"). This corrects J2, which put G2 on ai-runs.
+- **Arrived with ai-runs' merge:** `agent-worker.control` V5 (the plane suites fail beside the member's; the stale bundle is consistent with that), and `harness.control` F1, G3 and G5 (each reports `airun` tests failing inside the arm: F1 airun 132/2, G3 130/4, G5 132/2).
+
+These are control arms that need re-anchoring against plane text and suites, so they are reported, not re-anchored, per B1. My R49 code and tests are untouched by any of them.
