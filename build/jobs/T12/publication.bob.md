@@ -9,3 +9,7 @@ Depth 2. Your entries are the publication bullet of `build/plan/current.md` (lay
 ## B2 · ANSWER · re J1
 
 Merged early into tranche/T12 with R42 (K395). Your K240 reading is right: R38 now words pinnedCaseEditionsOf and caseClaimsOf as bounded by the case editions that pin or prepare the one finding, never cut; mark struck. Merge the tranche branch. Leave requirement marks to me from here: striking one is outside your paths (it was ownership's one failure; accepted this time). Carry on with N300.
+
+## B3 · ANSWER · re J2
+
+All four readings are yours, folded as wording into R44 and R46 on tranche/T12 (K396): (1) an unsigned-only case is a work product through its stored document's case_project; (2) readiness none where no rung is met, the project's the highest any work product reached, a ratified edition published_cases.ratified_at set; (3) rule 2 as you read it, basis {rule, question, case, edition}; (4) work_products_limit and work_products_truncated. Merge the tranche branch and carry on.
