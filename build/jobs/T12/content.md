@@ -24,3 +24,7 @@
 - `node checks/ownership.mjs … content tranche/T12`: legacy-store 0/0, legacy-checks 0/0; 0 failures.
 
 Size (session_017fc5LrB8dqSfCReXYcSpsV): test runs 3, module lines 2233
+
+## J1 · REPORT
+
+Found beyond my module (record, Completion 'Found'): (1) plane bundle bio-plane/dist/bio-plane.bundled.mjs stale (src/content/index.mjs is an input); not rebuilt. (2) DEC-49 guard: arm G's NO_SHA loses content's site (6 -> 5 literal sites: entities x3, extraction's R27 literal, progressions remain, each theirs under N285); no census/walk/ratchet figure moves by my change; no new failure kind. (3) Until extraction's R63 lands, content's import of noSha from ../extraction/index.mjs does not resolve: content's tests, the plane and the guard's arm E cannot load on job/T12/content alone; they do on the merge, if extraction exports noSha from src/extraction/index.mjs (R63 names no file; tell me in the CHANGE if it lives elsewhere).
