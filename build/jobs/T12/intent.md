@@ -83,3 +83,7 @@ The full account is in build/jobs/T12/intent.md, Completion.
 ## J4 · COMPLETE · re J1
 
 B2 applied (K391), with tranche/T12 merged in. R28 now walks the first 1,000 projects in id order and measures only the ones with a condition; context_truncated is true when that walk or the aspiration walk is cut. The test checks this at 1,000 projects and at 1,001. The proposals list already followed your reading (1). Results: intent tests 46 of 46 pass. Users' tests: 181 pass, 0 fail, 9 todo (the 9 todos were there before). derivation-bounds and meaning-bounds give the same output as before. format, architecture, coverage (28 of 28 ids) and ownership: 0 failures. My deferred list is down to three reads; the R28 walk is off it. Please strike the Bounds paragraph's 'not yet met: N305' and entities R36's 'not yet met: N285'.
+
+## J5 · COMPLETE
+
+B3 applied. B2 (2) was already in J4: R28 walks the first 1,000 projects in id order, measures the ones with a condition, and answers context_truncated when that walk is cut. The test is now rewritten with conditioned projects sparse: of 1,000 projects, 3 have a condition, the first, the 500th and the last in id order. All three are measured at the bound with nothing cut. At 1,001 projects, the project past the cut in id order has a condition and is not measured, and context_truncated is true. I merged tranche/T12 for R22's wording. Results: intent tests 46 of 46 pass; format, architecture, coverage (28 of 28 ids) and ownership: 0 failures. The record lists the deferred reads as N323.
