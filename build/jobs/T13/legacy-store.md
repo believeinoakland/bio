@@ -2,6 +2,16 @@
 
 **Status** · session_01L19DRu2cbWBiRXm4jADFGU · depth 2 · WORKING · handled B0
 
+## Progress
+
+- N328, bias half: done. `#counts` spreads bias's `counts(hid)` (its R42) in place of counting `bias_statements` and `bias_adoptions` by name; the keys and their subtraction are unchanged. Bias's five tables, dead in legacy-store's purge declaration (filtered out by `BIAS_TABLES`), removed with the filter and the import. Improvement: `#counts` asks retrieval's and run-productions' `counts(hid)` once per answer, not once per key (3 and 2 calls before).
+- N328, `tasks` half: J1 (QUESTION) open; the `TASK` row and the `tasks` read stay until answered.
+- `test/m/` whole (from `bio-plane/`, `node --test test/m/`): 2,744 tests, 2,722 pass, 0 fail, 22 todo.
+- Old battery, the suites reading these counts: purge 14/0, project-sight 255/0, mint-ledger 26/0; bias 137/1: the one red is its `CORPUS PRINTED` blindness floor, `store.mjs` >= 222,052 characters, now 221,831 (this change's -221). legacy-tests' to re-pin.
+- Checks: format 0 failures; architecture 3 (legacy-store importing queue twice and affordances, all before this job); coverage 0 of 0 (no requirements file); ownership 0 failures.
+- Grep of `civicos-ui/` and affordances for `biasStatements`, `biasAdoptions`, `BIAS_TABLES`: no hits.
+- Next: apply BOB's answer to J1, re-run steps 5–7.
+
 ## J1 · QUESTION
 
 N328's `tasks` half: my best reading, and what blocks the rest. The bias half is done (`#counts` spreads bias `counts(hid)`; bias's five dead purge entries and the `BIAS_TABLES` filter go).
