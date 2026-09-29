@@ -54,12 +54,12 @@ Opened by BOB #66, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 5bb688333c, T
 
 - **queue** · N325 (R41, C-19.2). N326 (R39's bias half). N329 (R23's wording). N330 (R9, R10 through monitoring). N342 (R42: registers its four figures, seeds its `TASK` row).
 - **instance-setup** · N339 (R43).
-- **control-plane** · N339 (R23's sentence). N347 (R22 reads capture's table; `uses` edge). N348 (R35: the DO class, instance-setup's routes in the one frame). N349 (its own silences carry the correlation).
+- **control-plane** · N339 (R23's sentence). N347 (R22 reads capture's table; `uses` edge). N348 (R35: the DO class, instance-setup's routes in the one frame). N349 (its own silences carry the correlation). Optional (K458): restore the gate's account (the fence as a member-reach property of `OPS`; one code at the gate, two at the mint) beside `AI_SCOPE_CHECKS`' header, from git history before 0ae4706953.
 - **legacy-index** · N339's ten relays. N348 (exports control-plane's `Store`). N349 (`out.correlation`; the dead imports as wordings 2 lists).
 
 ## Last: legacy-tests (K420, K427)
 
-- **legacy-tests** · K457 first: retire each old suite whose subject is extracted and covered by its module's tests, re-anchoring only what no module test guards; then the re-anchors each wording names and the re-read widened (`t14-reread.md`: N327's eight suites; N325's two; N335's `projects.test.mjs`:193; C-96.1's `d134-custodial-refusals.test.mjs`; C-29.12 accepted by name while nothing mints it; N347's `pdfstructure-op.test.mjs`:126 and the `check-refusal-codes` re-pin); N353 (REC-171's fixture); the d470 re-pin after legacy-checks' removals, the census suite over promotion's new stamp, and whatever T14's layers break, each named with its owner.
+- **legacy-tests** · LEGACY-CHECKS #8's re-pins (K458): the DEC-49 guard's four (families 109, rows 789, governed sites 498, the HELD TWICE acceptance retired), `d470-catalog-census` A1/A3/A9 after promotion's stamp, `d134-custodial-refusals`' C-96.1 arms, and `civicos-ui/test/custodial-acts.test.mjs`:381, 400 (read membership's `MEMBERSHIP_CHECKS`). K457 first: retire each old suite whose subject is extracted and covered by its module's tests, re-anchoring only what no module test guards; then the re-anchors each wording names and the re-read widened (`t14-reread.md`: N327's eight suites; N325's two; N335's `projects.test.mjs`:193; C-96.1's `d134-custodial-refusals.test.mjs`; C-29.12 accepted by name while nothing mints it; N347's `pdfstructure-op.test.mjs`:126 and the `check-refusal-codes` re-pin); N353 (REC-171's fixture); the d470 re-pin after legacy-checks' removals, the census suite over promotion's new stamp, and whatever T14's layers break, each named with its owner.
 
 ## Not in T14
 

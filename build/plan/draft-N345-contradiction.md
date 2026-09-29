@@ -1,6 +1,6 @@
 # N345 (contradiction): requirement changes for Bob's approval (a worker for BOB #66, 2026-09-29)
 
-**Status** · APPROVED by Bob 2026-09-29 (K455), with DEC-85 (a conflict with a side the member cannot see) to be folded into this draft before a tranche carries it. DEC-85 folded by a worker for BOB #66, 2026-09-29, as Bob clarified it (K456: no discussion thread; responses to the notices, relayed after mutual opt-in): contradiction R10, R19, R25, R27, R29, R42, R47 and new R49–R55 (C-93.34–C-93.39); publication R10, R50; case-authoring R31, C-120.1 and new R32, R33; affordances R3, R7; queue R1, R46 and new R47. Every DEC-85 item is marked CHANGE OF MEANING (approved by Bob as DEC-85) or WORDING.
+**Status** · APPROVED by Bob 2026-09-29 (K455), with DEC-85 (a conflict with a side the member cannot see) to be folded into this draft before a tranche carries it. DEC-85 folded by a worker for BOB #66, 2026-09-29, as Bob clarified it (K456: no discussion thread; responses to the notices, relayed after mutual opt-in): contradiction R10, R19, R20, R25, R27, R29, R42, R47 and new R49–R55 (C-93.34–C-93.39; C-93.9's translation); publication R10, R50; case-authoring R31, C-120.1 and new R32, R33; affordances R3, R7; queue R1, R46 and new R47. Every DEC-85 item is marked CHANGE OF MEANING (approved by Bob as DEC-85) or WORDING.
 
 **Status** · DRAFT, not folded. Read on `tranche/T13` @ f77ec838e9 (= `main`). Scope: the contradiction PRESENT and RESOLVE part of N345 only. N345's DEC-78 (capture, a source's disclosure history), DEC-80 (the ceremony) and DEC-81 (grade disclosure) parts are drafted separately.
 
@@ -206,7 +206,7 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 
 **R10** — **WORDING.** Gains: "A reveal (R52) never widens this rule: a side a viewer may not see stays unseen by them after it."
 
-**R20** — **WORDING.** Gains C-60.2, C-60.3 and C-93.8–C-93.33.
+**R20** — **WORDING.** Gains C-60.2, C-60.3 and C-93.8–C-93.39. C-93.9's translation gains its notice sentence (DEC-85, **WORDING**).
 
 ### New: what is shown, and at what weight
 
@@ -464,7 +464,8 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 ### Uses — WORDING
 
 - **`promotion`** (new edge): `promote` (R35, R36) and `registerStep` (R38).
-- **`membership`**: gains `sight` (K5), `isJoinedParticipant` and `projectOwners` (R24's reach).
+- **`membership`**: gains `sight` (K5), `isJoinedParticipant` and `projectOwners` (R24's reach); the existence answer (R77), `noSuchProject` (R78), `notAParticipant` (R87) and `memberFacts` (R68, the responder's own cover) for R50–R54.
+- **`record-core`**: the `bundles` read contract's `title`, for a revealed party's name (R52).
 - **`entities`**: gains `reportResolutionDefect` (its R38).
 - **`inquiry`**: gains R46–R48.
 - **`basis-versions`**: gains `conclude` (R36), `conclusionOf` (K5), `projectsDrawingOn` (R24), and the version legs (R29).
@@ -476,15 +477,18 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
   - DEC-84 items 1–5, 7, 11, 12, 14, 16 and 17
   - `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §4–§9, §11 and §12
   - `BIO_Assistant_and_AI_Roles_v0_1.md` §3 (DEC-24: the machine recommends, a member disposes)
-  - `BIO_Membership_Architecture_v2.md` §7
+  - `BIO_Membership_Architecture_v2.md` §7 (and §3, a cover is disclosed only by its member's choice: R53)
+  - DEC-85 and K456 (R49–R55; R19's, R25's, R27's and R29's DEC-85 parts)
 - **WORDING.** K5's judgement: the measured prompt is unchanged, and a K5 arm (two stances, at least one agreeing pair and one differing wording of one claim) is added to the gate's corpus. It is measured, recorded in `MEASUREMENTS.md` and passing (no false conflict) before any K5 candidate is shown.
 
 ### Suggestions — WORDING
 
-- **For callers.** The control plane stamps `author`, `viewer`, `proposedBy` and `caller`, and routes the nine ops. A surface that offers "accept" shows the recommendation with its reason before the act, and sends `accepted` only when the member chose it (R44's other half).
+- **For callers.** The control plane stamps `author`, `viewer`, `proposedBy` and `caller`, and routes the thirteen ops (the nine, and R50, R51, R53 and R54's four). A surface that offers "accept" shows the recommendation with its reason before the act, and sends `accepted` only when the member chose it (R44's other half).
 - **Atomicity (R36).** Write the resolution through one `promotion.promote`, then `conclude`, inside one outer `record-core.transact`, as `conformance` R6 does. If `conclude` cannot nest, the job reports it.
 - **R24's reach for `{project}`.** Use `basis-versions.projectQuestions` (its R41) to list the project's inquiries, then the candidates whose side's inquiry, or content row, is among them.
 - **The recommender's prompt** is packaged into the skill pack by `skills`, as the judgement's prompt is.
+- **R49's parties** are read with R24's reach, one query per side, so that a notice, an opt-in and the reveal count the same parties.
+- **R52 in one act.** The opt-in row and the `revealed` row are written inside one `record-core.transact`, after re-reading the parties there, so that two last opt-ins at once record one reveal.
 
 ### Rows (`CONTRADICTION_PAIR_CHECKS` C-60, `CONTRADICTION_CANDIDATE_CHECKS` C-93; promotion stamps them)
 
@@ -493,7 +497,7 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 | C-60.2 | `CANDIDATES_NO_SUBJECT` | "Candidates are read for one thing at a time: a question, a document part, a subject, a record, a project or one candidate. Name exactly one. Nothing was read." |
 | C-60.3 | `TENSIONS_TOO_MANY` | "At most 200 items can be asked about in one request. Ask about fewer at a time. Nothing was read." |
 | C-93.8 | `NO_CANDIDATE` | "This act is about one contradiction candidate, named by its id, and it names none. Nothing was written." |
-| C-93.9 | `NO_SUCH_CANDIDATE` | "No contradiction you can see answers to that id. One whose side you may not see is answered exactly as one that does not exist. Nothing was written." |
+| C-93.9 | `NO_SUCH_CANDIDATE` | "No contradiction you can see answers to that id. One whose side you may not see is answered here exactly as one that does not exist. If it touches your project, it reaches you as a notice about your own side. Nothing was written." |
 | C-93.10 | `MACHINE_CANNOT_ACT_ON_CANDIDATE` | "Saying what a contradiction turned out to be is a member's act, and a machine credential cannot take it. A machine may recommend in which respects the two sides may differ. Nothing was written." |
 | C-93.11 | `CANDIDATE_CLOSED` | "That contradiction has already been dismissed or resolved, by the member named, and it stays as they left it. If something new bears on it, take it up as a question. Nothing was written." |
 | C-93.12 | `CANDIDATE_TAKEN_UP` | "That contradiction has been taken up as a question, which is named, and it is resolved there by the question's conclusion. Nothing was written." |
@@ -518,11 +522,20 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 | C-93.31 | `RECOMMEND_CANDIDATE_NOT_STANDING` | "That contradiction is not open to recommendation: it has been resolved, dismissed or taken up, or it is not shown. Nothing was written." |
 | C-93.32 | `CANDIDATE_NOT_HELD` | "This question names a contradiction the record does not hold, or one you cannot see both sides of. Take a contradiction up from where it is shown. Nothing was written." |
 | C-93.33 | `WORDS_MALFORMED` | "A piece of text in this act is longer than it may be. The field and its limit are named. Nothing was written." |
+| C-93.34 | `NOT_A_PARTY` | "The project named does not rest on the side of this conflict that you can see, so it cannot ask to resolve it or respond to it. Name the project the notice came to. Nothing was written." |
+| C-93.35 | `NOT_A_PROJECT_CONFLICT` | "This is a lead the record noticed about the world, not a conflict the record holds between projects, so there is nothing to resolve between projects. Take it up as a question, or dismiss it with a reason. Nothing was written." |
+| C-93.36 | `RESPONSE_BEFORE_OPT_IN` | "A project responds to a conflict after it has asked to resolve it. Ask first, on the notice; your response reaches the other projects only once every project holding a side has asked. Nothing was written." |
+| C-93.37 | `RESPONSE_NO_TEXT` | "A response says something in your own words. Write it, and choose separately whether to share your cover or an email address. Nothing was written." |
+| C-93.38 | `DISCLOSURE_MALFORMED` | "What a response shares about you is your cover, an email address, or neither, and nothing else. The address must be one address. The part that is not one of these is named. Nothing was written." |
+| C-93.39 | `DISCLOSURE_NOT_YOURS` | "A response may share only your own cover or your own email address. What was given is someone else's, so it was not shared. Share your own, or nothing. Nothing was written." |
 
 ### Interface tests
 
 - **Refusals.** Every refusal has a negative control, in order.
-- **Sight.** A candidate with one side in a hidden project answers every read and act as absent. `unresolvedRecordOn` answers that side `{hidden: true}`.
+- **Sight.** A candidate with one side in a hidden project answers every read and act of R25–R36 as absent. `unresolvedRecordOn` answers it `unseen_other_side: true` with the seen side only, and no id, text, kind, source, project, members, explanation or inquiry of the other.
+- **DEC-85: the notice (R50).** A joined participant of the seen side's party gets the notice with that side only; the key, the reason and the party count are absent (R55: the notice's bytes are the same with one hidden party and with three). A participant of no party, a viewer at `EXISTENCE` and an outsider each get R50's refusals. A lead with a hidden side gives no notice. R27 marks the seen side `unseen_conflict` for a party member only.
+- **DEC-85: the opt-in (R51, R52).** Each refusal gets a negative control, in order. A repeat answers `already: true`. After one party opts in, the other's notice reads `asked_by_another: true` and names nobody. The last opt-in records one reveal, and the parties' names appear to each other; two last opt-ins at once record one. A truncated side records no reveal. A party arriving after the reveal is not revealed until it opts in. After the reveal, a member still may not see or act on the other side (R10, R30).
+- **DEC-85: responses (R53, R54).** Each refusal gets a negative control, in order. A response sharing another member's cover, or an email another member already disclosed, is refused C-93.39 and writes nothing. `cover: true` records the author's own cover. A response before the reveal is not relayed, and is relayed once the reveal happens. The relay carries the text, the chosen disclosures, the project and the instant, and never the handle or member id (checked over the notice's bytes). R50's `responses` holds only those after the project's own latest response, at most 20.
 - **Weight.** One case for each label and key (R24). The K5 weight changes after `no_difference`.
 - **State (R26).** Taken through each state by acts alone, including a reopened inquiry returning to `taken_up`.
 - **R27.** Each mark, over a claim, a leg and an extent.
@@ -531,7 +544,7 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 - **Over-strictness.** A repeated `recommend` writes nothing. A takeUp of a taken-up candidate writes nothing.
 - **R39 and R40.** Counts over a scripted sequence.
 - **R41.** The digest.
-- **Jobs.** `test/m/contradiction/`, with the gate harness's K5 arm and the recommender fixture.
+- **Jobs.** `test/m/contradiction/`, with the gate harness's K5 arm, the recommender fixture, and a fixture of two projects, each hidden from the other, drawing on the two sides of one duty (DEC-85).
 
 ---
 
@@ -583,19 +596,22 @@ Mark *(not yet met: N345)*.
 
 **R10** — **CHANGE OF MEANING.** Append:
 
-> The answer carries `tensions`, read from the signed document, never live. It lists each contradiction the owner disclosed (`case-authoring` R31), with the finding it touches, both sides with their sources (a side the publisher could not see stated as such, with no id, text or source), its state (`open`, `explained, not yet shown`, `taken up as a question` or `held irreconcilable, to be reopened by new evidence`), the explanation, who acknowledged it and when, and `depth: 1` with its sentence. Beside each member, its attributed tension sentences. A document before `/5` answers `tensions: null` with the sentence that its format predates the disclosure (R28).
+> The answer carries `tensions`, read from the signed document, never live. It lists each contradiction the owner disclosed (`case-authoring` R31), with the finding it touches, both sides with their sources, its state (`open`, `explained, not yet shown`, `taken up as a question` or `held irreconcilable, to be reopened by new evidence`), the explanation, who acknowledged it and when, and `depth: 1` with its sentence. Beside each member, its attributed tension sentences. A document before `/5` answers `tensions: null` with the sentence that its format predates the disclosure (R28).
+>
+> A disclosed contradiction with a side the publisher could not see is **highlighted**: its entry carries `unseen_other_side: true` and `case-authoring` R31's fixed sentence that the finding rests on a side in conflict with a record not shown, and its member's block carries the highlighted tension sentence. The answer counts them as `highlighted`, so that a reader's surface can set them apart. Nothing names the unseen record, its content, its source, or the project or members holding it (DEC-85).
 
-Mark *(not yet met: N345)*.
+Mark *(not yet met: N345)*. The highlight paragraph replaces the draft's "a side the publisher could not see stated as such, with no id, text or source", and is **CHANGE OF MEANING** (DEC-85).
 
 **publication.md, new after R49:**
 
-> - **R50** — **CHANGE OF MEANING** (DEC-84 item 13). `caseTensions({project?, after, limit})` answers, for each case whose latest ratified edition is owned by `project` (every such case when absent), in case id order after `after`, at most `limit` (1–200, default 200), with `cursor`: the candidates `contradiction.unresolvedRecordOn` (its R29) answers over each member at its pinned sha that the edition did not disclose. Each carries the case, the edition, the member, the candidate and its state. A candidate the edition disclosed and that has since been resolved is answered as `resolved_since`. It is read as the plane, for `queue`. It writes nothing, never throws, and composes no strength (R26). The signed edition never changes (R24). A later edition discloses or resolves the tension. *(not yet met: N345)*
+> - **R50** — **CHANGE OF MEANING** (DEC-84 item 13). `caseTensions({project?, after, limit})` answers, for each case whose latest ratified edition is owned by `project` (every such case when absent), in case id order after `after`, at most `limit` (1–200, default 200), with `cursor`: the candidates `contradiction.unresolvedRecordOn` (its R29) answers over each member at its pinned sha that the edition did not disclose. Each carries the case, the edition, the member, the candidate and its state. A candidate the edition disclosed and that has since been resolved is answered as `resolved_since`. A candidate with a side the project's owners may not see is answered as `unresolvedRecordOn` answers it, `unseen_other_side: true` with nothing of that side (DEC-85). It is read as the plane, for `queue`. It writes nothing, never throws, and composes no strength (R26). The signed edition never changes (R24). A later edition discloses or resolves the tension. *(not yet met: N345)*
 
 **Uses** — **WORDING.** `contradiction` (new edge): `unresolvedRecordOn` (R50).
 
 **Interface tests:**
 - A `/5` document's section round-trips to `tensions`.
 - A `/4` answers null, with its sentence.
+- A disclosed tension with an unseen side reads `unseen_other_side: true` and counts in `highlighted`, and the document's bytes hold no id, text, source, project or member of that side (DEC-85).
 - A tension formed after ratification appears in R50 and leaves when a later edition discloses it.
 - The edition's bytes are unchanged.
 
@@ -603,6 +619,7 @@ Mark *(not yet met: N345)*.
 - DEC-76 item 4
 - DEC-84 items 11–13 ("discloses, never blocks")
 - DEC-77 item 2 (the attributed tension sentence)
+- DEC-85 (the highlight)
 - the design's §10
 
 ---
@@ -623,35 +640,48 @@ Mark *(not yet met: N345)*.
 >   - **The read.** After R12 and before anything is written, it reads `contradiction.unresolvedRecordOn({finding, sha, viewer})` for each member at the bytes this act pins (R13).
 >   - **Refusals.**
 >     - A read that fails, or is `truncated`, is `TENSIONS_UNDETERMINED` (C-120.3), because what cannot be read cannot be disclosed (R26).
->     - Any candidate it answers that the list does not name is `TENSION_NOT_DISCLOSED` (C-120.1), naming each one. A side the owner may not see is named as "a side you may not see".
+>     - Any candidate it answers that the list does not name is `TENSION_NOT_DISCLOSED` (C-120.1), naming each one. One with a side the owner may not see is named by its candidate and its finding, with the words "in conflict with a record not shown", and nothing of that side (R33).
 >     - A listed candidate the read does not answer is `DISCLOSURE_NOT_STANDING` (C-120.2).
 >
 >     The case is never refused because a contradiction exists (DEC-76 item 4).
->   - **The section.** Otherwise the document's tension section lists each one: the finding, both sides verbatim with source, date and doctype (a hidden side as "a side the publisher may not see", nothing more), its state, the explanation, the owner's words marked as the owner's, `acknowledged_by` (the `author` stamp) and the instant, and the sentence that the disclosure reaches one level (DEC-84 item 12).
+>   - **The section.** Otherwise the document's tension section lists each one: the finding, both sides verbatim with source, date and doctype, its state, the explanation, the owner's words marked as the owner's, `acknowledged_by` (the `author` stamp) and the instant, and the sentence that the disclosure reaches one level (DEC-84 item 12).
 >   - **Each member's block.** It gains one sentence per tension on it, from fixed templates:
 >     - "In tension, not yet resolved: …";
 >     - "Explained, not yet shown: …";
->     - "Held irreconcilable by the group: …".
+>     - "Held irreconcilable by the group: …";
+>     - "Rests on a side in conflict with a record not shown: …".
 >
->     It names no member it may not name. It composes no strength (R24). *(not yet met: N345)*
+>     It names no member it may not name. It composes no strength (R24).
+>   - **The highlight** (**CHANGE OF MEANING**, DEC-85; replaces "a hidden side as 'a side the publisher may not see', nothing more"). A candidate `unresolvedRecordOn` answers `unseen_other_side: true` is **highlighted**. Its entry carries `unseen_other_side: true`, the seen side, its state, `acknowledged_by` and the instant, the owner's words, and the fixed sentence "This finding rests on a side in conflict with a record not shown here. The record and who holds it are not named." Its member's block carries the last template above, and not the state's own sentence. Nothing of the other side is written (R33). *(not yet met: N345)*
+
+**tensionsToDisclose({project, targets|target, viewer, author})** (`op=publishtensions`)
+
+> - **R32** — **CHANGE OF MEANING** (DEC-85: the ceremony tells the publisher before the act). The read the ceremony shows before `op=publish`.
+>   - **Refusals.** R2's authority refusals and R4's per-member refusals, each in its order. Then R31's `TENSIONS_UNDETERMINED` (C-120.3), when a read fails or is truncated.
+>   - **The answer.** Each candidate R31 would require the act to disclose, read exactly as R31 reads it (the same `unresolvedRecordOn`, the same viewer, each member at its current bytes). A highlighted one (R31) carries the sentence the ceremony shows before the act: "A finding in this case rests on something in conflict with a record you cannot see. You can still publish. The published case will highlight that this finding rests on a side in conflict with a record not shown, and will not name that record or who holds it." The answer counts `highlighted`, and states that publishing discloses and is never blocked by a conflict (DEC-76 item 4).
+>   - It writes nothing and never throws. Where it sits among the ceremony's steps is N345's DEC-80 part. *(not yet met: N345)*
+>
+> - **R33** — **CHANGE OF MEANING** (DEC-85). No case document this module writes, and no answer it gives, names the project, members, content, kind or source of a side the publisher could not see at the act. A reveal (`contradiction` R52) never widens what a case names: sight at the act, by `membership` R43, governs. *(not yet met: N345)*
 
 **R22, R25** — unchanged (the acknowledgement is the `author` stamp; the section is read from the record).
 
-**R29** — **WORDING.** Gains C-120.1–C-120.3.
+**R29** — **WORDING.** Gains C-120.1–C-120.3. C-120.1's translation gains its DEC-85 sentence (**WORDING**, carrying R31's highlight).
 
-**Uses** — **WORDING.** `contradiction` (new edge): `unresolvedRecordOn` (its R29). `publication`: the `/5` predicate.
+**Uses** — **WORDING.** `contradiction` (new edge): `unresolvedRecordOn` (its R29), for R31 and R32. `publication`: the `/5` predicate.
 
 **Rows** (a new family, C-120, "a case's disclosures", held in this module's table; BOB assigns it as the next free family. N345's DEC-81 part may take its next numbers):
 
 | row | code | translation |
 |---|---|---|
-| C-120.1 | `TENSION_NOT_DISCLOSED` | "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. Disclose it, or resolve it first. Nothing was published." |
+| C-120.1 | `TENSION_NOT_DISCLOSED` | "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published." |
 | C-120.2 | `DISCLOSURE_NOT_STANDING` | "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published." |
 | C-120.3 | `TENSIONS_UNDETERMINED` | "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published." |
 
 **Interface tests:**
 - An undisclosed tension is refused, and a disclosed one publishes: disclose, never block.
-- A hidden side is named with no content.
+- DEC-85: a tension with a hidden side is named in C-120.1 by its finding only; once disclosed it publishes highlighted, and the document's bytes hold no id, text, kind, source, project or member of that side, nor its explanation.
+- DEC-85: R32 answers the same candidates R31 then requires, with the highlight sentence for the hidden one, and writes nothing; its refusals get negative controls.
+- DEC-85: a publisher whose project was revealed to the hidden party (contradiction R52) still publishes the side as not shown (R33).
 - An `irreconcilable` conclusion must be disclosed.
 - A resolved candidate listed gets C-120.2.
 - R18's rollback arm is kept.
@@ -660,9 +690,10 @@ Mark *(not yet met: N345)*.
 - DEC-76 item 4
 - DEC-84 items 11–13
 - `BIO_Publication_v0_1.md` §3 rule 16 (what the case states about itself)
+- DEC-85 (the highlight, and the ceremony told before the act)
 - the design's §10
 
-**Not here.** Where this sits in DEC-80's ceremony (step three, "what you are leaving out") is N345's DEC-80 part. R31 is its `op=publish` half.
+**Not here.** Where this sits in DEC-80's ceremony (step three, "what you are leaving out") is N345's DEC-80 part. R31 is its `op=publish` half, and R32 the read its screen shows.
 
 ---
 
@@ -727,12 +758,14 @@ Mark *(not yet met: N345)*.
 
 - **R1.** `ACTS`' `single` list gains `contradictionresolve`.
 - **R2.** `RUNGS`' `reasoned` gains `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve` and `resolutiondefect`. Each asks a reason, or a question or conclusion, and is corrected forward, as R27 says.
-- **R3.** `RUNG_ABSENT` gains `contradictionrecommend`, ground `undetermined`, on `contradictionpropose`'s reasoning: a run proposes, and it is machine work.
+- **R3.** `RUNG_ABSENT` gains `contradictionrecommend`, ground `undetermined`, on `contradictionpropose`'s reasoning: a run proposes, and it is machine work. It also gains `contradictionoptin` and `contradictionrespond` (DEC-85), ground `undetermined`, on R27's rule: neither asks an authored reason, and no published act takes either back (an opt-in is never withdrawn, and a response is relayed as written).
 - **R7.** `MACHINE_REFUSALS` gains `contradictionresolve` → `MACHINE_CANNOT_ACT_ON_CANDIDATE`. `NON_ACTS` gains:
   - `contradictiondismiss`, `contradictionclarify` and `contradictiontakeup`: "candidate-directed: keyed by a candidate, reached where its sides are shown";
   - `contradictionrecommend`: run-directed;
   - `resolutiondefect`: "registry correction, keyed by a resolution";
-  - the four reads `contradictioncandidates`, `contradictiontensions`, `contradictionfacts` and `contradictionmeasures`: "read: …".
+  - the four reads `contradictioncandidates`, `contradictiontensions`, `contradictionfacts` and `contradictionmeasures`: "read: …";
+  - `contradictionoptin` and `contradictionrespond` (DEC-85): "conflict-directed: keyed by a candidate and the member's project, reached from the conflict's notice";
+  - the reads `contradictionnotices`, `contradictionresponses` and `publishtensions` (DEC-85): "read: …".
 - **R8.** `conclude` is withheld on an inquiry whose `contradiction_inquiry` is true. `contradictionresolve` is offered exactly where `conclude` would be on such an inquiry. This keeps R18 true under inquiry R47.
 - **R14.** Facts gain `contradiction_inquiry`: true when the document carries `contradiction`, false otherwise, null for a type that is not an inquiry. It is read from the front matter.
 - **R4.** `VOCABULARIES` gains `contradiction_coordinates`, `plurality_differences`, `resolution_kinds`, `norm_canons` and `dismissal_reasons`, each the enforcing module's object (inquiry R46; contradiction R31).
@@ -740,20 +773,21 @@ Mark *(not yet met: N345)*.
 
 **Tests:**
 - R8–R10's table gains the contradiction-inquiry rows.
-- R12's totality with the ten new ops.
+- R12's totality with the fifteen new ops (the ten, and DEC-85's `contradictionnotices`, `contradictionoptin`, `contradictionrespond`, `contradictionresponses` and `publishtensions`).
 - R20 for `contradictionresolve`.
 
 ---
 
 ## 9. queue (layer 11)
 
-**R1** — **CHANGE OF MEANING.** `OBLIGATION` gains `contradiction-duty` ("a conflict the record holds that a member of this project must resolve"). `FINDING` gains:
+**R1** — **CHANGE OF MEANING.** `OBLIGATION` gains `contradiction-duty` ("a conflict the record holds that a member of this project must resolve") and, for DEC-85, `contradiction-duty-unseen` ("something this project rests on is in conflict with a record you cannot see; your project can ask to resolve it"). `FINDING` gains:
+- `contradiction-plurality-unseen` (DEC-85: this project's conclusion may not hold together with a conclusion you cannot see);
 - `contradiction-lead` (a lead the record noticed);
 - `contradiction-plurality` (two projects' conclusions that may not both hold);
 - `side-corrected` (something a finding rests on was marked wrong);
 - `tension-after-publication` (a published case's finding rests on a conflict found since).
 
-**queue.md, new after R42** (under "Contradictions", N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13):
+**queue.md, new after R42** (under "Contradictions", N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85):
 
 > - **R43** — **CHANGE OF MEANING.** For each project the member has joined, at most 50 in id order (every visible project when there is no member), with the bound published beside `contradiction_projects_truncated`: one item per candidate `contradiction.candidatesFor({on: {project}})` answers (its R25), keyed `<CLASS>::contradiction::<candidate>` and counted once whatever number of projects it reaches:
 >   - `duty` → `contradiction-duty`, `open`, `taken_up` or `explained_not_shown`;
@@ -769,13 +803,26 @@ Mark *(not yet met: N345)*.
 >   - **`contradiction-plurality`**: `available: false` for R27's set-aside, `acts: [contradictionclarify, contradictiontakeup]`. A named difference clears it; a set-aside would not (DEC-84 item 3).
 >   - **`side-corrected`**: R12's project-scoped disposition, with `acts: [reevaluationrecord]`.
 >   - **`tension-after-publication`**: `available: false`, `instead: publish`.
+>   - **`contradiction-duty-unseen`** (DEC-85): `available: false`, `instead: [contradictionoptin]` until the member's project has opted in, then `[contradictionrespond]`. As an OBLIGATION it is never muted (R19, R31).
+>   - **`contradiction-plurality-unseen`** (DEC-85): `available: false` for R27's set-aside, with the same acts as the duty above.
+>   - **Between projects** (DEC-85): a `contradiction-duty` or `contradiction-plurality` item whose candidate is a conflict between projects also offers `contradictionoptin` while a party project of the member's has not opted in, and `contradictionrespond` once one has.
 >
 >   *(not yet met: N345)*
+> - **R47** — **CHANGE OF MEANING** (DEC-85, K456). **The notice and the relay.**
+>   - **The items.** For each project the member has joined (R43's projects and bound), one item per notice `contradiction.conflictNotices({project})` answers (its R50):
+>     - weight `duty` → `contradiction-duty-unseen`;
+>     - weight `plurality` → `contradiction-plurality-unseen`.
+>
+>     Each is keyed `<CLASS>::contradiction-unseen::<candidate>` and counted once, whatever number of the member's projects it reaches.
+>   - **Its home.** The item's only subject is the side the member may see, so R7 walks its homes from that side alone and never reaches the other.
+>   - **Its detail.** The notice's fixed sentence; `asked_by_another`; each of the member's party projects with its opt-in; once revealed, the parties' names; and the relay, `responses` (contradiction R54). The relay is the next notification this project's members receive. Each response carries only what its responder chose to share: the text, and the cover or email address when given, with the responder's project. Never a handle or member id.
+>   - **What it withholds.** Everything R50 withholds. No count, bound or `truncated` flag in the feed reveals the other side or the number of parties (R33).
+>   - **When it leaves.** When the notice leaves R50: the candidate is resolved or dismissed, or the member comes to see both sides (then R43's item answers it). *(not yet met: N345)*
 
 **R11** — **WORDING.** Unchanged. The new kinds are catalogued by R1, so the mint holds.
 
 **Uses** — **WORDING.**
-- `contradiction` (new edge): `candidatesFor`.
+- `contradiction` (new edge): `candidatesFor`, and `conflictNotices` (R47).
 - `reevaluation`: `correctedDependents`.
 - `publication`: `caseTensions`.
 - `membership`: `projectOwners`, the joined projects.
@@ -787,8 +834,10 @@ Mark *(not yet met: N345)*.
 - A plurality mark has no set-aside.
 - A hidden side yields no item and no count (R33).
 - An owner and a non-owner for `tension-after-publication`.
+- DEC-85: two projects, each hidden from the other, on the two sides of one duty. Each member gets one `contradiction-duty-unseen` item homed on their own side only, which cannot be muted. No item, home, count or `truncated` flag names the other side (R33). After one opts in, the other's item reads `asked_by_another`. After both opt in, the parties' names appear. A response's chosen parts appear in the other project's next item, and never the responder's handle.
+- DEC-85: a plurality between hidden projects gives `contradiction-plurality-unseen`, with no set-aside.
 
-**Satisfies** — gains DEC-76 item 3, DEC-84 items 1–3, 7 and 13, and the design's §4.
+**Satisfies** — gains DEC-76 item 3, DEC-84 items 1–3, 7 and 13, DEC-85 with K456 (R47, R46's DEC-85 parts), and the design's §4.
 
 ---
 
@@ -824,15 +873,22 @@ No change. `resolve` concludes through `conclude` without a project (R16–R19),
     - inquiry opens its own `checks.mjs` at C-2.11.
     - case-authoring takes C-120, a new family.
     - Bounds: pages of 50 or 200; 200 referents; 32 projects per inquiry; 50 projects per member; text caps as in R30.
+14. **DEC-85: who is a party.** A conflict's parties are R24's reach per side (32 per side), so the projects notified are exactly those the duty reaches. A truncated side makes the reveal undetermined rather than guessed.
+15. **DEC-85: which conflicts.** Only `duty` and `plurality` weights, open, explained or taken up, are conflicts between projects. A lead with an unseen side gives no notice: the machine's uncertainty creates no obligation (DEC-84 item 1), and telling of it would reveal that a hidden record exists on a machine's guess.
+16. **DEC-85: what a notice carries.** The candidate id (a digest, which reveals nothing), the seen side, the weight and the state. The key and its pairing sentence, the label's reason and any explanation are withheld, since each may describe the other side. `asked_by_another` is a boolean, never a count or a name.
+17. **DEC-85: the opt-in** is taken for the project by any joined participant, is never withdrawn (the others cannot be untold), and is recorded in `contradiction_optins`. It is graded `RUNG_ABSENT`, `undetermined`, by affordances R27, as is the response.
+18. **DEC-85: the reveal** is recorded by the act that completes the set of opt-ins, as a `revealed` row, inside one transaction, so that a later party does not un-reveal it. A later party joins the revealed set when it opts in. The reveal names the projects (id and name) and nothing else: not their members or their sides. It never widens R10, R30 or a publication: under K456 each project says, in its responses, what it chooses to.
+19. **DEC-85 and K456: responses.** A response is held by `contradiction` (`contradiction_responses`, append-only), may be written once the member's own project has opted in, and is relayed only after the reveal, as its text, its chosen disclosures, its project and its instant. The relay in a notice is the other parties' responses since the project's own latest one, at most 20. The read `conflictResponses` pages the whole history by 50. Text is capped at 2,000 characters. `queue` carries the relay in its items, and holds no copy.
+20. **DEC-85 and K456: disclosures.** `cover: true` is filled from the author's own record (membership R68), and a cover string must equal it. The plane holds no email address, so an email is recorded as "stated, not verified". It is refused only when another member has already disclosed it as theirs. Handle and member id are never relayed.
+21. **DEC-85: the highlight.** `unresolvedRecordOn` answers `unseen_other_side: true` with the seen side only, and withholds the explanation and the inquiry too. The case document states the fixed highlight sentence and a fifth member-block template, and `publishedCase` counts `highlighted`. Sight at the act, never a reveal, decides what is unseen (case-authoring R33).
+22. **DEC-85: the ceremony's read** is case-authoring's `tensionsToDisclose` (`op=publishtensions`), the same read R31 makes, with the sentence shown before the act. Its step in the ceremony is N345's DEC-80 part.
+23. **Numbers (DEC-85).** contradiction R49–R55 and C-93.34–C-93.39; case-authoring R32, R33 (C-120 unchanged; DEC-81's part keeps C-120.4 onward); queue R47; no new row in C-60, publication or queue. R50's refusals reuse membership's three answers (R77, R78, R87).
 
 ## Did not reconcile, or needs Bob's eye
 
-- **Sight against disclosure.**
-  - The design §4 says a candidate never reveals that a hidden project holds a conflicting claim.
-  - §10 (kept here) discloses "a side the publisher may not see" in the published case, which states that such a side exists.
-  - A joined member who may not see the other side gets no duty item.
-
-  Both follow the design as reviewed (K447). Bob may want to confirm that a published disclosure may state that an unseen side exists.
+- **Sight against disclosure: answered by Bob as DEC-85, with K456,** and folded here (contradiction R49–R55, R29; publication R10; case-authoring R31–R33; queue R46, R47).
+- **Email addresses (K456).** Membership holds no email address, so the plane cannot tell whether an address given is the responder's own. It refuses only one that another member has already disclosed as theirs, and marks every address "stated, not verified". Nor can it stop a member typing someone else's details into a response's text. Bob may want an email held per member, so that an address can be checked.
+- **What the reveal shows (DEC-85).** Drafted per BOB's reading: the reveal names the projects to each other's members, and nothing else. Each side stays unseen, and responses carry what each responder writes. So a conflict that no member can see whole stays a duty until members arrange sight between them (an invitation, for instance). Bob may want the reveal to show each side's text as well.
 - **Design §15.3 versus DEC-84 item 3.** DEC-84 item 3 revises §15.3's recommendation (no mark on two projects' conclusions), so the design's §5 and §14 do not carry K5. This draft adds K5 (decided above). The design document should be amended to match.
 - **Design §15.10 versus DEC-84 item 10.** §15.10 put an evidenced-or-hypothesis Cause on the determination. DEC-84 keeps a hypothesis off it. Drafted per DEC-84.
 
@@ -842,18 +898,18 @@ No change. `resolve` concludes through `conclude` without a project (R16–R19),
 
 | layer | module | what |
 |---|---|---|
-| 2 | promotion | stamps the rows: C-2.11–C-2.17, C-60.2–.3, C-93.8–.33, C-91.7, C-113.24–.27, C-120.1–.3 (K425) |
+| 2 | promotion | stamps the rows: C-2.11–C-2.17, C-60.2–.3, C-93.8–.39, C-91.7, C-113.24–.27, C-120.1–.3 (K425) |
 | 5 | entities | R38; `resolution_defects`; C-91.7; R14, R15, R30 wording |
 | 6 | inquiry | R46–R48; R11, R12 amended; the new `checks.mjs` |
-| 6 | contradiction | R24–R48; K5 (R5, R7, R8, R10, R11, R14); R12, R19, R20; the two tables; the promotion check; the K5 gate arm and the recommender fixture, recorded in `MEASUREMENTS.md` |
+| 6 | contradiction | R24–R55; K5 (R5, R7, R8, R10, R11, R14); R12, R19, R20; the four tables (`contradiction_acts`, `contradiction_recommendations`, `contradiction_optins`, `contradiction_responses`); the promotion check; the K5 gate arm and the recommender fixture, recorded in `MEASUREMENTS.md`; DEC-85's notices, opt-in, reveal and responses (R49–R55) with the two-hidden-projects fixture |
 | 6 | skills | packages `RECOMMEND_PROMPT` into the skill pack; agent-worker's bundle regenerated at the close |
 | 7 | reevaluation | R27; R2 |
-| 8 | publication | R20 (`/5`), R10, R50 |
-| 8 | case-authoring | R14 (`/5`), R31; C-120 |
+| 8 | publication | R20 (`/5`), R10 (with the highlight), R50 |
+| 8 | case-authoring | R14 (`/5`), R31 (with the highlight), R32 (`op=publishtensions`), R33; C-120 |
 | 9 | conformance | R12, R21, R22, R9, R1; C-113.24–.27 |
 | 11 | affordances | R1–R4, R7, R8, R14 |
-| 11 | queue | R1, R43–R46 |
-| 11 | control-plane | routes, `NEEDS` rows and stamps for the ten new ops (no requirement text beyond its routing rule) |
+| 11 | queue | R1, R43–R47 |
+| 11 | control-plane | routes, `NEEDS` rows and stamps for the fifteen new ops (no requirement text beyond its routing rule) |
 | — | `build/modules.json` | the six new edges listed at the top (BOB, with the fold) |
 | last | legacy-tests | re-anchors any suite that reads `bio-case-document/4` as current, or the affordances totality |
 
@@ -863,10 +919,12 @@ What changes in meaning, one line per module:
 
 - **entities:** a member can report that the record matched the wrong subject. The report is kept and shown, and changes nothing by itself.
 - **inquiry:** a question taken up from a contradiction must, when concluded, say what the conflict turned out to be (differ, wrong side, or genuine), in fixed words.
-- **contradiction:** contradictions are now shown to members who can see both sides. A record conflict is a duty on every project using either side, until someone resolves it. A world lead can be dismissed with one of three reasons. Members resolve inline or by taking the conflict up as a question. The machine may only suggest in which respects the two sides differ, and accepting a suggestion is recorded as such and measured. Two projects' conclusions that cannot both hold now get a mark (a new pairing), which a named difference clears.
+- **contradiction:** contradictions are now shown to members who can see both sides. When the other side is in a project you cannot see, your project is told only about its own side: never the other record, its project or its people. Your project can tick "we would like to resolve this", and the other project learns only that someone asked. Once every project involved has ticked, the projects' names are shown to each other's members, and members can respond. A response reaches the other project in its next notice, with your cover or an email address only if you choose to add them. A record conflict is a duty on every project using either side, until someone resolves it. A world lead can be dismissed with one of three reasons. Members resolve inline or by taking the conflict up as a question. The machine may only suggest in which respects the two sides differ, and accepting a suggestion is recorded as such and measured. Two projects' conclusions that cannot both hold now get a mark (a new pairing), which a named difference clears.
 - **reevaluation:** when a side is marked wrong, every finding resting on it is told. Nothing changes by itself.
-- **publication:** the published case now carries a "tensions disclosed" section. A tension found after publishing is reported to the owning project, and the signed edition is never changed.
-- **case-authoring:** publishing is refused only when an unresolved record conflict on the case is not disclosed. Once disclosed, it publishes. Disclosure is the owner's attributed act.
+- **publication:** the published case now carries a "tensions disclosed" section. A conflict with a record the publisher cannot see is highlighted as resting on a side in conflict with a record not shown, without naming that record or who holds it. A tension found after publishing is reported to the owning project, and the signed edition is never changed.
+- **case-authoring:** publishing is refused only when an unresolved record conflict on the case is not disclosed. Once disclosed, it publishes. Disclosure is the owner's attributed act. Before publishing, the ceremony tells the publisher when a conflict is with a record they cannot see, and that the case will highlight it.
 - **conformance:** a comparison can start from a contradiction, with its facts filled in and never its outcome. A cause is recorded only when evidenced, otherwise "cause not established". A determination may not hold a recommendation. It states when its standards disagree.
-- **queue:** new items: the conflict duty (cannot be muted), leads, two-project marks, "something you rest on was corrected", and, for case owners, "a conflict found since publishing".
-- **affordances:** no change of meaning. The new acts get their rungs, and "conclude" gives way to "resolve" on a contradiction question.
+- **queue:** new items: the conflict duty (cannot be muted), leads, two-project marks, "something you rest on was corrected", and, for case owners, "a conflict found since publishing". Also "in conflict with a record you cannot see". It carries the tick box and, after everyone has ticked, the other projects' responses.
+- **affordances:** no change of meaning. The new acts get their rungs, including the tick box and the response, and "conclude" gives way to "resolve" on a contradiction question.
+
+Two things to confirm (see "needs Bob's eye"): the app holds no email addresses, so it cannot check that an address given in a response is the responder's own; and once every project has ticked, the projects see each other's names but not each other's records.
