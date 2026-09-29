@@ -151,7 +151,7 @@ Each: what it is, and how the plan handles it.
 
 Replaced at each handoff; the progress log (§4) is the history.
 
-**Where things stand.** **T12 is closed** (K423): `main` @ 96816e0425 = `tranche/T12`, plan at `build/plan/archive/T12.md`. No tranche is open; no job runs; no backstop or `WATCH` is armed. Bob was told T12 closed and asked his weekly meter (not given yet).
+**Where things stand.** **T12 is closed** (K423): `main` @ 96816e0425 = `tranche/T12`, plan at `build/plan/archive/T12.md`. No tranche is open; no job runs; no backstop or `WATCH` is armed. Bob was told T12 closed; his weekly meter read 18% at the close (recorded in `archive/T12.md`).
 
 **Your first work:** take over (§2: depth, then `mail bob` needs an open plan, so write your Status line when you open T13); archive BOB #64 (`session_012drYcRAafNiFuVrqygtTWy`) once idle and write its `BOB-final` row under `build/metrics/T12.csv`. Then **open T13** from `build/plan/draft-T13.md`:
 1. Re-read the draft against T12's close (K170): its "Re-opened by verification (K411)" list, and N325–N340 raised since the cut, each placed or left.
