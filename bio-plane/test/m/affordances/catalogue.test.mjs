@@ -399,3 +399,20 @@ test("R3 R7 R12: layer 9's 22 mutating ops each carry a NON_ACTS reason and thei
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => mutating.includes(op) || LAYER9_READS.includes(op)), []);
 });
+
+/* N321 (T13, K424): `op=projectstage` (publication R44) is a read stamping `viewer`, carried as every project read is:
+   not mutating and with no `NEEDS` row, `op=profiles`' precedent (K416). So it takes no rung (R3 grades the ops that
+   write) and no `NON_ACTS` row (a row for an ungated op reads `stale`, R12), and no registry names it. */
+test("R3 R7 R12: op=projectstage, an ungated read, is named in no registry, and a table carrying it as one leaves "
+   + "nothing unaccounted; carried as mutating or gated, it would be named", () => {
+  const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
+    || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
+  assert.equal(named("projectstage"), false);
+  const row = { op: "projectstage", mutating: false, gated: false };
+  assert.deepEqual(A.unaccounted([row]), A.unaccounted([]));
+  const base = A.unaccounted([]);
+  const r = A.unaccounted([{ ...row, gated: true }]);
+  assert.deepEqual(r.unpublished, ["projectstage"]);
+  assert.deepEqual(A.unaccounted([{ ...row, mutating: true }]).unranked, ["projectstage"]);
+  assert.deepEqual(r.stale, base.stale);
+});
