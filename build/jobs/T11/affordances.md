@@ -39,3 +39,7 @@ Merged `tranche/T11` (legacy-index landed). `monitorpause` (monitoring R30) adde
 - format, architecture, coverage (27/27), ownership (2 files; legacy-store 0/0, legacy-index 0/0): 0 failures.
 
 Size (session_01B7kiVs24JbVTE4P4CTC88x): test runs 10, module lines 2717
+
+## J3 · COMPLETE · re B3
+
+B2/B3 applied on tranche/T11 merged: monitorpause in NON_ACTS (your reason) and RUNG_ABSENT under `credential`, governorconfig's ground. Module tests 74/0/1 todo; queue 10/0; legacy affordances.test passes; rung-ladder FORWARD and count (169) pass. One rung-ladder FAIL remains, the escalationresume way-back arm, present identically without my change (stash-checked): not mine. Checks 0 failures. R26 noted as N65.
