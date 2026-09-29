@@ -2,6 +2,35 @@
 
 **Status** · session_012x3jt5MEsquz9cY3RyQESF · depth 2 · WORKING · handled B0
 
+## Completion
+
+**Applied** (N30, on `tranche/T13` at ff11386715):
+- **R45**: `ODF_REPEAT_EXPANSION_MAX` = 262,144 is exported. Each `structure()`/`text()` is one `content.xml` read on its own meter, and every expansion is paid for before it is made: one unit per cell given at an address (column repeat × row repeat), per hidden row range, and per `text:c` space each time its text is given. The read that would cross the bound stops, and the entry answers as over the size guard with the marker `{text, why:"over_repeat_bound", units, bound, boundName:"ODF_REPEAT_EXPANSION_MAX", metric:"expanded_repeat_units"}`, `units` one past the bound. The same shapes apply as for the guard (R10, R13, R20, R27): `evidentiary.undetermined` carries `{part:"content.xml", why:"over_repeat_bound", guard:<marker>}`, and the notes name the bound. `meta.xml`, the manifest's `intra` links and `images` are still answered, and `odfEvidentiaryDigest` is unchanged.
+- **J2, built on my best reading pending BOB's answer:** a link at a repeated address after its cell's first costs one unit, and a repeated cell's text copied at each address after its first counts its characters against `MEASURED_OOXML_TEXT_BOUND_BYTES`. Past that, the marker is the same with `boundName:"MEASURED_OOXML_TEXT_BOUND_BYTES", metric:"repeated_text_chars"`. Without these, 27 copies of a 20 MB cell ended in `RangeError` and a many-link cell repeated could exhaust the heap. If BOB rules otherwise, a `CHANGE` brings it in line (the code is `spend`/`spendChars` in `walkSheet`).
+- **R16**: hidden rows are `{min, max, visibility}` ranges, one per `<table:table-row>`, never expanded; `count` counts ranges. A collapsed run of a million empty rows is one range and one unit.
+- **R41**: R45's `over_repeat_bound` is a stated "not read" branch on all three entries, and is tested.
+
+**Improvements in my own module:**
+- `meta.xml` is expanded on its own meter. A hostile `meta.xml` (`text:c="2000000000"`) used to fail the whole package as `reader_failed`; it is now stated as `{part:"meta.xml", why:"over_repeat_bound"}` and `content.xml` still reads.
+- `structure()` no longer expands paragraph text (`.odt`) or shape text (`.odp`) it never emits. So each read pays for a space once, and `structure()` does less work.
+- `walkSheet` reads a carrying cell's text and links once per element, not once per repeated column.
+
+**Marks my work meets** (for BOB to strike): R16's `*(not yet met: N30)*`, R45's `*(not yet met: N30)*`, R41's `*(not yet met: N30)*`, and the status line's "N30 … not yet met". R45's wording would need J2's two additions if BOB takes them.
+
+**Deferred.** None.
+
+**Found in other modules (reported to BOB, J3):**
+- **legacy-tests**: `bio-plane/test/formats-odf.test.mjs:461` pins the old R16 shape (`rows: [3]`) and now fails 1 of 171 (it wants `["Appropriations",[3]]` and gets `[{"min":3,"max":3,"visibility":"collapse"}]`). It passes on `tranche/T13`. It needs re-anchoring to R16's ranges; it is legacy-tests' suite, not edited.
+- **Generated artifacts made stale** (not rebuilt): `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`, carries `src/odf.mjs`) and `agent-worker/dist/agent-worker.bundled.mjs` (its manifest lists `../bio-plane/src/odf.mjs`). The pdf-worker and ocr-worker bundles do not carry `odf.mjs`, so they are unaffected.
+
+**Tests and checks:**
+- `node --test test/m/odf-reader/` (from `bio-plane/`): 57 tests, 57 pass, 0 fail. The new suite is `repeats.test.mjs` (R45 at the bound: 262,144 columns read and 262,145 refused; 512×512 against 512×513; `text:c="2000000000"` on all three entries; a hidden run as one range and one unit; spaces, link copies and copied text each at their bound; outside content.xml still answered). R16 and R41 are extended, and R43's export list gains `ODF_REPEAT_EXPANSION_MAX`.
+- Users of the module: `node --test test/m/format-registry/ test/m/capture/`: 97 tests, 97 pass, 0 fail.
+- Legacy `node test/formats-odf.test.mjs`: 170 pass, 1 fail (above); 171 pass on the base.
+- `node checks/format.mjs`: 69 modules, 64 requirements files, 0 failures. `architecture.mjs … odf-reader`: 9 product files, 34 relative imports, 0 failures. `coverage.mjs … odf-reader`: 45 of 45 live requirement ids named by a test, 0 failures. `ownership.mjs … odf-reader tranche/T13`: 5 files changed, 0 failures.
+
+Size (session_012x3jt5MEsquz9cY3RyQESF): test runs 11, module lines 2258
+
 ## J1 · QUESTION
 
 R45 bounds units (cells given at addresses, hidden row ranges, `text:c` spaces), and also says the reader "never ends in `reader_failed` for a repeat's size". Those two clauses conflict for one case: a repeated cell's own TEXT is copied into the output at every address, and that copy costs no unit as worded. A cell holding 20,000,000 literal characters (inside the 20 MiB bound), repeated across 27 columns, is 27 units, but `text()` joins 540 million characters and V8 throws `RangeError` (its string limit is about 2^29). That ends in `reader_failed`. A 1,000-character cell repeated 262,144 times (262,144 units, allowed) costs 262 MB of text.
