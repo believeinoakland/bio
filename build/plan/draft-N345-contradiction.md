@@ -1,6 +1,6 @@
 # N345 (contradiction): requirement changes for Bob's approval (a worker for BOB #66, 2026-09-29)
 
-**Status** · APPROVED by Bob 2026-09-29 (K455), with DEC-85 (a conflict with a side the member cannot see) to be folded into this draft before a tranche carries it.
+**Status** · APPROVED by Bob 2026-09-29 (K455), with DEC-85 (a conflict with a side the member cannot see) to be folded into this draft before a tranche carries it. DEC-85 folded by a worker for BOB #66, 2026-09-29, as Bob clarified it (K456: no discussion thread; responses to the notices, relayed after mutual opt-in): contradiction R10, R19, R25, R27, R29, R42, R47 and new R49–R55 (C-93.34–C-93.39); publication R10, R50; case-authoring R31, C-120.1 and new R32, R33; affordances R3, R7; queue R1, R46 and new R47. Every DEC-85 item is marked CHANGE OF MEANING (approved by Bob as DEC-85) or WORDING.
 
 **Status** · DRAFT, not folded. Read on `tranche/T13` @ f77ec838e9 (= `main`). Scope: the contradiction PRESENT and RESOLVE part of N345 only. N345's DEC-78 (capture, a source's disclosure history), DEC-80 (the ceremony) and DEC-81 (grade disclosure) parts are drafted separately.
 
@@ -19,13 +19,13 @@
 |---|---|---|---|
 | entities | R38 | R38 | C-91.7 |
 | inquiry | R46 | R46–R48 | C-2.11–C-2.17 (a new `src/inquiry/checks.mjs`) |
-| contradiction | R24 | R24–R48 | C-60.2, C-60.3; C-93.8–C-93.33 |
+| contradiction | R24 | R24–R55 | C-60.2, C-60.3; C-93.8–C-93.39 |
 | reevaluation | R27 | R27 | none |
 | publication | R50 (R48 is N339's, R49 N346's) | R50 | none |
-| case-authoring | R31 | R31 | C-120.1–C-120.3 (a new family, K343's pattern) |
+| case-authoring | R31 | R31–R33 | C-120.1–C-120.3 (a new family, K343's pattern) |
 | conformance | R21 | R21, R22 | C-113.24–C-113.27 |
 | affordances | R28 | none (amendments only) | none |
-| queue | R43 (R41 is N325's, R42 N342's) | R43–R46 | none |
+| queue | R43 (R41 is N325's, R42 N342's) | R43–R47 | none |
 | basis-versions | not needed | none | none |
 
 **New `uses` edges** (each to an earlier module; `modules.json` amended in the same change):
@@ -158,17 +158,21 @@ Mark *(not yet met: N345)*.
 
 ### Status and Purpose — CHANGE OF MEANING
 
-**Status line.** Append: "N345 (PRESENT and RESOLVE; DEC-76, DEC-77, DEC-84) adds R24–R48 and amends R5, R7, R8, R11, R12, R14, R19, R20."
+**Status line.** Append: "N345 (PRESENT and RESOLVE; DEC-76, DEC-77, DEC-84, DEC-85) adds R24–R55 and amends R5, R7, R8, R10, R11, R12, R14, R19, R20."
 
 **Purpose.** Replace its last sentence ("It never judges … are not designed).") with:
 
 > PRESENT and RESOLVE are held here too. A candidate is shown to a member who may see both of its sides, at the weight its label and key give it. A member's attributed act says what the conflict turned out to be: inline, or by taking it up as a contradiction inquiry whose conclusion records its kind. The machine may recommend only in which respects the sides may differ. Nothing here edits a side. What an act implies (a qualifier, a stale mark, a tension) is read, never written onto the side.
+>
+> A conflict between projects whose other side a member may not see is told to that member's project on its own side only, never naming the other side or who holds it. Each project may ask to resolve it. When every project holding a side has asked, the projects are named to each other's members, and each project's members may respond; a response reaches the other projects carrying only what its responder chose to share (DEC-85, K456).
+
+(The added paragraph is **CHANGE OF MEANING**, DEC-85.)
 
 ### Terms — WORDING
 
 Append:
 
-> A **weight** is `lead`, `duty`, `plurality` or `not_shown` (R24). A candidate's **state** is `open`, `dismissed`, `explained_not_shown`, `taken_up` or `resolved` (R26). A **mark** is one of R27's. **Coordinates**, **kinds** and **canons** are `inquiry`'s vocabularies (its R46). An **acceptance basis** is R30's.
+> A **weight** is `lead`, `duty`, `plurality` or `not_shown` (R24). A candidate's **state** is `open`, `dismissed`, `explained_not_shown`, `taken_up` or `resolved` (R26). A **mark** is one of R27's. **Coordinates**, **kinds** and **canons** are `inquiry`'s vocabularies (its R46). An **acceptance basis** is R30's. A candidate's **parties**, a **conflict between projects**, and a viewer who **sees it half** are R49's. A **notice** is R50's, an **opt-in** R51's, the **reveal** R52's, and a **response** and its **relay** R53's and R54's.
 
 ### The fifth key: two projects' conclusions (DEC-84 item 3) — CHANGE OF MEANING
 
@@ -196,7 +200,11 @@ The judgement over K5 pairs uses R2's pinned prompt unchanged. R3 renders a stan
 
 **R19** — **CHANGE OF MEANING.** Replaced by:
 
-> - **R19** No act here edits, grades or deletes a side, and no act but a member's (R31–R36) says what a candidate turned out to be. A candidate is shown to a member only by R25–R29, only to a viewer who may see both of its sides now (R10), and only at a weight R24 gives it. *(not yet met: N345)*
+> - **R19** No act here edits, grades or deletes a side, and no act but a member's (R31–R36) says what a candidate turned out to be. A candidate is shown to a member only by R25–R29, only to a viewer who may see both of its sides now (R10), and only at a weight R24 gives it. A conflict between projects that a viewer sees half is told to them only by R50's notice and R27's `unseen_conflict` mark, on their own side, and only when they are a joined participant of a party reached through that side (R49–R55; DEC-85). *(not yet met: N345)*
+
+(The last sentence is **CHANGE OF MEANING**, DEC-85.)
+
+**R10** — **WORDING.** Gains: "A reveal (R52) never widens this rule: a side a viewer may not see stays unseen by them after it."
 
 **R20** — **WORDING.** Gains C-60.2, C-60.3 and C-93.8–C-93.33.
 
