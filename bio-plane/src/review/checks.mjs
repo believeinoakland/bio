@@ -1,13 +1,14 @@
-/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23). DEC-49: every refusal
+/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23, R27). DEC-49: every refusal
  * this module answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R23): C-87.1–C-87.11
  * (`REVIEW_COPY_CHECKS`) and C-32.16 (`MACHINE_CANNOT_REVIEW`, split from `MACHINE_FENCE_CHECKS` by number, as strength
- * took C-32.9). Only each `where` moved, to name the region in this module where the refusal is minted. */
+ * took C-32.9). Only each `where` moved, to name the region in this module where the refusal is minted. C-87.12
+ * (`MINT_EXHAUSTED`, R27) was added here, in this module's own table (N306, K231, K392). */
 
 const at = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
 
-/* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS,
+/* D-448 / C-87 (minted with `node tools/mintid.mjs C`, 2026-09-24) — THE REVIEW COPY'S ELEVEN REFUSALS (a twelfth, C-87.12, joined them in T12; see its row),
  * which reached a member as machine words (`BIO_Publication_v0_1.md` §6A, §6A.4; DEC-49).
  *
  * WHAT WAS MEASURED, and by which instrument. UI-68 built §6A's surface on 2026-09-23 — an editor drafts,
@@ -136,5 +137,16 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     where: at('comment', 'is-review-comment-text'),
     translation: 'A comment has to say something, and at most 4000 characters of it. Nothing was recorded. '
       + 'What you have written is still yours to send once it is within that length.',
+  },
+  /* N306 (K392, R27): the draft act's new draft and the grant act each mint an opaque id, and when no free one can be
+     drawn both answer this ONE row, minted by one helper (as `notReviewOwner` is), its detail naming which id it could
+     not mint. Nothing is written. Next.md N322 retires it into the one row beside record-core's `mintOpaqueId`. */
+  MINT_EXHAUSTED: {
+    check: 'C-87.12',
+    where: at('mintExhausted', 'is-review-mint-exhausted'),
+    translation: 'The plane could not find a free identifier for this, so nothing was saved and nothing was '
+      + 'issued. Identifiers are drawn at random so that none of them says how many others exist, and every '
+      + 'one it tried was already taken. Trying again may succeed; if it keeps happening, tell whoever runs '
+      + 'this instance.',
   },
 });
