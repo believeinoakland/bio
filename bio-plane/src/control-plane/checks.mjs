@@ -329,7 +329,30 @@ export const BOOTSTRAP_CHECKS = {
 /* C-29.6–.10 — AN AGENT CREDENTIAL'S REACH (PL-11 / IS-5, D-199): the gate on every call (C-29.6, .7) and the
    declaration judged when a member mints one (C-29.8–.10). The reach question is the control plane's, because the op
    table is the only thing that knows what an op is and which classes may call it. Split from `AI_CREDENTIAL_CHECKS`,
-   whose mint and revocation rows are membership's. */
+   whose mint and revocation rows are membership's.
+
+   THE FAMILY SPANS TWO MODULES, AND THE SPLIT IS THE ITEM'S SHAPE RATHER THAN AN ACCIDENT OF WHERE THE CODE FELL
+   (restored here by K458 from the catalogue's `AI_CREDENTIAL_CHECKS` header, which carried it until T14):
+     membership (`src/membership/index.mjs`)  — WHO MAY MINT, and WHAT THE RECORD MUST SAY. Minting is a MEMBER act
+                                               (D-199 (3)) and the record names the token IDENTITY and the PRINCIPAL
+                                               behind it (D-199 (4)); both are facts about the record, judged where it
+                                               is written (C-29.1–.5, .11–.12).
+     control-plane (`index.mjs`, below)       — WHAT A SCOPE MAY REACH, these rows. The store cannot see the OPS table
+                                               and must not keep a copy.
+
+   THE FENCE IS A SHAPE, NOT A CLASS LIST, AND THAT IS PL-4'S DELEGATED CONSTRAINT DISCHARGED. `AI_SCOPE_BEYOND_MEMBER_REACH`
+   compares the op against ONE property of the OPS table — does a MEMBER class reach it (`aiReachesAsMember`) — and
+   nothing else. op=capturerequestdrain carries no member class BY CONSTRUCTION (PL-4: "a member reaching for it by hand
+   would be a person doing the daemon's job"), so no authored scope can ever name it; and adding "ai" to its class list
+   would admit nothing either, because no op's class list is consulted for this class at all. Two independent proofs,
+   both driven (R19, R31).
+
+   WHY THE GATE REFUSES WITH ONE CODE AND THE MINT WITH TWO. The mint judges the DECLARATION — may this sentence be
+   written into the record at all — and the gate judges the CALL against a declaration already judged. PL-4 measured
+   what happens when the same predicate sits at two points: one of them becomes unreachable and its code cannot be
+   driven. So the floor is re-evaluated at the gate on every call (a row can outlive the rule that admitted it) but it
+   answers with the gate's own code, and the mint's two codes are about the act of authoring rather than about the act
+   of calling. */
 export const AI_SCOPE_CHECKS = {
   /* ---- THE GATE. WHAT A DECLARED SCOPE ADMITS, ON EVERY CALL. ---- */
 
