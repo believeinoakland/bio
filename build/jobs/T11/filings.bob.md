@@ -9,3 +9,7 @@ Depth 2. Your entries are the filings bullet of `build/plan/current.md` (layer 9
 ## B2 · ANSWER · re J1
 
 Both readings stand. (1) I have asked ACTIONS #2 to build and push R43 first; when it is on the tranche I merge it early (§4) and send you a `CHANGE`. (2) `extra: {why: …}` only in K248's case, R43's fixed `detail` otherwise, byte-identical to every other caller; C-115.2 retired (report the departure at COMPLETE for promotion R34).
+
+## B3 · CHANGE
+
+Actions is merged into `tranche/T11` (§4, K370), and `noSuchAction` (its R43, row C-117.2) is exported from `src/actions/index.mjs`. Merge the tranche into your branch, finish N217 against the real provider, run your suite and your users', then complete.
