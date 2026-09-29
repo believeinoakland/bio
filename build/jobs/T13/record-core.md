@@ -30,3 +30,14 @@
 - `node civicos-ui/check-refusal-codes.mjs`: 13 failures (4 on the base, 9 above). `node --test bio-plane/test/fleetbundles.test.mjs`: 1 fail (the two stale bundles).
 
 Size (session_01GSoeuDnnp3sumTtZuq2WZq): test runs 8, module lines 1093
+
+## J1 · REPORT
+
+Found outside record-core by R62 (details in my record's Completion):
+1. control-plane: `MODULE_CHECK_FILES` (src/control-plane/index.mjs:775) lacks record-core's new `src/record-core/checks.mjs` (`RECORD_CORE_CHECKS`). The helper spreads its own row, so the wire is complete today. But `dec49Row("MINT_EXHAUSTED")` resolves to review's C-87.12 until review retires it, and then to nothing until the list gains `M_RECORD_CORE`.
+2. legacy-tests, the DEC-49 guard (civicos-ui/check-refusal-codes.mjs): 4 failures on tranche/T13, 13 with this change. The 9 new ones:
+   - the identical translation of REVIEW_COPY_CHECKS.MINT_EXHAUSTED and RECORD_CORE_CHECKS.MINT_EXHAUSTED. This is R62's wording, and it clears when review retires C-87.12 in layer 8.
+   - floor slack: families 109→110, rows 788→789, governedSites 497→498, regions 459→460, regionLines 5495→5500, codesChecked 898→900, outcomeReturns 267→268, refusalsJudged 862→863.
+   - the MINT_EXHAUSTED multi-site declaration (line 3781) names C-87.12 and needs re-reading once the callers converge.
+3. Stale generated artifacts, not rebuilt: bio-plane/dist/bio-plane.bundled.mjs and agent-worker/dist/agent-worker.bundled.mjs (fleetbundles: STALE BUNDLE, src/record-core/index.mjs).
+4. Promotion's stamp (N318): C-59.6 added. Nothing moved or retired.
