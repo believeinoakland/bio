@@ -581,8 +581,7 @@ export class Store extends DurableObject {
        projections, purge, filings' evidence block). standards creates its own tables at construction (N267). */
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
-    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences,
-                     producingGroup: () => { const f = promotion.fact("producingGroup"); return f.ok ? f.value : null; } });
+    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
     escalationOf(ctx);   /* on this host, it reaches conformance, consequences, actions and filings through their factories */
     monitoringOf(ctx, { env });
     promotion.registerStep("legacy-store", { check: (c) => this.#promoteChecks(c), project: (c) => this.#promoteProjections(c) });
@@ -723,14 +722,6 @@ export class Store extends DurableObject {
       ["bundles", "inquiry_superseded_by", "TEXT"],
       /* REC-42: `inquiry_basis.ground` is inquiry's migration now (its R36). */
       /* REC-82: `inquiry_basis.content_id` is inquiry's migration now (its R36). */
-      /* REC-207: WHICH OF THE THREE ACTS SETTLED THIS DEBT, beside the `cleared_at` D-86 already wrote. The
-         full record is `bias_debt_settlements`, append-only, one row per act; this column is what the SWEEP
-         reads on its hot path to tell an AUTHORED settlement (a re-run, a member's resolve) from the lens
-         having moved back, because the two behave differently when the sweep next sees the same lens delta.
-         NULLABLE AND NEVER BACK-FILLED: a debt cleared before this column existed was cleared by the lens
-         moving back — that was the only act there was — but writing that in would be back-filling an
-         attribution, so it reads UNDETERMINED and `#biasDebtSettlement` says so. */
-      ["bias_debts", "settled_kind", "TEXT"],
     ];
     const addColumns = () => {
       for (const [table, column, decl] of ADDITIVE_COLUMNS) {
@@ -759,6 +750,7 @@ export class Store extends DurableObject {
     entitiesOf(this.ctx).migrate();     /* entities' tables, R8's withdrawal columns and their purge declaration (R30) */
     contradictionOf(this.ctx).migrate();   /* contradiction's table and its purge declaration (R22) */
     progressionsOf(this.ctx).migrate();   /* progressions' tables and REC-184's column (R29) */
+    biasOf(this.ctx).migrate();   /* bias's tables and its settled_kind column (R45) */
     intentOf(this.ctx).migrate();   /* intent's tables (R24) */
 
     /* REC-143: the second pass — see ADDITIVE_COLUMNS above the schema for why there are two. */
@@ -2325,6 +2317,9 @@ export class Store extends DurableObject {
          pages on every write, a large lead's included, so the operator can detect that SOMETHING
          large was written; it cannot tell a lead from any other write, and no lead is readable to it. */
       ...((proof || capacity) ? { dbBytes: this.ctx.storage.sql.databaseSize } : {}),
+      /* N342 (K445): every module's registered figures (record-core R63), after the literal keys: a registered key of
+         a literal's name replaces it and keeps its place, so the keys, their order and their figures stay as they are. */
+      ...recordOf(this.ctx).counts(hid),
     };
   }
 
