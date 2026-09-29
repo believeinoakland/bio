@@ -29,3 +29,7 @@
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture intent`: 10 product files, 36 relative imports; 0 failures. `coverage intent`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership intent tranche/T11`: 7 files changed by intent; legacy-checks 0 added, 0 removed; legacy-store 0 added, 0 removed; 0 failures.
 
 Size (session_01WZrsBqtbtRoDpA36xiDFhT): test runs 9, module lines 1840
+
+## J1 · COMPLETE
+
+intent T11 complete. N208 (NO_SUCH_PROJECT through membership noSuchProject, C-111.2 retired), N209 (R12/R13 bounds), N236/N277 (MEASURE_MAX, DEPARTURES_MAX, SET_ASIDE_MAX interface tests), N291 (pursuitOf reads requestById); tests on a workerd cursor fixture with the 50-byte cap. intent 41/41; format, architecture, coverage (28/28), ownership: 0 failures. Marks for you to strike, and findings (unbounded servesOf/#conditioned reads; legacy bounds.test PIN to re-anchor; plane bundle stale), are in the record's Completion section.
