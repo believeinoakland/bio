@@ -66,6 +66,44 @@ import { parseFrontmatter, createSha256, normalizeType,
    of a set that grows every week, which is the staleness this project meets
    most; the named imports above stay named because they are used AS VALUES. */
 import * as CHECK_CATALOGUE from "../checks/bio-checks.mjs";
+/* N272 (K351): AND EVERY MODULE'S OWN FAMILIES. A row that left the catalogue for its module's `checks.mjs` (or the
+   one file a module keeps its families in) reached the wire with no `code`, `check` or `translation` unless its site
+   spread the row itself, because `dec49Row` read the catalogue alone. Each module file is read as a NAMESPACE, so a
+   family it mints tomorrow is found by the `_CHECKS` suffix with no edit here; a module that opens a NEW file of
+   families is not, and `MODULE_CHECK_FILES` gains it until N245's composed catalogue replaces this list (K351). */
+import * as M_ACTIONS from "./actions/checks.mjs";
+import * as M_AI_RUNS from "./ai-runs/checks.mjs";
+import * as M_BIAS from "./bias/checks.mjs";
+import * as M_CALIBRATION from "./calibration/checks.mjs";
+import * as M_CAPTURE_REQUESTS from "./capture-requests/checks.mjs";
+import * as M_CAPTURE_SOURCES_CREDENTIALS from "./capture-sources/credentials.mjs";
+import * as M_CASE_AUTHORING from "./case-authoring/checks.mjs";
+import * as M_CITATION from "./citation/checks.mjs";
+import * as M_CONFORMANCE from "./conformance/checks.mjs";
+import * as M_CONNECTIONS_THEMES from "./connections/themes.mjs";
+import * as M_CONSEQUENCES from "./consequences/checks.mjs";
+import * as M_CONTENT_EXTENT from "./content/extent.mjs";
+import * as M_CONTRADICTION from "./contradiction/checks.mjs";
+import * as M_ENTITIES from "./entities/checks.mjs";
+import * as M_ESCALATION from "./escalation/checks.mjs";
+import * as M_EXTRACTION from "./extraction/checks.mjs";
+import * as M_FILINGS from "./filings/checks.mjs";
+import * as M_INQUIRY from "./inquiry/index.mjs";
+import * as M_INTENT from "./intent/checks.mjs";
+import * as M_MEMBERSHIP from "./membership/checks.mjs";
+import * as M_OBSERVATION_LOG from "./observation-log/checks.mjs";
+import * as M_PROGRESSIONS from "./progressions/checks.mjs";
+import * as M_PROMOTION from "./promotion/checks.mjs";
+import * as M_PROVENANCE from "./provenance/checks.mjs";
+import * as M_PUBLICATION from "./publication/checks.mjs";
+import * as M_RATIFICATION from "./ratification/checks.mjs";
+import * as M_REEVALUATION from "./reevaluation/checks.mjs";
+import * as M_RETRIEVAL from "./retrieval/checks.mjs";
+import * as M_REVIEW from "./review/checks.mjs";
+import * as M_RUN_PRODUCTIONS from "./run-productions/checks.mjs";
+import * as M_SKILLDOCTRINE from "./skilldoctrine.mjs";
+import * as M_STANDARDS from "./standards/checks.mjs";
+import * as M_STRENGTH from "./strength/checks.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "./publication/worker.mjs";
 import { publishedGraphEdges } from "./publication/index.mjs";
 import { inbandQuartet } from "./inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
@@ -87,7 +125,10 @@ import { driveHop, callerSuppliedHopFacts,
    the gate cannot drift. */
 /* N177 (T8, affordances R11): the act decoration is affordances' `decorate(act, gate)`; this file supplies the gate
    from the tables that actually gate the call (`ACT_GATE`, beside `NEEDS`). */
-import { ACTS, VOCABULARIES, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate } from "./affordances.mjs";
+/* N231 (affordances R26, actions R42): the vocabularies are `vocabulariesFor(kinds)`, `action_kind` the kinds this
+   instance's `actions` answers at the call (its `actionkinds` route, asked by op=affordances and op=queue below), never a
+   copy held here. */
+import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, vocabulariesFor } from "./affordances.mjs";
 /* REC-48 / DEC-39: op=acquire's `note` is COMPOSED from the enforced capture
    ceiling rather than spelled here. It is not the attest fence and is not
    `ATTEST_FENCE` — a different act, a different reader — but it states the same
@@ -674,6 +715,10 @@ const OPS = {
      may read the record may read what a body quoted. It takes the viewer
      fail-closed in the stamp block below, because it ENUMERATES across actions. */
   actionquotes:     { classes: ["admin", "member", "probe"],     mutating: false },
+  /* N231 (actions R42, K262): the kinds this instance accepts NOW, actions' `kinds()` through the Durable Object route
+     `actionkinds`. A READ open to every signed-in class, `actionquotes`' cut: it writes nothing and names no bundle, so
+     it takes no viewer stamp and no NEEDS entry (`reevaluations`' precedent). */
+  actionkinds:      { classes: ["admin", "member", "probe"],     mutating: false },
   dangling:   { classes: ["admin", "member", "probe"],           mutating: false },
   stats:      { classes: ["admin", "member", "probe"],           mutating: false },
   promote:    { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1433,6 +1478,14 @@ const OPS = {
      `monitoring`. A READ on `driveshells`' cut and for its reason — it walks the working corpus and names bundle ids —
      so the viewer is stamped below and the store answers only what the viewer may see. */
   monitoring:         { classes: ["admin", "member", "probe"],      mutating: false },
+  /* K372 (monitoring R30): the administrator's PAUSE of the daemon, the DO route `monitorpause` — `paused: true` or
+     `false` in the POST body, and who set it the control plane's `actor` stamp below, never the caller's. The root of
+     trust's act, `governorconfig`'s cut: the ADMIN_TOKEN bearer and the founder's own session (`SESSION_OPS.admin`
+     alone), so an enrolled administrator's session is told SESSION_ROLE_CANNOT_REACH_OP and no code is minted here.
+     The DUE SLATE (`monitorslate`) is a READ on `monitoring`'s cut and for its reason: it names bundles, so the viewer
+     is stamped below and the store answers only what the viewer may see. */
+  monitorpause:       { classes: ["admin"],                         mutating: true  },
+  monitorslate:       { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
      section 4.2, section 6 row 2): *which of the four content-axis states is this
      capture in, and why*. A READ, so `mutating: false`.
@@ -2214,6 +2267,8 @@ const SESSION_OPS = {
                    ...ROSTER_SELF_ACTIONS,
                    ...PROVENANCE_JUDGEMENT_ACTIONS, ...CALIBRATION_WRITE_ACTIONS,
                    "governorstate", "governorconfig",
+                   /* K372 (monitoring R30): the daemon's pause, `governorconfig`'s route — the founder's session. */
+                   "monitorpause",
                    "aicredentialmint", "aicredentialrevoke",
                    "casedraft", "reviewgrant", "reviewrevoke"]),
 };
@@ -2669,6 +2724,9 @@ const NEEDS = {
      those into both session sets; governorconfig is the operator's (§4.9, BOB #23).
      governorstate is a read and needs no entry at all. */
   governorconfig:   null,
+  /* K372 (monitoring R30): pausing the daemon is the root of trust's act over the instance's own fetching, bounded by
+     its class and `SESSION_OPS.admin`, `governorconfig`'s reason: not a section-5 working capability. */
+  monitorpause:     null,
   /* REC-4 / D-98: forwarding or resolving a task carries NO working capability.
      The authorization is not "may this member contribute" but "is this THIS
      member's task" — an identity question the store's TASK-ACTOR FENCE answers
@@ -3607,21 +3665,31 @@ const json = (o, status = 200) =>
    actually refuses. Families are found by the `_CHECKS` suffix (a RESERVED
    SUFFIX in this repository: the DEC-49 guard harvests every one of them as a
    refusal family), so this is a PROPERTY and not a list. */
+/* N272: the catalogue first, then each module file in path order, so a code the catalogue still holds resolves as it
+   always has; a code held in two places is the guard's arm A to refuse, not this reader's to choose. */
+const MODULE_CHECK_FILES = [
+  M_ACTIONS, M_AI_RUNS, M_BIAS, M_CALIBRATION, M_CAPTURE_REQUESTS, M_CAPTURE_SOURCES_CREDENTIALS, M_CASE_AUTHORING,
+  M_CITATION, M_CONFORMANCE, M_CONNECTIONS_THEMES, M_CONSEQUENCES, M_CONTENT_EXTENT, M_CONTRADICTION, M_ENTITIES,
+  M_ESCALATION, M_EXTRACTION, M_FILINGS, M_INQUIRY, M_INTENT, M_MEMBERSHIP, M_OBSERVATION_LOG, M_PROGRESSIONS,
+  M_PROMOTION, M_PROVENANCE, M_PUBLICATION, M_RATIFICATION, M_REEVALUATION, M_RETRIEVAL, M_REVIEW, M_RUN_PRODUCTIONS,
+  M_SKILLDOCTRINE, M_STANDARDS, M_STRENGTH];
 let DEC49_ROWS = null;
 function dec49Row(code) {
   if (DEC49_ROWS === null) {
     DEC49_ROWS = new Map();
-    /* Sorted so a duplicated code — which the guard's arm A already refuses —
-       resolves the same way on every isolate rather than by module order. */
-    for (const family of Object.keys(CHECK_CATALOGUE).sort()) {
-      if (!/_CHECKS$/.test(family)) continue;
-      const rows = CHECK_CATALOGUE[family];
-      if (!rows || typeof rows !== "object") continue;
-      for (const [key, row] of Object.entries(rows)) {
-        if (!row || typeof row !== "object") continue;
-        if (typeof row.translation !== "string" || row.translation === "") continue;
-        if (!DEC49_ROWS.has(key))
-          DEC49_ROWS.set(key, { check: row.check ?? null, translation: row.translation });
+    for (const source of [CHECK_CATALOGUE, ...MODULE_CHECK_FILES]) {
+      /* Sorted so a duplicated code — which the guard's arm A already refuses —
+         resolves the same way on every isolate rather than by module order. */
+      for (const family of Object.keys(source).sort()) {
+        if (!/_CHECKS$/.test(family)) continue;
+        const rows = source[family];
+        if (!rows || typeof rows !== "object") continue;
+        for (const [key, row] of Object.entries(rows)) {
+          if (!row || typeof row !== "object") continue;
+          if (typeof row.translation !== "string" || row.translation === "") continue;
+          if (!DEC49_ROWS.has(key))
+            DEC49_ROWS.set(key, { check: row.check ?? null, translation: row.translation });
+        }
       }
     }
   }
@@ -4861,13 +4929,19 @@ export default {
       /* REC-20: op=queue's options[] and this answer come from the SAME function (decorateAct, affordances'
          `decorate` over this file's gate). */
       const target = url.searchParams.get("target");
+      const st = env.STORE.get(env.STORE.idFromName(storeName));
+      /* N231 (affordances R26): `action_kind` is the kinds this instance's `actions` accepts at this call (actions
+         R42), asked of the store; a silence is stated as one, never answered with the product's kinds (REC-52). */
+      const kOut = await doAnswer(st.fetch("http://do/actionkinds"));
+      if (!kOut.answered) return storeSilent("affordances");
+      const vocabularies = vocabulariesFor(kOut.result?.kinds);
       if (!target) {
         /* No target: the whole catalogue and the vocabularies, the shape a
            surface loads once — searchfields' precedent exactly. */
         return json({ ok: true, result: {
           target: null,
           catalog: ACTS.map((a) => ({ ...decorateAct(a), appliesTo: a.types })),
-          vocabularies: VOCABULARIES,
+          vocabularies,
           capture_acts: CAPTURE_ACTS.map(decorateAct),
           /* D-126: the acts that take a SET under the `per-item` weight (affordances.mjs PER_ITEM_ACTS),
              decorated from the same tables as every act, with the bound the store enforces. */
@@ -4884,7 +4958,6 @@ export default {
                 + "applied or RETAINED with its own act's reason, and none stops the others",
         }, store: storeName, tokenClass: cls }, 200);
       }
-      const st = env.STORE.get(env.STORE.idFromName(storeName));
       /* REC-25: the D-15 viewer stamp, server-side from the authenticated
          identity exactly as the passthrough reads take it below. An object the
          viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. */
@@ -4928,7 +5001,7 @@ export default {
         target: facts.target, object_type: facts.object_type,
         current_state: facts.current_state,
         acts: deriveActs(facts).map(decorateAct),
-        vocabularies: VOCABULARIES,
+        vocabularies,
         /* REC-38. The SAME block the no-target catalogue answers, and it is
            deliberately NOT filtered by this target: a capture act's subject is
            a capture sha, and whether one is attestable turns on the bytes being
@@ -4981,12 +5054,15 @@ export default {
       if (!qOut.answered) return storeSilent("queue");
       const r = qOut.result;
       if (!r) return storeSilent("queue");
+      /* N231 (affordances R26): op=affordances' vocabularies, `action_kind` asked of `actions` at this call. */
+      const qkOut = await doAnswer(st.fetch("http://do/actionkinds"));
+      if (!qkOut.answered) return storeSilent("queue");
       if (r.ok !== true)
         return json({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
       return json({ ok: true, result: {
         ...r,
         items: r.items.map((i) => ({ ...i, options: (i.options || []).map(decorateAct) })),
-        vocabularies: VOCABULARIES,
+        vocabularies: vocabulariesFor(qkOut.result?.kinds),
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -5282,7 +5358,8 @@ export default {
       return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
     }
 
-    if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, requiredArgument, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
+    /* K372 (N278, N247): `doAnswer` is handed in, as it is to `knockOp`, so the one envelope reader opens monitoring's. */
+    if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json, storeSilent, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
 
@@ -5317,6 +5394,10 @@ export default {
        The store additionally refuses a null/blank actor by name, so a bypass of
        this stamp fails closed rather than tripping the NOT NULL constraint. */
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
+    /* K372 (monitoring R30): WHO PAUSED OR RESUMED THE DAEMON, the server's stamp by the roster acts' `by` expression and
+       set after the caller's parameters were copied, so a caller's `actor` is overwritten; monitoring records it with
+       the pause and states it on every tick's answer. */
+    if (op === "monitorpause") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* D-15: whose view a query compiles for is decided by the SERVER, from the
        credential that authenticated, and set AFTER the caller's parameters were
        copied so a caller-supplied `viewer` is overwritten rather than honoured.
@@ -5669,6 +5750,8 @@ export default {
         || op === "actionriskpropose"
         /* T8 (monitoring R32): the monitored sources name bundles, `driveshells`' reason (REC-25). */
         || op === "monitoring"
+        /* K372 (monitoring R30): the due slate names bundles too, and answers only what the viewer may see. */
+        || op === "monitorslate"
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
