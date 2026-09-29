@@ -92,3 +92,7 @@ The job's Open list is done (record, "Work (CONTROL-PLANE #2)"): R28's replay or
 ## J6 · COMPLETE
 
 B6 (K412) applied at 6ce8267b0b: the store's door reverted to legacy-store (commit d2bbae2f75 holds the move for N333, named in the record); R25's Worker half kept with PLANE_INTERNAL_ERROR renumbered C-69.3 (the store's row goes with N333), R24's relay kept; R25's store half, R26, R27 are test.todo naming N333; queue's checks.mjs in MODULE_CHECK_FILES. Control-plane 39 pass, 0 fail, 3 todo; every module's tests 2,645 pass, 0 fail (promotion's write-path green again); format, architecture, coverage 0 failures; ownership the two J1 headers only, legacy-store untouched. N318: the only new row is C-69.3 PLANE_INTERNAL_ERROR; the moved rows as J4.
+
+## J7 · COMPLETE
+
+B7 (K418) applied: relayAnswer reads the store's reply through doAnswer, keeping only r.status; new R24 interface test that it answers exactly as doAnswer classifies (ten reply shapes, rejected and absent replies). Control-plane 40 pass, 0 fail, 3 todo (N333); format, architecture, coverage 34/34, ownership 0 failures. plane-envelope does not load (imports DISPATCH_CHECKS from the catalogue, J4 item 3), so Detector A is legacy-tests' to confirm.
