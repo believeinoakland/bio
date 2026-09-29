@@ -120,13 +120,10 @@ export function world() {
   /* publication R38's cursor answer (N308), over `pub.resting`'s list for a bundle: one pin per entry, in list order,
      each a resting finding `{case_id, finding, project}` or null (a pin nothing rests on through). At most `limit`
      pins a page (default 1,000, clamped to 1–1,000); `cursor` is the last pin read (`<case>#<member>#<sha>`) while
-     more follow, else null. A bundle with no list is the real read's. */
+     more follow, else null. A bundle with no list is answered by the real read. */
   const restingPage = (id, { after = null, limit = 1000 } = {}) => {
     const lim = Math.min(1000, Math.max(1, Number.isInteger(limit) ? limit : 1000));
-    if (!pub.resting.has(id)) {
-      const real = realPub.ratifiedFindingsRestingOn(id, { after, limit: lim });
-      return Array.isArray(real) ? { findings: real, limit: lim, cursor: null } : real;
-    }
+    if (!pub.resting.has(id)) return realPub.ratifiedFindingsRestingOn(id, { after, limit });
     const pins = pub.resting.get(id).map((f, i) =>
       ({ key: `${f ? f.case_id : "CASE-2026-9999"}#${f ? f.finding : "INQ-none"}#${String(i).padStart(64, "0")}`, f }));
     const from = after === null || after === undefined ? 0 : pins.findIndex((p) => p.key === after) + 1;
