@@ -45,21 +45,47 @@ test("R5: never viewer-gated — a retired item inside a project nobody else may
   assert.equal(broken.cit.retiredNotCitable("INFO-2026-0001"), false);
 });
 
-test("R6: a citation exists only in the citing document's bytes — no refs row and no inquiry_basis row is written; only record-core's tables (and the selection's last use) move", async () => {
+test("R6: a citation exists only in the citing document's bytes — the acts write no refs row and no inquiry_basis row; every row they write is the promotion of the citing document's new bytes (or the selection's last use)", async () => {
   const w = world();
   w.info("INFO-2026-0001");
   const q = w.inquiry("INQ-2026-0001");
   const p = w.project();
   const h = await w.select(["INFO-2026-0001"]);
+  /* Every write statement the storage runs, with the promotion or selection read it ran inside. Which derived tables a
+     promotion moves (record-core's, retrieval's projection, whatever later modules register) is the promotion's, not
+     pinned here (K354): what R6 says is that nothing reaches a table except through the document. */
+  const writes = [], promoted = [];
+  let inside = null;
+  const exec = w.st.sql.exec;
+  w.st.sql.exec = (sql, ...args) => {
+    const m = /^\s*(?:INSERT(?:\s+OR\s+\w+)?\s+INTO|REPLACE\s+INTO|UPDATE(?:\s+OR\s+\w+)?|DELETE\s+FROM)\s+"?(\w+)/i.exec(sql);
+    if (m) writes.push({ table: m[1], inside });
+    return exec.call(w.st.sql, sql, ...args);
+  };
+  const around = (obj, name, tag) => {
+    const f = obj[name];
+    obj[name] = (a) => { const was = inside; inside = tag(a); try { return f.call(obj, a); } finally { inside = was; } };
+  };
+  around(w.promotion, "promote", (pkg) => { promoted.push(pkg.bundleId); return `promote ${pkg.bundleId}`; });
+  around(w.retrieval, "selectionResolve", () => "selection");
   const before = w.snapshot();
   assert.equal(w.cit.cite({ project: p, handle: h, ...ANN }).ok, true);
   assert.equal(w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" }).ok, true);
   assert.equal(w.cit.sever({ project: p, handle: h, ...ANN, reason: "x" }).ok, true);
   const after = w.snapshot();
-  const moved = Object.keys(after).filter((t) => after[t] !== before[t]).sort();
-  assert.deepEqual(moved.filter((t) => t !== "selections"), ["bundles", "files", "history", "manifest"]);
+  /* The spy sees the promotions' own writes (a control: an empty log would prove nothing). */
+  assert.ok(writes.some((x) => x.inside === `promote ${p}`) && writes.some((x) => x.inside === `promote ${q}`));
+  /* One promotion per act, each of the citing object, and no row written outside a promotion or the selection's read. */
+  assert.deepEqual(promoted, [p, q, p]);
+  assert.deepEqual(writes.filter((x) => x.inside === null), []);
+  /* No write names either projection, and neither holds a row. */
+  assert.deepEqual(writes.filter((x) => /^(refs|inquiry_basis)$/i.test(x.table)), []);
+  for (const t of ["refs", "inquiry_basis"]) assert.equal(after[t], before[t], t);
   assert.equal(w.count("inquiry_basis"), 0);
   assert.equal("refs" in after ? JSON.parse(after.refs).length : 0, 0);
+  /* The citations themselves are in the citing documents' bytes. */
+  assert.deepEqual(w.fm(p).references.map((e) => [e.rel, e.target, e.status]), [["cites", "INFO-2026-0001", "severed"]]);
+  assert.deepEqual(w.fm(q).basis.map((l) => [l.target, l.role]), [["INFO-2026-0001", "supports"]]);
 });
 
 test("R9: every act naming a project the viewer may not see answers exactly as an absent one", async () => {
