@@ -33,3 +33,7 @@
 - `ownership` (against `tranche/T12`): 5 files, legacy-store and legacy-checks 0 lines added or removed, 0 failures.
 
 Size (session_012Ut7sA7iL6CYNPX5ux1UVU): test runs 3, module lines 1025
+
+## J1 · COMPLETE
+
+N306 applied as R27: MINT_EXHAUSTED is one row, C-87.12, in review's own table. Both sites (draft's new draft, grant) answer it through one helper, the detail naming the id, nothing written; both arms are tested at the interface. All checks are 0 failures; module tests 30/30. For you: (1) strike R27's not-yet-met mark in build/requirements/review.md, which is outside my scope; (2) the C-87.12 row is for promotion R34's next stamp (N318); (3) legacy-tests re-pins: d448 (family of 11 becomes 12) and the DEC-49 guard's arm F floor and arm G multi-site for MINT_EXHAUSTED (N322's state; it was already red on base with 25 failures, 27 now); (4) bio-plane.bundled.mjs is stale (not rebuilt). Details are in the record's Completion section.
