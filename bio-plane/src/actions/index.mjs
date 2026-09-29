@@ -13,7 +13,7 @@
  * R7, R11, R33), its audit check with record-core (R37), and its facts and projection decoration with retrieval (R12,
  * R25; retrieval R53, R56).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `head`, `readFile`, `livePaths`,
+ *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`; `viewerPredicate`;
  *                                   `promote`, `registerStep`.
  *   retrieval      `registerActionFacts`, `registerProjectionDecoration` (its R53, R56).
@@ -30,7 +30,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
-import { retrievalOf } from "../retrieval/index.mjs";
+import { retrievalOf, PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity, createSha256,
@@ -39,7 +39,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
          governingLawsOf, requestLifecycleOf, consequenceState, respondsToEdgeFindings, checkActionExtension,
-         recordsLawFindings, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, kindReadsAsWritten,
+         recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, kindReadsAsWritten,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS, ACTION_CATALOGUE_CHECKS } from "./checks.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
@@ -59,9 +59,13 @@ export const LAW_PROPOSALS_READ_MAX = 12;
 export const RISK_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
-/** R30: the most actions one page lists; R31: the most pending clock entries. */
+/** R30: the most actions one page lists; R31: the most pending clock entries, and the most actions one page reads. */
 export const ACTIONS_PAGE_MAX = 200;
 export const PENDING_CLOCKS_MAX = 500;
+export const PENDING_CLOCKS_ACTIONS_MAX = 500;
+/** R3 (N237, K351): the most `action_basis` and `correspondence` entries one action's document holds. */
+export const ACTION_LEGS_MAX = 500;
+export const ACTION_LEDGER_MAX = 500;
 /** R28: the longest basis a proposed tier carries. */
 export const RISK_PROPOSAL_BASIS_MAX = 500;
 
@@ -82,6 +86,30 @@ export function withRow(r) {
   return { ...r, code: r.code ?? r.reason, check: r.check ?? row.check, translation: r.translation ?? row.translation };
 }
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
+
+/* R43 (N217, K275). THE ONE ANSWER TO ONE CONDITION: no action the caller may see answers to `actionId` (absent,
+   invisible, or a bundle that is not an action, answered alike). Every act or read of a later module answering that
+   condition answers through here (filings R1, R8, R13; escalation R9), so `NO_SUCH_ACTION` is minted at one site and
+   its one row is this module's (C-117.2). The detail is one fixed sentence, the same for every caller, so an absent
+   id and a hidden one can never be told apart by it. `extra` adds a caller's own fields beside these and never
+   replaces one of them. Writes nothing and never throws. */
+const NO_SUCH_ACTION_DETAIL = "no action answers to that id here. An action you may not see is answered exactly as one "
+  + "that does not exist, so this is not a hint either way.";
+const NO_SUCH_ACTION_FIXED = new Set(["ok", "reason", "code", "check", "translation", "action", "detail"]);
+export function noSuchAction(actionId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_ACTION_FIXED.has(k));
+  } catch { own = []; }
+  let action = null;
+  try { action = actionId === undefined || actionId === null ? null : String(actionId); } catch { action = null; }
+  /* DEC-49 REGION is-no-such-action */
+  const row = ACTION_CATALOGUE_CHECKS.NO_SUCH_ACTION;
+  return { ok: false, reason: "NO_SUCH_ACTION", code: "NO_SUCH_ACTION", check: row.check,
+           translation: row.translation, action, ...Object.fromEntries(own), detail: NO_SUCH_ACTION_DETAIL };
+  /* END DEC-49 REGION is-no-such-action */
+}
 const findingsOf = (list) => list.filter((x) => x.severity === "error")
   .map((x) => ({ check: x.check, detail: x.message, ...(x.code ? { code: x.code } : {}), ...(x.repairs ? { repairs: x.repairs } : {}) }));
 
@@ -180,8 +208,13 @@ export class Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R10, R40: the kinds this instance accepts on a creation. */
-  kinds() { return actionKinds(this.#view()); }
+  /** R10, R40, R42 (N231): the kinds this instance accepts now: the product's own and the active profiles' combined
+   *  view. Writes nothing and never throws: a view that cannot be read answers the product's kinds alone. */
+  kinds() {
+    let view = null;
+    try { view = this.#view(); } catch { view = null; }
+    try { return actionKinds(view); } catch { return actionKinds(null); }
+  }
 
   /* The held version's `bundle_sha`, the compare-and-swap base (record-core R41). */
   #baseOf(id) { const h = this.record.head(id); return h ? h.bundleSha : null; }
@@ -197,8 +230,8 @@ export class Actions {
     }
     return out;
   }
-  /* R16: the courtesy lock is given back by taking it again for no time (record-core offers no release of its own). */
-  #releaseLease(id, who) { try { this.record.acquireLease(id, who, 0); } catch { /* a lease is a courtesy */ } }
+  /* R16 (N261): the courtesy lock is given back through record-core's own release (its R61), which never throws. */
+  #releaseLease(id, who) { this.record.releaseLease(id, who); }
   #heldFm(id) {
     const f = this.record.readFile(id, "bundle.md");
     if (!f || typeof f.text !== "string") return null;
@@ -391,10 +424,9 @@ export class Actions {
   #writeArms(c, heldFm, nextFm, who) {
     const { head, writer, operation } = c;
     const creation = !head;
-    /* DEC-49 REGION is-promote-records-law */
-    const lf = []; recordsLawFindings(nextFm, lf);
-    if (lf.length) return refuse("RECORDS_LAW_REFUSED", lf[0].message, { findings: findingsOf(lf) });
-    /* END DEC-49 REGION is-promote-records-law */
+    /* R4, R6 (N297): the law arm's one refusal, minted by `recordsLawRefusal` alone. */
+    const law = recordsLawRefusal(nextFm);
+    if (law) return law;
     /* DEC-49 REGION is-promote-action-kind */
     const kindMoved = creation || !heldFm || heldFm.action_kind !== nextFm.action_kind;
     if (kindMoved) {
@@ -451,10 +483,8 @@ export class Actions {
       const nextClock = Array.isArray(clock) ? clock : [];
       const recheck = writer === "mechanical" && operation === "deadline-recheck";
       const moved = clockMovesNotMechanical(heldClock, nextClock, today);
-      const reshaped = heldClock.length !== nextClock.length || heldClock.some((e, i) => {
-        const n = nextClock[i] || {};
-        return JSON.stringify({ ...e, status: null }) !== JSON.stringify({ ...n, status: null });
-      });
+      const reshaped = heldClock.length !== nextClock.length
+        || heldClock.some((e, i) => Actions.#clockShape(e) !== Actions.#clockShape(nextClock[i]));
       if (moved.length || reshaped || (!recheck && JSON.stringify(heldClock) !== JSON.stringify(nextClock)))
         return refuse("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date has "
           + "passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. "
@@ -464,7 +494,28 @@ export class Actions {
     return null;
   }
 
-  /** R1–R2, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
+  /* R33: a clock entry with its status left out, so a comparison sees every other key. */
+  static #clockShape(e) {
+    if (!e || typeof e !== "object") return JSON.stringify(e ?? null);
+    return JSON.stringify(Object.keys(e).filter((k) => k !== "status").sort().map((k) => [k, e[k]]));
+  }
+
+  /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
+     or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
+  #tooLarge(fm) {
+    const legs = Array.isArray(fm.action_basis) ? fm.action_basis.length : 0;
+    const ledger = Array.isArray(fm.correspondence) ? fm.correspondence.length : 0;
+    if (legs <= ACTION_LEGS_MAX && ledger <= ACTION_LEDGER_MAX) return null;
+    const part = legs > ACTION_LEGS_MAX ? "action_basis" : "correspondence";
+    const count = part === "action_basis" ? legs : ledger;
+    const limit = part === "action_basis" ? ACTION_LEGS_MAX : ACTION_LEDGER_MAX;
+    /* DEC-49 REGION is-action-too-large */
+    return refuse("ACTION_TOO_LARGE", `this action's ${part} holds ${count} entries; an action holds at most ${limit}. `
+      + "Nothing was written.", { part, count, limit });
+    /* END DEC-49 REGION is-action-too-large */
+  }
+
+  /** R1–R3, R5–R8, R33: this module's check, run inside every promotion before the write (promotion R39). */
   check(c) {
     const { pkg, meta, author, bundleId, files, head } = c;
     const md = (files || []).find((f) => f && f.path === "bundle.md");
@@ -485,6 +536,8 @@ export class Actions {
       if (law) return law;
       const arms = this.#writeArms(c, heldFm, nextFm, who);
       if (arms) return arms;
+      const large = this.#tooLarge(nextFm);
+      if (large) return large;
       /* REC-24: the legs (ACTION_BASIS_REFUSED), the ledger (CORRESPONDENCE_REFUSED) and what only the record can
          resolve — a leg or a hash naming nothing it holds. */
       const af = []; actionBasisFindings(nextFm, af);
@@ -508,8 +561,10 @@ export class Actions {
                   + "account and an author (DEC-13)",
             repairs: ["capture the artifact first (op=capture), then record its sha", "or record a named account instead"] }] });
       }
-      /* R8 (K256): the determination is read as the act's viewer sees it; a write that names none reads as its author. */
-      const breach = this.#breachRefusal(nextFm, pkg.viewer ?? c.viewer ?? (who || null));
+      /* R8 (K256, N271): the determination is read as the act's viewer sees it: the session's viewer the control plane
+         stamps on `op=promote` (`actorViewer`, promotion's "For callers"), else the viewer this module's own acts pass;
+         a write that names neither reads as its author. */
+      const breach = this.#breachRefusal(nextFm, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null));
       if (breach) return breach;
     }
     /* REC-24 (g) / C-6.1: a responds_to edge's shape from the catalogue, its resolution from the record. */
@@ -534,12 +589,9 @@ export class Actions {
     const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : [])
       .filter((l) => l && typeof l === "object" && l.kind === "rests_on" && typeof l.target === "string");
     const conf = this.conformance;
-    if (!conf || typeof conf.determinationRead !== "function")
-      return { ok: false, reason: "ACTION_NO_DETERMINATION", cause: "CONFORMANCE_UNAVAILABLE",
-               detail: "an action recorded for a breach rests on a conformance determination, and no determination "
-                     + "can be read on this instance yet, so none could be found. Nothing was written." };
+    const readable = !!conf && typeof conf.determinationRead === "function";
     let superseded = null;
-    for (const l of legs) {
+    for (const l of (readable ? legs : [])) {
       let d = null;
       try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
       if (!d || d.ok === false) continue;
@@ -549,23 +601,34 @@ export class Actions {
     if (superseded)
       return { ok: false, reason: "DETERMINATION_SUPERSEDED", determination: superseded,
                detail: `the determination ${superseded} this action rests on has been superseded; rest it on the live one.` };
-    return { ok: false, reason: "ACTION_NO_DETERMINATION",
-             detail: "an action recorded for a breach rests on a live conformance determination you may see, as a "
-                   + "rests_on leg. None of its legs names one. Nothing was written." };
+    /* DEC-49 REGION is-breach-determination */
+    return refuse("ACTION_NO_DETERMINATION", readable
+      ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. "
+        + "None of its legs names one. Nothing was written."
+      : "an action recorded for a breach rests on a conformance determination, and no determination can be read on "
+        + "this instance yet, so none could be found. Nothing was written.",
+      readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" });
+    /* END DEC-49 REGION is-breach-determination */
   }
 
   /** R3, R11: this module's projection, in the promotion's transaction after the write: legs, ledger and quotes
-   *  replaced whole from the document. A malformed replayed entry is skipped, never half-written. */
+   *  replaced whole from the document. A malformed replayed entry is skipped, never half-written. It reads at most
+   *  `ACTION_LEGS_MAX` legs and `ACTION_LEDGER_MAX` entries (N237): a replayed document holding more is skipped whole,
+   *  its rows cleared and none written, never half-projected (the write refuses one, `#tooLarge`). */
   project(c) {
     const { bundleId, promotedType } = c;
     const fm = c.docFm;
-    /* R11: a leg's pinned capture is kept as it was first stamped; a leg new in this version is stamped now. */
-    const held = new Map(this.#rows(`SELECT target_id, kind, extent_capture FROM action_basis WHERE bundle_id=?`, bundleId)
+    /* R11: a leg's pinned capture is kept as it was first stamped; a leg new in this version is stamped now. The rows
+       held are this projection's own, so never more than it writes. */
+    const held = new Map(this.#rows(`SELECT target_id, kind, extent_capture FROM action_basis WHERE bundle_id=?
+      ORDER BY ord LIMIT ?`, bundleId, ACTION_LEGS_MAX)
       .map((r) => [`${r.target_id}\u0000${r.kind}`, r.extent_capture]));
     this.sql.exec(`DELETE FROM action_basis WHERE bundle_id=?`, bundleId);
     this.sql.exec(`DELETE FROM correspondence WHERE bundle_id=?`, bundleId);
     this.sql.exec(`DELETE FROM action_quotes WHERE bundle_id=?`, bundleId);
     if (promotedType !== "action" || !fm || typeof fm !== "object") return null;
+    if ((Array.isArray(fm.action_basis) && fm.action_basis.length > ACTION_LEGS_MAX)
+        || (Array.isArray(fm.correspondence) && fm.correspondence.length > ACTION_LEDGER_MAX)) return null;
     const alegs = Array.isArray(fm.action_basis) ? fm.action_basis : [];
     for (let i = 0; i < alegs.length; i++) {
       const leg = alegs[i];
@@ -690,10 +753,12 @@ export class Actions {
                      + "may never advance one. Sign in as a member." };
     /* END DEC-49 REGION is-machine-move-action */
     const why = String(reason ?? "").trim();
+    /* DEC-49 REGION is-move-reason — R13 (N217, K275): this act's own condition, under its own code. */
     if (!why)
-      return { ok: false, reason: "NO_REASON",
+      return { ok: false, reason: "ACTION_MOVE_NO_REASON",
                detail: "an action moves for a stated reason, authored by the member moving it and never "
                      + "prefilled. A state change with no account of why cannot be checked by anyone." };
+    /* END DEC-49 REGION is-move-reason */
     if (why.length > NOTE_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "BAD_REASON",
                detail: `reason is at most ${NOTE_MAX} characters and cannot contain a quote, a `
@@ -1316,11 +1381,8 @@ export class Actions {
     const next = riskTierState(asked);
     const why = typeof reason === "string" ? reason.trim() : "";
     const text0 = Actions.#appendRiskTierHistory(liveMd.content, null);
+    if (next !== 1 && next !== 2 && next !== 3) return this.#badRiskTier(target, tier, "the act");
     /* DEC-49 REGION is-risk-tier-act */
-    if (next !== 1 && next !== 2 && next !== 3)
-      return { ok: false, reason: "BAD_RISK_TIER", target, tier: tier ?? null, legal: [1, 2, 3],
-               detail: "the act states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file without "
-                     + "counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set." };
     if (!why || why.length > RISK_TIER_REASON_MAX || /["\\\r\n]/.test(why))
       return { ok: false, reason: "RISK_TIER_REASON_REFUSED", target, max: RISK_TIER_REASON_MAX,
                detail: `a revision of a risk tier carries a reason of 1 to ${RISK_TIER_REASON_MAX} characters, with no `
@@ -1363,6 +1425,16 @@ export class Actions {
     return { ok: true, target, risk_tier: next, risk_tier_words: RISK_TIERS[next], prior: held,
              prior_words: RISK_TIERS[held] ?? null, by: who, at: when, reason: why,
              risk_tier_history: riskTierHistoryOf(after), weight: "single" };
+  }
+
+  /* R23, R28 (C-90.2): the one site that answers a tier that is not 1, 2 or 3, for the act and for a proposal alike
+     (one condition, one code). An instance method so the refusal guard's `where` can name it. */
+  #badRiskTier(target, tier, who) {
+    /* DEC-49 REGION is-bad-risk-tier */
+    return refuse("BAD_RISK_TIER", `${who} states a tier of 1 (file freely), 2 (file with caution) or 3 (do not file `
+      + "without counsel). Undetermined is what an action reads when nobody has assessed it, not a tier to set.",
+      { target, tier: tier ?? null, legal: [1, 2, 3] });
+    /* END DEC-49 REGION is-bad-risk-tier */
   }
 
   /* REC-214: APPEND one entry to the top-level `risk_tier_history:` block, or open the block before the closing
@@ -1793,32 +1865,49 @@ export class Actions {
                  says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
   }
 
-  /** R31: every `pending` clock entry dated before `before` across visible actions, at most 500 per page. */
+  /** R31 (N237, N283): every `pending` clock entry dated before `before` across visible actions, at most 500 per page.
+   *  A page reads at most 500 actions, in id order after `after`, and answers each action it reads whole: an action
+   *  whose entries would not all fit is left to the next page, so `cursor`, the last action read, never cuts one. The
+   *  seek is retrieval's projection (`bundle_projection`, its R61), joined on `bundle_id`; the entries are read from
+   *  the document, the authority. */
   pendingClocks({ before, limit = null, after = null, viewer = null } = {}) {
     const day = String(before ?? "").slice(0, 10);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return { ok: false, reason: "BAD_DATE", before: before ?? null,
-      detail: "before= is a date, YYYY-MM-DD" };
+    /* DEC-49 REGION is-pending-before */
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
+      return refuse("PENDING_CLOCKS_BAD_BEFORE", "before= is a date, YYYY-MM-DD", { before: before ?? null });
+    /* END DEC-49 REGION is-pending-before */
     const max = clampLimit(limit, PENDING_CLOCKS_MAX, PENDING_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
-    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='action' AND (${gate.sql})
-      ${after ? "AND b.bundle_id>?" : ""} AND b.action_clock_next IS NOT NULL AND b.action_clock_next < ? ORDER BY b.bundle_id`,
-      ...gate.args, ...(after ? [String(after)] : []), day);
+    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b JOIN ${PROJECTION_TABLE} bp ON bp.bundle_id = b.bundle_id
+      WHERE b.object_type='action' AND (${gate.sql}) ${after ? "AND b.bundle_id>?" : ""}
+        AND bp.action_clock_next IS NOT NULL AND bp.action_clock_next < ? ORDER BY b.bundle_id LIMIT ?`,
+      ...gate.args, ...(after ? [String(after)] : []), day, PENDING_CLOCKS_ACTIONS_MAX + 1);
     const items = [];
-    let truncated = false;
-    for (const r of rows) {
+    let truncated = rows.length > PENDING_CLOCKS_ACTIONS_MAX;
+    let cursor = null;
+    for (const r of rows.slice(0, PENDING_CLOCKS_ACTIONS_MAX)) {
       const fm = this.#heldFm(r.bundle_id) || {};
       const clock = Array.isArray(fm.clock) ? fm.clock : [];
+      const mine = [];
       for (let i = 0; i < clock.length; i++) {
         const e = clock[i];
         if (!e || e.status !== "pending" || typeof e.date !== "string" || !(e.date < day)) continue;
-        if (items.length === max) { truncated = true; break; }
-        items.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
-                     past: e.date < day });
+        mine.push({ action: r.bundle_id, ord: i, date: e.date, basis: e.basis ?? null, text: e.text ?? null,
+                    past: e.date < day });
       }
-      if (truncated) break;
+      /* The page is full before this action: it is read on the next page, whole. An action holding more entries than a
+         page is answered alone, its first `max`, and the page says so (`cut_inside`). */
+      if (items.length + mine.length > max && items.length) { truncated = true; break; }
+      if (mine.length > max) {
+        items.push(...mine.slice(0, max));
+        cursor = r.bundle_id;
+        return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated: true,
+                 cursor, cut_inside: { action: r.bundle_id, entries: mine.length, answered: max } };
+      }
+      items.push(...mine);
+      cursor = r.bundle_id;
     }
-    return { ok: true, before: day, items, limit: max, truncated,
-             cursor: items.length ? items[items.length - 1].action : null };
+    return { ok: true, before: day, items, limit: max, actions_limit: PENDING_CLOCKS_ACTIONS_MAX, truncated, cursor };
   }
 
   /* ================================================================ proposals (R19, R28, R32) */
@@ -1829,8 +1918,7 @@ export class Actions {
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
     const asked = typeof tier === "string" && /^[123]$/.test(tier.trim()) ? Number(tier.trim()) : tier;
-    if (asked !== 1 && asked !== 2 && asked !== 3)
-      return refuse("BAD_RISK_TIER", "a proposal states a tier of 1, 2 or 3", { target, tier: tier ?? null, legal: [1, 2, 3] });
+    if (asked !== 1 && asked !== 2 && asked !== 3) return this.#badRiskTier(target, tier, "a proposal");
     const why = typeof basis === "string" ? basis.trim() : "";
     /* DEC-49 REGION is-risk-propose-basis */
     if (!why || why.length > RISK_PROPOSAL_BASIS_MAX || /["\\\r\n]/.test(why))
@@ -1874,17 +1962,18 @@ export class Actions {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
     if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    if (!rule) return { ok: false, reason: "NO_RULE", detail: "name the profile deadline's rule: rule=<rule>" };
+    /* R32 (N246): an absent `rule` has no code of its own; it is answered `NO_SUCH_RULE` at that code's place. */
     const b = this.#visibleAction(target, viewer);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
     if (normalizeType(b.object_type) !== "action")
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
     const fm = this.#heldFm(target) || {};
     const view = this.#view();
-    const d = (view && Array.isArray(view.deadlines) ? view.deadlines : [])
-      .find((x) => x && x.rule === rule && x.applies_to === fm.action_kind);
-    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule,
-      detail: `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'` };
+    const d = rule ? (view && Array.isArray(view.deadlines) ? view.deadlines : [])
+      .find((x) => x && x.rule === rule && x.applies_to === fm.action_kind) : null;
+    if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
+      detail: rule ? `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'`
+                   : `no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '${fm.action_kind}'` };
     const computed = computeDeadline(d, fm, view);
     const basis = `${d.citation}${d.basis ? ` (profile basis: ${d.basis}${d.profile ? `, ${d.profile}` : ""})` : ""}`;
     const entry = { text: d.rule, description: `${d.days} ${d.count} day${d.days === 1 ? "" : "s"} from ${d.starts}`,
@@ -2054,5 +2143,8 @@ export function actionsOps(a, url, body) {
       dueBy: q("due_by"), dueCite: q("due_cite"), viewer: q("viewer"), author: q("author") }),
     actionquotes: () => a.actionQuotes({ counterparty: q("counterparty"), request: q("request"), answers: q("answers"),
                                          viewer: q("viewer") }),
+    /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control
+       plane's). */
+    actionkinds: () => ({ ok: true, kinds: a.kinds() }),
   };
 }
