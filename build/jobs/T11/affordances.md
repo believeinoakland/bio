@@ -20,4 +20,4 @@
 - Users of the changed tables: `node --test test/m/queue/`: tests 10, pass 10, fail 0 (control-plane has no module tests yet). Legacy `test/rung-ladder.test.mjs test/affordances.test.mjs`: pass 1, fail 1 before and after (above).
 - `node checks/format.mjs`: 69 modules, 64 requirements files; 0 failures. `architecture.mjs … affordances`: 7 product files, 52 relative imports; 0 failures. `coverage.mjs … affordances`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership.mjs … affordances tranche/T11`: 5 files changed by affordances; legacy-store 0/0, legacy-index 0/0; 0 failures.
 
-Size (session_01B7kiVs24JbVTE4P4CTC88x): test runs 5, module lines 2711
+Size (session_01B7kiVs24JbVTE4P4CTC88x): test runs 5, module lines 2713
