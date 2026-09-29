@@ -171,19 +171,15 @@ import { basisVersionsOf, basisVersionsOps, versionsIn, VERSION_ACT_TO, BASIS_VE
    which is what makes a capture an office container (`#containerKindOf`). */
 import { getFormat } from "./formats.mjs";
 import { sha256hex, instanceAiCredential, instanceClaudeToken } from "./tokens.mjs";
-/* The disposition set is the PUBLISHED one (op=affordances), imported so there
-   is ONE array — the REC-19 landing left a literal copy in dispose() with the
-   suite pinning the two identical; REC-11's folded chore flips the direction. */
-/* REC-35: and the intent layer's three closed vocabularies, on the SAME footing
-   as DISPOSITIONS — the refusals below are written here, the array is written
-   once there, and op=affordances publishes that same array. A kind this file
+/* REC-35: the intent layer's three closed vocabularies — the refusals below are written here, the array is
+   written once there, and op=affordances publishes that same array. A kind this file
    admits and the catalogue does not publish (or the reverse) is not reachable
    by editing one place, which is the whole of the guarantee. */
 /* REC-205: and `PER_ITEM_ACTS`, for the same reason — the set act's IDENTITY SHAPES are declared
    there once, published by op=affordances as `set_acts[].item_keys`, and ENFORCED by `#perItem`
    below. A shape the catalogue publishes and the helper does not honour (or the reverse) would be
    two answers to "what may an item name", which is the drift this import exists to prevent. */
-import { DISPOSITIONS, REOPENABLE_FROM, deriveActs,
+import { REOPENABLE_FROM, deriveActs,
          ENTITY_KINDS, RELATION_KINDS, STAGE_REQUIREDNESS, PER_ITEM_MAX,
          PER_ITEM_ACTS } from "./affordances.mjs";
 import { affordancesOf } from "./affordances.mjs";
@@ -342,7 +338,7 @@ import { checkChain, checkAttestation, extentCovers, derivationCap, isTranscribe
    can come to disagree with itself. */
 import { calibrationOf, calibrationOps } from "./calibration/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
-import { progressionsOf, progressionOps, PROGRESSIONS_TABLES } from "./progressions/index.mjs";
+import { progressionsOf, progressionOps, PROGRESSIONS_TABLES, notADisposition } from "./progressions/index.mjs";
 import { intentOf, intentOps } from "./intent/index.mjs";
 import { strengthOf as strengthModule, strengthOps, STRENGTH_AXES, barAxisWords } from "./strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "./reevaluation/index.mjs";
@@ -5030,16 +5026,11 @@ export class Store extends DurableObject {
                      + "and no team's feed moved." };
     if (!scoped) return progressionsOf(this.ctx).disposeProposal({ progressionKey: pk, stageKey: sk, to, state, reason,
                                                                   definitionVersion, decidedBy });
-    /* deferred (parked, returnable) or dismissed (declined). Both age the proposal out of the open
-       feed. Elevating/adopting is a DIFFERENT act (op=promote authors a focus) and is not a
-       disposition here — the same line op=dispose draws between a disposition and elevation.
-       The vocabulary is the PUBLISHED set imported from affordances.mjs (REC-11's folded
-       chore): one array for every disposition surface, so none can drift. */
+    /* N285 (K275): a word that is no disposition is answered by progressions' `notADisposition` (its R35), the one
+       site that mints NOT_A_DISPOSITION with its row, C-100.20; this act holds neither the list nor the sentence. */
     const st = typeof to === "string" ? to.trim() : (typeof state === "string" ? state.trim() : "");
-    if (!DISPOSITIONS.includes(st))
-      return { ok: false, reason: "NOT_A_DISPOSITION", to: st || null, dispositions: DISPOSITIONS,
-               detail: "a proposal is deferred (parked) or dismissed (declined); adopting one authors a "
-                     + "focus (op=promote) and is not a disposition" };
+    const undisposed = notADisposition(st);
+    if (undisposed) return undisposed;
     const why = String(reason ?? "").trim();
     if (!why)
       return { ok: false, reason: "NO_REASON",
