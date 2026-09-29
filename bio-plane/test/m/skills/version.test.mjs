@@ -6,8 +6,8 @@ import { CLAUSES } from "../../../src/skilldoctrine.mjs";
 import * as airun from "../../../src/airun.mjs";
 import { catalogue, published } from "./fixture.mjs";
 
-/* C-22.7's row, read through ai-runs (its AI_RUN_CHECKS, R35), never from the catalogue: the catalogue keeps a
-   distinct copy until T12 (K350, N299), and the row this module names is ai-runs' (R25, N289). */
+/* C-22.7's row, read through ai-runs (its AI_RUN_CHECKS, R35), never from the catalogue: the row this module names
+   is ai-runs' (R25, N289), and the catalogue's interim copy left in T12 (N299, K381). */
 const ROW = airun.AI_RUN_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED;
 
 /* Every value R12 refuses, and every value it accepts, the malformed ones one of each shape. */
@@ -79,11 +79,12 @@ test("R25 C-22.7 is named here by key through ai-runs, never copied: its code, n
   assert.ok(CLAUSES.some((c) => c.enforced_by.includes(ROW.check)), "the doctrine cites the row by its number");
 });
 
-test("R25 C-22.7's row is held in ai-runs' own table with its one minting site, a row distinct from the catalogue's interim copy", () => {
+test("R25 C-22.7's row is held in ai-runs' own table with its one minting site, and no catalogue family holds a copy", () => {
   assert.ok(ROW.where.startsWith("src/ai-runs/skill-version.mjs checkSkillVersion"), `ai-runs' minting site: ${ROW.where}`);
-  const copy = catalogue.AI_RUN_CHECKS?.AI_RUN_SKILL_VERSION_UNNAMED;
-  if (copy) {
-    assert.notEqual(SKILL_CHECKS.AI_RUN_SKILL_VERSION_UNNAMED, copy, "the row named here is ai-runs', not the catalogue's copy");
-    assert.deepEqual([copy.check, copy.translation], [ROW.check, ROW.translation], "the interim copy (N299) says the same");
-  }
+  for (const [family, rows] of Object.entries(catalogue))
+    if (rows && typeof rows === "object" && !Array.isArray(rows)) {
+      assert.ok(!Object.hasOwn(rows, "AI_RUN_SKILL_VERSION_UNNAMED"), `the catalogue's ${family} holds no copy of the code (N299)`);
+      for (const row of Object.values(rows))
+        assert.ok(!(row && row.check === ROW.check), `the catalogue's ${family} holds no row numbered ${ROW.check}`);
+    }
 });
