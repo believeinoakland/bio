@@ -26,6 +26,6 @@
 
 **Tests and checks**
 - `node --test test/m/intent/`: tests 41, pass 41, fail 0, todo 0. It is red before the source change, as it should be: the R22 NO_SUCH_PROJECT test, the R14 test and `bounds.test.mjs` failed on the old source.
-- `format`: 69 modules, 64 requirements files; 0 failures. `architecture intent`: 10 product files, 36 relative imports; 0 failures. `coverage intent`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership`: see below.
+- `format`: 69 modules, 64 requirements files; 0 failures. `architecture intent`: 10 product files, 36 relative imports; 0 failures. `coverage intent`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership intent tranche/T11`: 7 files changed by intent; legacy-checks 0 added, 0 removed; legacy-store 0 added, 0 removed; 0 failures.
 
 Size (session_01WZrsBqtbtRoDpA36xiDFhT): test runs 9, module lines 1840
