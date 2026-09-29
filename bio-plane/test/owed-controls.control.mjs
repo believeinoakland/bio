@@ -112,8 +112,11 @@ function arm({ id, what, mustFail, mustNot, file, patch, move }) {
   console.log(`=== BASELINE (nothing armed) — EXIT ${r.code} · register ${f.register} · plane arms ${f.arms} · fleet ${f.fleet}`);
   console.log(`    owed: ${(r.out.match(/OWED CONTROLS \(VF-1\).*/) || ["(not printed)"])[0]}`);
   if (r.code !== 0) { console.log("    ABORT: the tree is not green before arming anything"); process.exit(2); }
-  rows.push({ id: "BASE", code: r.code, ...f });
+  rows.push({ id: "BASE", code: r.code, ...f, out: r.out });
 }
+/* The fleet suites the baseline already names under FLEET CONTROL (suites since K100/N14 held to requirement ids, with
+   no declaration), so arms (2) and (3) can ask whether their suite was ADDED to that list rather than whether it fired. */
+const baseFleetUndeclared = ((rows[0].out.match(/FLEET CONTROL: ([^\n]*)/) || [])[1] || "");
 
 const hide = (src) => {
   const n = (src.match(/NEGATIVE CONTROL/g) || []).length;
@@ -131,30 +134,43 @@ const hide = (src) => {
     + ` · named ${a.named(/FLEET CONTROL:.*harness\.test\.mjs/) ? "YES" : "NO"}`);
 }
 
-/* (2) THE FLEET ARMS FLOOR. One arm removed from a declaration, nothing else. */
+/* (2) THE FLEET ARMS FLOOR. One arm removed from a declaration, nothing else.
+   RE-DECLARED 2026-09-29 (LEGACY-TESTS #11, T13), measured: since N88 (T5-11; K100 (1), N14) the FLEET FLOOR and
+   FLEET CONTROL are REPORTED and do not gate `--strict` (coverage.mjs's note above the strict tuple; owed-controls A13b),
+   and the baseline already reports both (71 arms under a floor of 100; the requirement-named fleet suites under FLEET
+   CONTROL). So the arm is measured on what it moves: the reported arm figure falls by one, `--strict` stays 0, and this
+   suite is not ADDED to FLEET CONTROL's list. The declaration it replaces asked for an exit 1 the gate no longer gives. */
 {
   const a = arm({ id: "2", file: "agent-worker/test/harness.test.mjs",
     what: "one stated arm is deleted from a fleet declaration (its transition becomes prose)",
-    mustFail: "--strict EXIT 1 at the FLEET FLOOR, 34 arms against a floor of 35",
-    mustNot: "the suite still DECLARES, so the FLEET CONTROL message must NOT fire",
+    mustFail: "the REPORTED fleet arm figure falls by one (FLEET FLOOR named); --strict stays EXIT 0 (reported, not gated, N88)",
+    mustNot: "the suite still DECLARES, so it must NOT join FLEET CONTROL's list",
     patch: (src) => {
       const i = src.indexOf("(H1)");
       const j = src.indexOf(" -> ", i);
       return j === -1 ? [src, 0] : [src.slice(0, j) + " and then " + src.slice(j + 4), 1];
     } });
+  const armsOf = (fleet) => +String(fleet).split("/")[2];
+  const listed = ((a.out.match(/FLEET CONTROL: ([^\n]*)/) || [])[1] || "");
   console.log(`    RESULT: exit ${a.code} · floor named ${a.named(/FLEET FLOOR:.*fleet control arm/) ? "YES" : "NO"}`
-    + ` · control message ${a.named(/FLEET CONTROL:/) ? "FIRED (unexpected)" : "silent as declared"}`);
+    + ` · fleet arms ${armsOf(rows[0].fleet)} -> ${armsOf(a.f.fleet)} ${armsOf(a.f.fleet) === armsOf(rows[0].fleet) - 1 ? "(fell by one, as declared)" : "(NOT as declared)"}`
+    + ` · harness.test.mjs ${listed.includes("harness.test.mjs") && !baseFleetUndeclared.includes("harness.test.mjs") ? "ADDED to FLEET CONTROL (unexpected)" : "not added, as declared"}`);
 }
 
-/* (3) THE FLEET SUITE FLOOR. A suite disappears; 4/4 would become 3/3. */
+/* (3) THE FLEET SUITE FLOOR. A suite disappears.
+   RE-DECLARED 2026-09-29 (LEGACY-TESTS #11, T13), for (2)'s reason (N88: reported, not gated): the fleet suites READ fall
+   by one, `--strict` stays 0, and no suite still in place joins FLEET CONTROL's list. */
 {
   const a = arm({ id: "3", move: "pdf-worker/test/pagepixels.test.mjs",
     what: "a fleet suite is moved out of its test directory",
-    mustFail: "--strict EXIT 1 at the FLEET FLOOR on suites read AND on arms",
-    mustNot: "no suite may be named as UNDECLARED — the ones that remain all declare, which is the whole point",
+    mustFail: "the REPORTED fleet suites-read figure falls by one; --strict stays EXIT 0 (reported, not gated, N88)",
+    mustNot: "no suite still in place may join FLEET CONTROL's list",
     patch: null });
-  console.log(`    RESULT: exit ${a.code} · suites floor named ${a.named(/FLEET FLOOR:.*fleet suite\(s\) read/) ? "YES" : "NO"}`
-    + ` · control message ${a.named(/FLEET CONTROL:/) ? "FIRED (unexpected)" : "silent as declared"}`);
+  const readOf = (fleet) => +String(fleet).split("/")[1];
+  const listed = ((a.out.match(/FLEET CONTROL: ([^\n]*)/) || [])[1] || "").split(", ").filter(Boolean);
+  const added = listed.filter((x) => !baseFleetUndeclared.includes(x));
+  console.log(`    RESULT: exit ${a.code} · fleet suites read ${readOf(rows[0].fleet)} -> ${readOf(a.f.fleet)} ${readOf(a.f.fleet) === readOf(rows[0].fleet) - 1 ? "(fell by one, as declared)" : "(NOT as declared)"}`
+    + ` · ${added.length ? `ADDED to FLEET CONTROL (unexpected): ${added.join(", ")}` : "none added, as declared"}`);
 }
 
 /* (4) AN OWED CONTROL LOSES ITS SUITE. */
@@ -197,7 +213,10 @@ const hide = (src) => {
 
 /* (7) OVER-STRICTNESS. Correct work, in spellings nothing here anticipated. */
 {
-  const a = arm({ id: "7a", file: "pdf-worker/test/pdf-worker.test.mjs",
+  /* RE-POINTED 2026-09-29 (LEGACY-TESTS #11, T13): `pdf-worker/test/pdf-worker.test.mjs` is gone (PDF-WORKER's T1
+     requirement-named suites, fb23efe7c0), and no pdf-worker suite declares a control now; the same rewrite is made in
+     a fleet suite that still declares one, agent-worker's cascade suite. */
+  const a = arm({ id: "7a", file: "agent-worker/test/cascade.test.mjs",
     what: "a fleet declaration's marker separator is rewritten from a colon to an EM DASH",
     mustFail: "NOTHING. --strict must stay EXIT 0",
     mustNot: "the suite must not be reported as undeclared, and the fleet arms tally must not fall",
