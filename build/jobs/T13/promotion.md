@@ -39,3 +39,11 @@ On tranche/T13 today (before record-core and membership) this gives 818 rows, di
 - `format`: 69 modules, 64 requirements files; 0 failures. `architecture promotion`: 16 product files, 59 relative imports; 0 failures. `coverage promotion`: 50 of 50 live requirement ids named by a test; 0 failures. `ownership promotion tranche/T13`: 4 files; legacy-checks and legacy-store 0 lines; 1 failure, `build/requirements/promotion.md`: the three `not yet met` marks struck as START asked (K395's precedent).
 
 Size (session_01JwRGiAAQuCSCteSnVJeMBi): test runs 7, module lines 37
+
+## J2 · REPORT
+
+For other modules (details in my record's Completion):
+1. legacy-tests: d470-catalog-census needs its 1.43.0 row: count 359, digest b28a8a91387ef629dab08baa025b766015f33d6a0a71eda9f392d0d6de2d2605, source 3a8dae6c959d33b5f83e18dc592c0ccb5b77ecddf1adcd5f8b71c2047dca2a40. It fails A3 and A5 until then. Its R50 census suite pins 820 rows, digest f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d, at 1.43.0.
+2. legacy-tests: civicos-ui/check-refusal-codes.mjs:3781 declares MINT_EXHAUSTED multi-site from review's C-87.12. Promotion's site now answers through record-core's C-59.6, with a translation, so that guard's counts may move.
+3. Stale generated artifacts: agent-worker/dist/agent-worker.bundled.mjs and bio-plane/dist/bio-plane.bundled.mjs (gate.mjs, promotion/index.mjs). Reported, not rebuilt.
+4. The stamp list, against the diff: C-100.20 is not new. It dates from T5; T12 changed its where and translation. C-33.44's translation was reworded on its move to queue, which the list does not name. Both are stamped.
