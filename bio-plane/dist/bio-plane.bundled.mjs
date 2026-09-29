@@ -95508,38 +95508,6 @@ function instanceSetupOps(m, url, body) {
     cpuprobeend: () => m.recordCpuProbeEnd(body || {})
   };
 }
-async function instanceSetupRoute(m, req) {
-  const url = new URL(req.url);
-  const op = url.pathname.slice(1);
-  if (!Object.prototype.hasOwnProperty.call(instanceSetupOps(m, url, null), op)) return null;
-  let body = null;
-  if (req.method === "POST") {
-    const raw = await req.text();
-    if (raw.trim() !== "") {
-      try {
-        body = JSON.parse(raw);
-      } catch {
-        return Response.json({ ok: false, reason: "BAD_JSON", detail: "the request body is not valid JSON" }, { status: 400 });
-      }
-    }
-  }
-  try {
-    return Response.json({ ok: true, result: await instanceSetupOps(m, url, body)[op]() });
-  } catch (e) {
-    return Response.json({ ok: false, error: String(e && e.stack || e) }, { status: 500 });
-  }
-}
-function instanceSetupStore(Base) {
-  return class Store extends Base {
-    constructor(ctx, env) {
-      super(ctx, env);
-      ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
-    }
-    async fetch(req) {
-      return await instanceSetupRoute(instanceSetupOf(this.ctx, this.env), req) ?? super.fetch(req);
-    }
-  };
-}
 function notAnswered(out, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
   if (out && out.refused === true && out.reply)
     return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
@@ -95704,9 +95672,6 @@ async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = nul
     note: complete ? "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms." : `the store did not confirm step ${confirmed + 1}, so the probe stopped there and burned nothing more: the trail is incomplete, and the last step the store confirmed is ${confirmed}.`
   });
 }
-
-// src/signpage.mjs
-var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/container.mjs
 var CONTAINER_MAX_BYTES = 64 * 1024 * 1024;
@@ -105310,6 +105275,800 @@ function queueAnswer(r, { gate, kinds } = {}) {
   } };
 }
 
+// src/extraction/ops.mjs
+var CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+async function readAnswer(res) {
+  let r = null, out = null;
+  try {
+    r = await res;
+    out = await r.json();
+  } catch {
+    out = null;
+  }
+  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
+  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
+  if (out.ok === true) return { answered: true, result: out.result, reply };
+  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
+  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION.test(out.correlation) ? out.correlation : void 0;
+  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
+}
+async function ask(store, path, init, doAnswer2) {
+  const res = (async () => store.fetch(path, init))();
+  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
+}
+var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
+  status,
+  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
+});
+function unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
+  if (r && r.refused && r.reply)
+    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json5(r.reply.body, r.reply.status);
+  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
+  return null;
+}
+async function pdfStructureOp(url, env, store, {
+  json: json5,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
+  storageAbsent: storageAbsent2,
+  requiredArgument: requiredArgument2,
+  cls,
+  session,
+  caps,
+  viewer,
+  author,
+  storeName
+}) {
+  const op = "pdfstructure";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
+  const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha))
+    return json5({ ok: false, ...requiredArgument2(
+      "pdfstructure",
+      "sha256",
+      "<64 lowercase hex>",
+      "pdfstructure requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const q6 = new URLSearchParams({
+    sha256: sha,
+    cls: cls || "",
+    session: session ? "1" : "0",
+    caps: [...caps || []].join(","),
+    viewer: viewer || "",
+    author: author || "",
+    store: storeName || "bio"
+  });
+  if (url.searchParams.has("ocr")) q6.set("ocr", url.searchParams.get("ocr") ?? "");
+  const r = await ask(store, `http://x/pdfstructure?${q6}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json5(r.result.body, r.result.status);
+}
+async function acquireReadingOp(answer, store, { json: json5 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
+  const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ document: answer.document })
+  }, doAnswer2);
+  const relayed = unanswered2(r, "acquire", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (relayed) return { response: relayed };
+  const out = r.result;
+  const body = withReading(answer, {
+    reading: out.reading,
+    textUnits: out.text_units || null,
+    textUnitsOverBound: out.text_units_over_bound || 0
+  });
+  if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
+  return { body };
+}
+
+// src/ratification/ops.mjs
+function storeRefused(out, { json: json5, storeRefusal: storeRefusal2 }) {
+  return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
+}
+async function caseRatifyOp(req, stub, ctx) {
+  const {
+    env,
+    json: json5,
+    doAnswer: doAnswer2,
+    storeSilent: storeSilent2,
+    storeRefusal: storeRefusal2,
+    assembleCaseContainer: assembleCaseContainer2,
+    storeName,
+    cls,
+    aiCred,
+    viaSession,
+    sessViewer,
+    sessRights
+  } = ctx;
+  const relay = { json: json5, storeRefusal: storeRefusal2 };
+  const op = "caseratify";
+  if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
+    return json5({
+      ok: false,
+      reason: "MACHINE_CANNOT_RATIFY_CASE",
+      ...rowOf5("MACHINE_CANNOT_RATIFY_CASE"),
+      op,
+      tokenClass: cls,
+      detail: "committing a case is a member's signed act. An assistant's credential may assemble the case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)."
+    }, 403);
+  if (!viaSession)
+    return json5({
+      ok: false,
+      reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
+      ...rowOf5("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"),
+      op,
+      tokenClass: cls,
+      detail: `committing a case is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised the case, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
+    }, 403);
+  const body = await req.json().catch(() => null);
+  if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha || typeof body?.sig !== "string")
+    return json5({
+      ok: false,
+      reason: "MALFORMED",
+      detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
+    }, 400);
+  const factsOut = await doAnswer2(stub.fetch(
+    `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}&edition=${encodeURIComponent(String(body.edition))}&viewer=${encodeURIComponent(sessViewer)}`
+  ));
+  if (factsOut.refused) return storeRefused(factsOut, relay);
+  if (!factsOut.answered) return storeSilent2("caseratify/facts", factsOut.correlation);
+  const facts = factsOut.result;
+  if (!facts.ok) return json5({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
+  const attr2 = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
+  if (attr2.legacy.length)
+    return json5({
+      ok: false,
+      reason: "TESTIMONY_CASE_UNPUBLISHABLE",
+      ...rowOf5("TESTIMONY_CASE_UNPUBLISHABLE"),
+      caseId: facts.doc.case_id,
+      edition: facts.doc.edition,
+      observations: attr2.legacy.slice(0, 50),
+      detail: `a finding in ${facts.doc.case_id} rests on an observation whose own files name its author (written before \xA74.1) or cannot be read to show they do not (${attr2.legacy.slice(0, 5).join(", ")}); publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const unchosen = attr2.current.filter((r2) => !r2.level);
+  if (unchosen.length)
+    return json5({
+      ok: false,
+      reason: "ATTRIBUTION_UNCHOSEN",
+      ...rowOf5("ATTRIBUTION_UNCHOSEN"),
+      caseId: facts.doc.case_id,
+      edition: facts.doc.edition,
+      unchosen: unchosen.slice(0, 50).map((r2) => ({ observation: r2.observation, why: r2.why })),
+      detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches ${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} author: ${unchosen.slice(0, 5).map((r2) => r2.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md \xA74.4). Each author chooses with op=attribute; nothing is filled in for them`,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  {
+    const statedOf = new Map(attr2.stated.map((r2) => [r2.observation, r2]));
+    const drift = attr2.current.filter((r2) => {
+      const st = statedOf.get(r2.observation);
+      return !st || st.level !== r2.level || (st.shown ?? null) !== (r2.shown ?? null);
+    });
+    if (drift.length || attr2.stated.length !== attr2.current.length)
+      return json5({
+        ok: false,
+        reason: "ATTRIBUTION_STATEMENT_STALE",
+        ...rowOf5("ATTRIBUTION_STATEMENT_STALE"),
+        caseId: facts.doc.case_id,
+        edition: facts.doc.edition,
+        observations: (drift.length ? drift : attr2.current).slice(0, 50).map((r2) => r2.observation),
+        detail: `the case document's attribution statements do not match what the observations' authors chose for this edition; re-prepare it (op=publish) and sign the new bytes`,
+        store: storeName,
+        tokenClass: cls
+      }, 409);
+  }
+  if (facts.doc.doc_sha !== body.expectedSha)
+    return json5({
+      ok: false,
+      reason: "CASE_RATIFY_STALE",
+      detail: "the case document has changed since it was reviewed; read it again and re-sign",
+      expected: facts.doc.doc_sha,
+      got: body.expectedSha,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  if (!facts.signers.length)
+    return json5({
+      ok: false,
+      reason: "NO_SIGNERS",
+      detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const sv = await verifySshsig(
+    body.sig,
+    caseRatifyStatement(facts.doc.case_id, facts.doc.edition, facts.doc.doc_sha),
+    NS_RATIFY,
+    facts.signers.map((s) => s.key_b64)
+  );
+  if (!sv.ok)
+    return json5({
+      ok: false,
+      reason: "SIG_" + sv.reason,
+      ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
+      ...sv.detail ? { detail: sv.detail } : {},
+      store: storeName,
+      tokenClass: cls
+    }, 403);
+  const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
+  const gateOut = await doAnswer2(stub.fetch(
+    `http://do/casegate?viewer=${encodeURIComponent(sessViewer)}`,
+    { method: "POST", body: JSON.stringify({
+      caseId: facts.doc.case_id,
+      edition: Number(facts.doc.edition),
+      docSha: facts.doc.doc_sha
+    }) }
+  ));
+  if (gateOut.refused) return storeRefused(gateOut, relay);
+  if (!gateOut.answered) return storeSilent2("caseratify/gate", gateOut.correlation);
+  const gate = gateOut.result || {};
+  if (gate.reason && !Array.isArray(gate.findings))
+    return json5({ ok: false, ...gate, store: storeName, tokenClass: cls }, gate.reason === "CASE_RATIFY_STALE" ? 409 : 404);
+  if (!gate.ok)
+    return json5({
+      ok: false,
+      reason: "GATE_REFUSED",
+      gateVersion: gate.gateVersion,
+      findings: gate.findings,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const deliveredBy = deliveringPrincipal(sessRights);
+  const out = await doAnswer2(stub.fetch("http://do/caseratify", {
+    method: "POST",
+    body: JSON.stringify({
+      caseId: facts.doc.case_id,
+      edition: Number(facts.doc.edition),
+      docSha: facts.doc.doc_sha,
+      sigArmored: body.sig,
+      attestorKey: sv.keyB64,
+      attestorMember: attestor?.member_id ?? null,
+      gateVersion: gate.gateVersion,
+      deliveredBy
+    })
+  }));
+  if (out.refused) return storeRefused(out, relay);
+  if (!out.answered) return storeSilent2("caseratify/commit", out.correlation);
+  const answered = out.result;
+  const { completedCase, ...r } = answered || {};
+  if (!answered || !r.ok)
+    return json5({
+      ok: false,
+      ...r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered },
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const container2 = completedCase && completedCase.complete && !completedCase.manifest_sha ? await assembleCaseContainer2({ env, stub, storeName, cs: completedCase, via: "caseratify" }) : null;
+  return json5({
+    ok: true,
+    ...r,
+    gateVersion: gate.gateVersion,
+    ...container2 ? { container: container2 } : {},
+    attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
+    /* REC-128: who carried the signature in, beside who made it. On a
+       retry of the same signature (`existed`) the store wrote nothing,
+       so the RECORD's deliverer is the first one — read it back through
+       op=casedocument; this field is who delivered THIS request. */
+    deliveredBy: delivererOf(deliveredBy),
+    /* THE WINDOW, NAMED IN THE ANSWER RATHER THAN LEFT TO BE
+       INFERRED FROM AN EMPTY LIST. The case is committed and the
+       members still sign their own bytes, because the finding is
+       the unit of truth — the container becomes assemblable when
+       the last of them lands. */
+    next: r.awaiting?.length ? `the case is committed. ${r.awaiting.length} member finding(s) still to ratify (op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a container when the last of them lands.` : "the case is committed and every member finding is already ratified at the version this case pinned" + (container2 && container2.manifest_sha ? `, so its container is assembled (${container2.zip}).` : "."),
+    store: storeName,
+    tokenClass: cls
+  });
+}
+async function ratifyOp(req, stub, ctx) {
+  const {
+    env,
+    json: json5,
+    doAnswer: doAnswer2,
+    storeSilent: storeSilent2,
+    storeRefusal: storeRefusal2,
+    assembleCaseContainer: assembleCaseContainer2,
+    storeName,
+    cls,
+    aiCred,
+    viaSession,
+    sessViewer,
+    sessRights,
+    captureKey: captureKey2,
+    withBiasChecks: withBiasChecks2,
+    STORE_SILENT_REASON: STORE_SILENT_REASON2,
+    STORE_SILENT_DETAIL: STORE_SILENT_DETAIL2
+  } = ctx;
+  const relay = { json: json5, storeRefusal: storeRefusal2 };
+  const op = "ratify";
+  if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
+    return json5({
+      ok: false,
+      reason: "MACHINE_CANNOT_RATIFY",
+      ...rowOf5("MACHINE_CANNOT_RATIFY"),
+      op,
+      tokenClass: cls,
+      detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4)."
+    }, 403);
+  if (!viaSession)
+    return json5({
+      ok: false,
+      reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
+      ...rowOf5("OPERATOR_TOKEN_CANNOT_RATIFY"),
+      op,
+      tokenClass: cls,
+      detail: `ratifying is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised publication, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
+    }, 403);
+  const body = await req.json().catch(() => null);
+  if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
+    return json5({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
+  const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
+  const factsOut = await doAnswer2(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
+  if (factsOut.refused) return storeRefused(factsOut, relay);
+  if (!factsOut.answered) return storeSilent2("ratify/gatefacts", factsOut.correlation);
+  const facts = factsOut.result;
+  if (!facts.ok) return json5({ ...facts, store: storeName, tokenClass: cls }, 404);
+  if (normalizeType(facts.row.object_type) === "project")
+    return json5({
+      ok: false,
+      reason: "RATIFY_PROJECT_BUNDLE",
+      ...rowOf5("RATIFY_PROJECT_BUNDLE"),
+      bundleId: body.bundleId,
+      detail: `${body.bundleId} is a project's own document, and a project is published through its cases, never directly (BIO_Publication_v0_1.md \xA73 rule 2; D-429). Nothing was published.`,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const legacy = Array.isArray(facts.testimonyLegacy) ? facts.testimonyLegacy : [];
+  if (facts.testimony && facts.testimony.self.length && legacy.includes(body.bundleId))
+    return json5({
+      ok: false,
+      reason: "TESTIMONY_UNPUBLISHABLE",
+      ...rowOf5("TESTIMONY_UNPUBLISHABLE"),
+      bundleId: body.bundleId,
+      detail: `${body.bundleId} is a member's observation whose own files name its author (written before \xA74.1), or cannot be read to show they do not; publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
+    return json5({
+      ok: false,
+      reason: "TESTIMONY_CITED_UNPUBLISHABLE",
+      ...rowOf5("TESTIMONY_CITED_UNPUBLISHABLE"),
+      bundleId: body.bundleId,
+      rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
+      detail: `${body.bundleId} rests on an observation whose own files name its author (written before \xA74.1) or cannot be read to show they do not (${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})`,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)
+    return json5({
+      ok: false,
+      reason: "ATTRIBUTION_UNSTATED",
+      ...rowOf5("ATTRIBUTION_UNSTATED"),
+      bundleId: body.bundleId,
+      detail: `no ratified case document states an attribution for ${body.bundleId}; sign the case edition that uses it (op=caseratify) first, and its author's chosen level is published with it`,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  if (facts.row.bundle_sha !== body.expectedSha)
+    return json5({
+      ok: false,
+      reason: "RATIFY_STALE",
+      detail: "the bundle has changed since it was reviewed; read it again and re-sign",
+      expected: facts.row.bundle_sha,
+      got: body.expectedSha,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  if (!facts.signers.length)
+    return json5({
+      ok: false,
+      reason: "NO_SIGNERS",
+      detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const sv = await verifySshsig(
+    body.sig,
+    ratifyStatement(body.bundleId, body.expectedSha),
+    NS_RATIFY,
+    facts.signers.map((s) => s.key_b64)
+  );
+  if (!sv.ok)
+    return json5({
+      ok: false,
+      reason: "SIG_" + sv.reason,
+      ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
+      ...sv.detail ? { detail: sv.detail } : {},
+      store: storeName,
+      tokenClass: cls
+    }, 403);
+  const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
+  const imgOut = await doAnswer2(stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
+  if (imgOut.refused) return storeRefused(imgOut, relay);
+  if (!imgOut.answered) return storeSilent2("ratify/image", imgOut.correlation);
+  const image = imgOut.result;
+  const r2 = typeof env.CAPTURES?.head === "function";
+  const listOut = await doAnswer2(stub.fetch(`http://do/list?viewer=${ratViewer}`));
+  if (listOut.refused) return storeRefused(listOut, relay);
+  if (!listOut.answered) return storeSilent2("ratify/list", listOut.correlation);
+  const known = new Set((listOut.result || []).map((b) => b.bundle_id));
+  const partedRows = /* @__PURE__ */ new Map();
+  const gate = withCaseMemberChecks(image, withBiasChecks2(image, withRegisterChecks(image, await runGate({
+    bundleId: body.bundleId,
+    image,
+    knownIds: known,
+    registers: facts.registers,
+    /* REC-14: the two facts the catalog cannot read out of the bundle --
+       what THIS case asserted at its previous EDITION (C-21.1) and what the
+       cases beneath it FROZE when they were signed (C-21.2). They come from
+       the store with the rest of the gate facts, so the gate and the write
+       path judge against the same published record. Passing nothing here
+       does not soften the gate, it blinds it. */
+    publishedRegistry: facts.publishedRegistry,
+    /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
+       registry, from the same one place that has the rows. */
+    publishedCaseRegistry: facts.publishedCaseRegistry,
+    /* REC-18: and the third — what each basis target EARNS from the record
+       (resolutions against the question's subject entity; the capture
+       record for the capture axis). Same reasoning, same source: an earned
+       grade is computed by the record, so a gate that cannot see the record
+       cannot confirm one, and threading it here is what makes the gate and
+       op=promote's write path judge an earned leg identically. */
+    earnedRegistry: facts.earnedRegistry,
+    hasCapture: async (sha) => {
+      if (!r2) return { present: false, bytes: 0 };
+      const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
+      if (h) return { present: true, bytes: h.size };
+      const hOut = await doAnswer2(stub.fetch(
+        `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`
+      ));
+      const named = hOut.answered && hOut.result ? hOut.result.parts : null;
+      if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
+      if (named?.state === "named") {
+        const v = await partsHeld(env.CAPTURES, (s) => captureKey2(storeName, s), named.parts);
+        if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
+        return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
+      }
+      const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
+      return { present: false, bytes: 0, ...inParts ? { heldInParts: true } : {} };
+    }
+  }))), parseFrontmatter);
+  if (!gate.ok)
+    return json5({
+      ok: false,
+      reason: "GATE_REFUSED",
+      gateVersion: gate.gateVersion,
+      findings: gate.findings,
+      store: storeName,
+      tokenClass: cls
+    }, 409);
+  const registerBytes = new Map((facts.registers || []).map((r) => [r.path, r.bytes]));
+  const shas = [];
+  for (const [path, v] of Object.entries(image)) {
+    if (path.startsWith("_history/")) continue;
+    if (typeof v === "string") {
+      const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v)))].map((x) => x.toString(16).padStart(2, "0")).join("");
+      shas.push({
+        sha256: sha,
+        path,
+        kind: path === "bundle.md" ? "bundle" : "file",
+        bytes: new TextEncoder().encode(v).length,
+        text: v
+      });
+    } else if (!partedRows.has(v.blobSha)) {
+      shas.push({
+        sha256: v.blobSha,
+        path,
+        kind: "capture",
+        bytes: registerBytes.has(path) ? registerBytes.get(path) : null
+      });
+    }
+  }
+  const partShaSet = /* @__PURE__ */ new Set();
+  for (const [whole, parts] of partedRows) {
+    const at17 = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
+    parts.forEach((p, i) => {
+      partShaSet.add(p.sha256);
+      if (!shas.some((s) => s.sha256 === p.sha256))
+        shas.push({ sha256: p.sha256, path: p.file || `${at17}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
+    });
+  }
+  const ratifiedFm = typeof image["bundle.md"] === "string" ? parseFrontmatter(image["bundle.md"]).data || {} : {};
+  const isCase = normalizeType(ratifiedFm.object_type) === "inquiry" && isCaseMemberBytes2(ratifiedFm);
+  const edition = isCase && Number.isInteger(ratifiedFm.edition) ? ratifiedFm.edition : 1;
+  const frozenStrength = isCase && Array.isArray(ratifiedFm.published_strength) ? ratifiedFm.published_strength : null;
+  const frozenCompleteness = isCase ? {
+    ...completenessFields(ratifiedFm),
+    subject_position: ratifiedFm.completeness?.subject_position ?? null,
+    author: ratifiedFm.completeness?.author ?? null,
+    at: ratifiedFm.completeness?.at ?? null
+  } : null;
+  const edges = publishedGraphEdges(ratifiedFm);
+  const deliveredBy = deliveringPrincipal(sessRights);
+  const pubOut = await doAnswer2(stub.fetch(new Request("http://do/publish", {
+    method: "POST",
+    body: JSON.stringify({
+      bundleId: body.bundleId,
+      bundleSha: body.expectedSha,
+      deliveredBy,
+      attestorKey: sv.keyB64,
+      attestorMember: attestor?.member_id ?? null,
+      gateVersion: gate.gateVersion,
+      sigArmored: body.sig,
+      /* Only a CASE names its edition, and it names it in the signed bytes.
+         Everything else leaves it to the store, which appends the next one
+         — an information bundle has no authored edition to assert and the
+         control plane must not invent one for it. */
+      ...isCase ? { edition } : {},
+      title: ratifiedFm.title ?? null,
+      completeness: frozenCompleteness,
+      strength: frozenStrength,
+      /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member published under rule 12 carries
+         no frozen block in its own bytes (`isCase` false), and the store reads its edition and
+         frozen pair from the RATIFIED case documents pinning these bytes instead. Legacy bytes
+         carry their own, read above exactly as before (rule 12 (e)). */
+      memberCarriesBlocks: isCase,
+      /* CASE-5b: `required` IS NOT SENT ANY MORE. The bar is the CASE's
+         (DEC-72 clause 2) and it left these bytes with the rest of the case,
+         so there is nothing here to send. `publish()` reads it from
+         `published_cases.bar` — committed from the case document a member
+         signed — which is the same doctrine reading a different signature. */
+      group: ratifiedFm.group ?? null,
+      edges,
+      shas: shas.map(({ text: text3, ...s }) => s)
+    })
+  })));
+  if (pubOut.refused) return storeRefused(pubOut, relay);
+  if (!pubOut.answered) return storeSilent2("ratify/publish", pubOut.correlation);
+  const pub = pubOut.result;
+  if (!pub?.ok)
+    return json5(
+      {
+        ok: false,
+        ...pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub },
+        store: storeName,
+        tokenClass: cls
+      },
+      pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT" || pub.reason === "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE" || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500
+    );
+  let copied = 0, present = 0, r2state = "not configured";
+  if (typeof env.PUBLISHED?.put === "function" && r2) {
+    r2state = "ok";
+    for (const s of shas) {
+      const key = `${storeName}/published/${s.sha256}`;
+      if (await env.PUBLISHED.head(key)) {
+        present++;
+        continue;
+      }
+      if (s.kind === "capture" || s.kind === "capture_part") {
+        const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
+        if (!obj) {
+          r2state = "INCOMPLETE: capture vanished between gate and copy";
+          continue;
+        }
+        if (!partShaSet.has(s.sha256)) await env.PUBLISHED.put(key, obj.body);
+        else try {
+          await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 });
+        } catch {
+          continue;
+        }
+      } else {
+        await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
+      }
+      copied++;
+    }
+  }
+  const partShas = [...new Map([...partedRows.values()].flat().map((p) => [p.sha256, p])).values()];
+  let partsPublished = null;
+  if (partShas.length && r2state !== "not configured") {
+    const v = await partsHeld(env.PUBLISHED, (s) => `${storeName}/published/${s}`, partShas);
+    const bad = [...v.missing, ...v.disagree, ...v.unverified];
+    partsPublished = {
+      parts: partShas.length,
+      verified: partShas.length - bad.length,
+      ...v.missing.length ? { missing_parts: v.missing } : {},
+      ...v.disagree.length ? { disagreeing_parts: v.disagree } : {},
+      ...v.unverified.length ? { unverified_parts: v.unverified } : {}
+    };
+    if (bad.length)
+      r2state = `INCOMPLETE: ${bad.length} of ${partShas.length} parts did not verify in the published bucket: ${bad.map((p) => p.file || p.sha256).join(", ")}`;
+  }
+  let container2 = null;
+  if (pub.case && pub.case.complete && !pub.case.manifest_sha)
+    container2 = await assembleCaseContainer2({ env, stub, storeName, cs: pub.case, via: "ratify" });
+  else if (Array.isArray(pub.containerCases)) {
+    for (const cs of pub.containerCases)
+      if (cs && cs.complete && !cs.manifest_sha)
+        container2 = await assembleCaseContainer2({ env, stub, storeName, cs, via: "ratify" });
+  }
+  let reuseReport = null;
+  const reusedOut = await doAnswer2(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`));
+  const reused = reusedOut.result;
+  if (!reusedOut.answered) {
+    reuseReport = {
+      ok: false,
+      reason: STORE_SILENT_REASON2,
+      op: "ratify/reusedparts",
+      detail: STORE_SILENT_DETAIL2,
+      note: "whether this bundle reused any part from the record is UNDETERMINED for this ratification, and that is NOT the same as no part having been reused. The bundle is ratified -- the signature, the gate and the published rows are all unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not happen. Re-ratifying converges it."
+    };
+  } else if (reused && Array.isArray(reused.parts) && reused.parts.length) {
+    const limOut = await doAnswer2(stub.fetch("http://do/capturelimit?runtime=subrequests"));
+    const ceilingRead = limOut.answered;
+    const lim = limOut.result;
+    const observed = ceilingRead && lim && lim.observed ? lim.observed : null;
+    const ceilingWord = !ceilingRead ? "UNREAD -- the store did not answer the capture-limit read, so this budget is our own appetite and not a calibrated ceiling" : observed == null ? "none observed" : String(observed);
+    const appetite = Number(env.RATIFY_REFETCH_BUDGET) || 500;
+    const margin = env.RATIFY_REFETCH_MARGIN !== void 0 ? Number(env.RATIFY_REFETCH_MARGIN) || 0 : 4;
+    const budget = observed != null ? Math.min(appetite, Math.max(0, observed - margin)) : appetite;
+    const rhex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    const verdicts = [];
+    let spent = 0;
+    for (const p of reused.parts) {
+      const base = {
+        source_capture: p.primary_sha,
+        host: p.host,
+        address_norm: p.address_norm,
+        reused_sha: p.reused_sha
+      };
+      if (!p.address || !isPublicHttpsLocator(p.address)) {
+        verdicts.push({
+          ...base,
+          verdict: "unavailable",
+          observed_sha: null,
+          basis: "the reused part has no re-fetchable public https address on record, so the source cannot be re-checked; ratified with the bytes captured on the day"
+        });
+        continue;
+      }
+      if (spent >= budget) {
+        verdicts.push({
+          ...base,
+          verdict: "not_attempted",
+          observed_sha: null,
+          basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest ceiling ${ceilingWord}) was spent before this part; it is recorded as outstanding, not silently omitted`
+        });
+        continue;
+      }
+      spent++;
+      let r = null;
+      try {
+        r = await fetch(p.address, { redirect: "follow", headers: { "user-agent": userAgent(env, "ratify") } });
+      } catch {
+        r = null;
+      }
+      if (!r || !r.ok) {
+        verdicts.push({
+          ...base,
+          verdict: "unavailable",
+          observed_sha: null,
+          basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, and the bundle is ratified with the bytes captured on the day`
+        });
+        continue;
+      }
+      const got = rhex(await crypto.subtle.digest("SHA-256", new Uint8Array(await r.arrayBuffer())));
+      if (got === p.reused_sha)
+        verdicts.push({
+          ...base,
+          verdict: "confirmed",
+          observed_sha: got,
+          basis: "a plain GET re-fetched the reused part and our own SHA-256 over what we received matches the reused bytes"
+        });
+      else
+        verdicts.push({
+          ...base,
+          verdict: "changed",
+          observed_sha: got,
+          basis: "a plain GET returned different bytes than were reused; ratified with the bytes captured on the day, the divergence recorded as the dated fact it is"
+        });
+    }
+    const at17 = (/* @__PURE__ */ new Date()).toISOString();
+    const vOut = await doAnswer2(stub.fetch(new Request("http://do/recordreuseverdicts", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ bundleId: body.bundleId, at: at17, verdicts })
+    })));
+    const tally = (k) => verdicts.filter((v) => v.verdict === k).length;
+    reuseReport = {
+      reused_parts: reused.parts.length,
+      budget,
+      /* Both spreads are EMPTY on the answered path, so a working instance's
+         answer is byte-identical to what it was before this item; the extra
+         field exists only where the answer used to be a claim nobody could
+         support. */
+      ...ceilingRead ? { ceiling: observed } : { ceiling_unread: {
+        reason: STORE_SILENT_REASON2,
+        op: "ratify/capturelimit",
+        detail: STORE_SILENT_DETAIL2
+      } },
+      confirmed: tally("confirmed"),
+      changed: tally("changed"),
+      unavailable: tally("unavailable"),
+      not_attempted: tally("not_attempted"),
+      outcomes: verdicts.map((v) => ({
+        address_norm: v.address_norm,
+        source_capture: v.source_capture,
+        verdict: v.verdict,
+        observed_sha: v.observed_sha,
+        basis: v.basis
+      })),
+      note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say different things; not_attempted names a part the budget could not reach. Re-fetch is a plain GET, hashed by us -- a reused part ratified in silence is what is forbidden.",
+      ...vOut.answered ? {} : { recorded: {
+        ok: false,
+        reason: STORE_SILENT_REASON2,
+        op: "ratify/recordreuseverdicts",
+        detail: STORE_SILENT_DETAIL2,
+        note: "the outcomes above are what this ratification OBSERVED; whether they reached the record is undetermined, so do not read their absence from the reuse history as their never having been checked. Re-ratifying converges it."
+      } }
+    };
+  }
+  return json5({
+    ok: true,
+    bundleId: body.bundleId,
+    bundleSha: body.expectedSha,
+    edition: pub.edition,
+    /* REC-22: the manifest's own hash IS the container's identity — every
+       part is named and hashed by it — so it is also the address the zip
+       is served at (op=publishedbytes&sha256=<manifest_sha>&format=zip),
+       and `graph` reports what the published edges did: how many the
+       surface may SERVE, how many it may only NAME, and how many
+       references to material not yet published were held privately
+       (counts, as publication answers them; a held target's id is never
+       published, R5). */
+    /* REC-58, 2026-08-05: THIS PICK IS A FENCE AND IS NAMED AS
+       ONE, because it was doing the work with nothing saying
+       so. `pub.case` is `#caseEditionState`'s WHOLE return,
+       arriving over the internal `do/publish` hop, and it
+       carries `opened` — the only route by which that field can
+       leave the store. Five fields are forwarded and `opened` is
+       not among them, so it stops here. KEEP THIS A PICK: a
+       `...pub.case` would put an unconsumed field (re-measured
+       at zero consumers by REC-58) on a public answer with
+       nobody having decided to publish it. test/case-opened.test.mjs
+       asserts both the named fields and the absence of a spread. */
+    ...pub.caseId ? {
+      caseId: pub.caseId,
+      case: {
+        edition: pub.case?.edition ?? null,
+        complete: !!pub.case?.complete,
+        awaiting: pub.case?.awaiting ?? [],
+        findings: (pub.case?.findings ?? []).map((f9) => f9.bundle_id),
+        detail: pub.case?.detail ?? null
+      }
+    } : {},
+    container: container2 ?? (pub.case && pub.case.manifest_sha ? {
+      manifest_sha: pub.case.manifest_sha,
+      zip: `op=publishedbytes&sha256=${pub.case.manifest_sha}&format=zip`
+    } : null),
+    graph: pub.edges ?? null,
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12: where this edition's number and
+       frozen pair were read from — the finding's own bytes (legacy), the case
+       documents pinning them, or neither — and whether those documents disagreed
+       about the pair. Two scalars, forwarded by name like every field here. */
+    frozenFrom: pub.frozenFrom ?? null,
+    ...pub.strengthUndetermined ? { strengthUndetermined: true } : {},
+    existed: pub.existed,
+    ratifiedAt: pub.ratifiedAt,
+    attestor: attestor?.member_id ?? null,
+    gateVersion: gate.gateVersion,
+    /* REC-128: who DELIVERED this request (a retry that `existed`
+       wrote nothing; the record keeps its first deliverer). */
+    deliveredBy: delivererOf(deliveredBy),
+    published: {
+      shas: shas.length,
+      copied,
+      alreadyPresent: present,
+      r2: r2state,
+      ...partsPublished ? { parts: partsPublished } : {}
+    },
+    ...reuseReport ? { reuse: reuseReport } : {},
+    store: storeName,
+    tokenClass: cls
+  }, 200);
+}
+
 // src/store.mjs
 import { DurableObject } from "cloudflare:workers";
 
@@ -113266,799 +114025,8 @@ var Store2 = class extends Store {
   }
 };
 
-// src/extraction/ops.mjs
-var CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-async function readAnswer(res) {
-  let r = null, out = null;
-  try {
-    r = await res;
-    out = await r.json();
-  } catch {
-    out = null;
-  }
-  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: void 0 };
-  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
-  if (out.ok === true) return { answered: true, result: out.result, reply };
-  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: void 0, reply };
-  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string" && CORRELATION.test(out.correlation) ? out.correlation : void 0;
-  return correlation ? { answered: false, result: void 0, correlation } : { answered: false, result: void 0 };
-}
-async function ask(store, path, init, doAnswer2) {
-  const res = (async () => store.fetch(path, init))();
-  return typeof doAnswer2 === "function" ? doAnswer2(res) : readAnswer(res);
-}
-var jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
-  status,
-  headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
-});
-function unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
-  if (r && r.refused && r.reply)
-    return typeof storeRefusal2 === "function" ? storeRefusal2(r) : json5(r.reply.body, r.reply.status);
-  if (!r || !r.answered || !r.result) return storeSilent2(op, r ? r.correlation : void 0);
-  return null;
-}
-async function pdfStructureOp(url, env, store, {
-  json: json5,
-  storeSilent: storeSilent2,
-  storeRefusal: storeRefusal2,
-  doAnswer: doAnswer2,
-  storageAbsent: storageAbsent2,
-  requiredArgument: requiredArgument2,
-  cls,
-  session,
-  caps,
-  viewer,
-  author,
-  storeName
-}) {
-  const op = "pdfstructure";
-  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
-  const sha = (url.searchParams.get("sha256") || "").toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(sha))
-    return json5({ ok: false, ...requiredArgument2(
-      "pdfstructure",
-      "sha256",
-      "<64 lowercase hex>",
-      "pdfstructure requires sha256=<64 lowercase hex>"
-    ) }, 400);
-  const q6 = new URLSearchParams({
-    sha256: sha,
-    cls: cls || "",
-    session: session ? "1" : "0",
-    caps: [...caps || []].join(","),
-    viewer: viewer || "",
-    author: author || "",
-    store: storeName || "bio"
-  });
-  if (url.searchParams.has("ocr")) q6.set("ocr", url.searchParams.get("ocr") ?? "");
-  const r = await ask(store, `http://x/pdfstructure?${q6}`, void 0, doAnswer2);
-  return unanswered2(r, op, { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json5(r.result.body, r.result.status);
-}
-async function acquireReadingOp(answer, store, { json: json5 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
-  const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ document: answer.document })
-  }, doAnswer2);
-  const relayed = unanswered2(r, "acquire", { json: json5, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (relayed) return { response: relayed };
-  const out = r.result;
-  const body = withReading(answer, {
-    reading: out.reading,
-    textUnits: out.text_units || null,
-    textUnitsOverBound: out.text_units_over_bound || 0
-  });
-  if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
-  return { body };
-}
-
-// src/ratification/ops.mjs
-function storeRefused(out, { json: json5, storeRefusal: storeRefusal2 }) {
-  return typeof storeRefusal2 === "function" ? storeRefusal2(out) : json5(out.reply.body, out.reply.status);
-}
-async function caseRatifyOp(req, stub, ctx) {
-  const {
-    env,
-    json: json5,
-    doAnswer: doAnswer2,
-    storeSilent: storeSilent2,
-    storeRefusal: storeRefusal2,
-    assembleCaseContainer: assembleCaseContainer2,
-    storeName,
-    cls,
-    aiCred,
-    viaSession,
-    sessViewer,
-    sessRights
-  } = ctx;
-  const relay = { json: json5, storeRefusal: storeRefusal2 };
-  const op = "caseratify";
-  if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
-    return json5({
-      ok: false,
-      reason: "MACHINE_CANNOT_RATIFY_CASE",
-      ...rowOf5("MACHINE_CANNOT_RATIFY_CASE"),
-      op,
-      tokenClass: cls,
-      detail: "committing a case is a member's signed act. An assistant's credential may assemble the case document and may never commit it, whoever's signature it carries (DEC-24 rule 4)."
-    }, 403);
-  if (!viaSession)
-    return json5({
-      ok: false,
-      reason: "OPERATOR_TOKEN_CANNOT_RATIFY_CASE",
-      ...rowOf5("OPERATOR_TOKEN_CANNOT_RATIFY_CASE"),
-      op,
-      tokenClass: cls,
-      detail: `committing a case is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised the case, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
-    }, 403);
-  const body = await req.json().catch(() => null);
-  if (!body?.caseId || !Number.isInteger(body?.edition) || !body?.expectedSha || typeof body?.sig !== "string")
-    return json5({
-      ok: false,
-      reason: "MALFORMED",
-      detail: "caseratify requires caseId, edition (integer), expectedSha, and sig (armored SSH signature over the case document's sha)"
-    }, 400);
-  const factsOut = await doAnswer2(stub.fetch(
-    `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}&edition=${encodeURIComponent(String(body.edition))}&viewer=${encodeURIComponent(sessViewer)}`
-  ));
-  if (factsOut.refused) return storeRefused(factsOut, relay);
-  if (!factsOut.answered) return storeSilent2("caseratify/facts", factsOut.correlation);
-  const facts = factsOut.result;
-  if (!facts.ok) return json5({ ok: false, ...facts, store: storeName, tokenClass: cls }, 404);
-  const attr2 = facts.attribution || { reached: [], legacy: [], stated: [], current: [] };
-  if (attr2.legacy.length)
-    return json5({
-      ok: false,
-      reason: "TESTIMONY_CASE_UNPUBLISHABLE",
-      ...rowOf5("TESTIMONY_CASE_UNPUBLISHABLE"),
-      caseId: facts.doc.case_id,
-      edition: facts.doc.edition,
-      observations: attr2.legacy.slice(0, 50),
-      detail: `a finding in ${facts.doc.case_id} rests on an observation whose own files name its author (written before \xA74.1) or cannot be read to show they do not (${attr2.legacy.slice(0, 5).join(", ")}); publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const unchosen = attr2.current.filter((r2) => !r2.level);
-  if (unchosen.length)
-    return json5({
-      ok: false,
-      reason: "ATTRIBUTION_UNCHOSEN",
-      ...rowOf5("ATTRIBUTION_UNCHOSEN"),
-      caseId: facts.doc.case_id,
-      edition: facts.doc.edition,
-      unchosen: unchosen.slice(0, 50).map((r2) => ({ observation: r2.observation, why: r2.why })),
-      detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches ${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} author: ${unchosen.slice(0, 5).map((r2) => r2.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md \xA74.4). Each author chooses with op=attribute; nothing is filled in for them`,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  {
-    const statedOf = new Map(attr2.stated.map((r2) => [r2.observation, r2]));
-    const drift = attr2.current.filter((r2) => {
-      const st = statedOf.get(r2.observation);
-      return !st || st.level !== r2.level || (st.shown ?? null) !== (r2.shown ?? null);
-    });
-    if (drift.length || attr2.stated.length !== attr2.current.length)
-      return json5({
-        ok: false,
-        reason: "ATTRIBUTION_STATEMENT_STALE",
-        ...rowOf5("ATTRIBUTION_STATEMENT_STALE"),
-        caseId: facts.doc.case_id,
-        edition: facts.doc.edition,
-        observations: (drift.length ? drift : attr2.current).slice(0, 50).map((r2) => r2.observation),
-        detail: `the case document's attribution statements do not match what the observations' authors chose for this edition; re-prepare it (op=publish) and sign the new bytes`,
-        store: storeName,
-        tokenClass: cls
-      }, 409);
-  }
-  if (facts.doc.doc_sha !== body.expectedSha)
-    return json5({
-      ok: false,
-      reason: "CASE_RATIFY_STALE",
-      detail: "the case document has changed since it was reviewed; read it again and re-sign",
-      expected: facts.doc.doc_sha,
-      got: body.expectedSha,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  if (!facts.signers.length)
-    return json5({
-      ok: false,
-      reason: "NO_SIGNERS",
-      detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const sv = await verifySshsig(
-    body.sig,
-    caseRatifyStatement(facts.doc.case_id, facts.doc.edition, facts.doc.doc_sha),
-    NS_RATIFY,
-    facts.signers.map((s) => s.key_b64)
-  );
-  if (!sv.ok)
-    return json5({
-      ok: false,
-      reason: "SIG_" + sv.reason,
-      ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
-      ...sv.detail ? { detail: sv.detail } : {},
-      store: storeName,
-      tokenClass: cls
-    }, 403);
-  const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-  const gateOut = await doAnswer2(stub.fetch(
-    `http://do/casegate?viewer=${encodeURIComponent(sessViewer)}`,
-    { method: "POST", body: JSON.stringify({
-      caseId: facts.doc.case_id,
-      edition: Number(facts.doc.edition),
-      docSha: facts.doc.doc_sha
-    }) }
-  ));
-  if (gateOut.refused) return storeRefused(gateOut, relay);
-  if (!gateOut.answered) return storeSilent2("caseratify/gate", gateOut.correlation);
-  const gate = gateOut.result || {};
-  if (gate.reason && !Array.isArray(gate.findings))
-    return json5({ ok: false, ...gate, store: storeName, tokenClass: cls }, gate.reason === "CASE_RATIFY_STALE" ? 409 : 404);
-  if (!gate.ok)
-    return json5({
-      ok: false,
-      reason: "GATE_REFUSED",
-      gateVersion: gate.gateVersion,
-      findings: gate.findings,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const deliveredBy = deliveringPrincipal(sessRights);
-  const out = await doAnswer2(stub.fetch("http://do/caseratify", {
-    method: "POST",
-    body: JSON.stringify({
-      caseId: facts.doc.case_id,
-      edition: Number(facts.doc.edition),
-      docSha: facts.doc.doc_sha,
-      sigArmored: body.sig,
-      attestorKey: sv.keyB64,
-      attestorMember: attestor?.member_id ?? null,
-      gateVersion: gate.gateVersion,
-      deliveredBy
-    })
-  }));
-  if (out.refused) return storeRefused(out, relay);
-  if (!out.answered) return storeSilent2("caseratify/commit", out.correlation);
-  const answered = out.result;
-  const { completedCase, ...r } = answered || {};
-  if (!answered || !r.ok)
-    return json5({
-      ok: false,
-      ...r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered },
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const container2 = completedCase && completedCase.complete && !completedCase.manifest_sha ? await assembleCaseContainer2({ env, stub, storeName, cs: completedCase, via: "caseratify" }) : null;
-  return json5({
-    ok: true,
-    ...r,
-    gateVersion: gate.gateVersion,
-    ...container2 ? { container: container2 } : {},
-    attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
-    /* REC-128: who carried the signature in, beside who made it. On a
-       retry of the same signature (`existed`) the store wrote nothing,
-       so the RECORD's deliverer is the first one — read it back through
-       op=casedocument; this field is who delivered THIS request. */
-    deliveredBy: delivererOf(deliveredBy),
-    /* THE WINDOW, NAMED IN THE ANSWER RATHER THAN LEFT TO BE
-       INFERRED FROM AN EMPTY LIST. The case is committed and the
-       members still sign their own bytes, because the finding is
-       the unit of truth — the container becomes assemblable when
-       the last of them lands. */
-    next: r.awaiting?.length ? `the case is committed. ${r.awaiting.length} member finding(s) still to ratify (op=ratify): ${r.awaiting.join(", ")}. This edition becomes servable as a container when the last of them lands.` : "the case is committed and every member finding is already ratified at the version this case pinned" + (container2 && container2.manifest_sha ? `, so its container is assembled (${container2.zip}).` : "."),
-    store: storeName,
-    tokenClass: cls
-  });
-}
-async function ratifyOp(req, stub, ctx) {
-  const {
-    env,
-    json: json5,
-    doAnswer: doAnswer2,
-    storeSilent: storeSilent2,
-    storeRefusal: storeRefusal2,
-    assembleCaseContainer: assembleCaseContainer2,
-    storeName,
-    cls,
-    aiCred,
-    viaSession,
-    sessViewer,
-    sessRights,
-    captureKey: captureKey2,
-    withBiasChecks: withBiasChecks2,
-    STORE_SILENT_REASON: STORE_SILENT_REASON2,
-    STORE_SILENT_DETAIL: STORE_SILENT_DETAIL2
-  } = ctx;
-  const relay = { json: json5, storeRefusal: storeRefusal2 };
-  const op = "ratify";
-  if (aiCred && isMachineIdentity(`${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`))
-    return json5({
-      ok: false,
-      reason: "MACHINE_CANNOT_RATIFY",
-      ...rowOf5("MACHINE_CANNOT_RATIFY"),
-      op,
-      tokenClass: cls,
-      detail: "ratifying is a member's signed act. An assistant's credential may prepare the finding and may never carry the signature in, whoever's key made it (DEC-24 rule 4)."
-    }, 403);
-  if (!viaSession)
-    return json5({
-      ok: false,
-      reason: "OPERATOR_TOKEN_CANNOT_RATIFY",
-      ...rowOf5("OPERATOR_TOKEN_CANNOT_RATIFY"),
-      op,
-      tokenClass: cls,
-      detail: `ratifying is a member's own signed act, delivered through that member's own signed-in session. The credential that asked is the operator's \`${cls}\`-class bearer token: the signature says who authorised publication, and the credential that delivers it decides when the record changes, so a bearer token may not carry it in (D-421).`
-    }, 403);
-  const body = await req.json().catch(() => null);
-  if (!body?.bundleId || !body?.expectedSha || typeof body?.sig !== "string")
-    return json5({ ok: false, reason: "MALFORMED", detail: "ratify requires bundleId, expectedSha, and sig (armored SSH signature)" }, 400);
-  const ratViewer = encodeURIComponent(viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`);
-  const factsOut = await doAnswer2(stub.fetch(`http://do/gatefacts?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
-  if (factsOut.refused) return storeRefused(factsOut, relay);
-  if (!factsOut.answered) return storeSilent2("ratify/gatefacts", factsOut.correlation);
-  const facts = factsOut.result;
-  if (!facts.ok) return json5({ ...facts, store: storeName, tokenClass: cls }, 404);
-  if (normalizeType(facts.row.object_type) === "project")
-    return json5({
-      ok: false,
-      reason: "RATIFY_PROJECT_BUNDLE",
-      ...rowOf5("RATIFY_PROJECT_BUNDLE"),
-      bundleId: body.bundleId,
-      detail: `${body.bundleId} is a project's own document, and a project is published through its cases, never directly (BIO_Publication_v0_1.md \xA73 rule 2; D-429). Nothing was published.`,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const legacy = Array.isArray(facts.testimonyLegacy) ? facts.testimonyLegacy : [];
-  if (facts.testimony && facts.testimony.self.length && legacy.includes(body.bundleId))
-    return json5({
-      ok: false,
-      reason: "TESTIMONY_UNPUBLISHABLE",
-      ...rowOf5("TESTIMONY_UNPUBLISHABLE"),
-      bundleId: body.bundleId,
-      detail: `${body.bundleId} is a member's observation whose own files name its author (written before \xA74.1), or cannot be read to show they do not; publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  if (facts.testimony && facts.testimony.via.some((v) => legacy.includes(v.observation)))
-    return json5({
-      ok: false,
-      reason: "TESTIMONY_CITED_UNPUBLISHABLE",
-      ...rowOf5("TESTIMONY_CITED_UNPUBLISHABLE"),
-      bundleId: body.bundleId,
-      rests_on: facts.testimony.via.filter((v) => legacy.includes(v.observation)),
-      detail: `${body.bundleId} rests on an observation whose own files name its author (written before \xA74.1) or cannot be read to show they do not (${facts.testimony.via.filter((v) => legacy.includes(v.observation)).slice(0, 5).map((v) => v.observation).join(", ")})`,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  if (facts.testimony && facts.testimony.self.length && !facts.attributionStated)
-    return json5({
-      ok: false,
-      reason: "ATTRIBUTION_UNSTATED",
-      ...rowOf5("ATTRIBUTION_UNSTATED"),
-      bundleId: body.bundleId,
-      detail: `no ratified case document states an attribution for ${body.bundleId}; sign the case edition that uses it (op=caseratify) first, and its author's chosen level is published with it`,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  if (facts.row.bundle_sha !== body.expectedSha)
-    return json5({
-      ok: false,
-      reason: "RATIFY_STALE",
-      detail: "the bundle has changed since it was reviewed; read it again and re-sign",
-      expected: facts.row.bundle_sha,
-      got: body.expectedSha,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  if (!facts.signers.length)
-    return json5({
-      ok: false,
-      reason: "NO_SIGNERS",
-      detail: "no active registered signing keys; an admin must register a member key before anything can be ratified",
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const sv = await verifySshsig(
-    body.sig,
-    ratifyStatement(body.bundleId, body.expectedSha),
-    NS_RATIFY,
-    facts.signers.map((s) => s.key_b64)
-  );
-  if (!sv.ok)
-    return json5({
-      ok: false,
-      reason: "SIG_" + sv.reason,
-      ...sv.keyB64 ? { keyB64: sv.keyB64 } : {},
-      ...sv.detail ? { detail: sv.detail } : {},
-      store: storeName,
-      tokenClass: cls
-    }, 403);
-  const attestor = facts.signers.find((s) => s.key_b64 === sv.keyB64);
-  const imgOut = await doAnswer2(stub.fetch(`http://do/image?id=${encodeURIComponent(body.bundleId)}&viewer=${ratViewer}`));
-  if (imgOut.refused) return storeRefused(imgOut, relay);
-  if (!imgOut.answered) return storeSilent2("ratify/image", imgOut.correlation);
-  const image = imgOut.result;
-  const r2 = typeof env.CAPTURES?.head === "function";
-  const listOut = await doAnswer2(stub.fetch(`http://do/list?viewer=${ratViewer}`));
-  if (listOut.refused) return storeRefused(listOut, relay);
-  if (!listOut.answered) return storeSilent2("ratify/list", listOut.correlation);
-  const known = new Set((listOut.result || []).map((b) => b.bundle_id));
-  const partedRows = /* @__PURE__ */ new Map();
-  const gate = withCaseMemberChecks(image, withBiasChecks2(image, withRegisterChecks(image, await runGate({
-    bundleId: body.bundleId,
-    image,
-    knownIds: known,
-    registers: facts.registers,
-    /* REC-14: the two facts the catalog cannot read out of the bundle --
-       what THIS case asserted at its previous EDITION (C-21.1) and what the
-       cases beneath it FROZE when they were signed (C-21.2). They come from
-       the store with the rest of the gate facts, so the gate and the write
-       path judge against the same published record. Passing nothing here
-       does not soften the gate, it blinds it. */
-    publishedRegistry: facts.publishedRegistry,
-    /* REC-44: C-21.1's fact moved to CASE altitude and travels in its own
-       registry, from the same one place that has the rows. */
-    publishedCaseRegistry: facts.publishedCaseRegistry,
-    /* REC-18: and the third — what each basis target EARNS from the record
-       (resolutions against the question's subject entity; the capture
-       record for the capture axis). Same reasoning, same source: an earned
-       grade is computed by the record, so a gate that cannot see the record
-       cannot confirm one, and threading it here is what makes the gate and
-       op=promote's write path judge an earned leg identically. */
-    earnedRegistry: facts.earnedRegistry,
-    hasCapture: async (sha) => {
-      if (!r2) return { present: false, bytes: 0 };
-      const h = await env.CAPTURES.head(`${storeName}/captures/${sha}`);
-      if (h) return { present: true, bytes: h.size };
-      const hOut = await doAnswer2(stub.fetch(
-        `http://x/registerholds?sha256=${encodeURIComponent(sha)}&bundle=${encodeURIComponent(body.bundleId)}`
-      ));
-      const named = hOut.answered && hOut.result ? hOut.result.parts : null;
-      if (named?.state === "unreadable") return { present: false, bytes: 0, parts: { why: named.why } };
-      if (named?.state === "named") {
-        const v = await partsHeld(env.CAPTURES, (s) => captureKey2(storeName, s), named.parts);
-        if (!v.missing.length && !v.disagree.length && !v.unverified.length) partedRows.set(sha, named.parts);
-        return { present: false, bytes: 0, parts: { named: named.parts, ...v } };
-      }
-      const inParts = !!(hOut.answered && hOut.result && hOut.result.acquired === true);
-      return { present: false, bytes: 0, ...inParts ? { heldInParts: true } : {} };
-    }
-  }))), parseFrontmatter);
-  if (!gate.ok)
-    return json5({
-      ok: false,
-      reason: "GATE_REFUSED",
-      gateVersion: gate.gateVersion,
-      findings: gate.findings,
-      store: storeName,
-      tokenClass: cls
-    }, 409);
-  const registerBytes = new Map((facts.registers || []).map((r) => [r.path, r.bytes]));
-  const shas = [];
-  for (const [path, v] of Object.entries(image)) {
-    if (path.startsWith("_history/")) continue;
-    if (typeof v === "string") {
-      const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v)))].map((x) => x.toString(16).padStart(2, "0")).join("");
-      shas.push({
-        sha256: sha,
-        path,
-        kind: path === "bundle.md" ? "bundle" : "file",
-        bytes: new TextEncoder().encode(v).length,
-        text: v
-      });
-    } else if (!partedRows.has(v.blobSha)) {
-      shas.push({
-        sha256: v.blobSha,
-        path,
-        kind: "capture",
-        bytes: registerBytes.has(path) ? registerBytes.get(path) : null
-      });
-    }
-  }
-  const partShaSet = /* @__PURE__ */ new Set();
-  for (const [whole, parts] of partedRows) {
-    const at17 = (facts.registers || []).find((r) => r.capture_sha === whole)?.path || whole;
-    parts.forEach((p, i) => {
-      partShaSet.add(p.sha256);
-      if (!shas.some((s) => s.sha256 === p.sha256))
-        shas.push({ sha256: p.sha256, path: p.file || `${at17}.part${i + 1}`, kind: "capture_part", bytes: p.bytes });
-    });
-  }
-  const ratifiedFm = typeof image["bundle.md"] === "string" ? parseFrontmatter(image["bundle.md"]).data || {} : {};
-  const isCase = normalizeType(ratifiedFm.object_type) === "inquiry" && isCaseMemberBytes2(ratifiedFm);
-  const edition = isCase && Number.isInteger(ratifiedFm.edition) ? ratifiedFm.edition : 1;
-  const frozenStrength = isCase && Array.isArray(ratifiedFm.published_strength) ? ratifiedFm.published_strength : null;
-  const frozenCompleteness = isCase ? {
-    ...completenessFields(ratifiedFm),
-    subject_position: ratifiedFm.completeness?.subject_position ?? null,
-    author: ratifiedFm.completeness?.author ?? null,
-    at: ratifiedFm.completeness?.at ?? null
-  } : null;
-  const edges = publishedGraphEdges(ratifiedFm);
-  const deliveredBy = deliveringPrincipal(sessRights);
-  const pubOut = await doAnswer2(stub.fetch(new Request("http://do/publish", {
-    method: "POST",
-    body: JSON.stringify({
-      bundleId: body.bundleId,
-      bundleSha: body.expectedSha,
-      deliveredBy,
-      attestorKey: sv.keyB64,
-      attestorMember: attestor?.member_id ?? null,
-      gateVersion: gate.gateVersion,
-      sigArmored: body.sig,
-      /* Only a CASE names its edition, and it names it in the signed bytes.
-         Everything else leaves it to the store, which appends the next one
-         — an information bundle has no authored edition to assert and the
-         control plane must not invent one for it. */
-      ...isCase ? { edition } : {},
-      title: ratifiedFm.title ?? null,
-      completeness: frozenCompleteness,
-      strength: frozenStrength,
-      /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member published under rule 12 carries
-         no frozen block in its own bytes (`isCase` false), and the store reads its edition and
-         frozen pair from the RATIFIED case documents pinning these bytes instead. Legacy bytes
-         carry their own, read above exactly as before (rule 12 (e)). */
-      memberCarriesBlocks: isCase,
-      /* CASE-5b: `required` IS NOT SENT ANY MORE. The bar is the CASE's
-         (DEC-72 clause 2) and it left these bytes with the rest of the case,
-         so there is nothing here to send. `publish()` reads it from
-         `published_cases.bar` — committed from the case document a member
-         signed — which is the same doctrine reading a different signature. */
-      group: ratifiedFm.group ?? null,
-      edges,
-      shas: shas.map(({ text: text3, ...s }) => s)
-    })
-  })));
-  if (pubOut.refused) return storeRefused(pubOut, relay);
-  if (!pubOut.answered) return storeSilent2("ratify/publish", pubOut.correlation);
-  const pub = pubOut.result;
-  if (!pub?.ok)
-    return json5(
-      {
-        ok: false,
-        ...pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub },
-        store: storeName,
-        tokenClass: cls
-      },
-      pub && (pub.reason === "EDITION_NOT_INCREMENTED" || pub.reason === "EDITION_EXISTS" || pub.reason === "CASE_ASSERTION_DIVERGED" || pub.reason === "CASE_MEMBERSHIP_DIVERGED" || pub.reason === "CASE_ROLES_DIVERGED" || pub.reason === "CASE_PRODUCTION_DIVERGED" || pub.reason === "CASE_NAMES_NO_PROJECT" || pub.reason === "CASE_ROSTER_EXCLUDES_SELF" || pub.reason === "CASE_SIGNER_NOT_AN_OWNER" || pub.reason === "PROJECT_ACT_NOT_A_PARTICIPANT" || pub.reason === "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE" || pub.reason === "RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE") ? 409 : 500
-    );
-  let copied = 0, present = 0, r2state = "not configured";
-  if (typeof env.PUBLISHED?.put === "function" && r2) {
-    r2state = "ok";
-    for (const s of shas) {
-      const key = `${storeName}/published/${s.sha256}`;
-      if (await env.PUBLISHED.head(key)) {
-        present++;
-        continue;
-      }
-      if (s.kind === "capture" || s.kind === "capture_part") {
-        const obj = await env.CAPTURES.get(`${storeName}/captures/${s.sha256}`);
-        if (!obj) {
-          r2state = "INCOMPLETE: capture vanished between gate and copy";
-          continue;
-        }
-        if (!partShaSet.has(s.sha256)) await env.PUBLISHED.put(key, obj.body);
-        else try {
-          await env.PUBLISHED.put(key, obj.body, { sha256: s.sha256 });
-        } catch {
-          continue;
-        }
-      } else {
-        await env.PUBLISHED.put(key, new TextEncoder().encode(s.text));
-      }
-      copied++;
-    }
-  }
-  const partShas = [...new Map([...partedRows.values()].flat().map((p) => [p.sha256, p])).values()];
-  let partsPublished = null;
-  if (partShas.length && r2state !== "not configured") {
-    const v = await partsHeld(env.PUBLISHED, (s) => `${storeName}/published/${s}`, partShas);
-    const bad = [...v.missing, ...v.disagree, ...v.unverified];
-    partsPublished = {
-      parts: partShas.length,
-      verified: partShas.length - bad.length,
-      ...v.missing.length ? { missing_parts: v.missing } : {},
-      ...v.disagree.length ? { disagreeing_parts: v.disagree } : {},
-      ...v.unverified.length ? { unverified_parts: v.unverified } : {}
-    };
-    if (bad.length)
-      r2state = `INCOMPLETE: ${bad.length} of ${partShas.length} parts did not verify in the published bucket: ${bad.map((p) => p.file || p.sha256).join(", ")}`;
-  }
-  let container2 = null;
-  if (pub.case && pub.case.complete && !pub.case.manifest_sha)
-    container2 = await assembleCaseContainer2({ env, stub, storeName, cs: pub.case, via: "ratify" });
-  else if (Array.isArray(pub.containerCases)) {
-    for (const cs of pub.containerCases)
-      if (cs && cs.complete && !cs.manifest_sha)
-        container2 = await assembleCaseContainer2({ env, stub, storeName, cs, via: "ratify" });
-  }
-  let reuseReport = null;
-  const reusedOut = await doAnswer2(stub.fetch(`http://do/reusedparts?id=${encodeURIComponent(body.bundleId)}`));
-  const reused = reusedOut.result;
-  if (!reusedOut.answered) {
-    reuseReport = {
-      ok: false,
-      reason: STORE_SILENT_REASON2,
-      op: "ratify/reusedparts",
-      detail: STORE_SILENT_DETAIL2,
-      note: "whether this bundle reused any part from the record is UNDETERMINED for this ratification, and that is NOT the same as no part having been reused. The bundle is ratified -- the signature, the gate and the published rows are all unaffected by this read -- and the reuse re-check (CAP-4 item 6b) did not happen. Re-ratifying converges it."
-    };
-  } else if (reused && Array.isArray(reused.parts) && reused.parts.length) {
-    const limOut = await doAnswer2(stub.fetch("http://do/capturelimit?runtime=subrequests"));
-    const ceilingRead = limOut.answered;
-    const lim = limOut.result;
-    const observed = ceilingRead && lim && lim.observed ? lim.observed : null;
-    const ceilingWord = !ceilingRead ? "UNREAD -- the store did not answer the capture-limit read, so this budget is our own appetite and not a calibrated ceiling" : observed == null ? "none observed" : String(observed);
-    const appetite = Number(env.RATIFY_REFETCH_BUDGET) || 500;
-    const margin = env.RATIFY_REFETCH_MARGIN !== void 0 ? Number(env.RATIFY_REFETCH_MARGIN) || 0 : 4;
-    const budget = observed != null ? Math.min(appetite, Math.max(0, observed - margin)) : appetite;
-    const rhex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-    const verdicts = [];
-    let spent = 0;
-    for (const p of reused.parts) {
-      const base = {
-        source_capture: p.primary_sha,
-        host: p.host,
-        address_norm: p.address_norm,
-        reused_sha: p.reused_sha
-      };
-      if (!p.address || !isPublicHttpsLocator(p.address)) {
-        verdicts.push({
-          ...base,
-          verdict: "unavailable",
-          observed_sha: null,
-          basis: "the reused part has no re-fetchable public https address on record, so the source cannot be re-checked; ratified with the bytes captured on the day"
-        });
-        continue;
-      }
-      if (spent >= budget) {
-        verdicts.push({
-          ...base,
-          verdict: "not_attempted",
-          observed_sha: null,
-          basis: `this ratification's re-fetch budget (${budget}, bounded by the calibrated subrequest ceiling ${ceilingWord}) was spent before this part; it is recorded as outstanding, not silently omitted`
-        });
-        continue;
-      }
-      spent++;
-      let r = null;
-      try {
-        r = await fetch(p.address, { redirect: "follow", headers: { "user-agent": userAgent(env, "ratify") } });
-      } catch {
-        r = null;
-      }
-      if (!r || !r.ok) {
-        verdicts.push({
-          ...base,
-          verdict: "unavailable",
-          observed_sha: null,
-          basis: `a plain GET returned ${r ? r.status : "a network error"}; the source no longer answers, and the bundle is ratified with the bytes captured on the day`
-        });
-        continue;
-      }
-      const got = rhex(await crypto.subtle.digest("SHA-256", new Uint8Array(await r.arrayBuffer())));
-      if (got === p.reused_sha)
-        verdicts.push({
-          ...base,
-          verdict: "confirmed",
-          observed_sha: got,
-          basis: "a plain GET re-fetched the reused part and our own SHA-256 over what we received matches the reused bytes"
-        });
-      else
-        verdicts.push({
-          ...base,
-          verdict: "changed",
-          observed_sha: got,
-          basis: "a plain GET returned different bytes than were reused; ratified with the bytes captured on the day, the divergence recorded as the dated fact it is"
-        });
-    }
-    const at17 = (/* @__PURE__ */ new Date()).toISOString();
-    const vOut = await doAnswer2(stub.fetch(new Request("http://do/recordreuseverdicts", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ bundleId: body.bundleId, at: at17, verdicts })
-    })));
-    const tally = (k) => verdicts.filter((v) => v.verdict === k).length;
-    reuseReport = {
-      reused_parts: reused.parts.length,
-      budget,
-      /* Both spreads are EMPTY on the answered path, so a working instance's
-         answer is byte-identical to what it was before this item; the extra
-         field exists only where the answer used to be a claim nobody could
-         support. */
-      ...ceilingRead ? { ceiling: observed } : { ceiling_unread: {
-        reason: STORE_SILENT_REASON2,
-        op: "ratify/capturelimit",
-        detail: STORE_SILENT_DETAIL2
-      } },
-      confirmed: tally("confirmed"),
-      changed: tally("changed"),
-      unavailable: tally("unavailable"),
-      not_attempted: tally("not_attempted"),
-      outcomes: verdicts.map((v) => ({
-        address_norm: v.address_norm,
-        source_capture: v.source_capture,
-        verdict: v.verdict,
-        observed_sha: v.observed_sha,
-        basis: v.basis
-      })),
-      note: "every reused part carries an outcome. confirmed/changed/unavailable all ratify and say different things; not_attempted names a part the budget could not reach. Re-fetch is a plain GET, hashed by us -- a reused part ratified in silence is what is forbidden.",
-      ...vOut.answered ? {} : { recorded: {
-        ok: false,
-        reason: STORE_SILENT_REASON2,
-        op: "ratify/recordreuseverdicts",
-        detail: STORE_SILENT_DETAIL2,
-        note: "the outcomes above are what this ratification OBSERVED; whether they reached the record is undetermined, so do not read their absence from the reuse history as their never having been checked. Re-ratifying converges it."
-      } }
-    };
-  }
-  return json5({
-    ok: true,
-    bundleId: body.bundleId,
-    bundleSha: body.expectedSha,
-    edition: pub.edition,
-    /* REC-22: the manifest's own hash IS the container's identity — every
-       part is named and hashed by it — so it is also the address the zip
-       is served at (op=publishedbytes&sha256=<manifest_sha>&format=zip),
-       and `graph` reports what the published edges did: how many the
-       surface may SERVE, how many it may only NAME, and how many
-       references to material not yet published were held privately
-       (counts, as publication answers them; a held target's id is never
-       published, R5). */
-    /* REC-58, 2026-08-05: THIS PICK IS A FENCE AND IS NAMED AS
-       ONE, because it was doing the work with nothing saying
-       so. `pub.case` is `#caseEditionState`'s WHOLE return,
-       arriving over the internal `do/publish` hop, and it
-       carries `opened` — the only route by which that field can
-       leave the store. Five fields are forwarded and `opened` is
-       not among them, so it stops here. KEEP THIS A PICK: a
-       `...pub.case` would put an unconsumed field (re-measured
-       at zero consumers by REC-58) on a public answer with
-       nobody having decided to publish it. test/case-opened.test.mjs
-       asserts both the named fields and the absence of a spread. */
-    ...pub.caseId ? {
-      caseId: pub.caseId,
-      case: {
-        edition: pub.case?.edition ?? null,
-        complete: !!pub.case?.complete,
-        awaiting: pub.case?.awaiting ?? [],
-        findings: (pub.case?.findings ?? []).map((f9) => f9.bundle_id),
-        detail: pub.case?.detail ?? null
-      }
-    } : {},
-    container: container2 ?? (pub.case && pub.case.manifest_sha ? {
-      manifest_sha: pub.case.manifest_sha,
-      zip: `op=publishedbytes&sha256=${pub.case.manifest_sha}&format=zip`
-    } : null),
-    graph: pub.edges ?? null,
-    /* D-442 / BIO_Publication_v0_1.md §3 rule 12: where this edition's number and
-       frozen pair were read from — the finding's own bytes (legacy), the case
-       documents pinning them, or neither — and whether those documents disagreed
-       about the pair. Two scalars, forwarded by name like every field here. */
-    frozenFrom: pub.frozenFrom ?? null,
-    ...pub.strengthUndetermined ? { strengthUndetermined: true } : {},
-    existed: pub.existed,
-    ratifiedAt: pub.ratifiedAt,
-    attestor: attestor?.member_id ?? null,
-    gateVersion: gate.gateVersion,
-    /* REC-128: who DELIVERED this request (a retry that `existed`
-       wrote nothing; the record keeps its first deliverer). */
-    deliveredBy: delivererOf(deliveredBy),
-    published: {
-      shas: shas.length,
-      copied,
-      alreadyPresent: present,
-      r2: r2state,
-      ...partsPublished ? { parts: partsPublished } : {}
-    },
-    ...reuseReport ? { reuse: reuseReport } : {},
-    store: storeName,
-    tokenClass: cls
-  }, 200);
-}
+// src/signpage.mjs
+var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>CivicOS signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no CivicOS code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>CivicOS signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the bundle id and its current hash from the instance page. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Bundle id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Bundle hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a CivicOS private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the bundle id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The bundle hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box on the instance page", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the bundle changes before\n     you submit it, the instance refuses this signature and you sign the new hash.`);\n};\n\narmed();\n</script>\n';
 
 // src/control-plane/ops.mjs
 var OPS2 = {
@@ -116177,12 +116145,6 @@ function sessionOpGate(kind, op, spec, method) {
     `'${String(op).slice(0, 60)}' is reachable by no session of any role, and this instance holds no recorded decision that it is not meant for a person. The plane will not invent one: a member told an absence is a decision stops reporting it as the gap it may well be. If you expected to perform this, that expectation is worth filing rather than working around.`
   );
 }
-var StoreSilent = class extends Error {
-  constructor(op) {
-    super(`the store did not answer ${op}`);
-    this.op = op;
-  }
-};
 var captureKey = (storeName, sha) => `${storeName}/captures/${sha}`;
 var DRIVE_PROVENANCE_PATH = "migration/drive-provenance.json";
 async function migrationReplayOf(env, storeName, b) {
@@ -116985,7 +116947,6 @@ function makeFetch(hooks = {}) {
 }
 
 // src/index.mjs
-var InstanceStore = instanceSetupStore(Store2);
 var requiredArgumentRow = (code) => {
   const row2 = REQUIRED_ARGUMENT_CHECKS[code];
   if (!row2 || typeof row2.translation !== "string" || !row2.translation)
@@ -117017,8 +116978,8 @@ bindPublishedPlane({
   json: json4,
   doAnswer,
   storeSilent,
+  storeRefusal,
   requiredArgument,
-  StoreSilent,
   STORE_SILENT_REASON,
   STORE_SILENT_DETAIL,
   PUBLISHED_STORE
@@ -117057,12 +117018,14 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         error: "verify requires sha256=<64 lowercase hex>"
       }, 400);
     const out = await doAnswer(stub.fetch(new Request(`http://do/verify?sha256=${sha}`)));
-    if (!out.answered) return storeSilent("verify");
+    if (out.refused) return storeRefusal(out);
+    if (!out.answered) return storeSilent("verify", out.correlation);
     return json4({ ok: true, ...out.result }, 200);
   }
   if (op === "publishedmanifest") {
     const out = await doAnswer(stub.fetch(new Request("http://do/publishedmanifest")));
-    if (!out.answered) return storeSilent("publishedmanifest");
+    if (out.refused) return storeRefusal(out);
+    if (!out.answered) return storeSilent("publishedmanifest", out.correlation);
     return json4({ ok: true, result: out.result }, 200);
   }
   if (op === "instancegroup") {
@@ -117071,8 +117034,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
     const heldScope = heldCls ? scopeFor(heldCls, url) : null;
     const igStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
     const igReader = await caseReader(url, env, igStore, presentedAi.cred);
-    if (igReader.silent) return storeSilent(igReader.silent);
-    return instanceGroupOp(env, igStore, igReader, { json: json4, storeSilent, doAnswer });
+    if (igReader.silent) return storeSilent(igReader.silent, igReader.correlation);
+    return instanceGroupOp(env, igStore, igReader, { json: json4, storeSilent, storeRefusal, doAnswer });
   }
   if (op === "groupidentity") {
     const held = url.searchParams.get("token");
@@ -117080,8 +117043,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
     const heldScope = heldCls ? scopeFor(heldCls, url) : null;
     const giStore = heldScope && !heldScope.error ? heldScope.name : url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
     const giReader = await caseReader(url, env, giStore, presentedAi.cred);
-    if (giReader.silent) return storeSilent(giReader.silent);
-    return groupIdentityOp(env, giStore, giReader, { json: json4, storeSilent, doAnswer });
+    if (giReader.silent) return storeSilent(giReader.silent, giReader.correlation);
+    return groupIdentityOp(env, giStore, giReader, { json: json4, storeSilent, storeRefusal, doAnswer });
   }
   if (op === "caseflags") {
     const q6 = new URLSearchParams();
@@ -117092,7 +117055,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
     if (url.searchParams.get("outstanding") === "1") q6.set("outstanding", "1");
     if (url.searchParams.get("limit")) q6.set("limit", url.searchParams.get("limit"));
     const fOut = await doAnswer(stub.fetch(`http://do/caseflags?${q6}`));
-    if (!fOut.answered) return storeSilent("caseflags");
+    if (fOut.refused) return storeRefusal(fOut);
+    if (!fOut.answered) return storeSilent("caseflags", fOut.correlation);
     return json4({ ok: true, result: fOut.result }, 200);
   }
   if (op === "casedocument") {
@@ -117105,12 +117069,13 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
         detail: "casedocument requires case=<CASE-YYYY-NNNN> and edition=<n>"
       }, 400);
     const reader = await caseReader(url, env, "bio", presentedAi.cred);
-    if (reader.silent) return storeSilent(reader.silent);
+    if (reader.silent) return storeSilent(reader.silent, reader.correlation);
     const docSecret = url.searchParams.has("secret") ? await sha256Hex12(url.searchParams.get("secret") || "") : "";
     const out = await doAnswer(stub.fetch(
       `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}` + (docSecret ? `&secretSha=${docSecret}` : "")
     ));
-    if (!out.answered) return storeSilent("casedocument");
+    if (out.refused) return storeRefusal(out);
+    if (!out.answered) return storeSilent("casedocument", out.correlation);
     const r = out.result;
     if (!r?.ok) return json4({ ok: false, ...r }, 404);
     return json4({
@@ -117130,8 +117095,8 @@ async function publicOp({ req, url, env, op, stub, invStub, fp, presentedAi }) {
     });
   }
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
-  if (op === "knock") return knockOp(req, env, stub, { json: json4, requiredArgument, storeSilent, doAnswer });
-  return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json: json4, storeSilent, doAnswer });
+  if (op === "knock") return knockOp(req, env, stub, { json: json4, requiredArgument, storeSilent, storeRefusal, doAnswer });
+  return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json: json4, storeSilent, storeRefusal, doAnswer });
 }
 async function gatedOp({
   req,
@@ -117153,7 +117118,8 @@ async function gatedOp({
     const target = url.searchParams.get("target");
     const st = env.STORE.get(env.STORE.idFromName(storeName));
     const kOut = await doAnswer(st.fetch("http://do/actionkinds"));
-    if (!kOut.answered) return storeSilent("affordances");
+    if (kOut.refused) return storeRefusal(kOut);
+    if (!kOut.answered) return storeSilent("affordances", kOut.correlation);
     const vocabularies = vocabulariesFor(kOut.result?.kinds);
     if (!target) {
       return json4({ ok: true, result: {
@@ -117180,7 +117146,8 @@ async function gatedOp({
     const fOut = await doAnswer(st.fetch(
       `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(affViewer)}&identity=${encodeURIComponent(affIdentity)}&author=${encodeURIComponent(affAuthor ?? "")}&by=${encodeURIComponent(affBy ?? "")}`
     ));
-    if (!fOut.answered) return storeSilent("affordances");
+    if (fOut.refused) return storeRefusal(fOut);
+    if (!fOut.answered) return storeSilent("affordances", fOut.correlation);
     const facts = fOut.result;
     if (!facts) return storeSilent("affordances");
     if (facts.ok !== true)
@@ -117216,11 +117183,13 @@ async function gatedOp({
       if (v !== null) inner.searchParams.set(k, v);
     }
     const qOut = await doAnswer(st.fetch(inner.toString()));
-    if (!qOut.answered) return storeSilent("queue");
+    if (qOut.refused) return storeRefusal(qOut);
+    if (!qOut.answered) return storeSilent("queue", qOut.correlation);
     const r = qOut.result;
     if (!r) return storeSilent("queue");
     const qkOut = await doAnswer(st.fetch("http://do/actionkinds"));
-    if (!qkOut.answered) return storeSilent("queue");
+    if (qkOut.refused) return storeRefusal(qkOut);
+    if (!qkOut.answered) return storeSilent("queue", qkOut.correlation);
     if (r.ok !== true)
       return json4({ ok: false, ...r, store: storeName, tokenClass: cls }, 400);
     return json4({ ok: true, result: queueAnswer(r, { gate: ACT_GATE, kinds: qkOut.result?.kinds }).result, store: storeName, tokenClass: cls }, 200);
@@ -117228,7 +117197,9 @@ async function gatedOp({
   if (op === "registeraudit") {
     const st = env.STORE.get(env.STORE.idFromName(storeName));
     const aOut = await doAnswer(st.fetch("http://do/registeraudit"));
-    if (!aOut.answered || !aOut.result) return storeSilent("registeraudit");
+    if (aOut.refused) return storeRefusal(aOut);
+    if (!aOut.answered) return storeSilent("registeraudit", aOut.correlation);
+    if (!aOut.result) return storeSilent("registeraudit");
     return json4({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) } : null), store: storeName, tokenClass: cls }, 200);
   }
   if (op === "selftest") return selftest(env, storeName, {
@@ -117260,11 +117231,11 @@ async function gatedOp({
     });
     return json4(out, out.verdict === "pass" ? 200 : 500);
   }
-  if (op === "runtime") return runtimeOp(env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, doAnswer });
+  if (op === "runtime") return runtimeOp(env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, storeRefusal, doAnswer });
   if (op === "cpuprobe") return cpuProbeOp(
     env.STORE.get(env.STORE.idFromName(storeName)),
     { iterations: url.searchParams.get("iterations"), budget_ms: url.searchParams.get("budget_ms") },
-    { json: json4, storeSilent, doAnswer }
+    { json: json4, storeSilent, storeRefusal, doAnswer }
   );
   if (op === "linkproject") {
     const st = env.STORE.get(env.STORE.idFromName(storeName));
@@ -117275,16 +117246,18 @@ async function gatedOp({
     const linkViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
     const linkIdentity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
     const p = await doAnswer(st.fetch(`http://x/projectlinks?capture=${capture}` + (bundle ? `&bundle=${encodeURIComponent(bundle)}` : "") + `&viewer=${encodeURIComponent(linkViewer)}&identity=${encodeURIComponent(linkIdentity)}`));
-    if (!p.answered) return storeSilent("linkproject");
+    if (p.refused) return storeRefusal(p);
+    if (!p.answered) return storeSilent("linkproject", p.correlation);
     return json4({ ok: true, ...p.result });
   }
   {
-    const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)));
-    if (g) return g.silent ? storeSilent(op) : json4(g.body, g.status);
+    const g = await governorOp(op, url, () => env.STORE.get(env.STORE.idFromName(storeName)), { doAnswer, storeRefusal });
+    if (g) return g.refused ? g.response : g.silent ? storeSilent(op, g.correlation) : json4(g.body, g.status);
   }
   if (op === "links") return linksOp(url, env.STORE.get(env.STORE.idFromName(storeName)), {
     json: json4,
     storeSilent,
+    storeRefusal,
     doAnswer,
     viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`
   });
@@ -117301,6 +117274,8 @@ async function gatedOp({
     {
       json: json4,
       storeSilent,
+      storeRefusal,
+      doAnswer,
       storageAbsent,
       requiredArgument,
       cls,
@@ -117311,11 +117286,12 @@ async function gatedOp({
       storeName
     }
   );
-  if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, doAnswer });
+  if (op === "archivelookup") return archiveLookupOp(req, url, env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, storeRefusal, doAnswer });
   if (op === "acquire") {
     const acquired = await acquireOp(req, env, env.STORE.get(env.STORE.idFromName(storeName)), {
       json: json4,
       storeSilent,
+      storeRefusal,
       storageAbsent,
       doAnswer,
       cls,
@@ -117324,7 +117300,7 @@ async function gatedOp({
       storeName
     });
     if (acquired.response) return acquired.response;
-    const read2 = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { storeSilent, storeName });
+    const read2 = await acquireReadingOp(acquired.answer, env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, storeRefusal, doAnswer, storeName });
     if (read2.response) return read2.response;
     return json4(Object.assign(read2.body, { note: ACQUIRE_GRADE_NOTE }), 200);
   }
@@ -117346,9 +117322,9 @@ async function gatedOp({
     });
     return json4({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
   }
-  if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
-  if (op === "caseratify") return caseRatifyOp(req, stub, { env, json: json4, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights });
-  if (op === "ratify") return ratifyOp(req, stub, { env, json: json4, doAnswer, storeSilent, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
+  if (op === "monitor") return monitorOp(req, env.STORE.get(env.STORE.idFromName(storeName)), { json: json4, storeSilent, storeRefusal, requiredArgument, doAnswer, viewer: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, actorClass: viaSession ? "member" : "machine", actor: viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`, storeName, cls });
+  if (op === "caseratify") return caseRatifyOp(req, stub, { env, json: json4, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights });
+  if (op === "ratify") return ratifyOp(req, stub, { env, json: json4, doAnswer, storeSilent, storeRefusal, assembleCaseContainer, storeName, cls, aiCred, viaSession, sessViewer, sessRights, captureKey, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL });
 }
 var index_default = { fetch: makeFetch({
   publicOp,
@@ -117357,7 +117333,7 @@ var index_default = { fetch: makeFetch({
 }) };
 export {
   PUBLISHED_TOKEN_HASHES,
-  InstanceStore as Store,
+  Store2 as Store,
   index_default as default,
   liveToken
 };
