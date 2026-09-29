@@ -1,6 +1,6 @@
 # control-plane (T12)
 
-**Status** · session_01UDmj5HcYEvNNWTxaQkjZLn · depth 2 · WORKING · handled B1
+**Status** · session_01UDmj5HcYEvNNWTxaQkjZLn · depth 2 · RUNNING until 2026-09-29T12:26:32Z (interface tests for R1-R34 (a worker of this session)) · handled B1
 
 ## Work (CONTROL-PLANE #1)
 
