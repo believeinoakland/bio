@@ -11,7 +11,8 @@
  * by the modules intent uses (membership's `PROJECT_ACT_NOT_A_PARTICIPANT` and C-70.1, progressions' dispose rows,
  * ai-runs' open rows) are relayed with their own rows and are not restated here. `NO_SUCH_PROJECT` is membership's one
  * row (C-70.5, answered through its `noSuchProject`, R78); intent's C-111.2 is retired (N208, K275) and its number is
- * not reused. */
+ * not reused. `NO_SUCH_ENTITY` is entities' one row (C-91.4, answered through its `noSuchEntity`, R36); intent's
+ * C-111.5 is retired (N285) and its number is not reused. */
 
 const at = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 /* A code several acts answer is minted once, by its own function at the foot of `index.mjs` (DEC-49's one code, one
@@ -37,11 +38,6 @@ export const INTENT_CHECKS = Object.freeze({
     check: 'C-111.4', where: at("refuseNoSuchProgression", "is-named-progression"),
     translation: 'The measure names a declared flow the record does not hold. Declare the flow first, or name one '
       + 'that exists. Nothing was written.',
-  },
-  NO_SUCH_ENTITY: {
-    check: 'C-111.5', where: at("refuseNoSuchEntity", "is-named-entity"),
-    translation: 'The measure names an entity the record does not hold. Register it first, or name one that exists. '
-      + 'Nothing was written.',
   },
   BAD_STAGE: {
     check: 'C-111.6', where: at("#conditionRefusal", "is-condition-stage"),

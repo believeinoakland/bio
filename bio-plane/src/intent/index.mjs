@@ -28,7 +28,7 @@ import { isMachineIdentity, normalizeType } from "../../checks/bio-checks.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { entitiesOf, gradeRank } from "../entities/index.mjs";
+import { entitiesOf, gradeRank, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
@@ -61,9 +61,13 @@ export const REASON_MAX = 160;
  *  GOALS_MAX, TRIAGED_MAX: the goals and triage acts one pursuit record answers (R14); SET_ASIDE_MAX: the proposals
  *  set aside that `proposals` lists beside the open ones, newest first (R16); SERVES_MAX: the subjects one `servesOf`
  *  call answers (R28); ASPIRATIONS_MAX: the held aspirations `aspirationsFor` reads and `contacts` pairs, the first in
- *  id order (R12, R13; N209, K338); CONTACTS_MAX: the pairs `contacts` lists (R13). */
+ *  id order (R12, R13; N209, K338); CONTACTS_MAX: the pairs `contacts` lists (R13). N305 (K367), the internal reads:
+ *  CONTEXT_MAX: the held aspirations in force and the conditioned projects one `servesOf` call measures against, each
+ *  the first in id order (R28); PROJECTS_MAX: the projects `proposals` reads with no project named, the first in id
+ *  order (R15); REQUESTS_MAX: the capture requests one pursuit record reads, in the order the basis names them (R14). */
 export const MEASURE_MAX = 1000, WATCH_LIMIT_MAX = 1000, DEPARTURES_MAX = 1000, GOALS_MAX = 200, TRIAGED_MAX = 1000,
-             SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000;
+             SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000, CONTEXT_MAX = 1000,
+             PROJECTS_MAX = 1000, REQUESTS_MAX = 1000;
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -285,9 +289,8 @@ export class Intent {
     if (!def || def.ok === false || !def.found)
       return refuseNoSuchProgression("the condition names a flow the record has not declared. Nothing was written.",
                      { progression: str(c.progression) });
-    if (!this.entities.has(str(c.entity)))
-      return refuseNoSuchEntity("the condition names an entity the record does not hold. Nothing was written.",
-                     { entity: str(c.entity) });
+    /* N285: entities' one answer to this condition (its R36), in place of C-111.5 */
+    if (!this.entities.has(str(c.entity))) return noSuchEntity(str(c.entity));
     const declared = new Set(def.stages.map((s) => s.stage_key));
     const bad = (c.required.stages || []).map(String).filter((s) => !declared.has(s));
     /* DEC-49 REGION is-condition-stage */
@@ -499,8 +502,9 @@ export class Intent {
 
   /** R28: for each named address, bundle and request (at most SERVES_MAX in all, the first in the order given, with
    *  `truncated`), the open gaps it serves in any project and the held aspirations in force for its project that it
-   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. Writes
-   *  nothing; never throws. */
+   *  serves (member aspirations aside, §12.1). A subject serving nothing, or unknown, answers empty lists. What it
+   *  measures against is bounded (N305): `context_truncated` says the held aspirations or the conditioned projects
+   *  were cut at CONTEXT_MAX. Writes nothing; never throws. */
   servesOf({ addresses = [], bundles = [], requests = [] } = {}) {
     const named = [];
     for (const [kind, list] of [["address", addresses], ["bundle", bundles], ["request", requests]])
@@ -509,7 +513,8 @@ export class Intent {
     const subjects = named.slice(0, SERVES_MAX);
     const empty = (x) => ({ kind: x.kind, id: x.id, gaps: [], aspirations: [] });
     let ctx;
-    try { ctx = this.#servesContext(); } catch { return { ok: true, serves: subjects.map(empty), truncated }; }
+    try { ctx = this.#servesContext(); }
+    catch { return { ok: true, serves: subjects.map(empty), truncated, context_truncated: false }; }
     const serves = subjects.map((x) => {
       try {
         if (!x.id) return empty(x);
@@ -522,15 +527,18 @@ export class Intent {
         return { kind: x.kind, id: x.id, gaps: [...gaps].sort(), aspirations: [...aspirations].sort() };
       } catch { return empty(x); }
     });
-    return { ok: true, serves, truncated };
+    return { ok: true, serves, truncated, context_truncated: ctx.cut };
   }
 
   /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
-     the bundles documenting their short instances, and each held group or project aspiration with what it names. */
+     the bundles documenting their short instances, and each held group or project aspiration with what it names.
+     N305: the first CONTEXT_MAX conditioned projects and the first CONTEXT_MAX held aspirations in force, each in id
+     order; `cut` says either was cut. */
   #servesContext() {
     const gapsByBundle = new Map();
     const all = [];
-    for (const pid of this.#conditioned(PLANE_VIEWER)) {
+    const conditioned = this.#projectsInOrder(PLANE_VIEWER, true, CONTEXT_MAX);
+    for (const pid of conditioned.ids) {
       const g = this.gaps({ project: pid, viewer: PLANE_VIEWER });
       if (g.ok) all.push(...g.gaps);
     }
@@ -545,8 +553,8 @@ export class Intent {
               gapsByBundle.get(d.bundle_id).add(g.key);
             }
     }
-    const held = this.#aspirations(PLANE_VIEWER)
-      .filter((a) => a.state === "held" && (a.scope === "group" || a.scope === "project"));
+    const inForce = this.#heldAspirations(PLANE_VIEWER, { scopes: ["group", "project"], max: CONTEXT_MAX });
+    const held = inForce.held;
     const departures = new Map(), concerned = new Map(), requestsRead = { rows: null };
     const departed = (project) => {
       if (!departures.has(project)) departures.set(project, this.#departures(project).latest);
@@ -564,6 +572,7 @@ export class Intent {
       `SELECT 1 AS x FROM progression_instances WHERE bundle_id=? AND progression_key IN (SELECT value FROM json_each(?))
        LIMIT 1`, bundleId, JSON.stringify(keys));
     return {
+      cut: conditioned.truncated || inForce.truncated,
       gapsOf: (bundleId) => gapsByBundle.get(bundleId) || [],
       /* R12's in force for the bundle's project (the group's less its departures, and the project's own); a bundle in
          no project is under the group's alone */
@@ -705,8 +714,7 @@ export class Intent {
     const ents = (Array.isArray(entities) ? entities : []).map(str).filter(Boolean);
     const progs = (Array.isArray(progressions) ? progressions : []).map(str).filter(Boolean);
     const badEnt = ents.find((e) => !TOKEN.test(e) || !this.entities.has(e));
-    if (badEnt) return refuseNoSuchEntity("the aspiration names an entity the record does not hold. Nothing was written.",
-                               { entity: badEnt });
+    if (badEnt) return noSuchEntity(badEnt);
     const badProg = progs.find((k) => { const d = TOKEN.test(k) && this.progressions.readProgression({ progressionKey: k });
                                         return !d || d.ok === false || !d.found; });
     if (badProg) return refuseNoSuchProgression("the aspiration names a flow the record has not declared. Nothing "
@@ -792,25 +800,10 @@ export class Intent {
     return { ok: true, aspiration, state: "retired", taught: str(taught), author: str(author), at };
   }
 
-  /* Every aspiration document the viewer may see, as R12's terms read it. */
-  #aspirations(viewer) {
-    const out = [];
-    let after = "";
-    for (;;) {
-      const page = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
-      for (const id of page.ids) {
-        const a = this.#pursuit(id, ASPIRATION, viewer);
-        if (a) out.push(this.#aspirationView(a));
-      }
-      if (page.ids.length < 200 || !page.cursor) break;
-      after = page.cursor;
-    }
-    return out;
-  }
-
-  /* R12, R13 (N209, K338): the first ASPIRATIONS_MAX held aspirations the viewer may see, in id order, walked a page
-     at a time and read one past so a cut says so. */
-  #heldAspirations(viewer) {
+  /* R12, R13 (N209, K338): the first `max` held aspirations the viewer may see, in id order, walked a page at a time
+     and read one past so a cut says so; `scopes`, when named, keeps only those scopes, before the count (R28's in
+     force, member aspirations aside; N305). */
+  #heldAspirations(viewer, { scopes = null, max = ASPIRATIONS_MAX } = {}) {
     const out = [];
     let after = "", truncated = false;
     for (;;) {
@@ -818,7 +811,8 @@ export class Intent {
       for (const id of page.ids) {
         const a = this.#pursuit(id, ASPIRATION, viewer);
         if (!a || a.head.currentState !== "held") continue;
-        if (out.length === ASPIRATIONS_MAX) { truncated = true; break; }
+        if (scopes && !scopes.includes(a.fm.scope)) continue;
+        if (out.length === max) { truncated = true; break; }
         out.push(this.#aspirationView(a));
       }
       if (truncated || page.ids.length < 200 || !page.cursor) break;
@@ -919,7 +913,14 @@ export class Intent {
       .map((r) => ({ proposal: r.proposal_key, source: r.source, kind: r.kind, act: r.act, project: r.project_id,
                      inquiry: r.inquiry_id, reason: r.reason, grade: r.grade, basis: safeJson(r.basis_json),
                      author: r.author, at: r.at }));
-    const named = [...new Set(triaged.flatMap((t) => captureRequestsNamed(t.basis)))];
+    /* N305: at most REQUESTS_MAX named requests, in the order the basis names them, read one past so a cut says so. */
+    const named = [];
+    for (const t of triaged) {
+      for (const id of captureRequestsNamed(t.basis)) if (!named.includes(id)) named.push(id);
+      if (named.length > REQUESTS_MAX) break;
+    }
+    const requests_truncated = named.length > REQUESTS_MAX;
+    named.length = Math.min(named.length, REQUESTS_MAX);
     /* capture-requests' one read by key (its R43; N291), under the viewer's sight: a request it answers null for is not
        held, or is one the viewer may not see, and reads so; never a guessed outcome. */
     const byId = named.length ? this.#lazy(this.captureRequests) : null;
@@ -931,7 +932,8 @@ export class Intent {
                                        captured_at: r.captured_at ?? null } };
     });
     return { ok: true, aspiration: this.#aspirationView(a), goals, goals_limit: GOALS_MAX, goals_truncated, triaged,
-             triaged_limit: TRIAGED_MAX, triaged_truncated, capture_requests,
+             triaged_limit: TRIAGED_MAX, triaged_truncated, capture_requests, requests_limit: REQUESTS_MAX,
+             requests_truncated,
              dead_ends: deadEndsOf(a.text), taught: a.head.currentState === "retired" ? readSection(a.text, "Taught") : null };
   }
 
@@ -955,7 +957,8 @@ export class Intent {
     return { ok: true, kind };
   }
 
-  /* Every proposal from every source, open or not, keyed `<source>::<its key>`. */
+  /* Every proposal from every source, open or not, keyed `<source>::<its key>`; with no project named, the gaps of the
+     first PROJECTS_MAX projects the viewer may see, in id order (N305), `projects_truncated` saying they were cut. */
   #allProposals(project, viewer) {
     const out = [];
     const feed = this.progressions.proposalsFeed(null);
@@ -974,29 +977,33 @@ export class Intent {
                      basis: p.basis ?? null, instances: Array.isArray(p.instances) ? p.instances : [],
                      surfaced_by: p.surfaced_by ?? "machine" });
     }
-    const projects = project ? [project] : this.#conditioned(viewer);
-    for (const pid of projects) {
+    const projects = project ? { ids: [project], truncated: false } : this.#projectsInOrder(viewer, false, PROJECTS_MAX);
+    for (const pid of projects.ids) {
       const g = this.gaps({ project: pid, viewer });
       if (g.ok) for (const gap of g.gaps) out.push({ ...gap, source_key: gap.key.slice("intent::".length) });
     }
-    return out;
+    return { list: out, projects_truncated: projects.truncated };
   }
 
-  /* The projects the viewer may see whose objective states a condition. */
-  #conditioned(viewer) {
-    const out = [];
-    let after = "";
+  /* N305: the first `max` projects the viewer may see (every project for a null viewer), in id order, or with
+     `conditioned` only those whose objective states a condition; walked a page at a time and read one past, so
+     `truncated` says one was made. A project the viewer may not see is not counted, so a cut says nothing of it
+     (R23). */
+  #projectsInOrder(viewer, conditioned, max) {
+    const ids = [];
+    let after = "", truncated = false;
     for (;;) {
       const page = this.record.listByType({ type: "project", after, limit: 200 });
       for (const id of page.ids) {
         if (viewer != null && !this.membership.inSight(id, viewer)) continue;
-        const d = this.#doc(id);
-        if (d && conditionOf(d.fm)) out.push(id);
+        if (conditioned) { const d = this.#doc(id); if (!d || !conditionOf(d.fm)) continue; }
+        if (ids.length === max) { truncated = true; break; }
+        ids.push(id);
       }
-      if (page.ids.length < 200 || !page.cursor) break;
+      if (truncated || page.ids.length < 200 || !page.cursor) break;
       after = page.cursor;
     }
-    return out;
+    return { ids, truncated };
   }
 
   /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
@@ -1043,11 +1050,12 @@ export class Intent {
       if (p.refused) return p.refused;
     }
     const all = this.#allProposals(project || null, viewer);
-    const decided = this.#decidedAmong(all.map((p) => p.key));
-    const open = all.filter((p) => !decided.has(p.key));
+    const decided = this.#decidedAmong(all.list.map((p) => p.key));
+    const open = all.list.filter((p) => !decided.has(p.key));
     const aside = this.#setAside(viewer);
     return { ok: true, project: project || null, proposals: open, count: open.length, set_aside: aside.list,
-             set_aside_limit: SET_ASIDE_MAX, set_aside_truncated: aside.truncated };
+             set_aside_limit: SET_ASIDE_MAX, set_aside_truncated: aside.truncated, projects_limit: PROJECTS_MAX,
+             projects_truncated: all.projects_truncated };
   }
 
   /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
@@ -1072,7 +1080,7 @@ export class Intent {
       proj = p.doc;
     }
     const found = this.#isDecided(proposal) ? null
-      : this.#allProposals(proj ? proj.id : null, viewer).find((p) => p.key === proposal);
+      : this.#allProposals(proj ? proj.id : null, viewer).list.find((p) => p.key === proposal);
     /* DEC-49 REGION is-proposal-open */
     if (!found)
       return refusal("NO_SUCH_PROPOSAL", "no open proposal answers to that key; a decided one stays readable with its "
@@ -1248,8 +1256,9 @@ export class Intent {
 }
 
 /* DEC-49: a code several acts answer is minted at one site, its own function here, which builds the refusal whole
-   from its row (D-484's shape); each act relays it with its own detail. `NO_SUCH_PROJECT` is not one of them: it is
-   one condition across modules, answered through membership's `noSuchProject` (its R78; N208, K275). */
+   from its row (D-484's shape); each act relays it with its own detail. `NO_SUCH_PROJECT` and `NO_SUCH_ENTITY` are not
+   among them: each is one condition across modules, answered through membership's `noSuchProject` (its R78; N208,
+   K275) and entities' `noSuchEntity` (its R36; N285). */
 function refuseNoSuchGoal(detail, extra) {
   /* DEC-49 REGION is-goal-held */
   const row = INTENT_CHECKS.NO_SUCH_GOAL;
@@ -1272,14 +1281,6 @@ function refuseNoSuchProgression(detail, extra) {
   return { ok: false, reason: "NO_SUCH_PROGRESSION", code: "NO_SUCH_PROGRESSION", check: row.check,
            translation: row.translation, detail, ...(extra || {}) };
   /* END DEC-49 REGION is-named-progression */
-}
-
-function refuseNoSuchEntity(detail, extra) {
-  /* DEC-49 REGION is-named-entity */
-  const row = INTENT_CHECKS.NO_SUCH_ENTITY;
-  return { ok: false, reason: "NO_SUCH_ENTITY", code: "NO_SUCH_ENTITY", check: row.check,
-           translation: row.translation, detail, ...(extra || {}) };
-  /* END DEC-49 REGION is-named-entity */
 }
 
 function refuseNoReason(detail, extra) {

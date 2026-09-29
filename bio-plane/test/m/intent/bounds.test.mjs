@@ -1,10 +1,13 @@
 /* intent's published bounds (the Bounds paragraph; N181, K239; N209, K338; N236, N277): each read that grows with the
    record answers at most its bound, says so with `truncated`, and at the bound exactly says nothing was cut. R4
-   (MEASURE_MAX), R10 and R12 (DEPARTURES_MAX), R12 and R13 (ASPIRATIONS_MAX, CONTACTS_MAX), R16 (SET_ASIDE_MAX). */
+   (MEASURE_MAX), R10 and R12 (DEPARTURES_MAX), R12 and R13 (ASPIRATIONS_MAX, CONTACTS_MAX), R16 (SET_ASIDE_MAX); and
+   the internal reads (N305, K367): R28's context (CONTEXT_MAX), `proposals` with no project (PROJECTS_MAX), R14's named
+   capture requests (REQUESTS_MAX). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MEASURE_MAX, DEPARTURES_MAX, SET_ASIDE_MAX, ASPIRATIONS_MAX, CONTACTS_MAX } from "../../../src/intent/index.mjs";
-import { seeded, V } from "./fixture.mjs";
+import { MEASURE_MAX, DEPARTURES_MAX, SET_ASIDE_MAX, ASPIRATIONS_MAX, CONTACTS_MAX, CONTEXT_MAX, PROJECTS_MAX,
+         REQUESTS_MAX } from "../../../src/intent/index.mjs";
+import { seeded, V, COND, projMd } from "./fixture.mjs";
 
 const declareGroup = (w, n, extra = {}) => Array.from({ length: n }, (_, k) =>
   w.i.declareAspiration({ scope: "group", statement: `Aspiration ${k}`, author: V("alice"), ...extra }).aspiration);
@@ -109,4 +112,106 @@ test("R16 proposals lists at most 200 set-aside proposals, newest first (SET_ASI
   assert.deepEqual([r.set_aside.length, r.set_aside_truncated], [200, true]);
   assert.deepEqual(r.set_aside.map((s) => s.key), keys.slice(1).reverse().map((k) => `monitoring::${k}`),
                    "newest first; the oldest is the one cut");
+});
+
+test("R28 (N305) servesOf measures against at most the first 1,000 held aspirations in force, in id order, member and retired ones not counted, answering context_truncated when cut", () => {
+  assert.equal(CONTEXT_MAX, 1000);
+  const w = seeded();
+  w.entity("ENT-1");
+  w.resolve("x-sha", "INFO-X", "ENT-1", "A");                        // a bundle concerning ENT-1, in no project
+  const ids = declareGroup(w, 1000, { entities: ["ENT-1"] });
+  /* neither a member's aspiration nor a retired one is in force for R28, so neither counts toward the bound */
+  w.i.declareAspiration({ scope: "member", owner: "bob", statement: "Mine", entities: ["ENT-1"], author: V("bob") });
+  const [old] = declareGroup(w, 1, { entities: ["ENT-1"] });
+  assert.equal(w.i.retireAspiration({ aspiration: old, taught: "t", author: V("alice") }).ok, true);
+  let r = w.i.servesOf({ bundles: ["INFO-X"] });
+  assert.deepEqual([r.serves[0].aspirations.length, r.context_truncated], [1000, false], "at the bound, nothing is cut");
+  assert.deepEqual(r.serves[0].aspirations, [...ids].sort());
+  const [extra] = declareGroup(w, 1, { entities: ["ENT-1"] });
+  r = w.i.servesOf({ bundles: ["INFO-X"] });
+  assert.equal(r.context_truncated, true, "the 1,001st is cut, and it says so");
+  assert.deepEqual(r.serves[0].aspirations, [...ids, extra].sort().slice(0, 1000), "the first 1,000 in id order");
+  assert.equal(r.truncated, false, "the subjects were not cut");
+});
+
+test("R28 (N305) servesOf measures against at most the first 1,000 conditioned projects, in id order, a project stating no condition not counted, answering context_truncated when cut", async () => {
+  const w = seeded();
+  w.entity("ENT-1"); w.entity("ENT-2");
+  w.relate("ENT-2", "ENT-1", "member_of");
+  w.define();
+  await w.thread("ENT-2", { need: "A" });                             // short (award missing) in every project below
+  const cond = ["objective_condition:", "  progression: proc", "  entity: ENT-1", "  relation: member_of",
+                "  required_grade: B", "  required_stages: [need, award]", "  share: 50"].join("\n");
+  let n = 0;
+  const conditioned = () => {
+    const r = w.promotion.promote({ base: null, snapKey: `c${++n}`, author: V("bob"), ownerMemberId: "bob",
+      files: [{ path: "bundle.md", text: projMd(`C ${n}`).replace("references: []", `references: []\n${cond}`) }],
+      meta: { object_type: "project" } });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+    return r.bundleId;
+  };
+  const projects = Array.from({ length: 1000 }, conditioned);
+  w.project("Unconditioned", "bob");                                  // P and this state none: not counted
+  const gapOf = (pid) => `intent::${pid}::proc::ENT-2`;
+  let r = w.i.servesOf({ bundles: ["INFO-ENT-2-need"] });
+  assert.deepEqual([r.serves[0].gaps.length, r.context_truncated], [1000, false], "at the bound, nothing is cut");
+  assert.deepEqual(r.serves[0].gaps, projects.map(gapOf).sort());
+  const extra = conditioned();
+  r = w.i.servesOf({ bundles: ["INFO-ENT-2-need"] });
+  assert.equal(r.context_truncated, true, "the 1,001st is cut, and it says so");
+  assert.deepEqual(r.serves[0].gaps, [...projects, extra].sort().slice(0, 1000).map(gapOf).sort(), "the first 1,000 in id order");
+});
+
+test("R15 R16 (N305) proposals with no project named reads at most the first 1,000 projects the viewer may see, in id order, answering projects_limit and projects_truncated; a project it may not see is not counted", async () => {
+  assert.equal(PROJECTS_MAX, 1000);
+  const w = seeded();
+  w.entity("ENT-1");
+  w.define();
+  const mine = Array.from({ length: 999 }, (_, k) => w.project(`Bob's ${k}`, "bob"));   // with P, 1,000 bob may see
+  let r = w.i.proposals({ viewer: V("bob") });
+  assert.deepEqual([r.projects_limit, r.projects_truncated], [1000, false], "at the bound, nothing is cut");
+  w.project("Carol's", "carol");                                      // bob may not see it: not counted, and not said
+  assert.equal(w.i.proposals({ viewer: V("bob") }).projects_truncated, false);
+  /* a 1,001st bob may see: cut, and said. The one past the cut in id order and the last one before it state a condition
+     with a gap each; the unnamed read offers the one before the cut and not the one past it (ids are not in creation
+     order, so both are found by sorting) */
+  const seen = [w.P, ...mine, w.project("One more", "bob")].sort();
+  const [inside, past] = [seen[999], seen[1000]];
+  for (const pid of [inside, past])
+    assert.equal(w.i.setCondition({ project: pid, condition: { ...COND, required: { grade: null, stages: ["need"] } },
+                                     author: V("bob"), viewer: V("bob") }).ok, true);
+  await w.thread("ENT-1", { award: "A" });                            // need missing: one gap in each
+  const gapOf = (pid) => w.i.proposals({ project: pid, viewer: V("bob") }).proposals.filter((p) => p.kind === "objective-gap");
+  assert.deepEqual([gapOf(inside).length, gapOf(past).length], [1, 1], "named, each project's gap is offered");
+  r = w.i.proposals({ viewer: V("bob") });
+  assert.equal(r.projects_truncated, true, "the 1,001st is cut, and it says so");
+  assert.ok(r.proposals.some((p) => p.key === gapOf(inside)[0].key), "the 1,000th in id order is read");
+  assert.ok(!r.proposals.some((p) => p.key === gapOf(past)[0].key), "past the cut, its gap is not read");
+  assert.equal(w.i.proposals({ viewer: V("carol") }).projects_truncated, false, "carol sees 2 of them");
+});
+
+test("R14 (N305) pursuitOf reads at most 1,000 named capture requests, in the order the basis names them, answering requests_limit and requests_truncated", () => {
+  assert.equal(REQUESTS_MAX, 1000);
+  const w = seeded();
+  const a = w.i.declareAspiration({ scope: "group", statement: "Open procurement", author: V("alice") }).aspiration;
+  const g = w.i.declareGoal({ statement: "The files", bounds: "this cycle", aspiration: a, author: V("bob") }).goal;
+  w.i.linkObjective({ goal: g, project: w.P, author: V("bob") });
+  const req = (k) => `CREQ-${String(k).padStart(4, "0")}`;
+  const first = Array.from({ length: 1000 }, (_, k) => req(999 - k));   // named in descending order
+  w.i.registerSource("monitoring", () => [
+    { key: "a", kind: "capture-failed", basis: { capture_requests: first } },
+    { key: "b", kind: "capture-failed", basis: { capture_request: req(0), requests: [req(1000)] } }]);
+  assert.equal(w.i.triage({ proposal: "monitoring::a", act: "dismiss", project: w.P, reason: "r", author: V("bob") }).ok, true);
+  let calls = w.calls.requestById.length;
+  let p = w.i.pursuitOf({ aspiration: a, viewer: V("bob") });
+  assert.deepEqual([p.capture_requests.length, p.requests_limit, p.requests_truncated], [1000, 1000, false], "at the bound, nothing is cut");
+  assert.deepEqual(p.capture_requests.map((c) => c.request), first, "in the order the basis names them");
+  assert.equal(w.calls.requestById.length - calls, 1000);
+  /* a second act names one already named (read once) and one more: 1,001 distinct, cut, and said */
+  assert.equal(w.i.triage({ proposal: "monitoring::b", act: "dismiss", project: w.P, reason: "r", author: V("bob") }).ok, true);
+  calls = w.calls.requestById.length;
+  p = w.i.pursuitOf({ aspiration: a, viewer: V("bob") });
+  assert.deepEqual([p.capture_requests.length, p.requests_truncated], [1000, true]);
+  assert.deepEqual(p.capture_requests.map((c) => c.request), first, "the one named last is the one cut");
+  assert.equal(w.calls.requestById.length - calls, 1000, "no more than 1,000 are read");
 });
