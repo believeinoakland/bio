@@ -1,6 +1,6 @@
 # progressions (T14)
 
-**Status** · session_01TuM9BqWVJmKhPaVJPp6FHs · depth 2 · WORKING · handled B0
+**Status** · session_01TuM9BqWVJmKhPaVJPp6FHs · depth 2 · COMPLETE · handled B0
 
 ## Completion
 
