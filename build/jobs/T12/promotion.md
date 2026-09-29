@@ -21,3 +21,11 @@
 - `checks/format.mjs`: 0 failures. `architecture.mjs promotion`: 0 failures. `coverage.mjs promotion`: 49 of 49 live ids named; 0 failures. `ownership.mjs promotion tranche/T12`: 1 file changed; 0 failures.
 
 Size (session_01SZn97qkUSZot248omWCcQA): test runs 6, module lines 17
+
+## J1 · REPORT
+
+For other modules (details in my record's Completion):
+1. legacy-tests (layer 11): d470-catalog-census needs its 1.42.0 row: count 396, digest de54b8bd85553c5d588c0b82fdbf0ea48a4bed3fe47d982fd9a8c1e3c5c023fe, source 8ada0f4c65a617f0e120bdfe8359f2b591d039b8a02e2cc3967d8aa27fd90f03. It fails A3 and A5 now; it already failed A3 and A9 after N299.
+2. Generated artifacts made stale by gate.mjs: agent-worker/dist/agent-worker.bundled.mjs and bio-plane/dist/bio-plane.bundled.mjs. Reported, not rebuilt.
+3. N302's list was incomplete. Diffing every row table since 7702929d29 also found: actions' C-117.2, C-117.3 and C-117.6 added; intent's C-111.2 retired; wording-only where and translation moves in actions (C-73.3, C-73.6, C-90.2), case-authoring (C-44.1, C-44.3–.5) and consequences (C-114.x). 1.42.0 stamps all of them.
+4. For BOB to word (a promotion improvement, not made): R34's own test cannot see a row move. Only the d470 census guards that, and it covers the catalogue file only. A census over every module's row table, pinned beside CATALOG_VERSION, would guard R34 in full, but it would go red mid-tranche whenever a later layer changes rows before the next stamp.
