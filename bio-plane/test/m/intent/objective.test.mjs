@@ -52,7 +52,7 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
   /* every refusal code intent.md names has its row here, with a check id and a translation */
   const named = ["NO_OBJECTIVE", "MACHINE_CANNOT_SET_OBJECTIVE", "CONDITION_UNREADABLE", "NO_SUCH_PROGRESSION",
     "BAD_STAGE", "CONDITION_BAD_GRADE", "BAD_SHARE", "MACHINE_CANNOT_DECLARE_GOAL", "PURSUIT_UNSTATED", "NO_SUCH_GOAL",
-    "NO_SUCH_ASPIRATION", "NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS", "GROUP_ASPIRATION_NOT_ADMIN",
+    "NO_SUCH_ASPIRATION", "NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS",
     "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION"];
   for (const code of named) {
     assert.ok(INTENT_CHECKS[code], `${code} has a row`);
@@ -68,6 +68,12 @@ test("R22 C-2.9's objective arm moved to intent with its test: the catalogue no 
     assert.match(row.check, /^C-111\.\d+$/, code);
     assert.match(row.where, /^src\/intent\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, `${code}: ${row.where}`);
   }
+  /* N327 (DEC-83): R9's refusal is membership's NOT_AN_ADMIN (its R84, C-96.1): intent's C-111.16 is retired and its
+     number is not reused */
+  assert.equal(INTENT_CHECKS.GROUP_ASPIRATION_NOT_ADMIN, undefined, "GROUP_ASPIRATION_NOT_ADMIN is retired");
+  assert.equal(INTENT_CHECKS.NOT_AN_ADMIN, undefined, "membership holds NOT_AN_ADMIN's one row");
+  assert.ok(!ids.includes("C-111.16"), "C-111.16's number is not reused");
+  assert.equal(MEMBERSHIP_CHECKS.NOT_AN_ADMIN.check, "C-96.1");
   /* N180: no code another module mints for its own condition is borrowed: NO_STATEMENT is the catalogue's, BAD_GRADE strength's */
   for (const borrowed of ["NO_STATEMENT", "BAD_GRADE"]) assert.equal(INTENT_CHECKS[borrowed], undefined, borrowed);
 });

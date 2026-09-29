@@ -2,9 +2,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { checkBundle } from "../../../checks/bio-checks.mjs";
+import { notAnAdmin, MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { seeded, V, MACHINE } from "./fixture.mjs";
 
 const strip = (r) => { const { detail, goal, aspiration, project, ...rest } = r; return rest; };
+/* R9 (N327): the one answer membership's R84 gives, with R9's fixed act and its next step: code, row (C-96.1), `by` as
+   stamped, the act named in the detail, `remedy`, and `message` the row's translation, a space, then the remedy. */
+const REMEDY = "Ask an active administrator: they declare, revise or retire an aspiration the whole group holds in their "
+  + "own name, and the act carries their name and date.";
+const ACT = "declaring, revising or retiring an aspiration the whole group holds";
+function notAdmin(r, by, label) {
+  assert.equal(r.ok, false, label);
+  assert.equal(r.code, "NOT_AN_ADMIN", label);
+  assert.equal(r.reason, "NOT_AN_ADMIN", label);
+  assert.equal(r.check, "C-96.1", label);
+  assert.equal(r.translation, MEMBERSHIP_CHECKS.NOT_AN_ADMIN.translation, label);
+  assert.equal(r.by, by, label);
+  assert.equal(r.remedy, REMEDY, label);
+  assert.equal(r.message, `${MEMBERSHIP_CHECKS.NOT_AN_ADMIN.translation} ${REMEDY}`, label);
+  assert.ok(r.detail.startsWith(`${ACT} is an administrator's act`), `${label}: ${r.detail}`);
+  assert.deepEqual(r, notAnAdmin(by, ACT, { remedy: REMEDY }), `${label}: exactly membership's answer`);
+}
 const manifestCount = (w, id) => w.rows(`SELECT COUNT(*) AS n FROM manifest WHERE bundle_id=?`, id)[0].n;
 
 test("R8 declareGoal, linkObjective and closeGoal each refuse a machine; empty statement or bounds, unseen goal or aspiration, and a close without a reason are refused; nothing is written by a refusal", () => {
@@ -57,7 +75,7 @@ test("R8 linkObjective records the decomposition as the author's dated claim and
   assert.equal(w.i.readGoal({ goal: g, viewer: V("bob") }).goal.objectives[0].project, w.P);
 });
 
-test("R9 a machine is refused; a member aspiration only by that member (NOT_YOURS); a project one by a member joined in it; a group one only by an active administrator, the founder included (GROUP_ASPIRATION_NOT_ADMIN); every aspiration is readable by every member", () => {
+test("R9 a machine is refused; a member aspiration only by that member (NOT_YOURS); a project one by a member joined in it; a group one only by an active administrator, the founder included, anyone else NOT_AN_ADMIN through membership's notAnAdmin (R84) with the next step as its remedy; every aspiration is readable by every member", () => {
   const w = seeded();
   w.st.sql.exec(`INSERT INTO credentials (role, salt, hash, iterations, updated) VALUES ('admin', 's', 'h', 1, 't')`);
   for (const who of ["", MACHINE])
@@ -69,9 +87,10 @@ test("R9 a machine is refused; a member aspiration only by that member (NOT_YOUR
   assert.equal(w.i.declareAspiration({ scope: "project", owner: w.P, statement: "s", author: V("dave") }).reason, "NO_SUCH_PROJECT");
   const proj = w.i.declareAspiration({ scope: "project", owner: w.P, statement: "Name every signatory", author: V("bob") });
   assert.equal(proj.ok, true);
-  assert.equal(w.i.declareAspiration({ scope: "group", statement: "s", author: V("bob") }).reason, "GROUP_ASPIRATION_NOT_ADMIN");
   w.member("eve", { role: "admin", status: "revoked" });
-  assert.equal(w.i.declareAspiration({ scope: "group", statement: "s", author: V("eve") }).reason, "GROUP_ASPIRATION_NOT_ADMIN", "an inactive administrator");
+  const snap = w.snapshot();
+  for (const who of ["bob", "eve"]) notAdmin(w.i.declareAspiration({ scope: "group", statement: "s", author: V(who) }), V(who), who);
+  assert.deepEqual(w.snapshot(), snap, "a refused declaration writes nothing");
   const grp = w.i.declareAspiration({ scope: "group", statement: "Open procurement", author: V("alice") });
   assert.equal(grp.ok, true);
   const founder = w.i.declareAspiration({ scope: "group", statement: "Keep the record honest", author: "admin" });
@@ -83,7 +102,18 @@ test("R9 a machine is refused; a member aspiration only by that member (NOT_YOUR
   assert.equal(w.i.declareAspiration({ scope: "group", statement: "", author: V("alice") }).reason, "PURSUIT_UNSTATED");
   /* revising and retiring follow the same rule */
   assert.equal(w.i.retireAspiration({ aspiration: mine.aspiration, taught: "t", author: V("carol") }).reason, "NOT_YOURS");
-  assert.equal(w.i.recordDeadEnd({ aspiration: grp.aspiration, note: "n", author: V("bob") }).reason, "GROUP_ASPIRATION_NOT_ADMIN");
+  const before = w.snapshot();
+  notAdmin(w.i.recordDeadEnd({ aspiration: grp.aspiration, note: "n", author: V("bob") }), V("bob"), "revising (a dead end)");
+  notAdmin(w.i.retireAspiration({ aspiration: grp.aspiration, taught: "t", author: V("eve") }), V("eve"), "retiring");
+  /* the raw promotion meets the same rule, through intent's registered check */
+  notAdmin(w.revise(grp.aspiration, w.text(grp.aspiration).replace("## Dead Ends\n", "## Dead Ends\n\nA raw note.\n"), V("bob")),
+           V("bob"), "a raw revision");
+  assert.deepEqual(w.snapshot(), before, "a refused revision or retirement writes nothing");
+  /* the machine is still refused first, before the administrator is asked */
+  assert.equal(w.i.retireAspiration({ aspiration: grp.aspiration, taught: "t", author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE_ASPIRATION");
+  /* an active administrator revises and retires a group aspiration */
+  assert.equal(w.i.recordDeadEnd({ aspiration: grp.aspiration, note: "n", author: V("alice") }).ok, true);
+  assert.equal(w.i.retireAspiration({ aspiration: founder.aspiration, taught: "t", author: V("alice") }).ok, true);
   assert.equal(w.i.recordDeadEnd({ aspiration: proj.aspiration, note: "n", author: V("carol") }).reason, "PROJECT_ACT_NOT_A_PARTICIPANT");
   /* readable by every member: dave, in no project, reads the group's and a member's pursuit record; a project's
      aspiration is that project's material, read by every member who may see the project (R23, N199) */

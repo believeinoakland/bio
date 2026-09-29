@@ -12,7 +12,9 @@
  * ai-runs' open rows) are relayed with their own rows and are not restated here. `NO_SUCH_PROJECT` is membership's one
  * row (C-70.5, answered through its `noSuchProject`, R78); intent's C-111.2 is retired (N208, K275) and its number is
  * not reused. `NO_SUCH_ENTITY` is entities' one row (C-91.4, answered through its `noSuchEntity`, R36); intent's
- * C-111.5 is retired (N285) and its number is not reused. */
+ * C-111.5 is retired (N285) and its number is not reused. `NOT_AN_ADMIN` is membership's one row (C-96.1, answered
+ * through its `notAnAdmin`, R84): R9's group aspiration answers it with its remedy, and intent's C-111.16
+ * (`GROUP_ASPIRATION_NOT_ADMIN`) is retired (N327, DEC-83) and its number is not reused. */
 
 const at = (fn, region) => `src/intent/index.mjs ${fn} > ${region}`;
 /* A code several acts answer is minted once, by its own function at the foot of `index.mjs` (DEC-49's one code, one
@@ -86,11 +88,6 @@ export const INTENT_CHECKS = Object.freeze({
     check: 'C-111.15', where: at("#aspirationAuthority", "is-aspiration-yours"),
     translation: 'A member\'s own aspiration is declared, revised and retired by that member alone. Nothing was '
       + 'written.',
-  },
-  GROUP_ASPIRATION_NOT_ADMIN: {
-    check: 'C-111.16', where: at("#aspirationAuthority", "is-group-aspiration-admin"),
-    translation: 'An aspiration the whole group holds is declared, revised and retired by an administrator, and the '
-      + 'act carries their name and date. Ask an administrator. Nothing was written.',
   },
   NO_LESSON: {
     check: 'C-111.17', where: at("refuseNoLesson", "is-retirement-taught"),
