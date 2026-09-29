@@ -45,3 +45,8 @@ For other modules (details in my record's Completion):
 ## J2 · COMPLETE
 
 N302 applied: CATALOG_VERSION 1.42.0 (8 arrivals, 4 departures, 1 changed, C-22.7 moved), commit f955769afc on job/T12/promotion. Promotion tests 67/0; format, architecture, coverage (49/49) and ownership: 0 failures. Stale bundles and the d470 re-pin are in the REPORT.
+
+## J3 · COMPLETE
+
+B2 done (03869d6d50). write-path.test.mjs now boots the plane's exported Store: an inline probe re-exports Store from ./index.mjs and relays each request to it; nodejs_compat added; unused import removed. Nothing else changed. Before: FACT_UNAVAILABLE producingGroup, reproduced. Promotion tests 67 pass, 0 fail, 0 todo. format, architecture, coverage (49/49) and ownership (1 file): 0 failures. Stale artifacts: none. Deferred: nothing.
+Size (session_01WeEThE5XFsoayhvn9So6tj): test runs 3, module lines 6
