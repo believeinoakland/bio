@@ -602,6 +602,10 @@ against. What it rules, stated here so the canon carries it without the page:
   how it was reached; a click on a grade opens that scale's ladder with the item placed on it.
 - **A newcomer meets two things first:** strength against the project's bar, and "Undetermined". Every other mark appears where
   it is used, its explanation one hover away (Design Requirement 11).
+- **The project workspace shows strength (question 5, DEC-82).** Each question listed shows its capture and connection badges
+  (testimony beside when present), one phrase against the project's bar ("Meets the bar", "Short on connection", "Short on
+  capture", "Unrated"), and "Undetermined" with its reason; never one combined badge (DEC-44). A hover names the weakest document
+  or link and how to raise it; a click opens the question with that leg highlighted.
 
 ## What this changes about how M8 is built
 
