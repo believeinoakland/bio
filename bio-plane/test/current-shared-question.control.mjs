@@ -49,7 +49,9 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = join(ROOT, ".nc-rec166");   /* inside this worktree; gitignored */
-const STORE = join(ROOT, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12): `#flagCasesOnRevision` left store.mjs for publication (T8, K240) as
+   its public `flagCasesOnRevision`, so arm (c)'s needle had matched nothing since; it edits the method where it lives. */
+const STORE = join(ROOT, "src", "publication", "index.mjs");
 /* ADDED 2026-09-28 (LEGACY-TESTS #4; BASIS-VERSIONS #1 J4.1): the make-current's early return (`#moveVersionState`)
    and the project's receipt (`#setProjectCurrentVersion`) moved to basis-versions; `#flagCasesOnRevision` stays in
    store.mjs. Arms (a), (b), (d) edit BV, arm (c) edits both. */
@@ -76,7 +78,7 @@ const EARLY = "      if (!p.ok) return { ...p, act, target, version: vname, proj
 const EARLY_RESTORED = "      if (!p.ok) return { ...p, act, target, version: vname, project: projectId };\n    }\n";
 const RECEIPT = "      + `Changes: this project now stands on reading '${vname}' of ${inquiryId}.\\n`\n"
               + "      + (why ? `Reason: ${why}\\n` : \"\"));";
-const FLAG = "  #flagCasesOnRevision(bundleId, replacedSha, when) {\n"
+const FLAG = "  flagCasesOnRevision(bundleId, replacedSha, when) {\n"
            + "    if (!bundleId || !replacedSha) return [];";
 
 const S1_FLAGS = "(fixture) before any stance moves, op=caseflags names nothing";
@@ -162,7 +164,11 @@ for (const name of order) {
   const snaps = arm.files.map((f) => {
     const buf = readFileSync(f);
     if (buf.length < FLOOR) throw new Error(`refusing to snapshot a suspiciously small ${f}: ${buf.length} bytes`);
-    const copy = join(PEN, `${name}--${f.split("/").pop()}.pristine`);
+    /* CORRECTED 2026-09-29 (LEGACY-TESTS #10, T12): named by the path under src/, not the basename. Arm (c) now snapshots
+       TWO files called `index.mjs` (basis-versions', publication's), and a basename-keyed copy let the second
+       overwrite the first, so the restore wrote publication's bytes over basis-versions' — caught by the sha256
+       check (MISMATCH, exit 3) in a scratch worktree on its first run, and restored from git there. */
+    const copy = join(PEN, `${name}--${f.slice(ROOT.length).replace(/[\/]/g, "_")}.pristine`);
     writeFileSync(copy, buf);
     return { file: f, copy, bytes: buf.length, sha: sha(buf) };
   });

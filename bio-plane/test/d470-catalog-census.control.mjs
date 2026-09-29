@@ -106,7 +106,10 @@ const A10 = "(A10) THE STRIPPED SOURCE IS NOT EMPTY";
 const A11a = "(A11) OVER-STRICTNESS FOR A9";
 const A11b = "(A11) …and a code edit";
 
-const ALL = [A1, A2, A3, A4, A5, A6a, A6b, A7, A8, A9, A10, A11a, A11b];
+/* ADDED 2026-09-29 (LEGACY-TESTS #10, T12): A12, the arm that verifies a version's `moved` declarations, is held in
+   every arm's MUST-NOT-FAIL like the rest, and arm (l) proves it can fail. */
+const A12 = "(A12) EVERY MOVED DECLARATION HOLDS";
+const ALL = [A1, A2, A3, A4, A5, A6a, A6b, A7, A8, A9, A10, A11a, A11b, A12];
 
 /* M0-195: arm (h) needs the source digest of the EDITED catalogue, which cannot be written down in advance — so,
    as the pin's own instructions say, it is read from THE SUITE'S OWN PRINT on the armed tree, never computed here. */
@@ -204,6 +207,14 @@ const ARMS = {
   k: { files: [SUITE], label: "(K) OVER-STRICTNESS FOR A4 — the same check changed AGAIN at a later version, nothing added: a distinct source is a distinct catalogue",
        apply: () => edit(SUITE, CENSUS_HEAD, CENSUS_HEAD + '  "1.30.1": { count: 502, digest: "b55afdc7fb1fbce736a34f447d2df960032900e099a15a8efe02e027d9f17d8f", changed: ["C-41.12"], source: "' + "1".repeat(64) + '" },\n'),
        mustFail: [], mustNotFail: ALL, expectGreen: true },
+  /* LEGACY-TESTS #10 (T12, 2026-09-29) — the `moved` declaration's own control, declared before its first run: one
+     departed id in 1.42.0's declaration replaced by an id that moved nowhere (C-76.1 -> C-999.1). The declaration's
+     count and digest still match the file, so A3 MUST NOT FAIL; A12 MUST FAIL, alone — a departure named that no
+     module table holds is a row REMOVED under a stamp that claims it only MOVED. */
+  l: { files: [SUITE], label: "(L) A `moved` DECLARATION NAMING A DEPARTURE THAT MOVED NOWHERE — C-76.1 -> C-999.1 in 1.42.0's departed list",
+       apply: () => edit(SUITE, '"C-68.2", "C-68.3", "C-68.4", "C-69.1", "C-69.2", "C-76.1",',
+                                '"C-68.2", "C-68.3", "C-68.4", "C-69.1", "C-69.2", "C-999.1",'),
+       mustFail: [A12], mustNotFail: except(A12) },
 };
 
 const want = process.argv[2];

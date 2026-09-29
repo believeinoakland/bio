@@ -47,6 +47,10 @@
  *       tell a useful answer from a true and useless one. A suite counting outcomes would have carried
  *       this defect indefinitely.
  *
+ * RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): `#perItem` and the three set acts' dispatch the runs
+ * above armed in src/store.mjs now live in src/queue/index.mjs (the mechanism itself in record-core's `perItem`); the
+ * runs are recorded as measured. No driver file exists for these arms.
+ *
  * D-126 — THE PER-ITEM WEIGHT, DRIVEN THROUGH THE OPS (NOTIFICATIONS.md §Applying a handler to a selection).
  *
  * The rule: *"each item independently succeeds or is RETAINED WITH A REASON"*, the reason being the act's

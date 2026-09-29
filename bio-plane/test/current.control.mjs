@@ -36,8 +36,11 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): both slugs' producers, `#dispositionOf` and
+   `#queueSharedInquiry`'s callers left src/store.mjs with the queue for src/queue/index.mjs; the arms that edited them
+   in the store (2b, 3, 5, 6, 7, 8) edit them there. */
 const F = {
-  store: ROOT + "src/store.mjs",
+  queue: ROOT + "src/queue/index.mjs",
   queuestate: ROOT + "src/queuestate.mjs",
   /* ADDED 2026-09-28 (LEGACY-TESTS #4): `#setProjectCurrentVersion` and `#projectsDrawingOn` moved to basis-versions
      (BASIS-VERSIONS #1 J4.1), and QUEUE_CONDITION_KINDS is observation-log's `CONDITION_KINDS` (K78), re-exported by
@@ -219,7 +222,7 @@ arm("2b", "THE HALF ARM 2 CANNOT REACH, AND IT TAKES TWO EDITS TOGETHER ON PURPO
    ["vocabulary", `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",`,
                   `  "runtime-ceiling-reached":      "a CPU or subrequest ceiling was reached (D-54, D-56)",
   "stance-changed-here-not-elsewhere": "MOVED BY THE CONTROL ARM — a divergence a member may silence",`],
-   ["store", `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
+   ["queue", `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
           class: "FINDING",`,
              `          id: \`FINDING::stance-changed-here-not-elsewhere::\${inq}::\${p.id}\`,
           class: "CONDITION",`]],
@@ -234,7 +237,7 @@ arm("3", "THE SPINE OF SLUG ONE — DIVERGENCE IS A COMPARISON AND NOT A COUNT. 
   + "DECLARED: the CONVERGENCE arm MUST fail — two projects on ONE reading must produce silence. "
   + "The divergence arms MUST stay green, which is exactly what makes this defect invisible without "
   + "an arm pointed at AGREEMENT rather than at disagreement.",
-  [["store", `                      && (!q.current || q.current.version !== p.current.version))`,
+  [["queue", `                      && (!q.current || q.current.version !== p.current.version))`,
              `                      && (true || q.current.version !== p.current.version))`]],
   ["when B moves ONTO A's reading the divergence is GONE"],
   ["now TWO items, one per dated act"]);
@@ -249,10 +252,11 @@ arm("4", "THE SEVERED-STATUS CONFIRMATION. `#projectsDrawingOn` stops honouring 
   + "because `versionAct` refuses to MOVE such a project's stance, which would leave the feed and "
   + "the act disagreeing about who is even in the conversation.",
   /* RE-ANCHORED 2026-09-28 (BASIS-VERSIONS #1 J4.1): `#projectsDrawingOn` is basis-versions' `projectsDrawingOn`. */
-  [["bv", `          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed"
-                                      && String(x.target ?? "").trim() === inq);`,
-          `          const draws = refs.some((x) => x && typeof x === "object" && x.rel === "cites"
-                                      && String(x.target ?? "").trim() === inq);`]],
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12): the old needle (`const draws = refs.some(`) had matched nothing since basis-versions factored
+     R13's test out as the module-level `drawsOn`, which `projectsDrawingOn` asks of each candidate; the arm drops the
+     `severed` clause there, with the same meaning. Counted (exactly one) before it was written. */
+  [["bv", `  x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);`,
+          `  x && typeof x === "object" && x.rel === "cites" && String(x.target ?? "").trim() === inquiryId);`]],
   ["the SEVERED project is not in the conversation at all"],
   ["and neither is the project that never cited the question"]);
 
@@ -275,8 +279,12 @@ arm("5", "THE TEAM IS READ, NEVER INFERRED. `#findingsVersionFromAnotherTeam` st
   + "DECLARED: the run-less arm MUST fail — a version with no run must mint NOTHING. The two "
   + "correctly-attributed arms MUST stay green, so the arm distinguishes *attributes correctly* "
   + "from *attributes at all*.",
-  [["store", `           FROM inquiry_basis_versions WHERE bundle_id=? AND run IS NOT NULL AND run <> ''`,
-             `           FROM inquiry_basis_versions WHERE bundle_id=?`],
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409): queue's producer reads the versions through basis-versions
+     R8–R9 and the run through ai-runs R28 (`runFor`), so the arm is re-expressed at those two sites with its meaning
+     unchanged: the run-less readings are no longer filtered out, and a reading whose run names no project falls back
+     to the first project drawing on the question. Each needle counted (exactly one) before it was written. */
+  [["queue", `      const vrows = heldVersions.filter((v) => typeof v.run === "string" && v.run)`,
+             `      const vrows = heldVersions.filter((v) => true)`],
    /* RE-ANCHORED 2026-09-13 BY M0-25's ARM-LIVENESS CENSUS, AND THE FINDING IS
       SHARPER THAN "THE LINE MOVED": **THIS ANCHOR NEVER EXISTED.** It quoted
       `        if (!runRow || runRow.context_type !== "project") continue;` — and
@@ -295,12 +303,10 @@ arm("5", "THE TEAM IS READ, NEVER INFERRED. `#findingsVersionFromAnotherTeam` st
       first project drawing on the question" is: drop `context_type='project'`
       from the predicate and `|| drawing[0]` after it. Asserted to occur exactly
       once, and the patched source re-parsed, before this was written. */
-   ["store", `        const from = drawing.find((p) => this.#one(
-          \`SELECT run FROM ai_runs WHERE run=? AND context_type='project' AND context_id=?\`,
-          v.run, p.id));`,
-             `        const from = drawing.find((p) => this.#one(
-          \`SELECT run FROM ai_runs WHERE run=? AND context_id=?\`,
-          v.run, p.id)) || drawing[0];`]],
+   ["queue", `        const from = run && run.context_type === "project"
+          ? drawing.find((p) => p.id === run.context_id) : undefined;`,
+             `        const from = (run && run.context_type === "project"
+          ? drawing.find((p) => p.id === run.context_id) : undefined) || drawing[0];`]],
   ["TWO items and not three"],
   []);
 
@@ -311,7 +317,7 @@ arm("6", "THE SOURCE IS NOT A HOME OF ITS OWN ITEM. The exclusion is removed, so
   + "DECLARED: the excluded-home arms MUST fail. The item still exists and still says everything "
   + "else it said, which is the defect's whole camouflage — nothing errors, nothing is missing, and "
   + "one sentence is simply false for one audience.",
-  [["store", `        const kept = homes.ancestors.filter((a) => a.id !== src);`,
+  [["queue", `        const kept = homes.ancestors.filter((a) => a.id !== src);`,
              `        const kept = homes.ancestors;`]],
   ["A's reading is NOT filed under A"],
   ["the run-less version is absent for a REASON THE PRODUCER PUBLISHES"]);
@@ -337,13 +343,16 @@ arm("7", "THE DISPOSITION PUBLICATION MUST BE A MEASUREMENT OF THE ACT AND NOT A
      which is the live defect UI-45 found one surface over. Counted (exactly one)
      before it was written, and the arm was RE-RUN to confirm it behaves as
      declared rather than merely arming. */
-  [["store", `      return { available: false, op: null, scope: "project", keyed_on: SCOPED_ON, key: null,
-               finding: fid, projects: [],
-               reason: "no_project_scope",`,
-             `      return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON, key: null,
-               finding: fid, projects: [],
-               reason: "no_project_scope",`]],
-  ["NEITHER of this item's two kinds is dispositionable"],
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409), and the arm had been NOT AS DECLARED since IC-60 (D-266's
+     widening): this suite's two kinds became dispositionable at PROJECT scope, so none of its items reaches the
+     `no_project_scope` guard above and flipping it moved nothing (measured: 65/0, GREEN), while the declared label
+     ("NEITHER … is dispositionable") no longer exists. Re-expressed at the site the suite's items DO reach, with the
+     same meaning — the publication advertises a key the act does not accept: the project-scoped success return
+     publishes the finding's own id as `key` and drops `requires`, which op=proposedispose answers NO_PROJECT_SCOPE
+     (peritem.test.mjs block 9, r9e). Counted (exactly one) before it was written. */
+  [["queue", `             key: null, finding: fid, projects: homes, requires: ["project", "finding"],`,
+             `             key: fid, finding: fid, projects: homes, requires: [],`]],
+  ["and `key` is NULL while `available` is TRUE"],
   ["DRIVEN — the pair the plane publishes as `keyed_on` is the pair the act ACCEPTS"]);
 
 /* ============= (8) THE PURGE GUARD, WHICH THIS ITEM'S OWN ARM FOUND ====== */
@@ -356,7 +365,7 @@ arm("8", "THE QUESTION MUST STILL EXIST. `#queueSharedInquiry`'s guard is remove
   + "defect found by a control is the best evidence that the control is real.",
   /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4): the six-line anchor occurs TWICE (the conclusion producer carries the
      same head), so the harness refused to arm; the stance producer's next line keeps it unique. */
-  [["store", `      const q = this.#queueSharedInquiry(inq, viewer);
+  [["queue", `      const q = this.#queueSharedInquiry(inq, viewer);
       if (!q) continue;
       const drawing = this.#projectsDrawingOn(inq, viewer);
       if (drawing.length < 2) continue;
