@@ -1,6 +1,6 @@
 # record-core (T13)
 
-**Status** · session_01GSoeuDnnp3sumTtZuq2WZq · depth 2 · WORKING · handled B1
+**Status** · session_01GSoeuDnnp3sumTtZuq2WZq · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
