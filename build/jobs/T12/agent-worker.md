@@ -9,3 +9,4 @@ N304 (B1): the eight arms re-anchored and measured on `tranche/T12` @ `89107afbe
 - `harness.control` G2 re-anchored: `#aiRunTerminate` moved from `store.mjs` into `bio-plane/src/ai-runs/index.mjs` (T7), so its patch matched zero times. F1, G3 and G5 are AS DECLARED unchanged (airun 134/0 and skillsequencing 27/0 clean; the legacy `airun` failures N304 names are gone on this tree).
 - Measured: V1–V5 AS DECLARED; F1, G2, G3, G5 AS DECLARED; D1–D5, O1 AS DECLARED.
 - Sweep of the rest (own module's flaws): `harness.control` H1–H9, E1, E2 AS DECLARED (11 of 11; 10m03s, the chunk ran just over ten minutes: later chunks are smaller).
+- `harness.control` F2–F4, G1, G4 AS DECLARED (3m57s); T1–T3, D1, D2, H10 AS DECLARED (7m18s; H10: harness 260/0, member 139/0, `--strict` exit 0). The whole driver: 26 of 26.
