@@ -23,3 +23,9 @@ Size (session_01WpDgkzKHXhpC2PuizXicGz): test runs 6, module lines 3051
 ## J1 · COMPLETE
 
 N308 applied against a local stub of R38's cursor answer: R5's scope arm pages ratifiedFindingsRestingOn(id, {after}) from the start through each cursor to null, stopping once a resting project admits; outcome unchanged (tested: 2,500 pins over 3 pages; stop at the first admitting page; paged refusal deep-equals the one-page refusal). Module tests 70/0; format, architecture, coverage (16/16), ownership 0 failures. Pending your CHANGE: publication's real R38 still returns an array, so legacy ratify-authority is 35/18 on this branch (53/0 on the tranche) until it lands; I re-run then. Reported: ratify-authority.control's RESTING anchor (arm readmit-unpinned-finding) needs re-anchoring (legacy-tests'); R5's 'not yet met: N308' mark is yours to strike (outside my paths). Record: build/jobs/T12/ratification.md.
+
+### Completion after B2 (CHANGE: publication's real R38 merged, K395)
+
+Merged `tranche/T12`. The fixture's fallback (`restingPage`, no steered list) now calls the real `ratifiedFindingsRestingOn(id, {after, limit})` and returns its answer as is (the array wrapper is gone); the C-58.2 / C-58.3 tests reach the real read through it. Runs against the real read: `node --test test/m/ratification/` 70 pass, 0 fail; `test/ratify-authority.test.mjs` 53 pass, 0 fail (back to the tranche's count); `test/caseobject.test.mjs` 19/0; `test/derivation-bounds.test.mjs` 0 fail. Checks: format, architecture, coverage (16 of 16), ownership: 0 failures each. The `RESTING` anchor in `ratify-authority.control.mjs` remains legacy-tests' (noted by BOB). Deferred: none.
+
+Size (session_01WpDgkzKHXhpC2PuizXicGz): test runs 11, module lines 3051
