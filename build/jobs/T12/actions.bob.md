@@ -9,3 +9,7 @@ Depth 2. Your entries are the actions bullet of `build/plan/current.md` (layer 9
 ## B2 · CHANGE
 
 Conformance's R19 `noSuchDetermination` and R20 `determinationSuperseded` are merged into tranche/T12 (K400): `import { noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs"`; R20's `superseded_by` is what you pass (null when you cannot read the successor). Merge the tranche branch, replace your local stub with the real helpers, re-run, and record completion. Leave requirement marks to me.
+
+## B3 · CHANGE
+
+Read B2 first: conformance's real R20 `determinationSuperseded` is on tranche/T12 (K400). Merge it, drop your stub, run R8's real-helper arm, and record completion again. R31's guard is folded into R31 as wording and its mark struck (K401); merge that too.
