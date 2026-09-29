@@ -1,0 +1,71 @@
+# Plan: tranche T13
+
+**Status** · CLOSING · BOB #66 · session_01JYHQ5hY1x1mG3gkXoP1uAf · main fast-forwarded to `tranche/T13` at the close (K___)
+
+Opened by BOB #65, 2026-09-29 (PROCESS-MECHANICS §5), at `main` @ 8dfc4fb5ca, T12 closed (K423). Cut from `draft-T13.md` re-read against T12's close (K424); its wordings folded before opening (K408, commit 59463bf73d; N332 worded as membership R85). Bob's weekly meter at the opening: asked (18% at T12's close); 22% given 2026-09-29 ~18:55 UTC, during T13's last stage. An `N` entry's text is in `build/plan/next.md`.
+
+**Jobs** · odf-reader: ODF-READER #3 session_012x3jt5MEsquz9cY3RyQESF; record-core: RECORD-CORE #7 session_01GSoeuDnnp3sumTtZuq2WZq; membership: MEMBERSHIP #6 session_01Hc7NnTW3bKEQ3syEqYwTB7; promotion: PROMOTION #14 session_01JwRGiAAQuCSCteSnVJeMBi; intent: INTENT #5 session_01NeUjSARtJrUvGsQ3fY9FRB; case-authoring: CASE-AUTHORING #3 session_01UycqMHEcrUKuRXZ9RLdPm5; review: REVIEW #4 session_01P7YNYC4HwY5uqrXFyjyZpM; ratification: RATIFICATION #5 session_01FW1o1n2eXe6NEXbNnBRoE6; monitoring: MONITORING #5 session_012PquHVC9k9aMw1YH8G1kq4; legacy-store: LEGACY-STORE #5 session_01L19DRu2cbWBiRXm4jADFGU; affordances: AFFORDANCES #6 session_01NhLZHCLTs7E1w8EfnWcDnJ; queue: QUEUE #3 session_01PQNFqfP7kPh56cqLi4WAzf; instance-setup: INSTANCE-SETUP #2 session_01TEPER5SDgX1CbFrmvYAxBe; control-plane: CONTROL-PLANE #4 session_01V4YD1GggxTVp7D89Qjz5po; legacy-index: LEGACY-INDEX #9 session_01SbWMHYtC23oJPnXnB8WhqY; legacy-tests: LEGACY-TESTS #11 session_014vwpwAxsSWt48tTDFnEJoS
+
+**Rules at the opening.** T12's rules hold (`archive/T12.md`): every job with a long battery runs it in the foreground, in chunks under ten minutes, pushing its record after each. A provider a later job of the same layer needs merges early as it completes (§4). **legacy-tests runs alone, last, after every other job has merged (K420, K427).** After each extraction merge BOB runs `test/m/` whole on the tranche (BOB #64's lesson).
+
+## Outcome by entry
+
+### Layer 1 (K428, K429)
+
+- **odf-reader** · N30: applied, R45 `ODF_REPEAT_EXPANSION_MAX` 262,144 units, with K428's additions (a link at a repeated address after its first costs a unit; a repeat's copied text counts against `MEASURED_OOXML_TEXT_BOUND_BYTES`, `metric: "repeated_text_chars"`); R16 hidden rows as ranges; R41's branch (K429). `formats-odf.test.mjs`:461's old R16 pin routed to legacy-tests.
+
+### Layer 2 (K425, K430–K432)
+
+- **record-core** · N322 (with N250): applied, R62 `mintExhausted`, C-59.6 in its own `RECORD_CORE_CHECKS`; merged early for promotion (K425, K430). R62's mark struck when its four callers converged (K441).
+- **membership** · N324: applied, R84 `notAnAdmin`, C-96.1 moved into `MEMBERSHIP_CHECKS` (the catalogue's copy held one tranche, K408 (4)); R6, R7, R9–R12, R20, R25, R26 through it. N332: applied, R85 tested at the interface. Merged early for promotion (K431).
+- **promotion** · N322: applied, R19 through record-core R62. N318: applied, `CATALOG_VERSION` 1.43.0 over every row change since 1.42.0 (the list, C-59.6, C-96.1 held twice, C-100.20's where and translation, C-33.44's wording). N319: applied, R50 `ROW_CENSUS` {1.43.0, 820, f01ed42a…}, J1's reading folded into R50 (K431). Stamped last, after record-core and membership (K425, K432); its striking its own three marks accepted (K395). Awaiting the next stamp: review's C-87.12 retirement, control-plane's C-69.4.
+
+### Layer 7 (K433)
+
+- **intent** · N323: applied, R12–R14, R17, R27, R28 and the Bounds paragraph bound their walks at 1,000, held and retired alike, with interface tests at and past each bound (K433).
+
+### Layer 8 (K434)
+
+- **case-authoring** · N322: applied, R7's mint through record-core R62. N251 (its share): applied, `invariants.test.mjs` walks every catalogue row family instead of importing `CASE_DERIVATION_CHECKS` (K434).
+- **review** · N322: applied, R27 through record-core R62; C-87.12 retired, awaiting stamp (K434).
+- **ratification** · N251 (its share): applied, test-only, `checks.test.mjs` R14 walks every catalogue family instead of `ATTRIBUTION_CHECKS` (K434). legacy-checks' two empty exports now have no reader (T14).
+
+### Layer 10 (K435–K437)
+
+- **monitoring** · N324: applied, R30's pause refuses through membership R84, its own site and `CUSTODIAL_CHECKS` read gone; marks struck for R30, R44 (N65) and the Uses capture line (N166), that line's "never by the table's name" cut (K436).
+- **legacy-store** · N328: bias half applied, `#counts` reads bias `counts(hid)`, bias's dead purge entries and `BIAS_TABLES` gone. Deferred: the `tasks` half (the `#counts` read and the `TASK` mint-ledger row), since legacy-store may not call queue (K435) → N342. `settled_kind`'s column → N343 (K437).
+
+### Layer 11 (K440–K443)
+
+- **affordances** · N321's share: applied, `op=projectstage` an ungated read, no list changed; R26 met at the interface (K441). Re-ran against merged control-plane (J3): 312 ops, nothing unaccounted, 76/0 (K443).
+- **queue** · N322: applied, R23's `waiting` entry carries record-core R62's `code`, `check`, `detail` (K441).
+- **instance-setup** · N10's remainder: applied, R15's end-to-end half through the Worker's route, test-only; R15 and its Status list (R32, R34, R39, R40) struck (K441).
+- **control-plane** · N321: applied, the Worker routes `op=projectstage`, stamping `viewer`. N333: applied, the store's door in `src/control-plane/dispatch.mjs`, R25–R27's store half tested, C-69.4 `STORE_INTERNAL_ERROR` awaiting stamp; `MODULE_CHECK_FILES` reads record-core's checks (edge added, K440). Its one added legacy line (`store.mjs`:2851, the route map's header) accepted as a rewire (K442). Deferred: capture's rows unread by the door → N347 (K440); instance-setup's routes outside R26's frame → N348 (K442).
+- **legacy-index** · N338: applied, `coverage.mjs` reads control-plane's `OPS`, `owed-controls` A1 green. N334 (its share): applied, the dead catalogue imports gone (K442). Deferred: its `storeSilent` sites without `out.correlation` and the other dead imports in `src/index.mjs` → N349.
+
+### Last: legacy-tests (K420, K427, K443)
+
+- **legacy-tests** · [BOB fills at its close]
+
+### Entries added during the tranche
+
+- **N entries raised in T13, arising, in next.md:**
+  - N341 · `gate.mjs` comments still say C-87.12 retires later; corrected with the next stamp (K434).
+  - N342 · record-core's counts registration; queue registers `{tasks}` and seeds its `TASK` row; legacy-store drops both (K435).
+  - N343 · bias owns `bias_debts.settled_kind`; legacy-store's `ADDITIVE_COLUMNS` line goes (K437).
+  - N344 · the contradiction PRESENT and RESOLVE design, DEC-76, DEC-77 (K439; reviewed K447).
+  - N345 · the requirement changes DEC-76–DEC-81 owe in ten modules and a source's disclosure history, for Bob's approval (K439; widened K447).
+  - N346 · publication R44–R47 carry DEC-79's display (K439; worded K448).
+  - N347 · capture renames `NOT_FOUND`; control-plane reads capture's table (K440; worded K445).
+  - N348 · instance-setup's routes join the door's route map (K442; worded K445).
+  - N349 · legacy-index's `storeSilent` sites pass `out.correlation`; its other dead imports go (K442; worded K445).
+
+## Outcome (BOB #66, 2026-09-29)
+
+**CLOSING: every layer merged; the tranche is closed when `main` is at this commit (K___).**
+- **Layers 1, 2, 7, 8, 10, 11** (K429, K432, K433, K434, K437, K443): every planned entry applied except legacy-store's N328 `tasks` half (K435, N342); each layer closed with ownership 0 failures or the failure accepted (K432, K442), bundles regenerated and fresh but for fleetbundles' 2a arm (routed to legacy-tests, K432), newgroup 0 fail; `test/m/` whole 2,732/0, 17 todo at layer 11's close. Promotion's stamp complete in one pass by merging layer 2's providers early (K425). Run by BOB #65 (layers 1–11) and BOB #66 (the last stage).
+- **Last stage** (legacy-tests): [BOB fills at its close].
+- **During the tranche:** DEC-76–DEC-82 landed on `tranche/T13` and reach `main` at this close (K439); T14's wordings reviewed and ruled (K444, K445, K447, K448); Bob ruled N327 as DEC-83 (K446).
+- **Deferred:** N342 from layer 10; N341–N349 raised; T13's "Not in T13" list unchanged in next.md.
+
+**Usage at close (K___):** 15 job sessions 164.5M tokens processed, plus [legacy-tests]; BOB rows 125.2M (BOB #65), [BOB #66 row: its successor writes it]; 289.7M in all so far, cache reads about 98%. The largest jobs: AFFORDANCES #6 25.5M, PROMOTION #14 16.8M, QUEUE #3 16.7M, CONTROL-PLANE #4 15.4M. Bob's weekly meter: asked at the opening; 22% given 2026-09-29 ~18:55 UTC (18% at T12's close).
