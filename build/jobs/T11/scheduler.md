@@ -22,3 +22,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … scheduler`: 0 failures. `checks/coverage.mjs … scheduler`: 20 of 20 live ids named, 0 failures. `checks/ownership.mjs … scheduler tranche/T11`: 0 failures.
 
 Size (session_01LjsX9MK5ewxBsUxpMLKmTd): test runs 5, module lines 366
+
+## J1 · COMPLETE
+
+Scheduler T11 complete (record's Completion section). N223: R9 registers arm with calibration R18/R19, ai-runs R43, capture-requests R44; four R9 todos now tests. N224: the rank already reached all four batch-bounded ticks. Marks to strike: R9's four producers; R10 on the scheduler's side (monitoring's ordering with MONITORING #3). Tests 46 pass, 0 fail, 2 todo (entities R13; per-owner ordering); four checks 0 failures. REPORT: bio-plane.bundled.mjs stale by this change.
