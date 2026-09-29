@@ -38,3 +38,6 @@
 
 Size (session_01JeqPFLgSenZTbeFG1Gi4Wo): test runs 27, module lines 3,101
 
+## J1 · COMPLETE
+
+N339 with N349 (R64) and N347 (R63) applied (6c6cd226bf); record "Completion (CAPTURE #7)" has the details. One helper, relayUnanswered, answers the four relays (links, archivelookup, acquire, knock): the store's refusal through storeRefusal when handed, else json(reply.body, reply.status); a silence is storeSilent(op, out.correlation). legacy-index at layer 11 adds storeRefusal at src/index.mjs :378, :675, :687, :693 (listed in the record). evidenceAbsent answers EVIDENCE_NOT_HELD; C-118.1 re-keyed, awaiting stamp. Marks met: R21, R63 (N347), R64 (N339, N349); R32's K383 looks met too (observation). capture 75/75, no todos; users' suites green except extraction's two N347 lines (pdfstructure.test.mjs:55, :68, layer 4). format, architecture, coverage (64/64), ownership clean. For legacy-tests: test/capture.test.mjs:74, test/pdfstructure-op.test.mjs:126, and the DEC-49 guard's arm G NOT_FOUND entry and R3 FED floor (92 -> 91). legacy-ui fixtures listed in the record. Stale: bio-plane and agent-worker bundles.
