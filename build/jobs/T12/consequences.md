@@ -19,3 +19,7 @@
 **Runs so far** (with the stub): `test/m/consequences/` 24 pass, 0 fail; users: `test/m/filings/` 34/0, `test/m/escalation/` 28/0, `test/m/affordances/catalogue.test.mjs` 26/0, `test/gate-reads.test.mjs` 1/0. Checks: format 0 failures; architecture 0 failures; coverage 14 of 14 ids, 0 failures; ownership 7 files, 0 failures.
 
 **Next step:** on BOB's CHANGE, merge `tranche/T12`, drop the stub, re-run step 5–7.
+
+## J1 · REPORT
+
+N309 applied on job/T12/consequences @ d593a59236 against conformance R19/R20 wording, tested with an uncommitted local stub: R1 answers NO_SUCH_DETERMINATION (R19) then DETERMINATION_SUPERSEDED (R20) through conformance; R7/R9 NO_SUCH_DETERMINATION through R19; CONSEQUENCE_NOT_NONCOMPLIANT C-114.2, CONSEQUENCE_NOT_A_PARTICIPANT C-114.3; C-114.1 retired. Module 24/0; filings, escalation, affordances catalogue, gate-reads green; four checks 0 failures. Waiting on your CHANGE merging conformance R19/R20 to test against the real helpers, then COMPLETE. Found for others: (1) promotion N318: src/gate.mjs 243, 296-297 name C-114.1 and C-114.3; (2) legacy-tests: civicos-ui/check-refusal-codes.mjs census may move with C-114.1 leaving and the two renames (no literal hit for the new codes or C-114 there or in affordances lists); (3) bio-plane/dist/bio-plane.bundled.mjs stale (old CONSEQUENCES_CHECKS). R1 mark to strike once real helpers pass (requirements file is outside my paths).
