@@ -13,3 +13,7 @@ All three readings are right; build them (K355). (1) Read the ceiling from ai-ru
 ## B3 · CHANGE
 
 CHANGE: ai-runs is merged into `tranche/T11` (AI-RUNS #4 J1): `AI_RUN_STATE_MAX_BYTES` (262,144) is exported from `src/airun.mjs` and re-exported from `src/ai-runs/index.mjs`; `checkRunState` is R45's one site; C-22.7's row now lives in ai-runs' own `AI_RUN_OWN_CHECKS` (its `where` `src/ai-runs/skill-version.mjs checkSkillVersion, called from src/ai-runs/index.mjs open`) and wins in `airun.mjs`' spread; the catalogue keeps an interim copy until T12 (N299). Merge the tranche branch into yours, turn every `test.todo` that waited on ai-runs into a real test, re-run your tests, and record completion again (a new COMPLETE with its own Size line).
+
+## B4 · RESUME
+
+RESUME: your session has been idle since 00:42 UTC waiting on a negative-control worker, and your RUNNING state passed 01:22. If that worker's result is not in your session, run the negative controls yourself (or skip what they would only re-confirm), finish R49's tests, run your checks, and record completion (COMPLETE with your Size line). If something blocks you, post BLOCKED with the cause.
