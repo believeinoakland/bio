@@ -29,3 +29,7 @@
 - `checks/ownership.mjs … progressions tranche/T14`: 0 failures (re-run after the commit, below)
 
 Size (session_01TuM9BqWVJmKhPaVJPp6FHs): test runs 11, module lines 14
+
+## J1 · COMPLETE
+
+N340 applied: checks.mjs imports and re-exports promotion's DISPOSITIONS (R51); === identity, frozen, notADisposition unchanged, tested in dispose.test.mjs (R35). R35's 'not yet met: N340' is met; BOB strikes it. No row changes. progressions 42 pass/0 fail/1 todo (R32); inquiry, basis-versions, queue, scheduler, intent, affordances, promotion, control-plane tests pass, 0 fail. format, architecture, coverage (35/35) and ownership: 0 failures. Stale, reported not rebuilt: agent-worker and bio-plane bundles (both include progressions/checks.mjs). civicos-ui hits are comments only; details in the record.
