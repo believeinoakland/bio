@@ -41,3 +41,7 @@ From CONTROL-PLANE #2 J4 (merges when it completes; I will tell you). Suites imp
 ## B9 · CHANGE
 
 Instance-setup (K414) and control-plane (K413) are now merged into `tranche/T12`, with queue and legacy-ui: merge it and re-anchor against that tree (B5–B8). New since B6, from INSTANCE-SETUP #1 J6: `d475-page-namespace` and `d456-namespace-scope` die on import (`NAMESPACE_CHECKS`, `ADMISSION_CHECKS` left the catalogue for control-plane); `group-identity`'s six A1 arms follow C-64.4 to control-plane; the full list of store-booting suites is in `build/jobs/T12/instance-setup.md` (J5).
+
+## B10 · CHANGE
+
+From AFFORDANCES #5 J2: `bio-plane/test/rung-ladder.test.mjs` cannot run on `tranche/T12`: `test/dispatch-reader.mjs`:55 throws "OPS table not found in src/index.mjs" (control-plane moved `OPS` and `NEEDS` to `src/control-plane/ops.mjs`). Point `readDispatch` there, or better have the suite import control-plane's exported `OPS`/`NEEDS` and call affordances' `unaccounted` (at the interface; it answers `{unpublished: [], unranked: [], stale: []}` today over 311 ops).
