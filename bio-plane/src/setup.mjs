@@ -2326,8 +2326,10 @@ export class InstanceSetup {
    *  iterations and the instant. Never throws for a well-formed call. */
   recordCpuProbeStep({ run = LEGACY_PROBE_RUN, step, elapsedMs, iterations, at = null } = {}) {
     const now = at || stampInstant("second", this.#now());
+    /* A step with no recorded start (a caller that names no run) belongs to a run whose end is not known either. */
     if (!this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, run))
-      this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations) VALUES (?, ?, ?)`, run, now, iterations);
+      this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'UNRECORDED')`,
+                     run, now, iterations);
     this.#sql.exec(
       `INSERT INTO cpu_probe_steps (run, step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(run, step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
