@@ -51,7 +51,7 @@ Each is an internal read like N305's.
 - `derivation-bounds` and `meaning-bounds`: the same output as before, apart from corpus counts.
 - format, architecture, coverage (28 of 28 ids) and ownership: 0 failures.
 
-Size (session_01Aqw26aHPhWB2gFJysEPTSZ): test runs 28, module lines 1836
+Size (session_01Aqw26aHPhWB2gFJysEPTSZ): test runs 28, module lines 1837
 
 ## J1 · QUESTION
 
