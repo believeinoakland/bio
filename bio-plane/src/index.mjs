@@ -10,10 +10,6 @@ import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
    public hosts only, no credentials in the authority, no bare IPs, no localhost.
    It is the one bound between a member typing a URL and this Worker fetching it,
    so it must be the same function the checker uses on the queue. */
-/* REC-50: `EARNED_CAPTURE_CEILING` arrives on the same import for the same
-   reason — op=acquire STAMPS the direct-fetch capture grade, and the letter it
-   stamps is the ceiling `checkEarnedLeg` enforces rather than a copy that
-   happens to agree. One value, read where it is refused. */
 /* REC-46 (2026-08-04): the two prefixes this file STAMPS on a machine
    credential now come from the catalog rather than being typed here twenty
    times. This is the trust boundary and the mint, so it is where the value used
@@ -23,29 +19,9 @@ import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "./sshsig.mjs";
    refusal that reads one literal while the stamp writes another is exactly the
    drift D-164 exists to stop. Nothing on the wire moves — the composed stamps
    are character-identical while the prefixes are `token:` and `class:`. */
-import { parseFrontmatter, createSha256, normalizeType,
-         EARNED_CAPTURE_CEILING,
-         /* PL-4: the ONE composer for the honest agent, and the capture-request
-            arm's DEC-49 row. Both live in the catalog so the Durable Object's
-            drain and this control plane cannot disagree about what was sent. */
-         civicosUserAgent, CAPTURE_REQUEST_CHECKS,
-         /* D-270 / C-61: the argument complaint's row. Named rather than reached
-            through the namespace below, because it is used AS A VALUE at the one
-            governed site — the code is a STRING LITERAL there so the DEC-49
-            guard's arm C can COMPARE it rather than read past a variable. */
-         REQUIRED_ARGUMENT_CHECKS,
-         /* CAP-8 / C-48: the Google Drive host stack's DEC-49 rows. Every one is
-            a NAMING — a folder, a kind the address does not carry, a shape this
-            recogniser does not read, the application shell, an export that could
-            not be fetched, and a caller trying to author the hop (D-112). The
-            item's rule is that none of these is ever a silent skip. */
-         DRIVE_CAPTURE_CHECKS,
-         /* D-64 / C-83: the render arm's DEC-49 rows. */
-         RENDER_CAPTURE_CHECKS,
-         MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX,
-         /* REC-123: the ONE machine-identity predicate (REC-46), asked by the two
-            ratification fences of the stamp an `ai` credential acts under. */
-         isMachineIdentity } from "../checks/bio-checks.mjs";
+/* D-270 / C-61: the argument complaint's row, used AS A VALUE at the one governed site — the code is a STRING
+   LITERAL there so the DEC-49 guard's arm C can COMPARE it rather than read past a variable. */
+import { REQUIRED_ARGUMENT_CHECKS, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../checks/bio-checks.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "./publication/worker.mjs";
 import { publishedGraphEdges } from "./publication/index.mjs";
 import { inbandQuartet } from "./inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
