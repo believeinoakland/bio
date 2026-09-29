@@ -1,5 +1,3 @@
 # The UX substrate
 
 What a member sees and works with, as the approved requirements define it (BOB #59, 2026-09-28, for Bob's UX redesign). `ux-substrate.json` is the inventory (constructs, relationships, lifecycles, acts, roles, journeys, display primitives, what is in flux, where canon and requirements disagree), every claim citing its requirement or canon section. `ux-substrate.html` is the rendered page, built by `build_ux.py` from the JSON; published at https://claude.ai/artifact/JsPZAftab91EL9Ut91qWGx. The requirements (`build/requirements/`) win over this snapshot, which is as of `tranche/T10` @ 6faa808405.
-
-**Kept current with Bob's rulings (2026-09-29).** Whenever Bob closes a question this page lists as open (an "In flux" row whose why is a design gap, or a question for Bob), the change that records the ruling also updates that row here, naming the ruling, and rebuilds the page: the row then reads *decided, not yet built* until the build lands. So the page's design gaps are always the questions still open. The first was contradictions (DEC-76, DEC-77).
