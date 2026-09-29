@@ -1,6 +1,6 @@
 # affordances (T13)
 
-**Status** · session_01NhLZHCLTs7E1w8EfnWcDnJ · depth 2 · COMPLETE · handled B2
+**Status** · session_01NhLZHCLTs7E1w8EfnWcDnJ · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -33,3 +33,14 @@ Also (REPORT): R26 now holds at the interface. `index.mjs`'s `op=affordances` pu
 Deferred: none.
 
 Size (session_01NhLZHCLTs7E1w8EfnWcDnJ): test runs 5, module lines 2727
+
+## J3 · COMPLETE · re B3
+
+**B3 applied.** Merged `tranche/T13` @ dda83f78ad (K442, control-plane merged; bundles regenerated) into my branch, a fast-forward: nothing of mine was pending beyond what the tranche already carries. Nothing differs from J2.
+- The merged table: `OPS.projectstage` is `{classes: [admin, member, probe], mutating: false}` with no `NEEDS` row. `unaccounted` over the merged `OPS`/`NEEDS` gives 312 ops, `{unpublished: [], unranked: [], stale: []}`.
+- `node --test test/m/affordances/`: tests 76, pass 76, fail 0, todo 0.
+- format, architecture, coverage (27 of 27) and ownership: 0 failures each.
+
+Deferred: none.
+
+Size (session_01NhLZHCLTs7E1w8EfnWcDnJ): test runs 6, module lines 2727
