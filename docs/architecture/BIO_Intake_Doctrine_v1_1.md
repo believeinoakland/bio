@@ -291,8 +291,13 @@ or any publication, so a whistleblower's way of being reached cannot be publishe
 **A source's identity evolves (Bob, 2026-09-29, DEC-78 item 5).** An unknown source may become a publicly known one: by revealing
 themself to the group or in public, by parts of their identity (an occupation, say) appearing in a whistleblower filing, or by being found
 and exposed by those hostile to their evidence. The record holds a source's identity as a HISTORY of disclosures, each dated and
-attributed, never as one field overwritten, and each capture keeps its source as it stood when the material was received. The doctrine of
-who may disclose what, to whom, is open with Bob.
+attributed, never as one field overwritten, and each capture keeps its source as it stood when the material was received. Five rules
+govern it (Bob, 2026-09-29): the group is never the FIRST to make a source more public (an identity detail is published only with the
+source's consent to that audience, or where it is already public elsewhere, cited); a hostile exposure is recorded as the EXPOSER'S claim
+and the group does not confirm it without the source's consent, since confirming is itself a disclosure; *known to the group, not
+recorded* is a first-class state, and a recorded identity is seen only by named members with every read logged; consent to go public is
+asked at the moment of publishing and stated as permanent, and withdrawing it binds only future publications; and a source's firmer
+identity reaches the findings resting on their material as a re-evaluation notice, never a silent regrade.
 
 **The limit is a BOUND (BOB #32, 2026-09-24, D-496).** A limit the instance publishes is one it holds, not the name of a bucket. The limits
 are 12 knocks per source (a fingerprint of the connecting address, never the address) and 300 per instance, in any 10 minutes, counted in
