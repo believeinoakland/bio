@@ -2584,6 +2584,9 @@ export function makeFetch(hooks = {}) {
     /* N43: membership's R10, R11 and R19 acts take the server's `by` by the same expression, in a statement of their
        own for the reason just given; the store's relays read it from the query after the body, so a caller's `by`
        names nobody. */
+    /* K407: who set the instance's profiles, the session's member; instance-setup refuses a `by` that is no administrator. */
+    if (op === "profilesset")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* REC-164: the setter of the group's display name or domain is the SERVER's stamp — set after the caller's

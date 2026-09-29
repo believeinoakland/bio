@@ -1299,6 +1299,12 @@ const OPS = {
      The DUE SLATE (`monitorslate`) is a READ on `monitoring`'s cut and for its reason: it names bundles, so the viewer
      is stamped below and the store answers only what the viewer may see. */
   monitorpause:       { classes: ["admin", "member"], machineClasses: ["admin"], mutating: true  },
+  /* K407 (INSTANCE-SETUP #1 J2): the instance's active jurisdiction profiles (instance-setup R12–R15). `profiles` is a
+     READ open to the admin bearer and every session; `profilesset` is an administrator's own session act: every session
+     reaches it (both sets) and `machineClasses: []` refuses every bearer CLASS_FORBIDDEN, `by` stamped below from the
+     session, and instance-setup refuses a `by` that is not an administrator. */
+  profiles:           { classes: ["admin", "member"],               mutating: false },
+  profilesset:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   monitorslate:       { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-94 / IC-95 — THE PER-CAPTURE CONTENT-AXIS READ (`OBSERVATION-LOG-DESIGN.md`
      section 4.2, section 6 row 2): *which of the four content-axis states is this
@@ -2024,6 +2030,8 @@ const SESSION_OPS = {
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
+                   /* K407: the instance's profiles, an administrator's own session act (instance-setup asks the roster). */
+                   "profilesset",
                    /* PL-11 / IS-5 / D-199 (3): MINTING AN AI TOKEN IS A MEMBER ACT,
                       and a MEMBER is a signed-in person — not the MEMBER_TOKEN
                       machine credential, which stamps `token:member` and is a
@@ -2086,6 +2094,7 @@ const SESSION_OPS = {
                    "governorstate", "governorconfig",
                    /* K372 (monitoring R30): the daemon's pause, `governorconfig`'s route — the founder's session. */
                    "monitorpause",
+                   "profilesset",
                    "aicredentialmint", "aicredentialrevoke",
                    "casedraft", "reviewgrant", "reviewrevoke"]),
 };
@@ -2544,6 +2553,9 @@ const NEEDS = {
   /* K372 (monitoring R30): pausing the daemon is the root of trust's act over the instance's own fetching, bounded by
      its class and `SESSION_OPS.admin`, `governorconfig`'s reason: not a section-5 working capability. */
   monitorpause:     null,
+  /* K407: setting the instance's profiles is an administrator's act asked of the roster, D-136's reasoning: no working
+     capability. */
+  profilesset:      null,
   /* REC-4 / D-98: forwarding or resolving a task carries NO working capability.
      The authorization is not "may this member contribute" but "is this THIS
      member's task" — an identity question the store's TASK-ACTOR FENCE answers
