@@ -647,7 +647,7 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
   for (const m of ["allocId", "allocIdOp", "mintOpaqueId", "acquireLease", "readFile", "readImage", "auditPass", "declarePurge",
                    "purge", "getSetting", "setSetting", "transact", "commit", "bundleInfo", "listBundles", "listByType",
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
-                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease"])
+                   "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease", "registerCounts", "counts"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -1395,5 +1395,142 @@ test("R62: mintExhausted's extra adds a caller's own fields and never replaces i
   assert.equal(mintExhausted(["CASE"]).prefix, "", "only a string names a prefix");
 });
 
-test.todo("R62: every act of any module that answers no free opaque id answers through mintExhausted: promotion R19 (T13 layer 2), "
-  + "case-authoring R7 and review R27 with C-87.12's retirement (layer 8), queue R23 (layer 11) — each changes in its own job (N322)");
+/* R62's other half, every act that answers no free opaque id answering through `mintExhausted`, is met since T13 (K441):
+   each caller tests it at its own interface (promotion R19, case-authoring R7, review R27, queue R23), so the todo that
+   stood here for it is retired (RECORD-CORE #8). */
+
+/* ---- T14: R63 `registerCounts`, `counts`; its rows C-102.13, C-102.14 (N342) ---- */
+
+const COUNTS_DECLARED_TRANSLATION = 'A part of this instance tried to report a figure another part already reports, or to register its '
+  + 'figures twice, so the second registration was refused and the first still stands. This is a fault in how the '
+  + 'instance was built, not in the record, and nothing in the record changed.';
+const COUNTS_MALFORMED_TRANSLATION = 'A part of this instance tried to register its figures without naming itself, the figures or a '
+  + 'function to count them, so nothing was registered. This is a fault in how the instance was built, not in the '
+  + 'record, and nothing in the record changed.';
+
+test("R63: counts answers every registered key in registration order, each its module's number, with hid passed on unchanged", () => {
+  const { s, rc } = fresh();
+  assert.deepEqual(rc.counts(null), {}, "nothing registered: no figures");
+  s.db.exec(`CREATE TABLE widgets (bundle_id TEXT); CREATE TABLE gadgets (k TEXT)`);
+  s.sql.exec(`INSERT INTO widgets VALUES ('INFO-2026-0001-a'), ('INFO-2026-0002-b'), (NULL)`);
+  s.sql.exec(`INSERT INTO gadgets VALUES ('g1'), ('g2')`);
+  const asked = [];
+  const c = (q, ...a) => Number([...s.sql.exec(q, ...a)][0].c);
+  // a module's own counts, subtracting the hidden bundles by its own key, as bias R42 does
+  const widgets = (hid) => {
+    asked.push(["w", hid]);
+    return hid ? { widgets: c(`SELECT count(*) AS c FROM widgets WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}`, ...hid.args), widgetKinds: 1 }
+               : { widgets: c(`SELECT count(*) AS c FROM widgets`), widgetKinds: 1 };
+  };
+  const gadgets = (hid) => { asked.push(["g", hid]); return { gadgets: c(`SELECT count(*) AS c FROM gadgets`), ignored: 99 }; };
+  assert.deepEqual(rc.registerCounts("gadgetry", ["gadgets"], gadgets), { ok: true, module: "gadgetry", keys: ["gadgets"] });
+  assert.deepEqual(rc.registerCounts("widgetry", ["widgets", "widgetKinds"], widgets), { ok: true, module: "widgetry", keys: ["widgets", "widgetKinds"] });
+  const whole = rc.counts(null);
+  assert.deepEqual(whole, { gadgets: 2, widgets: 3, widgetKinds: 1 });
+  assert.deepEqual(Object.keys(whole), ["gadgets", "widgets", "widgetKinds"], "registration order, then each list's order");
+  assert.ok(!("ignored" in whole), "only the registered keys are answered");
+  const hid = { sql: "(?)", args: ["INFO-2026-0001-a"] };
+  asked.length = 0;
+  assert.deepEqual(rc.counts(hid), { gadgets: 2, widgets: 2, widgetKinds: 1 });
+  assert.equal(asked.length, 2, "each function asked once per answer, not once per key");
+  assert.ok(asked.every(([, h]) => h === hid), "hid reaches each function as the caller gave it, the same object");
+  asked.length = 0;
+  rc.counts();
+  assert.ok(asked.every(([, h]) => h === null), "no hid given: null");
+  // the same instance for every caller in the object (R39): a registration through one handle is answered by another
+  assert.deepEqual(recordOf({ storage: s }).counts(null), whole);
+  // the figures follow the tables: counts reads at each answer, never a copy taken at registration
+  s.sql.exec(`INSERT INTO gadgets VALUES ('g3')`);
+  assert.equal(rc.counts(null).gadgets, 3);
+});
+
+test("R63: a figure that could not be read is null, never zero, and counts never throws", () => {
+  const { rc } = fresh();
+  const getter = Object.defineProperty({ ok: 4 }, "boom", { enumerable: true, get() { throw new Error("get"); } });
+  const fns = [
+    ["throws", ["t1", "t2"], () => { throw new Error("no table"); }],
+    ["nothing", ["n1"], () => undefined],
+    ["scalar", ["s1"], () => 7],
+    ["partial", ["p1", "p2", "p3", "p4", "p5", "p6", "p7"], () => ({ p1: 0, p2: "5", p3: NaN, p4: Infinity, p5: null, p6: 5n })],
+    ["getter", ["ok", "boom"], () => getter],
+    ["zero", ["z"], () => ({ z: 0 })],
+    ["negative", ["neg", "frac"], () => ({ neg: -1, frac: 2.5 })],
+    ["inherited", ["toString", "__proto__"], () => ({})],
+    ["async", ["a1"], async () => ({ a1: 1 })],
+    ["rejects", ["r1"], async () => { throw new Error("later"); }],
+  ];
+  for (const [m, keys, f] of fns) assert.equal(rc.registerCounts(m, keys, f).ok, true, m);
+  let got;
+  assert.doesNotThrow(() => { got = rc.counts(null); });
+  assert.deepEqual(Object.entries(got), [["t1", null], ["t2", null], ["n1", null], ["s1", null],
+    ["p1", 0], ["p2", null], ["p3", null], ["p4", null], ["p5", null], ["p6", null], ["p7", null],
+    ["ok", 4], ["boom", null], ["z", 0], ["neg", -1], ["frac", 2.5], ["toString", null], ["__proto__", null], ["a1", null], ["r1", null]]);
+  assert.equal(Object.getPrototypeOf(got), Object.prototype, "a key named __proto__ is an own figure, never the answer's prototype");
+  for (const hid of [undefined, null, 7, "x", { sql: 1 }]) assert.doesNotThrow(() => rc.counts(hid));
+});
+
+test("R63: a key already held, a key named twice and a module's second registration are COUNTS_DECLARED (C-102.13), naming the holder; nothing is registered", () => {
+  const { rc } = fresh();
+  const row = RECORD_CORE_CHECKS.COUNTS_DECLARED;
+  assert.deepEqual({ ...row }, { check: "C-102.13", where: "src/record-core/index.mjs registerCounts > is-counts-registration",
+                                 translation: COUNTS_DECLARED_TRANSLATION });
+  assert.ok(Object.isFrozen(row));
+  assert.equal(rc.registerCounts("queue", ["tasks", "queueState"], () => ({ tasks: 1, queueState: 2 })).ok, true);
+  const answer = () => rc.counts(null);
+  const before = answer();
+  const cases = [
+    ["bias", ["biasStatements", "tasks"], { module: "bias", key: "tasks", heldBy: "queue" }],
+    ["bias", ["queueState"], { module: "bias", key: "queueState", heldBy: "queue" }],
+    ["queue", ["other"], { module: "queue", heldBy: "queue" }],
+    ["bias", ["x", "y", "x"], { module: "bias", key: "x", heldBy: "bias" }],
+  ];
+  for (const [m, keys, named] of cases) {
+    const r = rc.registerCounts(m, keys, () => ({ biasStatements: 9, x: 1, y: 1, other: 1 }));
+    assert.deepEqual({ ...r, detail: null }, { ...named, ok: false, reason: "COUNTS_DECLARED", code: "COUNTS_DECLARED", check: "C-102.13",
+                                              translation: COUNTS_DECLARED_TRANSLATION, detail: null }, `${m} ${keys}`);
+    assert.equal(typeof r.detail, "string"); assert.ok(r.detail.includes(named.heldBy), "the detail names the holder");
+    assert.deepEqual(answer(), before, "a refused registration registered nothing, not even its other keys");
+  }
+  assert.deepEqual(rc.registerCounts("bias", ["biasStatements", "x", "y"], () => ({ biasStatements: 9, x: 1, y: 1 })).ok, true,
+                   "the refused module may still register once, with keys no one holds");
+  assert.deepEqual(answer(), { tasks: 1, queueState: 2, biasStatements: 9, x: 1, y: 1 });
+  // a caller's list changed after registration changes nothing registered
+  const keys = ["late"];
+  rc.registerCounts("later", keys, () => ({ late: 3, tasks: 100 }));
+  keys.push("tasks");
+  assert.deepEqual(answer(), { tasks: 1, queueState: 2, biasStatements: 9, x: 1, y: 1, late: 3 });
+});
+
+test("R63: a registration without a module name, a non-empty list of names or a function is COUNTS_MALFORMED (C-102.14), registering nothing", () => {
+  const { rc } = fresh();
+  const row = RECORD_CORE_CHECKS.COUNTS_MALFORMED;
+  assert.deepEqual({ ...row }, { check: "C-102.14", where: "src/record-core/index.mjs registerCounts > is-counts-registration",
+                                 translation: COUNTS_MALFORMED_TRANSLATION });
+  assert.ok(Object.isFrozen(row) && Object.isFrozen(RECORD_CORE_CHECKS));
+  const f = () => ({ k: 1 });
+  const bad = [["", ["k"], f], ["  ", ["k"], f], [null, ["k"], f], [7, ["k"], f], [undefined, ["k"], f],
+               ["m", [], f], ["m", "k", f], ["m", null, f], ["m", undefined, f], ["m", ["k", ""], f], ["m", ["k", 3], f], ["m", [" "], f],
+               ["m", ["k"], null], ["m", ["k"], "fn"], ["m", ["k"], { k: 1 }], ["m", ["k"], undefined]];
+  for (const [m, keys, fn] of bad) {
+    const r = rc.registerCounts(m, keys, fn);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "COUNTS_MALFORMED", "COUNTS_MALFORMED", "C-102.14", COUNTS_MALFORMED_TRANSLATION],
+                     `${String(m)} / ${JSON.stringify(keys)} / ${typeof fn}`);
+    assert.equal(typeof r.detail, "string");
+    assert.deepEqual(rc.counts(null), {}, "nothing was registered");
+  }
+  assert.deepEqual(rc.registerCounts("m", ["k"], f), { ok: true, module: "m", keys: ["k"] }, "a malformed attempt holds nothing: m registers once");
+  assert.deepEqual(rc.counts(null), { k: 1 });
+});
+
+test("R63: a refusal's own fields are never replaced by what it names, and neither service writes anything", () => {
+  const { s, rc } = fresh();
+  const before = dump(s);
+  // a module named like a refusal's fields, and keys shaped like them, leave code, check and translation as the row gives them
+  rc.registerCounts("check", ["check", "translation", "ok"], () => ({ check: 1, translation: 2, ok: 3 }));
+  const r = rc.registerCounts("code", ["check"], () => ({}));
+  assert.deepEqual([r.ok, r.code, r.check, r.translation, r.module, r.key, r.heldBy], [false, "COUNTS_DECLARED", "C-102.13", COUNTS_DECLARED_TRANSLATION, "code", "check", "check"]);
+  rc.counts(null); rc.counts({ sql: "(?)", args: ["x"] });
+  assert.deepEqual(dump(s), before, "registering and counting write nothing");
+  // the registrations are this instance's, not the module's: another storage's instance holds none
+  assert.deepEqual(recordOf({ storage: storage() }).counts(null), {});
+});
