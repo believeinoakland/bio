@@ -1,6 +1,6 @@
 # installer (T12)
 
-**Status** · session_01BB1Bcv3GqjX9wdZK5x9pH8 · depth 2 · WORKING · handled B0
+**Status** · session_01BB1Bcv3GqjX9wdZK5x9pH8 · depth 2 · WAITING ON BOB (J1) · handled B0
 
 ## J1 · QUESTION
 
