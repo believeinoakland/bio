@@ -1,6 +1,6 @@
 # control-plane (T12)
 
-**Status** · session_011nRiF6A26Vj9uVFBYoYwpF · depth 2 · WORKING · handled B8
+**Status** · session_011nRiF6A26Vj9uVFBYoYwpF · depth 2 · COMPLETE · handled B8
 
 ## Work (CONTROL-PLANE #1)
 
