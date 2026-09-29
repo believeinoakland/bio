@@ -24,3 +24,13 @@ Read whole: `roles/JOB.md`; B1; the plan's opening paragraph and layer 5; N288 (
 **Deferred:** nothing.
 
 Size (session_01KBB1VTU4oE4epgti9kRRV5): test runs 3, module lines 2225
+
+## J1 · COMPLETE
+
+N288 applied and pushed on job/T11/connections (tests 9d8db8e051, record 56549ce550; details in my record's Work section).
+R59 needed no code: derive writes entity_id exactly as given, registered or not, one row per unordered pair, and only R36's purge deletes a row. New readcontract.test.mjs checks this at the interface, retrieval's probe (SELECT 1 x FROM connections WHERE entity_id = ? LIMIT 1) over the workerd cursor fixture included, and a row surviving a derivation that finds no resolutions until purge.
+R1's N285 clause (NO_ENTITY through entities.noEntity) is a test.todo naming its cause.
+Marks for you to strike: none from this job (R59 carries none; R1's N285 mark stays).
+Found: the requirements file still marks R6, R13, R15, R26–R33, R43 and R49 not yet met (and the Status paragraph lists them), though each has a passing test under its id at the interface. For you to judge and strike.
+Tests: connections 65 pass, 0 fail, 1 todo; retrieval (R59's reader) 61 pass, 0 fail, 1 todo. format, architecture, coverage (59 of 59) and ownership: 0 failures.
+Stale artifacts: none (no product source changed). Deferred: nothing.
