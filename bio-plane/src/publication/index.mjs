@@ -72,6 +72,9 @@ export const CITED_PARTS_MAX = 1000;
 /** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
 export const RESTING_CAPTURES_MAX = 1000;
 export const RATIFIED_CASES_MAX = 1000;
+/** R42 (N315, K380): the resting findings one capture answers, and those one page answers in all. */
+export const RESTING_FINDINGS_PER_CAPTURE = 200;
+export const RESTING_FINDINGS_PER_PAGE = 10000;
 /** R38: the pins one `ratifiedFindingsRestingOn` page reads, its default and its ceiling. */
 export const RESTING_PINS_MAX = 1000;
 /* A caller's page size: a whole number of rows, floored, clamped to 1–max, the default when absent or not a number. */
@@ -1043,6 +1046,9 @@ export class Publication {
    *  findings and each one's owning projects: `{captures: [{capture_sha, findings: [{bundle_id, projects}]}], limit,
    *  truncated, cursor}`. `limit` defaults to RESTING_CAPTURES_MAX and is clamped to 1–RESTING_CAPTURES_MAX; `cursor`
    *  is the last capture answered when more follow, else null, so `monitoring` R33 follows it to the end (as intent R7).
+   *  N315 (K380): each capture answers at most RESTING_FINDINGS_PER_CAPTURE of its findings, in finding id order, and
+   *  `findings_truncated`, true when more rest on it; a page answers at most RESTING_FINDINGS_PER_PAGE findings in all,
+   *  ending early (its `cursor` the last capture answered whole) rather than exceed it.
    *  Read as the plane: viewer-free, and it writes nothing.
    *  THE SOURCE ROWS, CONFIRMED (the R42 note): what a finding RESTS ON is its `serve`-class edge set (D-431,
    *  `publishedGraphEdges`), which the published graph holds as `published_edges` rows of disclosure `serve`, and, for
@@ -1063,26 +1069,47 @@ export class Publication {
          WHERE EXISTS (SELECT 1 FROM published_bundles p WHERE p.bundle_id=m.bundle_id))`;
     const held = `FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
         JOIN rests x ON x.target=r.bundle_id JOIN ratified f ON f.finding=x.finding`;
+    /* N315 (K380): each capture of the page with how many findings rest on it, counted to one past the per-capture
+       bound, so the page can end before the 10,000th finding without reading one it will not answer. */
     const page = this.#rows(
-      `${rests} SELECT DISTINCT r.capture_sha ${held} WHERE r.capture_sha > ? ORDER BY r.capture_sha LIMIT ?`,
-      typeof after === "string" ? after : "", cap + 1);
-    const truncated = page.length > cap;
-    const shas = page.slice(0, cap).map((r) => r.capture_sha);
-    const by = new Map(shas.map((c) => [c, new Map()]));
-    if (shas.length)
+      `${rests}, caps(capture_sha) AS (
+          SELECT DISTINCT r.capture_sha ${held} WHERE r.capture_sha > ? ORDER BY r.capture_sha LIMIT ?)
+       SELECT k.capture_sha, (SELECT COUNT(*) FROM (SELECT DISTINCT f.finding ${held}
+                                WHERE r.capture_sha=k.capture_sha LIMIT ?)) AS n
+         FROM caps k ORDER BY k.capture_sha`,
+      typeof after === "string" ? after : "", cap + 1, RESTING_FINDINGS_PER_CAPTURE + 1);
+    let truncated = page.length > cap;
+    if (truncated) page.length = cap;
+    const answered = [];
+    let total = 0;
+    for (const c of page) {
+      const n = Math.min(Number(c.n) || 0, RESTING_FINDINGS_PER_CAPTURE);
+      if (total + n > RESTING_FINDINGS_PER_PAGE) { truncated = true; break; }
+      total += n;
+      answered.push({ capture_sha: c.capture_sha, cut: Number(c.n) > RESTING_FINDINGS_PER_CAPTURE });
+    }
+    const by = new Map(answered.map((c) => [c.capture_sha, new Map()]));
+    if (answered.length)
       for (const r of this.#rows(
-        `${rests} SELECT DISTINCT r.capture_sha, f.finding, f.project ${held}
-          WHERE r.capture_sha IN (SELECT value FROM json_each(?)) ORDER BY r.capture_sha, f.finding, f.project`,
-        JSON.stringify(shas))) {
+        `${rests}, picked(capture_sha, finding) AS (
+            SELECT capture_sha, finding FROM (
+              SELECT DISTINCT r.capture_sha, f.finding, DENSE_RANK() OVER (PARTITION BY r.capture_sha ORDER BY f.finding) AS nth
+                ${held} WHERE r.capture_sha IN (SELECT value FROM json_each(?))) WHERE nth <= ?)
+         SELECT DISTINCT r.capture_sha, f.finding, f.project ${held}
+           JOIN picked q ON q.capture_sha=r.capture_sha AND q.finding=f.finding
+          ORDER BY r.capture_sha, f.finding, f.project`,
+        JSON.stringify(answered.map((c) => c.capture_sha)), RESTING_FINDINGS_PER_CAPTURE)) {
         const fs = by.get(r.capture_sha);
         if (!fs) continue;
         if (!fs.has(r.finding)) fs.set(r.finding, []);
         fs.get(r.finding).push(r.project ?? null);
       }
     return { ok: true,
-             captures: shas.map((c) => ({ capture_sha: c,
-               findings: [...by.get(c)].map(([bundle_id, projects]) => ({ bundle_id, projects })) })),
-             limit: cap, truncated, cursor: truncated ? shas[shas.length - 1] : null };
+             captures: answered.map((c) => ({ capture_sha: c.capture_sha,
+               findings: [...by.get(c.capture_sha)].map(([bundle_id, projects]) => ({ bundle_id, projects })),
+               findings_truncated: c.cut })),
+             limit: cap, truncated,
+             cursor: truncated && answered.length ? answered[answered.length - 1].capture_sha : null };
   }
 
   /* ---------------------------------------------------------------- moved from the store */
