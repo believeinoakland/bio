@@ -17,3 +17,7 @@ One more for you, measured by BOB on the merged tranche: `rung-ladder` reads 49/
 ## B4 · CHANGE
 
 From LEGACY-INDEX #8 (K377), for `gate-reads.test` "EVERY read op is classified": `actionkinds` is ungated ("answers the instance's kinds and names no bundle"), and `monitorslate` is gated (viewer-stamped, monitoring's class). `refusal-wire`'s pinned forward set gains `r.body` (monitorOp's spread). Re-anchor both once legacy-index merges; I will tell you when it does.
+
+## B5 · CHANGE
+
+Legacy-index is merged into `tranche/T11` (§4): merge it before re-anchoring `gate-reads` (`actionkinds`, `monitorslate`) and `refusal-wire` (B4). Affordances' `monitorpause` entry follows shortly; I will send a CHANGE when it merges.
