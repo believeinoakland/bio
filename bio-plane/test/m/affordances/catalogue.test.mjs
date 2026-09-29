@@ -57,7 +57,7 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
 });
 
 /* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung; K264 layer 9's seven
-   (restored in T9 with N216), K309. */
+   (restored in T9 with N216), K309; N310 `determine` (conformance's N233). */
 test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   const want = {
@@ -67,7 +67,7 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment", () => {
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
       "versionhide", "versionrevert"],
     reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
-      "aspirationretire", "biasdebtresolve", "conclude", "connectionassert", "consequencerevise", "discharge", "dispose",
+      "aspirationretire", "biasdebtresolve", "conclude", "connectionassert", "consequencerevise", "determine", "discharge", "dispose",
       "escalationadvance", "escalationdecline", "escalationevaluate", "escalationsuspend", "filemembershipjudge", "goalclose",
       "inquirydivide", "inquiryground", "narrow", "projectownerremove", "projectownerrescue", "proposedispose",
       "reevaluationrecord", "reinstate", "relationdeclare", "relationwithdraw", "release", "reopen", "sever",
@@ -252,11 +252,12 @@ test("R19: `terminal` is given only while STATES.information.edges.retired is em
 });
 
 test("R19: the justification family names only codes that ask the member for an account, and holds the "
-   + "codes the reasoned ops of T7 refuse with", () => {
+   + "codes the reasoned ops refuse with", () => {
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
   for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
-    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+    "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
+    "ACTION_MOVE_NO_REASON" /* N310: actions R13 */]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
   for (const c of ["NO_TARGET", "NO_ID", "NO_KIND", "NO_LABEL", "NO_CITATION", "NO_BODY", "NO_TITLE"])
     assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
@@ -326,8 +327,8 @@ test("R27: no op is graded `undetermined` that the ruling moved, and exactly the
     "leadlook", "themedeclare", "themeplace", "themepropose", "progressiondefine", "resolvetestify",
     "contradictionpropose", "objectivecondition", "goaldeclare", "goallink", "aspirationdeclare", "aspirationdeadend",
     "workobjective", "versionadopt", "versionkeep", "actionriskpropose" /* T8 layer 11: actions R28's proposal */,
-    /* K264: layer 9's fifteen, restored in T9 with N216 */
-    "standarddeclare", "standardpropose", "standardadopt", "determine", "comparisonpropose", "consequencerecord",
+    /* K264: layer 9's fifteen, restored in T9 with N216; `determine` left for `reasoned` (N310) */
+    "standarddeclare", "standardpropose", "standardadopt", "comparisonpropose", "consequencerecord",
     "filingprepare", "filingapprove", "filingsent", "counselpacket", "theorypropose", "escalationopen",
     "escalationattach", "escalationend"].sort());
 });
@@ -350,11 +351,12 @@ const LAYER9_RUNGS = {
   consequencerevise: "reasoned", addressedrecord: "reasoned", escalationevaluate: "reasoned",
   escalationadvance: "reasoned", escalationdecline: "reasoned", escalationsuspend: "reasoned",
   escalationresume: "reversible",
+  determine: "reasoned",   // N310, with conformance's N233
 };
 const LAYER9_ABSENT = {
   counselpacketexport: "substrate",
   standarddeclare: "undetermined", standardpropose: "undetermined", standardadopt: "undetermined",
-  determine: "undetermined", comparisonpropose: "undetermined", consequencerecord: "undetermined",
+  comparisonpropose: "undetermined", consequencerecord: "undetermined",
   filingprepare: "undetermined", filingapprove: "undetermined", filingsent: "undetermined",
   counselpacket: "undetermined", theorypropose: "undetermined", escalationopen: "undetermined",
   escalationattach: "undetermined", escalationend: "undetermined",
