@@ -9,7 +9,7 @@
 - §1 and §5 — "draft position".
 - §1a — the incident procedure is "drafted if ever forced"; the chooses-not-to-hold case is "still deferred".
 - §2 — landing "through the pending queue" is the retired substrate.
-- §2a — how a member moves a knock into the record is RULED (DEC-78, Bob, 2026-09-29: pulling admits at `collected`, the source is an unnamed knocker with its receipt, the puller is the capturing actor, and a knocker may prove continuity by a secret) and NOT BUILT; still open, whether the knock's `note` and `contact` travel into the record; and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
+- §2a — how a member moves a knock into the record is RULED (DEC-78, Bob, 2026-09-29: pulling admits at `collected`, the source is an unnamed knocker with its receipt, the puller is the capturing actor, and a knocker may prove continuity by a secret) and NOT BUILT (the note travels with the capture, the contact stays in the inbox); and `RATE_IP` / `RATE_GLOBAL` have no member-facing translation yet (D-508).
 - §3 — the checker advisory is pending; DEC-39's attest-fence wording, which this section is said to take, is not referenced here.
 - §3c — bag ingestion "built when the first bag is produced or consumed".
 - §4 and §4a — daemon-centred; the retention posture "deferred until forced"; "today the client authenticates the group, not the person" predates Membership v2 §6.
@@ -284,6 +284,9 @@ secret and never identity. The secret is optional (a knocker may knock unlinked,
 digest under an instance key (as the rate fingerprint is), so neither a row nor a leak reveals it and the same secret used at two groups
 does not link them; and the doorbell can generate a strong one and show it once on the receipt, since a guessable or reused identifier would
 let someone else continue the pseudonym. The mechanism is BOB's; the rule is Bob's.
+**The note travels; the contact does not (DEC-78).** The knock's `note` travels with the capture as the knocker's own words, labelled as
+the knocker's and never as evidence of its truth. The `contact` stays in the doorbell inbox, readable by members and never in the record
+or any publication, so a whistleblower's way of being reached cannot be published by accident.
 
 **The limit is a BOUND (BOB #32, 2026-09-24, D-496).** A limit the instance publishes is one it holds, not the name of a bucket. The limits
 are 12 knocks per source (a fingerprint of the connecting address, never the address) and 300 per instance, in any 10 minutes, counted in
