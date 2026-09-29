@@ -441,7 +441,8 @@ export class Escalation {
     const seq = logOf(text).length + 1;
     const next = appendEntry(text, { entry, seq, stage, state, fromState: head.currentState, blurb });
     /* DEC-49 REGION is-escalation-spliceable */
-    if (next === null) return refusal("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
+    if (next === null)
+      return refusal("UNSPLICEABLE_ESCALATION", "the escalation's document cannot be extended in place. Nothing was written.");
     /* END DEC-49 REGION is-escalation-spliceable */
     const carried = this.record.livePaths(e.id).filter((p) => p !== "bundle.md").map((path) => {
       const f = this.record.readFile(e.id, path);
@@ -710,36 +711,36 @@ export class Escalation {
   #edgeArgs(kind, { id, to, reason, author, viewer }, args) {
     /* DEC-49 REGION is-edge-member */
     if (isMachine(author))
-      return { refused: refusal(kind === "advance" ? "MACHINE_CANNOT_ADVANCE" : "MACHINE_CANNOT_DECLINE",
+      return refusal(kind === "advance" ? "MACHINE_CANNOT_ADVANCE" : "MACHINE_CANNOT_DECLINE",
         `an escalation's stage is ${kind === "advance" ? "advanced" : "declined"} by a named member; a proposal is the `
-        + "protocol's derivation, never an act. Nothing was written.") };
+        + "protocol's derivation, never an act. Nothing was written.");
     /* END DEC-49 REGION is-edge-member */
     const judged = refuseJudgment(args);
-    if (judged) return { refused: judged };
+    if (judged) return judged;
     const e = this.#row(id, viewer);
-    if (!e) return { refused: refuseNoSuchEscalation() };
+    if (!e) return refuseNoSuchEscalation();
     /* DEC-49 REGION is-edge-open */
     if (e.state !== "open")
-      return { refused: refusal("NOT_OPEN", `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
-                                { state: e.state }) };
+      return refusal("NOT_OPEN", `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
+                     { state: e.state });
     /* END DEC-49 REGION is-edge-open */
     const bad = refuseReason(reason);
-    if (bad) return { refused: bad };
+    if (bad) return bad;
     const target = typeof to === "string" && /^\d$/.test(to) ? Number(to)
       : typeof to === "string" ? Number(Object.keys(STAGES).find((k) => STAGES[k] === to)) : to;
     const legal = STAGE_TABLE[e.stage] || [];
     /* DEC-49 REGION is-edge-legal */
     if (!legal.includes(target))
-      return { refused: refusal("ILLEGAL_STAGE", `stage ${e.stage} (${STAGES[e.stage]}) moves to ${legal.join(" or ")} only. Nothing was written.`,
-                                { from: e.stage, legal }) };
+      return refusal("ILLEGAL_STAGE", `stage ${e.stage} (${STAGES[e.stage]}) moves to ${legal.join(" or ")} only. Nothing was written.`,
+                     { from: e.stage, legal });
     /* END DEC-49 REGION is-edge-legal */
-    return { e, target };
+    return { ok: true, e, target };
   }
 
   /** R13: advance along a proposed edge. */
   escalationAdvance(args = {}) {
     const a = this.#edgeArgs("advance", args, args);
-    if (a.refused) return a.refused;
+    if (!a.ok) return a;
     const { e, target } = a;
     const nowMs = instantMs(this.now());
     const { triggers } = this.#triggers(e, nowMs, args.viewer);
@@ -760,7 +761,7 @@ export class Escalation {
   /** R13: record that a member chose not to advance along a proposed edge now. */
   escalationDecline(args = {}) {
     const a = this.#edgeArgs("decline", args, args);
-    if (a.refused) return a.refused;
+    if (!a.ok) return a;
     const { e, target } = a;
     const { triggers } = this.#triggers(e, instantMs(this.now()), args.viewer);
     const t = triggers.find((x) => x.to === target);
@@ -788,7 +789,8 @@ export class Escalation {
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     /* DEC-49 REGION is-end-once */
-    if (e.state === "ended") return refusal("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened.");
+    if (e.state === "ended")
+      return refusal("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened. Nothing was written.");
     /* END DEC-49 REGION is-end-once */
     const c = this.#compliance(e, viewer);
     /* DEC-49 REGION is-compliance-restored */
@@ -826,7 +828,9 @@ export class Escalation {
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
     /* DEC-49 REGION is-suspend-once */
-    if (e.state === "suspended") return refusal("ALREADY_SUSPENDED", `suspended since ${e.stateSince}. Nothing was written.`);
+    if (e.state === "suspended")
+      return refusal("ALREADY_SUSPENDED", `this escalation has been suspended since ${e.stateSince}; it is resumed before it is `
+                     + "suspended again. Nothing was written.", { since: e.stateSince });
     /* END DEC-49 REGION is-suspend-once */
     const bad = refuseReason(reason);
     if (bad) return bad;
@@ -850,7 +854,9 @@ export class Escalation {
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
     /* DEC-49 REGION is-resume-suspended */
-    if (e.state !== "suspended") return refusal("NOT_SUSPENDED", "this escalation is open. Nothing was written.");
+    if (e.state !== "suspended")
+      return refusal("NOT_SUSPENDED", "this escalation is open, not suspended, so there is nothing to resume. Nothing was written.",
+                     { state: e.state });
     /* END DEC-49 REGION is-resume-suspended */
     const entry = { kind: "resume", from: e.stage, reason: str(reason) || null, author, at: this.now() };
     const w = this.#append(e, entry, { state: "open", blurb: "Escalation resumed" });
@@ -900,7 +906,8 @@ export function refuseEnded() {
 /** R10: the evaluation names a received entry of an attached action, or none for `none`. */
 export function refuseNoSuchResponse(why) {
   /* DEC-49 REGION is-named-response */
-  return refusal("NO_SUCH_RESPONSE", `${why} Nothing was written.`);
+  return refusal("NO_SUCH_RESPONSE", `${why} An evaluation names a received entry of an action attached to this escalation, `
+    + "or no response for a none reading. Nothing was written.");
   /* END DEC-49 REGION is-named-response */
 }
 
