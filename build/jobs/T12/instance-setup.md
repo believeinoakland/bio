@@ -25,3 +25,9 @@ Four readings I am building on now; each carries on unless you answer otherwise.
 **Q4 · R14's four codes.** `NOT_A_LIST`, `UNKNOWN_PROFILE`, `PROFILE_IS_TEST`, `PROFILES_NOT_ADMIN` have no rows anywhere. **Best reading:** a new family C-119 (the next free) in this module's own table, four arrivals for promotion R34's next stamp (N318), reported. The five C-64 rows R30 names move to this module's table unchanged but for their `where`s.
 
 Also stated (no answer needed): the moved code lives in `bio-plane/src/setup.mjs`, this module's one code path besides `livefire.mjs` (its tables are created by its own `migrate`, out of `schema.mjs`); legacy-index's `Store` export wraps legacy-store's class to start it and route its Durable Object ops first (map §3).
+
+## J3 · QUESTION
+
+B2 applied and pushed: `bio-plane/src/setup-fleet.mjs` holds `GROUP_SLUG_RE` (a RegExp) and `FLEET_BINDINGS` (`[member, binding]` pairs), imports nothing (tested: it loads alone as a `data:` module), and `setup.mjs` re-exports both. The installer can import the leaf now. B3 merged (tranche @ its head); the extraction itself is pushed too (module tests 22/0 so far; the rest are being written).
+
+**Q5 · the one legacy-store line the ownership check fails.** Map §3 names it: `filingsOf`'s `producingGroup` (store.mjs 622) must read promotion's fact once `#producingGroup` leaves, so it reads `producingGroup: () => { const f = promotion.fact("producingGroup"); return f.ok ? f.value : null; }`. It uses no name from my paths, so `ownership` reports 1 failure (store.mjs:622). No form of it can use my names: legacy-store may not import instance-setup (it is earlier). **Best reading:** you accept this one line at review as the map's own row. The alternative is a filings entry (filings reads promotion's fact itself, N56, and legacy-store drops the dependency as a removal); say if you want that instead.
