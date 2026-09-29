@@ -199,11 +199,17 @@ const ARMS = {
     },
     mustFail: [], guardMustPass: true, expectGreen: true,
   },
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #11, T13), measured before the change: review's `noReviewCopy` is a module-level
+     `export function` now (review's extraction), and no row's `where` names a `static` method any more, so with the
+     widening reverted the guard printed the SAME failures, line for line, as without it. The arm's old declaration (a
+     failure naming `#noReviewCopy`) described a subject that is gone. It is kept as what it now measures: the widening
+     is inert on this tree, so reverting it must leave the guard exactly as the baseline leaves it (green once the
+     guard's carried failures, other modules', are paid). */
   e: {
     files: [GUARD],
-    label: "(E) THE RESOLVER WIDENING REVERTED — `functionBody` can no longer see past `static`",
+    label: "(E) THE RESOLVER WIDENING REVERTED — `functionBody` can no longer see past `static`; nothing governed is static, so the guard must not move",
     apply: () => edit(GUARD, STATIC_RE, PLAIN_RE),
-    mustFail: [], guardMustPass: false, guardMustName: "#noReviewCopy", expectGreen: true,
+    mustFail: [], guardMustPass: true, expectGreen: true,
   },
 };
 
