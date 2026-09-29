@@ -72,8 +72,19 @@ export const CITED_PARTS_MAX = 1000;
 /** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
 export const RESTING_CAPTURES_MAX = 1000;
 export const RATIFIED_CASES_MAX = 1000;
+/** R38: the pins one `ratifiedFindingsRestingOn` page reads, its default and its ceiling. */
+export const RESTING_PINS_MAX = 1000;
 /* A caller's page size: a whole number of rows, floored, clamped to 1–max, the default when absent or not a number. */
 const pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
+/* R38: a pin cursor `<case>#<member>#<sha>` as its three keys, the case up to the first `#` and the sha after the last
+   (a sha is hex); absent, the start. A string that is not a pin cursor is read as a case id alone: the page starts
+   after that case. */
+function pinCursor(after) {
+  const s = typeof after === "string" ? after : "";
+  const i = s.indexOf("#"), j = s.lastIndexOf("#");
+  if (i < 0 || j === i) return [s, "\u{10FFFF}", ""];
+  return [s.slice(0, i), s.slice(i + 1, j), s.slice(j + 1)];
+}
 
 /* R41 (C-41.15's vocabulary): the citation versions that name the capture a case edition cited. */
 const CITATION_NAMES_CAPTURE = Object.freeze(["pinned", "only_capture"]);
@@ -3153,25 +3164,37 @@ export class Publication {
      table is a projection of today's document and would be a second edge set). The bytes are read from the
      live file when it is still at the pin and from `history` when the finding has moved since. PINNED BYTES
      THIS STORE CANNOT READ rest on nothing here: the question is then undeterminable, and admitting a
-     bundle on an undetermined answer is the direction this defect runs in. The rows are a roster, bounded
-     by the cases ever ratified, and never a walk of the corpus. */
-  ratifiedFindingsRestingOn(bundleId) {
+     bundle on an undetermined answer is the direction this defect runs in.
+     R38 (N308, K380): PAGED BY THE PIN. One call reads at most `limit` pins (a ratified case edition's member with a
+     pinned sha, other than `id`; the editions of one case pinning one sha are one pin), in case id, member id and
+     pinned sha order after `after`, and `cursor` is the last pin read (`<case>#<member>#<sha>`) when more follow, else
+     null. A page may answer no finding while `cursor` is set; a caller follows it to null, so nothing is decided on
+     part of the pins (a truncated list would change who may sign, K380). */
+  ratifiedFindingsRestingOn(bundleId, { after = null, limit = null } = {}) {
+    const id = String(bundleId ?? "");
+    const cap = pageOf(limit, RESTING_PINS_MAX);
+    const [aCase, aMember, aSha] = pinCursor(after);
     const pins = this.#rows(
       `SELECT DISTINCT m.case_id, m.bundle_id, m.version_sha, cs.project_id
          FROM published_case_members m
          JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
          LEFT JOIN cases cs ON cs.case_id=m.case_id
         WHERE m.version_sha IS NOT NULL AND m.bundle_id<>?
-        ORDER BY m.case_id, m.bundle_id`, bundleId);
-    const out = [];
+          AND (m.case_id>? OR (m.case_id=? AND (m.bundle_id>? OR (m.bundle_id=? AND m.version_sha>?))))
+        ORDER BY m.case_id, m.bundle_id, m.version_sha LIMIT ?`,
+      id, aCase, aCase, aMember, aMember, aSha, cap + 1);
+    const more = pins.length > cap;
+    if (more) pins.length = cap;
+    const findings = [];
     for (const p of pins) {
-      const at = { content: this.record.textAtSha(p.bundle_id, p.version_sha) };
-      if (!at || typeof at.content !== "string") continue;
-      const fm = parseFrontmatter(at.content).data || {};
-      if (publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === bundleId))
-        out.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
+      const text = this.record.textAtSha(p.bundle_id, p.version_sha);
+      if (typeof text !== "string") continue;
+      const fm = parseFrontmatter(text).data || {};
+      if (publishedGraphEdges(fm).some((e) => e.disclosure === "serve" && e.to === id))
+        findings.push({ case_id: p.case_id, finding: p.bundle_id, project: p.project_id ?? null });
     }
-    return out;
+    const last = pins[pins.length - 1];
+    return { findings, limit: cap, cursor: more ? `${last.case_id}#${last.bundle_id}#${last.version_sha}` : null };
   }
 
   pinnedCaseEditionsOf(bundleId, bundleSha) {
