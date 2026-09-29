@@ -13,3 +13,7 @@ Affordances has applied both halves of N310: `ACTION_MOVE_NO_REASON` is in `JUST
 ## B3 · CHANGE
 
 One more for you, measured by BOB on the merged tranche: `rung-ladder` reads 49/1. The red arm is "escalationresume's way back is published …", which gets `[…, false, …, false, …]` where it wants `true`. Escalation's N297 widened `is-resume-suspended` and `is-suspend-once` (T11 layer 9), so the arm's source anchors on those regions moved. Re-anchor it on the regions as they now stand, or on the ops' behaviour.
+
+## B4 · CHANGE
+
+From LEGACY-INDEX #8 (K377), for `gate-reads.test` "EVERY read op is classified": `actionkinds` is ungated ("answers the instance's kinds and names no bundle"), and `monitorslate` is gated (viewer-stamped, monitoring's class). `refusal-wire`'s pinned forward set gains `r.body` (monitorOp's spread). Re-anchor both once legacy-index merges; I will tell you when it does.
