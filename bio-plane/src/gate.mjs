@@ -298,7 +298,29 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    arrivals, departures and a changed check. T12's later row changes (N306, K380) are the next number's (N318). The
    d470 census, of the catalogue file only, moved with C-22.7's copy: 397 -> 396, sha256 de54b8bd…, behaviour source
    8ada0f4c… (its own print on this tree); its 1.42.0 row, and A3, A5 and A9, are legacy-tests' re-pin. */
-export const CATALOG_VERSION = "1.42.0";
+/* 1.43.0 (PROMOTION #14, T13 layer 2, 2026-09-29; N318, N319, K425, K431): EVERY ROW CHANGE SINCE 1.42.0, counted
+   wherever the rows live (R34, R47), read by diffing every row table between f955769afc (1.42.0's stamp) and
+   `tranche/T13` after record-core and membership merged (build/plan/t13-stamp-list.md, checked row by row).
+   ARRIVED: C-33.50 NO_PROJECT_SCOPE (queue); C-51.6 NO_SHA (extraction); C-59.6 MINT_EXHAUSTED (record-core's R62, N322);
+   C-69.3 PLANE_INTERNAL_ERROR (control-plane); C-87.12 MINT_EXHAUSTED (review, N306; it retires into C-59.6 later in
+   T13); C-91.5 NO_ENTITY, C-91.6 ENTITY_NO_LABEL (entities); C-96.13 EXPERTISE_NO_LABEL (membership, missed by 1.42.0,
+   K382); C-113.23 DETERMINATION_SUPERSEDED (conformance); C-118.1 NOT_FOUND, C-118.2 NO_SUCH_KNOCK (capture); C-119.1
+   PROFILES_NOT_ADMIN, C-119.2 NOT_A_LIST, C-119.3 UNKNOWN_PROFILE, C-119.4 PROFILE_IS_TEST (instance-setup).
+   DEPARTED, their ids retired: C-100.9, C-100.19 (progressions); C-111.5 (intent); C-113.9, C-113.18 (conformance);
+   C-114.1 (consequences); C-116.3, C-116.4 (escalation).
+   RENAMED under an unmoved id: C-100.2 PROGRESSION_NO_LABEL, C-100.8 PROGRESSION_VERSION_NOT_HELD; C-113.3
+   DETERMINATION_NOT_A_PARTICIPANT, C-113.20 NO_SUCH_COMPARISON; C-114.2 CONSEQUENCE_NOT_NONCOMPLIANT (its translation
+   too), C-114.3 CONSEQUENCE_NOT_A_PARTICIPANT; C-116.6 ESCALATION_NOT_A_PARTICIPANT, C-116.30 EDGE_NOT_PROPOSED.
+   MOVED out of the catalogue into their module's table, condition and code unmoved, `where` following the site: queue's
+   eight (C-31.1–C-31.3, C-32.10, C-32.11, C-33.27, C-33.44, C-76.1; C-33.44's translation also reworded); instance-setup's
+   five (C-64.2, C-64.3, C-64.5–C-64.7); control-plane's twenty-four (C-29.6–C-29.10, C-32.17, C-38.1–C-38.8, C-64.4,
+   C-66.6, C-68.2–C-68.4, C-69.1, C-69.2, C-78.1–C-78.3). HELD TWICE: C-96.1 NOT_AN_ADMIN, now also in membership's table
+   (N324, `notAnAdmin`), its catalogue copy kept one tranche (K408 (4)), same code and translation.
+   Wording only: the `where`s of C-100.20 (and its translation), C-112.10 and C-113.15.
+   MINOR, rule 17 moving the stamp for arrivals, departures, renames and moves. ROW_CENSUS (R50, K431) is pinned to this
+   tree: 820 rows. Rows changed after this stamp in T13 (review's C-87.12 retiring, control-plane's C-69.4) are named
+   `awaiting stamp` by their jobs' records, for T14's stamp. */
+export const CATALOG_VERSION = "1.43.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -386,6 +408,11 @@ export const CATALOG_VERSION = "1.42.0";
    digest from the d470 suite's print on this tree. If another branch in the batch also moves the version, CONDUCT takes
    the next number at the union and re-reads the print on the merged tree. */
 export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
+/* R50 (N319, K431): the census of every refusal row as this stamp read it, pinned here and held against the tree by
+   legacy-tests' census suite (this module cannot read a later module's table, P4). The stamp that moves CATALOG_VERSION
+   re-pins it. */
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 820,
+  digest: "f01ed42a484a4aa3d36f9f89a36d832603dd46cb36a10333303907421176371d" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

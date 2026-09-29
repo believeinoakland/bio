@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION } from "../../../src/promotion/index.mjs";
+import { runGate, runCaseGate, CATALOG_VERSION, GATE_VERSION, ROW_CENSUS } from "../../../src/promotion/index.mjs";
 import { checkBundle, checkCaseDocument, parseFrontmatter } from "../../../checks/bio-checks.mjs";
 import { doc, T0, makePromotion } from "./fixtures.mjs";
 
@@ -127,5 +127,18 @@ test("R34: GATE_VERSION contains CATALOG_VERSION and both gates report the same 
   assert.equal(p.runCaseGate(args).gateVersion, GATE_VERSION);
   p.registerCaseCatalogue("ratification", () => []);
   assert.equal(p.runCaseGate(args).gateVersion, GATE_VERSION);
+  /* The census moves with the stamp: it names the version it was stamped with (R50). */
+  assert.equal(ROW_CENSUS.version, CATALOG_VERSION);
+});
+
+test("R50: ROW_CENSUS is a frozen {version, rows, digest}: the stamp's CATALOG_VERSION, a count of rows and a lowercase SHA-256", () => {
+  assert.ok(Object.isFrozen(ROW_CENSUS));
+  assert.deepEqual(Object.keys(ROW_CENSUS).sort(), ["digest", "rows", "version"]);
+  assert.equal(ROW_CENSUS.version, CATALOG_VERSION);
+  assert.ok(Number.isSafeInteger(ROW_CENSUS.rows) && ROW_CENSUS.rows > 0, String(ROW_CENSUS.rows));
+  assert.match(ROW_CENSUS.digest, /^[0-9a-f]{64}$/);
+  /* A frozen pin: no caller can move it. */
+  assert.throws(() => { ROW_CENSUS.rows = 0; }, TypeError);
+  assert.equal(Object.getOwnPropertyDescriptor(ROW_CENSUS, "rows").writable, false);
 });
 
