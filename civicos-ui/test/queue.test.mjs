@@ -448,7 +448,11 @@ async function click(ctx, attr, value){
   ok("the case group is named by its own title, not by its id alone", /Was the sewer fund misused\?/.test(inqCase));
   ok("an OBLIGATION and an aggregated FINDING sit under the SAME case",
      inqCase.includes('data-id="T-88"') && inqCase.includes('data-id="FINDING::procurement::solicitation"'));
-  ok("both classes are named on their rows", /OBLIGATION/.test(inqCase) && /FINDING/.test(inqCase));
+  /* RE-ANCHORED 2026-09-29 (N301, K356; legacy-tests T12 B3): this read `/FINDING/`, which since N301 answers only
+     from the item's `data-id` ("FINDING::…") — the row's class chip now names the class as members see it, "Noticed".
+     The arm reads the chips, so it says what it claims. */
+  ok("both classes are named on their rows",
+     /class="chip q-class">OBLIGATION</.test(inqCase) && /class="chip q-class">Noticed</.test(inqCase));
   ok("the kind is rendered from the producer's own token, not from a surface table",
      /Authority Undetermined/.test(inqCase) && /Missing Predecessor/.test(inqCase));
   ok("the item says what it is ON — the subject, which is a different thing from the case",
@@ -721,8 +725,10 @@ async function click(ctx, attr, value){
     ok("a case holding only an OBLIGATION gets no mute control at all, and no obligation gets an item mute",
        /data-case="PROJ-2026-0001"/.test(hOb) && !/data-mute=/.test(hOb) && !/data-muteitem=/.test(hOb));
   }
-  ok("the control says what muting does NOT do — the record is unchanged, a finding stays open for everyone else, and an obligation still reaches you",
-     /Muting changes nothing about the record and nothing for anybody else\. A finding you mute stays open for everyone else until somebody adopts, defers or dismisses it, and an obligation on this case still reaches you/.test(proj));
+  /* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12 B3): the queue class FINDING is shown to
+     members as "Noticed" ("finding" is kept for a concluded question), so the copy reads "A noticed item you mute". */
+  ok("the control says what muting does NOT do — the record is unchanged, a noticed item stays open for everyone else, and an obligation still reaches you",
+     /Muting changes nothing about the record and nothing for anybody else\. A noticed item you mute stays open for everyone else until somebody adopts, defers or dismisses it, and an obligation on this case still reaches you/.test(proj));
 
   await click(ctx, "mute", "PROJ-2026-0001");
   const muteCall = plane.CALLS.find(c=>c.op==="queuemute");

@@ -181,6 +181,9 @@ const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const SRC = (f) => join(ROOT, "src", f);
 const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
 const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K413, CONTROL-PLANE #2): the op table (`OPS`, `NEEDS`) left
+   index.mjs for `src/control-plane/ops.mjs`; the op-table arm (block 5) reads it there. */
+const OPS_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");
 const SCHEMA_SRC = readFileSync(SRC("schema.mjs"), "utf8");
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): biasAdopt, biasInhale and the refusal helper moved out of store.mjs
    into `src/bias/` (BIAS #1, T5-7); store.mjs keeps one-line delegates. The bias module's own files are read as
@@ -233,6 +236,7 @@ const AUTHORING_SRC = readdirSync(SRC("case-authoring")).filter((f) => f.endsWit
   .map((f) => readFileSync(join(SRC("case-authoring"), f), "utf8")).join("\n");
 const AUTHORING = decomment(AUTHORING_SRC);
 const INDEX = decomment(INDEX_SRC);
+const OPS = decomment(OPS_SRC);
 const BIAS = decomment(BIAS_SRC);
 /* RE-ANCHORED 2026-09-28 (T7, legacy-tests; AI-RUNS #2 REPORT J6.1): the store's `aiRunSpawnPayload` moved into ai-runs as
    `spawnPayload` (`src/ai-runs/index.mjs`, op=airunspawn through `aiRunsOps`); ARM F3/F3b read its payload there. */
@@ -306,10 +310,23 @@ t("SEEK GUARD: and a known PROSE line does not, so this suite's own reasoning ca
    frontmatter/publication/reading helpers), retrieval (99d8a98fd5, -786: R59, R60), strength (bf8416f54b, -355) and
    run-productions (cbd0805c1c, -212). A blindness floor, not a ratchet: an unreadable or truncated store fails it,
    and the next extraction moves it again by name. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12; LEGACY-STORE #4, N285, K404): 484,830 -> 484,250 characters, the
+   measured print. T11's legacy-store (fe1111225e, N266/N267/N294) grew it +153 to 484,983; T12's LEGACY-STORE #4
+   (9208377da3, -733) took out the scoped proposal dispose's own NOT_A_DISPOSITION literal, its sentence, the
+   `DISPOSITIONS` import and their comments, now answered through progressions' `notADisposition` (R35, C-100.20).
+   Still a blindness floor at the measured figure, never below it. */
+/* RE-PINNED 2026-09-29 (LEGACY-TESTS #10, T12 round 2; K409 QUEUE #2, K414 INSTANCE-SETUP #1, K413 CONTROL-PLANE #2):
+   store.mjs 484,250 -> 222,052 characters, the measured print: queue's extraction (74443d6d9e, -232,109, the feed,
+   the personal half, the dispose dispatch and the obligation inbox to `src/queue/`) and instance-setup's (ce41cfb5d6,
+   -30,089, C-64, the reports and the limits to `src/setup.mjs`). The second half asked index.mjs for more than
+   100,000 characters because index.mjs held the op table this suite reads; control-plane moved the table to
+   `src/control-plane/ops.mjs` (index.mjs 516,969 -> 52,370), so the floor follows the table: ops.mjs, measured
+   149,682. Both still blindness floors at the measured figures, never below them. */
 t("CORPUS PRINTED — the size of what every source arm below is read over",
-  [STORE_SRC.length >= 484_830, INDEX_SRC.length > 100_000], [true, true]);
+  [STORE_SRC.length >= 222_052, OPS_SRC.length >= 149_682], [true, true]);
 console.log(`  corpus: store.mjs ${STORE_SRC.length} chars (${STORE.length} after decomment), `
-          + `index.mjs ${INDEX_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
+          + `index.mjs ${INDEX_SRC.length}, control-plane/ops.mjs ${OPS_SRC.length}, schema.mjs ${SCHEMA_SRC.length}, `
+          + `src/bias/ ${BIAS_SRC.length} (${BIAS.length})`);
 
 /* ======================================================================= 1
  * THE OBJECT: the type, the id grammar, the heading set, the state machine.
@@ -629,7 +646,7 @@ const INHALE = bodyOf(BIAS, "biasInhale({");
   t("ARM I5: and no INSERT/UPDATE/DELETE of any kind anywhere in the body",
     /\b(INSERT|UPDATE|DELETE)\b/.test(INHALE), false);
   t("and the op table says the same thing a second way: biasinhale is NON-mutating",
-    /biasinhale:\s*\{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(INDEX), true);
+    /biasinhale:\s*\{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(OPS), true);
   t("SEEK GUARD on ARM I5: the SAME predicates DO fire on biasAdopt, which legitimately writes — so the "
   + "arms above are a fact about biasInhale and not a broken matcher",
     [/\bsql\.exec\(/.test(bodyOf(BIAS, "biasAdopt({")),

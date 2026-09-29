@@ -804,7 +804,9 @@ console.log("\n--- 6. R4: a published child NAMES its parent and its siblings an
 /* ====================================== 7. structural: the class, and the fence */
 console.log("\n--- 7. structural: credential-free BY DESIGN, and reading the published projection ONLY ---");
 {
-  const idx = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the `OPS` table left
+     `src/index.mjs` for `src/control-plane/ops.mjs`; the declaration arm reads the table where it is declared now. */
+  const idx = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
   /* RE-ANCHORED 2026-09-28 (T8, legacy-tests; PUBLICATION #1 J4.6): the store's publication half — `publishedCase`,
      and the write-time restriction, `#publishEdges` in store.mjs and `publishEdges` here — moved to
      `src/publication/index.mjs`, and its tables to `src/publication/schema.mjs`'s PUBLICATION_SCHEMA, which that

@@ -42,7 +42,7 @@ import { createHash, webcrypto } from "node:crypto";
 /* RE-POINTED 2026-09-28 (T8, legacy-tests; ACTIONS #1 J2 item 4): the tier vocabulary is read from `actions`, which
    re-exports it as the SAME object (R40); `checkBundle` no longer runs the action arm, which actions registers with
    record-core's audit (R37) and `c210` runs beside it. */
-import { checkBundle, parseFrontmatter, SURFACE_CHECKS as CHECK_CATALOGUE_SURFACE } from "../checks/bio-checks.mjs";
+import { checkBundle, parseFrontmatter } from "../checks/bio-checks.mjs";
 import { RISK_TIERS, riskTierState, checkActionExtension } from "../src/actions/checks.mjs";
 import { VOCABULARIES } from "../src/affordances.mjs";
 /* T3 (legacy-tests), 2026-09-26: the extracted modules' files, for (viii)'s one-writer census. */
@@ -64,6 +64,11 @@ const NL = "\n";
 /* D-511: the control driver points this at an armed COPY of the sources (REC-173's harness shape). It defaults to
    the real tree, so every run but the control's reads exactly what it read before. */
 const SRC_DIR = process.env.D511_SRC || fileURLToPath(new URL("../src", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1 and #2 J4 R32): C-66.6 REPLAY_UNVERIFIED
+   left the catalogue's SURFACE_CHECKS for control-plane's `REPLAY_CHECKS`, words and id kept, and `op=promote`'s stamp
+   block (the replay's deletes and its one server write) left `src/index.mjs` for `src/control-plane/index.mjs`. Both
+   are read through SRC_DIR, so an armed copy is still what is read. */
+const { REPLAY_CHECKS } = await import(join(SRC_DIR, "control-plane", "checks.mjs"));
 
 const NOW = "2026-07-24T00:00:00Z";
 
@@ -905,7 +910,7 @@ console.log("\n--- 8. D-511: `replay` is the server's word, never the caller's -
      C-32.19: the class test is kept as the second condition, as BOB #33 ruled. */
   const ADMIN_REPLAY = "ACTN-2026-0511-root-asserts-replay";
   const adminReplay = await promote(ADMIN_REPLAY, "adm-d511", { replay: true });
-  const RU = CHECK_CATALOGUE_SURFACE.REPLAY_UNVERIFIED;
+  const RU = REPLAY_CHECKS.REPLAY_UNVERIFIED;
   t("D-512 (δ), THE INVERSION OF D-511'S RESIDUE ARM: the ADMIN class with NO SESSION asserting `replay` with no "
     + "drive-provenance capture to show is REFUSED BY NAME, REPLAY_UNVERIFIED (C-66.6), with its canned translation",
     [adminReplay?.ok, adminReplay?.reason, adminReplay?.check, adminReplay?.translation === RU?.translation && !!RU?.translation],
@@ -942,8 +947,8 @@ console.log("\n--- 8. D-511: `replay` is the server's word, never the caller's -
      the class test was. Step (2) reads the caller's flag once and deletes it, so the ONLY write of `b.replay` after
      that is the server's, on a verified replay: TWO deletes (the class test, kept as the second condition, and the
      read-once) and ONE assignment, guarded by the proof. A third site, or an assignment anywhere else, still fails. */
-  const idxSrc = readFileSync(SRC, "utf8");
-  t("D-511 (ζ), AS D-512 LEFT IT: `src/index.mjs` deletes a caller's `replay` in exactly TWO places and sets it in "
+  const idxSrc = readFileSync(join(SRC_DIR, "control-plane", "index.mjs"), "utf8");   /* K413: the stamp block's home */
+  t("D-511 (ζ), AS D-512 LEFT IT: `src/control-plane/index.mjs` deletes a caller's `replay` in exactly TWO places and sets it in "
     + "exactly ONE — on a replay the plane verified",
     [(idxSrc.match(/delete b\.replay;/g) ?? []).length, (idxSrc.match(/\bb\.replay\s*=[^=]/g) ?? []).length,
      (idxSrc.match(/if \(proven\) b\.replay = true;/g) ?? []).length], [2, 1, 1]);

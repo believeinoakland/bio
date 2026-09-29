@@ -91,7 +91,8 @@ const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
    source pins below read the module; STRENGTH_SRC is both files, the class's first. */
 const STRENGTH_SRC = readFileSync(SRC("strength/index.mjs"), "utf8") + "\n"
                    + readFileSync(SRC("strength/arithmetic.mjs"), "utf8");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+const CP_SRC = readFileSync(SRC("control-plane/index.mjs"), "utf8");       /* K413: the dispatch and its stamps */
+const CP_OPS_SRC = readFileSync(SRC("control-plane/ops.mjs"), "utf8");     /* K413: the OPS table */
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -770,8 +771,11 @@ console.log("\n--- 9. the op through the control plane: refusals, the gate, and 
   t("an unauthenticated caller is refused and no reading, no pair and no letter reaches them",
     [bare.ok === true, "pair" in (bare ?? {}), "filter" in (bare ?? {})], [false, false, false]);
   t("the op is declared as a pure READ and the control plane stamps its viewer",
-    [/versionstrength: \{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(INDEX_SRC),
-     /\|\| op === "versionstrength"/.test(INDEX_SRC)], [true, true]);
+    /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the `OPS` table left
+       `src/index.mjs` for `src/control-plane/ops.mjs`, and the viewer stamp for `src/control-plane/index.mjs`;
+       each half is read where it lives now. */
+    [/versionstrength: \{ classes: \["admin", "member", "probe"\],\s+mutating: false \}/.test(CP_OPS_SRC),
+     /\|\| op === "versionstrength"/.test(CP_SRC)], [true, true]);
 }
 {
   /* DEC-49, AS A FLOOR AND A CEILING. A ceiling passes trivially over nothing,

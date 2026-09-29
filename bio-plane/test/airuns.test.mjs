@@ -729,7 +729,9 @@ t("SWEEP: and the finding is RATCHETED as a CEILING — an index added tomorrow 
      as here; the one arrival is `intent_triage_key` (`intent_triage(proposal_key)`, INTENT #1's table), which no
      statement filters — intent reads the table whole `ORDER BY seq` and keys it in JS. A ceiling does not rise
      because an index arrived with no reader; the red is REPORTED to intent. (Departures: none.) */
-  unread.length <= 13, true);   /* REC-104: 13 -> 14, and the arrival is NAMED and EXCULPATED below:
+  /* RE-PINNED 2026-09-29 (K409, QUEUE #2; K406), 13 -> 12, the ceiling tightened WITH the floor below: the departure
+     is `source_reach_failing`, named at the floor. */
+  unread.length <= 12, true);   /* REC-104: 13 -> 14, and the arrival is NAMED and EXCULPATED below:
                                    `content_chain_kind`, filtered by `content:chain` through the
                                    compiler's registry, which this reader cannot see — the same
                                    declared blind spot as `content_derivation_cap`, not a gap.
@@ -781,7 +783,15 @@ t("SWEEP: a FLOOR beside the ceiling — the list shrinking without this figure 
      statement filtering `grade`, and that is all it measures; whether SQLite would seek that statement through
      `resolutions_grade` (its first predicate is `entity_id=?`) is NOT measured here. The other thirteen are the
      base's own names, unchanged. */
-  unread.length >= 13, true);
+  /* RE-PINNED 2026-09-29 (K409, QUEUE #2; K406, queue R10/N229), 13 -> 12, FROM THE FIGURE THIS READER PRINTED, AND THE
+     DEPARTURE IS NAMED. Measured by running this same sweep over `6641ad6462` (the tree before queue's merge: 136
+     indexes, 13 unread) and over this tree (136 indexes, 12 unread). ARRIVED: none. DEPARTED: `source_reach_failing`
+     (`source_reachability(consecutive_failures)`, capture's), because queue's `archive-fallback-eligible` producer
+     (`#conditionsArchiveEligible`, src/queue/index.mjs, K406's Q2 reading) is a new statement
+     `… FROM source_reachability WHERE consecutive_failures >= ? …` — the index's leading column in a literal WHERE this
+     reader sees. THE PLANE GOT A READER, not the reader losing sight of an index; whether SQLite seeks that statement
+     through the index is not measured here. The other twelve are the base's own names, unchanged. */
+  unread.length >= 12, true);
 /* AND THE TWO NAMED ARRIVALS ARE PINNED BY NAME, not only by count. A ceiling of
    13 is satisfied by ANY thirteen, so a real gap could be swapped for a blind
    spot and the figure would never move — which is how a roster stops being about
@@ -804,6 +814,10 @@ t("SWEEP: the roster is still pinned BY NAME as well as by count — `reading_te
 t("SWEEP: and T5's DEPARTURE is pinned by name — `resolutions_grade` is OFF the roster because entities' "
 + "`#restingOn` (R8) filters `resolutions.grade` in a literal WHERE this reader sees",
   unread.some((ix) => ix.index === "resolutions_grade"), false);
+/* RE-PINNED 2026-09-29 (K409, QUEUE #2): T12's departure pinned by name, for REC-116's reason below. */
+t("SWEEP: and T12's DEPARTURE is pinned by name — `source_reach_failing` is OFF the roster because queue's "
++ "archive-fallback producer filters `source_reachability.consecutive_failures` in a literal WHERE this reader sees",
+  unread.some((ix) => ix.index === "source_reach_failing"), false);
 t("SWEEP: and the DEPARTURE is pinned by name too — `provenance_route_marks_finding` is OFF the "
 + "roster because REC-116 gave it the reader it waited 39 days for. Pinning the departure is what "
 + "stops the floor falling for the OTHER reason: a name asserted absent cannot be quietly "

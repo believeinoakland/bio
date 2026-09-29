@@ -48,12 +48,17 @@ const F = {
   provenance: ROOT + "src/provenance/index.mjs",
   publication: ROOT + "src/publication/index.mjs",
   suite: ROOT + "test/shadowed-refusals.test.mjs",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K409, QUEUE #2): NO_CASE's guard, `#queueCaseFor`, left
+     `src/store.mjs` with the queue for `src/queue/index.mjs`; arm (3) edits it there. Found dead by m025's A10. */
+  queue: ROOT + "src/queue/index.mjs",
 };
 const SUITE = "shadowed-refusals.test.mjs";
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
-const MIN_BYTES = { store: 500000, membership: 100000, recordCore: 25000, provenance: 75000, publication: 100000,
+/* FLOORS MOVED 2026-09-29 (LEGACY-TESTS #10, T12 round 3): the extractions left `src/store.mjs` at ~222 KB and
+   `src/index.mjs` at ~52 KB, under the old 400,000/500,000 and 100,000, so the pristine check refused to start. */
+const MIN_BYTES = { store: 150000, queue: 50000, membership: 100000, recordCore: 25000, provenance: 75000, publication: 100000,
                     suite: 10000 };
 
 /* THE PRISTINE COPIES, ON DISK, UNIQUELY NAMED PER ARM. `cmp` compares them
@@ -181,7 +186,7 @@ arm("(2) **LEASE_HELD.** Neuter the courtesy lock's conflict test — a lease he
 arm("(3) **NO_CASE.** Let an unnamed case through `#queueCaseFor`. The pin must fail, and it will "
   + "answer NO_SUCH_CASE — the refusal DIRECTLY BEHIND it, which is exactly the shadow D-230 named "
   + "and the reason a payload complete in every other respect was required to pin this one.",
-  [["store", `    if (!id) return { ok: false, reason: "NO_CASE",`,
+  [["queue", `    if (!id) return { ok: false, reason: "NO_CASE",`,
               `    if (false && !id) return { ok: false, reason: "NO_CASE",`]],
   [PINS.NO_CASE], othersHeldOpen("NO_CASE"));
 

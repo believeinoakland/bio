@@ -68,9 +68,19 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; found dead by m025's A10 — all fourteen F-mapped arms, and
+   the three shared edits, matched ZERO times): STRENGTH #1 (T7, K102) extracted the pair out of `src/store.mjs` into
+   `src/strength/` — the answer, the guard and the leg reader to `index.mjs` (`strength`), DEC-32's arithmetic to
+   `arithmetic.mjs` (`arith`: module functions `axisResult`, `groundResult`, `weakestOf`, over `GRADE_RANK`), and the
+   rows and rosters to `checks.mjs` (`schecks`). Each arm makes the same edit where its line now lives, re-spelled
+   where the module re-spelled the line (named below); every declaration is unchanged. `store` and `checks` stay
+   under the restore guarantee. */
 const F = {
   store: ROOT + "src/store.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
+  strength: ROOT + "src/strength/index.mjs",
+  arith: ROOT + "src/strength/arithmetic.mjs",
+  schecks: ROOT + "src/strength/checks.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -158,9 +168,13 @@ function arm(title, edits, mustFail, mustNotFail = [],
    unfiltered answer would look like. Only with the guard ALSO down does the
    harm become visible: a what-if indistinguishable from the record's own answer.
    Both arms are run, and they answer different questions. */
-const GUARD_OFF = ["store", "    return this.#refusePairComposed(out) ?? out;", "    return out;"];
-const LINE_OFF = ["store", "      filter,\n", "\n"];
-const SET_OFF = ["store", "      state_set: stateSet,\n", "\n"];
+/* RE-SPELLED 2026-09-29: the guard is the module function `refusePairComposed`, and `state_set` and `filter` share
+   one line of the answer, so each arm drops its own key from that line. */
+const GUARD_OFF = ["strength", "    return refusePairComposed(out) ?? out;", "    return out;"];
+const LINE_OFF = ["strength", "      state_set: stateSet, what_if: whatIf, filter, depth_bound:",
+                              "      state_set: stateSet, what_if: whatIf, depth_bound:"];
+const SET_OFF = ["strength", "      state_set: stateSet, what_if: whatIf, filter, depth_bound:",
+                             "      what_if: whatIf, filter, depth_bound:"];
 
 console.log("PL-14 / IS-7 — negative controls. Whole-tree baseline first, so every arm is a DELTA.");
 const base = runSuite("strengthpair.test.mjs");
@@ -215,7 +229,12 @@ arm("(1d) AND THE CATALOGUE ROW ITSELF — rename DEC-40's row out of the family
   + "the guard honest. Behaviour is unchanged and every behavioural arm stays green; what fails is the "
   + "assertion that the rule EXISTS AS A REFUSAL with a canned translation. A rule nothing enforces is "
   + "a rule the next edit deletes for free, and this is the arm that can see it.",
-  [["checks", "  VERSION_STRENGTH_UNFILTERED: {", "  VERSION_STRENGTH_UNFILTERED_GONE: {"]],
+  /* RE-SPELLED 2026-09-29 (LEGACY-TESTS #10, T12 round 3), NOT AS DECLARED AT ITS FIRST RUN on this tree: renaming the
+     key KILLED the Worker at startup (`src/skilldoctrine.mjs` reads `VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_UNFILTERED
+     .check` at import), so the suite threw and measured nothing. The row now keeps its key and loses its identity —
+     its C-number and its `where` — which is what the two declared assertions read; the declaration is unchanged. */
+  [["schecks", "  VERSION_STRENGTH_UNFILTERED: {\n    check: 'C-30.8',\n    where: at('refusePairComposed', 'is-pair-composed'),",
+    "  VERSION_STRENGTH_UNFILTERED: {\n    check: 'C-30.0',\n    where: at('nowhere', 'is-nowhere'),"]],
   ["and a missing line is a REFUSAL with a canned translation, not a formatting lapse",
    "the two self-guards carry their OWN `where`"],
   ["EVERY answer carries the line",
@@ -229,11 +248,10 @@ arm("(2) COMPOSE THE TWO AXES INTO ONE VALUE. This is R2's forbidden composition
   + "identical one altitude down. The answer now carries a single figure standing for both populations. "
   + "THE POINT OF THE ARM IS THAT THE REFUSAL FIRES: the op returns C-30.7 and every arm that expected a "
   + "pair fails, because the answer is a refusal rather than a wrong number.",
-  [["store", "      pair: { capture: pair.capture, connection: pair.connection },\n"
-    + "      /* INERT AND NAMED",
-    "      pair: { capture: pair.capture, connection: pair.connection },\n"
-    + "      strength: pair.connection.grade,\n"
-    + "      /* INERT AND NAMED"]],
+  /* RE-SPELLED 2026-09-29: the pair is built from the axis list (`Object.fromEntries(STRENGTH_AXES…)`). */
+  [["strength", "      pair: Object.fromEntries(STRENGTH_AXES.map((ax) => [ax, pair[ax]])),\n",
+    "      pair: Object.fromEntries(STRENGTH_AXES.map((ax) => [ax, pair[ax]])),\n"
+    + "      strength: pair.connection.grade,\n"]],
   /* NOT `and no top-level key can read as one figure standing for both` — CORRECTED
      AFTER THE FIRST RUN and recorded rather than smoothed. That assertion STAYS
      GREEN under this arm, and correctly: the guard refuses, so what comes back is
@@ -248,13 +266,12 @@ arm("(2b) THE COMPOSITION UNDER A NAME THE LIST DID NOT PREDICT — a third key 
   + "something nobody enumerated. The forbidden-key list catches the obvious spellings; TOTALITY is what "
   + "catches the rest, and this arm is the one that proves the totality is doing work rather than the "
   + "list.",
-  [["store", "      pair: { capture: pair.capture, connection: pair.connection },\n"
-    + "      /* INERT AND NAMED",
-    "      pair: { capture: pair.capture, connection: pair.connection,\n"
-    + "              headline: pair.connection.grade },\n"
-    + "      /* INERT AND NAMED"]],
+  [["strength", "      pair: Object.fromEntries(STRENGTH_AXES.map((ax) => [ax, pair[ax]])),\n",
+    "      pair: { ...Object.fromEntries(STRENGTH_AXES.map((ax) => [ax, pair[ax]])),\n"
+    + "              headline: pair.connection.grade },\n"]],
   ["the pair answers",
-   "`pair` holds EXACTLY the two axes and nothing else"],
+   /* RE-QUOTED 2026-09-29: the label reads "the axes" since testimony became the third (its composed tail names them). */
+   "`pair` holds EXACTLY the axes and nothing else"],
   [], { mustSee: ["VERSION_STRENGTH_COMPOSED"] });
 
 arm("(2c) AND THE GUARD REMOVED WHILE THE BUILDER STAYS HONEST — the same question arm (1c) asks about "
@@ -262,7 +279,8 @@ arm("(2c) AND THE GUARD REMOVED WHILE THE BUILDER STAYS HONEST — the same ques
   + "only the pin that can SEE a missing guard fails. That is the whole finding: a pin fails where a "
   + "behavioural arm cannot (IS-6's C-22.4 lesson, one item over).",
   [GUARD_OFF],
-  ["`#refusePairComposed` is DEFINED once and REACHED on the way out"],
+  /* RE-QUOTED 2026-09-29: the guard is the module function `refusePairComposed`, and the label says so. */
+  ["`refusePairComposed` is DEFINED once and REACHED on the way out"],
   ["the pair answers", "the two axes report DIFFERENT letters over the same reading",
    "EVERY answer carries the line"]);
 
@@ -273,8 +291,8 @@ arm("(3) TAKE THE MINIMUM OVER THE BRANCHES INSTEAD OF THE MAXIMUM. DEC-32, Bob'
   + "ground is established at B, full stop; the regulatory ground offered beside it at C weakens "
   + "nothing\"*. Under MIN the mixed fixture reads C where it should read A, and the branch-level "
   + "assertions stay green — which is exactly why the axis and the branches are asserted separately.",
-  [["store", "gradedBranches.reduce((a, g) => Store.#GRADE_RANK[g.grade] > Store.#GRADE_RANK[a.grade] ? g : a)",
-    "gradedBranches.reduce((a, g) => Store.#GRADE_RANK[g.grade] < Store.#GRADE_RANK[a.grade] ? g : a)"]],
+  [["arith", "gradedBranches.reduce((a, g) => GRADE_RANK[g.grade] > GRADE_RANK[a.grade] ? g : a)",
+    "gradedBranches.reduce((a, g) => GRADE_RANK[g.grade] < GRADE_RANK[a.grade] ? g : a)"]],
   ["MAX OVER BRANCHES: the axis takes the STRONGEST branch"],
   ["MIN WITHIN A BRANCH: the branch holding an A leg and a C leg is worth C"]);
 
@@ -282,8 +300,8 @@ arm("(4) TAKE THE STRONGEST LEG WITHIN A BRANCH INSTEAD OF THE WEAKEST. The dual
   + "an AND of its legs and is *\"no stronger than the weakest of them\"*, because a reader must be able "
   + "to check every link the claim NEEDS. Under MAX the branch reads A where it should read C, and the "
   + "axis-level assertion stays green — the two rules separated by two arms.",
-  [["store", "      if (weakest === null || Store.#GRADE_RANK[m.grade] < Store.#GRADE_RANK[weakest.grade]) weakest = m;",
-    "      if (weakest === null || Store.#GRADE_RANK[m.grade] > Store.#GRADE_RANK[weakest.grade]) weakest = m;"]],
+  [["arith", "    if (weakest === null || GRADE_RANK[m.grade] < GRADE_RANK[weakest.grade]) weakest = m;",
+    "    if (weakest === null || GRADE_RANK[m.grade] > GRADE_RANK[weakest.grade]) weakest = m;"]],
   ["MIN WITHIN A BRANCH: the branch holding an A leg and a C leg is worth C"],
   []);
 
@@ -291,7 +309,7 @@ arm("(5) COUNT THE HUNCH AS EVIDENCE. §12: *\"A leg marked as a HUNCH is visibl
   + "count as evidence.\"* The fixture's hunch sits on a document that EARNS grade A, so counting it "
   + "turns an UNRATED branch into a graded one — which is why the arm cannot pass vacuously and why the "
   + "fixture was built that way.",
-  [["checks", "export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];",
+  [["schecks", "export const VERSION_STRENGTH_INERT_SOURCES = ['hunch'];",
     "export const VERSION_STRENGTH_INERT_SOURCES = [];"]],
   ["the branch resting only on a hunch is UNRATED",
    "the excluded set is read from the CATALOG's roster"],
@@ -304,7 +322,7 @@ arm("(6) READ THE GRADE OFF THE FROZEN ROW INSTEAD OF FROM `earnedBasisRegistry`
   + "EARNED grades produce a supported calculation — not minting numbers.\"* Armed, a row claiming A for "
   + "a document the record earns C for is reported at A, and a leg the record earns NOTHING for stops "
   + "being ungraded at all.",
-  [["store", "        const e = earnedConn[r.target_id];\n        if (e && e.grade) return carries(e.grade, e.why);",
+  [["strength", "        const e = earnedConn[r.target_id];\n        if (e && e.grade) return carries(e.grade, e.why);",
     "        const e = earnedConn[r.target_id];\n        if (authored) return carries(authored, 'the row said so');\n"
     + "        if (e && e.grade) return carries(e.grade, e.why);"]],
   ["and the READ reports what the record EARNS, not what the row claims",
@@ -315,10 +333,15 @@ arm("(6b) DROP THE CAPTURE CEILING. The registry's capture entry is `mode: 'ceil
   + "there is no per-document capture grade anywhere in this schema — so a leg may not claim more than "
   + "the bytes can support. Armed, a leg authored at A on the capture axis is reported at A, and the "
   + "record asserts a strength about bytes it cannot prove that much about.",
-  [["store", "      const capped = Store.#GRADE_RANK[authored] > Store.#GRADE_RANK[c.grade] ? c.grade : authored;",
+  [["strength", "      const capped = GRADE_RANK[authored] > GRADE_RANK[c.grade] ? c.grade : authored;",
     "      const capped = authored;"]],
-  ["the CAPTURE axis is CAPPED at the ceiling, never raised to it"],
-  ["and the READ reports what the record EARNS, not what the row claims"]);
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #10, T12 round 3), NOT AS DECLARED AT ITS FIRST RUN on this tree (90/1): the
+     AXIS stayed at the ceiling, because the walk applies the capture bound a second time (`#captureBoundsFor`, handed
+     to `#walk` by `#pairOver`) — a second layer under this one. What this ceiling alone still owns is the LEG's own
+     account: the leg reports the authored letter and no longer says the record cannot support it. */
+  ["and the answer SAYS the leg was authored higher than the record supports"],
+  ["and the READ reports what the record EARNS, not what the row claims",
+   "the CAPTURE axis is CAPPED at the ceiling, never raised to it"]);
 
 /* ====== (7) INERT AND NAMED ARE TWO FACTS — PL-1's CONTROL (2) SHAPE ===== */
 
@@ -327,7 +350,7 @@ arm("(7a) BREAK **NAMED** AND LEAVE **INERT** WHOLE. DEC-18's plural clause is t
   + "named.\"* Armed, the arithmetic is still exactly right — the branch still reads C, the axis still "
   + "reads A — and the record has simply stopped saying what it is standing on. THAT IS THE POINT: the "
   + "arithmetic arms all stay GREEN, which is why naming needs its own control.",
-  [["store", "      ungraded: resolved.ungraded,", "      ungraded: [],"]],
+  [["strength", "      ungraded: resolved.ungraded,", "      ungraded: [],"]],
   ["the answer ALSO publishes the ungraded legs at the top",
    "and WHICH ABSENCE it is travels at the top level"],
   ["MIN WITHIN A BRANCH: the branch holding an A leg and a C leg is worth C",
@@ -340,8 +363,8 @@ arm("(7b) BREAK **INERT** AND LEAVE **NAMED** WHOLE — the other half, and the 
   + "legs, then it doesn't suspend the conclusion either\"*). Armed, the branch carrying the bare leg "
   + "stops being graded while every leg is still named — so the two halves are shown to be separable in "
   + "BOTH directions rather than only one.",
-  [["store", "    if (!loadBearing.length)\n      return { ground, state: \"unrated\", grade: null, weakest: null,",
-    "    if (inert.length || !loadBearing.length)\n      return { ground, state: \"unrated\", grade: null, weakest: null,"]],
+  [["arith", "  if (!loadBearing.length)\n    return { ground, state: \"unrated\", grade: null, weakest: null,",
+    "  if (inert.length || !loadBearing.length)\n    return { ground, state: \"unrated\", grade: null, weakest: null,"]],
   ["INERT: the branch carrying an ungraded leg is still graded",
    "MIN WITHIN A BRANCH: the branch holding an A leg and a C leg is worth C"],
   ["the answer ALSO publishes the ungraded legs at the top",
@@ -354,9 +377,11 @@ arm("(8) RE-IMPLEMENT THE ARITHMETIC RATHER THAN REACHING IT THROUGH `legsOverri
   + "removing either left the other absorbing the control. Armed, a second `#axisResult` exists and "
   + "BEHAVIOUR IS UNCHANGED — every arithmetic arm stays green — and only the implementation-count pin "
   + "can see it. That is what a count pin is for.",
-  [["store", "  static #axisResult(axis, members, exhausted) {",
-    "  static #axisResultAgain(axis, members, exhausted) { return Store.#axisResult(axis, members, exhausted); }\n"
-    + "  static #axisResult(axis, members, exhausted) {"]],
+  /* RE-SPELLED 2026-09-29: `axisResult` is an exported module function; the twin is a second one beside it. */
+  [["arith", "export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {",
+    "export function axisResultAgain(axis, members, exhausted, depthBound = DEPTH_BOUND) {\n"
+    + "  return axisResult(axis, members, exhausted, depthBound);\n}\n"
+    + "export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {"]],
   ["DEC-32's composition is implemented ONCE"],
   ["MAX OVER BRANCHES: the axis takes the STRONGEST branch",
    "the pair answers",
@@ -369,7 +394,7 @@ arm("(9) DEFAULT THE STATE SET TO EVERY STATE INSTEAD OF TO `accepted`. §12: *\
   + "nobody stood behind — and, worse, is answered without the what-if line, because the answer believes "
   + "it is the record's own. Two rules break together, which is what makes the default load-bearing "
   + "rather than a convenience.",
-  [["checks", "export const VERSION_STRENGTH_DEFAULT_STATES =\n  VERSION_STATES.filter((s) => s === 'accepted');",
+  [["schecks", "export const VERSION_STRENGTH_DEFAULT_STATES =\n  VERSION_STATES.filter((s) => s === 'accepted');",
     "export const VERSION_STRENGTH_DEFAULT_STATES = [...VERSION_STATES];"]],
   ["the DEFAULT state set is `accepted` alone",
    "a reading nobody has adopted is NOT what the record answers with"],
@@ -381,9 +406,9 @@ arm("(10) OVER-STRICTNESS. A fence that refuses correct work is a defect in the 
   + "here: the arm re-runs the whole suite after a NO-OP edit that rewrites a comment, to demonstrate "
   + "that the harness's own edit/restore machinery does not move the subject — a control estate that "
   + "cannot tell its own noise from a defect is the instrument this repository has been bitten by most.",
-  [["store", "   * ================================================================== */\n\n  /** How many state words",
-    "   * (over-strictness arm: this comment line is rewritten and nothing else)\n"
-    + "   * ================================================================== */\n\n  /** How many state words"]],
+  /* RE-ANCHORED 2026-09-29: the comment the arm rewrites is the answer's own, in the strength module. */
+  [["strength", "      /* One measurement per axis, over its own population; nothing beside the axes stands for all of them. */",
+    "      /* (over-strictness arm: this comment line is rewritten and nothing else) */"]],
   [], [], { mustStayGreen: true });
 
 console.log(`\n${armsRun} arms run, ${armsWrong} wrong.`);

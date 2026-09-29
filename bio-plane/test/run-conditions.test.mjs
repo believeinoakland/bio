@@ -517,7 +517,13 @@ const ROLE = {
      drives it, the same way ARM W8 drives SELECTS. A reader in this role whose
      SQL projects any stored column beyond the key FAILS THERE, which is what
      makes the exemption from ARM P1 EARNED rather than granted. */
-  "#findingsVersionFromAnotherTeam": "ATTRIBUTES",
+  /* RETIRED 2026-09-29 (T12 B5, K409; QUEUE #2 J2), and ARM W3b named it, on `#counts`' and the five retired
+     authorisers' precedent: `#findingsVersionFromAnotherTeam` left store.mjs with the queue (`src/queue/index.mjs`)
+     and no longer reads `ai_runs` at all — QUEUE #2 rewired it to ai-runs' `runFor` (R28; queue's Uses, "ai-runs:
+     `runFor`"), whose cell above holds the one read. The membership test is unchanged in meaning: `from_project` is
+     still `p.id` off the drawing set, matched against the run's context, never a column published. A CALLER now, and
+     callers are not in this table; ARM W6 still finds no reader outside the two walked files. With it the ATTRIBUTES
+     role has no member (ARM W9 GUARD). */
   /* REC-93 / IC-92, 2026-09-14 — A THIRTEENTH READER ARRIVED HERE AND THEN LEFT
      AGAIN, and the round trip is worth the six lines because BOTH directions of
      this table were proved by it in one turn.
@@ -555,9 +561,13 @@ t("ARM W1: the column corpus is READ from schema.mjs and is non-trivial — a wa
   [COLUMNS.length >= 20, COLUMNS.includes("standard_pair"), COLUMNS.includes("bias_manifest"),
    COLUMNS.includes("skill_version")],
   [true, true, true, true]);
+/* FLOOR MOVED 2026-09-29 (T12 B5, K409; QUEUE #2): 300 -> 280. The queue's methods left store.mjs for
+   `src/queue/index.mjs`, which holds no reader of `ai_runs` (ARM W6 walks it) and is not a walked file, so the method
+   scan over store.mjs and ai-runs/index.mjs fell to 284 measured (17 readers). The reach it guards is unchanged: a
+   neutered scan still reads [0,0]. */
 t("ARM W2: REACH, as a DELTA — the reader walk finds at least twelve methods reading `ai_runs`, over a "
-+ "method scan of at least three hundred. Neuter either and this reads [0,0] rather than passing",
-  [WALK.readers.length >= 12, WALK.methods >= 300], [true, true]);
++ "method scan of at least two hundred and eighty. Neuter either and this reads [0,0] rather than passing",
+  [WALK.readers.length >= 12, WALK.methods >= 280], [true, true]);
 t("ARM W3: THE CLASSIFICATION IS TOTAL over what the walk found — a thirteenth reader lands here as a "
 + "FAILURE naming itself, not as a silent addition to a sweep that has already reported",
   /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): own properties only — `ROLE[r]` answered Object.prototype's
@@ -687,9 +697,15 @@ const attributorViolations = ATTRIBUTORS.flatMap((name) => {
 });
 console.log(`  ARM W9 corpus: ${ATTRIBUTORS.length} ATTRIBUTES reader(s) — ${ATTRIBUTORS.join(", ") || "NONE"}`
           + `; each judged on its projection over ${COLUMNS.length} stored columns`);
-t("ARM W9 GUARD: there IS at least one ATTRIBUTES reader — the exemption below is judged over a real "
-+ "corpus rather than reported clean over an empty one",
-  ATTRIBUTORS.length >= 1, true);
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2 J2): the role's one member, `#findingsVersionFromAnotherTeam`, now
+   asks ai-runs' `runFor` and reads no row (its retired cell, above), so the ATTRIBUTES corpus is EMPTY — measured, and
+   said here rather than let W9 report clean over nothing. The guard now pins the corpus the walk finds to the cells the
+   table declares, both zero: W9 below is a sentinel for the next ATTRIBUTES cell (which moves this pin), and W9b–W9d
+   keep proving the reader can see a violation over segments this file constructs. */
+t("ARM W9 GUARD: the ATTRIBUTES corpus is STATED, not assumed — the walk finds exactly the readers the table "
++ "declares in the role, and since QUEUE #2 that is none, so ARM W9's empty list is judged over ZERO readers and "
++ "says so rather than reporting clean over a corpus",
+  [ATTRIBUTORS.length, Object.values(ROLE).filter((r) => r === "ATTRIBUTES").length], [0, 0]);
 t("ARM W9: ATTRIBUTES IS EARNED, NOT GRANTED — an attributing reader matches IN THE PREDICATE and "
 + "projects nothing but the key, so no stored column of `ai_runs` can reach a member through it. One "
 + "that started projecting a column lands here BY NAME instead of quietly sitting outside ARM P1",

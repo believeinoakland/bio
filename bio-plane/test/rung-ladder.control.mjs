@@ -22,7 +22,12 @@
  *     SURPRISING result is recorded as a finding about the ARM rather than
  *     smoothed away.
  *  6. AN ARM THAT NEVER ARMED is called out by name: a patch matching zero times
- *     reports a beautiful green over an unmodified tree.
+ *     reports a beautiful green over an unmodified tree. *
+ * RUN 2026-09-29 BY legacy-tests T12 (arms 1 and 3 re-anchored onto src/control-plane/ops.mjs, K413) in a scratch
+ * worktree at 58ea5a554f: BASELINE 52 pass / 0 fail (the carried `profilesset` reds were gone on that tree — the op is
+ * classified there, so the carried-baseline branch did not have to fire) · arm 1 49/3 as declared, `frobnicate` named
+ * in FORWARD · arm 2 42/10 as declared, corpus printing 0 declared mutating · arm 3 52/0 as declared · after all
+ * restores 52/0; ops.mjs and dispatch-reader.mjs byte-identical by sha256 and cmp.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -83,10 +88,19 @@ function runSuite() {
 
 const BASE = runSuite();
 console.log(`BASELINE  ${BASE.pass} pass, ${BASE.fail} fail, exit ${BASE.code}, foot ${BASE.foot}`);
-if (BASE.fail !== 0 || BASE.pass < 30 || !BASE.foot) {
-  console.log("the tree is not green before the controls — refusing to run arms");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414, AFFORDANCES' open item): the baseline CARRIES three reds, all one
+   defect in another module — `profilesset` (instance-setup's op, control-plane `ops.mjs`) is mutating and classified
+   in neither RUNGS nor RUNG_ABSENT, so FORWARD, the EXACT-account line and affordances' `unaccounted` agreement fail.
+   The harness runs over that baseline only when EVERY baseline failure is that carried one (each FAIL's `got` names
+   `profilesset` or is the 170-vs-169 count), and every arm below is judged RELATIVE to the baseline, never to zero.
+   The day affordances classifies the op, the baseline reads 0 fail and nothing here needs moving. */
+const BASE_FAILS = [...BASE.out.matchAll(/^ +FAIL {2}.*\n(?: +want .*\n)?(?: +got .*)?/gm)].map((m) => m[0]);
+const CARRIED = BASE_FAILS.every((f) => /got .*profilesset/.test(f) || /want 170\s+got\s+169/.test(f.replace(/\n\s+/g, " ")));
+if (BASE.pass < 30 || !BASE.foot || BASE.fail > 3 || !CARRIED) {
+  console.log("the tree is not green before the controls (beyond the carried `profilesset` reds) — refusing to run arms");
   process.exit(1);
 }
+if (BASE.fail) console.log(`  baseline carries ${BASE.fail} red(s), all the unclassified \`profilesset\` — arms are judged against this baseline`);
 
 const results = [];
 function arm({ id, what, mustFail, mustNotFail, files }) {
@@ -112,7 +126,9 @@ function arm({ id, what, mustFail, mustNotFail, files }) {
     console.log(`    corpus: ${n.trim()}`);
 }
 
-const INDEX = join(PLANE, "src/index.mjs");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): the OPS table left `src/index.mjs` for
+   `src/control-plane/ops.mjs`; arms (1) and (3) plant into it there, with the same edits. */
+const INDEX = join(PLANE, "src/control-plane/ops.mjs");
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; legacy-index N12): the dispatch reader left `scripts/op-claims.mjs` (removed)
    for `test/dispatch-reader.mjs`, verbatim; arm (2) neuters the same line there. */
 const OPCLAIMS = join(DIR, "dispatch-reader.mjs");
@@ -130,7 +146,9 @@ arm({
     '  knock:      { classes: null,                                   mutating: true  },',
     '  frobnicate: { classes: null,                                   mutating: true  },\n'
     + '  knock:      { classes: null,                                   mutating: true  },') }],
-  mustFail: (r) => r.fail >= 1 && /frobnicate/.test(r.out) && /FORWARD/.test(r.out),
+  /* Judged against the baseline (above): FORWARD and the EXACT line already fail over `profilesset`, so the COUNT
+     cannot rise for them; the arm is read off the NAME — `frobnicate` must appear in a failing assertion's `got`. */
+  mustFail: (r) => r.fail >= Math.max(1, BASE.fail) && /got .*frobnicate/.test(r.out) && /FORWARD/.test(r.out),
   /* The BACKWARD direction must stay green: this arm adds an op, it does not
      invent a classification, so a failure there would mean the two directions
      are not independent. */
@@ -166,8 +184,8 @@ arm({
   files: [{ path: INDEX, patch: (s) => s.replace(
     /^ {2}cite:\s*\{[^}]*\},$/m,
     '  cite:{classes:["admin","member","probe"],mutating:true},') }],
-  mustFail: (r) => r.fail === 0 && r.pass === BASE.pass && r.foot,
-  mustNotFail: (r) => r.fail === 0,
+  mustFail: (r) => r.fail === BASE.fail && r.pass === BASE.pass && r.foot,
+  mustNotFail: (r) => r.fail === BASE.fail,
 });
 
 /* ------------------------------------------------------------------ summary */
@@ -181,4 +199,4 @@ console.log(surprising.length === 0
     + surprising.map((r) => r.id).join(", "));
 const FINAL = runSuite();
 console.log(`\nAFTER ALL RESTORES  ${FINAL.pass} pass, ${FINAL.fail} fail, exit ${FINAL.code}, foot ${FINAL.foot}`
-  + `  ->  ${FINAL.pass === BASE.pass && FINAL.fail === 0 ? "tree is back to baseline" : "*** TREE NOT RESTORED ***"}`);
+  + `  ->  ${FINAL.pass === BASE.pass && FINAL.fail === BASE.fail ? "tree is back to baseline" : "*** TREE NOT RESTORED ***"}`);

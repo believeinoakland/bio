@@ -390,11 +390,15 @@ t("OVER-STRICTNESS: and a machine is still offered what its class is NOT refused
 console.log("\n--- 4. the facts are asked of the stamps the ACTS receive ---");
 const indexSrc = readFileSync(IDX, "utf8");
 const storeSrc = readFileSync(STORE_SRC, "utf8");
-const expr = (re) => { const m = re.exec(indexSrc); return m ? m[1].trim() : null; };
-const authorAtAct = expr(/\|\| op === "narrow"\)\s*\n\s*inner\.searchParams\.set\("author", ([^;]+)\);/);
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): the act stamps left `src/index.mjs` with the
+   control plane (`src/control-plane/index.mjs`); op=affordances' two stamps stay in `src/index.mjs`'s handler. Each
+   side is read where it lives; the claim — the SAME two expressions — is unchanged. */
+const cpSrc = readFileSync(new URL("../src/control-plane/index.mjs", import.meta.url), "utf8");
+const expr = (re, src = indexSrc) => { const m = re.exec(src); return m ? m[1].trim() : null; };
+const authorAtAct = expr(/\|\| op === "narrow"\)\s*\n\s*inner\.searchParams\.set\("author", ([^;]+)\);/, cpSrc);
 /* CORRECTED 2026-09-23 (REC-159), never exempted: the stamp's last disjunct was `op === "memberadd"`;
    REC-159 widened it to `CUSTODIAL_ACTIONS.includes(op)`, the four §4.9 acts. Same ONE expression. */
-const byAtAct = expr(/\|\| CUSTODIAL_ACTIONS\.includes\(op\)\)\s*\n\s*inner\.searchParams\.set\("by", ([^;]+)\);/);
+const byAtAct = expr(/\|\| CUSTODIAL_ACTIONS\.includes\(op\)\)\s*\n\s*inner\.searchParams\.set\("by", ([^;]+)\);/, cpSrc);
 const affAuthor = expr(/const affAuthor = ([^;]+);/);
 const affBy = expr(/const affBy = ([^;]+);/);
 t("op=affordances sends `author` and `by` composed by the SAME expressions the object-directed acts' "

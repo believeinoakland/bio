@@ -44,7 +44,9 @@ import "../../bio-plane/test/stdio.mjs";   /* D-282 / M0-36: a writer's own exit
 import { appScript } from "./extract.mjs";
 import vm from "vm";
 import { webcrypto } from "crypto";
-import { ADMISSION_CHECKS } from "../../bio-plane/checks/bio-checks.mjs";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): C-38 (ADMISSION_CHECKS) left the catalogue for
+   control-plane's own table, `bio-plane/src/control-plane/checks.mjs`; the row, its check and its sentence are unchanged. */
+import { ADMISSION_CHECKS } from "../../bio-plane/src/control-plane/checks.mjs";
 
 let n = 0, bad = 0;
 const ok = (label, cond) => {

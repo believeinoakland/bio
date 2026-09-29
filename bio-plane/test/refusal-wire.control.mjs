@@ -62,6 +62,13 @@
  * others: 6b's `error` line held, which is what says the arm tests the CODE and
  * not the wording, and section 2c did not move.
  *
+ * FIFTH RUN, 2026-09-29, BY legacy-tests T12 (K409, K413, K414 re-anchor) in a scratch worktree of
+ * `job/T12/legacy-tests` @ d3f5329855 with this driver and the suite as re-anchored, suite at 42 assertions:
+ * a GREEN 42/0 · b RED 37/5 · c RED 38/4 · d RED 1/2 · e RED 34/8 · f RED 41/1 · g GREEN 42/0 · h RED 37/5 ·
+ * i GREEN 42/0 · j RED 40/2 · k GREEN 42/0 · l RED 41/1 · m GREEN 42/0 — ALL THIRTEEN AS DECLARED, all seven files
+ * byte-identical to their pristine-of-record by sha256 AND `cmp`. Arm b now edits `src/control-plane/index.mjs` (where
+ * `json()` went) and arms l/m `src/setup.mjs` (where op=instancegroupseed's refusal went); nothing else moved.
+ *
  * THE ARMS TOUCH THREE FILES AND SAY WHICH: `src/index.mjs` (the subject — the
  * decoration), `src/store.mjs` (a real refusal site, for the divergence and
  * over-strictness arms), and `test/refusal-wire.test.mjs` (the INSTRUMENT's own
@@ -85,8 +92,18 @@ const SUITE = join(DIR, "refusal-wire.test.mjs");
    arms (c) and (g) arm the first there and arm (k) the second, making the same edits. */
 const BV = join(ROOT, "src", "basis-versions", "index.mjs");
 const INQ = join(ROOT, "src", "inquiry", "index.mjs");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2; K414, INSTANCE-SETUP #1): `json()` and its `dec49Attach` call left
+   `src/index.mjs` for `src/control-plane/index.mjs`, so arm (b) removes the call THERE; `op=instancegroupseed`'s
+   GROUP_SLUG_MALFORMED refusal left `src/store.mjs` for instance-setup's `src/setup.mjs` (its row now that file's
+   INSTANCE_SETUP_CHECKS), so arms (l) and (m) edit it THERE. The plane's entry `src/index.mjs` still holds op=purge's
+   site (arms h, i) and is now ~52 KB, so its byte floor is 40,000; `src/store.mjs` (arm j) is ~222 KB after T12's
+   extractions, so its floor is 150,000. Same edits, same declarations. */
+const CP = join(ROOT, "src", "control-plane", "index.mjs");
+const SETUP = join(ROOT, "src", "setup.mjs");
 const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-const MIN_BYTES = { [INDEX]: 100000, [STORE]: 500000, [SUITE]: 10000, [BV]: 50000, [INQ]: 50000 };
+const MIN_BYTES = { [INDEX]: 40000, [STORE]: 150000, [SUITE]: 10000, [BV]: 50000, [INQ]: 50000, [CP]: 100000,
+                    [SETUP]: 100000 };
+const FILES = [INDEX, STORE, SUITE, BV, INQ, CP, SETUP];
 
 const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
 const bytes = (p) => readFileSync(p).length;
@@ -95,7 +112,7 @@ const bytes = (p) => readFileSync(p).length;
    compared against it as well, so an arm that restores from a copy taken AFTER
    a previous arm leaked cannot pass unnoticed. */
 const OF_RECORD = {};
-for (const p of [INDEX, STORE, SUITE, BV, INQ]) {
+for (const p of FILES) {
   const dst = `${p}.d262-of-record`;
   copyFileSync(p, dst);
   OF_RECORD[p] = { sha: sha(p), bytes: bytes(p), copy: dst };
@@ -177,7 +194,7 @@ arm("a", "BASELINE — nothing armed", null, null, "GREEN");
    helper stays defined and every refusal site is untouched. This is the state
    `main` was in before D-262 and it is the arm that proves this suite watches
    the WIRE and not the site. */
-arm("b", "the decoration removed from json() — src/index.mjs (THE SUBJECT)", INDEX,
+arm("b", "the decoration removed from json() — src/control-plane/index.mjs (THE SUBJECT)", CP,
   (s) => s.replace("JSON.stringify(dec49Attach(o), null, 1)", "JSON.stringify(o, null, 1)"),
   "RED");
 
@@ -353,7 +370,7 @@ arm("k", "MACHINE_CANNOT_GROUND minted through a VARIABLE — src/inquiry/index.
    as one; section 9's member+`ai` pin, which cannot see this op at all; 6b, whose
    `op=purge` site is untouched. An arm that took any of those down with it would be
    moving a second variable. */
-arm("l", "an ADMIN-ONLY refusal stripped of its code \u2014 src/store.mjs (THE SUBJECT, D-495)", STORE,
+arm("l", "an ADMIN-ONLY refusal stripped of its code \u2014 src/setup.mjs (THE SUBJECT, D-495)", SETUP,
   (s) => s.replace(SITE_J,
                    `      return { ok: false, error: "that is not a slug in the installer's grammar. Nothing was recorded." };`),
   "RED");
@@ -366,11 +383,11 @@ arm("l", "an ADMIN-ONLY refusal stripped of its code \u2014 src/store.mjs (THE S
    caller was told WHICH condition fired, never which helper wrote the answer, and
    a class drive that reported correct work as codeless would teach the next author
    to route around it. */
-arm("m", "the same ADMIN-ONLY refusal in an UNANTICIPATED spelling \u2014 src/store.mjs (OVER-STRICTNESS)", STORE,
+arm("m", "the same ADMIN-ONLY refusal in an UNANTICIPATED spelling \u2014 src/setup.mjs (OVER-STRICTNESS)", SETUP,
   (s) => s.replace(SITE_J,
                    `      return { ok: false, code: "GROUP_SLUG_MALFORMED",
-        check: INSTANCE_GROUP_CHECKS.GROUP_SLUG_MALFORMED.check,
-        translation: INSTANCE_GROUP_CHECKS.GROUP_SLUG_MALFORMED.translation,
+        check: INSTANCE_SETUP_CHECKS.GROUP_SLUG_MALFORMED.check,
+        translation: INSTANCE_SETUP_CHECKS.GROUP_SLUG_MALFORMED.translation,
         sigil: 7,
         detail: "Nope \u2014 that slug is not in the installer's grammar. Nothing was recorded." };`),
   "GREEN");
@@ -384,12 +401,12 @@ for (const r of results) {
   console.log(`  ARM ${r.id}  declared ${r.declared.padEnd(5)}  actual ${r.actual.padEnd(8)}  `
             + `${r.pass} pass / ${r.fail} fail  ${asDeclared ? "as declared" : "*** NOT AS DECLARED ***"}`);
 }
-for (const p of [INDEX, STORE, SUITE, BV, INQ]) {
+for (const p of FILES) {
   const back = sha(p);
   console.log(`  final ${p.replace(ROOT + "/", "").padEnd(28)} ${bytes(p)} bytes · sha ${back.slice(0, 16)}… · `
             + `${back === OF_RECORD[p].sha ? "IDENTICAL to pristine-of-record" : "*** DRIFTED ***"}`);
   execFileSync("cmp", ["-s", p, OF_RECORD[p].copy]);
 }
-for (const p of [INDEX, STORE, SUITE, BV, INQ]) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
+for (const p of FILES) if (existsSync(`${p}.d262-of-record`)) rmSync(`${p}.d262-of-record`);
 console.log(`\n${wrong === 0 ? "ALL THIRTEEN ARMS AS DECLARED" : `${wrong} ARM(S) NOT AS DECLARED — record them, do not smooth them`}`);
 process.exit(0);

@@ -49,7 +49,11 @@ const F = {
      basis-versions, the cycle walk to inquiry (`cyclePath`); the arms that edited them in store.mjs edit them there. */
   bv: ROOT + "src/basis-versions/index.mjs",
   inquiry: ROOT + "src/inquiry/index.mjs",
-  index: ROOT + "src/index.mjs",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): layer 1's stamp left
+     `src/index.mjs` for `src/control-plane/index.mjs` (arm 1a edits it there), and layer 2's NEEDS for
+     `src/control-plane/ops.mjs` (arm 1b edits it there). Each anchor still occurs once. */
+  index: ROOT + "src/control-plane/index.mjs",
+  ops: ROOT + "src/control-plane/ops.mjs",
   checks: ROOT + "checks/bio-checks.mjs",
   /* THE SUITE ITSELF IS A RESTORABLE FILE, added 2026-08-09 for arm (9). An arm
      that removes an assertion's SUBJECT proves the subject matters; an arm that
@@ -157,7 +161,15 @@ arm("(1a) LAYER 1 — THE CREDENTIAL STAMP, with layers 2 and 3 HELD OPEN. "
   /* RE-ANCHORED 2026-09-28 (LEGACY-TESTS #4), stale again and found by the occurs-once guard: REC-122 landed
      `|| op === "connectionchoose"` between the DECLARATION/STRUCTURE line and this one, so the old two-line anchor
      occurred zero times (already on tranche/T6). The line above it is now the neighbour that keeps it unique. */
-  [["index", `        || op === "connectionchoose"\n        || VERSION_ACTIONS.includes(op)`,
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #10, T12 round 3), NOT AS DECLARED AT ITS FIRST RUN on this tree (89/0,
+     the suite GREEN): control-plane R17 (K413, CONTROL-PLANE #2) deletes every declared stamp, `author` among
+     `QUERY_STAMPS`, from the caller's query before the op's own stamps are set, so with the stamp line alone disarmed
+     the machine's `author=ruth` never reached the store, which saw no author and refused MACHINE_CANNOT_MOVE_VERSION
+     (`!who`). That is a SECOND layer under this one (the pattern adminvote's `stamp-dropped` re-declared the same
+     day), a finding about the declaration and not a defect. The arm now disarms both — the strip keeps `author` —
+     and its declaration is unchanged: the false attribution lands, and layer 3 cannot see it. */
+  [["index", `"identity", "author", "by"`, `"identity", /* ARMED: author kept */ "by"`],
+   ["index", `        || op === "connectionchoose"\n        || VERSION_ACTIONS.includes(op)`,
              `        || op === "connectionchoose"\n        || (VERSION_ACTIONS.includes(op) && viaSession)`]],
   ["EVERY ONE OF THE SIX refuses a machine credential",
    "caller-supplied `author` was OVERWRITTEN"]);
@@ -167,7 +179,7 @@ arm("(1b) LAYER 2 — THE ENDPOINT CAPABILITY, with layers 1 and 3 HELD OPEN. "
   + "Delete the six `contribute` rows from NEEDS: a signed-in member holding no `contribute` then "
   + "reaches the store, which sees a perfectly good member name and moves the reading. Layers 1 and 3 "
   + "are untouched and neither has anything to say about a capability.",
-  [["index", `  versionaccept:    "contribute",
+  [["ops", `  versionaccept:    "contribute",
   versionreject:    "contribute",
   versionconsider:  "contribute",
   versionrevert:    "contribute",

@@ -22,17 +22,23 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "d512-replay-verified.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/control-plane/index.mjs", "src/store.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-/* THE SUBJECTS, each an anchor in `index.mjs`'s `op=promote` stamp block or in `migrationReplayOf`. */
-const REFUSE = "        if (replayAsserted && !proven)\n";
+/* THE SUBJECTS, each an anchor in the `op=promote` stamp block or in `migrationReplayOf`.
+   RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1 and #2 item 2 / R28): both left
+   `src/index.mjs` for `src/control-plane/index.mjs`, and the replay is now judged once, before any handler, by
+   `replayVerdict` (the class asked there as `admin`, the verification as `proven`); the refusal reads that verdict. The
+   same statements, the same arms; only the spelling of the verdict moved. */
+const CP = "control-plane/index.mjs";
+const REFUSE = "    if (replay?.asserted && !replay.proven)\n";
 const HONOUR = "        if (proven) b.replay = true;\n";
 const SHA_CHECK = '    && p.record.files.some((f) => f && f.name === "bundle.md" && f.sha256 === mdSha));\n';
 const BUNDLE_CHECK = "    && p.record.target === b.bundleId\n";
 const REGISTER_CHECK = "  if (!registered) return null;\n";
 const CLASS_DELETE = '        if (viaSession || cls !== "admin") delete b.replay;\n';
-const CLASS_ASK = '(!viaSession && cls === "admin" && (replayAsserted || creatingInquiry))';
+const CLASS_ASK = '  const admin = !viaSession && cls === "admin";\n';
+const VERIFY_ASK = "  const proven = admin && (asserted || creatingInquiry) ? await migrationReplayOf(env, storeName, b) : null;\n";
 
 const U = ["ARM U1 ", "ARM U2 ", "ARM U3 ", "ARM U4 ", "ARM U5 ", "ARM U6 ", "ARM U0 "];
 const ARMS = {
@@ -42,28 +48,28 @@ const ARMS = {
      the verification's two halves. Every U arm is then ADMITTED as a replay (each carries the legacy queue a replay is
      exempt from), and the witness counts what they wrote. C1 must NOT fail (the class delete still runs first); V1
      and V2 must NOT fail (a verified replay is a replay either way). */
-  "skip-verification": { patches: [["index.mjs", REFUSE, "        if (false)\n"],
-                                   ["index.mjs", HONOUR, "        if (proven || replayAsserted) b.replay = true;\n"]],
+  "skip-verification": { patches: [[CP, REFUSE, "    if (false)\n"],
+                                   [CP, HONOUR, "        if (proven || replay?.asserted) b.replay = true;\n"]],
                          mustFail: U },
   /* THE SHA CHECK alone: a record naming this bundle at ANY bytes verifies. U4 by name, and the witness. */
-  "no-sha": { patches: [["index.mjs", SHA_CHECK, '    && p.record.files.some((f) => f && f.name === "bundle.md"));\n']],
+  "no-sha": { patches: [[CP, SHA_CHECK, '    && p.record.files.some((f) => f && f.name === "bundle.md"));\n']],
               mustFail: ["ARM U4 ", "ARM U0 "] },
   /* THE BUNDLE CHECK alone: another bundle's capture listing these bytes verifies. U3 by name, and the witness. */
-  "no-bundle": { patches: [["index.mjs", BUNDLE_CHECK, ""]], mustFail: ["ARM U3 ", "ARM U0 "] },
+  "no-bundle": { patches: [[CP, BUNDLE_CHECK, ""]], mustFail: ["ARM U3 ", "ARM U0 "] },
   /* THE REGISTRATION alone: a held capture this promotion does not register verifies. U6 by name, and the witness. */
-  "no-register": { patches: [["index.mjs", REGISTER_CHECK, ""]], mustFail: ["ARM U6 ", "ARM U0 "] },
+  "no-register": { patches: [[CP, REGISTER_CHECK, ""]], mustFail: ["ARM U6 ", "ARM U0 "] },
   /* THE SECOND CONDITION, the class test, dropped at BOTH its sites (D-511's delete, and the class asked before the
      verification): the member token carrying a valid capture is admitted as a replay. C1 by name, and nothing else. */
-  "no-class": { patches: [["index.mjs", CLASS_DELETE, "        if (false) delete b.replay;\n"],
-                          ["index.mjs", CLASS_ASK, "(!viaSession && (replayAsserted || creatingInquiry))"]],
+  "no-class": { patches: [[CP, CLASS_DELETE, "        if (false) delete b.replay;\n"],
+                          [CP, CLASS_ASK, "  const admin = !viaSession;\n"]],
                 mustFail: ["ARM C1 "] },
   /* OVER-STRICTNESS, A FENCE TIGHTER THAN THE RULE: the verification asked of an inquiry's CREATION only — REC-173's
      scope before this item. Every replay here is refused, so the V arms fail by name; every U arm stays GREEN, the
      direction that would otherwise hide it. */
-  "creation-only": { patches: [["index.mjs", CLASS_ASK, '(!viaSession && cls === "admin" && creatingInquiry)']],
+  "creation-only": { patches: [[CP, VERIFY_ASK, "  const proven = admin && creatingInquiry ? await migrationReplayOf(env, storeName, b) : null;\n"]],
                      mustFail: ["ARM V1 ", "ARM V2 "] },
   /* OVER-STRICTNESS, the same rule respelled: nothing may fail. */
-  "respelled": { patches: [["index.mjs", REFUSE, "        if (!proven && replayAsserted === true)\n"]], mustFail: [] },
+  "respelled": { patches: [[CP, REFUSE, "    if (!replay?.proven && replay?.asserted === true)\n"]], mustFail: [] },
 };
 
 const run = (name) => {

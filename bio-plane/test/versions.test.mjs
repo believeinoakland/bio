@@ -112,7 +112,11 @@ const PLANE_SRC = PLANE_FILES.map((f) => readFileSync(f, "utf8")).join("\n");
 const MODULE_SCHEMAS = readdirSync(SRC(""), { withFileTypes: true }).filter((d) => d.isDirectory())
   .map((d) => { try { return readFileSync(SRC(d.name + "/schema.mjs"), "utf8"); } catch { return ""; } });
 const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"), ...MODULE_SCHEMAS].join("\n");
-const INDEX_SRC = readFileSync(SRC("index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the OPS table and the viewer-stamp list left
+   src/index.mjs for src/control-plane/ (ops.mjs, index.mjs); the control-plane pins read the entry and both, so
+   "no version write op" still reads every place an op could be declared. */
+const INDEX_SRC = ["index.mjs", "control-plane/index.mjs", "control-plane/ops.mjs"]
+  .map((f) => readFileSync(SRC(f), "utf8")).join("\n");
 const CHECKS_SRC = readFileSync(fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url)), "utf8");
 
 let pass = 0, fail = 0;
@@ -140,7 +144,7 @@ const firstFinding = (r) => (Array.isArray(r?.findings) && r.findings[0]) ? r.fi
  *  every version read in this suite goes through the real op. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);

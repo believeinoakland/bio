@@ -23,22 +23,29 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "group-identity.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/control-plane/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-/* Anchors, each a line of the subject quoted verbatim. */
+/* Anchors, each a line of the subject quoted verbatim.
+   RE-ANCHORED 2026-09-29 (legacy-tests T12): the identity's store side (the public read's verdict gate, the alarm
+   consumer, the roster check) left `store.mjs` for instance-setup's `src/setup.mjs` (K414, INSTANCE-SETUP #1 J5), where
+   the consumer's tick is registered with the scheduler and the roster is asked of membership's `isAdministrator`; the
+   bearer fence, the stamp and the setup page's read left `index.mjs` for `src/control-plane/index.mjs` (K413), the
+   page reading legacy-index's `publicInstanceGroup` through its hook. Each arm patches the same statement where it
+   now lives; its meaning and its declaration are unchanged. */
+const CP = "control-plane/index.mjs";
 const GATE = "    const verified = !!(slug && dom && last && last.verdict === \"verified\");";
-const TICK = "        tick: ()    => this.#groupDomainTick() },";
+const TICK = "tick: () => this.groupDomainTick() });";
 const FENCE = "    if (IDENTITY_ACTIONS.includes(op) && !viaSession)";
 const STAMP = "      inner.searchParams.set(\"by\", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);\n"
             + "      inner.searchParams.set(\"origin\", url.origin);";
 /* D-596's anchors: the setup page's read, the line's domain gate and its dated rendering, the name span, and the escape. */
-const PAGE_READ = "      return new Response(setupPage(await publicInstanceGroup(env, pageStore, \"groupidentitypublic\")),";
+const PAGE_READ = "      return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore, \"groupidentitypublic\")),";
 const DOMAIN_GATE = "    const domain = typeof r.domain === \"string\" && r.domain && day ? r.domain : null;";
 const DOMAIN_DATE = "'</span> verified <time datetime=\"'\n                  + escGroup(day) + '\">' + escGroup(day) + \"</time>\"";
 const NAME_SPAN = "      + (name ? '<span class=\"name\">' + escGroup(name) + \"</span> &middot; \" : \"\")\n      + '<span class=\"slug\">'\n      + escGroup(r.group) + \"</span> &middot; group instance\"";
 const NAME_ESC = "'<span class=\"name\">' + escGroup(name) + ";
-const ROSTER = "    if (!by || !this.#activeAdmins().includes(by))\n      return refusal(\"GROUP_IDENTITY_NOT_ADMIN\",";
+const ROSTER = "    if (!by || !this.#membership().isAdministrator(by))\n      return refusal(\"GROUP_IDENTITY_NOT_ADMIN\",";
 
 const ARMS = {
   baseline: { patches: [], mustFail: [] },
@@ -48,7 +55,7 @@ const ARMS = {
      another instance (D3), another group (D3b) — and the liar's L3, where the alarm's `mismatched` must take the
      domain down. Every verified arm stays green: the gate only ever REMOVES a domain. */
   "verdict-gate-skipped": {
-    patches: [["store.mjs", GATE, "    const verified = !!(slug && dom);"]],
+    patches: [["setup.mjs", GATE, "    const verified = !!(slug && dom);"]],
     /* W3, W3b, W5 ADDED by D-596: the setup page follows the plane's gate, and a skipped gate hands it the claim WITH a
        date (`domain_verified_at` is the latest check's), so the page's own dated-verdict gate cannot and should not
        catch a plane that lies — the plane's gate is the one that decides. */
@@ -58,7 +65,7 @@ const ARMS = {
   /* THE LIAR THE ROW NAMES — VERIFIED ONCE AT SET TIME: the alarm consumer stays registered and re-checks nothing.
      Every set-time arm stays green; only the arms that change the file after `verified` can see it. */
   "set-time-only": {
-    patches: [["store.mjs", TICK, "        tick: ()    => ({ groupdomain: null }) },"]],
+    patches: [["setup.mjs", TICK, "tick: () => ({ groupdomain: null }) });"]],
     mustFail: ["L2:", "L3:", "L4:", "W5:"],   /* W5 ADDED by D-596: the page follows the stale verdict */
   },
 
@@ -66,13 +73,18 @@ const ARMS = {
      which is on no roster, so it is STILL refused — by C-64.5, not C-64.4. Every A1 fails at its code; A2b stays
      green, because nothing a bearer asked for lands: the fence supplies the sentence, the roster the refusal. */
   "fence-dropped": {
-    patches: [["index.mjs", FENCE, "    if (IDENTITY_ACTIONS.includes(op) && !viaSession && false)"]],
+    patches: [[CP, FENCE, "    if (IDENTITY_ACTIONS.includes(op) && !viaSession && false)"]],
     mustFail: ["A1:"],
   },
 
   /* THE STAMP HONOURS A CALLER'S `by`: cai names ruth and is let through; ruth names gus and the record names gus. */
+  /* RE-DECLARED 2026-09-29 (legacy-tests T12), NOT AS DECLARED AT ITS FIRST RUN on this tree (43/0): control-plane
+     R17/R29 (CONTROL-PLANE #1, a finding its tests fixed) deletes every declared stamp, `by` among `QUERY_STAMPS`, from
+     the query before an op's own are set, so the stamp line alone reads no caller `by` to honour — a second layer. A
+     finding about the declaration: the arm now disarms both (`by` taken out of the deleted set, and the stamp made to
+     prefer it), so it still shows the recorded setter is never the caller's word. */
   "stamp-dropped": {
-    patches: [["index.mjs", STAMP, "      inner.searchParams.set(\"by\", inner.searchParams.get(\"by\") || (viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`));\n"
+    patches: [[CP, '"author", "by", "actor"', '"author", "actor"'], [CP, STAMP, "      inner.searchParams.set(\"by\", inner.searchParams.get(\"by\") || (viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`));\n"
                                   + "      inner.searchParams.set(\"origin\", url.origin);"]],
     /* P1 CORRECTED after the first run, which read it NOT AS DECLARED: cai's forged domain claim LANDS in this arm and
        verifies, so the stranger's "no domain (none claimed)" read shows it. A finding about the declaration. */
@@ -82,7 +94,7 @@ const ARMS = {
   /* THE STAMP RECORDED AND NEVER READ: the store's roster check removed, the fence and stamp left standing. A bearer
      is still refused at the fence (A1 green); cai's own session now sets both values. */
   "roster-unread": {
-    patches: [["store.mjs", ROSTER, "    if (!by)\n      return refusal(\"GROUP_IDENTITY_NOT_ADMIN\","]],
+    patches: [["setup.mjs", ROSTER, "    if (!by)\n      return refusal(\"GROUP_IDENTITY_NOT_ADMIN\","]],
     /* A3 and P1 CORRECTED after the first run, which read them NOT AS DECLARED: cai's own set LANDS here, so the
        history ruth's act reads back starts with cai (A3), and cai's verified domain claim reaches the stranger (P1). */
     mustFail: ["A2:", "A2b:", "A3:", "A4:", "A5:", "D7:", "P1:"],
@@ -91,7 +103,7 @@ const ARMS = {
   /* THE GATE TOO TIGHT — it never opens. The unverified arms stay green (nothing is ever shown); every arm that
      demands a VERIFIED domain be shown fails. The direction a fence tighter than its rule goes. */
   "gate-never-opens": {
-    patches: [["store.mjs", GATE, "    const verified = false;"]],
+    patches: [["setup.mjs", GATE, "    const verified = false;"]],
     mustFail: ["D5:", "L1:", "L4:", "O1:", "W4:", "W6:"],   /* W4, W6 ADDED by D-596: nothing verified to show */
   },
 
@@ -109,7 +121,7 @@ const ARMS = {
      green; every page arm that demands the name or the verified domain fails. W3/W3b/W5 stay green — a page showing
      no domain never shows an unverified one — and W2, W8 need no read. */
   "page-reads-slug-only": {
-    patches: [["index.mjs", PAGE_READ, "      return new Response(setupPage(await publicInstanceGroup(env, pageStore)),"]],
+    patches: [[CP, PAGE_READ, "      return new Response(setupPage(await hooks.publicInstanceGroup(env, pageStore)),"]],
     mustFail: ["W1:", "W3:", "W4:", "W6:", "W7:"],
   },
 
@@ -137,7 +149,7 @@ const ARMS = {
 
   /* OVER-STRICTNESS OF THE SUITE: the same gate in a spelling it did not anticipate. Nothing may fail. */
   "gate-respelled": {
-    patches: [["store.mjs", GATE, "    const verified = Boolean(slug) && Boolean(dom) && [\"verified\"].includes(last?.verdict);"]],
+    patches: [["setup.mjs", GATE, "    const verified = Boolean(slug) && Boolean(dom) && [\"verified\"].includes(last?.verdict);"]],
     mustFail: [],
   },
 };

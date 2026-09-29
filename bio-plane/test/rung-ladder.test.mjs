@@ -66,6 +66,12 @@ import {
 } from "../src/affordances.mjs";
 import { STATES, VERSION_REASON_REQUIRED, versionNeedsReason } from "../checks/bio-checks.mjs";
 import { readDispatch, routeOf, PLANE } from "./dispatch-reader.mjs";   /* T4 (legacy-tests): the reader op-claims.mjs held (N12) */
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2; AFFORDANCES #5 J2, BOB's B10): `OPS` and `NEEDS` left `src/index.mjs`
+   for control-plane's `src/control-plane/ops.mjs`, which exports them. The reader above follows the table there; the
+   exported table is what section 1 holds that reading EQUAL to, and affordances' own totality service `unaccounted`
+   (its R12) is asked the section-2 question at its interface over the same table. */
+import { OPS as CP_OPS, NEEDS as CP_NEEDS } from "../src/control-plane/ops.mjs";
+import { unaccounted } from "../src/affordances.mjs";
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -92,7 +98,7 @@ console.log(`  FW-14 CORPUS: ${table.ops.size} ops in the dispatch table · `
   + `${MUTATING.length} declared mutating · ${Object.keys(RUNGS).length} carry a rung · `
   + `${Object.keys(RUNG_ABSENT).length} carry a STATED absence`);
 
-t("OPS is a non-trivial whitelist read out of src/index.mjs", table.ops.size >= 120, true);
+t("OPS is a non-trivial whitelist read out of src/control-plane/ops.mjs", table.ops.size >= 120, true);
 t("the MUTATING subset is non-trivial — the floor a neutered walk fails",
   MUTATING.length >= 80, true);
 t("and it is a strict SUBSET: the table also declares non-mutating ops, so the "
@@ -102,6 +108,11 @@ t("and it is a strict SUBSET: the table also declares non-mutating ops, so the "
    is caught by more than a count. */
 t("`publish` is read as mutating", table.mutating.has("publish"), true);
 t("`affordances` is read as NON-mutating", table.mutating.has("affordances"), false);
+/* ADDED 2026-09-29 (K413, B10): the source reading and the table the control plane actually gates with are ONE table —
+   same ops, same mutating flags — so a reader drifting from the live table fails here rather than grading a stale one. */
+const CP_MUTATING = Object.entries(CP_OPS).filter(([, v]) => v && v.mutating === true).map(([o]) => o).sort();
+t("and the reading EQUALS control-plane's exported OPS: the same ops and the same mutating subset",
+  [[...table.ops].sort(), MUTATING], [Object.keys(CP_OPS).sort(), CP_MUTATING]);
 
 /* --------------------------------------- 2. TOTALITY, IN BOTH DIRECTIONS */
 /* THE ITEM. Not the ladder — this. */
@@ -129,6 +140,16 @@ t("the two tables together account for the whole mutating set, EXACTLY",
    zero would satisfy `unclassified === []` only if MUTATING were also empty,
    which section 1 floors — but an EMPTY RUNGS with a total RUNG_ABSENT would
    pass everything above while assigning nothing at all. Asserted, not assumed. */
+/* ADDED 2026-09-29 (K413, B10): the same totality at affordances' interface — its `unaccounted` (R12) over control-plane's
+   exported table, each op `{op, mutating, gated}` with `gated` its `NEEDS` row. Its `unranked` is this section's FORWARD
+   list and the rung half of its `stale` this section's BACKWARD list, so the service and this reading must agree. */
+const UNACC = unaccounted(Object.entries(CP_OPS).map(([op, v]) => ({ op, mutating: v?.mutating === true,
+  gated: Object.hasOwn(CP_NEEDS, op) })));
+t("affordances' `unaccounted` over control-plane's table names no unranked mutating op and no stale rung — and agrees "
++ "with the two directions above",
+  [UNACC.unranked, UNACC.stale.filter((op) => op in RUNGS || op in RUNG_ABSENT), UNACC.unranked, phantom],
+  [[], [], unclassified, UNACC.stale.filter((op) => op in RUNGS || op in RUNG_ABSENT)]);
+
 t("some op actually carries a rung — the assignment half is non-empty",
   Object.keys(RUNGS).length >= 20, true);
 t("some op actually carries a stated absence — the absence half is non-empty",
@@ -371,7 +392,11 @@ const T5_OP_MAPS = [["entities", "entitiesOps"], ["progressions", "progressionOp
      Escalation publishes no op map; its ten ops are named in the store's map itself and read below
      (`ESCALATION_ROUTES`). */
   ["standards", "standardsOps"], ["conformance", "conformanceOps"], ["consequences", "consequencesOps"],
-  ["filings", "filingsOps"]];
+  ["filings", "filingsOps"],
+  /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): the queue's acts left the store for `src/queue/index.mjs`, spread into the
+     store's map by `queueOps` (`proposedispose` -> queue's `proposeDispose`, `taskresolve`, `taskforward`, `queuemute`,
+     …), so op=proposedispose's `reasoned` rung is read at queue's `proposeDispose`, which refuses NO_REASON itself. */
+  ["queue", "queueOps"]];
 const T5_ROUTES = new Map();
 for (const [mod, fn] of T5_OP_MAPS) {
   const src = moduleSources(mod);
@@ -540,6 +565,9 @@ t("and every ground's own text explains itself at length rather than naming itse
    rather than driven, because `affordances.test.mjs` owns the wire. */
 console.log("\n--- 6. the absence reaches a caller ---");
 const indexSrc = readFileSync(join(PLANE, "src/index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): `decorateAct` moved with the gate tables to
+   `src/control-plane/ops.mjs`, which imports affordances' `decorate`; index.mjs calls `decorateAct` from there. */
+const cpOpsSrc = readFileSync(join(PLANE, "src/control-plane/ops.mjs"), "utf8");
 /* RETIRED 2026-09-28 (T8, legacy-tests; N177, legacy-index's share landed): the two `decorateAct` source scans ("…
    publishes the absence GROUND beside the rung" and "index.mjs imports RUNG_ABSENT from the one place it is
    defined"). The decoration is affordances' `decorate(act, gate)` (its R11), which index.mjs calls, so the ground is
@@ -548,9 +576,12 @@ const indexSrc = readFileSync(join(PLANE, "src/index.mjs"), "utf8");
    rung_absence RUNG_ABSENT's ground, and …", and over the wire by `test/m/affordances/plane.test.mjs`, test "R24: no
    act in any answer carries a null rung without a stated absence". What stays readable here: index.mjs decorates
    through that function and holds no decoration of its own. */
-t("index.mjs decorates through affordances' `decorate` and composes no `rung_absence` of its own",
-  [/import \{[^}]*\bdecorate\b[^}]*\} from "\.\/affordances\.mjs"/s.test(indexSrc),
-   /rung_absence\s*:/.test(indexSrc.replace(/\/\*[\s\S]*?\*\//g, ""))], [true, false]);
+t("the control plane decorates through affordances' `decorate` (control-plane/ops.mjs's `decorateAct`, which index.mjs "
++ "imports) and neither file composes a `rung_absence` of its own",
+  [/import \{[^}]*\bdecorate\b[^}]*\} from "\.\.\/affordances\.mjs"/s.test(cpOpsSrc),
+   /import \{[^}]*\bdecorateAct\b[^}]*\} from "\.\/control-plane\/ops\.mjs"/s.test(indexSrc),
+   /rung_absence\s*:/.test(indexSrc.replace(/\/\*[\s\S]*?\*\//g, "")),
+   /rung_absence\s*:/.test(cpOpsSrc.replace(/\/\*[\s\S]*?\*\//g, ""))], [true, true, false, false]);
 
 /* ---------------------------------------------------------------- the foot */
 /* THE FOOT IS ASSERTED TO HAVE BEEN REACHED. A TypeError inside an assertion

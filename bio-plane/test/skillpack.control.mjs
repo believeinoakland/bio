@@ -30,9 +30,14 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12): arms (1) and (2) edit the run-open door, which left `src/store.mjs` for
+   `src/ai-runs/index.mjs` (`AiRuns#open`, AI-RUNS #2, T8; the same text, moved), and arm (6) edits the machine mode
+   where the plane now mints it, control-plane's `ACT_GATE.mode` in `src/control-plane/ops.mjs` (K413, N53), whose
+   spelling is `id`, not `a.id`. The arms' texts are otherwise unchanged; each still refuses to arm unless its anchor
+   occurs exactly once. */
 const F = {
-  store: ROOT + "src/store.mjs",
-  index: ROOT + "src/index.mjs",
+  store: ROOT + "src/ai-runs/index.mjs",
+  index: ROOT + "src/control-plane/ops.mjs",
   pack:  ROOT + "src/skillpack.mjs",
   /* THE SUITE ITSELF IS ARMABLE, and arm (8) arms it. An instrument its own
      controls cannot reach is an instrument nobody has shown can go red — VF-2's
@@ -170,8 +175,8 @@ arm("(6) THE PIN ON THE ONE PUBLISHED TOKEN THIS PACK NAMES. Rename the machine 
   + "plane MINTS it. Nothing else in the battery yields that value today — A9 measures zero "
   + "machine-reachable acts — so without this pin a rename would move the boundary's meaning with "
   + "nothing to notice.",
-  [["index", `      : SESSION_OPS.admin.has(a.id) ? "admin-session" : "machine",`,
-              `      : SESSION_OPS.admin.has(a.id) ? "admin-session" : "unattended",`]],
+  [["index", `SESSION_OPS.admin.has(id) ? "admin-session" : "machine",`,
+              `SESSION_OPS.admin.has(id) ? "admin-session" : "unattended",`]],
   ["ARM A10"]);
 
 /* ------------------------------------------------------------------- (7) */

@@ -196,7 +196,7 @@ const boot = (scriptPath, script, persist, version) => new Miniflare({
   defaultPersistRoot: persist,
 });
 const bootCurrent = (persist) =>
-  boot(SRC("rec143-migrate-probe.mjs"), probe("./index.mjs", "./store.mjs"), persist, "current");
+  boot(SRC("rec143-migrate-probe.mjs"), probe("./index.mjs", "./index.mjs"), persist, "current");   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 
 /* A RESPONSE THAT IS NOT JSON IS AN ANSWER, NOT A CRASH — `content-chain-kind`'s rule:
    a bricked Durable Object answers with an error page, and `.json()` on it would end

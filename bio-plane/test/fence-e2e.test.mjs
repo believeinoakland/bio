@@ -88,6 +88,14 @@ import { STRENGTH_BAR_CHECKS } from "../src/strength/index.mjs";
    registry this suite reads is the rows where they now live. */
 import { ACTION_FENCE_CHECKS, RECORDS_LAW_FENCE_CHECKS } from "../src/actions/checks.mjs";
 import { REVIEW_COPY_CHECKS } from "../src/review/checks.mjs";
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): C-32.10 MACHINE_CANNOT_FORWARD and C-32.11 MACHINE_CANNOT_RESOLVE left
+   `MACHINE_FENCE_CHECKS` with the task acts for queue's own `QUEUE_MACHINE_CHECKS` (`src/queue/checks.mjs`), ids and
+   translations unchanged, so the registry this suite reads includes them. */
+import { QUEUE_MACHINE_CHECKS } from "../src/queue/checks.mjs";
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): the agent credential's gate and declaration rows C-29.6–.10
+   (AI_BEYOND_TASK_SCOPE, AI_CREDENTIAL_REVOKED, AI_SCOPE_BEYOND_MEMBER_REACH among them) left `AI_CREDENTIAL_CHECKS`
+   for control-plane's `AI_SCOPE_CHECKS`, ids and translations unchanged; the catalogue keeps the mint's rows. */
+import { AI_SCOPE_CHECKS } from "../src/control-plane/checks.mjs";
 import { connectionAtC } from "./earned-connection.mjs";   /* T8: an EARNED connection leg (strength R5, K187) */
 import { makePublishingProject } from "./publishingproject.mjs";
 import { withAdoptableReading, adoptedVersionParam } from "./adoptable-reading.mjs";
@@ -372,7 +380,8 @@ t("and it is not one layer wearing three hats: the six attempts sit across THREE
    free — measured five times in this repository, once over 131 op names — so
    the registry is the source and the wire is the subject, never the reverse. */
 const REGISTRY = { ...VERSION_ACT_CHECKS, ...MACHINE_FENCE_CHECKS, ...STRENGTH_BAR_CHECKS, ...CAPTURE_REQUEST_CHECKS,
-                   ...AI_CREDENTIAL_CHECKS, ...ACTION_FENCE_CHECKS, ...RECORDS_LAW_FENCE_CHECKS, ...REVIEW_COPY_CHECKS };
+                   ...AI_CREDENTIAL_CHECKS, ...ACTION_FENCE_CHECKS, ...RECORDS_LAW_FENCE_CHECKS, ...REVIEW_COPY_CHECKS,
+                   ...QUEUE_MACHINE_CHECKS, ...AI_SCOPE_CHECKS };
 t("every code on the roster is in the catalog, and the catalog is what the C-numbers below are "
 + "compared against — never a number typed into this file",
   ROSTER.filter((r) => !(r.code in REGISTRY)).map((r) => r.code), []);
@@ -701,7 +710,7 @@ console.log("\n--- 6. direct enqueue: the machine reaches for the drain itself -
     note: "the declaration half of attempt 6" });
   t("   and the DECLARATION is refused at the mint too, by its own name and C-number — two "
   + "independent doors, so adding the class to a row would still admit nothing",
-    [codeOf(decl), checkOf(decl), transOf(decl) === AI_CREDENTIAL_CHECKS.AI_SCOPE_BEYOND_MEMBER_REACH.translation],
+    [codeOf(decl), checkOf(decl), transOf(decl) === AI_SCOPE_CHECKS.AI_SCOPE_BEYOND_MEMBER_REACH.translation],
     ["AI_SCOPE_BEYOND_MEMBER_REACH", "C-29.9", true]);
 
   /* COMPLETENESS FOR THIS ONE, and again it is not a member arm: no member
@@ -808,8 +817,8 @@ console.log("\n--- 8. end to end in ONE process: the real agent-worker against t
   + "thirteen-surfaces drift DEC-49's guard exists to close, measured across a real hop rather "
   + "than asserted on one side of it",
     [codeOf(e2e.body?.plane), checkOf(e2e.body?.plane),
-     transOf(e2e.body?.plane) === AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_REVOKED.translation],
-    ["AI_CREDENTIAL_REVOKED", AI_CREDENTIAL_CHECKS.AI_CREDENTIAL_REVOKED.check, true]);
+     transOf(e2e.body?.plane) === AI_SCOPE_CHECKS.AI_CREDENTIAL_REVOKED.translation],
+    ["AI_CREDENTIAL_REVOKED", AI_SCOPE_CHECKS.AI_CREDENTIAL_REVOKED.check, true]);
 
   /* AND THE SAME HOP CARRIES A FENCE FROM THIS PASS'S OWN ROSTER, so block 8 is
      joined to blocks 1-6 rather than being a separate demonstration: attempt 6's
@@ -982,8 +991,10 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
   /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): MACHINE_CANNOT_MOVE_ACTION, _CORRESPOND, _SET_LAWS, _SET_RISK_TIER (and
      the new _STATE_RECORDS_LAW) left with their acts for actions, MACHINE_CANNOT_PUBLISH for case-authoring
      (`#publishCase`), MACHINE_CANNOT_REVIEW for review — each extracted from the store. */
+  /* RE-ANCHORED 2026-09-29 (K409, QUEUE #2): MACHINE_CANNOT_FORWARD and MACHINE_CANNOT_RESOLVE left with `taskForward`
+     and `taskResolve` for `src/queue/`, extracted from the store with the obligation inbox. */
   const STORE_BARE = storeCorpus(["record-core", "membership", "promotion", "inquiry", "basis-versions", "strength",
-                                  "actions", "case-authoring", "review"])
+                                  "actions", "case-authoring", "review", "queue"])
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
   const HARVEST = [...new Set([...STORE_BARE.matchAll(/"(MACHINE_CANNOT_[A-Z_]+)"/g)].map((m) => m[1]))].sort();
   t("the harvest found a REAL family and not an empty one — the guard is the evidence, never the "
@@ -993,7 +1004,7 @@ console.log("\n--- 10. the class: which machine fences can actually be EXPLAINED
      plane can mint" also covers the five fences minted in `src/index.mjs`, which this suite does not
      drive. Those five are harvested and driven, each under a payload a human then succeeds with, by
      `machine-fences.test.mjs` block 3b (D-503), which holds the same equality over them. */
-  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, `src/{inquiry,basis-versions,strength}/`, T7, and `src/{actions,case-authoring,review}/`, T8) mints, so a thirteenth cannot arrive "
+  t("and the set driven below IS the family `src/store.mjs` (with `src/{record-core,membership,promotion}/`, T3, `src/{inquiry,basis-versions,strength}/`, T7, and `src/{actions,case-authoring,review}/`, T8, and `src/queue/`, T12) mints, so a thirteenth cannot arrive "
   + "unmeasured (the five `src/index.mjs` mints are machine-fences.test.mjs block 3b's, D-503)",
     [HARVEST.filter((c) => !(c in SHORT)), Object.keys(SHORT).filter((c) => !HARVEST.includes(c))],
     [[], []]);

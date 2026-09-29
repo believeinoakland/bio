@@ -64,6 +64,7 @@ import { textOf, FTS_COLUMNS } from "../src/query.mjs";
 import { storeCorpus } from "./extracted-sources.mjs";
 
 const SRC = (f) => fileURLToPath(new URL("../src/" + f, import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 
 let pass = 0, fail = 0;
@@ -110,8 +111,8 @@ console.log("\n--- the compiler is the only place a query comes from ---");
  * Phase 1: the small corpus, where index maintenance is checked.
  * ------------------------------------------------------------------ */
 const mf = new Miniflare({
-  modules: true, script: readFileSync(SRC("store.mjs"), "utf8"),
-  modulesRoot: "/", scriptPath: SRC("store.mjs"),
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });

@@ -317,7 +317,9 @@ console.log("\n--- structural: no mutating session op may go unmentioned ---");
    table is read out of the source and every mutating op a session can reach
    must have an entry, including the ones that need nothing, which are written
    as an explicit null with their reason. */
-const src = readFileSync(SRC, "utf8");
+/* RE-ANCHORED 2026-09-29 (K413, CONTROL-PLANE #2): `OPS`, `NEEDS`, `SESSION_OPS` and the act lists its spreads name
+   left `src/index.mjs` for control-plane's declarations, `src/control-plane/ops.mjs`; the table is read there. */
+const src = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
 const blockOf = (name) => {
   const i = src.indexOf(`const ${name} = {`);
   return i < 0 ? null : src.slice(i, src.indexOf("\n};", i));

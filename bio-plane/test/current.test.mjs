@@ -9,6 +9,7 @@
    (6) THE SOURCE IS NOT A HOME OF ITS OWN ITEM. In #findingsVersionFromAnotherTeam replace `homes.ancestors.filter((a) => a.id !== src)` with `homes.ancestors` -> the team that authored a reading is told it arrived from another team. MUST FAIL: §5's excluded-home arm. MUST NOT: the item still exists and still says everything else, which is the defect's whole camouflage.
    (7) THE DISPOSITION PUBLICATION IS A MEASUREMENT OF THE ACT. In #dispositionOf make the final return `available: true, op: "proposedispose"` -> the plane now advertises an act on items that carry no key. MUST FAIL: §7's undispositionable arms AND the DRIVEN arm that takes the published key to the real op. MUST NOT FAIL: the two proposal kinds, which were already true — so the arm proves the publication is not merely always-true.
    (8) OVER-STRICTNESS, and these PASS rather than fail: a project that does NOT cite the question is never named in anybody's divergence; two projects standing on the SAME reading produce silence rather than an item; a legacy `focus`/`problem`-typed shared question still diverges (the MAP RULE, so a spelling this item did not anticipate is not refused); an ordinary progression proposal keeps BOTH its disposition controls and its successful op=proposedispose; and `out-of-inquiry-lead` is unaffected in every respect. A fence that refuses correct work is a defect in the fence.
+   RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2) — WHERE EACH ARM'S SITE LIVES NOW, and the arms above are read with these paths: arm (1) basis-versions' `#setProjectCurrentVersion` (src/basis-versions/index.mjs); arm (4) basis-versions' module-level `drawsOn`, which `projectsDrawingOn` asks; arms (2b) producer half, (3), (5), (6), (7) and (8) `src/queue/index.mjs` (both producers, `#dispositionOf`); arm (5) re-expressed at the two sites queue reads (the versions' `run` filter and `runFor`'s context), same meaning; arm (7) re-expressed because since IC-60 no item of this suite reaches the `no_project_scope` guard: the project-scoped success return publishes the finding id as `key` with no `requires`, and "and `key` is NULL while `available` is TRUE" must fail. RUN 2026-09-29 in a scratch worktree of 6bb9bd7605: BASELINE 65/0; (1) 52/13, (2) 35/30, (2b) 57/8, (3) 64/1, (4) 61/4, (5) 57/8, (6) 63/2, (7) 64/1, (8) 64/1, (9) 65/0 — 10 arms, 0 NOT AS DECLARED; every file restored byte-identical (sha256 checked before and after the run).
    (9) BASELINE. Every arm restored, suite re-run, full green — the row that distinguishes six-arms-broken from six-arms-working.
    D-266's ARMS ALSO REACH THIS SUITE, and they are DECLARED HERE rather than only where they are driven, because a reader breaking §5 in a year needs to find them from the assertion they broke. RUN 2026-08-09 (d266-disposition) by `test/d266.control.mjs`, which arms `src/store.mjs` alone and runs BOTH this suite and `proposedispose.test.mjs` on every arm. BASELINE this suite 62/0.
    (D-266.4) THROW AWAY THE UNATTRIBUTABLE COUNT at #findingsVersionFromAnotherTeam's return (`out.unattributed = 0`) -> **this suite 61/1**, the counted-silence arm failing, `proposedispose.test.mjs` 27/0 and untouched. MUST NOT FAIL: the run-less arm and the two-items arm — the ITEMS are unaffected, which is precisely the state this half of D-266 found: a correct silence indistinguishable from having nothing to be silent about.
@@ -104,7 +105,10 @@ import { QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS,
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const SRC = (f) => join(DIR, "..", "src", f);
-const STORE_SRC = readFileSync(SRC("store.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): op=queue's feed — both slugs' producers, their wiring into the
+   FINDING half, and `#dispositionOf`'s per-class answers — left store.mjs for `src/queue/index.mjs`. The two
+   STRUCTURAL arms that read them read them there; what they assert is unchanged. */
+const QUEUE_SRC = readFileSync(SRC("queue/index.mjs"), "utf8");
 /* WIDENED 2026-09-28 (BASIS-VERSIONS #1 J4.1, K4): each extracted module now owns its tables in its own
    `src/<module>/schema.mjs`, so "the whole schema source" is schema.mjs AND every module's schema. */
 const SCHEMA_SRC = [readFileSync(SRC("schema.mjs"), "utf8"),
@@ -462,16 +466,16 @@ const accept = async (version, target = INQ) =>
        argument, `identity` (the queue's D-310 owner fact asks WHO, not what the caller sees), so
        the call is matched with or without it — the property (the producer is CALLED with the
        feed's own viewer and clock) is unchanged. */
-    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now(?:, identity)?\\)`).test(STORE_SRC);
-    const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(STORE_SRC);
-    const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(STORE_SRC);
-    const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(STORE_SRC));
+    const call = new RegExp(`this\\.#${name}\\s*\\(viewer, now(?:, identity)?\\)`).test(QUEUE_SRC);
+    const direct = new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*this\\.#${name}\\s*\\(`).test(QUEUE_SRC);
+    const decl = new RegExp(`(?:const|let)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*this\\.#${name}\\s*\\(`).exec(QUEUE_SRC);
+    const viaLocal = !!(decl && new RegExp(`items\\.push\\(\\s*\\.\\.\\.\\s*${decl[1]}\\b`).test(QUEUE_SRC));
     return call && (direct || viaLocal);
   };
   t("both slugs have a NAMED PRODUCER wired into queueFeed's FINDING half — a kind with no "
   + "generator is a word, and this record has shipped one of those before",
-    [/#findingsStanceDiverged\s*\(viewer, now(?:, identity)?\)/.test(STORE_SRC),
-     /#findingsVersionFromAnotherTeam\s*\(viewer, now(?:, identity)?\)/.test(STORE_SRC),
+    [/#findingsStanceDiverged\s*\(viewer, now(?:, identity)?\)/.test(QUEUE_SRC),
+     /#findingsVersionFromAnotherTeam\s*\(viewer, now(?:, identity)?\)/.test(QUEUE_SRC),
      wiredIntoItems("findingsStanceDiverged"),
      wiredIntoItems("findingsVersionFromAnotherTeam")],
     [true, true, true, true]);
@@ -872,11 +876,11 @@ const beforeShaA = await shaOf(A);
        and the pin is now on the CHOICE rather than on the one answer: the source must still name
        `taskresolve` as the default AND must name the bias-debt kind's own door, so a third kind
        added without one lands here as a failure instead of quietly inheriting a door it has not got. */
-    [/an_obligation_is_resolved_not_disposed/.test(STORE_SRC),
-     /\? "biasdebtresolve" : "taskresolve"/.test(STORE_SRC),
-     /item\.kind === "bias-debt"/.test(STORE_SRC),
-     /a_condition_is_acknowledged_or_muted/.test(STORE_SRC),
-     /instead: "queuemute"/.test(STORE_SRC),
+    [/an_obligation_is_resolved_not_disposed/.test(QUEUE_SRC),
+     /\? "biasdebtresolve" : "taskresolve"/.test(QUEUE_SRC),
+     /item\.kind === "bias-debt"/.test(QUEUE_SRC),
+     /a_condition_is_acknowledged_or_muted/.test(QUEUE_SRC),
+     /instead: "queuemute"/.test(QUEUE_SRC),
      ITEMS(q).filter((i) => i.class !== "FINDING").length], [true, true, true, true, true, 0]);
 
   /* THE PUBLICATION IS A MEASUREMENT OF THE ACT, IN BOTH DIRECTIONS. A claim

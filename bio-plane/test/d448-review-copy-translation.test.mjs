@@ -139,7 +139,12 @@ console.log("\n--- d448: the review copy's eleven refusals, translated ---");
 const C87 = Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).filter(([, r]) => /^C-87\./.test(r.check)));
 const CODES = Object.keys(C87);
 console.log(`  corpus: ${CODES.length} C-87 codes in REVIEW_COPY_CHECKS — ${CODES.join(", ")}`);
-t("the family is the ELEVEN codes UI-68's surface can show, and no fewer", CODES.length, 11);
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; REVIEW #3, N306, K392, R27): C-87.12 MINT_EXHAUSTED joined the family
+   in review's own table, the one answer both of review's minting acts (a new draft, a grant) give when no free opaque id
+   can be drawn. The family is now TWELVE, and every arm below that counted eleven counts twelve; the eleven UI-68 codes
+   are unchanged. N322 retires C-87.12 into record-core's one row beside `mintOpaqueId` (a later tranche): when it goes,
+   this pin goes red again by design, naming the departure. */
+t("the family is the TWELVE codes review's acts can answer (UI-68's eleven and C-87.12), and no fewer", CODES.length, 12);
 t("and its only other row is C-32.16 MACHINE_CANNOT_REVIEW, the fence review took with it",
   Object.entries(REVIEW_COPY_CHECKS).filter(([c]) => !(c in C87)).map(([c, r]) => [c, r.check]),
   [["MACHINE_CANNOT_REVIEW", "C-32.16"]]);
@@ -163,6 +168,7 @@ const NUMBERED = {
   REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5", REVIEW_NO_SUCH_CASE: "C-87.6",
   REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
   REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11",
+  MINT_EXHAUSTED: "C-87.12",   /* REVIEW #3 (N306, K392), 2026-09-29 */
 };
 t("the pinned numbering covers every code in the family, and no more",
   Object.keys(NUMBERED).sort().join(","), CODES.slice().sort().join(","));
@@ -177,10 +183,10 @@ for (const [code, row] of Object.entries(C87)) {
 }
 /* No two codes may share a sentence: a copied translation is one code's words on another's condition. */
 const sentences = Object.values(C87).map(r => r.translation);
-t("no two of the eleven share a translation", new Set(sentences).size, 11);
+t("no two of the twelve share a translation", new Set(sentences).size, 12);
 /* Every region name is distinct, or two rows would claim one span. */
-t("no two of the eleven share a `where`",
-  new Set(Object.values(C87).map(r => r.where)).size, 11);
+t("no two of the twelve share a `where`",
+  new Set(Object.values(C87).map(r => r.where)).size, 12);
 
 /* ========================================================================= 2
  * THE ROUTING, PINNED STRUCTURALLY. Each code is minted EXACTLY ONCE, through
@@ -322,12 +328,21 @@ await wire("a comment that says nothing", "REVIEW_NO_COMMENT_TEXT",
  * unreachable, never quietly dropped from the corpus (undetermined is
  * first-class and must be STATED).
  * ======================================================================== */
-console.log("\n--- 4. the two the wire cannot reach, and why (at the code, not by assumption) ---");
-const IDX_SRC = readFileSync(IDX, "utf8");
+console.log("\n--- 4. the three the wire does not reach, and why (at the code, not by assumption) ---");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2): op=reviewgrant's mint left `src/index.mjs` with the
+   control plane; the secret is minted and `secretSha` set in `src/control-plane/index.mjs`, which is read here. */
+const IDX_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
 t("REVIEW_UNKNOWN_ACT: the review module's op map binds `act` as a literal per op, so no caller presents a fourth",
   ["draft", "grant", "revoke"].every(a => REVIEW_SRC.includes(`act: "${a}"`)), true);
 t("REVIEW_NO_SECRET: op=reviewgrant MINTS the secret in the control plane and always sets secretSha",
   /inner\.searchParams\.set\("secretSha", await sha256Hex\(secret\)\)/.test(IDX_SRC), true);
+/* ADDED 2026-09-29 (LEGACY-TESTS #10, T12; REVIEW #3, N306, K392): MINT_EXHAUSTED needs every random opaque id the plane
+   draws to be taken already, which no caller can arrange through the op; review's own interface suite drives both arms
+   with record-core's `mintOpaqueId` answering none (`test/m/review/acts.test.mjs` R27). Here it is pinned structurally
+   like the eleven (section 2), and at the code: both of review's mint sites answer a `null` id through the one helper. */
+t("MINT_EXHAUSTED: both of review's mints (a new draft, a grant) answer a null id through `mintExhausted`, and nothing else does",
+  [/if \(!id\) return mintExhausted\("draft"\);/.test(REVIEW_SRC), /if \(!id\) return mintExhausted\("grant"\);/.test(REVIEW_SRC),
+   [...REVIEW_SRC.matchAll(/\bmintExhausted\(/g)].length], [true, true, 3]);
 
 console.log(`\nd448-review-copy-translation: ${pass} pass, ${fail} fail`);
 await mf.dispose();

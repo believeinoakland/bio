@@ -944,7 +944,10 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
      so dropping it from the table passed the sweep. Recorded, not smoothed; the viewer condition is gone, and the
      ungated id-carrying reads are classified too. */
   const src = (f) => readFileSync(join(SRC_DIR, f), "latin1");
-  const reads = new Set([...src("index.mjs").matchAll(/^\s+([a-z0-9]+):\s*\{\s*classes:[^}]*mutating:\s*false/gm)].map((m) => m[1]));
+  /* RE-ANCHORED 2026-09-29 (T12 B8–B10, K413; CONTROL-PLANE #2): the `OPS` table left `src/index.mjs` for
+     `src/control-plane/ops.mjs` (control-plane's own; B10), so the sweep read no op at all (`0 read ops`, 11g0). The
+     read ops are taken from where the table now is, by the same pattern. */
+  const reads = new Set([...src("control-plane/ops.mjs").matchAll(/^\s+([a-z0-9]+):\s*\{\s*classes:[^}]*mutating:\s*false/gm)].map((m) => m[1]));
   const lines = src("store.mjs").split("\n");
   const at = lines.findIndex((l) => /^      const map = \{/.test(l));
   const routes = {}; let cur = null;
@@ -1078,6 +1081,30 @@ console.log("\n--- 11. REC-196 / BOB #32 (a): a read naming a DISCOVERABLE proje
       if (xcur) routes[xcur] += xlines[i].replace(/\bqp?\("/g, 'searchParams.get("');
     }
     t(`11g000 (T9): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
+      routes[witness] !== undefined, true);
+  }
+  /* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the store's map now also spreads `queueOps(queueOf(this.ctx),
+     url, body)`, the routes the queue answers (`queue`, `queuemute`, `tasks`, `taskdrain` among them), declared in
+     `src/queue/index.mjs` as T7's are (`return {`, entries one indent in) and reading parameters through a local
+     `s("<name>")`, the `searchParams.get("…")` it is. 11g++ named the classified read `tasks`, whose route left the
+     store's own map for this one; it is read into the same table, the same way, floored by a route it must carry.
+     RE-ANCHORED 2026-09-29 (T12 B6/B9, K414; INSTANCE-SETUP #1): likewise instance-setup's `instanceSetupOps` in
+     `src/setup.mjs` (a file, not a directory; `q("<name>")`), which the plane's `Store` routes before the store's own
+     map — `instancegroup`, `groupidentity` and `profiles` left the store's map for it and the sweep printed them
+     unrouted; they are read into the same table (none carries an id-named parameter today, which the sweep now
+     measures rather than skips). */
+  for (const [mod, fn, witness, file] of [["queue", "queueOps", "tasks", "queue/index.mjs"],
+                                          ["instance-setup", "instanceSetupOps", "groupidentity", "setup.mjs"]]) {
+    const xlines = src(file).split("\n");
+    const xfn = xlines.findIndex((l) => new RegExp(`^export function ${fn}\\(`).test(l));
+    const xat = xfn < 0 ? -1 : xlines.findIndex((l, i) => i > xfn && /^  return \{/.test(l));
+    let xcur = null;
+    for (let i = xat + 1; xat >= 0 && i < xlines.length && !/^  \};/.test(xlines[i]); i++) {
+      const m = xlines[i].match(/^    ([a-z0-9]+): /);
+      if (m) { xcur = m[1] in routes ? null : m[1]; if (xcur) routes[xcur] = ""; }
+      if (xcur) routes[xcur] += xlines[i].replace(/\b[sq]\("/g, 'searchParams.get("');
+    }
+    t(`11g000 (T12): ${mod}'s routes were read (${fn}; the map it contributes carries \`${witness}\`)`,
       routes[witness] !== undefined, true);
   }
   const table = (name) => { const m = src("store.mjs").match(new RegExp(`static ${name} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`));

@@ -72,7 +72,10 @@ const SCHEMA_SRC = readFileSync(join(SRC_DIR, "schema.mjs"), "utf8");
    `publishCase` into `case-authoring`, and the DRAFT and RVG mints into `review`, which seeds its own two prefixes
    (`reviewOf` -> `record.seedMintLedger([...])`). The corpus widens to both, and S8's seed is the store's
    `#MINT_LEDGER_LIVE` AND every module's `seedMintLedger([...])` literal, read the same way. */
-const MODULES = ["record-core", "membership", "promotion", "case-authoring", "review"];
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the TASK mint (`op=taskdrain`'s `mintOpaqueId("TASK", …)`, its
+   `taken` reading `tasks.id`) left store.mjs with the queue for `src/queue/index.mjs` (`this.#record.mintOpaqueId`).
+   The corpus widens to `queue`, so S6 still finds five sites and S8 still reads TASK's `taken` beside the store's seed. */
+const MODULES = ["record-core", "membership", "promotion", "case-authoring", "review", "queue"];
 const moduleFiles = (d) => readdirSync(join(SRC_DIR, d)).filter((f) => f.endsWith(".mjs")).sort().map((f) => `${d}/${f}`);
 const RECORD_CORE_SRC = readFileSync(join(SRC_DIR, "record-core", "index.mjs"), "utf8");
 const RECORD_SCHEMA_SRC = readFileSync(join(SRC_DIR, "record-core", "schema.mjs"), "utf8");

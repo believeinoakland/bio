@@ -37,7 +37,11 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const F = { store: ROOT + "src/store.mjs" };
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): the ancestor walk (`#queueAncestorEdges`, arms A
+   and B) left the store with the queue for src/queue/index.mjs; the predicate and `citesInto` (arms C, C2, D, E) had
+   left it for connections (`edgeSevered`, `citesInto`, CONNECTIONS #1 R22, T5), so those four arms had matched
+   nothing since. Each arm makes the same edit where the code now lives; needles counted (exactly one) first. */
+const F = { queue: ROOT + "src/queue/index.mjs", connections: ROOT + "src/connections/index.mjs" };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
 const ORIGINAL_SHA = Object.fromEntries(Object.entries(ORIGINAL).map(([k, v]) => [k, sha(v)]));
@@ -155,7 +159,7 @@ arm("A", "THE CITES HALF. `#queueAncestorEdges` takes its `refs kind='cites'` ca
   + "DECLARED: this item's severed-project and cites-half-ungrouped arms MUST fail, and PL-13's "
   + "three CORRECTED pins MUST fail — if those pins did not come back down, correcting them was "
   + "decoration. The BASIS arms MUST stay green, because the other half is still confirmed.",
-  [["store", `      consider(r.bundle_id, "cites");`,
+  [["queue", `      consider(r.bundle_id, "cites");`,
               `      up.set(r.bundle_id, true);`]],
   /* The basis arms MUST stay green here, and they only can because the §3
      fixture references its subject as `relates_to` rather than `cites`. The
@@ -179,7 +183,7 @@ arm("B", "THE BASIS HALF, AND IT IS THE ONE NOTHING HAD NAMED. `inquiry_basis` i
   + "DECLARED: this item's basis arms MUST fail. §2 and PL-13's pins MUST stay green, because the "
   + "citation half is still confirmed — which is what proves the two halves are doing their own work "
   + "rather than one covering for the other.",
-  [["store", `      consider(r.bundle_id, null);`,
+  [["queue", `      consider(r.bundle_id, null);`,
               `      up.set(r.bundle_id, true);`]],
   [{ name: OWN,
      mustFail: ["THE HALF THE ROW DID NOT PREDICT", "the sole-dependent case"],
@@ -196,7 +200,7 @@ arm("C", "NORMALISING THE STATUS VALUE. `#refEdgeSevered` starts trimming and lo
   + "this predicate, and the one that quietly widens a refusal into shapes the catalog never wrote. "
   + "DECLARED: the over-strictness arm MUST fail, and the DEFECT-CLOSED and BASIS arms MUST stay "
   + "green — so this measures the over-strictness fixtures rather than the walk.",
-  [["store", `    return !!entry && entry.status === "severed";   // unrecorded is LIVE`,
+  [["connections", `    return !!entry && entry.status === "severed";`,
               `    return !!entry && String(entry.status ?? "").trim().toLowerCase() === "severed";`]],
   [{ name: OWN, mustFail: ["OVER-STRICTNESS"],
      mustNotFail: ["THE DEFECT, CLOSED", "THE HALF THE ROW DID NOT PREDICT"] },
@@ -221,7 +225,7 @@ arm("C2", "SEVERANCE NARROWING ON ABSENCE — a target with no matching referenc
   + "from the same `references[]` in the same transaction, so no fixture here can produce a "
   + "candidate edge without a matching entry. The green is the RESULT and the branch's "
   + "unreachability is the measurement, never evidence that the branch is unnecessary.",
-  [["store", `    return !!entry && entry.status === "severed";   // unrecorded is LIVE`,
+  [["connections", `    return !!entry && entry.status === "severed";`,
               `    return !entry || entry.status === "severed";`]],
   [{ name: OWN, mustFail: [], mustNotFail: [] },
    { name: PL13, mustFail: [], mustNotFail: [] }], true);
@@ -240,8 +244,8 @@ arm("D", "THE UNREADABLE BRANCH. A citing document whose `bundle.md` cannot be r
   + "DECLARED GREEN: neither suite can reach this branch — every fixture bundle has a readable "
   + "document and no op removes one. The green is this arm's RESULT and is recorded as a gap in the "
   + "instrument, never as evidence that the branch is right.",
-  [["store", `    if (!md || md.content === null) return false;   // unreadable is LIVE`,
-              `    if (!md || md.content === null) return true;`]],
+  [["connections", `    if (!md || typeof md.text !== "string") return false;`,
+              `    if (!md || typeof md.text !== "string") return true;`]],
   [{ name: OWN, mustFail: [], mustNotFail: [] },
    { name: PL13, mustFail: [], mustNotFail: [] }], true);
 
@@ -253,10 +257,10 @@ arm("E", "A FAITHFUL COPY. `#citesInto` stops calling the shared predicate and r
   + "green. D-267 exists because this rule had four inline implementations and grew a fifth reader "
   + "that did not know it existed; no behavioural arm anywhere could have caught that, which is the "
   + "whole argument for counting the call sites off the source.",
-  [["store", `      (this.#refEdgeSevered(r.bundle_id, id, "cites") ? severed : confirmed).push(r.bundle_id);`,
+  [["connections", `      (this.edgeSevered(r.bundle_id, id, "cites") ? severed : confirmed).push(r.bundle_id);`,
               `    {
-      const md = this.#one(\`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'\`, r.bundle_id);
-      const fmr = md && md.content !== null ? parseFrontmatter(md.content).data?.references : null;
+      const md = this.record.readFile(r.bundle_id, "bundle.md");
+      const fmr = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references : null;
       const entry = (Array.isArray(fmr) ? fmr : []).find((x) => x && x.rel === "cites" && x.target === id);
       (entry && entry.status === "severed" ? severed : confirmed).push(r.bundle_id);
     }`]],

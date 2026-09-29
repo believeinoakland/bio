@@ -740,6 +740,10 @@ ok("the plane's login-refusal sentence is readable from here, whole, and is pros
    reader. The read is GUARDED, because an extraction that silently yielded ""
    would make the refusal arm below trivially true. */
 const INDEX_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "index.mjs"), "utf8");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12, LEGACY-TESTS #10; B8, K413): control-plane moved the Worker's dispatch — the
+   `if (!spec)` line, byte-identical — out of `index.mjs` into `src/control-plane/index.mjs`; `op=verify` and
+   `requiredArgument` stay in `index.mjs`. The dispatch miss's two reads below follow it there. */
+const CONTROL_PLANE_SRC = fs.readFileSync(path.join(UIROOT, "..", "bio-plane", "src", "control-plane", "index.mjs"), "utf8");
 function planeVerifyRefusal(){
   const m = /op === "verify"\)\s*\{[\s\S]{0,600}?error:\s*"((?:[^"\\]|\\.)*)"/.exec(INDEX_SRC);
   return m ? JSON.parse('"' + m[1] + '"') : "";
@@ -779,7 +783,7 @@ ok("the plane's own refusal for op=verify is readable from here and is the contr
        site; it is asserted below rather than argued, and the spread is read out
        of index.mjs so the assertion is about the plane and not about a belief. */
 function planeUnknownOpRefusal(){
-  const m = /if \(!spec\) return json\(\{ ok: false, error: "((?:[^"\\]|\\.)*)"/.exec(INDEX_SRC);
+  const m = /if \(!spec\) return json\(\{ ok: false, error: "((?:[^"\\]|\\.)*)"/.exec(CONTROL_PLANE_SRC);
   return m ? JSON.parse('"' + m[1] + '"') : "";
 }
 const UNKNOWN_OP_REFUSAL = planeUnknownOpRefusal();
@@ -850,7 +854,7 @@ ok("and D-278's code for op=verify's missing-argument refusal, read inside `requ
    and D-278's own region comment at that line says so. */
 const UNKNOWN_OP_DECORATED =
   /if \(!spec\) return json\(\{ ok: false, error: "unknown op", reason: "UNKNOWN_OP", \.\.\.dispatchRow\("UNKNOWN_OP"\),\s*\n\s*op \}, 400\);/
-    .test(INDEX_SRC);
+    .test(CONTROL_PLANE_SRC);
 const VERIFY_DECORATED =
   /if \(op === "verify"\)[\s\S]{0,900}?return json\(\{ ok: false, \.\.\.requiredArgument\("verify", "sha256", "<64 lowercase hex>"\),/
     .test(INDEX_SRC);

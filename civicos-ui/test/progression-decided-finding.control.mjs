@@ -35,7 +35,9 @@ const sha = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex")
 
 const VIEW_CALL = "+ progFindingDecisionHtml(f)";
 const REFUSAL_PAINT = "instRefusal ? intentRefusalHtml(instRefusal)";
-const LEAD_OPEN = "`<b>A member decided this finding: set aside${";
+/* RE-ANCHORED 2026-09-29 (N301, K356; LEGACY-UI #1 J1, legacy-tests T12): app.html's decision sentences say
+   "this noticed item" where they said "this finding"; the anchors and arm (C)'s upper-cased lead follow them. */
+const LEAD_OPEN = "`<b>A member decided this noticed item: set aside${";
 const LEAD_CLOSE = "${at ? \" on \" + esc(at) : \"\"}.</b>`\n    + ` It stays listed here";
 
 const ARMS = [
@@ -49,7 +51,7 @@ const ARMS = [
     green: ["THE DECIDED-FINDING ARM"],
     edits: [{ from: REFUSAL_PAINT, to: "instRefusal ? \"\"" }] },
   { name: "(C) over-strictness: the lead sentence upper case and inside <em>", declared: "GREEN",
-    edits: [{ from: LEAD_OPEN, to: "`<em>A MEMBER DECIDED THIS FINDING: SET ASIDE${" },
+    edits: [{ from: LEAD_OPEN, to: "`<em>A MEMBER DECIDED THIS NOTICED ITEM: SET ASIDE${" },
             { from: LEAD_CLOSE, to: LEAD_CLOSE.replace(".</b>", ".</em>") }] },
 ];
 

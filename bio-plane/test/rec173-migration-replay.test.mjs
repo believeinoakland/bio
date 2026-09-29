@@ -58,7 +58,11 @@ const { SURFACE_CHECKS: CATALOGUE_SURFACE_CHECKS, ACT_SHAPE_CHECKS } =
    AI-RUNS #2 REPORT J6.1); REPLAY_UNVERIFIED (C-66.6, control-plane's) stays in the catalogue. Each row is read from
    where it now lives, through the same SRC_DIR the control arms. */
 const { SURFACE_RUN_CHECKS } = await import(join(SRC_DIR, "ai-runs", "index.mjs"));
-const SURFACE_CHECKS = { ...CATALOGUE_SURFACE_CHECKS, ...SURFACE_RUN_CHECKS };
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #2 J4 R32): REPLAY_UNVERIFIED (C-66.6) left the
+   catalogue's SURFACE_CHECKS too, split out to control-plane's `REPLAY_CHECKS` (`src/control-plane/checks.mjs`), words
+   and id kept; read from there through the same SRC_DIR. */
+const { REPLAY_CHECKS } = await import(join(SRC_DIR, "control-plane", "checks.mjs"));
+const SURFACE_CHECKS = { ...CATALOGUE_SURFACE_CHECKS, ...SURFACE_RUN_CHECKS, ...REPLAY_CHECKS };
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {

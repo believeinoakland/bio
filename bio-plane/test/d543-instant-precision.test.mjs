@@ -54,7 +54,8 @@ const sha = (v) => createHash("sha256").update(v).digest("hex");
    second deterministically, which is what a record written before D-543 holds) and calling the helpers. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store, stampInstant, instantOrder } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
+import { stampInstant, instantOrder } from "./store.mjs";
 export class ProbeStore extends Store {
   async fetch(req) {
     const url = new URL(req.url);
@@ -241,9 +242,14 @@ console.log("\n--- 4. no hand-spelled whole-second stamp is left in store.mjs or
        (standards, conformance, consequences, filings, escalation), whose stamps were never the store's. */
     "ai-runs", "run-productions", "citation", "inquiry", "basis-versions", "strength", "reevaluation", "intent",
     "review", "publication", "ratification", "case-authoring", "actions", "capture-requests", "monitoring",
-    "scheduler"];
+    "scheduler",
+    /* RE-ANCHORED 2026-09-29 by legacy-tests (T12; QUEUE #2, K409): the queue left the store for `src/queue/`. */
+    "queue"];
   const store = codeOf(storeCorpus(T5_MODULES, "latin1"));
-  const index = codeOf(readFileSync(SRC("index.mjs"), "utf8"));
+  /* RE-ANCHORED 2026-09-29 by legacy-tests (T12 B8; CONTROL-PLANE #2, K413): the router and its tables left index.mjs
+     for `src/control-plane/`, so the "index" corpus is the entry AND that module (the entry as it stood before the
+     extraction); its floor, the entry's old size, is asked of that whole. */
+  const index = codeOf([readFileSync(SRC("index.mjs"), "utf8"), moduleSources(["control-plane"], "utf8")].join("\n"));
   const HAND = /toISOString\(\)\s*\.\s*(?:replace\(\/\\\.\\d\+Z\$\/|split\(\s*["']\.["']\s*\)\s*\[\s*0\s*\]\s*\+\s*["']Z["'])/g;
   const calls = (store.match(/stampInstant\("(?:second|millisecond)"/g) || []).length
               + (index.match(/stampInstant\("(?:second|millisecond)"/g) || []).length;

@@ -674,8 +674,10 @@ console.log("\n--- 7. op=reevaluations is a GATED read, and its viewer is the se
   const forged = rP(await GET(`op=reevaluations&token=mem-rec17&target=${INQ_CASE}&viewer=class:nobody`));
   t("a caller-supplied `viewer` is OVERWRITTEN by the server's stamp, never honoured (REC-29's lesson)",
     [forged.ok, forged.count], [true, 1]);
-  const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
-  t("the op is in the ONE viewer-stamp condition in index.mjs",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the viewer stamp left
+     `src/index.mjs` with the dispatch for `src/control-plane/index.mjs`; the arm reads the stamp's condition there. */
+  const src = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
+  t("the op is in the ONE viewer-stamp condition in control-plane/index.mjs",
     /op === "reevaluations"/.test(src), true);
   /* RE-ANCHORED 2026-09-28 (T7 LEGACY-TESTS #4; REEVALUATION #1 J3): `reevaluations` and the act's echo
      `#reevalRaisedBy` moved out of store.mjs into src/reevaluation/index.mjs (`reevaluations`, `raise`). Its two gate

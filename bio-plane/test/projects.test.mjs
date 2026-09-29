@@ -24,7 +24,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 
-const SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+const SRC = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 let pass = 0, fail = 0;
 const t = (l, g, w) => {

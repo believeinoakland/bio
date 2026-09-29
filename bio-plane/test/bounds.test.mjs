@@ -166,8 +166,34 @@ const t = (label, got, want) => {
    publication, review, actions, monitoring, scheduler) left the store behind delegations and spreads of their routes,
    and op=caseflags, op=actionquotes and the rest of their capped reads left the roster while still capped. The corpus is
    T7's with a third pass of the same re-inliner over T8's modules (`{ modules: T8_MODULES }`, `t8-extracted.mjs`). */
-const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
-  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text;
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409; QUEUE #2): the queue left the store behind ONE spread of its routes
+   (`...queueOps(queueOf(this.ctx), url, body),`), and op=tasks, op=queue and op=taskdrain left the roster while still
+   capped and still driven (the second PIN arm named them). A FOURTH pass of the same re-inliner re-inlines it
+   (`{ modules: { queueOf: "queue" } }`, spelled as the store calls the factory); the re-inliner is not changed.
+   RE-ANCHORED 2026-09-29 (T12 B6 item 2, K414; INSTANCE-SETUP #1): op=groupidentity left the store for instance-setup
+   (`src/setup.mjs`, a FILE the re-inliner cannot read as a module directory), whose `Store` routes
+   `instanceSetupOps` BEFORE the store's own map — no spread or delegation is left in store.mjs to re-inline. So the
+   corpus appends instance-setup's class (`InstanceSetup`, its private methods spelled `#x$instanceSetup` so none
+   shadows a store segment of the same name, the re-inliner's own convention) and its route map as dispatch entries
+   (`m.x(` read as the `this.x(` it is), under one synthetic, uncapped segment. The roster is DIFFED BY NAME at the
+   pin below. */
+const SRC_SETUP = readFileSync(new URL("../src/setup.mjs", import.meta.url), "utf8");
+const setupAppendix = (() => {
+  const L = SRC_SETUP.split("\n");
+  const c0 = L.findIndex((l) => /^export class InstanceSetup \{/.test(l));
+  const c1 = L.findIndex((l, i) => i > c0 && /^\}/.test(l));
+  const priv = (t) => t.replace(/#([A-Za-z_$][\w$]*)/g, (m, n) => `#${n}$instanceSetup`);
+  const cls = c0 < 0 || c1 < 0 ? "" : priv(L.slice(c0 + 1, c1).join("\n"));
+  const f0 = L.findIndex((l) => /^export function instanceSetupOps\(/.test(l));
+  const r0 = f0 < 0 ? -1 : L.findIndex((l, i) => i > f0 && /^  return \{/.test(l));
+  const r1 = r0 < 0 ? -1 : L.findIndex((l, i) => i > r0 && /^  \};/.test(l));
+  const routes = r0 < 0 || r1 < 0 ? "" : L.slice(r0 + 1, r1)
+    .map((l) => "    " + l.replace(/\(\) => m\./, "() => this.")).join("\n");
+  return `\n${cls}\n  instanceSetupRoutes$reinlined(url, body) {\n      const map = {\n${routes}\n      };\n  }\n`;
+})();
+const SRC_STORE = reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer5(reinlineLayer3(inlinedStore(), { ops: true }).text, { ops: true }).text,
+  { ops: true, privates: true, modules: T7_MODULES }).text, { ops: true, privates: true, modules: T8_MODULES }).text,
+  { ops: true, privates: true, modules: { queueOf: "queue" } }).text + setupAppendix;
 const SRC_QUERY = readFileSync(new URL("../src/query.mjs", import.meta.url), "utf8");
 
 /* Blank block comments. See the header: an anchor that matches prose measures
@@ -322,14 +348,20 @@ for (const [op, meth] of [...OPS].sort()) console.log(`    op=${op.padEnd(20)} -
 /* RE-ANCHORED 2026-09-28 (T8, legacy-tests): `static CASE_FLAGS_LIMIT = 500;` left the store with publication
    (PUBLICATION #1), where it is a module constant (`export const`), outside the class this walk reads; the guard asks
    the same of another of the store's own numeric statics, T5's precedent. */
+/* RE-ANCHORED 2026-09-29 (T12 B6, K414): `static GROUP_DOMAIN_CHECKS_MAX = 20;` left the store with instance-setup,
+   where it is a module constant (`export const`, setup.mjs), outside the class this walk reads; the guard asks the
+   same of another of the store's own numeric statics, T5's and T8's precedent. */
 t("WALK GUARD: block comments are blanked, and a known CODE line SURVIVES it",
-  /static GROUP_DOMAIN_CHECKS_MAX = 20;/.test(CODE), true);
+  /static RELEASE_ACK_MAX = 500;/.test(CODE), true);
 t("WALK GUARD: and a known PROSE line does NOT — the anchor cannot match this item's own comments",
   /buried in its statement/.test(CODE), false);
 t("WALK GUARD: the segmenter partitions the class into a plausible number of methods",
   segments(CODE).size > 250, true);
+/* RE-ANCHORED 2026-09-29 (T12 B5, K409): `taskList` is the queue's now (re-inlined above), and its clamp is the
+   queue's `clampLimit(limit, 200, 1000)` where the store wrote `Math.max(1, Math.min(1000, …))`; the segment is read
+   for its own line and still must not run into `taskDrain`. */
 t("WALK GUARD: a segment is bounded by the NEXT method and does not run into it",
-  [/const cap = Math\.max\(1, Math\.min\(1000/.test(segments(CODE).get("taskList")),
+  [/const cap = clampLimit\(limit, 200, 1000\)/.test(segments(CODE).get("taskList")),
    /taskDrain\(\{/.test(segments(CODE).get("taskList"))], [true, false]);
 t("WALK GUARD: the roster is non-trivial", METHODS.size >= 10, true);
 
@@ -777,7 +809,19 @@ t("WALK: the roster is EVERY capped op the walk finds — the sweep is the item,
      the roster DIFFED BY NAME against T10's close (777083f36d). NO DEPARTURE. ONE ARRIVAL: op=monitorslate (`slate`,
      K372, monitoring R30: the due slate, capped at MONITORING_READ_MAX, `limit` and `truncated` published), driven in
      the loop below with a real bite. */
-  OPS.size, 72);
+  /* RE-PINNED 2026-09-29 (legacy-tests T12; N300, K395, publication R44–R47): 72 -> 73 from this suite's print
+     (`93 carrying a cap, reaching 73 ops`), the roster DIFFED BY NAME against T11's close. NO DEPARTURE. ONE ARRIVAL:
+     op=projectstage (`projectStage`, publication R46: at most WORK_PRODUCTS_MAX (200) work products, `LIMIT ?` at
+     cap + 1, `work_products_limit` and `work_products_truncated` published; R45's held-question read capped at
+     STAGE_QUESTIONS_MAX, `questions.truncated`), on the roster by the `clamp` shape: its segment pages the held
+     questions with `limit: Math.min(PROJECT_QUESTIONS_MAX, …)`. Its bites are
+     driven at publication's interface (DRIVEN_ELSEWHERE) and its envelope below. The other T12 bounds (publication R38's
+     pin cursor, R42, actions R31's entry cursor, intent K391) moved no op on or off this roster. */
+  /* HELD AT 73 on 2026-09-29 (legacy-tests T12, B5–B9; K409, K414): the queue's and instance-setup's extractions took
+     op=tasks, op=queue, op=taskdrain and op=groupidentity off the walk (it printed 69) while all four were still capped
+     and driven; the corpus re-inlines both (see SRC_STORE) and the roster is the same 73 BY NAME, the four back under
+     their own method names (`taskList`, `queueFeed`, `taskDrain`, `groupIdentity`). NO ARRIVAL, NO DEPARTURE. */
+  OPS.size, 73);
 
 /* op=search's cap lives in query.mjs as a module constant, not as a parameter
    default, so it is confirmed by its own name — and it is the op the others were
@@ -1765,7 +1809,16 @@ const DRIVEN_ELSEWHERE = new Set(["taskdrain", "reindexnames", "reproject", "sug
                                      force at most 1,000 (DEPARTURES_MAX) …", op=intentproposals "R16 proposals lists at
                                      most 200 set-aside proposals … (SET_ASIDE_MAX)" — each at its bound with `truncated`
                                      false and one past it true. Their envelopes stay driven here (`answersByOp`). */
-                                  "objectiveprogress", "aspirations", "intentproposals"]);
+                                  "objectiveprogress", "aspirations", "intentproposals",
+                                  /* ADDED 2026-09-29 (legacy-tests T12; N300, K395, publication R45/R46): op=projectstage
+                                     takes no caller `limit` (versionstrength's reason: a stage is a fact about the whole
+                                     project), and its bites need WORK_PRODUCTS_MAX + 1 cases and STAGE_QUESTIONS_MAX + 1 held
+                                     questions, which `test/m/publication/stage.test.mjs` builds: "R46 at most 200 work
+                                     products … with truncated" (`work_products_truncated` true at 201, false at 200, the
+                                     bound published as `work_products_limit`) and "R45 at the held-question cap …"
+                                     (`questions.truncated` true past 2,000, false at it). Its envelope is below, asked at the
+                                     Durable Object: its control-plane route is legacy-index's (N321, layer 11). */
+                                  "projectstage"]);
 
 /* ----------------------------------------------- PL-3 / IS-4's TWO ARMS.
    The write whose bound REFUSES. Driven against PL-1's fixture inquiry and
@@ -1995,7 +2048,9 @@ t("op=actionquotes: DELTA — 'this is all of them' and 'this is the first QUOTE
    one dated check each. This store records no producing group, so every verdict is `undetermined` ("no slug for
    the file to name") and no fetch leaves the process. WHAT A SILENT CUT WOULD LOSE: the oldest check, read as
    "this is the whole history of the claim". */
-const GI_MAX = Number((/static GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_STORE) || [])[1]);
+/* RE-ANCHORED 2026-09-29 (T12 B6 item 2, K414; INSTANCE-SETUP #1): GROUP_DOMAIN_CHECKS_MAX is instance-setup's
+   exported constant (`export const`, src/setup.mjs), read where it is declared. */
+const GI_MAX = Number((/export const GROUP_DOMAIN_CHECKS_MAX = (\d+);/.exec(SRC_SETUP) || [])[1]);
 const giAdd = await POST("op=memberadd&token=adm-r57", { memberId: "gia", cover: "cover for gia", role: "admin",
                                                          capabilities: ["contribute"] });
 const giEn = await POST("op=enroll", { invite: giAdd?.invite, handle: "gia", password: "gia-passphrase-r57" });
@@ -2315,6 +2370,15 @@ t("op=memberpairings: AN OVER-ASK IS ANSWERED AT THE CEILING, and the CEILING is
  * anywhere in `store.mjs` puts a member into this set and fails here, with no
  * list for it to be quietly added to.
  * ========================================================================== */
+/* ADDED 2026-09-29 (legacy-tests T12; N300, K395): op=projectstage's envelope over one of D-479's owned projects, read
+   by its owner, the one arrival the T12 roster gained. It has no control-plane row yet (N321), so it is asked at the
+   Durable Object, `reindexnames`' precedent; the bite is publication's interface test (DRIVEN_ELSEWHERE). */
+const STAGE_WHOLE = await DO(`projectstage?project=${encodeURIComponent(D479_PROJECTS[0])}&viewer=member:d479own`);
+t("op=projectstage: an answer object that PUBLISHES its work-product bound, and a project holding none says it is whole",
+  [STAGE_WHOLE?.ok, Array.isArray(STAGE_WHOLE), STAGE_WHOLE?.work_products_limit, STAGE_WHOLE?.work_products_truncated,
+   STAGE_WHOLE?.questions?.truncated],
+  [true, false, Number((/\bWORK_PRODUCTS_MAX = (\d+)/.exec(readFileSync(new URL("../src/publication/index.mjs",
+    import.meta.url), "utf8")) || [])[1]), false, false]);
 const answersByOp = new Map([
   ...await Promise.all(DRIVEN.map(async (d) => [d.op, await d.drive(d.whole)])),
   /* Driven above and REUSED rather than re-driven: both backfills CLEAR a
@@ -2435,6 +2499,8 @@ const answersByOp = new Map([
   ["intentproposals", PROPOSALS_WHOLE],
   /* ADDED 2026-09-28 by legacy-tests (T9): membership's two (R82), driven above with a real bite and REUSED here. */
   ["hostingaccess", HA_WHOLE], ["memberpairings", MP_WHOLE],
+  /* ADDED 2026-09-29 (legacy-tests T12; N300): publication's stage read, driven above and REUSED here. */
+  ["projectstage", STAGE_WHOLE],
   ["linksto", await DO(`linksto?address=${encodeURIComponent(VC_ADDR)}&limit=1`)],
   ["chromeof", await DO("chromeof?host=example.gov&limit=1")],
   ["sitechrome", await DO("sitechrome?host=example.gov&limit=1")],

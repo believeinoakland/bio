@@ -30,7 +30,7 @@ const SUITE = join(PLANE, "test", "instance-group.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the modules the re-anchored arms below patch (in the copy) are
    hashed too, so the real ones are proven untouched as well. */
-const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "src/livefire.mjs",
+const REAL = ["src/index.mjs", "src/control-plane/index.mjs", "src/store.mjs", "src/schema.mjs", "src/setup.mjs", "src/livefire.mjs",
               "checks/bio-checks.mjs", "src/promotion/index.mjs", "src/provenance/index.mjs",
               "src/record-core/index.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
@@ -38,7 +38,11 @@ const before = REAL.map(digest);
 const LIT = ["believe", "in", "oakland"].join("-");   /* spelled apart so this driver's own text is not a site */
 const READER = "    const r = this.#one(`SELECT slug FROM instance_group WHERE id=1`);\n"
              + "    return r && typeof r.slug === \"string\" && r.slug ? r.slug : null;";
-const FIRST_BOOT_CALL = "    if (firstBoot) this.#recordGroupAtFirstBoot();";
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5, R1–R4): the producing group's reader, its
+   first-boot write and the seed left `store.mjs` for instance-setup's `src/setup.mjs` ("setup.mjs" below), where the
+   first boot is asked of record-core's `isFirstBoot` once at start and the group recorded beside the profiles; the
+   module reads its env as `this.#env`. The arms patch the same statements there, their declarations unchanged. */
+const FIRST_BOOT_CALL = "    if (first) { out.group = this.#recordGroupAtFirstBoot(); ";
 const BOOT_WRITE = "VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`,";
 /* RE-ANCHORED 2026-09-27 (T5-12, legacy-tests): the stamp moved with `promote` to `src/promotion/index.mjs`'s module
    function `stampGroup` (promotion R13, T3); testify moved to `src/provenance/index.mjs` (T4 layer 3), where it
@@ -86,7 +90,7 @@ const ARMS = {
      too, and for a reason worth naming: the UI-shaped bytes already carry the literal, so the stamp leaves them
      byte-identical and the caller's own sha is the one registered. */
   "literal-at-the-authority": {
-    patches: [["store.mjs", READER, `    return "${LIT}";`]],
+    patches: [["setup.mjs", READER, `    return "${LIT}";`]],
     mustFail: ["S1:", "S3:", ...EVERY_W, "L2:", "L3:", "L4:",
                "C1:", "C1b:", "C2:", "C2b:", "C3:", "C4:", "P8:", "P9:"],
   },
@@ -105,8 +109,8 @@ const ARMS = {
      install passes — the var still says oak-town — and only the arm that MOVES the var sees it (L2–L4), with the
      structural pin on the reader (S3). The record's own read (L1) still reads the table and stays green. */
   "reread-the-var": {
-    patches: [["store.mjs", READER,
-               "    const r = { slug: String((this.env && this.env.INSTANCE_NAME) ?? \"\").trim() };\n"
+    patches: [["setup.mjs", READER,
+               "    const r = { slug: String((this.#env && this.#env.INSTANCE_NAME) ?? \"\").trim() };\n"
                + "    return r && typeof r.slug === \"string\" && r.slug ? r.slug : null;"]],
     mustFail: ["S3:", "L2:", "L3:", "L4:"],
   },
@@ -120,7 +124,7 @@ const ARMS = {
      build the fixture the later sections stand on. The arm measures the fixture, not decision (a); the suite needs a
      fixture that survives this arm (reported to the suite's owner). Declaration unchanged. */
   "no-first-boot-write": {
-    patches: [["store.mjs", FIRST_BOOT_CALL, "    /* armed: nothing recorded at the first boot */"]],
+    patches: [["setup.mjs", FIRST_BOOT_CALL, "    if (first) { /* armed: nothing recorded at the first boot */ "]],
     mustFail: ["B1:", "B2:", "B3:", ...EVERY_W.filter((l) => l !== "W3:"), "W9:", "L1:", "L2:", "L3:", "L4:"],
   },
 
@@ -128,14 +132,14 @@ const ARMS = {
      its next boot. The seed is then refused as already recorded, and the record says `bootstrap`. §3 stays green
      because the write still does nothing on conflict — which is what the next arm separates. */
   "seed-at-every-boot": {
-    patches: [["store.mjs", FIRST_BOOT_CALL, "    this.#recordGroupAtFirstBoot();"]],
+    patches: [["setup.mjs", FIRST_BOOT_CALL, "    out.group = this.#recordGroupAtFirstBoot();\n    if (first) { "]],
     mustFail: ["P2:", "P6:", "P7:"],
   },
 
   /* A LATENT UPSERT: the first-boot write made an UPDATE on conflict. It runs once per store, so NO behaviour can see
      it — declared to fail ONLY S2, the write-once pin, which is the whole reason S2 exists. */
   "upsert-at-first-boot": {
-    patches: [["store.mjs", BOOT_WRITE,
+    patches: [["setup.mjs", BOOT_WRITE,
                "VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO UPDATE SET slug=excluded.slug`,"]],
     mustFail: ["S2:"],
   },
@@ -143,7 +147,7 @@ const ARMS = {
   /* THE SEED'S WRITE-ONCE REFUSAL removed: a second seed then answers ok while the insert quietly does nothing — an
      answer that says a value was recorded when it was not. */
   "seed-accepts-twice": {
-    patches: [["store.mjs", SEED_HELD, "    if (false)\n      return refusal(\"GROUP_ALREADY_RECORDED\","]],
+    patches: [["setup.mjs", SEED_HELD, "    if (false)\n      return refusal(\"GROUP_ALREADY_RECORDED\","]],
     mustFail: ["P7:"],
   },
 

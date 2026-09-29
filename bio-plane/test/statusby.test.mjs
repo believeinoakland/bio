@@ -68,8 +68,12 @@ t("EVERY writer of members.status also writes status_by (the unstamped writers a
   writers.filter((q) => !/\bstatus_by\b/.test(q)).map((q) => q.replace(/\s+/g, " ").slice(0, 80)), []);
 
 /* ============================================================== 2. FIXTURE */
-const clsStart = IDX_SRC.indexOf("async function classify(token, env) {");
-const clsBody = clsStart < 0 ? "" : IDX_SRC.slice(clsStart, IDX_SRC.indexOf("\n}", clsStart));
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): `classify` left `src/index.mjs`
+   for `src/control-plane/index.mjs`; the fixture parses the env bindings from it there. The plane is still booted
+   from the entry, IDX. */
+const CP_SRC = readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8");
+const clsStart = CP_SRC.indexOf("async function classify(token, env) {");
+const clsBody = clsStart < 0 ? "" : CP_SRC.slice(clsStart, CP_SRC.indexOf("\n}", clsStart));
 const BINDINGS = [...clsBody.matchAll(
   /token === env\.([A-Z_]+) && \(await liveToken\(env\.\1\)\)\) return "([a-z]+)"/g)].map((m) => ({ binding: m[1], cls: m[2] }));
 const TOKEN_OF = Object.fromEntries(BINDINGS.map((b) => [b.cls, `${b.cls}-d610-${b.binding.toLowerCase()}`]));

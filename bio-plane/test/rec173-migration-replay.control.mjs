@@ -21,14 +21,18 @@ const PLANE = fileURLToPath(new URL("..", import.meta.url));
 const REPO = fileURLToPath(new URL("../..", import.meta.url));
 const SUITE = join(PLANE, "test", "rec173-migration-replay.test.mjs");
 const digest = (p) => { const b = readFileSync(p); return `${b.length} B sha256 ${createHash("sha256").update(b).digest("hex").slice(0, 12)}`; };
-const REAL = ["src/index.mjs", "src/store.mjs", "src/schema.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
+const REAL = ["src/index.mjs", "src/control-plane/index.mjs", "src/store.mjs", "src/schema.mjs", "checks/bio-checks.mjs"].map((f) => join(PLANE, f));
 const before = REAL.map(digest);
 
-/* THE SUBJECTS, each one anchor in `index.mjs`'s `migrationReplayOf` or `op=promote`'s stamp block. */
+/* THE SUBJECTS, each one anchor in `migrationReplayOf` or `op=promote`'s stamp block.
+   RE-ANCHORED 2026-09-29 (legacy-tests T12; K413, CONTROL-PLANE #1 step 1 and #2 item 2 / R28): both left
+   `src/index.mjs` for `src/control-plane/index.mjs` (CP). The admin condition is now asked once, in `replayVerdict`'s
+   `admin`, before any handler; every other anchor is the same statement, moved. */
+const CP = "control-plane/index.mjs";
 const SHA_CHECK = '    && p.record.files.some((f) => f && f.name === "bundle.md" && f.sha256 === mdSha));\n';
 const BUNDLE_CHECK = "    && p.record.target === b.bundleId\n";
 /* D-512 generalised the call site: the admin condition now fronts `(replayAsserted || creatingInquiry)`. */
-const ADMIN_CHECK = '(!viaSession && cls === "admin" && (replayAsserted || creatingInquiry))';
+const ADMIN_CHECK = '  const admin = !viaSession && cls === "admin";\n';
 const REGISTER_CHECK = "  if (!registered) return null;\n";
 const COMPUTED_SHA = "  const mdSha = createSha256().update(new TextEncoder().encode(bm.text)).hex();\n"
   + "  if (bm.sha256 !== mdSha) return null;\n";
@@ -44,33 +48,39 @@ const ARMS = {
   /* THE ROW'S CONTROL: drop the SHA-256 check. The arm replaying ALTERED bytes (N3) must fail BY NAME; the altered
      replay is then admitted as a replay, so N0 counts one row too many, and N7's failed replay lands as a replay
      instead of inside its run. N3b must NOT fail: the computed-sha guard still refuses a lying `sha256` field. */
-  "no-sha": { patches: [["index.mjs", SHA_CHECK, '    && p.record.files.some((f) => f && f.name === "bundle.md"));\n']],
+  "no-sha": { patches: [[CP, SHA_CHECK, '    && p.record.files.some((f) => f && f.name === "bundle.md"));\n']],
               mustFail: ["ARM N3 ", "ARM N0:", "ARM N7 ", "ARM N7b "] },
   /* THE BUNDLE CHECK: another bundle's capture listing these very bytes is admitted. */
-  "no-bundle": { patches: [["index.mjs", BUNDLE_CHECK, ""]], mustFail: ["ARM N2 ", "ARM N0:"] },
+  "no-bundle": { patches: [[CP, BUNDLE_CHECK, ""]], mustFail: ["ARM N2 ", "ARM N0:"] },
   /* THE LIAR WITH THE WRONG CREDENTIAL: any deploy class is admitted, not the admin alone. */
-  "any-class": { patches: [["index.mjs", ADMIN_CHECK, "(!viaSession && (replayAsserted || creatingInquiry))"]],
+  "any-class": { patches: [[CP, ADMIN_CHECK, "  const admin = !viaSession;\n"]],
                  mustFail: ["ARM N4 ", "ARM N4b ", "ARM N0:"] },
   /* THE CALLER-MADE CAPTURE: a held capture that is not registered as the Drive provenance is admitted. */
-  "no-register": { patches: [["index.mjs", REGISTER_CHECK, ""]], mustFail: ["ARM N5b ", "ARM N5c ", "ARM N0:"] },
+  "no-register": { patches: [[CP, REGISTER_CHECK, ""]], mustFail: ["ARM N5b ", "ARM N5c ", "ARM N0:"] },
   /* THE STALE SHA: the caller's `sha256` field is trusted instead of the text's own hash. CORRECTED 2026-09-23 by CONDUCT #16
      at REC-175's merge: REC-175's door (`Store#digestFiles`, FILE_DIGEST_MISMATCH) now refuses the stale figure BEFORE the
      replay check reads it, so disarming the replay's own hash alone showed NO EFFECT — the second cause, named. The arm
      disarms BOTH layers so it still proves the replay path never trusts the caller's figure on its own. */
   /* RETIRED 2026-09-26 (T3, legacy-tests; K84 (2)): the arm trust-caller-sha mutated the promotion's recomputed-sha disagreement refusal (`if (digested.disagree.length)`, REC-175's FILE_DIGEST_MISMATCH door, which the arm had to disarm together with index.mjs's computed-sha guard) in src/store.mjs, which moved to src/promotion/index.mjs (grep `digested.disagree`); its anchor no longer occurs and it cannot arm. */
   /* (b) BROKEN: D-78 restamps the verified replay — its Drive-era `surfaced_by: human` is rewritten `agent`. */
-  "restamp-replay": { patches: [["index.mjs", NO_RESTAMP, "        if (b.base === null && b.meta "]], mustFail: ["ARM R1b "] },
+  "restamp-replay": { patches: [[CP, NO_RESTAMP, "        if (b.base === null && b.meta "]], mustFail: ["ARM R1b "] },
   /* (a) BROKEN: the replay is still stamped for rule 2 — every replay is refused SURFACE_NO_RUN. */
-  "gate-replay": { patches: [["index.mjs", NO_GATE, ""]], mustFail: R },
+  "gate-replay": { patches: [[CP, NO_GATE, ""]], mustFail: R },
   /* THE FORGED STAMP: the server's `migrationReplay` is not deleted first, so a session's own copy is recorded. */
-  "trust-caller-stamp": { patches: [["index.mjs", STAMP_DELETE, ""]], mustFail: ["ARM N6 "] },
+  /* RE-DECLARED 2026-09-29 (legacy-tests T12), NOT AS DECLARED AT ITS FIRST RUN on this tree (21/0): control-plane R17/R29
+     (CONTROL-PLANE #1, a finding its tests fixed) deletes EVERY declared stamp from the query and body before an op's
+     own are set — `migrationReplay` among `BODY_STAMPS` — so the stamp block's own delete is now the second of two
+     layers. A finding about the DECLARATION, as REC-175's second layer was for trust-caller-sha: the arm now disarms
+     BOTH, so it still proves the recorded stamp is never the caller's. */
+  "trust-caller-stamp": { patches: [[CP, STAMP_DELETE, ""],
+    [CP, '"migrationReplay"]);', '"__migrationReplay_kept__"]);']], mustFail: ["ARM N6 "] },
   /* A FENCE TIGHTER THAN THE RULE: only the FIRST preserved record is asked — the truncated history's matching second
      record is refused. */
-  "first-record-only": { patches: [["index.mjs", MATCH,
+  "first-record-only": { patches: [[CP, MATCH,
     '  const match = records.slice(0, 1).find((p) => p && p.record && typeof p.record === "object"\n']], mustFail: ["ARM R2 "] },
   /* OVER-STRICTNESS: the same rule in a spelling the suite did not anticipate — the records searched last-first.
      Nothing may fail. */
-  "reversed-search": { patches: [["index.mjs", MATCH,
+  "reversed-search": { patches: [[CP, MATCH,
     '  const match = [...records].reverse().find((p) => p && p.record && typeof p.record === "object"\n']], mustFail: [] },
 };
 

@@ -50,6 +50,7 @@ import { registerChecks } from "../src/provenance/index.mjs";
 
 const IDX = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const STORE_SRC = fileURLToPath(new URL("../src/store.mjs", import.meta.url));
+const STARTED = fileURLToPath(new URL("./store-started.mjs", import.meta.url));   /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const CHECKS_SRC = fileURLToPath(new URL("../checks/bio-checks.mjs", import.meta.url));
 /* RE-ANCHORED 2026-09-27 (T4, legacy-tests; provenance T4-2, K72 (4)): C-18.9 (`checkAuthorityPublishable`) and the
    release-authority arm (`checkReleaseAuthority`) left the catalogue for provenance's register arms, unchanged in what
@@ -509,18 +510,24 @@ console.log("\n--- the batch write path refuses a document that would reach veri
      control plane's NAMED files — `index.mjs` and the two module files that now hold its publish/ratify handlers
      (ratification's `ops.mjs`, publication's `worker.mjs`) — named rather than walked, as before; the one there is is
      op=ratify's. */
-  const planeFiles = ["index.mjs", "ratification/ops.mjs", "publication/worker.mjs"];
+  /* RE-ANCHORED 2026-09-29 (T12 B8; K413, CONTROL-PLANE #2): the control plane's router and tables left `index.mjs`
+     for `src/control-plane/` (index.mjs, ops.mjs), so those two join the named files, and the read-is-real guard
+     (was `index.mjs` > 100,000 chars; the entry is now ~52,000) is taken over the control plane's router instead. */
+  const planeFiles = ["index.mjs", "control-plane/index.mjs", "control-plane/ops.mjs", "ratification/ops.mjs",
+                      "publication/worker.mjs"];
   const callSites = planeFiles.flatMap((f) => [...readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8")
     .matchAll(/await runGate\(/g)].map(() => f));
   t("runGate still has exactly one call site in the control plane",
-    [callSites.length, callSites[0] ?? null, idxSrc.length > 100_000], [1, "ratification/ops.mjs", true]);
+    [callSites.length, callSites[0] ?? null,
+     readFileSync(fileURLToPath(new URL("../src/control-plane/index.mjs", import.meta.url)), "utf8").length > 100_000],
+    [1, "ratification/ops.mjs", true]);
   t("and release() now carries the chain among its entry requirements",
     /a provenance_chain for documents\[/.test(src), true);
 }
 
 const mfStore = new Miniflare({
-  modules: true, script: readFileSync(STORE_SRC, "utf8"),
-  modulesRoot: "/", scriptPath: STORE_SRC,
+  modules: true, script: readFileSync(STARTED, "utf8"),
+  modulesRoot: "/", scriptPath: STARTED,
   compatibilityDate: "2026-07-01",
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
 });

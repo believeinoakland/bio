@@ -41,6 +41,15 @@ const F = {
      module (`ratifyOp`, `caseRatifyOp`), taking the four ratify fences with them; arms (6), (7) and (9) edit them
      there, under the same restore guarantee. The governance fence (arm 8) and arm (10)'s plant stay in index.mjs. */
   ratify: ROOT + "src/ratification/ops.mjs",
+  /* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): the governance fence left
+     src/index.mjs for `src/control-plane/index.mjs` (arm 8 edits it there, key `cp`) and `GOVERNANCE_ACTIONS` for
+     `src/control-plane/ops.mjs` (arm 10 plants beside it, key `ops`), both inside the suite's 3b harvest. Until this,
+     both arms threw at arming (the needle occurred 0 times in `index`), unseen by m025 because `GOVERN_FENCE` is a
+     concatenation. `index` stays under the restore guarantee. */
+  cp: ROOT + "src/control-plane/index.mjs",
+  ops: ROOT + "src/control-plane/ops.mjs",
+  /* ADDED 2026-09-29 (LEGACY-TESTS #10, T12 round 3): arm (2)'s second layer, strength R15 (K102), lives here. */
+  strength: ROOT + "src/strength/index.mjs",
 };
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const ORIGINAL = Object.fromEntries(Object.entries(F).map(([k, p]) => [k, readFileSync(p, "utf8")]));
@@ -146,8 +155,16 @@ arm("(2) **THE REGRESSION SENTINEL, ISOLATED.** `MACHINE_CANNOT_DECLARE` is the 
   + "its own here rather than left inside arm (1)'s list. Note the second assertion it must take down: "
   + "the bar is READ BACK and found DECLARED — the machine did not merely get past a refusal, it "
   + "changed what the group requires of its own evidence.",
+  /* RE-DECLARED 2026-09-29 (LEGACY-TESTS #10, T12 round 3), NOT AS DECLARED AT ITS FIRST RUN on this tree: with the
+     predicate alone neutered, the machine's `op=strengthbar` answered STRENGTH_BAR_NOT_ADMIN and "NOTHING was
+     declared" stayed GREEN. Strength R15 (K102, T7; C-107.1) refuses anyone but an active administrator, and
+     `token:ai` is none — a SECOND layer under the machine fence, as D-503's arm (8) found behind the governance
+     fence. A finding about the declaration, not a defect. The arm now holds R15 open too, so the sentinel's own
+     question — can a machine set the bar once the predicate is gone — is asked again; its declaration is unchanged. */
   [["checks", `export function isMachineIdentity(who) {`,
-              `export function isMachineIdentity(who) {\n  if (String(who ?? '').startsWith('token:')) return false;`]],
+              `export function isMachineIdentity(who) {\n  if (String(who ?? '').startsWith('token:')) return false;`],
+   ["strength", `    if (!this.membership.isAdministrator(who))\n      return refusal("STRENGTH_BAR_NOT_ADMIN",`,
+                `    if (false && !this.membership.isAdministrator(who))\n      return refusal("STRENGTH_BAR_NOT_ADMIN",`]],
   ["MACHINE_CANNOT_DECLARE — the machine is refused BY NAME",
    "and NOTHING was declared by the machine's call"],
   ["the harvest found a REAL family",
@@ -318,7 +335,7 @@ arm("(8) **D-503 · DROP THE GOVERNANCE FENCE.** DECLARED: 3b's OPERATOR_TOKEN_C
   + "FALSE, since the fact is that a token is not a person. So \"nothing the bearer asked for landed\" "
   + "MUST STAY GREEN and the pin's `got` should read NOT_AN_ADMIN. The two layers are both load-bearing "
   + "and this arm breaks one of them alone.",
-  [["index", GOVERN_FENCE, GOVERN_FENCE.replace("if (GOVERNANCE_ACTIONS", "if (false && GOVERNANCE_ACTIONS")]],
+  [["cp", GOVERN_FENCE, GOVERN_FENCE.replace("if (GOVERNANCE_ACTIONS", "if (false && GOVERNANCE_ACTIONS")]],
   ["OPERATOR_TOKEN_CANNOT_GOVERN — refused BY NAME through the op",
    "every one of them answered with its OWN name, stated once as a set"],
   ["MACHINE_CANNOT_RATIFY — refused BY NAME through the op",
@@ -347,7 +364,7 @@ arm("(10) **D-503 · A SIXTH FENCE MUST NOT ARRIVE UNDRIVEN — THE WHOLE POINT 
   + "block 1 harvests `src/store.mjs` alone. Plant one literal and the equality must name it. Note "
   + "what this arm does NOT do: it does not touch a fence, so every pin MUST STAY GREEN — a red pin "
   + "here would mean the arm had moved a second variable.",
-  [["index", 'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];',
+  [["ops", 'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];',
              'const GOVERNANCE_ACTIONS = ["adminendorse", "adminremove", "membercaps"];\n'
            + 'const D503_ARM_TEN = "MACHINE_CANNOT_ARRIVE_UNMEASURED";   /* D-503 arm 10: a sixth fence, minted and driven by nothing */']],
   ["D-503 · EVERY fence src/index.mjs mints was DRIVEN THROUGH ITS OP"],

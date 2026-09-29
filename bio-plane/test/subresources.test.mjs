@@ -1151,6 +1151,7 @@ console.log("\n--- a derived table that changes shape is rebuilt, not patched --
 }
 
 console.log("\n--- what a capture COSTS is measured, not assumed ---");
+let obsCw = null;
 {
   const c = full.snapshot.compute;
   /* Times are NOT reported, and that is the point. Cloudflare freezes the clock
@@ -1181,8 +1182,14 @@ console.log("\n--- what a capture COSTS is measured, not assumed ---");
     const stR = nsR.get(nsR.idFromName("bio"));
     const obsR = (await (await stR.fetch("http://x/runtimeobservations")).json()).result;
     const cw = ((obsR && obsR.metrics) || []).find((x) => x.metric === "capture_work_bytes");
-    t("and the measurement reached the store, through the compute listener",
-      [!!cw, !!cw && cw.peak_ms >= c.work_bytes], [true, true]);
+    /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K407, INSTANCE-SETUP #1 J5, its R34/R42): the listener is
+       instance-setup's now, and R34 answers each metric in its own UNIT with unit-neutral keys (`peak`, `last`,
+       `total`, `mean`); a bytes metric is never given `*_ms` keys — "a count of work is never described as a time". */
+    t("and the measurement reached the store, through the compute listener, as a count of BYTES — its peak at least "
+      + "this capture's own work, and no key describing it as a time",
+      [!!cw, cw?.unit, !!cw && cw.peak >= c.work_bytes, Object.keys(cw || {}).filter((k) => /_ms$/.test(k))],
+      [true, "bytes", true, []]);
+    obsCw = cw;
   }
 
   const ns5 = await mf.getDurableObjectNamespace("STORE");
@@ -1192,16 +1199,17 @@ console.log("\n--- what a capture COSTS is measured, not assumed ---");
 
   /* The peak is kept because the peak is the run that dies first. A mean would
      average away the one capture that matters. */
-  await call("/recordruntime", { metric: "t_metric", ms: 4, detail: "small" });
-  await call("/recordruntime", { metric: "t_metric", ms: 40, detail: "the big one" });
-  let r = (await call("/recordruntime", { metric: "t_metric", ms: 5, detail: "small again" })).result;
-  t("a later smaller run does not lower the peak", r.peak_ms, 40);
-  t("but is still the last observation", r.last_ms, 5);
-  const obs = (await call("/runtimeobservations")).result;
-  const tm = obs.metrics.find((m) => m.metric === "t_metric");
-  t("the peak keeps the detail of the run that set it", tm.peak_detail, "the big one");
-  t("and the mean is offered beside it rather than instead of it",
-    Math.abs(tm.mean_ms - 49 / 3) < 0.001, true);
+  /* RETIRED 2026-09-29 (legacy-tests T12; K414, INSTANCE-SETUP #1 J5 "`recordruntime` is dropped (no product caller,
+     map §1a)", its R42): the four arms that drove R33 through the store route `/recordruntime` with hand-picked
+     values (a later smaller run does not lower the peak; it is still the last; the peak keeps its detail; the mean
+     beside it). The route left with no product caller, and the one writer is capture's compute listener (R42), which
+     this suite drives above; R33's peak/last/detail semantics are held at instance-setup's interface by
+     `test/m/instance-setup/limits.test.mjs` ("R33 recordRuntimeObservation … replace the peak only when strictly
+     greater"). What stays here, on the real plane, is the reading R34 serves over the metric the listener wrote: the
+     mean is offered BESIDE the peak, never instead of it, and is the total over the samples. */
+  t("and the mean is offered beside the peak rather than instead of it, the total over the samples (R34)",
+    [typeof obsCw?.peak, typeof obsCw?.mean, !!obsCw && obsCw.samples > 0
+      && Math.abs(obsCw.mean - obsCw.total / obsCw.samples) < 1e-9], ["number", "number", true]);
 
   /* The probe: checkpoints must be durable BEFORE the next step, because the
      record of the last completed step is all that survives an isolate kill. */
@@ -1209,21 +1217,38 @@ console.log("\n--- what a capture COSTS is measured, not assumed ---");
   t("with no probe run, nothing is claimed about the ceiling",
     [ps0.highest_completed, /nothing is known/.test(ps0.note)], [0, true]);
 
+  /* RE-ANCHORED 2026-09-29 (legacy-tests T12; K407 Q2, instance-setup R35, R38, R40): each probe run is recorded under
+     its own run id (`cpuprobestart`, the steps, `cpuprobeend`), as `op=cpuprobe` records it; a step naming no run
+     would land in an `unrecorded` run of its own. */
   const seen = [];
+  await call("/cpuprobestart", { run: "sub-run-1", iterations: 50000, budgetMs: 1e9 });
   const pr = await cpuProbe({ startStep: 0, maxStep: 4, iterationsPerStep: 50000, budgetMs: 1e9,
     checkpoint: async (step, ms) => { seen.push(step);
-      await call("/recordcpuprobestep", { step, elapsedMs: ms, iterations: 50000 }); } });
+      await call("/recordcpuprobestep", { run: "sub-run-1", step, elapsedMs: ms, iterations: 50000 }); } });
+  await call("/cpuprobeend", { run: "sub-run-1", completed: pr.completed });
   t("it checkpoints after every step, not once at the end", seen, [1, 2, 3, 4]);
   t("and reports where it stopped", pr.completed, 4);
   const ps1 = (await call("/cpuprobestate")).result;
   t("the trail is durable and readable", ps1.highest_completed, 4);
   t("elapsed time rises with the steps", ps1.rows[3].elapsed_ms >= ps1.rows[0].elapsed_ms, true);
+  /* RE-ANCHORED 2026-09-29 (K407, instance-setup R36): the note now says what the trail bounds — the ceiling lies above
+     the elapsed time at the highest completed step — rather than "completed every step listed". */
   t("and the note says what a surviving trail means",
-    /completed every step listed/.test(ps1.note), true);
+    /the ceiling lies above/.test(ps1.note), true);
 
-  const pr2 = await cpuProbe({ startStep: ps1.highest_completed, maxStep: 6, iterationsPerStep: 50000,
-    budgetMs: 1e9, checkpoint: async (step, ms) => call("/recordcpuprobestep", { step, elapsedMs: ms, iterations: 50000 }) });
-  t("a second probe RESUMES rather than restarting, so the walk converges", pr2.completed, 6);
+  /* INVERTED 2026-09-29 (legacy-tests T12; K407 Q2, instance-setup R38/R40), never exempted: this asserted that a
+     second probe RESUMED from the first's highest step "so the walk converges". K407 rules that R38's resume
+     contradicted R40: a fresh isolate starting at step k measures k fewer steps of work under the old numbers. So a
+     second run starts at step 0 under its own id, and the state keeps the two trails apart, each numbered and timed
+     from its own start — the first run's four steps are not continued as if the two were one isolate's work. */
+  await call("/cpuprobestart", { run: "sub-run-2", iterations: 50000, budgetMs: 1e9 });
+  const pr2 = await cpuProbe({ startStep: 0, maxStep: 6, iterationsPerStep: 50000,
+    budgetMs: 1e9, checkpoint: async (step, ms) => call("/recordcpuprobestep", { run: "sub-run-2", step, elapsedMs: ms, iterations: 50000 }) });
+  await call("/cpuprobeend", { run: "sub-run-2", completed: pr2.completed });
+  const ps2 = (await call("/cpuprobestate")).result;
+  t("a second probe starts at step 0 under its own run, and the state keeps the two runs' trails apart (R40)",
+    [pr2.completed, (ps2.runs || []).map((r) => [r.run, r.steps.map((x) => x.step), r.returned])],
+    [6, [["sub-run-1", [1, 2, 3, 4], true], ["sub-run-2", [1, 2, 3, 4, 5, 6], true]]]);
 
   const rt = await (await mf.dispatchFetch("http://x/api/?op=runtime&token=mem-sub")).json();
   t("op=runtime serves it all through one surface", rt.ok, true);

@@ -30,7 +30,9 @@ import { preflight } from "../scripts/armdecay.mjs";
 const DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(DIR, "..");
 const PEN = mkdtempSync(join(tmpdir(), "nc-reviewcopy-inband-"));   /* OUTSIDE the worktree — see the header */
-const INDEX = join(ROOT, "src", "index.mjs");
+/* RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12 round 3; K413, CONTROL-PLANE #2): `reviewAnswer`, where arms (a) and
+   (d) plant, left `src/index.mjs` for `src/control-plane/index.mjs`; INDEX names it there. Each needle matches once. */
+const INDEX = join(ROOT, "src", "control-plane", "index.mjs");
 const INBAND = join(ROOT, "src", "inband.mjs");
 /* RE-ANCHORED 2026-09-28 by legacy-tests (T8, REVIEW #1 J4.1): the copy's last-change reducer left `store.mjs` for
    review's module function in `src/review/index.mjs` (two-space indentation, and it orders instants with

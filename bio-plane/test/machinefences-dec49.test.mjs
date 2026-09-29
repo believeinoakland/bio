@@ -250,7 +250,10 @@ console.log("\nBLOCK B — every fence sits inside a GOVERNED span (source; REC-
      MACHINE_CANNOT_STATE_RECORDS_LAW), MACHINE_CANNOT_PUBLISH to case-authoring (CASE-AUTHORING #1 J5) and
      MACHINE_CANNOT_REVIEW to review (REVIEW #1 J4). */
   const store_src = [storeCorpus(["record-core", "membership", "promotion"]),
-    ...["inquiry", "basis-versions", "strength", "actions", "case-authoring", "review"]
+    /* RE-ANCHORED 2026-09-29 (T12, legacy-tests; K409): + queue, which took MACHINE_CANNOT_FORWARD and
+       MACHINE_CANNOT_RESOLVE (`taskForward > is-machine-forward`, `taskResolve > is-machine-resolve`) out of the store
+       WITH their regions (QUEUE #2). */
+    ...["inquiry", "basis-versions", "strength", "actions", "case-authoring", "review", "queue"]
       .map((m) => fs.readFileSync(path.join(SRC, m, "index.mjs"), "utf8"))]
     .join("\n");   /* each module's minting code (index.mjs); its checks.mjs holds the rows, and their prose */
   const regionSpans = [];
@@ -377,8 +380,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-32.7", "MACHINE_CANNOT_DIVIDE"],
     ["C-32.8", "MACHINE_CANNOT_GROUND"],
     /* C-32.9: moved to PINNED_MOVED below (T7) */
-    ["C-32.10", "MACHINE_CANNOT_FORWARD"],
-    ["C-32.11", "MACHINE_CANNOT_RESOLVE"],
+    /* C-32.10, C-32.11: moved to PINNED_MOVED below (T12) */
     /* REC-123 / IC-132, 2026-09-18 — the two ratification fences, the first of
        this family whose region lives in the CONTROL PLANE (`src/index.mjs fetch`)
        rather than at the top of a store method. D-PIN-B failed until they were
@@ -401,7 +403,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        predicate. D-PIN-B failed naming exactly this row until it was written
        here, and D0 read 54 against a pinned 53 — the pair of arms doing its job
        on the first battery of the item that added it. */
-    ["C-32.17", "OPERATOR_TOKEN_CANNOT_GOVERN"],
+    /* C-32.17: moved to PINNED_MOVED below (T12) */
     /* D-149, 2026-09-23 — a machine credential may not state the laws that govern an action's request
        (BIO_Case_Making_v0_1.md §2). D-PIN-B failed naming exactly this row until it was written here. */
     /* C-32.18: moved to PINNED_MOVED below (T8) */
@@ -435,7 +437,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-33.24", "FILES_DROPPED"],
     ["C-33.25", "NO_ALIAS"],
     /* C-33.26: moved to PINNED_MOVED below (T5-12) */
-    ["C-33.27", "KIND_NOT_PERSONAL"],
+    /* C-33.27: moved to PINNED_MOVED below (T12) */
     ["C-33.28", "LAST_OWNER"],
     /* C-33.29: moved to PINNED_MOVED below (T7) */
     /* REC-76 / D-236 — CORRECTED HERE RATHER THAN EXEMPTED. Three rows landed in
@@ -495,7 +497,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        about what they selected. It is member-facing the day the queue lets a selection carry one, so it was
        translated at the mint rather than added to the untranslated census. D-PIN-B failed naming exactly
        this row when it landed, which is this pair of arms doing its job. */
-    ["C-33.44", "CLASS_NOT_DISPOSED"],
+    /* C-33.44: moved to PINNED_MOVED below (T12) */
     /* REC-207 / BOB #32's ruling of 2026-09-23 23:42Z, 2026-09-24: `op=airunopen` takes the authored
        link saying which run this one RE-RUNS, and `aiRunClose` settles a bias debt on the strength of
        it — so the link is judged at the door in one region (`aiRunOpen > is-airun-rerun-link`). Three
@@ -540,7 +542,17 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     "actions ACTION_ACT_CHECKS": (await import("../src/actions/checks.mjs")).ACTION_ACT_CHECKS,
     "ratification RATIFY_MACHINE_FENCE_CHECKS": (await import("../src/ratification/checks.mjs")).RATIFY_MACHINE_FENCE_CHECKS,
     "review REVIEW_COPY_CHECKS": (await import("../src/review/checks.mjs")).REVIEW_COPY_CHECKS,
+    /* T12 (legacy-tests, 2026-09-29): see the RE-PINNED note below. */
+    "queue QUEUE_MACHINE_CHECKS": (await import("../src/queue/checks.mjs")).QUEUE_MACHINE_CHECKS,
+    "queue QUEUE_ACT_CHECKS": (await import("../src/queue/checks.mjs")).QUEUE_ACT_CHECKS,
+    "control-plane OPERATOR_FENCE_CHECKS": (await import("../src/control-plane/checks.mjs")).OPERATOR_FENCE_CHECKS,
   };
+  /* RE-PINNED 2026-09-29 (T12, legacy-tests): FIVE more rows left the catalogue's two families with their ids, codes
+     and translations unchanged, each `where` re-pointed at the region its module mints in — C-32.10
+     MACHINE_CANNOT_FORWARD and C-32.11 MACHINE_CANNOT_RESOLVE to queue's `QUEUE_MACHINE_CHECKS`, C-33.27
+     KIND_NOT_PERSONAL and C-33.44 CLASS_NOT_DISPOSED to its `QUEUE_ACT_CHECKS` (K409, QUEUE #2); C-32.17
+     OPERATOR_TOKEN_CANNOT_GOVERN to control-plane's `OPERATOR_FENCE_CHECKS` (K413, CONTROL-PLANE #2 J4 R32). Pinned and
+     resolved here, where they now live, exactly as T5-12's, T7's and T8's are. */
   /* RE-PINNED 2026-09-28 (T8, legacy-tests): SIXTEEN more rows left the catalogue's two families with their ids, codes
      and translations unchanged, each `where` re-pointed at the region its module mints in — C-32.3
      MACHINE_CANNOT_MOVE_ACTION, C-32.4 MACHINE_CANNOT_CORRESPOND, C-32.18 MACHINE_CANNOT_SET_LAWS and C-32.19
@@ -584,8 +596,13 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
     ["C-32.14", "OPERATOR_TOKEN_CANNOT_RATIFY", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
     ["C-32.15", "OPERATOR_TOKEN_CANNOT_RATIFY_CASE", "ratification RATIFY_MACHINE_FENCE_CHECKS"],
     ["C-32.16", "MACHINE_CANNOT_REVIEW", "review REVIEW_COPY_CHECKS"],
+    ["C-32.10", "MACHINE_CANNOT_FORWARD", "queue QUEUE_MACHINE_CHECKS"],
+    ["C-32.11", "MACHINE_CANNOT_RESOLVE", "queue QUEUE_MACHINE_CHECKS"],
+    ["C-33.27", "KIND_NOT_PERSONAL", "queue QUEUE_ACT_CHECKS"],
+    ["C-33.44", "CLASS_NOT_DISPOSED", "queue QUEUE_ACT_CHECKS"],
+    ["C-32.17", "OPERATOR_TOKEN_CANNOT_GOVERN", "control-plane OPERATOR_FENCE_CHECKS"],
   ];
-  t("ARM D-PIN-M: each of the thirty-four moved rows (T5-12's five, T7's thirteen, T8's sixteen) is in its module's table under the SAME C-number and code, with a "
+  t("ARM D-PIN-M: each of the thirty-nine moved rows (T5-12's five, T7's thirteen, T8's sixteen, T12's five) is in its module's table under the SAME C-number and code, with a "
     + "translation — the catalogue's number did not change owner silently",
     PINNED_MOVED.filter(([n, c, tbl]) => !(MODULE_TABLES[tbl]?.[c]?.check === n
       && typeof MODULE_TABLES[tbl][c].translation === "string" && MODULE_TABLES[tbl][c].translation.trim()))
@@ -670,7 +687,7 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
       + `(${String(row.where).split(",")[0]})`,
       [span !== null, span !== null && span.includes(`"${code}"`)], [true, true]);
   }
-  t("ARM D0-M: all thirty-four moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 34);
+  t("ARM D0-M: all thirty-nine moved rows were resolved (a table that stopped loading would run none of them)", movedSeen, 39);
   console.log(`  corpus: ${rowsSeen} rows across ${FAMILIES.length} families, each resolved against `
             + `the plane's source and each naming its own C-number`);
   /* THE CORPUS FLOOR. Without it a families list that stopped resolving would
@@ -758,7 +775,11 @@ console.log("\nBLOCK D — every row points at a span that really mints its code
        across 2 families") on `job/T8/legacy-tests` over the merged tranche, never 51 - 16: SIXTEEN departures and no
        arrival, each named at MODULE_TABLES above (actions eleven, ratification four, review one). The sixteen are
        resolved where they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
-    rowsSeen, 35);
+    /* MOVED 35 -> 30 on 2026-09-29 (T12, legacy-tests), FROM THE FIGURE THIS INSTRUMENT PRINTED ("corpus: 30 rows
+       across 2 families", "got 30") on `job/T12/legacy-tests` over the merged tranche (ce41cfb5d6), never 35 - 5: FIVE
+       departures and no arrival, each named at MODULE_TABLES above (queue four, K409; control-plane one, K413). The
+       five are resolved where they now live (ARM D0-M counts them), so the arms this suite runs did not shrink. */
+    rowsSeen, 30);
 }
 
 /* THE TAIL LINE IS THE BATTERY'S CONTRACT, not decoration: `scripts/battery.mjs`

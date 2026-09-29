@@ -40,12 +40,19 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(HERE, "..");
-const IDX = join(PLANE, "src", "index.mjs");
-const STORE = join(PLANE, "src", "store.mjs");
+/* RE-ANCHORED 2026-09-29 (legacy-tests T12): the fence, the stamp and the gate's sentences left `src/index.mjs` for
+   control-plane's `src/control-plane/index.mjs` (IDX, K413), the session sets and the OPS rows for its `ops.mjs` (OPS),
+   and the store's relays, `memberCaps`' roster check, the §4.7 vote write and `#custodialBar` left `src/store.mjs` for
+   membership's `src/membership/index.mjs` (STORE; T3, membership R57–R59: `this.#activeAdmins()` is `this.activeAdmins()`
+   and the relay's receiver is `m`). Each arm edits the same statement where it now lives, its declaration unchanged
+   unless a re-declaration below says why. The names IDX and STORE are kept so each arm's `file:` still reads as it did. */
+const IDX = join(PLANE, "src", "control-plane", "index.mjs");
+const OPS = join(PLANE, "src", "control-plane", "ops.mjs");
+const STORE = join(PLANE, "src", "membership", "index.mjs");
 const SUITE = join(HERE, "adminvote.test.mjs");
 /* A restore below this is not a restore. Both files are far larger; the floor
    exists so a truncated write cannot be reported as byte-identical to itself. */
-const MIN_BYTES = { [IDX]: 500_000, [STORE]: 2_000_000 };
+const MIN_BYTES = { [IDX]: 200_000, [OPS]: 100_000, [STORE]: 100_000 };   /* 500,000 and 2,000,000 before the moves */
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
 /* The three sites exactly as they stand in the sources. */
@@ -58,24 +65,31 @@ const STAMP = `        || CUSTODIAL_ACTIONS.includes(op))\n      inner.searchPar
    put `...CUSTODIAL_ACTIONS` (with its own comment) between them, and the old anchor matched 0 times —
    the harness refused to arm, as it is built to, and that refusal is recorded on the suite's line. */
 const MEMBER_REACH = `                   ...GOVERNANCE_ACTIONS,\n                   /* REC-159:`;
-const CAPS_GATE = `    const admins = this.#activeAdmins();\n    if (!by || !admins.includes(by))\n      return { ok: false, reason: "NOT_AN_ADMIN", by,`;
+const CAPS_GATE = `  memberCaps({ memberId, capabilities, by } = {}) {\n    const admins = this.activeAdmins();\n    if (!by || !admins.includes(by))\n      return { ok: false, reason: "NOT_AN_ADMIN", by,`;
 /* REC-156's three sites, exactly as they stand: the stamp's `memberadd` disjunct, the
    store's relay, and `memberAdd`'s §4.7 vote write. */
 /* CORRECTED 2026-09-23 (REC-159): the disjunct is `CUSTODIAL_ACTIONS.includes(op)` now, which holds
    `memberadd` with the three other §4.9 acts; arm (h) drops that disjunct, and so drops all four. */
 const MA_DISJUNCT = `        || op === "projectparticipants" || op === "projectownerarith"\n        || CUSTODIAL_ACTIONS.includes(op))`;
-const MA_RELAY = `        memberadd: () => this.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),`;
+const MA_RELAY = `        memberadd: () => m.memberAdd({ ...(body || {}), by: url.searchParams.get("by") }),`;
 const MA_VOTE = `      if (by && admins.includes(by))\n        this.sql.exec(\`INSERT OR REPLACE INTO admin_votes (kind,target,voter,reason,created) VALUES ('add',?,?,NULL,?)\`,`;
 
 /* REC-159's four sites: one op's stamp (the `memberset` relay — the NEGATIVE CONTROL the row names),
    the roster the store asks, the member-set reach, and the bearer bound. */
-const CU_SET_RELAY = `        memberset: () => this.memberSet({ ...(body || {}), by: url.searchParams.get("by") }),`;
+const CU_SET_RELAY = `        memberset: () => m.memberSet({ ...(body || {}), by: url.searchParams.get("by") }),`;
 const CU_BAR = `  #custodialBar(by, act) {\n    if (by === null`;
 /* RE-ANCHORED 2026-09-25 at c22-batch29 (the union of REC-155 and REC-162): REC-155 put its §4.10 spread
    directly after `...CUSTODIAL_ACTIONS,` in the member set, so the old anchor (`/* REC-146:` on the next line)
    no longer existed and custodial-reach-dropped reported DID NOT ARM. Same site, same act: the member set's
    CUSTODIAL spread removed, the line after it kept. */
-const CU_REACH = `                   ...CUSTODIAL_ACTIONS,\n                   /* REC-155:`;
+const CU_REACH = `                   ...CUSTODIAL_ACTIONS,\n                   /* N43:`;
+/* THE SECOND LAYER (2026-09-29, legacy-tests T12): control-plane R17/R29 (CONTROL-PLANE #1, a finding its tests fixed)
+   deletes every declared stamp, `by` among `QUERY_STAMPS`, from the caller's query before the op's own stamps are set.
+   So an arm whose subject is "a caller's `by` reaches the store" measured NOTHING with the stamp line alone disarmed
+   (stamp-dropped 85/2, memberadd-disjunct-dropped 70/17, NOT AS DECLARED at their first run on this tree — findings
+   about the declarations, as REC-175's second layer was for rec173's trust-caller-sha). Those two arms now disarm both. */
+const R17_BY = `"author", "by", "actor"`;
+const R17_BY_OFF = `"author", "actor" /* ARMED: by kept */`;
 const CU_MACHINE = `    } else if (!(viaSession || !Array.isArray(spec.machineClasses) ? spec.classes : spec.machineClasses).includes(cls)) {`;
 const CUST4 = ["memberadd", "memberset", "signeradd", "signerset"];
 const OPS3_EARLY = ["adminendorse", "adminremove", "membercaps"];
@@ -174,7 +188,7 @@ const ARMS = {
      is what shows the two layers are independent rather than one layer twice. */
   "stamp-dropped": {
     file: IDX,
-    edits: [[STAMP, STAMP.replace("viaSession ? sessMember",
+    edits: [[R17_BY, R17_BY_OFF], [STAMP, STAMP.replace("viaSession ? sessMember",
       "viaSession ? (inner.searchParams.get(\"by\") || sessMember) /* ARMED */")]],
     /* DECLARATION WIDENED AFTER THE FIRST RUN, WITH THE REASON, never to buy a
        green (REC-153's precedent). Three corrections, each a finding about the
@@ -228,7 +242,7 @@ const ARMS = {
      administrator's session* and *the founder's session*, which is the
      measurement that decided this item's shape. */
   "reach-dropped": {
-    file: IDX,
+    file: OPS,
     edits: [[MEMBER_REACH, "                   /* REC-159:"]],
     /* WIDENED AFTER THE FIRST RUN, WITH THE REASON. `L.removeCounted` removed for
        stamp-dropped's reason (it is a read-back that STAYS true when no removal
@@ -253,7 +267,7 @@ const ARMS = {
      strength of its existence; this is the arm that tells the two apart. */
   "caps-ungated": {
     file: STORE,
-    edits: [[CAPS_GATE, `    const admins = this.#activeAdmins(); void admins; /* ARMED */\n    if (false)\n      return { ok: false, reason: "NOT_AN_ADMIN", by,`]],
+    edits: [[CAPS_GATE, `  memberCaps({ memberId, capabilities, by } = {}) {\n    const admins = this.activeAdmins(); void admins; /* ARMED */\n    if (false)\n      return { ok: false, reason: "NOT_AN_ADMIN", by,`]],
     mustFail: [L.caiRefused, L.caiNothing, L.caiMirror],
   },
 
@@ -301,7 +315,7 @@ const ARMS = {
      all of D-136's, because the three ops keep their own disjunct. */
   "memberadd-disjunct-dropped": {
     file: IDX,
-    edits: [[MA_DISJUNCT, `        || op === "projectparticipants" || op === "projectownerarith" /* ARMED */)`]],
+    edits: [[R17_BY, R17_BY_OFF], [MA_DISJUNCT, `        || op === "projectparticipants" || op === "projectownerarith" /* ARMED */)`]],
     mustFail: [L.structMaStamp, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack,
                /* REC-159, DECLARED BEFORE ARMING: the disjunct is the four's now, so with it gone a
                   caller's typed `by` reaches every custodial store method — ruth's `by=gus` is taken,
@@ -317,7 +331,7 @@ const ARMS = {
      is what shows the two halves are independent. */
   "memberadd-relay-dropped": {
     file: STORE,
-    edits: [[MA_RELAY, `        memberadd: () => this.memberAdd(body || {}) /* ARMED */,`]],
+    edits: [[MA_RELAY, `        memberadd: () => m.memberAdd(body || {}) /* ARMED */,`]],
     mustFail: [L.structMaRelay, L.maForge, L.maPositive, L.maReadBack, L.maBearer, L.maBearerBack,
                L.maStoreNoStamp, L.maStoreStamped,
                /* REC-159, DECLARED BEFORE ARMING: §9's memberadd arms read the body too — ruth's
@@ -332,7 +346,7 @@ const ARMS = {
      arm edits. */
   "memberadd-relay-fallback": {
     file: STORE,
-    edits: [[MA_RELAY, `        memberadd: () => this.memberAdd({ ...(body || {}), by: url.searchParams.get("by") ?? (body || {}).by /* ARMED */ }),`]],
+    edits: [[MA_RELAY, `        memberadd: () => m.memberAdd({ ...(body || {}), by: url.searchParams.get("by") ?? (body || {}).by /* ARMED */ }),`]],
     mustFail: [L.structMaRelay, L.maStoreNoStamp],
   },
 
@@ -359,7 +373,7 @@ const ARMS = {
      three ops' arms stay green, which is what shows the stamp is per op. */
   "custodial-stamp-dropped": {
     file: STORE,
-    edits: [[CU_SET_RELAY, `        memberset: () => this.memberSet(body || {}) /* ARMED */,`]],
+    edits: [[CU_SET_RELAY, `        memberset: () => m.memberSet(body || {}) /* ARMED */,`]],
     mustFail: [L.c9set, L.c9setBack, L.c9cai("memberset"), L.c9caiNothing, L.c9bearerAdmin, L.c9store],
   },
   /* (m) THE ROSTER DROPPED — `#custodialBar` answers null for everybody. The liar the row names:
@@ -374,8 +388,8 @@ const ARMS = {
      fails, cai is refused by the gate rather than the roster, and everything downstream of an act
      that never happened cascades, declared. */
   "custodial-reach-dropped": {
-    file: IDX,
-    edits: [[CU_REACH, "                   /* REC-155:"]],
+    file: OPS,
+    edits: [[CU_REACH, "                   /* N43:"]],
     mustFail: [L.closed8f, L.c9invite, ...C9_ATTRIB, ...CUST4.map(L.c9cai), L.c9caiNothing,
                L.c9bearerAdmin, L.c9store, L.struct9Reach],
   },
@@ -405,7 +419,7 @@ const ARMS = {
      refused by the class check. The liar that makes an administrator's session actually set an
      appetite has to widen BOTH, which is D-136's "reach" in full; re-declared onto that. */
   "governorconfig-both-sets": {
-    file: IDX,
+    file: OPS,
     edits: [[GOV_MEMBER_SET, `"inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate", "governorconfig" /* ARMED */,\n`],
             [GOV_CLASSES, `  governorconfig: { classes: ["admin", "member", "probe"] /* ARMED */,          mutating: true  },`]],
     mustFail: [...C10_WHO.map(L.c10refused), ...C10_WHO.map(L.c10sentence), L.c10nothing],
@@ -431,7 +445,7 @@ for (const name of order) {
   const arm = ARMS[name];
   const TARGET = arm.file;
   const original = readFileSync(TARGET);
-  const pristine = join(work, `${TARGET.endsWith("store.mjs") ? "store" : "index"}.mjs.pristine-${name}-${process.pid}`);
+  const pristine = join(work, `${TARGET.split("/").slice(-2).join("-")}.pristine-${name}-${process.pid}`);
   copyFileSync(TARGET, pristine);
   let src = original.toString("utf8"), armed = true;
   for (const [from, to] of arm.edits) {

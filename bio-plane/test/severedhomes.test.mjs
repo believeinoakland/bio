@@ -5,6 +5,7 @@
    (C2) SEVERANCE NARROWING ON ABSENCE. `return !entry || entry.status === "severed"` -> a target with no matching reference entry reads as a WITHDRAWAL. DECLARED RED, MEASURED GREEN, REDECLARED AND KEPT: both projections are written from `references[]` in ONE transaction, so a candidate edge always has a matching entry and this branch is unreachable through the ops. It is defensive rather than load-bearing today — and it earns its place because the `links_to` link projector is a SECOND writer of `refs` that inserts rows with no frontmatter entry behind them.
    (D) THE PREDICATE'S OTHER CONSERVATIVE ARM — UNREADABLE MUST MEAN LIVE. In #refEdgeSevered, make the unreadable branch `return true` -> a citing document whose bundle.md cannot be read is treated as having withdrawn. MUST FAIL: nothing in THIS suite, because every fixture here has a readable bundle.md — AND THAT IS THE ARM'S RESULT, recorded rather than smoothed: this suite cannot reach the unreadable branch through the op, and says so rather than claiming coverage it does not have. The branch is reached by `retire`'s own suite, which is where the behaviour was a rule before it was this predicate's.
    (E) THE SHARED PREDICATE IS SHARED. In #citesInto, restore the old inline read (`const md = …; const entry = refs.find(…)`) so the method no longer calls #refEdgeSevered -> the rule has two implementations again. MUST FAIL: §5's structural arm, which counts the call sites off the source. MUST NOT FAIL: any behavioural arm, because a faithful copy behaves identically — WHICH IS THE WHOLE POINT. D-267 exists because a rule with four inline implementations grew a fifth reader that did not know the rule existed, and no behavioural arm anywhere could have caught that.
+   RE-ANCHORED 2026-09-29 (LEGACY-TESTS #10, T12; K409, QUEUE #2): arms (A) and (B) edit `#queueAncestorEdges` in src/queue/index.mjs; arms (C), (C2), (D) and (E) edit connections' `edgeSevered` and `citesInto` (src/connections/index.mjs, CONNECTIONS #1 R22, T5), where the predicate had lived since T5 while the driver still armed the store and matched nothing. RUN 2026-09-29 in a scratch worktree of 6bb9bd7605: BASELINE 14/0 and current 65/0; (A) 11/3 + 62/3, (B) 11/3 + 65/0, (C) 13/1, (C2) 14/0, (D) 14/0, (E) 13/1 (the structural arm alone) — 7 arms, 0 WRONG; both files restored byte-identical.
    (F) OVER-STRICTNESS, and these PASS rather than fail: a live citation is a home; a live basis leg is a home; a reference with NO `status:` key at all is a home; a `status:` value the predicate does not recognise is a home and NOT a withdrawal; a target spelled with surrounding whitespace is a home; and a project that severed its citation is STILL REACHABLE by every other op — op=backlinks still names it and still reports the edge as `severed`, because the historical edge is a fact the record keeps. A fence that refuses correct work is a defect in the fence, and a walk that forgot an edge existed is worse than one that kept it.
    (G) BASELINE. Every arm restored, suite re-run, full green — the row that distinguishes six-arms-broken from six-arms-working.
    (H) (run 2026-09-23, M0-134) THIS SUITE MEASURED NOTHING FROM REC-141 UNTIL M0-134, and every arm above was unmeasurable in that window: it chose its projects' ids, was refused PROJECT_ID_SUPPLIED at the first, and with no catch before its exiting `finally` printed "1 pass, 0 fail", exit 0. Driven by `test/finallyexit.control.mjs`: `before` (catch removed, throw planted) -> exit 0, "14 pass, 0 fail" over the throw; `throw:severedhomes.test.mjs` (catch kept, throw planted) -> exit 1, "14 pass, 1 fail", the throw printed; `nocatch` -> hygiene.test.mjs fails naming this file. After the fix, all 14 assertions reached, 14 pass 0 fail on e62e08e1's store (5 callers of the severance predicate). AND ARMS (A)–(G) RE-RUN 2026-09-23, the first measurement since REC-141: (A) 11/3 · current 60/3, (B) 11/3, (C) 13/1, (C2) and (D) 14/0 green as declared, (E) 13/1, (G) 14/0 · 63/0 — but (E) first came back WRONG: the driver still expected the label "…ONE definition and THREE callers" while the structural arm really failed under its current label; the driver was corrected to the label's stable prefix and re-run, 7 arms, 0 WRONG. Re-run on the merge with 14faa089 (REC-160 landed, SIX callers, 7 occurrences of the name in store.mjs): §5's `[1, 6]` REACHED for the first time and passes, 14 pass 0 fail; the seven arms again 0 WRONG.
@@ -111,7 +112,11 @@ const CONNECTIONS_SRC = readdirSync(fileURLToPath(new URL("../src/connections/",
 const moduleSrc = (m) => readdirSync(fileURLToPath(new URL(`../src/${m}/`, import.meta.url)))
   .filter((f) => f.endsWith(".mjs")).sort()
   .map((f) => readFileSync(fileURLToPath(new URL(`../src/${m}/${f}`, import.meta.url)), "utf8")).join("\n");
-const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation")].join("\n");
+/* RE-ANCHORED 2026-09-29 (K409, QUEUE #2 J2 (5)): `#queueAncestorEdges` and `#routeTask` left store.mjs with the
+   queue for `src/queue/index.mjs`, where each calls queue's own one-line delegate `this.#refEdgeSevered(` (to
+   connections' `edgeSevered`). The census reads queue's files too; the walk's `consider` pin reads it there. */
+const QUEUE_SRC = moduleSrc("queue");
+const SEVERANCE_SRC = [STORE_SRC, CONNECTIONS_SRC, moduleSrc("inquiry"), moduleSrc("reevaluation"), QUEUE_SRC].join("\n");
 
 const mf = withSurfacingRun(new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: IDX, script: readFileSync(IDX, "utf8"),
@@ -504,6 +509,10 @@ const calls = (SEVERANCE_SRC.match(/this\.(?:#refEdgeSevered|edgeSevered|connect
    DRAWN_ON_BY_SEVERAL_PROJECTS), which asks the same predicate rather than copying it. The others moved without
    changing: `#citesInto` is connections' `citesInto`, `#restsOnLive` and `restingOn` inquiry's, and
    `#queueAncestorEdges` and `#routeTask` are still the store's. */
+/* CORRECTED 2026-09-29 (LEGACY-TESTS T12; K409, QUEUE #2), SIX STAYS SIX, NO ARRIVAL AND NO DEPARTURE: `#queueAncestorEdges`
+   and `#routeTask` MOVED with the queue to `src/queue/index.mjs` and still ask the ONE predicate, through queue's
+   delegate `#refEdgeSevered(...a)` (a delegate, like the store's, and neither a definition nor a call). The store's
+   own delegate now has no caller. */
 t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `citesInto`, "
 + "`restsOnLive`, `#queueAncestorEdges`, D-280's two surviving sites `#routeTask` and "
 + "`restingOn`, and inquiry R39's `projectsDrawingOn`; REC-160's `reevaluations` now reads the status "
@@ -515,8 +524,8 @@ t("STRUCTURAL: the severance rule has ONE definition and SIX callers — `citesI
 t("STRUCTURAL: and the walk no longer performs a raw unconfirmed read of either projection — both "
 + "edge kinds go through `consider`, so a future edge kind added to this method inherits the "
 + "confirmation instead of quietly reopening the defect",
-  [/consider\(r\.bundle_id, null\)/.test(STORE_SRC),
-   /consider\(r\.bundle_id, "cites"\)/.test(STORE_SRC)], [true, true]);
+  [/consider\(r\.bundle_id, null\)/.test(QUEUE_SRC),
+   /consider\(r\.bundle_id, "cites"\)/.test(QUEUE_SRC)], [true, true]);
 
 } catch (e) {
   /* M0-134: A THROW IS A FAILURE, COUNTED AND PRINTED. Without this clause the `finally` below ran,

@@ -77,7 +77,7 @@ import { registerDoc, registerFile } from "./register-doc.mjs";
    Object (`doStub`, as `taskenqueue` and `recordcapturedlocator` are below); the control plane has no route to it. */
 const PROBE_SRC = `
 import worker from "./index.mjs";
-import { Store } from "./store.mjs";
+import { Store } from "./index.mjs"; /* T12 B6, 2026-09-29 (K414, INSTANCE-SETUP #1 J5): the store as the plane starts it, instance-setup registering promotion's producingGroup */
 const PLANTABLE = { cases: ["case_id", "project_id", "opened"],
                     published_cases: ["case_id", "edition", "opened", "ratified_at"],
                     published_case_members: ["case_id", "edition", "ord", "bundle_id", "version_sha", "role"] };
@@ -1136,7 +1136,9 @@ console.log("\n--- T9's reads (standards, conformance, consequences, filings, es
  * ------------------------------------------------------------------------- */
 console.log("\n--- every read op is classified: gated, or ungated for a stated reason ---");
 {
-  const src = readFileSync(fileURLToPath(new URL("../src/index.mjs", import.meta.url)), "utf8");
+  /* RE-ANCHORED 2026-09-29 (T12 B8/B10; K413, CONTROL-PLANE #2): the OPS table left src/index.mjs for
+     src/control-plane/ops.mjs; the sweep parses it there. */
+  const src = readFileSync(fileURLToPath(new URL("../src/control-plane/ops.mjs", import.meta.url)), "utf8");
   const from = src.indexOf("const OPS");
   const reads = [];
   for (const m of src.slice(from).matchAll(/^\s{2}([a-z0-9_]+):\s*\{([^}]*)\}/gm)) {
@@ -2029,6 +2031,13 @@ console.log("\n--- every read op is classified: gated, or ungated for a stated r
       + "a viewer predicate to filter, so gating it would be a gate over the caller's own input, which "
       + "protects nothing and would make the ungated set harder to read by putting a gate where there "
       + "is nothing behind it.",
+    /* CLASSIFIED 2026-09-29 (T12 legacy-tests; instance-setup R12, R16, K407; its OPS row from CONTROL-PLANE #2, K413):
+       the sweep named it at the merge, as it exists to. */
+    profiles: "READS NO RECORD: op=profiles is instance-setup's `profiles()` (R12), which reads ONE instance "
+      + "setting (record-core's `jurisdiction_profiles`) and the held profile catalogue, and answers each id's "
+      + "name and coverage and the conflicts `combine` reports. It opens no bundle table and names no bundle, "
+      + "so there is no working material for the D-15 predicate to filter; R15 shows the list to members by "
+      + "name. Its write, op=profilesset, is admin-only and refused PROFILES_NOT_ADMIN otherwise (R14).",
   };
 
   const unclassified = reads.filter((op) => !(op in GATED) && !(op in UNGATED));
