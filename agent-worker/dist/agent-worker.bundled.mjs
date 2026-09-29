@@ -23613,6 +23613,7 @@ var CONDITION_KINDS = Object.freeze({
 
 // ../bio-plane/src/observation-log/index.mjs
 var CAPTURE_TEXT_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["pdf", "docx", "odt", "pptx", "odp", "xlsx", "ods", "csv"]));
+var INDEX_NOTICE_UNIT_CONTAINERS = Object.freeze(/* @__PURE__ */ new Set(["document"]));
 var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
 var AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs" });
 
@@ -25774,9 +25775,20 @@ var PROJECTION_INDEXED = Object.freeze([
   "action_resolution",
   "action_clock_overdue"
 ]);
+var PROJECTION_TABLE = "bundle_projection";
+var PROJECTION_RELATION = Object.freeze({ table: PROJECTION_TABLE, key: "bundle_id" });
+var PROJECTION_SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS ${PROJECTION_TABLE} (
+         bundle_id  TEXT PRIMARY KEY,
+         ${PROJECTION_COLUMNS.map(([c, t]) => `${c} ${t}`).join(",\n         ")}
+       )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS ${PROJECTION_TABLE}_fts_id ON ${PROJECTION_TABLE}(fts_id)`,
+  ...PROJECTION_INDEXED.map((c) => `CREATE INDEX IF NOT EXISTS ${PROJECTION_TABLE}_${c} ON ${PROJECTION_TABLE}(${c})`)
+];
 var FTS_SCHEMA = `CREATE VIRTUAL TABLE IF NOT EXISTS bundles_fts USING fts5(
          ${FTS_COLUMNS.join(", ")}, bundle_id UNINDEXED, tokenize='unicode61')`;
 var RETRIEVAL_PURGE = Object.freeze([
+  { name: PROJECTION_TABLE, keys: ["bundle_id"] },
   { name: "bundles_fts", keys: ["bundle_id"] },
   { name: "selection_items", keys: [] },
   { name: "selections", keys: [] }
@@ -25785,6 +25797,9 @@ var RETRIEVAL_PURGE = Object.freeze([
 // ../bio-plane/src/retrieval/index.mjs
 var RETRIEVAL_TABLES = Object.freeze(RETRIEVAL_PURGE.map((t) => t.name));
 var CAPTURE_TEXT_SKIPPED_RUNS_MAX = CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1024;
+var CLAIMED = `SELECT p.fts_id FROM ${PROJECTION_TABLE} p JOIN bundles cb ON cb.bundle_id = p.bundle_id
+                  WHERE p.fts_id IS NOT NULL`;
+var VIA = Object.freeze({ projection: PROJECTION_RELATION });
 
 // ../bio-plane/src/inquiry/grammar.mjs
 var INQUIRY_MACHINE = STATES.inquiry;
