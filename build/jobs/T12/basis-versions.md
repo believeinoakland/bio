@@ -31,3 +31,7 @@ Size (session_01Q76EbqkwaV8V5uqXQMJ8ct): test runs 14, module lines 2041
 ## J1 · REPORT
 
 Found beyond my module (record, Completion 'Found'): (1) Stale, not rebuilt: agent-worker and bio-plane bundles (both list src/basis-versions inputs). (2) DEC-49 guard: 26 FAIL lines before and after, the same; floor regionLines 5480 -> 5477 (conclude > is-conclude-claim 54L -> 51L). (3) Legacy suites naming this module's ops/reads: 94 of 97 pass; derivation-bounds, machinefences-dec49, meaning-bounds fail identically on the parent; airun flaked once under concurrency, passes alone.
+
+## J2 · COMPLETE
+
+N300: R41 projectQuestions({project, after, limit}) -> {items: [{inquiry, legs, stance}], cursor}, viewer-free, one bounded read, legs via inquiry.basisFor(limit 1), stance by R22; clamp reading: absent/zero/non-number 500, negative 1 (connections R42's convention). N316: R39 interface test, depth 64 reached and 65 not (negative controls at DEPTH+1 and DEPTH-1 both red). Also: R13's draws-on test one site (drawsOn) for R13, R17, R37, R41; R22's record reading shared. Strike R41's 'not yet met: N300'. Tests 47/47; users' m-tests 436 pass 0 fail; format, architecture, coverage 41/41, ownership: 0 failures. Record: build/jobs/T12/basis-versions.md, Completion.
