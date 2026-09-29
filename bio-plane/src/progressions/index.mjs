@@ -21,7 +21,8 @@
  *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`, R16).
  *   entities     `entitiesOf(host)`: `has(id)` (R7), `readEntity({entityId})` (R5), `strongestByCapture(id)` (R16); the
  *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34), and an
- *                unregistered entity is answered by its export `noSuchEntity` (R36, N208).
+ *                unregistered entity is answered by its export `noSuchEntity` (R36, N208), a request naming none by
+ *                its export `noEntity` (R37, N285).
  *   connections  `weakerGrade(a, b)`, its module-level export (connections R50).
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
@@ -31,7 +32,7 @@ import { recordOf, perItem } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, noSha } from "../extraction/index.mjs";
-import { entitiesOf, gradeRank, isEstablished, noSuchEntity } from "../entities/index.mjs";
+import { entitiesOf, gradeRank, isEstablished, noSuchEntity, noEntity } from "../entities/index.mjs";
 import { weakerGrade } from "../connections/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { refusal, generic, notADisposition } from "./checks.mjs";
@@ -177,15 +178,11 @@ export class Progressions {
     /* END DEC-49 REGION is-progression-declared */
   }
 
-  /* C-100.9: the request names no entity (`entityId` as the caller sent it). */
+  /* R6, R9, R14, R15 (N285): the request names no entity (`entityId` as the caller sent it; blank is none). An instance
+     is (progression, entity), so such a request says nothing about whose instance it means: entities' one answer (its
+     R37, `noEntity`), minted there. */
   #entityNamed(entityId, detail) {
-    /* DEC-49 REGION is-instance-entity */
-    /* an instance is (progression, entity): a request naming no entity says nothing about whose instance it means */
-    if (!str(entityId))
-      return refusal("NO_ENTITY", detail,
-                     {});
-    return null;
-    /* END DEC-49 REGION is-instance-entity */
+    return str(entityId) ? null : noEntity(detail);
   }
 
   /* C-100.13: the request names no stage. */

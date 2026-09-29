@@ -11,7 +11,8 @@
  * ONE CODE, ONE SITE (K231, N118, N242, T10; K275, N285, T12). Each row's `where` names one function and one marked
  * region that wraps the whole refusal; a code this module answers from several acts is minted in one private helper of
  * `Progressions`, which each act calls. What left C-100, its ids retired and never reused: `NO_SUCH_ENTITY` (C-100.12)
- * is entities' one answer (its R36, `noSuchEntity`), `LISTENER_DECLARED` (C-100.23) membership's (its R81,
+ * is entities' one answer (its R36, `noSuchEntity`), as `NO_ENTITY` (C-100.9) is (its R37, `noEntity`),
+ * `LISTENER_DECLARED` (C-100.23) membership's (its R81,
  * `listenerRefusal`), `NO_SHA` (C-100.19) extraction's (its R63, `noSha`, C-51.6, which carries C-100.19's translation),
  * and `NO_KEY` (C-100.1), which many modules mint for one condition, is answered as the catalogue's generic code under
  * its REC-64 rule (R27; K163, K329), with no row (`GENERIC_CODES`, `generic`). N285 renamed this module's own
@@ -70,11 +71,6 @@ export const PROGRESSION_CHECKS = Object.freeze({
     check: 'C-100.8', where: at("readProgression", "is-version-held"),
     translation: 'The record holds no such version of this flow. The versions it does hold are named '
       + 'beside this message, and each reads back in full.',
-  },
-  NO_ENTITY: {
-    check: 'C-100.9', where: at("#entityNamed", "is-instance-entity"),
-    translation: 'An instance of a flow is followed through one registered subject, and this request names '
-      + 'none. Name the subject by its id. Nothing was written.',
   },
   NO_PLACEMENTS: {
     check: 'C-100.10', where: at("threadInstance", "is-thread-placed"),

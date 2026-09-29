@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { world, seeded, MEMBER } from "./fixture.mjs";
 import { PROGRESSION_CHECKS, GENERIC_CODES, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
 import { ACT_SHAPE_CHECKS } from "../../../checks/bio-checks.mjs";
-import { noSuchEntity } from "../../../src/entities/index.mjs";
+import { noSuchEntity, noEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 import { noSha, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 
@@ -146,7 +146,7 @@ test("R5: NO_KEY; an undeclared key is found:false; a read names versions, curre
 
 test("R27 R28: every refusal this module answers carries its code with its row and translation, or is one it answers from its owner or as a generic code", async () => {
   // C-100 and the three moved rows: one function and one marked region each (N118, N242), ids unique, a translation
-  const kept = ["PROGRESSION_NO_LABEL", "PROGRESSION_VERSION_NOT_HELD", "NO_ENTITY", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
+  const kept = ["PROGRESSION_NO_LABEL", "PROGRESSION_VERSION_NOT_HELD", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
     "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_STAGE", "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED",
     "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED"];
   assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...kept].sort());
@@ -162,13 +162,13 @@ test("R27 R28: every refusal this module answers carries its code with its row a
                                                       : /^src\/progressions\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, c);
   }
   // the ids of the rows that left C-100 in T10 are retired, never reused
-  for (const retired of ["C-100.1", "C-100.12", "C-100.19", "C-100.23"])
+  for (const retired of ["C-100.1", "C-100.9", "C-100.12", "C-100.19", "C-100.23"])
     assert.ok(!ids.has(retired), retired);
   // N285: the renamed codes keep their ids; the old names and the retired NO_SHA row are gone
   assert.equal(PROGRESSION_CHECKS.PROGRESSION_NO_LABEL.check, "C-100.2");
   assert.equal(PROGRESSION_CHECKS.PROGRESSION_VERSION_NOT_HELD.check, "C-100.8");
   assert.equal(PROGRESSION_CHECKS.NOT_A_DISPOSITION.check, "C-100.20");
-  for (const gone of ["NO_LABEL", "NOT_FOUND", "NO_SHA"]) assert.equal(PROGRESSION_CHECKS[gone], undefined, gone);
+  for (const gone of ["NO_LABEL", "NOT_FOUND", "NO_SHA", "NO_ENTITY"]) assert.equal(PROGRESSION_CHECKS[gone], undefined, gone);
   // the generic code (N118): no row of this module's
   assert.deepEqual([...GENERIC_CODES], ["NO_KEY"]);
   for (const c of GENERIC_CODES) assert.equal(PROGRESSION_CHECKS[c], undefined, c);
@@ -216,6 +216,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
       const row = PROGRESSION_CHECKS[r.code] || ACT_SHAPE_CHECKS[r.code];
       assert.deepEqual([r.check, r.translation], [row.check, row.translation], r.code);
     } else if (r.code === "NO_SUCH_ENTITY") assert.deepEqual(r, noSuchEntity("ENT-9"));          // entities R36 (N208)
+    else if (r.code === "NO_ENTITY") assert.deepEqual(r, noEntity(r.detail));                  // entities R37 (N285)
     else if (r.code === "NO_SHA") {                                                              // extraction R63 (N285)
       assert.deepEqual(r, noSha(r.detail));
       assert.equal(r.check, EXTRACTION_CHECKS.NO_SHA.check);
@@ -230,10 +231,36 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   }
   // the drive reached every code: each row, each generic code, the shared act rows and the owners' answers
   assert.deepEqual([...seen].sort(), [...kept, ...GENERIC_CODES, "NO_BASIS", "NO_CITATION", "NO_SUCH_ENTITY",
-                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA"].sort());
+                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA", "NO_ENTITY"].sort());
 });
 
-test.todo("R27: NO_ENTITY carries entities' row through its noEntity (R37) in place of C-100.9 -- not yet met: entities R37 is not yet on tranche/T12 (N285; PROGRESSIONS #3 J1)");
+test("R27: NO_ENTITY is entities' one answer (its R37, noEntity, C-91.5) at every act that asks for an entity, whatever shape of absence; writes nothing", async () => {
+  const w = seeded();
+  w.define();
+  assert.equal(PROGRESSION_CHECKS.NO_ENTITY, undefined);                 // C-100.9 gave way (N285)
+  assert.equal(ENTITY_CHECKS.NO_ENTITY.check, "C-91.5");
+  const before = w.snapshot();
+  const acts = {
+    thread: (entityId) => w.p.threadInstance({ progressionKey: "proc", entityId, placements: [{ stage: "need", captureSha: "sa" }],
+                                               threadedBy: "member:alice", viewer: MEMBER }),
+    instance: (entityId) => w.p.readInstance({ progressionKey: "proc", entityId, viewer: MEMBER }),
+    discharge: (entityId) => w.p.dischargeStage({ progressionKey: "proc", entityId, stageKey: "need", captureSha: "sa", reason: "r",
+                                                  citation: "c", declaredBy: "member:alice", viewer: MEMBER }),
+    exceptions: (entityId) => w.p.readExceptions({ progressionKey: "proc", entityId, viewer: MEMBER }),
+  };
+  for (const [name, act] of Object.entries(acts))
+    for (const absent of [undefined, null, "", "   ", 7, true, {}, ["ENT-1"]]) {
+      const r = await act(absent);
+      const shown = `${name} ${JSON.stringify(absent)}`;
+      assert.deepEqual(r, noEntity(r.detail), shown);                    // field for field entities' answer, with the act's sentence
+      assert.deepEqual([r.code, r.check, r.translation], ["NO_ENTITY", "C-91.5", ENTITY_CHECKS.NO_ENTITY.translation], shown);
+      assert.ok(typeof r.detail === "string" && r.detail.length > 10, shown);
+    }
+  // NO_KEY is still heard first; a key and an entity named is no NO_ENTITY (negative control)
+  assert.equal(w.p.readInstance({ entityId: "" }).code, "NO_KEY");
+  assert.deepEqual(w.snapshot(), before);
+  for (const act of Object.values(acts)) assert.notEqual((await act("ENT-1")).code, "NO_ENTITY");
+});
 
 test("R30: no place is named in this module's outward text", () => {
   const texts = Object.values(PROGRESSION_CHECKS).map((r) => r.translation).join("\n");
