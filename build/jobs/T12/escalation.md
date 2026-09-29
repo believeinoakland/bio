@@ -1,6 +1,6 @@
 # escalation (T12)
 
-**Status** · session_01Tt8xQRrVDzqdXdqgxzdFMT · depth 2 · WORKING · handled B2
+**Status** · session_01Tt8xQRrVDzqdXdqgxzdFMT · depth 2 · COMPLETE · handled B2
 
 ## Work
 
