@@ -1,6 +1,6 @@
 # BOB to instance-setup (T12)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Q5: accepted at the close as the map's own row (K409); keep the line as you wrot
 ## B5 · CHANGE
 
 Control-plane is merged into `tranche/T12` (K413): `index.mjs` lost about 6,000 lines to `src/control-plane/` and its remaining arms sit in `publicOp`/`gatedOp`. Merge `tranche/T12` into your branch before completing and re-run your checks; your `memberVersions` removal and `Store` wrapping in `index.mjs` may conflict. Also pending for you: B4 (K409, your Q5).
+
+## B6 · CHANGE
+
+Re-opened (K419), from LEGACY-TESTS #10 J3: your `start` (`src/setup.mjs` ~1924) calls `scheduler.arm()` at boot; that is the producers' door (scheduler R4, R17) and arms the `SCHED_PROBE` probe at boot. The instance's start is scheduler R11's `start()`, which reconciles and starts no probe. Call `start()` there (after registering your consumer), keep the try/catch, and test at your interface that booting with `SCHED_PROBE` bound arms no probe. Merge `tranche/T12` first. `scheduler.test.mjs` (49/3) is legacy-tests' to confirm. If your context is past half its window, post BLOCKED (context) instead. Record completion again.

@@ -1,7 +1,7 @@
 /* The display name and the verified domain (R5–R11) and R27, at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boot } from "./fixture.mjs";
+import { boot, providers } from "./fixture.mjs";
 import { GROUP_DOMAIN_CHECKS_MAX, GROUP_WELL_KNOWN_MAX_BYTES, NO_GROUP_RECORDED } from "../../../src/setup.mjs";
 
 const ADDR = "https://river.example";
@@ -54,7 +54,7 @@ test("R7 a domain is lower-cased, its trailing dot removed, and must be a bare h
   assert.equal(r.check.verdict, "verified");
   assert.equal(r.shown_publicly, true);
   assert.deepEqual(r.history.map((h) => h.value), ["river.example.org"]);
-  assert.ok(w.prov.arms.length >= 2, "armed at start and after the set");
+  assert.equal(w.prov.arms.length, 1, "armed after the set (scheduler R9), and not at start");
   w.prov.answer = file("", 404);
   const r2 = await w.m.groupDomainSet({ domain: "other.example", by: "admin", origin: "ftp://nope" });
   assert.equal(r2.instance_address, null);
@@ -202,4 +202,25 @@ test("R27 the display name is presentation only: it enters no signed bytes — t
   assert.equal(w.m.instanceGroup().group, "river-town");
   const writes = w.st.statements.filter((q) => /^\s*(INSERT|UPDATE)/i.test(q) && /display_name/.test(q));
   for (const q of writes) assert.match(q, /INSERT INTO group_identity_history/);
+});
+
+test("R9 at start the consumer is registered before the scheduler's own start reconciles (its R11), and booting with SCHED_PROBE bound arms no probe (K419)", async () => {
+  const w = await world();
+  assert.deepEqual(w.prov.starts, [["group-domain-recheck"]]);
+  assert.equal(w.prov.arms.length, 0);
+  /* the real scheduler over a storage stand-in, its owners idle: a boot starts no probe the seam would arm */
+  const { Scheduler } = await import("../../../src/scheduler/index.mjs");
+  const kv = new Map(); let alarm = null;
+  const store = { async getAlarm() { return alarm; }, async setAlarm(t) { alarm = t; }, async deleteAlarm() { alarm = null; },
+                  async get(k) { return kv.get(k); }, async put(k, v) { kv.set(k, v); } };
+  const idle = new Proxy({}, { get: () => new Proxy({}, { get: () => () => null }) });
+  const env = { INSTANCE_NAME: "river-town", SCHED_PROBE: JSON.stringify([{ name: "probe-a", period: 1000, fires: 3 }]) };
+  const scheduler = new Scheduler({ storage: store, env, owners: idle });
+  const b = await boot({ env, prov: { ...providers(), scheduler } });
+  assert.equal(b.started.consumer.ok, true);
+  assert.equal(alarm, null, "no probe armed and no consumer wanting a wake");
+  assert.equal(kv.size, 0, "the probe's state is not written at boot");
+  /* while the producers' door, arm, does start it: the seam is live, only the boot leaves it alone */
+  await scheduler.arm();
+  assert.notEqual(alarm, null);
 });

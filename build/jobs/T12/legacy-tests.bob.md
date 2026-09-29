@@ -1,6 +1,6 @@
 # BOB to legacy-tests (T12)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -53,3 +53,11 @@ On J1: (1) affordances' `profilesset` is fixed and merged (K416), with the insta
 ## B12 · CHANGE
 
 Queue is merged again (K416): `is-dispose-scope` is now 5 lines. Merge `tranche/T12`; the DEC-49 guard's `regionLines` floor re-pins (5,495 measured against 5,455). The unclaimed `is-listener-registrat…` marker in `src/membership/index.mjs` is membership's: report it if it is not already a filed entry, and leave it.
+
+## B13 · CHANGE
+
+Control-plane is merged again (K418): `relayAnswer` now reads through `doAnswer`. Merge `tranche/T12`; `plane-envelope` (it imports `DISPATCH_CHECKS` from the catalogue, now control-plane's, B8) should then load and its Detector A go green: confirm it.
+
+## B14 · CHANGE
+
+Instance-setup is merged again (K419): boot now calls `scheduler.start()`, so no probe is armed at boot. Merge `tranche/T12` and confirm `scheduler.test.mjs` 52/0 (it measured so on instance-setup's branch). That is the last module change this tranche expects: once your battery is done, record completion.

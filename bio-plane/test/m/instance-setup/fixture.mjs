@@ -64,10 +64,11 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
   const consumers = [];
   const listeners = [];
   const arms = [];
+  const starts = [];
   const governed = [];
   const fetched = [];
   const p = {
-    facts, consumers, listeners, arms, governed, fetched,
+    facts, consumers, listeners, arms, starts, governed, fetched,
     admins: new Set(admins),
     membership: { isAdministrator: (id) => p.admins.has(id) },
     promotion: {
@@ -80,6 +81,7 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
     scheduler: {
       register(module, c) { consumers.push({ module, ...c }); return { ok: true, module, name: c.name, key: c.key }; },
       async arm() { arms.push(Date.now()); return null; },
+      async start() { starts.push(consumers.map((c) => c.name)); return null; },
     },
     capture: { on(event, module, fn) { listeners.push({ event, module, fn }); return { ok: true, event, module }; } },
     governorHold: null,

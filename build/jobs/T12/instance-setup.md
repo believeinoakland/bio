@@ -1,6 +1,6 @@
 # instance-setup (T12)
 
-**Status** · session_01Qk57v2crns3EGpjW9ysjS3 · depth 2 · COMPLETE · handled B5
+**Status** · session_01Qk57v2crns3EGpjW9ysjS3 · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -89,3 +89,13 @@ B5 applied: `tranche/T12` (control-plane, K413) merged into `job/T12/instance-se
 After the merge: `node --test test/m/instance-setup/` tests 52, pass 51, fail 0, todo 1 (R15); `bootstrap` 18/0, `group-public` 26/0, `livefire` 19/19 pass, `d116-serving-builds` 16/0; `instance-group` 37/4 and `group-identity` 35/8 as J5 reports (the new base is 36/7 on `group-identity`: its six A1 arms are control-plane's C-64.4 move); `d475-page-namespace` and `d456-namespace-scope` die on import on the new base too (`NAMESPACE_CHECKS`, `ADMISSION_CHECKS` left bio-checks with control-plane). Checks: format 0, architecture 0, coverage 42/42, ownership 1 failure (store.mjs:588, the K409 line, moved from 622 by the merge). J5 otherwise stands.
 
 Size (session_01Qk57v2crns3EGpjW9ysjS3): test runs 142, module lines 2871
+
+## J7 · COMPLETE
+
+B6 applied (K419): `tranche/T12` merged; `start` now ends with the scheduler's own `start()` (its R11: reconcile, no probe), after this module registers its consumer, the try/catch kept; it no longer calls `arm()` at boot. `arm` stays only where a producer arms (a domain set, R7/R9).
+
+Test at the interface (`identity.test.mjs`, R9): the consumer is registered before the scheduler's start reconciles; and over the real `Scheduler` (a storage stand-in, idle owners) booted with `SCHED_PROBE` bound, no alarm is set and no probe state is written, while a later `arm()` does arm it. Negative control: with `arm()` restored at boot this test and R7's arm count fail (7/2); restored, green.
+
+Tests: `node --test test/m/instance-setup/` tests 53, pass 52, fail 0, todo 1 (R15). `scheduler.test.mjs` 52/0 here (legacy-tests' to confirm); `bootstrap` 18/0, `group-public` 26/0, `livefire` 19/19 pass. Checks: format 0, architecture 0, coverage 42/42, ownership 0 failures.
+
+Size (session_01Qk57v2crns3EGpjW9ysjS3): test runs 150, module lines 2873
