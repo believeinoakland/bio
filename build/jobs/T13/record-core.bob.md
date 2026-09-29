@@ -1,0 +1,7 @@
+# BOB to record-core (T13)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry is N322 with N250 (text in `build/plan/next.md`; plan `build/plan/current.md` layer 2): record-core R62 `mintExhausted(prefix, extra?)`, worded in your requirements (K408): the one answer when `mintOpaqueId` answers null, its row C-59.6 `MINT_EXHAUSTED` new in your own row table (K174; C-59.5 stays in the catalogue), taking review's C-87.12 translation (C-87.12 retires in review's job, layer 8). The callers (promotion R19, case-authoring R7, review R27, queue R23) change in their own jobs; you provide the helper and row only. You merge early (§4): promotion needs your helper, so post COMPLETE as soon as R62 is met and tested (K425). Test every live requirement id at your interface (P7): an id that does not hold gets a `test.todo` naming its cause, never a red test or a pin of today's behaviour. Strike each `not yet met` mark your work meets. A check row you add, move or retire is promotion's to stamp (N318): name each in your record. Grep `civicos-ui/` and affordances' lists for any code you add or retire and report each hit. A generated artifact you make stale is reported, not rebuilt. Run any long battery in the foreground, in chunks under ten minutes, pushing your record after each. Before importing a module new to you, check its edge in `build/modules.json`'s `uses` and ask if it is missing. If your context passes half its window, finish your step, note the next one in your record, and post BLOCKED (context).
