@@ -1385,3 +1385,21 @@ response: **As recommended, Bob, 2026-09-29, with the principle stated in his wo
 decided: 2026-09-29 · Bob
 reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
 owed: the act surfaces in the redesign; BOB's assignment of the acts still graded undetermined (affordances R27); the UX page's open question 7 marked ruled.
+
+### DEC-85 · answered
+raised: 2026-09-29 · the same design session with Bob (following DEC-84: the acts whose rung is undetermined)
+for: bob
+question: Can the 57 acts graded `undetermined` in `affordances.RUNG_ABSENT` be given rungs from the principles already ruled (affordances R27; DEC-84)?
+why it is Bob's: the banding logic is UX and doctrine (how heavy an act feels); assigning each act is BOB's detail (P17), put to Bob here at his request.
+provisional: each is treated as reasoned (DEC-84).
+alternative: leave them to BOB one by one.
+recommendation: three bands, with six judgement calls named.
+reversal cost: low; nothing is built.
+response: **As recommended, Bob, 2026-09-29, with his note on the six: "The 6 judgment calls are heavyweight, so the friction should be appropriately high. That said, workobjective is probably not the heaviest weight of the 6."**
+  1. REVERSIBLE (26), proposals that bind nothing and working moves nobody relies on yet: `suggest`, `extractpropose`, `contradictionpropose`, `themepropose`, `standardpropose`, `comparisonpropose`, `theorypropose`, `actionriskpropose`, `actionlawspropose`, `filingprepare`, `contentmint`, `casedraft`, `reviewcomment`, `inboxresolve` (while it only sets a status), `taskforward`, `taskresolve`, `thread`, `connectionchoose`, `themedeclare`, `themeplace`, `entityalias`, `goallink`, `versionkeep`, `airunopen`, `airunclose`, `projectfork`.
+  2. REASONED (29), a member's own claim others may rely on, corrected only forward: `testify`, `lead`, `leadlook`, `leadshare`, `transcribe`, `transcriptionattest`, `attesttext`, `resolve`, `resolvetestify`, `entitycreate`, `versionadopt`, `progressiondefine`, `goaldeclare`, `aspirationdeclare`, `aspirationdeadend`, `objectivecondition`, `biasadopt`, `strengthbar`, `standarddeclare`, `standardadopt`, `consequencerecord`, `actioncorrespond`, `filingsent`, `escalationopen`, `escalationattach`, `counselpacket`, `attribute`, `statementack`, `workobjective`.
+  3. TERMINAL (2), ending what cannot be reopened: `escalationend`, `filingapprove`.
+  4. THE SIX JUDGEMENT CALLS CARRY HIGH FRICTION. Their rung names stay honest (a heavy consequence is not a new rung, R27), and friction follows consequence in the world (Interaction Constructs §F): `attribute` (a name that becomes permanent at publication), `leadshare` (a disclosure that cannot be un-read), `entitycreate` (a person named in the registry) and `strengthbar` (a gate on the whole group) open the full dialog stating that effect; `filingapprove` is terminal and has it already. `workobjective` is the lightest of the six: its reason field opens in place with the run's budget and scope shown beside it, heavier than a plain reasoned act and lighter than the full dialog.
+decided: 2026-09-29 · Bob
+reasoning recorded in: this entry; folded into `docs/architecture/BIO_Interaction_Constructs_v0_1.md` §F.
+owed (BOB's): move the 57 from `RUNG_ABSENT` into `RUNGS` in `bio-plane/src/affordances.mjs` and update affordances R27's text (which says 56; the code holds 57); add a required reason to each reasoned act whose requirement does not yet require one (an act whose own authored words serve as its reason counts); publish the consequence statement for the six; regrade `inboxresolve` to reasoned when DEC-78's pull admits material.

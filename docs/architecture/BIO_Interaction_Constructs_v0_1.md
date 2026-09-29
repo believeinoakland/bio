@@ -609,6 +609,11 @@ felt in it. **An act whose rung is still undetermined is treated as reasoned** u
 acts still ungraded). A single dialog for every act, with the rung merely highlighted, is the weight flattening revision 0.2
 names a doctrine failure, and is not used.
 
+**Friction also follows consequence in the world (Bob, 2026-09-29, DEC-85).** An act whose effect cannot be taken back outside
+the record (a disclosure once read, a person named in the registry, a group-wide gate, a step toward something leaving the group)
+opens the full dialog that states that effect, whatever its rung, and the rung's name stays honest. The 57 acts that had no rung are
+assigned in DEC-85: 26 reversible, 29 reasoned, 2 terminal.
+
 ## M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)
 
 Every scale a member meets is placed on one page, `docs/development/ux-substrate/measures-map.html` (rendered at
